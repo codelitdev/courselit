@@ -1,0 +1,8 @@
+version: "3"
+
+services:
+  mongo_service:
+    image: mongo
+    ports:
+      - "27017:27017"
+    container_name: mongo
