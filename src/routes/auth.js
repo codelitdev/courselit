@@ -3,6 +3,8 @@
  */
 
 const express = require('express')
+const jwt = require('jsonwebtoken')
+const constants = require('../config/constants.js')
 const responses = require('../config/strings.js').responses
 
 module.exports = (passport) => {
@@ -13,7 +15,7 @@ module.exports = (passport) => {
     (req, res, next) => {
       passport.authenticate('signup', (err, user, info) => {
         if (err)
-          return res.status(400).json({message: 'Error'})
+          return res.status(400).json({message: responses.error})
 
         return res.status(200).json({message: responses.user_created})
       })(req, res, next)
@@ -22,9 +24,26 @@ module.exports = (passport) => {
 
   router.post(
     '/login',
-    passport.authenticate('jwt', { session: false }),
-    function (req, res) {
-      res.send(req.user)
+    (req, res, next) => {
+      passport.authenticate('login', (err, user, info) => {
+        try {
+          if (err || !user) {
+            return res.status(400).json({message: responses.not_logged_in})
+          }
+        
+          req.login(user, {session: false}, err => {
+            if (err) 
+              return res.status(500).json({ message: responses.error, details: err.message })
+  
+            const body = {email: user.email}
+            const token = jwt.sign({user: body}, constants.jwtSecret)
+  
+            return res.json({token})
+          })
+        } catch (err) {
+          return res.status(500).json({ message: responses.error, details: err.message })
+        }
+      })(req, res, next)
     }
   )
 

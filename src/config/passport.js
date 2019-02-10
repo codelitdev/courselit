@@ -32,6 +32,29 @@ module.exports = (passport) => {
   }))
 
   // For sing in
+  passport.use('login', new LocalStrategy({
+    usernameField: 'email',
+    passwordField: 'password',
+    passReqToCallback: true
+  }, async (req, email, password, next) => {
+    try {
+      const user = await User.findOne({ email })
+
+      if (!user) {
+        return next(null, false)
+      }
+        
+      const validate = await user.isPasswordValid(password)
+
+      if (!validate) {
+        return next(null, false)
+      }
+        
+      return next(null, user)
+    } catch (err) {
+      return next(err, false)
+    }
+  }))
 
   // For verifying JWT
   passport.use(new JwtStrategy(opts, function (jwtPayload, done) {

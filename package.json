@@ -1,12 +1,14 @@
 {
   "scripts": {
     "lint": "eslint src --fix",
-    "dev": "nodemon src"
+    "dev": "PORT=8000 nodemon src",
+    "test": "jest"
   },
   "dependencies": {
     "bcrypt": "^3.0.3",
     "body-parser": "^1.18.3",
     "express": "^4.16.4",
+    "jsonwebtoken": "^8.4.0",
     "mongoose": "^5.4.8",
     "passport": "^0.4.0",
     "passport-jwt": "^4.0.0",
@@ -22,5 +24,10 @@
     "jest": "^24.0.0",
     "nodemon": "^1.18.9",
     "request": "^2.88.0"
+  },
+  "jest": {
+    "globals": {
+      "__api_url__": "localhost:8000"
+    }
   }
 }

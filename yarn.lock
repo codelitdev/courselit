@@ -2650,7 +2650,7 @@ json5@^2.1.0:
   dependencies:
     minimist "^1.2.0"
 
-jsonwebtoken@^8.2.0:
+jsonwebtoken@^8.2.0, jsonwebtoken@^8.4.0:
   version "8.4.0"
   resolved "https://registry.yarnpkg.com/jsonwebtoken/-/jsonwebtoken-8.4.0.tgz#8757f7b4cb7440d86d5e2f3becefa70536c8e46a"
   integrity sha512-coyXjRTCy0pw5WYBpMvWOMN+Kjaik2MwTUIq9cna/W7NpO9E+iYbumZONAz3hcr+tXFJECoQVrtmIoC3Oz0gvg==
