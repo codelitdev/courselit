@@ -10,3 +10,6 @@ node_modules/
 
 # Jest coverage
 coverage/
+
+# Text editors configurations
+.vscode/
