@@ -33,8 +33,9 @@ module.exports = (passport) => {
           req.login(user, { session: false }, err => {
             if (err) { return res.status(500).json({ message: responses.error, details: err.message }) }
 
-            const body = { email: user.email }
-            const token = jwt.sign({ user: body }, constants.jwtSecret)
+            const token = jwt.sign({ email: user.email }, constants.jwtSecret, {
+              expiresIn: constants.jwtExpire
+            })
 
             return res.json({ token })
           })

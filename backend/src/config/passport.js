@@ -10,13 +10,6 @@ const constants = require('./constants.js')
 const User = require('../models/User.js')
 
 module.exports = (passport) => {
-  const opts = {
-    jwtFromRequest: extractJwt.fromAuthHeaderAsBearerToken(),
-    secretOrKey: constants.authSecret,
-    issuer: constants.authIssuer,
-    audience: constants.authIssuer
-  }
-
   // For sign up
   passport.use('signup', new LocalStrategy({
     usernameField: 'email',
@@ -57,11 +50,16 @@ module.exports = (passport) => {
   }))
 
   // For verifying JWT
+  const opts = {
+    jwtFromRequest: extractJwt.fromAuthHeaderAsBearerToken(),
+    secretOrKey: constants.jwtSecret
+  }
   passport.use(new JwtStrategy(opts, function (jwtPayload, done) {
-    User.findOne({ email: jwtPayload.sub }, function (err, user) {
+    User.findOne({ email: jwtPayload.email }, function (err, user) {
       if (err) {
         return done(err, false)
       }
+
       if (user) {
         return done(null, user)
       } else {

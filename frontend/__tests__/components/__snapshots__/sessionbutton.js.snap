@@ -1,0 +1,23 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`When user is logged in 1`] = `
+<div>
+  <a
+    href="/logout"
+    onClick={[Function]}
+  >
+    Logout
+  </a>
+</div>
+`;
+
+exports[`When user is logged out 1`] = `
+<div>
+  <a
+    href="/login"
+    onClick={[Function]}
+  >
+    Login
+  </a>
+</div>
+`;

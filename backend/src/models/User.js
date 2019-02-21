@@ -16,6 +16,9 @@ const UserSchema = Schema({
   verified: {
     type: Boolean,
     default: false
+  },
+  name: {
+    type: String
   }
 })
 
