@@ -2,7 +2,6 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const passport = require('passport')
 const graphqlHTTP = require('express-graphql')
-// const { buildSchema } = require('graphql')
 const cors = require('cors')
 require('./config/passport.js')(passport)
 require('./config/db.js')
@@ -12,23 +11,8 @@ app.use(cors({ origin: 'http://localhost:3000' })) // for next.js development se
 app.use(passport.initialize())
 app.use(/\/((?!graphql).)*/, bodyParser.urlencoded({ extended: true }))
 
-// // Construct a schema, using GraphQL schema language
-// var schema = buildSchema(`
-//   type Query {
-//     hello: String
-//   }
-// `)
-
-// // The root provides a resolver function for each API endpoint
-// var root = {
-//   hello: () => {
-//     // return 'Hello world!'
-//     // throw new Error('aya maja')
-//   }
-// }
-app.use('/graphql', graphqlHTTP({
-  schema: require('./graphql/users/schema'),
-  // rootValue: root,
+app.use('/graphql', passport.authenticate('jwt', { session: false }), graphqlHTTP({
+  schema: require('./graphql/justfake.js'),
   graphiql: true
 }))
 

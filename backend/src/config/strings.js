@@ -4,5 +4,6 @@
 exports.responses = {
   error: 'Error',
   user_created: 'User created',
-  not_logged_in: 'Not logged in'
+  not_logged_in: 'Not logged in',
+  passport_js_unauthorized: 'Unauthorized',
 }
