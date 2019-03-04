@@ -1,24 +1,36 @@
+/**
+ * The application server for the entire API.
+ */
+
 const express = require('express')
 const bodyParser = require('body-parser')
 const passport = require('passport')
 const graphqlHTTP = require('express-graphql')
 const cors = require('cors')
-require('./config/passport.js')(passport)
+require('./middlewares/passport.js')(passport)
 require('./config/db.js')
+const optionalAuthMiddlewareCreator = require('./middlewares/optionalAuth.js')
 
 const app = express()
+
+// Middlewares
 app.use(cors({ origin: 'http://localhost:3000' })) // for next.js development server
 app.use(passport.initialize())
-app.use(/\/((?!graphql).)*/, bodyParser.urlencoded({ extended: true }))
+app.use(bodyParser.urlencoded({ extended: true }))
+if (process.env.NODE_ENV !== 'production') {
+  // only used for accessing GraphiQL with JWT auth, during development
+  app.use(bodyParser.json())
+}
 
-app.use('/graphql', passport.authenticate('jwt', { session: false }), graphqlHTTP({
-  schema: require('./graphql/justfake.js'),
-  graphiql: true
-}))
-
-// routes
+// Routes
 app.use('/auth', require('./routes/auth.js')(passport))
-app.use('/user',
-  passport.authenticate('jwt', { session: false }), require('./routes/account.js')())
+app.use('/graph',
+  optionalAuthMiddlewareCreator(passport),
+  graphqlHTTP(req => ({
+    schema: require('./graphql/schema.js'),
+    graphiql: true,
+    context: { user: req.user }
+  }))
+)
 
 app.listen(process.env.PORT || 80)

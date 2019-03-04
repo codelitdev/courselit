@@ -6,7 +6,7 @@
 const JwtStrategy = require('passport-jwt').Strategy
 const LocalStrategy = require('passport-local').Strategy
 const extractJwt = require('passport-jwt').ExtractJwt
-const constants = require('./constants.js')
+const constants = require('../config/constants.js')
 const User = require('../models/User.js')
 
 module.exports = (passport) => {

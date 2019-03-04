@@ -24,8 +24,7 @@ class MyApp extends App {
     const { Component, pageProps, store } = this.props
 
     const token_cookie = getCookie(JWT_COOKIE_NAME)
-    if (token_cookie)
-      store.dispatch(signedIn(token_cookie))
+    if (token_cookie) { store.dispatch(signedIn(token_cookie)) }
 
     return (
       <Container>

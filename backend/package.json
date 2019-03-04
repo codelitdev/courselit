@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "lint": "eslint src --fix",
+    "lint": "eslint src __tests__ --fix",
     "dev": "PORT=8000 nodemon src",
     "test": "jest"
   },
@@ -24,13 +24,17 @@
     "eslint-plugin-node": "^8.0.1",
     "eslint-plugin-promise": "^4.0.1",
     "eslint-plugin-standard": "^4.0.0",
+    "graphql-request": "^1.8.2",
     "jest": "^24.0.0",
     "nodemon": "^1.18.9",
     "request": "^2.88.0"
   },
   "jest": {
     "globals": {
-      "__api_url__": "localhost:8000"
-    }
+      "apiUrl": "localhost:8000"
+    },
+    "testPathIgnorePatterns": [
+      "<rootDir>/__tests__/util.js"
+    ]
   }
 }

@@ -12437,24 +12437,28 @@ function (_App) {
           pageProps = _this$props.pageProps,
           store = _this$props.store;
       var token_cookie = Object(_lib_session_js__WEBPACK_IMPORTED_MODULE_13__["getCookie"])(_config_constants_js__WEBPACK_IMPORTED_MODULE_14__["JWT_COOKIE_NAME"]);
-      if (token_cookie) store.dispatch(Object(_redux_actions_js__WEBPACK_IMPORTED_MODULE_15__["signedIn"])(token_cookie));
+
+      if (token_cookie) {
+        store.dispatch(Object(_redux_actions_js__WEBPACK_IMPORTED_MODULE_15__["signedIn"])(token_cookie));
+      }
+
       return react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(next_app__WEBPACK_IMPORTED_MODULE_10__["Container"], {
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 31
+          lineNumber: 30
         },
         __self: this
       }, react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(react_redux__WEBPACK_IMPORTED_MODULE_9__["Provider"], {
         store: store,
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 32
+          lineNumber: 31
         },
         __self: this
       }, react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(Component, Object(_babel_runtime_corejs2_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_2__["default"])({}, pageProps, {
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 33
+          lineNumber: 32
         },
         __self: this
       }))));

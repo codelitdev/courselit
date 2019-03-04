@@ -1,3 +1,10 @@
 module.exports = {
-    "extends": "standard"
+  "extends": "standard",
+  "env": {
+    "node": true,
+    "jest": true
+  },
+  "globals": {
+    "apiUrl": true
+  }
 };
