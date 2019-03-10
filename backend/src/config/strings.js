@@ -9,5 +9,8 @@ exports.responses = {
 
   // graphql responses
   user_not_found: 'User not found.',
-  request_not_authenticated: 'Request not authenticated'
+  request_not_authenticated: 'Request not authenticated',
+  content_cannot_be_null: 'Content cannot be empty',
+  content_url_cannot_be_null: 'Content URL cannot be empty',
+  lesson_not_found: 'Lesson not found'
 }

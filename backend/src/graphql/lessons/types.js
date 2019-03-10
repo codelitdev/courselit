@@ -1,4 +1,11 @@
 const graphql = require('graphql')
+const {
+  text,
+  audio,
+  video,
+  pdf,
+  quiz
+} = require('../../config/constants.js')
 
 /**
  * Every lesson can be one of the following types
@@ -6,11 +13,11 @@ const graphql = require('graphql')
 const lessontypeType = new graphql.GraphQLEnumType({
   name: 'LessonType',
   values: {
-    TEXT: { value: 0 },
-    VIDEO: { value: 1 },
-    AUDIO: { value: 2 },
-    PDF: { value: 3 },
-    QUIZ: { value: 4 }
+    TEXT: { value: text },
+    VIDEO: { value: video },
+    AUDIO: { value: audio },
+    PDF: { value: pdf },
+    QUIZ: { value: quiz }
   }
 })
 
