@@ -13,3 +13,13 @@ export function signedIn (token) {
 export function signedOut () {
   return { type: SIGN_OUT }
 }
+
+export function changeLogin (flag) {
+  return dispatch => {
+    if (flag) {
+      dispatch(signedIn())
+    } else {
+      dispatch(signedOut())
+    }
+  }
+}

@@ -6,6 +6,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import Link from 'next/link'
+import { connect } from 'react-redux'
 
 SessionButton.propTypes = {
   auth: PropTypes.shape({
@@ -14,7 +15,7 @@ SessionButton.propTypes = {
   })
 }
 
-export default function SessionButton (props) {
+function SessionButton (props) {
   const button = props.auth.guest
     ? (
       <Link href='/login'>
@@ -32,3 +33,11 @@ export default function SessionButton (props) {
     </div>
   )
 }
+
+const mapStateToProps = state => ({
+  auth: state.auth
+})
+
+export default connect(
+  mapStateToProps
+)(SessionButton)

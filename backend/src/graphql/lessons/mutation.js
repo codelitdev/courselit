@@ -26,5 +26,29 @@ module.exports = {
       newTitle: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) }
     },
     resolve: async (root, { id, newTitle }, context) => logic.changeTitle(id, newTitle, context)
+  },
+  changeContent: {
+    type: types.lessonType,
+    args: {
+      id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+      content: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) }
+    },
+    resolve: async (root, { id, content }, context) => logic.changeContent(id, content, context)
+  },
+  changeContentURL: {
+    type: types.lessonType,
+    args: {
+      id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+      url: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) }
+    },
+    resolve: async (root, { id, url }, context) => logic.changeContentURL(id, url, context)
+  },
+  changeDownloadable: {
+    type: types.lessonType,
+    args: {
+      id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+      flag: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) }
+    },
+    resolve: async (root, { id, flag }, context) => logic.changeDownloadable(id, flag, context)
   }
 }

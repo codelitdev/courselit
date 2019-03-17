@@ -18,20 +18,16 @@ import {
   signedIn
 } from '../redux/actions.js'
 import { setCookie } from '../lib/session.js'
+import { redirector } from '../lib/utils.js'
 
 function Login (props) {
+  redirector(props.auth, Router, '/')
+
   const emptyStringPat = /^\s*$/
   const defaultSignupData = { email: '', pass: '', conf: '', err: '', msg: '' }
   const defaultLoginData = { email: '', pass: '', err: '', msg: '' }
-
   const [loginData, setLoginData] = useState(defaultLoginData)
   const [signupData, setSignupData] = useState(defaultSignupData)
-
-  function redirectToHomeIfLoggedIn () {
-    if (!props.auth.guest) { Router.push('/') }
-  }
-
-  redirectToHomeIfLoggedIn()
 
   async function handleLogin (event) {
     event.preventDefault()
@@ -68,7 +64,7 @@ function Login (props) {
         // save the token in redux store
         props.dispatch(signedIn(data.token))
 
-        redirectToHomeIfLoggedIn()
+        redirector(props.auth, Router, '/')
       }
     } catch (err) {
       // do nothing
@@ -217,8 +213,8 @@ function Login (props) {
   )
 }
 
-Login.getInitialState = async ({ store, isServer, pathname, query }) => {
-  return { store }
-}
+// Login.getInitialState = async ({ store, isServer, pathname, query }) => {
+//   return { store }
+// }
 
 export default connect(state => state)(Login)

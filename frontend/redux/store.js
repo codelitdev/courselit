@@ -1,15 +1,16 @@
 /**
  * The Redux store
  */
-import { createStore } from 'redux'
+import { createStore, applyMiddleware } from 'redux'
+import thunk from 'redux-thunk'
 import reducer from './reducer.js'
 
-export default (initialState, options) => {
-  const store = createStore(reducer, initialState)
+export default () => {
+  const store = createStore(reducer, applyMiddleware(thunk))
 
-  store.subscribe(() => {
-    console.log(store.getState())
-  })
+  // store.subscribe(() => {
+  //   console.log(store.getState())
+  // })
 
   return store
 }

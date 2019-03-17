@@ -4,8 +4,8 @@
 
 import React from 'react'
 import PropTypes from 'prop-types'
-import Branding from './branding.js'
-import SessionButton from './sessionbutton.js'
+import Branding from './Branding.js'
+import SessionButton from './SessionButton.js'
 
 Header.propTypes = {
   title: PropTypes.string,

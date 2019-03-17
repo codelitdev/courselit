@@ -1,13 +1,10 @@
 import { connect } from 'react-redux'
-import Header from '../components/header.js'
+import MasterLayout from './masterlayout.js'
 
 const Index = (props) => (
-  <div>
-    <Header
-      title='Rayn Studios'
-      subtitle='Learn to code'
-      auth={props.auth}/>
-  </div>
+  <MasterLayout>
+    <div>Hi</div>
+  </MasterLayout>
 )
 
 Index.getInitialProps = async ({ store, isServer, pathname, query }) => {

@@ -13,8 +13,6 @@ import { signedIn } from '../redux/actions.js'
 
 class MyApp extends App {
   static async getInitialProps ({ Component, ctx }) {
-    // ctx.store.dispatch({ type: 'ANY' })
-
     const pageProps = Component.getInitialProps ? await Component.getInitialProps(ctx) : {}
 
     return { pageProps }
@@ -23,8 +21,8 @@ class MyApp extends App {
   render () {
     const { Component, pageProps, store } = this.props
 
-    const token_cookie = getCookie(JWT_COOKIE_NAME)
-    if (token_cookie) { store.dispatch(signedIn(token_cookie)) }
+    const tokenCookie = getCookie(JWT_COOKIE_NAME)
+    if (tokenCookie) { store.dispatch(signedIn(tokenCookie)) }
 
     return (
       <Container>

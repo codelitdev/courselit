@@ -11,6 +11,7 @@ exports.userType = new graphql.GraphQLObjectType({
       type: new graphql.GraphQLList(
         new graphql.GraphQLNonNull(graphql.GraphQLID)
       )
-    }
+    },
+    isCreator: { type: graphql.GraphQLBoolean }
   }
 })

@@ -8,6 +8,7 @@
 const graphql = require('graphql').graphql
 const schema = require('../../src/graphql/schema.js')
 const User = require('../../src/models/User.js')
+const Lesson = require('../../src/models/Lesson.js')
 const responses = require('../../src/config/strings.js').responses
 require('../../src/config/db.js')
 const mongoose = require('mongoose')
@@ -16,12 +17,19 @@ const slugify = require('slugify')
 describe('GraphQL API tests', () => {
   const user = 'graphuser@test.com'
   const user2 = 'graphuser2@test.com'
+  let createdLessonId = ''
 
   afterAll(done => {
-    User.deleteMany({ email: { $in: [user, user2] } }, () => {
-      mongoose.connection.close()
-      done()
-    })
+    User.deleteMany({ email: { $in: [user, user2] } })
+      .then(() => Lesson.findOneAndDelete({ _id: mongoose.Types.ObjectId(createdLessonId) }))
+      .then(() => {
+        mongoose.connection.close()
+        done()
+      })
+    // User.deleteMany({ email: { $in: [user, user2] } }, () => {
+    //   mongoose.connection.close()
+    //   done()
+    // })
   })
 
   beforeAll(done => {
@@ -88,8 +96,6 @@ describe('GraphQL API tests', () => {
    * Test suite for 'Lesson' related functions.
    */
   describe('lessons', () => {
-    let createdLessonId = ''
-
     it('creating a lesson via unauthenticated request', async () => {
       const mutation = `
       mutation {
@@ -271,7 +277,6 @@ describe('GraphQL API tests', () => {
       const mongoId = '000000000000000000000000'
       const userID = mongoose.Types.ObjectId(mongoId)
       const newTitle = "morphed"
-      console.log(createdLessonId)
       const mutation = `
       mutation  {
         changeTitle(id: "${createdLessonId}", newTitle: "${newTitle}") {
@@ -283,6 +288,64 @@ describe('GraphQL API tests', () => {
       const result = await graphql(schema, mutation, null, { user: { _id: userID } })
       expect(result).not.toHaveProperty('errors')
       expect(result.data.changeTitle.title).toBe(newTitle)
+    })
+
+    it('Change content', async () => {
+      const mongoId = '000000000000000000000000'
+      const userID = mongoose.Types.ObjectId(mongoId)
+      const newContent = "changed content"
+      const mutation = `
+      mutation  {
+        changeContent(id: "${createdLessonId}", content: "${newContent}") {
+          content
+        }
+      }`
+      const result = await graphql(schema, mutation, null, { user: { _id: userID } })
+      expect(result).not.toHaveProperty('errors')
+      expect(result.data.changeContent.content).toBe(newContent)
+    })
+
+    it('Change content url', async () => {
+      const mongoId = '000000000000000000000000'
+      const userID = mongoose.Types.ObjectId(mongoId)
+      const newContentURL = "http://fakyfaky"
+      const mutation = `
+      mutation  {
+        changeContentURL(id: "${createdLessonId}", url: "${newContentURL}") {
+          contentURL
+        }
+      }`
+      const result = await graphql(schema, mutation, null, { user: { _id: userID } })
+      expect(result).not.toHaveProperty('errors')
+      expect(result.data.changeContentURL.contentURL).toBe(newContentURL)
+    })
+
+    it('Change downloadable status', async () => {
+      const mongoId = '000000000000000000000000'
+      const userID = mongoose.Types.ObjectId(mongoId)
+      // make it true
+      let flag = true
+      let mutation = `
+      mutation  {
+        changeDownloadable(id: "${createdLessonId}", flag: ${flag}) {
+          downloadable
+        }
+      }`
+      let result = await graphql(schema, mutation, null, { user: { _id: userID } })
+      expect(result).not.toHaveProperty('errors')
+      expect(result.data.changeDownloadable.downloadable).toBeTruthy()
+   
+      // make it false
+      flag = false
+      mutation = `
+      mutation  {
+        changeDownloadable(id: "${createdLessonId}", flag: ${flag}) {
+          downloadable
+        }
+      }`
+      result = await graphql(schema, mutation, null, { user: { _id: userID } })
+      expect(result).not.toHaveProperty('errors')
+      expect(result.data.changeDownloadable.downloadable).toBeFalsy()
     })
   })
 })

@@ -87,3 +87,27 @@ exports.changeTitle = async (id, newTitle, ctx) => {
   lesson = await lesson.save()
   return lesson
 }
+
+exports.changeContent = async (id, content, ctx) => {
+  checkIfAuthenticated(ctx)
+  let lesson = await checkOwnership(id, ctx)
+  lesson.content = content
+  lesson = await lesson.save()
+  return lesson
+}
+
+exports.changeContentURL = async (id, url, ctx) => {
+  checkIfAuthenticated(ctx)
+  let lesson = await checkOwnership(id, ctx)
+  lesson.contentURL = url
+  lesson = await lesson.save()
+  return lesson
+}
+
+exports.changeDownloadable = async (id, flag, ctx) => {
+  checkIfAuthenticated(ctx)
+  let lesson = await checkOwnership(id, ctx)
+  lesson.downloadable = flag
+  lesson = await lesson.save()
+  return lesson
+}

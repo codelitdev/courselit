@@ -11,7 +11,8 @@
     "react": "^16.8.2",
     "react-dom": "^16.8.2",
     "react-redux": "^6.0.0",
-    "redux": "^4.0.1"
+    "redux": "^4.0.1",
+    "redux-thunk": "^2.3.0"
   },
   "scripts": {
     "dev": "next",
@@ -21,6 +22,7 @@
     "test": "jest"
   },
   "devDependencies": {
+    "@babel/core": "^7.3.4",
     "@babel/preset-env": "^7.3.1",
     "@babel/preset-react": "^7.0.0",
     "babel-jest": "^24.1.0",
