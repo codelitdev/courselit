@@ -10,7 +10,7 @@ import { connect } from 'react-redux'
 const Branding = (props) => (
   <div>
     <div>
-      <img src='/static/logo.jpg'/>
+      <img src={props.logoPath}/>
     </div>
     <div>
       <p>{props.title}</p>
@@ -26,12 +26,14 @@ const Branding = (props) => (
 
 Branding.propTypes = {
   title: PropTypes.string,
-  subtitle: PropTypes.string
+  subtitle: PropTypes.string,
+  logoPath: PropTypes.string
 }
 
 const mapStateToProps = state => ({
-  title: state.title,
-  subtitle: state.subtitle
+  title: state.brand.title,
+  subtitle: state.brand.subtitle,
+  logoPath: state.brand.logo
 })
 
 export default connect(

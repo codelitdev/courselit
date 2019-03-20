@@ -1,5 +1,7 @@
 /**
- * Provides cookie based session management functions
+ * Provides cookie based session management functions.
+ *
+ * Note: This limits the app to client-side only.
  */
 
 import Cookies from 'js-cookie'
