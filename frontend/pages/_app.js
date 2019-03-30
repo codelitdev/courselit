@@ -4,7 +4,7 @@ import App, { Container } from 'next/app'
 import makeStore from '../redux/store.js'
 import withRedux from 'next-redux-wrapper'
 import { getCookie } from '../lib/session.js'
-import { JWT_COOKIE_NAME } from '../config/constants.js'
+import { JWT_COOKIE_NAME, USERID_COOKIE_NAME } from '../config/constants.js'
 import { signedIn } from '../redux/actions.js'
 
 /**
@@ -22,7 +22,13 @@ class MyApp extends App {
     const { Component, pageProps, store } = this.props
 
     const tokenCookie = getCookie(JWT_COOKIE_NAME)
-    if (tokenCookie) { store.dispatch(signedIn(tokenCookie)) }
+    if (tokenCookie) {
+      store.dispatch(
+        signedIn(
+          getCookie(USERID_COOKIE_NAME), getCookie(JWT_COOKIE_NAME)
+        )
+      )
+    }
 
     return (
       <Container>

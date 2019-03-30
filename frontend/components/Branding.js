@@ -6,11 +6,16 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
+import Link from 'next/link'
 
 const Branding = (props) => (
   <div>
     <div>
-      <img src={props.logoPath}/>
+      <Link href='/'>
+        <a>
+          <img src={props.logoPath}/>
+        </a>
+      </Link>
     </div>
     <div>
       <p>{props.title}</p>

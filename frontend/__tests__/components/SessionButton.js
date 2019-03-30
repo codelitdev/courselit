@@ -4,7 +4,7 @@ import SessionButton from '../../components/sessionbutton.js'
 
 test('When user is logged out', () => {
   const component = renderer.create(
-    <SessionButton auth={{guest: true, token: ''}} />
+    <SessionButton auth={{ guest: true, token: '' }} />
   )
 
   let tree = component.toJSON()
@@ -13,7 +13,7 @@ test('When user is logged out', () => {
 
 test('When user is logged in', () => {
   const component = renderer.create(
-    <SessionButton auth={{guest: false, token: ''}} />
+    <SessionButton auth={{ guest: false, token: '' }} />
   )
 
   let tree = component.toJSON()

@@ -8,14 +8,17 @@ import {
   ERR_IN_USER_CREATION,
   RESP_API_ERROR,
   RESP_API_USER_CREATED,
-  SIGNUP_SUCCESS
+  SIGNUP_SUCCESS,
+  ERR_LOGIN_FAILED
 } from '../config/strings.js'
 import {
   BACKEND,
-  JWT_COOKIE_NAME
+  JWT_COOKIE_NAME,
+  USERID_COOKIE_NAME
 } from '../config/constants.js'
 import {
-  signedIn
+  signedIn,
+  networkAction
 } from '../redux/actions.js'
 import { setCookie } from '../lib/session.js'
 // import { redirector } from '../lib/utils.js'
@@ -26,7 +29,7 @@ function Login (props) {
 
   const emptyStringPat = /^\s*$/
   const defaultSignupData = { email: '', pass: '', conf: '', err: '', msg: '' }
-  const defaultLoginData = { email: '', pass: '', err: '', msg: '' }
+  const defaultLoginData = { email: '', pass: '', err: '' }
   const [loginData, setLoginData] = useState(defaultLoginData)
   const [signupData, setSignupData] = useState(defaultSignupData)
 
@@ -40,7 +43,7 @@ function Login (props) {
         Object.assign(
           {},
           loginData,
-          { err: ERR_ALL_FIELDS_REQUIRED, msg: '' }
+          { err: ERR_ALL_FIELDS_REQUIRED }
         )
       )
     }
@@ -49,6 +52,8 @@ function Login (props) {
     setLoginData(Object.assign({}, loginData, { err: '', msg: '' }))
 
     try {
+      props.dispatch(networkAction(true))
+
       const res = await fetch(`${BACKEND}/auth/login`, {
         method: 'POST',
         headers: {
@@ -56,17 +61,40 @@ function Login (props) {
         },
         body: `email=${loginData.email}&password=${loginData.password}`
       })
-      const data = await res.json()
 
-      if (typeof data.token !== 'undefined') {
-        // set cookie
-        setCookie(JWT_COOKIE_NAME, data.token)
+      if (res.status === 200) {
+        const data = await res.json()
 
-        // save the token in redux store
-        props.dispatch(signedIn(data.token))
+        if (typeof data.token !== 'undefined') {
+          // set cookie
+          setCookie(JWT_COOKIE_NAME, data.token)
+          setCookie(USERID_COOKIE_NAME, loginData.email)
+
+          // save the token in redux store
+          console.log(loginData.email, data.token)
+          props.dispatch(signedIn(loginData.email, data.token))
+        }
+      } else {
+        console.log('came here')
+        return setLoginData(
+          Object.assign(
+            {},
+            loginData,
+            { err: ERR_LOGIN_FAILED }
+          )
+        )
       }
     } catch (err) {
       // do nothing
+      return setLoginData(
+        Object.assign(
+          {},
+          loginData,
+          { err: err.message }
+        )
+      )
+    } finally {
+      props.dispatch(networkAction(false))
     }
   }
 
@@ -100,6 +128,8 @@ function Login (props) {
     setSignupData(Object.assign({}, signupData, { err: '', msg: '' }))
 
     try {
+      props.dispatch(networkAction(true))
+
       const res = await fetch(`${BACKEND}/auth/signup`, {
         method: 'POST',
         headers: {
@@ -129,7 +159,15 @@ function Login (props) {
         )
       }
     } catch (err) {
-      // console.log(err)
+      return setSignupData(
+        Object.assign(
+          {},
+          signupData,
+          { err: err.message, msg: '' }
+        )
+      )
+    } finally {
+      props.dispatch(networkAction(false))
     }
   }
 
@@ -143,6 +181,9 @@ function Login (props) {
         <div>
           <h2>Log in</h2>
           <form onSubmit={handleLogin}>
+            {loginData.err &&
+              <div>{loginData.err}</div>
+            }
             <label> Email:
               <input
                 type='email'

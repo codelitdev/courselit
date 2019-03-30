@@ -3,18 +3,22 @@
  */
 import { connect } from 'react-redux'
 import Router from 'next/router'
+import MasterLayout from './masterlayout.js'
 import ProtectedRoute from '../components/ProtectedRoute'
-import { CREATOR_AREA_TEMPLATE } from '../config/strings'
+import Creator from '../components/Creator.js'
+// import { CREATOR_AREA_TEMPLATE } from '../config/strings'
 
-const Create = (props) => <ProtectedRoute
-  condition={props.auth.guest}
-  router={Router}
-  redirectTo='/login'
-  renderOnServer={false}>
-  <div>
-    {CREATOR_AREA_TEMPLATE}
-  </div>
-</ProtectedRoute>
+const Create = (props) => (<MasterLayout>
+  <ProtectedRoute
+    condition={props.auth.guest || (props.profile.fetched && !props.profile.isCreator)}
+    router={Router}
+    redirectTo='/login'
+    renderOnServer={false}>
+    <div>
+      <Creator />
+    </div>
+  </ProtectedRoute>
+</MasterLayout>)
 
 // Create.getInitialProps = async ({ store, isServer, pathname, query }) => {
 //   return { }

@@ -1,2 +1,5 @@
 export const SIGN_IN = 'SIGN_IN'
 export const SIGN_OUT = 'SIGN_OUT'
+export const NETWORK_ACTION = 'NETWORK_ACTION'
+export const PROFILE_AVAILABLE = 'PROFILE_AVAILABLE'
+export const PROFILE_CLEAR = 'PROFILE_CLEAR'

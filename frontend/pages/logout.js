@@ -5,7 +5,8 @@ import {
 } from '../redux/actions'
 import { removeCookie } from '../lib/session.js'
 import {
-  JWT_COOKIE_NAME
+  JWT_COOKIE_NAME,
+  USERID_COOKIE_NAME
 } from '../config/constants.js'
 
 const Logout = (props) => (
@@ -13,8 +14,9 @@ const Logout = (props) => (
 )
 
 Logout.getInitialProps = async ({ store, isServer, pathname, query }) => {
-  // remove token cookie
+  // remove cookies
   removeCookie(JWT_COOKIE_NAME)
+  removeCookie(USERID_COOKIE_NAME)
 
   store.dispatch(signedOut())
   Router.push('/')

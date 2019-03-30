@@ -276,7 +276,7 @@ describe('GraphQL API tests', () => {
     it('Change title', async () => {
       const mongoId = '000000000000000000000000'
       const userID = mongoose.Types.ObjectId(mongoId)
-      const newTitle = "morphed"
+      const newTitle = 'morphed'
       const mutation = `
       mutation  {
         changeTitle(id: "${createdLessonId}", newTitle: "${newTitle}") {
@@ -293,7 +293,7 @@ describe('GraphQL API tests', () => {
     it('Change content', async () => {
       const mongoId = '000000000000000000000000'
       const userID = mongoose.Types.ObjectId(mongoId)
-      const newContent = "changed content"
+      const newContent = 'changed content'
       const mutation = `
       mutation  {
         changeContent(id: "${createdLessonId}", content: "${newContent}") {
@@ -308,7 +308,7 @@ describe('GraphQL API tests', () => {
     it('Change content url', async () => {
       const mongoId = '000000000000000000000000'
       const userID = mongoose.Types.ObjectId(mongoId)
-      const newContentURL = "http://fakyfaky"
+      const newContentURL = 'http://fakyfaky'
       const mutation = `
       mutation  {
         changeContentURL(id: "${createdLessonId}", url: "${newContentURL}") {
@@ -334,7 +334,7 @@ describe('GraphQL API tests', () => {
       let result = await graphql(schema, mutation, null, { user: { _id: userID } })
       expect(result).not.toHaveProperty('errors')
       expect(result.data.changeDownloadable.downloadable).toBeTruthy()
-   
+
       // make it false
       flag = false
       mutation = `
