@@ -9,10 +9,15 @@ module.exports = {
   jwtSecret: process.env.NODE_ENV === 'production' ? 'KLjl2k3j5lk2j' : 'kj23kl4j5kjk',
   jwtExpire: 60 * 60 * 24 * 10,
 
-  // Constants for defining content types
+  // Constants for content types
   text: 'text',
   audio: 'audio',
   video: 'video',
   pdf: 'pdf',
-  quiz: 'quiz'
+  quiz: 'quiz',
+
+  // Constants for courses privacy settings
+  unlisted: 'unlisted',
+  open: 'public',
+  closed: 'private'
 }

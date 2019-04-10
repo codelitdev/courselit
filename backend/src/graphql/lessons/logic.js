@@ -11,30 +11,27 @@ const {
 } = require('../../config/constants.js')
 const Lesson = require('../../models/Lesson.js')
 const strings = require('../../config/strings.js')
+const {
+  checkIfAuthenticated,
+  checkOwnership
+} = require('../../lib/graphql.js')
 
-/**
- * Helper function for checking authenticated requests.
- *
- * @param {Object} ctx context received from the GraphQL resolver
- */
-const checkIfAuthenticated = (ctx) => {
-  if (!ctx.user) throw new Error(strings.responses.request_not_authenticated)
-}
+// /**
+//  * Helper function for checking the ownership of the lesson.
+//  *
+//  * @param {ObjectId} id MongoDB ObjectId for the lesson
+//  * @param {Object} ctx context received from the GraphQL resolver
+//  */
+// const checkOwnership = async (id, ctx) => {
+//   const lesson = await Lesson.findOne({ _id: id })
+//   if (!lesson || (lesson.creatorId.toString() !== ctx.user._id.toString())) {
+//     throw new Error(strings.responses.lesson_not_found)
+//   }
 
-/**
- * Helper function for checking the ownership of the lesson.
- *
- * @param {ObjectId} id MongoDB ObjectId for the lesson
- * @param {Object} ctx context received from the GraphQL resolver
- */
-const checkOwnership = async (id, ctx) => {
-  const lesson = await Lesson.findOne({ _id: id })
-  if (!lesson || (lesson.creatorId.toString() !== ctx.user._id.toString())) {
-    throw new Error(strings.responses.lesson_not_found)
-  }
+//   return lesson
+// }
 
-  return lesson
-}
+const checkLessonOwnership = checkOwnership(Lesson)
 
 exports.getLesson = async (id, ctx) => {
   const lesson = await Lesson.findById(id)
@@ -72,7 +69,7 @@ exports.createLesson = async (lessonData, ctx) => {
 
 exports.deleteLesson = async (id, ctx) => {
   checkIfAuthenticated(ctx)
-  const lesson = await checkOwnership(id, ctx)
+  const lesson = await checkLessonOwnership(id, ctx)
   let result = true
   lesson.remove((err) => {
     if (err) { result = false }
@@ -82,7 +79,7 @@ exports.deleteLesson = async (id, ctx) => {
 
 exports.changeTitle = async (id, newTitle, ctx) => {
   checkIfAuthenticated(ctx)
-  let lesson = await checkOwnership(id, ctx)
+  let lesson = await checkLessonOwnership(id, ctx)
   lesson.title = newTitle
   lesson = await lesson.save()
   return lesson
@@ -90,7 +87,7 @@ exports.changeTitle = async (id, newTitle, ctx) => {
 
 exports.changeContent = async (id, content, ctx) => {
   checkIfAuthenticated(ctx)
-  let lesson = await checkOwnership(id, ctx)
+  let lesson = await checkLessonOwnership(id, ctx)
   lesson.content = content
   lesson = await lesson.save()
   return lesson
@@ -98,7 +95,7 @@ exports.changeContent = async (id, content, ctx) => {
 
 exports.changeContentURL = async (id, url, ctx) => {
   checkIfAuthenticated(ctx)
-  let lesson = await checkOwnership(id, ctx)
+  let lesson = await checkLessonOwnership(id, ctx)
   lesson.contentURL = url
   lesson = await lesson.save()
   return lesson
@@ -106,7 +103,7 @@ exports.changeContentURL = async (id, url, ctx) => {
 
 exports.changeDownloadable = async (id, flag, ctx) => {
   checkIfAuthenticated(ctx)
-  let lesson = await checkOwnership(id, ctx)
+  let lesson = await checkLessonOwnership(id, ctx)
   lesson.downloadable = flag
   lesson = await lesson.save()
   return lesson

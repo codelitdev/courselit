@@ -23,6 +23,7 @@ import {
 import { setCookie } from '../lib/session.js'
 // import { redirector } from '../lib/utils.js'
 import ProtectedRoute from '../components/ProtectedRoute.js'
+import MasterLayout from './masterlayout.js'
 
 function Login (props) {
   // redirector(props.auth, Router, '/')
@@ -71,7 +72,6 @@ function Login (props) {
           setCookie(USERID_COOKIE_NAME, loginData.email)
 
           // save the token in redux store
-          console.log(loginData.email, data.token)
           props.dispatch(signedIn(loginData.email, data.token))
         }
       } else {
@@ -172,90 +172,92 @@ function Login (props) {
   }
 
   return (
-    <ProtectedRoute
-      condition={!props.auth.guest}
-      router={Router}
-      redirectTo='/'
-      renderOnServer={true}>
-      <div>
+    <MasterLayout>
+      <ProtectedRoute
+        condition={!props.auth.guest}
+        router={Router}
+        redirectTo='/'
+        renderOnServer={true}>
         <div>
-          <h2>Log in</h2>
-          <form onSubmit={handleLogin}>
-            {loginData.err &&
-              <div>{loginData.err}</div>
-            }
-            <label> Email:
-              <input
-                type='email'
-                value={loginData.email}
-                onChange={
-                  (e) => setLoginData(
-                    Object.assign({}, loginData, {
-                      email: e.target.value
-                    })
-                  )}/>
-            </label>
-            <label> Password:
-              <input
-                type='password'
-                value={loginData.pass}
-                onChange={
-                  (e) => setLoginData(
-                    Object.assign({}, loginData, {
-                      pass: e.target.value
-                    })
-                  )}/>
-            </label>
-            <input type='submit' value='Submit' />
-          </form>
+          <div>
+            <h2>Log in</h2>
+            <form onSubmit={handleLogin}>
+              {loginData.err &&
+                <div>{loginData.err}</div>
+              }
+              <label> Email:
+                <input
+                  type='email'
+                  value={loginData.email}
+                  onChange={
+                    (e) => setLoginData(
+                      Object.assign({}, loginData, {
+                        email: e.target.value
+                      })
+                    )}/>
+              </label>
+              <label> Password:
+                <input
+                  type='password'
+                  value={loginData.pass}
+                  onChange={
+                    (e) => setLoginData(
+                      Object.assign({}, loginData, {
+                        pass: e.target.value
+                      })
+                    )}/>
+              </label>
+              <input type='submit' value='Submit' />
+            </form>
+          </div>
+          <div>
+            <h2>Sign up</h2>
+            <form onSubmit={handleSignup}>
+              {signupData.msg &&
+                <div>{signupData.msg}</div>
+              }
+              {signupData.err &&
+                <div>{signupData.err}</div>
+              }
+              <label> Email:
+                <input
+                  type='email'
+                  value={signupData.email}
+                  onChange={
+                    (e) => setSignupData(
+                      Object.assign({}, signupData, {
+                        email: e.target.value
+                      })
+                    )}/>
+              </label>
+              <label> Password:
+                <input
+                  type='password'
+                  value={signupData.pass}
+                  onChange={
+                    (e) => setSignupData(
+                      Object.assign({}, signupData, {
+                        pass: e.target.value
+                      })
+                    )}/>
+              </label>
+              <label> Confirm password:
+                <input
+                  type='password'
+                  value={signupData.conf}
+                  onChange={
+                    (e) => setSignupData(
+                      Object.assign({}, signupData, {
+                        conf: e.target.value
+                      })
+                    )}/>
+              </label>
+              <input type='submit' value='Submit' />
+            </form>
+          </div>
         </div>
-        <div>
-          <h2>Sign up</h2>
-          <form onSubmit={handleSignup}>
-            {signupData.msg &&
-              <div>{signupData.msg}</div>
-            }
-            {signupData.err &&
-              <div>{signupData.err}</div>
-            }
-            <label> Email:
-              <input
-                type='email'
-                value={signupData.email}
-                onChange={
-                  (e) => setSignupData(
-                    Object.assign({}, signupData, {
-                      email: e.target.value
-                    })
-                  )}/>
-            </label>
-            <label> Password:
-              <input
-                type='password'
-                value={signupData.pass}
-                onChange={
-                  (e) => setSignupData(
-                    Object.assign({}, signupData, {
-                      pass: e.target.value
-                    })
-                  )}/>
-            </label>
-            <label> Confirm password:
-              <input
-                type='password'
-                value={signupData.conf}
-                onChange={
-                  (e) => setSignupData(
-                    Object.assign({}, signupData, {
-                      conf: e.target.value
-                    })
-                  )}/>
-            </label>
-            <input type='submit' value='Submit' />
-          </form>
-        </div>
-      </div>
-    </ProtectedRoute>
+      </ProtectedRoute>
+    </MasterLayout>
   )
 }
 

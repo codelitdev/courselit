@@ -3,14 +3,14 @@ const types = require('./types.js')
 const logic = require('./logic.js')
 
 module.exports = {
-  getLesson: {
-    type: types.lessonType,
+  getCourse: {
+    type: types.courseType,
     args: {
       id: {
         type: new graphql.GraphQLNonNull(graphql.GraphQLString)
       }
     },
     resolve: (root, { id }, context) =>
-      logic.getLesson(id, context)
+      logic.getCourse(id, context)
   }
 }

@@ -16,10 +16,7 @@ import PropTypes from 'prop-types'
 const ProtectedRoute = (props) => {
   // Redirection happens only on the client side.
   if (process.browser) {
-    if (props.condition) { 
-      console.log('redirecting...')
-      props.router.push(props.redirectTo)
-    }
+    if (props.condition) { props.router.push(props.redirectTo) }
   }
 
   if (props.renderOnServer) {

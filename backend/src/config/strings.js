@@ -12,5 +12,5 @@ exports.responses = {
   request_not_authenticated: 'Request not authenticated',
   content_cannot_be_null: 'Content cannot be empty',
   content_url_cannot_be_null: 'Content URL cannot be empty',
-  lesson_not_found: 'Lesson not found'
+  item_not_found: 'Item not found'
 }

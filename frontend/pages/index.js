@@ -3,12 +3,12 @@ import MasterLayout from './masterlayout.js'
 
 const Index = (props) => (
   <MasterLayout>
-    <div>Hi</div>
+    <div></div>
   </MasterLayout>
 )
 
-Index.getInitialProps = async ({ store, isServer, pathname, query }) => {
-  return {}
-}
+// Index.getInitialProps = async ({ store, isServer, pathname, query }) => {
+//   return {}
+// }
 
 export default connect(state => state)(Index)

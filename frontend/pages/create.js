@@ -16,6 +16,7 @@ const Create = (props) => (<MasterLayout>
     renderOnServer={false}>
     <div>
       <Creator />
+      <p>Hi</p>
     </div>
   </ProtectedRoute>
 </MasterLayout>)

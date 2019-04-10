@@ -9,7 +9,9 @@ const graphql = require('graphql').graphql
 const schema = require('../../src/graphql/schema.js')
 const User = require('../../src/models/User.js')
 const Lesson = require('../../src/models/Lesson.js')
+const Course = require('../../src/models/Course.js')
 const responses = require('../../src/config/strings.js').responses
+const constants = require('../../src/config/constants.js')
 require('../../src/config/db.js')
 const mongoose = require('mongoose')
 const slugify = require('slugify')
@@ -18,10 +20,12 @@ describe('GraphQL API tests', () => {
   const user = 'graphuser@test.com'
   const user2 = 'graphuser2@test.com'
   let createdLessonId = ''
+  let createdCourseId = ''
 
   afterAll(done => {
     User.deleteMany({ email: { $in: [user, user2] } })
       .then(() => Lesson.findOneAndDelete({ _id: mongoose.Types.ObjectId(createdLessonId) }))
+      .then(() => Course.findOneAndDelete({ _id: mongoose.Types.ObjectId(createdCourseId) }))
       .then(() => {
         mongoose.connection.close()
         done()
@@ -95,7 +99,7 @@ describe('GraphQL API tests', () => {
   /**
    * Test suite for 'Lesson' related functions.
    */
-  describe('lessons', () => {
+  describe.only('lessons', () => {
     it('creating a lesson via unauthenticated request', async () => {
       const mutation = `
       mutation {
@@ -217,7 +221,7 @@ describe('GraphQL API tests', () => {
       `
       const result = await graphql(schema, mutation, null, { user: { _id: userID } })
       expect(result).toHaveProperty('errors')
-      expect(result.errors[0].message).toBe(responses.lesson_not_found)
+      expect(result.errors[0].message).toBe(responses.item_not_found)
     })
 
     it('delete an existent lesson', async () => {
@@ -269,7 +273,7 @@ describe('GraphQL API tests', () => {
       `
       const deleteResult = await graphql(schema, deleteMutation, null, { user: { _id: userID2 } })
       expect(deleteResult).toHaveProperty('errors')
-      expect(deleteResult.errors[0].message).toBe(responses.lesson_not_found)
+      expect(deleteResult.errors[0].message).toBe(responses.item_not_found)
       createdLessonId = lesson.id
     })
 
@@ -346,6 +350,91 @@ describe('GraphQL API tests', () => {
       result = await graphql(schema, mutation, null, { user: { _id: userID } })
       expect(result).not.toHaveProperty('errors')
       expect(result.data.changeDownloadable.downloadable).toBeFalsy()
+    })
+  })
+
+  /**
+   * Test suite for 'Lesson' related functions.
+   */
+  describe.only('courses', () => {
+    it('creating a course via an unauthenticated request', async () => {
+      const mutation = `
+      mutation {
+        createCourse(courseData: {
+          title: "First course",
+          cost: 3,
+          privacy: UNLISTED,
+          published: true,
+          isBlog: true
+        }) {
+          id,
+        }
+      }
+      `
+
+      const result = await graphql(schema, mutation, null, {})
+      expect(result).toHaveProperty('errors')
+      expect(result.errors[0].message).toBe(responses.request_not_authenticated)
+    })
+
+    it('creating a normal private course', async () => {
+      const userId = mongoose.Types.ObjectId('000000000000000000000000')
+      const mutation = `
+      mutation {
+        course: createCourse(courseData: {
+          title: "First course [via testing]",
+          cost: 3.99,
+          privacy: PRIVATE,
+          published: true,
+          isBlog: true
+        }) {
+          id,
+          cost
+        }
+      }
+      `
+
+      const result = await graphql(schema, mutation, null, { user: { _id: userId } })
+      expect(result).toHaveProperty('data')
+      expect(result.data).toHaveProperty('course')
+      expect(result.data.course).toHaveProperty('id')
+      expect(result.data.course.id).not.toBeNull()
+      expect(result.data.course.cost).toBe(3.99)
+
+      createdCourseId = result.data.course.id
+    })
+
+    it('get a private course\'s details as a third party', async () => {
+      const userId = mongoose.Types.ObjectId('000000000000000000000001')
+      const query = `
+      query {
+        course: getCourse(id: "${createdCourseId}") {
+          id,
+        }
+      }
+      `
+
+      const result = await graphql(schema, query, null, { user: { _id: userId } })
+      expect(result).toHaveProperty('errors')
+      expect(result.errors[0].message).toBe(responses.item_not_found)
+    })
+
+    it('get a private course\'s details as the owner', async () => {
+      const userId = mongoose.Types.ObjectId('000000000000000000000000')
+      const query = `
+      query {
+        course: getCourse(id: "${createdCourseId}") {
+          id,
+          privacy
+        }
+      }
+      `
+
+      const result = await graphql(schema, query, null, { user: { _id: userId } })
+      expect(result).toHaveProperty('data')
+      expect(result.data).toHaveProperty('course')
+      expect(result.data.course.id).toBe(createdCourseId)
+      expect(result.data.course.privacy).toBe(constants.closed.toUpperCase())
     })
   })
 })
