@@ -3,7 +3,9 @@
  *
  */
 import React from 'react'
-import PropTypes from 'prop-types'
+import {
+  protectedRouteProps
+} from '../types.js'
 
 /**
   * Redirects to a defined page if the condition is satisfied.
@@ -22,16 +24,10 @@ const ProtectedRoute = (props) => {
   if (props.renderOnServer) {
     return <>{props.children}</>
   } else {
-    return <></>
+    return <>{props.children}</>
   }
 }
 
-ProtectedRoute.propTypes = {
-  condition: PropTypes.bool.isRequired,
-  router: PropTypes.object.isRequired,
-  redirectTo: PropTypes.string.isRequired,
-  renderOnServer: PropTypes.bool.isRequired,
-  children: PropTypes.object
-}
+ProtectedRoute.propTypes = protectedRouteProps
 
 export default ProtectedRoute

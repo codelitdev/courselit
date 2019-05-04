@@ -13,7 +13,8 @@ const CourseSchema = mongoose.Schema({
   description: String,
   featuredImage: String,
   isBlog: { type: Boolean, default: false },
-  creatorId: mongoose.Schema.Types.ObjectId
+  creatorId: mongoose.Schema.Types.ObjectId,
+  lessons: [String]
 })
 
 module.exports = mongoose.model('Course', CourseSchema)

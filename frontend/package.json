@@ -18,7 +18,7 @@
     "dev": "next",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint pages components redux --fix",
+    "lint": "eslint pages components redux types.js --fix",
     "test": "jest"
   },
   "devDependencies": {

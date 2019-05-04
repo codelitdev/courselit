@@ -15,7 +15,7 @@ const LessonSchema = mongoose.Schema({
   contentURL: String,
   downloadable: { type: Boolean, default: false },
   creatorId: mongoose.Schema.Types.ObjectId,
-  courseId: mongoose.Schema.Types.ObjectId
+  // courseId: { type: mongoose.Schema.Types.ObjectId, required: true }
 })
 
 module.exports = mongoose.model('Lesson', LessonSchema)

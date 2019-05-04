@@ -50,5 +50,14 @@ module.exports = {
       flag: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) }
     },
     resolve: async (root, { id, flag }, context) => logic.changeDownloadable(id, flag, context)
-  }
+  },
+  updateLesson: {
+    type: types.lessonType,
+    args: {
+      lessonData: {
+        type: new graphql.GraphQLNonNull(types.lessonUpdateType)
+      }
+    },
+    resolve: async (root, { lessonData }, context) => logic.updateLesson(lessonData, context)
+  },
 }

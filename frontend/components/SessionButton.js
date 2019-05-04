@@ -4,7 +4,6 @@
  */
 
 import React from 'react'
-import PropTypes from 'prop-types'
 import Link from 'next/link'
 import { connect } from 'react-redux'
 import {
@@ -12,18 +11,14 @@ import {
   GENERIC_SIGNOUT_TEXT,
   GENERIC_SIGNIN_TEXT
 } from '../config/strings.js'
+import {
+  authProps,
+  profileProps
+} from '../types.js'
 
 SessionButton.propTypes = {
-  auth: PropTypes.shape({
-    guest: PropTypes.bool,
-    token: PropTypes.string
-  }),
-  profile: PropTypes.shape({
-    isCreator: PropTypes.bool,
-    name: PropTypes.string,
-    id: PropTypes.string,
-    fetched: PropTypes.bool
-  })
+  auth: authProps,
+  profile: profileProps
 }
 
 function SessionButton (props) {

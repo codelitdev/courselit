@@ -21,8 +21,20 @@ export const queryGraphQL = async (url, query, token) => {
       body: JSON.stringify({ query: query })
     })
     response = await response.json()
+
+    if (response.errors && response.errors.length > 0) {
+      throw new Error(response.errors[0].message)
+    }
+
     return response.data
   } catch (err) {
     throw err
   }
 }
+
+/**
+ * A helper function to capitalize the first letter of any string.
+ *
+ * @param {string} s
+ */
+export const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1)

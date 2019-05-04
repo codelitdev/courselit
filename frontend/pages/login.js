@@ -37,7 +37,7 @@ function Login (props) {
   async function handleLogin (event) {
     event.preventDefault()
 
-    // validate the data
+    // validating the data
     if (!loginData.email ||
       emptyStringPat.test(loginData.pass)) {
       return setLoginData(

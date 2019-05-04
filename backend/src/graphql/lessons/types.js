@@ -33,9 +33,9 @@ const lessonType = new graphql.GraphQLObjectType({
     type: { type: new graphql.GraphQLNonNull(lessontypeType) },
     downloadable: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
     creatorId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+    // courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     content: { type: graphql.GraphQLString },
-    contentURL: { type: graphql.GraphQLString },
-    courseId: { type: graphql.GraphQLID }
+    contentURL: { type: graphql.GraphQLString }
   }
 })
 
@@ -47,15 +47,31 @@ const lessonInputType = new graphql.GraphQLInputObjectType({
   fields: {
     title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     type: { type: new graphql.GraphQLNonNull(lessontypeType) },
+    courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     content: { type: graphql.GraphQLString },
     contentURL: { type: graphql.GraphQLString },
-    downloadable: { type: graphql.GraphQLBoolean },
-    courseId: { type: graphql.GraphQLID }
+    downloadable: { type: graphql.GraphQLBoolean }
+  }
+})
+
+/**
+ * A GraphQL type for taking input for updating a course.
+ */
+const lessonUpdateType = new graphql.GraphQLInputObjectType({
+  name: 'LessonUpdateInput',
+  fields: {
+    id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+    title: { type: graphql.GraphQLString },
+    type: { type: lessontypeType },
+    content: { type: graphql.GraphQLString },
+    contentURL: { type: graphql.GraphQLString },
+    downloadable: { type: graphql.GraphQLBoolean }
   }
 })
 
 module.exports = {
   lessontypeType,
   lessonType,
-  lessonInputType
+  lessonInputType,
+  lessonUpdateType
 }

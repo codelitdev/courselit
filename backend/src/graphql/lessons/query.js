@@ -7,7 +7,7 @@ module.exports = {
     type: types.lessonType,
     args: {
       id: {
-        type: new graphql.GraphQLNonNull(graphql.GraphQLString)
+        type: new graphql.GraphQLNonNull(graphql.GraphQLID)
       }
     },
     resolve: (root, { id }, context) =>

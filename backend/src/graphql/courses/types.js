@@ -31,7 +31,8 @@ const courseType = new graphql.GraphQLObjectType({
     isBlog: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
     creatorId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     description: { type: graphql.GraphQLString },
-    featuredImage: { type: graphql.GraphQLString }
+    featuredImage: { type: graphql.GraphQLString },
+    lessons: { type: new graphql.GraphQLNonNull(new graphql.GraphQLList(graphql.GraphQLID)) }
   }
 })
 
@@ -51,8 +52,26 @@ const courseInputType = new graphql.GraphQLInputObjectType({
   }
 })
 
+/**
+ * A GraphQL type for taking input for updating a course.
+ */
+const courseUpdateInput = new graphql.GraphQLInputObjectType({
+  name: 'CourseUpdateInput',
+  fields: {
+    id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+    title: { type: graphql.GraphQLString },
+    cost: { type: graphql.GraphQLFloat },
+    published: { type: graphql.GraphQLBoolean },
+    privacy: { type: courseStatusType },
+    isBlog: { type: graphql.GraphQLBoolean },
+    description: { type: graphql.GraphQLString },
+    featuredImage: { type: graphql.GraphQLString }
+  }
+})
+
 module.exports = {
   courseType,
   courseStatusType,
-  courseInputType
+  courseInputType,
+  courseUpdateInput
 }

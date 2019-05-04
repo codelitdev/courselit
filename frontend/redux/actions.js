@@ -27,6 +27,8 @@ export function signedIn (userid, token) {
       dispatch(updateProfile(response.profile))
     } catch (err) {
       // do nothing
+    } finally {
+      dispatch(networkAction(false))
     }
   }
 }

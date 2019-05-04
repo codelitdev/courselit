@@ -14,10 +14,7 @@ const Create = (props) => (<MasterLayout>
     router={Router}
     redirectTo='/login'
     renderOnServer={false}>
-    <div>
-      <Creator />
-      <p>Hi</p>
-    </div>
+    <Creator />
   </ProtectedRoute>
 </MasterLayout>)
 
