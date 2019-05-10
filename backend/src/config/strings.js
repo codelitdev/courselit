@@ -14,5 +14,6 @@ exports.responses = {
   content_url_cannot_be_null: 'Content URL cannot be empty',
   item_not_found: 'Item not found',
   not_a_creator: 'You do not have rights to perform this action',
-  course_not_empty: 'Delete all lessons before trying deleting the course'
+  course_not_empty: 'Delete all lessons before trying deleting the course',
+  invalid_offset: 'Invalid offset'
 }

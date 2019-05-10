@@ -1,7 +1,7 @@
 /**
  * This component lets the admin create content.
  */
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { connect } from 'react-redux'
 import PropTypes from 'prop-types'
 import {
@@ -26,12 +26,14 @@ import {
 } from '../types.js'
 import { networkAction } from '../redux/actions.js'
 
+let creatorCoursesPaginationOffset = 1
+
 const Creator = (props) => {
   const initCourseMetaData = {
     title: '',
     cost: '',
     published: false,
-    privacy: 'private',
+    privacy: 'PRIVATE',
     isBlog: false,
     description: '',
     featuredImage: '',
@@ -39,49 +41,85 @@ const Creator = (props) => {
   }
   const initCourseData = {
     course: initCourseMetaData,
-    lessons: [],
-    err: ''
+    lessons: []
   }
-  const [courseFormVisible, setCourseFormVisible] = useState(false)
   const [courseData, setCourseData] = useState(initCourseData)
+  const [courseFormVisible, setCourseFormVisible] = useState(false)
+  const [creatorCourses, setCreatorCourses] = useState([])
 
-  const setError = (msg) => setCourseData(
-    Object.assign({}, courseData, { err: msg || null })
-  )
+  // Following is used for displaying errors to the user
+  const [userError, setUserError] = useState('')
+
+  // The following ref is used for accessing previous state in hooks
+  // Reference: https://reactjs.org/docs/hooks-faq.html#how-to-get-the-previous-props-or-state
+  const prevCourseData = useRef()
+  useEffect(() => {
+    prevCourseData.current = courseData
+  })
+
+  // const setError = (msg) => setCourseData(
+  //   Object.assign({}, courseData, { err: msg || '' })
+  // )
+
+  /**
+   * A helper function to set user errors. To clear the error
+   * already set, call setError().
+   *
+   * @param {String} msg an error message to show to the user
+   */
+  const setError = (msg = '') => setUserError(msg)
 
   const onCourseCreate = async (e) => {
     e.preventDefault()
 
-    // validate the data
-    if (!courseData.course.title ||
-      !courseData.course.cost) {
-      return setCourseData(
-        Object.assign({}, courseData, {
-          err: ERR_COURSE_TITLE_COST_REQUIRED
-        })
-      )
-    }
-
     // clear error messages from previous submission
     setError()
 
-    // console.log(courseData)
-    const query = `
-    mutation {
-      course: createCourse(courseData: {
-        title: "${courseData.course.title}",
-        cost: ${courseData.course.cost},
-        published: ${courseData.course.published},
-        privacy: ${courseData.course.privacy.toUpperCase()},
-        isBlog: ${courseData.course.isBlog},
-        description: "${courseData.course.description}",
-        featuredImage: "${courseData.course.featuredImage}"
-      }) {
-        id
-      }
+    // validate the data
+    if (!courseData.course.title ||
+      !courseData.course.cost) {
+      return setUserError(ERR_COURSE_TITLE_COST_REQUIRED)
     }
-    `
 
+    let query = ''
+    if (courseData.course.id) {
+      // update the existing record
+      query = `
+      mutation {
+        course: updateCourse(courseData: {
+          id: "${courseData.course.id}"
+          title: "${courseData.course.title}",
+          cost: ${courseData.course.cost},
+          published: ${courseData.course.published},
+          privacy: ${courseData.course.privacy.toUpperCase()},
+          isBlog: ${courseData.course.isBlog},
+          description: "${courseData.course.description}",
+          featuredImage: "${courseData.course.featuredImage}"
+        }) {
+          id,
+          privacy
+        }
+      }
+      `
+    } else {
+      // make a new record
+      query = `
+      mutation {
+        course: createCourse(courseData: {
+          title: "${courseData.course.title}",
+          cost: ${courseData.course.cost},
+          published: ${courseData.course.published},
+          privacy: ${courseData.course.privacy.toUpperCase()},
+          isBlog: ${courseData.course.isBlog},
+          description: "${courseData.course.description}",
+          featuredImage: "${courseData.course.featuredImage}"
+        }) {
+          id
+        }
+      }
+      `
+    }
+    console.log(query)
     try {
       props.dispatch(networkAction(true))
       let response = await queryGraphQL(
@@ -91,6 +129,7 @@ const Creator = (props) => {
       )
 
       if (response.course) {
+        console.log(response.course)
         setCourseData(
           Object.assign({}, courseData, {
             course: Object.assign({}, courseData.course, {
@@ -100,7 +139,7 @@ const Creator = (props) => {
         )
       }
     } catch (err) {
-      console.log(err)
+      setError(err.message)
     } finally {
       props.dispatch(networkAction(false))
     }
@@ -123,7 +162,9 @@ const Creator = (props) => {
 
       if (response.result) {
         setCourseData(
-          Object.assign({}, courseData, initCourseMetaData)
+          Object.assign({}, courseData, {
+            course: initCourseMetaData
+          })
         )
       }
     } catch (err) {
@@ -307,151 +348,287 @@ const Creator = (props) => {
         ]
       })
     )
-    console.log(courseData.lessons)
+  }
+
+  const loadCreatorCourse = async () => {
+    const query = `
+    query {
+      courses: getCreatorCourses(id: "${props.profile.id}", offset: ${creatorCoursesPaginationOffset}) {
+        id, title
+      }
+    }
+    `
+
+    try {
+      props.dispatch(networkAction(true))
+      let response = await queryGraphQL(
+        `${BACKEND}/graph`,
+        query,
+        props.auth.token
+      )
+
+      if (response.courses) {
+        setCreatorCourses([...creatorCourses, ...response.courses])
+      }
+
+      creatorCoursesPaginationOffset += 1
+      console.log(creatorCourses)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      props.dispatch(networkAction(false))
+    }
+  }
+
+  const loadCourse = async (courseId) => {
+    setError()
+    setCourseData(Object.assign({}, courseData, {
+      lessons: []
+    }))
+    setCourseFormVisible(false)
+
+    const query = `
+    query {
+      course: getCourse(id: "${courseId}") {
+        title,
+        cost,
+        published,
+        privacy,
+        isBlog,
+        description,
+        featuredImage,
+        id,
+        lessons
+      }
+    }
+    `
+
+    try {
+      props.dispatch(networkAction(true))
+      let response = await queryGraphQL(
+        `${BACKEND}/graph`,
+        query,
+        props.auth.token
+      )
+
+      if (response.course) {
+        setCourseData(
+          Object.assign({}, courseData, {
+            course: response.course,
+            lessons: []
+          })
+        )
+
+        setCourseFormVisible(true)
+
+        // asynchronously load all lessons
+        for (let i of response.course.lessons) {
+          await loadLesson(i)
+        }
+      }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      props.dispatch(networkAction(false))
+    }
+  }
+
+  const loadLesson = async (id) => {
+    const query = `
+    query {
+      lesson: getLesson(id: "${id}") {
+        id,
+        title,
+        downloadable,
+        type,
+        content,
+        contentURL
+      }
+    }
+    `
+
+    try {
+      props.dispatch(networkAction(true))
+      let response = await queryGraphQL(
+        `${BACKEND}/graph`,
+        query,
+        props.auth.token
+      )
+
+      if (response.lesson) {
+        console.log(response.lesson)
+        // converting NULLs to empty strings before setting state, to avoid a React warning.
+        const lesson = {}
+        for (let i of Object.keys(response.lesson)) {
+          lesson[i] = response.lesson[i] === null ? '' : response.lesson[i]
+        }
+
+        setCourseData(Object.assign({}, prevCourseData.current, {
+          lessons: [...prevCourseData.current.lessons, { ...lesson }]
+        }))
+      }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      props.dispatch(networkAction(false))
+    }
   }
 
   return (<div>
-    <button onClick={() => setCourseFormVisible(true)}>
-      Create a course
-    </button>
-    {courseFormVisible &&
-      <div>
+    <div>
+      <p>My Courses</p>
+      {creatorCourses && <ul>
+        {creatorCourses.map(
+          (item, ind) => <li key={ind}>
+            <a href="#" onClick={() => loadCourse(item.id)}>{item.title}</a>
+          </li>
+        )}
+      </ul>}
+      <button onClick={loadCreatorCourse}>Load my courses</button>
+    </div>
+    <div>
+      <button onClick={() => setCourseFormVisible(true)}>
+        Create a course
+      </button>
+      {courseFormVisible &&
         <div>
-          <form onSubmit={onCourseCreate}>
-            {courseData.err &&
-              <div>{courseData.err}</div>
-            }
-            <label> Title:
-              <input
-                type='text'
-                name='title'
-                value={courseData.title}
-                onChange={onCourseDetailsChange}/>
-            </label>
-            <label> Description:
-              <textarea
-                name='description'
-                value={courseData.description}
-                onChange={onCourseDetailsChange}/>
-            </label>
-            <label> Featured Image:
-              <input
-                type='url'
-                name='featuredImage'
-                value={courseData.featuredImage}
-                onChange={onCourseDetailsChange}/>
-            </label>
-            <label> Cost:
-              <input
-                type='number'
-                name='cost'
-                value={courseData.cost}
-                step="0.1"
-                onChange={onCourseDetailsChange}/>
-            </label>
-            <label> Blog Post:
-              <input
-                type='checkbox'
-                name='isBlog'
-                defaultChecked={courseData.isBlog}
-                onChange={onCourseDetailsChange}/>
-            </label>
-            <label> Privacy:
-              <select
-                name='privacy'
-                value={courseData.privacy}
-                onChange={onCourseDetailsChange}>
-                <option value="public">Public</option>
-                <option value="private">Private</option>
-                <option value="unlisted">Unlisted</option>
-              </select>
-            </label>
-            <label> Published:
-              <input
-                type='checkbox'
-                name='published'
-                defaultChecked={courseData.published}
-                onChange={onCourseDetailsChange}/>
-            </label>
-            <input type='submit' value={COURSE_CREATOR_BUTTON_TEXT}/>
-          </form>
-        </div>
-        {courseData.course.id &&
           <div>
-            <button onClick={onCourseDelete}>Delete course</button>
-            {courseData.lessons.map(
-              (item, index) => (
-                <div key={index}>
-                  <form onSubmit={(e) => onLessonCreate(e, index)}>
-                    <label> Title:
-                      <input
-                        type='text'
-                        name='title'
-                        value={item.title}
-                        onChange={(e) => onLessonDetailsChange(e, index)}/>
-                    </label>
-                    <label> Type:
-                      <select
-                        name='type'
-                        value={item.type}
-                        onChange={(e) => onLessonDetailsChange(e, index)}>
-                        <option
-                          value={LESSON_TYPE_TEXT}>
-                          {capitalize(LESSON_TYPE_TEXT)}
-                        </option>
-                        <option
-                          value={LESSON_TYPE_VIDEO}>
-                          {capitalize(LESSON_TYPE_VIDEO)}
-                        </option>
-                        <option
-                          value={LESSON_TYPE_PDF}>
-                          {capitalize(LESSON_TYPE_PDF)}
-                        </option>
-                        <option
-                          value={LESSON_TYPE_AUDIO}>
-                          {capitalize(LESSON_TYPE_AUDIO)}
-                        </option>
-                        <option
-                          value={LESSON_TYPE_QUIZ}>
-                          {capitalize(LESSON_TYPE_QUIZ)}
-                        </option>
-                      </select>
-                    </label>
-                    <label> Content:
-                      <textarea
-                        name='content'
-                        value={item.content}
-                        onChange={(e) => onLessonDetailsChange(e, index)}/>
-                    </label>
-                    {(item.type !== LESSON_TYPE_TEXT &&
-                      item.type !== LESSON_TYPE_QUIZ) &&
-                      <label> {capitalize(item.type)} Url:
+            <form onSubmit={onCourseCreate}>
+              {userError &&
+                <div>{userError}</div>
+              }
+              <label> Title:
+                <input
+                  type='text'
+                  name='title'
+                  value={courseData.course.title}
+                  onChange={onCourseDetailsChange}/>
+              </label>
+              <label> Description:
+                <textarea
+                  name='description'
+                  value={courseData.course.description}
+                  onChange={onCourseDetailsChange}/>
+              </label>
+              <label> Featured Image:
+                <input
+                  type='url'
+                  name='featuredImage'
+                  value={courseData.course.featuredImage}
+                  onChange={onCourseDetailsChange}/>
+              </label>
+              <label> Cost:
+                <input
+                  type='number'
+                  name='cost'
+                  value={courseData.course.cost}
+                  step="0.1"
+                  onChange={onCourseDetailsChange}/>
+              </label>
+              <label> Blog Post:
+                <input
+                  type='checkbox'
+                  name='isBlog'
+                  checked={courseData.course.isBlog}
+                  onChange={onCourseDetailsChange}/>
+              </label>
+              <label> Privacy:
+                <select
+                  name='privacy'
+                  value={courseData.course.privacy}
+                  onChange={onCourseDetailsChange}>
+                  <option value="PUBLIC">Public</option>
+                  <option value="PRIVATE">Private</option>
+                  <option value="UNLISTED">Unlisted</option>
+                </select>
+              </label>
+              <label> Published:
+                <input
+                  type='checkbox'
+                  name='published'
+                  checked={courseData.course.published}
+                  onChange={onCourseDetailsChange}/>
+              </label>
+              <input type='submit' value={COURSE_CREATOR_BUTTON_TEXT}/>
+            </form>
+          </div>
+          {courseData.course.id &&
+            <div>
+              <button onClick={onCourseDelete}>Delete course</button>
+              {courseData.lessons.map(
+                (item, index) => (
+                  <div key={index}>
+                    <form onSubmit={(e) => onLessonCreate(e, index)}>
+                      <label> Title:
                         <input
-                          type='url'
-                          name='contentURL'
-                          value={item.contentURL}
+                          type='text'
+                          name='title'
+                          value={item.title}
                           onChange={(e) => onLessonDetailsChange(e, index)}/>
                       </label>
-                    }
-                    <label> Downloadable:
-                      <input
-                        type='checkbox'
-                        name='downloadable'
-                        defaultChecked={item.downloadable}
-                        onChange={(e) => onLessonDetailsChange(e, index)}/>
-                    </label>
-                    <input type='submit' value={COURSE_CREATOR_BUTTON_TEXT}/>
-                  </form>
-                  <button onClick={() => onLessonDelete(index)}>Remove lesson</button>
-                </div>
+                      <label> Type:
+                        <select
+                          name='type'
+                          value={item.type}
+                          onChange={(e) => onLessonDetailsChange(e, index)}>
+                          <option
+                            value={LESSON_TYPE_TEXT}>
+                            {capitalize(LESSON_TYPE_TEXT)}
+                          </option>
+                          <option
+                            value={LESSON_TYPE_VIDEO}>
+                            {capitalize(LESSON_TYPE_VIDEO)}
+                          </option>
+                          <option
+                            value={LESSON_TYPE_PDF}>
+                            {capitalize(LESSON_TYPE_PDF)}
+                          </option>
+                          <option
+                            value={LESSON_TYPE_AUDIO}>
+                            {capitalize(LESSON_TYPE_AUDIO)}
+                          </option>
+                          <option
+                            value={LESSON_TYPE_QUIZ}>
+                            {capitalize(LESSON_TYPE_QUIZ)}
+                          </option>
+                        </select>
+                      </label>
+                      <label> Content:
+                        <textarea
+                          name='content'
+                          value={item.content}
+                          onChange={(e) => onLessonDetailsChange(e, index)}/>
+                      </label>
+                      {(item.type !== LESSON_TYPE_TEXT &&
+                        item.type !== LESSON_TYPE_QUIZ) &&
+                        <label> {capitalize(item.type)} Url:
+                          <input
+                            type='url'
+                            name='contentURL'
+                            value={item.contentURL}
+                            onChange={(e) => onLessonDetailsChange(e, index)}/>
+                        </label>
+                      }
+                      <label> Downloadable:
+                        <input
+                          type='checkbox'
+                          name='downloadable'
+                          defaultChecked={item.downloadable}
+                          onChange={(e) => onLessonDetailsChange(e, index)}/>
+                      </label>
+                      <input type='submit' value={COURSE_CREATOR_BUTTON_TEXT}/>
+                    </form>
+                    <button onClick={() => onLessonDelete(index)}>Remove lesson</button>
+                  </div>
+                )
               )
-            )
-            }
-            <button onClick={onAddLesson}>Add lesson</button>
-          </div>
-        }
-      </div>
-    }
+              }
+              <button onClick={onAddLesson}>Add lesson</button>
+            </div>
+          }
+        </div>
+      }
+    </div>
   </div>)
 }
 

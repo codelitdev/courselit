@@ -8,8 +8,12 @@ const {
   checkOwnership
 } = require('../../lib/graphql.js')
 const {
-  closed
+  closed,
+  mycoursesLimit
 } = require('../../config/constants.js')
+// const {
+//   courseType
+// } = require('./types.js')
 
 const checkCourseOwnership = checkOwnership(Course)
 
@@ -111,4 +115,19 @@ exports.removeLesson = async (courseId, lessonId, ctx) => {
   }
 
   return true
+}
+
+/**
+ * Returns courses created by a user
+ */
+exports.getCreatorCourses = async (id, offset, ctx) => {
+  checkIfAuthenticated(ctx)
+
+  if (offset < 1) throw new Error(strings.responses.invalid_offset)
+
+  let courses = await Course.find({
+    creatorId: id
+  }).skip((offset - 1) * mycoursesLimit).limit(mycoursesLimit)
+
+  return courses
 }

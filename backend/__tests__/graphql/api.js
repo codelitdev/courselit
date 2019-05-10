@@ -344,6 +344,36 @@ describe('GraphQL API tests', () => {
       expect(result.data.addLesson).toBeTruthy()
     })
 
+    it('getting courses created by user but the request not authenticated', async () => {
+      const query = `
+      query y {
+        getCreatorCourses(id: "000000000000000000000000", offset: 1) {
+          id, title
+        }
+      }
+      `
+
+      const result = await graphql(schema, query, null, {})
+      expect(result).toHaveProperty('errors')
+      expect(result.errors[0].message).toBe(responses.request_not_authenticated)
+    })
+
+    it('getting first page of courses created by user', async () => {
+      const userId = mongoose.Types.ObjectId('000000000000000000000000')
+      const query = `
+      query y {
+        getCreatorCourses(id: "000000000000000000000000", offset: 1) {
+          id, title
+        }
+      }
+      `
+
+      const result = await graphql(schema, query, null, { user: { _id: userId } })
+      expect(result).toHaveProperty('data')
+      expect(result.data).toHaveProperty('getCreatorCourses')
+      expect(result.data.getCreatorCourses.length).toBe(1)
+    })
+
     it('removing a lesson', async () => {
       const userId = mongoose.Types.ObjectId('000000000000000000000000')
       const imaginaryLessonId = '100000000000000000000001'

@@ -4,6 +4,9 @@ const {
   open,
   closed
 } = require('../../config/constants.js')
+// const {
+//   lessonType
+// } = require('../lessons/types.js')
 
 /**
  * A GraphQL type for course's status
@@ -69,9 +72,21 @@ const courseUpdateInput = new graphql.GraphQLInputObjectType({
   }
 })
 
+/**
+ * A GraphQL type for representing a item from my courses list.
+ */
+const myCoursesItemType = new graphql.GraphQLObjectType({
+  name: 'MyCoursesItem',
+  fields: {
+    id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+    title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) }
+  }
+})
+
 module.exports = {
   courseType,
   courseStatusType,
   courseInputType,
-  courseUpdateInput
+  courseUpdateInput,
+  myCoursesItemType
 }

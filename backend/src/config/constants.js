@@ -19,5 +19,8 @@ module.exports = {
   // Constants for courses privacy settings
   unlisted: 'unlisted',
   open: 'public',
-  closed: 'private'
+  closed: 'private',
+
+  // Constants for pagination
+  mycoursesLimit: 5
 }

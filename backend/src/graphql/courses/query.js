@@ -12,5 +12,18 @@ module.exports = {
     },
     resolve: (root, { id }, context) =>
       logic.getCourse(id, context)
+  },
+  getCreatorCourses: {
+    type: new graphql.GraphQLList(types.myCoursesItemType),
+    args: {
+      id: {
+        type: new graphql.GraphQLNonNull(graphql.GraphQLID)
+      },
+      offset: {
+        type: new graphql.GraphQLNonNull(graphql.GraphQLInt)
+      }
+    },
+    resolve: (root, { id, offset }, context) =>
+      logic.getCreatorCourses(id, offset, context)
   }
 }
