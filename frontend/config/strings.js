@@ -4,13 +4,14 @@
 
 export const ERR_ALL_FIELDS_REQUIRED = 'All fields are required.'
 export const ERR_PASSWORDS_DONT_MATCH = 'Passwords do not match.'
-export const ERR_IN_USER_CREATION = 'Signup failed. Please try different settings.'
+// export const ERR_IN_USER_CREATION = 'Signup failed. Please try different settings.'
 export const SIGNUP_SUCCESS = 'Sign up successful. Please sign in.'
-export const ERR_LOGIN_FAILED = 'Login failed. Check your input.'
-export const ERR_COURSE_TITLE_COST_REQUIRED = 'A title and a cost are required.'
+// export const ERR_LOGIN_FAILED = 'Login failed. Check your input.'
+export const ERR_COURSE_TITLE_REQUIRED = 'A title is required.'
+export const ERR_COURSE_COST_REQUIRED = 'Cost is required.'
 
 // Replies from the backend
-export const RESP_API_ERROR = 'Error'
+// export const RESP_API_ERROR = 'Error'
 export const RESP_API_USER_CREATED = 'User created'
 
 // Placeholder texts

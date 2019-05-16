@@ -23,12 +23,14 @@ exports.updateName = async (name, ctx) => {
     throw new Error(strings.responses.request_not_authenticated)
   }
 
-  const user = await User.findOne({ email })
-  if (!user) {
-    throw new Error(strings.responses.user_not_found)
-  }
+  // const user = await User.findOne({ email })
+  // if (!user) {
+  //   throw new Error(strings.responses.user_not_found)
+  // }
 
-  user.name = name
-  await user.save()
-  return user
+  // user.name = name
+  // await user.save()
+  ctx.user.name = name
+  await ctx.user.save()
+  return ctx.user
 }

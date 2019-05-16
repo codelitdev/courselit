@@ -29,7 +29,7 @@ const lessonType = new graphql.GraphQLObjectType({
   fields: {
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-    slug: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+    // slug: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     type: { type: new graphql.GraphQLNonNull(lessontypeType) },
     downloadable: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
     creatorId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },

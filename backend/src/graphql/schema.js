@@ -3,6 +3,7 @@ const graphql = require('graphql')
 const users = require('./users')
 const lessons = require('./lessons')
 const courses = require('./courses')
+const siteinfo = require('./siteinfo')
 
 module.exports = new graphql.GraphQLSchema({
   query: new graphql.GraphQLObjectType({
@@ -10,7 +11,8 @@ module.exports = new graphql.GraphQLSchema({
     fields: {
       ...users.queries,
       ...lessons.queries,
-      ...courses.queries
+      ...courses.queries,
+      ...siteinfo.queries
     }
   }),
   mutation: new graphql.GraphQLObjectType({
@@ -18,7 +20,8 @@ module.exports = new graphql.GraphQLSchema({
     fields: {
       ...users.mutations,
       ...lessons.mutations,
-      ...courses.mutations
+      ...courses.mutations,
+      ...siteinfo.mutations
     }
   })
 })

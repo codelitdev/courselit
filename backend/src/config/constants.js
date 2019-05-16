@@ -22,5 +22,8 @@ module.exports = {
   closed: 'private',
 
   // Constants for pagination
-  mycoursesLimit: 5
+  mycoursesLimit: 5,
+  postsPerPageLimit: 5,
+  postDescTruncLimit: 30,
+  coursesPerPageLimit: 3
 }

@@ -8,7 +8,8 @@ import {
   SIGN_OUT,
   NETWORK_ACTION,
   PROFILE_AVAILABLE,
-  PROFILE_CLEAR
+  PROFILE_CLEAR,
+  SITEINFO_AVAILABLE
 } from './actionTypes.js'
 import {
   GENERIC_TITLE,
@@ -19,7 +20,7 @@ import {
 // The initial state of the app
 const initialState = {
   auth: { guest: true, token: null, userid: null },
-  brand: {
+  siteinfo: {
     title: GENERIC_TITLE,
     subtitle: GENERIC_SUBTITLE,
     logo: GENERIC_LOGO_PATH
@@ -44,8 +45,14 @@ function authReducer (state = initialState.auth, action) {
   }
 }
 
-function brandReducer (state = initialState.brand, action) {
+function siteinfoReducer (state = initialState.siteinfo, action) {
   switch (action.type) {
+    case SITEINFO_AVAILABLE:
+      return {
+        title: action.siteinfo.title,
+        subtitle: action.siteinfo.subtitle,
+        logopath: action.siteinfo.logopath
+      }
     default:
       return state
   }
@@ -78,7 +85,7 @@ function profileReducer (state = initialState.profile, action) {
 
 export default combineReducers({
   auth: authReducer,
-  brand: brandReducer,
+  siteinfo: siteinfoReducer,
   networkAction: networkActionReducer,
   profile: profileReducer
 })

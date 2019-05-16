@@ -4,10 +4,11 @@ const constants = require('../config/constants.js')
 
 const UserSchema = mongoose.Schema({
   email: { type: String, required: true, unique: true },
-  password: String,
-  verified: { type: Boolean, default: false },
-  name: String,
-  isCreator: { type: Boolean, default: false },
+  verified: { type: Boolean, required: true, default: false },
+  isCreator: { type: Boolean, required: true, default: false },
+  isAdmin: { type: Boolean, required: true, default: false },
+  password: { type: String, required: true },
+  name: { type: String, required: true },
   purchases: [mongoose.Schema.Types.ObjectId]
 })
 

@@ -14,7 +14,9 @@ module.exports = (passport) => {
     '/signup',
     (req, res, next) => {
       passport.authenticate('signup', (err, user, info) => {
-        if (err || !user) { return res.status(400).json({ message: responses.error }) }
+        if (err) return res.status(500).json({ message: err.message })
+        if (info) return res.status(400).json({ message: info.message })
+        // if (err || !user) { return res.status(400).json({ message: responses.error }) }
 
         return res.status(200).json({ message: responses.user_created })
       })(req, res, next)
@@ -26,9 +28,8 @@ module.exports = (passport) => {
     (req, res, next) => {
       passport.authenticate('login', (err, user, info) => {
         try {
-          if (err || !user) {
-            return res.status(400).json({ message: responses.not_logged_in })
-          }
+          if (err) return res.status(500).json({ message: err.message })
+          if (info) return res.status(400).json({ message: info.message })
 
           req.login(user, { session: false }, err => {
             if (err) { return res.status(500).json({ message: responses.error, details: err.message }) }

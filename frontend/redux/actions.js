@@ -6,7 +6,8 @@ import {
   SIGN_OUT,
   NETWORK_ACTION,
   PROFILE_AVAILABLE,
-  PROFILE_CLEAR
+  PROFILE_CLEAR,
+  SITEINFO_AVAILABLE
 } from './actionTypes.js'
 import { BACKEND } from '../config/constants.js'
 import { queryGraphQL } from '../lib/utils.js'
@@ -50,4 +51,23 @@ export function updateProfile (profile) {
 
 export function clearProfile () {
   return { type: PROFILE_CLEAR }
+}
+
+export function updateSiteInfo () {
+  return async (dispatch, getState) => {
+    try {
+      dispatch(networkAction(true))
+
+      let response = await queryGraphQL(
+        `${BACKEND}/graph`,
+        `{ site: getSiteInfo { title, subtitle, logopath } }`)
+
+      dispatch(networkAction(false))
+      dispatch({ type: SITEINFO_AVAILABLE, siteinfo: response.site })
+    } catch (err) {
+      // do nothing
+    } finally {
+      dispatch(networkAction(false))
+    }
+  }
 }

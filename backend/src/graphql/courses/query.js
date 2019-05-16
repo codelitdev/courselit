@@ -25,5 +25,28 @@ module.exports = {
     },
     resolve: (root, { id, offset }, context) =>
       logic.getCreatorCourses(id, offset, context)
+  },
+  getPosts: {
+    type: new graphql.GraphQLList(types.postType),
+    args: {
+      offset: {
+        type: new graphql.GraphQLNonNull(graphql.GraphQLInt)
+      }
+    },
+    resolve: (root, { offset }, context) =>
+      logic.getPosts(offset)
+  },
+  getPublicCourses: {
+    type: new graphql.GraphQLList(types.publicCoursesType),
+    args: {
+      offset: {
+        type: new graphql.GraphQLNonNull(graphql.GraphQLInt)
+      },
+      onlyShowFeatured: {
+        type: graphql.GraphQLBoolean
+      }
+    },
+    resolve: (root, { offset, onlyShowFeatured }, context) =>
+      logic.getPublicCourses(offset, onlyShowFeatured)
   }
 }

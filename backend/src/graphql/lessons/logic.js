@@ -1,7 +1,7 @@
 /**
  * Business logic for managing lessons
  */
-const slugify = require('slugify')
+// const slugify = require('slugify')
 const {
   text,
   audio,
@@ -14,9 +14,6 @@ const {
   checkIfAuthenticated,
   checkOwnership
 } = require('../../lib/graphql.js')
-const {
-  addLesson
-} = require('../courses/logic.js')
 const Course = require('../../models/Course.js')
 
 const checkLessonOwnership = checkOwnership(Lesson)
@@ -46,18 +43,16 @@ exports.getLesson = async (id, ctx) => {
 
 exports.createLesson = async (lessonData, ctx) => {
   checkIfAuthenticated(ctx)
-
   lessonValidator(lessonData)
 
-  const course = await Course.findById(lessonData.courseId)
-  if (!course) {
-    throw new Error(strings.responses.item_not_found)
-  }
-
   try {
+    const course = await Course.findById(lessonData.courseId)
+    if (!course) throw new Error(strings.responses.item_not_found)
+    if (course.isBlog) throw new Error(strings.responses.cannot_add_to_blogs)
+
     const lesson = await Lesson.create({
       title: lessonData.title,
-      slug: slugify(lessonData.title.toLowerCase()),
+      // slug: slugify(lessonData.title.toLowerCase()),
       type: lessonData.type,
       content: lessonData.content,
       contentURL: lessonData.contentURL,

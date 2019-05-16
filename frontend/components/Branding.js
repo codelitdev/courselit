@@ -36,9 +36,9 @@ Branding.propTypes = {
 }
 
 const mapStateToProps = state => ({
-  title: state.brand.title,
-  subtitle: state.brand.subtitle,
-  logoPath: state.brand.logo
+  title: state.siteinfo.title,
+  subtitle: state.siteinfo.subtitle,
+  logoPath: state.siteinfo.logopath
 })
 
 export default connect(

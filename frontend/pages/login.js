@@ -5,11 +5,11 @@ import fetch from 'isomorphic-unfetch'
 import {
   ERR_ALL_FIELDS_REQUIRED,
   ERR_PASSWORDS_DONT_MATCH,
-  ERR_IN_USER_CREATION,
-  RESP_API_ERROR,
+  // ERR_IN_USER_CREATION,
+  // RESP_API_ERROR,
   RESP_API_USER_CREATED,
-  SIGNUP_SUCCESS,
-  ERR_LOGIN_FAILED
+  SIGNUP_SUCCESS
+  // ERR_LOGIN_FAILED
 } from '../config/strings.js'
 import {
   BACKEND,
@@ -29,7 +29,7 @@ function Login (props) {
   // redirector(props.auth, Router, '/')
 
   const emptyStringPat = /^\s*$/
-  const defaultSignupData = { email: '', pass: '', conf: '', err: '', msg: '' }
+  const defaultSignupData = { email: '', pass: '', conf: '', name: '', err: '', msg: '' }
   const defaultLoginData = { email: '', pass: '', err: '' }
   const [loginData, setLoginData] = useState(defaultLoginData)
   const [signupData, setSignupData] = useState(defaultSignupData)
@@ -63,9 +63,8 @@ function Login (props) {
         body: `email=${loginData.email}&password=${loginData.password}`
       })
 
+      const data = await res.json()
       if (res.status === 200) {
-        const data = await res.json()
-
         if (typeof data.token !== 'undefined') {
           // set cookie
           setCookie(JWT_COOKIE_NAME, data.token)
@@ -75,18 +74,17 @@ function Login (props) {
           props.dispatch(signedIn(loginData.email, data.token))
         }
       } else {
-        console.log('came here')
-        return setLoginData(
+        setLoginData(
           Object.assign(
             {},
             loginData,
-            { err: ERR_LOGIN_FAILED }
+            { err: data.message }
           )
         )
       }
     } catch (err) {
       // do nothing
-      return setLoginData(
+      setLoginData(
         Object.assign(
           {},
           loginData,
@@ -104,7 +102,8 @@ function Login (props) {
     // validate the data
     if (!signupData.email ||
       emptyStringPat.test(signupData.pass) ||
-      emptyStringPat.test(signupData.conf)) {
+      emptyStringPat.test(signupData.conf) ||
+      !signupData.name) {
       return setSignupData(
         Object.assign(
           {},
@@ -135,31 +134,40 @@ function Login (props) {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: `email=${signupData.email}&password=${signupData.password}`
+        body: `email=${signupData.email}&password=${signupData.password}&name=${signupData.name}`
       })
       const data = await res.json()
 
-      if (data.message === RESP_API_ERROR) {
-        return setSignupData(
-          Object.assign(
-            {},
-            signupData,
-            { err: ERR_IN_USER_CREATION, msg: '' }
+      if (res.status === 200) {
+        if (data.message === RESP_API_USER_CREATED) {
+          setSignupData(
+            Object.assign(
+              {},
+              defaultSignupData,
+              { err: '', msg: SIGNUP_SUCCESS }
+            )
           )
-        )
-      }
-
-      if (data.message === RESP_API_USER_CREATED) {
+        }
+      } else {
         setSignupData(
           Object.assign(
             {},
-            defaultSignupData,
-            { err: '', msg: SIGNUP_SUCCESS }
+            signupData,
+            { err: data.message, msg: '' }
           )
         )
       }
+      // if (data.message === RESP_API_ERROR) {
+      //   return setSignupData(
+      //     Object.assign(
+      //       {},
+      //       signupData,
+      //       { err: ERR_IN_USER_CREATION, msg: '' }
+      //     )
+      //   )
+      // }
     } catch (err) {
-      return setSignupData(
+      setSignupData(
         Object.assign(
           {},
           signupData,
@@ -249,6 +257,17 @@ function Login (props) {
                     (e) => setSignupData(
                       Object.assign({}, signupData, {
                         conf: e.target.value
+                      })
+                    )}/>
+              </label>
+              <label> Name:
+                <input
+                  type='name'
+                  value={signupData.name}
+                  onChange={
+                    (e) => setSignupData(
+                      Object.assign({}, signupData, {
+                        name: e.target.value
                       })
                     )}/>
               </label>

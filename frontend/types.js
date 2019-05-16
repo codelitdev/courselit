@@ -22,3 +22,12 @@ export const protectedRouteProps = {
   renderOnServer: PropTypes.bool.isRequired,
   children: PropTypes.object
 }
+
+export const latestPostsProps = PropTypes.shape({
+  id: PropTypes.string.isRequired,
+  title: PropTypes.string.isRequired,
+  description: PropTypes.string.isRequired,
+  creatorName: PropTypes.string.isRequired,
+  updated: PropTypes.number.isRequired,
+  slug: PropTypes.string.isRequired
+})

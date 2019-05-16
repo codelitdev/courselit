@@ -11,7 +11,7 @@ const mongoose = require('mongoose')
 describe.skip('Auth Test Suite', () => {
   afterAll(done => mongoose.connection.close())
 
-  describe('Testing sign up', () => {
+  describe('Signing up suite', () => {
     beforeEach(done => {
       User.deleteOne({ email: 'user@test.com' }, () => done())
     })
@@ -26,12 +26,13 @@ describe.skip('Auth Test Suite', () => {
         url: `http://${apiUrl}/auth/signup`,
         form: {
           email: 'user@test.com',
-          password: 'lol'
+          password: 'lol',
+          name: 'Tester'
         }
-      }).then(data => expect(data.message).not.toBe(responses.error))
+      }).then(data => expect(data.message).toBe(responses.user_created))
     })
 
-    it('signup normal but wrong post data', () => {
+    it('signup but password field name is wrong', () => {
       expect.assertions(1)
       return promisify({
         url: `http://${apiUrl}/auth/signup`,
@@ -39,48 +40,57 @@ describe.skip('Auth Test Suite', () => {
           email: 'user@test.com',
           pass: 'lol'
         }
-      }).then(data => expect(data.message).toBe(responses.error))
+      }).then(data => expect(data.message).toBe('Missing credentials'))
     })
 
-    it('signup with existing email', () => {
-      expect.assertions(2)
+    it('signup but name field is missing', () => {
+      expect.assertions(1)
       return promisify({
         url: `http://${apiUrl}/auth/signup`,
         form: {
           email: 'user@test.com',
           password: 'lol'
         }
+      }).then(data => expect(data.message).toBe(responses.name_required))
+    })
+
+    it('signup with existing email', () => {
+      expect.assertions(1)
+      return promisify({
+        url: `http://${apiUrl}/auth/signup`,
+        form: {
+          email: 'user@test.com',
+          password: 'lol',
+          name: 'Tester'
+        }
       })
         .then(val => promisify({
           url: `http://${apiUrl}/auth/signup`,
           form: {
             email: 'user@test.com',
-            password: 'lol'
+            password: 'lol',
+            name: 'Tester #2'
           }
         }))
         .then(data => {
-          expect(data.message).toBe(responses.error)
-          expect(data.message).not.toBe(responses.user_created)
+          expect(data.message).toBe(responses.email_already_registered)
         })
     })
   })
 
-  describe('Testing sign in', () => {
+  describe('Signing in suite', () => {
     beforeAll(done => {
       promisify({
         url: `http://${apiUrl}/auth/signup`,
         form: {
           email: 'user@test.com',
-          password: 'lol'
+          password: 'lol',
+          name: 'Tester'
         }
       }).then(() => done())
     })
 
-    afterAll(done => {
-      User.deleteOne({ email: 'user@test.com' }, () => {
-        done()
-      })
-    })
+    afterAll(done => User.deleteOne({ email: 'user@test.com' }, () => done()))
 
     it('non existing user', () => {
       expect.assertions(1)
@@ -91,7 +101,7 @@ describe.skip('Auth Test Suite', () => {
           password: 'lol'
         }
       }).then(data => {
-        expect(data.message).toBe(responses.not_logged_in)
+        expect(data.message).toBe(responses.auth_user_not_found)
       })
     })
 
@@ -104,7 +114,7 @@ describe.skip('Auth Test Suite', () => {
           password: 'lol2'
         }
       }).then(data => {
-        expect(data.message).toBe(responses.not_logged_in)
+        expect(data.message).toBe(responses.email_or_passwd_invalid)
       })
     })
 
@@ -129,15 +139,14 @@ describe.skip('Auth Test Suite', () => {
         url: `http://${apiUrl}/auth/signup`,
         form: {
           email: 'user@test.com',
-          password: 'lol'
+          password: 'lol',
+          name: 'Tester'
         }
       }).then(() => done())
     })
 
     afterAll(done => {
-      User.deleteOne({ email: 'user@test.com' }, () => {
-        done()
-      })
+      User.deleteOne({ email: 'user@test.com' }, () => done())
     })
 
     // it('Hitting /graph endpoint with an unauthorized request', () => {

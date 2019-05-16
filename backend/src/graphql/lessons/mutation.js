@@ -59,5 +59,5 @@ module.exports = {
       }
     },
     resolve: async (root, { lessonData }, context) => logic.updateLesson(lessonData, context)
-  },
+  }
 }
