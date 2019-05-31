@@ -26,6 +26,7 @@ import {
   profileProps
 } from '../types.js'
 import { networkAction } from '../redux/actions.js'
+import MediaManager from './MediaManager.js'
 
 let creatorCoursesPaginationOffset = 1
 
@@ -665,6 +666,7 @@ const Creator = (props) => {
         </div>
       }
     </div>
+    <MediaManager />
   </div>)
 }
 

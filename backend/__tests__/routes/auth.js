@@ -8,7 +8,7 @@ const responses = require('../../src/config/strings.js').responses
 require('../../src/config/db.js')
 const mongoose = require('mongoose')
 
-describe.skip('Auth Test Suite', () => {
+describe('Auth Test Suite', () => {
   afterAll(done => mongoose.connection.close())
 
   describe('Signing up suite', () => {

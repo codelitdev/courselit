@@ -6,7 +6,8 @@ const Course = require('../../models/Course.js')
 const strings = require('../../config/strings.js')
 const {
   checkIfAuthenticated,
-  checkOwnership
+  checkOwnership,
+  validateOffset
 } = require('../../lib/graphql.js')
 const {
   closed,
@@ -27,9 +28,9 @@ const checkCourseOwnership = checkOwnership(Course)
  *
  * @param {number} offset Number of pages to skip
  */
-const validateOffset = (offset) => {
-  if (offset < 1) throw new Error(strings.responses.invalid_offset)
-}
+// const validateOffset = (offset) => {
+//   if (offset < 1) throw new Error(strings.responses.invalid_offset)
+// }
 
 /**
  * A helper function to validate blog posts.

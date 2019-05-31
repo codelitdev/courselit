@@ -5,7 +5,7 @@ const {
   closed
 } = require('../config/constants.js')
 
-const CourseSchema = mongoose.Schema({
+const CourseSchema = new mongoose.Schema({
   title: { type: String, required: true },
   slug: { type: String, required: true },
   cost: { type: Number, required: true },

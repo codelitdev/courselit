@@ -7,7 +7,7 @@ const {
   quiz
 } = require('../config/constants.js')
 
-const LessonSchema = mongoose.Schema({
+const LessonSchema = new mongoose.Schema({
   title: { type: String, required: true },
   // slug: { type: String, required: true },
   type: { type: String, required: true, enum: [text, video, audio, pdf, quiz] },

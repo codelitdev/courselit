@@ -27,3 +27,12 @@ exports.checkOwnership = (Model) => async (id, ctx) => {
 
   return item
 }
+
+/**
+ * A helper function to validate page offsets.
+ *
+ * @param {number} offset Number of pages to skip
+ */
+exports.validateOffset = (offset) => {
+  if (offset < 1) throw new Error(strings.responses.invalid_offset)
+}

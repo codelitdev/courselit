@@ -68,7 +68,7 @@ describe('GraphQL API tests', () => {
       expect(result.data.user.verified).toBeNull()
     })
 
-    it('change name via unauthenticate request', async () => {
+    it('change name via unauthenticated request', async () => {
       const newName = 'New name'
       const mutation = `
       mutation {
@@ -1086,6 +1086,93 @@ describe('GraphQL API tests', () => {
       expect(result).not.toHaveProperty('errors')
       expect(result.data).toHaveProperty('siteInfo')
       expect(result.data.siteInfo.title).toBe(newTitle)
+    })
+  })
+
+  /**
+   * Test suite for 'Media' related functions.
+   */
+  describe('media', () => {
+    it('getting creator media with unauthenticated request', async () => {
+      const query = `
+      query {
+        getCreatorMedia(offset: 1) {
+          id,
+          title,
+          altText
+        }
+      }
+      
+      `
+
+      const result = await graphql(schema, query, null, {})
+      expect(result).toHaveProperty('errors')
+      expect(result.errors[0].message).toBe(responses.request_not_authenticated)
+    })
+
+    it('getting creator media but invalid offset', async () => {
+      const user = {
+        _id: mongoose.Types.ObjectId('000000000000000000000000')
+      }
+
+      const query = `
+      query {
+        getCreatorMedia(offset: 0) {
+          id,
+          title,
+          altText
+        }
+      }
+      
+      `
+
+      const result = await graphql(schema, query, null, { user })
+      expect(result).toHaveProperty('errors')
+      expect(result.errors[0].message).toBe(responses.invalid_offset)
+    })
+
+    it('getting creator media', async () => {
+      const user = {
+        _id: mongoose.Types.ObjectId('000000000000000000000000')
+      }
+
+      const query = `
+      query {
+        getCreatorMedia(offset: 1) {
+          id,
+          title,
+          altText
+        }
+      }
+      
+      `
+
+      const result = await graphql(schema, query, null, { user })
+      expect(result).toHaveProperty('data')
+      expect(result.data).toHaveProperty('getCreatorMedia')
+      expect(result.data.getCreatorMedia.length).toBe(0)
+    })
+
+    it('search creator media', async () => {
+      const user = {
+        _id: mongoose.Types.ObjectId('000000000000000000000000')
+      }
+
+      const query = `
+      query {
+        getCreatorMedia(offset: 1, searchText: "test") {
+          id,
+          title,
+          altText
+        }
+      }
+      
+      `
+
+      const result = await graphql(schema, query, null, { user })
+      expect(result).toHaveProperty('data')
+      expect(result.data).toHaveProperty('getCreatorMedia')
+      expect(result.data.getCreatorMedia.length).toBe(0)
     })
   })
 

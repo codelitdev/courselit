@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
 const constants = require('../config/constants.js')
 
-const UserSchema = mongoose.Schema({
+const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   verified: { type: Boolean, required: true, default: false },
   isCreator: { type: Boolean, required: true, default: false },
