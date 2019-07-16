@@ -2,7 +2,6 @@
  * An end point for managing file uploads.
  */
 const express = require('express')
-const router = express.Router()
 const Media = require('../models/Media.js')
 const responses = require('../config/strings').responses
 const constants = require('../config/constants.js')
@@ -42,7 +41,7 @@ const move = (file, path) => new Promise((resolve, reject) => {
   })
 })
 
-router.get('/:mediaId', async (req, res) => {
+const getHandler = async (req, res) => {
   const media = await Media.findById(req.params.mediaId)
 
   let { thumb } = req.query
@@ -54,9 +53,9 @@ router.get('/:mediaId', async (req, res) => {
     res.contentType(media.mimeType)
     res.sendFile(`${constants.uploadFolder}/${media.fileName}`)
   }
-})
+}
 
-router.post('/', async (req, res) => {
+const postHandler = async (req, res) => {
   if (!req.user.isCreator) return res.status(400).json({ message: responses.not_a_creator })
   // console.log(req.files)
   const data = req.body
@@ -114,6 +113,11 @@ router.post('/', async (req, res) => {
   } catch (err) {
     return res.status(500).json({ message: err.message })
   }
-})
+}
 
-module.exports = router
+module.exports = (passport) => {
+  const router = express.Router()
+  router.get('/:mediaId', getHandler)
+  router.post('/', passport.authenticate('jwt', { session: false }), postHandler)
+  return router
+}

@@ -22,19 +22,30 @@ import {
   queryGraphQL
 } from '../lib/utils.js'
 
-let mediaOffset = 1
+const DEFAULT_MEDIA_OFFSET = 1
+// Represents the server offset for pagination
+let mediaOffset = DEFAULT_MEDIA_OFFSET
 
 const MediaManager = (props) => {
-  const initUploadData = {
-    title: '',
-    altText: '',
-    uploading: false
+  const defaults = {
+    uploadData: {
+      title: '',
+      altText: '',
+      uploading: false
+    },
+    uploadFormVisibility: false,
+    searchText: '',
+    userError: '',
+    userMedia: [],
+    selectedMedia: null
   }
-  const [uploadData, setUploadData] = useState(initUploadData)
-  const [uploadFormVisibility, setUploadFormVisibility] = useState(false)
-  const [searchText, setSearchText] = useState('')
-  const [userError, setUserError] = useState('')
-  const [userMedia, setUserMedia] = useState([])
+  const [uploadData, setUploadData] = useState(defaults.uploadData)
+  const [uploadFormVisibility, setUploadFormVisibility] = useState(defaults.uploadFormVisibility)
+  const [searchText, setSearchText] = useState(defaults.searchText)
+  const [userError, setUserError] = useState(defaults.userError)
+  // contains information about user's already uploaded media
+  const [userMedia, setUserMedia] = useState(defaults.userMedia)
+  const [selectedMedia, setSelectedMedia] = useState(defaults.selectedMedia)
   const fileInput = createRef()
 
   const onUploadDataChanged = (e) => setUploadData(
@@ -75,7 +86,7 @@ const MediaManager = (props) => {
       res = await res.json()
 
       if (res.id) {
-        setUploadData(initUploadData)
+        setUploadData(defaults.uploadData)
         setUserMedia([res.id, ...userMedia])
       }
     } catch (err) {
@@ -90,7 +101,7 @@ const MediaManager = (props) => {
     setSearchText(e.target.value)
 
   const cancelMediaUpload = () => {
-    setUploadData(initUploadData)
+    setUploadData(defaults.uploadData)
     toggleUploadFormVisibility()
   }
 
@@ -127,15 +138,40 @@ const MediaManager = (props) => {
   }
 
   const searchMedia = () => {
-    setUserMedia(userMedia => [])
-    mediaOffset = 1
-    console.log(userMedia)
+    // reset a few components
+    setUserMedia(defaults.userMedia)
+    mediaOffset = DEFAULT_MEDIA_OFFSET
+
     loadMedia()
+  }
+
+  // Pass information about the selected media to the
+  // parent component
+  const onMediaSelected = () => {
+    props.onMediaSelected(userMedia[selectedMedia])
+    onClose()
+  }
+
+  // Restore the defaults
+  const reset = () => {
+    mediaOffset = DEFAULT_MEDIA_OFFSET
+    setUploadData(defaults.uploadData)
+    setUploadFormVisibility(defaults.uploadFormVisibility)
+    setSearchText(defaults.searchText)
+    setUserError(defaults.userError)
+    setUserMedia(defaults.userMedia)
+    setSelectedMedia(defaults.selectedMedia)
+  }
+
+  const onClose = () => {
+    reset()
+    props.toggleVisibility(false)
   }
 
   return (
     <div className="container">
       <p>Media manager</p>
+      {/* Upload Area */}
       {uploadFormVisibility &&
         <div>
           <form onSubmit={onUpload}>
@@ -170,31 +206,52 @@ const MediaManager = (props) => {
       }
       {!uploadFormVisibility &&
         <button onClick={toggleUploadFormVisibility}>{MEDIA_ADD_NEW_BUTTON_TEXT}</button>}
+
+      {/* Search Area */}
+      <div>
+        <input
+          type='text'
+          name='search'
+          value={searchText}
+          placeholder={MEDIA_SEARCH_INPUT_PLACEHOLDER}
+          onChange={onSearchTextChanged}/>
+        <input
+          type='submit'
+          value='Search'
+          onClick={searchMedia}
+          disabled={searchText.trim().length !== 0 ? '' : 'disabled'}/>
+      </div>
+
+      {/* Explorer Area */}
       <div className="explorer">
-        <div>
-          <input
-            type='text'
-            name='search'
-            value={searchText}
-            placeholder={MEDIA_SEARCH_INPUT_PLACEHOLDER}
-            onChange={onSearchTextChanged}/>
-          <input
-            type='submit'
-            value='Search'
-            onClick={searchMedia}
-            disabled={searchText.trim().length !== 0 ? '' : 'disabled'}/>
-        </div>
         <div className="userMedia">
           {userMedia.map((item, index) =>
-            <img key={item} src={`${BACKEND}/media/${item}?thumb=1`} />
+            <div
+              key={item}
+              onClick={() => setSelectedMedia(index)}
+              className={ selectedMedia === index ? 'selected' : '' }>
+              <img src={`${BACKEND}/media/${item}?thumb=1`} />
+            </div>
           )}
           <button onClick={loadMedia}>{LOAD_MORE_TEXT}</button>
         </div>
       </div>
+
+      <div>
+        <button
+          disabled={ selectedMedia === null ? 'disabled' : '' }
+          onClick={onMediaSelected}>Select</button>
+        <button
+          onClick={onClose}>Cancel</button>
+      </div>
       <style jsx>
         {`
           .container {
-            background: #eee
+            background: #eee;
+          }
+          .selected {
+            background: blue;
+            padding: 5px;
           }
         `}
       </style>
@@ -204,7 +261,9 @@ const MediaManager = (props) => {
 
 MediaManager.propTypes = {
   auth: authProps,
-  dispatch: PropTypes.func.isRequired
+  dispatch: PropTypes.func.isRequired,
+  onMediaSelected: PropTypes.func.isRequired,
+  toggleVisibility: PropTypes.func.isRequired
 }
 
 const mapStateToProps = state => ({

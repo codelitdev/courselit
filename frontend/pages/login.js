@@ -54,13 +54,12 @@ function Login (props) {
 
     try {
       props.dispatch(networkAction(true))
-
       const res = await fetch(`${BACKEND}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: `email=${loginData.email}&password=${loginData.password}`
+        body: `email=${loginData.email}&password=${loginData.pass}`
       })
 
       const data = await res.json()

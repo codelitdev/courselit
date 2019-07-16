@@ -35,8 +35,8 @@ app.use('/graph',
   }))
 )
 app.use('/media',
-  passport.authenticate('jwt', { session: false }),
-  require('./routes/media.js')
+  // passport.authenticate('jwt', { session: false }),
+  require('./routes/media.js')(passport)
 )
 
 app.listen(process.env.PORT || 80)

@@ -7,7 +7,8 @@ import PropTypes from 'prop-types'
 import {
   COURSE_CREATOR_BUTTON_TEXT,
   ERR_COURSE_TITLE_REQUIRED,
-  ERR_COURSE_COST_REQUIRED
+  ERR_COURSE_COST_REQUIRED,
+  MANAGE_MEDIA_BUTTON_TEXT
 } from '../config/strings.js'
 import {
   BACKEND,
@@ -27,6 +28,7 @@ import {
 } from '../types.js'
 import { networkAction } from '../redux/actions.js'
 import MediaManager from './MediaManager.js'
+import TextEditor from './TextEditor.js'
 
 let creatorCoursesPaginationOffset = 1
 
@@ -52,6 +54,9 @@ const Creator = (props) => {
 
   // Following is used for displaying errors to the user
   const [userError, setUserError] = useState('')
+
+  // For toggling Media manager visibility
+  const [mediaManagerVisibility, setMediaManagerVisibility] = useState(false)
 
   // The following ref is used for accessing previous state in hooks
   // Reference: https://reactjs.org/docs/hooks-faq.html#how-to-get-the-previous-props-or-state
@@ -503,6 +508,14 @@ const Creator = (props) => {
     }
   }
 
+  const onMediaSelected = (mediaId) => {
+    console.log(`Selected media: ${mediaId}`) 
+  }
+
+  const toggleMediaManagerVisibility = (flag) => {
+    setMediaManagerVisibility(flag)
+  }
+
   return (<div>
     <div>
       <p>My Courses</p>
@@ -534,10 +547,11 @@ const Creator = (props) => {
                   onChange={onCourseDetailsChange}/>
               </label>
               <label> Description:
-                <textarea
+                <TextEditor />
+                {/* <textarea
                   name='description'
                   value={courseData.course.description}
-                  onChange={onCourseDetailsChange}/>
+                  onChange={onCourseDetailsChange}/> */}
               </label>
               <label> Featured Image:
                 <input
@@ -666,7 +680,12 @@ const Creator = (props) => {
         </div>
       }
     </div>
-    <MediaManager />
+    <button onClick={() => setMediaManagerVisibility(true)}>{MANAGE_MEDIA_BUTTON_TEXT}</button>
+    { mediaManagerVisibility &&
+      <MediaManager
+        onMediaSelected={onMediaSelected}
+        toggleVisibility={toggleMediaManagerVisibility}/>
+    }
   </div>)
 }
 

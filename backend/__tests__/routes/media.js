@@ -9,8 +9,9 @@ const Media = require('../../src/models/Media.js')
 const strings = require('../../src/config/strings.js')
 const fs = require('fs')
 const path = require('path')
+const request = require('request')
 
-describe('Media Test Suite', () => {
+describe.only('Media Test Suite', () => {
   const user = 'uploader@test.com'
   const pass = 'lol'
   let token = ''
@@ -54,6 +55,7 @@ describe('Media Test Suite', () => {
     }, false)
       .then(data => expect(data).toBe('Unauthorized'))
   })
+
 
   it('Not a creator', () => {
     return promisify({
@@ -162,5 +164,18 @@ describe('Media Test Suite', () => {
     expect(dbRecord.mimeType).toBe('video/mp4')
 
     videoMediaID = res.id
+  })
+
+  it('Unauthenticated get request', async done => {
+    request.get({
+      url: `http://${apiUrl}/media/${imageMediaID}`
+    }, (err, res, body) => {
+      if (err) {
+        console.log(err)
+      }
+
+      expect(res.headers['content-type']).toBe('image/jpeg')
+      done()
+    })
   })
 })

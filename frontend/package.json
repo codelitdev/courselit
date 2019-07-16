@@ -4,6 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
+    "@zeit/next-css": "^1.0.1",
+    "draft-js": "^0.10.5",
     "express": "^4.16.4",
     "isomorphic-unfetch": "^3.0.0",
     "js-cookie": "^2.2.0",
