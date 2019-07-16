@@ -133,7 +133,7 @@ function Login (props) {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: `email=${signupData.email}&password=${signupData.password}&name=${signupData.name}`
+        body: `email=${signupData.email}&password=${signupData.pass}&name=${signupData.name}`
       })
       const data = await res.json()
 
