@@ -2,6 +2,7 @@
  * Next.js Utility functions.
  */
 import fetch from 'isomorphic-unfetch'
+import { encode, decode } from 'base-64'
 
 /**
  * A wrapper for querying the GraphQL endpoint.
@@ -66,3 +67,12 @@ export const getDataCreator = (backend, dispatch, networkAction, token) =>
       dispatch(networkAction(false))
     }
   }
+
+export const draftJsStringify = {
+  encode: (stringToBeEncoded) => {
+    return encode(JSON.stringify(stringToBeEncoded))
+  },
+  decode: (fromEncodedString) => {
+    return JSON.parse(decode(fromEncodedString))
+  }
+}

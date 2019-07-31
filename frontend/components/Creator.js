@@ -20,7 +20,8 @@ import {
 } from '../config/constants.js'
 import {
   queryGraphQL,
-  capitalize
+  capitalize,
+  draftJsStringify
 } from '../lib/utils.js'
 import {
   authProps,
@@ -29,6 +30,7 @@ import {
 import { networkAction } from '../redux/actions.js'
 import MediaManager from './MediaManager.js'
 import TextEditor from './TextEditor.js'
+import { convertToRaw, convertFromRaw, EditorState } from 'draft-js'
 
 let creatorCoursesPaginationOffset = 1
 
@@ -113,7 +115,7 @@ const Creator = (props) => {
           published: ${courseData.course.published},
           privacy: ${courseData.course.privacy.toUpperCase()},
           isBlog: ${courseData.course.isBlog},
-          description: "${courseData.course.description}",
+          description: "${draftJsStringify.encode(convertToRaw(courseData.course.description.getCurrentContent()))}",
           featuredImage: "${courseData.course.featuredImage}",
           isFeatured: ${courseData.course.isFeatured}
         }) {
@@ -139,7 +141,7 @@ const Creator = (props) => {
           published: ${courseData.course.published},
           privacy: ${courseData.course.privacy.toUpperCase()},
           isBlog: ${courseData.course.isBlog},
-          description: "${courseData.course.description}",
+          description: "${draftJsStringify.encode(convertToRaw(courseData.course.description.getCurrentContent()))}",
           featuredImage: "${courseData.course.featuredImage}",
           isFeatured: ${courseData.course.isFeatured}
         }) {
@@ -446,9 +448,21 @@ const Creator = (props) => {
       )
 
       if (response.course) {
+        console.log(response.course, draftJsStringify.decode(response.course.description))
+        console.log(
+          EditorState.createWithContent(
+            convertFromRaw(draftJsStringify.decode(response.course.description))
+          )
+        )
+        const descriptionDecodedCourseData = Object.assign({}, response.course, {
+          description: EditorState.createWithContent(
+            convertFromRaw(draftJsStringify.decode(response.course.description))
+          )
+        })
+        console.log(`Decoded content: `, descriptionDecodedCourseData)
         setCourseData(
           Object.assign({}, courseData, {
-            course: response.course,
+            course: descriptionDecodedCourseData,
             lessons: []
           })
         )
@@ -461,6 +475,7 @@ const Creator = (props) => {
         }
       }
     } catch (err) {
+      console.log(err)
       setError(err.message)
     } finally {
       props.dispatch(networkAction(false))
@@ -516,6 +531,16 @@ const Creator = (props) => {
     setMediaManagerVisibility(flag)
   }
 
+  const onDescriptionChange = (editorState) => {
+    setCourseData(
+      Object.assign({}, courseData, {
+        course: Object.assign({}, courseData.course, {
+          description: editorState
+        })
+      })
+    )
+  }
+
   return (<div>
     <div>
       <p>My Courses</p>
@@ -547,7 +572,9 @@ const Creator = (props) => {
                   onChange={onCourseDetailsChange}/>
               </label>
               <label> Description:
-                <TextEditor />
+                <TextEditor
+                  initialContentState={courseData.course.description}
+                  onChange={onDescriptionChange}/>
                 {/* <textarea
                   name='description'
                   value={courseData.course.description}

@@ -1,10 +1,13 @@
 import React, { useState } from 'react'
 import { Editor, EditorState, RichUtils } from 'draft-js'
 import 'draft-js/dist/Draft.css'
+import PropTypes from 'prop-types'
 // import { edit } from 'external-editor';
 
-const TextEditor = () => {
-  const [editorState, setEditorState] = useState(EditorState.createEmpty())
+const TextEditor = (props) => {
+  const initialEditorState = props.initialContentState
+    ? props.initialContentState : EditorState.createEmpty()
+  const [editorState, setEditorState] = useState(initialEditorState)
 
   const handleKeyCommand = (command, editorState) => {
     const newState = RichUtils.handleKeyCommand(editorState, command)
@@ -15,7 +18,10 @@ const TextEditor = () => {
     return 'not handled'
   }
 
-  const onChange = (editorState) => setEditorState(editorState)
+  const onChange = (editorState) => {
+    setEditorState(editorState)
+    props.onChange(editorState)
+  }
 
   return (
     <div>
@@ -33,6 +39,11 @@ const TextEditor = () => {
       `}</style>
     </div>
   )
+}
+
+TextEditor.propTypes = {
+  initialContentState: PropTypes.any,
+  onChange: PropTypes.func.isRequired
 }
 
 export default TextEditor
