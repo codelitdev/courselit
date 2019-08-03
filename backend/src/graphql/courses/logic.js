@@ -184,7 +184,7 @@ exports.getPosts = async (offset) => {
   return posts.map(x => ({
     id: x.id,
     title: x.title,
-    description: x.description.substr(0, postDescTruncLimit),
+    description: x.description,
     creatorName: x.creatorName,
     updated: x.updated,
     slug: x.slug

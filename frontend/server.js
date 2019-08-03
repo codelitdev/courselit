@@ -13,7 +13,7 @@ app
   .then(() => {
     const server = express()
 
-    server.get('/post/:id/:slug', (req, res) => {
+    server.get('/posts/:id/:slug', (req, res) => {
       const actualPage = '/posts'
       const queryParams = { courseId: req.params.id }
       app.render(req, res, actualPage, queryParams)

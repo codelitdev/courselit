@@ -1,8 +1,4 @@
-/**
- * Next.js Utility functions.
- */
 import fetch from 'isomorphic-unfetch'
-import { encode, decode } from 'base-64'
 
 /**
  * A wrapper for querying the GraphQL endpoint.
@@ -33,11 +29,6 @@ export const queryGraphQL = async (url, query, token) => {
   }
 }
 
-/**
- * A helper function to capitalize the first letter of any string.
- *
- * @param {string} s
- */
 export const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1)
 
 /**
@@ -68,11 +59,5 @@ export const getDataCreator = (backend, dispatch, networkAction, token) =>
     }
   }
 
-export const draftJsStringify = {
-  encode: (stringToBeEncoded) => {
-    return encode(JSON.stringify(stringToBeEncoded))
-  },
-  decode: (fromEncodedString) => {
-    return JSON.parse(decode(fromEncodedString))
-  }
-}
+export const formattedLocaleDate = (epochString) =>
+  (new Date(Number(epochString))).toLocaleString('en-US')

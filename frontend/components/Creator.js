@@ -20,8 +20,7 @@ import {
 } from '../config/constants.js'
 import {
   queryGraphQL,
-  capitalize,
-  draftJsStringify
+  capitalize
 } from '../lib/utils.js'
 import {
   authProps,
@@ -30,7 +29,6 @@ import {
 import { networkAction } from '../redux/actions.js'
 import MediaManager from './MediaManager.js'
 import TextEditor from './TextEditor.js'
-import { convertToRaw, convertFromRaw, EditorState } from 'draft-js'
 
 let creatorCoursesPaginationOffset = 1
 
@@ -115,7 +113,7 @@ const Creator = (props) => {
           published: ${courseData.course.published},
           privacy: ${courseData.course.privacy.toUpperCase()},
           isBlog: ${courseData.course.isBlog},
-          description: "${draftJsStringify.encode(convertToRaw(courseData.course.description.getCurrentContent()))}",
+          description: "${TextEditor.stringify(courseData.course.description)}",
           featuredImage: "${courseData.course.featuredImage}",
           isFeatured: ${courseData.course.isFeatured}
         }) {
@@ -141,7 +139,7 @@ const Creator = (props) => {
           published: ${courseData.course.published},
           privacy: ${courseData.course.privacy.toUpperCase()},
           isBlog: ${courseData.course.isBlog},
-          description: "${draftJsStringify.encode(convertToRaw(courseData.course.description.getCurrentContent()))}",
+          description: "${TextEditor.stringify(courseData.course.description)}",
           featuredImage: "${courseData.course.featuredImage}",
           isFeatured: ${courseData.course.isFeatured}
         }) {
@@ -448,16 +446,17 @@ const Creator = (props) => {
       )
 
       if (response.course) {
-        console.log(response.course, draftJsStringify.decode(response.course.description))
-        console.log(
-          EditorState.createWithContent(
-            convertFromRaw(draftJsStringify.decode(response.course.description))
-          )
-        )
+        // console.log(response.course, draftJsStringify.decode(response.course.description))
+        // console.log(
+        //   EditorState.createWithContent(
+        //     convertFromRaw(draftJsStringify.decode(response.course.description))
+        //   )
+        // )
         const descriptionDecodedCourseData = Object.assign({}, response.course, {
-          description: EditorState.createWithContent(
-            convertFromRaw(draftJsStringify.decode(response.course.description))
-          )
+          description: TextEditor.hydrate(response.course.description)
+          // description: EditorState.createWithContent(
+          //   convertFromRaw(draftJsStringify.decode(response.course.description))
+          // )
         })
         console.log(`Decoded content: `, descriptionDecodedCourseData)
         setCourseData(

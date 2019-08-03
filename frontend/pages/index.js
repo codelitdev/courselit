@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { connect } from 'react-redux'
-// import PropTypes from 'prop-types'
-import Link from 'next/link'
 import MasterLayout from './masterlayout.js'
-// import {
-//   latestPostsProps
-// } from '../types.js'
 import {
   networkAction
 } from '../redux/actions.js'
@@ -15,19 +10,12 @@ import {
 import {
   BACKEND
 } from '../config/constants.js'
+import BlogPostItem from '../components/BlogPostItem.js'
 
 let postsPaginationOffset = 1
 
-const Index = (props) => {
-  const [posts, setPosts] = useState([])
-  const getDataUnauth = getDataCreator(
-    `${BACKEND}/graph`,
-    props.dispatch,
-    networkAction
-  )
-
-  const getPosts = async () => {
-    const query = `
+const getBlogPostQuery = (postsPaginationOffset) => {
+  return `
     query {
       posts: getPosts(offset: ${postsPaginationOffset}) {
         id,
@@ -38,81 +26,43 @@ const Index = (props) => {
         slug
       }
     }
-    `
-    getDataUnauth(query, (response) => {
-      if (response.posts) {
-        setPosts([...posts, ...response.posts])
-        postsPaginationOffset += 1
-      }
-    })
-  }
-
-  // const getPosts = async () => {
-  //   try {
-  //     props.dispatch(networkAction(false))
-  //     let response = await queryGraphQL(
-  //       `${BACKEND}/graph`,
-  //       `
-  //       query {
-  //         posts: getPosts(offset: ${postsPaginationOffset}) {
-  //           id,
-  //           title,
-  //           description,
-  //           updated,
-  //           creatorName,
-  //           slug
-  //         }
-  //       }
-  //       `)
-
-  //     if (response.posts) {
-  //       setPosts([...posts, ...response.posts])
-  //       postsPaginationOffset += 1
-  //     }
-  //   } catch (err) {
-  //     // do nothing
-  //   } finally {
-  //     props.dispatch(networkAction(false))
-  //   }
-  // }
-
-  useEffect(() => {
-    getPosts()
-  }, [])
-
-  return (<MasterLayout>
-    <div>
-      <div className='post'>
-        <p>Latest Posts</p>
-        {(posts.map(
-          (x, index) => <div key={ index }>
-            <p>{x.title}</p>
-            <p>{x.description}</p>
-            <p>Updated on {(new Date(Number(x.updated))).toString()} by {x.creatorName}</p>
-            <Link href={`/posts/${x.id}/${x.slug}`}>
-              <a>Visit post</a>
-            </Link>
-          </div>
-        ))}
-        { posts.length > 0 &&
-          <button onClick={getPosts}>Load more</button>}
-      </div>
-    </div>
-  </MasterLayout>)
+  `
 }
 
-// Index.getInitialProps = async ({ store, isServer, pathname, query }) => {
-//   return {}
-// }
+const Index = (props) => {
+  const [posts, setPosts] = useState([])
+  const getDataUnauth = getDataCreator(
+    `${BACKEND}/graph`,
+    props.dispatch,
+    networkAction
+  )
 
-// Index.propTypes = {
-//   posts: PropTypes.arrayOf(latestPostsProps),
-//   dispatch: PropTypes.func.isRequired
-// }
+  const getBlogPosts = async () => {
+    getDataUnauth(
+      getBlogPostQuery(postsPaginationOffset),
+      (response) => {
+        if (response.posts) {
+          setPosts([...posts, ...response.posts])
+          postsPaginationOffset += 1
+        }
+      })
+  }
 
-// const mapStateToProps = (state) => state
-// const mapDispatchToProps = (dispatch) => (dispatch)
-export default connect(
-  // mapStateToProps
-  // mapDispatchToProps
-)(Index)
+  useEffect(() => {
+    getBlogPosts()
+  }, [])
+
+  return (
+    <MasterLayout>
+      <div>
+        <section className='post'>
+          <h1>Latest Posts</h1>
+          { posts.map((x, index) => <BlogPostItem key={index} {...x}/>) }
+          { posts.length > 0 && <button onClick={getBlogPosts}>Load more</button> }
+        </section>
+      </div>
+    </MasterLayout>
+  )
+}
+
+export default connect()(Index)
