@@ -1,8 +1,23 @@
 import React, { useState } from 'react'
-import { Editor, EditorState, RichUtils } from 'draft-js'
+import {
+  Editor,
+  EditorState,
+  RichUtils,
+  convertFromRaw,
+  convertToRaw
+} from 'draft-js'
 import 'draft-js/dist/Draft.css'
 import PropTypes from 'prop-types'
-// import { edit } from 'external-editor';
+import { encode, decode } from 'base-64'
+
+const stringifyAndEncode = {
+  encode: (objectToBeEncoded) => {
+    return encode(JSON.stringify(objectToBeEncoded))
+  },
+  decode: (fromEncodedString) => {
+    return JSON.parse(decode(fromEncodedString))
+  }
+}
 
 const TextEditor = (props) => {
   const initialEditorState = props.initialContentState
@@ -29,6 +44,7 @@ const TextEditor = (props) => {
         className="editor"
         editorState={editorState}
         onChange={onChange}
+        readOnly={props.readOnly}
         handleKeyCommand={handleKeyCommand}/>
       <style jsx>{`
         .editor {
@@ -41,9 +57,19 @@ const TextEditor = (props) => {
   )
 }
 
+TextEditor.hydrate = (encodedEditorStateString) =>
+  EditorState.createWithContent(
+    convertFromRaw(stringifyAndEncode.decode(encodedEditorStateString))
+  )
+
+TextEditor.stringify = (editorState) =>
+  stringifyAndEncode
+    .encode(convertToRaw(editorState.getCurrentContent()))
+
 TextEditor.propTypes = {
   initialContentState: PropTypes.any,
-  onChange: PropTypes.func.isRequired
+  onChange: PropTypes.func,
+  readOnly: PropTypes.bool
 }
 
 export default TextEditor
