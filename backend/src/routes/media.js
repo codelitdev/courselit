@@ -17,10 +17,6 @@ const uniqueFileNameGenerator = (filename) => {
   const extention = filename.split('.')
   const uniqueNameWithoutExtention = `${extention.slice(0, extention.length - 1)}_${Date.now()}`
 
-  // return withoutExtension
-  //   ? uniqueNameWithoutExtention
-  //   : `${uniqueNameWithoutExtention}.${extention[extention.length - 1]}`
-  // return `${extention.slice(0, extention.length - 1)}_${Date.now()}.${extention[extention.length - 1]}`
   return {
     name: uniqueNameWithoutExtention,
     ext: extention[extention.length - 1]

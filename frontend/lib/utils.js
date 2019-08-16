@@ -31,18 +31,7 @@ export const queryGraphQL = async (url, query, token) => {
 
 export const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1)
 
-/**
- * A helper function to retrive data from a graphql endpoint along with
- * several UI niceties.
- *
- * @param {string} backend A url representing backend end-point
- * @param {function} dispatch Redux's dispatcher
- * @param {function} networkAction An action creator for showing network transit
- * @param {string} token an authorization token
- * @param {string} query A graphql query
- * @param {function} cb A callback function
- */
-export const getDataCreator = (backend, dispatch, networkAction, token) =>
+export const makeGraphQLCallWithUIEffects = (backend, dispatch, networkAction, token) =>
   async (query, cb) => {
     try {
       dispatch(networkAction(false))
@@ -53,7 +42,7 @@ export const getDataCreator = (backend, dispatch, networkAction, token) =>
 
       cb(response)
     } catch (err) {
-      // do nothing
+      throw err
     } finally {
       dispatch(networkAction(false))
     }
@@ -61,3 +50,19 @@ export const getDataCreator = (backend, dispatch, networkAction, token) =>
 
 export const formattedLocaleDate = (epochString) =>
   (new Date(Number(epochString))).toLocaleString('en-US')
+
+export const removeEmptyProperties = (obj, propToExclude) =>
+  Object
+    .keys(obj)
+    .filter(i => i !== propToExclude)
+    .reduce(
+      (acc, item, index) => {
+        if (obj[item] !== '') {
+          acc[item] = obj[item]
+        }
+        return acc
+      }, {})
+
+// Regex copied from: https://stackoverflow.com/a/48675160/942589
+export const makeGraphQLQueryStringFromJSObject = obj =>
+  JSON.stringify(obj).replace(/"([^(")"]+)":/g, '$1:')
