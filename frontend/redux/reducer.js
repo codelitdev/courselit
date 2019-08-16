@@ -1,7 +1,3 @@
-/**
- * The reducer function
- */
-
 import { combineReducers } from 'redux'
 import {
   SIGN_IN,
@@ -16,8 +12,8 @@ import {
   GENERIC_SUBTITLE,
   GENERIC_LOGO_PATH
 } from '../config/strings.js'
+// import { BACKEND } from '../config/constants.js'
 
-// The initial state of the app
 const initialState = {
   auth: { guest: true, token: null, userid: null },
   siteinfo: {

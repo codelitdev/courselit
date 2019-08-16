@@ -31,3 +31,9 @@ export const latestPostsProps = PropTypes.shape({
   updated: PropTypes.number.isRequired,
   slug: PropTypes.string.isRequired
 })
+
+export const siteInfoProps = PropTypes.shape({
+  title: PropTypes.string,
+  subtitle: PropTypes.string,
+  logopath: PropTypes.string
+})

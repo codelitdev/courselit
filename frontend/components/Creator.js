@@ -29,6 +29,7 @@ import {
 import { networkAction } from '../redux/actions.js'
 import MediaManager from './MediaManager.js'
 import TextEditor from './TextEditor.js'
+import SiteSettings from './SiteSettings.js'
 
 let creatorCoursesPaginationOffset = 1
 
@@ -712,6 +713,7 @@ const Creator = (props) => {
         onMediaSelected={onMediaSelected}
         toggleVisibility={toggleMediaManagerVisibility}/>
     }
+    <SiteSettings />
   </div>)
 }
 

@@ -239,7 +239,7 @@ const MediaManager = (props) => {
 
       <div>
         <button
-          disabled={ selectedMedia === null ? 'disabled' : '' }
+          disabled={selectedMedia === null ? 'disabled' : ''}
           onClick={onMediaSelected}>Select</button>
         <button
           onClick={onClose}>Cancel</button>

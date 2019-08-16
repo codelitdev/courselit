@@ -7,13 +7,14 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import Link from 'next/link'
+import Img from './Img'
 
 const Branding = (props) => (
   <div>
     <div>
       <Link href='/'>
         <a>
-          <img src={props.logoPath}/>
+          <Img src={props.logoPath} isThumbnail={true}/>
         </a>
       </Link>
     </div>
@@ -32,7 +33,8 @@ const Branding = (props) => (
 Branding.propTypes = {
   title: PropTypes.string,
   subtitle: PropTypes.string,
-  logoPath: PropTypes.string
+  logoPath: PropTypes.string,
+  backend: PropTypes.string
 }
 
 const mapStateToProps = state => ({
