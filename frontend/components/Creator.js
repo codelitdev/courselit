@@ -524,7 +524,7 @@ const Creator = (props) => {
   }
 
   const onMediaSelected = (mediaId) => {
-    console.log(`Selected media: ${mediaId}`) 
+    console.log(`Selected media: ${mediaId}`)
   }
 
   const toggleMediaManagerVisibility = (flag) => {
