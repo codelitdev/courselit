@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react'
 import { connect } from 'react-redux'
 import MasterLayout from './masterlayout.js'
 import PropTypes from 'prop-types'
-import { makeGraphQLCallWithUIEffects, formattedLocaleDate } from '../lib/utils.js'
+import { queryGraphQLWithUIEffects, formattedLocaleDate } from '../lib/utils.js'
 import { BACKEND } from '../config/constants.js'
 import { networkAction } from '../redux/actions.js'
 import TextEditor from '../components/TextEditor.js'
 
 const Posts = (props) => {
   const [post, setPost] = useState({})
-  const getDataUnauth = makeGraphQLCallWithUIEffects(
+  const getDataUnauth = queryGraphQLWithUIEffects(
     `${BACKEND}/graph`,
     props.dispatch,
     networkAction

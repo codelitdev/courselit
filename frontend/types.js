@@ -37,3 +37,14 @@ export const siteInfoProps = PropTypes.shape({
   subtitle: PropTypes.string,
   logopath: PropTypes.string
 })
+
+export const publicCourse = PropTypes.shape({
+  id: PropTypes.string.isRequired,
+  title: PropTypes.string.isRequired,
+  description: PropTypes.string.isRequired,
+  creatorName: PropTypes.string.isRequired,
+  updated: PropTypes.string.isRequired,
+  slug: PropTypes.string.isRequired,
+  isFeatured: PropTypes.bool.isRequired,
+  cost: PropTypes.number.isRequired
+})

@@ -2,7 +2,7 @@
  * A Higher-order component for secured routes.
  *
  */
-import React from 'react'
+import React, { useEffect } from 'react'
 import {
   protectedRouteProps
 } from '../types.js'
@@ -16,10 +16,12 @@ import {
   * @param {bool} props.renderOnServer if children can be rendered on server
   */
 const ProtectedRoute = (props) => {
-  // Redirection happens only on the client side.
-  if (process.browser) {
-    if (props.condition) { props.router.push(props.redirectTo) }
-  }
+  useEffect(() => {
+    // if (process.browser) {
+    //   console.log(props)
+    //   if (props.condition) { props.router.push(props.redirectTo) }
+    // }
+  })
 
   if (props.renderOnServer) {
     return <>{props.children}</>

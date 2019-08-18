@@ -32,6 +32,6 @@ module.exports = {
   mycoursesLimit: 5,
   postsPerPageLimit: 5,
   postDescTruncLimit: 30,
-  coursesPerPageLimit: 3,
+  coursesPerPageLimit: 1,
   mymediaLimit: 5
 }

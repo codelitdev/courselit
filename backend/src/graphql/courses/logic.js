@@ -14,7 +14,6 @@ const {
   open,
   mycoursesLimit,
   postsPerPageLimit,
-  postDescTruncLimit,
   coursesPerPageLimit
 } = require('../../config/constants.js')
 // const {
@@ -203,7 +202,8 @@ exports.getPublicCourses = async (offset, onlyShowFeatured = false) => {
     privacy: open.toLowerCase()
   }
   let courses = await Course
-    .find(query, 'id title featuredImage cost')
+    .find(query, 'id title featuredImage cost creatorName slug description updated isFeatured')
+    .sort({ updated: -1 })
     .skip((offset - 1) * coursesPerPageLimit).limit(coursesPerPageLimit)
 
   return courses
