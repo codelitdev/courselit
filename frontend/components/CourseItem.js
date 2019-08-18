@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import Link from 'next/link'
 import { publicCourse } from '../types'
 import TextEditor from './TextEditor.js'
