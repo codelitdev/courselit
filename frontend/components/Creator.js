@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { connect } from 'react-redux'
 import PropTypes from 'prop-types'
+import Link from 'next/link'
 import {
   COURSE_CREATOR_BUTTON_TEXT,
   ERR_COURSE_TITLE_REQUIRED,
@@ -16,7 +17,9 @@ import {
   LESSON_TYPE_AUDIO,
   LESSON_TYPE_VIDEO,
   LESSON_TYPE_PDF,
-  LESSON_TYPE_QUIZ
+  LESSON_TYPE_QUIZ,
+  URL_EXTENTION_POSTS,
+  URL_EXTENTION_COURSES
 } from '../config/constants.js'
 import {
   queryGraphQL,
@@ -52,11 +55,7 @@ const Creator = (props) => {
   const [courseData, setCourseData] = useState(initCourseData)
   const [courseFormVisible, setCourseFormVisible] = useState(false)
   const [creatorCourses, setCreatorCourses] = useState([])
-
-  // Following is used for displaying errors to the user
   const [userError, setUserError] = useState('')
-
-  // For toggling Media manager visibility
   const [mediaManagerVisibility, setMediaManagerVisibility] = useState(false)
 
   // The following ref is used for accessing previous state in hooks
@@ -66,16 +65,7 @@ const Creator = (props) => {
     prevCourseData.current = courseData
   })
 
-  // const setError = (msg) => setCourseData(
-  //   Object.assign({}, courseData, { err: msg || '' })
-  // )
-
-  /**
-   * A helper function to set user errors. To clear the error
-   * already set, call setError().
-   *
-   * @param {String} msg an error message to show to the user
-   */
+  // To clear the error, call setError().
   const setError = (msg = '') => setUserError(msg)
 
   const showCourseCreateForm = () => {
@@ -433,7 +423,8 @@ const Creator = (props) => {
         featuredImage,
         id,
         lessons,
-        isFeatured
+        isFeatured,
+        slug
       }
     }
     `
@@ -447,17 +438,8 @@ const Creator = (props) => {
       )
 
       if (response.course) {
-        // console.log(response.course, draftJsStringify.decode(response.course.description))
-        // console.log(
-        //   EditorState.createWithContent(
-        //     convertFromRaw(draftJsStringify.decode(response.course.description))
-        //   )
-        // )
         const descriptionDecodedCourseData = Object.assign({}, response.course, {
           description: TextEditor.hydrate(response.course.description)
-          // description: EditorState.createWithContent(
-          //   convertFromRaw(draftJsStringify.decode(response.course.description))
-          // )
         })
         console.log(`Decoded content: `, descriptionDecodedCourseData)
         setCourseData(
@@ -475,7 +457,6 @@ const Creator = (props) => {
         }
       }
     } catch (err) {
-      console.log(err)
       setError(err.message)
     } finally {
       props.dispatch(networkAction(false))
@@ -575,10 +556,6 @@ const Creator = (props) => {
                 <TextEditor
                   initialContentState={courseData.course.description}
                   onChange={onDescriptionChange}/>
-                {/* <textarea
-                  name='description'
-                  value={courseData.course.description}
-                  onChange={onCourseDetailsChange}/> */}
               </label>
               <label> Featured Image:
                 <input
@@ -631,6 +608,11 @@ const Creator = (props) => {
           </div>
           {courseData.course.id &&
             <div>
+              <Link href={
+                `/${courseData.course.isBlog ? URL_EXTENTION_POSTS : URL_EXTENTION_COURSES}/${courseData.course.id}/${courseData.course.slug}`
+              }>
+                <a>Visit { courseData.course.isBlog ? 'post' : 'course' }</a>
+              </Link>
               <button onClick={onCourseDelete}>Delete course</button>
               {!courseData.course.isBlog &&
                 (<div>

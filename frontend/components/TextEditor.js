@@ -45,7 +45,8 @@ const TextEditor = (props) => {
         editorState={editorState}
         onChange={onChange}
         readOnly={props.readOnly}
-        handleKeyCommand={handleKeyCommand}/>
+        handleKeyCommand={handleKeyCommand}
+        editorKey="editor"/>
       <style jsx>{`
         .editor {
           height: 100px;

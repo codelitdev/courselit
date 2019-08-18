@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import Link from 'next/link'
 import TextEditor from './TextEditor.js'
 import { formattedLocaleDate } from '../lib/utils.js'
+import { URL_EXTENTION_POSTS } from '../config/constants.js'
 
 const BlogPostItem = (props) => (
   <article>
@@ -11,7 +12,7 @@ const BlogPostItem = (props) => (
       initialContentState={ TextEditor.hydrate(props.description) }
       readOnly={ true }/>
     <p>Updated on { formattedLocaleDate(props.updated) } by { props.creatorName }</p>
-    <Link href={`/posts/${props.id}/${props.slug}`}>
+    <Link href={`/${URL_EXTENTION_POSTS}/${props.id}/${props.slug}`}>
       <a>Visit post</a>
     </Link>
     <style jsx>{`

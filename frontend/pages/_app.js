@@ -12,14 +12,15 @@ import { signedIn, updateSiteInfo } from '../redux/actions.js'
  */
 
 class MyApp extends App {
-  static async getInitialProps ({ Component, ctx }) {
+  static async getInitialProps (props) {
+    const { Component, ctx } = props
     await ctx.store.dispatch(updateSiteInfo())
     const pageProps = Component.getInitialProps ? await Component.getInitialProps(ctx) : {}
     return { pageProps }
   }
 
-  render () {
-    const { Component, pageProps, store } = this.props
+  componentDidMount () {
+    const { store } = this.props
     const tokenCookie = getCookie(JWT_COOKIE_NAME)
     if (tokenCookie) {
       store.dispatch(
@@ -28,6 +29,10 @@ class MyApp extends App {
         )
       )
     }
+  }
+
+  render () {
+    const { Component, pageProps, store } = this.props
 
     return (
       <Container>

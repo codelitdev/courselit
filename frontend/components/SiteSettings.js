@@ -7,7 +7,7 @@ import MediaManager from './MediaManager'
 import {
   removeEmptyProperties,
   makeGraphQLQueryStringFromJSObject,
-  makeGraphQLCallWithUIEffects
+  queryGraphQLWithUIEffects
 } from '../lib/utils.js'
 import { BACKEND } from '../config/constants.js'
 import { networkAction } from '../redux/actions.js'
@@ -20,7 +20,7 @@ const SiteSettings = props => {
     err: ''
   })
   const [mediaManagerVisibility, setMediaManagerVisibility] = useState(false)
-  const executeGQLCall = makeGraphQLCallWithUIEffects(
+  const executeGQLCall = queryGraphQLWithUIEffects(
     `${BACKEND}/graph`,
     props.dispatch,
     networkAction,

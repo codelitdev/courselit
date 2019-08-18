@@ -1,25 +1,33 @@
 /**
  * Dashboard for creators.
  */
+import React, { useEffect } from 'react'
 import { connect } from 'react-redux'
 import Router from 'next/router'
 import MasterLayout from './masterlayout.js'
 import ProtectedRoute from '../components/ProtectedRoute'
 import Creator from '../components/Creator.js'
-// import { CREATOR_AREA_TEMPLATE } from '../config/strings'
 
-const Create = (props) => (<MasterLayout>
-  <ProtectedRoute
-    condition={props.auth.guest || (props.profile.fetched && !props.profile.isCreator)}
-    router={Router}
-    redirectTo='/login'
-    renderOnServer={false}>
-    <Creator />
-  </ProtectedRoute>
-</MasterLayout>)
+const Create = (props) => {
+  useEffect(() => {
+    if (doesNotHaveCreatorPrivs()) {
+      console.log('Redirecting...', props)
+      Router.push('/')
+    }
+  })
 
-// Create.getInitialProps = async ({ store, isServer, pathname, query }) => {
-//   return { }
-// }
+  const doesNotHaveCreatorPrivs = () => (props.auth.guest ||
+    (props.profile.fetched && !props.profile.isCreator))
 
-export default connect(state => state)(Create)
+  return <MasterLayout>
+    {!doesNotHaveCreatorPrivs() &&
+      <Creator />}
+  </MasterLayout>
+}
+
+const mapStateToProps = state => ({
+  auth: state.auth,
+  profile: state.profile
+})
+
+export default connect(mapStateToProps)(Create)

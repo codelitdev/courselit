@@ -5,7 +5,7 @@ import {
   networkAction
 } from '../redux/actions.js'
 import {
-  makeGraphQLCallWithUIEffects
+  queryGraphQLWithUIEffects
 } from '../lib/utils.js'
 import {
   BACKEND
@@ -31,7 +31,7 @@ const getBlogPostQuery = (postsPaginationOffset) => {
 
 const Index = (props) => {
   const [posts, setPosts] = useState([])
-  const getDataUnauth = makeGraphQLCallWithUIEffects(
+  const getDataUnauth = queryGraphQLWithUIEffects(
     `${BACKEND}/graph`,
     props.dispatch,
     networkAction

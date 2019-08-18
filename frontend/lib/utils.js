@@ -8,30 +8,26 @@ import fetch from 'isomorphic-unfetch'
  * @param {string} token an authorization token, skip for unauthenticated requests
  */
 export const queryGraphQL = async (url, query, token) => {
-  try {
-    let response = await fetch(url, {
-      method: 'POST',
-      headers: token ? {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      } : { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: query })
-    })
-    response = await response.json()
+  let response = await fetch(url, {
+    method: 'POST',
+    headers: token ? {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    } : { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: query })
+  })
+  response = await response.json()
 
-    if (response.errors && response.errors.length > 0) {
-      throw new Error(response.errors[0].message)
-    }
-
-    return response.data
-  } catch (err) {
-    throw err
+  if (response.errors && response.errors.length > 0) {
+    throw new Error(response.errors[0].message)
   }
+
+  return response.data
 }
 
 export const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1)
 
-export const makeGraphQLCallWithUIEffects = (backend, dispatch, networkAction, token) =>
+export const queryGraphQLWithUIEffects = (backend, dispatch, networkAction, token) =>
   async (query, cb) => {
     try {
       dispatch(networkAction(false))

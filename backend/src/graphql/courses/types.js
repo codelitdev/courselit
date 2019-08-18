@@ -113,7 +113,12 @@ const publicCoursesType = new graphql.GraphQLObjectType({
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     featuredImage: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-    cost: { type: new graphql.GraphQLNonNull(graphql.GraphQLFloat) }
+    cost: { type: new graphql.GraphQLNonNull(graphql.GraphQLFloat) },
+    slug: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+    updated: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+    creatorName: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+    description: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+    isFeatured: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) }
   }
 })
 

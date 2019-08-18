@@ -22,6 +22,7 @@ export const GENERIC_LOGO_PATH = ''
 export const GENERIC_SIGNIN_TEXT = 'Sign in'
 export const GENERIC_SIGNUP_TEXT = 'Sign up'
 export const GENERIC_SIGNOUT_TEXT = 'Sign out'
+export const BTN_LOAD_MORE = 'Load More'
 
 // UI texts
 export const COURSE_CREATOR_BUTTON_TEXT = 'Save'
