@@ -10,7 +10,7 @@ import {
   queryGraphQLWithUIEffects
 } from '../lib/utils.js'
 import { BACKEND } from '../config/constants.js'
-import { networkAction } from '../redux/actions.js'
+import { networkAction, newSiteInfoAvailable } from '../redux/actions.js'
 
 const SiteSettings = props => {
   const [settings, setSettings] = useState({
@@ -34,7 +34,7 @@ const SiteSettings = props => {
     event.preventDefault()
     const query = `
     mutation {
-      updateSiteInfo(siteData: ${makeQueryForUpload()}) {
+      site: updateSiteInfo(siteData: ${makeQueryForUpload()}) {
         title,
         subtitle,
         logopath
@@ -43,7 +43,7 @@ const SiteSettings = props => {
     console.log(query)
     try {
       await executeGQLCall(query, response => {
-        console.log(response)
+        if (response.site) props.dispatch(newSiteInfoAvailable(response.site))
       })
     } catch (e) {
       console.log(e)

@@ -19,8 +19,8 @@ app
       app.render(req, res, actualPage, queryParams)
     })
 
-    server.get(`/courses/:id?/:slug?`, (req, res) => {
-      const actualPage = `/courses`
+    server.get(`/course/:id/:slug`, (req, res) => {
+      const actualPage = `/course`
       const queryParams = { courseId: req.params.id }
       app.render(req, res, actualPage, queryParams)
     })
