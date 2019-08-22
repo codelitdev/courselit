@@ -53,6 +53,10 @@ export function clearProfile () {
   return { type: PROFILE_CLEAR }
 }
 
+export function newSiteInfoAvailable (info) {
+  return { type: SITEINFO_AVAILABLE, siteinfo: info }
+}
+
 export function updateSiteInfo () {
   return async (dispatch, getState) => {
     try {
@@ -63,7 +67,8 @@ export function updateSiteInfo () {
         `{ site: getSiteInfo { title, subtitle, logopath } }`)
 
       dispatch(networkAction(false))
-      dispatch({ type: SITEINFO_AVAILABLE, siteinfo: response.site })
+      dispatch(newSiteInfoAvailable(response.site))
+      // dispatch({ type: SITEINFO_AVAILABLE, siteinfo: response.site })
     } catch (err) {
       throw err
     } finally {

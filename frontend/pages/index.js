@@ -65,4 +65,12 @@ const Index = (props) => {
   )
 }
 
-export default connect()(Index)
+const mapStateToProps = state => ({
+  auth: state.auth
+})
+
+const mapDispatchToProps = dispatch => ({
+  dispatch: dispatch
+})
+
+export default connect(mapStateToProps, mapDispatchToProps)(Index)

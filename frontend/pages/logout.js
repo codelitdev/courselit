@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react'
 import { connect } from 'react-redux'
 import Router from 'next/router'
 import {
@@ -9,18 +10,22 @@ import {
   USERID_COOKIE_NAME
 } from '../config/constants.js'
 
-const Logout = (props) => (
-  <div></div>
-)
+const Logout = (props) => {
+  useEffect(() => {
+    removeCookie(JWT_COOKIE_NAME)
+    removeCookie(USERID_COOKIE_NAME)
+    props.dispatch(signedOut())
+    Router.replace('/')
+  })
 
-Logout.getInitialProps = async ({ store, isServer, pathname, query }) => {
-  // remove cookies
-  removeCookie(JWT_COOKIE_NAME)
-  removeCookie(USERID_COOKIE_NAME)
-
-  store.dispatch(signedOut())
-  Router.push('/')
-  return {}
+  return <div></div>
 }
 
-export default connect(state => state)(Logout)
+const mapStateToProps = state => ({
+  auth: state.auth
+})
+const mapDispatchToProps = dispatch => ({
+  dispatch: dispatch
+})
+
+export default connect(mapStateToProps, mapDispatchToProps)(Logout)

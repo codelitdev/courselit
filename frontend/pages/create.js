@@ -5,7 +5,6 @@ import React, { useEffect } from 'react'
 import { connect } from 'react-redux'
 import Router from 'next/router'
 import MasterLayout from './masterlayout.js'
-import ProtectedRoute from '../components/ProtectedRoute'
 import Creator from '../components/Creator.js'
 
 const Create = (props) => {

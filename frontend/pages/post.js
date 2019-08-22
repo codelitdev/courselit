@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { connect } from 'react-redux'
 import MasterLayout from './masterlayout.js'
-import PropTypes from 'prop-types'
+// import PropTypes from 'prop-types'
 import { queryGraphQLWithUIEffects, formattedLocaleDate } from '../lib/utils.js'
 import { BACKEND } from '../config/constants.js'
 import { networkAction } from '../redux/actions.js'
@@ -56,14 +56,14 @@ const Posts = (props) => {
 
 Posts.getInitialProps = ({ query }) => query
 
-Posts.propTypes = {
-  post: PropTypes.shape({
-    title: PropTypes.string.isRequired,
-    description: PropTypes.string.isRequired,
-    featuredImage: PropTypes.string.isRequired,
-    updated: PropTypes.string.isRequired,
-    creatorName: PropTypes.string.isRequired
-  })
-}
+// Posts.propTypes = {
+//   post: PropTypes.shape({
+//     title: PropTypes.string.isRequired,
+//     description: PropTypes.string.isRequired,
+//     featuredImage: PropTypes.string.isRequired,
+//     updated: PropTypes.string.isRequired,
+//     creatorName: PropTypes.string.isRequired
+//   })
+// }
 
 export default connect()(Posts)
