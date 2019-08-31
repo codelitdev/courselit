@@ -2,10 +2,11 @@
   "scripts": {
     "lint": "eslint src __tests__ --fix",
     "dev": "PORT=8000 nodemon src",
-    "test": "jest"
+    "test": "jest",
+    "start": "PORT=8000 NODE_ENV=production node src"
   },
   "dependencies": {
-    "bcrypt": "^3.0.4",
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.3",
     "cors": "^2.8.5",
     "express": "^4.16.4",

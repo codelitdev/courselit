@@ -1,8 +1,42 @@
 version: "3"
 
 services:
-  mongo_service:
+  db:
     image: mongo
     ports:
       - "27017:27017"
-    container_name: mongo
+    container_name: db
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        backend: ${MAIN_URL}${API_PREFIX}
+    environment:
+      - BACKEND=${MAIN_URL}${API_PREFIX}
+      - API_PREFIX=${API_PREFIX}
+    expose:
+      - "3000"
+    depends_on:
+      - backend
+    container_name: frontend
+  backend:
+    build:
+      context: ./backend
+    environment:
+      - API_PREFIX=${API_PREFIX}
+    expose:
+      - "8000"
+    depends_on:
+      - db
+    container_name: backend
+  proxy:
+    build:
+      context: ./proxy
+    environment:
+      - API_PREFIX=${API_PREFIX}
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - frontend
+    container_name: proxy

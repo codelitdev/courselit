@@ -1,8 +1,16 @@
 /**
  * This file provides application wide constants.
  */
+import getConfig from 'next/config'
+const { publicRuntimeConfig } = getConfig()
 
-export const BACKEND = process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8000'
+export const BACKEND = process.env.NODE_ENV === 'production'
+  ? (process.env.BACKEND
+    ? `http://backend:8000${publicRuntimeConfig.apiPrefix}`
+    : publicRuntimeConfig.backend)
+  : 'http://localhost:8000'
+// export const BACKEND = process.env.backend
+console.log(process.env.backend, process.env.BACKEND, BACKEND)
 export const JWT_COOKIE_NAME = 'access_token'
 export const USERID_COOKIE_NAME = 'email'
 

@@ -44,10 +44,14 @@ function authReducer (state = initialState.auth, action) {
 function siteinfoReducer (state = initialState.siteinfo, action) {
   switch (action.type) {
     case SITEINFO_AVAILABLE:
-      return {
-        title: action.siteinfo.title,
-        subtitle: action.siteinfo.subtitle,
-        logopath: action.siteinfo.logopath
+      try {
+        return {
+          title: action.siteinfo.title,
+          subtitle: action.siteinfo.subtitle,
+          logopath: action.siteinfo.logopath
+        }
+      } catch (e) {
+        return state
       }
     default:
       return state

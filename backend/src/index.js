@@ -18,15 +18,13 @@ const app = express()
 app.use(cors({ origin: 'http://localhost:3000' })) // for next.js development server
 app.use(passport.initialize())
 app.use(bodyParser.urlencoded({ extended: true }))
-if (process.env.NODE_ENV !== 'production') {
-  // only used for accessing GraphiQL with JWT auth, during development
-  app.use(bodyParser.json())
-}
+app.use(bodyParser.json())
 app.use(fileUpload())
 
 // Routes
-app.use('/auth', require('./routes/auth.js')(passport))
-app.use('/graph',
+const routePrefix = process.env.NODE_ENV === 'production' ? process.env.API_PREFIX : ''
+app.use(`${routePrefix}/auth`, require('./routes/auth.js')(passport))
+app.use(`${routePrefix}/graph`,
   optionalAuthMiddlewareCreator(passport),
   graphqlHTTP(req => ({
     schema: require('./graphql/schema.js'),
@@ -34,7 +32,7 @@ app.use('/graph',
     context: { user: req.user }
   }))
 )
-app.use('/media',
+app.use(`${routePrefix}/media`,
   // passport.authenticate('jwt', { session: false }),
   require('./routes/media.js')(passport)
 )
