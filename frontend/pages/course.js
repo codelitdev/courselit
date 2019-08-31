@@ -1,11 +1,14 @@
 import { connect } from 'react-redux'
+import MasterLayout from './masterlayout'
 
 const Course = (props) => {
   return (
-    <div>
-      
-    </div>
+    <MasterLayout>
+    </MasterLayout>
   )
+}
+
+Course.getInitialProps = props => {
 }
 
 const mapStateToProps = state => ({

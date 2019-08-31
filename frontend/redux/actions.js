@@ -68,7 +68,6 @@ export function updateSiteInfo () {
 
       dispatch(networkAction(false))
       dispatch(newSiteInfoAvailable(response.site))
-      // dispatch({ type: SITEINFO_AVAILABLE, siteinfo: response.site })
     } catch (err) {
       throw err
     } finally {

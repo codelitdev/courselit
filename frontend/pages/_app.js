@@ -7,10 +7,6 @@ import { getCookie } from '../lib/session.js'
 import { JWT_COOKIE_NAME, USERID_COOKIE_NAME } from '../config/constants.js'
 import { signedIn, updateSiteInfo } from '../redux/actions.js'
 
-/**
- * A custom class for hooking in Redux store.
- */
-
 class MyApp extends App {
   static async getInitialProps (props) {
     const { Component, ctx } = props
