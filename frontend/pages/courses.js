@@ -5,7 +5,7 @@ import CourseItem from '../components/CourseItem.js'
 import { queryGraphQL } from '../lib/utils.js'
 import { BACKEND } from '../config/constants.js'
 import { BTN_LOAD_MORE } from '../config/strings.js'
-import MasterLayout from './masterlayout.js'
+import MasterLayout from '../components/Masterlayout.js'
 
 const Courses = (props) => {
   const [courses, setCourses] = useState(props.courses)

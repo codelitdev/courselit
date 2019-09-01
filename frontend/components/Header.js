@@ -9,9 +9,14 @@ import SessionButton from './SessionButton.js'
 
 export default function Header (props) {
   return (
-    <div>
+    <div className="header">
       <Branding backend={props.backend}/>
       <SessionButton />
+      <style jsx>{`
+        .header {
+          display: flex;
+        }
+      `}</style>
     </div>
   )
 }

@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { connect } from 'react-redux'
-import MasterLayout from './masterlayout.js'
-// import PropTypes from 'prop-types'
-import { queryGraphQLWithUIEffects, formattedLocaleDate } from '../lib/utils.js'
+import MasterLayout from '../components/Masterlayout.js'
 import { BACKEND } from '../config/constants.js'
 import { networkAction } from '../redux/actions.js'
 import TextEditor from '../components/TextEditor.js'
+import {
+  queryGraphQLWithUIEffects,
+  formattedLocaleDate
+} from '../lib/utils.js'
 
 const Posts = (props) => {
   const [post, setPost] = useState({})

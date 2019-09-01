@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { connect } from 'react-redux'
-import MasterLayout from './masterlayout.js'
+import MasterLayout from '../components/Masterlayout.js'
 import {
   networkAction
 } from '../redux/actions.js'
@@ -54,13 +54,16 @@ const Index = (props) => {
 
   return (
     <MasterLayout>
-      <div>
-        <section className='post'>
-          <h1>Latest Posts</h1>
-          { posts.map((x, index) => <BlogPostItem key={index} {...x}/>) }
-          { posts.length > 0 && <button onClick={getBlogPosts}>Load more</button> }
-        </section>
-      </div>
+      <section className='post'>
+        <h1>Latest Posts</h1>
+        { posts.map((x, index) => <BlogPostItem key={index} {...x}/>) }
+        { posts.length > 0 && <button onClick={getBlogPosts}>Load more</button> }
+      </section>
+      <style jsx>{`
+        section {
+          background: red;
+        }
+      `}</style>
     </MasterLayout>
   )
 }

@@ -3,7 +3,7 @@
  */
 
 module.exports = {
-  dbURL: process.env.NODE_ENV === 'production' ? 'db' : '172.18.0.2',
+  dbURL: process.env.NODE_ENV === 'production' ? 'db' : '172.19.0.1',
   dbName: 'app',
   saltRounds: 10, // for bcrypting the plain text passwords
   jwtSecret: process.env.NODE_ENV === 'production' ? 'KLjl2k3j5lk2j' : 'kj23kl4j5kjk',

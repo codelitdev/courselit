@@ -1,10 +1,8 @@
 import React, { useEffect } from 'react'
 import { connect } from 'react-redux'
 import Router from 'next/router'
-import {
-  signedOut
-} from '../redux/actions'
 import { removeCookie } from '../lib/session.js'
+import { signedOut } from '../redux/actions'
 import {
   JWT_COOKIE_NAME,
   USERID_COOKIE_NAME
@@ -28,4 +26,7 @@ const mapDispatchToProps = dispatch => ({
   dispatch: dispatch
 })
 
-export default connect(mapStateToProps, mapDispatchToProps)(Logout)
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Logout)

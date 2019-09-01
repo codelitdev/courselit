@@ -10,7 +10,7 @@ export const BACKEND = process.env.NODE_ENV === 'production'
     : publicRuntimeConfig.backend)
   : 'http://localhost:8000'
 // export const BACKEND = process.env.backend
-console.log(process.env.backend, process.env.BACKEND, BACKEND)
+// console.log(process.env.backend, process.env.BACKEND, BACKEND)
 export const JWT_COOKIE_NAME = 'access_token'
 export const USERID_COOKIE_NAME = 'email'
 

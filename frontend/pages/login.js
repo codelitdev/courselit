@@ -19,7 +19,7 @@ import {
 } from '../redux/actions.js'
 import { setCookie } from '../lib/session.js'
 // import { redirector } from '../lib/utils.js'
-import MasterLayout from './masterlayout.js'
+import MasterLayout from '../components/Masterlayout.js'
 
 const Login = (props) => {
   const emptyStringPat = /^\s*$/
