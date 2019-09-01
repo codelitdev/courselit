@@ -22,16 +22,16 @@ SessionButton.propTypes = {
 }
 
 function SessionButton (props) {
-  const button = props.auth.guest
-    ? (
-      <Link href='/login'>
-        <a>{ GENERIC_SIGNIN_TEXT }</a>
-      </Link>
-    ) : (
-      <Link href='/logout'>
-        <a>{ GENERIC_SIGNOUT_TEXT }</a>
-      </Link>
-    )
+  // const button = props.auth.guest
+  //   ? (
+  //     <Link href='/login'>
+  //       <a>{ GENERIC_SIGNIN_TEXT }</a>
+  //     </Link>
+  //   ) : (
+  //     <Link href='/logout'>
+  //       <a>{ GENERIC_SIGNOUT_TEXT }</a>
+  //     </Link>
+  //   )
 
   return (
     <div className="session">
