@@ -1,5 +1,5 @@
 import { connect } from 'react-redux'
-import MasterLayout from './masterlayout'
+import MasterLayout from '../components/Masterlayout.js'
 
 const Course = (props) => {
   return (

@@ -4,7 +4,7 @@
 import React, { useEffect } from 'react'
 import { connect } from 'react-redux'
 import Router from 'next/router'
-import MasterLayout from './masterlayout.js'
+import MasterLayout from '../components/Masterlayout.js'
 import Creator from '../components/Creator.js'
 
 const Create = (props) => {

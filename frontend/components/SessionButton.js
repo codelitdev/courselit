@@ -34,12 +34,36 @@ function SessionButton (props) {
     )
 
   return (
-    <div>
-      {button}
+    <div className="session">
       {props.profile.isCreator &&
         <Link href='/create'>
           <a>{CREATOR_AREA_LINK_TEXT}</a>
         </Link>}
+      {props.auth.guest
+        ? (
+          <Link href='/login'>
+            <a>{ GENERIC_SIGNIN_TEXT }</a>
+          </Link>
+        ) : (
+          <Link href='/logout'>
+            <a>{ GENERIC_SIGNOUT_TEXT }</a>
+          </Link>
+        )}
+      {/* { button } */}
+      <style jsx>{`
+        .session {
+          display: flex;
+          justify-content: center;
+        }
+        a {
+          color: black;
+          display: flex;
+          align-items: center;
+        }
+        a + a {
+          margin-left: .4em;
+        }
+      `}</style>
     </div>
   )
 }
