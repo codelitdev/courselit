@@ -6,18 +6,18 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import Branding from './Branding.js'
 import SessionButton from './SessionButton.js'
+import { Grid } from '@material-ui/core'
 
 export default function Header (props) {
   return (
-    <div className="header">
-      <Branding backend={props.backend}/>
-      <SessionButton />
-      <style jsx>{`
-        .header {
-          display: flex;
-        }
-      `}</style>
-    </div>
+    <Grid container direction='row'>
+      <Grid item xs={10}>
+        <Branding backend={props.backend}/>
+      </Grid>
+      <Grid item xs={2}>
+        <SessionButton />
+      </Grid>
+    </Grid>
   )
 }
 

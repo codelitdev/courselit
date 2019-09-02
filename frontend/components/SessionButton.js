@@ -15,6 +15,7 @@ import {
   authProps,
   profileProps
 } from '../types.js'
+import { Grid } from '@material-ui/core'
 
 SessionButton.propTypes = {
   auth: authProps,
@@ -34,37 +35,29 @@ function SessionButton (props) {
   //   )
 
   return (
-    <div className="session">
+    <Grid container justify='flex-end'>
       {props.profile.isCreator &&
-        <Link href='/create'>
-          <a>{CREATOR_AREA_LINK_TEXT}</a>
-        </Link>}
+        <Grid item>
+          <Link href='/create'>
+            <a>{CREATOR_AREA_LINK_TEXT}</a>
+          </Link>
+        </Grid>
+      }
       {props.auth.guest
         ? (
-          <Link href='/login'>
-            <a>{ GENERIC_SIGNIN_TEXT }</a>
-          </Link>
+          <Grid item>
+            <Link href='/login'>
+              <a>{ GENERIC_SIGNIN_TEXT }</a>
+            </Link>
+          </Grid>
         ) : (
-          <Link href='/logout'>
-            <a>{ GENERIC_SIGNOUT_TEXT }</a>
-          </Link>
+          <Grid item>
+            <Link href='/logout'>
+              <a>{ GENERIC_SIGNOUT_TEXT }</a>
+            </Link>
+          </Grid>
         )}
-      {/* { button } */}
-      <style jsx>{`
-        .session {
-          display: flex;
-          justify-content: center;
-        }
-        a {
-          color: black;
-          display: flex;
-          align-items: center;
-        }
-        a + a {
-          margin-left: .4em;
-        }
-      `}</style>
-    </div>
+    </Grid>
   )
 }
 
