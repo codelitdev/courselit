@@ -84,6 +84,27 @@ class MyApp extends App {
             border-collapse: collapse;
             border-spacing: 0;
           }
+
+          /* Custom Styles */
+          h1, h2, h3, h4, h5, h6 {
+            font-family: sans-serif;
+          }
+
+          h1 {
+            font-size: 1.6em;
+          }
+
+          h2 {
+            font-size: 1.5em;
+          }
+
+          h3 {
+            font-size: 1.4em;
+          }
+
+          h4 {
+            font-size: 1.3em;
+          }
         `}</style>
       </Container>
     )

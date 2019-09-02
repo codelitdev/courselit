@@ -54,14 +54,32 @@ const Index = (props) => {
 
   return (
     <MasterLayout>
-      <section className='post'>
-        <h1>Latest Posts</h1>
-        { posts.map((x, index) => <BlogPostItem key={index} {...x}/>) }
-        { posts.length > 0 && <button onClick={getBlogPosts}>Load more</button> }
-      </section>
+      <div className="content">
+        <section className='posts'>
+          <h1>Latest Posts</h1>
+          { posts.map((x, index) => <BlogPostItem key={index} {...x}/>) }
+          { posts.length > 0 && <button onClick={getBlogPosts}>Load more</button> }
+        </section>
+        <aside>
+          <h1>Social Corner</h1>
+        </aside>
+      </div>
       <style jsx>{`
+        .content {
+          display: flex;
+          margin-top: 2em;
+        }
         section {
-          background: red;
+          display: flex;
+          flex: 8;
+          flex-direction: column;
+        }
+        aside {
+          display: flex;
+          flex: 2;
+        }
+        section h1 {
+          margin-bottom: 0.8em;
         }
       `}</style>
     </MasterLayout>

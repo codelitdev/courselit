@@ -2,22 +2,39 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import Link from 'next/link'
 import TextEditor from './TextEditor.js'
-import { formattedLocaleDate } from '../lib/utils.js'
+// import { formattedLocaleDate } from '../lib/utils.js'
 import { URL_EXTENTION_POSTS } from '../config/constants.js'
 
 const BlogPostItem = (props) => (
-  <article>
-    <h1 className="title">{ props.title }</h1>
-    <TextEditor
-      initialContentState={ TextEditor.hydrate(props.description) }
-      readOnly={ true }/>
-    <p>Updated on { formattedLocaleDate(props.updated) } by { props.creatorName }</p>
-    <Link href={`/${URL_EXTENTION_POSTS}/${props.id}/${props.slug}`}>
-      <a>Visit post</a>
-    </Link>
-    <style jsx>{`
-    `}</style>
-  </article>
+  <Link href={`/${URL_EXTENTION_POSTS}/${props.id}/${props.slug}`}>
+    <article>
+      <h4 className="title">{ props.title }</h4>
+      <TextEditor
+        initialContentState={ TextEditor.hydrate(props.description) }
+        readOnly={ true }/>
+      {/* <p>Updated on { formattedLocaleDate(props.updated) } by { props.creatorName }</p> */}
+      <style jsx>{`
+        article {
+          padding: 10px 2px;
+          margin-bottom: 0.4em;
+        }
+
+        article:hover {
+          border: .1em solid blue;
+          cursor: pointer;
+        }
+
+        article + article {
+        }
+
+        .title {
+          font-weight: bold;
+          margin-bottom: 0.8em;
+        }
+
+      `}</style>
+    </article>
+  </Link>
 )
 
 BlogPostItem.propTypes = {
