@@ -11,6 +11,7 @@ import {
   BACKEND
 } from '../config/constants.js'
 import BlogPostItem from '../components/BlogPostItem.js'
+import Button from '@material-ui/core/Button'
 
 let postsPaginationOffset = 1
 
@@ -58,29 +59,29 @@ const Index = (props) => {
         <section className='posts'>
           <h1>Latest Posts</h1>
           { posts.map((x, index) => <BlogPostItem key={index} {...x}/>) }
-          { posts.length > 0 && <button onClick={getBlogPosts}>Load more</button> }
+          { posts.length > 0 && <Button onClick={getBlogPosts}>Load more</Button> }
         </section>
         <aside>
           <h1>Social Corner</h1>
         </aside>
       </div>
       <style jsx>{`
-        .content {
-          display: flex;
-          margin-top: 2em;
-        }
-        section {
-          display: flex;
-          flex: 8;
-          flex-direction: column;
-        }
-        aside {
-          display: flex;
-          flex: 2;
-        }
-        section h1 {
-          margin-bottom: 0.8em;
-        }
+        // .content {
+        //   display: flex;
+        //   margin-top: 2em;
+        // }
+        // section {
+        //   display: flex;
+        //   flex: 8;
+        //   flex-direction: column;
+        // }
+        // aside {
+        //   display: flex;
+        //   flex: 2;
+        // }
+        // section h1 {
+        //   margin-bottom: 0.8em;
+        // }
       `}</style>
     </MasterLayout>
   )

@@ -6,24 +6,29 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import Header from './Header.js'
 import { authProps } from '../types.js'
+import { Grid, Container, makeStyles } from '@material-ui/core'
 
-const MasterLayout = (props) => (
-  <div className="masterlayout">
-    <Header
-      className="header"
-      title='Rayn Studios'
-      subtitle='Learn to code'
-      auth={props.auth}/>
-    {props.children}
-    <style jsx>{`
-      .masterlayout {
-        display: flex;
-        flex-direction: column;
-        margin: 1.6em 2em;
-      }
-    `}</style>
-  </div>
-)
+const useStyles = makeStyles({
+  root: {
+    marginTop: 10
+  }
+})
+
+const MasterLayout = (props) => {
+  const classes = useStyles()
+  return (
+    <Container maxWidth='md' className={classes.root}>
+      <Grid container spacing={2}>
+        <Header
+          className="header"
+          title='Rayn Studios'
+          subtitle='Learn to code'
+          auth={props.auth}/>
+        {props.children}
+      </Grid>
+    </Container>
+  )
+}
 
 MasterLayout.propTypes = {
   children: PropTypes.array,

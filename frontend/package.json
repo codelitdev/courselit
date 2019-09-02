@@ -4,6 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
+    "@material-ui/core": "^4.4.0",
+    "@material-ui/styles": "^4.3.3",
     "@zeit/next-css": "^1.0.1",
     "base-64": "^0.1.0",
     "draft-js": "^0.10.5",
@@ -43,7 +45,8 @@
     "jest-resolve": "^24.1.0",
     "nodemon": "^1.19.0",
     "preact": "^8.4.2",
-    "react-test-renderer": "^16.8.5"
+    "react-test-renderer": "^16.8.5",
+    "webpack": "^4.39.3"
   },
   "jest": {
     "testPathIgnorePatterns": [
