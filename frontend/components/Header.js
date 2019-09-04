@@ -10,7 +10,7 @@ import { Grid } from '@material-ui/core'
 
 export default function Header (props) {
   return (
-    <Grid container direction='row'>
+    <Grid container direction='row' alignItems='center'>
       <Grid item xs={10}>
         <Branding backend={props.backend}/>
       </Grid>
