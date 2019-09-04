@@ -35,7 +35,7 @@ function SessionButton (props) {
   //   )
 
   return (
-    <Grid container justify='flex-end'>
+    <Grid container justify='flex-end' spacing={1}>
       {props.profile.isCreator &&
         <Grid item>
           <Link href='/create'>

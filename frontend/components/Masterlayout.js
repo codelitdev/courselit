@@ -18,13 +18,17 @@ const MasterLayout = (props) => {
   const classes = useStyles()
   return (
     <Container maxWidth='md' className={classes.root}>
-      <Grid container spacing={2}>
-        <Header
-          className="header"
-          title='Rayn Studios'
-          subtitle='Learn to code'
-          auth={props.auth}/>
-        {props.children}
+      <Grid container direction='column' spacing={2}>
+        <Grid item>
+          <Header
+            className="header"
+            title='Rayn Studios'
+            subtitle='Learn to code'
+            auth={props.auth}/>
+        </Grid>
+        <Grid item>
+          {props.children}
+        </Grid>
       </Grid>
     </Container>
   )
