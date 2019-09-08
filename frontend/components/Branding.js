@@ -30,8 +30,8 @@ const useStyles = makeStyles({
 const Branding = (props) => {
   const classes = useStyles()
   return (
-    <Grid container direction='row' spacing={1}>
-      <Grid item className={classes.logo}>
+    <Grid container spacing={1}>
+      <Grid item>
         <Link href='/'>
           <a>
             <Img src={props.logoPath} isThumbnail={true}/>
@@ -55,8 +55,7 @@ const Branding = (props) => {
 Branding.propTypes = {
   title: PropTypes.string,
   subtitle: PropTypes.string,
-  logoPath: PropTypes.string,
-  backend: PropTypes.string
+  logoPath: PropTypes.string
 }
 
 const mapStateToProps = state => ({

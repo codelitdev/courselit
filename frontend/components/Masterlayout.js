@@ -1,42 +1,40 @@
-/**
- * Common layout for all pages
- */
-// import { connect } from 'react-redux'
 import React from 'react'
 import PropTypes from 'prop-types'
 import Header from './Header.js'
-import { authProps } from '../types.js'
-import { Grid, Container, makeStyles } from '@material-ui/core'
+import { connect } from 'react-redux'
+import { Container, makeStyles, LinearProgress } from '@material-ui/core'
 
 const useStyles = makeStyles({
   root: {
     marginTop: 10
-  }
+  },
+  showProgressBar: props => ({
+    visibility: props ? 'visible' : 'hidden'
+  })
 })
 
 const MasterLayout = (props) => {
-  const classes = useStyles()
+  const classes = useStyles(props.networkAction)
   return (
-    <Container maxWidth='md' className={classes.root}>
-      <Grid container direction='column' spacing={2}>
-        <Grid item>
-          <Header
-            className="header"
-            title='Rayn Studios'
-            subtitle='Learn to code'
-            auth={props.auth}/>
-        </Grid>
-        <Grid item>
-          {props.children}
-        </Grid>
-      </Grid>
-    </Container>
+    <div>
+      <LinearProgress className={classes.showProgressBar}/>
+      <Container maxWidth='md' className={classes.root}>
+        <Header />
+        {props.children}
+      </Container>
+    </div>
   )
 }
 
 MasterLayout.propTypes = {
-  children: PropTypes.array,
-  auth: authProps
+  children: PropTypes.object,
+  networkAction: PropTypes.bool
 }
 
-export default MasterLayout
+const mapStateToProps = state => ({
+  networkAction: state.networkAction
+})
+
+export default connect(
+  mapStateToProps
+)(MasterLayout)

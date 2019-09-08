@@ -12,7 +12,6 @@ import {
   GENERIC_SUBTITLE,
   GENERIC_LOGO_PATH
 } from '../config/strings.js'
-// import { BACKEND } from '../config/constants.js'
 
 const initialState = {
   auth: { guest: true, token: null, userid: null },

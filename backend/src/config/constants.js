@@ -33,5 +33,6 @@ module.exports = {
   postsPerPageLimit: 5,
   postDescTruncLimit: 30,
   coursesPerPageLimit: 1,
-  mymediaLimit: 5
+  mymediaLimit: 5,
+  blogPostSnippetLength: 10
 }
