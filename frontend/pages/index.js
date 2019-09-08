@@ -11,7 +11,7 @@ import {
   BACKEND
 } from '../config/constants.js'
 import BlogPostItem from '../components/BlogPostItem.js'
-import Button from '@material-ui/core/Button'
+import { Grid, Button } from '@material-ui/core'
 
 let postsPaginationOffset = 1
 
@@ -55,34 +55,20 @@ const Index = (props) => {
 
   return (
     <MasterLayout>
-      <div className="content">
-        <section className='posts'>
-          <h1>Latest Posts</h1>
-          { posts.map((x, index) => <BlogPostItem key={index} {...x}/>) }
-          { posts.length > 0 && <Button onClick={getBlogPosts}>Load more</Button> }
-        </section>
-        <aside>
-          <h1>Social Corner</h1>
-        </aside>
-      </div>
-      <style jsx>{`
-        // .content {
-        //   display: flex;
-        //   margin-top: 2em;
-        // }
-        // section {
-        //   display: flex;
-        //   flex: 8;
-        //   flex-direction: column;
-        // }
-        // aside {
-        //   display: flex;
-        //   flex: 2;
-        // }
-        // section h1 {
-        //   margin-bottom: 0.8em;
-        // }
-      `}</style>
+      <Grid container direction='row'>
+        <Grid item xs={10}>
+          <section className='posts'>
+            <h1>Latest Posts</h1>
+            { posts.map((x, index) => <BlogPostItem key={index} {...x}/>) }
+            { posts.length > 0 && <Button onClick={getBlogPosts}>Load more</Button> }
+          </section>
+        </Grid>
+        <Grid item xs={2}>
+          <aside>
+            <h1>Social Corner</h1>
+          </aside>
+        </Grid>
+      </Grid>
     </MasterLayout>
   )
 }

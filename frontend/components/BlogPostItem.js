@@ -9,9 +9,10 @@ const BlogPostItem = (props) => (
   <Link href={`/${URL_EXTENTION_POSTS}/${props.id}/${props.slug}`}>
     <article>
       <h4 className="title">{ props.title }</h4>
-      <TextEditor
+      <p>{props.description}</p>
+      {/* <TextEditor
         initialContentState={ TextEditor.hydrate(props.description) }
-        readOnly={ true }/>
+        readOnly={ true }/> */}
       {/* <p>Updated on { formattedLocaleDate(props.updated) } by { props.creatorName }</p> */}
       <style jsx>{`
         article {

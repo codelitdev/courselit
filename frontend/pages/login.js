@@ -18,8 +18,8 @@ import {
   networkAction
 } from '../redux/actions.js'
 import { setCookie } from '../lib/session.js'
-// import { redirector } from '../lib/utils.js'
 import MasterLayout from '../components/Masterlayout.js'
+import { Grid, TextField, Button } from '@material-ui/core'
 
 const Login = (props) => {
   const emptyStringPat = /^\s*$/
@@ -171,39 +171,45 @@ const Login = (props) => {
 
   return (
     <MasterLayout>
-      <div>
-        <div>
-          <h2>Log in</h2>
-          <form onSubmit={handleLogin}>
-            {loginData.err &&
-              <div>{loginData.err}</div>
-            }
-            <label> Email:
-              <input
+      <Grid container direction='row' spacing={2}>
+        <Grid item xs={12} sm={6}>
+          <Grid container>
+            <h2>Log in</h2>
+            <form onSubmit={handleLogin}>
+              {loginData.err &&
+                <div>{loginData.err}</div>
+              }
+              <TextField
                 type='email'
                 value={loginData.email}
+                variant='outlined'
+                label='Email'
+                fullWidth
+                margin="normal"
                 onChange={
                   (e) => setLoginData(
                     Object.assign({}, loginData, {
                       email: e.target.value
                     })
                   )}/>
-            </label>
-            <label> Password:
-              <input
+              <TextField
                 type='password'
                 value={loginData.pass}
+                variant='outlined'
+                label='Password'
+                fullWidth
+                margin="normal"
                 onChange={
                   (e) => setLoginData(
                     Object.assign({}, loginData, {
                       pass: e.target.value
                     })
                   )}/>
-            </label>
-            <input type='submit' value='Submit' />
-          </form>
-        </div>
-        <div>
+              <Button type='submit'>Submit</Button>
+            </form>
+          </Grid>
+        </Grid>
+        <Grid item xs={12} sm={6}>
           <h2>Sign up</h2>
           <form onSubmit={handleSignup}>
             {signupData.msg &&
@@ -212,54 +218,62 @@ const Login = (props) => {
             {signupData.err &&
               <div>{signupData.err}</div>
             }
-            <label> Email:
-              <input
-                type='email'
-                value={signupData.email}
-                onChange={
-                  (e) => setSignupData(
-                    Object.assign({}, signupData, {
-                      email: e.target.value
-                    })
-                  )}/>
-            </label>
-            <label> Password:
-              <input
-                type='password'
-                value={signupData.pass}
-                onChange={
-                  (e) => setSignupData(
-                    Object.assign({}, signupData, {
-                      pass: e.target.value
-                    })
-                  )}/>
-            </label>
-            <label> Confirm password:
-              <input
-                type='password'
-                value={signupData.conf}
-                onChange={
-                  (e) => setSignupData(
-                    Object.assign({}, signupData, {
-                      conf: e.target.value
-                    })
-                  )}/>
-            </label>
-            <label> Name:
-              <input
-                type='name'
-                value={signupData.name}
-                onChange={
-                  (e) => setSignupData(
-                    Object.assign({}, signupData, {
-                      name: e.target.value
-                    })
-                  )}/>
-            </label>
-            <input type='submit' value='Submit' />
+            <TextField
+              type='email'
+              value={signupData.email}
+              variant='outlined'
+              label='Email'
+              fullWidth
+              margin="normal"
+              onChange={
+                (e) => setSignupData(
+                  Object.assign({}, signupData, {
+                    email: e.target.value
+                  })
+                )}/>
+            <TextField
+              type='password'
+              value={signupData.pass}
+              variant='outlined'
+              label='Password'
+              fullWidth
+              margin="normal"
+              onChange={
+                (e) => setSignupData(
+                  Object.assign({}, signupData, {
+                    pass: e.target.value
+                  })
+                )}/>
+            <TextField
+              type='password'
+              value={signupData.conf}
+              variant='outlined'
+              label='Confirm password'
+              fullWidth
+              margin="normal"
+              onChange={
+                (e) => setSignupData(
+                  Object.assign({}, signupData, {
+                    conf: e.target.value
+                  })
+                )}/>
+            <TextField
+              type='name'
+              value={signupData.name}
+              variant='outlined'
+              label='Name'
+              fullWidth
+              margin="normal"
+              onChange={
+                (e) => setSignupData(
+                  Object.assign({}, signupData, {
+                    name: e.target.value
+                  })
+                )}/>
+            <Button type='submit'>Submit</Button>
           </form>
-        </div>
-      </div>
+        </Grid>
+      </Grid>
     </MasterLayout>
   )
 }
