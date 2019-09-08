@@ -1,7 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import Link from 'next/link'
-import TextEditor from './TextEditor.js'
 // import { formattedLocaleDate } from '../lib/utils.js'
 import { URL_EXTENTION_POSTS } from '../config/constants.js'
 
@@ -10,10 +9,6 @@ const BlogPostItem = (props) => (
     <article>
       <h4 className="title">{ props.title }</h4>
       <p>{props.description}</p>
-      {/* <TextEditor
-        initialContentState={ TextEditor.hydrate(props.description) }
-        readOnly={ true }/> */}
-      {/* <p>Updated on { formattedLocaleDate(props.updated) } by { props.creatorName }</p> */}
       <style jsx>{`
         article {
           padding: 10px 2px;
