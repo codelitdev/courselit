@@ -1,8 +1,3 @@
-/**
- * This component displays the title, subtitle and logo
- * of the website.
- */
-
 import React from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'

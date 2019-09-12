@@ -2,19 +2,20 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import Header from './Header.js'
 import { connect } from 'react-redux'
-import { Container, makeStyles, LinearProgress } from '@material-ui/core'
+import { Container, LinearProgress } from '@material-ui/core'
+import { makeStyles } from '@material-ui/styles'
 
 const useStyles = makeStyles({
   root: {
     marginTop: 10
   },
   showProgressBar: props => ({
-    visibility: props ? 'visible' : 'hidden'
+    visibility: props.networkAction ? 'visible' : 'hidden'
   })
 })
 
 const MasterLayout = (props) => {
-  const classes = useStyles(props.networkAction)
+  const classes = useStyles(props)
   return (
     <div>
       <LinearProgress className={classes.showProgressBar}/>
