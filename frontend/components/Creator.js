@@ -33,8 +33,23 @@ import { networkAction } from '../redux/actions.js'
 import MediaManager from './MediaManager.js'
 import TextEditor from './TextEditor.js'
 import SiteSettings from './SiteSettings.js'
+import {
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  Hidden
+} from '@material-ui/core'
+import {
+  useTheme,
+  makeStyles
+} from '@material-ui/core/styles'
 
 let creatorCoursesPaginationOffset = 1
+
+const useStyles = makeStyles(theme => ({
+  toolbar: theme.mixins.toolbar
+}))
 
 const Creator = (props) => {
   const initCourseMetaData = {
@@ -57,6 +72,8 @@ const Creator = (props) => {
   const [creatorCourses, setCreatorCourses] = useState([])
   const [userError, setUserError] = useState('')
   const [mediaManagerVisibility, setMediaManagerVisibility] = useState(false)
+  const theme = useTheme()
+  const classes = useStyles()
 
   // The following ref is used for accessing previous state in hooks
   // Reference: https://reactjs.org/docs/hooks-faq.html#how-to-get-the-previous-props-or-state
@@ -522,181 +539,214 @@ const Creator = (props) => {
     )
   }
 
-  return (<div>
+  const drawer = (
     <div>
-      <p>My Courses</p>
-      {creatorCourses && <ul>
-        {creatorCourses.map(
-          (item, ind) => <li key={ind}>
-            <a href="#" onClick={() => loadCourse(item.id)}>{item.title}</a>
-          </li>
-        )}
-      </ul>}
-      <button onClick={loadCreatorCourse}>Load my courses</button>
+      <div className={classes.toolbar} />
+      <List>
+        {['Courses', 'Media', 'Settings'].map((text, index) => (
+          <ListItem button key={text}>
+            <ListItemText primary={text}></ListItemText>
+          </ListItem>
+        ))}
+      </List>
     </div>
+  )
+
+  return (
     <div>
-      <button onClick={showCourseCreateForm}>
-        Create a course
-      </button>
-      {courseFormVisible &&
+      <nav>
+        <Hidden smUp implementation='css'>
+          <Drawer
+            variant='temporary'
+            anchor={theme.direction === 'rtl' ? 'right' : 'left'}>
+            {drawer}
+          </Drawer>
+        </Hidden>
+        <Hidden xsDown implementation='css'>
+          <Drawer
+            variant="permanent">
+            {drawer}
+          </Drawer>
+        </Hidden>
+      </nav>
+      <main>
+        <div className={classes.toolbar} />
         <div>
-          <div>
-            <form onSubmit={onCourseCreate}>
-              {userError &&
-                <div>{userError}</div>
-              }
-              <label> Title:
-                <input
-                  type='text'
-                  name='title'
-                  value={courseData.course.title}
-                  onChange={onCourseDetailsChange}/>
-              </label>
-              <label> Description:
-                <TextEditor
-                  initialContentState={courseData.course.description}
-                  onChange={onDescriptionChange}/>
-              </label>
-              <label> Featured Image:
-                <input
-                  type='url'
-                  name='featuredImage'
-                  value={courseData.course.featuredImage}
-                  onChange={onCourseDetailsChange}/>
-              </label>
-              <label> Cost:
-                <input
-                  type='number'
-                  name='cost'
-                  value={courseData.course.cost}
-                  step="0.1"
-                  onChange={onCourseDetailsChange}/>
-              </label>
-              <label> Blog Post:
-                <input
-                  type='checkbox'
-                  name='isBlog'
-                  checked={courseData.course.isBlog}
-                  onChange={onCourseDetailsChange}/>
-              </label>
-              <label> Privacy:
-                <select
-                  name='privacy'
-                  value={courseData.course.privacy}
-                  onChange={onCourseDetailsChange}>
-                  <option value="PUBLIC">Public</option>
-                  <option value="PRIVATE">Private</option>
-                  <option value="UNLISTED">Unlisted</option>
-                </select>
-              </label>
-              <label> Published:
-                <input
-                  type='checkbox'
-                  name='published'
-                  checked={courseData.course.published}
-                  onChange={onCourseDetailsChange}/>
-              </label>
-              <label> Featured Course:
-                <input
-                  type='checkbox'
-                  name='isFeatured'
-                  checked={courseData.course.isFeatured}
-                  onChange={onCourseDetailsChange}/>
-              </label>
-              <input type='submit' value={COURSE_CREATOR_BUTTON_TEXT}/>
-            </form>
-          </div>
-          {courseData.course.id &&
+          <p>My Courses</p>
+          {creatorCourses && <ul>
+            {creatorCourses.map(
+              (item, ind) => <li key={ind}>
+                <a href="#" onClick={() => loadCourse(item.id)}>{item.title}</a>
+              </li>
+            )}
+          </ul>}
+          <button onClick={loadCreatorCourse}>Load my courses</button>
+        </div>
+        <div>
+          <button onClick={showCourseCreateForm}>
+            Create a course
+          </button>
+          {courseFormVisible &&
             <div>
-              <Link href={
-                `/${courseData.course.isBlog ? URL_EXTENTION_POSTS : URL_EXTENTION_COURSES}/${courseData.course.id}/${courseData.course.slug}`
-              }>
-                <a>Visit { courseData.course.isBlog ? 'post' : 'course' }</a>
-              </Link>
-              <button onClick={onCourseDelete}>Delete course</button>
-              {!courseData.course.isBlog &&
-                (<div>
-                  {courseData.lessons.map(
-                    (item, index) => (
-                      <div key={index}>
-                        <form onSubmit={(e) => onLessonCreate(e, index)}>
-                          <label> Title:
-                            <input
-                              type='text'
-                              name='title'
-                              value={item.title}
-                              onChange={(e) => onLessonDetailsChange(e, index)}/>
-                          </label>
-                          <label> Type:
-                            <select
-                              name='type'
-                              value={item.type}
-                              onChange={(e) => onLessonDetailsChange(e, index)}>
-                              <option
-                                value={LESSON_TYPE_TEXT}>
-                                {capitalize(LESSON_TYPE_TEXT)}
-                              </option>
-                              <option
-                                value={LESSON_TYPE_VIDEO}>
-                                {capitalize(LESSON_TYPE_VIDEO)}
-                              </option>
-                              <option
-                                value={LESSON_TYPE_PDF}>
-                                {capitalize(LESSON_TYPE_PDF)}
-                              </option>
-                              <option
-                                value={LESSON_TYPE_AUDIO}>
-                                {capitalize(LESSON_TYPE_AUDIO)}
-                              </option>
-                              <option
-                                value={LESSON_TYPE_QUIZ}>
-                                {capitalize(LESSON_TYPE_QUIZ)}
-                              </option>
-                            </select>
-                          </label>
-                          <label> Content:
-                            <textarea
-                              name='content'
-                              value={item.content}
-                              onChange={(e) => onLessonDetailsChange(e, index)}/>
-                          </label>
-                          {(item.type !== LESSON_TYPE_TEXT &&
-                            item.type !== LESSON_TYPE_QUIZ) &&
-                            <label> {capitalize(item.type)} Url:
-                              <input
-                                type='url'
-                                name='contentURL'
-                                value={item.contentURL}
-                                onChange={(e) => onLessonDetailsChange(e, index)}/>
-                            </label>
-                          }
-                          <label> Downloadable:
-                            <input
-                              type='checkbox'
-                              name='downloadable'
-                              defaultChecked={item.downloadable}
-                              onChange={(e) => onLessonDetailsChange(e, index)}/>
-                          </label>
-                          <input type='submit' value={COURSE_CREATOR_BUTTON_TEXT}/>
-                        </form>
-                        <button onClick={() => onLessonDelete(index)}>Remove lesson</button>
-                      </div>)
-                  )}
-                  <button onClick={onAddLesson}>Add lesson</button>
-                </div>)}
+              <div>
+                <form onSubmit={onCourseCreate}>
+                  {userError &&
+                    <div>{userError}</div>
+                  }
+                  <label> Title:
+                    <input
+                      type='text'
+                      name='title'
+                      value={courseData.course.title}
+                      onChange={onCourseDetailsChange}/>
+                  </label>
+                  <label> Description:
+                    <TextEditor
+                      initialContentState={courseData.course.description}
+                      onChange={onDescriptionChange}/>
+                  </label>
+                  <label> Featured Image:
+                    <input
+                      type='url'
+                      name='featuredImage'
+                      value={courseData.course.featuredImage}
+                      onChange={onCourseDetailsChange}/>
+                  </label>
+                  <label> Cost:
+                    <input
+                      type='number'
+                      name='cost'
+                      value={courseData.course.cost}
+                      step="0.1"
+                      onChange={onCourseDetailsChange}/>
+                  </label>
+                  <label> Blog Post:
+                    <input
+                      type='checkbox'
+                      name='isBlog'
+                      checked={courseData.course.isBlog}
+                      onChange={onCourseDetailsChange}/>
+                  </label>
+                  <label> Privacy:
+                    <select
+                      name='privacy'
+                      value={courseData.course.privacy}
+                      onChange={onCourseDetailsChange}>
+                      <option value="PUBLIC">Public</option>
+                      <option value="PRIVATE">Private</option>
+                      <option value="UNLISTED">Unlisted</option>
+                    </select>
+                  </label>
+                  <label> Published:
+                    <input
+                      type='checkbox'
+                      name='published'
+                      checked={courseData.course.published}
+                      onChange={onCourseDetailsChange}/>
+                  </label>
+                  <label> Featured Course:
+                    <input
+                      type='checkbox'
+                      name='isFeatured'
+                      checked={courseData.course.isFeatured}
+                      onChange={onCourseDetailsChange}/>
+                  </label>
+                  <input type='submit' value={COURSE_CREATOR_BUTTON_TEXT}/>
+                </form>
+              </div>
+              {courseData.course.id &&
+                <div>
+                  <Link href={
+                    `/${courseData.course.isBlog ? URL_EXTENTION_POSTS : URL_EXTENTION_COURSES}/${courseData.course.id}/${courseData.course.slug}`
+                  }>
+                    <a>Visit { courseData.course.isBlog ? 'post' : 'course' }</a>
+                  </Link>
+                  <button onClick={onCourseDelete}>Delete course</button>
+                  {!courseData.course.isBlog &&
+                    (<div>
+                      {courseData.lessons.map(
+                        (item, index) => (
+                          <div key={index}>
+                            <form onSubmit={(e) => onLessonCreate(e, index)}>
+                              <label> Title:
+                                <input
+                                  type='text'
+                                  name='title'
+                                  value={item.title}
+                                  onChange={(e) => onLessonDetailsChange(e, index)}/>
+                              </label>
+                              <label> Type:
+                                <select
+                                  name='type'
+                                  value={item.type}
+                                  onChange={(e) => onLessonDetailsChange(e, index)}>
+                                  <option
+                                    value={LESSON_TYPE_TEXT}>
+                                    {capitalize(LESSON_TYPE_TEXT)}
+                                  </option>
+                                  <option
+                                    value={LESSON_TYPE_VIDEO}>
+                                    {capitalize(LESSON_TYPE_VIDEO)}
+                                  </option>
+                                  <option
+                                    value={LESSON_TYPE_PDF}>
+                                    {capitalize(LESSON_TYPE_PDF)}
+                                  </option>
+                                  <option
+                                    value={LESSON_TYPE_AUDIO}>
+                                    {capitalize(LESSON_TYPE_AUDIO)}
+                                  </option>
+                                  <option
+                                    value={LESSON_TYPE_QUIZ}>
+                                    {capitalize(LESSON_TYPE_QUIZ)}
+                                  </option>
+                                </select>
+                              </label>
+                              <label> Content:
+                                <textarea
+                                  name='content'
+                                  value={item.content}
+                                  onChange={(e) => onLessonDetailsChange(e, index)}/>
+                              </label>
+                              {(item.type !== LESSON_TYPE_TEXT &&
+                                item.type !== LESSON_TYPE_QUIZ) &&
+                                <label> {capitalize(item.type)} Url:
+                                  <input
+                                    type='url'
+                                    name='contentURL'
+                                    value={item.contentURL}
+                                    onChange={(e) => onLessonDetailsChange(e, index)}/>
+                                </label>
+                              }
+                              <label> Downloadable:
+                                <input
+                                  type='checkbox'
+                                  name='downloadable'
+                                  defaultChecked={item.downloadable}
+                                  onChange={(e) => onLessonDetailsChange(e, index)}/>
+                              </label>
+                              <input type='submit' value={COURSE_CREATOR_BUTTON_TEXT}/>
+                            </form>
+                            <button onClick={() => onLessonDelete(index)}>Remove lesson</button>
+                          </div>)
+                      )}
+                      <button onClick={onAddLesson}>Add lesson</button>
+                    </div>)}
+                </div>
+              }
             </div>
           }
         </div>
-      }
+        <button onClick={() => setMediaManagerVisibility(true)}>{MANAGE_MEDIA_BUTTON_TEXT}</button>
+        { mediaManagerVisibility &&
+          <MediaManager
+            onMediaSelected={onMediaSelected}
+            toggleVisibility={toggleMediaManagerVisibility}/>
+        }
+        <SiteSettings />
+      </main>
     </div>
-    <button onClick={() => setMediaManagerVisibility(true)}>{MANAGE_MEDIA_BUTTON_TEXT}</button>
-    { mediaManagerVisibility &&
-      <MediaManager
-        onMediaSelected={onMediaSelected}
-        toggleVisibility={toggleMediaManagerVisibility}/>
-    }
-    <SiteSettings />
-  </div>)
+  )
 }
 
 Creator.propTypes = {
