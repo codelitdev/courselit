@@ -16,6 +16,7 @@ export const RESP_API_USER_CREATED = 'User created'
 
 // Placeholder texts
 export const CREATOR_AREA_LINK_TEXT = 'Create'
+export const CREATOR_AREA_PAGE_TITLE = 'Dashboard'
 export const GENERIC_TITLE = 'Content Platform'
 export const GENERIC_SUBTITLE = 'Learn new topics'
 export const GENERIC_LOGO_PATH = ''
