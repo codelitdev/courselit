@@ -9,6 +9,7 @@ import {
   CREATOR_AREA_PAGE_TITLE
 } from '../config/strings.js'
 import MediaManager from '../components/MediaManager.js'
+import Courses from '../components/Courses.js'
 
 const Create = (props) => {
   useEffect(() => {
@@ -31,7 +32,7 @@ const Create = (props) => {
   //   { name: 'Settings', component: 'div' }
   // ]
   const items = {
-    Courses: function Courses (props) { return <div>Courses</div> },
+    Courses: <Courses />,
     Settings: <SiteSettings />,
     Media: <MediaManager onMediaSelected={() => {}} toggleVisibility={() => {}} />
   }
