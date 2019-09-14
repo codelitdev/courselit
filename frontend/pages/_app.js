@@ -7,7 +7,6 @@ import { getCookie } from '../lib/session.js'
 import { JWT_COOKIE_NAME, USERID_COOKIE_NAME } from '../config/constants.js'
 import { signedIn, updateSiteInfo } from '../redux/actions.js'
 import { ThemeProvider } from '@material-ui/styles'
-import CssBaseline from '@material-ui/core/CssBaseline'
 import theme from '../theme'
 
 class MyApp extends App {
@@ -49,7 +48,6 @@ class MyApp extends App {
       <Container>
         <Provider store={store}>
           <ThemeProvider theme={theme}>
-            <CssBaseline />
             <Component {...pageProps} />
           </ThemeProvider>
         </Provider>
