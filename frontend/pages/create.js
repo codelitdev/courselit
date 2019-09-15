@@ -10,6 +10,7 @@ import {
 } from '../config/strings.js'
 import MediaManager from '../components/MediaManager.js'
 import Courses from '../components/Courses.js'
+import UsersManager from '../components/UsersManager.js'
 
 const Create = (props) => {
   useEffect(() => {
@@ -33,8 +34,9 @@ const Create = (props) => {
   // ]
   const items = {
     Courses: <Courses />,
-    Settings: <SiteSettings />,
-    Media: <MediaManager onMediaSelected={() => {}} toggleVisibility={() => {}} />
+    Users: <UsersManager />,
+    Media: <MediaManager onMediaSelected={() => {}} toggleVisibility={() => {}} />,
+    Settings: <SiteSettings />
   }
   return <ResponsiveDrawer items={items} pageTitle={CREATOR_AREA_PAGE_TITLE}/>
 }
