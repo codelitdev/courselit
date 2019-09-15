@@ -8,7 +8,8 @@ import {
 import {
   ERR_COURSE_COST_REQUIRED,
   ERR_COURSE_TITLE_REQUIRED,
-  COURSE_CREATOR_BUTTON_TEXT
+  COURSE_CREATOR_BUTTON_TEXT,
+  NEW_COURSE_CREATION_TITLE
 } from '../config/strings.js'
 import TextEditor from './TextEditor.js'
 import { networkAction } from '../redux/actions.js'
@@ -27,6 +28,44 @@ import {
   URL_EXTENTION_COURSES
 } from '../config/constants.js'
 import Link from 'next/link'
+import {
+  Grid,
+  TextField,
+  Typography,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Switch,
+  Button
+} from '@material-ui/core'
+import { makeStyles } from '@material-ui/styles'
+
+const useStyles = makeStyles(theme => ({
+  title: {
+    marginTop: theme.spacing(3)
+  },
+  formControl: {
+    margin: theme.spacing(1),
+    minWidth: '100%'
+  },
+  editor: {
+    border: `1px solid #cacaca`,
+    borderRadius: '6px',
+    padding: '10px 8px',
+    maxHeight: 300,
+    overflow: 'auto',
+    marginBottom: theme.spacing(2)
+  },
+  editorLabel: {
+    fontSize: '1em',
+    marginBottom: theme.spacing(1)
+  },
+  controlRow: {
+    marginTop: theme.spacing(2),
+    marginBottom: theme.spacing(2)
+  }
+}))
 
 const CourseEditor = (props) => {
   const initCourseMetaData = {
@@ -46,6 +85,7 @@ const CourseEditor = (props) => {
   }
   const [courseData, setCourseData] = useState(initCourseData)
   const [userError, setUserError] = useState('')
+  const classes = useStyles()
 
   // The following ref is used for accessing previous state in hooks
   // Reference: https://reactjs.org/docs/hooks-faq.html#how-to-get-the-previous-props-or-state
@@ -53,6 +93,13 @@ const CourseEditor = (props) => {
   useEffect(() => {
     prevCourseData.current = courseData
   })
+
+  // For privacy dropdown
+  const inputLabel = React.useRef(null)
+  const [labelWidth, setLabelWidth] = React.useState(0)
+  useEffect(() => {
+    setLabelWidth(inputLabel.current.offsetWidth)
+  }, [])
 
   // To clear the error, call setError().
   const setError = (msg = '') => setUserError(msg)
@@ -366,35 +413,140 @@ const CourseEditor = (props) => {
   return (
     <div>
       <div>
+        <Typography variant='h5' className={classes.title}>
+          {NEW_COURSE_CREATION_TITLE}
+        </Typography>
         <form onSubmit={onCourseCreate}>
           {userError &&
             <div>{userError}</div>
           }
-          <label> Title:
-            <input
-              type='text'
-              name='title'
-              value={courseData.course.title}
-              onChange={onCourseDetailsChange}/>
-          </label>
-          <label> Description:
-            <TextEditor
-              initialContentState={courseData.course.description}
-              onChange={onDescriptionChange}/>
-          </label>
+          <TextField
+            required
+            variant='outlined'
+            label='Title'
+            fullWidth
+            margin="normal"
+            name='title'
+            value={courseData.course.title}
+            onChange={onCourseDetailsChange}/>
+          <Grid container alignItems='center'>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                required
+                type='number'
+                variant='outlined'
+                label='Cost'
+                fullWidth
+                margin="normal"
+                name='cost'
+                step='0.1'
+                value={courseData.course.cost}
+                onChange={onCourseDetailsChange}/>
+              {/* <label> Cost:
+                <input
+                  type='number'
+                  name='cost'
+                  value={courseData.course.cost}
+                  step="0.1"
+                  onChange={onCourseDetailsChange}/>
+              </label> */}
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl variant='outlined' className={classes.formControl}>
+                <InputLabel ref={inputLabel} htmlFor='outlined-privacy-simple'>
+                  Privacy
+                </InputLabel>
+                <Select
+                  autoWidth
+                  value={courseData.course.privacy}
+                  onChange={onCourseDetailsChange}
+                  labelwidth={labelWidth}
+                  inputProps={{
+                    name: 'privacy',
+                    id: 'outlined-privacy-simple'
+                  }}>
+                  <MenuItem value="PUBLIC">Public</MenuItem>
+                  <MenuItem value="PRIVATE">Private</MenuItem>
+                  <MenuItem value="UNLISTED">Unlisted</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+          <Grid container className={classes.controlRow}>
+            <Grid item xs={12} sm={4}>
+              <Grid
+                container
+                justify='space-between'
+                alignItems='center'>
+                <Grid item>
+                  <Typography variant='body1'>
+                    Blog post
+                  </Typography>
+                </Grid>
+                <Grid item>
+                  <Switch
+                    type='checkbox'
+                    name='isBlog'
+                    checked={courseData.course.isBlog}
+                    onChange={onCourseDetailsChange}/>
+                </Grid>
+              </Grid>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <Grid
+                container
+                justify='space-between'
+                alignItems='center'>
+                <Grid item>
+                  <Typography variant='body1'>
+                    Published
+                  </Typography>
+                </Grid>
+                <Grid item>
+                  <Switch
+                    type='checkbox'
+                    name='published'
+                    checked={courseData.course.published}
+                    onChange={onCourseDetailsChange}/>
+                </Grid>
+              </Grid>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <Grid
+                container
+                justify='space-between'
+                alignItems='center'>
+                <Grid item>
+                  <Typography variant='body1'>
+                    Featured course
+                  </Typography>
+                </Grid>
+                <Grid item>
+                  <Switch
+                    type='checkbox'
+                    name='isFeatured'
+                    checked={courseData.course.isFeatured}
+                    onChange={onCourseDetailsChange}/>
+                </Grid>
+              </Grid>
+            </Grid>
+          </Grid>
+          <div></div>
+          <Grid container className={classes.editor}>
+            <Grid item xs={12} className={classes.editorLabel}>Description</Grid>
+            <Grid item xs={12}>
+              <TextEditor
+                initialContentState={courseData.course.description}
+                onChange={onDescriptionChange}/>
+            </Grid>
+          </Grid>
+          {/* <label> Description:
+          </label> */}
           <label> Featured Image:
             <input
               type='url'
               name='featuredImage'
               value={courseData.course.featuredImage}
-              onChange={onCourseDetailsChange}/>
-          </label>
-          <label> Cost:
-            <input
-              type='number'
-              name='cost'
-              value={courseData.course.cost}
-              step="0.1"
               onChange={onCourseDetailsChange}/>
           </label>
           <label> Blog Post:
@@ -428,7 +580,12 @@ const CourseEditor = (props) => {
               checked={courseData.course.isFeatured}
               onChange={onCourseDetailsChange}/>
           </label>
-          <input type='submit' value={COURSE_CREATOR_BUTTON_TEXT}/>
+          <Button
+            variant='contained'
+            type='submit'>
+            {COURSE_CREATOR_BUTTON_TEXT}
+          </Button>
+          {/* <input type='submit' value={COURSE_CREATOR_BUTTON_TEXT}/> */}
         </form>
       </div>
       {courseData.course.id &&
