@@ -9,6 +9,10 @@ import {
 import 'draft-js/dist/Draft.css'
 import PropTypes from 'prop-types'
 import { encode, decode } from 'base-64'
+import RichTextEditor from './RichTextEditor.js'
+import { Grid, IconButton } from '@material-ui/core'
+import AddPhotoAlternate from '@material-ui/icons/AddPhotoAlternate'
+import MediaManagerDialog from './MediaManagerDialog.js'
 
 const stringifyAndEncode = {
   encode: (objectToBeEncoded) => {
@@ -23,6 +27,7 @@ const TextEditor = (props) => {
   const initialEditorState = props.initialContentState
     ? props.initialContentState : EditorState.createEmpty()
   const [editorState, setEditorState] = useState(initialEditorState)
+  const [addImageDialogOpened, setAddImageDialogOpened] = useState(false)
 
   const handleKeyCommand = (command, editorState) => {
     const newState = RichUtils.handleKeyCommand(editorState, command)
@@ -38,22 +43,40 @@ const TextEditor = (props) => {
     props.onChange(editorState)
   }
 
+  const handleMediaManagerClose = () => {
+    setAddImageDialogOpened(false)
+  }
+
+  const addImage = () => {
+    setAddImageDialogOpened(true)
+  }
+
   return (
     <div>
-      <Editor
-        className="editor"
-        editorState={editorState}
-        onChange={onChange}
-        readOnly={props.readOnly}
-        handleKeyCommand={handleKeyCommand}
-        editorKey="editor"/>
-      <style jsx>{`
-        .editor {
-          height: 100px;
-          width: 200px;
-          border: 1px solid #eee;
-        }
-      `}</style>
+      <Grid container>
+        <Grid item>
+          <IconButton onClick={addImage}>
+            <AddPhotoAlternate />
+          </IconButton>
+        </Grid>
+        <Grid item>
+          <RichTextEditor
+            editorState={editorState}
+            onChange={onChange}
+            readOnly={props.readOnly}
+            handleKeyCommand={handleKeyCommand}/>
+        </Grid>
+        {/* <Editor
+          className="editor"
+          editorState={editorState}
+          onChange={onChange}
+          readOnly={props.readOnly}
+          handleKeyCommand={handleKeyCommand}
+          editorKey="editor"/> */}
+      </Grid>
+      <MediaManagerDialog
+        open={addImageDialogOpened}
+        onClose={handleMediaManagerClose}/>
     </div>
   )
 }

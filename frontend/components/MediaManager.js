@@ -149,7 +149,7 @@ const MediaManager = (props) => {
   // parent component
   const onMediaSelected = () => {
     props.onMediaSelected(userMedia[selectedMedia])
-    onClose()
+    // onClose()
   }
 
   // Restore the defaults
@@ -163,10 +163,10 @@ const MediaManager = (props) => {
     setSelectedMedia(defaults.selectedMedia)
   }
 
-  const onClose = () => {
-    reset()
-    props.toggleVisibility(false)
-  }
+  // const onClose = () => {
+  //   reset()
+  //   props.toggleVisibility(false)
+  // }
 
   return (
     <div className="container">
@@ -241,20 +241,9 @@ const MediaManager = (props) => {
         <button
           disabled={selectedMedia === null ? 'disabled' : ''}
           onClick={onMediaSelected}>Select</button>
-        <button
-          onClick={onClose}>Cancel</button>
+        {/* <button
+          onClick={onClose}>Cancel</button> */}
       </div>
-      <style jsx>
-        {`
-          .container {
-            background: #eee;
-          }
-          .selected {
-            background: blue;
-            padding: 5px;
-          }
-        `}
-      </style>
     </div>
   )
 }
@@ -263,7 +252,7 @@ MediaManager.propTypes = {
   auth: authProps,
   dispatch: PropTypes.func.isRequired,
   onMediaSelected: PropTypes.func.isRequired,
-  toggleVisibility: PropTypes.func.isRequired
+  toggleVisibility: PropTypes.func
 }
 
 const mapStateToProps = state => ({
