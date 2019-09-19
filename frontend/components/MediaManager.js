@@ -13,18 +13,12 @@ import {
   MEDIA_SEARCH_INPUT_PLACEHOLDER,
   LOAD_MORE_TEXT
 } from '../config/strings.js'
-import {
-  BACKEND
-} from '../config/constants.js'
+import { BACKEND } from '../config/constants.js'
 import { authProps } from '../types.js'
 import { networkAction } from '../redux/actions.js'
 import {
   queryGraphQL
 } from '../lib/utils.js'
-
-const DEFAULT_MEDIA_OFFSET = 1
-// Represents the server offset for pagination
-let mediaOffset = DEFAULT_MEDIA_OFFSET
 
 const MediaManager = (props) => {
   const defaults = {
@@ -47,6 +41,7 @@ const MediaManager = (props) => {
   const [userMedia, setUserMedia] = useState(defaults.userMedia)
   const [selectedMedia, setSelectedMedia] = useState(defaults.selectedMedia)
   const fileInput = createRef()
+  const [mediaOffset, setMediaOffset] = useState(1)
 
   const onUploadDataChanged = (e) => setUploadData(
     Object.assign({}, uploadData, {
@@ -115,7 +110,6 @@ const MediaManager = (props) => {
       }
     }
     `
-    console.log(query)
 
     try {
       props.dispatch(networkAction(true))
@@ -125,10 +119,10 @@ const MediaManager = (props) => {
         props.auth.token
       )
 
-      console.log(response)
+      // console.log(response)
       if (response.media && response.media.length > 0) {
         setUserMedia([...response.media.map(x => x.id), ...userMedia])
-        mediaOffset += 1
+        setMediaOffset(mediaOffset + 1)
       }
     } catch (err) {
       setUserError(err.message)
@@ -140,28 +134,25 @@ const MediaManager = (props) => {
   const searchMedia = () => {
     // reset a few components
     setUserMedia(defaults.userMedia)
-    mediaOffset = DEFAULT_MEDIA_OFFSET
-
+    setMediaOffset(1)
     loadMedia()
   }
 
-  // Pass information about the selected media to the
-  // parent component
   const onMediaSelected = () => {
     props.onMediaSelected(userMedia[selectedMedia])
     // onClose()
   }
 
   // Restore the defaults
-  const reset = () => {
-    mediaOffset = DEFAULT_MEDIA_OFFSET
-    setUploadData(defaults.uploadData)
-    setUploadFormVisibility(defaults.uploadFormVisibility)
-    setSearchText(defaults.searchText)
-    setUserError(defaults.userError)
-    setUserMedia(defaults.userMedia)
-    setSelectedMedia(defaults.selectedMedia)
-  }
+  // const reset = () => {
+  //   mediaOffset = DEFAULT_MEDIA_OFFSET
+  //   setUploadData(defaults.uploadData)
+  //   setUploadFormVisibility(defaults.uploadFormVisibility)
+  //   setSearchText(defaults.searchText)
+  //   setUserError(defaults.userError)
+  //   setUserMedia(defaults.userMedia)
+  //   setSelectedMedia(defaults.selectedMedia)
+  // }
 
   // const onClose = () => {
   //   reset()
