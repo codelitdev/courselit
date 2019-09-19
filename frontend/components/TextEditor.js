@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import {
-  Editor,
   EditorState,
   RichUtils,
   convertFromRaw,
@@ -13,6 +12,18 @@ import RichTextEditor from './RichTextEditor.js'
 import { Grid, IconButton } from '@material-ui/core'
 import AddPhotoAlternate from '@material-ui/icons/AddPhotoAlternate'
 import MediaManagerDialog from './MediaManagerDialog.js'
+import { makeStyles } from '@material-ui/styles'
+import createImagePlugin from 'draft-js-image-plugin'
+import { BACKEND } from '../config/constants.js'
+
+const imagePlugin = createImagePlugin()
+
+const useStyles = makeStyles({
+  editor: {
+    height: 100,
+    maxHeight: 300
+  }
+})
 
 const stringifyAndEncode = {
   encode: (objectToBeEncoded) => {
@@ -28,6 +39,7 @@ const TextEditor = (props) => {
     ? props.initialContentState : EditorState.createEmpty()
   const [editorState, setEditorState] = useState(initialEditorState)
   const [addImageDialogOpened, setAddImageDialogOpened] = useState(false)
+  const classes = useStyles()
 
   const handleKeyCommand = (command, editorState) => {
     const newState = RichUtils.handleKeyCommand(editorState, command)
@@ -43,8 +55,11 @@ const TextEditor = (props) => {
     props.onChange(editorState)
   }
 
-  const handleMediaManagerClose = () => {
+  const handleMediaManagerClose = path => {
     setAddImageDialogOpened(false)
+    setEditorState(
+      imagePlugin.addImage(editorState, `${BACKEND}/media/${path}?thumb=1`)
+    )
   }
 
   const addImage = () => {
@@ -53,18 +68,19 @@ const TextEditor = (props) => {
 
   return (
     <div>
-      <Grid container>
+      <Grid container direction='column'>
         <Grid item>
           <IconButton onClick={addImage}>
             <AddPhotoAlternate />
           </IconButton>
         </Grid>
-        <Grid item>
+        <Grid item className={classes.editor}>
           <RichTextEditor
             editorState={editorState}
             onChange={onChange}
             readOnly={props.readOnly}
-            handleKeyCommand={handleKeyCommand}/>
+            handleKeyCommand={handleKeyCommand}
+            plugins={[imagePlugin]}/>
         </Grid>
         {/* <Editor
           className="editor"
