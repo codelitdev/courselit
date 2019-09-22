@@ -15,7 +15,11 @@ import MediaManagerDialog from './MediaManagerDialog.js'
 import { makeStyles } from '@material-ui/styles'
 import createImagePlugin from 'draft-js-image-plugin'
 import { BACKEND } from '../config/constants.js'
+// import createResizeablePlugin from 'draft-js-resizeable-plugin'
+// import { composeDecorators } from 'draft-js-plugins-editor'
 
+// const resizeablePlugin = createResizeablePlugin({})
+// const decorator = composeDecorators(resizeablePlugin.decorator)
 const imagePlugin = createImagePlugin()
 
 const useStyles = makeStyles({
@@ -52,13 +56,13 @@ const TextEditor = (props) => {
 
   const onChange = (editorState) => {
     setEditorState(editorState)
-    props.onChange(editorState)
+    props.onChange && props.onChange(editorState)
   }
 
   const handleMediaManagerClose = path => {
     setAddImageDialogOpened(false)
     setEditorState(
-      imagePlugin.addImage(editorState, `${BACKEND}/media/${path}?thumb=1`)
+      imagePlugin.addImage(editorState, `${BACKEND}/media/${path}`)
     )
   }
 
@@ -69,11 +73,13 @@ const TextEditor = (props) => {
   return (
     <div>
       <Grid container direction='column'>
-        <Grid item>
-          <IconButton onClick={addImage}>
-            <AddPhotoAlternate />
-          </IconButton>
-        </Grid>
+        {!props.readOnly &&
+          <Grid item>
+            <IconButton onClick={addImage}>
+              <AddPhotoAlternate />
+            </IconButton>
+          </Grid>
+        }
         <Grid item className={classes.editor}>
           <RichTextEditor
             editorState={editorState}

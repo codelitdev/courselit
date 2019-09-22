@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { connect } from 'react-redux'
 import PropTypes from 'prop-types'
 import {
@@ -7,14 +7,18 @@ import {
 } from '../types.js'
 import { makeStyles } from '@material-ui/styles'
 import { Grid, Button, Typography } from '@material-ui/core'
-import CourseEditor from '../components/CourseEditor.js'
+import CourseEditor from './CourseEditor.js'
+import CreatorCoursesList from './CreatorCoursesList.js'
 import { networkAction } from '../redux/actions.js'
 import {
-  // BACKEND,
-  MANAGE_COURSES_PAGE_HEADING
+  NEW_COURSE_PAGE_HEADING,
+  MANAGE_COURSES_PAGE_HEADING,
+  BUTTON_CANCEL_TEXT,
+  BUTTON_NEW_COURSE
 } from '../config/strings.js'
+import { BACKEND } from '../config/constants.js'
 import {
-  queryGraphQL
+  queryGraphQLWithUIEffects
 } from '../lib/utils.js'
 
 const useStyles = makeStyles(theme => ({
@@ -25,11 +29,18 @@ const useStyles = makeStyles(theme => ({
 
 let creatorCoursesPaginationOffset = 1
 
-const Creator = (props) => {
-  const [courseFormVisible, setCourseFormVisible] = useState(false)
+const Courses = (props) => {
+  // const [courseFormVisible, setCourseFormVisible] = useState(false)
   const [creatorCourses, setCreatorCourses] = useState([])
   const classes = useStyles()
-  const [activeComponent, setActiveComponent] = useState(<CourseEditor />)
+  const [courseEditorVisible, setCourseEditorVisible] = useState(false)
+  const executeGQLCall = queryGraphQLWithUIEffects(
+    `${BACKEND}/graph`,
+    props.dispatch,
+    networkAction,
+    props.auth.token
+  )
+  const [selectedCourse, setSelectedCourse] = useState(null)
   // const [mediaManagerVisibility, setMediaManagerVisibility] = useState(false)
 
   // const showCourseCreateForm = () => {
@@ -42,33 +53,50 @@ const Creator = (props) => {
   //   setCourseFormVisible(true)
   // }
 
-  // const loadCreatorCourse = async () => {
-  //   const query = `
-  //   query {
-  //     courses: getCreatorCourses(id: "${props.profile.id}", offset: ${creatorCoursesPaginationOffset}) {
-  //       id, title
-  //     }
-  //   }
-  //   `
+  useEffect(() => {
+    loadCreatorCourses()
+  }, [props.profile.id])
 
-  //   try {
-  //     props.dispatch(networkAction(true))
-  //     let response = await queryGraphQL(
-  //       `${BACKEND}/graph`,
-  //       query,
-  //       props.auth.token
-  //     )
+  const loadCreatorCourses = async () => {
+    if (!props.profile.id) { return }
+    const query = `
+    query {
+      courses: getCreatorCourses(id: "${props.profile.id}", offset: ${creatorCoursesPaginationOffset}) {
+        id, title
+      }
+    }
+    `
+    try {
+      await executeGQLCall(query, response => {
+        console.log(response)
+        if (response.courses) {
+          console.log(response.courses)
+          setCreatorCourses([...creatorCourses, ...response.courses])
+          creatorCoursesPaginationOffset += 1
+        }
+      })
+    } catch (err) {
+      console.log(err)
+    }
 
-  //     if (response.courses) {
-  //       setCreatorCourses([...creatorCourses, ...response.courses])
-  //       creatorCoursesPaginationOffset += 1
-  //     }
-  //   } catch (err) {
-  //     setError(err.message)
-  //   } finally {
-  //     props.dispatch(networkAction(false))
-  //   }
-  // }
+    // try {
+    //   props.dispatch(networkAction(true))
+    //   let response = await queryGraphQL(
+    //     `${BACKEND}/graph`,
+    //     query,
+    //     props.auth.token
+    //   )
+
+    //   if (response.courses) {
+    //     setCreatorCourses([...creatorCourses, ...response.courses])
+    //     creatorCoursesPaginationOffset += 1
+    //   }
+    // } catch (err) {
+    //   setError(err.message)
+    // } finally {
+    //   props.dispatch(networkAction(false))
+    // }
+  }
 
   // const loadCourse = async (courseId) => {
   //   setError()
@@ -178,8 +206,14 @@ const Creator = (props) => {
   //   setMediaManagerVisibility(flag)
   // }
 
-  const showCourseCreateForm = (courseId) =>
-    setActiveComponent(<CourseEditor courseId={courseId}/>)
+  const showEditor = (courseId) => {
+    if (courseEditorVisible) {
+      setCourseEditorVisible(false)
+    } else {
+      console.log(courseId)
+      setCourseEditorVisible(true)
+    }
+  }
 
   return (
     <div>
@@ -191,16 +225,16 @@ const Creator = (props) => {
           alignItems='center'>
           <Grid item xs={12} sm={10}>
             <Typography variant='h3'>
-              {MANAGE_COURSES_PAGE_HEADING}
+              {courseEditorVisible ? NEW_COURSE_PAGE_HEADING : MANAGE_COURSES_PAGE_HEADING}
             </Typography>
           </Grid>
           <Grid item xs={12} sm={2}>
             <Button
               variant="contained"
-              color="primary"
+              color={courseEditorVisible ? 'default' : 'primary'}
               className={classes.button}
-              onClick={showCourseCreateForm}>
-              New course
+              onClick={showEditor}>
+              {courseEditorVisible ? BUTTON_CANCEL_TEXT : BUTTON_NEW_COURSE}
             </Button>
           </Grid>
         </Grid>
@@ -214,13 +248,15 @@ const Creator = (props) => {
         <button onClick={loadCreatorCourse}>Load my courses</button> */}
       </div>
       <div>
-        {activeComponent}
+        {courseEditorVisible === false &&
+          <CreatorCoursesList courses={creatorCourses} onClick={showEditor}/>}
+        {courseEditorVisible && <CourseEditor course={selectedCourse}/>}
       </div>
     </div>
   )
 }
 
-Creator.propTypes = {
+Courses.propTypes = {
   auth: authProps,
   profile: profileProps,
   dispatch: PropTypes.func.isRequired
@@ -238,4 +274,4 @@ const mapDispatchToProps = dispatch => ({
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(Creator)
+)(Courses)

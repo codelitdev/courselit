@@ -39,6 +39,7 @@ const Index = (props) => {
   )
 
   const getBlogPosts = async () => {
+    console.log(postsPaginationOffset)
     getDataUnauth(
       getBlogPostQuery(postsPaginationOffset),
       (response) => {
@@ -46,7 +47,8 @@ const Index = (props) => {
           setPosts([...posts, ...response.posts])
           postsPaginationOffset += 1
         }
-      })
+      }
+    )
   }
 
   useEffect(() => {

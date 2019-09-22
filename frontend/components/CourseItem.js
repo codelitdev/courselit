@@ -1,12 +1,14 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import Link from 'next/link'
-import { publicCourse } from '../types'
+import { creatorCourse } from '../types'
 import TextEditor from './TextEditor.js'
 import { formattedLocaleDate } from '../lib/utils.js'
 import {
   URL_EXTENTION_COURSES,
   FREE_COURSES_TEXT
 } from '../config/constants.js'
+import { ListItemText } from '@material-ui/core'
 
 const CourseItem = (props) => {
   const { course } = props
@@ -21,20 +23,24 @@ const CourseItem = (props) => {
 
   return (
     <article>
-      <h1 className="title">{ course.title }</h1>
-      {description}
-      <p>Updated on { formattedLocaleDate(course.updated) } by { course.creatorName }</p>
-      <Link href={`/${URL_EXTENTION_COURSES}/${course.id}/${course.slug}`}>
-        <a>Enroll for {course.cost === 0 ? FREE_COURSES_TEXT : course.cost}</a>
-      </Link>
-      <style jsx>{`
-      `}</style>
+      <ListItemText primary={course.title}></ListItemText>
+      {/* <h1 className="title">{ course.title }</h1> */}
+      {props.isPublicView &&
+        <div>
+          {description}
+          <p>Updated on { formattedLocaleDate(course.updated) } by { course.creatorName }</p>
+          <Link href={`/${URL_EXTENTION_COURSES}/${course.id}/${course.slug}`}>
+            <a>Enroll for {course.cost === 0 ? FREE_COURSES_TEXT : course.cost}</a>
+          </Link>
+        </div>
+      }
     </article>
   )
 }
 
 CourseItem.propTypes = {
-  course: publicCourse
+  course: creatorCourse,
+  isPublicView: PropTypes.bool.isRequired
 }
 
 export default CourseItem

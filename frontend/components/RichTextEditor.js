@@ -35,7 +35,7 @@ RichTextEditor.propTypes = {
   editorState: PropTypes.object.isRequired,
   onChange: PropTypes.func.isRequired,
   handleKeyCommand: PropTypes.func.isRequired,
-  plugins: PropTypes.arrayOf(PropTypes.func).isRequired,
+  plugins: PropTypes.arrayOf(PropTypes.object).isRequired,
   readOnly: PropTypes.bool
 }
 

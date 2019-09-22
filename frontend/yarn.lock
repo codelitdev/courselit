@@ -2975,6 +2975,11 @@ draft-js-plugins-editor@^3.0.0:
     immutable "~3.7.4"
     prop-types "^15.5.8"
 
+draft-js-resizeable-plugin@^2.0.9:
+  version "2.0.9"
+  resolved "https://registry.yarnpkg.com/draft-js-resizeable-plugin/-/draft-js-resizeable-plugin-2.0.9.tgz#fd78f4b8f4729dd585fe032ee066edbc526599f8"
+  integrity sha512-hInVpzSt7VK0M+j81BAfEk1S1fGo2sse+KZT8nXu7zTebdUGhJWwBjIMztYuY/NQSq+h+5MqKY40aZ6DkZ1R9w==
+
 draft-js@^0.11.0:
   version "0.11.0"
   resolved "https://registry.yarnpkg.com/draft-js/-/draft-js-0.11.0.tgz#f456f61ff68b7141f35ddd15af056069f10cafea"

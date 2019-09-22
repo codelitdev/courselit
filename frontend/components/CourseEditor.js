@@ -8,8 +8,7 @@ import {
 import {
   ERR_COURSE_COST_REQUIRED,
   ERR_COURSE_TITLE_REQUIRED,
-  COURSE_CREATOR_BUTTON_TEXT,
-  NEW_COURSE_CREATION_TITLE
+  COURSE_CREATOR_BUTTON_TEXT
 } from '../config/strings.js'
 import TextEditor from './TextEditor.js'
 import { networkAction } from '../redux/actions.js'
@@ -413,9 +412,6 @@ const CourseEditor = (props) => {
   return (
     <div>
       <div>
-        <Typography variant='h5' className={classes.title}>
-          {NEW_COURSE_CREATION_TITLE}
-        </Typography>
         <form onSubmit={onCourseCreate}>
           {userError &&
             <div>{userError}</div>
