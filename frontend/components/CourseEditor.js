@@ -14,6 +14,7 @@ import TextEditor from './TextEditor.js'
 import { networkAction } from '../redux/actions.js'
 import {
   queryGraphQL,
+  queryGraphQLWithUIEffects,
   capitalize
 } from '../lib/utils.js'
 import {
@@ -39,6 +40,7 @@ import {
   Button
 } from '@material-ui/core'
 import { makeStyles } from '@material-ui/styles'
+import { useExecuteGraphQLQuery } from './CustomHooks.js'
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -73,7 +75,7 @@ const CourseEditor = (props) => {
     published: false,
     privacy: 'PRIVATE',
     isBlog: false,
-    description: '',
+    description: TextEditor.emptyState(),
     featuredImage: '',
     id: null,
     isFeatured: false
@@ -84,14 +86,23 @@ const CourseEditor = (props) => {
   }
   const [courseData, setCourseData] = useState(initCourseData)
   const [userError, setUserError] = useState('')
+  // const executeGQLCall = queryGraphQLWithUIEffects(
+  //   `${BACKEND}/graph`,
+  //   props.dispatch,
+  //   networkAction,
+  //   props.auth.token
+  // )
   const classes = useStyles()
+  const executeGQLCall = useExecuteGraphQLQuery()
 
   // The following ref is used for accessing previous state in hooks
   // Reference: https://reactjs.org/docs/hooks-faq.html#how-to-get-the-previous-props-or-state
   const prevCourseData = useRef()
   useEffect(() => {
-    prevCourseData.current = courseData
-  })
+    // prevCourseData.current = courseData
+    console.log(props.courseId)
+    loadCourse(props.courseId)
+  }, [props.courseId])
 
   // For privacy dropdown
   const inputLabel = React.useRef(null)
@@ -104,6 +115,7 @@ const CourseEditor = (props) => {
   const setError = (msg = '') => setUserError(msg)
 
   const onCourseCreate = async (e) => {
+    console.log(`From onCourseCreate:`, courseData)
     e.preventDefault()
     setError()
 
@@ -171,27 +183,33 @@ const CourseEditor = (props) => {
       `
     }
 
-    try {
-      console.log(query)
-      props.dispatch(networkAction(true))
-      let response = await queryGraphQL(
-        `${BACKEND}/graph`,
-        query,
-        props.auth.token
-      )
-
+    await executeGQLCall(query, response => {
       if (response.course) {
-        setCourseData(
-          Object.assign({}, courseData, {
-            course: Object.assign({}, courseData.course, response.course)
-          })
-        )
+        setCourseDataWithDescription(response.course)
       }
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      props.dispatch(networkAction(false))
-    }
+    })
+
+    // try {
+    //   console.log(query)
+    //   props.dispatch(networkAction(true))
+    //   let response = await queryGraphQL(
+    //     `${BACKEND}/graph`,
+    //     query,
+    //     props.auth.token
+    //   )
+
+    //   if (response.course) {
+    //     setCourseData(
+    //       Object.assign({}, courseData, {
+    //         course: Object.assign({}, courseData.course, response.course)
+    //       })
+    //     )
+    //   }
+    // } catch (err) {
+    //   setError(err.message)
+    // } finally {
+    //   props.dispatch(networkAction(false))
+    // }
   }
 
   const onLessonDetailsChange = (e, index) => {
@@ -409,6 +427,77 @@ const CourseEditor = (props) => {
     }
   }
 
+  const setCourseDataWithDescription = (course) => 
+    setCourseData(
+      Object.assign({}, courseData, {
+        course: Object.assign({}, course, {
+          description: TextEditor.hydrate(course.description) 
+        }),
+        lessons: [...courseData.lessons]
+      })
+    )
+
+  const loadCourse = async (courseId) => {
+    setCourseData(Object.assign({}, courseData, {
+      lessons: []
+    }))
+
+    const query = `
+    query {
+      course: getCourse(id: "${courseId}") {
+        title,
+        cost,
+        published,
+        privacy,
+        isBlog,
+        description,
+        featuredImage,
+        id,
+        lessons,
+        isFeatured,
+        slug
+      }
+    }
+    `
+
+    try {
+      // props.dispatch(networkAction(true))
+      // let response = await queryGraphQL(
+      //   `${BACKEND}/graph`,
+      //   query,
+      //   props.auth.token
+      // )
+      await executeGQLCall(query, async response => {
+        if (response.course) {
+          setCourseDataWithDescription(response.course)
+          // console.log(response.course)
+          // const editorStateFromDescription = TextEditor.hydrate(response.course.description)
+          // const descriptionDecodedCourseData = Object.assign({}, response.course, {
+          //   description: editorStateFromDescription
+          // })
+          // console.log(`Decoded content: `,
+          //   descriptionDecodedCourseData,
+          //   editorStateFromDescription.getCurrentContent().getPlainText('\u0001'))
+          // setCourseData(
+          //   Object.assign({}, courseData, {
+          //     course: descriptionDecodedCourseData,
+          //     lessons: []
+          //   })
+          // )
+
+          // setCourseFormVisible(true)
+
+          // asynchronously load all lessons
+          // for (let i of response.course.lessons) {
+          //   await loadLesson(i)
+          // }
+        }
+      })
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   return (
     <div>
       <div>
@@ -532,7 +621,7 @@ const CourseEditor = (props) => {
             <Grid item xs={12} className={classes.editorLabel}>Description</Grid>
             <Grid item xs={12}>
               <TextEditor
-                initialContentState={courseData.course.description}
+                initialContentState={ courseData.course.description }
                 onChange={onDescriptionChange}/>
             </Grid>
           </Grid>
@@ -671,6 +760,7 @@ const CourseEditor = (props) => {
 CourseEditor.propTypes = {
   auth: authProps,
   profile: profileProps,
+  courseId: PropTypes.string,
   dispatch: PropTypes.func.isRequired
 }
 

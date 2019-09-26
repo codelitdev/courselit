@@ -9,17 +9,13 @@ import { makeStyles } from '@material-ui/styles'
 import { Grid, Button, Typography } from '@material-ui/core'
 import CourseEditor from './CourseEditor.js'
 import CreatorCoursesList from './CreatorCoursesList.js'
-import { networkAction } from '../redux/actions.js'
 import {
   NEW_COURSE_PAGE_HEADING,
   MANAGE_COURSES_PAGE_HEADING,
   BUTTON_CANCEL_TEXT,
   BUTTON_NEW_COURSE
 } from '../config/strings.js'
-import { BACKEND } from '../config/constants.js'
-import {
-  queryGraphQLWithUIEffects
-} from '../lib/utils.js'
+import { useExecuteGraphQLQuery } from './CustomHooks.js'
 
 const useStyles = makeStyles(theme => ({
   button: {
@@ -34,13 +30,8 @@ const Courses = (props) => {
   const [creatorCourses, setCreatorCourses] = useState([])
   const classes = useStyles()
   const [courseEditorVisible, setCourseEditorVisible] = useState(false)
-  const executeGQLCall = queryGraphQLWithUIEffects(
-    `${BACKEND}/graph`,
-    props.dispatch,
-    networkAction,
-    props.auth.token
-  )
   const [selectedCourse, setSelectedCourse] = useState(null)
+  const executeGQLCall = useExecuteGraphQLQuery()
   // const [mediaManagerVisibility, setMediaManagerVisibility] = useState(false)
 
   // const showCourseCreateForm = () => {
@@ -98,65 +89,6 @@ const Courses = (props) => {
     // }
   }
 
-  // const loadCourse = async (courseId) => {
-  //   setError()
-  //   setCourseData(Object.assign({}, courseData, {
-  //     lessons: []
-  //   }))
-  //   setCourseFormVisible(false)
-
-  //   const query = `
-  //   query {
-  //     course: getCourse(id: "${courseId}") {
-  //       title,
-  //       cost,
-  //       published,
-  //       privacy,
-  //       isBlog,
-  //       description,
-  //       featuredImage,
-  //       id,
-  //       lessons,
-  //       isFeatured,
-  //       slug
-  //     }
-  //   }
-  //   `
-
-  //   try {
-  //     props.dispatch(networkAction(true))
-  //     let response = await queryGraphQL(
-  //       `${BACKEND}/graph`,
-  //       query,
-  //       props.auth.token
-  //     )
-
-  //     if (response.course) {
-  //       const descriptionDecodedCourseData = Object.assign({}, response.course, {
-  //         description: TextEditor.hydrate(response.course.description)
-  //       })
-  //       console.log(`Decoded content: `, descriptionDecodedCourseData)
-  //       setCourseData(
-  //         Object.assign({}, courseData, {
-  //           course: descriptionDecodedCourseData,
-  //           lessons: []
-  //         })
-  //       )
-
-  //       setCourseFormVisible(true)
-
-  //       // asynchronously load all lessons
-  //       for (let i of response.course.lessons) {
-  //         await loadLesson(i)
-  //       }
-  //     }
-  //   } catch (err) {
-  //     setError(err.message)
-  //   } finally {
-  //     props.dispatch(networkAction(false))
-  //   }
-  // }
-
   // const loadLesson = async (id) => {
   //   const query = `
   //   query {
@@ -210,6 +142,7 @@ const Courses = (props) => {
     if (courseEditorVisible) {
       setCourseEditorVisible(false)
     } else {
+      setSelectedCourse(courseId)
       console.log(courseId)
       setCourseEditorVisible(true)
     }
@@ -250,7 +183,7 @@ const Courses = (props) => {
       <div>
         {courseEditorVisible === false &&
           <CreatorCoursesList courses={creatorCourses} onClick={showEditor}/>}
-        {courseEditorVisible && <CourseEditor course={selectedCourse}/>}
+        {courseEditorVisible && <CourseEditor courseId={selectedCourse}/>}
       </div>
     </div>
   )

@@ -18,7 +18,7 @@ const RichTextEditor = ({
   readOnly = false
 }) => {
   const classes = useStyles()
-
+  // console.log(editorState.getCurrentContent().getPlainText('\u0001'))
   return (
     <Editor
       className={classes.editor}
