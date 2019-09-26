@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import {
+  Editor,
   EditorState,
   RichUtils,
   convertFromRaw,
@@ -39,11 +40,16 @@ const stringifyAndEncode = {
 }
 
 const TextEditor = (props) => {
-  const initialEditorState = props.initialContentState
-    ? props.initialContentState : EditorState.createEmpty()
-  const [editorState, setEditorState] = useState(initialEditorState)
+  const initState = props.initialContentState || EditorState.createEmpty()
+  const [editorState, setEditorState] = useState(initState)
   const [addImageDialogOpened, setAddImageDialogOpened] = useState(false)
   const classes = useStyles()
+
+  React.useEffect(() => {
+    // console.log(initState.getCurrentContent().getPlainText('\u0001'))
+    // console.log(editorState.getCurrentContent().getPlainText('\u0001'))
+    setEditorState(props.initialContentState)
+  }, [props.initialContentState])
 
   const handleKeyCommand = (command, editorState) => {
     const newState = RichUtils.handleKeyCommand(editorState, command)
@@ -111,6 +117,8 @@ TextEditor.hydrate = (encodedEditorStateString) =>
 TextEditor.stringify = (editorState) =>
   stringifyAndEncode
     .encode(convertToRaw(editorState.getCurrentContent()))
+
+TextEditor.emptyState = () => EditorState.createEmpty()
 
 TextEditor.propTypes = {
   initialContentState: PropTypes.any,
