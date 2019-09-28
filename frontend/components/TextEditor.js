@@ -4,24 +4,18 @@ import {
   EditorState,
   RichUtils,
   convertFromRaw,
-  convertToRaw
+  convertToRaw,
+  AtomicBlockUtils
 } from 'draft-js'
 import 'draft-js/dist/Draft.css'
+import TextEditorMediaRenderer from './TextEditorMediaRenderer.js'
 import PropTypes from 'prop-types'
 import { encode, decode } from 'base-64'
-import RichTextEditor from './RichTextEditor.js'
 import { Grid, IconButton } from '@material-ui/core'
 import AddPhotoAlternate from '@material-ui/icons/AddPhotoAlternate'
 import MediaManagerDialog from './MediaManagerDialog.js'
 import { makeStyles } from '@material-ui/styles'
-import createImagePlugin from 'draft-js-image-plugin'
-import { BACKEND } from '../config/constants.js'
-// import createResizeablePlugin from 'draft-js-resizeable-plugin'
-// import { composeDecorators } from 'draft-js-plugins-editor'
-
-// const resizeablePlugin = createResizeablePlugin({})
-// const decorator = composeDecorators(resizeablePlugin.decorator)
-const imagePlugin = createImagePlugin()
+import { BACKEND, DRAFTJS_ENTITY_TYPE_IMAGE } from '../config/constants.js'
 
 const useStyles = makeStyles({
   editor: {
@@ -31,12 +25,8 @@ const useStyles = makeStyles({
 })
 
 const stringifyAndEncode = {
-  encode: (objectToBeEncoded) => {
-    return encode(JSON.stringify(objectToBeEncoded))
-  },
-  decode: (fromEncodedString) => {
-    return JSON.parse(decode(fromEncodedString))
-  }
+  encode: (objectToBeEncoded) => encode(JSON.stringify(objectToBeEncoded)),
+  decode: (fromEncodedString) => JSON.parse(decode(fromEncodedString))
 }
 
 const TextEditor = (props) => {
@@ -46,8 +36,6 @@ const TextEditor = (props) => {
   const classes = useStyles()
 
   React.useEffect(() => {
-    // console.log(initState.getCurrentContent().getPlainText('\u0001'))
-    // console.log(editorState.getCurrentContent().getPlainText('\u0001'))
     setEditorState(props.initialContentState)
   }, [props.initialContentState])
 
@@ -67,13 +55,36 @@ const TextEditor = (props) => {
 
   const handleMediaManagerClose = path => {
     setAddImageDialogOpened(false)
+    loadImage(path)
+  }
+
+  // const addImage = () => {
+  //   setAddImageDialogOpened(true)
+  // }
+
+  const loadImage = url => {
+    const contentState = editorState.getCurrentContent()
+    const contentStateWithEntity = contentState.createEntity(
+      DRAFTJS_ENTITY_TYPE_IMAGE,
+      'IMMUTABLE',
+      { options: { href: `${BACKEND}/media/${url}` } }
+    )
+    const entityKey = contentStateWithEntity.getLastCreatedEntityKey()
+    const newEditorState = EditorState.set(editorState, {
+      currentContent: contentStateWithEntity
+    })
     setEditorState(
-      imagePlugin.addImage(editorState, `${BACKEND}/media/${path}`)
+      AtomicBlockUtils.insertAtomicBlock(newEditorState, entityKey, ' ')
     )
   }
 
-  const addImage = () => {
-    setAddImageDialogOpened(true)
+  const customBlockRenderer = block => {
+    if (block.getType() === 'atomic') {
+      return {
+        component: TextEditorMediaRenderer,
+        editable: false
+      }
+    }
   }
 
   return (
@@ -81,26 +92,19 @@ const TextEditor = (props) => {
       <Grid container direction='column'>
         {!props.readOnly &&
           <Grid item>
-            <IconButton onClick={addImage}>
+            <IconButton onClick={() => setAddImageDialogOpened(true)}>
               <AddPhotoAlternate />
             </IconButton>
           </Grid>
         }
         <Grid item className={classes.editor}>
-          <RichTextEditor
+          <Editor
             editorState={editorState}
             onChange={onChange}
             readOnly={props.readOnly}
             handleKeyCommand={handleKeyCommand}
-            plugins={[imagePlugin]}/>
+            blockRendererFn={customBlockRenderer} />
         </Grid>
-        {/* <Editor
-          className="editor"
-          editorState={editorState}
-          onChange={onChange}
-          readOnly={props.readOnly}
-          handleKeyCommand={handleKeyCommand}
-          editorKey="editor"/> */}
       </Grid>
       <MediaManagerDialog
         open={addImageDialogOpened}
