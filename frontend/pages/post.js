@@ -3,7 +3,7 @@ import { connect } from 'react-redux'
 import MasterLayout from '../components/Masterlayout.js'
 import { BACKEND } from '../config/constants.js'
 import { networkAction } from '../redux/actions.js'
-import TextEditor from '../components/TextEditor.js'
+import TextEditor from '../components/TextEditor'
 import {
   queryGraphQLWithUIEffects,
   formattedLocaleDate

@@ -10,11 +10,11 @@ import {
   ERR_COURSE_TITLE_REQUIRED,
   COURSE_CREATOR_BUTTON_TEXT
 } from '../config/strings.js'
-import TextEditor from './TextEditor.js'
+import TextEditor from './TextEditor'
 import { networkAction } from '../redux/actions.js'
 import {
   queryGraphQL,
-  queryGraphQLWithUIEffects,
+  // queryGraphQLWithUIEffects,
   capitalize
 } from '../lib/utils.js'
 import {
@@ -97,7 +97,7 @@ const CourseEditor = (props) => {
 
   // The following ref is used for accessing previous state in hooks
   // Reference: https://reactjs.org/docs/hooks-faq.html#how-to-get-the-previous-props-or-state
-  const prevCourseData = useRef()
+  // const prevCourseData = useRef()
   useEffect(() => {
     // prevCourseData.current = courseData
     console.log(props.courseId)
