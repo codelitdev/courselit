@@ -62,3 +62,7 @@ export const removeEmptyProperties = (obj, propToExclude) =>
 // Regex copied from: https://stackoverflow.com/a/48675160/942589
 export const makeGraphQLQueryStringFromJSObject = obj =>
   JSON.stringify(obj).replace(/"([^(")"]+)":/g, '$1:')
+
+export const formulateMediaUrl =
+  (backend, mediaID, generateThumbnailUrl = false) =>
+    `${backend}/media/${mediaID}${generateThumbnailUrl ? '?thumb=1' : ''}`

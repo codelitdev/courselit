@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect /* useRef */ } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import {
@@ -8,7 +8,9 @@ import {
 import {
   ERR_COURSE_COST_REQUIRED,
   ERR_COURSE_TITLE_REQUIRED,
-  COURSE_CREATOR_BUTTON_TEXT
+  COURSE_CREATOR_BUTTON_TEXT,
+  DIALOG_TITLE_FEATURED_IMAGE,
+  BUTTON_SET_FEATURED_IMAGE
 } from '../config/strings.js'
 import TextEditor from './TextEditor'
 import { networkAction } from '../redux/actions.js'
@@ -41,6 +43,7 @@ import {
 } from '@material-ui/core'
 import { makeStyles } from '@material-ui/styles'
 import { useExecuteGraphQLQuery } from './CustomHooks.js'
+import MediaManagerDialog from './MediaManagerDialog.js'
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -86,6 +89,7 @@ const CourseEditor = (props) => {
   }
   const [courseData, setCourseData] = useState(initCourseData)
   const [userError, setUserError] = useState('')
+  const [featuredImageDialogOpened, setFeaturedImageDialogOpened] = useState(false)
   // const executeGQLCall = queryGraphQLWithUIEffects(
   //   `${BACKEND}/graph`,
   //   props.dispatch,
@@ -498,6 +502,10 @@ const CourseEditor = (props) => {
     }
   }
 
+  const handleFeaturedImageSelection = url => {
+    setFeaturedImageDialogOpened(false)
+  }
+
   return (
     <div>
       <div>
@@ -633,6 +641,14 @@ const CourseEditor = (props) => {
               name='featuredImage'
               value={courseData.course.featuredImage}
               onChange={onCourseDetailsChange}/>
+            <button onClick={() => setFeaturedImageDialogOpened(true)}>
+              {BUTTON_SET_FEATURED_IMAGE}
+            </button>
+            <MediaManagerDialog
+              onOpen={featuredImageDialogOpened}
+              onClose={handleFeaturedImageSelection}
+              title={DIALOG_TITLE_FEATURED_IMAGE}
+              mediaAdditionAllowed={false} />
           </label>
           <label> Blog Post:
             <input
