@@ -7,6 +7,7 @@ import { Grid, IconButton } from '@material-ui/core'
 import AddPhotoAlternate from '@material-ui/icons/AddPhotoAlternate'
 import MediaManagerDialog from '../MediaManagerDialog.js'
 import { makeStyles } from '@material-ui/styles'
+import { MEDIA_MANAGER_DIALOG_TITLE } from '../../config/strings.js'
 
 const useStyles = makeStyles({
   container: {
@@ -61,8 +62,9 @@ const EditorUI = (props) => {
         </Grid>
       </Grid>
       <MediaManagerDialog
-        open={addImageDialogOpened}
-        onClose={handleMediaManagerClose}/>
+        onOpen={addImageDialogOpened}
+        onClose={handleMediaManagerClose}
+        title={MEDIA_MANAGER_DIALOG_TITLE}/>
     </div>
   )
 }

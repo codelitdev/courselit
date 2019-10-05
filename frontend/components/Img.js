@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { BACKEND } from '../config/constants'
+import { formulateMediaUrl } from '../lib/utils'
 
 const Img = (props) => {
   // const image = props.src ? <img
@@ -9,7 +10,7 @@ const Img = (props) => {
   return (
     <>
       <img src={props.src
-        ? `${BACKEND}/media/${props.src}${props.isThumbnail ? '?thumb=1' : ''}`
+        ? `${formulateMediaUrl(BACKEND, props.src, props.isThumbnail)}`
         : '/static/default.png'}/>
       <style jsx>{`
         img {
