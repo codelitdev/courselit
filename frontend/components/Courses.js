@@ -59,9 +59,9 @@ const Courses = (props) => {
     `
     try {
       await executeGQLCall(query, response => {
-        console.log(response)
+        // console.log(response)
         if (response.courses) {
-          console.log(response.courses)
+          // console.log(response.courses)
           setCreatorCourses([...creatorCourses, ...response.courses])
           creatorCoursesPaginationOffset += 1
         }
@@ -143,7 +143,7 @@ const Courses = (props) => {
       setCourseEditorVisible(false)
     } else {
       setSelectedCourse(courseId)
-      console.log(courseId)
+      // console.log(courseId)
       setCourseEditorVisible(true)
     }
   }
@@ -166,7 +166,7 @@ const Courses = (props) => {
               variant="contained"
               color={courseEditorVisible ? 'default' : 'primary'}
               className={classes.button}
-              onClick={showEditor}>
+              onClick={() => showEditor()}>
               {courseEditorVisible ? BUTTON_CANCEL_TEXT : BUTTON_NEW_COURSE}
             </Button>
           </Grid>
@@ -181,8 +181,7 @@ const Courses = (props) => {
         <button onClick={loadCreatorCourse}>Load my courses</button> */}
       </div>
       <div>
-        {courseEditorVisible === false &&
-          <CreatorCoursesList courses={creatorCourses} onClick={showEditor}/>}
+        {!courseEditorVisible && <CreatorCoursesList courses={creatorCourses} onClick={showEditor}/>}
         {courseEditorVisible && <CourseEditor courseId={selectedCourse}/>}
       </div>
     </div>

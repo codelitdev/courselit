@@ -11,6 +11,7 @@ import {
 } from '../lib/utils.js'
 import { BACKEND } from '../config/constants.js'
 import { networkAction, newSiteInfoAvailable } from '../redux/actions.js'
+import ImgSwitcher from './ImgSwitcher.js'
 
 const SiteSettings = props => {
   const [settings, setSettings] = useState({
@@ -94,6 +95,9 @@ const SiteSettings = props => {
             </div>
           }
           <button type='button' onClick={toggleMediaManagerVisibility}>Change</button>
+          <ImgSwitcher 
+            src={settings.logopath || props.siteinfo.logopath}
+            onSelection={onChangeData}/>
         </label>
         <button
           type='submit'
