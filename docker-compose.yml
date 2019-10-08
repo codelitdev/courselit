@@ -24,6 +24,10 @@ services:
       context: ./backend
     environment:
       - API_PREFIX=${API_PREFIX}
+      - MEDIA_FOLDER="/"
+    volumes:
+      - uploads:/uploads
+      - thumbs:/thumbs
     expose:
       - "8000"
     depends_on:
@@ -40,3 +44,15 @@ services:
       - backend
       - frontend
     container_name: proxy
+
+volumes:
+  uploads:
+    driver: local
+    driver_opts:
+      device: ${MOUNT_UPLOAD_FOLDER_VOLUME_AS}
+      o: bind
+  thumbs:
+    driver: local
+    driver_opts:
+      device: ${MOUNT_THUMBNAIL_FOLDER_VOLUME_AS}
+      o: bind

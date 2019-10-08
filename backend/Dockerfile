@@ -9,6 +9,8 @@ COPY package.json /usr/src/app
 # RUN apk add --no-cache --virtual .gyp python make g++ \
 #     && npm install \
 #     && apk del .gyp
+RUN apk add --no-cache --virtual .media ffmpeg imagemagick \
+    && apk del .media
 RUN npm install
 
 # copy local files to container

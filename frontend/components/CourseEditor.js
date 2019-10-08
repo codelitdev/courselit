@@ -105,7 +105,9 @@ const CourseEditor = (props) => {
   useEffect(() => {
     // prevCourseData.current = courseData
     console.log(props.courseId)
-    loadCourse(props.courseId)
+    if(props.courseId) {
+      loadCourse(props.courseId)
+    }
   }, [props.courseId])
 
   // For privacy dropdown

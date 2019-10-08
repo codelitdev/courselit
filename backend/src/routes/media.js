@@ -6,6 +6,7 @@ const Media = require('../models/Media.js')
 const responses = require('../config/strings').responses
 const constants = require('../config/constants.js')
 const thumbnail = require('media-thumbnail')
+const path = require('path')
 
 /**
  * A pure function to generate a string by appending current epoch
@@ -60,12 +61,14 @@ const postHandler = async (req, res) => {
 
   // create unique file name for the uploaded file
   const fileName = uniqueFileNameGenerator(req.files.file.name)
-  const filePath = `${constants.uploadFolder}/${fileName.name}.${fileName.ext}`
+  // const filePath = `${constants.uploadFolder}/${fileName.name}.${fileName.ext}`
+  const filePath = path.join(constants.uploadFolder, `${fileName.name}.${fileName.ext}`)
 
   // move the uploaded file to the upload folder
   try {
     await move(req.files.file, filePath)
   } catch (err) {
+    console.log(constants.uploadFolder)
     return res.status(500).json({ message: responses.error_in_moving_file })
   }
 
