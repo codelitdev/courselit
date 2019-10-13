@@ -36,13 +36,11 @@ function SessionButton (props) {
 
   return (
     <Grid container justify='flex-end' spacing={1}>
-      {props.profile.isCreator &&
+      {/* {props.profile.isCreator &&
         <Grid item>
-          <Link href='/create'>
-            <a>{CREATOR_AREA_LINK_TEXT}</a>
-          </Link>
+          <a href='/create'>{CREATOR_AREA_LINK_TEXT}</a>
         </Grid>
-      }
+      } */}
       {props.auth.guest
         ? (
           <Grid item>

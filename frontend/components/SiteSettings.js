@@ -12,12 +12,14 @@ import {
 import { BACKEND } from '../config/constants.js'
 import { networkAction, newSiteInfoAvailable } from '../redux/actions.js'
 import ImgSwitcher from './ImgSwitcher.js'
+import { TextField, Grid, Button } from '@material-ui/core'
+import { FORM_FIELD_LOGO } from '../config/strings.js'
 
 const SiteSettings = props => {
   const [settings, setSettings] = useState({
-    title: '',
-    subtitle: '',
-    logopath: '',
+    title: props.siteinfo.title,
+    subtitle: props.siteinfo.subtitle,
+    logopath: props.siteinfo.logopath,
     err: ''
   })
   const [mediaManagerVisibility, setMediaManagerVisibility] = useState(false)
@@ -54,6 +56,7 @@ const SiteSettings = props => {
   const onChangeData = (e) => {
     const change = typeof e === 'string' ? { logopath: e } : { [e.target.name]: e.target.value }
     setSettings(Object.assign({}, settings, change))
+    // setDataChanged(true)
     console.log(settings)
   }
 
@@ -67,44 +70,34 @@ const SiteSettings = props => {
         {settings.err &&
           <div>{settings.err}</div>
         }
-        <label> Title:
-          <p>Current: {props.siteinfo.title}</p>
-          <input
-            type='text'
-            value={settings.title}
+        <TextField
+            variant='outlined'
+            label='Title'
+            fullWidth
+            margin="normal"
             name='title'
-            placeholder='New title'
+            value={settings.title}
             onChange={onChangeData}/>
-        </label>
-        <label> Sub title:
-          <p>Current: {props.siteinfo.subtitle}</p>
-          <input
-            type='text'
-            value={settings.subtitle}
+        <TextField
+            variant='outlined'
+            label='Sub title'
+            fullWidth
+            margin="normal"
             name='subtitle'
-            placeholder='New subtitle'
+            value={settings.subtitle}
             onChange={onChangeData}/>
-        </label>
-        <label> Logo:
-          <p>Current: </p>
-          <Img src={props.siteinfo.logopath} isThumbnail={true} />
-          {settings.logopath &&
-            <div>
-              <p>New: </p>
-              <Img src={settings.logopath} isThumbnail={true} />
-            </div>
-          }
-          <button type='button' onClick={toggleMediaManagerVisibility}>Change</button>
-          <ImgSwitcher 
-            src={settings.logopath || props.siteinfo.logopath}
-            onSelection={onChangeData}/>
-        </label>
-        <button
+        <ImgSwitcher
+              title={FORM_FIELD_LOGO} 
+              src={settings.logopath || props.siteinfo.logopath}
+              onSelection={onChangeData}/>
+        <Button
+          variant='contained'
+          color='default'
           type='submit'
           value='Save'
-          disabled={(!settings.title && !settings.subtitle && !settings.logopath) ? 'disabled' : ''}>
+          disabled={(!settings.title && !settings.subtitle && !settings.logopath) ? true : false}>
             Save
-        </button>
+        </Button>
       </form>
       {mediaManagerVisibility &&
         <MediaManager

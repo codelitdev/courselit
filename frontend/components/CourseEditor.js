@@ -6,9 +6,11 @@ import {
   profileProps
 } from '../types.js'
 import {
+  BTN_DELETE_COURSE,
   ERR_COURSE_COST_REQUIRED,
   ERR_COURSE_TITLE_REQUIRED,
   COURSE_CREATOR_BUTTON_TEXT,
+  FORM_FIELD_FEATURED_IMAGE,
   DIALOG_TITLE_FEATURED_IMAGE,
   BUTTON_SET_FEATURED_IMAGE
 } from '../config/strings.js'
@@ -43,6 +45,7 @@ import {
 } from '@material-ui/core'
 import { makeStyles } from '@material-ui/styles'
 import { useExecuteGraphQLQuery } from './CustomHooks.js'
+import ImgSwitcher from './ImgSwitcher.js'
 import MediaManagerDialog from './MediaManagerDialog.js'
 
 const useStyles = makeStyles(theme => ({
@@ -232,16 +235,30 @@ const CourseEditor = (props) => {
       })
     )
   }
-
-  const onCourseDetailsChange = (e) => {
+  
+  const changeCourseDetails = (key, value) => {
     setCourseData(
       Object.assign({}, courseData, {
         course: Object.assign({}, courseData.course, {
-          [e.target.name]: e.target.type === 'checkbox'
-            ? e.target.checked : e.target.value
+          [key]: value
         })
       })
     )
+  }
+
+  const onCourseDetailsChange = (e) => {
+    changeCourseDetails(
+      e.target.name, 
+      e.target.type === 'checkbox' ? e.target.checked : e.target.value
+    )
+    // setCourseData(
+    //   Object.assign({}, courseData, {
+    //     course: Object.assign({}, courseData.course, {
+    //       [e.target.name]: e.target.type === 'checkbox'
+    //         ? e.target.checked : e.target.value
+    //     })
+    //   })
+    // )
   }
 
   const onDescriptionChange = (editorState) => {
@@ -504,8 +521,8 @@ const CourseEditor = (props) => {
     }
   }
 
-  const handleFeaturedImageSelection = url => {
-    setFeaturedImageDialogOpened(false)
+  const onFeaturedImageSelection = url => {
+    changeCourseDetails('featuredImage', url)
   }
 
   return (
@@ -524,6 +541,14 @@ const CourseEditor = (props) => {
             name='title'
             value={courseData.course.title}
             onChange={onCourseDetailsChange}/>
+          <Grid container className={classes.editor}>
+            <Grid item xs={12} className={classes.editorLabel}>Description</Grid>
+            <Grid item xs={12}>
+              <TextEditor
+                initialContentState={ courseData.course.description }
+                onChange={onDescriptionChange}/>
+            </Grid>
+          </Grid>
           <Grid container alignItems='center'>
             <Grid item xs={12} sm={6}>
               <TextField
@@ -537,14 +562,6 @@ const CourseEditor = (props) => {
                 step='0.1'
                 value={courseData.course.cost}
                 onChange={onCourseDetailsChange}/>
-              {/* <label> Cost:
-                <input
-                  type='number'
-                  name='cost'
-                  value={courseData.course.cost}
-                  step="0.1"
-                  onChange={onCourseDetailsChange}/>
-              </label> */}
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl variant='outlined' className={classes.formControl}>
@@ -626,79 +643,35 @@ const CourseEditor = (props) => {
               </Grid>
             </Grid>
           </Grid>
-          <div></div>
-          <Grid container className={classes.editor}>
-            <Grid item xs={12} className={classes.editorLabel}>Description</Grid>
-            <Grid item xs={12}>
-              <TextEditor
-                initialContentState={ courseData.course.description }
-                onChange={onDescriptionChange}/>
-            </Grid>
-          </Grid>
-          {/* <label> Description:
-          </label> */}
-          <label> Featured Image:
-            <input
-              type='url'
-              name='featuredImage'
-              value={courseData.course.featuredImage}
-              onChange={onCourseDetailsChange}/>
-            <button onClick={() => setFeaturedImageDialogOpened(true)}>
-              {BUTTON_SET_FEATURED_IMAGE}
-            </button>
-            <MediaManagerDialog
-              onOpen={featuredImageDialogOpened}
-              onClose={handleFeaturedImageSelection}
-              title={DIALOG_TITLE_FEATURED_IMAGE}
-              mediaAdditionAllowed={false} />
-          </label>
-          <label> Blog Post:
-            <input
-              type='checkbox'
-              name='isBlog'
-              checked={courseData.course.isBlog}
-              onChange={onCourseDetailsChange}/>
-          </label>
-          <label> Privacy:
-            <select
-              name='privacy'
-              value={courseData.course.privacy}
-              onChange={onCourseDetailsChange}>
-              <option value="PUBLIC">Public</option>
-              <option value="PRIVATE">Private</option>
-              <option value="UNLISTED">Unlisted</option>
-            </select>
-          </label>
-          <label> Published:
-            <input
-              type='checkbox'
-              name='published'
-              checked={courseData.course.published}
-              onChange={onCourseDetailsChange}/>
-          </label>
-          <label> Featured Course:
-            <input
-              type='checkbox'
-              name='isFeatured'
-              checked={courseData.course.isFeatured}
-              onChange={onCourseDetailsChange}/>
-          </label>
+          <ImgSwitcher
+              title={FORM_FIELD_FEATURED_IMAGE}
+              src={courseData.course.featuredImage}
+              onSelection={onFeaturedImageSelection}/>
           <Button
             variant='contained'
             type='submit'>
             {COURSE_CREATOR_BUTTON_TEXT}
           </Button>
-          {/* <input type='submit' value={COURSE_CREATOR_BUTTON_TEXT}/> */}
         </form>
       </div>
       {courseData.course.id &&
         <div>
-          <Link href={
-            `/${courseData.course.isBlog ? URL_EXTENTION_POSTS : URL_EXTENTION_COURSES}/${courseData.course.id}/${courseData.course.slug}`
-          }>
-            <a>Visit { courseData.course.isBlog ? 'post' : 'course' }</a>
-          </Link>
-          <button onClick={onCourseDelete}>Delete course</button>
+          <p>
+            <Link href={
+              `/${courseData.course.isBlog ? URL_EXTENTION_POSTS : URL_EXTENTION_COURSES}/${courseData.course.id}/${courseData.course.slug}`
+            }>
+              <a>Visit { courseData.course.isBlog ? 'post' : 'course' }</a>
+            </Link>
+          </p>
+          <p>
+            <Button
+              variant='contained'
+              color='default'
+              onClick={onCourseDelete}>
+              {BTN_DELETE_COURSE}
+            </Button>
+          </p>
+          {/* <button onClick={onCourseDelete}>Delete course</button> */}
           {!courseData.course.isBlog &&
             (<div>
               {courseData.lessons.map(

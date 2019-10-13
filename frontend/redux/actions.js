@@ -7,7 +7,8 @@ import {
   NETWORK_ACTION,
   PROFILE_AVAILABLE,
   PROFILE_CLEAR,
-  SITEINFO_AVAILABLE
+  SITEINFO_AVAILABLE,
+  AUTH_CHECKED
 } from './actionTypes.js'
 import { BACKEND } from '../config/constants.js'
 import { queryGraphQL } from '../lib/utils.js'
@@ -38,6 +39,12 @@ export function signedOut () {
   return dispatch => {
     dispatch(clearProfile())
     dispatch({ type: SIGN_OUT })
+  }
+}
+
+export function authHasBeenChecked () {
+  return dispatch => {
+    dispatch({ type: AUTH_CHECKED })
   }
 }
 
