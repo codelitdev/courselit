@@ -5,7 +5,7 @@ import makeStore from '../redux/store.js'
 import withRedux from 'next-redux-wrapper'
 import { getCookie } from '../lib/session.js'
 import { JWT_COOKIE_NAME, USERID_COOKIE_NAME } from '../config/constants.js'
-import { signedIn, updateSiteInfo } from '../redux/actions.js'
+import { signedIn, updateSiteInfo, authHasBeenChecked } from '../redux/actions.js'
 import { ThemeProvider } from '@material-ui/styles'
 import theme from '../theme'
 
@@ -31,7 +31,8 @@ class MyApp extends App {
           getCookie(USERID_COOKIE_NAME), getCookie(JWT_COOKIE_NAME)
         )
       )
-    }
+    } 
+    store.dispatch(authHasBeenChecked())
   }
 
   removeServerSideInjectedCSS () {

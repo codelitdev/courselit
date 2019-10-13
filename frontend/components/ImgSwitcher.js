@@ -3,6 +3,7 @@ import { BUTTON_IMAGE_CHANGE, DIALOG_TITLE_FEATURED_IMAGE } from '../config/stri
 import Img from './Img.js'
 import MediaManagerDialog from './MediaManagerDialog.js'
 import { useState } from 'react'
+import { Grid, Button } from '@material-ui/core'
 
 const ImgSwitcher = (props) => {
     const [dialogOpened, setDialogOpened] = useState(false)
@@ -13,19 +14,29 @@ const ImgSwitcher = (props) => {
     }
 
     return (
-        <div>
-            <Img src={props.src} isThumbnail={true} />
-            <button onClick={() => setDialogOpened(!dialogOpened)}>{BUTTON_IMAGE_CHANGE}</button>
+        <Grid container>
+            <Grid item>
+                {props.title}
+            </Grid>
+            <Grid item>
+                <Img src={props.src} isThumbnail={true} />
+            </Grid>
+            <Grid item>
+                <Button onClick={() => setDialogOpened(!dialogOpened)}>
+                    {BUTTON_IMAGE_CHANGE}
+                </Button>
+            </Grid>
             <MediaManagerDialog
               onOpen={dialogOpened}
               onClose={onSelection}
               title={DIALOG_TITLE_FEATURED_IMAGE}
               mediaAdditionAllowed={false} />
-        </div>
+        </Grid>
     )
 }
 
 ImgSwitcher.propTypes = {
+    title: PropTypes.string,
     src: PropTypes.string,
     onSelection: PropTypes.func.isRequired
 }

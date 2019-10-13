@@ -11,34 +11,31 @@ import {
 import MediaManager from '../components/MediaManager.js'
 import Courses from '../components/Courses.js'
 import UsersManager from '../components/UsersManager.js'
+import Router from 'next/router'
 
 const Create = (props) => {
   useEffect(() => {
-    // if (doesNotHaveCreatorPrivs()) {
-    //   console.log('Redirecting...', props)
-    //   Router.push('/')
-    // }
-  })
+    if (props.profile.fetched && !props.profile.isCreator) {
+      Router.push('/')
+    }
+  }, [props.profile.fetched])
 
-  // const doesNotHaveCreatorPrivs = () => (props.auth.guest ||
-  //   (props.profile.fetched && !props.profile.isCreator))
+  useEffect(() => {
+    if (props.auth.checked && props.auth.guest) {
+      Router.push('/')
+    }
+  }, [props.auth.checked])
 
-  // return <MasterLayoutWithAppBar>
-  //   {/* {!doesNotHaveCreatorPrivs() &&
-  //     <Creator />} */}
-  //   {/* <Creator /> */}
-  // </MasterLayoutWithAppBar>
-  // const items = [
-  //   { name: 'Courses', component: 'div' },
-  //   { name: 'Settings', component: 'div' }
-  // ]
   const items = {
     Courses: <Courses />,
     Users: <UsersManager />,
     Media: <MediaManager onMediaSelected={() => {}} toggleVisibility={() => {}} />,
     Settings: <SiteSettings />
   }
-  return <ResponsiveDrawer items={items} pageTitle={CREATOR_AREA_PAGE_TITLE}/>
+  return props.profile.fetched 
+    ? (<ResponsiveDrawer items={items} pageTitle={CREATOR_AREA_PAGE_TITLE}/>)
+    :
+    <p>Loading...</p>
 }
 
 const mapStateToProps = state => ({
