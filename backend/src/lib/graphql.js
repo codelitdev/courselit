@@ -1,13 +1,10 @@
-/**
- * Utility functions related to GraphQL API.
- */
+const {
+  EditorState,
+  convertFromRaw
+} = require('draft-js')
+const { decode } = require('base-64')
 const strings = require('../config/strings.js')
 
-/**
- * Helper function for checking authenticated requests.
- *
- * @param {Object} ctx context received from the GraphQL resolver
- */
 exports.checkIfAuthenticated = (ctx) => {
   if (!ctx.user) throw new Error(strings.responses.request_not_authenticated)
 }
@@ -28,11 +25,15 @@ exports.checkOwnership = (Model) => async (id, ctx) => {
   return item
 }
 
-/**
- * A helper function to validate page offsets.
- *
- * @param {number} offset Number of pages to skip
- */
 exports.validateOffset = (offset) => {
   if (offset < 1) throw new Error(strings.responses.invalid_offset)
+}
+
+exports.extractPlainTextFromDraftJS = (encodedEditorStateString, characters) => {
+  const editorState = EditorState.createWithContent(
+    convertFromRaw(JSON.parse(decode(encodedEditorStateString)))
+  )
+  const descriptInPlainText = editorState.getCurrentContent().getPlainText()
+  return descriptInPlainText.length > characters
+    ? descriptInPlainText.substring(0, characters) + '...' : descriptInPlainText
 }

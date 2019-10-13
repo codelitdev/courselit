@@ -48,3 +48,14 @@ export const publicCourse = PropTypes.shape({
   isFeatured: PropTypes.bool.isRequired,
   cost: PropTypes.number.isRequired
 })
+
+export const creatorCourse = PropTypes.shape({
+  id: PropTypes.string.isRequired,
+  title: PropTypes.string.isRequired,
+  description: PropTypes.string,
+  creatorName: PropTypes.string,
+  updated: PropTypes.string,
+  slug: PropTypes.string,
+  isFeatured: PropTypes.bool,
+  cost: PropTypes.number
+})

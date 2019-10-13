@@ -5,17 +5,19 @@ import {
   networkAction
 } from '../redux/actions.js'
 import {
+  queryGraphQL,
   queryGraphQLWithUIEffects
 } from '../lib/utils.js'
 import {
   BACKEND
 } from '../config/constants.js'
 import BlogPostItem from '../components/BlogPostItem.js'
+import { Grid, Button } from '@material-ui/core'
 
-let postsPaginationOffset = 1
+// let postsPaginationOffset = 1
 
-const getBlogPostQuery = (postsPaginationOffset) => {
-  return `
+const getBlogPostQuery = (postsPaginationOffset) =>
+  `
     query {
       posts: getPosts(offset: ${postsPaginationOffset}) {
         id,
@@ -27,10 +29,10 @@ const getBlogPostQuery = (postsPaginationOffset) => {
       }
     }
   `
-}
 
 const Index = (props) => {
-  const [posts, setPosts] = useState([])
+  const [posts, setPosts] = useState([...props.posts])
+  const [postsOffset, setPostsOffset] = useState(props.postsOffset)
   const getDataUnauth = queryGraphQLWithUIEffects(
     `${BACKEND}/graph`,
     props.dispatch,
@@ -38,14 +40,11 @@ const Index = (props) => {
   )
 
   const getBlogPosts = async () => {
-    getDataUnauth(
-      getBlogPostQuery(postsPaginationOffset),
-      (response) => {
-        if (response.posts) {
-          setPosts([...posts, ...response.posts])
-          postsPaginationOffset += 1
-        }
-      })
+    const response = await getDataUnauth(getBlogPostQuery(postsOffset))
+    if (response.posts) {
+      setPosts([...posts, ...response.posts])
+      setPostsOffset(postsOffset + 1)
+    }
   }
 
   useEffect(() => {
@@ -54,36 +53,32 @@ const Index = (props) => {
 
   return (
     <MasterLayout>
-      <div className="content">
-        <section className='posts'>
-          <h1>Latest Posts</h1>
-          { posts.map((x, index) => <BlogPostItem key={index} {...x}/>) }
-          { posts.length > 0 && <button onClick={getBlogPosts}>Load more</button> }
-        </section>
-        <aside>
-          <h1>Social Corner</h1>
-        </aside>
-      </div>
-      <style jsx>{`
-        .content {
-          display: flex;
-          margin-top: 2em;
-        }
-        section {
-          display: flex;
-          flex: 8;
-          flex-direction: column;
-        }
-        aside {
-          display: flex;
-          flex: 2;
-        }
-        section h1 {
-          margin-bottom: 0.8em;
-        }
-      `}</style>
+      <Grid container direction='row'>
+        <Grid item xs={10}>
+          <section className='posts'>
+            <h1>Latest Posts</h1>
+            { posts.map((x, index) => <BlogPostItem key={index} {...x}/>) }
+            { posts.length > 0 && <Button onClick={getBlogPosts}>Load more</Button> }
+          </section>
+        </Grid>
+        <Grid item xs={2}>
+          <aside>
+            <h1>Social Corner</h1>
+          </aside>
+        </Grid>
+      </Grid>
     </MasterLayout>
   )
+}
+
+Index.getInitialProps = async () => {
+  let postsPaginationOffset = 1
+  const response = await queryGraphQL(
+    `${BACKEND}/graph`,
+    getBlogPostQuery(postsPaginationOffset)
+  )
+  console.log(response)
+  return { posts: response.posts, postsOffset: ++postsPaginationOffset }
 }
 
 const mapStateToProps = state => ({

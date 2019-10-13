@@ -3,25 +3,39 @@
  */
 import React, { useEffect } from 'react'
 import { connect } from 'react-redux'
+import ResponsiveDrawer from '../components/ResponsiveDrawer.js'
+import SiteSettings from '../components/SiteSettings.js'
+import {
+  CREATOR_AREA_PAGE_TITLE
+} from '../config/strings.js'
+import MediaManager from '../components/MediaManager.js'
+import Courses from '../components/Courses.js'
+import UsersManager from '../components/UsersManager.js'
 import Router from 'next/router'
-import MasterLayout from '../components/Masterlayout.js'
-import Creator from '../components/Creator.js'
 
 const Create = (props) => {
   useEffect(() => {
-    if (doesNotHaveCreatorPrivs()) {
-      console.log('Redirecting...', props)
+    if (props.profile.fetched && !props.profile.isCreator) {
       Router.push('/')
     }
-  })
+  }, [props.profile.fetched])
 
-  const doesNotHaveCreatorPrivs = () => (props.auth.guest ||
-    (props.profile.fetched && !props.profile.isCreator))
+  useEffect(() => {
+    if (props.auth.checked && props.auth.guest) {
+      Router.push('/')
+    }
+  }, [props.auth.checked])
 
-  return <MasterLayout>
-    {!doesNotHaveCreatorPrivs() &&
-      <Creator />}
-  </MasterLayout>
+  const items = {
+    Courses: <Courses />,
+    Users: <UsersManager />,
+    Media: <MediaManager onMediaSelected={() => {}} toggleVisibility={() => {}} />,
+    Settings: <SiteSettings />
+  }
+  return props.profile.fetched 
+    ? (<ResponsiveDrawer items={items} pageTitle={CREATOR_AREA_PAGE_TITLE}/>)
+    :
+    <p>Loading...</p>
 }
 
 const mapStateToProps = state => ({

@@ -25,3 +25,8 @@ export const URL_EXTENTION_POSTS = 'post'
 export const URL_EXTENTION_COURSES = 'course'
 
 export const FREE_COURSES_TEXT = 'FREE'
+
+// Constant for representing Draftjs' entities
+export const DRAFTJS_ENTITY_TYPE_IMAGE = 'image'
+export const DRAFTJS_ENTITY_TYPE_VIDEO = 'video'
+export const DRAFTJS_ENTITY_TYPE_AUDIO = 'audio'

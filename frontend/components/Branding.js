@@ -1,61 +1,56 @@
-/**
- * This component displays the title, subtitle and logo
- * of the website.
- */
-
 import React from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import Link from 'next/link'
 import Img from './Img'
+import { Grid } from '@material-ui/core'
+import { makeStyles } from '@material-ui/core/styles'
 
-const Branding = (props) => (
-  <div className="branding">
-    <Link href='/'>
-      <a>
-        <Img src={props.logoPath} isThumbnail={true}/>
-      </a>
-    </Link>
-    <div className="text">
-      <p>{props.title}</p>
-      <p>{props.subtitle}</p>
-    </div>
-    <style jsx>{`
-      .branding {
-        display: flex;
-        flex: 9;
-        flex-direction: row;
-      }
-      .text {
-        display: flex;
-        flex-direction: column;
-        margin-left: .8em;
-      }
-      a {
-        display: flex;
-        width: 56px;
-        height: 56px;
-      }
-      .text p:first-child {
-        font-size: 1.6em;
-        font-weight: bold;
-        font-family: sans-serif;
-        flex: 8;
-      }
-      .text p:last-child {
-        font-size: 1.2em;
-        color: #696969;
-        flex: 2;
-      }
-    `}</style>
-  </div>
-)
+const useStyles = makeStyles({
+  logo: {
+    height: 98,
+    width: 98
+  },
+  title: {
+    fontWeight: 'bold',
+    fontSize: 30,
+    margin: 2
+  },
+  subtitle: {
+    fontSize: 18,
+    color: '#6f6f6f'
+  }
+})
+
+const Branding = (props) => {
+  const classes = useStyles()
+  return (
+    <Grid container spacing={1}>
+      <Grid item>
+        <Link href='/'>
+          <a>
+            <Img src={props.logoPath} isThumbnail={true}/>
+          </a>
+        </Link>
+      </Grid>
+      <Grid item>
+        <Grid container direction='column'>
+          <Grid item xs>
+            <p className={classes.title}>{props.title}</p>
+          </Grid>
+          <Grid item xs>
+            <p className={classes.subtitle}>{props.subtitle}</p>
+          </Grid>
+        </Grid>
+      </Grid>
+    </Grid>
+  )
+}
 
 Branding.propTypes = {
   title: PropTypes.string,
   subtitle: PropTypes.string,
-  logoPath: PropTypes.string,
-  backend: PropTypes.string
+  logoPath: PropTypes.string
 }
 
 const mapStateToProps = state => ({

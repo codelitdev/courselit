@@ -28,7 +28,7 @@ export const queryGraphQL = async (url, query, token) => {
 export const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export const queryGraphQLWithUIEffects = (backend, dispatch, networkAction, token) =>
-  async (query, cb) => {
+  async (query) => {
     try {
       dispatch(networkAction(false))
       let response = await queryGraphQL(
@@ -36,7 +36,7 @@ export const queryGraphQLWithUIEffects = (backend, dispatch, networkAction, toke
         query,
         token)
 
-      cb(response)
+      return response
     } catch (err) {
       throw err
     } finally {
@@ -62,3 +62,7 @@ export const removeEmptyProperties = (obj, propToExclude) =>
 // Regex copied from: https://stackoverflow.com/a/48675160/942589
 export const makeGraphQLQueryStringFromJSObject = obj =>
   JSON.stringify(obj).replace(/"([^(")"]+)":/g, '$1:')
+
+export const formulateMediaUrl =
+  (backend, mediaID, generateThumbnailUrl = false) =>
+    `${backend}/media/${mediaID}${generateThumbnailUrl ? '?thumb=1' : ''}`
