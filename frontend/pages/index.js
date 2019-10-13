@@ -5,6 +5,7 @@ import {
   networkAction
 } from '../redux/actions.js'
 import {
+  queryGraphQL,
   queryGraphQLWithUIEffects
 } from '../lib/utils.js'
 import {
@@ -13,10 +14,10 @@ import {
 import BlogPostItem from '../components/BlogPostItem.js'
 import { Grid, Button } from '@material-ui/core'
 
-let postsPaginationOffset = 1
+// let postsPaginationOffset = 1
 
-const getBlogPostQuery = (postsPaginationOffset) => {
-  return `
+const getBlogPostQuery = (postsPaginationOffset) =>
+  `
     query {
       posts: getPosts(offset: ${postsPaginationOffset}) {
         id,
@@ -28,10 +29,10 @@ const getBlogPostQuery = (postsPaginationOffset) => {
       }
     }
   `
-}
 
 const Index = (props) => {
-  const [posts, setPosts] = useState([])
+  const [posts, setPosts] = useState([...props.posts])
+  const [postsOffset, setPostsOffset] = useState(props.postsOffset)
   const getDataUnauth = queryGraphQLWithUIEffects(
     `${BACKEND}/graph`,
     props.dispatch,
@@ -39,16 +40,11 @@ const Index = (props) => {
   )
 
   const getBlogPosts = async () => {
-    console.log(postsPaginationOffset)
-    getDataUnauth(
-      getBlogPostQuery(postsPaginationOffset),
-      (response) => {
-        if (response.posts) {
-          setPosts([...posts, ...response.posts])
-          postsPaginationOffset += 1
-        }
-      }
-    )
+    const response = await getDataUnauth(getBlogPostQuery(postsOffset))
+    if (response.posts) {
+      setPosts([...posts, ...response.posts])
+      setPostsOffset(postsOffset + 1)
+    }
   }
 
   useEffect(() => {
@@ -73,6 +69,16 @@ const Index = (props) => {
       </Grid>
     </MasterLayout>
   )
+}
+
+Index.getInitialProps = async () => {
+  let postsPaginationOffset = 1
+  const response = await queryGraphQL(
+    `${BACKEND}/graph`,
+    getBlogPostQuery(postsPaginationOffset)
+  )
+  console.log(response)
+  return { posts: response.posts, postsOffset: ++postsPaginationOffset }
 }
 
 const mapStateToProps = state => ({

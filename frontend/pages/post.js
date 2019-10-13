@@ -5,50 +5,21 @@ import { BACKEND } from '../config/constants.js'
 import { networkAction } from '../redux/actions.js'
 import TextEditor from '../components/TextEditor'
 import {
-  queryGraphQLWithUIEffects,
+  queryGraphQL,
   formattedLocaleDate
 } from '../lib/utils.js'
 
 const Posts = (props) => {
-  const [post, setPost] = useState({})
-  const getDataUnauth = queryGraphQLWithUIEffects(
-    `${BACKEND}/graph`,
-    props.dispatch,
-    networkAction
-  )
-
-  const getPost = async () => {
-    const query = `
-    query {
-      post: getCourse(id: "${props.courseId}") {
-        title,
-        description,
-        featuredImage,
-        updated,
-        creatorName
-      }
-    }
-    `
-    await getDataUnauth(
-      query,
-      (response) => response.post && setPost(response.post)
-    )
-  }
-
-  useEffect(() => {
-    getPost()
-  }, [])
-
   return (
     <MasterLayout>
       {
-        post.title &&
+        props.post.title &&
         <article>
-          <h1>{ post.title }</h1>
-          <p>Updated on { formattedLocaleDate(post.updated) } by { post.creatorName }</p>
-          <img src={ post.featuredImage }/>
+          <h1>{ props.post.title }</h1>
+          <p>Updated on { formattedLocaleDate(props.post.updated) } by { props.post.creatorName }</p>
+          <img src={ props.post.featuredImage }/>
           <TextEditor
-            initialContentState={ TextEditor.hydrate(post.description) }
+            initialContentState={ TextEditor.hydrate(props.post.description) }
             readOnly={ true }/>
         </article>
       }
@@ -56,7 +27,24 @@ const Posts = (props) => {
   )
 }
 
-Posts.getInitialProps = ({ query }) => query
+Posts.getInitialProps = async ({ query }) => {
+  const graphQuery = `
+    query {
+      post: getCourse(id: "${query.courseId}") {
+        title,
+        description,
+        featuredImage,
+        updated,
+        creatorName
+      }
+    }
+  `
+  const response = await queryGraphQL(
+    `${BACKEND}/graph`,
+    graphQuery
+  )
+  return { post: response.post }
+}
 
 // Posts.propTypes = {
 //   post: PropTypes.shape({
