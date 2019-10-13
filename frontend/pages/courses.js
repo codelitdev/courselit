@@ -25,7 +25,7 @@ const Courses = (props) => {
 
   return (
     <MasterLayout>
-      {courses.map(course => <CourseItem course={course} key={course.id}/>)}
+      {courses.map(course => <CourseItem course={course} key={course.id} isPublicView={true}/>)}
       <button
         onClick={getMoreCourses}
         disabled={hasMorePages ? null : 'disabled'}>{BTN_LOAD_MORE}</button>

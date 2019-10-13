@@ -7,14 +7,16 @@ const strings = require('../../config/strings.js')
 const {
   checkIfAuthenticated,
   checkOwnership,
-  validateOffset
+  validateOffset,
+  extractPlainTextFromDraftJS
 } = require('../../lib/graphql.js')
 const {
   closed,
   open,
   mycoursesLimit,
   postsPerPageLimit,
-  coursesPerPageLimit
+  coursesPerPageLimit,
+  blogPostSnippetLength
 } = require('../../config/constants.js')
 // const {
 //   courseType
@@ -183,7 +185,7 @@ exports.getPosts = async (offset) => {
   return posts.map(x => ({
     id: x.id,
     title: x.title,
-    description: x.description,
+    description: extractPlainTextFromDraftJS(x.description, blogPostSnippetLength),
     creatorName: x.creatorName,
     updated: x.updated,
     slug: x.slug

@@ -8,23 +8,19 @@ import PropTypes from 'prop-types'
 import {
   MEDIA_UPLOAD_BUTTON_TEXT,
   ERR_MEDIA_UPLOAD_TITLE_TEXT,
-  MEDIA_ADD_NEW_BUTTON_TEXT,
-  BUTTON_CANCEL_TEXT,
   MEDIA_SEARCH_INPUT_PLACEHOLDER,
   LOAD_MORE_TEXT
 } from '../config/strings.js'
-import {
-  BACKEND
-} from '../config/constants.js'
+import { BACKEND } from '../config/constants.js'
 import { authProps } from '../types.js'
 import { networkAction } from '../redux/actions.js'
 import {
   queryGraphQL
 } from '../lib/utils.js'
-
-const DEFAULT_MEDIA_OFFSET = 1
-// Represents the server offset for pagination
-let mediaOffset = DEFAULT_MEDIA_OFFSET
+import {
+  TextField,
+  Button
+} from '@material-ui/core'
 
 const MediaManager = (props) => {
   const defaults = {
@@ -33,20 +29,23 @@ const MediaManager = (props) => {
       altText: '',
       uploading: false
     },
-    uploadFormVisibility: false,
+    uploadFormVisibility:
+      typeof props.mediaAdditionAllowed !== 'undefined'
+        ? props.mediaAdditionAllowed : true,
     searchText: '',
     userError: '',
     userMedia: [],
     selectedMedia: null
   }
   const [uploadData, setUploadData] = useState(defaults.uploadData)
-  const [uploadFormVisibility, setUploadFormVisibility] = useState(defaults.uploadFormVisibility)
+  const [uploadFormVisibility] = useState(defaults.uploadFormVisibility)
   const [searchText, setSearchText] = useState(defaults.searchText)
   const [userError, setUserError] = useState(defaults.userError)
   // contains information about user's already uploaded media
   const [userMedia, setUserMedia] = useState(defaults.userMedia)
   const [selectedMedia, setSelectedMedia] = useState(defaults.selectedMedia)
   const fileInput = createRef()
+  const [mediaOffset, setMediaOffset] = useState(1)
 
   const onUploadDataChanged = (e) => setUploadData(
     Object.assign({}, uploadData, {
@@ -94,16 +93,16 @@ const MediaManager = (props) => {
     }
   }
 
-  const toggleUploadFormVisibility = () =>
-    setUploadFormVisibility(!uploadFormVisibility)
+  // const toggleUploadFormVisibility = () =>
+  //   setUploadFormVisibility(!uploadFormVisibility)
 
   const onSearchTextChanged = (e) =>
     setSearchText(e.target.value)
 
-  const cancelMediaUpload = () => {
-    setUploadData(defaults.uploadData)
-    toggleUploadFormVisibility()
-  }
+  // const cancelMediaUpload = () => {
+  //   setUploadData(defaults.uploadData)
+  //   toggleUploadFormVisibility()
+  // }
 
   const loadMedia = async () => {
     const query = `
@@ -115,7 +114,6 @@ const MediaManager = (props) => {
       }
     }
     `
-    console.log(query)
 
     try {
       props.dispatch(networkAction(true))
@@ -125,10 +123,10 @@ const MediaManager = (props) => {
         props.auth.token
       )
 
-      console.log(response)
+      // console.log(response)
       if (response.media && response.media.length > 0) {
         setUserMedia([...response.media.map(x => x.id), ...userMedia])
-        mediaOffset += 1
+        setMediaOffset(mediaOffset + 1)
       }
     } catch (err) {
       setUserError(err.message)
@@ -140,37 +138,33 @@ const MediaManager = (props) => {
   const searchMedia = () => {
     // reset a few components
     setUserMedia(defaults.userMedia)
-    mediaOffset = DEFAULT_MEDIA_OFFSET
-
+    setMediaOffset(1)
     loadMedia()
   }
 
-  // Pass information about the selected media to the
-  // parent component
   const onMediaSelected = () => {
     props.onMediaSelected(userMedia[selectedMedia])
-    onClose()
+    // onClose()
   }
 
   // Restore the defaults
-  const reset = () => {
-    mediaOffset = DEFAULT_MEDIA_OFFSET
-    setUploadData(defaults.uploadData)
-    setUploadFormVisibility(defaults.uploadFormVisibility)
-    setSearchText(defaults.searchText)
-    setUserError(defaults.userError)
-    setUserMedia(defaults.userMedia)
-    setSelectedMedia(defaults.selectedMedia)
-  }
+  // const reset = () => {
+  //   mediaOffset = DEFAULT_MEDIA_OFFSET
+  //   setUploadData(defaults.uploadData)
+  //   setUploadFormVisibility(defaults.uploadFormVisibility)
+  //   setSearchText(defaults.searchText)
+  //   setUserError(defaults.userError)
+  //   setUserMedia(defaults.userMedia)
+  //   setSelectedMedia(defaults.selectedMedia)
+  // }
 
-  const onClose = () => {
-    reset()
-    props.toggleVisibility(false)
-  }
+  // const onClose = () => {
+  //   reset()
+  //   props.toggleVisibility(false)
+  // }
 
   return (
     <div className="container">
-      <p>Media manager</p>
       {/* Upload Area */}
       {uploadFormVisibility &&
         <div>
@@ -178,34 +172,58 @@ const MediaManager = (props) => {
             <fieldset disabled={uploadData.uploading ? 'disabled' : ''}>
               {userError &&
                 <div>{userError}</div>}
+              <Button label='Select a file'>
+                <input
+                  type='file'
+                  name='file'
+                  ref={fileInput}/>
+              </Button>
               <label> File:
                 <input
                   type='file'
                   name='file'
                   ref={fileInput}/>
               </label>
-              <label> Title:
+              {/* <label> Title:
                 <input
                   type='text'
                   name='title'
                   value={uploadData.title}
                   onChange={onUploadDataChanged}/>
-              </label>
-              <label> Alt text:
+              </label> */}
+              <TextField
+                required
+                variant='outlined'
+                label='Title'
+                fullWidth
+                margin="normal"
+                name='title'
+                value={uploadData.title}
+                onChange={onUploadDataChanged}/>
+              {/* <label> Alt text:
                 <input
                   type='text'
                   name='altText'
                   value={uploadData.altText}
                   onChange={onUploadDataChanged}/>
-              </label>
+              </label> */}
+              <TextField
+                required
+                variant='outlined'
+                label='Alt text'
+                fullWidth
+                margin="normal"
+                name='altText'
+                value={uploadData.altText}
+                onChange={onUploadDataChanged}/>
               <input type='submit' value={MEDIA_UPLOAD_BUTTON_TEXT}/>
             </fieldset>
           </form>
-          <button onClick={cancelMediaUpload}>{BUTTON_CANCEL_TEXT}</button>
+          {/* <button onClick={cancelMediaUpload}>{BUTTON_CANCEL_TEXT}</button> */}
         </div>
       }
-      {!uploadFormVisibility &&
-        <button onClick={toggleUploadFormVisibility}>{MEDIA_ADD_NEW_BUTTON_TEXT}</button>}
+      {/* {!uploadFormVisibility &&
+        <button onClick={toggleUploadFormVisibility}>{MEDIA_ADD_NEW_BUTTON_TEXT}</button>} */}
 
       {/* Search Area */}
       <div>
@@ -241,20 +259,9 @@ const MediaManager = (props) => {
         <button
           disabled={selectedMedia === null ? 'disabled' : ''}
           onClick={onMediaSelected}>Select</button>
-        <button
-          onClick={onClose}>Cancel</button>
+        {/* <button
+          onClick={onClose}>Cancel</button> */}
       </div>
-      <style jsx>
-        {`
-          .container {
-            background: #eee;
-          }
-          .selected {
-            background: blue;
-            padding: 5px;
-          }
-        `}
-      </style>
     </div>
   )
 }
@@ -263,7 +270,8 @@ MediaManager.propTypes = {
   auth: authProps,
   dispatch: PropTypes.func.isRequired,
   onMediaSelected: PropTypes.func.isRequired,
-  toggleVisibility: PropTypes.func.isRequired
+  mediaAdditionAllowed: PropTypes.bool
+  // toggleVisibility: PropTypes.func
 }
 
 const mapStateToProps = state => ({

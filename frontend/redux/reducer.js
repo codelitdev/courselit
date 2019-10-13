@@ -5,17 +5,22 @@ import {
   NETWORK_ACTION,
   PROFILE_AVAILABLE,
   PROFILE_CLEAR,
-  SITEINFO_AVAILABLE
+  SITEINFO_AVAILABLE,
+  AUTH_CHECKED
 } from './actionTypes.js'
 import {
   GENERIC_TITLE,
   GENERIC_SUBTITLE,
   GENERIC_LOGO_PATH
 } from '../config/strings.js'
-// import { BACKEND } from '../config/constants.js'
 
 const initialState = {
-  auth: { guest: true, token: null, userid: null },
+  auth: { 
+    guest: true,
+    token: null,
+    userid: null,
+    checked: false 
+  },
   siteinfo: {
     title: GENERIC_TITLE,
     subtitle: GENERIC_SUBTITLE,
@@ -33,9 +38,11 @@ const initialState = {
 function authReducer (state = initialState.auth, action) {
   switch (action.type) {
     case SIGN_IN:
-      return { guest: false, token: action.token, userid: action.userid }
+      return { guest: false, token: action.token, userid: action.userid, checked: true }
     case SIGN_OUT:
       return initialState.auth
+    case AUTH_CHECKED:
+      return Object.assign({}, state, { checked: true })
     default:
       return state
   }
