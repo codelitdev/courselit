@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react'
 import { connect } from 'react-redux'
-import MasterLayout from '../components/Masterlayout.js'
-import { BACKEND } from '../config/constants.js'
-import { networkAction } from '../redux/actions.js'
-import TextEditor from '../components/TextEditor'
+import MasterLayout from '../../../components/Masterlayout.js'
+import { BACKEND } from '../../../config/constants.js'
+// import { networkAction } from '../../../redux/actions.js'
+import TextEditor from '../../../components/TextEditor'
 import {
   queryGraphQL,
   formattedLocaleDate
-} from '../lib/utils.js'
+} from '../../../lib/utils.js'
+import { useRouter } from 'next/router'
+
+// const router = useRouter()
 
 const Posts = (props) => {
   return (
     <MasterLayout>
       {
-        props.post.title &&
+        props.post &&
         <article>
           <h1>{ props.post.title }</h1>
           <p>Updated on { formattedLocaleDate(props.post.updated) } by { props.post.creatorName }</p>
@@ -28,22 +31,22 @@ const Posts = (props) => {
 }
 
 Posts.getInitialProps = async ({ query }) => {
-  const graphQuery = `
-    query {
-      post: getCourse(id: "${query.courseId}") {
-        title,
-        description,
-        featuredImage,
-        updated,
-        creatorName
-      }
-    }
-  `
-  const response = await queryGraphQL(
-    `${BACKEND}/graph`,
-    graphQuery
-  )
-  return { post: response.post }
+    const graphQuery = `
+        query {
+        post: getCourse(id: "${query.id}") {
+            title,
+            description,
+            featuredImage,
+            updated,
+            creatorName
+        }
+        }
+    `
+    const response = await queryGraphQL(
+        `${BACKEND}/graph`,
+        graphQuery
+    )
+    return { post: response.post }
 }
 
 // Posts.propTypes = {

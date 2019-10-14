@@ -192,11 +192,10 @@ const CourseEditor = (props) => {
       `
     }
 
-    await executeGQLCall(query, response => {
-      if (response.course) {
-        setCourseDataWithDescription(response.course)
-      }
-    })
+    const response = await executeGQLCall(query)
+    if (response.course) {
+      setCourseDataWithDescription(response.course)
+    }
 
     // try {
     //   console.log(query)
@@ -490,32 +489,10 @@ const CourseEditor = (props) => {
       //   query,
       //   props.auth.token
       // )
-      await executeGQLCall(query, async response => {
-        if (response.course) {
-          setCourseDataWithDescription(response.course)
-          // console.log(response.course)
-          // const editorStateFromDescription = TextEditor.hydrate(response.course.description)
-          // const descriptionDecodedCourseData = Object.assign({}, response.course, {
-          //   description: editorStateFromDescription
-          // })
-          // console.log(`Decoded content: `,
-          //   descriptionDecodedCourseData,
-          //   editorStateFromDescription.getCurrentContent().getPlainText('\u0001'))
-          // setCourseData(
-          //   Object.assign({}, courseData, {
-          //     course: descriptionDecodedCourseData,
-          //     lessons: []
-          //   })
-          // )
-
-          // setCourseFormVisible(true)
-
-          // asynchronously load all lessons
-          // for (let i of response.course.lessons) {
-          //   await loadLesson(i)
-          // }
-        }
-      })
+      const response = await executeGQLCall(query)
+      if (response.course) {
+        setCourseDataWithDescription(response.course)
+      }
     } catch (err) {
       setError(err.message)
     }

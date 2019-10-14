@@ -5,7 +5,7 @@ import {
   RichUtils,
   AtomicBlockUtils
 } from 'draft-js'
-import 'draft-js/dist/Draft.css'
+// import 'draft-js/dist/Draft.css'
 import MediaRenderer from './MediaRenderer.js'
 import PropTypes from 'prop-types'
 
@@ -39,12 +39,16 @@ const Editor = (props) => {
   // }
 
   return (
-    <DraftJSEditor
-      editorState={props.editorState}
-      onChange={props.onChange}
-      readOnly={props.readOnly}
-      handleKeyCommand={handleKeyCommand}
-      blockRendererFn={customBlockRenderer} />
+    <div>
+      {/* <link rel='stylesheet' type='text/css' href={'draft-js/dist/Draft.css'} /> */}
+      <DraftJSEditor
+        editorKey="editor" // for data-editor invalid prop error
+        editorState={props.editorState}
+        onChange={props.onChange}
+        readOnly={props.readOnly}
+        handleKeyCommand={handleKeyCommand}
+        blockRendererFn={customBlockRenderer} />
+    </div>
   )
 }
 
