@@ -46,13 +46,11 @@ class MyApp extends App {
     const { Component, pageProps, store } = this.props
 
     return (
-      <Container>
-        <Provider store={store}>
-          <ThemeProvider theme={theme}>
-            <Component {...pageProps} />
-          </ThemeProvider>
-        </Provider>
-      </Container>
+      <Provider store={store}>
+        <ThemeProvider theme={theme}>
+          <Component {...pageProps} />
+        </ThemeProvider>
+      </Provider>
     )
   }
 }

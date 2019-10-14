@@ -58,14 +58,12 @@ const Courses = (props) => {
     }
     `
     try {
-      await executeGQLCall(query, response => {
-        // console.log(response)
-        if (response.courses) {
-          // console.log(response.courses)
-          setCreatorCourses([...creatorCourses, ...response.courses])
-          creatorCoursesPaginationOffset += 1
-        }
-      })
+      const response = await executeGQLCall(query)
+      if (response.courses) {
+        // console.log(response.courses)
+        setCreatorCourses([...creatorCourses, ...response.courses])
+        creatorCoursesPaginationOffset += 1
+      }
     } catch (err) {
       console.log(err)
     }
