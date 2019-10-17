@@ -23,9 +23,9 @@ const MediaRenderer = props => {
   )
 }
 
-MediaRenderer.IMAGE_TYPE = 'image'
-MediaRenderer.AUDIO_TYPE = 'audio'
-MediaRenderer.VIDEO_TYPE = 'video'
+MediaRenderer.IMAGE_TYPE = 'IMAGE'
+MediaRenderer.AUDIO_TYPE = 'AUDIO'
+MediaRenderer.VIDEO_TYPE = 'VIDEO'
 
 MediaRenderer.propTypes = {
   contentState: PropTypes.object,

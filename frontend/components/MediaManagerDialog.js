@@ -5,7 +5,6 @@ import MediaManager from './MediaManager.js'
 
 const MediaManagerDialog = (props) => {
   const { onClose, onOpen } = props
-  console.log(props.mediaAdditionAllowed)
 
   const handleSelection = (path) => {
     onClose(path)
