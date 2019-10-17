@@ -25,6 +25,9 @@ const stylingForInternalComponentsOfDraftJS = {
     img: {
       maxWidth: '100%'
     }
+  },
+  code: {
+    background: '#eee'
   }
 }
 
@@ -43,12 +46,24 @@ const EditorUI = (props) => {
     )
   }
 
+  const highlightCode = () => {
+    // props.onChange(
+    //   Editor.highlightCode(props.editorState)
+    // )
+    props.onChange(
+      Editor.formatCode(props.editorState)
+    )
+  }
+
   return (
     <div>
       <Grid container direction='column'>
         {!props.readOnly &&
           <Grid item>
             <IconButton onClick={() => setAddImageDialogOpened(true)}>
+              <AddPhotoAlternate />
+            </IconButton>
+            <IconButton onClick={highlightCode}>
               <AddPhotoAlternate />
             </IconButton>
           </Grid>
