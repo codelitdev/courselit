@@ -11,9 +11,9 @@ const CodeRenderer = props => {
   // const { styles } = props.blockProps
 
   return (
-    <div style={props.styles}>
+    <span style={props.styles}>
       {text}
-    </div>
+    </span>
   )
 }
 

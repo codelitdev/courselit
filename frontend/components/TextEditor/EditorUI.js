@@ -4,15 +4,20 @@ import PropTypes from 'prop-types'
 import { BACKEND } from '../../config/constants.js'
 
 import { Grid, IconButton } from '@material-ui/core'
-import AddPhotoAlternate from '@material-ui/icons/AddPhotoAlternate'
-import MediaManagerDialog from '../MediaManagerDialog.js'
+import { AddPhotoAlternate, Code, MusicVideo, FormatQuote } from '@material-ui/icons'
+import MediaManager from '../MediaManager.js'
 import { makeStyles } from '@material-ui/styles'
-import { MEDIA_MANAGER_DIALOG_TITLE } from '../../config/strings.js'
+import { 
+  MEDIA_MANAGER_DIALOG_TITLE,
+  ADD_VIDEO_DIALOG_TITLE,
+  BTN_ADD_VIDEO
+} from '../../config/strings.js'
+import AppDialog from '../AppDialog.js'
+import { Button } from '@material-ui/core'
 
 const useStyles = makeStyles({
   container: {
-    height: 100,
-    maxHeight: 300
+    display: 'flex'
   }
 })
 
@@ -28,6 +33,15 @@ const stylingForInternalComponentsOfDraftJS = {
   },
   code: {
     background: '#eee'
+  },
+  blockquote: {
+    fontStyle: 'italic',
+    marginTop: 10,
+    marginBottom: 10,
+    borderLeft: '5px solid #cecece',
+    paddingLeft: 10,
+    fontSize: '1.6em',
+    color: '#686868'
   }
 }
 
@@ -51,24 +65,33 @@ const EditorUI = (props) => {
     //   Editor.highlightCode(props.editorState)
     // )
     props.onChange(
-      Editor.formatCode(props.editorState)
+      Editor.toggleCode(props.editorState)
+    )
+  }
+
+  const toggleBlockquote = () => {
+    props.onChange(
+      Editor.toggleBlockquote(props.editorState)
     )
   }
 
   return (
-    <div>
-      <Grid container direction='column'>
+    <>
+      <Grid container direction='column' className={classes.container}>
         {!props.readOnly &&
           <Grid item>
             <IconButton onClick={() => setAddImageDialogOpened(true)}>
               <AddPhotoAlternate />
             </IconButton>
             <IconButton onClick={highlightCode}>
-              <AddPhotoAlternate />
+              <Code />
+            </IconButton>
+            <IconButton onClick={toggleBlockquote}>
+              <FormatQuote />
             </IconButton>
           </Grid>
         }
-        <Grid item className={classes.container}>
+        <Grid item>
           <Editor
             editorState={props.editorState}
             onChange={onChange}
@@ -76,13 +99,23 @@ const EditorUI = (props) => {
             theme={stylingForInternalComponentsOfDraftJS} />
         </Grid>
       </Grid>
-      <MediaManagerDialog
+      {/* <MediaManagerDialog
         onOpen={addImageDialogOpened}
         onClose={handleMediaManagerClose}
-        title={MEDIA_MANAGER_DIALOG_TITLE}/>
-    </div>
+        title={MEDIA_MANAGER_DIALOG_TITLE}/> */}
+      <AppDialog
+        onOpen={addImageDialogOpened}
+        onClose={handleMediaManagerClose}
+        title={MEDIA_MANAGER_DIALOG_TITLE}>
+        <MediaManager
+          onMediaSelected={handleMediaManagerClose}
+          mediaAdditionAllowed={false} />
+      </AppDialog>
+    </>
   )
 }
+
+EditorUI.getDecorators = Editor.getDecorators
 
 EditorUI.propTypes = {
   editorState: PropTypes.object,

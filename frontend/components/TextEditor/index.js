@@ -14,7 +14,7 @@ const stringifyAndEncode = {
 }
 
 const TextEditor = (props) => {
-  const initState = props.initialContentState || EditorState.createEmpty()
+  const initState = props.initialContentState || EditorState.createEmpty(Editor.getDecorators())
   const [editorState, setEditorState] = useState(initState)
 
   React.useEffect(() => {
@@ -36,14 +36,15 @@ const TextEditor = (props) => {
 
 TextEditor.hydrate = (encodedEditorStateString) =>
   EditorState.createWithContent(
-    convertFromRaw(stringifyAndEncode.decode(encodedEditorStateString))
+    convertFromRaw(stringifyAndEncode.decode(encodedEditorStateString)),
+    Editor.getDecorators()
   )
 
 TextEditor.stringify = (editorState) =>
   stringifyAndEncode
     .encode(convertToRaw(editorState.getCurrentContent()))
 
-TextEditor.emptyState = () => EditorState.createEmpty()
+TextEditor.emptyState = () => EditorState.createEmpty(Editor.getDecorators())
 
 TextEditor.propTypes = {
   initialContentState: PropTypes.any,
