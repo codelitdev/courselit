@@ -11,8 +11,10 @@ import {
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { Grid, Typography, makeStyles } from '@material-ui/core'
+import Img from '../../../components/Img.js'
+import { formulateMediaUrl } from '../../../lib/utils.js'
 
-const useStyles = makeStyles({
+const useStyles = (featuredImage) => makeStyles({
   article: {
     marginTop: '3.2em'
   },
@@ -21,7 +23,7 @@ const useStyles = makeStyles({
     alignItems: 'center'
   },
   creatorcard: {
-    paddingTop: '0.4em',
+    paddingTop: '0.8em',
     paddingBottom: '2.4em'
   },
   creatoravatar: {
@@ -29,15 +31,20 @@ const useStyles = makeStyles({
     width: '3em',
     marginRight: '1em'
   },
-  updatedtime: {
-
+  featuredimagecontainer: {
+    width: '100%',
+    height: 240,
+    overflow: 'hidden',
+    marginBottom: '1.8em',
+    background: `url('${formulateMediaUrl(BACKEND, featuredImage)}')`,
+    backgroundPosition: 'center'
   }
 })
 
 // const router = useRouter()
 
 const Posts = (props) => {
-  const classes = useStyles()
+  const classes = useStyles(props.post.featuredImage)()
 
   return (
     <MasterLayout>
@@ -47,7 +54,6 @@ const Posts = (props) => {
           <Typography variant="h3">
             {props.post.title}
           </Typography>
-          <img src={ props.post.featuredImage }/>
           <Grid container className={classes.creatorcard}>
             <Grid item className={classes.creatoravatarcontainer}>
               <img src='/static/logo.jpg' className={classes.creatoravatar}></img>
@@ -65,6 +71,7 @@ const Posts = (props) => {
               </Typography>
             </Grid>
           </Grid>
+          {props.post.featuredImage && <div className={classes.featuredimagecontainer} />}
           <TextEditor
             initialContentState={ TextEditor.hydrate(props.post.description) }
             readOnly={ true }/>
