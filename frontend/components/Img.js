@@ -1,12 +1,9 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { BACKEND } from '../config/constants'
-import { formulateMediaUrl } from '../lib/utils'
+import { BACKEND } from '../config/constants.js'
+import { formulateMediaUrl } from '../lib/utils.js'
 
 const Img = (props) => {
-  // const image = props.src ? <img
-  //   src={`${BACKEND}/media/${props.src}${props.isThumbnail ? '?thumb=1' : ''}`}
-  // /> : <img src='/static/default.png'/>
   return (
     <>
       <img src={props.src
