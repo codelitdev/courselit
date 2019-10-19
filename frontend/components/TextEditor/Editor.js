@@ -14,30 +14,33 @@ import PropTypes from 'prop-types'
 import MediaRenderer from './MediaRenderer.js'
 import CodeRenderer from './CodeRenderer.js'
 import { Map } from 'immutable'
+import VideoRenderer from './VideoRenderer.js'
+import TextRenderer from './TextRenderer.js'
+import BlockquoteRenderer from './BlockquoteRenderer.js'
 
 const Editor = (props) => {
-  const findCodeEntities = (contentBlock, callback, contentState) => {
-    contentBlock.findEntityRanges(
-      (character) => {
-        const entityKey = character.getEntity()
-        return (
-          entityKey !== null &&
-          contentState.getEntity(entityKey).getType() === 'CODE'
-        );
-      },
-      callback
-    );
-  }
+  // const findCodeEntities = (contentBlock, callback, contentState) => {
+  //   contentBlock.findEntityRanges(
+  //     (character) => {
+  //       const entityKey = character.getEntity()
+  //       return (
+  //         entityKey !== null &&
+  //         contentState.getEntity(entityKey).getType() === 'CODE'
+  //       );
+  //     },
+  //     callback
+  //   );
+  // }
 
-  const decorators = new CompositeDecorator([
-    {
-      strategy: findCodeEntities,
-      component: CodeRenderer,
-      props: {
-        styles: props.theme.code
-      }
-    }
-  ])
+  // const decorators = new CompositeDecorator([
+  //   {
+  //     strategy: findCodeEntities,
+  //     component: CodeRenderer,
+  //     props: {
+  //       styles: props.theme.code
+  //     }
+  //   }
+  // ])
 
   const handleKeyCommand = (command, editorState) => {
     const newState = RichUtils.handleKeyCommand(editorState, command)
@@ -59,9 +62,9 @@ const Editor = (props) => {
             styles: props.theme.media
           }
         }
-      // case 'code-block':
+      // case 'blockquote':
       //   return {
-      //     component: CodeRenderer,
+      //     component: BlockquoteRenderer,
       //     editable: true,
       //     props: {
       //       styles: props.theme.code
@@ -95,24 +98,27 @@ const Editor = (props) => {
   //   }
   // }
 
-  // const blockRenderMap = Map({
-  //   'code-block': {
-  //     element: 'code',
-  //     wrapper: <CodeRenderer />
-  //   }
-  // })
-  // const extendedBlockRenderMap = DefaultDraftBlockRenderMap.merge(blockRenderMap)
+  const blockRenderMap = Map({
+    'unstyled': {
+      element: 'span',
+      wrapper: <TextRenderer />
+    },
+    'blockquote': {
+      element: 'span',
+      wrapper: <BlockquoteRenderer style={props.theme.blockquote}/>
+    }
+  })
+  const extendedBlockRenderMap = DefaultDraftBlockRenderMap.merge(blockRenderMap)
 
   return (
-    <div>
-      <DraftJSEditor
+    <DraftJSEditor
         editorKey="editor" // for data-editor invalid prop error
         editorState={props.editorState}
         onChange={props.onChange}
         readOnly={props.readOnly}
         handleKeyCommand={handleKeyCommand}
-        blockRendererFn={customBlockRenderer} />
-    </div>
+        blockRendererFn={customBlockRenderer}
+        blockRenderMap={extendedBlockRenderMap} />
   )
 }
 
@@ -154,7 +160,32 @@ Editor.addImage = (editorState, url) => {
 //   return newEditorState
 // }
 
-Editor.formatCode = (editorState) => RichUtils.toggleCode(editorState)
+Editor.toggleCode = (editorState) => RichUtils.toggleCode(editorState)
+Editor.toggleBlockquote = (editorState) => RichUtils.toggleBlockType(editorState, 'blockquote')
+
+Editor.getDecorators = () => {
+  // From https://draftjs.org/docs/advanced-topics-decorators
+  const findWithRegex = (regex, contentBlock, callback) => {
+    const text = contentBlock.getText();
+    let matchArr, start
+    while ((matchArr = regex.exec(text)) !== null) {
+      start = matchArr.index
+      callback(start, start + matchArr[0].length)
+    }
+  }
+
+  const videoStrategy = (contentBlock, callback, contentState) => {
+    const YOUTUBE_REGEX = /https?:\/\/youtu.be\/[a-zA-Z0-9-_]+/g
+    findWithRegex(YOUTUBE_REGEX, contentBlock, callback)
+  }
+
+  return new CompositeDecorator([
+    {
+      strategy: videoStrategy,
+      component: VideoRenderer
+    }
+  ])
+}
 
 Editor.propTypes = {
   editorState: PropTypes.object,
