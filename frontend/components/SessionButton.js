@@ -15,24 +15,17 @@ import {
   authProps,
   profileProps
 } from '../types.js'
-import { Grid } from '@material-ui/core'
+import { Grid, Button } from '@material-ui/core'
+import { makeStyles } from '@material-ui/styles'
 
-SessionButton.propTypes = {
-  auth: authProps,
-  profile: profileProps
-}
+const useStyles = makeStyles({
+  button: {
+    color: 'white'
+  }
+})
 
 function SessionButton (props) {
-  // const button = props.auth.guest
-  //   ? (
-  //     <Link href='/login'>
-  //       <a>{ GENERIC_SIGNIN_TEXT }</a>
-  //     </Link>
-  //   ) : (
-  //     <Link href='/logout'>
-  //       <a>{ GENERIC_SIGNOUT_TEXT }</a>
-  //     </Link>
-  //   )
+  const classes = useStyles()
 
   return (
     <Grid container justify='flex-end' spacing={1}>
@@ -45,18 +38,27 @@ function SessionButton (props) {
         ? (
           <Grid item>
             <Link href='/login'>
-              <a>{ GENERIC_SIGNIN_TEXT }</a>
+                <Button className={classes.button}>
+                { GENERIC_SIGNIN_TEXT }
+                </Button>
             </Link>
           </Grid>
         ) : (
           <Grid item>
             <Link href='/logout'>
-              <a>{ GENERIC_SIGNOUT_TEXT }</a>
+              <Button className={classes.button}>
+                { GENERIC_SIGNOUT_TEXT }
+              </Button>
             </Link>
           </Grid>
         )}
     </Grid>
   )
+}
+
+SessionButton.propTypes = {
+  auth: authProps,
+  profile: profileProps
 }
 
 const mapStateToProps = state => ({
