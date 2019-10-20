@@ -106,6 +106,10 @@ const Editor = (props) => {
     'blockquote': {
       element: 'span',
       wrapper: <BlockquoteRenderer style={props.theme.blockquote}/>
+    },
+    'code-block': {
+      element: 'span',
+      wrapper: <CodeRenderer style={props.theme.code}/>
     }
   })
   const extendedBlockRenderMap = DefaultDraftBlockRenderMap.merge(blockRenderMap)

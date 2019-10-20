@@ -32,7 +32,11 @@ const stylingForInternalComponentsOfDraftJS = {
     }
   },
   code: {
-    background: '#eee'
+    background: 'rgb(45, 45, 45)',
+    color: '#e2e7ff',
+    padding: '10px 16px',
+    borderRadius: 2,
+    fontFamily: '"Fira Code", monospace'
   },
   blockquote: {
     fontStyle: 'italic',

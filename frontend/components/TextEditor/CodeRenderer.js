@@ -1,27 +1,17 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
-const CodeRenderer = props => {
-  console.log(props.entityKey, props.contentState)
-  const entity = props.contentState.getEntity(props.entityKey)
-  const { text } = entity.getData()
-  console.log(text)
-  // const text = props.block.getText()
-  // console.log(text);
-  // const { styles } = props.blockProps
-
-  return (
-    <span style={props.styles}>
-      {text}
-    </span>
-  )
+const CodeRenderer = (props) => {
+    return (
+        <div style={props.style}>
+            {props.children}
+        </div>
+    )
 }
 
 CodeRenderer.propTypes = {
-  contentState: PropTypes.object,
-  blockProps: PropTypes.object,
-  block: PropTypes.object,
-  options: PropTypes.shape({})
+    style: PropTypes.object.isRequired,
+    children: PropTypes.array
 }
 
 export default CodeRenderer
