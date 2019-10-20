@@ -179,7 +179,7 @@ exports.getPosts = async (offset) => {
     isBlog: true,
     published: true,
     privacy: open.toLowerCase()
-  }, 'id title description creatorName updated slug')
+  }, 'id title description creatorName updated slug featuredImage')
     .skip((offset - 1) * postsPerPageLimit).limit(postsPerPageLimit)
 
   return posts.map(x => ({
@@ -188,7 +188,8 @@ exports.getPosts = async (offset) => {
     description: extractPlainTextFromDraftJS(x.description, blogPostSnippetLength),
     creatorName: x.creatorName,
     updated: x.updated,
-    slug: x.slug
+    slug: x.slug,
+    featuredImage: x.featuredImage
   }))
 }
 

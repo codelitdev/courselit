@@ -4,6 +4,7 @@ import Header from './Header.js'
 import { connect } from 'react-redux'
 import { Container, LinearProgress } from '@material-ui/core'
 import { makeStyles } from '@material-ui/styles'
+import CssBaseline from '@material-ui/core/CssBaseline'
 
 const useStyles = makeStyles({
   root: {
@@ -18,9 +19,10 @@ const MasterLayout = (props) => {
   const classes = useStyles(props)
   return (
     <div>
+      <CssBaseline />
+      <Header />
       <LinearProgress className={classes.showProgressBar}/>
       <Container maxWidth='md' className={classes.root}>
-        <Header />
         {props.children}
       </Container>
     </div>

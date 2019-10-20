@@ -25,7 +25,8 @@ const getBlogPostQuery = (postsPaginationOffset) =>
         description,
         updated,
         creatorName,
-        slug
+        slug,
+        featuredImage
       }
     }
   `

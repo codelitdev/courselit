@@ -100,7 +100,8 @@ const postType = new graphql.GraphQLObjectType({
     description: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     creatorName: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     updated: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-    slug: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) }
+    slug: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+    featuredImage: { type: graphql.GraphQLString }
   }
 })
 
