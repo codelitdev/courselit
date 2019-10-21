@@ -9,7 +9,10 @@ require('../../src/config/db.js')
 const mongoose = require('mongoose')
 
 describe('Auth Test Suite', () => {
-  afterAll(done => mongoose.connection.close())
+  afterAll(done => {
+    mongoose.connection.close()
+    done()
+  })
 
   describe('Signing up suite', () => {
     beforeEach(done => {
@@ -20,16 +23,21 @@ describe('Auth Test Suite', () => {
       User.deleteOne({ email: 'user@test.com' }, () => done())
     })
 
-    it('signup normal', () => {
-      expect.assertions(1)
-      return promisify({
+    it('signup normal', async done => {
+      expect.assertions(3)
+      const response = await promisify({
         url: `http://${apiUrl}/auth/signup`,
         form: {
           email: 'user@test.com',
           password: 'lol',
           name: 'Tester'
         }
-      }).then(data => expect(data.message).toBe(responses.user_created))
+      })
+      expect(response.message).toBe(responses.user_created)
+      const user = await User.findOne({ email: 'user@test.com'})
+      expect(user.isCreator).toBeTruthy()
+      expect(user.isAdmin).toBeTruthy()
+      done()
     })
 
     it('signup but password field name is wrong', () => {
@@ -75,6 +83,24 @@ describe('Auth Test Suite', () => {
         .then(data => {
           expect(data.message).toBe(responses.email_already_registered)
         })
+    })
+
+    // TODO: fix this testcase, beforeEach blocks are not running correctly
+    it('only the first signup gets super admin rights', async done => {
+      const user = 'user@test.com'
+      expect.assertions(2)
+      await promisify({
+        url: `http://${apiUrl}/auth/signup`,
+        form: {
+          email: user,
+          password: 'lol',
+          name: 'Tester'
+        }
+      })
+      const userData = await User.findOne({ email: user })
+      expect(userData.isCreator).toBeFalsy()
+      expect(userData.isAdmin).toBeFalsy()
+      done()
     })
   })
 

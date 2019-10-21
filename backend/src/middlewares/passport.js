@@ -11,7 +11,6 @@ const responses = require('../config/strings.js').responses
 const User = require('../models/User.js')
 
 module.exports = (passport) => {
-  // For sign up
   passport.use('signup', new LocalStrategy({
     usernameField: 'email',
     passReqToCallback: true
@@ -37,10 +36,14 @@ module.exports = (passport) => {
         )
       }
 
+      const notTheFirstUser = await User.countDocuments()
+      console.log(notTheFirstUser)
       user = await User.create({
         email,
         password,
-        name: req.body.name
+        name: req.body.name,
+        isCreator: notTheFirstUser ? false : true,
+        isAdmin: notTheFirstUser ? false : true
       })
       return next(null, user)
     } catch (err) {
@@ -48,7 +51,6 @@ module.exports = (passport) => {
     }
   }))
 
-  // For sing in
   passport.use('login', new LocalStrategy({
     usernameField: 'email',
     passwordField: 'password',
