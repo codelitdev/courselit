@@ -25,6 +25,9 @@ services:
     environment:
       - API_PREFIX=${API_PREFIX}
       - MEDIA_FOLDER="/"
+      - DB_CONNECTION_STRING=${DB_CONNECTION_STRING}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
     volumes:
       - uploads:/uploads
       - thumbs:/thumbs
