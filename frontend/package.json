@@ -24,7 +24,7 @@
   "scripts": {
     "dev": "nodemon server.js",
     "build": "next build",
-    "start": "NODE_ENV=production node server.js",
+    "start": "next start -p 3000",
     "lint": "eslint pages components redux types.js theme.js --fix",
     "test": "jest",
     "dev:next": "next"
