@@ -4,16 +4,13 @@ import PropTypes from 'prop-types'
 import { BACKEND } from '../../config/constants.js'
 
 import { Grid, IconButton } from '@material-ui/core'
-import { AddPhotoAlternate, Code, MusicVideo, FormatQuote } from '@material-ui/icons'
+import { AddPhotoAlternate, Code, FormatQuote } from '@material-ui/icons'
 import MediaManager from '../MediaManager.js'
 import { makeStyles } from '@material-ui/styles'
-import { 
-  MEDIA_MANAGER_DIALOG_TITLE,
-  ADD_VIDEO_DIALOG_TITLE,
-  BTN_ADD_VIDEO
+import {
+  MEDIA_MANAGER_DIALOG_TITLE
 } from '../../config/strings.js'
 import AppDialog from '../AppDialog.js'
-import { Button } from '@material-ui/core'
 
 const useStyles = makeStyles({
   container: {

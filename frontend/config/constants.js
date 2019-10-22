@@ -6,8 +6,8 @@ const { publicRuntimeConfig } = getConfig()
 
 export const BACKEND = process.env.NODE_ENV === 'production'
   ? (process.env.BACKEND
-    ? `http://backend:8000${publicRuntimeConfig.apiPrefix}`
-    : publicRuntimeConfig.backend)
+    ? `http://backend:8000${publicRuntimeConfig.apiPrefix}` // Server-side API path (SSR)
+    : publicRuntimeConfig.backend) // Client-side API path
   : 'http://localhost:8000'
 // export const BACKEND = process.env.backend
 // console.log(process.env.backend, process.env.BACKEND, BACKEND)

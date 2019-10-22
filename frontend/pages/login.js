@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { connect } from 'react-redux'
 import fetch from 'isomorphic-unfetch'
 import Router from 'next/router'

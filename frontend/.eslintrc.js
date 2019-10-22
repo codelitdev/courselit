@@ -13,5 +13,14 @@ module.exports = {
         react: {
             version: 'detect'
         }
-    }
+    },
+    overrides: [
+        {
+            files: ['pages/**/*.js'],
+            rules: {
+                "react/react-in-jsx-scope": "off",
+                "react/prop-types": "off"
+            }
+        }
+    ]
 };

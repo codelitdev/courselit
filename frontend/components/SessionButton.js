@@ -7,7 +7,6 @@ import React from 'react'
 import Link from 'next/link'
 import { connect } from 'react-redux'
 import {
-  CREATOR_AREA_LINK_TEXT,
   GENERIC_SIGNOUT_TEXT,
   GENERIC_SIGNIN_TEXT
 } from '../config/strings.js'
@@ -29,18 +28,13 @@ function SessionButton (props) {
 
   return (
     <Grid container justify='flex-end' spacing={1}>
-      {/* {props.profile.isCreator &&
-        <Grid item>
-          <a href='/create'>{CREATOR_AREA_LINK_TEXT}</a>
-        </Grid>
-      } */}
       {props.auth.guest
         ? (
           <Grid item>
             <Link href='/login'>
-                <Button className={classes.button}>
+              <Button className={classes.button}>
                 { GENERIC_SIGNIN_TEXT }
-                </Button>
+              </Button>
             </Link>
           </Grid>
         ) : (

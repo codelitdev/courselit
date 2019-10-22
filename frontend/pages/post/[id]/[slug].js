@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import { connect } from 'react-redux'
 import MasterLayout from '../../../components/Masterlayout.js'
 import { BACKEND } from '../../../config/constants.js'
@@ -7,12 +6,9 @@ import TextEditor from '../../../components/TextEditor'
 import {
   queryGraphQL,
   formattedLocaleDate
-} from '../../../lib/utils.js'
-import { useRouter } from 'next/router'
+  , formulateMediaUrl } from '../../../lib/utils.js'
 import Link from 'next/link'
 import { Grid, Typography, makeStyles } from '@material-ui/core'
-import Img from '../../../components/Img.js'
-import { formulateMediaUrl } from '../../../lib/utils.js'
 
 const useStyles = (featuredImage) => makeStyles({
   article: {
@@ -82,7 +78,7 @@ const Posts = (props) => {
 }
 
 Posts.getInitialProps = async ({ query }) => {
-    const graphQuery = `
+  const graphQuery = `
         query {
         post: getCourse(id: "${query.id}") {
             title,
@@ -94,11 +90,11 @@ Posts.getInitialProps = async ({ query }) => {
         }
         }
     `
-    const response = await queryGraphQL(
-        `${BACKEND}/graph`,
-        graphQuery
-    )
-    return { post: response.post }
+  const response = await queryGraphQL(
+    `${BACKEND}/graph`,
+    graphQuery
+  )
+  return { post: response.post }
 }
 
 // Posts.propTypes = {

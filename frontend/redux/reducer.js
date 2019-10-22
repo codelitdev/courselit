@@ -15,11 +15,11 @@ import {
 } from '../config/strings.js'
 
 const initialState = {
-  auth: { 
+  auth: {
     guest: true,
     token: null,
     userid: null,
-    checked: false 
+    checked: false
   },
   siteinfo: {
     title: GENERIC_TITLE,

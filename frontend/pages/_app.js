@@ -1,6 +1,5 @@
-import React from 'react'
 import { Provider } from 'react-redux'
-import App, { Container } from 'next/app'
+import App from 'next/app'
 import makeStore from '../redux/store.js'
 import withRedux from 'next-redux-wrapper'
 import { getCookie } from '../lib/session.js'
@@ -31,7 +30,7 @@ class MyApp extends App {
           getCookie(USERID_COOKIE_NAME), getCookie(JWT_COOKIE_NAME)
         )
       )
-    } 
+    }
     store.dispatch(authHasBeenChecked())
   }
 

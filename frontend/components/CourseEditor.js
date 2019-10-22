@@ -10,9 +10,7 @@ import {
   ERR_COURSE_COST_REQUIRED,
   ERR_COURSE_TITLE_REQUIRED,
   COURSE_CREATOR_BUTTON_TEXT,
-  FORM_FIELD_FEATURED_IMAGE,
-  DIALOG_TITLE_FEATURED_IMAGE,
-  BUTTON_SET_FEATURED_IMAGE
+  FORM_FIELD_FEATURED_IMAGE
 } from '../config/strings.js'
 import TextEditor from './TextEditor'
 import { networkAction } from '../redux/actions.js'
@@ -46,7 +44,6 @@ import {
 import { makeStyles } from '@material-ui/styles'
 import { useExecuteGraphQLQuery } from './CustomHooks.js'
 import ImgSwitcher from './ImgSwitcher.js'
-import MediaManagerDialog from './MediaManagerDialog.js'
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -92,7 +89,6 @@ const CourseEditor = (props) => {
   }
   const [courseData, setCourseData] = useState(initCourseData)
   const [userError, setUserError] = useState('')
-  const [featuredImageDialogOpened, setFeaturedImageDialogOpened] = useState(false)
   // const executeGQLCall = queryGraphQLWithUIEffects(
   //   `${BACKEND}/graph`,
   //   props.dispatch,
@@ -108,7 +104,7 @@ const CourseEditor = (props) => {
   useEffect(() => {
     // prevCourseData.current = courseData
     console.log(props.courseId)
-    if(props.courseId) {
+    if (props.courseId) {
       loadCourse(props.courseId)
     }
   }, [props.courseId])
@@ -234,7 +230,7 @@ const CourseEditor = (props) => {
       })
     )
   }
-  
+
   const changeCourseDetails = (key, value) => {
     setCourseData(
       Object.assign({}, courseData, {
@@ -247,7 +243,7 @@ const CourseEditor = (props) => {
 
   const onCourseDetailsChange = (e) => {
     changeCourseDetails(
-      e.target.name, 
+      e.target.name,
       e.target.type === 'checkbox' ? e.target.checked : e.target.value
     )
     // setCourseData(
@@ -621,9 +617,9 @@ const CourseEditor = (props) => {
             </Grid>
           </Grid>
           <ImgSwitcher
-              title={FORM_FIELD_FEATURED_IMAGE}
-              src={courseData.course.featuredImage}
-              onSelection={onFeaturedImageSelection}/>
+            title={FORM_FIELD_FEATURED_IMAGE}
+            src={courseData.course.featuredImage}
+            onSelection={onFeaturedImageSelection}/>
           <Button
             variant='contained'
             type='submit'>
