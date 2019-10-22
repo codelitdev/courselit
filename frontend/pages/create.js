@@ -1,7 +1,7 @@
 /**
  * Dashboard for creators.
  */
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { connect } from 'react-redux'
 import ResponsiveDrawer from '../components/ResponsiveDrawer.js'
 import SiteSettings from '../components/SiteSettings.js'
@@ -32,10 +32,9 @@ const Create = (props) => {
     Media: <MediaManager onMediaSelected={() => {}} toggleVisibility={() => {}} />,
     Settings: <SiteSettings />
   }
-  return props.profile.fetched 
+  return props.profile.fetched
     ? (<ResponsiveDrawer items={items} pageTitle={CREATOR_AREA_PAGE_TITLE}/>)
-    :
-    <p>Loading...</p>
+    : <p>Loading...</p>
 }
 
 const mapStateToProps = state => ({

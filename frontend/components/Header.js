@@ -5,10 +5,9 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
-import { AppBar, Toolbar, Grid, Typography } from '@material-ui/core'
+import { AppBar, Toolbar, Typography } from '@material-ui/core'
 import { makeStyles } from '@material-ui/styles'
 import Link from 'next/link'
-import Branding from './Branding.js'
 import SessionButton from './SessionButton.js'
 import Img from './Img.js'
 

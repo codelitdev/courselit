@@ -25,7 +25,7 @@
     "dev": "nodemon server.js",
     "build": "next build",
     "start": "NODE_ENV=production node server.js",
-    "lint": "eslint pages components redux types.js --fix",
+    "lint": "eslint pages components redux types.js theme.js --fix",
     "test": "jest",
     "dev:next": "next"
   },

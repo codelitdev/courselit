@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { siteInfoProps, authProps } from '../types'
-import Img from './Img'
 import MediaManager from './MediaManager'
 import {
   removeEmptyProperties,
@@ -12,7 +11,7 @@ import {
 import { BACKEND } from '../config/constants.js'
 import { networkAction, newSiteInfoAvailable } from '../redux/actions.js'
 import ImgSwitcher from './ImgSwitcher.js'
-import { TextField, Grid, Button } from '@material-ui/core'
+import { TextField, Button } from '@material-ui/core'
 import { FORM_FIELD_LOGO } from '../config/strings.js'
 
 const SiteSettings = props => {
@@ -71,31 +70,31 @@ const SiteSettings = props => {
           <div>{settings.err}</div>
         }
         <TextField
-            variant='outlined'
-            label='Title'
-            fullWidth
-            margin="normal"
-            name='title'
-            value={settings.title}
-            onChange={onChangeData}/>
+          variant='outlined'
+          label='Title'
+          fullWidth
+          margin="normal"
+          name='title'
+          value={settings.title}
+          onChange={onChangeData}/>
         <TextField
-            variant='outlined'
-            label='Sub title'
-            fullWidth
-            margin="normal"
-            name='subtitle'
-            value={settings.subtitle}
-            onChange={onChangeData}/>
+          variant='outlined'
+          label='Sub title'
+          fullWidth
+          margin="normal"
+          name='subtitle'
+          value={settings.subtitle}
+          onChange={onChangeData}/>
         <ImgSwitcher
-              title={FORM_FIELD_LOGO} 
-              src={settings.logopath || props.siteinfo.logopath}
-              onSelection={onChangeData}/>
+          title={FORM_FIELD_LOGO}
+          src={settings.logopath || props.siteinfo.logopath}
+          onSelection={onChangeData}/>
         <Button
           variant='contained'
           color='default'
           type='submit'
           value='Save'
-          disabled={(!settings.title && !settings.subtitle && !settings.logopath) ? true : false}>
+          disabled={!!((!settings.title && !settings.subtitle && !settings.logopath))}>
             Save
         </Button>
       </form>

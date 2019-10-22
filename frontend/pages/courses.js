@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import PropTypes from 'prop-types'
 import { publicCourse } from '../types.js'
 import CourseItem from '../components/CourseItem.js'
