@@ -5,8 +5,8 @@ const path = require('path')
 const homedir = require('os').homedir()
 
 module.exports = {
-  dbConnectionString: process.env.DB_CONNECTION_STRING
-    || `mongodb://localhost/${ process.env.NODE_ENV === 'test' ? 'test' : 'app2'}`,
+  dbConnectionString: process.env.DB_CONNECTION_STRING ||
+    `mongodb://localhost/${ process.env.NODE_ENV === 'test' ? 'test' : 'app2'}`,
   saltRounds: 10, // for bcrypting the plain text passwords
   jwtSecret: process.env.JWT_SECRET || 'ultrasecurekey',
   jwtExpire: process.env.JWT_EXPIRES_IN || 60 * 60 * 24 * 10,

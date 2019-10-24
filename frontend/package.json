@@ -22,7 +22,7 @@
     "redux-thunk": "^2.3.0"
   },
   "scripts": {
-    "dev": "nodemon server.js",
+    "now:dev": "now dev",
     "build": "next build",
     "start": "next start -p 3000",
     "lint": "eslint pages components redux types.js theme.js --fix",
