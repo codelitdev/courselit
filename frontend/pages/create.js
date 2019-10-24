@@ -12,6 +12,9 @@ import MediaManager from '../components/MediaManager.js'
 import Courses from '../components/Courses.js'
 import UsersManager from '../components/UsersManager.js'
 import Router from 'next/router'
+import {
+  LibraryBooks, SupervisedUserCircle, PermMedia, SettingsApplications
+} from '@material-ui/icons'
 
 const Create = (props) => {
   useEffect(() => {
@@ -26,12 +29,29 @@ const Create = (props) => {
     }
   }, [props.auth.checked])
 
-  const items = {
-    Courses: <Courses />,
-    Users: <UsersManager />,
-    Media: <MediaManager onMediaSelected={() => {}} toggleVisibility={() => {}} />,
-    Settings: <SiteSettings />
-  }
+  const items = [
+    {
+      name: 'Courses',
+      element: <Courses />,
+      icon: <LibraryBooks />
+    },
+    {
+      name: 'Users',
+      element: <UsersManager />,
+      icon: <SupervisedUserCircle />
+    },
+    {
+      name: 'Media',
+      element: <MediaManager onMediaSelected={() => {}} toggleVisibility={() => {}} />,
+      icon: <PermMedia />
+    },
+    {
+      name: 'Settings',
+      element: <SiteSettings />,
+      icon: <SettingsApplications />
+    }
+  ]
+  
   return props.profile.fetched
     ? (<ResponsiveDrawer items={items} pageTitle={CREATOR_AREA_PAGE_TITLE}/>)
     : <p>Loading...</p>
