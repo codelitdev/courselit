@@ -5,13 +5,20 @@ import Divider from '@material-ui/core/Divider'
 import Drawer from '@material-ui/core/Drawer'
 import Hidden from '@material-ui/core/Hidden'
 import IconButton from '@material-ui/core/IconButton'
-import InboxIcon from '@material-ui/icons/MoveToInbox'
+// import InboxIcon from '@material-ui/icons/MoveToInbox'
 import List from '@material-ui/core/List'
 import ListItem from '@material-ui/core/ListItem'
 import ListItemIcon from '@material-ui/core/ListItemIcon'
 import ListItemText from '@material-ui/core/ListItemText'
-import MailIcon from '@material-ui/icons/Mail'
-import MenuIcon from '@material-ui/icons/Menu'
+import {
+  Mail,
+  Menu,
+  ShoppingCart,
+  MoveToInbox,
+  SettingsApplications
+} from '@material-ui/icons'
+// import MailIcon from '@material-ui/icons/Mail'
+// import MenuIcon from '@material-ui/icons/Menu'
 import Toolbar from '@material-ui/core/Toolbar'
 import Typography from '@material-ui/core/Typography'
 import { makeStyles, useTheme } from '@material-ui/core/styles'
@@ -58,16 +65,15 @@ function ResponsiveDrawer (props) {
   const [visibleComponent, setVisibleComponent] = useState()
 
   useEffect(() => {
-    const firstComponentFromList = Object.keys(props.items)[0]
-    showComponent(firstComponentFromList)
+    showComponent(props.items[0].element)
   }, [])
 
   function handleDrawerToggle () {
     setMobileOpen(!mobileOpen)
   }
 
-  function showComponent (key) {
-    setVisibleComponent(props.items[key])
+  function showComponent (item) {
+    setVisibleComponent(item)
   }
 
   const drawer = (
@@ -75,10 +81,10 @@ function ResponsiveDrawer (props) {
       <div className={classes.toolbar} />
       <Divider />
       <List>
-        {(Object.keys(props.items)).map((text, index) => (
-          <ListItem button key={text} onClick={() => showComponent(text)}>
-            <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
-            <ListItemText primary={text} />
+        {(props.items).map((item, index) => (
+          <ListItem button key={item.name} onClick={() => showComponent(item.element)}>
+            <ListItemIcon>{item.icon}</ListItemIcon>
+            <ListItemText primary={item.name} />
           </ListItem>
         ))}
       </List>
@@ -86,7 +92,7 @@ function ResponsiveDrawer (props) {
       <List>
         {['Market'].map((text, index) => (
           <ListItem button key={text}>
-            <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
+            <ListItemIcon><ShoppingCart /></ListItemIcon>
             <ListItemText primary={text} />
           </ListItem>
         ))}
@@ -106,7 +112,7 @@ function ResponsiveDrawer (props) {
             onClick={handleDrawerToggle}
             className={classes.menuButton}
           >
-            <MenuIcon />
+            <Menu />
           </IconButton>
           <Typography variant="h6" noWrap>
             {props.pageTitle}
@@ -153,7 +159,11 @@ function ResponsiveDrawer (props) {
 
 ResponsiveDrawer.propTypes = {
   pageTitle: PropTypes.string,
-  items: PropTypes.objectOf(PropTypes.object.isRequired)
+  items: PropTypes.arrayOf(PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    element: PropTypes.object.isRequired,
+    icon: PropTypes.object.isRequired
+  }))
 }
 
 export default ResponsiveDrawer
