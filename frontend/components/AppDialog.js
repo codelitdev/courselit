@@ -17,7 +17,7 @@ AppDialog.propTypes = {
   onOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   title: PropTypes.string.isRequired,
-  children: PropTypes.array
+  children: PropTypes.object
 }
 
 export default AppDialog

@@ -5,6 +5,7 @@ services:
     image: mongo
     ports:
       - "27017:27017"
+    command: --quiet
     container_name: db
   frontend:
     build:
@@ -29,8 +30,8 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
     volumes:
-      - uploads:/uploads
-      - thumbs:/thumbs
+      - ${MOUNT_UPLOAD_FOLDER_VOLUME_AS}:/uploads
+      - ${MOUNT_THUMBNAIL_FOLDER_VOLUME_AS}:/thumbs
     expose:
       - "8000"
     depends_on:
@@ -48,14 +49,14 @@ services:
       - frontend
     container_name: proxy
 
-volumes:
-  uploads:
-    driver: local
-    driver_opts:
-      device: ${MOUNT_UPLOAD_FOLDER_VOLUME_AS}
-      o: bind
-  thumbs:
-    driver: local
-    driver_opts:
-      device: ${MOUNT_THUMBNAIL_FOLDER_VOLUME_AS}
-      o: bind
+# volumes:
+#   uploads:
+#     driver: local
+#     driver_opts:
+#       device: ${MOUNT_UPLOAD_FOLDER_VOLUME_AS}
+#       o: bind
+#   thumbs:
+#     driver: local
+#     driver_opts:
+#       device: ${MOUNT_THUMBNAIL_FOLDER_VOLUME_AS}
+#       o: bind

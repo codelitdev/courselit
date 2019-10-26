@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+  proxy:
+    environment:
+      - DOMAIN=${DOMAIN}
+    ports:
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt
+
