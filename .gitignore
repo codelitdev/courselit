@@ -6,10 +6,13 @@ yarn-debug.log*
 yarn-error.log*
 
 # Dependencies
-node_modules/
+node_modules
 
 # Jest coverage
-coverage/
+coverage
 
 # Text editors configurations
-.vscode/
+.vscode
+
+# Env file
+*.env
