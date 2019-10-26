@@ -23,10 +23,11 @@ const useStyles = makeStyles(theme => ({
   }
 }))
 
-let creatorCoursesPaginationOffset = 1
+// let creatorCoursesPaginationOffset = 1
 
 const Courses = (props) => {
   // const [courseFormVisible, setCourseFormVisible] = useState(false)
+  const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1)
   const [creatorCourses, setCreatorCourses] = useState([])
   const classes = useStyles()
   const [courseEditorVisible, setCourseEditorVisible] = useState(false)
@@ -45,6 +46,7 @@ const Courses = (props) => {
   // }
 
   useEffect(() => {
+    console.log(coursesPaginationOffset)
     loadCreatorCourses()
   }, [props.profile.id])
 
@@ -52,17 +54,18 @@ const Courses = (props) => {
     if (!props.profile.id) { return }
     const query = `
     query {
-      courses: getCreatorCourses(id: "${props.profile.id}", offset: ${creatorCoursesPaginationOffset}) {
+      courses: getCreatorCourses(id: "${props.profile.id}", offset: ${coursesPaginationOffset}) {
         id, title
       }
     }
     `
     try {
       const response = await executeGQLCall(query)
-      if (response.courses) {
-        // console.log(response.courses)
+      if (response.courses && response.courses.length > 0) {
+        console.log(response.courses)
         setCreatorCourses([...creatorCourses, ...response.courses])
-        creatorCoursesPaginationOffset += 1
+        setCoursesPaginationOffset(coursesPaginationOffset + 1)
+        // creatorCoursesPaginationOffset += 1
       }
     } catch (err) {
       console.log(err)
@@ -141,7 +144,6 @@ const Courses = (props) => {
       setCourseEditorVisible(false)
     } else {
       setSelectedCourse(courseId)
-      // console.log(courseId)
       setCourseEditorVisible(true)
     }
   }
@@ -179,7 +181,11 @@ const Courses = (props) => {
         <button onClick={loadCreatorCourse}>Load my courses</button> */}
       </div>
       <div>
-        {!courseEditorVisible && <CreatorCoursesList courses={creatorCourses} onClick={showEditor}/>}
+        {!courseEditorVisible &&
+          <CreatorCoursesList 
+            courses={creatorCourses}
+            onClick={showEditor}
+            onLoadMoreClick={loadCreatorCourses}/>}
         {courseEditorVisible && <CourseEditor courseId={selectedCourse}/>}
       </div>
     </div>

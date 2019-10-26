@@ -188,9 +188,13 @@ const CourseEditor = (props) => {
       `
     }
 
-    const response = await executeGQLCall(query)
-    if (response.course) {
-      setCourseDataWithDescription(response.course)
+    try {
+      const response = await executeGQLCall(query)
+      if (response.course) {
+        setCourseDataWithDescription(response.course)
+      }
+    } catch (err) {
+      return setUserError(err.message)
     }
 
     // try {
@@ -479,12 +483,6 @@ const CourseEditor = (props) => {
     `
 
     try {
-      // props.dispatch(networkAction(true))
-      // let response = await queryGraphQL(
-      //   `${BACKEND}/graph`,
-      //   query,
-      //   props.auth.token
-      // )
       const response = await executeGQLCall(query)
       if (response.course) {
         setCourseDataWithDescription(response.course)
