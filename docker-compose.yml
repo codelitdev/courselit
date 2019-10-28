@@ -5,6 +5,11 @@ services:
     image: mongo
     ports:
       - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+    volumes:
+      - mongodata:/data/db
     command: --quiet
     container_name: db
   frontend:
@@ -26,7 +31,7 @@ services:
     environment:
       - API_PREFIX=${API_PREFIX}
       - MEDIA_FOLDER=/
-      - DB_CONNECTION_STRING=${DB_CONNECTION_STRING}
+      - DB_CONNECTION_STRING=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@db
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
     volumes:
@@ -49,7 +54,8 @@ services:
       - frontend
     container_name: proxy
 
-# volumes:
+volumes:
+  mongodata:
 #   uploads:
 #     driver: local
 #     driver_opts:
