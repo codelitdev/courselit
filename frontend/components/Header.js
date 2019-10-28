@@ -52,14 +52,6 @@ const Header = (props) => {
       </AppBar>
       <div className={classes.offset}></div>
     </div>
-    // <Grid container direction='row' alignItems='center'>
-    //   <Grid item xs={10}>
-    //     <Branding />
-    //   </Grid>
-    //   <Grid item xs={2}>
-    //     <SessionButton />
-    //   </Grid>
-    // </Grid>
   )
 }
 

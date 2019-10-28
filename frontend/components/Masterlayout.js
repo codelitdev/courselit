@@ -5,6 +5,13 @@ import { connect } from 'react-redux'
 import { Container, LinearProgress } from '@material-ui/core'
 import { makeStyles } from '@material-ui/styles'
 import CssBaseline from '@material-ui/core/CssBaseline'
+import Head from 'next/head'
+import {
+  BACKEND
+} from '../config/constants.js'
+import {
+  formulateMediaUrl
+} from '../lib/utils.js'
 
 const useStyles = makeStyles({
   root: {
@@ -18,14 +25,18 @@ const useStyles = makeStyles({
 const MasterLayout = (props) => {
   const classes = useStyles(props)
   return (
-    <div>
+    <>
+      <Head>
+        {props.siteinfo.logopath && 
+          <link rel="icon" href={formulateMediaUrl(BACKEND, props.siteinfo.logopath, true)}/>}
+      </Head>
       <CssBaseline />
       <Header />
       <LinearProgress className={classes.showProgressBar}/>
       <Container maxWidth='md' className={classes.root}>
         {props.children}
       </Container>
-    </div>
+    </>
   )
 }
 
@@ -35,7 +46,8 @@ MasterLayout.propTypes = {
 }
 
 const mapStateToProps = state => ({
-  networkAction: state.networkAction
+  networkAction: state.networkAction,
+  siteinfo: state.siteinfo
 })
 
 export default connect(

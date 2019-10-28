@@ -4,7 +4,7 @@ import PropTypes from 'prop-types'
 import { BACKEND } from '../../config/constants.js'
 
 import { Grid, IconButton } from '@material-ui/core'
-import { AddPhotoAlternate, Code, FormatQuote } from '@material-ui/icons'
+import { AddPhotoAlternate, Code, FormatQuote, InsertLink } from '@material-ui/icons'
 import MediaManager from '../MediaManager.js'
 import { makeStyles } from '@material-ui/styles'
 import {
@@ -76,6 +76,12 @@ const EditorUI = (props) => {
     )
   }
 
+  const toggleLink = () => {
+    props.onChange(
+      Editor.toggleLink(props.editorState)
+    )
+  }
+
   return (
     <>
       <Grid container direction='column' className={classes.container}>
@@ -83,6 +89,9 @@ const EditorUI = (props) => {
           <Grid item>
             <IconButton onClick={() => setAddImageDialogOpened(true)}>
               <AddPhotoAlternate />
+            </IconButton>
+            <IconButton onClick={toggleLink}>
+              <InsertLink />
             </IconButton>
             <IconButton onClick={highlightCode}>
               <Code />

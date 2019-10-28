@@ -27,26 +27,22 @@ function SessionButton (props) {
   const classes = useStyles()
 
   return (
-    <Grid container justify='flex-end' spacing={1}>
+    <>
       {props.auth.guest
         ? (
-          <Grid item>
-            <Link href='/login'>
-              <Button className={classes.button}>
-                { GENERIC_SIGNIN_TEXT }
-              </Button>
-            </Link>
-          </Grid>
+          <Link href='/login'>
+            <Button className={classes.button}>
+              { GENERIC_SIGNIN_TEXT }
+            </Button>
+          </Link>
         ) : (
-          <Grid item>
-            <Link href='/logout'>
-              <Button className={classes.button}>
-                { GENERIC_SIGNOUT_TEXT }
-              </Button>
-            </Link>
-          </Grid>
+          <Link href='/logout'>
+            <Button className={classes.button}>
+              { GENERIC_SIGNOUT_TEXT }
+            </Button>
+          </Link>
         )}
-    </Grid>
+    </>
   )
 }
 
