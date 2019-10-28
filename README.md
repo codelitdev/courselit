@@ -42,3 +42,8 @@ The very first user who signs up for an account, automatically becomes a super a
   ```    
   ./up .prod.env [any other docker-compose option, if necessary]
   ```
+
+## Security
+Although, we've done everything in our power to secure the application by following the best practices, we hope you understand that no one can guarantee that it's the most secure implementation and it will always stay secure. 
+
+Please audit the environment files, docker-compose files and other configurations properly as per your company's security standards. If you've discovered a security vulnerability, consider submitting a PR.
