@@ -15,6 +15,7 @@ import { Map } from 'immutable'
 import VideoRenderer from './VideoRenderer.js'
 import TextRenderer from './TextRenderer.js'
 import BlockquoteRenderer from './BlockquoteRenderer.js'
+import LinkRenderer from './LinkRenderer.js'
 
 const Editor = (props) => {
   const handleKeyCommand = (command, editorState) => {
@@ -85,6 +86,8 @@ Editor.addImage = (editorState, url) => {
 }
 
 Editor.toggleCode = (editorState) => RichUtils.toggleCode(editorState)
+Editor.toggleLink = (editorState) =>
+  RichUtils.toggleLink(editorState, editorState.getSelection(), null)
 Editor.toggleBlockquote = (editorState) => RichUtils.toggleBlockType(editorState, 'blockquote')
 
 Editor.getDecorators = () => {
@@ -103,10 +106,30 @@ Editor.getDecorators = () => {
     findWithRegex(YOUTUBE_REGEX, contentBlock, callback)
   }
 
+  const linkStrategy = (contentBlock, callback, contentState) => {
+    // contentBlock.findEntityRanges(
+    //   (character) => {
+    //     const entityKey = character.getEntity();
+    //     return (
+    //       entityKey !== null &&
+    //       contentState.getEntity(entityKey).getType() === 'LINK'
+    //     );
+    //   },
+    //   callback
+    // );
+    // Regex from Stackoverflow: https://stackoverflow.com/a/3809435/942589
+    const LINK_REGEX = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)?/gi
+    findWithRegex(LINK_REGEX, contentBlock, callback)
+  }
+
   return new CompositeDecorator([
     {
       strategy: videoStrategy,
       component: VideoRenderer
+    },
+    {
+      strategy: linkStrategy,
+      component: LinkRenderer
     }
   ])
 }
