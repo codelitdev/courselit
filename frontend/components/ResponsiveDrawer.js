@@ -67,7 +67,7 @@ function ResponsiveDrawer (props) {
   const [visibleComponent, setVisibleComponent] = useState()
 
   useEffect(() => {
-    showComponent(props.items[0].element)
+    showComponent(props.items[2].element)
   }, [])
 
   function handleDrawerToggle () {
