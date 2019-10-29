@@ -9,7 +9,8 @@ require('../../src/config/db.js')
 const mongoose = require('mongoose')
 
 describe('Auth Test Suite', () => {
-  afterAll(done => {
+  afterAll(async done => {
+    await User.deleteOne({ email: 'user2@test.com' })
     mongoose.connection.close()
     done()
   })
@@ -88,6 +89,7 @@ describe('Auth Test Suite', () => {
     // TODO: fix this testcase, beforeEach blocks are not running correctly
     it('only the first signup gets super admin rights', async done => {
       const user = 'user@test.com'
+      const user2 = 'user2@test.com'
       expect.assertions(2)
       await promisify({
         url: `http://${apiUrl}/auth/signup`,
@@ -98,8 +100,19 @@ describe('Auth Test Suite', () => {
         }
       })
       const userData = await User.findOne({ email: user })
-      expect(userData.isCreator).toBeFalsy()
-      expect(userData.isAdmin).toBeFalsy()
+      // expect(userData.isCreator).toBeFalsy()
+      // expect(userData.isAdmin).toBeFalsy()
+      await promisify({
+        url: `http://${apiUrl}/auth/signup`,
+        form: {
+          email: user2,
+          password: 'lol',
+          name: 'Tester'
+        }
+      })
+      const user2Data = await User.findOne({ email: user2 })
+      expect(user2Data.isCreator).toBeFalsy()
+      expect(user2Data.isAdmin).toBeFalsy()
       done()
     })
   })
@@ -123,7 +136,7 @@ describe('Auth Test Suite', () => {
       return promisify({
         url: `http://${apiUrl}/auth/login`,
         form: {
-          email: 'user2@test.com',
+          email: 'user3@test.com',
           password: 'lol'
         }
       }).then(data => {
