@@ -36,21 +36,27 @@ const Create = (props) => {
       icon: <LibraryBooks />
     },
     {
-      name: 'Users',
-      element: <UsersManager />,
-      icon: <SupervisedUserCircle />
-    },
-    {
       name: 'Media',
       element: <MediaManager onMediaSelected={() => {}} toggleVisibility={() => {}} />,
       icon: <PermMedia />
-    },
-    {
-      name: 'Settings',
-      element: <SiteSettings />,
-      icon: <SettingsApplications />
     }
   ]
+
+  if (props.profile.isAdmin) {
+    items.push(...[
+      {
+        name: 'Users',
+        element: <UsersManager />,
+        icon: <SupervisedUserCircle />
+      },
+      {
+        name: 'Settings',
+        element: <SiteSettings />,
+        icon: <SettingsApplications />
+      }
+    ])
+  }
+
   
   return props.profile.fetched
     ? (<ResponsiveDrawer items={items} pageTitle={CREATOR_AREA_PAGE_TITLE}/>)

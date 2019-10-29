@@ -21,7 +21,7 @@ export function signedIn (userid, token) {
       dispatch(networkAction(true))
       let response = await queryGraphQL(
         `${BACKEND}/graph`,
-        `{ profile: getUser(email: "${userid}") {name, isCreator, id} }`,
+        `{ profile: getUser(email: "${userid}") {name, isCreator, id, isAdmin} }`,
         getState().auth.token
       )
 

@@ -31,7 +31,8 @@ const initialState = {
     isCreator: false,
     name: null,
     id: null,
-    fetched: false
+    fetched: false,
+    isAdmin: false
   }
 }
 
@@ -81,7 +82,8 @@ function profileReducer (state = initialState.profile, action) {
         id: action.profile.id,
         name: action.profile.name,
         isCreator: action.profile.isCreator || false,
-        fetched: true
+        fetched: true,
+        isAdmin: action.profile.isAdmin || false
       }
     case PROFILE_CLEAR:
       return initialState.profile
