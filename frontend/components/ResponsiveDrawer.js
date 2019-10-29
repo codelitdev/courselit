@@ -19,10 +19,12 @@ import {
 } from '@material-ui/icons'
 // import MailIcon from '@material-ui/icons/Mail'
 // import MenuIcon from '@material-ui/icons/Menu'
-import Toolbar from '@material-ui/core/Toolbar'
-import Typography from '@material-ui/core/Typography'
+import { Toolbar, Typography, Grid } from '@material-ui/core'
+// import Toolbar from '@material-ui/core/Toolbar'
+// import Typography from '@material-ui/core/Typography'
 import { makeStyles, useTheme } from '@material-ui/core/styles'
 import PropTypes from 'prop-types'
+import SessionButton from './SessionButton.js'
 
 const drawerWidth = 240
 
@@ -114,9 +116,16 @@ function ResponsiveDrawer (props) {
           >
             <Menu />
           </IconButton>
-          <Typography variant="h6" noWrap>
-            {props.pageTitle}
-          </Typography>
+          <Grid container justify='space-between'>
+            <Grid item>
+              <Typography variant="h6" noWrap>
+                {props.pageTitle}
+              </Typography>
+            </Grid>
+            <Grid item>
+              <SessionButton />
+            </Grid>
+          </Grid>
         </Toolbar>
       </AppBar>
       <nav className={classes.drawer} aria-label="mailbox folders">

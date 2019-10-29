@@ -5,7 +5,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
-import { AppBar, Toolbar, Typography } from '@material-ui/core'
+import { AppBar, Toolbar, Typography, Grid } from '@material-ui/core'
 import { makeStyles } from '@material-ui/styles'
 import Link from 'next/link'
 import SessionButton from './SessionButton.js'
@@ -37,17 +37,25 @@ const Header = (props) => {
     <div className={classes.root}>
       <AppBar position='fixed'>
         <Toolbar>
-          <Link href='/'>
-            <a className={classes.logo}>
-              <div className={classes.logocontainer}>
-                <Img src={props.logoPath} isThumbnail={true}/>
-              </div>
-            </a>
-          </Link>
-          <Typography variant='h6'>
-            {props.title}
-          </Typography>
-          <SessionButton />
+          <Grid container justify='space-between' direction='row'>
+            <Grid item>
+              <Grid container>
+                  <Link href='/'>
+                    <a className={classes.logo}>
+                      <div className={classes.logocontainer}>
+                        <Img src={props.logoPath} isThumbnail={true}/>
+                      </div>
+                    </a>
+                  </Link>
+                  <Typography variant='h6'>
+                    {props.title}
+                  </Typography>
+              </Grid>
+            </Grid>
+            <Grid item>
+              <SessionButton />
+            </Grid>
+          </Grid>
         </Toolbar>
       </AppBar>
       <div className={classes.offset}></div>
