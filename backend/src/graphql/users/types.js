@@ -1,9 +1,9 @@
 const graphql = require('graphql')
 
-exports.userType = new graphql.GraphQLObjectType({
+const userType = new graphql.GraphQLObjectType({
   name: 'User',
   fields: {
-    id: { type: graphql.GraphQLID },
+    id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     email: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     verified: { type: graphql.GraphQLBoolean },
     name: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
@@ -13,6 +13,32 @@ exports.userType = new graphql.GraphQLObjectType({
       )
     },
     isCreator: { type: graphql.GraphQLBoolean },
+    isAdmin: { type: graphql.GraphQLBoolean },
+    avatar: { type: graphql.GraphQLString }
+  }
+})
+
+const userUpdateInput = new graphql.GraphQLInputObjectType({
+  name: 'UserUpdateInput',
+  fields: {
+    id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+    name: { type: graphql.GraphQLString },
+    avatar: { type: graphql.GraphQLString },
+    isCreator: { type: graphql.GraphQLBoolean },
     isAdmin: { type: graphql.GraphQLBoolean }
   }
 })
+
+const userSearchInput = new graphql.GraphQLInputObjectType({
+  name: 'UserSearchInput',
+  fields: {
+    searchText: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+    offset: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) }
+  }
+})
+
+module.exports = {
+  userType,
+  userUpdateInput,
+  userSearchInput
+}

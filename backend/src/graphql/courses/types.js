@@ -8,9 +8,6 @@ const {
 //   lessonType
 // } = require('../lessons/types.js')
 
-/**
- * A GraphQL type for course's status
- */
 const courseStatusType = new graphql.GraphQLEnumType({
   name: 'CoursePrivacyType',
   values: {
@@ -20,9 +17,6 @@ const courseStatusType = new graphql.GraphQLEnumType({
   }
 })
 
-/**
- * A GraphQL type for courses
- */
 const courseType = new graphql.GraphQLObjectType({
   name: 'Course',
   fields: {
@@ -43,9 +37,6 @@ const courseType = new graphql.GraphQLObjectType({
   }
 })
 
-/**
- * A GraphQL type for taking input for creating a course
- */
 const courseInputType = new graphql.GraphQLInputObjectType({
   name: 'CourseInput',
   fields: {
@@ -60,9 +51,6 @@ const courseInputType = new graphql.GraphQLInputObjectType({
   }
 })
 
-/**
- * A GraphQL type for taking input for updating a course.
- */
 const courseUpdateInput = new graphql.GraphQLInputObjectType({
   name: 'CourseUpdateInput',
   fields: {
@@ -78,9 +66,6 @@ const courseUpdateInput = new graphql.GraphQLInputObjectType({
   }
 })
 
-/**
- * A GraphQL type for representing a item from my courses list.
- */
 const myCoursesItemType = new graphql.GraphQLObjectType({
   name: 'MyCoursesItem',
   fields: {
@@ -89,9 +74,6 @@ const myCoursesItemType = new graphql.GraphQLObjectType({
   }
 })
 
-/**
- * A GraphQL type for blog posts.
- */
 const postType = new graphql.GraphQLObjectType({
   name: 'Post',
   fields: {
@@ -105,9 +87,6 @@ const postType = new graphql.GraphQLObjectType({
   }
 })
 
-/**
- * A GraphQL type for public courses.
- */
 const publicCoursesType = new graphql.GraphQLObjectType({
   name: 'PublicCourse',
   fields: {

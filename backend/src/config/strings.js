@@ -29,5 +29,8 @@ exports.responses = {
   title_is_required: 'A title is required',
   file_is_required: 'A file is required',
   error_in_moving_file: 'Error in moving file',
-  success: 'Success'
+  success: 'Success',
+  user_name_cant_be_null: 'Name cannot be null',
+  action_not_allowed: 'You do not have rights to perform this action',
+  invalid_input: 'Invalid input'
 }

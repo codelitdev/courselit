@@ -1,6 +1,3 @@
-/**
- * A model for representing uploaded files.
- */
 const mongoose = require('mongoose')
 
 const MediaSchema = new mongoose.Schema({

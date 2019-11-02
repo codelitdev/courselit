@@ -3,22 +3,22 @@
  */
 const Media = require('../../models/Media.js')
 const {
-  checkIfAuthenticated,
-  validateOffset
+  makeModelTextSearchable
 } = require('../../lib/graphql.js')
 const {
   mymediaLimit
 } = require('../../config/constants.js')
 
-exports.getCreatorMedia = async (offset, ctx, searchText) => {
-  checkIfAuthenticated(ctx)
-  validateOffset(offset)
-
+exports.getCreatorMedia = async (offset, ctx, text) => {
   const query = {
-    creatorId: ctx.user._id
+    creatorId: ctx && ctx.user && ctx.user._id
   }
-  if (searchText) query['$text'] = { $search: searchText }
-  let media = await Media.find(query).skip((offset - 1) * mymediaLimit).limit(mymediaLimit)
+  if (text) query['$text'] = { $search: text }
 
-  return media
+  const searchMedia = makeModelTextSearchable(Media)
+
+  return await searchMedia(
+    { offset, query, graphQLContext: ctx }, 
+    { itemsPerPage: mymediaLimit }
+  )
 }

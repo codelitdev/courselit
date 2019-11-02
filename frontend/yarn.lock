@@ -5820,10 +5820,10 @@ normalize-url@1.9.1:
     query-string "^4.1.0"
     sort-keys "^1.0.0"
 
-now@^16.4.3:
-  version "16.4.3"
-  resolved "https://registry.yarnpkg.com/now/-/now-16.4.3.tgz#ff194b6addd2974e638dbaadbd15340d9d14ea99"
-  integrity sha512-BF4Zx6/RRovRWmShJB6O8vEkUT/baNWgxwerXjdJpG4xAiWP0s1EpXCEanDNMzaCWOuG+RaNxwHpOTyVNWWULg==
+now@^16.4.4:
+  version "16.4.4"
+  resolved "https://registry.yarnpkg.com/now/-/now-16.4.4.tgz#6f465cd74b4981c63a002b45e7ae5e719a0561ab"
+  integrity sha512-yw4/DWcnyZ7nGv00bzZJhFOM6vFWur52esXiA2xi2Xcv/LSqVSzQ8Z7KdtfZCs0oH14+qcxDNZU+qbr5r+OXJg==
 
 npm-bundled@^1.0.1:
   version "1.0.6"

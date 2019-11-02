@@ -4,6 +4,7 @@ const {
 } = require('draft-js')
 const { decode } = require('base-64')
 const strings = require('../config/strings.js')
+const constants = require('../config/constants.js')
 
 exports.checkIfAuthenticated = (ctx) => {
   if (!ctx.user) throw new Error(strings.responses.request_not_authenticated)
@@ -36,4 +37,54 @@ exports.extractPlainTextFromDraftJS = (encodedEditorStateString, characters) => 
   const descriptInPlainText = editorState.getCurrentContent().getPlainText()
   return descriptInPlainText.length > characters
     ? descriptInPlainText.substring(0, characters) + '...' : descriptInPlainText
+}
+
+exports.checkAdminOrSelf = (userID, GraphQLContext) => {
+  const isSelf = userID === GraphQLContext.user.id
+  const isAdmin = GraphQLContext.user.isAdmin
+  const isActionAllowed = isSelf || isAdmin
+  if (!isActionAllowed) {
+    throw new Error(strings.responses.action_not_allowed)
+  }
+}
+
+exports.checkIfItemExists = async (Model, id) => {
+  let item = await Model.findById(id)
+  if (!item) throw new Error(strings.responses.item_not_found)
+
+  return item
+}
+
+validateMongooseTextSearchQuery = (query) => {
+  if (typeof query !== 'object') throw new Error(strings.responses.invalid_input)
+}
+
+/**
+ * searchData = {
+ *  offset: number,
+ *  query: object,
+ *  graphQLContext: object
+ * }
+ * 
+ * options = {
+ *  checkIfRequestIsAuthenticated: boolean,
+ *  itemsPerPage: number
+ * }
+ */
+validateSearchInput = (searchData, checkIfRequestIsAuthenticated) => {
+  this.validateOffset(searchData.offset)
+  validateMongooseTextSearchQuery(searchData.query)
+  if (checkIfRequestIsAuthenticated) {
+    this.checkIfAuthenticated(searchData.graphQLContext)
+  }
+}
+exports.makeModelTextSearchable = (Model) => async (searchData, options = {}) => {
+  const itemsPerPage = options.itemsPerPage || constants.defaultPaginationItemsPerPage
+  const checkIfRequestIsAuthenticated = options.checkIfRequestIsAuthenticated || true
+
+  validateSearchInput(searchData, checkIfRequestIsAuthenticated)
+
+  return await Model.find(searchData.query)
+                    .skip((searchData.offset - 1) * itemsPerPage)
+                    .limit(itemsPerPage)
 }
