@@ -42,8 +42,8 @@ describe('GraphQL API tests', () => {
 
   beforeAll(done => {
     User.create([
-      { email: user, password: 'lol', name: 'Tester #1' },
-      { email: user2, password: 'lol', name: 'Tester #2' }
+      { email: user, password: 'lol', name: 'Tester #1', isAdmin: true },
+      { email: user2, password: 'lol', name: 'Tester #2', verified: false }
     ])
       .then(() => SiteInfo.deleteMany({}))
       .then(() => done())
@@ -53,12 +53,13 @@ describe('GraphQL API tests', () => {
    * Test suite for 'User' related functions.
    */
   describe('users', () => {
-    it('get details', async () => {
+    it('get user details as a regular user', async () => {
       const query = /* GraphQL */ `
       {
         user: getUser(email: "${user2}") {
           email,
-          verified
+          verified,
+          isCreator
         }
       }
       `
@@ -104,6 +105,211 @@ describe('GraphQL API tests', () => {
       expect(result).not.toHaveProperty('errors')
       expect(result.data.updateName.email).toBe(user)
       expect(result.data.updateName.name).toBe(newName)
+    })
+
+    it('get users details as an admin', async () => {
+      const query = /* GraphQL */ `
+      {
+        user: getUser(email: "${user2}") {
+          email,
+          verified
+        }
+      }
+      `
+      const result = await graphql(schema, query, {}, { user: { email: user, isAdmin: true } })
+      expect(result).toHaveProperty('data')
+      expect(result.data.user.email).toBe(user2)
+      expect(result.data.user.verified).not.toBeNull()
+    })
+
+    it('get details of a non-existing user', async () => {
+      const query = /* GraphQL */ `
+      {
+        user: getUser(email: "nonexisting@test.com") {
+          email,
+          verified
+        }
+      }
+      `
+      const result = await graphql(schema, query, {}, { user: { email: user } })
+      expect(result).toHaveProperty('errors')
+      expect(result.errors[0].message).toBe(responses.item_not_found)
+    })
+
+    it('updating a user via an unauthenticated request', async () => {
+      const mutation = `
+      mutation {
+        updateUser(userData: {
+          id: "${mongoose.Types.ObjectId('000000000000000000000000')}"
+          name: "rajat"
+        }) {
+          id,
+        }
+      }
+      `
+
+      const result = await graphql(schema, mutation, null, {})
+      expect(result).toHaveProperty('errors')
+      expect(result.errors[0].message).toBe(responses.request_not_authenticated)
+    })
+
+    it('updating a user as an admin', async () => {
+      const userDetails = await User.findOne({ email: user })
+      const user2Details = await User.findOne({ email: user2 })
+      const newName = 'Edited Tester #2'
+      const mutation = `
+      mutation {
+        user: updateUser(userData: {
+          id: "${mongoose.Types.ObjectId(user2Details.id)}"
+          name: "${newName}"
+        }) {
+          name,
+          email
+        }
+      }
+      `
+
+      const result = await graphql(schema, mutation, null, { user: userDetails })
+      expect(result).toHaveProperty('data')
+      expect(result.data.user.name).toBe(newName)
+      expect(result.data.user.email).toBe(user2)
+    })
+
+    it('updating other users as a non admin', async () => {
+      const userDetails = await User.findOne({ email: user })
+      const user2Details = await User.findOne({ email: user2 })
+      const newName = 'Edited Tester #2'
+      const mutation = `
+      mutation {
+        user: updateUser(userData: {
+          id: "${mongoose.Types.ObjectId(userDetails.id)}"
+          name: "${newName}"
+        }) {
+          name,
+          email
+        }
+      }
+      `
+
+      const result = await graphql(schema, mutation, null, { user: user2Details })
+      expect(result).toHaveProperty('errors')
+      expect(result.errors[0].message).toBe(responses.action_not_allowed)
+    })
+
+    it('updating own details', async () => {
+      const userDetails = await User.findOne({ email: user2 })
+      const newName = 'Edited Tester #2'
+      const mutation = `
+      mutation {
+        user: updateUser(userData: {
+          id: "${mongoose.Types.ObjectId(userDetails.id)}"
+          name: "${newName}"
+        }) {
+          name,
+          email
+        }
+      }
+      `
+
+      const result = await graphql(schema, mutation, null, { user: userDetails })
+      expect(result).toHaveProperty('data')
+      expect(result.data.user.name).toBe(newName)
+      expect(result.data.user.email).toBe(user2)
+    })
+
+    it('updating a non-existing user', async () => {
+      const user = {
+        _id: mongoose.Types.ObjectId('000000000000000000000000'),
+        isCreator: false,
+        name: 'Tester'
+      }
+      const newName = 'Edited Tester #2'
+      const mutation = `
+      mutation {
+        user: updateUser(userData: {
+          id: "${mongoose.Types.ObjectId(user.id)}"
+          name: "${newName}"
+        }) {
+          name,
+          email
+        }
+      }
+      `
+
+      const result = await graphql(schema, mutation, null, { user })
+      expect(result).toHaveProperty('errors')
+      expect(result.errors[0].message).toBe(responses.item_not_found)
+    })
+
+    it('setting name to blank', async () => {
+      const userDetails = await User.findOne({ email: user2 })
+      const newName = ''
+      const mutation = `
+      mutation {
+        user: updateUser(userData: {
+          id: "${mongoose.Types.ObjectId(userDetails.id)}"
+          name: "${newName}"
+        }) {
+          name,
+          email
+        }
+      }
+      `
+
+      const result = await graphql(schema, mutation, null, { user: userDetails })
+      expect(result).toHaveProperty('errors')
+      expect(result.errors[0].message).toBe(responses.user_name_cant_be_null)
+    })
+
+    it('setting isCreator, isAdmin from a non admin user', async () => {
+      const userDetails = await User.findOne({ email: user2 })
+      const newName = 'Edited Tester #3'
+      const mutation = `
+      mutation {
+        user: updateUser(userData: {
+          id: "${mongoose.Types.ObjectId(userDetails.id)}",
+          name: "${newName}",
+          isAdmin: true,
+          isCreator: true
+        }) {
+          name,
+          isAdmin,
+          isCreator
+        }
+      }
+      `
+
+      const result = await graphql(schema, mutation, null, { user: userDetails })
+      expect(result).toHaveProperty('data')
+      expect(result.data.user.name).toBe(newName)
+      expect(result.data.user.isAdmin).toBe(false)
+      expect(result.data.user.isCreator).toBe(false)
+    })
+
+    it('setting isCreator, isAdmin from an admin user', async () => {
+      const adminUser = await User.findOne({ email: user })
+      const commonUser = await User.findOne({ email: user2 })
+      const newName = 'Edited Tester #2'
+      const mutation = `
+      mutation {
+        user: updateUser(userData: {
+          id: "${mongoose.Types.ObjectId(commonUser.id)}",
+          name: "${newName}",
+          isAdmin: true,
+          isCreator: true
+        }) {
+          name,
+          isAdmin,
+          isCreator
+        }
+      }
+      `
+
+      const result = await graphql(schema, mutation, null, { user: adminUser })
+      expect(result).toHaveProperty('data')
+      expect(result.data.user.name).toBe(newName)
+      expect(result.data.user.isAdmin).toBe(true)
+      expect(result.data.user.isCreator).toBe(true)
     })
   })
 

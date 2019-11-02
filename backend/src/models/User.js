@@ -12,6 +12,11 @@ const UserSchema = new mongoose.Schema({
   purchases: [mongoose.Schema.Types.ObjectId]
 })
 
+UserSchema.index({
+  email: 'text',
+  name: 'text'
+})
+
 // This pre-hook which runs before saving the data to db, for
 // hashing the plain text password.
 UserSchema.pre('save', async function (next) {

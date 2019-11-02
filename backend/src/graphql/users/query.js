@@ -9,5 +9,12 @@ module.exports = {
       email: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) }
     },
     resolve: (root, { email }, context) => logic.getUser(email, context)
+  },
+  searchUser: {
+    type: types.userType,
+    args: {
+      searchData: { type: new graphql.GraphQLNonNull(types.userSearchInput) }
+    },
+    resolve: (root, { searchData }, context) => logic.searchUser(searchData, context)
   }
 }
