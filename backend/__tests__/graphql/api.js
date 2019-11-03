@@ -23,13 +23,14 @@ require('../../src/config/db.js')
 describe('GraphQL API tests', () => {
   const user = 'graphuser@test.com'
   const user2 = 'graphuser2@test.com'
+  const user3 = 'graphuser3@test.com'
   let createdLessonId = ''
   let createdCourseId = ''
   let createdCourseId2 = ''
   let createdCourseId3 = ''
 
   afterAll(done => {
-    User.deleteMany({ email: { $in: [user, user2] } })
+    User.deleteMany({ email: { $in: [user, user2, user3] } })
       .then(() => Lesson.findOneAndDelete({ _id: mongoose.Types.ObjectId(createdLessonId) }))
       .then(() => Course.deleteMany({ _id: {
         $in: [createdCourseId, createdCourseId2, createdCourseId3]
@@ -43,7 +44,8 @@ describe('GraphQL API tests', () => {
   beforeAll(done => {
     User.create([
       { email: user, password: 'lol', name: 'Tester #1', isAdmin: true },
-      { email: user2, password: 'lol', name: 'Tester #2', verified: false }
+      { email: user2, password: 'lol', name: 'Tester #2', verified: false },
+      { email: user3, password: 'lol', name: 'Tester #3', verified: true }
     ])
       .then(() => SiteInfo.deleteMany({}))
       .then(() => done())
@@ -310,6 +312,77 @@ describe('GraphQL API tests', () => {
       expect(result.data.user.name).toBe(newName)
       expect(result.data.user.isAdmin).toBe(true)
       expect(result.data.user.isCreator).toBe(true)
+    })
+
+    it('searching users with an unauthenticated request', async () => {
+      const searchText = 'Tester'
+      const mutation = `
+      query {
+        users: searchUser(searchData: {
+          searchText: "${searchText}",
+          offset: 1
+        }) {
+          name,
+          email
+        }
+      }
+      `
+
+      const result = await graphql(schema, mutation, null, {})
+      expect(result).toHaveProperty('errors')
+      expect(result.errors[0].message).toBe(responses.request_not_authenticated)
+    })
+
+    it('searching text in names as an admin user', async () => {
+      const signedInUser = await User.findOne({ email: user2 })
+      const searchText = '#1'
+      const mutation = `
+      query {
+        users: searchUser(searchData: {
+          searchText: "${searchText}",
+          offset: 1
+        }) {
+          name,
+          email,
+          isAdmin,
+          isCreator
+        }
+      }
+      `
+
+      const result = await graphql(schema, mutation, null, { user: signedInUser })
+      expect(result).toHaveProperty('data')
+      expect(result.data).toHaveProperty('users')
+      expect(result.data.users.length).toBe(1)
+      expect(result.data.users[0].email).toBe(user)
+      expect(result.data.users[0].isCreator).not.toBeTruthy()
+      expect(result.data.users[0].isAdmin).toBeTruthy()
+    })
+
+    it('searching text in emails as a common user', async () => {
+      const signedInUser = await User.findOne({ email: user3 })
+      const searchText = 'graphuser2'
+      const mutation = `
+      query {
+        users: searchUser(searchData: {
+          searchText: "${searchText}",
+          offset: 1
+        }) {
+          name,
+          email,
+          isAdmin,
+          isCreator
+        }
+      }
+      `
+
+      const result = await graphql(schema, mutation, null, { user: signedInUser })
+      expect(result).toHaveProperty('data')
+      expect(result.data).toHaveProperty('users')
+      expect(result.data.users.length).toBe(1)
+      expect(result.data.users[0].email).toBe(user2)
+      expect(result.data.users[0].isCreator).toBeNull()
+      expect(result.data.users[0].isAdmin).toBeNull()
     })
   })
 

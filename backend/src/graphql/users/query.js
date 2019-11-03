@@ -11,7 +11,7 @@ module.exports = {
     resolve: (root, { email }, context) => logic.getUser(email, context)
   },
   searchUser: {
-    type: types.userType,
+    type: new graphql.GraphQLList(types.userType),
     args: {
       searchData: { type: new graphql.GraphQLNonNull(types.userSearchInput) }
     },
