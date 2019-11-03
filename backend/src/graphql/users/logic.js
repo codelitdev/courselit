@@ -6,8 +6,11 @@ const strings = require('../../config/strings.js')
 const {
   checkIfAuthenticated,
   checkAdminOrSelf,
-  checkIfItemExists
+  checkIfItemExists,
+  makeModelTextSearchable
 } = require('../../lib/graphql.js')
+
+removeAdminFieldsFromUserObject = ({ id, email, name }) => ({ id, email, name })
 
 exports.getUser = async (email, ctx) => {
   const loggedUserEmail = ctx.user && ctx.user.email
@@ -21,7 +24,7 @@ exports.getUser = async (email, ctx) => {
 
   const result = (loggedUserEmail === email || isAdmin)
     ? user
-    : (({ id, email, name }) => ({ id, email, name }))(user)
+    : removeAdminFieldsFromUserObject(user)
 
   return result
 }
@@ -60,12 +63,18 @@ exports.updateUser = async (userData, ctx) => {
 
 exports.searchUser = async (searchData, ctx) => {
   const query = {}
-  if (text) query['$text'] = { $search: searchData.searchText }
+  if (searchData.searchText) query['$text'] = { $search: searchData.searchText }
 
-  const searchMedia = makeModelTextSearchable(Media)
+  const searchMedia = makeModelTextSearchable(User)
 
-  return await searchMedia(
-    { offset: searchData.offset, query, graphQLContext: ctx }, 
-    { itemsPerPage: mymediaLimit }
+
+  const users =  await searchMedia(
+    { offset: searchData.offset, query, graphQLContext: ctx }
   )
+
+  if (ctx.user.isAdmin){
+    return users
+  } else {
+    return users.map(x => removeAdminFieldsFromUserObject(x))
+  }
 }
