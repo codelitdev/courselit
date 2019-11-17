@@ -50,6 +50,7 @@ The very first user who signs up for an account, automatically becomes a super a
   ```
 - Install Letsencrypt's Certbot from [here](https://certbot.eff.org/lets-encrypt/ubuntuxenial-haproxy)
 - Copy-paste the content of the `configure-server-for-letsencrypt` in a script on your docker machine and execute it
+- Log out of your docker machine
 - Start the docker containers
   ```    
   ./up .prod.env [any other docker-compose option, if necessary]
