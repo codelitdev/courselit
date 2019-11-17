@@ -118,7 +118,7 @@ Editor.getDecorators = () => {
     //   callback
     // );
     // Regex from Stackoverflow: https://stackoverflow.com/a/3809435/942589
-    const LINK_REGEX = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)?/gi
+    const LINK_REGEX = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)?/gi
     findWithRegex(LINK_REGEX, contentBlock, callback)
   }
 

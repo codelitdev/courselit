@@ -17,8 +17,8 @@ exports.getCreatorMedia = async (offset, ctx, text) => {
 
   const searchMedia = makeModelTextSearchable(Media)
 
-  return await searchMedia(
-    { offset, query, graphQLContext: ctx }, 
+  return searchMedia(
+    { offset, query, graphQLContext: ctx },
     { itemsPerPage: mymediaLimit }
   )
 }

@@ -59,3 +59,13 @@ export const creatorCourse = PropTypes.shape({
   isFeatured: PropTypes.bool,
   cost: PropTypes.number
 })
+
+export const siteUser = PropTypes.shape({
+  email: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  verified: PropTypes.bool.isRequired,
+  isCreator: PropTypes.bool.isRequired,
+  isAdmin: PropTypes.bool.isRequired,
+  avatar: PropTypes.string,
+  purchases: PropTypes.arrayOf(PropTypes.object)
+})

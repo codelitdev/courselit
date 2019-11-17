@@ -11,11 +11,8 @@ import ListItem from '@material-ui/core/ListItem'
 import ListItemIcon from '@material-ui/core/ListItemIcon'
 import ListItemText from '@material-ui/core/ListItemText'
 import {
-  Mail,
   Menu,
-  ShoppingCart,
-  MoveToInbox,
-  SettingsApplications
+  ShoppingCart
 } from '@material-ui/icons'
 // import MailIcon from '@material-ui/icons/Mail'
 // import MenuIcon from '@material-ui/icons/Menu'

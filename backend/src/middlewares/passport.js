@@ -42,8 +42,9 @@ module.exports = (passport) => {
         email,
         password,
         name: req.body.name,
-        isCreator: notTheFirstUser ? false : true,
-        isAdmin: notTheFirstUser ? false : true
+        isCreator: !notTheFirstUser,
+        isAdmin: !notTheFirstUser,
+        active: true
       })
       return next(null, user)
     } catch (err) {

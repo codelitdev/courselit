@@ -12,6 +12,7 @@ import {
 import {
   formulateMediaUrl
 } from '../lib/utils.js'
+import { siteInfoProps } from '../types.js'
 
 const useStyles = makeStyles({
   root: {
@@ -27,7 +28,7 @@ const MasterLayout = (props) => {
   return (
     <>
       <Head>
-        {props.siteinfo.logopath && 
+        {props.siteinfo.logopath &&
           <link rel="icon" href={formulateMediaUrl(BACKEND, props.siteinfo.logopath, true)}/>}
       </Head>
       <CssBaseline />
@@ -42,7 +43,8 @@ const MasterLayout = (props) => {
 
 MasterLayout.propTypes = {
   children: PropTypes.object,
-  networkAction: PropTypes.bool
+  networkAction: PropTypes.bool,
+  siteinfo: siteInfoProps
 }
 
 const mapStateToProps = state => ({

@@ -1,12 +1,5 @@
 import fetch from 'isomorphic-unfetch'
 
-/**
- * A wrapper for querying the GraphQL endpoint.
- *
- * @param {string} url
- * @param {string} query
- * @param {string} token an authorization token, skip for unauthenticated requests
- */
 export const queryGraphQL = async (url, query, token) => {
   let response = await fetch(url, {
     method: 'POST',

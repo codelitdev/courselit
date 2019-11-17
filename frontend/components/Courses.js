@@ -182,7 +182,7 @@ const Courses = (props) => {
       </div>
       <div>
         {!courseEditorVisible &&
-          <CreatorCoursesList 
+          <CreatorCoursesList
             courses={creatorCourses}
             onClick={showEditor}
             onLoadMoreClick={loadCreatorCourses}/>}
