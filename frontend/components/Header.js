@@ -40,16 +40,16 @@ const Header = (props) => {
           <Grid container justify='space-between' direction='row'>
             <Grid item>
               <Grid container>
-                  <Link href='/'>
-                    <a className={classes.logo}>
-                      <div className={classes.logocontainer}>
-                        <Img src={props.logoPath} isThumbnail={true}/>
-                      </div>
-                    </a>
-                  </Link>
-                  <Typography variant='h6'>
-                    {props.title}
-                  </Typography>
+                <Link href='/'>
+                  <a className={classes.logo}>
+                    <div className={classes.logocontainer}>
+                      <Img src={props.logoPath} isThumbnail={true}/>
+                    </div>
+                  </a>
+                </Link>
+                <Typography variant='h6'>
+                  {props.title}
+                </Typography>
               </Grid>
             </Grid>
             <Grid item>

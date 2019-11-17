@@ -14,7 +14,7 @@ import {
   authProps,
   profileProps
 } from '../types.js'
-import { Grid, Button } from '@material-ui/core'
+import { Button } from '@material-ui/core'
 import { makeStyles } from '@material-ui/styles'
 
 const useStyles = makeStyles({

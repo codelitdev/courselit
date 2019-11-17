@@ -10,11 +10,15 @@ module.exports = {
     },
     resolve: (root, { email }, context) => logic.getUser(email, context)
   },
-  searchUser: {
+  getSiteUsers: {
     type: new graphql.GraphQLList(types.userType),
     args: {
-      searchData: { type: new graphql.GraphQLNonNull(types.userSearchInput) }
+      searchData: { type: types.userSearchInput }
     },
-    resolve: (root, { searchData }, context) => logic.searchUser(searchData, context)
+    resolve: (root, { searchData }, context) => logic.getSiteUsers(searchData, context)
+  },
+  getUsersSummary: {
+    type: types.usersSummaryType,
+    resolve: (root, { a = {} }, context) => logic.getUsersSummary(context)
   }
 }

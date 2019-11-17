@@ -57,7 +57,6 @@ const Create = (props) => {
     ])
   }
 
-  
   return props.profile.fetched
     ? (<ResponsiveDrawer items={items} pageTitle={CREATOR_AREA_PAGE_TITLE}/>)
     : <p>Loading...</p>

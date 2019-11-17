@@ -35,7 +35,7 @@ describe('Auth Test Suite', () => {
         }
       })
       expect(response.message).toBe(responses.user_created)
-      const user = await User.findOne({ email: 'user@test.com'})
+      const user = await User.findOne({ email: 'user@test.com' })
       expect(user.isCreator).toBeTruthy()
       expect(user.isAdmin).toBeTruthy()
       done()
@@ -99,7 +99,6 @@ describe('Auth Test Suite', () => {
           name: 'Tester'
         }
       })
-      const userData = await User.findOne({ email: user })
       // expect(userData.isCreator).toBeFalsy()
       // expect(userData.isAdmin).toBeFalsy()
       await promisify({

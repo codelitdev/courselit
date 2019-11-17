@@ -3,7 +3,7 @@
     "lint": "eslint src __tests__ --fix",
     "dev": "PORT=8000 nodemon src",
     "test:server": "NODE_ENV=test PORT=8000 nodemon src",
-    "test:unit": "NODE_ENV=test jest",
+    "test:inte": "NODE_ENV=test jest",
     "start": "PORT=8000 NODE_ENV=production node src"
   },
   "dependencies": {

@@ -13,12 +13,12 @@ const CreatorCoursesList = (props) => {
       <List aria-label="courses">
         {props.courses.map(
           course =>
-          <ListItem key={course.id} onClick={e => props.onClick(course.id)} button>
-            <CourseItem
-              course={course}
-              isPublicView={false}
-              onClick={props.onClick}/>
-          </ListItem>
+            <ListItem key={course.id} onClick={e => props.onClick(course.id)} button>
+              <CourseItem
+                course={course}
+                isPublicView={false}
+                onClick={props.onClick}/>
+            </ListItem>
         )}
       </List>
       <Button onClick={props.onLoadMoreClick}>

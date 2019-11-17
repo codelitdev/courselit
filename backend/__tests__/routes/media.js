@@ -56,7 +56,6 @@ describe.only('Media Test Suite', () => {
       .then(data => expect(data).toBe('Unauthorized'))
   })
 
-
   it('Not a creator', () => {
     return promisify({
       url: `http://${apiUrl}/media`,

@@ -1,14 +1,13 @@
 import { connect } from 'react-redux'
 import MasterLayout from '../../../components/Masterlayout.js'
 import { BACKEND } from '../../../config/constants.js'
-// import { networkAction } from '../../../redux/actions.js'
 import TextEditor from '../../../components/TextEditor'
 import {
   queryGraphQL,
   formattedLocaleDate
   , formulateMediaUrl } from '../../../lib/utils.js'
 import Link from 'next/link'
-import { Grid, Typography, makeStyles, Card, CardContent } from '@material-ui/core'
+import { Grid, Typography, makeStyles } from '@material-ui/core'
 import Head from 'next/head'
 
 const useStyles = (featuredImage) => makeStyles({

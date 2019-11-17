@@ -55,7 +55,7 @@ exports.checkIfItemExists = async (Model, id) => {
   return item
 }
 
-validateMongooseTextSearchQuery = (query) => {
+const validateMongooseTextSearchQuery = (query) => {
   if (typeof query !== 'object') throw new Error(strings.responses.invalid_input)
 }
 
@@ -65,26 +65,29 @@ validateMongooseTextSearchQuery = (query) => {
  *  query: object,
  *  graphQLContext: object
  * }
- * 
+ *
  * options = {
  *  checkIfRequestIsAuthenticated: boolean,
  *  itemsPerPage: number
  * }
  */
-validateSearchInput = (searchData, checkIfRequestIsAuthenticated) => {
+exports.makeModelTextSearchable = (Model) => async (searchData, options = {}) => {
+  const itemsPerPage = options.itemsPerPage || constants.defaultPaginationItemsPerPage
+  const checkIfRequestIsAuthenticated = options.checkIfRequestIsAuthenticated || true
+  const offset = (searchData.offset || constants.defaultOffset) - 1
+
+  validateSearchInput(searchData, checkIfRequestIsAuthenticated)
+
+  return Model
+    .find(searchData.query)
+    .skip(offset * itemsPerPage)
+    .limit(itemsPerPage)
+}
+
+const validateSearchInput = (searchData, checkIfRequestIsAuthenticated) => {
   this.validateOffset(searchData.offset)
   validateMongooseTextSearchQuery(searchData.query)
   if (checkIfRequestIsAuthenticated) {
     this.checkIfAuthenticated(searchData.graphQLContext)
   }
-}
-exports.makeModelTextSearchable = (Model) => async (searchData, options = {}) => {
-  const itemsPerPage = options.itemsPerPage || constants.defaultPaginationItemsPerPage
-  const checkIfRequestIsAuthenticated = options.checkIfRequestIsAuthenticated || true
-
-  validateSearchInput(searchData, checkIfRequestIsAuthenticated)
-
-  return await Model.find(searchData.query)
-                    .skip((searchData.offset - 1) * itemsPerPage)
-                    .limit(itemsPerPage)
 }

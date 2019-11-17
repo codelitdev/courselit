@@ -9,7 +9,8 @@ const LinkRenderer = (props) =>
   </span>
 
 LinkRenderer.propTypes = {
-  children: PropTypes.array
+  children: PropTypes.array,
+  decoratedText: PropTypes.string
 }
 
 export default LinkRenderer

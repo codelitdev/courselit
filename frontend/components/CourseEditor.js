@@ -103,7 +103,7 @@ const CourseEditor = (props) => {
   // const prevCourseData = useRef()
   useEffect(() => {
     // prevCourseData.current = courseData
-    console.log(props.courseId)
+    // console.log(props.courseId)
     if (props.courseId) {
       loadCourse(props.courseId)
     }
@@ -120,7 +120,7 @@ const CourseEditor = (props) => {
   const setError = (msg = '') => setUserError(msg)
 
   const onCourseCreate = async (e) => {
-    console.log(`From onCourseCreate:`, courseData)
+    // console.log(`From onCourseCreate:`, courseData)
     e.preventDefault()
     setError()
 
@@ -250,14 +250,6 @@ const CourseEditor = (props) => {
       e.target.name,
       e.target.type === 'checkbox' ? e.target.checked : e.target.value
     )
-    // setCourseData(
-    //   Object.assign({}, courseData, {
-    //     course: Object.assign({}, courseData.course, {
-    //       [e.target.name]: e.target.type === 'checkbox'
-    //         ? e.target.checked : e.target.value
-    //     })
-    //   })
-    // )
   }
 
   const onDescriptionChange = (editorState) => {
