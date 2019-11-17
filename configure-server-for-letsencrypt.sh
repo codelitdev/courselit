@@ -1,4 +1,4 @@
-# Usage ./config.sh domain-name
+# Usage ./configure-server-for-letsencrypt.sh domain-name
 
 if [ -z "$1" ]; then
     echo "Error: specify the domain name"

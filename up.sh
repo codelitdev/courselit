@@ -1,4 +1,4 @@
-# Usage: ./up.sh docker-machine-name your-env-file docker-compose-build-option
+# Usage: ./up.sh docker-machine-name your-env-file [docker-compose-build-option]
 
 if [ -z "$1" ]; then
     echo "Error: specify the Docker machine's name"
