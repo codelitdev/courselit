@@ -1,13 +1,13 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { BACKEND } from '../config/constants.js'
+import { MEDIA_BACKEND } from '../config/constants.js'
 import { formulateMediaUrl } from '../lib/utils.js'
 
 const Img = (props) => {
   return (
     <>
       <img src={props.src
-        ? `${formulateMediaUrl(BACKEND, props.src, props.isThumbnail)}`
+        ? `${formulateMediaUrl(MEDIA_BACKEND, props.src, props.isThumbnail)}`
         : '/static/default.png'}/>
       <style jsx>{`
         img {

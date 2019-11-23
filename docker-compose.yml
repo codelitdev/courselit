@@ -15,8 +15,8 @@ services:
   frontend:
     build:
       context: ./frontend
-      args:
-        backend: ${MAIN_URL}${API_PREFIX}
+      # args:
+      #   backend: ${MAIN_URL}${API_PREFIX}
     environment:
       - BACKEND=${MAIN_URL}${API_PREFIX}
       - API_PREFIX=${API_PREFIX}

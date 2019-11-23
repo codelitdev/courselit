@@ -4,14 +4,14 @@
 import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
 
+const LOCAL_BACKEND = 'http://localhost:8000'
 const resolveProductionBackend = () => process.env.BACKEND
   ? `http://backend:8000${publicRuntimeConfig.apiPrefix}` // Server-side API path (SSR)
   : publicRuntimeConfig.apiPrefix // Client-side API path
 
 export const BACKEND = process.env.NODE_ENV === 'production' 
-  ? resolveProductionBackend() : 'http://localhost:8000'
-// export const BACKEND = process.env.backend
-// console.log(process.env.backend, process.env.BACKEND, BACKEND)
+  ? resolveProductionBackend() : LOCAL_BACKEND
+export const MEDIA_BACKEND = publicRuntimeConfig.apiPrefix || LOCAL_BACKEND
 export const JWT_COOKIE_NAME = 'access_token'
 export const USERID_COOKIE_NAME = 'email'
 

@@ -16,3 +16,6 @@ coverage
 
 # Env file
 *.env
+
+# report files
+report*.json
