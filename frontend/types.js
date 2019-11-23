@@ -15,14 +15,6 @@ export const profileProps = PropTypes.shape({
   fetched: PropTypes.bool
 })
 
-export const protectedRouteProps = {
-  condition: PropTypes.bool.isRequired,
-  router: PropTypes.object.isRequired,
-  redirectTo: PropTypes.string.isRequired,
-  renderOnServer: PropTypes.bool.isRequired,
-  children: PropTypes.object
-}
-
 export const latestPostsProps = PropTypes.shape({
   id: PropTypes.string.isRequired,
   title: PropTypes.string.isRequired,

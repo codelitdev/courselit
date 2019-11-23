@@ -13,8 +13,11 @@ import {
 } from '../config/constants.js'
 import BlogPostItem from '../components/BlogPostItem.js'
 import { Grid, Button } from '@material-ui/core'
-
-// let postsPaginationOffset = 1
+import {
+  HEADER_BLOG_POSTS_SECTION,
+  HEADER_SOCIAL_SECTION,
+  BTN_LOAD_MORE
+} from '../config/strings.js'
 
 const getBlogPostQuery = (postsPaginationOffset) =>
   `
@@ -57,14 +60,14 @@ const Index = (props) => {
       <Grid container direction='row'>
         <Grid item xs={10}>
           <section className='posts'>
-            <h1>Latest Posts</h1>
+            <h1>{HEADER_BLOG_POSTS_SECTION}</h1>
             { posts.map((x, index) => <BlogPostItem key={index} {...x}/>) }
-            { posts.length > 0 && <Button onClick={getBlogPosts}>Load more</Button> }
+            { posts.length > 0 && <Button onClick={getBlogPosts}>{BTN_LOAD_MORE}</Button> }
           </section>
         </Grid>
         <Grid item xs={2}>
           <aside>
-            <h1>Social Corner</h1>
+            <h1>{HEADER_SOCIAL_SECTION}</h1>
           </aside>
         </Grid>
       </Grid>
