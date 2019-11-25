@@ -15,12 +15,12 @@ import BlogPostItem from '../components/BlogPostItem.js'
 import { Grid, Button, Typography } from '@material-ui/core'
 import {
   HEADER_BLOG_POSTS_SECTION,
-  HEADER_SOCIAL_SECTION,
   BTN_LOAD_MORE
 } from '../config/strings.js'
 import Hero from '../components/Hero.js'
 import { makeStyles } from '@material-ui/styles'
 import ContainedBodyLayout from '../components/ContainedBodyLayout.js'
+import About from '../components/About.js'
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -91,9 +91,7 @@ const Index = (props) => {
               </Grid>
               <Grid item xs={12} sm={3}>
                 <aside>
-                  <Typography variant='h4'>
-                    {HEADER_SOCIAL_SECTION}
-                  </Typography>
+                  <About />
                 </aside>
               </Grid>
             </Grid>

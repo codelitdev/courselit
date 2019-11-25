@@ -10,7 +10,8 @@ const SiteInfoSchema = new mongoose.Schema({
   subtitle: { type: String },
   logopath: { type: String },
   currencyUnit: { type: String },
-  copyrightText: { type: String }
+  copyrightText: { type: String },
+  about: { type: String }
 })
 
 module.exports = mongoose.model('SiteInfo', SiteInfoSchema)

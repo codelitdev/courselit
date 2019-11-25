@@ -71,7 +71,7 @@ export function updateSiteInfo () {
 
       const response = await queryGraphQL(
         `${BACKEND}/graph`,
-        '{ site: getSiteInfo { title, subtitle, logopath, currencyUnit, copyrightText } }')
+        '{ site: getSiteInfo { title, subtitle, logopath, currencyUnit, copyrightText, about } }')
 
       dispatch(networkAction(false))
       dispatch(newSiteInfoAvailable(response.site))

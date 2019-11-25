@@ -18,7 +18,10 @@ import Footer from './Footer.js'
 const useStyles = makeStyles({
   showProgressBar: props => ({
     visibility: props.networkAction ? 'visible' : 'hidden'
-  })
+  }),
+  mainContent: {
+    minHeight: 600
+  }
 })
 
 const MasterLayout = (props) => {
@@ -32,7 +35,9 @@ const MasterLayout = (props) => {
       <CssBaseline />
       <Header />
       <LinearProgress className={classes.showProgressBar}/>
-      {props.children}
+      <div className={classes.mainContent}>
+        {props.children}
+      </div>
       <Footer />
     </>
   )

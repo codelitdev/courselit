@@ -23,8 +23,8 @@ const useStyles = makeStyles(theme => ({
     display: 'flex'
   },
   logocontainer: {
-    width: '2em',
-    height: '2em',
+    width: '3.6em',
+    height: '3.6em',
     marginRight: '0.8em',
     display: 'flex'
   },
