@@ -11,13 +11,15 @@ import {
 import { BACKEND } from '../config/constants.js'
 import { networkAction, newSiteInfoAvailable } from '../redux/actions.js'
 import ImgSwitcher from './ImgSwitcher.js'
-import { TextField, Button } from '@material-ui/core'
+import { TextField, Button, Typography } from '@material-ui/core'
 import {
   SITE_SETTINGS_TITLE,
   SITE_SETTINGS_SUBTITLE,
   SITE_SETTINGS_CURRENCY_UNIT,
   SITE_SETTINGS_LOGO,
-  SITE_SETTINGS_COPYRIGHT_TEXT
+  SITE_SETTINGS_COPYRIGHT_TEXT,
+  SITE_SETTINGS_ABOUT_TEXT,
+  SITE_SETTINGS_PAGE_HEADING
 } from '../config/strings.js'
 
 const SiteSettings = props => {
@@ -27,6 +29,7 @@ const SiteSettings = props => {
     logopath: props.siteinfo.logopath,
     currencyUnit: props.siteinfo.currencyUnit,
     copyrightText: props.siteinfo.copyrightText,
+    about: props.siteinfo.about,
     err: ''
   })
   const [mediaManagerVisibility, setMediaManagerVisibility] = useState(false)
@@ -48,7 +51,9 @@ const SiteSettings = props => {
         title,
         subtitle,
         logopath,
-        currencyUnit
+        currencyUnit,
+        copyrightText,
+        about
       }
     }`
     console.log(query)
@@ -73,7 +78,9 @@ const SiteSettings = props => {
 
   return (
     <section>
-      <h1>Site settings</h1>
+      <Typography variant='h3'>
+        {SITE_SETTINGS_PAGE_HEADING}
+      </Typography>
       <form onSubmit={handleSubmit}>
         {settings.err &&
           <div>{settings.err}</div>
@@ -109,6 +116,14 @@ const SiteSettings = props => {
           margin="normal"
           name='copyrightText'
           value={settings.copyrightText}
+          onChange={onChangeData}/>
+        <TextField
+          variant='outlined'
+          label={SITE_SETTINGS_ABOUT_TEXT}
+          fullWidth
+          margin="normal"
+          name='about'
+          value={settings.about}
           onChange={onChangeData}/>
         <ImgSwitcher
           title={SITE_SETTINGS_LOGO}
