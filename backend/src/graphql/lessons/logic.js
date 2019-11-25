@@ -76,7 +76,7 @@ exports.deleteLesson = async (id, ctx) => {
 
   try {
     // remove from the parent Course's lessons array
-    let course = await Course.find().elemMatch('lessons', { '$eq': lesson.id })
+    let course = await Course.find().elemMatch('lessons', { $eq: lesson.id })
     course = course[0]
     if (~course.lessons.indexOf(lesson.id)) {
       course.lessons.splice(course.lessons.indexOf(lesson.id), 1)
@@ -128,7 +128,7 @@ exports.updateLesson = async (lessonData, ctx) => {
 
   lessonValidator(lessonData)
 
-  for (let key of Object.keys(lessonData)) {
+  for (const key of Object.keys(lessonData)) {
     lesson[key] = lessonData[key]
   }
 

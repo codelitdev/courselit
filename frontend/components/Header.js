@@ -27,6 +27,9 @@ const useStyles = makeStyles(theme => ({
     height: '2em',
     marginRight: '0.8em',
     display: 'flex'
+  },
+  logoimg: {
+    borderRadius: '0.2em'
   }
 }))
 
@@ -37,19 +40,29 @@ const Header = (props) => {
     <div className={classes.root}>
       <AppBar position='fixed'>
         <Toolbar>
-          <Grid container justify='space-between' direction='row'>
+          <Grid container justify='space-between' direction='row' alignItems='center'>
             <Grid item>
-              <Grid container>
-                <Link href='/'>
-                  <a className={classes.logo}>
-                    <div className={classes.logocontainer}>
-                      <Img src={props.logoPath} isThumbnail={true}/>
-                    </div>
-                  </a>
-                </Link>
-                <Typography variant='h6'>
-                  {props.title}
-                </Typography>
+              <Grid container direction='row' alignItems='center'>
+                <Grid item>
+                  <Link href='/'>
+                    <a className={classes.logo}>
+                      <div className={classes.logocontainer}>
+                        <Img
+                          src={props.logoPath}
+                          isThumbnail={true}
+                          classes={classes.logoimg}/>
+                      </div>
+                    </a>
+                  </Link>
+                </Grid>
+                <Grid item>
+                  <Typography variant='h5'>
+                    {props.title}
+                  </Typography>
+                  <Typography variant='body2'>
+                    {props.subtitle}
+                  </Typography>
+                </Grid>
               </Grid>
             </Grid>
             <Grid item>

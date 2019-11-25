@@ -214,7 +214,7 @@ describe('Auth Test Suite', () => {
           return promisify({
             url: `http://${apiUrl}/graph`,
             headers: {
-              'Authorization': `Bearer ${token}`
+              Authorization: `Bearer ${token}`
             }
           }, false)
         })

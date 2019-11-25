@@ -44,11 +44,11 @@ const Editor = (props) => {
   }
 
   const blockRenderMap = Map({
-    'unstyled': {
+    unstyled: {
       element: 'span',
       wrapper: <TextRenderer />
     },
-    'blockquote': {
+    blockquote: {
       element: 'span',
       wrapper: <BlockquoteRenderer style={props.theme.blockquote}/>
     },

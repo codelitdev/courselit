@@ -9,7 +9,7 @@ export default (initialState) => {
   const store = createStore(reducer, initialState, applyMiddleware(thunk))
 
   store.subscribe(() => {
-    // console.log(store.getState())
+    console.log(store.getState())
   })
 
   return store

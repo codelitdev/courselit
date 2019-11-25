@@ -41,7 +41,7 @@ const move = (file, path) => new Promise((resolve, reject) => {
 const getHandler = async (req, res) => {
   const media = await Media.findById(req.params.mediaId)
 
-  let { thumb } = req.query
+  const { thumb } = req.query
 
   if (thumb === '1') {
     res.contentType(constants.thumbnailContentType)
@@ -75,7 +75,7 @@ const postHandler = async (req, res) => {
   // generate thumbnail for a video or image
   const imagePattern = /image/
   const videoPattern = /video/
-  let thumbPath = `${constants.thumbnailsFolder}/${fileName.name}.${constants.thumbnailFileExtension}`
+  const thumbPath = `${constants.thumbnailsFolder}/${fileName.name}.${constants.thumbnailFileExtension}`
   let isThumbGenerated = false // to indicate if the thumbnail name is to be saved to the DB
   try {
     if (imagePattern.test(req.files.file.mimetype)) {
@@ -103,8 +103,8 @@ const postHandler = async (req, res) => {
     mimeType: req.files.file.mimetype,
     size: req.files.file.size
   }
-  if (isThumbGenerated) mediaObject['thumbnail'] = `${fileName.name}.${constants.thumbnailFileExtension}`
-  if (data.altText) mediaObject['altText'] = data.altText
+  if (isThumbGenerated) mediaObject.thumbnail = `${fileName.name}.${constants.thumbnailFileExtension}`
+  if (data.altText) mediaObject.altText = data.altText
 
   try {
     const media = await Media.create(mediaObject)

@@ -6,7 +6,7 @@ import { formulateMediaUrl } from '../lib/utils.js'
 const Img = (props) => {
   return (
     <>
-      <img src={props.src
+      <img className={props.classes} src={props.src
         ? `${formulateMediaUrl(MEDIA_BACKEND, props.src, props.isThumbnail)}`
         : '/static/default.png'}/>
       <style jsx>{`
@@ -20,8 +20,9 @@ const Img = (props) => {
 }
 
 Img.propTypes = {
-  src: PropTypes.string,
-  isThumbnail: PropTypes.bool
+  src: PropTypes.string.isRequired,
+  isThumbnail: PropTypes.bool,
+  classes: PropTypes.string
 }
 
 export default Img
