@@ -22,11 +22,13 @@ describe.only('Media Test Suite', () => {
   afterAll(done => {
     User
       .deleteOne({ email: user })
-      .then(() => Media.deleteMany({ _id: {
-        $in: [ fileMediaID, imageMediaID, videoMediaID ]
-      } }))
+      .then(() => Media.deleteMany({
+        _id: {
+          $in: [fileMediaID, imageMediaID, videoMediaID]
+        }
+      }))
       .then(() => {
-        console.info(`Be sure to remove uploaded media from upload and thumbnail folders.`)
+        console.info('Be sure to remove uploaded media from upload and thumbnail folders.')
         mongoose.connection.close()
         done()
       })
@@ -60,7 +62,7 @@ describe.only('Media Test Suite', () => {
     return promisify({
       url: `http://${apiUrl}/media`,
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       }
     })
       .then(res => {
@@ -77,7 +79,7 @@ describe.only('Media Test Suite', () => {
     const res = await promisify({
       url: `http://${apiUrl}/media`,
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       }
     })
 
@@ -89,7 +91,7 @@ describe.only('Media Test Suite', () => {
     const res = await promisify({
       url: `http://${apiUrl}/media`,
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       },
       form: {
         title: 'Sample File'
@@ -103,7 +105,7 @@ describe.only('Media Test Suite', () => {
     const res = await promisify({
       url: `http://${apiUrl}/media`,
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       },
       formData: {
         title: 'Sample File',
@@ -125,7 +127,7 @@ describe.only('Media Test Suite', () => {
     const res = await promisify({
       url: `http://${apiUrl}/media`,
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       },
       formData: {
         title: 'Sample Image',
@@ -147,7 +149,7 @@ describe.only('Media Test Suite', () => {
     const res = await promisify({
       url: `http://${apiUrl}/media`,
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       },
       formData: {
         title: 'Sample Video',

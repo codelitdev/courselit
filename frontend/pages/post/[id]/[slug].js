@@ -5,10 +5,12 @@ import TextEditor from '../../../components/TextEditor'
 import {
   queryGraphQL,
   formattedLocaleDate
-  , formulateMediaUrl } from '../../../lib/utils.js'
+  , formulateMediaUrl
+} from '../../../lib/utils.js'
 import Link from 'next/link'
 import { Grid, Typography, makeStyles } from '@material-ui/core'
 import Head from 'next/head'
+import ContainedBodyLayout from '../../../components/ContainedBodyLayout.js'
 
 const useStyles = (featuredImage) => makeStyles({
   article: {
@@ -48,32 +50,34 @@ const Posts = (props) => {
           <Head>
             <title>{props.post.title}</title>
           </Head>
-          <article className={classes.article}>
-            <Typography variant="h3">
-              {props.post.title}
-            </Typography>
-            <Grid container className={classes.creatorcard}>
-              <Grid item className={classes.creatoravatarcontainer}>
-                <img src='/static/logo.jpg' className={classes.creatoravatar}></img>
+          <ContainedBodyLayout>
+            <article className={classes.article}>
+              <Typography variant="h2">
+                {props.post.title}
+              </Typography>
+              <Grid container className={classes.creatorcard}>
+                <Grid item className={classes.creatoravatarcontainer}>
+                  <img src='/static/logo.jpg' className={classes.creatoravatar}></img>
+                </Grid>
+                <Grid item>
+                  <Typography variant='overline' component='p'>
+                    <Link href='/creator/[id]' as={`/creator/${props.post.creatorId}`}>
+                      <a>
+                        { props.post.creatorName }
+                      </a>
+                    </Link>
+                  </Typography>
+                  <Typography variant='overline' className={classes.updatedtime}>
+                    { formattedLocaleDate(props.post.updated) }
+                  </Typography>
+                </Grid>
               </Grid>
-              <Grid item>
-                <Typography variant='overline' component='p'>
-                  <Link href='/creator/[id]' as={`/creator/${props.post.creatorId}`}>
-                    <a>
-                      { props.post.creatorName }
-                    </a>
-                  </Link>
-                </Typography>
-                <Typography variant='overline' className={classes.updatedtime}>
-                  { formattedLocaleDate(props.post.updated) }
-                </Typography>
-              </Grid>
-            </Grid>
-            {props.post.featuredImage && <div className={classes.featuredimagecontainer} />}
-            <TextEditor
-              initialContentState={ TextEditor.hydrate(props.post.description) }
-              readOnly={ true }/>
-          </article>
+              {props.post.featuredImage && <div className={classes.featuredimagecontainer} />}
+              <TextEditor
+                initialContentState={ TextEditor.hydrate(props.post.description) }
+                readOnly={ true }/>
+            </article>
+          </ContainedBodyLayout>
         </>
       }
     </MasterLayout>

@@ -54,7 +54,7 @@ const useStyles = makeStyles(theme => ({
     minWidth: '100%'
   },
   editor: {
-    border: `1px solid #cacaca`,
+    border: '1px solid #cacaca',
     borderRadius: '6px',
     padding: '10px 8px',
     maxHeight: 300,
@@ -271,7 +271,7 @@ const CourseEditor = (props) => {
 
     try {
       props.dispatch(networkAction(true))
-      let response = await queryGraphQL(
+      const response = await queryGraphQL(
         `${BACKEND}/graph`,
         query,
         props.auth.token
@@ -323,7 +323,7 @@ const CourseEditor = (props) => {
 
       try {
         props.dispatch(networkAction(true))
-        let response = await queryGraphQL(
+        const response = await queryGraphQL(
           `${BACKEND}/graph`,
           query,
           props.auth.token
@@ -356,7 +356,7 @@ const CourseEditor = (props) => {
 
       try {
         props.dispatch(networkAction(true))
-        let response = await queryGraphQL(
+        const response = await queryGraphQL(
           `${BACKEND}/graph`,
           query,
           props.auth.token
@@ -413,7 +413,7 @@ const CourseEditor = (props) => {
 
       try {
         props.dispatch(networkAction(true))
-        let response = await queryGraphQL(
+        const response = await queryGraphQL(
           `${BACKEND}/graph`,
           query,
           props.auth.token

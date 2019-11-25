@@ -43,7 +43,7 @@ exports.updateUser = async (userData, ctx) => {
   let user = await checkIfItemExists(User, id)
   checkAdminOrSelf(id, ctx)
 
-  for (let key of Object.keys(userData)) {
+  for (const key of Object.keys(userData)) {
     if (key === 'id') { continue }
     if (~['isCreator', 'isAdmin', 'active'].indexOf(key)) {
       if (ctx.user.isAdmin) {
@@ -68,7 +68,7 @@ exports.updateUser = async (userData, ctx) => {
 
 exports.getSiteUsers = async (searchData = {}, ctx) => {
   const query = {}
-  if (searchData.searchText) query['$text'] = { $search: searchData.searchText }
+  if (searchData.searchText) query.$text = { $search: searchData.searchText }
 
   const searchUsers = makeModelTextSearchable(User)
 

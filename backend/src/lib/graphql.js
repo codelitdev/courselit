@@ -49,7 +49,7 @@ exports.checkAdminOrSelf = (userID, GraphQLContext) => {
 }
 
 exports.checkIfItemExists = async (Model, id) => {
-  let item = await Model.findById(id)
+  const item = await Model.findById(id)
   if (!item) throw new Error(strings.responses.item_not_found)
 
   return item

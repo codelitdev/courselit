@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import Header from './Header.js'
 import { connect } from 'react-redux'
-import { Container, LinearProgress } from '@material-ui/core'
+import { LinearProgress } from '@material-ui/core'
 import { makeStyles } from '@material-ui/styles'
 import CssBaseline from '@material-ui/core/CssBaseline'
 import Head from 'next/head'
@@ -13,11 +13,9 @@ import {
   formulateMediaUrl
 } from '../lib/utils.js'
 import { siteInfoProps } from '../types.js'
+import Footer from './Footer.js'
 
 const useStyles = makeStyles({
-  root: {
-    marginTop: 10
-  },
   showProgressBar: props => ({
     visibility: props.networkAction ? 'visible' : 'hidden'
   })
@@ -34,9 +32,8 @@ const MasterLayout = (props) => {
       <CssBaseline />
       <Header />
       <LinearProgress className={classes.showProgressBar}/>
-      <Container maxWidth='md' className={classes.root}>
-        {props.children}
-      </Container>
+      {props.children}
+      <Footer />
     </>
   )
 }

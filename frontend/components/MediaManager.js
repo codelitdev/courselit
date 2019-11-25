@@ -78,7 +78,7 @@ const MediaManager = (props) => {
       let res = await fetch(`${BACKEND}/media`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${props.auth.token}`
+          Authorization: `Bearer ${props.auth.token}`
         },
         body: fD
       })
@@ -117,7 +117,7 @@ const MediaManager = (props) => {
 
     try {
       props.dispatch(networkAction(true))
-      let response = await queryGraphQL(
+      const response = await queryGraphQL(
         `${BACKEND}/graph`,
         query,
         props.auth.token

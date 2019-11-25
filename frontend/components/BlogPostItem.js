@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import Link from 'next/link'
 // import { formattedLocaleDate } from '../lib/utils.js'
 import { URL_EXTENTION_POSTS } from '../config/constants.js'
-import { Grid, Typography } from '@material-ui/core'
+import { Grid, Typography, Card, CardContent } from '@material-ui/core'
 import { makeStyles } from '@material-ui/styles'
 import Img from './Img.js'
 
@@ -15,10 +15,12 @@ const useStyles = makeStyles({
   bloglink: {
     textDecoration: 'none',
     display: 'block',
-    marginBottom: 20,
+    marginTop: '0.8em',
+    marginBottom: '1em',
     '&:hover': {
       background: '#eee'
-    }
+    },
+    color: 'inherit'
   }
 })
 
@@ -30,25 +32,33 @@ const BlogPostItem = (props) => {
       href={`/${URL_EXTENTION_POSTS}/[id]/[slug]`}
       as={`/${URL_EXTENTION_POSTS}/${props.id}/${props.slug}`}>
       <a className={classes.bloglink}>
-        <article>
-          <Grid container>
-            {props.featuredImage &&
-              <Grid item className={classes.featuredimagecontainer}>
-                <Img src={props.featuredImage} isThumbnail={true} />
-              </Grid>
-            }
-            <Grid item>
-              <Grid>
+        <Card>
+          <CardContent>
+            <article>
+              <Grid container>
+                {props.featuredImage &&
+                  <Grid item className={classes.featuredimagecontainer}>
+                    <Img src={props.featuredImage} isThumbnail={true} />
+                  </Grid>
+                }
                 <Grid item>
-                  <Typography variant='h6' className="title">{ props.title }</Typography>
-                </Grid>
-                <Grid item>
-                  <Typography variant='body2'>{props.description}</Typography>
+                  <Grid container direction='column'>
+                    <Grid item>
+                      <Typography variant='h6' className="title">
+                        { props.title }
+                      </Typography>
+                    </Grid>
+                    <Grid item>
+                      <Typography variant='subtitle1'>
+                        {props.description}
+                      </Typography>
+                    </Grid>
+                  </Grid>
                 </Grid>
               </Grid>
-            </Grid>
-          </Grid>
-        </article>
+            </article>
+          </CardContent>
+        </Card>
       </a>
     </Link>
   )

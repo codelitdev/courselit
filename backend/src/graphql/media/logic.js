@@ -13,7 +13,7 @@ exports.getCreatorMedia = async (offset, ctx, text) => {
   const query = {
     creatorId: ctx && ctx.user && ctx.user._id
   }
-  if (text) query['$text'] = { $search: text }
+  if (text) query.$text = { $search: text }
 
   const searchMedia = makeModelTextSearchable(Media)
 

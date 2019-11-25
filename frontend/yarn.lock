@@ -5872,10 +5872,10 @@ normalize-url@1.9.1:
     query-string "^4.1.0"
     sort-keys "^1.0.0"
 
-now@^16.5.2:
-  version "16.5.2"
-  resolved "https://registry.yarnpkg.com/now/-/now-16.5.2.tgz#0c19c2d1197dcd2aed2dc08fd9610383fcea96a7"
-  integrity sha512-Pv8HMpeTaiLLoNh93Poy5GbiM0oc/CPo1ZXa+o70Nd/ospRaLg7gaFtpZH+My/vS9+xWTDq7hmHjXPCXPtD/pg==
+now@^16.6.0:
+  version "16.6.0"
+  resolved "https://registry.yarnpkg.com/now/-/now-16.6.0.tgz#09c7752eacfe6a2f571b8be378a685b2b066a9fc"
+  integrity sha512-OHWgh7QOgXi7IDI68yJ7SBTcQZr8rFGdM4w2W5CdOyCoISletVhb1+KO4g4iBQGVFVNp1W6hv4qJGAOODmib5Q==
 
 npm-bundled@^1.0.1:
   version "1.0.6"

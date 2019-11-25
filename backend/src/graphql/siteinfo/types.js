@@ -5,7 +5,9 @@ const siteType = new graphql.GraphQLObjectType({
   fields: {
     title: { type: graphql.GraphQLString },
     subtitle: { type: graphql.GraphQLString },
-    logopath: { type: graphql.GraphQLString }
+    logopath: { type: graphql.GraphQLString },
+    currencyUnit: { type: graphql.GraphQLString },
+    copyrightText: { type: graphql.GraphQLString }
   }
 })
 
@@ -14,7 +16,9 @@ const siteUpdateType = new graphql.GraphQLInputObjectType({
   fields: {
     title: { type: graphql.GraphQLString },
     subtitle: { type: graphql.GraphQLString },
-    logopath: { type: graphql.GraphQLString }
+    logopath: { type: graphql.GraphQLString },
+    currencyUnit: { type: graphql.GraphQLString },
+    copyrightText: { type: graphql.GraphQLString }
   }
 })
 

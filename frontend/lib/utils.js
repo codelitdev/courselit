@@ -1,14 +1,15 @@
 import fetch from 'isomorphic-unfetch'
 
 export const queryGraphQL = async (url, query, token) => {
-  let response = await fetch(url, {
+  const options = {
     method: 'POST',
     headers: token ? {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     } : { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query: query })
-  })
+    body: JSON.stringify({ query })
+  }
+  let response = await fetch(url, options)
   response = await response.json()
 
   if (response.errors && response.errors.length > 0) {

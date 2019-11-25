@@ -27,7 +27,8 @@ export const latestPostsProps = PropTypes.shape({
 export const siteInfoProps = PropTypes.shape({
   title: PropTypes.string,
   subtitle: PropTypes.string,
-  logopath: PropTypes.string
+  logopath: PropTypes.string,
+  currencyUnit: PropTypes.string
 })
 
 export const publicCourse = PropTypes.shape({
@@ -60,4 +61,11 @@ export const siteUser = PropTypes.shape({
   isAdmin: PropTypes.bool.isRequired,
   avatar: PropTypes.string,
   purchases: PropTypes.arrayOf(PropTypes.object)
+})
+
+export const featuredCourse = PropTypes.shape({
+  id: PropTypes.string.isRequired,
+  title: PropTypes.string.isRequired,
+  cost: PropTypes.number.isRequired,
+  featuredImage: PropTypes.string
 })

@@ -19,7 +19,7 @@ export function signedIn (userid, token) {
 
     try {
       dispatch(networkAction(true))
-      let response = await queryGraphQL(
+      const response = await queryGraphQL(
         `${BACKEND}/graph`,
         `{ profile: getUser(email: "${userid}") {name, isCreator, id, isAdmin} }`,
         getState().auth.token
@@ -69,14 +69,12 @@ export function updateSiteInfo () {
     try {
       dispatch(networkAction(true))
 
-      let response = await queryGraphQL(
+      const response = await queryGraphQL(
         `${BACKEND}/graph`,
-        `{ site: getSiteInfo { title, subtitle, logopath } }`)
+        '{ site: getSiteInfo { title, subtitle, logopath, currencyUnit, copyrightText } }')
 
       dispatch(networkAction(false))
       dispatch(newSiteInfoAvailable(response.site))
-    } catch (err) {
-      throw err
     } finally {
       dispatch(networkAction(false))
     }

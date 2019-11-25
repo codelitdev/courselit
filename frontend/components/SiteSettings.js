@@ -12,13 +12,21 @@ import { BACKEND } from '../config/constants.js'
 import { networkAction, newSiteInfoAvailable } from '../redux/actions.js'
 import ImgSwitcher from './ImgSwitcher.js'
 import { TextField, Button } from '@material-ui/core'
-import { FORM_FIELD_LOGO } from '../config/strings.js'
+import {
+  SITE_SETTINGS_TITLE,
+  SITE_SETTINGS_SUBTITLE,
+  SITE_SETTINGS_CURRENCY_UNIT,
+  SITE_SETTINGS_LOGO,
+  SITE_SETTINGS_COPYRIGHT_TEXT
+} from '../config/strings.js'
 
 const SiteSettings = props => {
   const [settings, setSettings] = useState({
     title: props.siteinfo.title,
     subtitle: props.siteinfo.subtitle,
     logopath: props.siteinfo.logopath,
+    currencyUnit: props.siteinfo.currencyUnit,
+    copyrightText: props.siteinfo.copyrightText,
     err: ''
   })
   const [mediaManagerVisibility, setMediaManagerVisibility] = useState(false)
@@ -39,7 +47,8 @@ const SiteSettings = props => {
       site: updateSiteInfo(siteData: ${makeQueryForUpload()}) {
         title,
         subtitle,
-        logopath
+        logopath,
+        currencyUnit
       }
     }`
     console.log(query)
@@ -71,7 +80,7 @@ const SiteSettings = props => {
         }
         <TextField
           variant='outlined'
-          label='Title'
+          label={SITE_SETTINGS_TITLE}
           fullWidth
           margin="normal"
           name='title'
@@ -79,14 +88,30 @@ const SiteSettings = props => {
           onChange={onChangeData}/>
         <TextField
           variant='outlined'
-          label='Sub title'
+          label={SITE_SETTINGS_SUBTITLE}
           fullWidth
           margin="normal"
           name='subtitle'
           value={settings.subtitle}
           onChange={onChangeData}/>
+        <TextField
+          variant='outlined'
+          label={SITE_SETTINGS_CURRENCY_UNIT}
+          fullWidth
+          margin="normal"
+          name='currencyUnit'
+          value={settings.currencyUnit}
+          onChange={onChangeData}/>
+        <TextField
+          variant='outlined'
+          label={SITE_SETTINGS_COPYRIGHT_TEXT}
+          fullWidth
+          margin="normal"
+          name='copyrightText'
+          value={settings.copyrightText}
+          onChange={onChangeData}/>
         <ImgSwitcher
-          title={FORM_FIELD_LOGO}
+          title={SITE_SETTINGS_LOGO}
           src={settings.logopath || props.siteinfo.logopath}
           onSelection={onChangeData}/>
         <Button

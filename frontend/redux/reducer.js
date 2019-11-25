@@ -11,7 +11,9 @@ import {
 import {
   GENERIC_TITLE,
   GENERIC_SUBTITLE,
-  GENERIC_LOGO_PATH
+  GENERIC_LOGO_PATH,
+  GENERIC_CURRENCY_UNIT,
+  GENERIC_COPYRIGHT_TEXT
 } from '../config/strings.js'
 
 const initialState = {
@@ -24,7 +26,9 @@ const initialState = {
   siteinfo: {
     title: GENERIC_TITLE,
     subtitle: GENERIC_SUBTITLE,
-    logo: GENERIC_LOGO_PATH
+    logo: GENERIC_LOGO_PATH,
+    currencyUnit: GENERIC_CURRENCY_UNIT,
+    copyrightText: GENERIC_COPYRIGHT_TEXT
   },
   networkAction: false,
   profile: {
@@ -56,7 +60,9 @@ function siteinfoReducer (state = initialState.siteinfo, action) {
         return {
           title: action.siteinfo.title,
           subtitle: action.siteinfo.subtitle,
-          logopath: action.siteinfo.logopath
+          logopath: action.siteinfo.logopath,
+          currencyUnit: action.siteinfo.currencyUnit,
+          copyrightText: action.siteinfo.copyrightText
         }
       } catch (e) {
         return state

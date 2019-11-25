@@ -18,26 +18,9 @@ const {
   coursesPerPageLimit,
   blogPostSnippetLength
 } = require('../../config/constants.js')
-// const {
-//   courseType
-// } = require('./types.js')
 
 const checkCourseOwnership = checkOwnership(Course)
 
-/**
- * A helper function to validate page offsets.
- *
- * @param {number} offset Number of pages to skip
- */
-// const validateOffset = (offset) => {
-//   if (offset < 1) throw new Error(strings.responses.invalid_offset)
-// }
-
-/**
- * A helper function to validate blog posts.
- *
- * @param {object} courseData
- */
 const validateBlogPosts = (courseData) => {
   if (courseData.isBlog) {
     if (!courseData.description) throw new Error(strings.responses.blog_description_empty)
@@ -101,7 +84,7 @@ exports.updateCourse = async (courseData, ctx) => {
   checkIfAuthenticated(ctx)
   let course = await checkCourseOwnership(courseData.id, ctx)
 
-  for (let key of Object.keys(courseData)) {
+  for (const key of Object.keys(courseData)) {
     course[key] = courseData[key]
   }
 
@@ -112,7 +95,7 @@ exports.updateCourse = async (courseData, ctx) => {
 
 exports.deleteCourse = async (id, ctx) => {
   checkIfAuthenticated(ctx)
-  let course = await checkCourseOwnership(id, ctx)
+  const course = await checkCourseOwnership(id, ctx)
 
   if (course.lessons.length > 0) {
     throw new Error(strings.responses.course_not_empty)
@@ -128,7 +111,7 @@ exports.deleteCourse = async (id, ctx) => {
 
 exports.addLesson = async (courseId, lessonId, ctx) => {
   checkIfAuthenticated(ctx)
-  let course = await checkCourseOwnership(courseId, ctx)
+  const course = await checkCourseOwnership(courseId, ctx)
   if (course.lessons.indexOf(lessonId) === -1) {
     course.lessons.push(lessonId)
   }
@@ -144,7 +127,7 @@ exports.addLesson = async (courseId, lessonId, ctx) => {
 
 exports.removeLesson = async (courseId, lessonId, ctx) => {
   checkIfAuthenticated(ctx)
-  let course = await checkCourseOwnership(courseId, ctx)
+  const course = await checkCourseOwnership(courseId, ctx)
   if (~course.lessons.indexOf(lessonId)) {
     course.lessons.splice(course.lessons.indexOf(lessonId), 1)
   }
@@ -165,7 +148,7 @@ exports.getCreatorCourses = async (id, offset, ctx) => {
   checkIfAuthenticated(ctx)
   validateOffset(offset)
 
-  let courses = await Course.find({
+  const courses = await Course.find({
     creatorId: id
   }).skip((offset - 1) * mycoursesLimit).limit(mycoursesLimit)
 
@@ -175,12 +158,13 @@ exports.getCreatorCourses = async (id, offset, ctx) => {
 exports.getPosts = async (offset) => {
   validateOffset(offset)
 
-  let posts = await Course.find({
+  const posts = await Course.find({
     isBlog: true,
     published: true,
     privacy: open.toLowerCase()
   }, 'id title description creatorName updated slug featuredImage')
     .skip((offset - 1) * postsPerPageLimit).limit(postsPerPageLimit)
+  console.log(posts)
 
   return posts.map(x => ({
     id: x.id,
@@ -194,20 +178,22 @@ exports.getPosts = async (offset) => {
 }
 
 exports.getPublicCourses = async (offset, onlyShowFeatured = false) => {
-  const query = onlyShowFeatured ? {
-    isBlog: false,
-    published: true,
-    privacy: open.toLowerCase(),
-    isFeatured: true
-  } : {
+  const query = {
     isBlog: false,
     published: true,
     privacy: open.toLowerCase()
   }
-  let courses = await Course
+  if (onlyShowFeatured) {
+    query.isFeatured = true
+  }
+
+  let dbQuery = Course
     .find(query, 'id title featuredImage cost creatorName slug description updated isFeatured')
     .sort({ updated: -1 })
-    .skip((offset - 1) * coursesPerPageLimit).limit(coursesPerPageLimit)
+  if (!onlyShowFeatured) {
+    dbQuery = dbQuery
+      .skip((offset - 1) * coursesPerPageLimit).limit(coursesPerPageLimit)
+  }
 
-  return courses
+  return dbQuery
 }

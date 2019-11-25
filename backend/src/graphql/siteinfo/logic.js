@@ -31,7 +31,7 @@ exports.updateSiteInfo = async (siteData, ctx) => {
   }
 
   // populate changed data
-  for (let key of Object.keys(siteData)) {
+  for (const key of Object.keys(siteData)) {
     siteInfo[key] = siteData[key]
   }
 
