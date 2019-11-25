@@ -20,6 +20,7 @@ import {
 import { setCookie } from '../lib/session.js'
 import MasterLayout from '../components/Masterlayout.js'
 import { Grid, TextField, Button } from '@material-ui/core'
+import ContainedBodyLayout from '../components/ContainedBodyLayout.js'
 
 const Login = (props) => {
   const emptyStringPat = /^\s*$/
@@ -171,109 +172,111 @@ const Login = (props) => {
 
   return (
     <MasterLayout>
-      <Grid container direction='row' spacing={2}>
-        <Grid item xs={12} sm={6}>
-          <Grid container>
-            <h2>Log in</h2>
-            <form onSubmit={handleLogin}>
-              {loginData.err &&
-                <div>{loginData.err}</div>
+      <ContainedBodyLayout>
+        <Grid container direction='row' spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <Grid container>
+              <h2>Log in</h2>
+              <form onSubmit={handleLogin}>
+                {loginData.err &&
+                  <div>{loginData.err}</div>
+                }
+                <TextField
+                  type='email'
+                  value={loginData.email}
+                  variant='outlined'
+                  label='Email'
+                  fullWidth
+                  margin="normal"
+                  onChange={
+                    (e) => setLoginData(
+                      Object.assign({}, loginData, {
+                        email: e.target.value
+                      })
+                    )}/>
+                <TextField
+                  type='password'
+                  value={loginData.pass}
+                  variant='outlined'
+                  label='Password'
+                  fullWidth
+                  margin="normal"
+                  onChange={
+                    (e) => setLoginData(
+                      Object.assign({}, loginData, {
+                        pass: e.target.value
+                      })
+                    )}/>
+                <Button type='submit'>Submit</Button>
+              </form>
+            </Grid>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <h2>Sign up</h2>
+            <form onSubmit={handleSignup}>
+              {signupData.msg &&
+                <div>{signupData.msg}</div>
+              }
+              {signupData.err &&
+                <div>{signupData.err}</div>
               }
               <TextField
                 type='email'
-                value={loginData.email}
+                value={signupData.email}
                 variant='outlined'
                 label='Email'
                 fullWidth
                 margin="normal"
                 onChange={
-                  (e) => setLoginData(
-                    Object.assign({}, loginData, {
+                  (e) => setSignupData(
+                    Object.assign({}, signupData, {
                       email: e.target.value
                     })
                   )}/>
               <TextField
                 type='password'
-                value={loginData.pass}
+                value={signupData.pass}
                 variant='outlined'
                 label='Password'
                 fullWidth
                 margin="normal"
                 onChange={
-                  (e) => setLoginData(
-                    Object.assign({}, loginData, {
+                  (e) => setSignupData(
+                    Object.assign({}, signupData, {
                       pass: e.target.value
+                    })
+                  )}/>
+              <TextField
+                type='password'
+                value={signupData.conf}
+                variant='outlined'
+                label='Confirm password'
+                fullWidth
+                margin="normal"
+                onChange={
+                  (e) => setSignupData(
+                    Object.assign({}, signupData, {
+                      conf: e.target.value
+                    })
+                  )}/>
+              <TextField
+                type='name'
+                value={signupData.name}
+                variant='outlined'
+                label='Name'
+                fullWidth
+                margin="normal"
+                onChange={
+                  (e) => setSignupData(
+                    Object.assign({}, signupData, {
+                      name: e.target.value
                     })
                   )}/>
               <Button type='submit'>Submit</Button>
             </form>
           </Grid>
         </Grid>
-        <Grid item xs={12} sm={6}>
-          <h2>Sign up</h2>
-          <form onSubmit={handleSignup}>
-            {signupData.msg &&
-              <div>{signupData.msg}</div>
-            }
-            {signupData.err &&
-              <div>{signupData.err}</div>
-            }
-            <TextField
-              type='email'
-              value={signupData.email}
-              variant='outlined'
-              label='Email'
-              fullWidth
-              margin="normal"
-              onChange={
-                (e) => setSignupData(
-                  Object.assign({}, signupData, {
-                    email: e.target.value
-                  })
-                )}/>
-            <TextField
-              type='password'
-              value={signupData.pass}
-              variant='outlined'
-              label='Password'
-              fullWidth
-              margin="normal"
-              onChange={
-                (e) => setSignupData(
-                  Object.assign({}, signupData, {
-                    pass: e.target.value
-                  })
-                )}/>
-            <TextField
-              type='password'
-              value={signupData.conf}
-              variant='outlined'
-              label='Confirm password'
-              fullWidth
-              margin="normal"
-              onChange={
-                (e) => setSignupData(
-                  Object.assign({}, signupData, {
-                    conf: e.target.value
-                  })
-                )}/>
-            <TextField
-              type='name'
-              value={signupData.name}
-              variant='outlined'
-              label='Name'
-              fullWidth
-              margin="normal"
-              onChange={
-                (e) => setSignupData(
-                  Object.assign({}, signupData, {
-                    name: e.target.value
-                  })
-                )}/>
-            <Button type='submit'>Submit</Button>
-          </form>
-        </Grid>
-      </Grid>
+      </ContainedBodyLayout>
     </MasterLayout>
   )
 }
