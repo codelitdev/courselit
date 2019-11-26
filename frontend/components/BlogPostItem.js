@@ -9,8 +9,7 @@ import Img from './Img.js'
 
 const useStyles = makeStyles({
   featuredimagecontainer: {
-    display: 'flex',
-    marginRight: 20
+    display: 'flex'
   },
   bloglink: {
     textDecoration: 'none',
@@ -35,13 +34,13 @@ const BlogPostItem = (props) => {
         <Card>
           <CardContent>
             <article>
-              <Grid container>
+              <Grid container direction='row' spacing={1}>
                 {props.featuredImage &&
-                  <Grid item className={classes.featuredimagecontainer}>
-                    <Img src={props.featuredImage} isThumbnail={true} />
+                  <Grid item className={classes.featuredimagecontainer} sm={12} md={2}>
+                    <Img src={props.featuredImage} />
                   </Grid>
                 }
-                <Grid item>
+                <Grid item sm={12} md={10}>
                   <Grid container direction='column'>
                     <Grid item>
                       <Typography variant='h6' className="title">
