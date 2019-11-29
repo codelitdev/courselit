@@ -809,31 +809,31 @@ describe('GraphQL API tests', () => {
       createdCourseId3 = result.data.course.id
     })
 
-    it('creating a course (not a blog post) but cost is not provided', async () => {
-      const user = {
-        _id: mongoose.Types.ObjectId('000000000000000000000000'),
-        isCreator: true,
-        name: 'Tester'
-      }
-      const mutation = `
-      mutation {
-        course: createCourse(courseData: {
-          title: "First course [via testing]",
-          privacy: PRIVATE,
-          published: true,
-          isBlog: false,
-          description: "Sample description",
-          isFeatured: false
-        }) {
-          id
-        }
-      }
-      `
+    // it('creating a course (not a blog post) but cost is not provided', async () => {
+    //   const user = {
+    //     _id: mongoose.Types.ObjectId('000000000000000000000000'),
+    //     isCreator: true,
+    //     name: 'Tester'
+    //   }
+    //   const mutation = `
+    //   mutation {
+    //     course: createCourse(courseData: {
+    //       title: "First course [via testing]",
+    //       privacy: PRIVATE,
+    //       published: true,
+    //       isBlog: false,
+    //       description: "Sample description",
+    //       isFeatured: false
+    //     }) {
+    //       id
+    //     }
+    //   }
+    //   `
 
-      const result = await graphql(schema, mutation, null, { user })
-      expect(result).toHaveProperty('errors')
-      expect(result.errors[0].message).toBe(responses.cost_not_provided)
-    })
+    //   const result = await graphql(schema, mutation, null, { user })
+    //   expect(result).toHaveProperty('errors')
+    //   expect(result.errors[0].message).toBe(responses.cost_not_provided)
+    // })
 
     it('creating a course (not a blog post) but cost is below zero', async () => {
       const user = {

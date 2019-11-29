@@ -20,7 +20,7 @@ const useStyles = makeStyles({
     visibility: props.networkAction ? 'visible' : 'hidden'
   }),
   mainContent: {
-    minHeight: 600
+    minHeight: '80vh'
   }
 })
 

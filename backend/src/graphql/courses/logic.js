@@ -24,11 +24,8 @@ const checkCourseOwnership = checkOwnership(Course)
 const validateBlogPosts = (courseData) => {
   if (courseData.isBlog) {
     if (!courseData.description) throw new Error(strings.responses.blog_description_empty)
-
     courseData.cost = 0
   } else {
-    // verify cost data for non-blog posts
-    if (!courseData.cost) throw new Error(strings.responses.cost_not_provided)
     if (courseData.cost < 0) throw new Error(strings.responses.invalid_cost)
   }
 
@@ -164,7 +161,6 @@ exports.getPosts = async (offset) => {
     privacy: open.toLowerCase()
   }, 'id title description creatorName updated slug featuredImage')
     .skip((offset - 1) * postsPerPageLimit).limit(postsPerPageLimit)
-  console.log(posts)
 
   return posts.map(x => ({
     id: x.id,
