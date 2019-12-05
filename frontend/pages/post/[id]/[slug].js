@@ -1,11 +1,12 @@
 import { connect } from 'react-redux'
 import MasterLayout from '../../../components/Masterlayout.js'
-import { BACKEND } from '../../../config/constants.js'
+import { BACKEND, FRONTEND, MEDIA_BACKEND } from '../../../config/constants.js'
 import TextEditor from '../../../components/TextEditor'
 import {
   queryGraphQL,
-  formattedLocaleDate
-  , formulateMediaUrl
+  formattedLocaleDate,
+  formulateMediaUrl,
+  formulateCourseUrl
 } from '../../../lib/utils.js'
 import Link from 'next/link'
 import { Grid, Typography, makeStyles } from '@material-ui/core'
@@ -39,6 +40,16 @@ const useStyles = (featuredImage) => makeStyles({
   }
 })
 
+const getPostDescriptionSnippet = (rawContentState) => {
+  const firstSentence = TextEditor
+    .hydrate(rawContentState)
+    .getCurrentContent()
+    .getPlainText()
+    .split('.')[0]
+
+  return firstSentence ? firstSentence + '.' : firstSentence
+}
+
 const Posts = (props) => {
   const classes = useStyles(props.post.featuredImage)()
 
@@ -49,6 +60,13 @@ const Posts = (props) => {
         <>
           <Head>
             <title>{props.post.title}</title>
+            <meta property="og:url" content={formulateCourseUrl(props.post, FRONTEND)} />
+            <meta property="og:type" content='article' />
+            <meta property="og:title" content={props.post.title} />
+            <meta property="og:description" content={getPostDescriptionSnippet(props.post.description)} />
+            <meta property="og:author" content={props.post.creatorName} />
+            {props.post.featuredImage &&
+              <meta property="og:image" content={formulateMediaUrl(MEDIA_BACKEND, props.post.featuredImage)} />}
           </Head>
           <ContainedBodyLayout>
             <article className={classes.article}>
@@ -63,18 +81,18 @@ const Posts = (props) => {
                   <Typography variant='overline' component='p'>
                     <Link href='/creator/[id]' as={`/creator/${props.post.creatorId}`}>
                       <a>
-                        { props.post.creatorName }
+                        {props.post.creatorName}
                       </a>
                     </Link>
                   </Typography>
                   <Typography variant='overline' className={classes.updatedtime}>
-                    { formattedLocaleDate(props.post.updated) }
+                    {formattedLocaleDate(props.post.updated)}
                   </Typography>
                 </Grid>
               </Grid>
               {props.post.featuredImage && <div className={classes.featuredimagecontainer} />}
               <TextEditor
-                initialContentState={ TextEditor.hydrate(props.post.description) }
+                initialContentState={TextEditor.hydrate(props.post.description)}
                 readOnly={ true }/>
             </article>
           </ContainedBodyLayout>
@@ -86,17 +104,20 @@ const Posts = (props) => {
 
 Posts.getInitialProps = async ({ query }) => {
   const graphQuery = `
-        query {
-        post: getCourse(id: "${query.id}") {
-            title,
-            description,
-            featuredImage,
-            updated,
-            creatorName,
-            creatorId
-        }
-        }
-    `
+  query {
+    post: getCourse(id: "${query.id}") {
+        id,
+        title,
+        description,
+        featuredImage,
+        updated,
+        creatorName,
+        creatorId,
+        slug,
+        isBlog
+    }
+  }
+  `
   const response = await queryGraphQL(
     `${BACKEND}/graph`,
     graphQuery

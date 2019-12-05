@@ -128,7 +128,6 @@ const getFeaturedCourses = async () => {
     }
     `
   )
-  console.log(response)
 
   return response.featuredCourses
 }
