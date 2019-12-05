@@ -6,9 +6,7 @@ import { LinearProgress } from '@material-ui/core'
 import { makeStyles } from '@material-ui/styles'
 import CssBaseline from '@material-ui/core/CssBaseline'
 import Head from 'next/head'
-import {
-  BACKEND
-} from '../config/constants.js'
+import { MEDIA_BACKEND } from '../config/constants.js'
 import {
   formulateMediaUrl
 } from '../lib/utils.js'
@@ -30,7 +28,7 @@ const MasterLayout = (props) => {
     <>
       <Head>
         {props.siteinfo.logopath &&
-          <link rel="icon" href={formulateMediaUrl(BACKEND, props.siteinfo.logopath, true)}/>}
+          <link rel="icon" href={formulateMediaUrl(MEDIA_BACKEND, props.siteinfo.logopath, true)}/>}
       </Head>
       <CssBaseline />
       <Header />

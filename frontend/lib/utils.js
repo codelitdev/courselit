@@ -1,4 +1,8 @@
 import fetch from 'isomorphic-unfetch'
+import {
+  URL_EXTENTION_POSTS,
+  URL_EXTENTION_COURSES
+} from '../config/constants.js'
 
 export const queryGraphQL = async (url, query, token) => {
   const options = {
@@ -60,3 +64,6 @@ export const makeGraphQLQueryStringFromJSObject = obj =>
 export const formulateMediaUrl =
   (backend, mediaID, generateThumbnailUrl = false) =>
     `${backend}/media/${mediaID}${generateThumbnailUrl ? '?thumb=1' : ''}`
+
+export const formulateCourseUrl = (course, backend = '') =>
+  `${backend}/${course.isBlog ? URL_EXTENTION_POSTS : URL_EXTENTION_COURSES}/${course.id}/${course.slug}`

@@ -17,7 +17,8 @@ import { networkAction } from '../redux/actions.js'
 import {
   queryGraphQL,
   // queryGraphQLWithUIEffects,
-  capitalize
+  capitalize,
+  formulateCourseUrl
 } from '../lib/utils.js'
 import {
   BACKEND,
@@ -26,8 +27,7 @@ import {
   LESSON_TYPE_VIDEO,
   LESSON_TYPE_PDF,
   LESSON_TYPE_QUIZ,
-  URL_EXTENTION_POSTS,
-  URL_EXTENTION_COURSES
+  FRONTEND
 } from '../config/constants.js'
 import Link from 'next/link'
 import {
@@ -620,9 +620,7 @@ const CourseEditor = (props) => {
       {courseData.course.id &&
         <div>
           <p>
-            <Link href={
-              `/${courseData.course.isBlog ? URL_EXTENTION_POSTS : URL_EXTENTION_COURSES}/${courseData.course.id}/${courseData.course.slug}`
-            }>
+            <Link href={formulateCourseUrl(courseData.course)}>
               <a>Visit { courseData.course.isBlog ? 'post' : 'course' }</a>
             </Link>
           </p>

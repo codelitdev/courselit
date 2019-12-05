@@ -39,6 +39,8 @@ const Hero = (props) => {
   const { featuredCourses } = props
   console.log(featuredCourses)
   const item = featuredCourses[offset]
+  if (!item) return <></>
+  
   const classes = useStyles(item.featuredImage)()
   const cost = item.cost > 0 ? `${props.siteInfo.currencyUnit}${item.cost}` : FREE_COST
 
