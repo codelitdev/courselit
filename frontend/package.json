@@ -46,7 +46,7 @@
     "jest-haste-map": "^24.5.0",
     "jest-resolve": "^24.1.0",
     "nodemon": "^1.19.0",
-    "now": "^16.6.0",
+    "now": "^16.6.2",
     "preact": "^10.0.5",
     "react-test-renderer": "^16.12.0",
     "webpack": "^4.39.3"

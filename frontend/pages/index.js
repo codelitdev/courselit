@@ -123,7 +123,8 @@ const getFeaturedCourses = async () => {
         id,
         title,
         cost,
-        featuredImage
+        featuredImage,
+        slug
       }
     }
     `

@@ -64,7 +64,7 @@ function ResponsiveDrawer (props) {
   const [visibleComponent, setVisibleComponent] = useState()
 
   useEffect(() => {
-    showComponent(props.items[2].element)
+    showComponent(props.items[0].element)
   }, [])
 
   function handleDrawerToggle () {
@@ -82,12 +82,12 @@ function ResponsiveDrawer (props) {
       <List>
         {(props.items).map((item, index) => (
           <ListItem button key={item.name} onClick={() => showComponent(item.element)}>
-            <ListItemIcon>{item.icon}</ListItemIcon>
+            {item.icon && <ListItemIcon>{item.icon}</ListItemIcon>}
             <ListItemText primary={item.name} />
           </ListItem>
         ))}
       </List>
-      <Divider />
+      {/* <Divider />
       <List>
         {['Market'].map((text, index) => (
           <ListItem button key={text}>
@@ -95,7 +95,7 @@ function ResponsiveDrawer (props) {
             <ListItemText primary={text} />
           </ListItem>
         ))}
-      </List>
+      </List> */}
     </div>
   )
 
@@ -109,8 +109,7 @@ function ResponsiveDrawer (props) {
             aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            className={classes.menuButton}
-          >
+            className={classes.menuButton}>
             <Menu />
           </IconButton>
           <Grid container justify='space-between'>
@@ -168,7 +167,11 @@ ResponsiveDrawer.propTypes = {
   items: PropTypes.arrayOf(PropTypes.shape({
     name: PropTypes.string.isRequired,
     element: PropTypes.object.isRequired,
-    icon: PropTypes.object.isRequired
+    icon: PropTypes.object,
+    props: PropTypes.object,
+    progress: PropTypes.shape({
+      status: PropTypes.bool.isRequired
+    })
   }))
 }
 

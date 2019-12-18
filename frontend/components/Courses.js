@@ -164,7 +164,7 @@ const Courses = (props) => {
           <Grid item xs={12} sm={2}>
             <Button
               variant='contained'
-              color={courseEditorVisible ? 'default' : 'primary'}
+              color={courseEditorVisible ? 'default' : 'secondary'}
               className={classes.button}
               onClick={() => showEditor()}>
               {courseEditorVisible ? BUTTON_CANCEL_TEXT : BUTTON_NEW_COURSE}
