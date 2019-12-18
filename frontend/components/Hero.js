@@ -13,8 +13,9 @@ import {
 } from '@material-ui/icons'
 
 import { formulateMediaUrl } from '../lib/utils'
-import { MEDIA_BACKEND } from '../config/constants'
+import { MEDIA_BACKEND, URL_EXTENTION_COURSES } from '../config/constants'
 import { FREE_COST } from '../config/strings.js'
+import Link from 'next/link'
 
 const useStyles = (backgroundImageUrl) => makeStyles(theme => ({
   container: {
@@ -37,9 +38,10 @@ const useStyles = (backgroundImageUrl) => makeStyles(theme => ({
 const Hero = (props) => {
   const [offset, setOffset] = useState(0)
   const { featuredCourses } = props
-  console.log(featuredCourses)
   const item = featuredCourses[offset]
   if (!item) return <></>
+
+  console.log(featuredCourses, item)
   
   const classes = useStyles(item.featuredImage)()
   const cost = item.cost > 0 ? `${props.siteInfo.currencyUnit}${item.cost}` : FREE_COST
@@ -67,9 +69,13 @@ const Hero = (props) => {
           </Grid>
           <Grid item>
             <Typography variant='h4'>
-              <Button variant='contained' color='primary'>
-                  Enroll for {cost}
-              </Button>
+              <Link
+                href={`/${URL_EXTENTION_COURSES}/[id]/[slug]`}
+                as={`/${URL_EXTENTION_COURSES}/${item.id}/${item.slug}`}>
+                <Button variant='contained' color='secondary'>
+                    Enroll for {cost}
+                </Button>
+              </Link>
             </Typography>
           </Grid>
         </Grid>

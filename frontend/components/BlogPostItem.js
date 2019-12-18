@@ -1,7 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import Link from 'next/link'
-// import { formattedLocaleDate } from '../lib/utils.js'
 import { URL_EXTENTION_POSTS } from '../config/constants.js'
 import { Grid, Typography, Card, CardContent } from '@material-ui/core'
 import { makeStyles } from '@material-ui/styles'

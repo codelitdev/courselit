@@ -3,6 +3,7 @@ import {
   URL_EXTENTION_POSTS,
   URL_EXTENTION_COURSES
 } from '../config/constants.js'
+import TextEditor from '../components/TextEditor/index.js'
 
 export const queryGraphQL = async (url, query, token) => {
   const options = {
@@ -67,3 +68,13 @@ export const formulateMediaUrl =
 
 export const formulateCourseUrl = (course, backend = '') =>
   `${backend}/${course.isBlog ? URL_EXTENTION_POSTS : URL_EXTENTION_COURSES}/${course.id}/${course.slug}`
+
+export const getPostDescriptionSnippet = (rawDraftJSContentState) => {
+  const firstSentence = TextEditor
+    .hydrate(rawDraftJSContentState)
+    .getCurrentContent()
+    .getPlainText()
+    .split('.')[0]
+
+  return firstSentence ? firstSentence + '.' : firstSentence
+}

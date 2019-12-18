@@ -4,9 +4,9 @@ const {
   open,
   closed
 } = require('../../config/constants.js')
-// const {
-//   lessonType
-// } = require('../lessons/types.js')
+const {
+  lessonType
+} = require('../lessons/types.js')
 
 const courseStatusType = new graphql.GraphQLEnumType({
   name: 'CoursePrivacyType',
@@ -29,7 +29,7 @@ const courseType = new graphql.GraphQLObjectType({
     isFeatured: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
     creatorId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     creatorName: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-    lessons: { type: new graphql.GraphQLNonNull(new graphql.GraphQLList(graphql.GraphQLID)) },
+    lessons: { type: new graphql.GraphQLList(lessonType) },
     updated: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     slug: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     description: { type: graphql.GraphQLString },

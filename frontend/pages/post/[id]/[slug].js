@@ -6,52 +6,63 @@ import {
   queryGraphQL,
   formattedLocaleDate,
   formulateMediaUrl,
-  formulateCourseUrl
+  formulateCourseUrl,
+  getPostDescriptionSnippet
 } from '../../../lib/utils.js'
 import Link from 'next/link'
 import { Grid, Typography, makeStyles } from '@material-ui/core'
 import Head from 'next/head'
 import ContainedBodyLayout from '../../../components/ContainedBodyLayout.js'
+import Article from '../../../components/Article.js'
 
-const useStyles = (featuredImage) => makeStyles({
-  article: {
+const useStyles = makeStyles({
+  articleMarginAdjust: {
     marginTop: '3.2em'
-  },
-  creatoravatarcontainer: {
-    display: 'flex',
-    alignItems: 'center'
-  },
-  creatorcard: {
-    paddingTop: '0.8em',
-    paddingBottom: '2.4em'
-  },
-  creatoravatar: {
-    borderRadius: '1.5em',
-    width: '3em',
-    marginRight: '1em'
-  },
-  featuredimagecontainer: {
-    width: '100%',
-    height: 240,
-    overflow: 'hidden',
-    marginBottom: '1.8em',
-    background: `url('${formulateMediaUrl(BACKEND, featuredImage)}')`,
-    backgroundPosition: 'center'
   }
 })
 
-const getPostDescriptionSnippet = (rawContentState) => {
-  const firstSentence = TextEditor
-    .hydrate(rawContentState)
-    .getCurrentContent()
-    .getPlainText()
-    .split('.')[0]
+// const useStyles = (featuredImage) => makeStyles({
+//   article: {
+//     marginTop: '3.2em'
+//   },
+//   creatoravatarcontainer: {
+//     display: 'flex',
+//     alignItems: 'center'
+//   },
+//   creatorcard: {
+//     paddingTop: '0.8em',
+//     paddingBottom: '2.4em'
+//   },
+//   creatoravatar: {
+//     borderRadius: '1.5em',
+//     width: '3em',
+//     marginRight: '1em'
+//   },
+//   featuredimagecontainer: {
+//     width: '100%',
+//     height: 240,
+//     overflow: 'hidden',
+//     marginBottom: '1.8em',
+//     background: `url('${formulateMediaUrl(BACKEND, featuredImage)}')`,
+//     backgroundPosition: 'center'
+//   }
+// })
 
-  return firstSentence ? firstSentence + '.' : firstSentence
-}
+// const getPostDescriptionSnippet = (rawContentState) => {
+//   const firstSentence = TextEditor
+//     .hydrate(rawContentState)
+//     .getCurrentContent()
+//     .getPlainText()
+//     .split('.')[0]
 
-const Posts = (props) => {
-  const classes = useStyles(props.post.featuredImage)()
+//   return firstSentence ? firstSentence + '.' : firstSentence
+// }
+
+const Post = (props) => {
+  const classes = useStyles()
+  const articleOptions = {
+    showAttribution: false
+  }
 
   return (
     <MasterLayout>
@@ -69,32 +80,8 @@ const Posts = (props) => {
               <meta property="og:image" content={formulateMediaUrl(MEDIA_BACKEND, props.post.featuredImage)} />}
           </Head>
           <ContainedBodyLayout>
-            <article className={classes.article}>
-              <Typography variant="h2">
-                {props.post.title}
-              </Typography>
-              <Grid container className={classes.creatorcard}>
-                <Grid item className={classes.creatoravatarcontainer}>
-                  <img src='/static/logo.jpg' className={classes.creatoravatar}></img>
-                </Grid>
-                <Grid item>
-                  <Typography variant='overline' component='p'>
-                    <Link href='/creator/[id]' as={`/creator/${props.post.creatorId}`}>
-                      <a>
-                        {props.post.creatorName}
-                      </a>
-                    </Link>
-                  </Typography>
-                  <Typography variant='overline' className={classes.updatedtime}>
-                    {formattedLocaleDate(props.post.updated)}
-                  </Typography>
-                </Grid>
-              </Grid>
-              {props.post.featuredImage && <div className={classes.featuredimagecontainer} />}
-              <TextEditor
-                initialContentState={TextEditor.hydrate(props.post.description)}
-                readOnly={ true }/>
-            </article>
+            <div className={classes.articleMarginAdjust}/>
+            <Article course={props.post} options={articleOptions}/>
           </ContainedBodyLayout>
         </>
       }
@@ -102,7 +89,7 @@ const Posts = (props) => {
   )
 }
 
-Posts.getInitialProps = async ({ query }) => {
+Post.getInitialProps = async ({ query }) => {
   const graphQuery = `
   query {
     post: getCourse(id: "${query.id}") {
@@ -135,4 +122,4 @@ Posts.getInitialProps = async ({ query }) => {
 //   })
 // }
 
-export default connect()(Posts)
+export default connect()(Post)
