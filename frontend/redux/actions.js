@@ -8,7 +8,9 @@ import {
   PROFILE_AVAILABLE,
   PROFILE_CLEAR,
   SITEINFO_AVAILABLE,
-  AUTH_CHECKED
+  AUTH_CHECKED,
+  SET_ERROR,
+  CLEAR_ERROR
 } from './actionTypes.js'
 import { BACKEND } from '../config/constants.js'
 import { queryGraphQL } from '../lib/utils.js'
@@ -71,7 +73,16 @@ export function updateSiteInfo () {
 
       const response = await queryGraphQL(
         `${BACKEND}/graph`,
-        '{ site: getSiteInfo { title, subtitle, logopath, currencyUnit, copyrightText, about } }')
+        `{ site: getSiteInfo {
+            title,
+            subtitle,
+            logopath,
+            currencyUnit,
+            currencyISOCode,
+            copyrightText,
+            about
+          }
+        }`)
 
       dispatch(networkAction(false))
       dispatch(newSiteInfoAvailable(response.site))
@@ -79,4 +90,12 @@ export function updateSiteInfo () {
       dispatch(networkAction(false))
     }
   }
+}
+
+export function setAppError (error) {
+  return dispatch => dispatch({ type: SET_ERROR, error })
+}
+
+export function clearAppError () {
+  return dispatch => dispatch({ type: CLEAR_ERROR })
 }

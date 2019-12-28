@@ -40,5 +40,30 @@ module.exports = {
   blogPostSnippetLength: 135,
   defaultPaginationItemsPerPage: 5,
   defaultOffset: 1,
-  siteUsersPerPage: 5
+  siteUsersPerPage: 5,
+
+  // Payment methods
+  paypal: 'paypal',
+  stripe: 'stripe',
+  unpaid: 'unpaid',
+  paytm: 'paytm',
+  other: 'other',
+
+  // acceptable currency codes for payments
+  currencyISOCodes: [
+    'afn', 'eur', 'all', 'dzd', 'usd', 'aoa', 'xcd', 'ars', 'amd', 'awg', 'aud', 'azn', 'bsd',
+    'bhd', 'bdt', 'bbd', 'byn', 'bzd', 'xof', 'bmd', 'inr', 'btn', 'bob', 'bov', 'bam', 'bwp',
+    'nok', 'brl', 'bnd', 'bgn', 'bif', 'cve', 'khr', 'xaf', 'cad', 'kyd', 'clp', 'clf', 'cny',
+    'cop', 'cou', 'kmf', 'cdf', 'nzd', 'crc', 'hrk', 'cup', 'cuc', 'ang', 'czk', 'dkk', 'djf',
+    'dop', 'egp', 'svc', 'ern', 'etb', 'fkp', 'fjd', 'xpf', 'gmd', 'gel', 'ghs', 'gip', 'gtq',
+    'gbp', 'gnf', 'gyd', 'htg', 'hnl', 'hkd', 'huf', 'isk', 'idr', 'xdr', 'irr', 'iqd', 'ils',
+    'jmd', 'jpy', 'jod', 'kzt', 'kes', 'kpw', 'krw', 'kwd', 'kgs', 'lak', 'lbp', 'lsl', 'zar',
+    'lrd', 'lyd', 'chf', 'mop', 'mkd', 'mga', 'mwk', 'myr', 'mvr', 'mru', 'mur', 'xua', 'mxn',
+    'mxv', 'mdl', 'mnt', 'mad', 'mzn', 'mmk', 'nad', 'npr', 'nio', 'ngn', 'omr', 'pkr', 'pab',
+    'pgk', 'pyg', 'pen', 'php', 'pln', 'qar', 'ron', 'rub', 'rwf', 'shp', 'wst', 'stn', 'sar',
+    'rsd', 'scr', 'sll', 'sgd', 'xsu', 'sbd', 'sos', 'ssp', 'lkr', 'sdg', 'srd', 'szl', 'sek',
+    'che', 'chw', 'syp', 'twd', 'tjs', 'tzs', 'thb', 'top', 'ttd', 'tnd', 'try', 'tmt', 'ugx',
+    'uah', 'aed', 'usn', 'uyu', 'uyi', 'uyw', 'uzs', 'vuv', 'ves', 'vnd', 'yer', 'zmw', 'zwl',
+    'xba', 'xbb', 'xbc', 'xbd', 'xts', 'xxx', 'xau', 'xpd', 'xpt', 'xag'
+  ]
 }

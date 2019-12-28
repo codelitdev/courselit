@@ -8,5 +8,9 @@ const constants = require('./constants.js')
 module.exports = mongoose
   .connect(
     constants.dbConnectionString,
-    { useNewUrlParser: true, useCreateIndex: true }
+    {
+      useNewUrlParser: true,
+      useCreateIndex: true,
+      useUnifiedTopology: true
+    }
   )

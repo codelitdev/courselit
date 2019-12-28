@@ -9,7 +9,7 @@ import {
   queryGraphQLWithUIEffects
 } from '../lib/utils.js'
 import { BACKEND } from '../config/constants.js'
-import { networkAction, newSiteInfoAvailable } from '../redux/actions.js'
+import { networkAction, newSiteInfoAvailable, setAppError } from '../redux/actions.js'
 import ImgSwitcher from './ImgSwitcher.js'
 import { TextField, Button, Typography } from '@material-ui/core'
 import {
@@ -19,8 +19,10 @@ import {
   SITE_SETTINGS_LOGO,
   SITE_SETTINGS_COPYRIGHT_TEXT,
   SITE_SETTINGS_ABOUT_TEXT,
-  SITE_SETTINGS_PAGE_HEADING
+  SITE_SETTINGS_PAGE_HEADING,
+  SITE_SETTINGS_CURRENCY_ISO_CODE_TEXT
 } from '../config/strings.js'
+import AppError from '../models/app-error.js'
 
 const SiteSettings = props => {
   const [settings, setSettings] = useState({
@@ -29,6 +31,7 @@ const SiteSettings = props => {
     logopath: props.siteinfo.logopath,
     currencyUnit: props.siteinfo.currencyUnit,
     copyrightText: props.siteinfo.copyrightText,
+    currencyISOCode: props.siteinfo.currencyISOCode,
     about: props.siteinfo.about,
     err: ''
   })
@@ -52,25 +55,29 @@ const SiteSettings = props => {
         subtitle,
         logopath,
         currencyUnit,
+        currencyISOCode,
         copyrightText,
         about
       }
     }`
-    console.log(query)
     try {
       await executeGQLCall(query, response => {
-        if (response.site) props.dispatch(newSiteInfoAvailable(response.site))
+        if (response.site) {
+          props.dispatch(newSiteInfoAvailable(response.site))
+        }
       })
     } catch (e) {
-      console.log(e)
+      props.dispatch(
+        setAppError(
+          new AppError(e.message)
+        )
+      )
     }
   }
 
   const onChangeData = (e) => {
     const change = typeof e === 'string' ? { logopath: e } : { [e.target.name]: e.target.value }
     setSettings(Object.assign({}, settings, change))
-    // setDataChanged(true)
-    console.log(settings)
   }
 
   const toggleMediaManagerVisibility = () =>
@@ -91,7 +98,7 @@ const SiteSettings = props => {
           fullWidth
           margin="normal"
           name='title'
-          value={settings.title}
+          value={settings.title || ''}
           onChange={onChangeData}/>
         <TextField
           variant='outlined'
@@ -99,7 +106,7 @@ const SiteSettings = props => {
           fullWidth
           margin="normal"
           name='subtitle'
-          value={settings.subtitle}
+          value={settings.subtitle || ''}
           onChange={onChangeData}/>
         <TextField
           variant='outlined'
@@ -107,15 +114,24 @@ const SiteSettings = props => {
           fullWidth
           margin="normal"
           name='currencyUnit'
-          value={settings.currencyUnit}
+          value={settings.currencyUnit || ''}
           onChange={onChangeData}/>
+        <TextField
+          variant='outlined'
+          label={SITE_SETTINGS_CURRENCY_ISO_CODE_TEXT}
+          fullWidth
+          margin="normal"
+          name='currencyISOCode'
+          value={settings.currencyISOCode || ''}
+          onChange={onChangeData}
+          maxLength={3}/>
         <TextField
           variant='outlined'
           label={SITE_SETTINGS_COPYRIGHT_TEXT}
           fullWidth
           margin="normal"
           name='copyrightText'
-          value={settings.copyrightText}
+          value={settings.copyrightText || ''}
           onChange={onChangeData}/>
         <TextField
           variant='outlined'
@@ -123,7 +139,7 @@ const SiteSettings = props => {
           fullWidth
           margin="normal"
           name='about'
-          value={settings.about}
+          value={settings.about || ''}
           onChange={onChangeData}/>
         <ImgSwitcher
           title={SITE_SETTINGS_LOGO}
@@ -166,4 +182,3 @@ export default connect(
   mapStateToProps,
   mapDispatchToProps
 )(SiteSettings)
-// export default SiteSettings

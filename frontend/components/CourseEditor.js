@@ -16,7 +16,6 @@ import TextEditor from './TextEditor'
 import { networkAction } from '../redux/actions.js'
 import {
   queryGraphQL,
-  // queryGraphQLWithUIEffects,
   capitalize,
   formulateCourseUrl
 } from '../lib/utils.js'
@@ -26,8 +25,7 @@ import {
   LESSON_TYPE_AUDIO,
   LESSON_TYPE_VIDEO,
   LESSON_TYPE_PDF,
-  LESSON_TYPE_QUIZ,
-  FRONTEND
+  LESSON_TYPE_QUIZ
 } from '../config/constants.js'
 import Link from 'next/link'
 import {
@@ -467,7 +465,10 @@ const CourseEditor = (props) => {
         description,
         featuredImage,
         id,
-        lessons,
+        lessons {
+          id,
+          title
+        },
         isFeatured,
         slug
       }

@@ -10,6 +10,7 @@ const {
   makeModelTextSearchable
 } = require('../../lib/graphql.js')
 const constants = require('../../config/constants.js')
+const Purchase = require('../../models/Purchase.js')
 
 const removeAdminFieldsFromUserObject = ({ id, email, name }) => ({ id, email, name })
 
@@ -96,4 +97,25 @@ exports.getUsersSummary = async (ctx) => {
     admins: await User.countDocuments({ isAdmin: true }),
     creators: await User.countDocuments({ isCreator: true })
   }
+}
+
+exports.purchaseMade = async (purchaseData = {}, ctx) => {
+  checkIfAuthenticated(ctx)
+  const { purchasedBy } = purchaseData
+  let user = await checkIfItemExists(User, purchasedBy)
+  checkAdminOrSelf(purchasedBy, ctx)
+
+  await Purchase.create({
+    courseId: purchaseData.courseId,
+    purchasedOn: purchaseData.purchasedOn,
+    purchasedBy: purchaseData.purchasedBy,
+    paymentMethod: purchaseData.paymentMethod,
+    paymentId: purchaseData.paymentId,
+    amount: purchaseData.amount,
+    discount: purchaseData.discount
+  })
+
+  user.purchases.push(purchaseData.courseId)
+  user = await user.save()
+  return user
 }

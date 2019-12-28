@@ -7,6 +7,9 @@ const {
   quiz
 } = require('../../config/constants.js')
 
+const DESCRIPTION_REQUIRES_ENROLLMENT =
+  'Should the content of this lesson be visible to only enrolled customers.'
+
 /**
  * Every lesson can be one of the following types
  */
@@ -33,9 +36,28 @@ const lessonType = new graphql.GraphQLObjectType({
     type: { type: new graphql.GraphQLNonNull(lessontypeType) },
     downloadable: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
     creatorId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+    requiresEnrollment: {
+      description: DESCRIPTION_REQUIRES_ENROLLMENT,
+      type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean)
+    },
     // courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     content: { type: graphql.GraphQLString },
     contentURL: { type: graphql.GraphQLString }
+  }
+})
+
+/**
+ * A GraphQL type for representing meta infomation regarding a lesson
+ */
+const lessonMetaType = new graphql.GraphQLObjectType({
+  name: 'LessonMeta',
+  fields: {
+    id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+    title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+    requiresEnrollment: {
+      description: DESCRIPTION_REQUIRES_ENROLLMENT,
+      type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean)
+    }
   }
 })
 
@@ -48,6 +70,10 @@ const lessonInputType = new graphql.GraphQLInputObjectType({
     title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     type: { type: new graphql.GraphQLNonNull(lessontypeType) },
     courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+    requiresEnrollment: {
+      description: DESCRIPTION_REQUIRES_ENROLLMENT,
+      type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean)
+    },
     content: { type: graphql.GraphQLString },
     contentURL: { type: graphql.GraphQLString },
     downloadable: { type: graphql.GraphQLBoolean }
@@ -65,7 +91,11 @@ const lessonUpdateType = new graphql.GraphQLInputObjectType({
     type: { type: lessontypeType },
     content: { type: graphql.GraphQLString },
     contentURL: { type: graphql.GraphQLString },
-    downloadable: { type: graphql.GraphQLBoolean }
+    downloadable: { type: graphql.GraphQLBoolean },
+    requiresEnrollment: {
+      description: DESCRIPTION_REQUIRES_ENROLLMENT,
+      type: graphql.GraphQLBoolean
+    }
   }
 })
 
@@ -73,5 +103,6 @@ module.exports = {
   lessontypeType,
   lessonType,
   lessonInputType,
-  lessonUpdateType
+  lessonUpdateType,
+  lessonMetaType
 }

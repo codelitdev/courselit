@@ -1,9 +1,9 @@
+import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import { Button } from '@material-ui/core'
 import { connect } from 'react-redux'
 import PriceTag from './PriceTag'
 import { publicCourse } from '../types'
-import { useState } from 'react'
 
 const BuyButton = (props) => {
   const [purchased, setPurchased] = useState(false)
@@ -14,8 +14,8 @@ const BuyButton = (props) => {
 
   const buyCourse = () => {}
 
-  return purchased ?
-    (<Button onClick={startCourse}></Button>) : (
+  return purchased
+    ? (<Button onClick={startCourse}></Button>) : (
       <Button onClick={buyCourse} variant='contained' color='secondary'>
         <PriceTag cost={course.cost} />
       </Button>

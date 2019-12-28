@@ -11,8 +11,7 @@ import ListItem from '@material-ui/core/ListItem'
 import ListItemIcon from '@material-ui/core/ListItemIcon'
 import ListItemText from '@material-ui/core/ListItemText'
 import {
-  Menu,
-  ShoppingCart
+  Menu
 } from '@material-ui/icons'
 // import MailIcon from '@material-ui/icons/Mail'
 // import MenuIcon from '@material-ui/icons/Menu'
@@ -22,6 +21,7 @@ import { Toolbar, Typography, Grid } from '@material-ui/core'
 import { makeStyles, useTheme } from '@material-ui/core/styles'
 import PropTypes from 'prop-types'
 import SessionButton from './SessionButton.js'
+import AppError from './AppError.js'
 
 const drawerWidth = 240
 
@@ -57,7 +57,15 @@ const useStyles = makeStyles(theme => ({
   }
 }))
 
-function ResponsiveDrawer (props) {
+const IconComponent = props => (
+  <Grid item>
+    <ListItemIcon>
+      {props.icon}
+    </ListItemIcon>
+  </Grid>
+)
+
+const ResponsiveDrawer = (props) => {
   const classes = useStyles()
   const theme = useTheme()
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -82,8 +90,17 @@ function ResponsiveDrawer (props) {
       <List>
         {(props.items).map((item, index) => (
           <ListItem button key={item.name} onClick={() => showComponent(item.element)}>
-            {item.icon && <ListItemIcon>{item.icon}</ListItemIcon>}
-            <ListItemText primary={item.name} />
+            <Grid container direction='row' alignItems='center'>
+              {item.icon &&
+                !item.iconPlacementRight &&
+                <IconComponent icon={item.icon}/>}
+              <Grid item>
+                <ListItemText primary={item.name} />
+              </Grid>
+              {item.icon &&
+                item.iconPlacementRight &&
+                <IconComponent icon={item.icon}/>}
+            </Grid>
           </ListItem>
         ))}
       </List>
@@ -158,8 +175,13 @@ function ResponsiveDrawer (props) {
         <div className={classes.toolbar} />
         {visibleComponent}
       </main>
+      <AppError />
     </div>
   )
+}
+
+IconComponent.propTypes = {
+  icon: PropTypes.object
 }
 
 ResponsiveDrawer.propTypes = {

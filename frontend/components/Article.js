@@ -1,14 +1,13 @@
-import { Typography, Grid, Button } from "@material-ui/core"  
-import Link from "next/link"
-import TextEditor from "./TextEditor"
+import React from 'react'
+import { Typography, Grid } from '@material-ui/core'
+import Link from 'next/link'
+import TextEditor from './TextEditor'
 import PropTypes from 'prop-types'
-import { makeStyles } from "@material-ui/styles"
-import { BACKEND } from "../config/constants"
-import { formulateMediaUrl, formattedLocaleDate } from "../lib/utils"
-import { publicCourse } from "../types"
-import { BUTTON_START_NOW, BUTTON_TEXT_BUY_NOW } from "../config/strings"
-import PriceTag from "./PriceTag"
-import BuyButton from "./BuyButton"
+import { makeStyles } from '@material-ui/styles'
+import { BACKEND } from '../config/constants'
+import { formulateMediaUrl, formattedLocaleDate } from '../lib/utils'
+import { publicCourse } from '../types'
+import BuyButton from './BuyButton'
 
 const useStyles = (featuredImage) => makeStyles({
   creatoravatarcontainer: {
@@ -16,7 +15,7 @@ const useStyles = (featuredImage) => makeStyles({
     alignItems: 'center'
   },
   creatorcard: {
-    paddingTop: '0.8em',
+    paddingTop: '0.8em'
   },
   creatoravatar: {
     borderRadius: '1.5em',
@@ -45,27 +44,23 @@ const Article = (props) => {
     // do nothing
   }
 
-  const handleBuyNow = (course) => {
-
-  }
-
   return (
     <article className={classes.article}>
       <Typography variant="h2">
         {course.title}
       </Typography>
-      {options.showAttribution && 
+      {options.showAttribution &&
         <Grid container className={classes.creatorcard}>
           <Grid item className={classes.creatoravatarcontainer}>
-              <img src='/static/logo.jpg' className={classes.creatoravatar}></img>
+            <img src='/static/logo.jpg' className={classes.creatoravatar}></img>
           </Grid>
           <Grid item>
             <Typography variant='overline' component='p'>
-            <Link href='/creator/[id]' as={`/creator/${course.creatorId}`}>
-              <a>
-                {course.creatorName}
-              </a>
-            </Link>
+              <Link href='/creator/[id]' as={`/creator/${course.creatorId}`}>
+                <a>
+                  {course.creatorName}
+                </a>
+              </Link>
             </Typography>
             <Typography variant='overline' className={classes.updatedtime}>
               {formattedLocaleDate(course.updated)}

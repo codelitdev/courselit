@@ -1,7 +1,7 @@
 {
   "scripts": {
     "lint": "eslint src __tests__ --fix",
-    "dev": "PORT=8000 nodemon src",
+    "dev": "PORT=8000 nodemon -r dotenv/config src dotenv_config_path=../.env",
     "test:server": "NODE_ENV=test PORT=8000 nodemon src",
     "test:inte": "NODE_ENV=test jest",
     "start": "PORT=8000 NODE_ENV=production node src"
@@ -11,6 +11,7 @@
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
     "draft-js": "^0.11.2",
     "express": "^4.17.1",
     "express-fileupload": "^1.1.6-alpha.6",
@@ -24,7 +25,8 @@
     "passport-local": "^1.0.0",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
-    "slugify": "^1.3.6"
+    "slugify": "^1.3.6",
+    "stripe": "^7.14.0"
   },
   "devDependencies": {
     "eslint": "^6.6.0",

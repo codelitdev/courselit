@@ -43,14 +43,14 @@ module.exports = {
     },
     resolve: async (root, { id, url }, context) => logic.changeContentURL(id, url, context)
   },
-  changeDownloadable: {
-    type: types.lessonType,
-    args: {
-      id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
-      flag: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) }
-    },
-    resolve: async (root, { id, flag }, context) => logic.changeDownloadable(id, flag, context)
-  },
+  // changeDownloadable: {
+  //   type: types.lessonType,
+  //   args: {
+  //     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+  //     flag: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) }
+  //   },
+  //   resolve: async (root, { id, flag }, context) => logic.changeDownloadable(id, flag, context)
+  // },
   updateLesson: {
     type: types.lessonType,
     args: {

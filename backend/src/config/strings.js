@@ -32,5 +32,12 @@ exports.responses = {
   success: 'Success',
   user_name_cant_be_null: 'Name cannot be null',
   action_not_allowed: 'You do not have rights to perform this action',
-  invalid_input: 'Invalid input'
+  invalid_input: 'Invalid input',
+  stripe_invalid_settings: 'Required Stripe keys not found',
+  unrecognised_currency_code: 'Unrecognised currency code'
+}
+
+exports.internal = {
+  error_unrecognised_payment_method: 'Unrecognized payment method',
+  error_payment_method_not_implemented: 'Not yet implemented'
 }

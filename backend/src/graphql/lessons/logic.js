@@ -135,3 +135,19 @@ exports.updateLesson = async (lessonData, ctx) => {
   lesson = await lesson.save()
   return lesson
 }
+
+exports.getAllLessonsOfACourse = async (course, ctx) => {
+  const lessons = await Lesson.find({
+    _id: {
+      $in: [...course.lessons]
+    }
+  })
+
+  const onlyLessonMeta = lesson => ({
+    id: lesson.id,
+    title: lesson.title,
+    requiresEnrollment: lesson.requiresEnrollment
+  })
+
+  return lessons.map(onlyLessonMeta)
+}
