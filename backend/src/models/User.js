@@ -18,8 +18,7 @@ UserSchema.index({
   name: 'text'
 })
 
-// This pre-hook which runs before saving the data to db, for
-// hashing the plain text password.
+// This pre-hook hashes the plain text password before saving it to the db
 UserSchema.pre('save', async function (next) {
   const user = this
   const hash = await bcrypt.hash(user.password, constants.saltRounds)

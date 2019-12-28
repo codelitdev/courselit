@@ -20,7 +20,7 @@ const responses = require('../../src/config/strings.js').responses
 const constants = require('../../src/config/constants.js')
 require('../../src/config/db.js')
 
-describe('GraphQL API tests', () => {
+describe.only('GraphQL API tests', () => {
   const user = 'graphuser@test.com'
   const user2 = 'graphuser2@test.com'
   const user3 = 'graphuser3@test.com'
@@ -809,32 +809,6 @@ describe('GraphQL API tests', () => {
       createdCourseId3 = result.data.course.id
     })
 
-    // it('creating a course (not a blog post) but cost is not provided', async () => {
-    //   const user = {
-    //     _id: mongoose.Types.ObjectId('000000000000000000000000'),
-    //     isCreator: true,
-    //     name: 'Tester'
-    //   }
-    //   const mutation = `
-    //   mutation {
-    //     course: createCourse(courseData: {
-    //       title: "First course [via testing]",
-    //       privacy: PRIVATE,
-    //       published: true,
-    //       isBlog: false,
-    //       description: "Sample description",
-    //       isFeatured: false
-    //     }) {
-    //       id
-    //     }
-    //   }
-    //   `
-
-    //   const result = await graphql(schema, mutation, null, { user })
-    //   expect(result).toHaveProperty('errors')
-    //   expect(result.errors[0].message).toBe(responses.cost_not_provided)
-    // })
-
     it('creating a course (not a blog post) but cost is below zero', async () => {
       const user = {
         _id: mongoose.Types.ObjectId('000000000000000000000000'),
@@ -1124,11 +1098,13 @@ describe('GraphQL API tests', () => {
       await graphql(schema, mutation, null, { user: { _id: userId } })
 
       const query = `
-      query q{
+      query q {
         getCourse(id: "${createdCourseId}") {
           id,
           title,
-          lessons
+          lessons {
+            id
+          }
         }
       }
       `
@@ -1219,7 +1195,8 @@ describe('GraphQL API tests', () => {
           type: TEXT,
           title: "first post",
           content: "THis is so awesome",
-          courseId: "100000000000000000000000"
+          courseId: "100000000000000000000000",
+          requiresEnrollment: true
         }){
           id
         }
@@ -1237,7 +1214,8 @@ describe('GraphQL API tests', () => {
         createLesson(lessonData: {
           title: "so bad", 
           type: TEXT,
-          courseId: "100000000000000000000000"
+          courseId: "100000000000000000000000",
+          requiresEnrollment: true
         }) {
           title
         }
@@ -1255,7 +1233,8 @@ describe('GraphQL API tests', () => {
         createLesson(lessonData: {
           title: "so bad", 
           type: VIDEO,
-          courseId: "100000000000000000000000"
+          courseId: "100000000000000000000000",
+          requiresEnrollment: true
         }) {
           title
         }
@@ -1275,7 +1254,8 @@ describe('GraphQL API tests', () => {
         createLesson(lessonData: {
           title: "so bad", 
           type: AUDIO,
-          courseId: "100000000000000000000000"
+          courseId: "100000000000000000000000",
+          requiresEnrollment: true
         }) {
           title
         }
@@ -1299,7 +1279,8 @@ describe('GraphQL API tests', () => {
           type: VIDEO,
           contentURL: "${contentUrlString}",
           downloadable: true,
-          courseId: "100000000000000000000000"
+          courseId: "100000000000000000000000",
+          requiresEnrollment: true
         }) {
           id
           type,
@@ -1329,7 +1310,8 @@ describe('GraphQL API tests', () => {
           type: VIDEO,
           contentURL: "${contentUrlString}",
           downloadable: true,
-          courseId: "${createdCourseId}"
+          courseId: "${createdCourseId}",
+          requiresEnrollment: true
         }) {
           id
           type,
@@ -1366,7 +1348,8 @@ describe('GraphQL API tests', () => {
           type: VIDEO,
           contentURL: "${contentUrlString}",
           downloadable: true,
-          courseId: "${createdCourseId3}"
+          courseId: "${createdCourseId3}",
+          requiresEnrollment: true
         }) {
           id
         }
@@ -1420,7 +1403,8 @@ describe('GraphQL API tests', () => {
           type: VIDEO,
           contentURL: "${contentUrlString}",
           downloadable: true,
-          courseId: "${createdCourseId}"
+          courseId: "${createdCourseId}",
+          requiresEnrollment: true
         }) {
           id
           type,
@@ -1493,34 +1477,6 @@ describe('GraphQL API tests', () => {
       expect(result.data.changeContentURL.contentURL).toBe(newContentURL)
     })
 
-    // it('Change downloadable status', async () => {
-    //   const mongoId = '000000000000000000000000'
-    //   const userID = mongoose.Types.ObjectId(mongoId)
-    //   // make it true
-    //   let flag = true
-    //   let mutation = `
-    //   mutation  {
-    //     changeDownloadable(id: "${createdLessonId}", flag: ${flag}) {
-    //       downloadable
-    //     }
-    //   }`
-    //   let result = await graphql(schema, mutation, null, { user: { _id: userID } })
-    //   expect(result).not.toHaveProperty('errors')
-    //   expect(result.data.changeDownloadable.downloadable).toBeTruthy()
-
-    //   // make it false
-    //   flag = false
-    //   mutation = `
-    //   mutation  {
-    //     changeDownloadable(id: "${createdLessonId}", flag: ${flag}) {
-    //       downloadable
-    //     }
-    //   }`
-    //   result = await graphql(schema, mutation, null, { user: { _id: userID } })
-    //   expect(result).not.toHaveProperty('errors')
-    //   expect(result.data.changeDownloadable.downloadable).toBeFalsy()
-    // })
-
     it('Change downloadable status via update function', async () => {
       const mongoId = '000000000000000000000000'
       const userID = mongoose.Types.ObjectId(mongoId)
@@ -1588,6 +1544,27 @@ describe('GraphQL API tests', () => {
       expect(result.data).toHaveProperty('addLesson')
       expect(result.data.addLesson).toBeTruthy()
     })
+
+    it('fetching all lessons of a course', async () => {
+      const userId = mongoose.Types.ObjectId('000000000000000000000000')
+      const query = `
+      query {
+        course: getCourse(id: "${createdCourseId}") {
+          id,
+          lessons {
+            id
+          }
+        }
+      }
+      `
+
+      const result = await graphql(schema, query, null, { user: { _id: userId } })
+      expect(result).toHaveProperty('data')
+      expect(result.data).toHaveProperty('course')
+      expect(result.data.course.id).toBe(createdCourseId)
+      expect(result.data.course).toHaveProperty('lessons')
+      expect(result.data.course.lessons.length).toBeGreaterThan(0)
+    })
   })
 
   /**
@@ -1640,6 +1617,22 @@ describe('GraphQL API tests', () => {
       expect(result).not.toHaveProperty('errors')
       expect(result.data).toHaveProperty('siteInfo')
       expect(result.data.siteInfo.title).toBe(newTitle)
+    })
+
+    it('Pass unrecognised currency code', async () => {
+      const mongoId = '000000000000000000000000'
+      const userID = mongoose.Types.ObjectId(mongoId)
+      const mutation = `
+      mutation {
+        siteInfo: updateSiteInfo(siteData: {currencyISOCode: "usdy"}) {
+          currencyISOCode
+        }
+      }
+      `
+
+      const result = await graphql(schema, mutation, null, { user: { _id: userID, isAdmin: true } })
+      expect(result).toHaveProperty('errors')
+      expect(result.errors[0].message).toBe(responses.unrecognised_currency_code)
     })
   })
 

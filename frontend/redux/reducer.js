@@ -6,7 +6,9 @@ import {
   PROFILE_AVAILABLE,
   PROFILE_CLEAR,
   SITEINFO_AVAILABLE,
-  AUTH_CHECKED
+  AUTH_CHECKED,
+  SET_ERROR,
+  CLEAR_ERROR
 } from './actionTypes.js'
 import {
   GENERIC_TITLE,
@@ -39,6 +41,11 @@ const initialState = {
     id: null,
     fetched: false,
     isAdmin: false
+  },
+  error: {
+    open: false,
+    message: '',
+    action: null
   }
 }
 
@@ -64,6 +71,7 @@ function siteinfoReducer (state = initialState.siteinfo, action) {
           subtitle: action.siteinfo.subtitle,
           logopath: action.siteinfo.logopath,
           currencyUnit: action.siteinfo.currencyUnit,
+          currencyISOCode: action.siteinfo.currencyISOCode,
           copyrightText: action.siteinfo.copyrightText,
           about: action.siteinfo.about
         }
@@ -101,9 +109,25 @@ function profileReducer (state = initialState.profile, action) {
   }
 }
 
+function appErrorReducer (state = initialState.error, action) {
+  switch (action.type) {
+    case SET_ERROR:
+      return {
+        message: action.error.message,
+        action: action.error.action,
+        open: true
+      }
+    case CLEAR_ERROR:
+      return initialState.error
+    default:
+      return state
+  }
+}
+
 export default combineReducers({
   auth: authReducer,
   siteinfo: siteinfoReducer,
   networkAction: networkActionReducer,
-  profile: profileReducer
+  profile: profileReducer,
+  error: appErrorReducer
 })

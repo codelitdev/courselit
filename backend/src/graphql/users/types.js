@@ -1,18 +1,32 @@
 const graphql = require('graphql')
+const {
+  paypal,
+  stripe,
+  unpaid,
+  paytm,
+  other
+} = require('../../config/constants.js')
+
+const paymentMethodType = new graphql.GraphQLEnumType({
+  name: 'PaymentMethodType',
+  values: {
+    PAYPAL: { value: paypal },
+    STRIPE: { value: stripe },
+    PAYTM: { value: paytm },
+    OTHER: { value: other },
+    UNPAID: { value: unpaid }
+  }
+})
 
 const userType = new graphql.GraphQLObjectType({
   name: 'User',
   fields: {
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     email: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-    verified: { type: graphql.GraphQLBoolean },
     name: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-    purchases: {
-      type: new graphql.GraphQLList(
-        new graphql.GraphQLNonNull(graphql.GraphQLID)
-      )
-    },
+    purchases: { type: new graphql.GraphQLList(graphql.GraphQLID) },
     active: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
+    verified: { type: graphql.GraphQLBoolean },
     isCreator: { type: graphql.GraphQLBoolean },
     isAdmin: { type: graphql.GraphQLBoolean },
     avatar: { type: graphql.GraphQLString }
@@ -50,9 +64,23 @@ const usersSummaryType = new graphql.GraphQLObjectType({
   }
 })
 
+const userPurchaseInput = new graphql.GraphQLObjectType({
+  name: 'UserPurchaseInput',
+  fields: {
+    courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+    purchasedOn: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+    purchasedBy: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+    paymentMethod: { type: new graphql.GraphQLNonNull(paymentMethodType) },
+    paymentId: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+    amount: { type: new graphql.GraphQLNonNull(graphql.GraphQLFloat) },
+    discount: { type: graphql.GraphQLFloat }
+  }
+})
+
 module.exports = {
   userType,
   userUpdateInput,
   userSearchInput,
-  usersSummaryType
+  usersSummaryType,
+  userPurchaseInput
 }

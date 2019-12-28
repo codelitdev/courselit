@@ -31,12 +31,16 @@ exports.validateOffset = (offset) => {
 }
 
 exports.extractPlainTextFromDraftJS = (encodedEditorStateString, characters) => {
-  const editorState = EditorState.createWithContent(
-    convertFromRaw(JSON.parse(decode(encodedEditorStateString)))
-  )
-  const descriptInPlainText = editorState.getCurrentContent().getPlainText()
-  return descriptInPlainText.length > characters
-    ? descriptInPlainText.substring(0, characters) + '...' : descriptInPlainText
+  try {
+    const editorState = EditorState.createWithContent(
+      convertFromRaw(JSON.parse(decode(encodedEditorStateString)))
+    )
+    const descriptInPlainText = editorState.getCurrentContent().getPlainText()
+    return descriptInPlainText.length > characters
+      ? descriptInPlainText.substring(0, characters) + '...' : descriptInPlainText
+  } catch (err) {
+    return ''
+  }
 }
 
 exports.checkAdminOrSelf = (userID, GraphQLContext) => {

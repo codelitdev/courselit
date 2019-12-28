@@ -70,3 +70,12 @@ export const featuredCourse = PropTypes.shape({
   cost: PropTypes.number.isRequired,
   featuredImage: PropTypes.string
 })
+
+export const appError = PropTypes.shape({
+  open: PropTypes.bool.isRequired,
+  message: PropTypes.string.isRequired,
+  action: PropTypes.shape({
+    text: PropTypes.string.isRequired,
+    cb: PropTypes.func.isRequired
+  })
+})

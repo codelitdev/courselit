@@ -1,16 +1,13 @@
 import { connect } from 'react-redux'
 import MasterLayout from '../../../components/Masterlayout.js'
 import { BACKEND, FRONTEND, MEDIA_BACKEND } from '../../../config/constants.js'
-import TextEditor from '../../../components/TextEditor'
 import {
   queryGraphQL,
-  formattedLocaleDate,
   formulateMediaUrl,
   formulateCourseUrl,
   getPostDescriptionSnippet
 } from '../../../lib/utils.js'
-import Link from 'next/link'
-import { Grid, Typography, makeStyles } from '@material-ui/core'
+import { makeStyles } from '@material-ui/core'
 import Head from 'next/head'
 import ContainedBodyLayout from '../../../components/ContainedBodyLayout.js'
 import Article from '../../../components/Article.js'

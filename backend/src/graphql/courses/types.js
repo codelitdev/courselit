@@ -5,8 +5,9 @@ const {
   closed
 } = require('../../config/constants.js')
 const {
-  lessonType
+  lessonMetaType
 } = require('../lessons/types.js')
+const lessonLogic = require('../lessons/logic.js')
 
 const courseStatusType = new graphql.GraphQLEnumType({
   name: 'CoursePrivacyType',
@@ -29,7 +30,11 @@ const courseType = new graphql.GraphQLObjectType({
     isFeatured: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
     creatorId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     creatorName: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-    lessons: { type: new graphql.GraphQLList(lessonType) },
+    lessons: {
+      type: new graphql.GraphQLList(lessonMetaType),
+      resolve: (course, args, context, info) =>
+        lessonLogic.getAllLessonsOfACourse(course, context)
+    },
     updated: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     slug: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     description: { type: graphql.GraphQLString },

@@ -10,6 +10,7 @@ const SiteInfoSchema = new mongoose.Schema({
   subtitle: { type: String },
   logopath: { type: String },
   currencyUnit: { type: String },
+  currencyISOCode: { type: String, maxlength: 3, minlength: 3 },
   copyrightText: { type: String },
   about: { type: String }
 })

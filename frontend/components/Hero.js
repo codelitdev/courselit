@@ -17,7 +17,7 @@ import { MEDIA_BACKEND, URL_EXTENTION_COURSES } from '../config/constants'
 import { FREE_COST } from '../config/strings.js'
 import Link from 'next/link'
 
-const useStyles = (backgroundImageUrl) => makeStyles(theme => ({
+const getUseStyles = (backgroundImageUrl) => makeStyles(theme => ({
   container: {
     background: `url('${formulateMediaUrl(MEDIA_BACKEND, backgroundImageUrl, false)}') no-repeat center center`,
     backgroundSize: 'cover'
@@ -42,9 +42,9 @@ const Hero = (props) => {
   if (!item) return <></>
 
   console.log(featuredCourses, item)
-  
-  const classes = useStyles(item.featuredImage)()
-  const cost = item.cost > 0 ? `${props.siteInfo.currencyUnit}${item.cost}` : FREE_COST
+
+  const classes = getUseStyles(item.featuredImage)()
+  const cost = item.cost > 0 ? `${props.siteInfo.currencyUnit || ''}${item.cost}` : FREE_COST
 
   const showNextItem = () => setOffset(offset + 1 === featuredCourses.length ? offset : offset + 1)
   const showPreviousItem = () => setOffset(offset - 1 < 0 ? 0 : offset - 1)
