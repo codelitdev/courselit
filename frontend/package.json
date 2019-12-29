@@ -21,6 +21,9 @@
     "redux": "^4.0.5",
     "redux-thunk": "^2.3.0"
   },
+  "resolutions": {
+    "jss": "10.0.0"
+  },
   "scripts": {
     "dev:now": "now dev",
     "build": "next build",

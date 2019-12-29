@@ -11,6 +11,8 @@ const {
 } = require('../../lib/graphql.js')
 const constants = require('../../config/constants.js')
 const Purchase = require('../../models/Purchase.js')
+const Course = require('../../models/Course.js')
+const SiteInfo = require('../../models/SiteInfo.js')
 
 const removeAdminFieldsFromUserObject = ({ id, email, name }) => ({ id, email, name })
 
@@ -97,6 +99,27 @@ exports.getUsersSummary = async (ctx) => {
     admins: await User.countDocuments({ isAdmin: true }),
     creators: await User.countDocuments({ isCreator: true })
   }
+}
+
+exports.initiatePurchase = async (purchaseData = {}, ctx) => {
+  checkIfAuthenticated(ctx)
+  const someOneElse = purchaseData.purchasingFor
+  const myself = ctx.user.id
+
+  if (someOneElse && !ctx.user.isAdmin) {
+    throw new Error(strings.responses.only_admins_can_purchase)
+  }
+
+  const purchasingFor = someOneElse || myself
+  const buyer = await checkIfItemExists(User, purchasingFor)
+  const course = await checkIfItemExists(Course, purchaseData.courseId)
+
+  if (buyer.purchases.includes(course.id)) {
+    throw new Error(strings.responses.course_already_purchased)
+  }
+
+  const siteinfo = (await SiteInfo.find())[0]
+  console.log(siteinfo)
 }
 
 exports.purchaseMade = async (purchaseData = {}, ctx) => {

@@ -10,6 +10,7 @@ module.exports = {
         type: new graphql.GraphQLNonNull(types.siteUpdateType)
       }
     },
-    resolve: async (root, { siteData }, context) => logic.updateSiteInfo(siteData, context)
+    resolve: async (root, { siteData }, context) =>
+      logic.updateSiteInfo(siteData, context)
   }
 }

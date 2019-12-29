@@ -46,7 +46,6 @@ const Courses = (props) => {
   // }
 
   useEffect(() => {
-    console.log(coursesPaginationOffset)
     loadCreatorCourses()
   }, [props.profile.id])
 
@@ -62,10 +61,8 @@ const Courses = (props) => {
     try {
       const response = await executeGQLCall(query)
       if (response.courses && response.courses.length > 0) {
-        console.log(response.courses)
         setCreatorCourses([...creatorCourses, ...response.courses])
         setCoursesPaginationOffset(coursesPaginationOffset + 1)
-        // creatorCoursesPaginationOffset += 1
       }
     } catch (err) {
       console.log(err)

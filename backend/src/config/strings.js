@@ -34,7 +34,10 @@ exports.responses = {
   action_not_allowed: 'You do not have rights to perform this action',
   invalid_input: 'Invalid input',
   stripe_invalid_settings: 'Required Stripe keys not found',
-  unrecognised_currency_code: 'Unrecognised currency code'
+  unrecognised_currency_code: 'Unrecognised currency code',
+  only_admins_can_purchase: 'Only admins can purchase courses on behalf of others',
+  course_already_purchased: 'You have already purchased this item',
+  payment_settings_invalid_suffix: 'settings are invalid'
 }
 
 exports.internal = {
