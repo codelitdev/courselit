@@ -15,6 +15,7 @@ const User = require('../../src/models/User.js')
 const Lesson = require('../../src/models/Lesson.js')
 const Course = require('../../src/models/Course.js')
 const SiteInfo = require('../../src/models/SiteInfo.js')
+const Settings = require('../../src/models/Settings.js')
 
 const responses = require('../../src/config/strings.js').responses
 const constants = require('../../src/config/constants.js')
@@ -52,6 +53,7 @@ describe.only('GraphQL API tests', () => {
       { email: user4, password: 'lol', name: 'Tester #4', verified: false }
     ])
       .then(() => SiteInfo.deleteMany({}))
+      .then(() => Settings.deleteMany({}))
       .then(() => done())
   })
 
@@ -1720,6 +1722,90 @@ describe.only('GraphQL API tests', () => {
       expect(result).toHaveProperty('data')
       expect(result.data).toHaveProperty('getCreatorMedia')
       expect(result.data.getCreatorMedia.length).toBe(0)
+    })
+  })
+
+  /**
+   * Test suite for adming 'Settings' related functions.
+   */
+  describe('settings', () => {
+    it('Update settings but not authenticated', async () => {
+      const mutation = `
+      mutation {
+        updateSettings(settingsData: {paymentMethod: PAYTM}) {
+          paymentMethod
+        }
+      }
+      `
+
+      const result = await graphql(schema, mutation, null, {})
+      expect(result).toHaveProperty('errors')
+      expect(result.errors[0].message).toBe(responses.request_not_authenticated)
+    })
+
+    it('Update settings but the user is not admin', async () => {
+      const mongoId = '000000000000000000000000'
+      const userID = mongoose.Types.ObjectId(mongoId)
+      const mutation = `
+      mutation {
+        updateSettings(settingsData: {paymentMethod: PAYTM}) {
+          paymentMethod
+        }
+      }
+      `
+
+      const result = await graphql(schema, mutation, null, { user: { _id: userID, isAdmin: false } })
+      expect(result).toHaveProperty('errors')
+      expect(result.errors[0].message).toBe(responses.is_not_admin)
+    })
+
+    it('Update settings but invalid payment method is passed', async () => {
+      const mongoId = '000000000000000000000000'
+      const userID = mongoose.Types.ObjectId(mongoId)
+      const mutation = `
+      mutation {
+        updateSettings(settingsData: {paymentMethod: OTHER}) {
+          paymentMethod
+        }
+      }
+      `
+
+      const result = await graphql(schema, mutation, null, { user: { _id: userID, isAdmin: true } })
+      expect(result).toHaveProperty('errors')
+    })
+
+    it('Update settings', async () => {
+      const mongoId = '000000000000000000000000'
+      const userID = mongoose.Types.ObjectId(mongoId)
+      const stripeKey = 'abc'
+      const mutation = `
+      mutation {
+        settings: updateSettings(settingsData: {stripeSecret: "${stripeKey}"}) {
+          stripeSecret
+        }
+      }
+      `
+
+      const result = await graphql(schema, mutation, null, { user: { _id: userID, isAdmin: true } })
+      expect(result).not.toHaveProperty('errors')
+      expect(result.data).toHaveProperty('settings')
+      expect(result.data.settings.stripeSecret).toBe(stripeKey)
+    })
+
+    it('Getting settings but the user is not admin', async () => {
+      const mongoId = '000000000000000000000000'
+      const userID = mongoose.Types.ObjectId(mongoId)
+      const query = `
+      query {
+        getSettings {
+          paymentMethod
+        }
+      }
+      `
+
+      const result = await graphql(schema, query, null, { user: { _id: userID, isAdmin: false } })
+      expect(result).toHaveProperty('errors')
+      expect(result.errors[0].message).toBe(responses.is_not_admin)
     })
   })
 

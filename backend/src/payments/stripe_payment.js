@@ -21,6 +21,8 @@ class StripePayment extends Payment {
       amount,
       currency
     })
+
+    return paymentIntent
   }
 
   verify () {

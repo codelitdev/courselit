@@ -9,7 +9,7 @@ module.exports = {
     `mongodb://localhost/${process.env.NODE_ENV === 'test' ? 'test' : 'app2'}`,
   saltRounds: 10, // for bcrypting the plain text passwords
   jwtSecret: process.env.JWT_SECRET || 'ultrasecurekey',
-  jwtExpire: process.env.JWT_EXPIRES_IN || 60 * 60 * 24 * 10,
+  jwtExpire: process.env.JWT_EXPIRES_IN || '1d',
 
   // Media uploads config
   uploadFolder: path.join(process.env.MEDIA_FOLDER || homedir, 'uploads'),
@@ -65,5 +65,10 @@ module.exports = {
     'che', 'chw', 'syp', 'twd', 'tjs', 'tzs', 'thb', 'top', 'ttd', 'tnd', 'try', 'tmt', 'ugx',
     'uah', 'aed', 'usn', 'uyu', 'uyi', 'uyw', 'uzs', 'vuv', 'ves', 'vnd', 'yer', 'zmw', 'zwl',
     'xba', 'xbb', 'xbc', 'xbd', 'xts', 'xxx', 'xau', 'xpd', 'xpt', 'xag'
-  ]
+  ],
+
+  // transaction statuses
+  transactionInitiated: 'initiated',
+  transactionSuccess: 'success',
+  transactionFailed: 'failed'
 }

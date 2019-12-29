@@ -9,7 +9,6 @@ import { Close } from '@material-ui/icons'
 const AppError = (props) => {
   const { error } = props
   const action = error && error.action
-  console.log(error)
 
   const handleClose = (event, reason) => {
     if (reason === 'clickaway') {

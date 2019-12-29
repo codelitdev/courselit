@@ -1,22 +1,4 @@
 const graphql = require('graphql')
-const {
-  paypal,
-  stripe,
-  unpaid,
-  paytm,
-  other
-} = require('../../config/constants.js')
-
-const paymentMethodType = new graphql.GraphQLEnumType({
-  name: 'PaymentMethodType',
-  values: {
-    PAYPAL: { value: paypal },
-    STRIPE: { value: stripe },
-    PAYTM: { value: paytm },
-    OTHER: { value: other },
-    UNPAID: { value: unpaid }
-  }
-})
 
 const userType = new graphql.GraphQLObjectType({
   name: 'User',
@@ -68,12 +50,8 @@ const userPurchaseInput = new graphql.GraphQLObjectType({
   name: 'UserPurchaseInput',
   fields: {
     courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
-    purchasedOn: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-    purchasedBy: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
-    paymentMethod: { type: new graphql.GraphQLNonNull(paymentMethodType) },
-    paymentId: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-    amount: { type: new graphql.GraphQLNonNull(graphql.GraphQLFloat) },
-    discount: { type: graphql.GraphQLFloat }
+    discountCode: { type: graphql.GraphQLString },
+    purchasingFor: { type: graphql.GraphQLID }
   }
 })
 
