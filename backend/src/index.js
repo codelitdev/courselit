@@ -36,5 +36,6 @@ app.use(`${routePrefix}/media`,
   // passport.authenticate('jwt', { session: false }),
   require('./routes/media.js')(passport)
 )
+app.use(`${routePrefix}/payment`, require('./routes/payment.js')(passport))
 
 app.listen(process.env.PORT || 80)

@@ -1,18 +1,13 @@
 const Settings = require('../../models/Settings.js')
-const {
-  checkIfAuthenticated
-} = require('../../lib/graphql.js')
-const {
-  responses
-} = require('../../config/strings.js')
+const SiteInfo = require('../../models/SiteInfo.js')
+const { checkIfAuthenticated } = require('../../lib/graphql.js')
+const { responses } = require('../../config/strings.js')
+const { capitalize } = require('../../lib/utils.js')
 const {
   paypal,
   stripe,
   paytm
 } = require('../../config/constants.js')
-const {
-  capitalize
-} = require('../../lib/utils.js')
 
 exports.getSettings = async (ctx) => {
   checkIfAuthenticated(ctx)
@@ -59,18 +54,20 @@ exports.updateSettings = async (settingsData, ctx) => {
   return settings
 }
 
-const validatePaymentMethodOrThrow = (settings) => {
+const validatePaymentMethodOrThrow = async (settings) => {
+  const siteInfo = (await SiteInfo.find())[0]
+
   let failedPaymentMethod = null
 
-  if (settings.paymentMethod === paytm && !settings.paytmSecret) {
+  if (siteInfo.paymentMethod === paytm && !settings.paytmSecret) {
     failedPaymentMethod = paytm
   }
 
-  if (settings.paymentMethod === paypal && !settings.paypalSecret) {
+  if (siteInfo.paymentMethod === paypal && !settings.paypalSecret) {
     failedPaymentMethod = paypal
   }
 
-  if (settings.paymentMethod === stripe && !settings.stripeSecret) {
+  if (siteInfo.paymentMethod === stripe && !settings.stripeSecret) {
     failedPaymentMethod = stripe
   }
 

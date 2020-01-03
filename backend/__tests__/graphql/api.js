@@ -21,7 +21,7 @@ const responses = require('../../src/config/strings.js').responses
 const constants = require('../../src/config/constants.js')
 require('../../src/config/db.js')
 
-describe.only('GraphQL API tests', () => {
+describe.skip('GraphQL API tests', () => {
   const user = 'graphuser@test.com'
   const user2 = 'graphuser2@test.com'
   const user3 = 'graphuser3@test.com'
