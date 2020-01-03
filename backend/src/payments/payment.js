@@ -1,4 +1,6 @@
-export default class Payment {
+class Payment {
   initiate () {}
   verify () {}
 }
+
+module.exports = Payment

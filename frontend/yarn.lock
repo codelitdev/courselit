@@ -7826,6 +7826,13 @@ react-redux@^7.1.3:
     prop-types "^15.7.2"
     react-is "^16.9.0"
 
+react-stripe-elements@^6.0.1:
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/react-stripe-elements/-/react-stripe-elements-6.0.1.tgz#f2b1e4c132cb18f140668556a5218e3b8e082794"
+  integrity sha512-WVKTunSgsrkm8Tv1+BEehfYrA2CHdlk01ocmbcECliPb1EDybaoUCx2MR212ptRHyitMrHF+ahUTewjaX98kcQ==
+  dependencies:
+    prop-types "15.7.2"
+
 react-test-renderer@^16.12.0:
   version "16.12.0"
   resolved "https://registry.yarnpkg.com/react-test-renderer/-/react-test-renderer-16.12.0.tgz#11417ffda579306d4e841a794d32140f3da1b43f"

@@ -102,6 +102,10 @@ exports.getUsersSummary = async (ctx) => {
 }
 
 exports.initiatePurchase = async (purchaseData = {}, ctx) => {
+  const response = {
+    status: constants.transactionInitiated
+  }
+
   checkIfAuthenticated(ctx)
   const someOneElse = purchaseData.purchasingFor
   const myself = ctx.user.id
@@ -118,8 +122,19 @@ exports.initiatePurchase = async (purchaseData = {}, ctx) => {
     throw new Error(strings.responses.course_already_purchased)
   }
 
+  if (course.cost === 0) {
+    await finalizePurchase(course, user)
+    return response
+  }
+
   const siteinfo = (await SiteInfo.find())[0]
   console.log(siteinfo)
+}
+
+const finalizePurchase = async (course, user) => {
+  user.purchases.push(course.id)
+  await user.save()
+  return user
 }
 
 exports.purchaseMade = async (purchaseData = {}, ctx) => {

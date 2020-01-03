@@ -1,7 +1,7 @@
 {
   "scripts": {
     "lint": "eslint src __tests__ --fix",
-    "dev": "PORT=8000 nodemon -r dotenv/config src dotenv_config_path=../.env",
+    "dev": "PORT=8000 nodemon --inspect -r dotenv/config src dotenv_config_path=../.env",
     "test:server": "NODE_ENV=test PORT=8000 nodemon src",
     "test:inte": "NODE_ENV=test jest",
     "start": "PORT=8000 NODE_ENV=production node src"

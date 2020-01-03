@@ -6,7 +6,6 @@
 const mongoose = require('mongoose')
 
 const SettingsSchema = new mongoose.Schema({
-  paymentMethod: { type: String },
   stripeSecret: { type: String },
   paytmSecret: { type: String },
   paypalSecret: { type: String }

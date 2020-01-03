@@ -22,12 +22,10 @@ class StripePayment extends Payment {
       currency
     })
 
-    return paymentIntent
+    return paymentIntent.client_secret
   }
 
-  verify () {
-
-  }
+  verify () {}
 }
 
 module.exports = StripePayment

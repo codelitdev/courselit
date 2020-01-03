@@ -37,7 +37,8 @@ exports.responses = {
   unrecognised_currency_code: 'Unrecognised currency code',
   only_admins_can_purchase: 'Only admins can purchase courses on behalf of others',
   course_already_purchased: 'You have already purchased this item',
-  payment_settings_invalid_suffix: 'settings are invalid'
+  payment_settings_invalid_suffix: 'settings are invalid',
+  invalid_course_id: 'Invalid course ID'
 }
 
 exports.internal = {
