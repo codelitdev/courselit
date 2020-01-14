@@ -21,7 +21,7 @@ const responses = require('../../src/config/strings.js').responses
 const constants = require('../../src/config/constants.js')
 require('../../src/config/db.js')
 
-describe.skip('GraphQL API tests', () => {
+describe('GraphQL API tests', () => {
   const user = 'graphuser@test.com'
   const user2 = 'graphuser2@test.com'
   const user3 = 'graphuser3@test.com'
@@ -1636,6 +1636,51 @@ describe.skip('GraphQL API tests', () => {
       expect(result).toHaveProperty('errors')
       expect(result.errors[0].message).toBe(responses.unrecognised_currency_code)
     })
+
+    it('Update settings but not authenticated', async () => {
+      const mutation = `
+      mutation {
+        updateSiteInfo(siteData: {paymentMethod: PAYTM}) {
+          paymentMethod
+        }
+      }
+      `
+
+      const result = await graphql(schema, mutation, null, {})
+      expect(result).toHaveProperty('errors')
+      expect(result.errors[0].message).toBe(responses.request_not_authenticated)
+    })
+
+    it('Update settings but the user is not admin', async () => {
+      const mongoId = '000000000000000000000000'
+      const userID = mongoose.Types.ObjectId(mongoId)
+      const mutation = `
+      mutation {
+        updateSiteInfo(siteData: {paymentMethod: PAYTM}) {
+          paymentMethod
+        }
+      }
+      `
+
+      const result = await graphql(schema, mutation, null, { user: { _id: userID, isAdmin: false } })
+      expect(result).toHaveProperty('errors')
+      expect(result.errors[0].message).toBe(responses.is_not_admin)
+    })
+
+    it('Update settings but invalid payment method is passed', async () => {
+      const mongoId = '000000000000000000000000'
+      const userID = mongoose.Types.ObjectId(mongoId)
+      const mutation = `
+      mutation {
+        updateSiteInfo(siteData: {paymentMethod: OTHER}) {
+          paymentMethod
+        }
+      }
+      `
+
+      const result = await graphql(schema, mutation, null, { user: { _id: userID, isAdmin: true } })
+      expect(result).toHaveProperty('errors')
+    })
   })
 
   /**
@@ -1729,51 +1774,6 @@ describe.skip('GraphQL API tests', () => {
    * Test suite for adming 'Settings' related functions.
    */
   describe('settings', () => {
-    it('Update settings but not authenticated', async () => {
-      const mutation = `
-      mutation {
-        updateSettings(settingsData: {paymentMethod: PAYTM}) {
-          paymentMethod
-        }
-      }
-      `
-
-      const result = await graphql(schema, mutation, null, {})
-      expect(result).toHaveProperty('errors')
-      expect(result.errors[0].message).toBe(responses.request_not_authenticated)
-    })
-
-    it('Update settings but the user is not admin', async () => {
-      const mongoId = '000000000000000000000000'
-      const userID = mongoose.Types.ObjectId(mongoId)
-      const mutation = `
-      mutation {
-        updateSettings(settingsData: {paymentMethod: PAYTM}) {
-          paymentMethod
-        }
-      }
-      `
-
-      const result = await graphql(schema, mutation, null, { user: { _id: userID, isAdmin: false } })
-      expect(result).toHaveProperty('errors')
-      expect(result.errors[0].message).toBe(responses.is_not_admin)
-    })
-
-    it('Update settings but invalid payment method is passed', async () => {
-      const mongoId = '000000000000000000000000'
-      const userID = mongoose.Types.ObjectId(mongoId)
-      const mutation = `
-      mutation {
-        updateSettings(settingsData: {paymentMethod: OTHER}) {
-          paymentMethod
-        }
-      }
-      `
-
-      const result = await graphql(schema, mutation, null, { user: { _id: userID, isAdmin: true } })
-      expect(result).toHaveProperty('errors')
-    })
-
     it('Update settings', async () => {
       const mongoId = '000000000000000000000000'
       const userID = mongoose.Types.ObjectId(mongoId)
@@ -1798,7 +1798,7 @@ describe.skip('GraphQL API tests', () => {
       const query = `
       query {
         getSettings {
-          paymentMethod
+          stripeSecret
         }
       }
       `

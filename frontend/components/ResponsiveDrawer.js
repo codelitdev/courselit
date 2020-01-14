@@ -10,9 +10,7 @@ import List from '@material-ui/core/List'
 import ListItem from '@material-ui/core/ListItem'
 import ListItemIcon from '@material-ui/core/ListItemIcon'
 import ListItemText from '@material-ui/core/ListItemText'
-import {
-  Menu
-} from '@material-ui/icons'
+import { Menu } from '@material-ui/icons'
 // import MailIcon from '@material-ui/icons/Mail'
 // import MenuIcon from '@material-ui/icons/Menu'
 import { Toolbar, Typography, Grid } from '@material-ui/core'

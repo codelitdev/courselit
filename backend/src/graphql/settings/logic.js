@@ -43,7 +43,10 @@ exports.updateSettings = async (settingsData, ctx) => {
   }
 
   // validate payment combinations
-  validatePaymentMethodOrThrow(settings)
+  const failedPaymentMethod = await checkForInvalidPaymentSettings(settings)
+  if (failedPaymentMethod) {
+    throw getPaymentInvalidException(failedPaymentMethod)
+  }
 
   if (shouldCreate) {
     settings = await Settings.create(settings)
@@ -54,9 +57,8 @@ exports.updateSettings = async (settingsData, ctx) => {
   return settings
 }
 
-const validatePaymentMethodOrThrow = async (settings) => {
+const checkForInvalidPaymentSettings = async (settings) => {
   const siteInfo = (await SiteInfo.find())[0]
-
   let failedPaymentMethod = null
 
   if (siteInfo.paymentMethod === paytm && !settings.paytmSecret) {
@@ -71,9 +73,7 @@ const validatePaymentMethodOrThrow = async (settings) => {
     failedPaymentMethod = stripe
   }
 
-  if (failedPaymentMethod) {
-    throw getPaymentInvalidException(failedPaymentMethod)
-  }
+  return failedPaymentMethod
 }
 
 const getPaymentInvalidException = (paymentMethod) =>

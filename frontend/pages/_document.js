@@ -19,6 +19,7 @@ class MyDocument extends Document {
           <link
             rel="stylesheet"
             href="https://fonts.googleapis.com/css?family=Fira+Code&display=swap" />
+          <script id="stripe-js" src="https://js.stripe.com/v3/" async></script>
         </Head>
         <body>
           <Main />

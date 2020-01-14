@@ -10,9 +10,6 @@ const {
   makeModelTextSearchable
 } = require('../../lib/graphql.js')
 const constants = require('../../config/constants.js')
-const Purchase = require('../../models/Purchase.js')
-const Course = require('../../models/Course.js')
-const SiteInfo = require('../../models/SiteInfo.js')
 
 const removeAdminFieldsFromUserObject = ({ id, email, name }) => ({ id, email, name })
 
@@ -101,59 +98,59 @@ exports.getUsersSummary = async (ctx) => {
   }
 }
 
-exports.initiatePurchase = async (purchaseData = {}, ctx) => {
-  const response = {
-    status: constants.transactionInitiated
-  }
+// exports.initiatePurchase = async (purchaseData = {}, ctx) => {
+//   const response = {
+//     status: constants.transactionInitiated
+//   }
 
-  checkIfAuthenticated(ctx)
-  const someOneElse = purchaseData.purchasingFor
-  const myself = ctx.user.id
+//   checkIfAuthenticated(ctx)
+//   const someOneElse = purchaseData.purchasingFor
+//   const myself = ctx.user.id
 
-  if (someOneElse && !ctx.user.isAdmin) {
-    throw new Error(strings.responses.only_admins_can_purchase)
-  }
+//   if (someOneElse && !ctx.user.isAdmin) {
+//     throw new Error(strings.responses.only_admins_can_purchase)
+//   }
 
-  const purchasingFor = someOneElse || myself
-  const buyer = await checkIfItemExists(User, purchasingFor)
-  const course = await checkIfItemExists(Course, purchaseData.courseId)
+//   const purchasingFor = someOneElse || myself
+//   const buyer = await checkIfItemExists(User, purchasingFor)
+//   const course = await checkIfItemExists(Course, purchaseData.courseId)
 
-  if (buyer.purchases.includes(course.id)) {
-    throw new Error(strings.responses.course_already_purchased)
-  }
+//   if (buyer.purchases.includes(course.id)) {
+//     throw new Error(strings.responses.course_already_purchased)
+//   }
 
-  if (course.cost === 0) {
-    await finalizePurchase(course, user)
-    return response
-  }
+//   if (course.cost === 0) {
+//     await finalizePurchase(course, user)
+//     return response
+//   }
 
-  const siteinfo = (await SiteInfo.find())[0]
-  console.log(siteinfo)
-}
+//   const siteinfo = (await SiteInfo.find())[0]
+//   console.log(siteinfo)
+// }
 
-const finalizePurchase = async (course, user) => {
-  user.purchases.push(course.id)
-  await user.save()
-  return user
-}
+// const finalizePurchase = async (course, user) => {
+//   user.purchases.push(course.id)
+//   await user.save()
+//   return user
+// }
 
-exports.purchaseMade = async (purchaseData = {}, ctx) => {
-  checkIfAuthenticated(ctx)
-  const { purchasedBy } = purchaseData
-  let user = await checkIfItemExists(User, purchasedBy)
-  checkAdminOrSelf(purchasedBy, ctx)
+// exports.purchaseMade = async (purchaseData = {}, ctx) => {
+//   checkIfAuthenticated(ctx)
+//   const { purchasedBy } = purchaseData
+//   let user = await checkIfItemExists(User, purchasedBy)
+//   checkAdminOrSelf(purchasedBy, ctx)
 
-  await Purchase.create({
-    courseId: purchaseData.courseId,
-    purchasedOn: purchaseData.purchasedOn,
-    purchasedBy: purchaseData.purchasedBy,
-    paymentMethod: purchaseData.paymentMethod,
-    paymentId: purchaseData.paymentId,
-    amount: purchaseData.amount,
-    discount: purchaseData.discount
-  })
+//   await Purchase.create({
+//     courseId: purchaseData.courseId,
+//     purchasedOn: purchaseData.purchasedOn,
+//     purchasedBy: purchaseData.purchasedBy,
+//     paymentMethod: purchaseData.paymentMethod,
+//     paymentId: purchaseData.paymentId,
+//     amount: purchaseData.amount,
+//     discount: purchaseData.discount
+//   })
 
-  user.purchases.push(purchaseData.courseId)
-  user = await user.save()
-  return user
-}
+//   user.purchases.push(purchaseData.courseId)
+//   user = await user.save()
+//   return user
+// }

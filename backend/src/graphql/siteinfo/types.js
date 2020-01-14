@@ -26,6 +26,7 @@ const siteType = new graphql.GraphQLObjectType({
     copyrightText: { type: graphql.GraphQLString },
     about: { type: graphql.GraphQLString },
     paymentMethod: { type: paymentMethodType },
+    stripePublishableKey: { type: graphql.GraphQLString }
   }
 })
 
@@ -40,6 +41,7 @@ const siteUpdateType = new graphql.GraphQLInputObjectType({
     copyrightText: { type: graphql.GraphQLString },
     about: { type: graphql.GraphQLString },
     paymentMethod: { type: paymentMethodType },
+    stripePublishableKey: { type: graphql.GraphQLString }
   }
 })
 

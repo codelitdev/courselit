@@ -4,12 +4,17 @@ import { connect } from 'react-redux'
 import { siteInfoProps, authProps } from '../types'
 import MediaManager from './MediaManager'
 import {
-  removeEmptyProperties,
   makeGraphQLQueryStringFromJSObject,
   queryGraphQLWithUIEffects,
-  getGraphQLQueryFields
+  getGraphQLQueryFields,
+  getObjectContainingOnlyChangedFields
 } from '../lib/utils.js'
-import { BACKEND } from '../config/constants.js'
+import {
+  BACKEND,
+  PAYMENT_METHOD_PAYPAL,
+  PAYMENT_METHOD_PAYTM,
+  PAYMENT_METHOD_STRIPE
+} from '../config/constants.js'
 import { networkAction, newSiteInfoAvailable, setAppError } from '../redux/actions.js'
 import ImgSwitcher from './ImgSwitcher.js'
 import {
@@ -37,13 +42,15 @@ import {
   SITE_ADMIN_SETTINGS_PAYTM_SECRET,
   SITE_SETTINGS_SECTION_GENERAL,
   SITE_SETTINGS_SECTION_PAYMENT,
-  SITE_ADMIN_SETTINGS_PAYMENT_METHOD
+  SITE_ADMIN_SETTINGS_PAYMENT_METHOD,
+  SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT
 } from '../config/strings.js'
 import AppError from '../models/app-error.js'
 
 const useStyles = makeStyles(theme => ({
   formControl: {
-    minWidth: '100%'
+    minWidth: '100%',
+    marginBottom: '1.8em'
   }
 }))
 
@@ -56,10 +63,10 @@ const SiteSettings = props => {
     copyrightText: props.siteinfo.copyrightText,
     currencyISOCode: props.siteinfo.currencyISOCode,
     about: props.siteinfo.about,
-    err: ''
+    paymentMethod: props.siteinfo.paymentMethod,
+    stripePublishableKey: props.siteinfo.stripePublishableKey
   })
   const [adminSettings, setAdminSettings] = useState({
-    paymentMethod: '',
     stripeSecret: '',
     paypalSecret: '',
     paytmSecret: ''
@@ -81,7 +88,6 @@ const SiteSettings = props => {
     const query = `
     query {
       adminSettings: getSettings {
-        paymentMethod,
         stripeSecret,
         paypalSecret,
         paytmSecret
@@ -99,12 +105,21 @@ const SiteSettings = props => {
 
   const handleGeneralSettingsSubmit = async (event) => {
     event.preventDefault()
+    const onlyChangedSettings = getObjectContainingOnlyChangedFields(
+      props.siteinfo,
+      settings
+    )
+    console.log(props.siteinfo, settings, onlyChangedSettings)
+    const formattedQuery = getGraphQLQueryFields(
+      onlyChangedSettings, ['paymentMethod']
+    )
     const query = `
     mutation {
       site: updateSiteInfo(siteData: ${
-        makeGraphQLQueryStringFromJSObject(
-          removeEmptyProperties(settings, 'err')
-        )
+        // makeGraphQLQueryStringFromJSObject(
+        //   removeEmptyProperties(settings, 'err')
+        // )
+        formattedQuery
       }) {
         title,
         subtitle,
@@ -112,7 +127,9 @@ const SiteSettings = props => {
         currencyUnit,
         currencyISOCode,
         copyrightText,
-        about
+        about,
+        paymentMethod,
+        stripePublishableKey
       }
     }`
     try {
@@ -148,9 +165,11 @@ const SiteSettings = props => {
     const query = `
     mutation {
       adminSettings: updateSettings(settingsData: ${
-        getGraphQLQueryFields(removeEmptyProperties(adminSettings), ['paymentMethod'])
+        makeGraphQLQueryStringFromJSObject(
+          adminSettings
+        )
+        // getGraphQLQueryFields(removeEmptyProperties(adminSettings), ['paymentMethod'])
       }) {
-        paymentMethod,
         stripeSecret,
         paypalSecret,
         paytmSecret
@@ -240,6 +259,31 @@ const SiteSettings = props => {
               title={SITE_SETTINGS_LOGO}
               src={settings.logopath || props.siteinfo.logopath}
               onSelection={onChangeData}/>
+            <FormControl variant='outlined' className={classes.formControl}>
+              <InputLabel htmlFor='outlined-paymentmethod-simple'>
+                {SITE_ADMIN_SETTINGS_PAYMENT_METHOD}
+              </InputLabel>
+              <Select
+                autoWidth
+                value={settings.paymentMethod}
+                onChange={onChangeData}
+                inputProps={{
+                  name: 'paymentMethod',
+                  id: 'outlined-paymentmethod-simple'
+                }}>
+                <MenuItem value={PAYMENT_METHOD_STRIPE}>Stripe</MenuItem>
+                <MenuItem value={PAYMENT_METHOD_PAYPAL}>Paypal</MenuItem>
+                <MenuItem value={PAYMENT_METHOD_PAYTM}>Paytm</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              variant='outlined'
+              label={SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT}
+              fullWidth
+              margin="normal"
+              name='stripePublishableKey'
+              value={settings.stripePublishableKey || ''}
+              onChange={onChangeData}/>
             <Button
               variant='contained'
               color='default'
@@ -257,23 +301,6 @@ const SiteSettings = props => {
         </Grid>
         <Grid item>
           <form onSubmit={handleAdminSettingsSubmit}>
-            <FormControl variant='outlined' className={classes.formControl}>
-              <InputLabel htmlFor='outlined-paymentmethod-simple'>
-                {SITE_ADMIN_SETTINGS_PAYMENT_METHOD}
-              </InputLabel>
-              <Select
-                autoWidth
-                value={adminSettings.paymentMethod}
-                onChange={onAdminSettingsChanged}
-                inputProps={{
-                  name: 'paymentMethod',
-                  id: 'outlined-paymentmethod-simple'
-                }}>
-                <MenuItem value="STRIPE">Stripe</MenuItem>
-                <MenuItem value="PAYPAL">Paypal</MenuItem>
-                <MenuItem value="PAYTM">Paytm</MenuItem>
-              </Select>
-            </FormControl>
             <TextField
               variant='outlined'
               label={SITE_ADMIN_SETTINGS_STRIPE_SECRET}

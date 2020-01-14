@@ -36,3 +36,16 @@ export const FREE_COURSES_TEXT = 'FREE'
 export const DRAFTJS_ENTITY_TYPE_IMAGE = 'image'
 export const DRAFTJS_ENTITY_TYPE_VIDEO = 'video'
 export const DRAFTJS_ENTITY_TYPE_AUDIO = 'audio'
+
+// Payment methods
+export const PAYMENT_METHOD_STRIPE = 'STRIPE'
+export const PAYMENT_METHOD_PAYPAL = 'PAYPAL'
+export const PAYMENT_METHOD_PAYTM = 'PAYTM'
+
+// transaction statuses from backend
+export const TRANSACTION_INITIATED = 'initiated'
+export const TRANSACTION_SUCCESS = 'success'
+export const TRANSACTION_FAILED = 'failed'
+
+export const CONSECUTIVE_PAYMENT_VERIFICATION_REQUEST_GAP = 2000
+

@@ -12,7 +12,9 @@ export const profileProps = PropTypes.shape({
   isCreator: PropTypes.bool,
   name: PropTypes.string,
   id: PropTypes.string,
-  fetched: PropTypes.bool
+  fetched: PropTypes.bool,
+  email: PropTypes.string,
+  purchases: PropTypes.arrayOf(PropTypes.string)
 })
 
 export const latestPostsProps = PropTypes.shape({

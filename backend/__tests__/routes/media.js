@@ -11,7 +11,7 @@ const fs = require('fs')
 const path = require('path')
 const request = require('request')
 
-describe.skip('Media Test Suite', () => {
+describe('Media Test Suite', () => {
   const user = 'uploader@test.com'
   const pass = 'lol'
   let token = ''
