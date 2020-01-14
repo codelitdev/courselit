@@ -6,8 +6,7 @@ import PriceTag from './PriceTag'
 import { publicCourse } from '../types'
 
 const BuyButton = (props) => {
-  const [purchased, setPurchased] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [purchased] = useState(false)
   const { course } = props
 
   const startCourse = () => {}

@@ -1,13 +1,17 @@
 import React from 'react'
 import { connect } from 'react-redux'
 import PropTypes from 'prop-types'
-import { BUTTON_TEXT_BUY_NOW, BUTTON_START_NOW } from '../config/strings'
+import { FREE_COST } from '../config/strings'
 import { siteInfoProps } from '../types'
 
 const PriceTag = (props) => {
   const cost = props.cost || 0
-  const costText = cost > 0
-    ? `${BUTTON_TEXT_BUY_NOW} ${props.siteInfo.currencyUnit}${cost}` : BUTTON_START_NOW
+  const costText = cost <= 0
+    ? FREE_COST : (
+      props.siteInfo.currencyUnit
+        ? `${props.siteInfo.currencyUnit}${cost}`
+        : `${cost} ${props.siteInfo.currencyISOCode}`
+    )
 
   return <>{costText}</>
 }

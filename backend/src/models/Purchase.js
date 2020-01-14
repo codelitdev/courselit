@@ -8,8 +8,9 @@ const PurchaseSchema = new mongoose.Schema({
   purchasedOn: { type: Date, required: true, default: Date.now },
   purchasedBy: { type: mongoose.Schema.Types.ObjectId, required: true },
   paymentMethod: { type: String, required: true },
-  paymentId: { type: String },
+  paymentId: { type: String, required: true },
   amount: { type: Number, required: true },
+  currencyISOCode: { type: String, required: true },
   discount: { type: Number },
   status: { type: String, required: true, default: transactionInitiated },
   remark: { type: String }

@@ -16,7 +16,10 @@ import {
   GENERIC_LOGO_PATH,
   GENERIC_CURRENCY_UNIT,
   GENERIC_COPYRIGHT_TEXT,
-  GENERIC_ABOUT_TEXT
+  GENERIC_ABOUT_TEXT,
+  GENERIC_STRIPE_PUBLISHABLE_KEY_TEXT,
+  GENERIC_CURRENCY_ISO_CODE,
+  GENERIC_PAYMENT_METHOD
 } from '../config/strings.js'
 
 const initialState = {
@@ -29,10 +32,13 @@ const initialState = {
   siteinfo: {
     title: GENERIC_TITLE,
     subtitle: GENERIC_SUBTITLE,
-    logo: GENERIC_LOGO_PATH,
+    logopath: GENERIC_LOGO_PATH,
     currencyUnit: GENERIC_CURRENCY_UNIT,
+    currencyISOCode: GENERIC_CURRENCY_ISO_CODE,
     copyrightText: GENERIC_COPYRIGHT_TEXT,
-    about: GENERIC_ABOUT_TEXT
+    about: GENERIC_ABOUT_TEXT,
+    paymentMethod: GENERIC_PAYMENT_METHOD,
+    stripePublishableKey: GENERIC_STRIPE_PUBLISHABLE_KEY_TEXT
   },
   networkAction: false,
   profile: {
@@ -40,7 +46,9 @@ const initialState = {
     name: null,
     id: null,
     fetched: false,
-    isAdmin: false
+    isAdmin: false,
+    purchases: [],
+    email: null
   },
   error: {
     open: false,
@@ -67,13 +75,16 @@ function siteinfoReducer (state = initialState.siteinfo, action) {
     case SITEINFO_AVAILABLE:
       try {
         return {
-          title: action.siteinfo.title,
-          subtitle: action.siteinfo.subtitle,
-          logopath: action.siteinfo.logopath,
-          currencyUnit: action.siteinfo.currencyUnit,
-          currencyISOCode: action.siteinfo.currencyISOCode,
-          copyrightText: action.siteinfo.copyrightText,
-          about: action.siteinfo.about
+          title: action.siteinfo.title || initialState.siteinfo.title,
+          subtitle: action.siteinfo.subtitle || initialState.siteinfo.subtitle,
+          logopath: action.siteinfo.logopath || initialState.siteinfo.logopath,
+          currencyUnit: action.siteinfo.currencyUnit || initialState.siteinfo.currencyUnit,
+          currencyISOCode: action.siteinfo.currencyISOCode || initialState.siteinfo.currencyISOCode,
+          copyrightText: action.siteinfo.copyrightText || initialState.siteinfo.copyrightText,
+          about: action.siteinfo.about || initialState.siteinfo.about,
+          paymentMethod: action.siteinfo.paymentMethod || initialState.siteinfo.paymentMethod,
+          stripePublishableKey: action.siteinfo.stripePublishableKey ||
+                                initialState.siteinfo.stripePublishableKey
         }
       } catch (e) {
         return state
@@ -100,7 +111,9 @@ function profileReducer (state = initialState.profile, action) {
         name: action.profile.name,
         isCreator: action.profile.isCreator || false,
         fetched: true,
-        isAdmin: action.profile.isAdmin || false
+        isAdmin: action.profile.isAdmin || false,
+        purchases: action.profile.purchases || [],
+        email: action.profile.email
       }
     case PROFILE_CLEAR:
       return initialState.profile

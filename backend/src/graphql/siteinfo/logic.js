@@ -23,7 +23,7 @@ exports.updateSiteInfo = async (siteData, ctx) => {
   // check if the user is an admin
   if (!ctx.user.isAdmin) throw new Error(responses.is_not_admin)
 
-  if (siteData.currencyISOCode && !~currencyISOCodes.indexOf(siteData.currencyISOCode)) {
+  if (siteData.currencyISOCode && !currencyISOCodes.includes(siteData.currencyISOCode)) {
     throw new Error(responses.unrecognised_currency_code)
   }
 

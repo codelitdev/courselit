@@ -6,10 +6,10 @@ const User = require('../../src/models/User.js')
 const promisify = require('../util.js').promisify
 require('../../src/config/db.js')
 
-describe.only('Payment test suite', () => {
+describe('Payment test suite', () => {
   const user = 'uploader@test.com'
   const pass = 'lol'
-  let token = ''
+  // let token = ''
 
   beforeAll(async done => {
     User
@@ -22,7 +22,7 @@ describe.only('Payment test suite', () => {
         }
       }))
       .then((res) => {
-        token = res.token
+        // token = res.token
         done()
       })
   })
@@ -41,7 +41,7 @@ describe.only('Payment test suite', () => {
     return promisify({
       url: `http://${apiUrl}/payment/nonexisting`
     }, false)
-    .then(data => expect(data).toContain('Cannot POST /payment/nonexisting'))
+      .then(data => expect(data).toContain('Cannot POST /payment/nonexisting'))
   })
 
   it('Unauthenticated payment initiation request', () => {
@@ -49,14 +49,14 @@ describe.only('Payment test suite', () => {
     return promisify({
       url: `http://${apiUrl}/payment/initiate`
     }, false)
-    .then(data => expect(data).toBe('Unauthorized'))
+      .then(data => expect(data).toBe('Unauthorized'))
   })
 
   it('Unauthenticated payment finalization request', () => {
     expect.assertions(1)
     return promisify({
-      url: `http://${apiUrl}/payment/finalize`
+      url: `http://${apiUrl}/payment/verify`
     }, false)
-    .then(data => expect(data).toBe('Unauthorized'))
+      .then(data => expect(data).toBe('Unauthorized'))
   })
 })

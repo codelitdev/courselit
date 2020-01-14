@@ -10,12 +10,12 @@ const {
 } = require('../config/strings.js').internal
 const StripePayment = require('./stripe_payment.js')
 
-exports.getPaymentMethod = (methodName) => {
+exports.getPaymentMethod = async (methodName) => {
   switch (methodName) {
     case paypal:
       throw new Error(notYetSupported)
     case stripe:
-      return new StripePayment()
+      return (new StripePayment()).setup()
     case paytm:
       throw new Error(notYetSupported)
     case unpaid:

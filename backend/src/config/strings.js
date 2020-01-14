@@ -33,12 +33,13 @@ exports.responses = {
   user_name_cant_be_null: 'Name cannot be null',
   action_not_allowed: 'You do not have rights to perform this action',
   invalid_input: 'Invalid input',
-  stripe_invalid_settings: 'Required Stripe keys not found',
+  stripe_invalid_settings: 'Stripe configuration is invalid.',
   unrecognised_currency_code: 'Unrecognised currency code',
   only_admins_can_purchase: 'Only admins can purchase courses on behalf of others',
   course_already_purchased: 'You have already purchased this item',
   payment_settings_invalid_suffix: 'settings are invalid',
-  invalid_course_id: 'Invalid course ID'
+  invalid_course_id: 'Invalid course ID',
+  payment_settings_invalid: 'Payment method is not set up. Please contact site admin.'
 }
 
 exports.internal = {

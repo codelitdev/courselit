@@ -4,23 +4,30 @@ import { MEDIA_BACKEND } from '../config/constants.js'
 import { formulateMediaUrl } from '../lib/utils.js'
 
 const Img = (props) => {
+  const { src, isThumbnail, classes } = props
+
   return (
     <>
-      <img className={props.classes} src={props.src
-        ? `${formulateMediaUrl(MEDIA_BACKEND, props.src, props.isThumbnail)}`
-        : '/static/default.png'}/>
-      <style jsx>{`
-        img {
-          width: 100%;
-          height: auto;
-        }
-      `}</style>
+      {src &&
+        <>
+          <img className={classes} src={src
+            ? `${formulateMediaUrl(MEDIA_BACKEND, src, isThumbnail)}`
+            : '/static/default.png'}/>
+          <style jsx>{`
+            img {
+              width: 100%;
+              height: auto;
+            }
+          `}</style>
+        </>
+      }
+      {!src && <></>}
     </>
   )
 }
 
 Img.propTypes = {
-  src: PropTypes.string.isRequired,
+  src: PropTypes.string,
   isThumbnail: PropTypes.bool,
   classes: PropTypes.string
 }

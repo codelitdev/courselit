@@ -3,17 +3,24 @@ const {
   stripe_invalid_settings: stripeInvalidSettings
 } = require('../config/strings.js').responses
 const stripeSDK = require('stripe')
+const Settings = require('../models/Settings.js')
+const SiteInfo = require('../models/SiteInfo.js')
 
 class StripePayment extends Payment {
-  constructor () {
-    super()
+  async setup () {
+    const siteinfo = (await SiteInfo.find())[0]
+    const settings = (await Settings.find())[0]
 
-    if (!process.env.STRIPE_PUBLISHABLE_KEY) {
+    if (
+      !siteinfo.stripePublishableKey ||
+      !settings.stripeSecret ||
+      !siteinfo.currencyISOCode
+    ) {
       throw new Error(stripeInvalidSettings)
     }
 
-    this.secret_key = process.env.STRIPE_SECRET_KEY
-    this.stripe = stripeSDK(this.secret_key)
+    this.stripe = stripeSDK(settings.stripeSecret)
+    return this
   }
 
   async initiate (amount, currency) {
@@ -25,7 +32,13 @@ class StripePayment extends Payment {
     return paymentIntent.client_secret
   }
 
-  verify () {}
+  async verify (event) {
+    return event.type === 'payment_intent.succeeded'
+  }
+
+  getPaymentIdentifier (event) {
+    return event.data.object.client_secret
+  }
 }
 
 module.exports = StripePayment

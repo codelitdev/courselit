@@ -46,17 +46,17 @@ export const queryGraphQLWithUIEffects = (backend, dispatch, networkAction, toke
 export const formattedLocaleDate = (epochString) =>
   (new Date(Number(epochString))).toLocaleString('en-US')
 
-export const removeEmptyProperties = (obj, propToExclude) =>
-  Object
-    .keys(obj)
-    .filter(i => i !== propToExclude)
-    .reduce(
-      (acc, item, index) => {
-        if (obj[item] !== '') {
-          acc[item] = obj[item]
-        }
-        return acc
-      }, {})
+// export const removeEmptyProperties = (obj, propToExclude) =>
+//   Object
+//     .keys(obj)
+//     .filter(i => i !== propToExclude)
+//     .reduce(
+//       (acc, item, index) => {
+//         if (obj[item] !== '') {
+//           acc[item] = obj[item]
+//         }
+//         return acc
+//       }, {})
 
 // Regex copied from: https://stackoverflow.com/a/48675160/942589
 export const makeGraphQLQueryStringFromJSObject = obj =>
@@ -82,11 +82,22 @@ export const getPostDescriptionSnippet = (rawDraftJSContentState) => {
 export const getGraphQLQueryFields = (jsObj, fieldsNotPutBetweenQuotes) => {
   let queryString = '{'
   for (let i of Object.keys(jsObj)) {
-    queryString += fieldsNotPutBetweenQuotes.includes(i) ?
-      `${i}: ${jsObj[i]},` :
-      `${i}: "${jsObj[i]}",`
+    if (jsObj[i] !== undefined) {
+      queryString += fieldsNotPutBetweenQuotes.includes(i) ?
+        `${i}: ${jsObj[i]},` : `${i}: "${jsObj[i]}",`
+    }
   }
   queryString += '}'
 
   return queryString
+}
+
+export const getObjectContainingOnlyChangedFields = (baseline, obj) => {
+  const result = {}
+  for (let i of Object.keys(baseline)) {
+    if (baseline[i] !== obj[i]) {
+      result[i] = obj[i]
+    }
+  }
+  return result
 }

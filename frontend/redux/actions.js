@@ -18,19 +18,30 @@ import { queryGraphQL } from '../lib/utils.js'
 export function signedIn (userid, token) {
   return async (dispatch, getState) => {
     dispatch({ type: SIGN_IN, token, userid })
+    dispatch(refreshUserProfile(userid))
+  }
+}
 
+export function refreshUserProfile (userId) {
+  return async (dispatch, getState) => {
     try {
       dispatch(networkAction(true))
+      const userID = userId || getState().profile.email
       const response = await queryGraphQL(
         `${BACKEND}/graph`,
-        `{ profile: getUser(email: "${userid}") {name, isCreator, id, isAdmin} }`,
+        `{profile: getUser(email: "${userID}") {
+          name,
+          isCreator,
+          id,
+          isAdmin,
+          email,
+          purchases
+        }}`,
         getState().auth.token
       )
 
       dispatch(networkAction(false))
       dispatch(updateProfile(response.profile))
-    } catch (err) {
-      // do nothing
     } finally {
       dispatch(networkAction(false))
     }
@@ -80,7 +91,9 @@ export function updateSiteInfo () {
             currencyUnit,
             currencyISOCode,
             copyrightText,
-            about
+            about,
+            paymentMethod,
+            stripePublishableKey
           }
         }`)
 

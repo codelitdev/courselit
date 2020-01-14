@@ -3,37 +3,48 @@ import PropTypes from 'prop-types'
 import { Button } from '@material-ui/core'
 import { connect } from 'react-redux'
 import PriceTag from '../PriceTag'
-import { publicCourse } from '../../types'
+import { publicCourse, authProps, profileProps } from '../../types'
 import PaymentDialog from './PaymentDialog.js'
+import Router from 'next/router'
 
-const Button = (props) => {
+const CheckoutButton = (props) => {
   const [dialogOpened, setDialogOpened] = useState(false)
-  const [purchased, setPurchased] = useState(false)
-  const { course } = props
+  const { course, auth } = props
 
-  const startCourse = () => {}
-
-  const buyCourse = () => {}
-
-  const cancelPayment = () => {
-    setDialogOpened(false)
+  const buyCourse = () => {
+    if (auth.guest) {
+      Router.push('/login')
+    } else {
+      setDialogOpened(true)
+    }
   }
 
-  return purchased
-    ? (<Button onClick={startCourse}></Button>) : (
+  const cancelPayment = () => setDialogOpened(false)
+
+  return (
+    <>
       <Button onClick={buyCourse} variant='contained' color='secondary'>
         <PriceTag cost={course.cost} />
-        <PaymentDialog
-          onOpen={dialogOpened}
-          onClose={cancelPayment} />
       </Button>
-    )
+      <PaymentDialog
+        course={course}
+        open={dialogOpened}
+        onClose={cancelPayment} />
+    </>
+  )
 }
 
-BuyButton.propTypes = {
+CheckoutButton.propTypes = {
   course: publicCourse.isRequired,
   onTransactionSuccess: PropTypes.func.isRequired,
-  onTransactionFailure: PropTypes.func.isRequired
+  onTransactionFailure: PropTypes.func.isRequired,
+  auth: authProps,
+  profile: profileProps
 }
 
-export default connect()(Button)
+const mapStateToProps = state => ({
+  auth: state.auth,
+  profile: state.profile
+})
+
+export default connect(mapStateToProps)(CheckoutButton)

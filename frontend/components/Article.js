@@ -6,8 +6,9 @@ import PropTypes from 'prop-types'
 import { makeStyles } from '@material-ui/styles'
 import { BACKEND } from '../config/constants'
 import { formulateMediaUrl, formattedLocaleDate } from '../lib/utils'
-import { publicCourse } from '../types'
-import BuyButton from './BuyButton'
+import { publicCourse, profileProps } from '../types'
+import BuyButton from './Checkout'
+import { connect } from 'react-redux'
 
 const useStyles = (featuredImage) => makeStyles({
   creatoravatarcontainer: {
@@ -34,7 +35,7 @@ const useStyles = (featuredImage) => makeStyles({
 })
 
 const Article = (props) => {
-  const { course, options } = props
+  const { course, options, profile } = props
   console.log(course, options)
   const classes = useStyles(course.featuredImage)()
   let courseDescriptionHydrated
@@ -71,6 +72,7 @@ const Article = (props) => {
       {course.featuredImage &&
         <div className={classes.featuredimagecontainer} />}
       {options.showEnrollmentArea &&
+      !profile.purchases.includes(course.id) &&
         <BuyButton
           course={course}
           onTransactionSuccess={() => {}}
@@ -89,7 +91,12 @@ Article.propTypes = {
   options: PropTypes.shape({
     showAttribution: PropTypes.bool,
     showEnrollmentArea: PropTypes.bool
-  }).isRequired
+  }).isRequired,
+  profile: profileProps
 }
 
-export default Article
+const mapStateToProps = state => ({
+  profile: state.profile
+})
+
+export default connect(mapStateToProps)(Article)

@@ -8,7 +8,7 @@ import { SIDEBAR_TEXT_COURSE_ABOUT } from '../../../config/strings.js'
 import CourseIntroduction from '../../../components/CourseIntroduction.js'
 
 const Course = (props) => {
-  const { course } = props
+  const { course, profile } = props
 
   const lessons = []
   lessons.push({
@@ -19,7 +19,8 @@ const Course = (props) => {
     lessons.push({
       name: lesson.title,
       element: <></>,
-      icon: lesson.requiresEnrollment ? <Lock /> : null,
+      icon: (lesson.requiresEnrollment &&
+        !profile.purchases.includes(course.id)) ? <Lock /> : null,
       iconPlacementRight: true
     })
   }
