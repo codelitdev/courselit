@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { connect } from 'react-redux'
-import fetch from 'isomorphic-unfetch'
 import Router from 'next/router'
 import {
   ERR_ALL_FIELDS_REQUIRED,
@@ -21,6 +20,7 @@ import { setCookie } from '../lib/session.js'
 import MasterLayout from '../components/Masterlayout.js'
 import { Grid, TextField, Button } from '@material-ui/core'
 import ContainedBodyLayout from '../components/ContainedBodyLayout.js'
+import FetchBuilder from '../lib/fetch.js'
 
 const Login = (props) => {
   const emptyStringPat = /^\s*$/
@@ -50,50 +50,42 @@ const Login = (props) => {
       )
     }
 
-    // clear error message set by previous submissions, if there is any
-    setLoginData(Object.assign({}, loginData, { err: '', msg: '' }))
+    clearLoginErrors()
 
     try {
       props.dispatch(networkAction(true))
-      const res = await fetch(`${BACKEND}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: `email=${loginData.email}&password=${loginData.pass}`
-      })
 
-      const data = await res.json()
-      if (res.status === 200) {
-        if (typeof data.token !== 'undefined') {
-          // set cookie
-          setCookie(JWT_COOKIE_NAME, data.token)
-          setCookie(USERID_COOKIE_NAME, loginData.email)
+      const formData = new window.FormData()
+      formData.append('email', loginData.email)
+      formData.append('password', loginData.pass)
 
-          // save the token in redux store
-          props.dispatch(signedIn(loginData.email, data.token))
-        }
+      const fetch = new FetchBuilder()
+        .setUrl(`${BACKEND}/auth/login`)
+        .setPayload(formData)
+        .build()
+      const response = await fetch.exec()
+      const { token, message } = response
+
+      if (token) {
+        setCookie(JWT_COOKIE_NAME, token)
+        setCookie(USERID_COOKIE_NAME, loginData.email)
+        props.dispatch(signedIn(loginData.email, token))
       } else {
         setLoginData(
-          Object.assign(
-            {},
-            loginData,
-            { err: data.message }
-          )
+          Object.assign({}, loginData, { err: message })
         )
       }
     } catch (err) {
-      // do nothing
       setLoginData(
-        Object.assign(
-          {},
-          loginData,
-          { err: err.message }
-        )
+        Object.assign({}, loginData, { err: err.message })
       )
     } finally {
       props.dispatch(networkAction(false))
     }
+  }
+
+  function clearLoginErrors () {
+    setLoginData(Object.assign({}, loginData, { err: '', msg: '' }))
   }
 
   async function handleSignup (event) {
@@ -123,51 +115,52 @@ const Login = (props) => {
       )
     }
 
-    // clear error message set by previous submissions, if there is any
-    setSignupData(Object.assign({}, signupData, { err: '', msg: '' }))
+    clearSignUpErrors()
 
     try {
       props.dispatch(networkAction(true))
 
-      const res = await fetch(`${BACKEND}/auth/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: `email=${signupData.email}&password=${signupData.pass}&name=${signupData.name}`
-      })
-      const data = await res.json()
+      const formData = new window.FormData()
+      formData.append('email', signupData.email)
+      formData.append('password', signupData.pass)
+      formData.append('name', signupData.name)
 
-      if (res.status === 200) {
-        if (data.message === RESP_API_USER_CREATED) {
-          setSignupData(
-            Object.assign(
-              {},
-              defaultSignupData,
-              { err: '', msg: SIGNUP_SUCCESS }
-            )
-          )
-        }
+      const fetch = new FetchBuilder()
+        .setUrl(`${BACKEND}/auth/signup`)
+        .setPayload(formData)
+        .build()
+      const response = await fetch.exec()
+      const { message } = response
+
+      if (message === RESP_API_USER_CREATED) {
+        setSignupData(
+          Object.assign({}, defaultSignupData, {
+            err: '',
+            msg: SIGNUP_SUCCESS
+          })
+        )
       } else {
         setSignupData(
-          Object.assign(
-            {},
-            signupData,
-            { err: data.message, msg: '' }
-          )
+          Object.assign({}, signupData, {
+            err: message,
+            msg: ''
+          })
         )
       }
     } catch (err) {
       setSignupData(
-        Object.assign(
-          {},
-          signupData,
-          { err: err.message, msg: '' }
-        )
+        Object.assign({}, signupData, {
+          err: err.message,
+          msg: ''
+        })
       )
     } finally {
       props.dispatch(networkAction(false))
     }
+  }
+
+  function clearSignUpErrors () {
+    setSignupData(Object.assign({}, signupData, { err: '', msg: '' }))
   }
 
   return (
@@ -280,10 +273,6 @@ const Login = (props) => {
     </MasterLayout>
   )
 }
-
-// Login.getInitialState = async ({ store, isServer, pathname, query }) => {
-//   return { store }
-// }
 
 const mapStateToProps = state => ({
   auth: state.auth

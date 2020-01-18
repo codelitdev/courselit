@@ -1,16 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { connect } from 'react-redux'
 import MasterLayout from '../components/Masterlayout.js'
-import {
-  networkAction
-} from '../redux/actions.js'
-import {
-  queryGraphQL,
-  queryGraphQLWithUIEffects
-} from '../lib/utils.js'
-import {
-  BACKEND
-} from '../config/constants.js'
+import { networkAction } from '../redux/actions.js'
+import { BACKEND } from '../config/constants.js'
 import BlogPostItem from '../components/BlogPostItem.js'
 import { Grid, Button, Typography } from '@material-ui/core'
 import {
@@ -21,6 +13,7 @@ import Hero from '../components/Hero.js'
 import { makeStyles } from '@material-ui/styles'
 import ContainedBodyLayout from '../components/ContainedBodyLayout.js'
 import About from '../components/About.js'
+import FetchBuilder from '../lib/fetch.js'
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -49,24 +42,17 @@ const getBlogPostQuery = (postsPaginationOffset) =>
 const Index = (props) => {
   const [posts, setPosts] = useState([...props.posts])
   const [postsOffset, setPostsOffset] = useState(props.postsOffset)
-  const getDataUnauth = queryGraphQLWithUIEffects(
-    `${BACKEND}/graph`,
-    props.dispatch,
-    networkAction
-  )
   const classes = useStyles()
 
-  const getBlogPosts = async () => {
-    const response = await getDataUnauth(getBlogPostQuery(postsOffset))
-    if (response.posts) {
-      setPosts([...posts, ...response.posts])
+  const getMorePosts = async () => {
+    props.dispatch(networkAction(true))
+    const morePosts = await getPosts(postsOffset)
+    if (morePosts) {
+      setPosts([...posts, ...morePosts])
       setPostsOffset(postsOffset + 1)
     }
+    props.dispatch(networkAction(false))
   }
-
-  useEffect(() => {
-    getBlogPosts()
-  }, [])
 
   return (
     <MasterLayout>
@@ -86,7 +72,7 @@ const Index = (props) => {
                     {HEADER_BLOG_POSTS_SECTION}
                   </Typography>
                   { posts.map((x, index) => <BlogPostItem key={index} {...x}/>) }
-                  { posts.length > 0 && <Button onClick={getBlogPosts}>{BTN_LOAD_MORE}</Button> }
+                  { posts.length > 0 && <Button onClick={getMorePosts}>{BTN_LOAD_MORE}</Button> }
                 </section>
               </Grid>
               <Grid item xs={12} sm={3}>
@@ -104,20 +90,25 @@ const Index = (props) => {
 
 Index.getInitialProps = async () => {
   let postsOffset = 1
-  const postsResponse = await queryGraphQL(
-    `${BACKEND}/graph`,
-    getBlogPostQuery(postsOffset++)
-  )
-
+  const posts = await getPosts(postsOffset++)
   const featuredCourses = await getFeaturedCourses()
 
-  return { posts: postsResponse.posts, postsOffset, featuredCourses }
+  return { posts, postsOffset, featuredCourses }
+}
+
+const getPosts = async (offset) => {
+  const fetch = new FetchBuilder()
+    .setUrl(`${BACKEND}/graph`)
+    .setPayload(getBlogPostQuery(offset))
+    .setIsGraphQLEndpoint(true)
+    .build()
+  const response = await fetch.exec()
+
+  return response.posts
 }
 
 const getFeaturedCourses = async () => {
-  const response = await queryGraphQL(
-    `${BACKEND}/graph`,
-    `
+  const query = `
     query {
       featuredCourses: getPublicCourses(offset: 1, onlyShowFeatured: true) {
         id,
@@ -127,8 +118,13 @@ const getFeaturedCourses = async () => {
         slug
       }
     }
-    `
-  )
+  `
+  const fetch = new FetchBuilder()
+    .setUrl(`${BACKEND}/graph`)
+    .setPayload(query)
+    .setIsGraphQLEndpoint(true)
+    .build()
+  const response = await fetch.exec()
 
   return response.featuredCourses
 }

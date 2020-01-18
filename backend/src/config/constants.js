@@ -33,7 +33,7 @@ module.exports = {
 
   // Pagination config
   mycoursesLimit: 5,
-  postsPerPageLimit: 5,
+  postsPerPageLimit: 1,
   postDescTruncLimit: 30,
   coursesPerPageLimit: 1,
   mymediaLimit: 5,

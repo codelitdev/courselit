@@ -1,11 +1,12 @@
 import { connect } from 'react-redux'
 import ResponsiveDrawer from '../../../components/ResponsiveDrawer.js'
 import Head from 'next/head'
-import { formulateCourseUrl, formulateMediaUrl, queryGraphQL } from '../../../lib/utils.js'
+import { formulateCourseUrl, formulateMediaUrl } from '../../../lib/utils.js'
 import { Lock } from '@material-ui/icons'
 import { BACKEND, FRONTEND, MEDIA_BACKEND } from '../../../config/constants.js'
 import { SIDEBAR_TEXT_COURSE_ABOUT } from '../../../config/strings.js'
 import CourseIntroduction from '../../../components/CourseIntroduction.js'
+import FetchBuilder from '../../../lib/fetch.js'
 
 const Course = (props) => {
   const { course, profile } = props
@@ -44,30 +45,33 @@ const Course = (props) => {
 
 Course.getInitialProps = async ({ query }) => {
   const graphQuery = `
-  query {
-    post: getCourse(id: "${query.id}") {
-      id,
-      title,
-      description,
-      featuredImage,
-      updated,
-      creatorName,
-      creatorId,
-      slug,
-      isBlog,
-      cost,
-      lessons {
+    query {
+      post: getCourse(id: "${query.id}") {
         id,
         title,
-        requiresEnrollment
+        description,
+        featuredImage,
+        updated,
+        creatorName,
+        creatorId,
+        slug,
+        isBlog,
+        cost,
+        lessons {
+          id,
+          title,
+          requiresEnrollment
+        }
       }
     }
-  }
   `
-  const response = await queryGraphQL(
-    `${BACKEND}/graph`,
-    graphQuery
-  )
+  const fetch = new FetchBuilder()
+    .setUrl(`${BACKEND}/graph`)
+    .setPayload(graphQuery)
+    .setIsGraphQLEndpoint(true)
+    .build()
+  const response = await fetch.exec()
+
   return { course: response.post }
   // return {
   //   course: {
