@@ -13,7 +13,7 @@ import {
   CLEAR_ERROR
 } from './actionTypes.js'
 import { BACKEND } from '../config/constants.js'
-import { queryGraphQL } from '../lib/utils.js'
+import FetchBuilder from '../lib/fetch.js'
 
 export function signedIn (userid, token) {
   return async (dispatch, getState) => {
@@ -27,18 +27,25 @@ export function refreshUserProfile (userId) {
     try {
       dispatch(networkAction(true))
       const userID = userId || getState().profile.email
-      const response = await queryGraphQL(
-        `${BACKEND}/graph`,
-        `{profile: getUser(email: "${userID}") {
+
+      const query = `
+      { profile: getUser(email: "${userID}") {
           name,
           isCreator,
           id,
           isAdmin,
           email,
           purchases
-        }}`,
-        getState().auth.token
-      )
+        }
+      }
+      `
+      const fetch = new FetchBuilder()
+        .setUrl(`${BACKEND}/graph`)
+        .setPayload(query)
+        .setIsGraphQLEndpoint(true)
+        .setAuthToken(getState().auth.token)
+        .build()
+      const response = await fetch.exec()
 
       dispatch(networkAction(false))
       dispatch(updateProfile(response.profile))
@@ -82,20 +89,26 @@ export function updateSiteInfo () {
     try {
       dispatch(networkAction(true))
 
-      const response = await queryGraphQL(
-        `${BACKEND}/graph`,
-        `{ site: getSiteInfo {
-            title,
-            subtitle,
-            logopath,
-            currencyUnit,
-            currencyISOCode,
-            copyrightText,
-            about,
-            paymentMethod,
-            stripePublishableKey
-          }
-        }`)
+      const query = `
+      { site: getSiteInfo {
+          title,
+          subtitle,
+          logopath,
+          currencyUnit,
+          currencyISOCode,
+          copyrightText,
+          about,
+          paymentMethod,
+          stripePublishableKey
+        }
+      }
+      `
+      const fetch = new FetchBuilder()
+        .setUrl(`${BACKEND}/graph`)
+        .setPayload(query)
+        .setIsGraphQLEndpoint(true)
+        .build()
+      const response = await fetch.exec()
 
       dispatch(networkAction(false))
       dispatch(newSiteInfoAvailable(response.site))
