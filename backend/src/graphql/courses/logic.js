@@ -145,22 +145,27 @@ exports.getCreatorCourses = async (id, offset, ctx) => {
   checkIfAuthenticated(ctx)
   validateOffset(offset)
 
-  const courses = await Course.find({
-    creatorId: id
-  }).skip((offset - 1) * mycoursesLimit).limit(mycoursesLimit)
+  const courses = await Course
+    .find({ creatorId: id })
+    .sort({ updated: -1 })
+    .skip((offset - 1) * mycoursesLimit)
+    .limit(mycoursesLimit)
 
   return courses
 }
 
 exports.getPosts = async (offset) => {
   validateOffset(offset)
-
-  const posts = await Course.find({
+  const query = {
     isBlog: true,
     published: true,
     privacy: open.toLowerCase()
-  }, 'id title description creatorName updated slug featuredImage')
-    .skip((offset - 1) * postsPerPageLimit).limit(postsPerPageLimit)
+  }
+  const posts = await Course
+    .find(query, 'id title description creatorName updated slug featuredImage')
+    .sort({ updated: -1 })
+    .skip((offset - 1) * postsPerPageLimit)
+    .limit(postsPerPageLimit)
 
   return posts.map(x => ({
     id: x.id,

@@ -90,42 +90,40 @@ const UsersManager = (props) => {
   const onLoadMoreClick = () => setUsersPaginationOffset(usersPaginationOffset + 1)
 
   return (
-    <>
-      <Grid container direction='column'>
-        <Grid
-          item
-          container
-          direction='row'
-          justify='space-between'
-          alignItems='center'>
-          <Grid item xs={12} sm={8}>
-            <Typography variant='h3'>
-              {USERS_MANAGER_PAGE_HEADING}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <form onSubmit={handleSearch}>
-              <TextField
-                value={searchText}
-                variant='outlined'
-                label=''
-                fullWidth
-                margin="normal"
-                placeholder={`Search in ${usersSummary.count} users`}
-                onChange={(e) => setSearchText(e.target.value)}/>
-            </form>
-          </Grid>
+    <Grid container direction='column'>
+      <Grid
+        item
+        container
+        direction='row'
+        justify='space-between'
+        alignItems='center'>
+        <Grid item xs={12} sm={8}>
+          <Typography variant='h3'>
+            {USERS_MANAGER_PAGE_HEADING}
+          </Typography>
         </Grid>
-        <Grid item>
-          {users.map(user => <UserDetails user={user} key={user.email}/>)}
-        </Grid>
-        <Grid item>
-          <Button onClick={onLoadMoreClick}>
-            {LOAD_MORE_TEXT}
-          </Button>
+        <Grid item xs={12} sm={4}>
+          <form onSubmit={handleSearch}>
+            <TextField
+              value={searchText}
+              variant='outlined'
+              label=''
+              fullWidth
+              margin="normal"
+              placeholder={`Search in ${usersSummary.count} users`}
+              onChange={(e) => setSearchText(e.target.value)}/>
+          </form>
         </Grid>
       </Grid>
-    </>
+      <Grid item>
+        {users.map(user => <UserDetails user={user} key={user.email}/>)}
+      </Grid>
+      <Grid item>
+        <Button onClick={onLoadMoreClick}>
+          {LOAD_MORE_TEXT}
+        </Button>
+      </Grid>
+    </Grid>
   )
 }
 

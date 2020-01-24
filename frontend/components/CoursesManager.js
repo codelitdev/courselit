@@ -1,25 +1,26 @@
 import React, { useState, useEffect } from 'react'
 import { connect } from 'react-redux'
 import PropTypes from 'prop-types'
-import {
-  authProps,
-  profileProps
-} from '../types.js'
+import { authProps, profileProps } from '../types.js'
 import { makeStyles } from '@material-ui/styles'
-import { Grid, Button, Typography } from '@material-ui/core'
+import { Grid, Typography, Fab } from '@material-ui/core'
 import CourseEditor from './CourseEditor.js'
 import CreatorCoursesList from './CreatorCoursesList.js'
 import {
   NEW_COURSE_PAGE_HEADING,
-  MANAGE_COURSES_PAGE_HEADING,
-  BUTTON_CANCEL_TEXT,
-  BUTTON_NEW_COURSE
+  MANAGE_COURSES_PAGE_HEADING
 } from '../config/strings.js'
 import { useExecuteGraphQLQuery } from './CustomHooks.js'
+import { Add, Done } from '@material-ui/icons'
 
 const useStyles = makeStyles(theme => ({
   button: {
     margin: theme.spacing(1)
+  },
+  fab: {
+    position: 'fixed',
+    bottom: theme.spacing(4),
+    right: theme.spacing(4)
   }
 }))
 
@@ -159,13 +160,20 @@ const Courses = (props) => {
             </Typography>
           </Grid>
           <Grid item xs={12} sm={2}>
-            <Button
+            {/* <Button
               variant='contained'
               color={courseEditorVisible ? 'default' : 'secondary'}
               className={classes.button}
+              onClick={() => showEditor()}
+              startIcon={courseEditorVisible ? <Done /> : <Add />}>
+              {courseEditorVisible ? BUTTON_DONE_TEXT : BUTTON_NEW_COURSE}
+            </Button> */}
+            <Fab
+              color={courseEditorVisible ? 'default' : 'secondary'}
+              className={classes.fab}
               onClick={() => showEditor()}>
-              {courseEditorVisible ? BUTTON_CANCEL_TEXT : BUTTON_NEW_COURSE}
-            </Button>
+              {courseEditorVisible ? <Done /> : <Add />}
+            </Fab>
           </Grid>
         </Grid>
         {/* {creatorCourses && <ul>
@@ -183,7 +191,10 @@ const Courses = (props) => {
             courses={creatorCourses}
             onClick={showEditor}
             onLoadMoreClick={loadCreatorCourses}/>}
-        {courseEditorVisible && <CourseEditor courseId={selectedCourse}/>}
+        {courseEditorVisible &&
+          <CourseEditor
+            courseId={selectedCourse}
+            closeEditor={() => showEditor()}/>}
       </div>
     </div>
   )

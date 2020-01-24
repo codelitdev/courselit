@@ -6,7 +6,7 @@ import { clearAppError } from '../redux/actions'
 import { appError } from '../types'
 import { Close } from '@material-ui/icons'
 
-const AppError = (props) => {
+const AppToast = (props) => {
   const { error } = props
   const action = error && error.action
 
@@ -62,7 +62,7 @@ const AppError = (props) => {
   )
 }
 
-AppError.propTypes = {
+AppToast.propTypes = {
   error: appError.isRequired,
   dispatch: PropTypes.func.isRequired
 }
@@ -78,4 +78,4 @@ const mapDispatchToProps = dispatch => ({
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(AppError)
+)(AppToast)

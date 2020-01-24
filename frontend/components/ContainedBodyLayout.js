@@ -20,7 +20,7 @@ const ContainedBodyLayout = (props) => {
 }
 
 ContainedBodyLayout.propTypes = {
-  children: PropTypes.object
+  children: PropTypes.any
 }
 
 export default ContainedBodyLayout

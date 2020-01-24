@@ -5,7 +5,11 @@ import {
   ERR_ALL_FIELDS_REQUIRED,
   ERR_PASSWORDS_DONT_MATCH,
   RESP_API_USER_CREATED,
-  SIGNUP_SUCCESS
+  SIGNUP_SUCCESS,
+  LOGIN_SECTION_HEADER,
+  LOGIN_SECTION_BUTTON,
+  SIGNUP_SECTION_HEADER,
+  SIGNUP_SECTION_BUTTON
 } from '../config/strings.js'
 import {
   BACKEND,
@@ -18,9 +22,20 @@ import {
 } from '../redux/actions.js'
 import { setCookie } from '../lib/session.js'
 import MasterLayout from '../components/Masterlayout.js'
-import { Grid, TextField, Button } from '@material-ui/core'
+import { Grid, TextField, Button, Card, CardContent, Typography } from '@material-ui/core'
 import ContainedBodyLayout from '../components/ContainedBodyLayout.js'
 import FetchBuilder from '../lib/fetch.js'
+import { makeStyles } from '@material-ui/styles'
+
+const useStyles = makeStyles(theme => ({
+  card: {
+    marginTop: theme.spacing(4),
+    marginBottom: theme.spacing(8)
+  },
+  cardHeader: {
+    textAlign: 'center'
+  }
+}))
 
 const Login = (props) => {
   const emptyStringPat = /^\s*$/
@@ -28,6 +43,8 @@ const Login = (props) => {
   const defaultLoginData = { email: '', pass: '', err: '' }
   const [loginData, setLoginData] = useState(defaultLoginData)
   const [signupData, setSignupData] = useState(defaultSignupData)
+  const [showSignupForm, setShowSignupForm] = useState(false)
+  const classes = useStyles()
 
   useEffect(() => {
     if (!props.auth.guest) {
@@ -166,107 +183,157 @@ const Login = (props) => {
   return (
     <MasterLayout>
       <ContainedBodyLayout>
-        <Grid container direction='row' spacing={2}>
+        <Grid
+          container
+          direction='row'
+          justify='center'
+          className={classes.card}>
           <Grid item xs={12} sm={6}>
-            <Grid container>
-              <h2>Log in</h2>
-              <form onSubmit={handleLogin}>
-                {loginData.err &&
-                  <div>{loginData.err}</div>
-                }
-                <TextField
-                  type='email'
-                  value={loginData.email}
-                  variant='outlined'
-                  label='Email'
-                  fullWidth
-                  margin="normal"
-                  onChange={
-                    (e) => setLoginData(
-                      Object.assign({}, loginData, {
-                        email: e.target.value
-                      })
-                    )}/>
-                <TextField
-                  type='password'
-                  value={loginData.pass}
-                  variant='outlined'
-                  label='Password'
-                  fullWidth
-                  margin="normal"
-                  onChange={
-                    (e) => setLoginData(
-                      Object.assign({}, loginData, {
-                        pass: e.target.value
-                      })
-                    )}/>
-                <Button type='submit'>Submit</Button>
-              </form>
-            </Grid>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <h2>Sign up</h2>
-            <form onSubmit={handleSignup}>
-              {signupData.msg &&
-                <div>{signupData.msg}</div>
-              }
-              {signupData.err &&
-                <div>{signupData.err}</div>
-              }
-              <TextField
-                type='email'
-                value={signupData.email}
-                variant='outlined'
-                label='Email'
-                fullWidth
-                margin="normal"
-                onChange={
-                  (e) => setSignupData(
-                    Object.assign({}, signupData, {
-                      email: e.target.value
-                    })
-                  )}/>
-              <TextField
-                type='password'
-                value={signupData.pass}
-                variant='outlined'
-                label='Password'
-                fullWidth
-                margin="normal"
-                onChange={
-                  (e) => setSignupData(
-                    Object.assign({}, signupData, {
-                      pass: e.target.value
-                    })
-                  )}/>
-              <TextField
-                type='password'
-                value={signupData.conf}
-                variant='outlined'
-                label='Confirm password'
-                fullWidth
-                margin="normal"
-                onChange={
-                  (e) => setSignupData(
-                    Object.assign({}, signupData, {
-                      conf: e.target.value
-                    })
-                  )}/>
-              <TextField
-                type='name'
-                value={signupData.name}
-                variant='outlined'
-                label='Name'
-                fullWidth
-                margin="normal"
-                onChange={
-                  (e) => setSignupData(
-                    Object.assign({}, signupData, {
-                      name: e.target.value
-                    })
-                  )}/>
-              <Button type='submit'>Submit</Button>
-            </form>
+            {!showSignupForm &&
+              <Card>
+                <CardContent>
+                  <Typography variant='h4' className={classes.cardHeader}>
+                    {LOGIN_SECTION_HEADER}
+                  </Typography>
+                  <form onSubmit={handleLogin}>
+                    {loginData.err &&
+                      <div>{loginData.err}</div>
+                    }
+                    <TextField
+                      type='email'
+                      value={loginData.email}
+                      variant='outlined'
+                      label='Email'
+                      fullWidth
+                      margin="normal"
+                      onChange={
+                        (e) => setLoginData(
+                          Object.assign({}, loginData, {
+                            email: e.target.value
+                          })
+                        )}/>
+                    <TextField
+                      type='password'
+                      value={loginData.pass}
+                      variant='outlined'
+                      label='Password'
+                      fullWidth
+                      margin="normal"
+                      onChange={
+                        (e) => setLoginData(
+                          Object.assign({}, loginData, {
+                            pass: e.target.value
+                          })
+                        )}/>
+                    <Grid
+                      container
+                      direction='row'
+                      justify='space-between'>
+                      <Grid item>
+                        <Button
+                          variant='contained'
+                          type='submit'
+                          color='primary'>
+                          {LOGIN_SECTION_BUTTON}
+                        </Button>
+                      </Grid>
+                      <Grid item>
+                        <Button onClick={() => setShowSignupForm(true)}>
+                          {SIGNUP_SECTION_HEADER}
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  </form>
+                </CardContent>
+              </Card>
+            }
+            {showSignupForm &&
+              <Card>
+                <CardContent>
+                  <Typography variant='h4' className={classes.cardHeader}>
+                    {SIGNUP_SECTION_HEADER}
+                  </Typography>
+                  <form onSubmit={handleSignup}>
+                    {signupData.msg &&
+                      <div>{signupData.msg}</div>
+                    }
+                    {signupData.err &&
+                      <div>{signupData.err}</div>
+                    }
+                    <TextField
+                      type='email'
+                      value={signupData.email}
+                      variant='outlined'
+                      label='Email'
+                      fullWidth
+                      margin="normal"
+                      onChange={
+                        (e) => setSignupData(
+                          Object.assign({}, signupData, {
+                            email: e.target.value
+                          })
+                        )}/>
+                    <TextField
+                      type='password'
+                      value={signupData.pass}
+                      variant='outlined'
+                      label='Password'
+                      fullWidth
+                      margin="normal"
+                      onChange={
+                        (e) => setSignupData(
+                          Object.assign({}, signupData, {
+                            pass: e.target.value
+                          })
+                        )}/>
+                    <TextField
+                      type='password'
+                      value={signupData.conf}
+                      variant='outlined'
+                      label='Confirm password'
+                      fullWidth
+                      margin="normal"
+                      onChange={
+                        (e) => setSignupData(
+                          Object.assign({}, signupData, {
+                            conf: e.target.value
+                          })
+                        )}/>
+                    <TextField
+                      type='name'
+                      value={signupData.name}
+                      variant='outlined'
+                      label='Name'
+                      fullWidth
+                      margin="normal"
+                      onChange={
+                        (e) => setSignupData(
+                          Object.assign({}, signupData, {
+                            name: e.target.value
+                          })
+                        )}/>
+                    <Grid
+                      container
+                      direction='row'
+                      justify='space-between'>
+                      <Grid item>
+                        <Button
+                          variant='contained'
+                          type='submit'
+                          color='primary'>
+                          {SIGNUP_SECTION_BUTTON}
+                        </Button>
+                      </Grid>
+                      <Grid item>
+                        <Button onClick={() => setShowSignupForm(false)}>
+                          {LOGIN_SECTION_BUTTON}
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  </form>
+                </CardContent>
+              </Card>
+            }
           </Grid>
         </Grid>
       </ContainedBodyLayout>
