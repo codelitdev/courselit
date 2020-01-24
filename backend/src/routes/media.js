@@ -108,7 +108,14 @@ const postHandler = async (req, res) => {
 
   try {
     const media = await Media.create(mediaObject)
-    return res.status(200).json({ message: responses.success, id: media.id })
+    return res.status(200).json({
+      message: responses.success,
+      media: {
+        id: media.id,
+        title: mediaObject.title,
+        mimeType: mediaObject.mimeType
+      }
+    })
   } catch (err) {
     return res.status(500).json({ message: err.message })
   }

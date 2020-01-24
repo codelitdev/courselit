@@ -6,7 +6,7 @@ import theme from '../theme'
 class MyDocument extends Document {
   render () {
     return (
-      <html lang="en">
+      <html lang="en" style={{ height: '100%', width: '100%' }}>
         <Head>
           <meta charSet="utf-8" />
           <meta
@@ -21,7 +21,7 @@ class MyDocument extends Document {
             href="https://fonts.googleapis.com/css?family=Fira+Code&display=swap" />
           <script id="stripe-js" src="https://js.stripe.com/v3/" async></script>
         </Head>
-        <body>
+        <body style={{ height: '100%', width: '100%', margin: 0 }}>
           <Main />
           <NextScript />
         </body>

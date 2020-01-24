@@ -19,7 +19,7 @@ import { Toolbar, Typography, Grid } from '@material-ui/core'
 import { makeStyles, useTheme } from '@material-ui/core/styles'
 import PropTypes from 'prop-types'
 import SessionButton from './SessionButton.js'
-import AppError from './AppError.js'
+import AppToast from './AppToast'
 
 const drawerWidth = 240
 
@@ -70,7 +70,7 @@ const ResponsiveDrawer = (props) => {
   const [visibleComponent, setVisibleComponent] = useState()
 
   useEffect(() => {
-    showComponent(props.items[0].element)
+    showComponent(props.items[1].element)
   }, [])
 
   function handleDrawerToggle () {
@@ -173,7 +173,7 @@ const ResponsiveDrawer = (props) => {
         <div className={classes.toolbar} />
         {visibleComponent}
       </main>
-      <AppError />
+      <AppToast />
     </div>
   )
 }

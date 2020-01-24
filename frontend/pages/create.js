@@ -3,18 +3,20 @@
  */
 import { useEffect } from 'react'
 import { connect } from 'react-redux'
-import ResponsiveDrawer from '../components/ResponsiveDrawer.js'
-import SiteSettings from '../components/SiteSettings.js'
-import {
-  CREATOR_AREA_PAGE_TITLE
-} from '../config/strings.js'
-import MediaManager from '../components/MediaManager.js'
-import Courses from '../components/Courses.js'
-import UsersManager from '../components/UsersManager.js'
 import Router from 'next/router'
 import {
-  LibraryBooks, SupervisedUserCircle, PermMedia, SettingsApplications
+  LibraryBooks,
+  SupervisedUserCircle,
+  PermMedia,
+  SettingsApplications
 } from '@material-ui/icons'
+import ResponsiveDrawer from '../components/ResponsiveDrawer.js'
+import SiteSettings from '../components/SiteSettings.js'
+import { CREATOR_AREA_PAGE_TITLE } from '../config/strings.js'
+import MediaManager from '../components/MediaManager.js'
+import Courses from '../components/CoursesManager.js'
+import UsersManager from '../components/UsersManager.js'
+import AppLoader from '../components/AppLoader.js'
 
 const Create = (props) => {
   useEffect(() => {
@@ -57,9 +59,9 @@ const Create = (props) => {
     ])
   }
 
-  return props.profile.fetched
+  return props.profile.fetched && props.profile.isCreator
     ? (<ResponsiveDrawer items={items} pageTitle={CREATOR_AREA_PAGE_TITLE} />)
-    : <p>Loading...</p>
+    : (<AppLoader />)
 }
 
 const mapStateToProps = state => ({

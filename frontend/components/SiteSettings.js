@@ -25,7 +25,10 @@ import {
   Select,
   InputLabel,
   MenuItem,
-  Grid
+  Grid,
+  Card,
+  CardContent,
+  CardActions
 } from '@material-ui/core'
 import { makeStyles } from '@material-ui/styles'
 import {
@@ -51,6 +54,9 @@ const useStyles = makeStyles(theme => ({
   formControl: {
     minWidth: '100%',
     marginBottom: '1.8em'
+  },
+  general: {
+    marginBottom: theme.spacing(4)
   }
 }))
 
@@ -194,157 +200,201 @@ const SiteSettings = props => {
   }
 
   return (
-    <section>
-      <Typography variant='h3'>
-        {SITE_SETTINGS_PAGE_HEADING}
-      </Typography>
-      <Grid container direction='column'>
-        <Grid item>
-          <Typography variant='h5'>
-            {SITE_SETTINGS_SECTION_GENERAL}
-          </Typography>
-        </Grid>
-        <Grid item>
-          <form onSubmit={handleGeneralSettingsSubmit}>
-            <TextField
-              variant='outlined'
-              label={SITE_SETTINGS_TITLE}
-              fullWidth
-              margin="normal"
-              name='title'
-              value={settings.title || ''}
-              onChange={onChangeData}/>
-            <TextField
-              variant='outlined'
-              label={SITE_SETTINGS_SUBTITLE}
-              fullWidth
-              margin="normal"
-              name='subtitle'
-              value={settings.subtitle || ''}
-              onChange={onChangeData}/>
-            <TextField
-              variant='outlined'
-              label={SITE_SETTINGS_CURRENCY_UNIT}
-              fullWidth
-              margin="normal"
-              name='currencyUnit'
-              value={settings.currencyUnit || ''}
-              onChange={onChangeData}/>
-            <TextField
-              variant='outlined'
-              label={SITE_SETTINGS_CURRENCY_ISO_CODE_TEXT}
-              fullWidth
-              margin="normal"
-              name='currencyISOCode'
-              value={settings.currencyISOCode || ''}
-              onChange={onChangeData}
-              maxLength={3}/>
-            <TextField
-              variant='outlined'
-              label={SITE_SETTINGS_COPYRIGHT_TEXT}
-              fullWidth
-              margin="normal"
-              name='copyrightText'
-              value={settings.copyrightText || ''}
-              onChange={onChangeData}/>
-            <TextField
-              variant='outlined'
-              label={SITE_SETTINGS_ABOUT_TEXT}
-              fullWidth
-              margin="normal"
-              name='about'
-              value={settings.about || ''}
-              onChange={onChangeData}/>
-            <ImgSwitcher
-              title={SITE_SETTINGS_LOGO}
-              src={settings.logopath || props.siteinfo.logopath}
-              onSelection={onChangeData}/>
-            <FormControl variant='outlined' className={classes.formControl}>
-              <InputLabel htmlFor='outlined-paymentmethod-simple'>
-                {SITE_ADMIN_SETTINGS_PAYMENT_METHOD}
-              </InputLabel>
-              <Select
-                autoWidth
-                value={settings.paymentMethod}
-                onChange={onChangeData}
-                inputProps={{
-                  name: 'paymentMethod',
-                  id: 'outlined-paymentmethod-simple'
-                }}>
-                <MenuItem value={PAYMENT_METHOD_STRIPE}>Stripe</MenuItem>
-                <MenuItem value={PAYMENT_METHOD_PAYPAL}>Paypal</MenuItem>
-                <MenuItem value={PAYMENT_METHOD_PAYTM}>Paytm</MenuItem>
-              </Select>
-            </FormControl>
-            <TextField
-              variant='outlined'
-              label={SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT}
-              fullWidth
-              margin="normal"
-              name='stripePublishableKey'
-              value={settings.stripePublishableKey || ''}
-              onChange={onChangeData}/>
-            <Button
-              variant='contained'
-              color='default'
-              type='submit'
-              value='Save'
-              disabled={!!((!settings.title && !settings.subtitle && !settings.logopath))}>
-                Save
-            </Button>
-          </form>
-        </Grid>
-        <Grid item>
-          <Typography variant='h5'>
-            {SITE_SETTINGS_SECTION_PAYMENT}
-          </Typography>
-        </Grid>
-        <Grid item>
-          <form onSubmit={handleAdminSettingsSubmit}>
-            <TextField
-              variant='outlined'
-              label={SITE_ADMIN_SETTINGS_STRIPE_SECRET}
-              fullWidth
-              margin="normal"
-              name='stripeSecret'
-              type='password'
-              value={adminSettings.stripeSecret || ''}
-              onChange={onAdminSettingsChanged}/>
-            <TextField
-              variant='outlined'
-              label={SITE_ADMIN_SETTINGS_PAYPAL_SECRET}
-              fullWidth
-              margin="normal"
-              name='paypalSecret'
-              type='password'
-              value={adminSettings.paypalSecret || ''}
-              onChange={onAdminSettingsChanged}/>
-            <TextField
-              variant='outlined'
-              label={SITE_ADMIN_SETTINGS_PAYTM_SECRET}
-              fullWidth
-              margin="normal"
-              name='paytmSecret'
-              type='password'
-              value={adminSettings.paytmSecret || ''}
-              onChange={onAdminSettingsChanged}/>
-            <Button
-              variant='contained'
-              color='default'
-              type='submit'
-              value='Save'
-              disabled={!!((!settings.title && !settings.subtitle && !settings.logopath))}>
-                Save
-            </Button>
-          </form>
-        </Grid>
+    <Grid container>
+      <Grid item>
+        <Typography variant='h3'>
+          {SITE_SETTINGS_PAGE_HEADING}
+        </Typography>
       </Grid>
+
+      <Grid
+        item
+        xs={12}
+        className={classes.general}>
+        <Card>
+          <form onSubmit={handleGeneralSettingsSubmit}>
+            <CardContent>
+              <Typography variant='h6'>
+                {SITE_SETTINGS_SECTION_GENERAL}
+              </Typography>
+              <TextField
+                variant='outlined'
+                label={SITE_SETTINGS_TITLE}
+                fullWidth
+                margin="normal"
+                name='title'
+                value={settings.title || ''}
+                onChange={onChangeData}/>
+              <TextField
+                variant='outlined'
+                label={SITE_SETTINGS_SUBTITLE}
+                fullWidth
+                margin="normal"
+                name='subtitle'
+                value={settings.subtitle || ''}
+                onChange={onChangeData}/>
+              <TextField
+                variant='outlined'
+                label={SITE_SETTINGS_CURRENCY_UNIT}
+                fullWidth
+                margin="normal"
+                name='currencyUnit'
+                value={settings.currencyUnit || ''}
+                onChange={onChangeData}/>
+              <TextField
+                variant='outlined'
+                label={SITE_SETTINGS_CURRENCY_ISO_CODE_TEXT}
+                fullWidth
+                margin="normal"
+                name='currencyISOCode'
+                value={settings.currencyISOCode || ''}
+                onChange={onChangeData}
+                maxLength={3}/>
+              <TextField
+                variant='outlined'
+                label={SITE_SETTINGS_COPYRIGHT_TEXT}
+                fullWidth
+                margin="normal"
+                name='copyrightText'
+                value={settings.copyrightText || ''}
+                onChange={onChangeData}/>
+              <TextField
+                variant='outlined'
+                label={SITE_SETTINGS_ABOUT_TEXT}
+                fullWidth
+                margin="normal"
+                name='about'
+                value={settings.about || ''}
+                onChange={onChangeData}/>
+              <FormControl variant='outlined' className={classes.formControl}>
+                <InputLabel htmlFor='outlined-paymentmethod-simple'>
+                  {SITE_ADMIN_SETTINGS_PAYMENT_METHOD}
+                </InputLabel>
+                <Select
+                  autoWidth
+                  value={settings.paymentMethod}
+                  onChange={onChangeData}
+                  inputProps={{
+                    name: 'paymentMethod',
+                    id: 'outlined-paymentmethod-simple'
+                  }}>
+                  <MenuItem value={PAYMENT_METHOD_STRIPE}>Stripe</MenuItem>
+                  <MenuItem value={PAYMENT_METHOD_PAYPAL}>Paypal</MenuItem>
+                  <MenuItem value={PAYMENT_METHOD_PAYTM}>Paytm</MenuItem>
+                </Select>
+              </FormControl>
+              <TextField
+                variant='outlined'
+                label={SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT}
+                fullWidth
+                margin="normal"
+                name='stripePublishableKey'
+                value={settings.stripePublishableKey || ''}
+                onChange={onChangeData}/>
+              <ImgSwitcher
+                title={SITE_SETTINGS_LOGO}
+                src={settings.logopath || props.siteinfo.logopath}
+                onSelection={onChangeData}/>
+            </CardContent>
+            <CardActions>
+              <Button
+                type='submit'
+                value='Save'
+                disabled={!!((!settings.title && !settings.subtitle && !settings.logopath))}>
+                  Save
+              </Button>
+            </CardActions>
+          </form>
+        </Card>
+
+        {/* <Grid container direction='column'>
+          <Grid item>
+            <Typography variant='h5'>
+              {SITE_SETTINGS_SECTION_GENERAL}
+            </Typography>
+          </Grid>
+          <Grid item>
+            <form onSubmit={handleGeneralSettingsSubmit}>
+
+              <Button
+                variant='contained'
+                color='default'
+                type='submit'
+                value='Save'
+                disabled={!!((!settings.title && !settings.subtitle && !settings.logopath))}>
+                  Save
+              </Button>
+            </form>
+          </Grid>
+        </Grid> */}
+      </Grid>
+
+      <Grid item xs={12}>
+        <Card>
+          <form onSubmit={handleAdminSettingsSubmit}>
+            <CardContent>
+              <Typography variant='h6'>
+                {SITE_SETTINGS_SECTION_PAYMENT}
+              </Typography>
+              <TextField
+                variant='outlined'
+                label={SITE_ADMIN_SETTINGS_STRIPE_SECRET}
+                fullWidth
+                margin="normal"
+                name='stripeSecret'
+                type='password'
+                value={adminSettings.stripeSecret || ''}
+                onChange={onAdminSettingsChanged}/>
+              <TextField
+                variant='outlined'
+                label={SITE_ADMIN_SETTINGS_PAYPAL_SECRET}
+                fullWidth
+                margin="normal"
+                name='paypalSecret'
+                type='password'
+                value={adminSettings.paypalSecret || ''}
+                onChange={onAdminSettingsChanged}/>
+              <TextField
+                variant='outlined'
+                label={SITE_ADMIN_SETTINGS_PAYTM_SECRET}
+                fullWidth
+                margin="normal"
+                name='paytmSecret'
+                type='password'
+                value={adminSettings.paytmSecret || ''}
+                onChange={onAdminSettingsChanged}/>
+            </CardContent>
+            <CardActions>
+              <Button
+                type='submit'
+                value='Save'
+                disabled={!!((!settings.title && !settings.subtitle && !settings.logopath))}>
+                Save
+              </Button>
+            </CardActions>
+          </form>
+        </Card>
+
+        {/* <Grid container direction='column'>
+          <Grid item>
+            <Typography variant='h5'>
+              {SITE_SETTINGS_SECTION_PAYMENT}
+            </Typography>
+          </Grid>
+          <Grid item>
+            <form onSubmit={handleAdminSettingsSubmit}>
+
+            </form>
+          </Grid>
+        </Grid> */}
+      </Grid>
+
       {mediaManagerVisibility &&
         <MediaManager
           toggleVisibility={toggleMediaManagerVisibility}
           onMediaSelected={onChangeData}/>
       }
-    </section>
+    </Grid>
   )
 }
 

@@ -82,10 +82,15 @@ exports.makeModelTextSearchable = (Model) => async (searchData, options = {}) =>
 
   validateSearchInput(searchData, checkIfRequestIsAuthenticated)
 
-  return Model
+  const query = Model
     .find(searchData.query)
     .skip(offset * itemsPerPage)
     .limit(itemsPerPage)
+  if (options.sortByColumn && options.sortOrder) {
+    query.sort({ [options.sortByColumn]: options.sortOrder })
+  }
+
+  return query
 }
 
 const validateSearchInput = (searchData, checkIfRequestIsAuthenticated) => {

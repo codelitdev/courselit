@@ -19,6 +19,10 @@ exports.getCreatorMedia = async (offset, ctx, text) => {
 
   return searchMedia(
     { offset, query, graphQLContext: ctx },
-    { itemsPerPage: mymediaLimit }
+    {
+      itemsPerPage: mymediaLimit,
+      sortByColumn: '_id',
+      sortOrder: -1
+    }
   )
 }
