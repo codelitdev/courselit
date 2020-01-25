@@ -331,47 +331,13 @@ const MediaManager = (props) => {
           </CardContent>
         </Card>
         }
-      </Grid>
-      <div className="container">
-        {/* Upload Area */}
-        {uploadFormVisible &&
-        <div>
-
-          {/* <button onClick={cancelMediaUpload}>{BUTTON_CANCEL_TEXT}</button> */}
-        </div>
-        }
-        {/* {!uploadFormVisibility &&
-        <button onClick={toggleUploadFormVisibility}>{MEDIA_ADD_NEW_BUTTON_TEXT}</button>} */}
-
-        {/* Search Area */}
-        {/* <div>
-        <input
-          type='text'
-          name='search'
-          value={searchText}
-          placeholder={MEDIA_SEARCH_INPUT_PLACEHOLDER}
-          onChange={onSearchTextChanged}/>
-        <input
-          type='submit'
-          value='Search'
-          onClick={searchMedia}
-          disabled={searchText.trim().length !== 0 ? '' : 'disabled'}/>
-      </div> */}
-
-        <div>
-          <button
-            disabled={selectedMedia === null ? 'disabled' : ''}
-            onClick={onMediaSelected}>Select</button>
-          {/* <button
-          onClick={onClose}>Cancel</button> */}
-        </div>
         <Fab
           color={uploadFormVisible ? 'default' : 'secondary'}
           className={classes.fab}
           onClick={showUploadForm}>
           {uploadFormVisible ? <Done /> : <Add />}
         </Fab>
-      </div>
+      </Grid>
     </>
   )
 }
