@@ -1,6 +1,11 @@
-## Running
-### locally
+# Introduction
+CourseLit is a decoupled content management system (CMS) for teachers and course creators.
+
+## Setup
+### Local
 - Install MongoDB
+- Install imagemagick, ffmpeg
+- Create two folders `uploads` and `thumbs` in your home folder or set an environment variable `MEDIA_FOLDER` where the prior mentioned folders are located.
 
 ## Testing
 ### Backend

@@ -16,7 +16,7 @@ import {
   PAYMENT_METHOD_STRIPE
 } from '../config/constants.js'
 import { networkAction, newSiteInfoAvailable, setAppError } from '../redux/actions.js'
-import ImgSwitcher from './ImgSwitcher.js'
+import MediaSelector from './MediaSelector.js'
 import {
   TextField,
   Button,
@@ -291,7 +291,7 @@ const SiteSettings = props => {
                 name='stripePublishableKey'
                 value={settings.stripePublishableKey || ''}
                 onChange={onChangeData}/>
-              <ImgSwitcher
+              <MediaSelector
                 title={SITE_SETTINGS_LOGO}
                 src={settings.logopath || props.siteinfo.logopath}
                 onSelection={onChangeData}/>
