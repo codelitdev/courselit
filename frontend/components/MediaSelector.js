@@ -1,13 +1,20 @@
 import React, { useState } from 'react'
 import PropTypes from 'prop-types'
-import { BUTTON_IMAGE_CHANGE, DIALOG_TITLE_FEATURED_IMAGE } from '../config/strings.js'
+import { BUTTON_SELECT_MEDIA, DIALOG_TITLE_FEATURED_IMAGE } from '../config/strings.js'
 import Img from './Img.js'
 import MediaManagerDialog from './MediaManagerDialog.js'
+import { Grid, Button, Typography } from '@material-ui/core'
+import { makeStyles } from '@material-ui/styles'
 
-import { Grid, Button } from '@material-ui/core'
+const useStyles = makeStyles(theme => ({
+  control: {
+    marginLeft: theme.spacing(1)
+  }
+}))
 
-const ImgSwitcher = (props) => {
+const MediaSelector = (props) => {
   const [dialogOpened, setDialogOpened] = useState(false)
+  const classes = useStyles()
 
   const onSelection = mediaID => {
     setDialogOpened(!dialogOpened)
@@ -15,16 +22,18 @@ const ImgSwitcher = (props) => {
   }
 
   return (
-    <Grid container>
+    <Grid container direction='row' alignItems='center'>
       <Grid item>
-        {props.title}
+        <Typography variant='body1'>
+          {props.title}
+        </Typography>
       </Grid>
-      <Grid item>
+      <Grid item className={classes.control}>
         <Img src={props.src} isThumbnail={true} />
       </Grid>
-      <Grid item>
+      <Grid item className={classes.control}>
         <Button onClick={() => setDialogOpened(!dialogOpened)}>
-          {BUTTON_IMAGE_CHANGE}
+          {BUTTON_SELECT_MEDIA}
         </Button>
       </Grid>
       <MediaManagerDialog
@@ -36,10 +45,10 @@ const ImgSwitcher = (props) => {
   )
 }
 
-ImgSwitcher.propTypes = {
+MediaSelector.propTypes = {
   title: PropTypes.string,
   src: PropTypes.string,
   onSelection: PropTypes.func.isRequired
 }
 
-export default ImgSwitcher
+export default MediaSelector

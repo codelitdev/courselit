@@ -81,3 +81,11 @@ export const appError = PropTypes.shape({
     cb: PropTypes.func.isRequired
   })
 })
+
+export const lesson = PropTypes.shape({
+  title: PropTypes.string.isRequired,
+  type: PropTypes.string.isRequired,
+  downloadable: PropTypes.bool.isRequired,
+  content: PropTypes.string,
+  contentURL: PropTypes.string
+})
