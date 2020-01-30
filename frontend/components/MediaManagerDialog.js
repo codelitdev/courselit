@@ -1,21 +1,41 @@
-import React from 'react'
+import React, {useState} from 'react'
 import PropTypes from 'prop-types'
-import { Dialog, DialogTitle } from '@material-ui/core'
-import MediaManager from './MediaManager.js'
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button
+} from '@material-ui/core'
+import MediaGallery from './MediaGallery.js'
+import { 
+  BUTTON_CANCEL_TEXT,
+  DIALOG_SELECT_BUTTON
+} from '../config/strings.js'
 
 const MediaManagerDialog = (props) => {
   const { onClose, onOpen } = props
+  const [selectedMediaId, setSelectedMediaId] = useState('')
 
-  const handleSelection = (path) => {
-    onClose(path)
-  }
+  const handleSelection = () => onClose(selectedMediaId)
 
   return (
-    <Dialog onClose={handleSelection} open={onOpen}>
+    <Dialog onClose={onClose} open={onOpen}>
       <DialogTitle>{props.title}</DialogTitle>
-      <MediaManager
-        onMediaSelected={handleSelection}
-        mediaAdditionAllowed={props.mediaAdditionAllowed} />
+      <DialogContent>
+        <MediaGallery
+          onMediaSelected={(mediaId) => setSelectedMediaId(mediaId)}/>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>
+          {BUTTON_CANCEL_TEXT}
+        </Button>
+        <Button
+          onClick={handleSelection}
+          disabled={selectedMediaId ? false : true}>
+          {DIALOG_SELECT_BUTTON}
+        </Button>
+      </DialogActions>
     </Dialog>
   )
 }

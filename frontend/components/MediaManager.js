@@ -8,18 +8,15 @@ import PropTypes from 'prop-types'
 import {
   MEDIA_UPLOAD_BUTTON_TEXT,
   ERR_MEDIA_UPLOAD_TITLE_TEXT,
-  MEDIA_SEARCH_INPUT_PLACEHOLDER,
-  LOAD_MORE_TEXT,
   MEDIA_MANAGER_PAGE_HEADING,
-  BUTTON_SEARCH,
   MEDIA_MANAGER_DIALOG_TITLE,
   BUTTON_ADD_FILE,
   FILE_UPLOAD_SUCCESS,
-  HEADER_YOUR_MEDIA
+  MEDIA_MANAGER_YOUR_MEDIA_HEADER
 } from '../config/strings.js'
 import { BACKEND } from '../config/constants.js'
 import { authProps } from '../types.js'
-import { networkAction, setAppError } from '../redux/actions.js'
+import { setAppError } from '../redux/actions.js'
 import {
   TextField,
   Button,
@@ -28,26 +25,17 @@ import {
   Fab,
   CardActions,
   Card,
-  CardContent,
-  GridList,
-  GridListTile,
-  GridListTileBar,
-  IconButton,
-  ListSubheader
+  CardContent
 } from '@material-ui/core'
 import { makeStyles } from '@material-ui/styles'
-import { Add, Done, InfoOutlined } from '@material-ui/icons'
+import { Add, Done } from '@material-ui/icons'
 import AppError from '../models/app-error.js'
-import AppLoader from './AppLoader.js'
-import FetchBuilder from '../lib/fetch.js'
+
+import MediaGallery from './MediaGallery.js'
 
 const useStyles = makeStyles(theme => ({
   header: {
     marginBottom: theme.spacing(1)
-  },
-  searchField: {
-    flexGrow: 1,
-    marginRight: theme.spacing(2)
   },
   fab: {
     position: 'fixed',
@@ -56,18 +44,6 @@ const useStyles = makeStyles(theme => ({
   },
   fileUploadInput: {
     display: 'none'
-  },
-  cardHeader: {
-    marginBottom: theme.spacing(2)
-  },
-  mediaGrid: {
-    paddingBottom: theme.spacing(2)
-  },
-  mediaGridHeader: {
-    height: 'auto'
-  },
-  gridListItemIcon: {
-    color: '#fff'
   }
 }))
 
@@ -81,25 +57,17 @@ const MediaManager = (props) => {
     uploadFormVisibility:
       typeof props.mediaAdditionAllowed !== 'undefined'
         ? props.mediaAdditionAllowed : true,
-    searchText: '',
     userError: '',
-    userMedia: [],
     selectedMedia: null
   }
   const [uploadData, setUploadData] = useState(defaults.uploadData)
-  const [searchText, setSearchText] = useState(defaults.searchText)
   const [userError, setUserError] = useState(defaults.userError)
-  // contains information about user's already uploaded media
-  const [userMedia, setUserMedia] = useState(defaults.userMedia)
   const [selectedMedia] = useState(defaults.selectedMedia)
   const fileInput = createRef()
-  const [mediaOffset, setMediaOffset] = useState(1)
   const classes = useStyles()
   const [uploadFormVisible, setUploadFormVisible] = useState(false)
 
-  useEffect(() => {
-    loadMedia()
-  }, [])
+  
 
   const onUploadDataChanged = (e) => setUploadData(
     Object.assign({}, uploadData, {
@@ -140,7 +108,7 @@ const MediaManager = (props) => {
 
       if (res.media) {
         setUploadData(defaults.uploadData)
-        setUserMedia([res.media, ...userMedia])
+        // setUserMedia([res.media, ...userMedia])
         props.dispatch(
           setAppError(new AppError(FILE_UPLOAD_SUCCESS))
         )
@@ -154,62 +122,14 @@ const MediaManager = (props) => {
   // const toggleUploadFormVisibility = () =>
   //   setUploadFormVisibility(!uploadFormVisibility)
 
-  const onSearchTextChanged = (e) =>
-    setSearchText(e.target.value)
+  
 
   // const cancelMediaUpload = () => {
   //   setUploadData(defaults.uploadData)
   //   toggleUploadFormVisibility()
   // }
 
-  const loadMedia = async () => {
-    const query = `
-    query {
-      media: getCreatorMedia(offset: ${mediaOffset}, searchText: "${searchText}") {
-        id,
-        title,
-        mimeType,
-      }
-    }
-    `
-    const fetch = new FetchBuilder()
-      .setUrl(`${BACKEND}/graph`)
-      .setPayload(query)
-      .setIsGraphQLEndpoint(true)
-      .setAuthToken(props.auth.token)
-      .build()
-    try {
-      props.dispatch(networkAction(true))
-      // const response = await queryGraphQL(
-      //   `${BACKEND}/graph`,
-      //   query,
-      //   props.auth.token
-      // )
-      const response = await fetch.exec()
-
-      // console.log(response)
-      if (response.media && response.media.length > 0) {
-        setUserMedia([...userMedia, ...response.media])
-        setMediaOffset(mediaOffset + 1)
-      }
-    } catch (err) {
-      setUserError(err.message)
-    } finally {
-      props.dispatch(networkAction(false))
-    }
-  }
-
-  const searchMedia = (e) => {
-    e.preventDefault()
-    reset()
-
-    loadMedia()
-  }
-
-  const reset = () => {
-    setUserMedia(defaults.userMedia)
-    setMediaOffset(1)
-  }
+  
 
   const onMediaSelected = () => {
     props.onMediaSelected(userMedia[selectedMedia])
@@ -279,58 +199,14 @@ const MediaManager = (props) => {
         </Card>
         }
         {!uploadFormVisible &&
-        <Card>
-          <CardContent>
-            <form onSubmit={searchMedia}>
-              <Grid container direction='row' alignItems='center'>
-                <Grid item className={classes.searchField}>
-                  <TextField
-                    value={searchText}
-                    variant='outlined'
-                    label=''
-                    fullWidth
-                    margin="normal"
-                    placeholder={MEDIA_SEARCH_INPUT_PLACEHOLDER}
-                    onChange={onSearchTextChanged}/>
-                </Grid>
-                <Grid item>
-                  <Button
-                    type='submit'
-                    variant={searchText.trim().length !== 0 ? 'contained' : 'text'}
-                    disabled={searchText.trim().length === 0}>
-                    {BUTTON_SEARCH}
-                  </Button>
-                </Grid>
-              </Grid>
-            </form>
-            <GridList cols={3} className={classes.mediaGrid}>
-              <GridListTile cols={3} key='Subheader' style={{ height: 'auto' }}>
-                <ListSubheader component='div'>
-                  {HEADER_YOUR_MEDIA}
-                </ListSubheader>
-              </GridListTile>
-              {userMedia.map((item) =>
-                <GridListTile key={item.id} cols={1}>
-                  <img src={`${BACKEND}/media/${item.id}?thumb=1`} />
-                  <GridListTileBar
-                    title={item.title}
-                    subtitle={item.mimeType}
-                    actionIcon={
-                      <IconButton className={classes.gridListItemIcon}>
-                        <InfoOutlined />
-                      </IconButton>
-                    }/>
-                </GridListTile>
-              )}
-            </GridList>
-            {props.networkAction &&
-                <AppLoader />}
-            <Button onClick={loadMedia}>
-              {LOAD_MORE_TEXT}
-            </Button>
-          </CardContent>
-        </Card>
-        }
+          <Card>
+            <CardContent>
+              <Typography variant='h6' className={classes.cardHeader}>
+                {MEDIA_MANAGER_YOUR_MEDIA_HEADER}
+              </Typography>
+              <MediaGallery />
+            </CardContent>
+          </Card>}
         <Fab
           color={uploadFormVisible ? 'default' : 'secondary'}
           className={classes.fab}

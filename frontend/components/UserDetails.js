@@ -50,7 +50,6 @@ const UserDetails = (props) => {
   const executeGQLCall = useExecuteGraphQLQuery()
 
   useEffect(() => {
-    console.log(props.user, newUserData)
     setError(getUserDataError())
   }, [newUserData.confirmPassword, newUserData.password])
 
@@ -167,102 +166,108 @@ const UserDetails = (props) => {
           justify='space-between'
           alignItems='center'>
           <Grid item>
-            <AccountCircle />
-          </Grid>
-          <Grid item xs={10}>
             <Grid
               container
               item
               direction='row'
               alignItems='center'>
-              <Typography variant='h6'>
-                {props.user.name}
-              </Typography>
-              {props.user.isAdmin &&
-                                <Typography variant='caption'>Admin</Typography>}
-              <Typography variant='caption'>
-                {props.user.verified ? CAPTION_VERIFIED : CAPTION_UNVERIFIED }
-              </Typography>
-            </Grid>
-            <Grid>
-              <Typography variant='body2'>
-                <a href={`mailto:${props.user.email}`}>{props.user.email}</a>
-              </Typography>
+              <Grid item>
+                <AccountCircle />
+              </Grid>
+              <Grid item>
+                <Grid item container direction='row' alignItems='center'>
+                  <Grid item>
+                    <Typography variant='h6'>
+                      {props.user.name}
+                    </Typography>
+                  </Grid>
+                  <Grid item>
+                    <Typography variant='body2'>
+                      <a href={`mailto:${props.user.email}`}>{props.user.email}</a>
+                    </Typography>
+                  </Grid>
+                </Grid>
+                {props.user.isAdmin &&
+                  <Typography variant='caption'>Admin</Typography>}
+                <Typography variant='caption'>
+                  {props.user.verified ? CAPTION_VERIFIED : CAPTION_UNVERIFIED }
+                </Typography>
+              </Grid>
             </Grid>
           </Grid>
-          <Grid item xs={1}>
+          <Grid item>
             <IconButton onClick={toggleExpandedState}>
               {expanded ? <ExpandLess /> : <ExpandMore />}
             </IconButton>
           </Grid>
         </Grid>
         {expanded &&
-                    <Grid item>
-                      <form onSubmit={saveUserChanges}>
-                        <Grid container direction='column'>
-                          <Grid container item>
-                            <Grid container item direction='row' justify='space-between' xs={12} sm={4}>
-                              <Typography variant='subtitle1'>{SWITCH_IS_ADMIN}</Typography>
-                              <Switch
-                                type='checkbox'
-                                name='isAdmin'
-                                checked={newUserData.isAdmin}
-                                onChange={e => updateUserData('isAdmin', e.target.checked)}/>
-                            </Grid>
-                            <Grid container item direction='row' justify='space-between' xs={12} sm={4}>
-                              <Typography variant='subtitle1'>{SWITCH_IS_CREATOR}</Typography>
-                              <Switch
-                                type='checkbox'
-                                name='isAdmin'
-                                checked={newUserData.isCreator}
-                                onChange={e => updateUserData('isCreator', e.target.checked)}/>
-                            </Grid>
-                            <Grid container item direction='row' justify='space-between' xs={12} sm={4}>
-                              <Typography variant='subtitle1'>{SWITCH_ACCOUNT_ACTIVE}</Typography>
-                              <Switch
-                                type='checkbox'
-                                name='active'
-                                checked={newUserData.active}
-                                onChange={e => updateUserData('active', e.target.checked)}/>
-                            </Grid>
-                          </Grid>
+          <Grid item>
+            <form onSubmit={saveUserChanges}>
+              <Grid container direction='column'>
+                <Grid container item>
+                  <Grid container item direction='row' justify='space-between' xs={12} sm={4}>
+                    <Typography variant='subtitle1'>{SWITCH_IS_ADMIN}</Typography>
+                    <Switch
+                      type='checkbox'
+                      name='isAdmin'
+                      checked={newUserData.isAdmin}
+                      onChange={e => updateUserData('isAdmin', e.target.checked)}/>
+                  </Grid>
+                  <Grid container item direction='row' justify='space-between' xs={12} sm={4}>
+                    <Typography variant='subtitle1'>{SWITCH_IS_CREATOR}</Typography>
+                    <Switch
+                      type='checkbox'
+                      name='isAdmin'
+                      checked={newUserData.isCreator}
+                      onChange={e => updateUserData('isCreator', e.target.checked)}/>
+                  </Grid>
+                  <Grid container item direction='row' justify='space-between' xs={12} sm={4}>
+                    <Typography variant='subtitle1'>{SWITCH_ACCOUNT_ACTIVE}</Typography>
+                    <Switch
+                      type='checkbox'
+                      name='active'
+                      checked={newUserData.active}
+                      onChange={e => updateUserData('active', e.target.checked)}/>
+                  </Grid>
+                </Grid>
+                <Grid item>
+                  <TextField
+                    variant='outlined'
+                    label={LABEL_NEW_PASSWORD}
+                    fullWidth
+                    margin='normal'
+                    name='password'
+                    type='password'
+                    value={newUserData.password}
+                    onChange={e => updateUserData('password', e.target.value)}/>
+                  <TextField
+                    variant='outlined'
+                    label={LABEL_CONF_PASSWORD}
+                    fullWidth
+                    margin='normal'
+                    name='confirmPassword'
+                    type='password'
+                    value={newUserData.confirmPassword}
+                    onChange={e => updateUserData('confirmPassword', e.target.value)}/>
+                </Grid>
+                <Grid container item justify='flex-end' alignItems='center'>
+                  {error &&
                           <Grid item>
-                            <TextField
-                              variant='outlined'
-                              label={LABEL_NEW_PASSWORD}
-                              fullWidth
-                              margin='normal'
-                              name='password'
-                              type='password'
-                              value={newUserData.password}
-                              onChange={e => updateUserData('password', e.target.value)}/>
-                            <TextField
-                              variant='outlined'
-                              label={LABEL_CONF_PASSWORD}
-                              fullWidth
-                              margin='normal'
-                              name='confirmPassword'
-                              type='password'
-                              value={newUserData.confirmPassword}
-                              onChange={e => updateUserData('confirmPassword', e.target.value)}/>
-                          </Grid>
-                          <Grid container item justify='flex-end' alignItems='center'>
-                            {error &&
-                                    <Grid item>
-                                      <Typography variant='caption' className={classes.error}>{error}</Typography>
-                                    </Grid>}
-                            <Grid item>
-                              <Button
-                                color='primary'
-                                onClick={saveUserChanges}
-                                disabled={!isNewUserDataValid()}>
-                                {BUTTON_SAVE}
-                              </Button>
-                            </Grid>
-                          </Grid>
-                        </Grid>
-                      </form>
-                    </Grid>}
+                            <Typography variant='caption' className={classes.error}>{error}</Typography>
+                          </Grid>}
+                  <Grid item>
+                    <Button
+                      color='primary'
+                      onClick={saveUserChanges}
+                      disabled={!isNewUserDataValid()}>
+                      {BUTTON_SAVE}
+                    </Button>
+                  </Grid>
+                </Grid>
+              </Grid>
+            </form>
+          </Grid>}
       </Grid>
     </Card>
   )
