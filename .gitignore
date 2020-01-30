@@ -19,3 +19,6 @@ coverage
 
 # report files
 report*.json
+
+# yarn
+.yarn

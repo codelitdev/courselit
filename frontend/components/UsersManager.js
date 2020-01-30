@@ -41,7 +41,6 @@ const UsersManager = (props) => {
     try {
       const response = await executeGQLCall(query)
       if (response.summary) {
-        console.log(response.summary)
         setUsersSummary({
           count: response.summary.count,
           verified: response.summary.verified,

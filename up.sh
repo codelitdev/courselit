@@ -13,10 +13,9 @@ fi
 FILE=$2
 if test -f "$FILE"; then
     cp $FILE .env
-    eval $("docker-machine.exe" env $1 --shell bash)
-    echo $DOCKER_HOST
-    docker-compose.exe $3 build
-    docker-compose.exe up -d
+    eval $(docker-machine env $1)
+    echo Deploying on $DOCKER_HOST
+    docker-compose up -d
 else
     echo "Error: $FILE does not exist"
     exit 1

@@ -14,7 +14,8 @@ const stringifyAndEncode = {
 }
 
 const TextEditor = (props) => {
-  const initState = props.initialContentState || EditorState.createEmpty(Editor.getDecorators())
+  const initState = props.initialContentState ||
+    EditorState.createEmpty(Editor.getDecorators())
   const [editorState, setEditorState] = useState(initState)
 
   React.useEffect(() => {

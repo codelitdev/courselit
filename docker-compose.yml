@@ -9,14 +9,11 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
     volumes:
-      - mongodata:/data/db
+      - db
     command: --quiet
     container_name: db
   frontend:
-    build:
-      context: ./frontend
-      # args:
-      #   backend: ${MAIN_URL}${API_PREFIX}
+    image: codelit/courselit-frontend:latest
     environment:
       - MAIN_URL=${MAIN_URL}
       - BACKEND=${MAIN_URL}${API_PREFIX}
@@ -27,8 +24,7 @@ services:
       - backend
     container_name: frontend
   backend:
-    build:
-      context: ./backend
+    image: codelit/courselit-backend:latest
     environment:
       - API_PREFIX=${API_PREFIX}
       - MEDIA_FOLDER=/
@@ -44,8 +40,7 @@ services:
       - db
     container_name: backend
   proxy:
-    build:
-      context: ./proxy
+    image: codelit/courselit-proxy:latest
     environment:
       - API_PREFIX=${API_PREFIX}
     ports:
@@ -56,7 +51,7 @@ services:
     container_name: proxy
 
 volumes:
-  mongodata:
+  db:
 #   uploads:
 #     driver: local
 #     driver_opts:

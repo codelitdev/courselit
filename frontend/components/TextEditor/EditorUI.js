@@ -3,20 +3,26 @@ import Editor from './Editor.js'
 import PropTypes from 'prop-types'
 import { BACKEND } from '../../config/constants.js'
 
-import { Grid, IconButton } from '@material-ui/core'
-import { AddPhotoAlternate, Code, FormatQuote, InsertLink } from '@material-ui/icons'
+import { Grid, IconButton, Dialog, AppBar, Toolbar, Slide, TransitionProps } from '@material-ui/core'
+import { AddPhotoAlternate, Code, FormatQuote, InsertLink, Close, Edit } from '@material-ui/icons'
 import MediaManager from '../MediaManager.js'
 import { makeStyles } from '@material-ui/styles'
-import {
-  MEDIA_MANAGER_DIALOG_TITLE
-} from '../../config/strings.js'
+import { MEDIA_MANAGER_DIALOG_TITLE } from '../../config/strings.js'
 import AppDialog from '../AppDialog.js'
 
-const useStyles = makeStyles({
+const useStyles = makeStyles(theme => ({
   container: {
     display: 'flex'
-  }
-})
+  },
+  editorContainer: {
+    marginTop: theme.spacing(1),
+    marginLeft: theme.spacing(1),
+    marginRight: theme.spacing(1)
+  },
+  appBar: {
+    position: 'relative',
+  },
+}))
 
 const stylingForInternalComponentsOfDraftJS = {
   media: {
@@ -46,7 +52,12 @@ const stylingForInternalComponentsOfDraftJS = {
   }
 }
 
+const Transition = React.forwardRef(function Transition(props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
+
 const EditorUI = (props) => {
+  const [open, setOpen] = useState(false)
   const [addImageDialogOpened, setAddImageDialogOpened] = useState(false)
   const classes = useStyles()
 
@@ -82,45 +93,60 @@ const EditorUI = (props) => {
     )
   }
 
-  return (
+  const openMediaSelection = () =>
+    setAddImageDialogOpened(true)
+  
+  const closeEditor = () => setOpen(false)
+
+  const editor = <Editor
+    editorState={props.editorState}
+    onChange={onChange}
+    readOnly={props.readOnly}
+    theme={stylingForInternalComponentsOfDraftJS} />
+
+  return props.readOnly ? editor : (
     <>
-      <Grid container direction='column' className={classes.container}>
-        {!props.readOnly &&
-          <Grid item>
-            <IconButton onClick={() => setAddImageDialogOpened(true)}>
-              <AddPhotoAlternate />
-            </IconButton>
-            <IconButton onClick={toggleLink}>
-              <InsertLink />
-            </IconButton>
-            <IconButton onClick={highlightCode}>
-              <Code />
-            </IconButton>
-            <IconButton onClick={toggleBlockquote}>
-              <FormatQuote />
-            </IconButton>
-          </Grid>
-        }
-        <Grid item>
-          <Editor
-            editorState={props.editorState}
-            onChange={onChange}
-            readOnly={props.readOnly}
-            theme={stylingForInternalComponentsOfDraftJS} />
-        </Grid>
-      </Grid>
-      {/* <MediaManagerDialog
-        onOpen={addImageDialogOpened}
-        onClose={handleMediaManagerClose}
-        title={MEDIA_MANAGER_DIALOG_TITLE}/> */}
-      <AppDialog
-        onOpen={addImageDialogOpened}
-        onClose={handleMediaManagerClose}
-        title={MEDIA_MANAGER_DIALOG_TITLE}>
-        <MediaManager
-          onMediaSelected={handleMediaManagerClose}
-          mediaAdditionAllowed={false} />
-      </AppDialog>
+      <IconButton onClick={() => setOpen(true)}>
+        <Edit />
+      </IconButton>
+      <Dialog
+        fullScreen
+        open={open}
+        onClose={closeEditor}
+        TransitionComponent={Transition}>
+        <AppBar className={classes.appBar}>
+          <Toolbar>
+              <IconButton color='inherit' onClick={openMediaSelection}>
+                <AddPhotoAlternate />
+              </IconButton>
+              <IconButton color='inherit' onClick={toggleLink}>
+                <InsertLink />
+              </IconButton>
+              <IconButton color='inherit' onClick={highlightCode}>
+                <Code />
+              </IconButton>
+              <IconButton color='inherit' onClick={toggleBlockquote}>
+                <FormatQuote />
+              </IconButton>
+              <IconButton edge='end' color='inherit' onClick={closeEditor}>
+                <Close />
+              </IconButton>
+          </Toolbar>
+        </AppBar>
+        {editor}
+        {/* <MediaManagerDialog
+          onOpen={addImageDialogOpened}
+          onClose={handleMediaManagerClose}
+          title={MEDIA_MANAGER_DIALOG_TITLE}/> */}
+        <AppDialog
+          onOpen={addImageDialogOpened}
+          onClose={handleMediaManagerClose}
+          title={MEDIA_MANAGER_DIALOG_TITLE}>
+          <MediaManager
+            onMediaSelected={handleMediaManagerClose}
+            mediaAdditionAllowed={false} />
+        </AppDialog>
+      </Dialog>
     </>
   )
 }
