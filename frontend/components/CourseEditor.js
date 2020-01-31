@@ -106,6 +106,7 @@ const CourseEditor = (props) => {
   const [lessons, setLessons] = useState([])
   const classes = useStyles()
   const executeGQLCall = useExecuteGraphQLQuery()
+  const [lessonIndex, setLessonIndex] = useState(0)
 
   // The following ref is used for accessing previous state in hooks
   // Reference: https://reactjs.org/docs/hooks-faq.html#how-to-get-the-previous-props-or-state
@@ -339,8 +340,13 @@ const CourseEditor = (props) => {
   const closeDeleteCoursePopup = () =>
     setDeleteCoursePopupOpened(false)
 
-  const onAddLesson = () =>
-    setLessons([...lessons, LessonEditor.emptyLesson])
+  const onAddLesson = () => {
+    const emptyLessonWithLocalIndexKey = Object.assign({}, LessonEditor.emptyLesson, {
+      lessonIndex: lessonIndex
+    })
+    setLessonIndex(lessonIndex+1)
+    setLessons([...lessons, emptyLessonWithLocalIndexKey])
+  }
 
   return (
     <Grid container direction='column'>
@@ -507,7 +513,7 @@ const CourseEditor = (props) => {
                       lessonIndexOnCourseEditorPage={index}
                       onLessonCreated={(lesson) => {}}
                       onLessonUpdated={(index, lesson) => {}}
-                      key={index} />
+                      key={item.lessonIndex} />
                   </Grid>
               )}
               <Grid item>
