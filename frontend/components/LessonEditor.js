@@ -65,6 +65,7 @@ const useStyles = makeStyles(theme => ({
 const LessonEditor = (props) => {
   console.log(props.lesson)
   const [lesson, setLesson] = useState(props.lesson || LessonEditor.emptyLesson)
+  const [error, setError] = useState('')
   const classes = useStyles()
   const inputLabel = React.useRef(null)
   const [labelWidth, setLabelWidth] = React.useState(0)
@@ -74,95 +75,97 @@ const LessonEditor = (props) => {
     setLabelWidth(inputLabel.current.offsetWidth)
   }, [])
 
-  const onLessonCreate = async (e, index) => {
+  const onLessonCreate = async (e) => {
     e.preventDefault()
-
-    const lesson = courseData.lessons[index]
-
-    // clear error messages from previous submission
-    setError()
+    setError('')
 
     if (lesson.id) {
-      // update the existing record
-      const query = `
-      mutation {
-        lesson: updateLesson(lessonData: {
-          id: "${lesson.id}"
-          title: "${lesson.title}",
-          downloadable: ${lesson.downloadable},
-          type: ${lesson.type.toUpperCase()},
-          content: ${lesson.content !== '' ? '"' + lesson.content + '"' : null},
-          contentURL: ${lesson.contentURL !== '' ? '"' + lesson.contentURL + '"' : null}
-        }) {
-          id,
-          title,
-          downloadable,
-          type,
-          content,
-          contentURL
-        }
-      }
-      `
-
-      try {
-        props.dispatch(networkAction(true))
-        const response = await queryGraphQL(
-          `${BACKEND}/graph`,
-          query,
-          props.auth.token
-        )
-
-        if (response.lesson) {
-          console.log(response.lesson)
-        }
-      } catch (err) {
-        setError(err.message)
-      } finally {
-        props.dispatch(networkAction(false))
-      }
+      await updateLesson()
     } else {
-      // create a new record
-      const query = `
-      mutation {
-        lesson: createLesson(lessonData: {
-          title: "${lesson.title}",
-          downloadable: ${lesson.downloadable},
-          type: ${lesson.type.toUpperCase()},
-          content: ${lesson.content !== '' ? '"' + lesson.content + '"' : null},
-          contentURL: ${lesson.contentURL !== '' ? '"' + lesson.contentURL + '"' : null},
-          courseId: "${courseData.course.id}"
-        }) {
-          id
-        }
-      }
-      `
+      await createLesson()
+    }
+  }
 
-      try {
-        props.dispatch(networkAction(true))
-        const response = await queryGraphQL(
-          `${BACKEND}/graph`,
-          query,
-          props.auth.token
+  const updateLesson = async () => {
+    const query = `
+    mutation {
+      lesson: updateLesson(lessonData: {
+        id: "${lesson.id}"
+        title: "${lesson.title}",
+        downloadable: ${lesson.downloadable},
+        type: ${lesson.type.toUpperCase()},
+        content: ${lesson.content !== '' ? '"' + lesson.content + '"' : null},
+        contentURL: ${lesson.contentURL !== '' ? '"' + lesson.contentURL + '"' : null}
+      }) {
+        id,
+        title,
+        downloadable,
+        type,
+        content,
+        contentURL
+      }
+    }
+    `
+
+    try {
+      props.dispatch(networkAction(true))
+      const response = await queryGraphQL(
+        `${BACKEND}/graph`,
+        query,
+        props.auth.token
+      )
+
+      if (response.lesson) {
+        console.log(response.lesson)
+      }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      props.dispatch(networkAction(false))
+    }
+  }
+
+  const createLesson = async () => {
+    const query = `
+    mutation {
+      lesson: createLesson(lessonData: {
+        title: "${lesson.title}",
+        downloadable: ${lesson.downloadable},
+        type: ${lesson.type.toUpperCase()},
+        content: ${lesson.content !== '' ? '"' + lesson.content + '"' : null},
+        contentURL: ${lesson.contentURL !== '' ? '"' + lesson.contentURL + '"' : null},
+        courseId: "${courseData.course.id}"
+      }) {
+        id
+      }
+    }
+    `
+
+    try {
+      props.dispatch(networkAction(true))
+      const response = await queryGraphQL(
+        `${BACKEND}/graph`,
+        query,
+        props.auth.token
+      )
+
+      if (response.lesson) {
+        setCourseData(
+          Object.assign({}, courseData, {
+            lessons: [
+              ...courseData.lessons.slice(0, index),
+              Object.assign({}, lesson, {
+                id: response.lesson.id
+              }),
+              ...courseData.lessons.slice(index + 1)
+            ]
+          })
         )
-
-        if (response.lesson) {
-          setCourseData(
-            Object.assign({}, courseData, {
-              lessons: [
-                ...courseData.lessons.slice(0, index),
-                Object.assign({}, lesson, {
-                  id: response.lesson.id
-                }),
-                ...courseData.lessons.slice(index + 1)
-              ]
-            })
-          )
-        }
-      } catch (err) {
-        setError(err.message)
-      } finally {
-        props.dispatch(networkAction(false))
       }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      props.dispatch(networkAction(false))
     }
   }
 
