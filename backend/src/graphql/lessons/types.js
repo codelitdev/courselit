@@ -40,7 +40,7 @@ const lessonType = new graphql.GraphQLObjectType({
       description: DESCRIPTION_REQUIRES_ENROLLMENT,
       type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean)
     },
-    // courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+    courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     content: { type: graphql.GraphQLString },
     contentURL: { type: graphql.GraphQLString }
   }
@@ -57,7 +57,8 @@ const lessonMetaType = new graphql.GraphQLObjectType({
     requiresEnrollment: {
       description: DESCRIPTION_REQUIRES_ENROLLMENT,
       type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean)
-    }
+    },
+    courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) }
   }
 })
 

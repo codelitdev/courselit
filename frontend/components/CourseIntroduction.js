@@ -1,7 +1,6 @@
 import React from 'react'
 import { connect } from 'react-redux'
 import { publicCourse } from '../types'
-import { Grid } from '@material-ui/core'
 import Article from './Article'
 
 const CourseIntroduction = (props) => {
@@ -11,9 +10,9 @@ const CourseIntroduction = (props) => {
   }
 
   return (
-    <Grid container>
+    <>
       {course && <Article course={course} options={options} />}
-    </Grid>
+    </>
   )
 }
 

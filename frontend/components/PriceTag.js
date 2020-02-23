@@ -3,8 +3,17 @@ import { connect } from 'react-redux'
 import PropTypes from 'prop-types'
 import { FREE_COST } from '../config/strings'
 import { siteInfoProps } from '../types'
+import { Typography } from '@material-ui/core'
+import { makeStyles } from '@material-ui/styles'
+
+const useStyles = makeStyles({
+  price: {
+    fontSize: '3em'
+  }
+})
 
 const PriceTag = (props) => {
+  const classes = useStyles()
   const cost = props.cost || 0
   const costText = cost <= 0
     ? FREE_COST : (
@@ -13,7 +22,11 @@ const PriceTag = (props) => {
         : `${cost} ${props.siteInfo.currencyISOCode}`
     )
 
-  return <>{costText}</>
+  return (
+    <Typography variant='subtitle1' color='primary' className={classes.price}>
+      {costText}
+    </Typography>
+  )
 }
 
 PriceTag.propTypes = {

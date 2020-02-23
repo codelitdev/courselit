@@ -4,7 +4,7 @@ import {
   Card,
   CardContent,
   CardActions,
-  Button, 
+  Button,
   TextField,
   Typography,
   Grid,
@@ -13,7 +13,7 @@ import {
   FormControl,
   InputLabel,
   MenuItem
-} from "@material-ui/core"
+} from '@material-ui/core'
 import {
   BUTTON_SAVE,
   BUTTON_DELETE_LESSON_TEXT,
@@ -21,9 +21,15 @@ import {
   DOWNLOADABLE_SWITCH,
   TYPE_DROPDOWN,
   LESSON_CONTENT_HEADER,
-  CONTENT_URL_LABEL
-} from "../config/strings"
-import {lesson as lessonType} from '../types.js'
+  CONTENT_URL_LABEL,
+  LESSON_REQUIRES_ENROLLMENT,
+  DELETE_LESSON_POPUP_HEADER,
+  POPUP_CANCEL_ACTION,
+  POPUP_OK_ACTION,
+  APP_MESSAGE_LESSON_DELETED,
+  APP_MESSAGE_LESSON_SAVED
+} from '../config/strings'
+import { lesson as lessonType, authProps } from '../types.js'
 import {
   BACKEND,
   LESSON_TYPE_TEXT,
@@ -36,6 +42,11 @@ import { capitalize } from '../lib/utils'
 import { makeStyles } from '@material-ui/styles'
 import TextEditor from './TextEditor'
 import MediaSelector from './MediaSelector'
+import FetchBuilder from '../lib/fetch'
+import { networkAction, setAppMessage } from '../redux/actions'
+import { connect } from 'react-redux'
+import AppDialog from './AppDialog'
+import AppMessage from '../models/app-message.js'
 
 const useStyles = makeStyles(theme => ({
   formControl: {
@@ -59,25 +70,67 @@ const useStyles = makeStyles(theme => ({
   editorLabel: {
     fontSize: '1em',
     marginBottom: theme.spacing(1)
-  },
+  }
 }))
 
 const LessonEditor = (props) => {
-  console.log(props.lesson)
-  const [lesson, setLesson] = useState(props.lesson || LessonEditor.emptyLesson)
-  const [error, setError] = useState('')
+  const [lesson, setLesson] = useState(props.lesson)
+  // const [error, setError] = useState('')
   const classes = useStyles()
   const inputLabel = React.useRef(null)
   const [labelWidth, setLabelWidth] = React.useState(0)
-  const [open, setOpen] = useState(false)
+  const [deleteLessonPopupOpened, setDeleteLessonPopupOpened] = useState(false)
 
   useEffect(() => {
-    setLabelWidth(inputLabel.current.offsetWidth)
-  }, [])
+    setLabelWidth(inputLabel.current && inputLabel.current.offsetWidth)
+  }, [lesson.type])
+
+  useEffect(() => {
+    props.lesson.id && loadLesson(props.lesson.id)
+  }, [props.lesson.id])
+
+  const loadLesson = async (id) => {
+    const query = `
+    query {
+      lesson: getLesson(id: "${id}") {
+        id,
+        title,
+        downloadable,
+        type,
+        content,
+        contentURL,
+        requiresEnrollment
+      }
+    }
+    `
+
+    const fetch = new FetchBuilder()
+      .setUrl(`${BACKEND}/graph`)
+      .setPayload(query)
+      .setIsGraphQLEndpoint(true)
+      .setAuthToken(props.auth.token)
+      .build()
+
+    try {
+      props.dispatch(networkAction(true))
+      const response = await fetch.exec()
+
+      if (response.lesson) {
+        console.log(response.lesson)
+        setLesson(Object.assign({}, response.lesson, {
+          content: TextEditor.hydrate(response.lesson.content)
+        }))
+      }
+    } catch (err) {
+      // setError(err.message)
+    } finally {
+      props.dispatch(networkAction(false))
+    }
+  }
 
   const onLessonCreate = async (e) => {
     e.preventDefault()
-    setError('')
+    // setError('')
 
     if (lesson.id) {
       await updateLesson()
@@ -94,8 +147,9 @@ const LessonEditor = (props) => {
         title: "${lesson.title}",
         downloadable: ${lesson.downloadable},
         type: ${lesson.type.toUpperCase()},
-        content: ${lesson.content !== '' ? '"' + lesson.content + '"' : null},
-        contentURL: ${lesson.contentURL !== '' ? '"' + lesson.contentURL + '"' : null}
+        content: "${TextEditor.stringify(lesson.content)}",
+        contentURL: ${lesson.contentURL !== '' ? '"' + lesson.contentURL + '"' : null},
+        requiresEnrollment: ${lesson.requiresEnrollment}
       }) {
         id,
         title,
@@ -106,22 +160,29 @@ const LessonEditor = (props) => {
       }
     }
     `
+    const fetch = new FetchBuilder()
+      .setUrl(`${BACKEND}/graph`)
+      .setPayload(query)
+      .setIsGraphQLEndpoint(true)
+      .setAuthToken(props.auth.token)
+      .build()
 
     try {
       props.dispatch(networkAction(true))
-      const response = await queryGraphQL(
-        `${BACKEND}/graph`,
-        query,
-        props.auth.token
-      )
+      const response = await fetch.exec()
 
       if (response.lesson) {
         console.log(response.lesson)
       }
     } catch (err) {
-      setError(err.message)
+      props.dispatch(
+        setAppMessage(new AppMessage(err.message))
+      )
     } finally {
       props.dispatch(networkAction(false))
+      props.dispatch(
+        setAppMessage(new AppMessage(APP_MESSAGE_LESSON_SAVED))
+      )
     }
   }
 
@@ -132,49 +193,44 @@ const LessonEditor = (props) => {
         title: "${lesson.title}",
         downloadable: ${lesson.downloadable},
         type: ${lesson.type.toUpperCase()},
-        content: ${lesson.content !== '' ? '"' + lesson.content + '"' : null},
+        content: "${TextEditor.stringify(lesson.content)}",
         contentURL: ${lesson.contentURL !== '' ? '"' + lesson.contentURL + '"' : null},
-        courseId: "${courseData.course.id}"
+        courseId: "${lesson.courseId}",
+        requiresEnrollment: ${lesson.requiresEnrollment}
       }) {
         id
       }
     }
     `
+    const fetch = new FetchBuilder()
+      .setUrl(`${BACKEND}/graph`)
+      .setPayload(query)
+      .setIsGraphQLEndpoint(true)
+      .setAuthToken(props.auth.token)
+      .build()
 
     try {
       props.dispatch(networkAction(true))
-      const response = await queryGraphQL(
-        `${BACKEND}/graph`,
-        query,
-        props.auth.token
-      )
+      const response = await fetch.exec()
 
       if (response.lesson) {
-        setCourseData(
-          Object.assign({}, courseData, {
-            lessons: [
-              ...courseData.lessons.slice(0, index),
-              Object.assign({}, lesson, {
-                id: response.lesson.id
-              }),
-              ...courseData.lessons.slice(index + 1)
-            ]
-          })
-        )
+        setLesson(Object.assign({}, lesson, { id: response.lesson.id }))
       }
     } catch (err) {
-      setError(err.message)
+      props.dispatch(
+        setAppMessage(new AppMessage(err.message))
+      )
     } finally {
       props.dispatch(networkAction(false))
+      props.dispatch(
+        setAppMessage(new AppMessage(APP_MESSAGE_LESSON_SAVED))
+      )
     }
   }
 
   const onLessonDelete = async (index) => {
-    let shouldRemoveLocal = false
-    const lesson = courseData.lessons[index]
-
-    // clear error messages from previous submission
-    setError()
+    setDeleteLessonPopupOpened(false)
+    // setError()
 
     if (lesson.id) {
       const query = `
@@ -182,35 +238,32 @@ const LessonEditor = (props) => {
         result: deleteLesson(id: "${lesson.id}")
       }
       `
+      const fetch = new FetchBuilder()
+        .setUrl(`${BACKEND}/graph`)
+        .setPayload(query)
+        .setIsGraphQLEndpoint(true)
+        .setAuthToken(props.auth.token)
+        .build()
 
       try {
         props.dispatch(networkAction(true))
-        const response = await queryGraphQL(
-          `${BACKEND}/graph`,
-          query,
-          props.auth.token
-        )
+        const response = await fetch.exec()
 
         if (response.result) {
-          shouldRemoveLocal = true
+          props.dispatch(
+            setAppMessage(
+              new AppMessage(APP_MESSAGE_LESSON_DELETED)
+            )
+          )
         }
       } catch (err) {
-        setError(err.message)
+        props.dispatch(
+          setAppMessage(new AppMessage(err.message))
+        )
       }
-    } else {
-      shouldRemoveLocal = true
     }
 
-    if (shouldRemoveLocal) {
-      setCourseData(
-        Object.assign({}, courseData, {
-          lessons: [
-            ...courseData.lessons.slice(0, index),
-            ...courseData.lessons.slice(index + 1)
-          ]
-        })
-      )
-    }
+    props.onLessonDeleted(lesson.lessonIndex)
   }
 
   const onLessonDetailsChange = (e) =>
@@ -222,8 +275,11 @@ const LessonEditor = (props) => {
     )
 
   const changeTextContent = (editorState) => setLesson(
-    Object.assign({}, lesson, {content: editorState})
+    Object.assign({}, lesson, { content: editorState })
   )
+
+  const closeDeleteLessonPopup = () =>
+    setDeleteLessonPopupOpened(false)
 
   return (
     <Card>
@@ -231,7 +287,8 @@ const LessonEditor = (props) => {
         <Typography variant='h6'>
           {LESSON_EDITOR_HEADER}
         </Typography>
-        <form onSubmit={onLessonCreate}>
+        {lesson.type &&
+        <form>
           <TextField
             required
             variant='outlined'
@@ -256,16 +313,17 @@ const LessonEditor = (props) => {
                 name: 'type'
               }}
             >
-              <MenuItem value={LESSON_TYPE_TEXT}>
+              {/* <MenuItem value="TEXT">Text</MenuItem> */}
+              <MenuItem value={String.prototype.toUpperCase.call(LESSON_TYPE_TEXT)}>
                 {capitalize(LESSON_TYPE_TEXT)}
               </MenuItem>
-              <MenuItem value={LESSON_TYPE_VIDEO}>
+              <MenuItem value={String.prototype.toUpperCase.call(LESSON_TYPE_VIDEO)}>
                 {capitalize(LESSON_TYPE_VIDEO)}
               </MenuItem>
-              <MenuItem value={LESSON_TYPE_AUDIO}>
+              <MenuItem value={String.prototype.toUpperCase.call(LESSON_TYPE_AUDIO)}>
                 {capitalize(LESSON_TYPE_AUDIO)}
               </MenuItem>
-              <MenuItem value={LESSON_TYPE_PDF}>
+              <MenuItem value={String.prototype.toUpperCase.call(LESSON_TYPE_PDF)}>
                 {capitalize(LESSON_TYPE_PDF)}
               </MenuItem>
               {/* <MenuItem value={LESSON_TYPE_QUIZ}>
@@ -273,15 +331,18 @@ const LessonEditor = (props) => {
               </MenuItem> */}
             </Select>
           </FormControl>
-          {![LESSON_TYPE_TEXT, LESSON_TYPE_QUIZ].includes(lesson.type) &&
+          {![
+            String.prototype.toUpperCase.call(LESSON_TYPE_TEXT),
+            String.prototype.toUpperCase.call(LESSON_TYPE_QUIZ)
+          ].includes(lesson.type) &&
             <div className={classes.formControl}>
               <MediaSelector
                 title={CONTENT_URL_LABEL}
                 src={lesson.contentURL}
                 onSelection={(mediaId) => setLesson(
-                  Object.assign({}, lesson, {contentURL: mediaId})
+                  Object.assign({}, lesson, { contentURL: mediaId })
                 )}
-                />
+              />
             </div>}
           <Grid
             container
@@ -305,7 +366,7 @@ const LessonEditor = (props) => {
           {[LESSON_TYPE_VIDEO,
             LESSON_TYPE_AUDIO,
             LESSON_TYPE_PDF
-            ].includes(lesson.type) &&
+          ].includes(lesson.type) &&
             <Grid
               container
               justify='space-between'
@@ -324,33 +385,72 @@ const LessonEditor = (props) => {
                   onChange={onLessonDetailsChange}/>
               </Grid>
             </Grid>}
-        </form>
+          <Grid
+            container
+            justify='space-between'
+            alignItems='center'
+            className={classes.formControl}>
+            <Grid item>
+              <Typography variant='body1'>
+                {LESSON_REQUIRES_ENROLLMENT}
+              </Typography>
+            </Grid>
+            <Grid item>
+              <Switch
+                type='checkbox'
+                name='requiresEnrollment'
+                checked={lesson.requiresEnrollment}
+                onChange={onLessonDetailsChange}/>
+            </Grid>
+          </Grid>
+        </form>}
       </CardContent>
       <CardActions>
-        <Button>
+        <Button onClick={onLessonCreate}>
           {BUTTON_SAVE}
         </Button>
-        <Button>
+        <Button onClick={() => setDeleteLessonPopupOpened(true)}>
           {BUTTON_DELETE_LESSON_TEXT}
         </Button>
       </CardActions>
+      <AppDialog
+        onOpen={deleteLessonPopupOpened}
+        onClose={closeDeleteLessonPopup}
+        title={DELETE_LESSON_POPUP_HEADER}
+        actions={[
+          { name: POPUP_CANCEL_ACTION, callback: closeDeleteLessonPopup },
+          { name: POPUP_OK_ACTION, callback: onLessonDelete }
+        ]}>
+      </AppDialog>
     </Card>
   )
 }
 
 LessonEditor.emptyLesson = {
   title: '',
-  type: LESSON_TYPE_TEXT,
+  type: String.prototype.toUpperCase.call(LESSON_TYPE_TEXT),
   content: TextEditor.emptyState(),
   contentURL: '',
-  downloadable: false
+  downloadable: false,
+  requiresEnrollment: false
 }
 
 LessonEditor.propTypes = {
-  onLessonCreated: PropTypes.func.isRequired,
-  onLessonUpdated: PropTypes.func,
-  lessonIndexOnCourseEditorPage: PropTypes.number,
-  // lesson: lessonType
+  onLessonDeleted: PropTypes.func.isRequired,
+  auth: authProps,
+  dispatch: PropTypes.func.isRequired,
+  lesson: lessonType
 }
 
-export default LessonEditor
+const mapStateToProps = state => ({
+  auth: state.auth
+})
+
+const mapDispatchToProps = dispatch => ({
+  dispatch: dispatch
+})
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(LessonEditor)

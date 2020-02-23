@@ -35,12 +35,13 @@ const validateBlogPosts = (courseData) => {
 exports.getCourse = async (id, ctx) => {
   const course = await Course.findById(id)
 
+  if (!course) {
+    throw new Error(strings.responses.item_not_found)
+  }
+
   // If the accessor is not the owner hide certain details or the entire course
   if (course &&
-    (
-      !ctx.user ||
-      (course.creatorId.toString() !== ctx.user._id.toString())
-    )
+    (!ctx.user || (course.creatorId.toString() !== ctx.user._id.toString()))
   ) {
     if (!course.published || course.privacy === closed) {
       throw new Error(strings.responses.item_not_found)
@@ -138,9 +139,6 @@ exports.removeLesson = async (courseId, lessonId, ctx) => {
   return true
 }
 
-/**
- * Returns courses created by a user.
- */
 exports.getCreatorCourses = async (id, offset, ctx) => {
   checkIfAuthenticated(ctx)
   validateOffset(offset)

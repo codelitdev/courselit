@@ -37,7 +37,23 @@ const lessonValidator = (lessonData) => {
 }
 
 exports.getLesson = async (id, ctx) => {
+  checkIfAuthenticated(ctx)
+  const lesson = await checkLessonOwnership(id, ctx)
+  return lesson
+}
+
+exports.getLessonDetails = async (id, ctx) => {
   const lesson = await Lesson.findById(id)
+
+  if (!lesson) {
+    throw new Error(strings.responses.item_not_found)
+  }
+  if (lesson.requiresEnrollment &&
+    (!ctx.user || !ctx.user.purchases.includes(lesson.courseId))
+  ) {
+    throw new Error(strings.responses.not_enrolled)
+  }
+
   return lesson
 }
 
@@ -52,15 +68,14 @@ exports.createLesson = async (lessonData, ctx) => {
 
     const lesson = await Lesson.create({
       title: lessonData.title,
-      // slug: slugify(lessonData.title.toLowerCase()),
       type: lessonData.type,
       content: lessonData.content,
       contentURL: lessonData.contentURL,
       downloadable: lessonData.downloadable,
-      creatorId: ctx.user._id
+      creatorId: ctx.user._id,
+      courseId: course._id
     })
 
-    // add the lesson to the course
     course.lessons.push(lesson.id)
     await course.save()
 
@@ -146,7 +161,8 @@ exports.getAllLessonsOfACourse = async (course, ctx) => {
   const onlyLessonMeta = lesson => ({
     id: lesson.id,
     title: lesson.title,
-    requiresEnrollment: lesson.requiresEnrollment
+    requiresEnrollment: lesson.requiresEnrollment,
+    courseId: lesson.courseId
   })
 
   return lessons.map(onlyLessonMeta)
