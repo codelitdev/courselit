@@ -15,7 +15,7 @@ import {
   PAYMENT_METHOD_PAYTM,
   PAYMENT_METHOD_STRIPE
 } from '../config/constants.js'
-import { networkAction, newSiteInfoAvailable, setAppError } from '../redux/actions.js'
+import { networkAction, newSiteInfoAvailable, setAppMessage } from '../redux/actions.js'
 import MediaSelector from './MediaSelector.js'
 import {
   TextField,
@@ -48,7 +48,7 @@ import {
   SITE_ADMIN_SETTINGS_PAYMENT_METHOD,
   SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT
 } from '../config/strings.js'
-import AppError from '../models/app-error.js'
+import AppMessage from '../models/app-message.js'
 
 const useStyles = makeStyles(theme => ({
   formControl: {
@@ -146,9 +146,7 @@ const SiteSettings = props => {
       })
     } catch (e) {
       props.dispatch(
-        setAppError(
-          new AppError(e.message)
-        )
+        setAppMessage(new AppMessage(e.message))
       )
     }
   }
@@ -192,8 +190,8 @@ const SiteSettings = props => {
       })
     } catch (e) {
       props.dispatch(
-        setAppError(
-          new AppError(e.message)
+        setAppMessage(
+          new AppMessage(e.message)
         )
       )
     }

@@ -1,9 +1,7 @@
-import React, {useState,useEffect} from 'react'
+import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
-import {connect} from 'react-redux'
+import { connect } from 'react-redux'
 import {
-  Card,
-  CardContent,
   Grid,
   TextField,
   GridList,
@@ -89,7 +87,7 @@ const MediaGallery = (props) => {
         setMediaOffset(mediaOffset + 1)
       }
     } catch (err) {
-      setUserError(err.message)
+      // setUserError(err.message)
     } finally {
       props.dispatch(networkAction(false))
     }

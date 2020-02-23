@@ -2,20 +2,20 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { Snackbar, IconButton, Button } from '@material-ui/core'
-import { clearAppError } from '../redux/actions'
-import { appError } from '../types'
+import { clearAppMessage } from '../redux/actions'
+import { appMessage } from '../types'
 import { Close } from '@material-ui/icons'
 
 const AppToast = (props) => {
-  const { error } = props
-  const action = error && error.action
+  const { message } = props
+  const action = message && message.action
 
   const handleClose = (event, reason) => {
     if (reason === 'clickaway') {
       return
     }
 
-    props.dispatch(clearAppError())
+    props.dispatch(clearAppMessage())
   }
 
   const getActionButtonsArray = () => {
@@ -34,8 +34,8 @@ const AppToast = (props) => {
           key="action"
           color="secondary"
           size="small"
-          onClick={error.action.cb}>
-          {error.action.text}
+          onClick={message.action.cb}>
+          {message.action.text}
         </Button>
       )
     }
@@ -45,16 +45,16 @@ const AppToast = (props) => {
 
   return (
     <>
-      {error &&
+      {message &&
         <Snackbar
           anchorOrigin={{
             vertical: 'bottom',
             horizontal: 'left'
           }}
-          open={error.open}
+          open={message.open}
           autoHideDuration={6000}
           onClose={handleClose}
-          message={<span>{error.message}</span>}
+          message={<span>{message.message}</span>}
           action={getActionButtonsArray()}
         />
       }
@@ -63,12 +63,12 @@ const AppToast = (props) => {
 }
 
 AppToast.propTypes = {
-  error: appError.isRequired,
+  message: appMessage.isRequired,
   dispatch: PropTypes.func.isRequired
 }
 
 const mapStateToProps = state => ({
-  error: state.error
+  message: state.message
 })
 
 const mapDispatchToProps = dispatch => ({

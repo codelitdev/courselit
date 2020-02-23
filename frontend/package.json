@@ -14,7 +14,7 @@
     "immutable": "^4.0.0-rc.12",
     "isomorphic-unfetch": "^3.0.0",
     "js-cookie": "^2.2.0",
-    "next": "^9.1.6",
+    "next": "^9.2.1",
     "next-redux-wrapper": "^4.0.1",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
@@ -27,12 +27,11 @@
     "jss": "10.0.0"
   },
   "scripts": {
-    "dev:now": "now dev",
+    "dev": "next",
     "build": "next build",
     "start": "next start -p 3000",
     "lint": "eslint pages components redux types.js theme.js --fix",
-    "test": "jest",
-    "dev:next": "next"
+    "test": "jest"
   },
   "devDependencies": {
     "@babel/core": "^7.7.7",
@@ -52,7 +51,7 @@
     "jest-haste-map": "^24.5.0",
     "jest-resolve": "^24.1.0",
     "nodemon": "^2.0.2",
-    "now": "^16.7.3",
+    "now": "^17.0.3",
     "preact": "^10.1.1",
     "react-test-renderer": "^16.12.0",
     "webpack": "^4.41.5"
