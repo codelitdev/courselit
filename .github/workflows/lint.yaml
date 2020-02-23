@@ -10,7 +10,8 @@ jobs:
     - uses: actions/setup-node@v1
       with:
         node-version: '10.x'
-    - run: npm install
     - name: Backend Lint
-      run: npm run lint
+      run: |
+        npm install
+        npm run lint
       working-directory: ./backend
