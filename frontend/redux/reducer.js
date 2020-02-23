@@ -7,8 +7,8 @@ import {
   PROFILE_CLEAR,
   SITEINFO_AVAILABLE,
   AUTH_CHECKED,
-  SET_ERROR,
-  CLEAR_ERROR
+  SET_MESSAGE,
+  CLEAR_MESSAGE
 } from './actionTypes.js'
 import {
   GENERIC_TITLE,
@@ -50,7 +50,7 @@ const initialState = {
     purchases: [],
     email: null
   },
-  error: {
+  message: {
     open: false,
     message: '',
     action: null
@@ -107,13 +107,13 @@ function profileReducer (state = initialState.profile, action) {
   switch (action.type) {
     case PROFILE_AVAILABLE:
       return {
-        id: action.profile.id,
-        name: action.profile.name,
-        isCreator: action.profile.isCreator || false,
+        id: action.profile && action.profile.id,
+        name: action.profile && action.profile.name,
+        isCreator: (action.profile && action.profile.isCreator) || false,
         fetched: true,
-        isAdmin: action.profile.isAdmin || false,
-        purchases: action.profile.purchases || [],
-        email: action.profile.email
+        isAdmin: (action.profile && action.profile.isAdmin) || false,
+        purchases: (action.profile && action.profile.purchases) || [],
+        email: action.profile && action.profile.email
       }
     case PROFILE_CLEAR:
       return initialState.profile
@@ -122,16 +122,16 @@ function profileReducer (state = initialState.profile, action) {
   }
 }
 
-function appErrorReducer (state = initialState.error, action) {
+function appMessageReducer (state = initialState.message, action) {
   switch (action.type) {
-    case SET_ERROR:
+    case SET_MESSAGE:
       return {
-        message: action.error.message,
-        action: action.error.action,
+        message: action.message.message,
+        action: action.message.action,
         open: true
       }
-    case CLEAR_ERROR:
-      return initialState.error
+    case CLEAR_MESSAGE:
+      return initialState.message
     default:
       return state
   }
@@ -142,5 +142,5 @@ export default combineReducers({
   siteinfo: siteinfoReducer,
   networkAction: networkActionReducer,
   profile: profileReducer,
-  error: appErrorReducer
+  message: appMessageReducer
 })

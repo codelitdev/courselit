@@ -34,7 +34,7 @@ Fetch.prototype.exec = async function () {
   let response = await fetch(this.url, fetchOptions)
 
   if (response.status === 401) {
-    Router.push('/login')
+    Router.push('/logout')
     return {}
   }
 

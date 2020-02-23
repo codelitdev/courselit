@@ -9,11 +9,12 @@ import {
   PROFILE_CLEAR,
   SITEINFO_AVAILABLE,
   AUTH_CHECKED,
-  SET_ERROR,
-  CLEAR_ERROR
+  SET_MESSAGE,
+  CLEAR_MESSAGE
 } from './actionTypes.js'
-import { BACKEND } from '../config/constants.js'
+import { BACKEND, JWT_COOKIE_NAME, USERID_COOKIE_NAME } from '../config/constants.js'
 import FetchBuilder from '../lib/fetch.js'
+import { removeCookie } from '../lib/session.js'
 
 export function signedIn (userid, token) {
   return async (dispatch, getState) => {
@@ -57,6 +58,8 @@ export function refreshUserProfile (userId) {
 
 export function signedOut () {
   return dispatch => {
+    removeCookie(JWT_COOKIE_NAME)
+    removeCookie(USERID_COOKIE_NAME)
     dispatch(clearProfile())
     dispatch({ type: SIGN_OUT })
   }
@@ -118,10 +121,10 @@ export function updateSiteInfo () {
   }
 }
 
-export function setAppError (error) {
-  return dispatch => dispatch({ type: SET_ERROR, error })
+export function setAppMessage (message) {
+  return dispatch => dispatch({ type: SET_MESSAGE, message })
 }
 
-export function clearAppError () {
-  return dispatch => dispatch({ type: CLEAR_ERROR })
+export function clearAppMessage () {
+  return dispatch => dispatch({ type: CLEAR_MESSAGE })
 }

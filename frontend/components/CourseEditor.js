@@ -18,13 +18,13 @@ import {
   DELETE_COURSE_POPUP_HEADER,
   POPUP_CANCEL_ACTION,
   POPUP_OK_ACTION,
-  BLOG_POST_SWITCH
+  BLOG_POST_SWITCH,
+  APP_MESSAGE_COURSE_SAVED
 } from '../config/strings.js'
 import TextEditor from './TextEditor'
-import { networkAction } from '../redux/actions.js'
+import { networkAction, setAppMessage } from '../redux/actions.js'
 import {
   queryGraphQL,
-  capitalize,
   formulateCourseUrl
 } from '../lib/utils.js'
 import Link from 'next/link'
@@ -48,6 +48,8 @@ import MediaSelector from './MediaSelector.js'
 import { Delete, Add } from '@material-ui/icons'
 import AppDialog from './AppDialog.js'
 import LessonEditor from './LessonEditor.js'
+import AppMessage from '../models/app-message.js'
+import { BACKEND } from '../config/constants.js'
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -82,6 +84,9 @@ const useStyles = makeStyles(theme => ({
   },
   lessonItem: {
     marginBottom: theme.spacing(2)
+  },
+  addLesson: {
+    marginBottom: theme.spacing(2)
   }
 }))
 
@@ -106,6 +111,7 @@ const CourseEditor = (props) => {
   const [lessons, setLessons] = useState([])
   const classes = useStyles()
   const executeGQLCall = useExecuteGraphQLQuery()
+  const [lessonIndex, setLessonIndex] = useState(0)
 
   // The following ref is used for accessing previous state in hooks
   // Reference: https://reactjs.org/docs/hooks-faq.html#how-to-get-the-previous-props-or-state
@@ -197,11 +203,19 @@ const CourseEditor = (props) => {
 
     try {
       const response = await executeGQLCall(query)
+      console.log(response)
       if (response.course) {
         setCourseDataWithDescription(response.course)
+        props.dispatch(
+          setAppMessage(new AppMessage(APP_MESSAGE_COURSE_SAVED))
+        )
       }
     } catch (err) {
-      return setUserError(err.message)
+      // return setUserError(err.message)
+      console.log(err)
+      props.dispatch(
+        setAppMessage(new AppMessage(err.message))
+      )
     }
 
     // try {
@@ -227,6 +241,13 @@ const CourseEditor = (props) => {
     // }
   }
 
+  const onCourseDetailsChange = (e) => {
+    changeCourseDetails(
+      e.target.name,
+      e.target.type === 'checkbox' ? e.target.checked : e.target.value
+    )
+  }
+
   const changeCourseDetails = (key, value) => {
     setCourseData(
       Object.assign({}, courseData, {
@@ -234,13 +255,6 @@ const CourseEditor = (props) => {
           [key]: value
         })
       })
-    )
-  }
-
-  const onCourseDetailsChange = (e) => {
-    changeCourseDetails(
-      e.target.name,
-      e.target.type === 'checkbox' ? e.target.checked : e.target.value
     )
   }
 
@@ -285,15 +299,15 @@ const CourseEditor = (props) => {
   }
 
   const setCourseDataWithDescription = (course) => {
-    console.log(course)
+    console.log('setCourse...', course)
     setCourseData(
       Object.assign({}, courseData, {
         course: Object.assign({}, course, {
           description: TextEditor.hydrate(course.description)
-        }),
+        })
       })
     )
-    setLessons([...lessons, ...course.lessons])
+    course.lessons && setLessons([...lessons, ...course.lessons])
   }
 
   const loadCourse = async (courseId) => {
@@ -339,8 +353,23 @@ const CourseEditor = (props) => {
   const closeDeleteCoursePopup = () =>
     setDeleteCoursePopupOpened(false)
 
-  const onAddLesson = () =>
-    setLessons([...lessons, LessonEditor.emptyLesson])
+  const onAddLesson = () => {
+    const emptyLessonWithLocalIndexKey = Object.assign({}, LessonEditor.emptyLesson, {
+      lessonIndex: lessonIndex,
+      courseId: courseData.course.id
+    })
+    setLessonIndex(lessonIndex + 1)
+    setLessons([...lessons, emptyLessonWithLocalIndexKey])
+  }
+
+  const onLessonDeleted = (lessonIndex) => {
+    const indexOfDeletedLesson =
+      lessons.map(lesson => lesson.lessonIndex).indexOf(lessonIndex)
+    setLessons([
+      ...lessons.slice(0, indexOfDeletedLesson),
+      ...lessons.slice(indexOfDeletedLesson + 1)
+    ])
+  }
 
   return (
     <Grid container direction='column'>
@@ -501,21 +530,20 @@ const CourseEditor = (props) => {
             <Grid item container direction='column'>
               {lessons.map(
                 (item, index) =>
-                  <Grid item className={classes.lessonItem}>
+                  <Grid item key={index} className={classes.lessonItem}>
                     <LessonEditor
                       lesson={item}
-                      lessonIndexOnCourseEditorPage={index}
-                      onLessonCreated={(lesson) => {}}
-                      onLessonUpdated={(index, lesson) => {}}
-                      key={index} />
+                      onLessonDeleted={onLessonDeleted}
+                      key={item.lessonIndex} />
                   </Grid>
               )}
               <Grid item>
                 <Button
                   variant='contained'
                   color='secondary'
-                  onClick={onAddLesson} 
-                  startIcon={<Add />}>
+                  onClick={onAddLesson}
+                  startIcon={<Add />}
+                  className={classes.addLesson}>
                   {BUTTON_NEW_LESSON_TEXT}
                 </Button>
               </Grid>

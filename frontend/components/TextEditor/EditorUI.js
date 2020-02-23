@@ -3,7 +3,7 @@ import Editor from './Editor.js'
 import PropTypes from 'prop-types'
 import { BACKEND } from '../../config/constants.js'
 
-import { Grid, IconButton, Dialog, AppBar, Toolbar, Slide, TransitionProps } from '@material-ui/core'
+import { IconButton, Dialog, AppBar, Toolbar, Slide } from '@material-ui/core'
 import { AddPhotoAlternate, Code, FormatQuote, InsertLink, Close, Edit } from '@material-ui/icons'
 import MediaManager from '../MediaManager.js'
 import { makeStyles } from '@material-ui/styles'
@@ -20,8 +20,8 @@ const useStyles = makeStyles(theme => ({
     marginRight: theme.spacing(1)
   },
   appBar: {
-    position: 'relative',
-  },
+    position: 'relative'
+  }
 }))
 
 const stylingForInternalComponentsOfDraftJS = {
@@ -52,9 +52,9 @@ const stylingForInternalComponentsOfDraftJS = {
   }
 }
 
-const Transition = React.forwardRef(function Transition(props, ref) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
+const Transition = React.forwardRef(function Transition (props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />
+})
 
 const EditorUI = (props) => {
   const [open, setOpen] = useState(false)
@@ -95,7 +95,7 @@ const EditorUI = (props) => {
 
   const openMediaSelection = () =>
     setAddImageDialogOpened(true)
-  
+
   const closeEditor = () => setOpen(false)
 
   const editor = <Editor
@@ -116,21 +116,21 @@ const EditorUI = (props) => {
         TransitionComponent={Transition}>
         <AppBar className={classes.appBar}>
           <Toolbar>
-              <IconButton color='inherit' onClick={openMediaSelection}>
-                <AddPhotoAlternate />
-              </IconButton>
-              <IconButton color='inherit' onClick={toggleLink}>
-                <InsertLink />
-              </IconButton>
-              <IconButton color='inherit' onClick={highlightCode}>
-                <Code />
-              </IconButton>
-              <IconButton color='inherit' onClick={toggleBlockquote}>
-                <FormatQuote />
-              </IconButton>
-              <IconButton edge='end' color='inherit' onClick={closeEditor}>
-                <Close />
-              </IconButton>
+            <IconButton color='inherit' onClick={openMediaSelection}>
+              <AddPhotoAlternate />
+            </IconButton>
+            <IconButton color='inherit' onClick={toggleLink}>
+              <InsertLink />
+            </IconButton>
+            <IconButton color='inherit' onClick={highlightCode}>
+              <Code />
+            </IconButton>
+            <IconButton color='inherit' onClick={toggleBlockquote}>
+              <FormatQuote />
+            </IconButton>
+            <IconButton edge='end' color='inherit' onClick={closeEditor}>
+              <Close />
+            </IconButton>
           </Toolbar>
         </AppBar>
         {editor}

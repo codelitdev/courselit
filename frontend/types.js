@@ -73,7 +73,7 @@ export const featuredCourse = PropTypes.shape({
   featuredImage: PropTypes.string
 })
 
-export const appError = PropTypes.shape({
+export const appMessage = PropTypes.shape({
   open: PropTypes.bool.isRequired,
   message: PropTypes.string.isRequired,
   action: PropTypes.shape({
