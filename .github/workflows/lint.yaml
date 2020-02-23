@@ -1,0 +1,13 @@
+name: Lint
+on: [push]
+
+jobs:
+  backend-lint:
+    runs-on: node-latest
+
+    steps:
+    - name: Backend Lint
+      run: |
+        npm install
+        npm run lint
+      working-directory: ./backend
