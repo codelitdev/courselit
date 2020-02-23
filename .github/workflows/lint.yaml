@@ -3,6 +3,7 @@ on: [push]
 
 jobs:
   backend-lint:
+    name: Backend
     runs-on: ubuntu-latest
 
     steps:
@@ -10,8 +11,23 @@ jobs:
     - uses: actions/setup-node@v1
       with:
         node-version: '10.x'
-    - name: Backend Lint
+    - name: Linting backend
       run: |
         npm install
         npm run lint
       working-directory: ./backend
+  
+  frontend-lint:
+    name: Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v1
+      with:
+        node-version: '10.x'
+    - name: Linting frontend
+      run: |
+        npm install
+        npm run lint
+      working-directory: ./frontend
