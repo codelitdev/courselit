@@ -3,11 +3,14 @@ on: [push]
 
 jobs:
   backend-lint:
-    runs-on: node-latest
+    runs-on: ubuntu-latest
 
     steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v1
+      with:
+        node-version: '10.x'
+    - run: npm install
     - name: Backend Lint
-      run: |
-        npm install
-        npm run lint
+      run: npm run lint
       working-directory: ./backend
