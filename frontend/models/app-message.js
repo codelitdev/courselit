@@ -1,4 +1,4 @@
-class AppError {
+class AppMessage {
   constructor (message, actionText, actionFunc) {
     if (actionText && typeof actionText !== 'string') {
       throw new Error('actionText should be of type string')
@@ -18,4 +18,4 @@ class AppError {
   }
 }
 
-export default AppError
+export default AppMessage

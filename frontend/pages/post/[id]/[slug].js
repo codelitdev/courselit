@@ -15,6 +15,9 @@ import FetchBuilder from '../../../lib/fetch.js'
 const useStyles = makeStyles({
   articleMarginAdjust: {
     marginTop: '3.2em'
+  },
+  articleMarginBottomAdjust: {
+    marginBottom: '2em'
   }
 })
 
@@ -40,8 +43,9 @@ const Post = (props) => {
               <meta property="og:image" content={formulateMediaUrl(MEDIA_BACKEND, props.post.featuredImage)} />}
           </Head>
           <ContainedBodyLayout>
-            <div className={classes.articleMarginAdjust}/>
-            <Article course={props.post} options={articleOptions}/>
+            <div className={classes.articleMarginAdjust} />
+            <Article course={props.post} options={articleOptions} />
+            <div className={classes.articleMarginBottomAdjust} />
           </ContainedBodyLayout>
         </>
       }

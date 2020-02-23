@@ -1,7 +1,4 @@
-/**
- * Component for managing all media across the app
- */
-import React, { useState, createRef, useEffect } from 'react'
+import React, { useState, createRef } from 'react'
 import { connect } from 'react-redux'
 import fetch from 'isomorphic-unfetch'
 import PropTypes from 'prop-types'
@@ -16,7 +13,7 @@ import {
 } from '../config/strings.js'
 import { BACKEND } from '../config/constants.js'
 import { authProps } from '../types.js'
-import { setAppError } from '../redux/actions.js'
+import { setAppMessage } from '../redux/actions.js'
 import {
   TextField,
   Button,
@@ -29,7 +26,7 @@ import {
 } from '@material-ui/core'
 import { makeStyles } from '@material-ui/styles'
 import { Add, Done } from '@material-ui/icons'
-import AppError from '../models/app-error.js'
+import AppMessage from '../models/app-message.js'
 
 import MediaGallery from './MediaGallery.js'
 
@@ -62,12 +59,10 @@ const MediaManager = (props) => {
   }
   const [uploadData, setUploadData] = useState(defaults.uploadData)
   const [userError, setUserError] = useState(defaults.userError)
-  const [selectedMedia] = useState(defaults.selectedMedia)
+  // const [selectedMedia] = useState(defaults.selectedMedia)
   const fileInput = createRef()
   const classes = useStyles()
   const [uploadFormVisible, setUploadFormVisible] = useState(false)
-
-  
 
   const onUploadDataChanged = (e) => setUploadData(
     Object.assign({}, uploadData, {
@@ -110,7 +105,7 @@ const MediaManager = (props) => {
         setUploadData(defaults.uploadData)
         // setUserMedia([res.media, ...userMedia])
         props.dispatch(
-          setAppError(new AppError(FILE_UPLOAD_SUCCESS))
+          setAppMessage(new AppMessage(FILE_UPLOAD_SUCCESS))
         )
         setUploadFormVisible(false)
       }
@@ -122,19 +117,15 @@ const MediaManager = (props) => {
   // const toggleUploadFormVisibility = () =>
   //   setUploadFormVisibility(!uploadFormVisibility)
 
-  
-
   // const cancelMediaUpload = () => {
   //   setUploadData(defaults.uploadData)
   //   toggleUploadFormVisibility()
   // }
 
-  
-
-  const onMediaSelected = () => {
-    props.onMediaSelected(userMedia[selectedMedia])
-    // onClose()
-  }
+  // const onMediaSelected = () => {
+  //   props.onMediaSelected(userMedia[selectedMedia])
+  //   // onClose()
+  // }
 
   const showUploadForm = () => {
     setUploadFormVisible(!uploadFormVisible)

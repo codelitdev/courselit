@@ -12,5 +12,15 @@ module.exports = {
     },
     resolve: (root, { id }, context) =>
       logic.getLesson(id, context)
+  },
+  getLessonDetails: {
+    type: types.lessonType,
+    args: {
+      id: {
+        type: new graphql.GraphQLNonNull(graphql.GraphQLID)
+      }
+    },
+    resolve: (root, { id }, context) =>
+      logic.getLessonDetails(id, context)
   }
 }

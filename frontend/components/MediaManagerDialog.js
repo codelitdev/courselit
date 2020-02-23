@@ -1,4 +1,4 @@
-import React, {useState} from 'react'
+import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import {
   Dialog,
@@ -8,7 +8,7 @@ import {
   Button
 } from '@material-ui/core'
 import MediaGallery from './MediaGallery.js'
-import { 
+import {
   BUTTON_CANCEL_TEXT,
   DIALOG_SELECT_BUTTON
 } from '../config/strings.js'
@@ -32,7 +32,7 @@ const MediaManagerDialog = (props) => {
         </Button>
         <Button
           onClick={handleSelection}
-          disabled={selectedMediaId ? false : true}>
+          disabled={!selectedMediaId}>
           {DIALOG_SELECT_BUTTON}
         </Button>
       </DialogActions>
