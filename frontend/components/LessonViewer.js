@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import FetchBuilder from '../lib/fetch'
-import { BACKEND } from '../config/constants'
+import { BACKEND, LESSON_TYPE_VIDEO, MEDIA_BACKEND } from '../config/constants'
 import { connect } from 'react-redux'
 import { networkAction } from '../redux/actions'
 import TextEditor from './TextEditor'
-import { Typography, Card, CardContent } from '@material-ui/core'
+import { Typography, Card, CardContent, Grid } from '@material-ui/core'
 import {
   ENROLL_IN_THE_COURSE,
   USER_ERROR_HEADER
 } from '../config/strings'
 import { makeStyles } from '@material-ui/styles'
 import { lesson, authProps, profileProps } from '../types'
+import { formulateMediaUrl } from '../lib/utils.js'
 
 const useStyles = makeStyles(theme => ({
   notEnrolledHeader: {
@@ -30,7 +31,7 @@ const LessonViewer = (props) => {
 
   useEffect(() => {
     props.lesson.id && isEnrolled && loadLesson(props.lesson.id)
-  })
+  }, [props.lesson])
 
   const loadLesson = async (id) => {
     const query = `
@@ -89,9 +90,32 @@ const LessonViewer = (props) => {
       {isEnrolled &&
         <Card>
           <CardContent>
-            <Typography variant='h3'>
-              {lesson.title}
-            </Typography>
+            <Grid container direction='column'>
+              <Grid item>
+                <Typography variant='h3'>
+                  {lesson.title}
+                </Typography>
+              </Grid>
+              {String.prototype.toUpperCase.call(LESSON_TYPE_VIDEO) === lesson.type &&
+                <Grid item>
+                  <video width="320" height="240" controls>
+                    <source
+                      src={
+                        `${formulateMediaUrl(MEDIA_BACKEND, lesson.contentURL, false)}`
+                      }
+                      type="video/mp4" />
+                    <source src="movie.ogg" type="video/ogg" />
+                    Your browser does not support the video tag.
+                  </video>
+                </Grid>}
+              {lesson.content &&
+                <Grid item>
+                  <TextEditor
+                    initialContentState={lesson.content}
+                    readOnly={true} />
+                </Grid>
+              }
+            </Grid>
           </CardContent>
         </Card>
       }
