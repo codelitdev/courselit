@@ -47,6 +47,9 @@ const useStyles = makeStyles(theme => ({
   content: {
     flexGrow: 1,
     padding: theme.spacing(3)
+  },
+  activeItem: {
+    background: '#d6d6d6'
   }
 }))
 
@@ -63,6 +66,7 @@ const ResponsiveDrawer = (props) => {
   const theme = useTheme()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [visibleComponent, setVisibleComponent] = useState()
+  const [activeItemIndex, setActiveItemIndex] = useState(0)
 
   useEffect(() => {
     showComponent(props.items[0].element)
@@ -72,7 +76,8 @@ const ResponsiveDrawer = (props) => {
     setMobileOpen(!mobileOpen)
   }
 
-  function showComponent (item) {
+  function showComponent (item, index) {
+    setActiveItemIndex(index)
     setVisibleComponent(item)
   }
 
@@ -82,7 +87,11 @@ const ResponsiveDrawer = (props) => {
       <Divider />
       <List>
         {(props.items).map((item, index) => (
-          <ListItem button key={item.name} onClick={() => showComponent(item.element)}>
+          <ListItem
+            button
+            key={index}
+            onClick={() => showComponent(item.element, index)}
+            className={activeItemIndex === index ? classes.activeItem : null}>
             <Grid container direction='row' alignItems='center'>
               {item.icon &&
                 !item.iconPlacementRight &&

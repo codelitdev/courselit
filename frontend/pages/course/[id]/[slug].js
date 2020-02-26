@@ -14,16 +14,17 @@ const Course = (props) => {
   const { course, profile, error } = props
   console.log(error)
   const lessons = []
+  let key = 0
 
   if (course) {
     lessons.push({
       name: SIDEBAR_TEXT_COURSE_ABOUT,
-      element: <CourseIntroduction course={course} />
+      element: <CourseIntroduction key={key++} course={course} />
     })
     for (const lesson of course.lessons) {
       lessons.push({
         name: lesson.title,
-        element: <LessonViewer lesson={lesson} />,
+        element: <LessonViewer key={key++} lesson={lesson} />,
         icon: (lesson.requiresEnrollment &&
           !profile.purchases.includes(course.id)) ? <Lock /> : null,
         iconPlacementRight: true
