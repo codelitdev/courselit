@@ -1,53 +1,59 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import Link from 'next/link'
-import { URL_EXTENTION_POSTS } from '../config/constants.js'
-import { Grid, Typography, Card, CardContent } from '@material-ui/core'
-import { makeStyles } from '@material-ui/styles'
-import Img from './Img.js'
+import React from "react";
+import PropTypes from "prop-types";
+import Link from "next/link";
+import { URL_EXTENTION_POSTS } from "../config/constants.js";
+import { Grid, Typography, Card, CardContent } from "@material-ui/core";
+import { makeStyles } from "@material-ui/styles";
+import Img from "./Img.js";
 
 const useStyles = makeStyles({
   featuredimagecontainer: {
-    display: 'flex'
+    display: "flex"
   },
   bloglink: {
-    textDecoration: 'none',
-    display: 'block',
-    marginTop: '0.8em',
-    marginBottom: '1em',
-    '&:hover': {
-      background: '#eee'
+    textDecoration: "none",
+    display: "block",
+    marginTop: "0.8em",
+    marginBottom: "1em",
+    "&:hover": {
+      background: "#eee"
     },
-    color: 'inherit'
+    color: "inherit"
   }
-})
+});
 
-const BlogPostItem = (props) => {
-  const classes = useStyles()
+const BlogPostItem = props => {
+  const classes = useStyles();
 
   return (
     <Link
       href={`/${URL_EXTENTION_POSTS}/[id]/[slug]`}
-      as={`/${URL_EXTENTION_POSTS}/${props.id}/${props.slug}`}>
+      as={`/${URL_EXTENTION_POSTS}/${props.id}/${props.slug}`}
+    >
       <a className={classes.bloglink}>
         <Card>
           <CardContent>
             <article>
-              <Grid container direction='row' spacing={1}>
-                {props.featuredImage &&
-                  <Grid item className={classes.featuredimagecontainer} sm={12} md={2}>
+              <Grid container direction="row" spacing={1}>
+                {props.featuredImage && (
+                  <Grid
+                    item
+                    className={classes.featuredimagecontainer}
+                    sm={12}
+                    md={2}
+                  >
                     <Img src={props.featuredImage} />
                   </Grid>
-                }
+                )}
                 <Grid item sm={12} md={10}>
-                  <Grid container direction='column'>
+                  <Grid container direction="column">
                     <Grid item>
-                      <Typography variant='h6' className="title">
-                        { props.title }
+                      <Typography variant="h6" className="title">
+                        {props.title}
                       </Typography>
                     </Grid>
                     <Grid item>
-                      <Typography variant='subtitle1'>
+                      <Typography variant="subtitle1">
                         {props.description}
                       </Typography>
                     </Grid>
@@ -59,8 +65,8 @@ const BlogPostItem = (props) => {
         </Card>
       </a>
     </Link>
-  )
-}
+  );
+};
 
 BlogPostItem.propTypes = {
   id: PropTypes.string.isRequired,
@@ -70,6 +76,6 @@ BlogPostItem.propTypes = {
   creatorName: PropTypes.string.isRequired,
   slug: PropTypes.string.isRequired,
   featuredImage: PropTypes.string
-}
+};
 
-export default BlogPostItem
+export default BlogPostItem;

@@ -1,39 +1,39 @@
-import React, { useState, useEffect } from 'react'
-import { connect } from 'react-redux'
-import PropTypes from 'prop-types'
-import { authProps, profileProps } from '../types.js'
-import { makeStyles } from '@material-ui/styles'
-import { Grid, Typography, Fab } from '@material-ui/core'
-import CourseEditor from './CourseEditor.js'
-import CreatorCoursesList from './CreatorCoursesList.js'
+import React, { useState, useEffect } from "react";
+import { connect } from "react-redux";
+import PropTypes from "prop-types";
+import { authProps, profileProps } from "../types.js";
+import { makeStyles } from "@material-ui/styles";
+import { Grid, Typography, Fab } from "@material-ui/core";
+import CourseEditor from "./CourseEditor.js";
+import CreatorCoursesList from "./CreatorCoursesList.js";
 import {
   NEW_COURSE_PAGE_HEADING,
   MANAGE_COURSES_PAGE_HEADING
-} from '../config/strings.js'
-import { useExecuteGraphQLQuery } from './CustomHooks.js'
-import { Add, Done } from '@material-ui/icons'
+} from "../config/strings.js";
+import { useExecuteGraphQLQuery } from "./CustomHooks.js";
+import { Add, Done } from "@material-ui/icons";
 
 const useStyles = makeStyles(theme => ({
   button: {
     margin: theme.spacing(1)
   },
   fab: {
-    position: 'fixed',
+    position: "fixed",
     bottom: theme.spacing(4),
     right: theme.spacing(4)
   }
-}))
+}));
 
 // let creatorCoursesPaginationOffset = 1
 
-const Courses = (props) => {
+const Courses = props => {
   // const [courseFormVisible, setCourseFormVisible] = useState(false)
-  const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1)
-  const [creatorCourses, setCreatorCourses] = useState([])
-  const classes = useStyles()
-  const [courseEditorVisible, setCourseEditorVisible] = useState(false)
-  const [selectedCourse, setSelectedCourse] = useState(null)
-  const executeGQLCall = useExecuteGraphQLQuery()
+  const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1);
+  const [creatorCourses, setCreatorCourses] = useState([]);
+  const classes = useStyles();
+  const [courseEditorVisible, setCourseEditorVisible] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const executeGQLCall = useExecuteGraphQLQuery();
   // const [mediaManagerVisibility, setMediaManagerVisibility] = useState(false)
 
   // const showCourseCreateForm = () => {
@@ -47,26 +47,28 @@ const Courses = (props) => {
   // }
 
   useEffect(() => {
-    loadCreatorCourses()
-  }, [props.profile.id])
+    loadCreatorCourses();
+  }, [props.profile.id]);
 
   const loadCreatorCourses = async () => {
-    if (!props.profile.id) { return }
+    if (!props.profile.id) {
+      return;
+    }
     const query = `
     query {
       courses: getCreatorCourses(id: "${props.profile.id}", offset: ${coursesPaginationOffset}) {
         id, title
       }
     }
-    `
+    `;
     try {
-      const response = await executeGQLCall(query)
+      const response = await executeGQLCall(query);
       if (response.courses && response.courses.length > 0) {
-        setCreatorCourses([...creatorCourses, ...response.courses])
-        setCoursesPaginationOffset(coursesPaginationOffset + 1)
+        setCreatorCourses([...creatorCourses, ...response.courses]);
+        setCoursesPaginationOffset(coursesPaginationOffset + 1);
       }
     } catch (err) {
-      console.log(err)
+      console.log(err);
     }
 
     // try {
@@ -86,7 +88,7 @@ const Courses = (props) => {
     // } finally {
     //   props.dispatch(networkAction(false))
     // }
-  }
+  };
 
   // const loadLesson = async (id) => {
   //   const query = `
@@ -137,26 +139,29 @@ const Courses = (props) => {
   //   setMediaManagerVisibility(flag)
   // }
 
-  const showEditor = (courseId) => {
+  const showEditor = courseId => {
     if (courseEditorVisible) {
-      setCourseEditorVisible(false)
+      setCourseEditorVisible(false);
     } else {
-      setSelectedCourse(courseId)
-      setCourseEditorVisible(true)
+      setSelectedCourse(courseId);
+      setCourseEditorVisible(true);
     }
-  }
+  };
 
   return (
     <div>
       <div>
         <Grid
           container
-          direction='row'
-          justify='space-between'
-          alignItems='center'>
+          direction="row"
+          justify="space-between"
+          alignItems="center"
+        >
           <Grid item xs={12} sm={10}>
-            <Typography variant='h3'>
-              {courseEditorVisible ? NEW_COURSE_PAGE_HEADING : MANAGE_COURSES_PAGE_HEADING}
+            <Typography variant="h3">
+              {courseEditorVisible
+                ? NEW_COURSE_PAGE_HEADING
+                : MANAGE_COURSES_PAGE_HEADING}
             </Typography>
           </Grid>
           <Grid item xs={12} sm={2}>
@@ -169,9 +174,10 @@ const Courses = (props) => {
               {courseEditorVisible ? BUTTON_DONE_TEXT : BUTTON_NEW_COURSE}
             </Button> */}
             <Fab
-              color={courseEditorVisible ? 'default' : 'secondary'}
+              color={courseEditorVisible ? "default" : "secondary"}
               className={classes.fab}
-              onClick={() => showEditor()}>
+              onClick={() => showEditor()}
+            >
               {courseEditorVisible ? <Done /> : <Add />}
             </Fab>
           </Grid>
@@ -186,36 +192,37 @@ const Courses = (props) => {
         <button onClick={loadCreatorCourse}>Load my courses</button> */}
       </div>
       <div>
-        {!courseEditorVisible &&
+        {!courseEditorVisible && (
           <CreatorCoursesList
             courses={creatorCourses}
             onClick={showEditor}
-            onLoadMoreClick={loadCreatorCourses}/>}
-        {courseEditorVisible &&
+            onLoadMoreClick={loadCreatorCourses}
+          />
+        )}
+        {courseEditorVisible && (
           <CourseEditor
             courseId={selectedCourse}
-            closeEditor={() => showEditor()}/>}
+            closeEditor={() => showEditor()}
+          />
+        )}
       </div>
     </div>
-  )
-}
+  );
+};
 
 Courses.propTypes = {
   auth: authProps,
   profile: profileProps,
   dispatch: PropTypes.func.isRequired
-}
+};
 
 const mapStateToProps = state => ({
   auth: state.auth,
   profile: state.profile
-})
+});
 
 const mapDispatchToProps = dispatch => ({
   dispatch: dispatch
-})
+});
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Courses)
+export default connect(mapStateToProps, mapDispatchToProps)(Courses);

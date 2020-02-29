@@ -1,4 +1,4 @@
-import { combineReducers } from 'redux'
+import { combineReducers } from "redux";
 import {
   SIGN_IN,
   SIGN_OUT,
@@ -9,7 +9,7 @@ import {
   AUTH_CHECKED,
   SET_MESSAGE,
   CLEAR_MESSAGE
-} from './actionTypes.js'
+} from "./actionTypes.js";
 import {
   GENERIC_TITLE,
   GENERIC_SUBTITLE,
@@ -20,7 +20,7 @@ import {
   GENERIC_STRIPE_PUBLISHABLE_KEY_TEXT,
   GENERIC_CURRENCY_ISO_CODE,
   GENERIC_PAYMENT_METHOD
-} from '../config/strings.js'
+} from "../config/strings.js";
 
 const initialState = {
   auth: {
@@ -52,25 +52,30 @@ const initialState = {
   },
   message: {
     open: false,
-    message: '',
+    message: "",
     action: null
   }
-}
+};
 
-function authReducer (state = initialState.auth, action) {
+function authReducer(state = initialState.auth, action) {
   switch (action.type) {
     case SIGN_IN:
-      return { guest: false, token: action.token, userid: action.userid, checked: true }
+      return {
+        guest: false,
+        token: action.token,
+        userid: action.userid,
+        checked: true
+      };
     case SIGN_OUT:
-      return initialState.auth
+      return initialState.auth;
     case AUTH_CHECKED:
-      return Object.assign({}, state, { checked: true })
+      return Object.assign({}, state, { checked: true });
     default:
-      return state
+      return state;
   }
 }
 
-function siteinfoReducer (state = initialState.siteinfo, action) {
+function siteinfoReducer(state = initialState.siteinfo, action) {
   switch (action.type) {
     case SITEINFO_AVAILABLE:
       try {
@@ -78,32 +83,40 @@ function siteinfoReducer (state = initialState.siteinfo, action) {
           title: action.siteinfo.title || initialState.siteinfo.title,
           subtitle: action.siteinfo.subtitle || initialState.siteinfo.subtitle,
           logopath: action.siteinfo.logopath || initialState.siteinfo.logopath,
-          currencyUnit: action.siteinfo.currencyUnit || initialState.siteinfo.currencyUnit,
-          currencyISOCode: action.siteinfo.currencyISOCode || initialState.siteinfo.currencyISOCode,
-          copyrightText: action.siteinfo.copyrightText || initialState.siteinfo.copyrightText,
+          currencyUnit:
+            action.siteinfo.currencyUnit || initialState.siteinfo.currencyUnit,
+          currencyISOCode:
+            action.siteinfo.currencyISOCode ||
+            initialState.siteinfo.currencyISOCode,
+          copyrightText:
+            action.siteinfo.copyrightText ||
+            initialState.siteinfo.copyrightText,
           about: action.siteinfo.about || initialState.siteinfo.about,
-          paymentMethod: action.siteinfo.paymentMethod || initialState.siteinfo.paymentMethod,
-          stripePublishableKey: action.siteinfo.stripePublishableKey ||
-                                initialState.siteinfo.stripePublishableKey
-        }
+          paymentMethod:
+            action.siteinfo.paymentMethod ||
+            initialState.siteinfo.paymentMethod,
+          stripePublishableKey:
+            action.siteinfo.stripePublishableKey ||
+            initialState.siteinfo.stripePublishableKey
+        };
       } catch (e) {
-        return state
+        return state;
       }
     default:
-      return state
+      return state;
   }
 }
 
-function networkActionReducer (state = initialState.networkAction, action) {
+function networkActionReducer(state = initialState.networkAction, action) {
   switch (action.type) {
     case NETWORK_ACTION:
-      return action.flag
+      return action.flag;
     default:
-      return state
+      return state;
   }
 }
 
-function profileReducer (state = initialState.profile, action) {
+function profileReducer(state = initialState.profile, action) {
   switch (action.type) {
     case PROFILE_AVAILABLE:
       return {
@@ -114,26 +127,26 @@ function profileReducer (state = initialState.profile, action) {
         isAdmin: (action.profile && action.profile.isAdmin) || false,
         purchases: (action.profile && action.profile.purchases) || [],
         email: action.profile && action.profile.email
-      }
+      };
     case PROFILE_CLEAR:
-      return initialState.profile
+      return initialState.profile;
     default:
-      return state
+      return state;
   }
 }
 
-function appMessageReducer (state = initialState.message, action) {
+function appMessageReducer(state = initialState.message, action) {
   switch (action.type) {
     case SET_MESSAGE:
       return {
         message: action.message.message,
         action: action.message.action,
         open: true
-      }
+      };
     case CLEAR_MESSAGE:
-      return initialState.message
+      return initialState.message;
     default:
-      return state
+      return state;
   }
 }
 
@@ -143,4 +156,4 @@ export default combineReducers({
   networkAction: networkActionReducer,
   profile: profileReducer,
   message: appMessageReducer
-})
+});

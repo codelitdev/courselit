@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import PropTypes from 'prop-types'
+import React, { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import {
   Card,
   CardContent,
@@ -13,7 +13,7 @@ import {
   FormControl,
   InputLabel,
   MenuItem
-} from '@material-ui/core'
+} from "@material-ui/core";
 import {
   BUTTON_SAVE,
   BUTTON_DELETE_LESSON_TEXT,
@@ -28,8 +28,8 @@ import {
   POPUP_OK_ACTION,
   APP_MESSAGE_LESSON_DELETED,
   APP_MESSAGE_LESSON_SAVED
-} from '../config/strings'
-import { lesson as lessonType, authProps } from '../types.js'
+} from "../config/strings";
+import { lesson as lessonType, authProps } from "../types.js";
 import {
   BACKEND,
   LESSON_TYPE_TEXT,
@@ -37,59 +37,59 @@ import {
   LESSON_TYPE_VIDEO,
   LESSON_TYPE_PDF,
   LESSON_TYPE_QUIZ
-} from '../config/constants.js'
-import { capitalize } from '../lib/utils'
-import { makeStyles } from '@material-ui/styles'
-import TextEditor from './TextEditor'
-import MediaSelector from './MediaSelector'
-import FetchBuilder from '../lib/fetch'
-import { networkAction, setAppMessage } from '../redux/actions'
-import { connect } from 'react-redux'
-import AppDialog from './AppDialog'
-import AppMessage from '../models/app-message.js'
+} from "../config/constants.js";
+import { capitalize } from "../lib/utils";
+import { makeStyles } from "@material-ui/styles";
+import TextEditor from "./TextEditor";
+import MediaSelector from "./MediaSelector";
+import FetchBuilder from "../lib/fetch";
+import { networkAction, setAppMessage } from "../redux/actions";
+import { connect } from "react-redux";
+import AppDialog from "./AppDialog";
+import AppMessage from "../models/app-message.js";
 
 const useStyles = makeStyles(theme => ({
   formControl: {
     marginBottom: theme.spacing(2),
-    minWidth: '100%'
+    minWidth: "100%"
   },
   controlRow: {
     marginTop: theme.spacing(2),
     marginBottom: theme.spacing(2),
-    display: 'flex',
-    alignItems: 'center'
+    display: "flex",
+    alignItems: "center"
   },
   editor: {
-    border: '1px solid #cacaca',
-    borderRadius: '6px',
-    padding: '10px 8px',
+    border: "1px solid #cacaca",
+    borderRadius: "6px",
+    padding: "10px 8px",
     maxHeight: 300,
-    overflow: 'auto',
+    overflow: "auto",
     marginBottom: theme.spacing(2)
   },
   editorLabel: {
-    fontSize: '1em',
+    fontSize: "1em",
     marginBottom: theme.spacing(1)
   }
-}))
+}));
 
-const LessonEditor = (props) => {
-  const [lesson, setLesson] = useState(props.lesson)
+const LessonEditor = props => {
+  const [lesson, setLesson] = useState(props.lesson);
   // const [error, setError] = useState('')
-  const classes = useStyles()
-  const inputLabel = React.useRef(null)
-  const [labelWidth, setLabelWidth] = React.useState(0)
-  const [deleteLessonPopupOpened, setDeleteLessonPopupOpened] = useState(false)
+  const classes = useStyles();
+  const inputLabel = React.useRef(null);
+  const [labelWidth, setLabelWidth] = React.useState(0);
+  const [deleteLessonPopupOpened, setDeleteLessonPopupOpened] = useState(false);
 
   useEffect(() => {
-    setLabelWidth(inputLabel.current && inputLabel.current.offsetWidth)
-  }, [lesson.type])
+    setLabelWidth(inputLabel.current && inputLabel.current.offsetWidth);
+  }, [lesson.type]);
 
   useEffect(() => {
-    props.lesson.id && loadLesson(props.lesson.id)
-  }, [props.lesson.id])
+    props.lesson.id && loadLesson(props.lesson.id);
+  }, [props.lesson.id]);
 
-  const loadLesson = async (id) => {
+  const loadLesson = async id => {
     const query = `
     query {
       lesson: getLesson(id: "${id}") {
@@ -102,42 +102,44 @@ const LessonEditor = (props) => {
         requiresEnrollment
       }
     }
-    `
+    `;
 
     const fetch = new FetchBuilder()
       .setUrl(`${BACKEND}/graph`)
       .setPayload(query)
       .setIsGraphQLEndpoint(true)
       .setAuthToken(props.auth.token)
-      .build()
+      .build();
 
     try {
-      props.dispatch(networkAction(true))
-      const response = await fetch.exec()
+      props.dispatch(networkAction(true));
+      const response = await fetch.exec();
 
       if (response.lesson) {
-        console.log(response.lesson)
-        setLesson(Object.assign({}, response.lesson, {
-          content: TextEditor.hydrate(response.lesson.content)
-        }))
+        console.log(response.lesson);
+        setLesson(
+          Object.assign({}, response.lesson, {
+            content: TextEditor.hydrate(response.lesson.content)
+          })
+        );
       }
     } catch (err) {
       // setError(err.message)
     } finally {
-      props.dispatch(networkAction(false))
+      props.dispatch(networkAction(false));
     }
-  }
+  };
 
-  const onLessonCreate = async (e) => {
-    e.preventDefault()
+  const onLessonCreate = async e => {
+    e.preventDefault();
     // setError('')
 
     if (lesson.id) {
-      await updateLesson()
+      await updateLesson();
     } else {
-      await createLesson()
+      await createLesson();
     }
-  }
+  };
 
   const updateLesson = async () => {
     const query = `
@@ -148,7 +150,9 @@ const LessonEditor = (props) => {
         downloadable: ${lesson.downloadable},
         type: ${lesson.type.toUpperCase()},
         content: "${TextEditor.stringify(lesson.content)}",
-        contentURL: ${lesson.contentURL !== '' ? '"' + lesson.contentURL + '"' : null},
+        contentURL: ${
+          lesson.contentURL !== "" ? '"' + lesson.contentURL + '"' : null
+        },
         requiresEnrollment: ${lesson.requiresEnrollment}
       }) {
         id,
@@ -159,32 +163,28 @@ const LessonEditor = (props) => {
         contentURL
       }
     }
-    `
+    `;
     const fetch = new FetchBuilder()
       .setUrl(`${BACKEND}/graph`)
       .setPayload(query)
       .setIsGraphQLEndpoint(true)
       .setAuthToken(props.auth.token)
-      .build()
+      .build();
 
     try {
-      props.dispatch(networkAction(true))
-      const response = await fetch.exec()
+      props.dispatch(networkAction(true));
+      const response = await fetch.exec();
 
       if (response.lesson) {
-        console.log(response.lesson)
+        console.log(response.lesson);
       }
     } catch (err) {
-      props.dispatch(
-        setAppMessage(new AppMessage(err.message))
-      )
+      props.dispatch(setAppMessage(new AppMessage(err.message)));
     } finally {
-      props.dispatch(networkAction(false))
-      props.dispatch(
-        setAppMessage(new AppMessage(APP_MESSAGE_LESSON_SAVED))
-      )
+      props.dispatch(networkAction(false));
+      props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_LESSON_SAVED)));
     }
-  }
+  };
 
   const createLesson = async () => {
     const query = `
@@ -194,42 +194,40 @@ const LessonEditor = (props) => {
         downloadable: ${lesson.downloadable},
         type: ${lesson.type.toUpperCase()},
         content: "${TextEditor.stringify(lesson.content)}",
-        contentURL: ${lesson.contentURL !== '' ? '"' + lesson.contentURL + '"' : null},
+        contentURL: ${
+          lesson.contentURL !== "" ? '"' + lesson.contentURL + '"' : null
+        },
         courseId: "${lesson.courseId}",
         requiresEnrollment: ${lesson.requiresEnrollment}
       }) {
         id
       }
     }
-    `
+    `;
     const fetch = new FetchBuilder()
       .setUrl(`${BACKEND}/graph`)
       .setPayload(query)
       .setIsGraphQLEndpoint(true)
       .setAuthToken(props.auth.token)
-      .build()
+      .build();
 
     try {
-      props.dispatch(networkAction(true))
-      const response = await fetch.exec()
+      props.dispatch(networkAction(true));
+      const response = await fetch.exec();
 
       if (response.lesson) {
-        setLesson(Object.assign({}, lesson, { id: response.lesson.id }))
+        setLesson(Object.assign({}, lesson, { id: response.lesson.id }));
       }
     } catch (err) {
-      props.dispatch(
-        setAppMessage(new AppMessage(err.message))
-      )
+      props.dispatch(setAppMessage(new AppMessage(err.message)));
     } finally {
-      props.dispatch(networkAction(false))
-      props.dispatch(
-        setAppMessage(new AppMessage(APP_MESSAGE_LESSON_SAVED))
-      )
+      props.dispatch(networkAction(false));
+      props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_LESSON_SAVED)));
     }
-  }
+  };
 
-  const onLessonDelete = async (index) => {
-    setDeleteLessonPopupOpened(false)
+  const onLessonDelete = async index => {
+    setDeleteLessonPopupOpened(false);
     // setError()
 
     if (lesson.id) {
@@ -237,178 +235,183 @@ const LessonEditor = (props) => {
       mutation r {
         result: deleteLesson(id: "${lesson.id}")
       }
-      `
+      `;
       const fetch = new FetchBuilder()
         .setUrl(`${BACKEND}/graph`)
         .setPayload(query)
         .setIsGraphQLEndpoint(true)
         .setAuthToken(props.auth.token)
-        .build()
+        .build();
 
       try {
-        props.dispatch(networkAction(true))
-        const response = await fetch.exec()
+        props.dispatch(networkAction(true));
+        const response = await fetch.exec();
 
         if (response.result) {
           props.dispatch(
-            setAppMessage(
-              new AppMessage(APP_MESSAGE_LESSON_DELETED)
-            )
-          )
+            setAppMessage(new AppMessage(APP_MESSAGE_LESSON_DELETED))
+          );
         }
       } catch (err) {
-        props.dispatch(
-          setAppMessage(new AppMessage(err.message))
-        )
+        props.dispatch(setAppMessage(new AppMessage(err.message)));
       }
     }
 
-    props.onLessonDeleted(lesson.lessonIndex)
-  }
+    props.onLessonDeleted(lesson.lessonIndex);
+  };
 
-  const onLessonDetailsChange = (e) =>
+  const onLessonDetailsChange = e =>
     setLesson(
       Object.assign({}, lesson, {
-        [e.target.name]: e.target.type === 'checkbox'
-          ? e.target.checked : e.target.value
+        [e.target.name]:
+          e.target.type === "checkbox" ? e.target.checked : e.target.value
       })
-    )
+    );
 
-  const changeTextContent = (editorState) => setLesson(
-    Object.assign({}, lesson, { content: editorState })
-  )
+  const changeTextContent = editorState =>
+    setLesson(Object.assign({}, lesson, { content: editorState }));
 
-  const closeDeleteLessonPopup = () =>
-    setDeleteLessonPopupOpened(false)
+  const closeDeleteLessonPopup = () => setDeleteLessonPopupOpened(false);
 
   return (
     <Card>
       <CardContent>
-        <Typography variant='h6'>
-          {LESSON_EDITOR_HEADER}
-        </Typography>
-        {lesson.type &&
-        <form>
-          <TextField
-            required
-            variant='outlined'
-            label='Title'
-            fullWidth
-            margin="normal"
-            name='title'
-            value={lesson.title}
-            onChange={onLessonDetailsChange}
-            className={classes.formControl}/>
-          <FormControl variant='outlined' className={classes.formControl}>
-            <InputLabel ref={inputLabel} id="select-type">
-              {TYPE_DROPDOWN}
-            </InputLabel>
-            <Select
-              labelId="select-type"
-              id="demo-simple-select-outlined"
-              value={lesson.type}
+        <Typography variant="h6">{LESSON_EDITOR_HEADER}</Typography>
+        {lesson.type && (
+          <form>
+            <TextField
+              required
+              variant="outlined"
+              label="Title"
+              fullWidth
+              margin="normal"
+              name="title"
+              value={lesson.title}
               onChange={onLessonDetailsChange}
-              labelWidth={labelWidth}
-              inputProps={{
-                name: 'type'
-              }}
-            >
-              {/* <MenuItem value="TEXT">Text</MenuItem> */}
-              <MenuItem value={String.prototype.toUpperCase.call(LESSON_TYPE_TEXT)}>
-                {capitalize(LESSON_TYPE_TEXT)}
-              </MenuItem>
-              <MenuItem value={String.prototype.toUpperCase.call(LESSON_TYPE_VIDEO)}>
-                {capitalize(LESSON_TYPE_VIDEO)}
-              </MenuItem>
-              <MenuItem value={String.prototype.toUpperCase.call(LESSON_TYPE_AUDIO)}>
-                {capitalize(LESSON_TYPE_AUDIO)}
-              </MenuItem>
-              <MenuItem value={String.prototype.toUpperCase.call(LESSON_TYPE_PDF)}>
-                {capitalize(LESSON_TYPE_PDF)}
-              </MenuItem>
-              {/* <MenuItem value={LESSON_TYPE_QUIZ}>
+              className={classes.formControl}
+            />
+            <FormControl variant="outlined" className={classes.formControl}>
+              <InputLabel ref={inputLabel} id="select-type">
+                {TYPE_DROPDOWN}
+              </InputLabel>
+              <Select
+                labelId="select-type"
+                id="demo-simple-select-outlined"
+                value={lesson.type}
+                onChange={onLessonDetailsChange}
+                labelWidth={labelWidth}
+                inputProps={{
+                  name: "type"
+                }}
+              >
+                {/* <MenuItem value="TEXT">Text</MenuItem> */}
+                <MenuItem
+                  value={String.prototype.toUpperCase.call(LESSON_TYPE_TEXT)}
+                >
+                  {capitalize(LESSON_TYPE_TEXT)}
+                </MenuItem>
+                <MenuItem
+                  value={String.prototype.toUpperCase.call(LESSON_TYPE_VIDEO)}
+                >
+                  {capitalize(LESSON_TYPE_VIDEO)}
+                </MenuItem>
+                <MenuItem
+                  value={String.prototype.toUpperCase.call(LESSON_TYPE_AUDIO)}
+                >
+                  {capitalize(LESSON_TYPE_AUDIO)}
+                </MenuItem>
+                <MenuItem
+                  value={String.prototype.toUpperCase.call(LESSON_TYPE_PDF)}
+                >
+                  {capitalize(LESSON_TYPE_PDF)}
+                </MenuItem>
+                {/* <MenuItem value={LESSON_TYPE_QUIZ}>
                 {capitalize(LESSON_TYPE_QUIZ)}
               </MenuItem> */}
-            </Select>
-          </FormControl>
-          {![
-            String.prototype.toUpperCase.call(LESSON_TYPE_TEXT),
-            String.prototype.toUpperCase.call(LESSON_TYPE_QUIZ)
-          ].includes(lesson.type) &&
-            <div className={classes.formControl}>
-              <MediaSelector
-                title={CONTENT_URL_LABEL}
-                src={lesson.contentURL}
-                onSelection={(mediaId) => setLesson(
-                  Object.assign({}, lesson, { contentURL: mediaId })
-                )}
-              />
-            </div>}
-          <Grid
-            container
-            className={classes.formControl}
-            alignItems='center'
-            justify='space-between'>
-            <Grid item>
-              <Typography variant='body1'>
-                {LESSON_CONTENT_HEADER}
-              </Typography>
-            </Grid>
-            <Grid item>
-              <TextEditor
-                initialContentState={lesson.content}
-                onChange={changeTextContent} />
-              {/* <IconButton onClick={() => setOpen(true)}>
-                <Edit />
-              </IconButton> */}
-            </Grid>
-          </Grid>
-          {[LESSON_TYPE_VIDEO,
-            LESSON_TYPE_AUDIO,
-            LESSON_TYPE_PDF
-          ].includes(lesson.type) &&
+              </Select>
+            </FormControl>
+            {![
+              String.prototype.toUpperCase.call(LESSON_TYPE_TEXT),
+              String.prototype.toUpperCase.call(LESSON_TYPE_QUIZ)
+            ].includes(lesson.type) && (
+              <div className={classes.formControl}>
+                <MediaSelector
+                  title={CONTENT_URL_LABEL}
+                  src={lesson.contentURL}
+                  onSelection={mediaId =>
+                    setLesson(
+                      Object.assign({}, lesson, { contentURL: mediaId })
+                    )
+                  }
+                />
+              </div>
+            )}
             <Grid
               container
-              justify='space-between'
-              alignItems='center'
-              className={classes.formControl}>
+              className={classes.formControl}
+              alignItems="center"
+              justify="space-between"
+            >
               <Grid item>
-                <Typography variant='body1'>
-                  {DOWNLOADABLE_SWITCH}
+                <Typography variant="body1">{LESSON_CONTENT_HEADER}</Typography>
+              </Grid>
+              <Grid item>
+                <TextEditor
+                  initialContentState={lesson.content}
+                  onChange={changeTextContent}
+                />
+                {/* <IconButton onClick={() => setOpen(true)}>
+                <Edit />
+              </IconButton> */}
+              </Grid>
+            </Grid>
+            {[LESSON_TYPE_VIDEO, LESSON_TYPE_AUDIO, LESSON_TYPE_PDF].includes(
+              lesson.type
+            ) && (
+              <Grid
+                container
+                justify="space-between"
+                alignItems="center"
+                className={classes.formControl}
+              >
+                <Grid item>
+                  <Typography variant="body1">{DOWNLOADABLE_SWITCH}</Typography>
+                </Grid>
+                <Grid item>
+                  <Switch
+                    type="checkbox"
+                    name="downloadable"
+                    checked={lesson.downloadable}
+                    onChange={onLessonDetailsChange}
+                  />
+                </Grid>
+              </Grid>
+            )}
+            <Grid
+              container
+              justify="space-between"
+              alignItems="center"
+              className={classes.formControl}
+            >
+              <Grid item>
+                <Typography variant="body1">
+                  {LESSON_REQUIRES_ENROLLMENT}
                 </Typography>
               </Grid>
               <Grid item>
                 <Switch
-                  type='checkbox'
-                  name='downloadable'
-                  checked={lesson.downloadable}
-                  onChange={onLessonDetailsChange}/>
+                  type="checkbox"
+                  name="requiresEnrollment"
+                  checked={lesson.requiresEnrollment}
+                  onChange={onLessonDetailsChange}
+                />
               </Grid>
-            </Grid>}
-          <Grid
-            container
-            justify='space-between'
-            alignItems='center'
-            className={classes.formControl}>
-            <Grid item>
-              <Typography variant='body1'>
-                {LESSON_REQUIRES_ENROLLMENT}
-              </Typography>
             </Grid>
-            <Grid item>
-              <Switch
-                type='checkbox'
-                name='requiresEnrollment'
-                checked={lesson.requiresEnrollment}
-                onChange={onLessonDetailsChange}/>
-            </Grid>
-          </Grid>
-        </form>}
+          </form>
+        )}
       </CardContent>
       <CardActions>
-        <Button onClick={onLessonCreate}>
-          {BUTTON_SAVE}
-        </Button>
+        <Button onClick={onLessonCreate}>{BUTTON_SAVE}</Button>
         <Button onClick={() => setDeleteLessonPopupOpened(true)}>
           {BUTTON_DELETE_LESSON_TEXT}
         </Button>
@@ -420,37 +423,34 @@ const LessonEditor = (props) => {
         actions={[
           { name: POPUP_CANCEL_ACTION, callback: closeDeleteLessonPopup },
           { name: POPUP_OK_ACTION, callback: onLessonDelete }
-        ]}>
-      </AppDialog>
+        ]}
+      ></AppDialog>
     </Card>
-  )
-}
+  );
+};
 
 LessonEditor.emptyLesson = {
-  title: '',
+  title: "",
   type: String.prototype.toUpperCase.call(LESSON_TYPE_TEXT),
   content: TextEditor.emptyState(),
-  contentURL: '',
+  contentURL: "",
   downloadable: false,
   requiresEnrollment: false
-}
+};
 
 LessonEditor.propTypes = {
   onLessonDeleted: PropTypes.func.isRequired,
   auth: authProps,
   dispatch: PropTypes.func.isRequired,
   lesson: lessonType
-}
+};
 
 const mapStateToProps = state => ({
   auth: state.auth
-})
+});
 
 const mapDispatchToProps = dispatch => ({
   dispatch: dispatch
-})
+});
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(LessonEditor)
+export default connect(mapStateToProps, mapDispatchToProps)(LessonEditor);

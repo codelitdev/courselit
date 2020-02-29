@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react'
-import { connect } from 'react-redux'
-import PropTypes from 'prop-types'
+import React, { useEffect, useState } from "react";
+import { connect } from "react-redux";
+import PropTypes from "prop-types";
 import {
   Dialog,
   DialogTitle,
@@ -11,16 +11,16 @@ import {
   Button,
   CircularProgress,
   Divider
-} from '@material-ui/core'
+} from "@material-ui/core";
 import {
   CHECKOUT_DIALOG_TITLE,
   PAYMENT_MODAL_PAYMENT_DETAILS_HEADER,
   PAYMENT_VERIFICATION_FAILED,
   CAPTION_TRY_AGAIN,
   CAPTION_CLOSE
-} from '../../config/strings'
-import { siteInfoProps, publicCourse, authProps } from '../../types'
-import Stripe from './Stripe'
+} from "../../config/strings";
+import { siteInfoProps, publicCourse, authProps } from "../../types";
+import Stripe from "./Stripe";
 import {
   PAYMENT_METHOD_STRIPE,
   PAYMENT_METHOD_PAYTM,
@@ -30,18 +30,15 @@ import {
   TRANSACTION_SUCCESS,
   TRANSACTION_FAILED,
   CONSECUTIVE_PAYMENT_VERIFICATION_REQUEST_GAP
-} from '../../config/constants'
-import { makeStyles } from '@material-ui/styles'
-import {
-  ShoppingCart
-} from '@material-ui/icons'
-import Router from 'next/router'
-import { refreshUserProfile } from '../../redux/actions'
-import fetch from 'isomorphic-unfetch'
+} from "../../config/constants";
+import { makeStyles } from "@material-ui/styles";
+import { ShoppingCart } from "@material-ui/icons";
+import Router from "next/router";
+import { refreshUserProfile } from "../../redux/actions";
+import fetch from "isomorphic-unfetch";
 
 const useStyles = makeStyles(theme => ({
-  header: {
-  },
+  header: {},
   divider: {
     margin: theme.spacing(2, 0)
   },
@@ -52,227 +49,218 @@ const useStyles = makeStyles(theme => ({
     margin: theme.spacing(2, 0)
   },
   checkoutIcon: {
-    display: 'flex',
-    alignItems: 'center',
+    display: "flex",
+    alignItems: "center",
     marginRight: theme.spacing(1)
   },
   error: {
-    color: 'red'
+    color: "red"
   },
   paymentTemplate: {
-    margin: '0.8em 0em'
+    margin: "0.8em 0em"
   }
-}))
+}));
 
-const PaymentDialog = (props) => {
-  const { onClose, open, course, auth } = props
-  const { paymentMethod } = props.siteInfo
-  const [paymentTracker, setPaymentTracker] = useState('')
-  const [purchaseId, setPurchaseId] = useState('')
-  const [error, setError] = useState('')
-  const classes = useStyles()
-  const [loading, setLoading] = useState(false)
+const PaymentDialog = props => {
+  const { onClose, open, course, auth } = props;
+  const { paymentMethod } = props.siteInfo;
+  const [paymentTracker, setPaymentTracker] = useState("");
+  const [purchaseId, setPurchaseId] = useState("");
+  const [error, setError] = useState("");
+  const classes = useStyles();
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    initiatePayment()
-  }, [props.open])
+    initiatePayment();
+  }, [props.open]);
 
   const initiatePayment = async () => {
     if (props.open) {
-      setLoading(true)
+      setLoading(true);
 
       try {
-        const initiatePaymentResponse = await makePaymentRequest(course.id)
+        const initiatePaymentResponse = await makePaymentRequest(course.id);
         switch (initiatePaymentResponse.status) {
           case TRANSACTION_SUCCESS:
-            courseBought()
-            break
+            courseBought();
+            break;
           case TRANSACTION_FAILED:
-            setError(initiatePaymentResponse.error)
-            break
+            setError(initiatePaymentResponse.error);
+            break;
           case TRANSACTION_INITIATED:
-            setPaymentTracker(initiatePaymentResponse.paymentTracker)
-            setPurchaseId(initiatePaymentResponse.purchaseId)
-            break
+            setPaymentTracker(initiatePaymentResponse.paymentTracker);
+            setPurchaseId(initiatePaymentResponse.purchaseId);
+            break;
           default:
-            // do nothing
+          // do nothing
         }
       } catch (err) {
-        setError(err.message)
+        setError(err.message);
       }
 
-      setLoading(false)
+      setLoading(false);
     } else {
-      resetState()
+      resetState();
     }
-  }
+  };
 
-  const makePaymentRequest = async (courseId) => {
-    const formData = new window.FormData()
-    formData.append('courseid', courseId)
+  const makePaymentRequest = async courseId => {
+    const formData = new window.FormData();
+    formData.append("courseid", courseId);
 
     const res = await fetch(`${BACKEND}/payment/initiate`, {
-      method: 'POST',
+      method: "POST",
       headers: {
         Authorization: `Bearer ${auth.token}`
       },
       body: formData
-    })
+    });
 
     if (res.status === 401) {
-      Router.push('/login')
-      return
+      Router.push("/login");
+      return;
     }
 
-    return res.json()
-  }
+    return res.json();
+  };
 
   const courseBought = () => {
-    props.dispatch(refreshUserProfile())
-    onClose()
-  }
+    props.dispatch(refreshUserProfile());
+    onClose();
+  };
 
   const resetState = () => {
-    setPaymentTracker('')
-    setError('')
-    setLoading(false)
-  }
+    setPaymentTracker("");
+    setError("");
+    setLoading(false);
+  };
 
   const paymentSuccess = async () => {
-    let paymentIsVerifiedOnServer = false
+    let paymentIsVerifiedOnServer = false;
 
-    setLoading(true)
+    setLoading(true);
     for (let i = 0; i < 10; i++) {
-      paymentIsVerifiedOnServer = await verifyPaymentOnServer()
+      paymentIsVerifiedOnServer = await verifyPaymentOnServer();
       if (paymentIsVerifiedOnServer) {
-        break
+        break;
       }
       await new Promise(resolve =>
-        setTimeout(resolve, CONSECUTIVE_PAYMENT_VERIFICATION_REQUEST_GAP))
+        setTimeout(resolve, CONSECUTIVE_PAYMENT_VERIFICATION_REQUEST_GAP)
+      );
     }
-    setLoading(false)
+    setLoading(false);
 
     if (paymentIsVerifiedOnServer) {
-      courseBought()
+      courseBought();
     } else {
-      setError(PAYMENT_VERIFICATION_FAILED)
+      setError(PAYMENT_VERIFICATION_FAILED);
     }
-  }
+  };
 
   const verifyPaymentOnServer = async () => {
-    const formData = new window.FormData()
-    formData.append('purchaseid', purchaseId)
+    const formData = new window.FormData();
+    formData.append("purchaseid", purchaseId);
 
     let res = await fetch(`${BACKEND}/payment/verify`, {
-      method: 'POST',
+      method: "POST",
       headers: {
         Authorization: `Bearer ${auth.token}`
       },
       body: formData
-    })
+    });
 
     if (res.status === 401) {
-      Router.push('/login')
-      return
+      Router.push("/login");
+      return;
     }
-    res = await res.json()
+    res = await res.json();
 
     if (res.status && res.status === TRANSACTION_SUCCESS) {
-      return true
+      return true;
     } else {
-      return false
+      return false;
     }
-  }
+  };
 
-  const paymentError = error => setError(error.message)
+  const paymentError = error => setError(error.message);
 
   return (
-    <Dialog
-      onClose={onClose}
-      open={open}
-      maxWidth='sm'
-      fullWidth={true}>
+    <Dialog onClose={onClose} open={open} maxWidth="sm" fullWidth={true}>
       <DialogTitle>
-        <Grid container direction='row' className={classes.header}>
+        <Grid container direction="row" className={classes.header}>
           <Grid item className={classes.checkoutIcon}>
             <ShoppingCart />
           </Grid>
-          <Grid item>
-            {CHECKOUT_DIALOG_TITLE}
-          </Grid>
+          <Grid item>{CHECKOUT_DIALOG_TITLE}</Grid>
         </Grid>
       </DialogTitle>
       <DialogContent>
-        <Grid
-          container
-          direction='row'
-          alignItems='center'>
+        <Grid container direction="row" alignItems="center">
           <Grid item xs>
-            <Typography variant='h4'>
-              {course.title}
-            </Typography>
+            <Typography variant="h4">{course.title}</Typography>
           </Grid>
           <Grid item>
-            <Typography variant='subtitle1'>
-              {props.siteInfo.currencyUnit}{course.cost}
+            <Typography variant="subtitle1">
+              {props.siteInfo.currencyUnit}
+              {course.cost}
             </Typography>
           </Grid>
         </Grid>
-        <Divider variant='middle' className={classes.divider} />
-        <Typography variant='h6' className={classes.paymentHeader}>
+        <Divider variant="middle" className={classes.divider} />
+        <Typography variant="h6" className={classes.paymentHeader}>
           {PAYMENT_MODAL_PAYMENT_DETAILS_HEADER}
         </Typography>
 
-        {loading &&
-          <Grid
-            container
-            justify='center'
-            className={classes.paymentTemplate}>
+        {loading && (
+          <Grid container justify="center" className={classes.paymentTemplate}>
             <Grid item>
-              <CircularProgress color='secondary' />
+              <CircularProgress color="secondary" />
             </Grid>
           </Grid>
-        }
+        )}
 
-        {!loading &&
+        {!loading && (
           <>
-            {error &&
+            {error && (
               <Grid
                 container
-                alignItems='center'
+                alignItems="center"
                 className={classes.paymentTemplate}
-                direction='column'>
+                direction="column"
+              >
                 <Grid item>
-                  <Typography variant='subtitle1' className={classes.error}>
+                  <Typography variant="subtitle1" className={classes.error}>
                     {error}
                   </Typography>
                 </Grid>
-                {error === PAYMENT_VERIFICATION_FAILED &&
+                {error === PAYMENT_VERIFICATION_FAILED && (
                   <Grid item>
-                    <Button onClick={paymentSuccess} color='primary'>
+                    <Button onClick={paymentSuccess} color="primary">
                       {CAPTION_TRY_AGAIN}
                     </Button>
                   </Grid>
-                }
+                )}
               </Grid>
-            }
-            {!error &&
+            )}
+            {!error && (
               <>
-                {paymentTracker &&
+                {paymentTracker && (
                   <>
-                    {paymentMethod === PAYMENT_METHOD_STRIPE &&
+                    {paymentMethod === PAYMENT_METHOD_STRIPE && (
                       <Stripe
                         clientSecret={paymentTracker}
                         onSuccess={paymentSuccess}
-                        onError={paymentError} />}
+                        onError={paymentError}
+                      />
+                    )}
                     {paymentMethod === PAYMENT_METHOD_PAYTM && <></>}
                     {paymentMethod === PAYMENT_METHOD_PAYPAL && <></>}
                   </>
-                }
+                )}
               </>
-            }
+            )}
           </>
-        }
+        )}
         {/*
         {paymentPhase === INITIATION_PHASE &&
           <>
@@ -340,16 +328,15 @@ const PaymentDialog = (props) => {
             </Grid>
           </>
         } */}
-
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color='secondary'>
+        <Button onClick={onClose} color="secondary">
           {CAPTION_CLOSE}
         </Button>
       </DialogActions>
     </Dialog>
-  )
-}
+  );
+};
 
 PaymentDialog.propTypes = {
   course: publicCourse.isRequired,
@@ -358,18 +345,15 @@ PaymentDialog.propTypes = {
   onClose: PropTypes.func.isRequired,
   auth: authProps,
   dispatch: PropTypes.func.isRequired
-}
+};
 
 const mapStateToProps = state => ({
   auth: state.auth,
   siteInfo: state.siteinfo
-})
+});
 
 const mapDispatchToProps = dispatch => ({
   dispatch: dispatch
-})
+});
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(PaymentDialog)
+export default connect(mapStateToProps, mapDispatchToProps)(PaymentDialog);

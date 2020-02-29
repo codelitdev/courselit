@@ -1,39 +1,44 @@
-import { useState } from 'react'
-import PropTypes from 'prop-types'
-import { publicCourse } from '../types.js'
-import CourseItem from '../components/CourseItem.js'
-import { queryGraphQL } from '../lib/utils.js'
-import { BACKEND } from '../config/constants.js'
-import { BTN_LOAD_MORE } from '../config/strings.js'
-import MasterLayout from '../components/Masterlayout.js'
+import { useState } from "react";
+import PropTypes from "prop-types";
+import { publicCourse } from "../types.js";
+import CourseItem from "../components/CourseItem.js";
+import { queryGraphQL } from "../lib/utils.js";
+import { BACKEND } from "../config/constants.js";
+import { BTN_LOAD_MORE } from "../config/strings.js";
+import MasterLayout from "../components/Masterlayout.js";
 
-const Courses = (props) => {
-  const [courses, setCourses] = useState(props.courses)
-  const [hasMorePages, setHasMorePages] = useState(true)
+const Courses = props => {
+  const [courses, setCourses] = useState(props.courses);
+  const [hasMorePages, setHasMorePages] = useState(true);
 
   const getMoreCourses = async () => {
     if (hasMorePages) {
-      pageOffset += 1
-      const moreCourses = await getCourses()
+      pageOffset += 1;
+      const moreCourses = await getCourses();
       if (moreCourses.length > 0) {
-        setCourses([...courses, ...moreCourses])
+        setCourses([...courses, ...moreCourses]);
       } else {
-        setHasMorePages(false)
+        setHasMorePages(false);
       }
     }
-  }
+  };
 
   return (
     <MasterLayout>
-      {courses.map(course => <CourseItem course={course} key={course.id} isPublicView={true}/>)}
+      {courses.map(course => (
+        <CourseItem course={course} key={course.id} isPublicView={true} />
+      ))}
       <button
         onClick={getMoreCourses}
-        disabled={hasMorePages ? null : 'disabled'}>{BTN_LOAD_MORE}</button>
+        disabled={hasMorePages ? null : "disabled"}
+      >
+        {BTN_LOAD_MORE}
+      </button>
     </MasterLayout>
-  )
-}
+  );
+};
 
-let pageOffset = 1
+let pageOffset = 1;
 const getQuery = () => `
   query {
     courses: getPublicCourses(offset: ${pageOffset}) {
@@ -48,26 +53,26 @@ const getQuery = () => `
       isFeatured
     }
   }
-`
+`;
 
 const getCourses = async () => {
-  let courses = []
+  let courses = [];
   try {
-    const response = await queryGraphQL(`${BACKEND}/graph`, getQuery())
-    courses = response.courses
+    const response = await queryGraphQL(`${BACKEND}/graph`, getQuery());
+    courses = response.courses;
   } catch (e) {
     // do nothing
   }
-  return courses
-}
+  return courses;
+};
 
-Courses.getInitialProps = async (props) => {
-  const courses = await getCourses()
-  return { courses }
-}
+Courses.getInitialProps = async props => {
+  const courses = await getCourses();
+  return { courses };
+};
 
 Courses.propTypes = {
   courses: PropTypes.arrayOf(publicCourse)
-}
+};
 
-export default Courses
+export default Courses;

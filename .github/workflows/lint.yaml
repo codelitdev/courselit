@@ -5,7 +5,6 @@ jobs:
   backend-lint:
     name: Backend
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-node@v1
@@ -20,7 +19,6 @@ jobs:
   frontend-lint:
     name: Frontend
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-node@v1

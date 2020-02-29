@@ -1,12 +1,12 @@
 /**
  * This file contains all the PropTypes used across the app.
  */
-import PropTypes from 'prop-types'
+import PropTypes from "prop-types";
 
 export const authProps = PropTypes.shape({
   guest: PropTypes.bool,
   token: PropTypes.string
-})
+});
 
 export const profileProps = PropTypes.shape({
   isCreator: PropTypes.bool,
@@ -15,7 +15,7 @@ export const profileProps = PropTypes.shape({
   fetched: PropTypes.bool,
   email: PropTypes.string,
   purchases: PropTypes.arrayOf(PropTypes.string)
-})
+});
 
 export const latestPostsProps = PropTypes.shape({
   id: PropTypes.string.isRequired,
@@ -24,14 +24,14 @@ export const latestPostsProps = PropTypes.shape({
   creatorName: PropTypes.string.isRequired,
   updated: PropTypes.number.isRequired,
   slug: PropTypes.string.isRequired
-})
+});
 
 export const siteInfoProps = PropTypes.shape({
   title: PropTypes.string,
   subtitle: PropTypes.string,
   logopath: PropTypes.string,
   currencyUnit: PropTypes.string
-})
+});
 
 export const publicCourse = PropTypes.shape({
   id: PropTypes.string.isRequired,
@@ -43,7 +43,7 @@ export const publicCourse = PropTypes.shape({
   isFeatured: PropTypes.bool,
   cost: PropTypes.number,
   creatorId: PropTypes.string
-})
+});
 
 export const creatorCourse = PropTypes.shape({
   id: PropTypes.string.isRequired,
@@ -54,7 +54,7 @@ export const creatorCourse = PropTypes.shape({
   slug: PropTypes.string,
   isFeatured: PropTypes.bool,
   cost: PropTypes.number
-})
+});
 
 export const siteUser = PropTypes.shape({
   email: PropTypes.string.isRequired,
@@ -64,14 +64,14 @@ export const siteUser = PropTypes.shape({
   isAdmin: PropTypes.bool.isRequired,
   avatar: PropTypes.string,
   purchases: PropTypes.arrayOf(PropTypes.object)
-})
+});
 
 export const featuredCourse = PropTypes.shape({
   id: PropTypes.string.isRequired,
   title: PropTypes.string.isRequired,
   cost: PropTypes.number.isRequired,
   featuredImage: PropTypes.string
-})
+});
 
 export const appMessage = PropTypes.shape({
   open: PropTypes.bool.isRequired,
@@ -80,7 +80,7 @@ export const appMessage = PropTypes.shape({
     text: PropTypes.string.isRequired,
     cb: PropTypes.func.isRequired
   })
-})
+});
 
 export const lesson = PropTypes.shape({
   title: PropTypes.string.isRequired,
@@ -88,4 +88,4 @@ export const lesson = PropTypes.shape({
   downloadable: PropTypes.bool,
   content: PropTypes.string,
   contentURL: PropTypes.string
-})
+});
