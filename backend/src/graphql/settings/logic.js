@@ -1,80 +1,78 @@
-const Settings = require('../../models/Settings.js')
-const SiteInfo = require('../../models/SiteInfo.js')
-const { checkIfAuthenticated } = require('../../lib/graphql.js')
-const { responses } = require('../../config/strings.js')
-const { capitalize } = require('../../lib/utils.js')
-const {
-  paypal,
-  stripe,
-  paytm
-} = require('../../config/constants.js')
+const Settings = require("../../models/Settings.js");
+const SiteInfo = require("../../models/SiteInfo.js");
+const { checkIfAuthenticated } = require("../../lib/graphql.js");
+const { responses } = require("../../config/strings.js");
+const { capitalize } = require("../../lib/utils.js");
+const { paypal, stripe, paytm } = require("../../config/constants.js");
 
-exports.getSettings = async (ctx) => {
-  checkIfAuthenticated(ctx)
+exports.getSettings = async ctx => {
+  checkIfAuthenticated(ctx);
 
   if (!ctx.user.isAdmin) {
-    throw new Error(responses.is_not_admin)
+    throw new Error(responses.is_not_admin);
   }
 
-  const settings = await Settings.find()
-  return settings[0]
-}
+  const settings = await Settings.find();
+  return settings[0];
+};
 
 exports.updateSettings = async (settingsData, ctx) => {
-  checkIfAuthenticated(ctx)
+  checkIfAuthenticated(ctx);
 
   if (!ctx.user.isAdmin) {
-    throw new Error(responses.is_not_admin)
+    throw new Error(responses.is_not_admin);
   }
 
-  let settings = await Settings.find()
-  settings = settings[0]
+  let settings = await Settings.find();
+  settings = settings[0];
 
   // create a new entry if not existing
-  let shouldCreate = false
+  let shouldCreate = false;
   if (settings === undefined) {
-    shouldCreate = true
-    settings = {}
+    shouldCreate = true;
+    settings = {};
   }
 
   // populate changed data
   for (const key of Object.keys(settingsData)) {
-    settings[key] = settingsData[key]
+    settings[key] = settingsData[key];
   }
 
   // validate payment combinations
-  const failedPaymentMethod = await checkForInvalidPaymentSettings(settings)
+  const failedPaymentMethod = await checkForInvalidPaymentSettings(settings);
   if (failedPaymentMethod) {
-    throw getPaymentInvalidException(failedPaymentMethod)
+    throw getPaymentInvalidException(failedPaymentMethod);
   }
 
   if (shouldCreate) {
-    settings = await Settings.create(settings)
+    settings = await Settings.create(settings);
   } else {
-    settings = await settings.save()
+    settings = await settings.save();
   }
 
-  return settings
-}
+  return settings;
+};
 
-const checkForInvalidPaymentSettings = async (settings) => {
-  const siteInfo = (await SiteInfo.find())[0]
-  let failedPaymentMethod = null
+const checkForInvalidPaymentSettings = async settings => {
+  const siteInfo = (await SiteInfo.find())[0];
+  let failedPaymentMethod = null;
 
   if (siteInfo.paymentMethod === paytm && !settings.paytmSecret) {
-    failedPaymentMethod = paytm
+    failedPaymentMethod = paytm;
   }
 
   if (siteInfo.paymentMethod === paypal && !settings.paypalSecret) {
-    failedPaymentMethod = paypal
+    failedPaymentMethod = paypal;
   }
 
   if (siteInfo.paymentMethod === stripe && !settings.stripeSecret) {
-    failedPaymentMethod = stripe
+    failedPaymentMethod = stripe;
   }
 
-  return failedPaymentMethod
-}
+  return failedPaymentMethod;
+};
 
-const getPaymentInvalidException = (paymentMethod) =>
-  new Error(`${capitalize(paymentMethod)} ${responses.payment_settings_invalid_suffix}`)
+const getPaymentInvalidException = paymentMethod =>
+  new Error(
+    `${capitalize(paymentMethod)} ${responses.payment_settings_invalid_suffix}`
+  );

@@ -1,6 +1,6 @@
-const graphql = require('graphql')
-const types = require('./types.js')
-const logic = require('./logic.js')
+const graphql = require("graphql");
+const types = require("./types.js");
+const logic = require("./logic.js");
 
 module.exports = {
   createLesson: {
@@ -10,7 +10,8 @@ module.exports = {
         type: new graphql.GraphQLNonNull(types.lessonInputType)
       }
     },
-    resolve: async (root, { lessonData }, context) => logic.createLesson(lessonData, context)
+    resolve: async (root, { lessonData }, context) =>
+      logic.createLesson(lessonData, context)
   },
   deleteLesson: {
     type: graphql.GraphQLBoolean,
@@ -25,7 +26,8 @@ module.exports = {
       id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
       newTitle: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) }
     },
-    resolve: async (root, { id, newTitle }, context) => logic.changeTitle(id, newTitle, context)
+    resolve: async (root, { id, newTitle }, context) =>
+      logic.changeTitle(id, newTitle, context)
   },
   changeContent: {
     type: types.lessonType,
@@ -33,7 +35,8 @@ module.exports = {
       id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
       content: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) }
     },
-    resolve: async (root, { id, content }, context) => logic.changeContent(id, content, context)
+    resolve: async (root, { id, content }, context) =>
+      logic.changeContent(id, content, context)
   },
   changeContentURL: {
     type: types.lessonType,
@@ -41,7 +44,8 @@ module.exports = {
       id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
       url: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) }
     },
-    resolve: async (root, { id, url }, context) => logic.changeContentURL(id, url, context)
+    resolve: async (root, { id, url }, context) =>
+      logic.changeContentURL(id, url, context)
   },
   // changeDownloadable: {
   //   type: types.lessonType,
@@ -58,6 +62,7 @@ module.exports = {
         type: new graphql.GraphQLNonNull(types.lessonUpdateType)
       }
     },
-    resolve: async (root, { lessonData }, context) => logic.updateLesson(lessonData, context)
+    resolve: async (root, { lessonData }, context) =>
+      logic.updateLesson(lessonData, context)
   }
-}
+};

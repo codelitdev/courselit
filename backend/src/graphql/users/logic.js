@@ -1,34 +1,39 @@
 /**
  * Business logic for managing users.
  */
-const User = require('../../models/User.js')
-const strings = require('../../config/strings.js')
+const User = require("../../models/User.js");
+const strings = require("../../config/strings.js");
 const {
   checkIfAuthenticated,
   checkAdminOrSelf,
   checkIfItemExists,
   makeModelTextSearchable
-} = require('../../lib/graphql.js')
-const constants = require('../../config/constants.js')
+} = require("../../lib/graphql.js");
+const constants = require("../../config/constants.js");
 
-const removeAdminFieldsFromUserObject = ({ id, email, name }) => ({ id, email, name })
+const removeAdminFieldsFromUserObject = ({ id, email, name }) => ({
+  id,
+  email,
+  name
+});
 
 exports.getUser = async (email, ctx) => {
-  const loggedUserEmail = ctx.user && ctx.user.email
-  const isAdmin = ctx.user && ctx.user.isAdmin
+  const loggedUserEmail = ctx.user && ctx.user.email;
+  const isAdmin = ctx.user && ctx.user.isAdmin;
 
-  const user = await User.findOne({ email })
+  const user = await User.findOne({ email });
 
   if (!user) {
-    throw new Error(strings.responses.item_not_found)
+    throw new Error(strings.responses.item_not_found);
   }
 
-  const result = (loggedUserEmail === email || isAdmin)
-    ? user
-    : removeAdminFieldsFromUserObject(user)
+  const result =
+    loggedUserEmail === email || isAdmin
+      ? user
+      : removeAdminFieldsFromUserObject(user);
 
-  return result
-}
+  return result;
+};
 
 // exports.updateName = async (name, ctx) => {
 //   checkIfAuthenticated(ctx)
@@ -38,56 +43,58 @@ exports.getUser = async (email, ctx) => {
 // }
 
 exports.updateUser = async (userData, ctx) => {
-  checkIfAuthenticated(ctx)
-  const { id } = userData
-  let user = await checkIfItemExists(User, id)
-  checkAdminOrSelf(id, ctx)
+  checkIfAuthenticated(ctx);
+  const { id } = userData;
+  let user = await checkIfItemExists(User, id);
+  checkAdminOrSelf(id, ctx);
 
   for (const key of Object.keys(userData)) {
-    if (key === 'id') { continue }
-    if (~['isCreator', 'isAdmin', 'active'].indexOf(key)) {
+    if (key === "id") {
+      continue;
+    }
+    if (~["isCreator", "isAdmin", "active"].indexOf(key)) {
       if (ctx.user.isAdmin) {
-        if (ctx.user.id === id && ~['active', 'isAdmin'].indexOf(key)) {
-          throw new Error(strings.responses.action_not_allowed)
+        if (ctx.user.id === id && ~["active", "isAdmin"].indexOf(key)) {
+          throw new Error(strings.responses.action_not_allowed);
         }
 
-        user[key] = userData[key]
+        user[key] = userData[key];
       }
-      continue
+      continue;
     }
-    user[key] = userData[key]
+    user[key] = userData[key];
   }
 
   if (!user.name) {
-    throw new Error(strings.responses.user_name_cant_be_null)
+    throw new Error(strings.responses.user_name_cant_be_null);
   }
 
-  user = await user.save()
-  return user
-}
+  user = await user.save();
+  return user;
+};
 
 exports.getSiteUsers = async (searchData = {}, ctx) => {
-  const query = {}
-  if (searchData.searchText) query.$text = { $search: searchData.searchText }
+  const query = {};
+  if (searchData.searchText) query.$text = { $search: searchData.searchText };
 
-  const searchUsers = makeModelTextSearchable(User)
+  const searchUsers = makeModelTextSearchable(User);
 
   const users = await searchUsers(
     { offset: searchData.offset, query, graphQLContext: ctx },
     { itemsPerPage: constants.siteUsersPerPage }
-  )
+  );
 
   if (ctx.user.isAdmin) {
-    return users
+    return users;
   } else {
-    return users.map(x => removeAdminFieldsFromUserObject(x))
+    return users.map(x => removeAdminFieldsFromUserObject(x));
   }
-}
+};
 
-exports.getUsersSummary = async (ctx) => {
-  checkIfAuthenticated(ctx)
+exports.getUsersSummary = async ctx => {
+  checkIfAuthenticated(ctx);
   if (!ctx.user.isAdmin) {
-    throw new Error(strings.responses.action_not_allowed)
+    throw new Error(strings.responses.action_not_allowed);
   }
 
   return {
@@ -95,8 +102,8 @@ exports.getUsersSummary = async (ctx) => {
     verified: await User.countDocuments({ verified: true }),
     admins: await User.countDocuments({ isAdmin: true }),
     creators: await User.countDocuments({ isCreator: true })
-  }
-}
+  };
+};
 
 // exports.initiatePurchase = async (purchaseData = {}, ctx) => {
 //   const response = {

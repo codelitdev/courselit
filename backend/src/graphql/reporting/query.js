@@ -1,6 +1,6 @@
-const graphql = require('graphql')
-const types = require('./types')
-const logic = require('./logic.js')
+const graphql = require("graphql");
+const types = require("./types");
+const logic = require("./logic.js");
 
 module.exports = {
   getUserPurchases: {
@@ -8,6 +8,7 @@ module.exports = {
     args: {
       offset: { type: graphql.GraphQLInt }
     },
-    resolve: (root, { offset }, context) => logic.getUserPurchases(context, offset)
+    resolve: (root, { offset }, context) =>
+      logic.getUserPurchases(context, offset)
   }
-}
+};

@@ -1,25 +1,19 @@
-const graphql = require('graphql')
-const {
-  unlisted,
-  open,
-  closed
-} = require('../../config/constants.js')
-const {
-  lessonMetaType
-} = require('../lessons/types.js')
-const lessonLogic = require('../lessons/logic.js')
+const graphql = require("graphql");
+const { unlisted, open, closed } = require("../../config/constants.js");
+const { lessonMetaType } = require("../lessons/types.js");
+const lessonLogic = require("../lessons/logic.js");
 
 const courseStatusType = new graphql.GraphQLEnumType({
-  name: 'CoursePrivacyType',
+  name: "CoursePrivacyType",
   values: {
     UNLISTED: { value: unlisted },
     PUBLIC: { value: open },
     PRIVATE: { value: closed }
   }
-})
+});
 
 const courseType = new graphql.GraphQLObjectType({
-  name: 'Course',
+  name: "Course",
   fields: {
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
@@ -40,10 +34,10 @@ const courseType = new graphql.GraphQLObjectType({
     description: { type: graphql.GraphQLString },
     featuredImage: { type: graphql.GraphQLString }
   }
-})
+});
 
 const courseInputType = new graphql.GraphQLInputObjectType({
-  name: 'CourseInput',
+  name: "CourseInput",
   fields: {
     title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     published: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
@@ -54,10 +48,10 @@ const courseInputType = new graphql.GraphQLInputObjectType({
     description: { type: graphql.GraphQLString },
     featuredImage: { type: graphql.GraphQLString }
   }
-})
+});
 
 const courseUpdateInput = new graphql.GraphQLInputObjectType({
-  name: 'CourseUpdateInput',
+  name: "CourseUpdateInput",
   fields: {
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     title: { type: graphql.GraphQLString },
@@ -69,18 +63,18 @@ const courseUpdateInput = new graphql.GraphQLInputObjectType({
     description: { type: graphql.GraphQLString },
     featuredImage: { type: graphql.GraphQLString }
   }
-})
+});
 
 const myCoursesItemType = new graphql.GraphQLObjectType({
-  name: 'MyCoursesItem',
+  name: "MyCoursesItem",
   fields: {
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) }
   }
-})
+});
 
 const postType = new graphql.GraphQLObjectType({
-  name: 'Post',
+  name: "Post",
   fields: {
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
@@ -90,10 +84,10 @@ const postType = new graphql.GraphQLObjectType({
     slug: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     featuredImage: { type: graphql.GraphQLString }
   }
-})
+});
 
 const publicCoursesType = new graphql.GraphQLObjectType({
-  name: 'PublicCourse',
+  name: "PublicCourse",
   fields: {
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
@@ -105,7 +99,7 @@ const publicCoursesType = new graphql.GraphQLObjectType({
     description: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     isFeatured: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) }
   }
-})
+});
 
 module.exports = {
   courseType,
@@ -115,4 +109,4 @@ module.exports = {
   myCoursesItemType,
   postType,
   publicCoursesType
-}
+};

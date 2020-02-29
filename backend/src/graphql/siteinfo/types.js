@@ -1,22 +1,18 @@
-const graphql = require('graphql')
+const graphql = require("graphql");
 
-const {
-  paypal,
-  stripe,
-  paytm
-} = require('../../config/constants.js')
+const { paypal, stripe, paytm } = require("../../config/constants.js");
 
 const paymentMethodType = new graphql.GraphQLEnumType({
-  name: 'PaymentMethod',
+  name: "PaymentMethod",
   values: {
     STRIPE: { value: stripe },
     PAYPAL: { value: paypal },
     PAYTM: { value: paytm }
   }
-})
+});
 
 const siteType = new graphql.GraphQLObjectType({
-  name: 'Site',
+  name: "Site",
   fields: {
     title: { type: graphql.GraphQLString },
     subtitle: { type: graphql.GraphQLString },
@@ -28,10 +24,10 @@ const siteType = new graphql.GraphQLObjectType({
     paymentMethod: { type: paymentMethodType },
     stripePublishableKey: { type: graphql.GraphQLString }
   }
-})
+});
 
 const siteUpdateType = new graphql.GraphQLInputObjectType({
-  name: 'SiteInfoUpdateInput',
+  name: "SiteInfoUpdateInput",
   fields: {
     title: { type: graphql.GraphQLString },
     subtitle: { type: graphql.GraphQLString },
@@ -43,9 +39,9 @@ const siteUpdateType = new graphql.GraphQLInputObjectType({
     paymentMethod: { type: paymentMethodType },
     stripePublishableKey: { type: graphql.GraphQLString }
   }
-})
+});
 
 module.exports = {
   siteType,
   siteUpdateType
-}
+};

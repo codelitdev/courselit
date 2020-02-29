@@ -1,6 +1,6 @@
-const graphql = require('graphql')
-const types = require('./types.js')
-const logic = require('./logic.js')
+const graphql = require("graphql");
+const types = require("./types.js");
+const logic = require("./logic.js");
 
 module.exports = {
   getCourse: {
@@ -10,8 +10,7 @@ module.exports = {
         type: new graphql.GraphQLNonNull(graphql.GraphQLString)
       }
     },
-    resolve: (root, { id }, context) =>
-      logic.getCourse(id, context)
+    resolve: (root, { id }, context) => logic.getCourse(id, context)
   },
   getCreatorCourses: {
     type: new graphql.GraphQLList(types.myCoursesItemType),
@@ -33,8 +32,7 @@ module.exports = {
         type: new graphql.GraphQLNonNull(graphql.GraphQLInt)
       }
     },
-    resolve: (root, { offset }, context) =>
-      logic.getPosts(offset)
+    resolve: (root, { offset }, context) => logic.getPosts(offset)
   },
   getPublicCourses: {
     type: new graphql.GraphQLList(types.publicCoursesType),
@@ -49,4 +47,4 @@ module.exports = {
     resolve: (root, { offset, onlyShowFeatured }, context) =>
       logic.getPublicCourses(offset, onlyShowFeatured)
   }
-}
+};

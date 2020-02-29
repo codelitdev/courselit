@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import FetchBuilder from '../lib/fetch'
-import { BACKEND, LESSON_TYPE_VIDEO, MEDIA_BACKEND } from '../config/constants'
+import { 
+  BACKEND,
+  LESSON_TYPE_VIDEO,
+  LESSON_TYPE_AUDIO,
+  MEDIA_BACKEND 
+} from '../config/constants'
 import { connect } from 'react-redux'
 import { networkAction } from '../redux/actions'
 import TextEditor from './TextEditor'
@@ -17,6 +22,13 @@ import { formulateMediaUrl } from '../lib/utils.js'
 const useStyles = makeStyles(theme => ({
   notEnrolledHeader: {
     marginBottom: theme.spacing(1)
+  },
+  videoPlayer: {
+    width: '100%',
+    height: 'auto'
+  },
+  section: {
+    marginTop: '1.6em'
   }
 }))
 
@@ -98,18 +110,28 @@ const LessonViewer = (props) => {
               </Grid>
               {String.prototype.toUpperCase.call(LESSON_TYPE_VIDEO) === lesson.type &&
                 <Grid item>
-                  <video width="320" height="240" controls>
+                  <video controls controlsList="nodownload" className={`${classes.videoPlayer} ${classes.section}`}>
                     <source
                       src={
                         `${formulateMediaUrl(MEDIA_BACKEND, lesson.contentURL, false)}`
                       }
                       type="video/mp4" />
-                    <source src="movie.ogg" type="video/ogg" />
                     Your browser does not support the video tag.
                   </video>
                 </Grid>}
-              {lesson.content &&
+              {String.prototype.toUpperCase.call(LESSON_TYPE_AUDIO) === lesson.type &&
                 <Grid item>
+                  <audio controls controlsList="nodownload" className={classes.section}>
+                    <source
+                      src={
+                        `${formulateMediaUrl(MEDIA_BACKEND, lesson.contentURL, false)}`
+                      }
+                      type="audio/mpeg" />
+                    Your browser does not support the video tag.
+                  </audio>
+                </Grid>}
+              {lesson.content &&
+                <Grid item className={classes.section}>
                   <TextEditor
                     initialContentState={lesson.content}
                     readOnly={true} />

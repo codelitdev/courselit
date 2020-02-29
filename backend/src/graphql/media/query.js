@@ -1,6 +1,6 @@
-const graphql = require('graphql')
-const types = require('./types.js')
-const logic = require('./logic.js')
+const graphql = require("graphql");
+const types = require("./types.js");
+const logic = require("./logic.js");
 
 module.exports = {
   getCreatorMedia: {
@@ -16,4 +16,4 @@ module.exports = {
     resolve: (root, { offset, searchText }, context) =>
       logic.getCreatorMedia(offset, context, searchText)
   }
-}
+};

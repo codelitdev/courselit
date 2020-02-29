@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 
 const MediaSchema = new mongoose.Schema({
   title: { type: String, required: true },
@@ -9,12 +9,12 @@ const MediaSchema = new mongoose.Schema({
   creatorId: { type: mongoose.Schema.Types.ObjectId, required: true },
   altText: { type: String },
   thumbnail: { type: String }
-})
+});
 
 MediaSchema.index({
-  originalFileName: 'text',
-  title: 'text',
-  altText: 'text'
-})
+  originalFileName: "text",
+  title: "text",
+  altText: "text"
+});
 
-module.exports = mongoose.model('Media', MediaSchema)
+module.exports = mongoose.model("Media", MediaSchema);
