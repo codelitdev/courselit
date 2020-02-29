@@ -1,10 +1,7 @@
-import React, { useState, useEffect /* useRef */ } from 'react'
-import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
-import {
-  authProps,
-  profileProps
-} from '../types.js'
+import React, { useState, useEffect /* useRef */ } from "react";
+import PropTypes from "prop-types";
+import { connect } from "react-redux";
+import { authProps, profileProps } from "../types.js";
 import {
   BTN_DELETE_COURSE,
   ERR_COURSE_COST_REQUIRED,
@@ -20,14 +17,11 @@ import {
   POPUP_OK_ACTION,
   BLOG_POST_SWITCH,
   APP_MESSAGE_COURSE_SAVED
-} from '../config/strings.js'
-import TextEditor from './TextEditor'
-import { networkAction, setAppMessage } from '../redux/actions.js'
-import {
-  queryGraphQL,
-  formulateCourseUrl
-} from '../lib/utils.js'
-import Link from 'next/link'
+} from "../config/strings.js";
+import TextEditor from "./TextEditor";
+import { networkAction, setAppMessage } from "../redux/actions.js";
+import { queryGraphQL, formulateCourseUrl } from "../lib/utils.js";
+import Link from "next/link";
 import {
   Grid,
   TextField,
@@ -41,15 +35,15 @@ import {
   Card,
   CardActions,
   CardContent
-} from '@material-ui/core'
-import { makeStyles } from '@material-ui/styles'
-import { useExecuteGraphQLQuery } from './CustomHooks.js'
-import MediaSelector from './MediaSelector.js'
-import { Delete, Add } from '@material-ui/icons'
-import AppDialog from './AppDialog.js'
-import LessonEditor from './LessonEditor.js'
-import AppMessage from '../models/app-message.js'
-import { BACKEND } from '../config/constants.js'
+} from "@material-ui/core";
+import { makeStyles } from "@material-ui/styles";
+import { useExecuteGraphQLQuery } from "./CustomHooks.js";
+import MediaSelector from "./MediaSelector.js";
+import { Delete, Add } from "@material-ui/icons";
+import AppDialog from "./AppDialog.js";
+import LessonEditor from "./LessonEditor.js";
+import AppMessage from "../models/app-message.js";
+import { BACKEND } from "../config/constants.js";
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -57,18 +51,18 @@ const useStyles = makeStyles(theme => ({
   },
   formControl: {
     margin: theme.spacing(1),
-    minWidth: '100%'
+    minWidth: "100%"
   },
   editor: {
-    border: '1px solid #cacaca',
-    borderRadius: '6px',
-    padding: '10px 8px',
+    border: "1px solid #cacaca",
+    borderRadius: "6px",
+    padding: "10px 8px",
     maxHeight: 300,
-    overflow: 'auto',
+    overflow: "auto",
     marginBottom: theme.spacing(2)
   },
   editorLabel: {
-    fontSize: '1em',
+    fontSize: "1em",
     marginBottom: theme.spacing(1)
   },
   controlRow: {
@@ -76,8 +70,8 @@ const useStyles = makeStyles(theme => ({
     marginBottom: theme.spacing(2)
   },
   link: {
-    textDecoration: 'none',
-    color: 'inherit'
+    textDecoration: "none",
+    color: "inherit"
   },
   cardHeader: {
     marginBottom: theme.spacing(1)
@@ -88,64 +82,64 @@ const useStyles = makeStyles(theme => ({
   addLesson: {
     marginBottom: theme.spacing(2)
   }
-}))
+}));
 
-const CourseEditor = (props) => {
+const CourseEditor = props => {
   const initCourseMetaData = {
-    title: '',
-    cost: '',
+    title: "",
+    cost: "",
     published: false,
-    privacy: 'PRIVATE',
+    privacy: "PRIVATE",
     isBlog: false,
     description: TextEditor.emptyState(),
-    featuredImage: '',
+    featuredImage: "",
     id: null,
     isFeatured: false
-  }
+  };
   const initCourseData = {
     course: initCourseMetaData
-  }
-  const [courseData, setCourseData] = useState(initCourseData)
-  const [userError, setUserError] = useState('')
-  const [deleteCoursePopupOpened, setDeleteCoursePopupOpened] = useState(false)
-  const [lessons, setLessons] = useState([])
-  const classes = useStyles()
-  const executeGQLCall = useExecuteGraphQLQuery()
-  const [lessonIndex, setLessonIndex] = useState(0)
+  };
+  const [courseData, setCourseData] = useState(initCourseData);
+  const [userError, setUserError] = useState("");
+  const [deleteCoursePopupOpened, setDeleteCoursePopupOpened] = useState(false);
+  const [lessons, setLessons] = useState([]);
+  const classes = useStyles();
+  const executeGQLCall = useExecuteGraphQLQuery();
+  const [lessonIndex, setLessonIndex] = useState(0);
 
   // The following ref is used for accessing previous state in hooks
   // Reference: https://reactjs.org/docs/hooks-faq.html#how-to-get-the-previous-props-or-state
   // const prevCourseData = useRef()
   useEffect(() => {
     if (props.courseId) {
-      loadCourse(props.courseId)
+      loadCourse(props.courseId);
     }
-  }, [props.courseId])
+  }, [props.courseId]);
 
   // For privacy dropdown
-  const inputLabel = React.useRef(null)
-  const [labelWidth, setLabelWidth] = React.useState(0)
+  const inputLabel = React.useRef(null);
+  const [labelWidth, setLabelWidth] = React.useState(0);
   useEffect(() => {
-    setLabelWidth(inputLabel.current.offsetWidth)
-  }, [])
+    setLabelWidth(inputLabel.current.offsetWidth);
+  }, []);
 
   // To clear the error, call setError().
-  const setError = (msg = '') => setUserError(msg)
+  const setError = (msg = "") => setUserError(msg);
 
-  const onCourseCreate = async (e) => {
+  const onCourseCreate = async e => {
     // console.log(`From onCourseCreate:`, courseData)
-    e.preventDefault()
-    setError()
+    e.preventDefault();
+    setError();
 
     // validate the data
     if (!courseData.course.title) {
-      return setUserError(ERR_COURSE_TITLE_REQUIRED)
+      return setUserError(ERR_COURSE_TITLE_REQUIRED);
     }
     if (!courseData.course.isBlog && !courseData.course.cost) {
-      return setUserError(ERR_COURSE_COST_REQUIRED)
+      return setUserError(ERR_COURSE_COST_REQUIRED);
     }
 
-    let query = ''
+    let query = "";
     if (courseData.course.id) {
       // update the existing record
       query = `
@@ -172,7 +166,7 @@ const CourseEditor = (props) => {
           isFeatured
         }
       }
-      `
+      `;
     } else {
       // make a new record
       query = `
@@ -198,24 +192,20 @@ const CourseEditor = (props) => {
           isFeatured
         }
       }
-      `
+      `;
     }
 
     try {
-      const response = await executeGQLCall(query)
-      console.log(response)
+      const response = await executeGQLCall(query);
+      console.log(response);
       if (response.course) {
-        setCourseDataWithDescription(response.course)
-        props.dispatch(
-          setAppMessage(new AppMessage(APP_MESSAGE_COURSE_SAVED))
-        )
+        setCourseDataWithDescription(response.course);
+        props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_COURSE_SAVED)));
       }
     } catch (err) {
       // return setUserError(err.message)
-      console.log(err)
-      props.dispatch(
-        setAppMessage(new AppMessage(err.message))
-      )
+      console.log(err);
+      props.dispatch(setAppMessage(new AppMessage(err.message)));
     }
 
     // try {
@@ -239,14 +229,14 @@ const CourseEditor = (props) => {
     // } finally {
     //   props.dispatch(networkAction(false))
     // }
-  }
+  };
 
-  const onCourseDetailsChange = (e) => {
+  const onCourseDetailsChange = e => {
     changeCourseDetails(
       e.target.name,
-      e.target.type === 'checkbox' ? e.target.checked : e.target.value
-    )
-  }
+      e.target.type === "checkbox" ? e.target.checked : e.target.value
+    );
+  };
 
   const changeCourseDetails = (key, value) => {
     setCourseData(
@@ -255,62 +245,62 @@ const CourseEditor = (props) => {
           [key]: value
         })
       })
-    )
-  }
+    );
+  };
 
-  const onDescriptionChange = (editorState) => {
+  const onDescriptionChange = editorState => {
     setCourseData(
       Object.assign({}, courseData, {
         course: Object.assign({}, courseData.course, {
           description: editorState
         })
       })
-    )
-  }
+    );
+  };
 
   const onCourseDelete = async () => {
     const query = `
     mutation {
       result: deleteCourse(id: "${courseData.course.id}")
     }
-    `
+    `;
 
     try {
-      props.dispatch(networkAction(true))
+      props.dispatch(networkAction(true));
       const response = await queryGraphQL(
         `${BACKEND}/graph`,
         query,
         props.auth.token
-      )
+      );
 
       if (response.result) {
         setCourseData(
           Object.assign({}, courseData, {
             course: initCourseMetaData
           })
-        )
-        props.closeEditor()
+        );
+        props.closeEditor();
       }
     } catch (err) {
-      setError(err.message)
+      setError(err.message);
     } finally {
-      props.dispatch(networkAction(false))
+      props.dispatch(networkAction(false));
     }
-  }
+  };
 
-  const setCourseDataWithDescription = (course) => {
-    console.log('setCourse...', course)
+  const setCourseDataWithDescription = course => {
+    console.log("setCourse...", course);
     setCourseData(
       Object.assign({}, courseData, {
         course: Object.assign({}, course, {
           description: TextEditor.hydrate(course.description)
         })
       })
-    )
-    course.lessons && setLessons([...lessons, ...course.lessons])
-  }
+    );
+    course.lessons && setLessons([...lessons, ...course.lessons]);
+  };
 
-  const loadCourse = async (courseId) => {
+  const loadCourse = async courseId => {
     // setCourseData(Object.assign({}, courseData, {
     //   lessons: []
     // }))
@@ -334,93 +324,107 @@ const CourseEditor = (props) => {
         slug
       }
     }
-    `
+    `;
 
     try {
-      const response = await executeGQLCall(query)
+      const response = await executeGQLCall(query);
       if (response.course) {
-        console.log(response.course)
-        setCourseDataWithDescription(response.course)
+        console.log(response.course);
+        setCourseDataWithDescription(response.course);
       }
     } catch (err) {
-      setError(err.message)
+      setError(err.message);
     }
-  }
+  };
 
   const onFeaturedImageSelection = url =>
-    changeCourseDetails('featuredImage', url)
+    changeCourseDetails("featuredImage", url);
 
-  const closeDeleteCoursePopup = () =>
-    setDeleteCoursePopupOpened(false)
+  const closeDeleteCoursePopup = () => setDeleteCoursePopupOpened(false);
 
   const onAddLesson = () => {
-    const emptyLessonWithLocalIndexKey = Object.assign({}, LessonEditor.emptyLesson, {
-      lessonIndex: lessonIndex,
-      courseId: courseData.course.id
-    })
-    setLessonIndex(lessonIndex + 1)
-    setLessons([...lessons, emptyLessonWithLocalIndexKey])
-  }
+    const emptyLessonWithLocalIndexKey = Object.assign(
+      {},
+      LessonEditor.emptyLesson,
+      {
+        lessonIndex: lessonIndex,
+        courseId: courseData.course.id
+      }
+    );
+    setLessonIndex(lessonIndex + 1);
+    setLessons([...lessons, emptyLessonWithLocalIndexKey]);
+  };
 
-  const onLessonDeleted = (lessonIndex) => {
-    const indexOfDeletedLesson =
-      lessons.map(lesson => lesson.lessonIndex).indexOf(lessonIndex)
+  const onLessonDeleted = lessonIndex => {
+    const indexOfDeletedLesson = lessons
+      .map(lesson => lesson.lessonIndex)
+      .indexOf(lessonIndex);
     setLessons([
       ...lessons.slice(0, indexOfDeletedLesson),
       ...lessons.slice(indexOfDeletedLesson + 1)
-    ])
-  }
+    ]);
+  };
 
   return (
-    <Grid container direction='column'>
+    <Grid container direction="column">
       <Grid item>
         <Card>
           <form onSubmit={onCourseCreate}>
             <CardContent>
               <Typography
-                color='textSecondary'
-                variant='h5'
-                className={classes.cardHeader}>
+                color="textSecondary"
+                variant="h5"
+                className={classes.cardHeader}
+              >
                 {COURSE_DETAILS_CARD_HEADER}
               </Typography>
 
-              {userError &&
-                <div>{userError}</div>
-              }
+              {userError && <div>{userError}</div>}
               <TextField
                 required
-                variant='outlined'
-                label='Title'
+                variant="outlined"
+                label="Title"
                 fullWidth
                 margin="normal"
-                name='title'
+                name="title"
                 value={courseData.course.title}
-                onChange={onCourseDetailsChange}/>
+                onChange={onCourseDetailsChange}
+              />
               <Grid container className={classes.editor}>
-                <Grid item xs={12} className={classes.editorLabel}>Description</Grid>
+                <Grid item xs={12} className={classes.editorLabel}>
+                  Description
+                </Grid>
                 <Grid item xs={12}>
                   <TextEditor
-                    initialContentState={ courseData.course.description }
-                    onChange={onDescriptionChange}/>
+                    initialContentState={courseData.course.description}
+                    onChange={onDescriptionChange}
+                  />
                 </Grid>
               </Grid>
-              <Grid container alignItems='center'>
+              <Grid container alignItems="center">
                 <Grid item xs={12} sm={6}>
                   <TextField
                     required
-                    type='number'
-                    variant='outlined'
-                    label='Cost'
+                    type="number"
+                    variant="outlined"
+                    label="Cost"
                     fullWidth
                     margin="normal"
-                    name='cost'
-                    step='0.1'
+                    name="cost"
+                    step="0.1"
                     value={courseData.course.cost}
-                    onChange={onCourseDetailsChange}/>
+                    onChange={onCourseDetailsChange}
+                  />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <FormControl variant='outlined' className={classes.formControl}>
-                    <InputLabel ref={inputLabel} htmlFor='outlined-privacy-simple'>
+                  <FormControl
+                    variant="outlined"
+                    className={classes.formControl}
+                  >
+                    <InputLabel
+                      ref={inputLabel}
+                      htmlFor="outlined-privacy-simple"
+                    >
                       Privacy
                     </InputLabel>
                     <Select
@@ -429,9 +433,10 @@ const CourseEditor = (props) => {
                       onChange={onCourseDetailsChange}
                       labelwidth={labelWidth}
                       inputProps={{
-                        name: 'privacy',
-                        id: 'outlined-privacy-simple'
-                      }}>
+                        name: "privacy",
+                        id: "outlined-privacy-simple"
+                      }}
+                    >
                       <MenuItem value="PUBLIC">Public</MenuItem>
                       <MenuItem value="PRIVATE">Private</MenuItem>
                       <MenuItem value="UNLISTED">Unlisted</MenuItem>
@@ -441,59 +446,49 @@ const CourseEditor = (props) => {
               </Grid>
               <Grid container className={classes.controlRow}>
                 <Grid item xs={12} sm={4}>
-                  <Grid
-                    container
-                    justify='space-between'
-                    alignItems='center'>
+                  <Grid container justify="space-between" alignItems="center">
                     <Grid item>
-                      <Typography variant='body1'>
+                      <Typography variant="body1">
                         {BLOG_POST_SWITCH}
                       </Typography>
                     </Grid>
                     <Grid item>
                       <Switch
-                        type='checkbox'
-                        name='isBlog'
+                        type="checkbox"
+                        name="isBlog"
                         checked={courseData.course.isBlog}
-                        onChange={onCourseDetailsChange}/>
+                        onChange={onCourseDetailsChange}
+                      />
                     </Grid>
                   </Grid>
                 </Grid>
                 <Grid item xs={12} sm={4}>
-                  <Grid
-                    container
-                    justify='space-between'
-                    alignItems='center'>
+                  <Grid container justify="space-between" alignItems="center">
                     <Grid item>
-                      <Typography variant='body1'>
-                        Published
-                      </Typography>
+                      <Typography variant="body1">Published</Typography>
                     </Grid>
                     <Grid item>
                       <Switch
-                        type='checkbox'
-                        name='published'
+                        type="checkbox"
+                        name="published"
                         checked={courseData.course.published}
-                        onChange={onCourseDetailsChange}/>
+                        onChange={onCourseDetailsChange}
+                      />
                     </Grid>
                   </Grid>
                 </Grid>
                 <Grid item xs={12} sm={4}>
-                  <Grid
-                    container
-                    justify='space-between'
-                    alignItems='center'>
+                  <Grid container justify="space-between" alignItems="center">
                     <Grid item>
-                      <Typography variant='body1'>
-                        Featured course
-                      </Typography>
+                      <Typography variant="body1">Featured course</Typography>
                     </Grid>
                     <Grid item>
                       <Switch
-                        type='checkbox'
-                        name='isFeatured'
+                        type="checkbox"
+                        name="isFeatured"
                         checked={courseData.course.isFeatured}
-                        onChange={onCourseDetailsChange}/>
+                        onChange={onCourseDetailsChange}
+                      />
                     </Grid>
                   </Grid>
                 </Grid>
@@ -501,79 +496,79 @@ const CourseEditor = (props) => {
               <MediaSelector
                 title={FORM_FIELD_FEATURED_IMAGE}
                 src={courseData.course.featuredImage}
-                onSelection={onFeaturedImageSelection}/>
+                onSelection={onFeaturedImageSelection}
+              />
             </CardContent>
             <CardActions>
-              <Button
-                type='submit'>
-                {BUTTON_SAVE}
-              </Button>
-              {courseData.course.id &&
+              <Button type="submit">{BUTTON_SAVE}</Button>
+              {courseData.course.id && (
                 <Button>
                   <Link href={formulateCourseUrl(courseData.course)}>
-                    <a
-                      className={classes.link}>
-                      Visit { courseData.course.isBlog ? 'post' : 'course' }
+                    <a className={classes.link}>
+                      Visit {courseData.course.isBlog ? "post" : "course"}
                     </a>
                   </Link>
                 </Button>
-              }
+              )}
             </CardActions>
           </form>
         </Card>
       </Grid>
 
-      {courseData.course.id &&
+      {courseData.course.id && (
         <Grid item container>
           {/* <button onClick={onCourseDelete}>Delete course</button> */}
-          {!courseData.course.isBlog &&
-            <Grid item container direction='column'>
-              {lessons.map(
-                (item, index) =>
-                  <Grid item key={index} className={classes.lessonItem}>
-                    <LessonEditor
-                      lesson={item}
-                      onLessonDeleted={onLessonDeleted}
-                      key={item.lessonIndex} />
-                  </Grid>
-              )}
+          {!courseData.course.isBlog && (
+            <Grid item container direction="column">
+              {lessons.map((item, index) => (
+                <Grid item key={index} className={classes.lessonItem}>
+                  <LessonEditor
+                    lesson={item}
+                    onLessonDeleted={onLessonDeleted}
+                    key={item.lessonIndex}
+                  />
+                </Grid>
+              ))}
               <Grid item>
                 <Button
-                  variant='contained'
-                  color='secondary'
+                  variant="contained"
+                  color="secondary"
                   onClick={onAddLesson}
                   startIcon={<Add />}
-                  className={classes.addLesson}>
+                  className={classes.addLesson}
+                >
                   {BUTTON_NEW_LESSON_TEXT}
                 </Button>
               </Grid>
             </Grid>
-          }
+          )}
           <Grid item xs={12}>
             <Card>
               <CardContent>
                 <Typography
-                  variant='h5'
-                  color='textSecondary'
-                  className={classes.cardHeader}>
+                  variant="h5"
+                  color="textSecondary"
+                  className={classes.cardHeader}
+                >
                   {DANGER_ZONE_HEADER}
                 </Typography>
-                <Typography variant='body2'>
+                <Typography variant="body2">
                   {DANGER_ZONE_DESCRIPTION}
                 </Typography>
               </CardContent>
               <CardActions>
                 <Button
-                  color='secondary'
+                  color="secondary"
                   onClick={() => setDeleteCoursePopupOpened(true)}
-                  startIcon={<Delete />}>
+                  startIcon={<Delete />}
+                >
                   {BTN_DELETE_COURSE}
                 </Button>
               </CardActions>
             </Card>
           </Grid>
         </Grid>
-      }
+      )}
       <AppDialog
         onOpen={deleteCoursePopupOpened}
         onClose={closeDeleteCoursePopup}
@@ -581,11 +576,11 @@ const CourseEditor = (props) => {
         actions={[
           { name: POPUP_CANCEL_ACTION, callback: closeDeleteCoursePopup },
           { name: POPUP_OK_ACTION, callback: onCourseDelete }
-        ]}>
-      </AppDialog>
+        ]}
+      ></AppDialog>
     </Grid>
-  )
-}
+  );
+};
 
 CourseEditor.propTypes = {
   auth: authProps,
@@ -593,18 +588,15 @@ CourseEditor.propTypes = {
   courseId: PropTypes.string,
   dispatch: PropTypes.func.isRequired,
   closeEditor: PropTypes.func.isRequired
-}
+};
 
 const mapStateToProps = state => ({
   auth: state.auth,
   profile: state.profile
-})
+});
 
 const mapDispatchToProps = dispatch => ({
   dispatch: dispatch
-})
+});
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(CourseEditor)
+export default connect(mapStateToProps, mapDispatchToProps)(CourseEditor);

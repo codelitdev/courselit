@@ -1,26 +1,26 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import { Container } from '@material-ui/core'
-import { makeStyles } from '@material-ui/styles'
+import React from "react";
+import PropTypes from "prop-types";
+import { Container } from "@material-ui/core";
+import { makeStyles } from "@material-ui/styles";
 
 const useStyles = makeStyles({
   root: {
     marginTop: 10
   }
-})
+});
 
-const ContainedBodyLayout = (props) => {
-  const classes = useStyles()
+const ContainedBodyLayout = props => {
+  const classes = useStyles();
 
   return (
-    <Container maxWidth='md' className={classes.root}>
+    <Container maxWidth="md" className={classes.root}>
       {props.children}
     </Container>
-  )
-}
+  );
+};
 
 ContainedBodyLayout.propTypes = {
   children: PropTypes.any
-}
+};
 
-export default ContainedBodyLayout
+export default ContainedBodyLayout;

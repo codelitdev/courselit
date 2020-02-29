@@ -11,23 +11,27 @@ import {
   AUTH_CHECKED,
   SET_MESSAGE,
   CLEAR_MESSAGE
-} from './actionTypes.js'
-import { BACKEND, JWT_COOKIE_NAME, USERID_COOKIE_NAME } from '../config/constants.js'
-import FetchBuilder from '../lib/fetch.js'
-import { removeCookie } from '../lib/session.js'
+} from "./actionTypes.js";
+import {
+  BACKEND,
+  JWT_COOKIE_NAME,
+  USERID_COOKIE_NAME
+} from "../config/constants.js";
+import FetchBuilder from "../lib/fetch.js";
+import { removeCookie } from "../lib/session.js";
 
-export function signedIn (userid, token) {
+export function signedIn(userid, token) {
   return async (dispatch, getState) => {
-    dispatch({ type: SIGN_IN, token, userid })
-    dispatch(refreshUserProfile(userid))
-  }
+    dispatch({ type: SIGN_IN, token, userid });
+    dispatch(refreshUserProfile(userid));
+  };
 }
 
-export function refreshUserProfile (userId) {
+export function refreshUserProfile(userId) {
   return async (dispatch, getState) => {
     try {
-      dispatch(networkAction(true))
-      const userID = userId || getState().profile.email
+      dispatch(networkAction(true));
+      const userID = userId || getState().profile.email;
 
       const query = `
       { profile: getUser(email: "${userID}") {
@@ -39,58 +43,58 @@ export function refreshUserProfile (userId) {
           purchases
         }
       }
-      `
+      `;
       const fetch = new FetchBuilder()
         .setUrl(`${BACKEND}/graph`)
         .setPayload(query)
         .setIsGraphQLEndpoint(true)
         .setAuthToken(getState().auth.token)
-        .build()
-      const response = await fetch.exec()
+        .build();
+      const response = await fetch.exec();
 
-      dispatch(networkAction(false))
-      dispatch(updateProfile(response.profile))
+      dispatch(networkAction(false));
+      dispatch(updateProfile(response.profile));
     } finally {
-      dispatch(networkAction(false))
+      dispatch(networkAction(false));
     }
-  }
+  };
 }
 
-export function signedOut () {
+export function signedOut() {
   return dispatch => {
-    removeCookie(JWT_COOKIE_NAME)
-    removeCookie(USERID_COOKIE_NAME)
-    dispatch(clearProfile())
-    dispatch({ type: SIGN_OUT })
-  }
+    removeCookie(JWT_COOKIE_NAME);
+    removeCookie(USERID_COOKIE_NAME);
+    dispatch(clearProfile());
+    dispatch({ type: SIGN_OUT });
+  };
 }
 
-export function authHasBeenChecked () {
+export function authHasBeenChecked() {
   return dispatch => {
-    dispatch({ type: AUTH_CHECKED })
-  }
+    dispatch({ type: AUTH_CHECKED });
+  };
 }
 
-export function networkAction (flag) {
-  return dispatch => dispatch({ type: NETWORK_ACTION, flag })
+export function networkAction(flag) {
+  return dispatch => dispatch({ type: NETWORK_ACTION, flag });
 }
 
-export function updateProfile (profile) {
-  return { type: PROFILE_AVAILABLE, profile }
+export function updateProfile(profile) {
+  return { type: PROFILE_AVAILABLE, profile };
 }
 
-export function clearProfile () {
-  return { type: PROFILE_CLEAR }
+export function clearProfile() {
+  return { type: PROFILE_CLEAR };
 }
 
-export function newSiteInfoAvailable (info) {
-  return { type: SITEINFO_AVAILABLE, siteinfo: info }
+export function newSiteInfoAvailable(info) {
+  return { type: SITEINFO_AVAILABLE, siteinfo: info };
 }
 
-export function updateSiteInfo () {
+export function updateSiteInfo() {
   return async (dispatch, getState) => {
     try {
-      dispatch(networkAction(true))
+      dispatch(networkAction(true));
 
       const query = `
       { site: getSiteInfo {
@@ -105,26 +109,26 @@ export function updateSiteInfo () {
           stripePublishableKey
         }
       }
-      `
+      `;
       const fetch = new FetchBuilder()
         .setUrl(`${BACKEND}/graph`)
         .setPayload(query)
         .setIsGraphQLEndpoint(true)
-        .build()
-      const response = await fetch.exec()
+        .build();
+      const response = await fetch.exec();
 
-      dispatch(networkAction(false))
-      dispatch(newSiteInfoAvailable(response.site))
+      dispatch(networkAction(false));
+      dispatch(newSiteInfoAvailable(response.site));
     } finally {
-      dispatch(networkAction(false))
+      dispatch(networkAction(false));
     }
-  }
+  };
 }
 
-export function setAppMessage (message) {
-  return dispatch => dispatch({ type: SET_MESSAGE, message })
+export function setAppMessage(message) {
+  return dispatch => dispatch({ type: SET_MESSAGE, message });
 }
 
-export function clearAppMessage () {
-  return dispatch => dispatch({ type: CLEAR_MESSAGE })
+export function clearAppMessage() {
+  return dispatch => dispatch({ type: CLEAR_MESSAGE });
 }

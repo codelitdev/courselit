@@ -31,6 +31,7 @@
     "build": "next build",
     "start": "next start -p 3000",
     "lint": "eslint pages components redux types.js theme.js --fix",
+    "prettier": "prettier --write 'pages/**/*.js' 'components/**/*.js' 'redux/**/*.js' types.js theme.js",
     "test": "jest"
   },
   "devDependencies": {
@@ -53,6 +54,7 @@
     "nodemon": "^2.0.2",
     "now": "^17.0.3",
     "preact": "^10.1.1",
+    "prettier": "1.19.1",
     "react-test-renderer": "^16.12.0",
     "webpack": "^4.41.5"
   },
