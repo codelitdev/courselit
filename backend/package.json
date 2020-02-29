@@ -1,6 +1,7 @@
 {
   "scripts": {
     "lint": "eslint src __tests__ --fix",
+    "prettier": "prettier --write 'src/**/*.js' '__tests__/**/*.js'",
     "dev": "PORT=8000 nodemon --inspect -r dotenv/config src dotenv_config_path=../.env",
     "test:server": "NODE_ENV=test PORT=8000 nodemon src",
     "test:inte": "NODE_ENV=test jest",
@@ -38,6 +39,7 @@
     "graphql-request": "^1.8.2",
     "jest": "^24.9.0",
     "nodemon": "^1.19.4",
+    "prettier": "1.19.1",
     "request": "^2.88.0"
   },
   "jest": {

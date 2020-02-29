@@ -3,7 +3,7 @@
  *
  * This will only contain one record.
  */
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 
 const SiteInfoSchema = new mongoose.Schema({
   title: { type: String },
@@ -15,6 +15,6 @@ const SiteInfoSchema = new mongoose.Schema({
   about: { type: String },
   paymentMethod: { type: String },
   stripePublishableKey: { type: String }
-})
+});
 
-module.exports = mongoose.model('SiteInfo', SiteInfoSchema)
+module.exports = mongoose.model("SiteInfo", SiteInfoSchema);

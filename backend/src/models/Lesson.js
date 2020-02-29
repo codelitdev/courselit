@@ -1,11 +1,5 @@
-const mongoose = require('mongoose')
-const {
-  text,
-  video,
-  audio,
-  pdf,
-  quiz
-} = require('../config/constants.js')
+const mongoose = require("mongoose");
+const { text, video, audio, pdf, quiz } = require("../config/constants.js");
 
 const LessonSchema = new mongoose.Schema({
   title: { type: String, required: true },
@@ -16,6 +10,6 @@ const LessonSchema = new mongoose.Schema({
   creatorId: mongoose.Schema.Types.ObjectId,
   courseId: mongoose.Schema.Types.ObjectId,
   requiresEnrollment: { type: Boolean, default: false }
-})
+});
 
-module.exports = mongoose.model('Lesson', LessonSchema)
+module.exports = mongoose.model("Lesson", LessonSchema);

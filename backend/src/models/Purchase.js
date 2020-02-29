@@ -1,7 +1,5 @@
-const mongoose = require('mongoose')
-const {
-  transactionInitiated
-} = require('../config/constants.js')
+const mongoose = require("mongoose");
+const { transactionInitiated } = require("../config/constants.js");
 
 const PurchaseSchema = new mongoose.Schema({
   courseId: { type: mongoose.Schema.Types.ObjectId, required: true },
@@ -14,6 +12,6 @@ const PurchaseSchema = new mongoose.Schema({
   discount: { type: Number },
   status: { type: String, required: true, default: transactionInitiated },
   remark: { type: String }
-})
+});
 
-module.exports = mongoose.model('Purchase', PurchaseSchema)
+module.exports = mongoose.model("Purchase", PurchaseSchema);

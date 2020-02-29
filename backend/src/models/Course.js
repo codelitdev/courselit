@@ -1,9 +1,5 @@
-const mongoose = require('mongoose')
-const {
-  unlisted,
-  open,
-  closed
-} = require('../config/constants.js')
+const mongoose = require("mongoose");
+const { unlisted, open, closed } = require("../config/constants.js");
 
 const CourseSchema = new mongoose.Schema({
   title: { type: String, required: true },
@@ -19,6 +15,6 @@ const CourseSchema = new mongoose.Schema({
   lessons: [String],
   description: String,
   featuredImage: String
-})
+});
 
-module.exports = mongoose.model('Course', CourseSchema)
+module.exports = mongoose.model("Course", CourseSchema);

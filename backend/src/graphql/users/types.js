@@ -1,7 +1,7 @@
-const graphql = require('graphql')
+const graphql = require("graphql");
 
 const userType = new graphql.GraphQLObjectType({
-  name: 'User',
+  name: "User",
   fields: {
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     email: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
@@ -13,10 +13,10 @@ const userType = new graphql.GraphQLObjectType({
     isAdmin: { type: graphql.GraphQLBoolean },
     avatar: { type: graphql.GraphQLString }
   }
-})
+});
 
 const userUpdateInput = new graphql.GraphQLInputObjectType({
-  name: 'UserUpdateInput',
+  name: "UserUpdateInput",
   fields: {
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     name: { type: graphql.GraphQLString },
@@ -26,34 +26,34 @@ const userUpdateInput = new graphql.GraphQLInputObjectType({
     active: { type: graphql.GraphQLBoolean },
     password: { type: graphql.GraphQLString }
   }
-})
+});
 
 const userSearchInput = new graphql.GraphQLInputObjectType({
-  name: 'UserSearchInput',
+  name: "UserSearchInput",
   fields: {
     offset: { type: graphql.GraphQLInt },
     searchText: { type: graphql.GraphQLString }
   }
-})
+});
 
 const usersSummaryType = new graphql.GraphQLObjectType({
-  name: 'UsersSummary',
+  name: "UsersSummary",
   fields: {
     count: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
     verified: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
     admins: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
     creators: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) }
   }
-})
+});
 
 const userPurchaseInput = new graphql.GraphQLObjectType({
-  name: 'UserPurchaseInput',
+  name: "UserPurchaseInput",
   fields: {
     courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     discountCode: { type: graphql.GraphQLString },
     purchasingFor: { type: graphql.GraphQLID }
   }
-})
+});
 
 module.exports = {
   userType,
@@ -61,4 +61,4 @@ module.exports = {
   userSearchInput,
   usersSummaryType,
   userPurchaseInput
-}
+};

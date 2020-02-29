@@ -1,3 +1,3 @@
 module.exports = {
-  queries: require('./query')
-}
+  queries: require("./query")
+};

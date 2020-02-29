@@ -1,6 +1,6 @@
-const graphql = require('graphql')
-const types = require('./types.js')
-const logic = require('./logic.js')
+const graphql = require("graphql");
+const types = require("./types.js");
+const logic = require("./logic.js");
 
 module.exports = {
   getLesson: {
@@ -10,8 +10,7 @@ module.exports = {
         type: new graphql.GraphQLNonNull(graphql.GraphQLID)
       }
     },
-    resolve: (root, { id }, context) =>
-      logic.getLesson(id, context)
+    resolve: (root, { id }, context) => logic.getLesson(id, context)
   },
   getLessonDetails: {
     type: types.lessonType,
@@ -20,7 +19,6 @@ module.exports = {
         type: new graphql.GraphQLNonNull(graphql.GraphQLID)
       }
     },
-    resolve: (root, { id }, context) =>
-      logic.getLessonDetails(id, context)
+    resolve: (root, { id }, context) => logic.getLessonDetails(id, context)
   }
-}
+};

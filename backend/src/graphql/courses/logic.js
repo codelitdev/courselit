@@ -1,15 +1,15 @@
 /**
  * Business logic for managing courses.
  */
-const slugify = require('slugify')
-const Course = require('../../models/Course.js')
-const strings = require('../../config/strings.js')
+const slugify = require("slugify");
+const Course = require("../../models/Course.js");
+const strings = require("../../config/strings.js");
 const {
   checkIfAuthenticated,
   checkOwnership,
   validateOffset,
   extractPlainTextFromDraftJS
-} = require('../../lib/graphql.js')
+} = require("../../lib/graphql.js");
 const {
   closed,
   open,
@@ -17,49 +17,50 @@ const {
   postsPerPageLimit,
   coursesPerPageLimit,
   blogPostSnippetLength
-} = require('../../config/constants.js')
+} = require("../../config/constants.js");
 
-const checkCourseOwnership = checkOwnership(Course)
+const checkCourseOwnership = checkOwnership(Course);
 
-const validateBlogPosts = (courseData) => {
+const validateBlogPosts = courseData => {
   if (courseData.isBlog) {
-    if (!courseData.description) throw new Error(strings.responses.blog_description_empty)
-    courseData.cost = 0
+    if (!courseData.description)
+      throw new Error(strings.responses.blog_description_empty);
+    courseData.cost = 0;
   } else {
-    if (courseData.cost < 0) throw new Error(strings.responses.invalid_cost)
+    if (courseData.cost < 0) throw new Error(strings.responses.invalid_cost);
   }
 
-  return courseData
-}
+  return courseData;
+};
 
 exports.getCourse = async (id, ctx) => {
-  const course = await Course.findById(id)
+  const course = await Course.findById(id);
 
   if (!course) {
-    throw new Error(strings.responses.item_not_found)
+    throw new Error(strings.responses.item_not_found);
   }
 
   // If the accessor is not the owner hide certain details or the entire course
-  if (course &&
-    (!ctx.user || (course.creatorId.toString() !== ctx.user._id.toString()))
+  if (
+    course &&
+    (!ctx.user || course.creatorId.toString() !== ctx.user._id.toString())
   ) {
     if (!course.published || course.privacy === closed) {
-      throw new Error(strings.responses.item_not_found)
+      throw new Error(strings.responses.item_not_found);
     }
   }
 
-  return course
-}
+  return course;
+};
 
 exports.createCourse = async (courseData, ctx) => {
-  checkIfAuthenticated(ctx)
+  checkIfAuthenticated(ctx);
 
-  if (ctx.user.isCreator === undefined ||
-    !ctx.user.isCreator) {
-    throw new Error(strings.responses.not_a_creator)
+  if (ctx.user.isCreator === undefined || !ctx.user.isCreator) {
+    throw new Error(strings.responses.not_a_creator);
   }
 
-  courseData = validateBlogPosts(courseData)
+  courseData = validateBlogPosts(courseData);
 
   const course = await Course.create({
     title: courseData.title,
@@ -73,126 +74,132 @@ exports.createCourse = async (courseData, ctx) => {
     creatorId: ctx.user._id,
     creatorName: ctx.user.name,
     slug: slugify(courseData.title.toLowerCase())
-  })
+  });
 
-  return course
-}
+  return course;
+};
 
 exports.updateCourse = async (courseData, ctx) => {
-  checkIfAuthenticated(ctx)
-  let course = await checkCourseOwnership(courseData.id, ctx)
+  checkIfAuthenticated(ctx);
+  let course = await checkCourseOwnership(courseData.id, ctx);
 
   for (const key of Object.keys(courseData)) {
-    course[key] = courseData[key]
+    course[key] = courseData[key];
   }
 
-  course = validateBlogPosts(course)
-  course = await course.save()
-  return course
-}
+  course = validateBlogPosts(course);
+  course = await course.save();
+  return course;
+};
 
 exports.deleteCourse = async (id, ctx) => {
-  checkIfAuthenticated(ctx)
-  const course = await checkCourseOwnership(id, ctx)
+  checkIfAuthenticated(ctx);
+  const course = await checkCourseOwnership(id, ctx);
 
   if (course.lessons.length > 0) {
-    throw new Error(strings.responses.course_not_empty)
+    throw new Error(strings.responses.course_not_empty);
   }
 
   try {
-    await course.remove()
-    return true
+    await course.remove();
+    return true;
   } catch (err) {
-    throw new Error(err.message)
+    throw new Error(err.message);
   }
-}
+};
 
 exports.addLesson = async (courseId, lessonId, ctx) => {
-  checkIfAuthenticated(ctx)
-  const course = await checkCourseOwnership(courseId, ctx)
+  checkIfAuthenticated(ctx);
+  const course = await checkCourseOwnership(courseId, ctx);
   if (course.lessons.indexOf(lessonId) === -1) {
-    course.lessons.push(lessonId)
+    course.lessons.push(lessonId);
   }
 
   try {
-    await course.save()
+    await course.save();
   } catch (err) {
-    return false
+    return false;
   }
 
-  return true
-}
+  return true;
+};
 
 exports.removeLesson = async (courseId, lessonId, ctx) => {
-  checkIfAuthenticated(ctx)
-  const course = await checkCourseOwnership(courseId, ctx)
+  checkIfAuthenticated(ctx);
+  const course = await checkCourseOwnership(courseId, ctx);
   if (~course.lessons.indexOf(lessonId)) {
-    course.lessons.splice(course.lessons.indexOf(lessonId), 1)
+    course.lessons.splice(course.lessons.indexOf(lessonId), 1);
   }
 
   try {
-    await course.save()
+    await course.save();
   } catch (err) {
-    return false
+    return false;
   }
 
-  return true
-}
+  return true;
+};
 
 exports.getCreatorCourses = async (id, offset, ctx) => {
-  checkIfAuthenticated(ctx)
-  validateOffset(offset)
+  checkIfAuthenticated(ctx);
+  validateOffset(offset);
 
-  const courses = await Course
-    .find({ creatorId: id })
+  const courses = await Course.find({ creatorId: id })
     .sort({ updated: -1 })
     .skip((offset - 1) * mycoursesLimit)
-    .limit(mycoursesLimit)
+    .limit(mycoursesLimit);
 
-  return courses
-}
+  return courses;
+};
 
-exports.getPosts = async (offset) => {
-  validateOffset(offset)
+exports.getPosts = async offset => {
+  validateOffset(offset);
   const query = {
     isBlog: true,
     published: true,
     privacy: open.toLowerCase()
-  }
-  const posts = await Course
-    .find(query, 'id title description creatorName updated slug featuredImage')
+  };
+  const posts = await Course.find(
+    query,
+    "id title description creatorName updated slug featuredImage"
+  )
     .sort({ updated: -1 })
     .skip((offset - 1) * postsPerPageLimit)
-    .limit(postsPerPageLimit)
+    .limit(postsPerPageLimit);
 
   return posts.map(x => ({
     id: x.id,
     title: x.title,
-    description: extractPlainTextFromDraftJS(x.description, blogPostSnippetLength),
+    description: extractPlainTextFromDraftJS(
+      x.description,
+      blogPostSnippetLength
+    ),
     creatorName: x.creatorName,
     updated: x.updated,
     slug: x.slug,
     featuredImage: x.featuredImage
-  }))
-}
+  }));
+};
 
 exports.getPublicCourses = async (offset, onlyShowFeatured = false) => {
   const query = {
     isBlog: false,
     published: true,
     privacy: open.toLowerCase()
-  }
+  };
   if (onlyShowFeatured) {
-    query.isFeatured = true
+    query.isFeatured = true;
   }
 
-  let dbQuery = Course
-    .find(query, 'id title featuredImage cost creatorName slug description updated isFeatured')
-    .sort({ updated: -1 })
+  let dbQuery = Course.find(
+    query,
+    "id title featuredImage cost creatorName slug description updated isFeatured"
+  ).sort({ updated: -1 });
   if (!onlyShowFeatured) {
     dbQuery = dbQuery
-      .skip((offset - 1) * coursesPerPageLimit).limit(coursesPerPageLimit)
+      .skip((offset - 1) * coursesPerPageLimit)
+      .limit(coursesPerPageLimit);
   }
 
-  return dbQuery
-}
+  return dbQuery;
+};

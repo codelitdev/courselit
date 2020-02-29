@@ -3,95 +3,110 @@
  */
 
 // The code is taken from https://www.npmjs.com/package/passport-jwt
-const JwtStrategy = require('passport-jwt').Strategy
-const LocalStrategy = require('passport-local').Strategy
-const extractJwt = require('passport-jwt').ExtractJwt
-const constants = require('../config/constants.js')
-const responses = require('../config/strings.js').responses
-const User = require('../models/User.js')
+const JwtStrategy = require("passport-jwt").Strategy;
+const LocalStrategy = require("passport-local").Strategy;
+const extractJwt = require("passport-jwt").ExtractJwt;
+const constants = require("../config/constants.js");
+const responses = require("../config/strings.js").responses;
+const User = require("../models/User.js");
 
-module.exports = (passport) => {
-  passport.use('signup', new LocalStrategy({
-    usernameField: 'email',
-    passReqToCallback: true
-  }, async (req, email, password, next) => {
-    // validate input
-    if (!req.body.name) {
-      // Refer https://github.com/jaredhanson/passport-local/issues/4#issuecomment-4521526
-      // for this syntax.
-      return next(
-        null,
-        false,
-        { message: responses.name_required }
-      )
-    }
+module.exports = passport => {
+  passport.use(
+    "signup",
+    new LocalStrategy(
+      {
+        usernameField: "email",
+        passReqToCallback: true
+      },
+      async (req, email, password, next) => {
+        // validate input
+        if (!req.body.name) {
+          // Refer https://github.com/jaredhanson/passport-local/issues/4#issuecomment-4521526
+          // for this syntax.
+          return next(null, false, { message: responses.name_required });
+        }
 
-    try {
-      let user = await User.findOne({ email })
-      if (user) {
-        return next(
-          null,
-          false,
-          { message: responses.email_already_registered }
-        )
+        try {
+          let user = await User.findOne({ email });
+          if (user) {
+            return next(null, false, {
+              message: responses.email_already_registered
+            });
+          }
+
+          const notTheFirstUser = await User.countDocuments();
+          console.log(notTheFirstUser);
+          user = await User.create({
+            email,
+            password,
+            name: req.body.name,
+            isCreator: !notTheFirstUser,
+            isAdmin: !notTheFirstUser,
+            active: true
+          });
+          return next(null, user);
+        } catch (err) {
+          return next(err, false);
+        }
       }
+    )
+  );
 
-      const notTheFirstUser = await User.countDocuments()
-      console.log(notTheFirstUser)
-      user = await User.create({
-        email,
-        password,
-        name: req.body.name,
-        isCreator: !notTheFirstUser,
-        isAdmin: !notTheFirstUser,
-        active: true
-      })
-      return next(null, user)
-    } catch (err) {
-      return next(err, false)
-    }
-  }))
+  passport.use(
+    "login",
+    new LocalStrategy(
+      {
+        usernameField: "email",
+        passwordField: "password",
+        passReqToCallback: true
+      },
+      async (req, email, password, next) => {
+        try {
+          const user = await User.findOne({ email });
 
-  passport.use('login', new LocalStrategy({
-    usernameField: 'email',
-    passwordField: 'password',
-    passReqToCallback: true
-  }, async (req, email, password, next) => {
-    try {
-      const user = await User.findOne({ email })
+          if (!user) {
+            return next(null, false, {
+              message: responses.auth_user_not_found
+            });
+          }
 
-      if (!user) {
-        return next(null, false, { message: responses.auth_user_not_found })
+          const validate = await user.isPasswordValid(password);
+
+          if (!validate) {
+            return next(null, false, {
+              message: responses.email_or_passwd_invalid
+            });
+          }
+
+          return next(null, user);
+        } catch (err) {
+          return next(err, false);
+        }
       }
-
-      const validate = await user.isPasswordValid(password)
-
-      if (!validate) {
-        return next(null, false, { message: responses.email_or_passwd_invalid })
-      }
-
-      return next(null, user)
-    } catch (err) {
-      return next(err, false)
-    }
-  }))
+    )
+  );
 
   // For verifying JWT
   const opts = {
     jwtFromRequest: extractJwt.fromAuthHeaderAsBearerToken(),
-    secretOrKey: constants.jwtSecret
-  }
-  passport.use(new JwtStrategy(opts, function (jwtPayload, done) {
-    User.findOne({ email: jwtPayload.email }, function (err, user) {
-      if (err) {
-        return done(err, false)
-      }
+    secretOrKey: constants.jwtSecret,
+    jsonWebTokenOptions: {
+      expiresIn: constants.jwtExpire
+    }
+  };
+  passport.use(
+    new JwtStrategy(opts, function(jwtPayload, done) {
+      User.findOne({ email: jwtPayload.email }, function(err, user) {
+        if (err) {
+          return done(err, false);
+        }
 
-      if (user) {
-        return done(null, user)
-      } else {
-        return done(null, false)
-      }
+        if (user) {
+          return done(null, user);
+        } else {
+          return done(null, false);
+        }
+      });
     })
-  }))
-}
+  );
+};

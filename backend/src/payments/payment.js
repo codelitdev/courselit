@@ -1,8 +1,8 @@
 class Payment {
-  setup () {}
-  initiate () {}
-  verify () {}
-  getPaymentIdentifier () {}
+  setup() {}
+  initiate() {}
+  verify() {}
+  getPaymentIdentifier() {}
 }
 
-module.exports = Payment
+module.exports = Payment;

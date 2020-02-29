@@ -1,6 +1,6 @@
-const graphql = require('graphql')
-const types = require('./types.js')
-const logic = require('./logic.js')
+const graphql = require("graphql");
+const types = require("./types.js");
+const logic = require("./logic.js");
 
 module.exports = {
   updateSettings: {
@@ -13,4 +13,4 @@ module.exports = {
     resolve: async (root, { settingsData }, context) =>
       logic.updateSettings(settingsData, context)
   }
-}
+};

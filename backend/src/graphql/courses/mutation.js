@@ -1,6 +1,6 @@
-const graphql = require('graphql')
-const types = require('./types.js')
-const logic = require('./logic.js')
+const graphql = require("graphql");
+const types = require("./types.js");
+const logic = require("./logic.js");
 
 module.exports = {
   createCourse: {
@@ -30,8 +30,7 @@ module.exports = {
         type: new graphql.GraphQLNonNull(graphql.GraphQLID)
       }
     },
-    resolve: async (root, { id }, context) =>
-      logic.deleteCourse(id, context)
+    resolve: async (root, { id }, context) => logic.deleteCourse(id, context)
   },
   addLesson: {
     type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean),
@@ -59,4 +58,4 @@ module.exports = {
     resolve: async (root, { courseId, lessonId }, context) =>
       logic.removeLesson(courseId, lessonId, context)
   }
-}
+};
