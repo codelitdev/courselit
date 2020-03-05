@@ -26,7 +26,8 @@ module.exports = new graphql.GraphQLSchema({
       ...lessons.mutations,
       ...courses.mutations,
       ...siteinfo.mutations,
-      ...settings.mutations
+      ...settings.mutations,
+      ...media.mutations
     }
   })
 });

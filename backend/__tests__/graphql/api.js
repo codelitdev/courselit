@@ -16,6 +16,7 @@ const Lesson = require("../../src/models/Lesson.js");
 const Course = require("../../src/models/Course.js");
 const SiteInfo = require("../../src/models/SiteInfo.js");
 const Settings = require("../../src/models/Settings.js");
+const Media = require("../../src/models/Media.js");
 
 const responses = require("../../src/config/strings.js").responses;
 const constants = require("../../src/config/constants.js");
@@ -1835,7 +1836,31 @@ describe("GraphQL API tests", () => {
   /**
    * Test suite for 'Media' related functions.
    */
-  describe("media", () => {
+  describe.only("media", () => {
+    let mediaId;
+
+    beforeAll(async done => {
+      const userDetails = await User.findOne({ email: user });
+      mediaId = await Media.create({
+        title: "sample media",
+        originalFileName: "samplefile.mp4",
+        fileName: "samplefile",
+        mimeType: "video/mp4",
+        size: 1234567,
+        creatorId: userDetails.id
+      });
+      done();
+    });
+
+    afterAll(async done => {
+      await Media.deleteMany({
+        _id: {
+          $in: [mediaId]
+        }
+      });
+      done();
+    });
+
     it("getting creator media with unauthenticated request", async () => {
       const query = `
       query {
@@ -1918,6 +1943,91 @@ describe("GraphQL API tests", () => {
       expect(result).toHaveProperty("data");
       expect(result.data).toHaveProperty("getCreatorMedia");
       expect(result.data.getCreatorMedia.length).toBe(0);
+    });
+
+    it("update media with an unauthenticated request", async () => {
+      const mutation = `
+      mutation {
+        updateMedia(mediaData: {
+          id: "${mongoose.Types.ObjectId("000000000000000000000000")}",
+          title: "changed title"
+        }) {
+          id,
+        }
+      }
+      `;
+
+      const result = await graphql(schema, mutation, null, {});
+      expect(result).toHaveProperty("errors");
+      expect(result.errors[0].message).toBe(
+        responses.request_not_authenticated
+      );
+    });
+
+    it("update someone else media", async () => {
+      const user = await User.findOne({ email: user2 });
+
+      const mutation = `
+      mutation {
+        updateMedia(mediaData: {
+          id: "${mediaId.id}",
+          title: "changed title"
+        }) {
+          id,
+        }
+      }
+      `;
+      const result = await graphql(schema, mutation, null, { user });
+      expect(result).toHaveProperty("errors");
+      expect(result.errors[0].message).toBe(responses.item_not_found);
+    });
+
+    it("update media but setting the title to blank", async () => {
+      const loggedInUser = await User.findOne({ email: user });
+
+      const mutation = `
+      mutation {
+        updateMedia(mediaData: {
+          id: "${mediaId.id}",
+          title: ""
+        }) {
+          id,
+        }
+      }
+      `;
+      const result = await graphql(schema, mutation, null, {
+        user: loggedInUser
+      });
+      expect(result).toHaveProperty("errors");
+      expect(result.errors[0].message).toBe(responses.title_is_required);
+    });
+
+    it("update media", async () => {
+      const loggedInUser = await User.findOne({ email: user });
+      const newTitle = "A new title";
+      const newAltText = "A new alt text";
+
+      const mutation = `
+      mutation {
+        media: updateMedia(mediaData: {
+          id: "${mediaId.id}",
+          title: "${newTitle}",
+          altText: "${newAltText}"
+        }) {
+          title,
+          altText
+        }
+      }
+      `;
+
+      const result = await graphql(schema, mutation, null, {
+        user: loggedInUser
+      });
+      expect(result).toHaveProperty("data");
+      expect(result.data).toHaveProperty("media");
+      expect(result.data.media.title).toBe(newTitle);
+      expect(result.data.media.altText).toBe(newAltText);
+      console.log(result.data.media.title, result.data.media.altText);
     });
   });
 

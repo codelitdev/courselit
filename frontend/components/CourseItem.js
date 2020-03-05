@@ -3,15 +3,33 @@ import PropTypes from "prop-types";
 import Link from "next/link";
 import { creatorCourse } from "../types";
 import TextEditor from "./TextEditor";
-import { formattedLocaleDate } from "../lib/utils.js";
-import {
-  URL_EXTENTION_COURSES,
-  FREE_COURSES_TEXT
-} from "../config/constants.js";
-import { ListItemText } from "@material-ui/core";
+import { URL_EXTENTION_COURSES } from "../config/constants.js";
+import { CardContent, Card, Grid, Typography } from "@material-ui/core";
+import { makeStyles } from "@material-ui/styles";
+import PriceTag from "../components/PriceTag.js";
+import { COURSE_CREATOR_PREFIX } from "../config/strings.js";
+import Img from "./Img";
+
+const useStyles = makeStyles({
+  featuredimagecontainer: {
+    display: "flex"
+  },
+  courselink: {
+    textDecoration: "none",
+    display: "block",
+    marginTop: "0.8em",
+    marginBottom: "1em",
+    "&:hover": {
+      background: "#eee"
+    },
+    color: "inherit"
+  }
+});
 
 const CourseItem = props => {
   const { course } = props;
+  const classes = useStyles();
+
   let description;
   try {
     description = (
@@ -25,24 +43,48 @@ const CourseItem = props => {
   }
 
   return (
-    <article>
-      <ListItemText primary={course.title}></ListItemText>
-      {/* <h1 className="title">{ course.title }</h1> */}
-      {props.isPublicView && (
-        <div>
-          {description}
-          <p>
-            Updated on {formattedLocaleDate(course.updated)} by{" "}
-            {course.creatorName}
-          </p>
-          <Link href={`/${URL_EXTENTION_COURSES}/${course.id}/${course.slug}`}>
-            <a>
-              Enroll for {course.cost === 0 ? FREE_COURSES_TEXT : course.cost}
-            </a>
-          </Link>
-        </div>
-      )}
-    </article>
+    <Link href={`/${URL_EXTENTION_COURSES}/${course.id}/${course.slug}`}>
+      <a className={classes.courselink}>
+        <Card>
+          <CardContent>
+            <article>
+              <Grid container direction="row" spacing={2}>
+                {course.featuredImage && (
+                  <Grid
+                    item
+                    className={classes.featuredimagecontainer}
+                    sm={12}
+                    md={3}
+                  >
+                    <Img src={course.featuredImage} />
+                  </Grid>
+                )}
+                <Grid item sm={12} md={9}>
+                  <Grid container direction="column">
+                    <Grid item>
+                      <Typography variant="h6" className="title">
+                        {course.title}
+                      </Typography>
+                    </Grid>
+                    <Grid item>
+                      <Typography variant="body1">{description}</Typography>
+                    </Grid>
+                    <Grid item>
+                      <PriceTag cost={course.cost}></PriceTag>
+                    </Grid>
+                    <Grid item>
+                      <Typography variant="subtitle1" color="textSecondary">
+                        {COURSE_CREATOR_PREFIX} {course.creatorName}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Grid>
+              </Grid>
+            </article>
+          </CardContent>
+        </Card>
+      </a>
+    </Link>
   );
 };
 

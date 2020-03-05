@@ -4,8 +4,10 @@ import { publicCourse } from "../types.js";
 import CourseItem from "../components/CourseItem.js";
 import { queryGraphQL } from "../lib/utils.js";
 import { BACKEND } from "../config/constants.js";
-import { BTN_LOAD_MORE } from "../config/strings.js";
+import { BTN_LOAD_MORE, PAGE_HEADER_ALL_COURSES } from "../config/strings.js";
 import MasterLayout from "../components/Masterlayout.js";
+import ContainedBodyLayout from "../components/ContainedBodyLayout.js";
+import { Typography, Button } from "@material-ui/core";
 
 const Courses = props => {
   const [courses, setCourses] = useState(props.courses);
@@ -25,15 +27,18 @@ const Courses = props => {
 
   return (
     <MasterLayout>
-      {courses.map(course => (
-        <CourseItem course={course} key={course.id} isPublicView={true} />
-      ))}
-      <button
-        onClick={getMoreCourses}
-        disabled={hasMorePages ? null : "disabled"}
-      >
-        {BTN_LOAD_MORE}
-      </button>
+      <ContainedBodyLayout>
+        <Typography variant="h2">{PAGE_HEADER_ALL_COURSES}</Typography>
+        {courses.map(course => (
+          <CourseItem course={course} key={course.id} isPublicView={true} />
+        ))}
+        <Button
+          onClick={getMoreCourses}
+          disabled={hasMorePages ? null : "disabled"}
+        >
+          {BTN_LOAD_MORE}
+        </Button>
+      </ContainedBodyLayout>
     </MasterLayout>
   );
 };

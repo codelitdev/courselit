@@ -16,7 +16,8 @@ import {
   POPUP_CANCEL_ACTION,
   POPUP_OK_ACTION,
   BLOG_POST_SWITCH,
-  APP_MESSAGE_COURSE_SAVED
+  APP_MESSAGE_COURSE_SAVED,
+  COURSE_EDITOR_DESCRIPTION
 } from "../config/strings.js";
 import TextEditor from "./TextEditor";
 import { networkAction, setAppMessage } from "../redux/actions.js";
@@ -390,11 +391,18 @@ const CourseEditor = props => {
                 value={courseData.course.title}
                 onChange={onCourseDetailsChange}
               />
-              <Grid container className={classes.editor}>
-                <Grid item xs={12} className={classes.editorLabel}>
-                  Description
+              <Grid
+                container
+                className={classes.formControl}
+                alignItems="center"
+                justify="space-between"
+              >
+                <Grid item>
+                  <Typography variant="body1">
+                    {COURSE_EDITOR_DESCRIPTION}
+                  </Typography>
                 </Grid>
-                <Grid item xs={12}>
+                <Grid item>
                   <TextEditor
                     initialContentState={courseData.course.description}
                     onChange={onDescriptionChange}
@@ -504,7 +512,7 @@ const CourseEditor = props => {
               {courseData.course.id && (
                 <Button>
                   <Link href={formulateCourseUrl(courseData.course)}>
-                    <a className={classes.link}>
+                    <a className={classes.link} target="_blank">
                       Visit {courseData.course.isBlog ? "post" : "course"}
                     </a>
                   </Link>

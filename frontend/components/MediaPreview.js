@@ -1,0 +1,77 @@
+import React from "react";
+import PropTypes from "prop-types";
+import { formulateMediaUrl } from "../lib/utils";
+import { MEDIA_BACKEND } from "../config/constants";
+import { makeStyles } from "@material-ui/styles";
+import { Typography } from "@material-ui/core";
+import { HEADER_MEDIA_PREVIEW, PREVIEW_PDF_FILE } from "../config/strings";
+
+const useStyles = makeStyles({
+  video: {
+    width: 300,
+    height: "auto"
+  },
+  img: {
+    width: 300,
+    height: "auto"
+  }
+});
+
+const MediaPreview = props => {
+  const { mimeType, id } = props;
+  const classes = useStyles();
+
+  return (
+    <>
+      {[
+        "application/pdf",
+        "image/png",
+        "image/jpeg",
+        "video/mp4",
+        "audio/mp3"
+      ].includes(mimeType) && (
+        <Typography variant="subtitle1">{HEADER_MEDIA_PREVIEW}</Typography>
+      )}
+      {mimeType === "application/pdf" && (
+        <a
+          href={`${formulateMediaUrl(MEDIA_BACKEND, id, false)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {PREVIEW_PDF_FILE}
+        </a>
+      )}
+      {(mimeType === "image/png" || mimeType === "image/jpeg") && (
+        <img
+          src={`${formulateMediaUrl(MEDIA_BACKEND, id, false)}`}
+          className={classes.img}
+        />
+      )}
+      {mimeType === "video/mp4" && (
+        <video controls controlsList="nodownload" className={classes.video}>
+          <source
+            src={`${formulateMediaUrl(MEDIA_BACKEND, id, false)}`}
+            type="video/mp4"
+          />
+          Your browser does not support the video tag.
+        </video>
+      )}
+      {mimeType === "audio/mp3" && (
+        <audio controls controlsList="nodownload">
+          <source
+            src={`${formulateMediaUrl(MEDIA_BACKEND, id, false)}`}
+            type="audio/mpeg"
+          />
+          Your browser does not support the video tag.
+        </audio>
+      )}
+    </>
+  );
+};
+
+MediaPreview.propTypes = {
+  id: PropTypes.string,
+  mimeType: PropTypes.string
+};
+
+export default MediaPreview;

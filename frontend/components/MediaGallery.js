@@ -6,10 +6,12 @@ import {
   TextField,
   GridList,
   GridListTile,
-  GridListTileBar,
-  IconButton,
   ListSubheader,
-  Button
+  Button,
+  Typography,
+  Card,
+  CardContent,
+  CardActions
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import { authProps } from "../types.js";
@@ -17,13 +19,31 @@ import {
   MEDIA_SEARCH_INPUT_PLACEHOLDER,
   LOAD_MORE_TEXT,
   BUTTON_SEARCH,
-  HEADER_YOUR_MEDIA
+  HEADER_YOUR_MEDIA,
+  BUTTON_DELETE_MEDIA,
+  DELETE_MEDIA_POPUP_HEADER,
+  POPUP_CANCEL_ACTION,
+  POPUP_OK_ACTION,
+  BUTTON_CANCEL_TEXT,
+  HEADER_EDITING_MEDIA,
+  APP_MESSAGE_MEDIA_DELETED,
+  BUTTON_SAVE,
+  APP_MESSAGE_MEDIA_UPDATED
 } from "../config/strings.js";
 import AppLoader from "./AppLoader.js";
 import FetchBuilder from "../lib/fetch.js";
-import { InfoOutlined } from "@material-ui/icons";
-import { networkAction } from "../redux/actions.js";
+import { networkAction, setAppMessage } from "../redux/actions.js";
 import { BACKEND } from "../config/constants.js";
+import MediaGalleryItem from "./MediaGalleryItem.js";
+import AppDialog from "./AppDialog.js";
+import MediaPreview from "./MediaPreview.js";
+import fetch from "isomorphic-unfetch";
+import AppMessage from "../models/app-message.js";
+import {
+  getObjectContainingOnlyChangedFields,
+  getGraphQLQueryFields
+} from "../lib/utils.js";
+import Router from "next/router";
 
 const useStyles = makeStyles(theme => ({
   searchField: {
@@ -50,6 +70,8 @@ const MediaGallery = props => {
   const [mediaOffset, setMediaOffset] = useState(defaultMediaOffset);
   const [searchText, setSearchText] = useState("");
   const [userMedia, setUserMedia] = useState(defaultUserMedia);
+  const [mediaBeingEdited, setMediaBeingEdited] = useState(null);
+  const [deleteMediaPopupOpened, setDeleteMediaPopupOpened] = useState(false);
   const classes = useStyles();
 
   useEffect(() => {
@@ -63,6 +85,7 @@ const MediaGallery = props => {
         id,
         title,
         mimeType,
+        altText
       }
     }
     `;
@@ -74,17 +97,12 @@ const MediaGallery = props => {
       .build();
     try {
       props.dispatch(networkAction(true));
-      // const response = await queryGraphQL(
-      //   `${BACKEND}/graph`,
-      //   query,
-      //   props.auth.token
-      // )
       const response = await fetch.exec();
 
-      // console.log(response)
       if (response.media && response.media.length > 0) {
         setUserMedia([...userMedia, ...response.media]);
         setMediaOffset(mediaOffset + 1);
+        console.log(response.media);
       }
     } catch (err) {
       // setUserError(err.message)
@@ -110,57 +128,211 @@ const MediaGallery = props => {
   const onMediaSelected = mediaId =>
     props.onMediaSelected && props.onMediaSelected(mediaId);
 
+  const toggleMediaEditForm = (mediaItem = null) =>
+    setMediaBeingEdited(mediaItem);
+
+  const closeDeleteMediaPopup = () => setDeleteMediaPopupOpened(false);
+
+  const onMediaBeingEditedChanged = e =>
+    setMediaBeingEdited(
+      Object.assign({}, mediaBeingEdited, {
+        [e.target.name]: e.target.value
+      })
+    );
+
+  const onMediaDelete = async () => {
+    setDeleteMediaPopupOpened(false);
+
+    try {
+      props.dispatch(networkAction(true));
+      const res = await fetch(`${BACKEND}/media/${mediaBeingEdited.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${props.auth.token}`
+        }
+      });
+
+      if (res.status === 401) {
+        Router.push("/login");
+        return;
+      }
+
+      if (res.status === 200) {
+        props.dispatch(
+          setAppMessage(new AppMessage(APP_MESSAGE_MEDIA_DELETED))
+        );
+        const indexOfDeletedMedia = userMedia
+          .map(media => media.id)
+          .indexOf(mediaBeingEdited.id);
+        setUserMedia([
+          ...userMedia.slice(0, indexOfDeletedMedia),
+          ...userMedia.slice(indexOfDeletedMedia + 1)
+        ]);
+        toggleMediaEditForm();
+      }
+    } catch (err) {
+      props.dispatch(setAppMessage(new AppMessage(err.message)));
+    } finally {
+      props.dispatch(networkAction(false));
+    }
+  };
+
+  const updateMedia = async () => {
+    const indexOfUpdatedMedia = userMedia
+      .map(media => media.id)
+      .indexOf(mediaBeingEdited.id);
+    const onlyChangedFields = getObjectContainingOnlyChangedFields(
+      userMedia[indexOfUpdatedMedia],
+      mediaBeingEdited
+    );
+    if (Object.keys(onlyChangedFields).length === 0) {
+      return;
+    }
+    onlyChangedFields.id = mediaBeingEdited.id;
+    const formattedGraphQLQuery = getGraphQLQueryFields(onlyChangedFields);
+    const query = `
+    mutation {
+      media: updateMedia(mediaData: ${formattedGraphQLQuery}) {
+        id,
+        title,
+        altText
+      }
+    }
+    `;
+    console.log(query);
+    const fetch = new FetchBuilder()
+      .setUrl(`${BACKEND}/graph`)
+      .setPayload(query)
+      .setIsGraphQLEndpoint(true)
+      .setAuthToken(props.auth.token)
+      .build();
+    try {
+      props.dispatch(networkAction(true));
+      const response = await fetch.exec();
+
+      if (response.media) {
+        props.dispatch(
+          setAppMessage(new AppMessage(APP_MESSAGE_MEDIA_UPDATED))
+        );
+        userMedia[indexOfUpdatedMedia].title = response.media.title;
+        userMedia[indexOfUpdatedMedia].altText = response.media.altText;
+        toggleMediaEditForm();
+      }
+    } catch (err) {
+      props.dispatch(setAppMessage(new AppMessage(err.message)));
+    } finally {
+      props.dispatch(networkAction(false));
+    }
+  };
+
   return (
     <>
-      <form onSubmit={searchMedia}>
-        <Grid container direction="row" alignItems="center">
-          <Grid item className={classes.searchField}>
-            <TextField
-              value={searchText}
-              variant="outlined"
-              label=""
-              fullWidth
-              margin="normal"
-              placeholder={MEDIA_SEARCH_INPUT_PLACEHOLDER}
-              onChange={onSearchTextChanged}
+      {!mediaBeingEdited && (
+        <Card>
+          <CardContent>
+            <form onSubmit={searchMedia}>
+              <Grid container direction="row" alignItems="center">
+                <Grid item className={classes.searchField}>
+                  <TextField
+                    value={searchText}
+                    variant="outlined"
+                    label=""
+                    fullWidth
+                    margin="normal"
+                    placeholder={MEDIA_SEARCH_INPUT_PLACEHOLDER}
+                    onChange={onSearchTextChanged}
+                  />
+                </Grid>
+                <Grid item>
+                  <Button
+                    type="submit"
+                    variant={
+                      searchText.trim().length !== 0 ? "contained" : "text"
+                    }
+                    disabled={searchText.trim().length === 0}
+                  >
+                    {BUTTON_SEARCH}
+                  </Button>
+                </Grid>
+              </Grid>
+            </form>
+            <GridList cols={3} className={classes.mediaGrid}>
+              <GridListTile cols={3} key="Subheader" style={{ height: "auto" }}>
+                <ListSubheader component="div">
+                  {HEADER_YOUR_MEDIA}
+                </ListSubheader>
+              </GridListTile>
+              {userMedia.map(item => (
+                <GridListTile
+                  key={item.id}
+                  cols={1}
+                  onClick={() => onMediaSelected(item.id)}
+                >
+                  <MediaGalleryItem
+                    item={item}
+                    toggleMediaEditForm={toggleMediaEditForm}
+                  />
+                </GridListTile>
+              ))}
+            </GridList>
+            {props.networkAction && <AppLoader />}
+          </CardContent>
+          <CardActions>
+            <Button onClick={loadMedia}>{LOAD_MORE_TEXT}</Button>
+          </CardActions>
+        </Card>
+      )}
+      {mediaBeingEdited && (
+        <Card>
+          <CardContent>
+            <Typography variant="h6">{HEADER_EDITING_MEDIA}</Typography>
+            <MediaPreview
+              id={mediaBeingEdited.id}
+              mimeType={mediaBeingEdited.mimeType}
             />
-          </Grid>
-          <Grid item>
-            <Button
-              type="submit"
-              variant={searchText.trim().length !== 0 ? "contained" : "text"}
-              disabled={searchText.trim().length === 0}
-            >
-              {BUTTON_SEARCH}
+            <form>
+              <TextField
+                required
+                variant="outlined"
+                label="Title"
+                fullWidth
+                margin="normal"
+                name="title"
+                value={mediaBeingEdited.title}
+                onChange={onMediaBeingEditedChanged}
+              />
+              <TextField
+                required
+                variant="outlined"
+                label="Alt text"
+                fullWidth
+                margin="normal"
+                name="altText"
+                value={mediaBeingEdited.altText}
+                onChange={onMediaBeingEditedChanged}
+              />
+            </form>
+          </CardContent>
+          <CardActions>
+            <Button onClick={updateMedia}>{BUTTON_SAVE}</Button>
+            <Button onClick={() => toggleMediaEditForm()}>
+              {BUTTON_CANCEL_TEXT}
             </Button>
-          </Grid>
-        </Grid>
-      </form>
-      <GridList cols={3} className={classes.mediaGrid}>
-        <GridListTile cols={3} key="Subheader" style={{ height: "auto" }}>
-          <ListSubheader component="div">{HEADER_YOUR_MEDIA}</ListSubheader>
-        </GridListTile>
-        {userMedia.map(item => (
-          <GridListTile
-            key={item.id}
-            cols={1}
-            onClick={() => onMediaSelected(item.id)}
-          >
-            <img src={`${BACKEND}/media/${item.id}?thumb=1`} />
-            <GridListTileBar
-              title={item.title}
-              subtitle={item.mimeType}
-              actionIcon={
-                <IconButton className={classes.gridListItemIcon}>
-                  <InfoOutlined />
-                </IconButton>
-              }
-            />
-          </GridListTile>
-        ))}
-      </GridList>
-      {props.networkAction && <AppLoader />}
-      <Button onClick={loadMedia}>{LOAD_MORE_TEXT}</Button>
+            <Button onClick={() => setDeleteMediaPopupOpened(true)}>
+              {BUTTON_DELETE_MEDIA}
+            </Button>
+          </CardActions>
+        </Card>
+      )}
+      <AppDialog
+        onOpen={deleteMediaPopupOpened}
+        onClose={closeDeleteMediaPopup}
+        title={DELETE_MEDIA_POPUP_HEADER}
+        actions={[
+          { name: POPUP_CANCEL_ACTION, callback: closeDeleteMediaPopup },
+          { name: POPUP_OK_ACTION, callback: onMediaDelete }
+        ]}
+      ></AppDialog>
     </>
   );
 };

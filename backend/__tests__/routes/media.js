@@ -11,7 +11,7 @@ const fs = require("fs");
 const path = require("path");
 const request = require("request");
 
-describe("Media Test Suite", () => {
+describe.skip("Media Test Suite", () => {
   const user = "uploader@test.com";
   const user2 = "uploader2@test.com";
   const pass = "lol";

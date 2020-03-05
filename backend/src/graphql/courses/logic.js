@@ -23,8 +23,9 @@ const checkCourseOwnership = checkOwnership(Course);
 
 const validateBlogPosts = courseData => {
   if (courseData.isBlog) {
-    if (!courseData.description)
+    if (!courseData.description) {
       throw new Error(strings.responses.blog_description_empty);
+    }
     courseData.cost = 0;
   } else {
     if (courseData.cost < 0) throw new Error(strings.responses.invalid_cost);
@@ -40,11 +41,10 @@ exports.getCourse = async (id, ctx) => {
     throw new Error(strings.responses.item_not_found);
   }
 
-  // If the accessor is not the owner hide certain details or the entire course
-  if (
+  const notTheOwner =
     course &&
-    (!ctx.user || course.creatorId.toString() !== ctx.user._id.toString())
-  ) {
+    (!ctx.user || course.creatorId.toString() !== ctx.user._id.toString());
+  if (notTheOwner) {
     if (!course.published || course.privacy === closed) {
       throw new Error(strings.responses.item_not_found);
     }

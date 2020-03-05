@@ -119,7 +119,6 @@ const SiteSettings = props => {
       props.siteinfo,
       settings
     );
-    console.log(props.siteinfo, settings, onlyChangedSettings);
     const formattedQuery = getGraphQLQueryFields(onlyChangedSettings, [
       "paymentMethod"
     ]);
