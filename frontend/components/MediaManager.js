@@ -8,8 +8,7 @@ import {
   MEDIA_MANAGER_PAGE_HEADING,
   MEDIA_MANAGER_DIALOG_TITLE,
   BUTTON_ADD_FILE,
-  FILE_UPLOAD_SUCCESS,
-  MEDIA_MANAGER_YOUR_MEDIA_HEADER
+  FILE_UPLOAD_SUCCESS
 } from "../config/strings.js";
 import { BACKEND } from "../config/constants.js";
 import { authProps } from "../types.js";
@@ -183,16 +182,7 @@ const MediaManager = props => {
             </form>
           </Card>
         )}
-        {!uploadFormVisible && (
-          <Card>
-            <CardContent>
-              <Typography variant="h6" className={classes.cardHeader}>
-                {MEDIA_MANAGER_YOUR_MEDIA_HEADER}
-              </Typography>
-              <MediaGallery />
-            </CardContent>
-          </Card>
-        )}
+        {!uploadFormVisible && <MediaGallery />}
         <Fab
           color={uploadFormVisible ? "default" : "secondary"}
           className={classes.fab}

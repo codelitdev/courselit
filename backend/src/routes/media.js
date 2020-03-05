@@ -58,13 +58,16 @@ const getHandler = async (req, res) => {
 };
 
 const postHandler = async (req, res) => {
-  if (!req.user.isCreator)
+  if (!req.user.isCreator) {
     return res.status(400).json({ message: responses.not_a_creator });
+  }
   const data = req.body;
-  if (!data.title)
+  if (!data.title) {
     return res.status(400).json({ message: responses.title_is_required });
-  if (!req.files || !req.files.file)
+  }
+  if (!req.files || !req.files.file) {
     return res.status(400).json({ message: responses.file_is_required });
+  }
 
   // create unique file name for the uploaded file
   const fileName = uniqueFileNameGenerator(req.files.file.name);
@@ -112,8 +115,9 @@ const postHandler = async (req, res) => {
     mimeType: req.files.file.mimetype,
     size: req.files.file.size
   };
-  if (isThumbGenerated)
+  if (isThumbGenerated) {
     mediaObject.thumbnail = `${fileName.name}.${constants.thumbnailFileExtension}`;
+  }
   if (data.altText) mediaObject.altText = data.altText;
 
   try {

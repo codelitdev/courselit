@@ -14,6 +14,16 @@ const creatorMediaType = new graphql.GraphQLObjectType({
   }
 });
 
+const mediaUpdateType = new graphql.GraphQLInputObjectType({
+  name: "MediaUpdateInput",
+  fields: {
+    id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+    title: { type: graphql.GraphQLString },
+    altText: { type: graphql.GraphQLString }
+  }
+});
+
 module.exports = {
-  creatorMediaType
+  creatorMediaType,
+  mediaUpdateType
 };

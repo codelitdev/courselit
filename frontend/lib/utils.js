@@ -79,7 +79,7 @@ export const getPostDescriptionSnippet = (rawDraftJSContentState) => {
   return firstSentence ? firstSentence + '.' : firstSentence
 }
 
-export const getGraphQLQueryFields = (jsObj, fieldsNotPutBetweenQuotes) => {
+export const getGraphQLQueryFields = (jsObj, fieldsNotPutBetweenQuotes = []) => {
   let queryString = '{'
   for (let i of Object.keys(jsObj)) {
     if (jsObj[i] !== undefined) {

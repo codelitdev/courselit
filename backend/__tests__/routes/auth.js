@@ -8,7 +8,7 @@ const responses = require("../../src/config/strings.js").responses;
 require("../../src/config/db.js");
 const mongoose = require("mongoose");
 
-describe("Auth Test Suite", () => {
+describe.skip("Auth Test Suite", () => {
   afterAll(async done => {
     await User.deleteOne({ email: "user2@test.com" });
     mongoose.connection.close();

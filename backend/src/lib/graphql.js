@@ -61,8 +61,9 @@ exports.checkIfItemExists = async (Model, id) => {
 };
 
 const validateMongooseTextSearchQuery = query => {
-  if (typeof query !== "object")
+  if (typeof query !== "object") {
     throw new Error(strings.responses.invalid_input);
+  }
 };
 
 /**
