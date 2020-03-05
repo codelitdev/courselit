@@ -42,7 +42,9 @@ exports.responses = {
   invalid_course_id: "Invalid course ID",
   payment_settings_invalid:
     "Payment method is not set up. Please contact site admin.",
-  not_enrolled: "You are not enrolled in the course"
+  not_enrolled: "You are not enrolled in the course",
+  currency_iso_not_set:
+    "Currency ISO code is not set. Please contact site admin."
 };
 
 exports.internal = {
