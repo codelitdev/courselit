@@ -34,7 +34,7 @@ The very first user who signs up for an account, automatically becomes a super a
   MOUNT_UPLOAD_FOLDER_VOLUME_AS=~/courselit/uploads
   MOUNT_THUMBNAIL_FOLDER_VOLUME_AS=~/courselit/thumbs
   MOUNT_MONGO_VOLUME_AS=~/courselit/mongo
-  JWT_SECRET=verysecuresecret
+  JWT_SECRET=yoursecret
   JWT_EXPIRES_IN=864000
   MONGO_DB_NAME=app
   MONGO_ROOT_USERNAME=username
