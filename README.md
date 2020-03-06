@@ -1,6 +1,8 @@
 # Introduction
 CourseLit is a decoupled content management system (CMS) for teachers and course creators.
 
+![courselit cms screenshot](./screenshot.png)
+
 ## Setup
 ### Local
 - Install MongoDB
