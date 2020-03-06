@@ -3,5 +3,5 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-eval $("docker-machine.exe" env $1 --shell bash)
-docker-compose.exe $2 down
+eval $(docker-machine env $1 --shell bash)
+docker-compose $2 down

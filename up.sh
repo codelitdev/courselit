@@ -15,7 +15,8 @@ if test -f "$FILE"; then
     cp $FILE .env
     eval $(docker-machine env $1)
     echo Deploying on $DOCKER_HOST
-    docker-compose up -d
+    docker-compose pull
+    docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 else
     echo "Error: $FILE does not exist"
     exit 1
