@@ -9,7 +9,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
     volumes:
-      - db
+      - ${MOUNT_MONGO_VOLUME_AS}:/data/db
     command: --quiet
     container_name: db
   frontend:
@@ -50,8 +50,8 @@ services:
       - frontend
     container_name: proxy
 
-volumes:
-  db:
+# volumes:
+#   db:
 #   uploads:
 #     driver: local
 #     driver_opts:
