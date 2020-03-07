@@ -63,7 +63,7 @@ const Index = props => {
         <Grid item className={classes.body}>
           <ContainedBodyLayout>
             <Grid container direction="row" spacing={2}>
-              <Grid item xs={12} sm={9}>
+              <Grid item xs={12} sm={8}>
                 <section className="posts">
                   <Typography variant="h4">
                     {HEADER_BLOG_POSTS_SECTION}
@@ -76,7 +76,7 @@ const Index = props => {
                   )}
                 </section>
               </Grid>
-              <Grid item xs={12} sm={3}>
+              <Grid item xs={12} sm={4}>
                 <aside>
                   <About />
                 </aside>

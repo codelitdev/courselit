@@ -5,9 +5,10 @@ import { siteInfoProps, authProps } from "../types";
 import MediaManager from "./MediaManager";
 import {
   makeGraphQLQueryStringFromJSObject,
-  queryGraphQLWithUIEffects,
   getGraphQLQueryFields,
-  getObjectContainingOnlyChangedFields
+  getObjectContainingOnlyChangedFields,
+  areObjectsDifferent,
+  capitalize
 } from "../lib/utils.js";
 import {
   BACKEND,
@@ -15,11 +16,7 @@ import {
   PAYMENT_METHOD_PAYTM,
   PAYMENT_METHOD_STRIPE
 } from "../config/constants.js";
-import {
-  networkAction,
-  newSiteInfoAvailable,
-  setAppMessage
-} from "../redux/actions.js";
+import { newSiteInfoAvailable, setAppMessage } from "../redux/actions.js";
 import MediaSelector from "./MediaSelector.js";
 import {
   TextField,
@@ -50,14 +47,16 @@ import {
   SITE_SETTINGS_SECTION_GENERAL,
   SITE_SETTINGS_SECTION_PAYMENT,
   SITE_ADMIN_SETTINGS_PAYMENT_METHOD,
-  SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT
+  SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT,
+  APP_MESSAGE_SETTINGS_SAVED
 } from "../config/strings.js";
 import AppMessage from "../models/app-message.js";
+import FetchBuilder from "../lib/fetch";
 
 const useStyles = makeStyles(theme => ({
   formControl: {
     minWidth: "100%",
-    marginBottom: "1.8em"
+    margin: "1em 0em"
   },
   general: {
     marginBottom: theme.spacing(4)
@@ -76,19 +75,19 @@ const SiteSettings = props => {
     paymentMethod: props.siteinfo.paymentMethod,
     stripePublishableKey: props.siteinfo.stripePublishableKey
   });
-  const [adminSettings, setAdminSettings] = useState({
+  const defaultAdminState = {
     stripeSecret: "",
     paypalSecret: "",
     paytmSecret: ""
-  });
+  };
+  const [adminSettings, setAdminSettings] = useState(defaultAdminState);
+  const [newAdminSettings, setNewAdminSettings] = useState(defaultAdminState);
   const [mediaManagerVisibility, setMediaManagerVisibility] = useState(false);
-  const executeGQLCall = queryGraphQLWithUIEffects(
-    `${BACKEND}/graph`,
-    props.dispatch,
-    networkAction,
-    props.auth.token
-  );
   const classes = useStyles();
+  const fetch = new FetchBuilder()
+    .setUrl(`${BACKEND}/graph`)
+    .setIsGraphQLEndpoint(true)
+    .setAuthToken(props.auth.token);
 
   useEffect(() => {
     loadAdminSettings();
@@ -104,10 +103,14 @@ const SiteSettings = props => {
       }
     }`;
     try {
-      const response = await executeGQLCall(query);
+      const fetchRequest = fetch.setPayload(query).build();
+      const response = await fetchRequest.exec();
       if (response.adminSettings) {
         setAdminSettings(
           Object.assign({}, adminSettings, response.adminSettings)
+        );
+        setNewAdminSettings(
+          Object.assign({}, newAdminSettings, response.adminSettings)
         );
       }
     } catch (e) {}
@@ -124,12 +127,7 @@ const SiteSettings = props => {
     ]);
     const query = `
     mutation {
-      site: updateSiteInfo(siteData: ${
-        // makeGraphQLQueryStringFromJSObject(
-        //   removeEmptyProperties(settings, 'err')
-        // )
-        formattedQuery
-      }) {
+      site: updateSiteInfo(siteData: ${formattedQuery}) {
         title,
         subtitle,
         logopath,
@@ -142,11 +140,10 @@ const SiteSettings = props => {
       }
     }`;
     try {
-      await executeGQLCall(query, response => {
-        if (response.site) {
-          props.dispatch(newSiteInfoAvailable(response.site));
-        }
-      });
+      const fetchRequest = fetch.setPayload(query).build();
+      const response = await fetchRequest.exec();
+      props.dispatch(newSiteInfoAvailable(response.site));
+      props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)));
     } catch (e) {
       props.dispatch(setAppMessage(new AppMessage(e.message)));
     }
@@ -165,7 +162,7 @@ const SiteSettings = props => {
 
   const onAdminSettingsChanged = e => {
     const change = { [e.target.name]: e.target.value };
-    setAdminSettings(Object.assign({}, adminSettings, change));
+    setNewAdminSettings(Object.assign({}, newAdminSettings, change));
   };
 
   const handleAdminSettingsSubmit = async event => {
@@ -181,15 +178,16 @@ const SiteSettings = props => {
         paytmSecret
       }
     }`;
-    console.log(query);
     try {
-      await executeGQLCall(query, response => {
-        if (response.adminSettings) {
-          setAdminSettings(
-            Object.assign({}, adminSettings, response.adminSettings)
-          );
-        }
-      });
+      const fetchRequest = fetch.setPayload(query).build();
+      const response = await fetchRequest.exec();
+      setAdminSettings(
+        Object.assign({}, adminSettings, response.adminSettings)
+      );
+      setNewAdminSettings(
+        Object.assign({}, newAdminSettings, response.adminSettings)
+      );
+      props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)));
     } catch (e) {
       props.dispatch(setAppMessage(new AppMessage(e.message)));
     }
@@ -276,20 +274,28 @@ const SiteSettings = props => {
                     id: "outlined-paymentmethod-simple"
                   }}
                 >
-                  <MenuItem value={PAYMENT_METHOD_STRIPE}>Stripe</MenuItem>
-                  <MenuItem value={PAYMENT_METHOD_PAYPAL}>Paypal</MenuItem>
-                  <MenuItem value={PAYMENT_METHOD_PAYTM}>Paytm</MenuItem>
+                  <MenuItem value={PAYMENT_METHOD_STRIPE}>
+                    {capitalize(PAYMENT_METHOD_STRIPE.toLowerCase())}
+                  </MenuItem>
+                  <MenuItem value={PAYMENT_METHOD_PAYPAL} disabled={true}>
+                    {capitalize(PAYMENT_METHOD_PAYPAL.toLowerCase())}
+                  </MenuItem>
+                  <MenuItem value={PAYMENT_METHOD_PAYTM} disabled={true}>
+                    {capitalize(PAYMENT_METHOD_PAYTM.toLowerCase())}
+                  </MenuItem>
                 </Select>
               </FormControl>
-              <TextField
-                variant="outlined"
-                label={SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT}
-                fullWidth
-                margin="normal"
-                name="stripePublishableKey"
-                value={settings.stripePublishableKey || ""}
-                onChange={onChangeData}
-              />
+              {settings.paymentMethod === PAYMENT_METHOD_STRIPE && (
+                <TextField
+                  variant="outlined"
+                  label={SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT}
+                  fullWidth
+                  margin="normal"
+                  name="stripePublishableKey"
+                  value={settings.stripePublishableKey || ""}
+                  onChange={onChangeData}
+                />
+              )}
               <MediaSelector
                 title={SITE_SETTINGS_LOGO}
                 src={settings.logopath || props.siteinfo.logopath}
@@ -301,11 +307,8 @@ const SiteSettings = props => {
                 type="submit"
                 value="Save"
                 disabled={
-                  !!(
-                    !settings.title &&
-                    !settings.subtitle &&
-                    !settings.logopath
-                  )
+                  !areObjectsDifferent(props.siteinfo, settings) ||
+                  !settings.title || !settings.subtitle
                 }
               >
                 Save
@@ -362,6 +365,7 @@ const SiteSettings = props => {
                 type="password"
                 value={adminSettings.paypalSecret || ""}
                 onChange={onAdminSettingsChanged}
+                disabled={true}
               />
               <TextField
                 variant="outlined"
@@ -372,19 +376,14 @@ const SiteSettings = props => {
                 type="password"
                 value={adminSettings.paytmSecret || ""}
                 onChange={onAdminSettingsChanged}
+                disabled={true}
               />
             </CardContent>
             <CardActions>
               <Button
                 type="submit"
                 value="Save"
-                disabled={
-                  !!(
-                    !settings.title &&
-                    !settings.subtitle &&
-                    !settings.logopath
-                  )
-                }
+                disabled={!areObjectsDifferent(adminSettings, newAdminSettings)}
               >
                 Save
               </Button>

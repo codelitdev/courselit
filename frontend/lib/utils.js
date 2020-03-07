@@ -101,3 +101,8 @@ export const getObjectContainingOnlyChangedFields = (baseline, obj) => {
   }
   return result
 }
+
+export const areObjectsDifferent = (baseline, obj) => {
+  const onlyChangedFields = getObjectContainingOnlyChangedFields(baseline, obj);
+  return !!Object.keys(onlyChangedFields).length;
+}

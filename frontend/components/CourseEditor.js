@@ -95,7 +95,8 @@ const CourseEditor = props => {
     description: TextEditor.emptyState(),
     featuredImage: "",
     id: null,
-    isFeatured: false
+    isFeatured: false,
+    slug: ""
   };
   const initCourseData = {
     course: initCourseMetaData
@@ -164,7 +165,8 @@ const CourseEditor = props => {
           isBlog,
           description,
           featuredImage,
-          isFeatured
+          isFeatured,
+          slug
         }
       }
       `;
@@ -190,7 +192,8 @@ const CourseEditor = props => {
           isBlog,
           description,
           featuredImage,
-          isFeatured
+          isFeatured,
+          slug
         }
       }
       `;
