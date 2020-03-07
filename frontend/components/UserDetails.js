@@ -24,15 +24,22 @@ import {
 import { makeStyles } from "@material-ui/styles";
 import { useExecuteGraphQLQuery } from "./CustomHooks.js";
 
-const useStyles = makeStyles({
+const useStyles = makeStyles(theme => ({
   container: {
     padding: "0.8em 1.2em",
     marginBottom: "0.6em"
   },
   error: {
     color: "#ff0000"
+  },
+  avatar: {
+    height: "1.6em",
+    width: "auto"
+  },
+  expanded: {
+    marginTop: "1em"
   }
-});
+}));
 
 const UserDetails = props => {
   const newUserDataDefaults = {
@@ -172,12 +179,31 @@ const UserDetails = props => {
           alignItems="center"
         >
           <Grid item>
-            <Grid container item direction="row" alignItems="center">
+            <Grid
+              container
+              item
+              direction="row"
+              alignItems="center"
+              spacing={1}
+            >
               <Grid item>
-                <AccountCircle />
+                <Grid container direction="column" alignItems="center">
+                  <AccountCircle className={classes.avatar} />
+                  <Typography variant="caption" color="textSecondary">
+                    {props.user.verified
+                      ? CAPTION_VERIFIED
+                      : CAPTION_UNVERIFIED}
+                  </Typography>
+                </Grid>
               </Grid>
               <Grid item>
-                <Grid item container direction="row" alignItems="center">
+                <Grid
+                  item
+                  container
+                  direction="row"
+                  alignItems="center"
+                  spacing={1}
+                >
                   <Grid item>
                     <Typography variant="h6">{props.user.name}</Typography>
                   </Grid>
@@ -189,12 +215,15 @@ const UserDetails = props => {
                     </Typography>
                   </Grid>
                 </Grid>
-                {props.user.isAdmin && (
-                  <Typography variant="caption">Admin</Typography>
-                )}
-                <Typography variant="caption">
-                  {props.user.verified ? CAPTION_VERIFIED : CAPTION_UNVERIFIED}
-                </Typography>
+                <Grid item container direction="row" spacing={1}>
+                  {props.user.isAdmin && (
+                    <Grid item>
+                      <Typography variant="caption" color="textSecondary">
+                        Admin
+                      </Typography>
+                    </Grid>
+                  )}
+                </Grid>
               </Grid>
             </Grid>
           </Grid>
@@ -205,7 +234,7 @@ const UserDetails = props => {
           </Grid>
         </Grid>
         {expanded && (
-          <Grid item>
+          <Grid item className={classes.expanded}>
             <form onSubmit={saveUserChanges}>
               <Grid container direction="column">
                 <Grid container item>

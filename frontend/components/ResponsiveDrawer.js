@@ -9,12 +9,13 @@ import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
-import { Menu } from "@material-ui/icons";
+import { Menu, OpenInBrowser } from "@material-ui/icons";
 import { Toolbar, Typography, Grid } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
 import SessionButton from "./SessionButton.js";
 import AppToast from "./AppToast";
+import Link from "next/link";
 
 const drawerWidth = 240;
 
@@ -50,6 +51,9 @@ const useStyles = makeStyles(theme => ({
   },
   activeItem: {
     background: "#d6d6d6"
+  },
+  visitSiteLink: {
+    color: "#fff"
   }
 }));
 
@@ -131,11 +135,22 @@ const ResponsiveDrawer = props => {
           >
             <Menu />
           </IconButton>
-          <Grid container justify="space-between">
+          <Grid container justify="space-between" alignItems="center">
             <Grid item>
-              <Typography variant="h6" noWrap>
-                {props.pageTitle}
-              </Typography>
+              <Grid container alignItems="center" spacing={1}>
+                <Grid item>
+                  <Typography variant="h6" noWrap>
+                    {props.pageTitle}
+                  </Typography>
+                </Grid>
+                <Grid item>
+                  <Link href="/">
+                    <a target="_blank" className={classes.visitSiteLink}>
+                      <OpenInBrowser />
+                    </a>
+                  </Link>
+                </Grid>
+              </Grid>
             </Grid>
             <Grid item>
               <SessionButton />
