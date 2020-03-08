@@ -63,7 +63,7 @@ The very first user who signs up for an account, automatically becomes a super a
 - Log out of your docker machine.
 - Start the docker containers.
   ```    
-  ./up .prod.env [any other docker-compose option, if necessary]
+  ./up machine-name .prod.env
   ```
 
 ## Security
