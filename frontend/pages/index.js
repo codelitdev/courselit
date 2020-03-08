@@ -18,6 +18,9 @@ const useStyles = makeStyles(theme => ({
   },
   body: {
     marginTop: "1.8em"
+  },
+  content: {
+    marginBottom: theme.spacing(2)
   }
 }));
 
@@ -62,7 +65,7 @@ const Index = props => {
         </Grid>
         <Grid item className={classes.body}>
           <ContainedBodyLayout>
-            <Grid container direction="row" spacing={2}>
+            <Grid container direction="row" spacing={2} className={classes.content}>
               <Grid item xs={12} sm={8}>
                 <section className="posts">
                   <Typography variant="h4">

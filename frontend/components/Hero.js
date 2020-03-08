@@ -40,8 +40,6 @@ const Hero = props => {
   const item = featuredCourses[offset];
   if (!item) return <></>;
 
-  console.log(featuredCourses, item);
-
   const classes = getUseStyles(item.featuredImage)();
   const cost =
     item.cost > 0
@@ -67,6 +65,7 @@ const Hero = props => {
           </IconButton>
         </Grid>
       </Grid>
+
       <Grid item xs={10}>
         <Grid
           container
@@ -92,6 +91,7 @@ const Hero = props => {
           </Grid>
         </Grid>
       </Grid>
+      
       <Grid item container direction="row" justify="flex-end" xs={1}>
         <Grid item>
           <IconButton aria-label="previous" onClick={showNextItem}>
