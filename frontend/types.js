@@ -63,7 +63,7 @@ export const siteUser = PropTypes.shape({
   isCreator: PropTypes.bool.isRequired,
   isAdmin: PropTypes.bool.isRequired,
   avatar: PropTypes.string,
-  purchases: PropTypes.arrayOf(PropTypes.object)
+  purchases: PropTypes.arrayOf(PropTypes.string)
 });
 
 export const featuredCourse = PropTypes.shape({

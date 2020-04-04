@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { siteUser } from "../types";
+import { siteUser, authProps } from "../types";
 import {
   Grid,
   IconButton,
@@ -19,10 +19,14 @@ import {
   SWITCH_IS_ADMIN,
   SWITCH_IS_CREATOR,
   SWITCH_ACCOUNT_ACTIVE,
-  ERR_PASSWORDS_DONT_MATCH
+  ERR_PASSWORDS_DONT_MATCH,
+  ENROLLED_COURSES_HEADER
 } from "../config/strings";
 import { makeStyles } from "@material-ui/styles";
 import { useExecuteGraphQLQuery } from "./CustomHooks.js";
+import { BACKEND } from "../config/constants";
+import FetchBuilder from "../lib/fetch";
+import { connect } from "react-redux";
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -38,6 +42,9 @@ const useStyles = makeStyles(theme => ({
   },
   expanded: {
     marginTop: "1em"
+  },
+  enrolledCourseItem: {
+    marginTop: theme.spacing(1)
   }
 }));
 
@@ -55,10 +62,40 @@ const UserDetails = props => {
   const classes = useStyles();
   const [error, setError] = useState("");
   const executeGQLCall = useExecuteGraphQLQuery();
+  const [enrolledCourses, setEnrolledCourses] = useState([]);
 
   useEffect(() => {
     setError(getUserDataError());
   }, [newUserData.confirmPassword, newUserData.password]);
+
+  useEffect(() => {
+    if (expanded) {
+      getEnrolledCourses();
+    }
+  }, [expanded]);
+
+  const getEnrolledCourses = async () => {
+    const query = `
+    query {
+      enrolledCourses: getEnrolledCourses(userId: "5e8069a4942cc60a3d0196b1") {
+        id,
+        title
+      }
+    }
+    `;
+    try {
+      const fetch = new FetchBuilder()
+        .setUrl(`${BACKEND}/graph`)
+        .setPayload(query)
+        .setIsGraphQLEndpoint(true)
+        .setAuthToken(props.auth.token)
+        .build();
+      const response = await fetch.exec();
+      setEnrolledCourses(response.enrolledCourses);
+    } catch (err) {
+      //
+    }
+  };
 
   const getUserDataError = () => {
     if (
@@ -234,114 +271,136 @@ const UserDetails = props => {
           </Grid>
         </Grid>
         {expanded && (
-          <Grid item className={classes.expanded}>
-            <form onSubmit={saveUserChanges}>
-              <Grid container direction="column">
-                <Grid container item>
-                  <Grid
-                    container
-                    item
-                    direction="row"
-                    justify="space-between"
-                    xs={12}
-                    sm={4}
-                  >
-                    <Typography variant="subtitle1">
-                      {SWITCH_IS_ADMIN}
-                    </Typography>
-                    <Switch
-                      type="checkbox"
-                      name="isAdmin"
-                      checked={newUserData.isAdmin}
-                      onChange={e =>
-                        updateUserData("isAdmin", e.target.checked)
-                      }
-                    />
-                  </Grid>
-                  <Grid
-                    container
-                    item
-                    direction="row"
-                    justify="space-between"
-                    xs={12}
-                    sm={4}
-                  >
-                    <Typography variant="subtitle1">
-                      {SWITCH_IS_CREATOR}
-                    </Typography>
-                    <Switch
-                      type="checkbox"
-                      name="isAdmin"
-                      checked={newUserData.isCreator}
-                      onChange={e =>
-                        updateUserData("isCreator", e.target.checked)
-                      }
-                    />
-                  </Grid>
-                  <Grid
-                    container
-                    item
-                    direction="row"
-                    justify="space-between"
-                    xs={12}
-                    sm={4}
-                  >
-                    <Typography variant="subtitle1">
-                      {SWITCH_ACCOUNT_ACTIVE}
-                    </Typography>
-                    <Switch
-                      type="checkbox"
-                      name="active"
-                      checked={newUserData.active}
-                      onChange={e => updateUserData("active", e.target.checked)}
-                    />
-                  </Grid>
-                </Grid>
-                <Grid item>
-                  <TextField
-                    variant="outlined"
-                    label={LABEL_NEW_PASSWORD}
-                    fullWidth
-                    margin="normal"
-                    name="password"
-                    type="password"
-                    value={newUserData.password}
-                    onChange={e => updateUserData("password", e.target.value)}
-                  />
-                  <TextField
-                    variant="outlined"
-                    label={LABEL_CONF_PASSWORD}
-                    fullWidth
-                    margin="normal"
-                    name="confirmPassword"
-                    type="password"
-                    value={newUserData.confirmPassword}
-                    onChange={e =>
-                      updateUserData("confirmPassword", e.target.value)
-                    }
-                  />
-                </Grid>
-                <Grid container item justify="flex-end" alignItems="center">
-                  {error && (
-                    <Grid item>
-                      <Typography variant="caption" className={classes.error}>
-                        {error}
-                      </Typography>
-                    </Grid>
-                  )}
-                  <Grid item>
-                    <Button
-                      color="primary"
-                      onClick={saveUserChanges}
-                      disabled={!isNewUserDataValid()}
+          <>
+            <Grid item className={classes.expanded}>
+              <form onSubmit={saveUserChanges}>
+                <Grid container direction="column">
+                  <Grid container item>
+                    <Grid
+                      container
+                      item
+                      direction="row"
+                      justify="space-between"
+                      xs={12}
+                      sm={4}
                     >
-                      {BUTTON_SAVE}
-                    </Button>
+                      <Typography variant="subtitle1">
+                        {SWITCH_IS_ADMIN}
+                      </Typography>
+                      <Switch
+                        type="checkbox"
+                        name="isAdmin"
+                        checked={newUserData.isAdmin}
+                        onChange={e =>
+                          updateUserData("isAdmin", e.target.checked)
+                        }
+                      />
+                    </Grid>
+                    <Grid
+                      container
+                      item
+                      direction="row"
+                      justify="space-between"
+                      xs={12}
+                      sm={4}
+                    >
+                      <Typography variant="subtitle1">
+                        {SWITCH_IS_CREATOR}
+                      </Typography>
+                      <Switch
+                        type="checkbox"
+                        name="isAdmin"
+                        checked={newUserData.isCreator}
+                        onChange={e =>
+                          updateUserData("isCreator", e.target.checked)
+                        }
+                      />
+                    </Grid>
+                    <Grid
+                      container
+                      item
+                      direction="row"
+                      justify="space-between"
+                      xs={12}
+                      sm={4}
+                    >
+                      <Typography variant="subtitle1">
+                        {SWITCH_ACCOUNT_ACTIVE}
+                      </Typography>
+                      <Switch
+                        type="checkbox"
+                        name="active"
+                        checked={newUserData.active}
+                        onChange={e =>
+                          updateUserData("active", e.target.checked)
+                        }
+                      />
+                    </Grid>
                   </Grid>
+                  <Grid item>
+                    <TextField
+                      variant="outlined"
+                      label={LABEL_NEW_PASSWORD}
+                      fullWidth
+                      margin="normal"
+                      name="password"
+                      type="password"
+                      value={newUserData.password}
+                      onChange={e => updateUserData("password", e.target.value)}
+                    />
+                    <TextField
+                      variant="outlined"
+                      label={LABEL_CONF_PASSWORD}
+                      fullWidth
+                      margin="normal"
+                      name="confirmPassword"
+                      type="password"
+                      value={newUserData.confirmPassword}
+                      onChange={e =>
+                        updateUserData("confirmPassword", e.target.value)
+                      }
+                    />
+                  </Grid>
+                  <Grid container item justify="flex-end" alignItems="center">
+                    {error && (
+                      <Grid item>
+                        <Typography variant="caption" className={classes.error}>
+                          {error}
+                        </Typography>
+                      </Grid>
+                    )}
+                    <Grid item>
+                      <Button
+                        color="primary"
+                        onClick={saveUserChanges}
+                        disabled={!isNewUserDataValid()}
+                      >
+                        {BUTTON_SAVE}
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </Grid>
+              </form>
+            </Grid>
+            {props.user.purchases.length > 0 && (
+              <Grid item>
+                <Typography variant="h6">
+                  {ENROLLED_COURSES_HEADER} ({props.user.purchases.length})
+                </Typography>
+                <Grid container direction="column">
+                  {enrolledCourses.map(course => (
+                    <Grid
+                      item
+                      key={course.id}
+                      className={classes.enrolledCourseItem}
+                    >
+                      {course.title}
+                    </Grid>
+                  ))}
                 </Grid>
               </Grid>
-            </form>
-          </Grid>
+            )}
+          </>
         )}
       </Grid>
     </Card>
@@ -349,7 +408,12 @@ const UserDetails = props => {
 };
 
 UserDetails.propTypes = {
+  auth: authProps,
   user: siteUser
 };
 
-export default UserDetails;
+const mapStateToProps = state => ({
+  auth: state.auth
+});
+
+export default connect(mapStateToProps)(UserDetails);

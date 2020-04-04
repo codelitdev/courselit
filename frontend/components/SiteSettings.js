@@ -308,7 +308,8 @@ const SiteSettings = props => {
                 value="Save"
                 disabled={
                   !areObjectsDifferent(props.siteinfo, settings) ||
-                  !settings.title || !settings.subtitle
+                  !settings.title ||
+                  !settings.subtitle
                 }
               >
                 Save
