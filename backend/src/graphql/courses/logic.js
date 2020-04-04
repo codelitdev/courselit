@@ -3,6 +3,7 @@
  */
 const slugify = require("slugify");
 const Course = require("../../models/Course.js");
+const User = require("../../models/User.js");
 const strings = require("../../config/strings.js");
 const {
   checkIfAuthenticated,
@@ -202,4 +203,29 @@ exports.getPublicCourses = async (offset, onlyShowFeatured = false) => {
   }
 
   return dbQuery;
+};
+
+// TODO: write tests for this
+exports.getEnrolledCourses = async (userId, ctx) => {
+  checkIfAuthenticated(ctx);
+  const notAdminOrSelf =
+    !(ctx.user.isCreator || ctx.user.isAdmin) && userId !== ctx.user.id;
+
+  if (notAdminOrSelf) {
+    throw new Error(strings.responses.item_not_found);
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new Error(strings.responses.user_not_found);
+  }
+
+  return Course.find(
+    {
+      _id: {
+        $in: [...user.purchases]
+      }
+    },
+    "id title"
+  );
 };

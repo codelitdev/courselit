@@ -46,5 +46,15 @@ module.exports = {
     },
     resolve: (root, { offset, onlyShowFeatured }, context) =>
       logic.getPublicCourses(offset, onlyShowFeatured)
+  },
+  getEnrolledCourses: {
+    type: new graphql.GraphQLList(types.myCoursesItemType),
+    args: {
+      userId: {
+        type: new graphql.GraphQLNonNull(graphql.GraphQLID)
+      }
+    },
+    resolve: (root, { userId }, context) =>
+      logic.getEnrolledCourses(userId, context)
   }
 };

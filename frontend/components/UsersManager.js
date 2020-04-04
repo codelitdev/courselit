@@ -117,7 +117,7 @@ const UsersManager = props => {
       </Grid>
       <Grid item>
         {users.map(user => (
-          <UserDetails user={user} key={user.email} />
+          <UserDetails user={user} key={user.id} />
         ))}
       </Grid>
       <Grid item>

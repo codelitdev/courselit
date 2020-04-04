@@ -91,7 +91,7 @@ const Hero = props => {
           </Grid>
         </Grid>
       </Grid>
-      
+
       <Grid item container direction="row" justify="flex-end" xs={1}>
         <Grid item>
           <IconButton aria-label="previous" onClick={showNextItem}>

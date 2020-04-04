@@ -65,20 +65,27 @@ const Index = props => {
         </Grid>
         <Grid item className={classes.body}>
           <ContainedBodyLayout>
-            <Grid container direction="row" spacing={2} className={classes.content}>
-              <Grid item xs={12} sm={8}>
-                <section className="posts">
-                  <Typography variant="h4">
-                    {HEADER_BLOG_POSTS_SECTION}
-                  </Typography>
-                  {posts.map((x, index) => (
-                    <BlogPostItem key={index} {...x} />
-                  ))}
-                  {posts.length > 0 && (
-                    <Button onClick={getMorePosts}>{BTN_LOAD_MORE}</Button>
-                  )}
-                </section>
-              </Grid>
+            <Grid
+              container
+              direction="row"
+              spacing={2}
+              className={classes.content}
+            >
+              {posts.length > 0 && (
+                <Grid item xs={12} sm={8}>
+                  <section className="posts">
+                    <Typography variant="h4">
+                      {HEADER_BLOG_POSTS_SECTION}
+                    </Typography>
+                    {posts.map((x, index) => (
+                      <BlogPostItem key={index} {...x} />
+                    ))}
+                    {posts.length > 0 && (
+                      <Button onClick={getMorePosts}>{BTN_LOAD_MORE}</Button>
+                    )}
+                  </section>
+                </Grid>
+              )}
               <Grid item xs={12} sm={4}>
                 <aside>
                   <About />

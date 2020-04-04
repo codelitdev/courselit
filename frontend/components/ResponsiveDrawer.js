@@ -9,7 +9,7 @@ import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
-import { Menu, OpenInBrowser } from "@material-ui/icons";
+import { Menu, Launch } from "@material-ui/icons";
 import { Toolbar, Typography, Grid } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
@@ -137,7 +137,7 @@ const ResponsiveDrawer = props => {
           </IconButton>
           <Grid container justify="space-between" alignItems="center">
             <Grid item>
-              <Grid container alignItems="center" spacing={1}>
+              <Grid container alignItems="center" spacing={2}>
                 <Grid item>
                   <Typography variant="h6" noWrap>
                     {props.pageTitle}
@@ -146,7 +146,7 @@ const ResponsiveDrawer = props => {
                 <Grid item>
                   <Link href="/">
                     <a target="_blank" className={classes.visitSiteLink}>
-                      <OpenInBrowser />
+                      <Launch />
                     </a>
                   </Link>
                 </Grid>
