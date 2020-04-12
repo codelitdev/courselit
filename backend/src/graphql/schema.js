@@ -6,7 +6,7 @@ const courses = require("./courses");
 const siteinfo = require("./siteinfo");
 const media = require("./media");
 const settings = require("./settings");
-const customisations = require('./customisations');
+const customisations = require("./customisations");
 
 module.exports = new graphql.GraphQLSchema({
   query: new graphql.GraphQLObjectType({

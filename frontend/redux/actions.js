@@ -135,7 +135,7 @@ export function clearAppMessage() {
 }
 
 export function setCustomisations(customisations) {
-  return { type: CUSTOMISATIONS_AVAILABLE, customisations }
+  return { type: CUSTOMISATIONS_AVAILABLE, customisations };
 }
 
 export function updateCustomisations() {
@@ -148,16 +148,16 @@ export function updateCustomisations() {
           codeInjectionHead
         }
       }
-      `
+      `;
       const fetch = new FetchBuilder()
-          .setUrl(`${BACKEND}/graph`)
-          .setPayload(query)
-          .setIsGraphQLEndpoint(true)
-          .build();
+        .setUrl(`${BACKEND}/graph`)
+        .setPayload(query)
+        .setIsGraphQLEndpoint(true)
+        .build();
       const response = await fetch.exec();
-      dispatch(setCustomisations(response.customisations))
+      dispatch(setCustomisations(response.customisations));
     } catch {
       // fail silently
     }
-  }
+  };
 }

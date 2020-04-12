@@ -57,9 +57,9 @@ const initialState = {
     action: null
   },
   customisations: {
-    themePrimaryColor: '',
-    themeSecondaryColor: '',
-    codeInjectionHead: ''
+    themePrimaryColor: "",
+    themeSecondaryColor: "",
+    codeInjectionHead: ""
   }
 };
 
@@ -163,7 +163,7 @@ function customisationsReducer(state = initialState.customisations, action) {
         themePrimaryColor: action.customisations.themePrimaryColor,
         themeSecondaryColor: action.customisations.themeSecondaryColor,
         codeInjectionHead: action.customisations.codeInjectionHead
-      }
+      };
     default:
       return state;
   }

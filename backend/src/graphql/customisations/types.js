@@ -1,4 +1,4 @@
-const graphql = require('graphql');
+const graphql = require("graphql");
 
 // const themeType = new graphql.GraphQLObjectType({
 //     name: 'Theme',
@@ -16,24 +16,24 @@ const graphql = require('graphql');
 // })
 
 const customisationType = new graphql.GraphQLObjectType({
-    name: 'Customisation',
-    fields: {
-        themePrimaryColor: { type: graphql.GraphQLString },
-        themeSecondaryColor: { type: graphql.GraphQLString },
-        codeInjectionHead: { type: graphql.GraphQLString }
-    }
-})
+  name: "Customisation",
+  fields: {
+    themePrimaryColor: { type: graphql.GraphQLString },
+    themeSecondaryColor: { type: graphql.GraphQLString },
+    codeInjectionHead: { type: graphql.GraphQLString }
+  }
+});
 
 const customisationInputType = new graphql.GraphQLInputObjectType({
-    name: 'CustomisationInput',
-    fields: {
-        themePrimaryColor: { type: graphql.GraphQLString },
-        themeSecondaryColor: { type: graphql.GraphQLString },
-        codeInjectionHead: { type: graphql.GraphQLString }
-    }
-})
+  name: "CustomisationInput",
+  fields: {
+    themePrimaryColor: { type: graphql.GraphQLString },
+    themeSecondaryColor: { type: graphql.GraphQLString },
+    codeInjectionHead: { type: graphql.GraphQLString }
+  }
+});
 
 module.exports = {
-    customisationType,
-    customisationInputType
-}
+  customisationType,
+  customisationInputType
+};
