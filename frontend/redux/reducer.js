@@ -8,7 +8,8 @@ import {
   SITEINFO_AVAILABLE,
   AUTH_CHECKED,
   SET_MESSAGE,
-  CLEAR_MESSAGE
+  CLEAR_MESSAGE,
+  CUSTOMISATIONS_AVAILABLE
 } from "./actionTypes.js";
 import {
   GENERIC_TITLE,
@@ -54,6 +55,11 @@ const initialState = {
     open: false,
     message: "",
     action: null
+  },
+  customisations: {
+    themePrimaryColor: '',
+    themeSecondaryColor: '',
+    codeInjectionHead: ''
   }
 };
 
@@ -150,10 +156,24 @@ function appMessageReducer(state = initialState.message, action) {
   }
 }
 
+function customisationsReducer(state = initialState.customisations, action) {
+  switch (action.type) {
+    case CUSTOMISATIONS_AVAILABLE:
+      return {
+        themePrimaryColor: action.customisations.themePrimaryColor,
+        themeSecondaryColor: action.customisations.themeSecondaryColor,
+        codeInjectionHead: action.customisations.codeInjectionHead
+      }
+    default:
+      return state;
+  }
+}
+
 export default combineReducers({
   auth: authReducer,
   siteinfo: siteinfoReducer,
   networkAction: networkActionReducer,
   profile: profileReducer,
-  message: appMessageReducer
+  message: appMessageReducer,
+  customisations: customisationsReducer
 });

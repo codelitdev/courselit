@@ -58,6 +58,9 @@ const Index = props => {
     <MasterLayout>
       <Grid container direction="column">
         <Grid item>
+          <div className="fb-comment-embed" data-href="https://www.facebook.com/zuck/posts/10102577175875681?comment_id=1193531464007751&amp;reply_comment_id=654912701278942" data-width="560" data-include-parent="false"></div>
+        </Grid>
+        <Grid item>
           <div className={classes.offset}></div>
         </Grid>
         <Grid item>
