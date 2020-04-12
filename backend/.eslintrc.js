@@ -1,5 +1,8 @@
 module.exports = {
-  "extends": "standard",
+  "extends": [
+    "standard",
+    "prettier"
+  ],
   "env": {
     "node": true,
     "jest": true

@@ -13,7 +13,6 @@ import {
 import { ThemeProvider } from "@material-ui/styles";
 import theme from "../theme";
 import CodeInjector from "../components/CodeInjector.js";
-import { getCustomisations } from "../../backend/src/graphql/customisations/logic.js";
 
 class MyApp extends App {
   constructor(props) {
@@ -60,7 +59,7 @@ class MyApp extends App {
       <div id="fb-root"></div>
       <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v6.0&appId=982276498618242&autoLogAppEvents=1"></script>
       `
-    }
+    };
   }
 
   static async getInitialProps(props) {
@@ -84,7 +83,7 @@ class MyApp extends App {
     //     var t = window.driftt = window.drift = window.driftt || [];
     //     if (!t.init) {
     //       if (t.invoked) return void (window.console && console.error && console.error("Drift snippet included twice."));
-    //       t.invoked = !0, t.methods = [ "identify", "config", "track", "reset", "debug", "show", "ping", "page", "hide", "off", "on" ], 
+    //       t.invoked = !0, t.methods = [ "identify", "config", "track", "reset", "debug", "show", "ping", "page", "hide", "off", "on" ],
     //       t.factory = function(e) {
     //         return function() {
     //           var n = Array.prototype.slice.call(arguments);

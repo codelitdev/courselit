@@ -1,4 +1,4 @@
 module.exports = {
-    queries: require("./query.js"),
-    mutations: require("./mutation.js")
+  queries: require("./query.js"),
+  mutations: require("./mutation.js")
 };
