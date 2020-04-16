@@ -55,6 +55,10 @@ exports.updateSettings = async (settingsData, ctx) => {
 
 const checkForInvalidPaymentSettings = async settings => {
   const siteInfo = (await SiteInfo.find())[0];
+  if (!siteInfo) {
+    throw new Error(responses.payment_method_not_saved)
+  }
+  
   let failedPaymentMethod = null;
 
   if (siteInfo.paymentMethod === paytm && !settings.paytmSecret) {
