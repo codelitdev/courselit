@@ -48,7 +48,11 @@ import {
   SITE_SETTINGS_SECTION_PAYMENT,
   SITE_ADMIN_SETTINGS_PAYMENT_METHOD,
   SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT,
-  APP_MESSAGE_SETTINGS_SAVED
+  APP_MESSAGE_SETTINGS_SAVED,
+  SITE_CUSTOMISATIONS_SETTING_HEADER,
+  SITE_CUSTOMISATIONS_SETTING_PRIMARY_COLOR,
+  SITE_CUSTOMISATIONS_SETTING_SECONDARY_COLOR,
+  SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD
 } from "../config/strings.js";
 import AppMessage from "../models/app-message.js";
 import FetchBuilder from "../lib/fetch";
@@ -58,13 +62,13 @@ const useStyles = makeStyles(theme => ({
     minWidth: "100%",
     margin: "1em 0em"
   },
-  general: {
+  section: {
     marginBottom: theme.spacing(4)
   }
 }));
 
 const SiteSettings = props => {
-  const [settings, setSettings] = useState({
+  const defaultSettingsState = {
     title: props.siteinfo.title,
     subtitle: props.siteinfo.subtitle,
     logopath: props.siteinfo.logopath,
@@ -74,14 +78,26 @@ const SiteSettings = props => {
     about: props.siteinfo.about,
     paymentMethod: props.siteinfo.paymentMethod,
     stripePublishableKey: props.siteinfo.stripePublishableKey
-  });
+  }
   const defaultAdminState = {
     stripeSecret: "",
     paypalSecret: "",
     paytmSecret: ""
   };
+  const defaultCustomisationsState = {
+    themePrimaryColor: '',
+    themeSecondaryColor: '',
+    codeInjectionHead: ''
+  }
+
+  const [settings, setSettings] = useState(defaultSettingsState);
+
   const [adminSettings, setAdminSettings] = useState(defaultAdminState);
   const [newAdminSettings, setNewAdminSettings] = useState(defaultAdminState);
+
+  const [customisations, setCustomisations] = useState(defaultCustomisationsState);
+  const [newCustomisations, setNewCustomisations] = useState(defaultCustomisationsState);
+
   const [mediaManagerVisibility, setMediaManagerVisibility] = useState(false);
   const classes = useStyles();
   const fetch = new FetchBuilder()
@@ -91,6 +107,7 @@ const SiteSettings = props => {
 
   useEffect(() => {
     loadAdminSettings();
+    loadCustomisations();
   }, []);
 
   const loadAdminSettings = async () => {
@@ -111,6 +128,29 @@ const SiteSettings = props => {
         );
         setNewAdminSettings(
           Object.assign({}, newAdminSettings, response.adminSettings)
+        );
+      }
+    } catch (e) {}
+  };
+
+  const loadCustomisations = async () => {
+    const query = `
+    query {
+      customisations: getCustomisations {
+        themePrimaryColor,
+        themeSecondaryColor,
+        codeInjectionHead
+      }
+    }`;
+    try {
+      const fetchRequest = fetch.setPayload(query).build();
+      const response = await fetchRequest.exec();
+      if (response.customisations) {
+        setCustomisations(
+          Object.assign({}, customisations, response.customisations)
+        );
+        setNewCustomisations(
+          Object.assign({}, newCustomisations, response.customisations)
         );
       }
     } catch (e) {}
@@ -170,7 +210,7 @@ const SiteSettings = props => {
     const query = `
     mutation {
       adminSettings: updateSettings(settingsData: ${
-        makeGraphQLQueryStringFromJSObject(adminSettings)
+        makeGraphQLQueryStringFromJSObject(newAdminSettings)
         // getGraphQLQueryFields(removeEmptyProperties(adminSettings), ['paymentMethod'])
       }) {
         stripeSecret,
@@ -189,9 +229,43 @@ const SiteSettings = props => {
       );
       props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)));
     } catch (e) {
+      console.log(e);
       props.dispatch(setAppMessage(new AppMessage(e.message)));
     }
   };
+
+  const onCustomisationsChanged = e => {
+    const change = { [e.target.name]: e.target.value };
+    setNewCustomisations(Object.assign({}, newCustomisations, change));
+  }
+
+  const handleCustomisationsChanged = async event => {
+    event.preventDefault();
+    const query = `
+    mutation {
+      customisations: updateCustomisations(customisationsData: ${
+        makeGraphQLQueryStringFromJSObject(newCustomisations)
+        // getGraphQLQueryFields(removeEmptyProperties(adminSettings), ['paymentMethod'])
+      }) {
+        themePrimaryColor,
+        themeSecondaryColor,
+        codeInjectionHead
+      }
+    }`;
+    try {
+      const fetchRequest = fetch.setPayload(query).build();
+      const response = await fetchRequest.exec();
+      setCustomisations(
+        Object.assign({}, customisations, response.customisations)
+      );
+      setNewCustomisations(
+        Object.assign({}, newCustomisations, response.customisations)
+      );
+      props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)));
+    } catch (e) {
+      props.dispatch(setAppMessage(new AppMessage(e.message)));
+    }
+  }
 
   return (
     <Grid container>
@@ -199,7 +273,7 @@ const SiteSettings = props => {
         <Typography variant="h3">{SITE_SETTINGS_PAGE_HEADING}</Typography>
       </Grid>
 
-      <Grid item xs={12} className={classes.general}>
+      <Grid item xs={12} className={classes.section}>
         <Card>
           <form onSubmit={handleGeneralSettingsSubmit}>
             <CardContent>
@@ -340,7 +414,7 @@ const SiteSettings = props => {
         </Grid> */}
       </Grid>
 
-      <Grid item xs={12}>
+      <Grid item xs={12} className={classes.section}>
         <Card>
           <form onSubmit={handleAdminSettingsSubmit}>
             <CardContent>
@@ -354,7 +428,7 @@ const SiteSettings = props => {
                 margin="normal"
                 name="stripeSecret"
                 type="password"
-                value={adminSettings.stripeSecret || ""}
+                value={newAdminSettings.stripeSecret || ""}
                 onChange={onAdminSettingsChanged}
               />
               <TextField
@@ -364,7 +438,7 @@ const SiteSettings = props => {
                 margin="normal"
                 name="paypalSecret"
                 type="password"
-                value={adminSettings.paypalSecret || ""}
+                value={newAdminSettings.paypalSecret || ""}
                 onChange={onAdminSettingsChanged}
                 disabled={true}
               />
@@ -375,7 +449,7 @@ const SiteSettings = props => {
                 margin="normal"
                 name="paytmSecret"
                 type="password"
-                value={adminSettings.paytmSecret || ""}
+                value={newAdminSettings.paytmSecret || ""}
                 onChange={onAdminSettingsChanged}
                 disabled={true}
               />
@@ -404,6 +478,56 @@ const SiteSettings = props => {
             </form>
           </Grid>
         </Grid> */}
+      </Grid>
+
+      <Grid item xs={12} className={classes.section}>
+        <Card>
+          <form onSubmit={handleCustomisationsChanged}>
+            <CardContent>
+              <Typography variant="h6">
+                {SITE_CUSTOMISATIONS_SETTING_HEADER}
+              </Typography>
+              <TextField
+                variant="outlined"
+                label={SITE_CUSTOMISATIONS_SETTING_PRIMARY_COLOR}
+                fullWidth
+                margin="normal"
+                name="themePrimaryColor"
+                value={newCustomisations.themePrimaryColor || ""}
+                onChange={onCustomisationsChanged}
+              />
+              <TextField
+                variant="outlined"
+                label={SITE_CUSTOMISATIONS_SETTING_SECONDARY_COLOR}
+                fullWidth
+                margin="normal"
+                name="themeSecondaryColor"
+                value={newCustomisations.themeSecondaryColor || ""}
+                onChange={onCustomisationsChanged}
+              />
+              <TextField
+                variant="outlined"
+                label={SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD}
+                fullWidth
+                margin="normal"
+                name="codeInjectionHead"
+                value={newCustomisations.codeInjectionHead || ""}
+                onChange={onCustomisationsChanged}
+                multiline
+                rows={10}
+              />
+            </CardContent>
+            <CardActions>
+              <Button
+                type="submit"
+                value="Save"
+                disabled={!areObjectsDifferent(customisations, newCustomisations)}
+              >
+                Save
+              </Button>
+            </CardActions>
+          </form>
+        </Card>
       </Grid>
 
       {mediaManagerVisibility && (

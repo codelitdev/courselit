@@ -44,7 +44,8 @@ exports.responses = {
     "Payment method is not set up. Please contact site admin.",
   not_enrolled: "You are not enrolled in the course",
   currency_iso_not_set:
-    "Currency ISO code is not set. Please contact site admin."
+    "Currency ISO code is not set. Please contact site admin.",
+  payment_method_not_saved: 'A payment method is not set in general settings'
 };
 
 exports.internal = {
