@@ -6,7 +6,7 @@ const User = require("../../src/models/User.js");
 const promisify = require("../util.js").promisify;
 require("../../src/config/db.js");
 
-describe.skip("Payment test suite", () => {
+describe("Payment test suite", () => {
   const user = "uploader@test.com";
   const pass = "lol";
   // let token = ''

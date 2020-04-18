@@ -5,6 +5,10 @@ const logic = require("./logic.js");
 module.exports = {
   getSiteInfo: {
     type: types.siteType,
-    resolve: (root, { x }, context) => logic.getSiteInfo()
+    resolve: () => logic.getSiteInfo()
+  },
+  getSiteInfoAsAdmin: {
+    type: types.siteAdminType,
+    resolve: (root, _, ctx) => logic.getSiteInfoAsAdmin(ctx)
   }
 };
