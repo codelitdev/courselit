@@ -5,8 +5,6 @@ const lessons = require("./lessons");
 const courses = require("./courses");
 const siteinfo = require("./siteinfo");
 const media = require("./media");
-const settings = require("./settings");
-const customisations = require("./customisations");
 
 module.exports = new graphql.GraphQLSchema({
   query: new graphql.GraphQLObjectType({
@@ -16,9 +14,7 @@ module.exports = new graphql.GraphQLSchema({
       ...lessons.queries,
       ...courses.queries,
       ...siteinfo.queries,
-      ...media.queries,
-      ...settings.queries,
-      ...customisations.queries
+      ...media.queries
     }
   }),
   mutation: new graphql.GraphQLObjectType({
@@ -28,9 +24,7 @@ module.exports = new graphql.GraphQLSchema({
       ...lessons.mutations,
       ...courses.mutations,
       ...siteinfo.mutations,
-      ...media.mutations,
-      ...settings.mutations,
-      ...customisations.mutations
+      ...media.mutations
     }
   })
 });
