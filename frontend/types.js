@@ -89,9 +89,3 @@ export const lesson = PropTypes.shape({
   content: PropTypes.string,
   contentURL: PropTypes.string
 });
-
-export const customisations = PropTypes.shape({
-  themePrimaryColor: PropTypes.string,
-  themeSecondaryColor: PropTypes.string,
-  codeInjectionHead: PropTypes.string
-});

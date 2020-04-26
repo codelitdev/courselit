@@ -38,9 +38,10 @@ export const DRAFTJS_ENTITY_TYPE_VIDEO = 'video'
 export const DRAFTJS_ENTITY_TYPE_AUDIO = 'audio'
 
 // Payment methods
-export const PAYMENT_METHOD_STRIPE = 'STRIPE'
-export const PAYMENT_METHOD_PAYPAL = 'PAYPAL'
-export const PAYMENT_METHOD_PAYTM = 'PAYTM'
+export const PAYMENT_METHOD_STRIPE = 'stripe'
+export const PAYMENT_METHOD_PAYPAL = 'paypal'
+export const PAYMENT_METHOD_PAYTM = 'paytm'
+export const PAYMENT_METHOD_NONE = ''
 
 // transaction statuses from backend
 export const TRANSACTION_INITIATED = 'initiated'

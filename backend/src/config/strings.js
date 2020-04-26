@@ -46,7 +46,8 @@ exports.responses = {
   currency_iso_not_set:
     "Currency ISO code is not set. Please contact site admin.",
   payment_method_not_saved:
-    "Set a payment method before setting its corresponding secret key"
+    "Set a payment method before setting its corresponding secret key",
+  invalid_payment_method: "Invalid payment method"
 };
 
 exports.internal = {

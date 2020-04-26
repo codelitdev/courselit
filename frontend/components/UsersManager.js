@@ -101,7 +101,7 @@ const UsersManager = props => {
         <Grid item xs={12} sm={8}>
           <Typography variant="h3">{USERS_MANAGER_PAGE_HEADING}</Typography>
         </Grid>
-        <Grid item xs={12} sm={4}>
+        {/* <Grid item xs={12} sm={4}>
           <form onSubmit={handleSearch}>
             <TextField
               value={searchText}
@@ -113,7 +113,7 @@ const UsersManager = props => {
               onChange={e => setSearchText(e.target.value)}
             />
           </form>
-        </Grid>
+        </Grid> */}
       </Grid>
       <Grid item>
         {users.map(user => (

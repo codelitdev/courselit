@@ -8,7 +8,8 @@ const {
   currencyISOCodes,
   paypal,
   stripe,
-  paytm
+  paytm,
+  none
 } = require("../../config/constants.js");
 const { capitalize } = require("../../lib/utils.js");
 
@@ -58,6 +59,11 @@ exports.updateSiteInfo = async (siteData, ctx) => {
     siteInfo[key] = siteData[key];
   }
 
+  const invalidPaymentMethod = checkForInvalidPaymentMethod(siteInfo);
+  if (invalidPaymentMethod) {
+    throw invalidPaymentMethod
+  }
+  
   const failedPaymentMethod = checkForInvalidPaymentSettings(siteInfo);
   if (failedPaymentMethod) {
     throw getPaymentInvalidException(failedPaymentMethod);
@@ -71,6 +77,16 @@ exports.updateSiteInfo = async (siteData, ctx) => {
 
   return siteInfo;
 };
+
+const checkForInvalidPaymentMethod = siteInfo => {
+  if (!siteInfo.paymentMethod) {
+    return;
+  }
+
+  if (![paypal, stripe, paytm, none].includes(siteInfo.paymentMethod)) {
+    return new Error(responses.invalid_payment_method)
+  }
+}
 
 const checkForInvalidPaymentSettings = siteInfo => {
   if (!siteInfo.paymentMethod) {
