@@ -1,16 +1,5 @@
 const graphql = require("graphql");
 
-const { paypal, stripe, paytm } = require("../../config/constants.js");
-
-const paymentMethodType = new graphql.GraphQLEnumType({
-  name: "PaymentMethod",
-  values: {
-    STRIPE: { value: stripe },
-    PAYPAL: { value: paypal },
-    PAYTM: { value: paytm }
-  }
-});
-
 const siteType = new graphql.GraphQLObjectType({
   name: "SiteInfo",
   fields: {
@@ -21,7 +10,7 @@ const siteType = new graphql.GraphQLObjectType({
     currencyISOCode: { type: graphql.GraphQLString },
     copyrightText: { type: graphql.GraphQLString },
     about: { type: graphql.GraphQLString },
-    paymentMethod: { type: paymentMethodType },
+    paymentMethod: { type: graphql.GraphQLString },
     stripePublishableKey: { type: graphql.GraphQLString },
     themePrimaryColor: { type: graphql.GraphQLString },
     themeSecondaryColor: { type: graphql.GraphQLString },
@@ -39,7 +28,7 @@ const siteAdminType = new graphql.GraphQLObjectType({
     currencyISOCode: { type: graphql.GraphQLString },
     copyrightText: { type: graphql.GraphQLString },
     about: { type: graphql.GraphQLString },
-    paymentMethod: { type: paymentMethodType },
+    paymentMethod: { type: graphql.GraphQLString },
     stripePublishableKey: { type: graphql.GraphQLString },
     themePrimaryColor: { type: graphql.GraphQLString },
     themeSecondaryColor: { type: graphql.GraphQLString },
@@ -60,7 +49,7 @@ const siteUpdateType = new graphql.GraphQLInputObjectType({
     currencyISOCode: { type: graphql.GraphQLString },
     copyrightText: { type: graphql.GraphQLString },
     about: { type: graphql.GraphQLString },
-    paymentMethod: { type: paymentMethodType },
+    paymentMethod: { type: graphql.GraphQLString },
     stripePublishableKey: { type: graphql.GraphQLString },
     themePrimaryColor: { type: graphql.GraphQLString },
     themeSecondaryColor: { type: graphql.GraphQLString },

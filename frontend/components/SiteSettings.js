@@ -4,7 +4,6 @@ import { connect } from "react-redux";
 import { siteInfoProps, authProps } from "../types";
 import MediaManager from "./MediaManager";
 import {
-  makeGraphQLQueryStringFromJSObject,
   getGraphQLQueryFields,
   getObjectContainingOnlyChangedFields,
   areObjectsDifferent,
@@ -14,7 +13,8 @@ import {
   BACKEND,
   PAYMENT_METHOD_PAYPAL,
   PAYMENT_METHOD_PAYTM,
-  PAYMENT_METHOD_STRIPE
+  PAYMENT_METHOD_STRIPE,
+  PAYMENT_METHOD_NONE
 } from "../config/constants.js";
 import { newSiteInfoAvailable, setAppMessage } from "../redux/actions.js";
 import MediaSelector from "./MediaSelector.js";
@@ -69,34 +69,25 @@ const useStyles = makeStyles(theme => ({
 
 const SiteSettings = props => {
   const defaultSettingsState = {
-    title: props.siteinfo.title,
-    subtitle: props.siteinfo.subtitle,
-    logopath: props.siteinfo.logopath,
-    currencyUnit: props.siteinfo.currencyUnit,
-    copyrightText: props.siteinfo.copyrightText,
-    currencyISOCode: props.siteinfo.currencyISOCode,
-    about: props.siteinfo.about,
-    paymentMethod: props.siteinfo.paymentMethod,
-    stripePublishableKey: props.siteinfo.stripePublishableKey
-  }
-  const defaultAdminState = {
-    stripeSecret: "",
-    paypalSecret: "",
-    paytmSecret: ""
-  };
-  const defaultCustomisationsState = {
+    title: '',
+    subtitle: '',
+    logopath: '',
+    currencyUnit: '',
+    copyrightText: '',
+    currencyISOCode: '',
+    about: '',
+    paymentMethod: '',
+    stripePublishableKey: '',
     themePrimaryColor: '',
     themeSecondaryColor: '',
-    codeInjectionHead: ''
+    codeInjectionHead: '',
+    stripeSecret: '',
+    paypalSecret: '',
+    paytmSecret: '',
   }
 
   const [settings, setSettings] = useState(defaultSettingsState);
-
-  const [adminSettings, setAdminSettings] = useState(defaultAdminState);
-  const [newAdminSettings, setNewAdminSettings] = useState(defaultAdminState);
-
-  const [customisations, setCustomisations] = useState(defaultCustomisationsState);
-  const [newCustomisations, setNewCustomisations] = useState(defaultCustomisationsState);
+  const [newSettings, setNewSettings] = useState(defaultSettingsState);
 
   const [mediaManagerVisibility, setMediaManagerVisibility] = useState(false);
   const classes = useStyles();
@@ -107,13 +98,24 @@ const SiteSettings = props => {
 
   useEffect(() => {
     loadAdminSettings();
-    loadCustomisations();
   }, []);
 
   const loadAdminSettings = async () => {
     const query = `
     query {
-      adminSettings: getSettings {
+      settings: getSiteInfoAsAdmin {
+        title,
+        subtitle,
+        logopath,
+        currencyUnit,
+        copyrightText,
+        currencyISOCode,
+        about,
+        paymentMethod,
+        stripePublishableKey,
+        themePrimaryColor,
+        themeSecondaryColor,
+        codeInjectionHead,
         stripeSecret,
         paypalSecret,
         paytmSecret
@@ -122,68 +124,69 @@ const SiteSettings = props => {
     try {
       const fetchRequest = fetch.setPayload(query).build();
       const response = await fetchRequest.exec();
-      if (response.adminSettings) {
-        setAdminSettings(
-          Object.assign({}, adminSettings, response.adminSettings)
-        );
-        setNewAdminSettings(
-          Object.assign({}, newAdminSettings, response.adminSettings)
-        );
+      if (response.settings) {
+        setSettingsState(response.settings);
       }
     } catch (e) {}
   };
 
-  const loadCustomisations = async () => {
-    const query = `
-    query {
-      customisations: getCustomisations {
-        themePrimaryColor,
-        themeSecondaryColor,
-        codeInjectionHead
-      }
-    }`;
-    try {
-      const fetchRequest = fetch.setPayload(query).build();
-      const response = await fetchRequest.exec();
-      if (response.customisations) {
-        setCustomisations(
-          Object.assign({}, customisations, response.customisations)
-        );
-        setNewCustomisations(
-          Object.assign({}, newCustomisations, response.customisations)
-        );
-      }
-    } catch (e) {}
-  };
+  const setSettingsState = settingsResponse => {
+    setSettings(
+      Object.assign({}, settings, settingsResponse)
+    );
+    setNewSettings(
+      Object.assign({}, newSettings, settingsResponse)
+    );
+  }
 
-  const handleGeneralSettingsSubmit = async event => {
+  const handleSettingsSubmit = async event => {
     event.preventDefault();
     const onlyChangedSettings = getObjectContainingOnlyChangedFields(
-      props.siteinfo,
-      settings
+      settings,
+      newSettings
     );
-    const formattedQuery = getGraphQLQueryFields(onlyChangedSettings, [
-      "paymentMethod"
-    ]);
+    const formattedQuery = getGraphQLQueryFields(onlyChangedSettings);
     const query = `
     mutation {
-      site: updateSiteInfo(siteData: ${formattedQuery}) {
+      settings: updateSiteInfo(siteData: ${formattedQuery}) {
         title,
         subtitle,
         logopath,
         currencyUnit,
-        currencyISOCode,
         copyrightText,
+        currencyISOCode,
         about,
         paymentMethod,
-        stripePublishableKey
+        stripePublishableKey,
+        themePrimaryColor,
+        themeSecondaryColor,
+        codeInjectionHead,
+        stripeSecret,
+        paypalSecret,
+        paytmSecret
       }
     }`;
     try {
       const fetchRequest = fetch.setPayload(query).build();
       const response = await fetchRequest.exec();
-      props.dispatch(newSiteInfoAvailable(response.site));
-      props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)));
+      if (response.settings) {
+        setSettingsState(response.settings);
+        props.dispatch(newSiteInfoAvailable({
+          title: settings.title,
+          subtitle: settings.subtitle,
+          logopath: settings.logopath,
+          currencyUnit: settings.currencyUnit,
+          copyrightText: settings.copyrightText,
+          currencyISOCode: settings.currencyISOCode,
+          about: settings.about,
+          paymentMethod: settings.paymentMethod,
+          stripePublishableKey: settings.stripePublishableKey,
+          themePrimaryColor: settings.themePrimaryColor,
+          themeSecondaryColor: settings.themeSecondaryColor,
+          codeInjectionHead: settings.codeInjectionHead,
+        }));
+        props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)));
+      }
     } catch (e) {
       props.dispatch(setAppMessage(new AppMessage(e.message)));
     }
@@ -194,78 +197,78 @@ const SiteSettings = props => {
       typeof e === "string"
         ? { logopath: e }
         : { [e.target.name]: e.target.value };
-    setSettings(Object.assign({}, settings, change));
+    setNewSettings(Object.assign({}, newSettings, change));
   };
 
   const toggleMediaManagerVisibility = () =>
     setMediaManagerVisibility(!mediaManagerVisibility);
 
-  const onAdminSettingsChanged = e => {
-    const change = { [e.target.name]: e.target.value };
-    setNewAdminSettings(Object.assign({}, newAdminSettings, change));
-  };
+  // const onAdminSettingsChanged = e => {
+  //   const change = { [e.target.name]: e.target.value };
+  //   setNewAdminSettings(Object.assign({}, newAdminSettings, change));
+  // };
 
-  const handleAdminSettingsSubmit = async event => {
-    event.preventDefault();
-    const query = `
-    mutation {
-      adminSettings: updateSettings(settingsData: ${
-        makeGraphQLQueryStringFromJSObject(newAdminSettings)
-        // getGraphQLQueryFields(removeEmptyProperties(adminSettings), ['paymentMethod'])
-      }) {
-        stripeSecret,
-        paypalSecret,
-        paytmSecret
-      }
-    }`;
-    try {
-      const fetchRequest = fetch.setPayload(query).build();
-      const response = await fetchRequest.exec();
-      setAdminSettings(
-        Object.assign({}, adminSettings, response.adminSettings)
-      );
-      setNewAdminSettings(
-        Object.assign({}, newAdminSettings, response.adminSettings)
-      );
-      props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)));
-    } catch (e) {
-      console.log(e);
-      props.dispatch(setAppMessage(new AppMessage(e.message)));
-    }
-  };
+  // const handleAdminSettingsSubmit = async event => {
+  //   event.preventDefault();
+  //   const query = `
+  //   mutation {
+  //     adminSettings: updateSettings(settingsData: ${
+  //       makeGraphQLQueryStringFromJSObject(newAdminSettings)
+  //       // getGraphQLQueryFields(removeEmptyProperties(adminSettings), ['paymentMethod'])
+  //     }) {
+  //       stripeSecret,
+  //       paypalSecret,
+  //       paytmSecret
+  //     }
+  //   }`;
+  //   try {
+  //     const fetchRequest = fetch.setPayload(query).build();
+  //     const response = await fetchRequest.exec();
+  //     setAdminSettings(
+  //       Object.assign({}, adminSettings, response.adminSettings)
+  //     );
+  //     setNewAdminSettings(
+  //       Object.assign({}, newAdminSettings, response.adminSettings)
+  //     );
+  //     props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)));
+  //   } catch (e) {
+  //     console.log(e);
+  //     props.dispatch(setAppMessage(new AppMessage(e.message)));
+  //   }
+  // };
 
-  const onCustomisationsChanged = e => {
-    const change = { [e.target.name]: e.target.value };
-    setNewCustomisations(Object.assign({}, newCustomisations, change));
-  }
+  // const onCustomisationsChanged = e => {
+  //   const change = { [e.target.name]: e.target.value };
+  //   setNewCustomisations(Object.assign({}, newCustomisations, change));
+  // }
 
-  const handleCustomisationsChanged = async event => {
-    event.preventDefault();
-    const query = `
-    mutation {
-      customisations: updateCustomisations(customisationsData: ${
-        makeGraphQLQueryStringFromJSObject(newCustomisations)
-        // getGraphQLQueryFields(removeEmptyProperties(adminSettings), ['paymentMethod'])
-      }) {
-        themePrimaryColor,
-        themeSecondaryColor,
-        codeInjectionHead
-      }
-    }`;
-    try {
-      const fetchRequest = fetch.setPayload(query).build();
-      const response = await fetchRequest.exec();
-      setCustomisations(
-        Object.assign({}, customisations, response.customisations)
-      );
-      setNewCustomisations(
-        Object.assign({}, newCustomisations, response.customisations)
-      );
-      props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)));
-    } catch (e) {
-      props.dispatch(setAppMessage(new AppMessage(e.message)));
-    }
-  }
+  // const handleCustomisationsChanged = async event => {
+  //   event.preventDefault();
+  //   const query = `
+  //   mutation {
+  //     customisations: updateCustomisations(customisationsData: ${
+  //       makeGraphQLQueryStringFromJSObject(newCustomisations)
+  //       // getGraphQLQueryFields(removeEmptyProperties(adminSettings), ['paymentMethod'])
+  //     }) {
+  //       themePrimaryColor,
+  //       themeSecondaryColor,
+  //       codeInjectionHead
+  //     }
+  //   }`;
+  //   try {
+  //     const fetchRequest = fetch.setPayload(query).build();
+  //     const response = await fetchRequest.exec();
+  //     setCustomisations(
+  //       Object.assign({}, customisations, response.customisations)
+  //     );
+  //     setNewCustomisations(
+  //       Object.assign({}, newCustomisations, response.customisations)
+  //     );
+  //     props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)));
+  //   } catch (e) {
+  //     props.dispatch(setAppMessage(new AppMessage(e.message)));
+  //   }
+  // }
 
   return (
     <Grid container>
@@ -275,115 +278,203 @@ const SiteSettings = props => {
 
       <Grid item xs={12} className={classes.section}>
         <Card>
-          <form onSubmit={handleGeneralSettingsSubmit}>
+          <form onSubmit={handleSettingsSubmit}>
             <CardContent>
-              <Typography variant="h6">
-                {SITE_SETTINGS_SECTION_GENERAL}
-              </Typography>
-              <TextField
-                variant="outlined"
-                label={SITE_SETTINGS_TITLE}
-                fullWidth
-                margin="normal"
-                name="title"
-                value={settings.title || ""}
-                onChange={onChangeData}
-              />
-              <TextField
-                variant="outlined"
-                label={SITE_SETTINGS_SUBTITLE}
-                fullWidth
-                margin="normal"
-                name="subtitle"
-                value={settings.subtitle || ""}
-                onChange={onChangeData}
-              />
-              <TextField
-                variant="outlined"
-                label={SITE_SETTINGS_CURRENCY_UNIT}
-                fullWidth
-                margin="normal"
-                name="currencyUnit"
-                value={settings.currencyUnit || ""}
-                onChange={onChangeData}
-              />
-              <TextField
-                variant="outlined"
-                label={SITE_SETTINGS_CURRENCY_ISO_CODE_TEXT}
-                fullWidth
-                margin="normal"
-                name="currencyISOCode"
-                value={settings.currencyISOCode || ""}
-                onChange={onChangeData}
-                maxLength={3}
-              />
-              <TextField
-                variant="outlined"
-                label={SITE_SETTINGS_COPYRIGHT_TEXT}
-                fullWidth
-                margin="normal"
-                name="copyrightText"
-                value={settings.copyrightText || ""}
-                onChange={onChangeData}
-              />
-              <TextField
-                variant="outlined"
-                label={SITE_SETTINGS_ABOUT_TEXT}
-                fullWidth
-                margin="normal"
-                name="about"
-                value={settings.about || ""}
-                onChange={onChangeData}
-              />
-              <FormControl variant="outlined" className={classes.formControl}>
-                <InputLabel htmlFor="outlined-paymentmethod-simple">
-                  {SITE_ADMIN_SETTINGS_PAYMENT_METHOD}
-                </InputLabel>
-                <Select
-                  autoWidth
-                  value={settings.paymentMethod}
-                  onChange={onChangeData}
-                  inputProps={{
-                    name: "paymentMethod",
-                    id: "outlined-paymentmethod-simple"
-                  }}
-                >
-                  <MenuItem value={PAYMENT_METHOD_STRIPE}>
-                    {capitalize(PAYMENT_METHOD_STRIPE.toLowerCase())}
-                  </MenuItem>
-                  <MenuItem value={PAYMENT_METHOD_PAYPAL} disabled={true}>
-                    {capitalize(PAYMENT_METHOD_PAYPAL.toLowerCase())}
-                  </MenuItem>
-                  <MenuItem value={PAYMENT_METHOD_PAYTM} disabled={true}>
-                    {capitalize(PAYMENT_METHOD_PAYTM.toLowerCase())}
-                  </MenuItem>
-                </Select>
-              </FormControl>
-              {settings.paymentMethod === PAYMENT_METHOD_STRIPE && (
+              <div className={classes.section}>
+                <Typography variant="h6">
+                  {SITE_SETTINGS_SECTION_GENERAL}
+                </Typography>
                 <TextField
                   variant="outlined"
-                  label={SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT}
+                  label={SITE_SETTINGS_TITLE}
                   fullWidth
                   margin="normal"
-                  name="stripePublishableKey"
-                  value={settings.stripePublishableKey || ""}
+                  name="title"
+                  value={newSettings.title || ""}
+                  onChange={onChangeData}
+                  required
+                />
+                <TextField
+                  variant="outlined"
+                  label={SITE_SETTINGS_SUBTITLE}
+                  fullWidth
+                  margin="normal"
+                  name="subtitle"
+                  value={newSettings.subtitle || ""}
+                  onChange={onChangeData}
+                  required
+                />
+                <TextField
+                  variant="outlined"
+                  label={SITE_SETTINGS_COPYRIGHT_TEXT}
+                  fullWidth
+                  margin="normal"
+                  name="copyrightText"
+                  value={newSettings.copyrightText || ""}
                   onChange={onChangeData}
                 />
-              )}
-              <MediaSelector
-                title={SITE_SETTINGS_LOGO}
-                src={settings.logopath || props.siteinfo.logopath}
-                onSelection={onChangeData}
-              />
+                <TextField
+                  variant="outlined"
+                  label={SITE_SETTINGS_ABOUT_TEXT}
+                  fullWidth
+                  margin="normal"
+                  name="about"
+                  value={newSettings.about || ""}
+                  onChange={onChangeData}
+                />
+                <MediaSelector
+                  title={SITE_SETTINGS_LOGO}
+                  src={newSettings.logopath || props.siteinfo.logopath}
+                  onSelection={onChangeData}
+                />
+              </div>
+              <div className={classes.section}>
+                <Typography variant="h6">
+                  {SITE_SETTINGS_SECTION_PAYMENT}
+                </Typography>
+                <TextField
+                  variant="outlined"
+                  label={SITE_SETTINGS_CURRENCY_UNIT}
+                  fullWidth
+                  margin="normal"
+                  name="currencyUnit"
+                  value={newSettings.currencyUnit || ""}
+                  onChange={onChangeData}
+                />
+                <TextField
+                  variant="outlined"
+                  label={SITE_SETTINGS_CURRENCY_ISO_CODE_TEXT}
+                  fullWidth
+                  margin="normal"
+                  name="currencyISOCode"
+                  value={newSettings.currencyISOCode || ""}
+                  onChange={onChangeData}
+                  maxLength={3}
+                />
+                <FormControl variant="outlined" className={classes.formControl}>
+                  <InputLabel htmlFor="outlined-paymentmethod-simple">
+                    {SITE_ADMIN_SETTINGS_PAYMENT_METHOD}
+                  </InputLabel>
+                  <Select
+                    autoWidth
+                    value={newSettings.paymentMethod}
+                    onChange={onChangeData}
+                    inputProps={{
+                      name: "paymentMethod",
+                      id: "outlined-paymentmethod-simple"
+                    }}
+                  >
+                    <MenuItem value={PAYMENT_METHOD_NONE}>
+                      &nbsp;
+                    </MenuItem>
+                    <MenuItem value={PAYMENT_METHOD_STRIPE}>
+                      {capitalize(PAYMENT_METHOD_STRIPE.toLowerCase())}
+                    </MenuItem>
+                    {/* <MenuItem value={PAYMENT_METHOD_PAYPAL} disabled={true}>
+                      {capitalize(PAYMENT_METHOD_PAYPAL.toLowerCase())}
+                    </MenuItem> */}
+                    {/* <MenuItem value={PAYMENT_METHOD_PAYTM} disabled={true}>
+                      {capitalize(PAYMENT_METHOD_PAYTM.toLowerCase())}
+                    </MenuItem> */}
+                  </Select>
+                </FormControl>
+                {newSettings.paymentMethod === PAYMENT_METHOD_STRIPE && (
+                  <>
+                    <TextField
+                      variant="outlined"
+                      label={SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT}
+                      fullWidth
+                      margin="normal"
+                      name="stripePublishableKey"
+                      value={newSettings.stripePublishableKey || ""}
+                      onChange={onChangeData}
+                    />
+                    <TextField
+                      variant="outlined"
+                      label={SITE_ADMIN_SETTINGS_STRIPE_SECRET}
+                      fullWidth
+                      margin="normal"
+                      name="stripeSecret"
+                      type="password"
+                      value={newSettings.stripeSecret || ""}
+                      onChange={onChangeData}
+                    />
+                  </>
+                )}
+                {newSettings.paymentMethod === PAYMENT_METHOD_PAYPAL && (
+                  <>
+                    <TextField
+                      variant="outlined"
+                      label={SITE_ADMIN_SETTINGS_PAYPAL_SECRET}
+                      fullWidth
+                      margin="normal"
+                      name="paypalSecret"
+                      type="password"
+                      value={newSettings.paypalSecret || ""}
+                      onChange={onChangeData}
+                      disabled={true}
+                    />
+                  </>
+                )}
+                {newSettings.paymentMethod === PAYMENT_METHOD_PAYTM && (
+                  <>
+                    <TextField
+                      variant="outlined"
+                      label={SITE_ADMIN_SETTINGS_PAYTM_SECRET}
+                      fullWidth
+                      margin="normal"
+                      name="paytmSecret"
+                      type="password"
+                      value={newSettings.paytmSecret || ""}
+                      onChange={onChangeData}
+                      disabled={true}
+                    />
+                  </>
+                )}
+              </div>
+              <div className={classes.section}>
+                <Typography variant="h6">
+                  {SITE_CUSTOMISATIONS_SETTING_HEADER}
+                </Typography>
+                <TextField
+                  variant="outlined"
+                  label={SITE_CUSTOMISATIONS_SETTING_PRIMARY_COLOR}
+                  fullWidth
+                  margin="normal"
+                  name="themePrimaryColor"
+                  value={newSettings.themePrimaryColor || ""}
+                  onChange={onChangeData}
+                />
+                <TextField
+                  variant="outlined"
+                  label={SITE_CUSTOMISATIONS_SETTING_SECONDARY_COLOR}
+                  fullWidth
+                  margin="normal"
+                  name="themeSecondaryColor"
+                  value={newSettings.themeSecondaryColor || ""}
+                  onChange={onChangeData}
+                />
+                <TextField
+                  variant="outlined"
+                  label={SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD}
+                  fullWidth
+                  margin="normal"
+                  name="codeInjectionHead"
+                  value={newSettings.codeInjectionHead || ""}
+                  onChange={onChangeData}
+                  multiline
+                  rows={10}
+                />
+              </div>
             </CardContent>
             <CardActions>
               <Button
                 type="submit"
                 value="Save"
                 disabled={
-                  !areObjectsDifferent(props.siteinfo, settings) ||
-                  !settings.title ||
-                  !settings.subtitle
+                  !areObjectsDifferent(settings, newSettings) ||
+                  !newSettings.title ||
+                  !newSettings.subtitle
                 }
               >
                 Save
@@ -414,7 +505,7 @@ const SiteSettings = props => {
         </Grid> */}
       </Grid>
 
-      <Grid item xs={12} className={classes.section}>
+      {/* <Grid item xs={12} className={classes.section}>
         <Card>
           <form onSubmit={handleAdminSettingsSubmit}>
             <CardContent>
@@ -466,7 +557,7 @@ const SiteSettings = props => {
           </form>
         </Card>
 
-        {/* <Grid container direction='column'>
+        <Grid container direction='column'>
           <Grid item>
             <Typography variant='h5'>
               {SITE_SETTINGS_SECTION_PAYMENT}
@@ -477,7 +568,7 @@ const SiteSettings = props => {
 
             </form>
           </Grid>
-        </Grid> */}
+        </Grid>
       </Grid>
 
       <Grid item xs={12} className={classes.section}>
@@ -528,7 +619,7 @@ const SiteSettings = props => {
             </CardActions>
           </form>
         </Card>
-      </Grid>
+      </Grid> */}
 
       {mediaManagerVisibility && (
         <MediaManager

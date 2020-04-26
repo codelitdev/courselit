@@ -1,5 +1,5 @@
 import React from "react";
-import { customisations } from "../types";
+import PropTypes from 'prop-types';
 import { connect } from "react-redux";
 
 class CodeInjector extends React.Component {
@@ -12,7 +12,7 @@ class CodeInjector extends React.Component {
 
   injectCodeIn(targetHTMLTag) {
     const tempContainer = document.createElement("div");
-    tempContainer.innerHTML = this.props.customisations.codeInjectionHead;
+    tempContainer.innerHTML = this.props.codeForHead;
     const children = tempContainer.children;
     for (let i = 0; i < children.length; i++) {
       console.log(i, children[i]);
@@ -40,10 +40,12 @@ class CodeInjector extends React.Component {
   }
 }
 
-CodeInjector.propTypes = customisations;
+CodeInjector.propTypes = {
+  codeForHead: PropTypes.string
+}
 
 const mapStateToProps = state => ({
-  customisations: state.customisations
+  codeForHead: state.siteinfo.codeInjectionHead
 });
 
 export default connect(mapStateToProps)(CodeInjector);

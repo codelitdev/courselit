@@ -46,9 +46,8 @@ module.exports = {
   // Payment methods
   paypal: "paypal",
   stripe: "stripe",
-  unpaid: "unpaid",
   paytm: "paytm",
-  other: "other",
+  none: "",
 
   // acceptable currency codes for payments
   currencyISOCodes: [

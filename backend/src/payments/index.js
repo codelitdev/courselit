@@ -1,4 +1,4 @@
-const { paypal, stripe, unpaid, paytm } = require("../config/constants.js");
+const { paypal, stripe, paytm } = require("../config/constants.js");
 const {
   error_unrecognised_payment_method: unrecognisedPaymentMethod,
   error_payment_method_not_implemented: notYetSupported
@@ -12,8 +12,6 @@ exports.getPaymentMethod = async methodName => {
     case stripe:
       return new StripePayment().setup();
     case paytm:
-      throw new Error(notYetSupported);
-    case unpaid:
       throw new Error(notYetSupported);
     default:
       throw new Error(unrecognisedPaymentMethod);
