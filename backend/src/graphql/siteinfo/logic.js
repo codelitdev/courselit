@@ -61,9 +61,9 @@ exports.updateSiteInfo = async (siteData, ctx) => {
 
   const invalidPaymentMethod = checkForInvalidPaymentMethod(siteInfo);
   if (invalidPaymentMethod) {
-    throw invalidPaymentMethod
+    throw invalidPaymentMethod;
   }
-  
+
   const failedPaymentMethod = checkForInvalidPaymentSettings(siteInfo);
   if (failedPaymentMethod) {
     throw getPaymentInvalidException(failedPaymentMethod);
@@ -84,9 +84,9 @@ const checkForInvalidPaymentMethod = siteInfo => {
   }
 
   if (![paypal, stripe, paytm, none].includes(siteInfo.paymentMethod)) {
-    return new Error(responses.invalid_payment_method)
+    return new Error(responses.invalid_payment_method);
   }
-}
+};
 
 const checkForInvalidPaymentSettings = siteInfo => {
   if (!siteInfo.paymentMethod) {

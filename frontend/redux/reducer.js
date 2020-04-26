@@ -170,5 +170,5 @@ export default combineReducers({
   siteinfo: siteinfoReducer,
   networkAction: networkActionReducer,
   profile: profileReducer,
-  message: messageReducer,
+  message: messageReducer
 });
