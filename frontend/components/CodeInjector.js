@@ -1,5 +1,5 @@
 import React from "react";
-import PropTypes from 'prop-types';
+import PropTypes from "prop-types";
 import { connect } from "react-redux";
 
 class CodeInjector extends React.Component {
@@ -42,7 +42,7 @@ class CodeInjector extends React.Component {
 
 CodeInjector.propTypes = {
   codeForHead: PropTypes.string
-}
+};
 
 const mapStateToProps = state => ({
   codeForHead: state.siteinfo.codeInjectionHead

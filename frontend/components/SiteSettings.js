@@ -50,8 +50,8 @@ import {
   SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT,
   APP_MESSAGE_SETTINGS_SAVED,
   SITE_CUSTOMISATIONS_SETTING_HEADER,
-  SITE_CUSTOMISATIONS_SETTING_PRIMARY_COLOR,
-  SITE_CUSTOMISATIONS_SETTING_SECONDARY_COLOR,
+  // SITE_CUSTOMISATIONS_SETTING_PRIMARY_COLOR,
+  // SITE_CUSTOMISATIONS_SETTING_SECONDARY_COLOR,
   SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD
 } from "../config/strings.js";
 import AppMessage from "../models/app-message.js";
@@ -69,22 +69,22 @@ const useStyles = makeStyles(theme => ({
 
 const SiteSettings = props => {
   const defaultSettingsState = {
-    title: '',
-    subtitle: '',
-    logopath: '',
-    currencyUnit: '',
-    copyrightText: '',
-    currencyISOCode: '',
-    about: '',
-    paymentMethod: '',
-    stripePublishableKey: '',
-    themePrimaryColor: '',
-    themeSecondaryColor: '',
-    codeInjectionHead: '',
-    stripeSecret: '',
-    paypalSecret: '',
-    paytmSecret: '',
-  }
+    title: "",
+    subtitle: "",
+    logopath: "",
+    currencyUnit: "",
+    copyrightText: "",
+    currencyISOCode: "",
+    about: "",
+    paymentMethod: "",
+    stripePublishableKey: "",
+    themePrimaryColor: "",
+    themeSecondaryColor: "",
+    codeInjectionHead: "",
+    stripeSecret: "",
+    paypalSecret: "",
+    paytmSecret: ""
+  };
 
   const [settings, setSettings] = useState(defaultSettingsState);
   const [newSettings, setNewSettings] = useState(defaultSettingsState);
@@ -131,13 +131,9 @@ const SiteSettings = props => {
   };
 
   const setSettingsState = settingsResponse => {
-    setSettings(
-      Object.assign({}, settings, settingsResponse)
-    );
-    setNewSettings(
-      Object.assign({}, newSettings, settingsResponse)
-    );
-  }
+    setSettings(Object.assign({}, settings, settingsResponse));
+    setNewSettings(Object.assign({}, newSettings, settingsResponse));
+  };
 
   const handleSettingsSubmit = async event => {
     event.preventDefault();
@@ -171,21 +167,25 @@ const SiteSettings = props => {
       const response = await fetchRequest.exec();
       if (response.settings) {
         setSettingsState(response.settings);
-        props.dispatch(newSiteInfoAvailable({
-          title: settings.title,
-          subtitle: settings.subtitle,
-          logopath: settings.logopath,
-          currencyUnit: settings.currencyUnit,
-          copyrightText: settings.copyrightText,
-          currencyISOCode: settings.currencyISOCode,
-          about: settings.about,
-          paymentMethod: settings.paymentMethod,
-          stripePublishableKey: settings.stripePublishableKey,
-          themePrimaryColor: settings.themePrimaryColor,
-          themeSecondaryColor: settings.themeSecondaryColor,
-          codeInjectionHead: settings.codeInjectionHead,
-        }));
-        props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)));
+        props.dispatch(
+          newSiteInfoAvailable({
+            title: settings.title,
+            subtitle: settings.subtitle,
+            logopath: settings.logopath,
+            currencyUnit: settings.currencyUnit,
+            copyrightText: settings.copyrightText,
+            currencyISOCode: settings.currencyISOCode,
+            about: settings.about,
+            paymentMethod: settings.paymentMethod,
+            stripePublishableKey: settings.stripePublishableKey,
+            themePrimaryColor: settings.themePrimaryColor,
+            themeSecondaryColor: settings.themeSecondaryColor,
+            codeInjectionHead: settings.codeInjectionHead
+          })
+        );
+        props.dispatch(
+          setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED))
+        );
       }
     } catch (e) {
       props.dispatch(setAppMessage(new AppMessage(e.message)));
@@ -364,9 +364,7 @@ const SiteSettings = props => {
                       id: "outlined-paymentmethod-simple"
                     }}
                   >
-                    <MenuItem value={PAYMENT_METHOD_NONE}>
-                      &nbsp;
-                    </MenuItem>
+                    <MenuItem value={PAYMENT_METHOD_NONE}>&nbsp;</MenuItem>
                     <MenuItem value={PAYMENT_METHOD_STRIPE}>
                       {capitalize(PAYMENT_METHOD_STRIPE.toLowerCase())}
                     </MenuItem>
@@ -436,7 +434,7 @@ const SiteSettings = props => {
                 <Typography variant="h6">
                   {SITE_CUSTOMISATIONS_SETTING_HEADER}
                 </Typography>
-                <TextField
+                {/* <TextField
                   variant="outlined"
                   label={SITE_CUSTOMISATIONS_SETTING_PRIMARY_COLOR}
                   fullWidth
@@ -453,7 +451,7 @@ const SiteSettings = props => {
                   name="themeSecondaryColor"
                   value={newSettings.themeSecondaryColor || ""}
                   onChange={onChangeData}
-                />
+                /> */}
                 <TextField
                   variant="outlined"
                   label={SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD}

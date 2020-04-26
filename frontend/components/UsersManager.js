@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Grid, Typography, TextField, Button } from "@material-ui/core";
+import { Grid, Typography, Button } from "@material-ui/core";
 import {
   USERS_MANAGER_PAGE_HEADING,
   LOAD_MORE_TEXT
@@ -8,7 +8,7 @@ import UserDetails from "./UserDetails.js";
 import { useExecuteGraphQLQuery } from "./CustomHooks.js";
 
 const UsersManager = props => {
-  const [usersSummary, setUsersSummary] = useState({
+  const [, setUsersSummary] = useState({
     count: 0,
     verified: 0,
     admins: 0,
@@ -16,7 +16,7 @@ const UsersManager = props => {
   });
   const [usersPaginationOffset, setUsersPaginationOffset] = useState(1);
   const [users, setUsers] = useState([]);
-  const [searchText, setSearchText] = useState("");
+  // const [searchText, setSearchText] = useState("");
   const executeGQLCall = useExecuteGraphQLQuery();
 
   useEffect(() => {
@@ -82,9 +82,9 @@ const UsersManager = props => {
     }
   };
 
-  const handleSearch = event => {
-    event.preventDefault();
-  };
+  // const handleSearch = event => {
+  //   event.preventDefault();
+  // };
 
   const onLoadMoreClick = () =>
     setUsersPaginationOffset(usersPaginationOffset + 1);
