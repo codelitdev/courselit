@@ -8,9 +8,10 @@ const passport = require("passport");
 const graphqlHTTP = require("express-graphql");
 const cors = require("cors");
 const fileUpload = require("express-fileupload");
-require("./middlewares/passport.js")(passport);
-require("./config/db.js");
 const optionalAuthMiddlewareCreator = require("./middlewares/optionalAuth.js");
+require("./middlewares/passport.js")(passport);
+require("./config/db.js")();
+const { routePrefix } = require("./config/constants.js");
 
 const app = express();
 
@@ -22,8 +23,6 @@ app.use(bodyParser.json());
 app.use(fileUpload());
 
 // Routes
-const routePrefix =
-  process.env.NODE_ENV === "production" ? process.env.API_PREFIX : "";
 app.use(`${routePrefix}/auth`, require("./routes/auth.js")(passport));
 app.use(
   `${routePrefix}/graph`,
