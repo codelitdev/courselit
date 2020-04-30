@@ -8,6 +8,10 @@ module.exports = {
   dbConnectionString:
     process.env.DB_CONNECTION_STRING ||
     `mongodb://localhost/${process.env.NODE_ENV === "test" ? "test" : "app"}`,
+
+  routePrefix: process.env.NODE_ENV === "production" ? (process.env.API_PREFIX || "/api"): "",
+
+  // password related config
   saltRounds: 10, // for bcrypting the plain text passwords
   jwtSecret: process.env.JWT_SECRET || "ultrasecurekey",
   jwtExpire: process.env.JWT_EXPIRES_IN || "1d",

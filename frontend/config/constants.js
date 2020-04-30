@@ -6,10 +6,11 @@ const { publicRuntimeConfig } = getConfig()
 
 const LOCAL_BACKEND = 'http://localhost:8000'
 const LOCAL_FRONTEND = 'http://localhost:3000'
+const API_PREFIX = publicRuntimeConfig.apiPrefix || '/api'
 
 const resolveProductionBackend = () => process.env.BACKEND
-  ? `http://backend:8000${publicRuntimeConfig.apiPrefix}` // Server-side API path (SSR)
-  : publicRuntimeConfig.apiPrefix // Client-side API path
+  ? `http://backend:8000${API_PREFIX}` // Server-side API path (SSR)
+  :  API_PREFIX // Client-side API path
 export const BACKEND = process.env.NODE_ENV === 'production' 
   ? resolveProductionBackend() : LOCAL_BACKEND
 export const FRONTEND = publicRuntimeConfig.mainUrl || LOCAL_FRONTEND
