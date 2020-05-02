@@ -1,4 +1,4 @@
-[License](https://badgen.net/github/license/codelit/courselit)]
+[![License](https://badgen.net/github/license/codelit/courselit)](https://github.com/codelit/courselit/blob/deployment/LICENSE)
 [![Build Status](https://badgen.net/github/status/codelit/courselit)](https://github.com/codelit/courselit/actions)
 
 
