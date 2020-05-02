@@ -1,3 +1,5 @@
+[![Build Status](https://badgen.net/github/status/codelit/courselit)](https://github.com/codelit/courselit/actions)
+
 # Introduction
 CourseLit is a decoupled content management system (CMS) for teachers and course creators.
 

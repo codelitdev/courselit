@@ -12,17 +12,7 @@ services:
       - ${MOUNT_MONGO_VOLUME_AS}:/data/db
     command: --quiet
     container_name: db
-  frontend:
-    image: codelit/courselit-frontend:latest
-    environment:
-      - MAIN_URL=${MAIN_URL}
-      - BACKEND=${MAIN_URL}${API_PREFIX}
-      - API_PREFIX=${API_PREFIX}
-    expose:
-      - "3000"
-    depends_on:
-      - backend
-    container_name: frontend
+  
   backend:
     image: codelit/courselit-backend:latest
     environment:
@@ -39,6 +29,19 @@ services:
     depends_on:
       - db
     container_name: backend
+
+  frontend:
+    image: codelit/courselit-frontend:latest
+    environment:
+      - MAIN_URL=${MAIN_URL}
+      - BACKEND=${MAIN_URL}${API_PREFIX}
+      - API_PREFIX=${API_PREFIX}
+    expose:
+      - "3000"
+    depends_on:
+      - backend
+    container_name: frontend
+
   proxy:
     image: codelit/courselit-proxy:latest
     environment:
