@@ -20,13 +20,13 @@ This will make the server available at `/<API_PREFIX>` path. Defaults to `/api`.
 
 **DB_CONNECTION_STRING**
 
-The connection string to a remote mongodb instance. Defaults to `mongodb://localhost/app`
+The connection string to a remote mongodb instance. Defaults to `mongodb://localhost/app`.
 
 **JWT_SECRET**
 
-A random string to use as a secret to sign the JWT tokens the backend generate. Default to nothing.
+A random string to use as a secret to sign the JWT tokens the API generates. Required parameter. No default value.
 
 **JWT_EXPIRES_IN**
 
-The duration after while the generated JWT expires. For more information [check out here](https://www.npmjs.com/package/jsonwebtoken). Defaults to `1d`.
+The duration after while the generated JWT expires. For more information [check out here](https://www.npmjs.com/package/jsonwebtoken). Optional parameter. Defaults to `1d`.
 
