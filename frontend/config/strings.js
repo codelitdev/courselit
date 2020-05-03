@@ -33,7 +33,6 @@ export const GENERIC_CODE_INJECTION_HEAD = ''
 // UI texts
 export const BTN_LOAD_MORE = 'Load More'
 export const MEDIA_UPLOAD_BUTTON_TEXT = 'Upload'
-export const ERR_MEDIA_UPLOAD_TITLE_TEXT = 'A title and a file are required'
 export const MEDIA_ADD_NEW_BUTTON_TEXT = 'Add new'
 export const BUTTON_CANCEL_TEXT = 'Cancel'
 export const MEDIA_SEARCH_INPUT_PLACEHOLDER = 'Search your media'
