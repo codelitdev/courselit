@@ -6,10 +6,10 @@ services:
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME?'MONGO_ROOT_USERNAME environment variable is not defined'}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD?'MONGO_ROOT_PASSWORD environment variable is not defined'}
     volumes:
-      - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable not defined'}/mongo/data/db:/data/db
+      - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}/mongo/data/db:/data/db
     command: --quiet
     container_name: db
   
@@ -17,11 +17,11 @@ services:
     image: codelit/courselit-backend:latest
     environment:
       - API_PREFIX=${API_PREFIX}
-      - DB_CONNECTION_STRING=${DB_CONNECTION_STRING}
-      - JWT_SECRET=${JWT_SECRET}
+      - DB_CONNECTION_STRING=${DB_CONNECTION_STRING?'DB_CONNECTION_STRING environment variable is is not defined'}
+      - JWT_SECRET=${JWT_SECRET?'JWT_SECRET environment variable is not defined'}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
     volumes:
-      - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable not defined'}:/data
+      - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}:/data
     expose:
       - "8000"
     depends_on:
@@ -31,7 +31,7 @@ services:
   frontend:
     image: codelit/courselit-frontend:latest
     environment:
-      - SITE_URL=${SITE_URL}
+      - SITE_URL=${SITE_URL?'SITE_URL environment variable is not defined'}
       - API_PREFIX=${API_PREFIX}
       - SSR_SITE_URL=http://backend:8000
     expose:

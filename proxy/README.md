@@ -18,4 +18,4 @@ where `directory_containing_letsencrypt_certificate` is the directory on your ho
 
 **DOMAIN**
 
-The site address, to spot the letsencrypt certificate.
+The domain name for which the ssl certificate is issued.
