@@ -53,5 +53,7 @@ exports.responses = {
 exports.internal = {
   error_unrecognised_payment_method: "Unrecognized payment method",
   error_payment_method_not_implemented: "Not yet implemented",
-  error_db_connection_failed: 'Unable to establish a connection to the database. Exiting...'
+  error_db_connection_failed:
+    "Unable to establish a connection to the database.",
+  error_env_var_undefined: "A required environment variable is not defined"
 };

@@ -15,7 +15,8 @@ module.exports = async () => {
       serverSelectionTimeoutMS: 5000
     });
   } catch (err) {
-    console.log(internalResponses.error_db_connection_failed, err);
+    console.error(internalResponses.error_db_connection_failed);
+    console.error(`Additional info: ${err.message}`);
     process.exit(1);
   }
-}
+};

@@ -9,7 +9,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
     volumes:
-      - ${MOUNT_MONGO_VOLUME_AS}:/data/db
+      - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable not defined'}/mongo/data/db:/data/db
     command: --quiet
     container_name: db
   
@@ -17,13 +17,11 @@ services:
     image: codelit/courselit-backend:latest
     environment:
       - API_PREFIX=${API_PREFIX}
-      - MEDIA_FOLDER=/
-      - DB_CONNECTION_STRING=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@db
+      - DB_CONNECTION_STRING=${DB_CONNECTION_STRING}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
     volumes:
-      - ${MOUNT_UPLOAD_FOLDER_VOLUME_AS}:/uploads
-      - ${MOUNT_THUMBNAIL_FOLDER_VOLUME_AS}:/thumbs
+      - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable not defined'}:/data
     expose:
       - "8000"
     depends_on:
@@ -33,9 +31,9 @@ services:
   frontend:
     image: codelit/courselit-frontend:latest
     environment:
-      - MAIN_URL=${MAIN_URL}
-      - BACKEND=${MAIN_URL}${API_PREFIX}
+      - SITE_URL=${SITE_URL}
       - API_PREFIX=${API_PREFIX}
+      - SSR_SITE_URL=http://backend:8000
     expose:
       - "3000"
     depends_on:
