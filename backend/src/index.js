@@ -1,44 +1,29 @@
-/**
- * The application server for the entire API.
- */
+"use strict";
 
-const express = require("express");
-const bodyParser = require("body-parser");
-const passport = require("passport");
-const graphqlHTTP = require("express-graphql");
-const cors = require("cors");
-const fileUpload = require("express-fileupload");
-require("./middlewares/passport.js")(passport);
-require("./config/db.js");
-const optionalAuthMiddlewareCreator = require("./middlewares/optionalAuth.js");
+const internalResponse = require("./config/strings.js").internal;
+const { uploadFolder, thumbnailsFolder } = require("./config/constants.js");
+const fs = require("fs");
 
-const app = express();
+const checkForNecessaryEnvironmentVars = () => {
+  for (const field of ["JWT_SECRET"]) {
+    if (!process.env[field]) {
+      console.error(`${internalResponse.error_env_var_undefined}: ${field}`);
+      process.exit(1);
+    }
+  }
+};
 
-// Middlewares
-app.use(cors({ origin: "http://localhost:3000" })); // for next.js development server
-app.use(passport.initialize());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.use(fileUpload());
+const createFoldersForUserData = () => {
+  if (!fs.existsSync(uploadFolder)) {
+    fs.mkdirSync(uploadFolder, { recursive: true });
+  }
+  if (!fs.existsSync(thumbnailsFolder)) {
+    fs.mkdirSync(thumbnailsFolder, { recursive: true });
+  }
+};
 
-// Routes
-const routePrefix =
-  process.env.NODE_ENV === "production" ? process.env.API_PREFIX : "";
-app.use(`${routePrefix}/auth`, require("./routes/auth.js")(passport));
-app.use(
-  `${routePrefix}/graph`,
-  optionalAuthMiddlewareCreator(passport),
-  graphqlHTTP(req => ({
-    schema: require("./graphql/schema.js"),
-    graphiql: true,
-    context: { user: req.user }
-  }))
-);
-app.use(
-  `${routePrefix}/media`,
-  // passport.authenticate('jwt', { session: false }),
-  require("./routes/media.js")(passport)
-);
-app.use(`${routePrefix}/payment`, require("./routes/payment.js")(passport));
+checkForNecessaryEnvironmentVars();
+createFoldersForUserData();
 
+const app = require("./app.js");
 app.listen(process.env.PORT || 80);

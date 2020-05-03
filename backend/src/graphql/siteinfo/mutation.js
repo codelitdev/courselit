@@ -4,7 +4,7 @@ const logic = require("./logic.js");
 
 module.exports = {
   updateSiteInfo: {
-    type: types.siteType,
+    type: types.siteAdminType,
     args: {
       siteData: {
         type: new graphql.GraphQLNonNull(types.siteUpdateType)

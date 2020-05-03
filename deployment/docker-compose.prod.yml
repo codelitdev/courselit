@@ -7,5 +7,5 @@ services:
     ports:
       - "443:443"
     volumes:
-      - /etc/letsencrypt:/etc/letsencrypt
+      - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable not defined'}/sslcert:/etc/letsencrypt
 

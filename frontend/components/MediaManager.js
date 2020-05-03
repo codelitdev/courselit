@@ -4,7 +4,6 @@ import fetch from "isomorphic-unfetch";
 import PropTypes from "prop-types";
 import {
   MEDIA_UPLOAD_BUTTON_TEXT,
-  ERR_MEDIA_UPLOAD_TITLE_TEXT,
   MEDIA_MANAGER_PAGE_HEADING,
   MEDIA_MANAGER_DIALOG_TITLE,
   BUTTON_ADD_FILE,
@@ -54,11 +53,9 @@ const MediaManager = props => {
       typeof props.mediaAdditionAllowed !== "undefined"
         ? props.mediaAdditionAllowed
         : true,
-    userError: "",
     selectedMedia: null
   };
   const [uploadData, setUploadData] = useState(defaults.uploadData);
-  const [userError, setUserError] = useState(defaults.userError);
   // const [selectedMedia] = useState(defaults.selectedMedia)
   const fileInput = createRef();
   const classes = useStyles();
@@ -73,15 +70,6 @@ const MediaManager = props => {
 
   const onUpload = async e => {
     e.preventDefault();
-
-    // clear errors from previous submissions
-    setUserError("");
-
-    // validate data
-    if (!uploadData.title || fileInput.current.files.length === 0) {
-      setUserError(ERR_MEDIA_UPLOAD_TITLE_TEXT);
-      return;
-    }
 
     const fD = new window.FormData();
     fD.append("title", uploadData.title);
@@ -106,27 +94,16 @@ const MediaManager = props => {
 
       if (res.media) {
         setUploadData(defaults.uploadData);
-        // setUserMedia([res.media, ...userMedia])
         props.dispatch(setAppMessage(new AppMessage(FILE_UPLOAD_SUCCESS)));
         setUploadFormVisible(false);
+      } else {
+        props.dispatch(setAppMessage(new AppMessage(res.message)));
       }
     } catch (err) {
-      setUserError(err.message);
+      console.log(err);
+      props.dispatch(setAppMessage(new AppMessage(e.message)));
     }
   };
-
-  // const toggleUploadFormVisibility = () =>
-  //   setUploadFormVisibility(!uploadFormVisibility)
-
-  // const cancelMediaUpload = () => {
-  //   setUploadData(defaults.uploadData)
-  //   toggleUploadFormVisibility()
-  // }
-
-  // const onMediaSelected = () => {
-  //   props.onMediaSelected(userMedia[selectedMedia])
-  //   // onClose()
-  // }
 
   const showUploadForm = () => {
     setUploadFormVisible(!uploadFormVisible);
@@ -145,7 +122,6 @@ const MediaManager = props => {
                 <Typography variant="h6" className={classes.cardHeader}>
                   {MEDIA_MANAGER_DIALOG_TITLE}
                 </Typography>
-                {userError && <div>{userError}</div>}
                 <Button variant="contained" component="label" color="primary">
                   {BUTTON_ADD_FILE}
                   <input
