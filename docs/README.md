@@ -1,5 +1,7 @@
-<p align="center" style="font-size:24px; font-weight: bold;">
-  CourseLit
+<p align="center">
+  <b>
+    CourseLit
+  </b>
 </p>
 <p align="center">
   A CMS for building your own course site.
