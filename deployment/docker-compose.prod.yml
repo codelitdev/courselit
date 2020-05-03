@@ -3,9 +3,9 @@ version: "3"
 services:
   proxy:
     environment:
-      - DOMAIN=${DOMAIN}
+      - DOMAIN=${DOMAIN?'DOMAIN environment variable is not defined'}
     ports:
       - "443:443"
     volumes:
-      - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable not defined'}/sslcert:/etc/letsencrypt
+      - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}/sslcert:/etc/letsencrypt
 
