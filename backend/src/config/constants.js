@@ -2,23 +2,27 @@
  * This file provides app wide constants
  */
 const path = require("path");
-const homedir = require("os").homedir();
+
+const USER_CONTENT_DIRECTORY = process.env.USER_CONTENT_DIRECTORY || "/data";
 
 module.exports = {
   dbConnectionString:
     process.env.DB_CONNECTION_STRING ||
     `mongodb://localhost/${process.env.NODE_ENV === "test" ? "test" : "app"}`,
 
-  routePrefix: process.env.NODE_ENV === "production" ? (process.env.API_PREFIX || "/api"): "",
+  routePrefix:
+    process.env.NODE_ENV === "production"
+      ? process.env.API_PREFIX || "/api"
+      : "",
 
   // password related config
   saltRounds: 10, // for bcrypting the plain text passwords
-  jwtSecret: process.env.JWT_SECRET || "ultrasecurekey",
+  jwtSecret: process.env.JWT_SECRET,
   jwtExpire: process.env.JWT_EXPIRES_IN || "1d",
 
   // Media uploads config
-  uploadFolder: path.join(process.env.MEDIA_FOLDER || homedir, "uploads"),
-  thumbnailsFolder: path.join(process.env.MEDIA_FOLDER || homedir, "thumbs"),
+  uploadFolder: path.join(USER_CONTENT_DIRECTORY, "uploads"),
+  thumbnailsFolder: path.join(USER_CONTENT_DIRECTORY, "thumbs"),
   thumbnailFileExtension: "jpg",
   thumbnailContentType: "image/jpeg", // the following constants are as per the 16:9 aspect ratio
   thumbnailWidth: 120,
