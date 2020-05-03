@@ -50,16 +50,3 @@ services:
       - backend
       - frontend
     container_name: proxy
-
-# volumes:
-#   db:
-#   uploads:
-#     driver: local
-#     driver_opts:
-#       device: ${MOUNT_UPLOAD_FOLDER_VOLUME_AS}
-#       o: bind
-#   thumbs:
-#     driver: local
-#     driver_opts:
-#       device: ${MOUNT_THUMBNAIL_FOLDER_VOLUME_AS}
-#       o: bind
