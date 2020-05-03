@@ -2,7 +2,7 @@
 
 A headless CMS for course management. Supports course creation, student management, payments and user authentication.
 
-## Docker
+## Getting started
 
 Easily spin up a new courselit-backend server using the following command
 
@@ -30,3 +30,16 @@ A random string to use as a secret to sign the JWT tokens the API generates. Req
 
 The duration after while the generated JWT expires. For more information [check out here](https://www.npmjs.com/package/jsonwebtoken). Optional parameter. Defaults to `1d`.
 
+
+## Development
+
+### Running on local
+1. Install MongoDB.
+2. Install the following softwares.
+```
+apt install imagemagick ffmpeg
+```
+3. Start the development server.
+```
+yarn dev
+```
