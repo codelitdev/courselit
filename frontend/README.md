@@ -18,7 +18,7 @@ The public address of the site. Defaults to none.
 
 **API_PREFIX**
 
-This will make the server available at `/<API_PREFIX>` path. Defaults to `/api`.
+The path where the API is located on the server. Defaults to `/api`.
 
 **SSR_SITE_URL**
 
