@@ -1,3 +1,8 @@
+[![License](https://badgen.net/github/license/codelit/courselit)](https://github.com/codelit/courselit/blob/deployment/LICENSE)
+[![Build Status](https://badgen.net/github/status/codelit/courselit)](https://github.com/codelit/courselit/actions)
+[![Docker PUlls](https://badgen.net/docker/pulls/codelit/courselit-proxy)](https://hub.docker.com/r/codelit/courselit-proxy)
+[![Last Commit](https://badgen.net/github/last-commit/codelit/courselit)](https://github.com/codelit/courselit)
+
 # Introduction
 CourseLit is a decoupled content management system (CMS) for teachers and course creators.
 

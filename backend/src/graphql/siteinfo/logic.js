@@ -4,9 +4,29 @@
 const SiteInfo = require("../../models/SiteInfo.js");
 const { checkIfAuthenticated } = require("../../lib/graphql.js");
 const { responses } = require("../../config/strings.js");
-const { currencyISOCodes } = require("../../config/constants.js");
+const {
+  currencyISOCodes,
+  paypal,
+  stripe,
+  paytm,
+  none
+} = require("../../config/constants.js");
+const { capitalize } = require("../../lib/utils.js");
 
 exports.getSiteInfo = async () => {
+  const siteinfo = await SiteInfo.find(
+    {},
+    "title subtitle logopath currencyUnit currencyISOCode copyrightText about paymentMethod stripePublishableKey themePrimaryColor themeSecondaryColor codeInjectionHead"
+  );
+
+  return siteinfo[0];
+};
+
+exports.getSiteInfoAsAdmin = async ctx => {
+  checkIfAuthenticated(ctx);
+
+  if (!ctx.user.isAdmin) throw new Error(responses.is_not_admin);
+
   const siteinfo = await SiteInfo.find();
   return siteinfo[0];
 };
@@ -39,6 +59,16 @@ exports.updateSiteInfo = async (siteData, ctx) => {
     siteInfo[key] = siteData[key];
   }
 
+  const invalidPaymentMethod = checkForInvalidPaymentMethod(siteInfo);
+  if (invalidPaymentMethod) {
+    throw invalidPaymentMethod;
+  }
+
+  const failedPaymentMethod = checkForInvalidPaymentSettings(siteInfo);
+  if (failedPaymentMethod) {
+    throw getPaymentInvalidException(failedPaymentMethod);
+  }
+
   if (shouldCreate) {
     siteInfo = await SiteInfo.create(siteInfo);
   } else {
@@ -47,3 +77,43 @@ exports.updateSiteInfo = async (siteData, ctx) => {
 
   return siteInfo;
 };
+
+const checkForInvalidPaymentMethod = siteInfo => {
+  if (!siteInfo.paymentMethod) {
+    return;
+  }
+
+  if (![paypal, stripe, paytm, none].includes(siteInfo.paymentMethod)) {
+    return new Error(responses.invalid_payment_method);
+  }
+};
+
+const checkForInvalidPaymentSettings = siteInfo => {
+  if (!siteInfo.paymentMethod) {
+    return;
+  }
+
+  let failedPaymentMethod = null;
+
+  if (siteInfo.paymentMethod === paytm && !siteInfo.paytmSecret) {
+    failedPaymentMethod = paytm;
+  }
+
+  if (siteInfo.paymentMethod === paypal && !siteInfo.paypalSecret) {
+    failedPaymentMethod = paypal;
+  }
+
+  if (
+    siteInfo.paymentMethod === stripe &&
+    !(siteInfo.stripeSecret && siteInfo.stripePublishableKey)
+  ) {
+    failedPaymentMethod = stripe;
+  }
+
+  return failedPaymentMethod;
+};
+
+const getPaymentInvalidException = paymentMethod =>
+  new Error(
+    `${capitalize(paymentMethod)} ${responses.payment_settings_invalid_suffix}`
+  );

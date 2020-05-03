@@ -44,10 +44,16 @@ exports.responses = {
     "Payment method is not set up. Please contact site admin.",
   not_enrolled: "You are not enrolled in the course",
   currency_iso_not_set:
-    "Currency ISO code is not set. Please contact site admin."
+    "Currency ISO code is not set. Please contact site admin.",
+  payment_method_not_saved:
+    "Set a payment method before setting its corresponding secret key",
+  invalid_payment_method: "Invalid payment method"
 };
 
 exports.internal = {
   error_unrecognised_payment_method: "Unrecognized payment method",
-  error_payment_method_not_implemented: "Not yet implemented"
+  error_payment_method_not_implemented: "Not yet implemented",
+  error_db_connection_failed:
+    "Unable to establish a connection to the database.",
+  error_env_var_undefined: "A required environment variable is not defined"
 };

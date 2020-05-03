@@ -205,7 +205,7 @@ exports.getPublicCourses = async (offset, onlyShowFeatured = false) => {
   return dbQuery;
 };
 
-// TODO: write tests for this
+// TODO: write tests
 exports.getEnrolledCourses = async (userId, ctx) => {
   checkIfAuthenticated(ctx);
   const notAdminOrSelf =

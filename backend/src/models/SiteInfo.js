@@ -14,7 +14,13 @@ const SiteInfoSchema = new mongoose.Schema({
   copyrightText: { type: String },
   about: { type: String },
   paymentMethod: { type: String },
-  stripePublishableKey: { type: String }
+  stripePublishableKey: { type: String },
+  themePrimaryColor: { type: String },
+  themeSecondaryColor: { type: String },
+  codeInjectionHead: { type: String },
+  stripeSecret: { type: String },
+  paytmSecret: { type: String },
+  paypalSecret: { type: String }
 });
 
 module.exports = mongoose.model("SiteInfo", SiteInfoSchema);

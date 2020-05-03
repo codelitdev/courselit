@@ -71,7 +71,7 @@ const ResponsiveDrawer = props => {
   const [activeItemIndex, setActiveItemIndex] = useState(0);
 
   useEffect(() => {
-    showComponent(props.items[0].element);
+    showComponent(props.items[3].element);
   }, []);
 
   function handleDrawerToggle() {

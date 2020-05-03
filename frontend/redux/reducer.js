@@ -19,7 +19,10 @@ import {
   GENERIC_ABOUT_TEXT,
   GENERIC_STRIPE_PUBLISHABLE_KEY_TEXT,
   GENERIC_CURRENCY_ISO_CODE,
-  GENERIC_PAYMENT_METHOD
+  GENERIC_PAYMENT_METHOD,
+  GENERIC_THEME_COLOR_PRIMARY,
+  GENERIC_THEME_COLOR_SECONDARY,
+  GENERIC_CODE_INJECTION_HEAD
 } from "../config/strings.js";
 
 const initialState = {
@@ -38,7 +41,10 @@ const initialState = {
     copyrightText: GENERIC_COPYRIGHT_TEXT,
     about: GENERIC_ABOUT_TEXT,
     paymentMethod: GENERIC_PAYMENT_METHOD,
-    stripePublishableKey: GENERIC_STRIPE_PUBLISHABLE_KEY_TEXT
+    stripePublishableKey: GENERIC_STRIPE_PUBLISHABLE_KEY_TEXT,
+    themePrimaryColor: GENERIC_THEME_COLOR_PRIMARY,
+    themeSecondaryColor: GENERIC_THEME_COLOR_SECONDARY,
+    codeInjectionHead: GENERIC_CODE_INJECTION_HEAD
   },
   networkAction: false,
   profile: {
@@ -97,7 +103,16 @@ function siteinfoReducer(state = initialState.siteinfo, action) {
             initialState.siteinfo.paymentMethod,
           stripePublishableKey:
             action.siteinfo.stripePublishableKey ||
-            initialState.siteinfo.stripePublishableKey
+            initialState.siteinfo.stripePublishableKey,
+          themePrimaryColor:
+            action.siteinfo.themePrimaryColor ||
+            initialState.siteinfo.themePrimaryColor,
+          themeSecondaryColor:
+            action.siteinfo.themeSecondaryColor ||
+            initialState.siteinfo.themeSecondaryColor,
+          codeInjectionHead:
+            action.siteinfo.codeInjectionHead ||
+            initialState.siteinfo.codeInjectionHead
         };
       } catch (e) {
         return state;
@@ -135,7 +150,7 @@ function profileReducer(state = initialState.profile, action) {
   }
 }
 
-function appMessageReducer(state = initialState.message, action) {
+function messageReducer(state = initialState.message, action) {
   switch (action.type) {
     case SET_MESSAGE:
       return {
@@ -155,5 +170,5 @@ export default combineReducers({
   siteinfo: siteinfoReducer,
   networkAction: networkActionReducer,
   profile: profileReducer,
-  message: appMessageReducer
+  message: messageReducer
 });

@@ -14,7 +14,7 @@
     "immutable": "^4.0.0-rc.12",
     "isomorphic-unfetch": "^3.0.0",
     "js-cookie": "^2.2.0",
-    "next": "^9.2.1",
+    "next": "^9.3.5",
     "next-redux-wrapper": "^4.0.1",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
@@ -22,9 +22,6 @@
     "react-stripe-elements": "^6.0.1",
     "redux": "^4.0.5",
     "redux-thunk": "^2.3.0"
-  },
-  "resolutions": {
-    "jss": "10.0.0"
   },
   "scripts": {
     "dev": "next",
@@ -41,6 +38,7 @@
     "@babel/preset-react": "^7.7.4",
     "babel-jest": "^24.5.0",
     "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.10.1",
     "eslint-config-standard": "^14.1.0",
     "eslint-plugin-import": "^2.19.1",
     "eslint-plugin-node": "^11.0.0",

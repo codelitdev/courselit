@@ -106,7 +106,10 @@ export function updateSiteInfo() {
           copyrightText,
           about,
           paymentMethod,
-          stripePublishableKey
+          stripePublishableKey,
+          themePrimaryColor,
+          themeSecondaryColor,
+          codeInjectionHead
         }
       }
       `;
@@ -132,3 +135,31 @@ export function setAppMessage(message) {
 export function clearAppMessage() {
   return dispatch => dispatch({ type: CLEAR_MESSAGE });
 }
+
+// export function setCustomisations(customisations) {
+//   return { type: CUSTOMISATIONS_AVAILABLE, customisations };
+// }
+
+// export function updateCustomisations() {
+//   return async dispatch => {
+//     try {
+//       const query = `
+//       { customisations: getCustomisations {
+//           themePrimaryColor,
+//           themeSecondaryColor,
+//           codeInjectionHead
+//         }
+//       }
+//       `;
+//       const fetch = new FetchBuilder()
+//         .setUrl(`${BACKEND}/graph`)
+//         .setPayload(query)
+//         .setIsGraphQLEndpoint(true)
+//         .build();
+//       const response = await fetch.exec();
+//       dispatch(setCustomisations(response.customisations));
+//     } catch {
+//       // fail silently
+//     }
+//   };
+// }
