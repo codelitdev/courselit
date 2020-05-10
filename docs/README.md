@@ -34,12 +34,18 @@ CourseLit is a content management system for educators, teachers and all creativ
 ![courselit cms screenshot](./assets/screenshot.png)
 
 ## Getting Started
+The recommended way to deploy CourseLit on your server is via Ansible. Follow the below mentioned instructions.
 
-The recommended way to get up and running with CourseLit is via [Docker Compose](https://docs.docker.com/compose/). Install it on your machine and follow the steps.
-
-1. Clone the repo and cd to it.
 ```
-git clone https://github.com/codelit/courselit.git
+cd deployment
+ansible-playbook install.yml -l <host> -u <host_user>
+```
+
+## Running on local
+You can run a local instance of CourseLit on your local machine via [Docker Compose](https://docs.docker.com/compose/). Follow the below mentioned instructions.
+
+1. Cd to the `deployment` folder.
+```
 cd courselit/deployment
 ```
 
@@ -56,24 +62,13 @@ JWT_EXPIRES_IN=2d
 
 3. Start the application.
 
-  - **Without SSL**
-    ```
-    docker-compose up
-    ```
+```
+docker-compose -f docker-compose.yml up
+```
 
-  - **With SSL**
-    - In the `.env` file, define a new variable DOMAIN and set its value to the domain name you have the ssl certificate for.
-    ```
-    DOMAIN=yourwebsite.com
-    ```
-    >  IMPORTANT: Make sure you already have a SSL certificate installed at `<MEDIA_FOLDER>/sslcert/live/${DOMAIN}/haproxy.pem`, otherwise the following step will fail.
+4. Visit `http://localhost` in your browser.
 
-    - Run the following command
-    ```
-    docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
-    ```
-
-## Environment variables.
+### Environment variables.
 **SITE_URL**
 
 The public address of the site. Required parameter. No default value.
