@@ -29,7 +29,15 @@
 </p>
 
 # Introduction
-CourseLit is a content management system for educators, teachers and all creative people who want to run their own online teaching businesses. It is built using open source technologies like Node.js, Express.js, MongoDB, GraphQL and Next.js.
+Hi there! Are you an educator looking for a way to start your own online teaching website or business? Have you been to the sites which let you start your own online classes but charge a lot or take a lot commission but you don't want to give away a significant amount of your income to those businesses? Then you are at the right place.
+
+Using CourseLit, which is a content management system (also known as a CMS) specially designed for educators and teachers, you can easily host your own courses on any cheap cloud based server, something like [a $5/month droplet on Digitalocean](https://www.digitalocean.com/pricing/) for example. 
+
+CourseLit comes pre-equipped with all the basic tools you'd require to efficiently run and administer your online teaching business. Features include student management, payment processing (via Stripe), customization and analytics (very limited as of now). 
+
+Check out a live example to see what you can build with CourseLit. [Click here](https://codelit.dev).
+
+## Screenshot
 
 ![courselit cms screenshot](./assets/screenshot.png)
 
