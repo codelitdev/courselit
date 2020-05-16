@@ -3,9 +3,11 @@
 </p>
 
 <p align="center">
-  <a href="https://codelit.github.io/courselit">Website</a> |
-  <a href="#getting-started">Getting started</a> |
-  <a href="https://github.com/codelit/courselit/wiki">Documentation</a>
+  <b>
+    <a href="https://codelit.github.io/courselit">Website</a> |
+    <a href="#getting-started">Getting started</a> |
+    <a href="https://github.com/codelit/courselit/wiki">Documentation</a>
+  </b>
 </p>
 
 <p align="center">
