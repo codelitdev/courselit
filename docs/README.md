@@ -1,10 +1,5 @@
 <p align="center">
-  <b>
-    CourseLit
-  </b>
-</p>
-<p align="center">
-  A CMS for building your own course website.
+  <img src="./assets/banner.png">
 </p>
 
 <p align="center">
@@ -25,6 +20,9 @@
   </a>
   <a href="https://github.com/codelit/courselit">
     <img src="https://badgen.net/github/last-commit/codelit/courselit" alt="Last commit">
+  </a>
+  <a href="https://lgtm.com/projects/g/codelit/courselit/alerts/">
+    <img src="https://img.shields.io/lgtm/alerts/g/codelit/courselit.svg?logo=lgtm&logoWidth=18" alt="Lgtm">
   </a>
 </p>
 
