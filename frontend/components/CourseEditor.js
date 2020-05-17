@@ -109,9 +109,6 @@ const CourseEditor = props => {
   const executeGQLCall = useExecuteGraphQLQuery();
   const [lessonIndex, setLessonIndex] = useState(0);
 
-  // The following ref is used for accessing previous state in hooks
-  // Reference: https://reactjs.org/docs/hooks-faq.html#how-to-get-the-previous-props-or-state
-  // const prevCourseData = useRef()
   useEffect(() => {
     if (props.courseId) {
       loadCourse(props.courseId);
@@ -129,7 +126,6 @@ const CourseEditor = props => {
   const setError = (msg = "") => setUserError(msg);
 
   const onCourseCreate = async e => {
-    // console.log(`From onCourseCreate:`, courseData)
     e.preventDefault();
     setError();
 
@@ -201,38 +197,14 @@ const CourseEditor = props => {
 
     try {
       const response = await executeGQLCall(query);
-      console.log(response);
       if (response.course) {
         setCourseDataWithDescription(response.course);
+        props.markDirty(false);
         props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_COURSE_SAVED)));
       }
     } catch (err) {
-      // return setUserError(err.message)
-      console.log(err);
       props.dispatch(setAppMessage(new AppMessage(err.message)));
     }
-
-    // try {
-    //   console.log(query)
-    //   props.dispatch(networkAction(true))
-    //   let response = await queryGraphQL(
-    //     `${BACKEND}/graph`,
-    //     query,
-    //     props.auth.token
-    //   )
-
-    //   if (response.course) {
-    //     setCourseData(
-    //       Object.assign({}, courseData, {
-    //         course: Object.assign({}, courseData.course, response.course)
-    //       })
-    //     )
-    //   }
-    // } catch (err) {
-    //   setError(err.message)
-    // } finally {
-    //   props.dispatch(networkAction(false))
-    // }
   };
 
   const onCourseDetailsChange = e => {
@@ -243,6 +215,8 @@ const CourseEditor = props => {
   };
 
   const changeCourseDetails = (key, value) => {
+    props.markDirty(true);
+
     setCourseData(
       Object.assign({}, courseData, {
         course: Object.assign({}, courseData.course, {
@@ -253,6 +227,8 @@ const CourseEditor = props => {
   };
 
   const onDescriptionChange = editorState => {
+    props.markDirty(true);
+
     setCourseData(
       Object.assign({}, courseData, {
         course: Object.assign({}, courseData.course, {
@@ -293,7 +269,6 @@ const CourseEditor = props => {
   };
 
   const setCourseDataWithDescription = course => {
-    console.log("setCourse...", course);
     setCourseData(
       Object.assign({}, courseData, {
         course: Object.assign({}, course, {
@@ -305,10 +280,6 @@ const CourseEditor = props => {
   };
 
   const loadCourse = async courseId => {
-    // setCourseData(Object.assign({}, courseData, {
-    //   lessons: []
-    // }))
-
     const query = `
     query {
       course: getCourse(id: "${courseId}") {
@@ -333,7 +304,6 @@ const CourseEditor = props => {
     try {
       const response = await executeGQLCall(query);
       if (response.course) {
-        console.log(response.course);
         setCourseDataWithDescription(response.course);
       }
     } catch (err) {
@@ -598,7 +568,8 @@ CourseEditor.propTypes = {
   profile: profileProps,
   courseId: PropTypes.string,
   dispatch: PropTypes.func.isRequired,
-  closeEditor: PropTypes.func.isRequired
+  closeEditor: PropTypes.func.isRequired,
+  markDirty: PropTypes.func.isRequired
 };
 
 const mapStateToProps = state => ({
