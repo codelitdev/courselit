@@ -1,0 +1,163 @@
+---
+    - hosts: all
+      become: true
+
+      vars_prompt:
+
+        - name: domain
+          prompt: "Enter your domain name (without http://)"
+          private: no
+
+        - name: email
+          prompt: "Enter your email for getting emails from LetsEncrypt"
+          private: no
+
+        - name: domain_propagation_complete
+          prompt: "Is the domain propagation complete? It is required for acquiring a SSL certificate."
+          private: no
+          default: "no"
+
+        - name: media_folder
+          prompt: "Which folder would you like to store your files in?"
+          private: no
+          default: "~/courselit-data"
+
+        - name: mongo_user_name
+          prompt: "Specify a username for the database. Keep it safe for future maintanences."
+          private: no
+
+        - name: mongo_password
+          prompt: "Specify the password for the above user. Keep it safe for future maintanences."
+
+        - name: jwt_secret
+          prompt: "Specify a secret string which will be used to hash password. Keep it safe for future maintanences."
+
+        - name: jwt_expires
+          prompt: "How long should an access token stay valid? It keeps your users logged in. Examples (2d or 1h or 3y)."
+          private: no
+          default: "14d"
+
+      tasks:
+              - name: Check user input
+                fail: msg="The answer to the domain propagation question is not correct. Exiting."
+                when: domain_propagation_complete != "yes"
+          
+              - name: Install required system packages
+                apt: name={{ item }} state=present update_cache=yes
+                loop: [ 'apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common', 'python3-pip']
+
+              - name: Install Python setuptools
+                pip:
+                  name:
+                    - setuptools
+          
+              - name: Install Docker packages
+                apt:
+                  name: ['docker-compose']
+                  state: present
+
+              - name: Install Python Docker packages
+                pip:
+                  name:
+                    - docker
+                    - docker-compose
+
+              - name: Install certbot
+                apt: update_cache=yes name=certbot state=present
+
+              - name: Add the firewall rule
+                ufw:
+                    rule: allow
+                    port: '80'
+                    proto: tcp
+
+              - name: Run certbot
+                command: certbot certonly --standalone --non-interactive --agree-tos -m {{ email }} -d {{ domain }}
+
+              - name: Combine certificates
+                shell:
+                    cmd: cat fullchain.pem privkey.pem > haproxy.pem
+                    chdir: /etc/letsencrypt/live/{{ domain }}/
+                    creates: haproxy.pem
+
+              - name: Unmask Docker
+                command: systemctl unmask docker
+
+              - name: Start Docker service
+                systemd: 
+                  name: docker
+                  state: started
+
+              - name: Run Docker compose
+                docker_compose:
+                  debug: yes
+                  project_name: courselit
+                  definition:
+                      version: '3'
+                      services:
+                          db:
+                            image: mongo
+                            ports:
+                              - "27017:27017"
+                            environment:
+                              MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME?'MONGO_ROOT_USERNAME environment variable is not defined'}
+                              MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD?'MONGO_ROOT_PASSWORD environment variable is not defined'}
+                            volumes:
+                              - "{{ media_folder }}/mongo/data/db:/data/db"
+                            command: --quiet
+                            container_name: db
+
+                          backend:
+                            image: codelit/courselit-backend:latest
+                            environment:
+                              - API_PREFIX=${API_PREFIX}
+                              - DB_CONNECTION_STRING=${DB_CONNECTION_STRING?'DB_CONNECTION_STRING environment variable is is not defined'}
+                              - JWT_SECRET=${JWT_SECRET?'JWT_SECRET environment variable is not defined'}
+                              - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+                            volumes:
+                              - "{{ media_folder }}:/data"
+                            expose:
+                              - "8000"
+                            depends_on:
+                              - db
+                            container_name: backend
+
+                          frontend:
+                            image: codelit/courselit-frontend:latest
+                            environment:
+                              - SITE_URL=${SITE_URL?'SITE_URL environment variable is not defined'}
+                              - API_PREFIX=${API_PREFIX}
+                              - SSR_SITE_URL=http://backend:8000
+                            expose:
+                              - "3000"
+                            depends_on:
+                              - backend
+                            container_name: frontend
+
+                          proxy:
+                            image: codelit/courselit-proxy:latest
+                            environment:
+                              - API_PREFIX=${API_PREFIX}
+                              - DOMAIN=${DOMAIN?'DOMAIN environment variable is not defined'}
+                            volumes:
+                              - /etc/letsencrypt:/etc/letsencrypt
+                            ports:
+                              - "443:443"
+                            depends_on:
+                              - backend
+                              - frontend
+                            container_name: proxy
+                  build: no
+                register: output
+                environment:
+                    SITE_URL: http://{{ domain }}
+                    MEDIA_FOLDER: "{{ media_folder }}"
+                    MONGO_ROOT_USERNAME: "{{ mongo_user_name }}"
+                    MONGO_ROOT_PASSWORD: "{{ mongo_password }}"
+                    DB_CONNECTION_STRING: "mongodb://{{ mongo_user_name }}:{{ mongo_password }}@db"
+                    JWT_SECRET: "{{ jwt_secret }}"
+                    JWT_EXPIRES_IN: "{{ jwt_expires }}"
+                    DOMAIN: "{{ domain }}"
+
+              - debug:
+                    var: output

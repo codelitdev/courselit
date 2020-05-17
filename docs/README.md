@@ -1,16 +1,13 @@
 <p align="center">
-  <b>
-    CourseLit
-  </b>
-</p>
-<p align="center">
-  A CMS for building your own course website.
+  <img src="./assets/banner.png">
 </p>
 
 <p align="center">
-  <a href="https://codelit.github.io/courselit">Website</a> |
-  <a href="#getting-started">Getting started</a> |
-  <a href="https://github.com/codelit/courselit/wiki">Documentation</a>
+  <b>
+    <a href="https://codelit.github.io/courselit">Website</a> |
+    <a href="#getting-started">Getting started</a> |
+    <a href="https://github.com/codelit/courselit/wiki">Documentation</a>
+  </b>
 </p>
 
 <p align="center">
@@ -26,20 +23,41 @@
   <a href="https://github.com/codelit/courselit">
     <img src="https://badgen.net/github/last-commit/codelit/courselit" alt="Last commit">
   </a>
+  <a href="https://lgtm.com/projects/g/codelit/courselit/alerts/">
+    <img src="https://img.shields.io/lgtm/alerts/g/codelit/courselit.svg?logo=lgtm&logoWidth=18" alt="Lgtm">
+  </a>
 </p>
 
 # Introduction
-CourseLit is a content management system for educators, teachers and all creative people who want to run their own online teaching businesses. It is built using open source technologies like Node.js, Express.js, MongoDB, GraphQL and Next.js.
+Hi there! Are you an educator looking for a way to start your own online teaching website or business? Have you been to the sites which let you start your own online classes but charge a lot or take a lot commission but you don't want to give away a significant amount of your income to those businesses? Then you are at the right place.
+
+Using CourseLit, which is a content management system (also known as a CMS) specially designed for educators and teachers, you can easily host your own courses on any cheap cloud based server, something like [a $5/month droplet on Digitalocean](https://www.digitalocean.com/pricing/) for example. 
+
+CourseLit comes pre-equipped with all the basic tools you'd require to efficiently run and administer your online teaching business. Features include student management, payment processing (via Stripe), customization and analytics (very limited as of now). 
+
+Check out a live example to see what you can build with CourseLit. [Click here](https://codelit.dev).
+
+## Screenshot
 
 ![courselit cms screenshot](./assets/screenshot.png)
 
 ## Getting Started
+The recommended way to deploy CourseLit on your server is via Ansible. Follow the below mentioned instructions.
 
-The recommended way to get up and running with CourseLit is via [Docker Compose](https://docs.docker.com/compose/). Install it on your machine and follow the steps.
-
-1. Clone the repo and cd to it.
 ```
-git clone https://github.com/codelit/courselit.git
+ansible-playbook deployment/install.yml -l <host> -u <host_user> --ask-become-pass -e 'ansible_python_interpreter=/usr/bin/python3'
+```
+
+> Tested on Ubuntu 18.04 LTS and 20.04 LTS versions.
+
+## Troubleshooting
+If the above Ansible installer fails, retry the operation after deleting the `media folder` from the server which you specified while running the installer. The default location is `~/courselit-data`.
+
+## Running on local
+You can run a local instance of CourseLit on your local machine via [Docker Compose](https://docs.docker.com/compose/). Follow the below mentioned instructions.
+
+1. Cd to the `deployment` folder.
+```
 cd courselit/deployment
 ```
 
@@ -56,24 +74,13 @@ JWT_EXPIRES_IN=2d
 
 3. Start the application.
 
-  - **Without SSL**
-    ```
-    docker-compose up
-    ```
+```
+docker-compose -f docker-compose.yml up
+```
 
-  - **With SSL**
-    - In the `.env` file, define a new variable DOMAIN and set its value to the domain name you have the ssl certificate for.
-    ```
-    DOMAIN=yourwebsite.com
-    ```
-    >  IMPORTANT: Make sure you already have a SSL certificate installed at `<MEDIA_FOLDER>/sslcert/live/${DOMAIN}/haproxy.pem`, otherwise the following step will fail.
+4. Visit `http://localhost` in your browser.
 
-    - Run the following command
-    ```
-    docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
-    ```
-
-## Environment variables.
+### Environment variables.
 **SITE_URL**
 
 The public address of the site. Required parameter. No default value.
