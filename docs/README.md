@@ -45,9 +45,13 @@ Check out a live example to see what you can build with CourseLit. [Click here](
 The recommended way to deploy CourseLit on your server is via Ansible. Follow the below mentioned instructions.
 
 ```
-cd deployment
-ansible-playbook install.yml -l <host> -u <host_user>
+ansible-playbook deployment/install.yml -l <host> -u <host_user> --ask-become-pass -e 'ansible_python_interpreter=/usr/bin/python3'
 ```
+
+> Tested on Ubuntu 18.04 LTS and 20.04 LTS versions.
+
+## Troubleshooting
+If the above Ansible installer fails, retry the operation after deleting the `media folder` from the server which you specified while running the installer. The default location is `~/courselit-data`.
 
 ## Running on local
 You can run a local instance of CourseLit on your local machine via [Docker Compose](https://docs.docker.com/compose/). Follow the below mentioned instructions.
