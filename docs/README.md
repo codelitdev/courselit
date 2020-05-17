@@ -26,6 +26,9 @@
   <a href="https://lgtm.com/projects/g/codelit/courselit/alerts/">
     <img src="https://img.shields.io/lgtm/alerts/g/codelit/courselit.svg?logo=lgtm&logoWidth=18" alt="Lgtm">
   </a>
+  <a href="https://spectrum.chat/courselit">
+    <img src="https://img.shields.io/badge/chat-spectrum-blue" alt="Chat">
+  </a>
 </p>
 
 # Introduction
