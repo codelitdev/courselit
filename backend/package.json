@@ -1,4 +1,6 @@
 {
+  "name": "courselit-backend",
+  "version": "0.1.0",
   "scripts": {
     "lint": "eslint src __tests__ --fix",
     "prettier": "prettier --write 'src/**/*.js' '__tests__/**/*.js'",
