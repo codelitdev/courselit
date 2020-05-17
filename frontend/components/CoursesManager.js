@@ -8,10 +8,14 @@ import CourseEditor from "./CourseEditor.js";
 import CreatorCoursesList from "./CreatorCoursesList.js";
 import {
   NEW_COURSE_PAGE_HEADING,
-  MANAGE_COURSES_PAGE_HEADING
+  MANAGE_COURSES_PAGE_HEADING,
+  POPUP_CANCEL_ACTION,
+  POPUP_OK_ACTION,
+  DISCARD_COURSE_CHANGES_POPUP_HEADER
 } from "../config/strings.js";
 import { useExecuteGraphQLQuery } from "./CustomHooks.js";
 import { Add, Done } from "@material-ui/icons";
+import AppDialog from "./AppDialog.js";
 
 const useStyles = makeStyles(theme => ({
   button: {
@@ -33,18 +37,11 @@ const Courses = props => {
   const classes = useStyles();
   const [courseEditorVisible, setCourseEditorVisible] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [courseEditorDirty, setCourseEditorDirty] = useState(false);
+  const [userDismissingDirtyEditor, setUserDismissingDirtyEditor] = useState(
+    false
+  );
   const executeGQLCall = useExecuteGraphQLQuery();
-  // const [mediaManagerVisibility, setMediaManagerVisibility] = useState(false)
-
-  // const showCourseCreateForm = () => {
-  //   setError()
-  //   setCourseData(
-  //     Object.assign({}, courseData, {
-  //       course: initCourseMetaData
-  //     })
-  //   )
-  //   setCourseFormVisible(true)
-  // }
 
   useEffect(() => {
     loadCreatorCourses();
@@ -70,82 +67,27 @@ const Courses = props => {
     } catch (err) {
       console.log(err);
     }
-
-    // try {
-    //   props.dispatch(networkAction(true))
-    //   let response = await queryGraphQL(
-    //     `${BACKEND}/graph`,
-    //     query,
-    //     props.auth.token
-    //   )
-
-    //   if (response.courses) {
-    //     setCreatorCourses([...creatorCourses, ...response.courses])
-    //     creatorCoursesPaginationOffset += 1
-    //   }
-    // } catch (err) {
-    //   setError(err.message)
-    // } finally {
-    //   props.dispatch(networkAction(false))
-    // }
   };
-
-  // const loadLesson = async (id) => {
-  //   const query = `
-  //   query {
-  //     lesson: getLesson(id: "${id}") {
-  //       id,
-  //       title,
-  //       downloadable,
-  //       type,
-  //       content,
-  //       contentURL
-  //     }
-  //   }
-  //   `
-
-  //   try {
-  //     props.dispatch(networkAction(true))
-  //     let response = await queryGraphQL(
-  //       `${BACKEND}/graph`,
-  //       query,
-  //       props.auth.token
-  //     )
-
-  //     if (response.lesson) {
-  //       console.log(response.lesson)
-  //       // converting NULLs to empty strings before setting state, to avoid a React warning.
-  //       const lesson = {}
-  //       for (let i of Object.keys(response.lesson)) {
-  //         lesson[i] = response.lesson[i] === null ? '' : response.lesson[i]
-  //       }
-
-  //       setCourseData(Object.assign({}, prevCourseData.current, {
-  //         lessons: [...prevCourseData.current.lessons, { ...lesson }]
-  //       }))
-  //     }
-  //   } catch (err) {
-  //     setError(err.message)
-  //   } finally {
-  //     props.dispatch(networkAction(false))
-  //   }
-  // }
-
-  // const onMediaSelected = (mediaId) => {
-  //   console.log(`Selected media: ${mediaId}`)
-  // }
-
-  // const toggleMediaManagerVisibility = (flag) => {
-  //   setMediaManagerVisibility(flag)
-  // }
 
   const showEditor = courseId => {
     if (courseEditorVisible) {
-      setCourseEditorVisible(false);
+      if (courseEditorDirty) {
+        setUserDismissingDirtyEditor(true);
+      } else {
+        setCourseEditorVisible(false);
+      }
     } else {
       setSelectedCourse(courseId);
       setCourseEditorVisible(true);
     }
+  };
+
+  const markDirtyEditorClean = () => setUserDismissingDirtyEditor(false);
+
+  const dismissEditor = () => {
+    setUserDismissingDirtyEditor(false);
+    setCourseEditorDirty(false);
+    setCourseEditorVisible(false);
   };
 
   return (
@@ -165,14 +107,6 @@ const Courses = props => {
             </Typography>
           </Grid>
           <Grid item xs={12} sm={2}>
-            {/* <Button
-              variant='contained'
-              color={courseEditorVisible ? 'default' : 'secondary'}
-              className={classes.button}
-              onClick={() => showEditor()}
-              startIcon={courseEditorVisible ? <Done /> : <Add />}>
-              {courseEditorVisible ? BUTTON_DONE_TEXT : BUTTON_NEW_COURSE}
-            </Button> */}
             <Fab
               color={courseEditorVisible ? "default" : "secondary"}
               className={classes.fab}
@@ -182,14 +116,6 @@ const Courses = props => {
             </Fab>
           </Grid>
         </Grid>
-        {/* {creatorCourses && <ul>
-          {creatorCourses.map(
-            (item, ind) => <li key={ind}>
-              <a href="#" onClick={() => loadCourse(item.id)}>{item.title}</a>
-            </li>
-          )}
-        </ul>}
-        <button onClick={loadCreatorCourse}>Load my courses</button> */}
       </div>
       <div>
         {!courseEditorVisible && (
@@ -202,10 +128,20 @@ const Courses = props => {
         {courseEditorVisible && (
           <CourseEditor
             courseId={selectedCourse}
-            closeEditor={() => showEditor()}
+            markDirty={setCourseEditorDirty}
+            closeEditor={showEditor}
           />
         )}
       </div>
+      <AppDialog
+        onOpen={userDismissingDirtyEditor}
+        onClose={markDirtyEditorClean}
+        title={DISCARD_COURSE_CHANGES_POPUP_HEADER}
+        actions={[
+          { name: POPUP_CANCEL_ACTION, callback: markDirtyEditorClean },
+          { name: POPUP_OK_ACTION, callback: dismissEditor }
+        ]}
+      ></AppDialog>
     </div>
   );
 };
