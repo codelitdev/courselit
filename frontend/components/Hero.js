@@ -34,11 +34,26 @@ import Link from "next/link";
 //     }
 //   }));
 
-const useStyles = makeStyles({
+const useStyles = makeStyles(theme => ({
+  container: {
+    listStyle: 'none',
+    margin: 0,
+    padding: 0,
+    overflowX: 'scroll',
+    overflowY: 'none',
+    width: '100%'
+  },
+  item: {
+    float: 'right'
+  },
   card: {
-    maxWidth: '30vw'
+    maxWidth: 300,
+    [theme.breakpoints.up('md')]: {
+      maxWidth: 420
+    },
+    marginRight: '2em'
   }
-})
+}))
 
 const Hero = props => {
   const [offset, setOffset] = useState(0);
@@ -48,21 +63,17 @@ const Hero = props => {
   const classes = useStyles();
 
   // const classes = getUseStyles(item.featuredImage)();
-  // const cost =
-  //   item.cost > 0
-  //     ? `${props.siteInfo.currencyUnit || ""}${item.cost}`
-  //     : FREE_COST;
+  const cost =
+    item.cost > 0
+      ? `${props.siteInfo.currencyUnit || ""} ${item.cost}`
+      : FREE_COST;
 
   // const showNextItem = () =>
   //   setOffset(offset + 1 === featuredCourses.length ? offset : offset + 1);
   // const showPreviousItem = () => setOffset(offset - 1 < 0 ? 0 : offset - 1);
 
   return (
-    <Grid
-      container
-      direction="row"
-      justify="space-between"
-      alignItems="center"
+    <ul
       className={classes.container}
     >
       {/* <Grid item container direction="row" justify="flex-start" xs={1}>
@@ -107,29 +118,34 @@ const Hero = props => {
         </Grid>
       </Grid> */}
       {featuredCourses.map(course => (
-        <Card className={classes.card}>
-          <Link
-            href={`/${URL_EXTENTION_COURSES}/[id]/[slug]`}
-            as={`/${URL_EXTENTION_COURSES}/${item.id}/${item.slug}`}
-          >
-            <CardActionArea>
-              <CardMedia
-                component='img'
-                alt={course.title}
-                height="140"
-                title={course.title}
-                image={formulateMediaUrl(MEDIA_BACKEND, course.featuredImage, false) || "/default.png"}
-              />
-              <CardContent>
-                <Typography variant='h3'>
-                  {course.title}
-                </Typography>
-              </CardContent>
-            </CardActionArea>
-          </Link>
-        </Card>
+        <li className={classes.item}>
+          <Card className={classes.card}>
+            <Link
+              href={`/${URL_EXTENTION_COURSES}/[id]/[slug]`}
+              as={`/${URL_EXTENTION_COURSES}/${item.id}/${item.slug}`}
+            >
+              <CardActionArea>
+                <CardMedia
+                  component='img'
+                  alt={course.title}
+                  title={course.title}
+                  image={formulateMediaUrl(MEDIA_BACKEND, course.featuredImage, false) || "/default.png"}
+                  className={classes.cardMedia}
+                />
+                <CardContent>
+                  <Typography variant='h3'>
+                    {course.title}
+                  </Typography>
+                  <Typography variant='body1' color="textSecondary">
+                    {cost}
+                  </Typography>
+                </CardContent>
+              </CardActionArea>
+            </Link>
+          </Card>
+        </li>
       ))}
-    </Grid>
+    </ul>
   );
 };
 
