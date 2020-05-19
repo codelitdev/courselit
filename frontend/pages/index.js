@@ -68,11 +68,12 @@ const Index = props => {
         <Grid item>
           <div className={classes.offset}></div>
         </Grid>
-        <Grid item>
+        {/* <Grid item>
           <Hero featuredCourses={props.featuredCourses} />
-        </Grid>
+        </Grid> */}
         <Grid item className={classes.body}>
           <ContainedBodyLayout>
+            <Hero featuredCourses={props.featuredCourses} />
             <Grid
               container
               direction="row"

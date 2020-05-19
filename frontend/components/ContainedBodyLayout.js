@@ -13,7 +13,7 @@ const ContainedBodyLayout = props => {
   const classes = useStyles();
 
   return (
-    <Container maxWidth="md" className={classes.root}>
+    <Container maxWidth="xl" className={classes.root}>
       {props.children}
     </Container>
   );
