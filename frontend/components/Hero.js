@@ -10,29 +10,6 @@ import { MEDIA_BACKEND, URL_EXTENTION_COURSES } from "../config/constants";
 import { FREE_COST, FEATURED_SECTION_HEADER } from "../config/strings.js";
 import Link from "next/link";
 
-// const getUseStyles = backgroundImageUrl =>
-//   makeStyles(theme => ({
-//     container: {
-//       background: `url('${formulateMediaUrl(
-//         MEDIA_BACKEND,
-//         backgroundImageUrl,
-//         false
-//       )}') no-repeat center center`,
-//       backgroundSize: "cover"
-//     },
-//     contentContainer: {
-//       padding: "12em 2em",
-//       [theme.breakpoints.down("sm")]: {
-//         padding: "7em 0em"
-//       }
-//     },
-//     title: {
-//       marginBottom: "2em",
-//       margin: "0.8em 0em",
-//       textAlign: "center"
-//     }
-//   }));
-
 const useStyles = makeStyles(theme => ({
   container: {
     listStyle: 'none',
