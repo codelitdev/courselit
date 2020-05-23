@@ -4,8 +4,14 @@ import MasterLayout from "../components/Masterlayout.js";
 import { networkAction } from "../redux/actions.js";
 import { BACKEND } from "../config/constants.js";
 import BlogPostItem from "../components/BlogPostItem.js";
-import { Grid, Button, Typography } from "@material-ui/core";
-import { HEADER_BLOG_POSTS_SECTION, BTN_LOAD_MORE } from "../config/strings.js";
+import { Grid, Button, Typography, Link } from "@material-ui/core";
+import {
+  HEADER_BLOG_POSTS_SECTION,
+  BTN_LOAD_MORE,
+  EMPTY_PAGE_PLACEHOLDER,
+  EMPTY_PAGE_CREATOR_USER_PLACEHOLDER,
+  BTN_GO_TO_DASHBOARD
+} from "../config/strings.js";
 import Hero from "../components/Hero.js";
 import { makeStyles } from "@material-ui/styles";
 import ContainedBodyLayout from "../components/ContainedBodyLayout.js";
@@ -21,6 +27,18 @@ const useStyles = makeStyles(theme => ({
   },
   content: {
     marginBottom: theme.spacing(2)
+  },
+  emptystate: {
+    marginTop: theme.spacing(16),
+    [theme.breakpoints.up("md")]: {
+      marginTop: theme.spacing(24)
+    }
+  },
+  adminEmptySectionHeader: {
+    marginBottom: theme.spacing(4)
+  },
+  emptyStateHeader: {
+    textAlign: "center"
   }
 }));
 
@@ -43,6 +61,8 @@ const Index = props => {
   const [posts, setPosts] = useState([...props.posts]);
   const [postsOffset, setPostsOffset] = useState(props.postsOffset);
   const classes = useStyles();
+  const hasContentToShow =
+    props.featuredCourses.length > 0 || props.posts.length > 0;
 
   const getMorePosts = async () => {
     props.dispatch(networkAction(true));
@@ -58,51 +78,93 @@ const Index = props => {
     <MasterLayout>
       <Grid container direction="column">
         <Grid item>
-          <div
-            className="fb-comment-embed"
-            data-href="https://www.facebook.com/zuck/posts/10102577175875681?comment_id=1193531464007751&amp;reply_comment_id=654912701278942"
-            data-width="560"
-            data-include-parent="false"
-          ></div>
-        </Grid>
-        <Grid item>
           <div className={classes.offset}></div>
         </Grid>
-        {/* <Grid item>
-          <Hero featuredCourses={props.featuredCourses} />
-        </Grid> */}
-        <Grid item className={classes.body}>
+        {hasContentToShow === true && (
+          <>
+            <ContainedBodyLayout>
+              <Hero featuredCourses={props.featuredCourses} />
+            </ContainedBodyLayout>
+            <Grid item className={classes.body}>
+              <ContainedBodyLayout>
+                <Grid
+                  container
+                  direction="row"
+                  spacing={2}
+                  className={classes.content}
+                >
+                  {posts.length > 0 && (
+                    <Grid item xs={12} sm={8}>
+                      <section className="posts">
+                        <Typography variant="h4">
+                          {HEADER_BLOG_POSTS_SECTION}
+                        </Typography>
+                        {posts.map((x, index) => (
+                          <BlogPostItem key={index} {...x} />
+                        ))}
+                        {posts.length > 0 && (
+                          <Button onClick={getMorePosts}>
+                            {BTN_LOAD_MORE}
+                          </Button>
+                        )}
+                      </section>
+                    </Grid>
+                  )}
+                  <Grid item xs={12} sm={4}>
+                    <aside>
+                      <About />
+                    </aside>
+                  </Grid>
+                </Grid>
+              </ContainedBodyLayout>
+            </Grid>
+          </>
+        )}
+        {hasContentToShow === false && (
           <ContainedBodyLayout>
-            <Hero featuredCourses={props.featuredCourses} />
             <Grid
               container
-              direction="row"
-              spacing={2}
-              className={classes.content}
+              alignItems="center"
+              className={classes.emptystate}
+              direction="column"
             >
-              {posts.length > 0 && (
-                <Grid item xs={12} sm={8}>
-                  <section className="posts">
-                    <Typography variant="h4">
-                      {HEADER_BLOG_POSTS_SECTION}
+              {props.profile.fetched &&
+                (props.profile.isCreator || props.profile.isAdmin) && (
+                  <>
+                    <Grid
+                      item
+                      className={[
+                        classes.adminEmptySectionHeader,
+                        classes.emptyStateHeader
+                      ]}
+                    >
+                      <Typography variant="h5">
+                        {EMPTY_PAGE_CREATOR_USER_PLACEHOLDER}
+                      </Typography>
+                    </Grid>
+                    <Grid item>
+                      <Button variant="contained" color="secondary">
+                        <Link href="/create" as={`/create`}>
+                          {BTN_GO_TO_DASHBOARD}
+                        </Link>
+                      </Button>
+                    </Grid>
+                  </>
+                )}
+              {(!props.profile.fetched ||
+                (props.profile.fetched &&
+                  !(props.profile.isCreator || props.profile.isAdmin))) && (
+                <>
+                  <Grid item className={classes.emptyStateHeader}>
+                    <Typography variant="h5">
+                      {EMPTY_PAGE_PLACEHOLDER}
                     </Typography>
-                    {posts.map((x, index) => (
-                      <BlogPostItem key={index} {...x} />
-                    ))}
-                    {posts.length > 0 && (
-                      <Button onClick={getMorePosts}>{BTN_LOAD_MORE}</Button>
-                    )}
-                  </section>
-                </Grid>
+                  </Grid>
+                </>
               )}
-              <Grid item xs={12} sm={4}>
-                <aside>
-                  <About />
-                </aside>
-              </Grid>
             </Grid>
           </ContainedBodyLayout>
-        </Grid>
+        )}
       </Grid>
     </MasterLayout>
   );
@@ -150,7 +212,8 @@ const getFeaturedCourses = async () => {
 };
 
 const mapStateToProps = state => ({
-  auth: state.auth
+  auth: state.auth,
+  profile: state.profile
 });
 
 const mapDispatchToProps = dispatch => ({
