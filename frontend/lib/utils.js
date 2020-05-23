@@ -64,7 +64,7 @@ export const makeGraphQLQueryStringFromJSObject = obj =>
 
 export const formulateMediaUrl =
   (backend, mediaID, generateThumbnailUrl = false) =>
-    `${backend}/media/${mediaID}${generateThumbnailUrl ? '?thumb=1' : ''}`
+    mediaID ? `${backend}/media/${mediaID}${generateThumbnailUrl ? '?thumb=1' : ''}` : ''
 
 export const formulateCourseUrl = (course, backend = '') =>
   `${backend}/${course.isBlog ? URL_EXTENTION_POSTS : URL_EXTENTION_COURSES}/${course.id}/${course.slug}`
