@@ -148,6 +148,7 @@
                               - frontend
                             container_name: proxy
                   build: no
+                  pull: yes
                 register: output
                 environment:
                     SITE_URL: http://{{ domain }}
