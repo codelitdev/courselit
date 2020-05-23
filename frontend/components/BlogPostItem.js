@@ -53,7 +53,7 @@ const BlogPostItem = props => {
                       </Typography>
                     </Grid>
                     <Grid item>
-                      <Typography variant="subtitle1">
+                      <Typography variant="body1">
                         {props.description}
                       </Typography>
                     </Grid>

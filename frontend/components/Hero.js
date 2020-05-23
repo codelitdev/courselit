@@ -1,105 +1,106 @@
-import React, { useState } from "react";
-import { Grid, IconButton, Typography, Button } from "@material-ui/core";
+import React from "react";
+import {
+  Grid,
+  Typography,
+  Card,
+  CardActionArea,
+  CardMedia,
+  CardContent
+} from "@material-ui/core";
 import PropTypes from "prop-types";
 import { featuredCourse, siteInfoProps } from "../types.js";
 import { makeStyles } from "@material-ui/styles";
 import { connect } from "react-redux";
-import { KeyboardArrowLeft, KeyboardArrowRight } from "@material-ui/icons";
-
 import { formulateMediaUrl } from "../lib/utils";
 import { MEDIA_BACKEND, URL_EXTENTION_COURSES } from "../config/constants";
-import { FREE_COST } from "../config/strings.js";
+import { FREE_COST, FEATURED_SECTION_HEADER } from "../config/strings.js";
 import Link from "next/link";
 
-const getUseStyles = backgroundImageUrl =>
-  makeStyles(theme => ({
-    container: {
-      background: `url('${formulateMediaUrl(
-        MEDIA_BACKEND,
-        backgroundImageUrl,
-        false
-      )}') no-repeat center center`,
-      backgroundSize: "cover"
-    },
-    contentContainer: {
-      padding: "12em 2em",
-      [theme.breakpoints.down("sm")]: {
-        padding: "7em 0em"
-      }
-    },
-    title: {
-      marginBottom: "2em",
-      margin: "0.8em 0em",
-      textAlign: "center"
+const useStyles = makeStyles(theme => ({
+  container: {
+    marginBottom: theme.spacing(1),
+    [theme.breakpoints.up("md")]: {
+      marginBottom: theme.spacing(2)
     }
-  }));
+  },
+  coursesContainer: {
+    marginBottom: theme.spacing(1)
+  },
+  content: {
+    display: "flex",
+    flex: 1,
+    overflow: "auto",
+    paddingBottom: theme.spacing(2)
+  },
+  elem: {
+    width: 200,
+    padding: 80,
+    border: "1px solid black"
+  },
+  header: {
+    marginTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2)
+  },
+  item: {
+    float: "left",
+    flex: "0 0 40vw",
+    [theme.breakpoints.up("md")]: {
+      flex: "0 0 24vw"
+    },
+    marginRight: theme.spacing(4)
+  }
+}));
 
 const Hero = props => {
-  const [offset, setOffset] = useState(0);
   const { featuredCourses } = props;
-  const item = featuredCourses[offset];
-  if (!item) return <></>;
+  const classes = useStyles();
 
-  const classes = getUseStyles(item.featuredImage)();
-  const cost =
-    item.cost > 0
-      ? `${props.siteInfo.currencyUnit || ""}${item.cost}`
-      : FREE_COST;
-
-  const showNextItem = () =>
-    setOffset(offset + 1 === featuredCourses.length ? offset : offset + 1);
-  const showPreviousItem = () => setOffset(offset - 1 < 0 ? 0 : offset - 1);
-
-  return (
-    <Grid
-      container
-      direction="row"
-      justify="space-between"
-      alignItems="center"
-      className={classes.container}
-    >
-      <Grid item container direction="row" justify="flex-start" xs={1}>
+  return featuredCourses.length ? (
+    <div className={classes.container}>
+      <Grid container className={classes.header}>
         <Grid item>
-          <IconButton aria-label="previous" onClick={showPreviousItem}>
-            <KeyboardArrowLeft />
-          </IconButton>
+          <Typography variant="h4">{FEATURED_SECTION_HEADER}</Typography>
         </Grid>
       </Grid>
-
-      <Grid item xs={10}>
-        <Grid
-          container
-          direction="column"
-          justify="center"
-          alignItems="center"
-          className={classes.contentContainer}
-        >
-          <Grid item className={classes.title}>
-            <Typography variant="h2">{item.title}</Typography>
-          </Grid>
-          <Grid item>
-            <Typography variant="h4">
+      <Grid container alignItems="center">
+        <Grid item className={classes.content}>
+          {featuredCourses.map(course => (
+            <Card className={classes.item} key={course.id}>
               <Link
                 href={`/${URL_EXTENTION_COURSES}/[id]/[slug]`}
-                as={`/${URL_EXTENTION_COURSES}/${item.id}/${item.slug}`}
+                as={`/${URL_EXTENTION_COURSES}/${course.id}/${course.slug}`}
               >
-                <Button variant="contained" color="secondary">
-                  Enroll for {cost}
-                </Button>
+                <CardActionArea>
+                  <CardMedia
+                    component="img"
+                    alt={course.title}
+                    title={course.title}
+                    image={
+                      formulateMediaUrl(
+                        MEDIA_BACKEND,
+                        course.featuredImage,
+                        false
+                      ) || "/default.png"
+                    }
+                    className={classes.cardMedia}
+                  />
+                  <CardContent>
+                    <Typography variant="h6">{course.title}</Typography>
+                    <Typography variant="subtitle1" color="textSecondary">
+                      {course.cost > 0
+                        ? `${props.siteInfo.currencyUnit || ""} ${course.cost}`
+                        : FREE_COST}
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
               </Link>
-            </Typography>
-          </Grid>
+            </Card>
+          ))}
         </Grid>
       </Grid>
-
-      <Grid item container direction="row" justify="flex-end" xs={1}>
-        <Grid item>
-          <IconButton aria-label="previous" onClick={showNextItem}>
-            <KeyboardArrowRight />
-          </IconButton>
-        </Grid>
-      </Grid>
-    </Grid>
+    </div>
+  ) : (
+    <></>
   );
 };
 
