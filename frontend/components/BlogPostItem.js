@@ -34,7 +34,7 @@ const BlogPostItem = props => {
         <Card>
           <CardContent>
             <article>
-              <Grid container direction="row" spacing={1}>
+              <Grid container direction="row" spacing={2}>
                 {props.featuredImage && (
                   <Grid
                     item
@@ -53,7 +53,7 @@ const BlogPostItem = props => {
                       </Typography>
                     </Grid>
                     <Grid item>
-                      <Typography variant="body1">
+                      <Typography variant="body1" color="textSecondary">
                         {props.description}
                       </Typography>
                     </Grid>
