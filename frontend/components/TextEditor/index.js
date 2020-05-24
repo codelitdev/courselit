@@ -5,8 +5,10 @@ import PropTypes from "prop-types";
 import { encode, decode } from "base-64";
 
 const stringifyAndEncode = {
-  encode: objectToBeEncoded => encode(JSON.stringify(objectToBeEncoded)),
-  decode: fromEncodedString => JSON.parse(decode(fromEncodedString))
+  encode: objectToBeEncoded =>
+    encode(unescape(encodeURIComponent(JSON.stringify(objectToBeEncoded)))),
+  decode: fromEncodedString =>
+    JSON.parse(decodeURIComponent(escape(decode(fromEncodedString))))
 };
 
 const TextEditor = props => {
