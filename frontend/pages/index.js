@@ -90,12 +90,12 @@ const Index = props => {
                 <Grid
                   container
                   direction="row"
-                  spacing={2}
+                  spacing={4}
                   className={classes.content}
                 >
                   {posts.length > 0 && (
                     <Grid item xs={12} sm={8}>
-                      <section className="posts">
+                      <section>
                         <Typography variant="h4">
                           {HEADER_BLOG_POSTS_SECTION}
                         </Typography>
