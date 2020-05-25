@@ -9,13 +9,15 @@ const MediaRenderer = props => {
 
   let element;
   if (type === MediaRenderer.IMAGE_TYPE) {
+    element = <img style={styles.img} src={options.url} alt={options.alt} />;
+  }
+
+  if (type === MediaRenderer.VIDEO_TYPE) {
     element = (
-      <img
-        style={styles.img}
-        src={options.url}
-        alt={options.alt}
-        className={MediaRenderer.IMAGE_TYPE}
-      />
+      <video controls controlsList="nodownload">
+        <source src={options.url} type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
     );
   }
 

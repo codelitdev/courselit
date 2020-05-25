@@ -177,7 +177,6 @@ MediaManager.propTypes = {
   onMediaSelected: PropTypes.func.isRequired,
   mediaAdditionAllowed: PropTypes.bool,
   networkAction: PropTypes.bool.isRequired
-  // toggleVisibility: PropTypes.func
 };
 
 const mapStateToProps = state => ({

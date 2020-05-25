@@ -19,6 +19,9 @@ import PriceTag from "./PriceTag";
 
 const useStyles = featuredImage =>
   makeStyles(theme => ({
+    header: {
+      marginBottom: theme.spacing(2)
+    },
     creatoravatarcontainer: {
       display: "flex",
       alignItems: "center"
@@ -32,16 +35,20 @@ const useStyles = featuredImage =>
       marginRight: "1em"
     },
     featuredimagecontainer: {
-      marginTop: "2.4em",
       width: "100%",
       height: 240,
+      [theme.breakpoints.up("sm")]: {
+        marginTop: theme.spacing(2),
+        marginBottom: theme.spacing(2),
+        height: 480,
+        backgroundSize: "cover"
+      },
       overflow: "hidden",
-      marginBottom: "1.8em",
       background: `url('${formulateMediaUrl(
         BACKEND,
         featuredImage
       )}') no-repeat center center`,
-      backgroundSize: "cover"
+      backgroundSize: "contain"
     },
     enrollmentArea: {
       marginTop: theme.spacing(3),
@@ -66,7 +73,9 @@ const Article = props => {
     <Card>
       <CardContent>
         <article className={classes.article}>
-          <Typography variant="h2">{course.title}</Typography>
+          <Typography variant="h2" className={classes.header}>
+            {course.title}
+          </Typography>
           {options.showAttribution && (
             <Grid container className={classes.creatorcard}>
               <Grid item className={classes.creatoravatarcontainer}>

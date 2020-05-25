@@ -22,6 +22,7 @@ const MediaManagerDialog = props => {
       <DialogContent>
         <MediaGallery
           onMediaSelected={mediaId => setSelectedMediaId(mediaId)}
+          mimeTypesToShow={props.mimeTypesToShow}
         />
       </DialogContent>
       <DialogActions>
@@ -38,7 +39,8 @@ MediaManagerDialog.propTypes = {
   onOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   title: PropTypes.string.isRequired,
-  mediaAdditionAllowed: PropTypes.bool
+  mediaAdditionAllowed: PropTypes.bool,
+  mimeTypesToShow: PropTypes.arrayOf(PropTypes.string)
 };
 
 export default MediaManagerDialog;

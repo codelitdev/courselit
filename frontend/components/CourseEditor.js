@@ -44,7 +44,7 @@ import { Delete, Add } from "@material-ui/icons";
 import AppDialog from "./AppDialog.js";
 import LessonEditor from "./LessonEditor.js";
 import AppMessage from "../models/app-message.js";
-import { BACKEND } from "../config/constants.js";
+import { BACKEND, MIMETYPE_IMAGE } from "../config/constants.js";
 
 const useStyles = makeStyles(theme => ({
   title: {
@@ -478,6 +478,7 @@ const CourseEditor = props => {
                 title={FORM_FIELD_FEATURED_IMAGE}
                 src={courseData.course.featuredImage}
                 onSelection={onFeaturedImageSelection}
+                mimeTypesToShow={[MIMETYPE_IMAGE]}
               />
             </CardContent>
             <CardActions>
