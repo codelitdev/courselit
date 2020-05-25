@@ -23,31 +23,9 @@ const useStyles = makeStyles(theme => ({
       marginBottom: theme.spacing(2)
     }
   },
-  coursesContainer: {
-    marginBottom: theme.spacing(1)
-  },
-  content: {
-    display: "flex",
-    flex: 1,
-    overflow: "auto",
-    paddingBottom: theme.spacing(2)
-  },
-  elem: {
-    width: 200,
-    padding: 80,
-    border: "1px solid black"
-  },
   header: {
     marginTop: theme.spacing(2),
     paddingBottom: theme.spacing(2)
-  },
-  item: {
-    float: "left",
-    flex: "0 0 40vw",
-    [theme.breakpoints.up("md")]: {
-      flex: "0 0 24vw"
-    },
-    marginRight: theme.spacing(4)
   }
 }));
 
@@ -62,10 +40,10 @@ const Hero = props => {
           <Typography variant="h4">{FEATURED_SECTION_HEADER}</Typography>
         </Grid>
       </Grid>
-      <Grid container alignItems="center">
-        <Grid item className={classes.content}>
-          {featuredCourses.map(course => (
-            <Card className={classes.item} key={course.id}>
+      <Grid container alignItems="center" justify="space-between" spacing={2}>
+        {featuredCourses.map(course => (
+          <Grid item xs={12} sm={6} md={4} lg={3} key={course.id}>
+            <Card className={classes.item}>
               <Link
                 href={`/${URL_EXTENTION_COURSES}/[id]/[slug]`}
                 as={`/${URL_EXTENTION_COURSES}/${course.id}/${course.slug}`}
@@ -85,7 +63,9 @@ const Hero = props => {
                     className={classes.cardMedia}
                   />
                   <CardContent>
-                    <Typography variant="h6">{course.title}</Typography>
+                    <Typography variant="h6" className={classes.textOverflow}>
+                      {course.title}
+                    </Typography>
                     <Typography variant="subtitle1" color="textSecondary">
                       {course.cost > 0
                         ? `${props.siteInfo.currencyUnit || ""} ${course.cost}`
@@ -95,8 +75,8 @@ const Hero = props => {
                 </CardActionArea>
               </Link>
             </Card>
-          ))}
-        </Grid>
+          </Grid>
+        ))}
       </Grid>
     </div>
   ) : (

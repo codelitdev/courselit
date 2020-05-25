@@ -39,9 +39,7 @@ const Create = props => {
     },
     {
       name: "Media",
-      element: (
-        <MediaManager onMediaSelected={() => {}} toggleVisibility={() => {}} />
-      ),
+      element: <MediaManager onMediaSelected={() => {}} />,
       icon: <PermMedia />
     }
   ];

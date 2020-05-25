@@ -8,7 +8,6 @@ import {
   CompositeDecorator
 } from "draft-js";
 import PropTypes from "prop-types";
-// import 'draft-js/dist/Draft.css'
 import MediaRenderer from "./MediaRenderer.js";
 import CodeRenderer from "./CodeRenderer.js";
 import { Map } from "immutable";

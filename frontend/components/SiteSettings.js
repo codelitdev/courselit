@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import { siteInfoProps, authProps } from "../types";
-import MediaManager from "./MediaManager";
 import {
   getGraphQLQueryFields,
   getObjectContainingOnlyChangedFields,
@@ -89,7 +88,6 @@ const SiteSettings = props => {
   const [settings, setSettings] = useState(defaultSettingsState);
   const [newSettings, setNewSettings] = useState(defaultSettingsState);
 
-  const [mediaManagerVisibility, setMediaManagerVisibility] = useState(false);
   const classes = useStyles();
   const fetch = new FetchBuilder()
     .setUrl(`${BACKEND}/graph`)
@@ -200,8 +198,8 @@ const SiteSettings = props => {
     setNewSettings(Object.assign({}, newSettings, change));
   };
 
-  const toggleMediaManagerVisibility = () =>
-    setMediaManagerVisibility(!mediaManagerVisibility);
+  // const toggleMediaManagerVisibility = () =>
+  //   setMediaManagerVisibility(!mediaManagerVisibility);
 
   // const onAdminSettingsChanged = e => {
   //   const change = { [e.target.name]: e.target.value };
@@ -618,13 +616,6 @@ const SiteSettings = props => {
           </form>
         </Card>
       </Grid> */}
-
-      {mediaManagerVisibility && (
-        <MediaManager
-          toggleVisibility={toggleMediaManagerVisibility}
-          onMediaSelected={onChangeData}
-        />
-      )}
     </Grid>
   );
 };
