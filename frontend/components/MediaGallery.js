@@ -98,14 +98,22 @@ const MediaGallery = props => {
     try {
       props.dispatch(networkAction(true));
       const response = await fetch.exec();
+      console.log(response);
 
       if (response.media && response.media.length > 0) {
-        setUserMedia([...userMedia, ...response.media]);
+        const filteredMedia =
+          props.mimeTypesToShow && props.mimeTypesToShow.length
+            ? response.media.filter(item =>
+                props.mimeTypesToShow.includes(item.mimeType)
+              )
+            : response.media;
+        console.log(filteredMedia, props.mimeTypesToShow);
+        setUserMedia([...userMedia, ...filteredMedia]);
         setMediaOffset(mediaOffset + 1);
         console.log(response.media);
       }
     } catch (err) {
-      // setUserError(err.message)
+      console.log(err);
     } finally {
       props.dispatch(networkAction(false));
     }
@@ -341,7 +349,8 @@ MediaGallery.propTypes = {
   auth: authProps,
   dispatch: PropTypes.func.isRequired,
   networkAction: PropTypes.bool.isRequired,
-  onMediaSelected: PropTypes.func
+  onMediaSelected: PropTypes.func,
+  mimeTypesToShow: PropTypes.arrayOf(PropTypes.string)
 };
 
 const mapStateToProps = state => ({
