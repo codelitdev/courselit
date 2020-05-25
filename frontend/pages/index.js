@@ -77,9 +77,6 @@ const Index = props => {
   return (
     <MasterLayout>
       <Grid container direction="column">
-        <Grid item>
-          <div className={classes.offset}></div>
-        </Grid>
         {hasContentToShow === true && (
           <>
             <ContainedBodyLayout>

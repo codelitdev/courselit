@@ -1,33 +1,31 @@
 import React, { useState } from "react";
 import Editor from "./Editor.js";
 import PropTypes from "prop-types";
-import { BACKEND } from "../../config/constants.js";
+import { BACKEND, MIMETYPE_IMAGE } from "../../config/constants.js";
 
-import { IconButton, Dialog, AppBar, Toolbar, Slide } from "@material-ui/core";
 import {
-  AddPhotoAlternate,
-  Code,
-  FormatQuote,
-  InsertLink,
-  Close,
-  Edit
-} from "@material-ui/icons";
-import MediaManager from "../MediaManager.js";
+  IconButton,
+  Dialog,
+  AppBar,
+  Toolbar,
+  Slide,
+  Grid,
+  Menu,
+  MenuItem
+} from "@material-ui/core";
+import { Edit, TextFormat, InsertPhoto, Done } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/styles";
 import { MEDIA_MANAGER_DIALOG_TITLE } from "../../config/strings.js";
-import AppDialog from "../AppDialog.js";
+import MediaManagerDialog from "../MediaManagerDialog.js";
 
 const useStyles = makeStyles(theme => ({
-  container: {
-    display: "flex"
-  },
   editorContainer: {
-    marginTop: theme.spacing(1),
-    marginLeft: theme.spacing(1),
-    marginRight: theme.spacing(1)
+    margin: theme.spacing(2),
+    marginBottom: theme.spacing(16)
   },
   appBar: {
-    position: "relative"
+    top: "auto",
+    bottom: 0
   }
 }));
 
@@ -66,6 +64,8 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 const EditorUI = props => {
   const [open, setOpen] = useState(false);
   const [addImageDialogOpened, setAddImageDialogOpened] = useState(false);
+  const [insertAnchorEl, setinsertAnchorEl] = useState(null);
+  const [formatAnchorEl, setFormatAnchorEl] = useState(null);
   const classes = useStyles();
 
   const onChange = editorState => {
@@ -74,29 +74,34 @@ const EditorUI = props => {
 
   const handleMediaManagerClose = url => {
     setAddImageDialogOpened(false);
+    // TODO: Add capability to add other media types like videos, pdfs etc.
     props.onChange(
       Editor.addImage(props.editorState, `${BACKEND}/media/${url}`)
     );
   };
 
   const highlightCode = () => {
-    // props.onChange(
-    //   Editor.highlightCode(props.editorState)
-    // )
+    handleFormatClose();
     props.onChange(Editor.toggleCode(props.editorState));
   };
 
   const toggleBlockquote = () => {
+    handleFormatClose();
     props.onChange(Editor.toggleBlockquote(props.editorState));
   };
 
-  const toggleLink = () => {
-    props.onChange(Editor.toggleLink(props.editorState));
+  const openMediaSelection = () => {
+    handleInsertClose();
+    setAddImageDialogOpened(true);
   };
 
-  const openMediaSelection = () => setAddImageDialogOpened(true);
-
   const closeEditor = () => setOpen(false);
+
+  const handleInsertOpen = event => setinsertAnchorEl(event.currentTarget);
+  const handleInsertClose = () => setinsertAnchorEl(null);
+
+  const handleFormatOpen = event => setFormatAnchorEl(event.currentTarget);
+  const handleFormatClose = () => setFormatAnchorEl(null);
 
   const editor = (
     <Editor
@@ -120,41 +125,62 @@ const EditorUI = props => {
         onClose={closeEditor}
         TransitionComponent={Transition}
       >
-        <AppBar className={classes.appBar}>
+        <AppBar position="fixed" className={classes.appBar}>
           <Toolbar>
-            <IconButton color="inherit" onClick={openMediaSelection}>
-              <AddPhotoAlternate />
-            </IconButton>
-            <IconButton color="inherit" onClick={toggleLink}>
-              <InsertLink />
-            </IconButton>
-            <IconButton color="inherit" onClick={highlightCode}>
-              <Code />
-            </IconButton>
-            <IconButton color="inherit" onClick={toggleBlockquote}>
-              <FormatQuote />
-            </IconButton>
-            <IconButton edge="end" color="inherit" onClick={closeEditor}>
-              <Close />
-            </IconButton>
+            <Grid container justify="space-between" alignItems="center">
+              <div>
+                <IconButton
+                  color="inherit"
+                  onClick={handleInsertOpen}
+                  aria-controls="insert-menu"
+                >
+                  <InsertPhoto />
+                </IconButton>
+                <IconButton
+                  color="inherit"
+                  onClick={handleFormatOpen}
+                  aria-controls="format-menu"
+                >
+                  <TextFormat />
+                </IconButton>
+                <Menu
+                  id="insert-menu"
+                  anchorEl={insertAnchorEl}
+                  keepMounted
+                  open={Boolean(insertAnchorEl)}
+                  onClose={handleInsertClose}
+                >
+                  <MenuItem onClick={openMediaSelection}>Media</MenuItem>
+                </Menu>
+                <Menu
+                  id="format-menu"
+                  anchorEl={formatAnchorEl}
+                  keepMounted
+                  open={Boolean(formatAnchorEl)}
+                  onClose={handleFormatClose}
+                >
+                  <MenuItem onClick={highlightCode}>Code</MenuItem>
+                  <MenuItem onClick={toggleBlockquote}>Blockquote</MenuItem>
+                </Menu>
+              </div>
+              <IconButton edge="end" color="inherit" onClick={closeEditor}>
+                <Done />
+              </IconButton>
+            </Grid>
           </Toolbar>
         </AppBar>
-        {editor}
-        {/* <MediaManagerDialog
-          onOpen={addImageDialogOpened}
-          onClose={handleMediaManagerClose}
-          title={MEDIA_MANAGER_DIALOG_TITLE}/> */}
-        <AppDialog
-          onOpen={addImageDialogOpened}
-          onClose={handleMediaManagerClose}
-          title={MEDIA_MANAGER_DIALOG_TITLE}
-        >
-          <MediaManager
-            onMediaSelected={handleMediaManagerClose}
-            mediaAdditionAllowed={false}
-          />
-        </AppDialog>
+        <div className={classes.editorContainer}>
+          {editor}
+          <div className={classes.offset}></div>
+        </div>
       </Dialog>
+      <MediaManagerDialog
+        onOpen={addImageDialogOpened}
+        onClose={handleMediaManagerClose}
+        title={MEDIA_MANAGER_DIALOG_TITLE}
+        mediaAdditionAllowed={false}
+        mimeTypesToShow={[MIMETYPE_IMAGE]}
+      />
     </>
   );
 };
