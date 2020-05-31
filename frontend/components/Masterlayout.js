@@ -25,12 +25,13 @@ const MasterLayout = props => {
   return (
     <>
       <Head>
-        {props.siteinfo.logopath && (
+        <title>{props.title} | {props.siteInfo.title}</title>
+        {props.siteInfo.logopath && (
           <link
             rel="icon"
             href={formulateMediaUrl(
               MEDIA_BACKEND,
-              props.siteinfo.logopath,
+              props.siteInfo.logopath,
               true
             )}
           />
@@ -48,12 +49,13 @@ const MasterLayout = props => {
 MasterLayout.propTypes = {
   children: PropTypes.object,
   networkAction: PropTypes.bool,
-  siteinfo: siteInfoProps
+  siteInfo: siteInfoProps.isRequired,
+  title: PropTypes.string.isRequired
 };
 
 const mapStateToProps = state => ({
   networkAction: state.networkAction,
-  siteinfo: state.siteinfo
+  siteInfo: state.siteinfo
 });
 
 export default connect(mapStateToProps)(MasterLayout);
