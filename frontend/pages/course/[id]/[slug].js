@@ -1,7 +1,7 @@
 import { connect } from "react-redux";
 import ResponsiveDrawer from "../../../components/ResponsiveDrawer.js";
 import Head from "next/head";
-import { formulateCourseUrl, formulateMediaUrl } from "../../../lib/utils.js";
+import { formulateCourseUrl, formulateMediaUrl, getPostDescriptionSnippet } from "../../../lib/utils.js";
 import { Lock } from "@material-ui/icons";
 import { BACKEND, FRONTEND, MEDIA_BACKEND } from "../../../config/constants.js";
 import { SIDEBAR_TEXT_COURSE_ABOUT } from "../../../config/strings.js";
@@ -41,14 +41,14 @@ const Course = props => {
       {!error && (
         <>
           <Head>
-            <title>{course.title}</title>
+            <title>{course.title} | {props.siteInfo.title}</title>
             <meta
               property="og:url"
               content={formulateCourseUrl(course, FRONTEND)}
             />
             <meta property="og:type" content="article" />
             <meta property="og:title" content={course.title} />
-            {/* <meta property="og:description" content={getPostDescriptionSnippet(course.description)} /> */}
+            <meta property="og:description" content={getPostDescriptionSnippet(course.description)} />
             <meta property="og:author" content={course.creatorName} />
             {course.featuredImage && (
               <meta
@@ -108,7 +108,8 @@ Course.getInitialProps = async ({ query }) => {
 };
 
 const mapStateToProps = state => ({
-  profile: state.profile
+  profile: state.profile,
+  siteInfo: state.siteinfo
 });
 
 export default connect(mapStateToProps)(Course);

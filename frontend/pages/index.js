@@ -17,6 +17,7 @@ import { makeStyles } from "@material-ui/styles";
 import ContainedBodyLayout from "../components/ContainedBodyLayout.js";
 import About from "../components/About.js";
 import FetchBuilder from "../lib/fetch.js";
+import { siteInfoProps } from "../types.js";
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -75,7 +76,7 @@ const Index = props => {
   };
 
   return (
-    <MasterLayout>
+    <MasterLayout title={`${props.siteinfo.subtitle} | ${props.siteinfo.title}`}>
       <Grid container direction="column">
         {hasContentToShow === true && (
           <>
@@ -93,7 +94,7 @@ const Index = props => {
                   {posts.length > 0 && (
                     <Grid item xs={12} sm={8}>
                       <section>
-                        <Typography variant="h4">
+                        <Typography variant="h2">
                           {HEADER_BLOG_POSTS_SECTION}
                         </Typography>
                         {posts.map((x, index) => (
@@ -210,7 +211,8 @@ const getFeaturedCourses = async () => {
 
 const mapStateToProps = state => ({
   auth: state.auth,
-  profile: state.profile
+  profile: state.profile,
+  siteinfo: state.siteinfo
 });
 
 const mapDispatchToProps = dispatch => ({
