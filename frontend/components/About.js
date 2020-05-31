@@ -8,7 +8,7 @@ const About = props =>
   props.siteInfo.about ? (
     <Grid container spacing={2}>
       <Grid item>
-        <Typography variant="h4">{HEADER_ABOUT_SECTION}</Typography>
+        <Typography variant="h2">{HEADER_ABOUT_SECTION}</Typography>
       </Grid>
       <Grid item>
         <Card>

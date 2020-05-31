@@ -37,7 +37,7 @@ const Hero = props => {
     <div className={classes.container}>
       <Grid container className={classes.header}>
         <Grid item>
-          <Typography variant="h4">{FEATURED_SECTION_HEADER}</Typography>
+          <Typography variant="h2">{FEATURED_SECTION_HEADER}</Typography>
         </Grid>
       </Grid>
       <Grid container alignItems="center" justify="space-between" spacing={2}>
