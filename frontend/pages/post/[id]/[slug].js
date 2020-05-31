@@ -11,15 +11,16 @@ import Head from "next/head";
 import ContainedBodyLayout from "../../../components/ContainedBodyLayout.js";
 import Article from "../../../components/Article.js";
 import FetchBuilder from "../../../lib/fetch.js";
+import { siteInfoProps } from "../../../types.js";
 
-const useStyles = makeStyles({
+const useStyles = makeStyles(theme => ({
   articleMarginAdjust: {
-    marginTop: "3.2em"
+    marginTop: theme.spacing(2)
   },
   articleMarginBottomAdjust: {
-    marginBottom: "2em"
+    marginBottom: theme.spacing(2)
   }
-});
+}));
 
 const Post = props => {
   const classes = useStyles();
@@ -28,11 +29,10 @@ const Post = props => {
   };
 
   return (
-    <MasterLayout>
+    <MasterLayout title={props.post.title}>
       {props.post && (
         <>
           <Head>
-            <title>{props.post.title}</title>
             <meta
               property="og:url"
               content={formulateCourseUrl(props.post, FRONTEND)}
@@ -91,4 +91,12 @@ Post.getInitialProps = async ({ query }) => {
   return { post: response.post };
 };
 
-export default connect()(Post);
+Post.propTypes = {
+  siteInfo: siteInfoProps
+};
+
+const mapStateToProps = state => ({
+  siteInfo: state.siteinfo
+});
+
+export default connect(mapStateToProps)(Post);

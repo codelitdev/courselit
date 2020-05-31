@@ -20,7 +20,10 @@ import PriceTag from "./PriceTag";
 const useStyles = featuredImage =>
   makeStyles(theme => ({
     header: {
-      marginBottom: theme.spacing(2)
+      marginBottom: theme.spacing(1),
+      [theme.breakpoints.up("sm")]: {
+        marginBottom: theme.spacing(4)
+      }
     },
     creatoravatarcontainer: {
       display: "flex",
