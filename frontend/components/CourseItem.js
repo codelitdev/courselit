@@ -67,7 +67,9 @@ const CourseItem = props => {
                       </Typography>
                     </Grid>
                     <Grid item>
-                      <Typography variant="body1" component='div'>{description}</Typography>
+                      <Typography variant="body1" component="div">
+                        {description}
+                      </Typography>
                     </Grid>
                     <Grid item>
                       <PriceTag cost={course.cost}></PriceTag>

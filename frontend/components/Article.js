@@ -21,8 +21,8 @@ const useStyles = featuredImage =>
   makeStyles(theme => ({
     header: {
       marginBottom: theme.spacing(1),
-      [theme.breakpoints.up('sm')]: {
-        marginBottom: theme.spacing(4),
+      [theme.breakpoints.up("sm")]: {
+        marginBottom: theme.spacing(4)
       }
     },
     creatoravatarcontainer: {

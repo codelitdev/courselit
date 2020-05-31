@@ -1,4 +1,3 @@
-import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import MasterLayout from "../../../components/Masterlayout.js";
 import { BACKEND, FRONTEND, MEDIA_BACKEND } from "../../../config/constants.js";
@@ -21,7 +20,7 @@ const useStyles = makeStyles(theme => ({
   articleMarginBottomAdjust: {
     marginBottom: theme.spacing(2)
   }
-}))
+}));
 
 const Post = props => {
   const classes = useStyles();
@@ -94,7 +93,7 @@ Post.getInitialProps = async ({ query }) => {
 
 Post.propTypes = {
   siteInfo: siteInfoProps
-}
+};
 
 const mapStateToProps = state => ({
   siteInfo: state.siteinfo

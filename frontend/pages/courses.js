@@ -14,14 +14,14 @@ const useStyles = makeStyles(theme => ({
   header: {
     marginTop: theme.spacing(2),
     marginBottom: theme.spacing(2),
-    [theme.breakpoints.up('sm')]: {
-      marginTop: theme.spacing(4),
+    [theme.breakpoints.up("sm")]: {
+      marginTop: theme.spacing(4)
     }
   },
   loadMoreBtn: {
     marginBottom: theme.spacing(4)
   }
-}))
+}));
 
 const Courses = props => {
   const [courses, setCourses] = useState(props.courses);
@@ -43,7 +43,9 @@ const Courses = props => {
   return (
     <MasterLayout title={PAGE_HEADER_ALL_COURSES}>
       <ContainedBodyLayout>
-        <Typography variant="h2" className={classes.header}>{PAGE_HEADER_ALL_COURSES}</Typography>
+        <Typography variant="h2" className={classes.header}>
+          {PAGE_HEADER_ALL_COURSES}
+        </Typography>
         {courses.map(course => (
           <CourseItem course={course} key={course.id} isPublicView={true} />
         ))}
