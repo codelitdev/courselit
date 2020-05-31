@@ -25,7 +25,9 @@ const MasterLayout = props => {
   return (
     <>
       <Head>
-        <title>{props.title} | {props.siteInfo.title}</title>
+        <title>
+          {props.title} | {props.siteInfo.title}
+        </title>
         {props.siteInfo.logopath && (
           <link
             rel="icon"

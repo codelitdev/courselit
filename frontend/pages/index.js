@@ -17,7 +17,6 @@ import { makeStyles } from "@material-ui/styles";
 import ContainedBodyLayout from "../components/ContainedBodyLayout.js";
 import About from "../components/About.js";
 import FetchBuilder from "../lib/fetch.js";
-import { siteInfoProps } from "../types.js";
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -76,7 +75,9 @@ const Index = props => {
   };
 
   return (
-    <MasterLayout title={`${props.siteinfo.subtitle} | ${props.siteinfo.title}`}>
+    <MasterLayout
+      title={`${props.siteinfo.subtitle} | ${props.siteinfo.title}`}
+    >
       <Grid container direction="column">
         {hasContentToShow === true && (
           <>
