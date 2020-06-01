@@ -76,7 +76,7 @@ const Index = props => {
 
   return (
     <MasterLayout
-      title={`${props.siteinfo.subtitle} | ${props.siteinfo.title}`}
+      title={props.siteinfo.subtitle}
     >
       <Grid container direction="column">
         {hasContentToShow === true && (
