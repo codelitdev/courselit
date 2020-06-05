@@ -53,5 +53,8 @@
       "<rootDir>/__tests__/util.js",
       "<rootDir>/__tests__/otherfiles"
     ]
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

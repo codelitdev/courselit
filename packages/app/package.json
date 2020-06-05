@@ -60,5 +60,8 @@
     "testPathIgnorePatterns": [
       "<rootDir>/__tests__/.eslintrc.js"
     ]
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
