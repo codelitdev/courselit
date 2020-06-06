@@ -1,13 +1,16 @@
 # Introduction
 
-A Material UI based front-end app for the CourseLit Headless CMS.
+A Material UI based front-end app for [CourseLit Headless CMS](https://www.npmjs.com/package/@courselit/api).
 
-## Docker
-
-Easily spin up a new courselit-frontend server using the following command
+## Getting started
+Since the app is based on Next.js framework there is no straight forward way to run it. Please follow the below commands.
 
 ```
-docker run codelit/courselit-frontend
+mv node_modules/@courselit/app/* .
+rm -rf node_modules
+npm install
+npm run build
+npm run start
 ```
 
 ### Environment variables

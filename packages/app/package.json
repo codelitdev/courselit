@@ -11,9 +11,6 @@
     "prettier": "prettier --write 'pages/**/*.js' 'components/**/*.js' 'redux/**/*.js' types.js theme.js",
     "test": "jest"
   },
-  "bin": {
-    "courselit-app": "./bin/server.js"
-  },
   "dependencies": {
     "@babel/runtime": "^7.8.3",
     "@material-ui/core": "^4.8.1",
