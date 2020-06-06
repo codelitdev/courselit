@@ -14,7 +14,7 @@ const CourseSchema = new mongoose.Schema({
   isFeatured: { type: Boolean, required: true, default: false },
   lessons: [String],
   description: String,
-  featuredImage: String
+  featuredImage: String,
 });
 
 module.exports = mongoose.model("Course", CourseSchema);

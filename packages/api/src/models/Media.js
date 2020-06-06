@@ -8,13 +8,13 @@ const MediaSchema = new mongoose.Schema({
   size: { type: String, required: true },
   creatorId: { type: mongoose.Schema.Types.ObjectId, required: true },
   altText: { type: String },
-  thumbnail: { type: String }
+  thumbnail: { type: String },
 });
 
 MediaSchema.index({
   originalFileName: "text",
   title: "text",
-  altText: "text"
+  altText: "text",
 });
 
 module.exports = mongoose.model("Media", MediaSchema);

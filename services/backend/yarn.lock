@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@courselit/api@^0.1.1":
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/@courselit/api/-/api-0.1.1.tgz#d6b2aecbb2695f205f7bda7dff4bf1eb43c28ad8"
-  integrity sha512-MGs60gsk2NIc72hFhkjbeaT4KWloXtFQWdmflZdWHnTj2yngjhm9JEePrcNn0oyn3KNaNss7ORa0CjGeqgRW5Q==
+"@courselit/api@^0.1.2":
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/@courselit/api/-/api-0.1.2.tgz#dc313045b08f52d7bf9667f019645e016321f558"
+  integrity sha512-iHzdtaiK36oD4Vd+bUjlPcIfR1kQcbXSejD13ipcKuMftqLjW1tSH8c9CEIqX3Mktaq5WFmxger9dSIrJPOZ2Q==
   dependencies:
     base-64 "^0.1.0"
     bcryptjs "^2.4.3"

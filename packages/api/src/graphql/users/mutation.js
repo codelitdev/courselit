@@ -16,10 +16,10 @@ module.exports = {
     type: types.userType,
     args: {
       userData: {
-        type: new graphql.GraphQLNonNull(types.userUpdateInput)
-      }
+        type: new graphql.GraphQLNonNull(types.userUpdateInput),
+      },
     },
     resolve: async (root, { userData }, context) =>
-      logic.updateUser(userData, context)
-  }
+      logic.updateUser(userData, context),
+  },
 };

@@ -11,24 +11,24 @@ describe("Payment test suite", () => {
   const pass = "lol";
   // let token = ''
 
-  beforeAll(async done => {
+  beforeAll(async (done) => {
     User.create({ email: user, password: pass, name: "Tester #1" })
       .then(() =>
         promisify({
           url: `http://${apiUrl}/auth/login`,
           form: {
             email: user,
-            password: "lol"
-          }
+            password: "lol",
+          },
         })
       )
-      .then(res => {
+      .then((res) => {
         // token = res.token
         done();
       });
   });
 
-  afterAll(done => {
+  afterAll((done) => {
     User.deleteOne({ email: user }).then(() => {
       mongoose.connection.close();
       done();
@@ -39,29 +39,31 @@ describe("Payment test suite", () => {
     expect.assertions(1);
     return promisify(
       {
-        url: `http://${apiUrl}/payment/nonexisting`
+        url: `http://${apiUrl}/payment/nonexisting`,
       },
       false
-    ).then(data => expect(data).toContain("Cannot POST /payment/nonexisting"));
+    ).then((data) =>
+      expect(data).toContain("Cannot POST /payment/nonexisting")
+    );
   });
 
   it("Unauthenticated payment initiation request", () => {
     expect.assertions(1);
     return promisify(
       {
-        url: `http://${apiUrl}/payment/initiate`
+        url: `http://${apiUrl}/payment/initiate`,
       },
       false
-    ).then(data => expect(data).toBe("Unauthorized"));
+    ).then((data) => expect(data).toBe("Unauthorized"));
   });
 
   it("Unauthenticated payment finalization request", () => {
     expect.assertions(1);
     return promisify(
       {
-        url: `http://${apiUrl}/payment/verify`
+        url: `http://${apiUrl}/payment/verify`,
       },
       false
-    ).then(data => expect(data).toBe("Unauthorized"));
+    ).then((data) => expect(data).toBe("Unauthorized"));
   });
 });

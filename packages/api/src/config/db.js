@@ -12,7 +12,7 @@ module.exports = async () => {
       useNewUrlParser: true,
       useCreateIndex: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000
+      serverSelectionTimeoutMS: 5000,
     });
   } catch (err) {
     console.error(internalResponses.error_db_connection_failed);

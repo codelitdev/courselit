@@ -9,7 +9,7 @@ const LessonSchema = new mongoose.Schema({
   downloadable: { type: Boolean, default: false },
   creatorId: mongoose.Schema.Types.ObjectId,
   courseId: mongoose.Schema.Types.ObjectId,
-  requiresEnrollment: { type: Boolean, default: false }
+  requiresEnrollment: { type: Boolean, default: false },
 });
 
 module.exports = mongoose.model("Lesson", LessonSchema);

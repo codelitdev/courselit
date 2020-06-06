@@ -6,20 +6,20 @@ module.exports = {
   getUser: {
     type: types.userType,
     args: {
-      email: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) }
+      email: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     },
-    resolve: (root, { email }, context) => logic.getUser(email, context)
+    resolve: (root, { email }, context) => logic.getUser(email, context),
   },
   getSiteUsers: {
     type: new graphql.GraphQLList(types.userType),
     args: {
-      searchData: { type: types.userSearchInput }
+      searchData: { type: types.userSearchInput },
     },
     resolve: (root, { searchData }, context) =>
-      logic.getSiteUsers(searchData, context)
+      logic.getSiteUsers(searchData, context),
   },
   getUsersSummary: {
     type: types.usersSummaryType,
-    resolve: (root, { a = {} }, context) => logic.getUsersSummary(context)
-  }
+    resolve: (root, { a = {} }, context) => logic.getUsersSummary(context),
+  },
 };

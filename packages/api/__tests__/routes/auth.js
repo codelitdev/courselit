@@ -9,30 +9,30 @@ require("../../src/config/db.js");
 const mongoose = require("mongoose");
 
 describe("Auth Test Suite", () => {
-  afterAll(async done => {
+  afterAll(async (done) => {
     await User.deleteOne({ email: "user2@test.com" });
     mongoose.connection.close();
     done();
   });
 
   describe("Signing up suite", () => {
-    beforeEach(done => {
+    beforeEach((done) => {
       User.deleteOne({ email: "user@test.com" }, () => done());
     });
 
-    afterEach(done => {
+    afterEach((done) => {
       User.deleteOne({ email: "user@test.com" }, () => done());
     });
 
-    it("signup normal", async done => {
+    it("signup normal", async (done) => {
       expect.assertions(1);
       const response = await promisify({
         url: `http://${apiUrl}/auth/signup`,
         form: {
           email: "user@test.com",
           password: "lol",
-          name: "Tester"
-        }
+          name: "Tester",
+        },
       });
       expect(response.message).toBe(responses.user_created);
       // TODO: fix this
@@ -48,9 +48,9 @@ describe("Auth Test Suite", () => {
         url: `http://${apiUrl}/auth/signup`,
         form: {
           email: "user@test.com",
-          pass: "lol"
-        }
-      }).then(data => expect(data.message).toBe("Missing credentials"));
+          pass: "lol",
+        },
+      }).then((data) => expect(data.message).toBe("Missing credentials"));
     });
 
     it("signup but name field is missing", () => {
@@ -59,9 +59,9 @@ describe("Auth Test Suite", () => {
         url: `http://${apiUrl}/auth/signup`,
         form: {
           email: "user@test.com",
-          password: "lol"
-        }
-      }).then(data => expect(data.message).toBe(responses.name_required));
+          password: "lol",
+        },
+      }).then((data) => expect(data.message).toBe(responses.name_required));
     });
 
     it("signup with existing email", () => {
@@ -71,26 +71,26 @@ describe("Auth Test Suite", () => {
         form: {
           email: "user@test.com",
           password: "lol",
-          name: "Tester"
-        }
+          name: "Tester",
+        },
       })
-        .then(val =>
+        .then((val) =>
           promisify({
             url: `http://${apiUrl}/auth/signup`,
             form: {
               email: "user@test.com",
               password: "lol",
-              name: "Tester #2"
-            }
+              name: "Tester #2",
+            },
           })
         )
-        .then(data => {
+        .then((data) => {
           expect(data.message).toBe(responses.email_already_registered);
         });
     });
 
     // TODO: fix this testcase, beforeEach blocks are not running correctly
-    it("only the first signup gets super admin rights", async done => {
+    it("only the first signup gets super admin rights", async (done) => {
       const user = "user@test.com";
       const user2 = "user2@test.com";
       expect.assertions(2);
@@ -99,8 +99,8 @@ describe("Auth Test Suite", () => {
         form: {
           email: user,
           password: "lol",
-          name: "Tester"
-        }
+          name: "Tester",
+        },
       });
       // expect(userData.isCreator).toBeFalsy()
       // expect(userData.isAdmin).toBeFalsy()
@@ -109,8 +109,8 @@ describe("Auth Test Suite", () => {
         form: {
           email: user2,
           password: "lol",
-          name: "Tester"
-        }
+          name: "Tester",
+        },
       });
       const user2Data = await User.findOne({ email: user2 });
       expect(user2Data.isCreator).toBeFalsy();
@@ -120,18 +120,20 @@ describe("Auth Test Suite", () => {
   });
 
   describe("Signing in suite", () => {
-    beforeAll(done => {
+    beforeAll((done) => {
       promisify({
         url: `http://${apiUrl}/auth/signup`,
         form: {
           email: "user@test.com",
           password: "lol",
-          name: "Tester"
-        }
+          name: "Tester",
+        },
       }).then(() => done());
     });
 
-    afterAll(done => User.deleteOne({ email: "user@test.com" }, () => done()));
+    afterAll((done) =>
+      User.deleteOne({ email: "user@test.com" }, () => done())
+    );
 
     it("non existing user", () => {
       expect.assertions(1);
@@ -139,9 +141,9 @@ describe("Auth Test Suite", () => {
         url: `http://${apiUrl}/auth/login`,
         form: {
           email: "user3@test.com",
-          password: "lol"
-        }
-      }).then(data => {
+          password: "lol",
+        },
+      }).then((data) => {
         expect(data.message).toBe(responses.auth_user_not_found);
       });
     });
@@ -152,9 +154,9 @@ describe("Auth Test Suite", () => {
         url: `http://${apiUrl}/auth/login`,
         form: {
           email: "user@test.com",
-          password: "lol2"
-        }
-      }).then(data => {
+          password: "lol2",
+        },
+      }).then((data) => {
         expect(data.message).toBe(responses.email_or_passwd_invalid);
       });
     });
@@ -165,9 +167,9 @@ describe("Auth Test Suite", () => {
         url: `http://${apiUrl}/auth/login`,
         form: {
           email: "user@test.com",
-          password: "lol"
-        }
-      }).then(data => {
+          password: "lol",
+        },
+      }).then((data) => {
         expect(data).not.toHaveProperty("message");
         expect(data.token).toBeTruthy();
       });
@@ -175,18 +177,18 @@ describe("Auth Test Suite", () => {
   });
 
   describe("Testing graphql endpoint security", () => {
-    beforeAll(done => {
+    beforeAll((done) => {
       promisify({
         url: `http://${apiUrl}/auth/signup`,
         form: {
           email: "user@test.com",
           password: "lol",
-          name: "Tester"
-        }
+          name: "Tester",
+        },
       }).then(() => done());
     });
 
-    afterAll(done => {
+    afterAll((done) => {
       User.deleteOne({ email: "user@test.com" }, () => done());
     });
 
@@ -209,22 +211,22 @@ describe("Auth Test Suite", () => {
         url: `http://${apiUrl}/auth/login`,
         form: {
           email: "user@test.com",
-          password: "lol"
-        }
+          password: "lol",
+        },
       })
-        .then(data => data.token)
-        .then(token => {
+        .then((data) => data.token)
+        .then((token) => {
           return promisify(
             {
               url: `http://${apiUrl}/graph`,
               headers: {
-                Authorization: `Bearer ${token}`
-              }
+                Authorization: `Bearer ${token}`,
+              },
             },
             false
           );
         })
-        .then(data => {
+        .then((data) => {
           try {
             const res = JSON.parse(data);
             expect(res).toHaveProperty("errors");

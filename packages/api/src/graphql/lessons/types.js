@@ -14,8 +14,8 @@ const lessontypeType = new graphql.GraphQLEnumType({
     VIDEO: { value: video },
     AUDIO: { value: audio },
     PDF: { value: pdf },
-    QUIZ: { value: quiz }
-  }
+    QUIZ: { value: quiz },
+  },
 });
 
 /**
@@ -32,12 +32,12 @@ const lessonType = new graphql.GraphQLObjectType({
     creatorId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     requiresEnrollment: {
       description: DESCRIPTION_REQUIRES_ENROLLMENT,
-      type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean)
+      type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean),
     },
     courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     content: { type: graphql.GraphQLString },
-    contentURL: { type: graphql.GraphQLString }
-  }
+    contentURL: { type: graphql.GraphQLString },
+  },
 });
 
 /**
@@ -50,10 +50,10 @@ const lessonMetaType = new graphql.GraphQLObjectType({
     title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     requiresEnrollment: {
       description: DESCRIPTION_REQUIRES_ENROLLMENT,
-      type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean)
+      type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean),
     },
-    courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) }
-  }
+    courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+  },
 });
 
 /**
@@ -67,12 +67,12 @@ const lessonInputType = new graphql.GraphQLInputObjectType({
     courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     requiresEnrollment: {
       description: DESCRIPTION_REQUIRES_ENROLLMENT,
-      type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean)
+      type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean),
     },
     content: { type: graphql.GraphQLString },
     contentURL: { type: graphql.GraphQLString },
-    downloadable: { type: graphql.GraphQLBoolean }
-  }
+    downloadable: { type: graphql.GraphQLBoolean },
+  },
 });
 
 /**
@@ -89,9 +89,9 @@ const lessonUpdateType = new graphql.GraphQLInputObjectType({
     downloadable: { type: graphql.GraphQLBoolean },
     requiresEnrollment: {
       description: DESCRIPTION_REQUIRES_ENROLLMENT,
-      type: graphql.GraphQLBoolean
-    }
-  }
+      type: graphql.GraphQLBoolean,
+    },
+  },
 });
 
 module.exports = {
@@ -99,5 +99,5 @@ module.exports = {
   lessonType,
   lessonInputType,
   lessonUpdateType,
-  lessonMetaType
+  lessonMetaType,
 };

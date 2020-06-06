@@ -11,7 +11,7 @@ const PurchaseSchema = new mongoose.Schema({
   currencyISOCode: { type: String, required: true },
   discount: { type: Number },
   status: { type: String, required: true, default: transactionInitiated },
-  remark: { type: String }
+  remark: { type: String },
 });
 
 module.exports = mongoose.model("Purchase", PurchaseSchema);

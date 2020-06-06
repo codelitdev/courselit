@@ -6,7 +6,7 @@ const { makeModelTextSearchable } = require("../../lib/graphql.js");
 const { mymediaLimit } = require("../../config/constants.js");
 const {
   checkIfAuthenticated,
-  checkOwnership
+  checkOwnership,
 } = require("../../lib/graphql.js");
 const strings = require("../../config/strings.js");
 
@@ -14,7 +14,7 @@ const checkMediaOwnership = checkOwnership(Media);
 
 exports.getCreatorMedia = async (offset, ctx, text) => {
   const query = {
-    creatorId: ctx && ctx.user && ctx.user._id
+    creatorId: ctx && ctx.user && ctx.user._id,
   };
   if (text) query.$text = { $search: text };
 
@@ -25,7 +25,7 @@ exports.getCreatorMedia = async (offset, ctx, text) => {
     {
       itemsPerPage: mymediaLimit,
       sortByColumn: "_id",
-      sortOrder: -1
+      sortOrder: -1,
     }
   );
 };

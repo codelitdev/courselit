@@ -15,7 +15,7 @@ const fs = require("fs");
  *
  * @param {string} filename
  */
-const uniqueFileNameGenerator = filename => {
+const uniqueFileNameGenerator = (filename) => {
   const extention = filename.split(".");
   const uniqueNameWithoutExtention = `${extention.slice(
     0,
@@ -24,7 +24,7 @@ const uniqueFileNameGenerator = filename => {
 
   return {
     name: uniqueNameWithoutExtention,
-    ext: extention[extention.length - 1]
+    ext: extention[extention.length - 1],
   };
 };
 
@@ -36,7 +36,7 @@ const uniqueFileNameGenerator = filename => {
  */
 const move = (file, path) =>
   new Promise((resolve, reject) => {
-    file.mv(path, err => {
+    file.mv(path, (err) => {
       if (err) reject(err.message);
 
       resolve();
@@ -92,14 +92,14 @@ const postHandler = async (req, res) => {
   try {
     if (imagePattern.test(req.files.file.mimetype)) {
       await thumbnail.forImage(filePath, thumbPath, {
-        width: constants.thumbnailWidth
+        width: constants.thumbnailWidth,
       });
       isThumbGenerated = true;
     }
     if (videoPattern.test(req.files.file.mimetype)) {
       await thumbnail.forVideo(filePath, thumbPath, {
         width: constants.thumbnailWidth,
-        height: constants.thumbnailHeight
+        height: constants.thumbnailHeight,
       });
       isThumbGenerated = true;
     }
@@ -113,7 +113,7 @@ const postHandler = async (req, res) => {
     fileName: `${fileName.name}.${fileName.ext}`,
     creatorId: req.user._id,
     mimeType: req.files.file.mimetype,
-    size: req.files.file.size
+    size: req.files.file.size,
   };
   if (isThumbGenerated) {
     mediaObject.thumbnail = `${fileName.name}.${constants.thumbnailFileExtension}`;
@@ -127,8 +127,8 @@ const postHandler = async (req, res) => {
       media: {
         id: media.id,
         title: mediaObject.title,
-        mimeType: mediaObject.mimeType
-      }
+        mimeType: mediaObject.mimeType,
+      },
     });
   } catch (err) {
     return res.status(500).json({ message: err.message });
@@ -160,7 +160,7 @@ const deleteHandler = async (req, res) => {
 const isOwner = (media, user) =>
   media.creatorId.toString() === user._id.toString();
 
-module.exports = passport => {
+module.exports = (passport) => {
   const router = express.Router();
   router.get("/:mediaId", getHandler);
   router.post(

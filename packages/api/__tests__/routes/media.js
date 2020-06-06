@@ -20,13 +20,13 @@ describe.skip("Media Test Suite", () => {
   let imageMediaID = "";
   let videoMediaID = "";
 
-  afterAll(done => {
+  afterAll((done) => {
     User.deleteMany({ email: { $in: [user, user2] } })
       .then(() =>
         Media.deleteMany({
           _id: {
-            $in: [fileMediaID, imageMediaID, videoMediaID]
-          }
+            $in: [fileMediaID, imageMediaID, videoMediaID],
+          },
         })
       )
       .then(() => {
@@ -38,21 +38,21 @@ describe.skip("Media Test Suite", () => {
       });
   });
 
-  beforeAll(done => {
+  beforeAll((done) => {
     User.create([
       { email: user, password: pass, name: "Tester #1" },
-      { email: user2, password: pass, name: "Tester #2" }
+      { email: user2, password: pass, name: "Tester #2" },
     ])
       .then(() =>
         promisify({
           url: `http://${apiUrl}/auth/login`,
           form: {
             email: user,
-            password: "lol"
-          }
+            password: "lol",
+          },
         })
       )
-      .then(res => {
+      .then((res) => {
         token = res.token;
         done();
       });
@@ -62,19 +62,19 @@ describe.skip("Media Test Suite", () => {
     expect.assertions(1);
     return promisify(
       {
-        url: `http://${apiUrl}/media`
+        url: `http://${apiUrl}/media`,
       },
       false
-    ).then(data => expect(data).toBe("Unauthorized"));
+    ).then((data) => expect(data).toBe("Unauthorized"));
   });
 
   it("Not a creator", () => {
     return promisify({
       url: `http://${apiUrl}/media`,
       headers: {
-        Authorization: `Bearer ${token}`
-      }
-    }).then(res => {
+        Authorization: `Bearer ${token}`,
+      },
+    }).then((res) => {
       expect(res).toHaveProperty("message");
       expect(res.message).toBe(strings.responses.not_a_creator);
     });
@@ -84,15 +84,15 @@ describe.skip("Media Test Suite", () => {
     await User.updateOne(
       { email: user },
       {
-        isCreator: true
+        isCreator: true,
       }
     );
 
     const res = await promisify({
       url: `http://${apiUrl}/media`,
       headers: {
-        Authorization: `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     expect(res).toHaveProperty("message");
@@ -103,11 +103,11 @@ describe.skip("Media Test Suite", () => {
     const res = await promisify({
       url: `http://${apiUrl}/media`,
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
       form: {
-        title: "Sample File"
-      }
+        title: "Sample File",
+      },
     });
     expect(res).toHaveProperty("message");
     expect(res.message).toBe(strings.responses.file_is_required);
@@ -117,12 +117,12 @@ describe.skip("Media Test Suite", () => {
     const res = await promisify({
       url: `http://${apiUrl}/media`,
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
       formData: {
         title: "Sample File",
-        file: fs.createReadStream(path.join(__dirname, "/media.js"))
-      }
+        file: fs.createReadStream(path.join(__dirname, "/media.js")),
+      },
     });
     expect(res).toHaveProperty("media");
     expect(res.message).toBe(strings.responses.success);
@@ -141,14 +141,14 @@ describe.skip("Media Test Suite", () => {
     const res = await promisify({
       url: `http://${apiUrl}/media`,
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
       formData: {
         title: "Sample Image",
         file: fs.createReadStream(
           path.join(__dirname, "/../otherfiles/test_image.jpg")
-        )
-      }
+        ),
+      },
     });
     expect(res).toHaveProperty("media");
     expect(res.message).toBe(strings.responses.success);
@@ -167,14 +167,14 @@ describe.skip("Media Test Suite", () => {
     const res = await promisify({
       url: `http://${apiUrl}/media`,
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
       formData: {
         title: "Sample Video",
         file: fs.createReadStream(
           path.join(__dirname, "/../otherfiles/maple.mp4")
-        )
-      }
+        ),
+      },
     });
     expect(res).toHaveProperty("media");
     expect(res.message).toBe(strings.responses.success);
@@ -189,10 +189,10 @@ describe.skip("Media Test Suite", () => {
     videoMediaID = res.media.id;
   });
 
-  it("get media", async done => {
+  it("get media", async (done) => {
     request.get(
       {
-        url: `http://${apiUrl}/media/${imageMediaID}`
+        url: `http://${apiUrl}/media/${imageMediaID}`,
       },
       (err, res, body) => {
         if (err) {
@@ -205,10 +205,10 @@ describe.skip("Media Test Suite", () => {
     );
   });
 
-  it("deleting media from an unauthenticated request", async done => {
+  it("deleting media from an unauthenticated request", async (done) => {
     request.delete(
       {
-        url: `http://${apiUrl}/media/${imageMediaID}`
+        url: `http://${apiUrl}/media/${imageMediaID}`,
       },
       (err, res, body) => {
         if (err) {
@@ -221,20 +221,20 @@ describe.skip("Media Test Suite", () => {
     );
   });
 
-  it("deleting media of some other user", async done => {
+  it("deleting media of some other user", async (done) => {
     const loginResponse = await promisify({
       url: `http://${apiUrl}/auth/login`,
       form: {
         email: user2,
-        password: "lol"
-      }
+        password: "lol",
+      },
     });
     request.delete(
       {
         url: `http://${apiUrl}/media/${imageMediaID}`,
         headers: {
-          Authorization: `Bearer ${loginResponse.token}`
-        }
+          Authorization: `Bearer ${loginResponse.token}`,
+        },
       },
       (err, res, body) => {
         if (err) {
@@ -247,13 +247,13 @@ describe.skip("Media Test Suite", () => {
     );
   });
 
-  it("deleting image media", async done => {
+  it("deleting image media", async (done) => {
     request.delete(
       {
         url: `http://${apiUrl}/media/${imageMediaID}`,
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       },
       (err, res, body) => {
         if (err) {
@@ -266,13 +266,13 @@ describe.skip("Media Test Suite", () => {
     );
   });
 
-  it("deleting video media", async done => {
+  it("deleting video media", async (done) => {
     request.delete(
       {
         url: `http://${apiUrl}/media/${videoMediaID}`,
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       },
       (err, res, body) => {
         if (err) {
@@ -285,13 +285,13 @@ describe.skip("Media Test Suite", () => {
     );
   });
 
-  it("deleting a non-image, non-video media", async done => {
+  it("deleting a non-image, non-video media", async (done) => {
     request.delete(
       {
         url: `http://${apiUrl}/media/${fileMediaID}`,
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       },
       (err, res, body) => {
         if (err) {

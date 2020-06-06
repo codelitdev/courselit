@@ -9,7 +9,7 @@ const {
   paypal,
   stripe,
   paytm,
-  none
+  none,
 } = require("../../config/constants.js");
 const { capitalize } = require("../../lib/utils.js");
 
@@ -22,7 +22,7 @@ exports.getSiteInfo = async () => {
   return siteinfo[0];
 };
 
-exports.getSiteInfoAsAdmin = async ctx => {
+exports.getSiteInfoAsAdmin = async (ctx) => {
   checkIfAuthenticated(ctx);
 
   if (!ctx.user.isAdmin) throw new Error(responses.is_not_admin);
@@ -78,7 +78,7 @@ exports.updateSiteInfo = async (siteData, ctx) => {
   return siteInfo;
 };
 
-const checkForInvalidPaymentMethod = siteInfo => {
+const checkForInvalidPaymentMethod = (siteInfo) => {
   if (!siteInfo.paymentMethod) {
     return;
   }
@@ -88,7 +88,7 @@ const checkForInvalidPaymentMethod = siteInfo => {
   }
 };
 
-const checkForInvalidPaymentSettings = siteInfo => {
+const checkForInvalidPaymentSettings = (siteInfo) => {
   if (!siteInfo.paymentMethod) {
     return;
   }
@@ -113,7 +113,7 @@ const checkForInvalidPaymentSettings = siteInfo => {
   return failedPaymentMethod;
 };
 
-const getPaymentInvalidException = paymentMethod =>
+const getPaymentInvalidException = (paymentMethod) =>
   new Error(
     `${capitalize(paymentMethod)} ${responses.payment_settings_invalid_suffix}`
   );

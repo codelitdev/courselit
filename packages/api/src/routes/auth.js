@@ -7,7 +7,7 @@ const jwt = require("jsonwebtoken");
 const constants = require("../config/constants.js");
 const responses = require("../config/strings.js").responses;
 
-module.exports = passport => {
+module.exports = (passport) => {
   const router = express.Router();
 
   router.post("/signup", (req, res, next) => {
@@ -26,7 +26,7 @@ module.exports = passport => {
         if (err) return res.status(500).json({ message: err.message });
         if (info) return res.status(400).json({ message: info.message });
 
-        req.login(user, { session: false }, err => {
+        req.login(user, { session: false }, (err) => {
           if (err) {
             return res
               .status(500)
@@ -34,7 +34,7 @@ module.exports = passport => {
           }
 
           const token = jwt.sign({ email: user.email }, constants.jwtSecret, {
-            expiresIn: constants.jwtExpire
+            expiresIn: constants.jwtExpire,
           });
 
           return res.json({ token });

@@ -47,7 +47,7 @@ exports.responses = {
     "Currency ISO code is not set. Please contact site admin.",
   payment_method_not_saved:
     "Set a payment method before setting its corresponding secret key",
-  invalid_payment_method: "Invalid payment method"
+  invalid_payment_method: "Invalid payment method",
 };
 
 exports.internal = {
@@ -55,5 +55,6 @@ exports.internal = {
   error_payment_method_not_implemented: "Not yet implemented",
   error_db_connection_failed:
     "Unable to establish a connection to the database.",
-  error_env_var_undefined: "A required environment variable is not defined"
+  error_env_var_undefined: "A required environment variable is not defined",
+  app_running: "CourseLit server is running on",
 };

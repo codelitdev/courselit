@@ -7,10 +7,10 @@ module.exports = {
     type: types.creatorMediaType,
     args: {
       mediaData: {
-        type: new graphql.GraphQLNonNull(types.mediaUpdateType)
-      }
+        type: new graphql.GraphQLNonNull(types.mediaUpdateType),
+      },
     },
     resolve: async (root, { mediaData }, context) =>
-      logic.updateMedia(mediaData, context)
-  }
+      logic.updateMedia(mediaData, context),
+  },
 };

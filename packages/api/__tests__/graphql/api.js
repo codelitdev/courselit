@@ -32,18 +32,18 @@ describe("GraphQL API tests", () => {
   let createdCourseId2 = "000000000000000000000000";
   let createdCourseId3 = "000000000000000000000000";
 
-  afterAll(done => {
+  afterAll((done) => {
     User.deleteMany({ email: { $in: [user, user2, user3, user4] } })
       .then(() =>
         Lesson.findOneAndDelete({
-          _id: mongoose.Types.ObjectId(createdLessonId)
+          _id: mongoose.Types.ObjectId(createdLessonId),
         })
       )
       .then(() =>
         Course.deleteMany({
           _id: {
-            $in: [createdCourseId, createdCourseId2, createdCourseId3]
-          }
+            $in: [createdCourseId, createdCourseId2, createdCourseId3],
+          },
         })
       )
       .then(() => {
@@ -52,12 +52,12 @@ describe("GraphQL API tests", () => {
       });
   });
 
-  beforeAll(done => {
+  beforeAll((done) => {
     User.create([
       { email: user, password: "lol", name: "Tester #1", isAdmin: true },
       { email: user2, password: "lol", name: "Tester #2", verified: false },
       { email: user3, password: "lol", name: "Tester #3", verified: true },
-      { email: user4, password: "lol", name: "Tester #4", verified: false }
+      { email: user4, password: "lol", name: "Tester #4", verified: false },
     ])
       .then(() => SiteInfo.deleteMany({}))
       .then(() => Settings.deleteMany({}))
@@ -202,7 +202,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: userDetails
+        user: userDetails,
       });
       expect(result).toHaveProperty("data");
       expect(result.data.user.name).toBe(newName);
@@ -226,7 +226,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: user2Details
+        user: user2Details,
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(responses.action_not_allowed);
@@ -248,7 +248,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: userDetails
+        user: userDetails,
       });
       expect(result).toHaveProperty("data");
       expect(result.data.user.name).toBe(newName);
@@ -259,7 +259,7 @@ describe("GraphQL API tests", () => {
       const user = {
         _id: mongoose.Types.ObjectId("000000000000000000000000"),
         isCreator: false,
-        name: "Tester"
+        name: "Tester",
       };
       const newName = "Edited Tester #2";
       const mutation = `
@@ -295,7 +295,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: userDetails
+        user: userDetails,
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(responses.user_name_cant_be_null);
@@ -320,7 +320,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: userDetails
+        user: userDetails,
       });
       expect(result).toHaveProperty("data");
       expect(result.data.user.name).toBe(newName);
@@ -393,7 +393,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: signedInUser
+        user: signedInUser,
       });
       expect(result).toHaveProperty("data");
       expect(result.data).toHaveProperty("users");
@@ -420,7 +420,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: signedInUser
+        user: signedInUser,
       });
       expect(result).toHaveProperty("data");
       expect(result.data).toHaveProperty("users");
@@ -448,7 +448,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: signedInUser
+        user: signedInUser,
       });
       expect(result).toHaveProperty("data");
       expect(result.data).toHaveProperty("users");
@@ -472,7 +472,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: signedInUser
+        user: signedInUser,
       });
       expect(result).toHaveProperty("data");
       expect(result.data).toHaveProperty("users");
@@ -542,7 +542,7 @@ describe("GraphQL API tests", () => {
     it("get users summary via an admin user", async () => {
       const user = {
         _id: mongoose.Types.ObjectId("000000000000000000000000"),
-        isAdmin: true
+        isAdmin: true,
       };
       const query = `
       query {
@@ -665,7 +665,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: signedInUser
+        user: signedInUser,
       });
       expect(result).toHaveProperty("data");
       expect(result.data).toHaveProperty("user");
@@ -708,7 +708,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: signedInUser
+        user: signedInUser,
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(responses.action_not_allowed);
@@ -746,7 +746,7 @@ describe("GraphQL API tests", () => {
       const user = {
         _id: mongoose.Types.ObjectId("000000000000000000000000"),
         isCreator: false,
-        name: "Tester"
+        name: "Tester",
       };
       const mutation = `
       mutation {
@@ -773,7 +773,7 @@ describe("GraphQL API tests", () => {
       const user = {
         _id: mongoose.Types.ObjectId("000000000000000000000000"),
         isCreator: true,
-        name: "Tester"
+        name: "Tester",
       };
       const title = "First course [via testing]";
       const mutation = `
@@ -811,7 +811,7 @@ describe("GraphQL API tests", () => {
       const user = {
         _id: mongoose.Types.ObjectId("000000000000000000000000"),
         isCreator: true,
-        name: "Tester"
+        name: "Tester",
       };
       const mutation = `
       mutation {
@@ -838,7 +838,7 @@ describe("GraphQL API tests", () => {
       const user = {
         _id: mongoose.Types.ObjectId("000000000000000000000000"),
         isCreator: true,
-        name: "Tester"
+        name: "Tester",
       };
       const mutation = `
       mutation {
@@ -870,7 +870,7 @@ describe("GraphQL API tests", () => {
       const user = {
         _id: mongoose.Types.ObjectId("000000000000000000000000"),
         isCreator: true,
-        name: "Tester"
+        name: "Tester",
       };
       const mutation = `
       mutation {
@@ -904,7 +904,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, query, null, {
-        user: { _id: userId }
+        user: { _id: userId },
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(responses.item_not_found);
@@ -922,7 +922,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, query, null, {
-        user: { _id: userId }
+        user: { _id: userId },
       });
       expect(result).toHaveProperty("data");
       expect(result.data).toHaveProperty("course");
@@ -934,10 +934,10 @@ describe("GraphQL API tests", () => {
       const owner = {
         _id: mongoose.Types.ObjectId("000000000000000000000000"),
         isCreator: true,
-        name: "Tester"
+        name: "Tester",
       };
       const accessor = {
-        _id: mongoose.Types.ObjectId("000000000000000000000001")
+        _id: mongoose.Types.ObjectId("000000000000000000000001"),
       };
       const mutation = `
       mutation {
@@ -969,7 +969,7 @@ describe("GraphQL API tests", () => {
       }
       `;
       const queryResult = await graphql(schema, query, null, {
-        user: accessor
+        user: accessor,
       });
       expect(queryResult).toHaveProperty("errors");
       expect(queryResult.errors[0].message).toBe(responses.item_not_found);
@@ -991,7 +991,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userId }
+        user: { _id: userId },
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(responses.item_not_found);
@@ -1016,7 +1016,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userId }
+        user: { _id: userId },
       });
       expect(result).toHaveProperty("data");
       expect(result.data).toHaveProperty("updateCourse");
@@ -1041,7 +1041,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userId }
+        user: { _id: userId },
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(responses.blog_description_empty);
@@ -1062,7 +1062,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userId }
+        user: { _id: userId },
       });
       expect(result).toHaveProperty("data");
       expect(result.data).toHaveProperty("updateCourse");
@@ -1083,7 +1083,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userId }
+        user: { _id: userId },
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(responses.invalid_cost);
@@ -1098,7 +1098,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userId }
+        user: { _id: userId },
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(responses.item_not_found);
@@ -1113,7 +1113,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userId }
+        user: { _id: userId },
       });
       expect(result).toHaveProperty("data");
       expect(result.data).toHaveProperty("deleteCourse");
@@ -1147,7 +1147,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, query, null, {
-        user: { _id: userId }
+        user: { _id: userId },
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(responses.invalid_offset);
@@ -1164,7 +1164,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, query, null, {
-        user: { _id: userId }
+        user: { _id: userId },
       });
       expect(result).toHaveProperty("data");
       expect(result.data).toHaveProperty("getCreatorCourses");
@@ -1194,7 +1194,7 @@ describe("GraphQL API tests", () => {
       }
       `;
       const result = await graphql(schema, query, null, {
-        user: { _id: userId }
+        user: { _id: userId },
       });
       expect(result).toHaveProperty("data");
       expect(result.data).toHaveProperty("getCourse");
@@ -1212,7 +1212,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, query, null, {
-        user: { _id: userId }
+        user: { _id: userId },
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(responses.invalid_offset);
@@ -1232,7 +1232,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, query, null, {
-        user: { _id: userId }
+        user: { _id: userId },
       });
       expect(result).toHaveProperty("data");
       expect(result.data).toHaveProperty("getPosts");
@@ -1252,7 +1252,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, query, null, {
-        user: { _id: userId }
+        user: { _id: userId },
       });
       expect(result).toHaveProperty("data");
       expect(result.data).toHaveProperty("courses");
@@ -1271,7 +1271,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, query, null, {
-        user: { _id: userId }
+        user: { _id: userId },
       });
       expect(result).toHaveProperty("data");
       expect(result.data).toHaveProperty("courses");
@@ -1320,7 +1320,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: { email: user }
+        user: { email: user },
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(responses.content_cannot_be_null);
@@ -1341,7 +1341,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: { email: user }
+        user: { email: user },
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(
@@ -1366,7 +1366,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: { email: user }
+        user: { email: user },
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(
@@ -1401,7 +1401,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userID }
+        user: { _id: userID },
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(responses.item_not_found);
@@ -1434,7 +1434,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userID }
+        user: { _id: userID },
       });
       expect(result).not.toHaveProperty("errors");
       const { lesson } = result.data;
@@ -1468,7 +1468,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userID }
+        user: { _id: userID },
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(responses.cannot_add_to_blogs);
@@ -1485,7 +1485,7 @@ describe("GraphQL API tests", () => {
       }
       `;
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userID }
+        user: { _id: userID },
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(responses.item_not_found);
@@ -1500,7 +1500,7 @@ describe("GraphQL API tests", () => {
       }
       `;
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userID }
+        user: { _id: userID },
       });
       expect(result).not.toHaveProperty("errors");
       expect(result.data.deleteLesson).toBeTruthy();
@@ -1535,7 +1535,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userID }
+        user: { _id: userID },
       });
       const { lesson } = result.data;
       const deleteMutation = `
@@ -1544,7 +1544,7 @@ describe("GraphQL API tests", () => {
       }
       `;
       const deleteResult = await graphql(schema, deleteMutation, null, {
-        user: { _id: userID2 }
+        user: { _id: userID2 },
       });
       expect(deleteResult).toHaveProperty("errors");
       expect(deleteResult.errors[0].message).toBe(responses.item_not_found);
@@ -1564,7 +1564,7 @@ describe("GraphQL API tests", () => {
         }
       }`;
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userID }
+        user: { _id: userID },
       });
       expect(result).not.toHaveProperty("errors");
       expect(result.data.changeTitle.title).toBe(newTitle);
@@ -1581,7 +1581,7 @@ describe("GraphQL API tests", () => {
         }
       }`;
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userID }
+        user: { _id: userID },
       });
       expect(result).not.toHaveProperty("errors");
       expect(result.data.changeContent.content).toBe(newContent);
@@ -1598,7 +1598,7 @@ describe("GraphQL API tests", () => {
         }
       }`;
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userID }
+        user: { _id: userID },
       });
       expect(result).not.toHaveProperty("errors");
       expect(result.data.changeContentURL.contentURL).toBe(newContentURL);
@@ -1618,7 +1618,7 @@ describe("GraphQL API tests", () => {
         }
       }`;
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userID }
+        user: { _id: userID },
       });
       expect(result).not.toHaveProperty("errors");
       expect(result.data.lesson.id).toBe(createdLessonId);
@@ -1640,7 +1640,7 @@ describe("GraphQL API tests", () => {
         }
       }`;
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userID }
+        user: { _id: userID },
       });
       expect(result).not.toHaveProperty("errors");
       expect(result.data.lesson.id).toBe(createdLessonId);
@@ -1657,7 +1657,7 @@ describe("GraphQL API tests", () => {
       }
       `;
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userId }
+        user: { _id: userId },
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(responses.item_not_found);
@@ -1673,7 +1673,7 @@ describe("GraphQL API tests", () => {
       }
       `;
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userId }
+        user: { _id: userId },
       });
       expect(result).toHaveProperty("data");
       expect(result.data).toHaveProperty("addLesson");
@@ -1694,7 +1694,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, query, null, {
-        user: { _id: userId }
+        user: { _id: userId },
       });
       expect(result).toHaveProperty("data");
       expect(result.data).toHaveProperty("course");
@@ -1719,7 +1719,7 @@ describe("GraphQL API tests", () => {
       }
       `;
       const result = await graphql(schema, query, null, {
-        user: { _id: userID }
+        user: { _id: userID },
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(responses.is_not_admin);
@@ -1751,7 +1751,7 @@ describe("GraphQL API tests", () => {
       }
       `;
       const result = await graphql(schema, query, null, {
-        user: { _id: userID, isAdmin: true }
+        user: { _id: userID, isAdmin: true },
       });
       expect(result).not.toHaveProperty("errors");
     });
@@ -1784,7 +1784,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userID }
+        user: { _id: userID },
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(responses.is_not_admin);
@@ -1805,7 +1805,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userID, isAdmin: true }
+        user: { _id: userID, isAdmin: true },
       });
       expect(result).not.toHaveProperty("errors");
       expect(result.data).toHaveProperty("siteInfo");
@@ -1825,7 +1825,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userID, isAdmin: true }
+        user: { _id: userID, isAdmin: true },
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(
@@ -1861,7 +1861,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userID, isAdmin: false }
+        user: { _id: userID, isAdmin: false },
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(responses.is_not_admin);
@@ -1879,7 +1879,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userID, isAdmin: true }
+        user: { _id: userID, isAdmin: true },
       });
       expect(result).toHaveProperty("errors");
     });
@@ -1896,7 +1896,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userID, isAdmin: true }
+        user: { _id: userID, isAdmin: true },
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(
@@ -1911,7 +1911,7 @@ describe("GraphQL API tests", () => {
   describe("media", () => {
     let mediaId;
 
-    beforeAll(async done => {
+    beforeAll(async (done) => {
       const userDetails = await User.findOne({ email: user });
       mediaId = await Media.create({
         title: "sample media",
@@ -1919,16 +1919,16 @@ describe("GraphQL API tests", () => {
         fileName: "samplefile",
         mimeType: "video/mp4",
         size: 1234567,
-        creatorId: userDetails.id
+        creatorId: userDetails.id,
       });
       done();
     });
 
-    afterAll(async done => {
+    afterAll(async (done) => {
       await Media.deleteMany({
         _id: {
-          $in: [mediaId]
-        }
+          $in: [mediaId],
+        },
       });
       done();
     });
@@ -1954,7 +1954,7 @@ describe("GraphQL API tests", () => {
 
     it("getting creator media but invalid offset", async () => {
       const user = {
-        _id: mongoose.Types.ObjectId("000000000000000000000000")
+        _id: mongoose.Types.ObjectId("000000000000000000000000"),
       };
 
       const query = `
@@ -1975,7 +1975,7 @@ describe("GraphQL API tests", () => {
 
     it("getting creator media", async () => {
       const user = {
-        _id: mongoose.Types.ObjectId("000000000000000000000000")
+        _id: mongoose.Types.ObjectId("000000000000000000000000"),
       };
 
       const query = `
@@ -1997,7 +1997,7 @@ describe("GraphQL API tests", () => {
 
     it("search creator media", async () => {
       const user = {
-        _id: mongoose.Types.ObjectId("000000000000000000000000")
+        _id: mongoose.Types.ObjectId("000000000000000000000000"),
       };
 
       const query = `
@@ -2068,7 +2068,7 @@ describe("GraphQL API tests", () => {
       }
       `;
       const result = await graphql(schema, mutation, null, {
-        user: loggedInUser
+        user: loggedInUser,
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(responses.title_is_required);
@@ -2093,7 +2093,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: loggedInUser
+        user: loggedInUser,
       });
       expect(result).toHaveProperty("data");
       expect(result.data).toHaveProperty("media");
@@ -2116,7 +2116,7 @@ describe("GraphQL API tests", () => {
       `;
 
       const result = await graphql(schema, mutation, null, {
-        user: { _id: userId }
+        user: { _id: userId },
       });
       expect(result).toHaveProperty("errors");
       expect(result.errors[0].message).toBe(responses.course_not_empty);

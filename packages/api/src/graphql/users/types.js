@@ -11,8 +11,8 @@ const userType = new graphql.GraphQLObjectType({
     verified: { type: graphql.GraphQLBoolean },
     isCreator: { type: graphql.GraphQLBoolean },
     isAdmin: { type: graphql.GraphQLBoolean },
-    avatar: { type: graphql.GraphQLString }
-  }
+    avatar: { type: graphql.GraphQLString },
+  },
 });
 
 const userUpdateInput = new graphql.GraphQLInputObjectType({
@@ -24,16 +24,16 @@ const userUpdateInput = new graphql.GraphQLInputObjectType({
     isCreator: { type: graphql.GraphQLBoolean },
     isAdmin: { type: graphql.GraphQLBoolean },
     active: { type: graphql.GraphQLBoolean },
-    password: { type: graphql.GraphQLString }
-  }
+    password: { type: graphql.GraphQLString },
+  },
 });
 
 const userSearchInput = new graphql.GraphQLInputObjectType({
   name: "UserSearchInput",
   fields: {
     offset: { type: graphql.GraphQLInt },
-    searchText: { type: graphql.GraphQLString }
-  }
+    searchText: { type: graphql.GraphQLString },
+  },
 });
 
 const usersSummaryType = new graphql.GraphQLObjectType({
@@ -42,8 +42,8 @@ const usersSummaryType = new graphql.GraphQLObjectType({
     count: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
     verified: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
     admins: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
-    creators: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) }
-  }
+    creators: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
+  },
 });
 
 const userPurchaseInput = new graphql.GraphQLObjectType({
@@ -51,8 +51,8 @@ const userPurchaseInput = new graphql.GraphQLObjectType({
   fields: {
     courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     discountCode: { type: graphql.GraphQLString },
-    purchasingFor: { type: graphql.GraphQLID }
-  }
+    purchasingFor: { type: graphql.GraphQLID },
+  },
 });
 
 module.exports = {
@@ -60,5 +60,5 @@ module.exports = {
   userUpdateInput,
   userSearchInput,
   usersSummaryType,
-  userPurchaseInput
+  userPurchaseInput,
 };

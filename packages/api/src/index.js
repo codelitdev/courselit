@@ -1,11 +1,13 @@
 "use strict";
 
+process.env.NODE_ENV = process.env.NODE_ENV || "production";
+
 const internalResponse = require("./config/strings.js").internal;
 const { uploadFolder, thumbnailsFolder } = require("./config/constants.js");
 const fs = require("fs");
 
 const checkForNecessaryEnvironmentVars = () => {
-  for (const field of ["JWT_SECRET"]) {
+  for (const field of ["USER_CONTENT_DIRECTORY", "JWT_SECRET"]) {
     if (!process.env[field]) {
       console.error(`${internalResponse.error_env_var_undefined}: ${field}`);
       process.exit(1);
@@ -26,4 +28,8 @@ checkForNecessaryEnvironmentVars();
 createFoldersForUserData();
 
 const app = require("./app.js");
-app.listen(process.env.PORT || 80);
+
+const port = process.env.PORT || 80;
+app.listen(port, () =>
+  console.log(`${internalResponse.app_running} port ${port}`)
+);
