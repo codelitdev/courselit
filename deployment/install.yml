@@ -116,6 +116,7 @@
                               - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
                               - NODE_ENV=production
                               - PORT=8000
+                              - USER_CONTENT_DIRECTORY=${MEDIA_FOLDER}
                             volumes:
                               - "{{ media_folder }}:/data"
                             expose:
