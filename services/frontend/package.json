@@ -1,0 +1,15 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "description": "The official frontend for CourseLit CMS",
+  "scripts": {
+    "install": "npm explore @courselit/app -- npm install",
+    "build": "npm explore @courselit/app -- npm run build",
+    "start": "yarn --cwd node_modules/@courselit/app start"
+  },
+  "author": "The Recurze team",
+  "license": "MIT",
+  "dependencies": {
+    "@courselit/app": "^0.1.1"
+  }
+}
