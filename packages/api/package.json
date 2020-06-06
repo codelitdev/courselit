@@ -1,6 +1,7 @@
 {
   "name": "@courselit/api",
   "version": "0.1.1",
+  "main": "./src/index.js",
   "scripts": {
     "lint": "eslint src __tests__ --fix",
     "prettier": "prettier --write 'src/**/*.js' '__tests__/**/*.js'",
