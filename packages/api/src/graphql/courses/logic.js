@@ -9,7 +9,7 @@ const {
   checkIfAuthenticated,
   checkOwnership,
   validateOffset,
-  extractPlainTextFromDraftJS
+  extractPlainTextFromDraftJS,
 } = require("../../lib/graphql.js");
 const {
   closed,
@@ -17,12 +17,12 @@ const {
   mycoursesLimit,
   postsPerPageLimit,
   coursesPerPageLimit,
-  blogPostSnippetLength
+  blogPostSnippetLength,
 } = require("../../config/constants.js");
 
 const checkCourseOwnership = checkOwnership(Course);
 
-const validateBlogPosts = courseData => {
+const validateBlogPosts = (courseData) => {
   if (courseData.isBlog) {
     if (!courseData.description) {
       throw new Error(strings.responses.blog_description_empty);
@@ -74,7 +74,7 @@ exports.createCourse = async (courseData, ctx) => {
     featuredImage: courseData.featuredImage,
     creatorId: ctx.user._id,
     creatorName: ctx.user.name,
-    slug: slugify(courseData.title.toLowerCase())
+    slug: slugify(courseData.title.toLowerCase()),
   });
 
   return course;
@@ -153,12 +153,12 @@ exports.getCreatorCourses = async (id, offset, ctx) => {
   return courses;
 };
 
-exports.getPosts = async offset => {
+exports.getPosts = async (offset) => {
   validateOffset(offset);
   const query = {
     isBlog: true,
     published: true,
-    privacy: open.toLowerCase()
+    privacy: open.toLowerCase(),
   };
   const posts = await Course.find(
     query,
@@ -168,7 +168,7 @@ exports.getPosts = async offset => {
     .skip((offset - 1) * postsPerPageLimit)
     .limit(postsPerPageLimit);
 
-  return posts.map(x => ({
+  return posts.map((x) => ({
     id: x.id,
     title: x.title,
     description: extractPlainTextFromDraftJS(
@@ -178,7 +178,7 @@ exports.getPosts = async offset => {
     creatorName: x.creatorName,
     updated: x.updated,
     slug: x.slug,
-    featuredImage: x.featuredImage
+    featuredImage: x.featuredImage,
   }));
 };
 
@@ -186,7 +186,7 @@ exports.getPublicCourses = async (offset, onlyShowFeatured = false) => {
   const query = {
     isBlog: false,
     published: true,
-    privacy: open.toLowerCase()
+    privacy: open.toLowerCase(),
   };
   if (onlyShowFeatured) {
     query.isFeatured = true;
@@ -223,8 +223,8 @@ exports.getEnrolledCourses = async (userId, ctx) => {
   return Course.find(
     {
       _id: {
-        $in: [...user.purchases]
-      }
+        $in: [...user.purchases],
+      },
     },
     "id title"
   );

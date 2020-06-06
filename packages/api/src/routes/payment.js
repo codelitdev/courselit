@@ -11,7 +11,7 @@ const Purchase = require("../models/Purchase.js");
 const {
   transactionSuccess,
   transactionInitiated,
-  transactionFailed
+  transactionFailed,
 } = require("../config/constants.js");
 
 const initiateHandler = async (req, res) => {
@@ -44,7 +44,7 @@ const initiateHandler = async (req, res) => {
 
     if (buyer.purchases.includes(course.id)) {
       return res.status(200).json({
-        status: transactionSuccess
+        status: transactionSuccess,
       });
     }
 
@@ -54,7 +54,7 @@ const initiateHandler = async (req, res) => {
       try {
         await finalizeCoursePurchase(user.id, course.id);
         res.status(200).json({
-          status: transactionSuccess
+          status: transactionSuccess,
         });
       } catch (err) {
         res.status(500).json({ error: err.message });
@@ -78,18 +78,18 @@ const initiateHandler = async (req, res) => {
       paymentMethod: siteinfo.paymentMethod,
       paymentId: paymentTracker,
       amount: amountToBeCharged,
-      currencyISOCode: siteinfo.currencyISOCode
+      currencyISOCode: siteinfo.currencyISOCode,
     });
 
     res.status(200).json({
       status: transactionInitiated,
       purchaseId: purchase.id,
-      paymentTracker
+      paymentTracker,
     });
   } catch (err) {
     res.status(500).json({
       status: transactionFailed,
-      error: err.message
+      error: err.message,
     });
   }
 };
@@ -118,7 +118,7 @@ const verifyHandler = async (req, res) => {
   }
 
   res.status(200).json({
-    status: purchaseRecord.status
+    status: purchaseRecord.status,
   });
 };
 
@@ -132,7 +132,7 @@ const webhookHandler = async (req, res) => {
   if (paymentVerified) {
     const purchaseRecord = (
       await Purchase.find({
-        paymentId: paymentMethod.getPaymentIdentifier(body)
+        paymentId: paymentMethod.getPaymentIdentifier(body),
       })
     )[0];
     console.log("Webhook verified", purchaseRecord);
@@ -147,21 +147,21 @@ const webhookHandler = async (req, res) => {
       );
 
       res.status(200).json({
-        message: "success"
+        message: "success",
       });
     } else {
       res.status(200).json({
-        message: "fail"
+        message: "fail",
       });
     }
   } else {
     res.status(200).json({
-      message: "fail"
+      message: "fail",
     });
   }
 };
 
-module.exports = passport => {
+module.exports = (passport) => {
   const router = express.Router();
   router.post(
     "/initiate",

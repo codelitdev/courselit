@@ -10,13 +10,13 @@ const constants = require("../config/constants.js");
 const responses = require("../config/strings.js").responses;
 const User = require("../models/User.js");
 
-module.exports = passport => {
+module.exports = (passport) => {
   passport.use(
     "signup",
     new LocalStrategy(
       {
         usernameField: "email",
-        passReqToCallback: true
+        passReqToCallback: true,
       },
       async (req, email, password, next) => {
         // validate input
@@ -30,7 +30,7 @@ module.exports = passport => {
           let user = await User.findOne({ email });
           if (user) {
             return next(null, false, {
-              message: responses.email_already_registered
+              message: responses.email_already_registered,
             });
           }
 
@@ -42,7 +42,7 @@ module.exports = passport => {
             name: req.body.name,
             isCreator: !notTheFirstUser,
             isAdmin: !notTheFirstUser,
-            active: true
+            active: true,
           });
           return next(null, user);
         } catch (err) {
@@ -58,7 +58,7 @@ module.exports = passport => {
       {
         usernameField: "email",
         passwordField: "password",
-        passReqToCallback: true
+        passReqToCallback: true,
       },
       async (req, email, password, next) => {
         try {
@@ -66,7 +66,7 @@ module.exports = passport => {
 
           if (!user) {
             return next(null, false, {
-              message: responses.auth_user_not_found
+              message: responses.auth_user_not_found,
             });
           }
 
@@ -74,7 +74,7 @@ module.exports = passport => {
 
           if (!validate) {
             return next(null, false, {
-              message: responses.email_or_passwd_invalid
+              message: responses.email_or_passwd_invalid,
             });
           }
 
@@ -91,12 +91,12 @@ module.exports = passport => {
     jwtFromRequest: extractJwt.fromAuthHeaderAsBearerToken(),
     secretOrKey: constants.jwtSecret,
     jsonWebTokenOptions: {
-      expiresIn: constants.jwtExpire
-    }
+      expiresIn: constants.jwtExpire,
+    },
   };
   passport.use(
-    new JwtStrategy(opts, function(jwtPayload, done) {
-      User.findOne({ email: jwtPayload.email }, function(err, user) {
+    new JwtStrategy(opts, function (jwtPayload, done) {
+      User.findOne({ email: jwtPayload.email }, function (err, user) {
         if (err) {
           return done(err, false);
         }

@@ -14,8 +14,8 @@ module.exports = new graphql.GraphQLSchema({
       ...lessons.queries,
       ...courses.queries,
       ...siteinfo.queries,
-      ...media.queries
-    }
+      ...media.queries,
+    },
   }),
   mutation: new graphql.GraphQLObjectType({
     name: "RootMutation",
@@ -24,7 +24,7 @@ module.exports = new graphql.GraphQLSchema({
       ...lessons.mutations,
       ...courses.mutations,
       ...siteinfo.mutations,
-      ...media.mutations
-    }
-  })
+      ...media.mutations,
+    },
+  }),
 });

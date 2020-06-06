@@ -6,12 +6,12 @@ const creatorMediaType = new graphql.GraphQLObjectType({
     id: { type: graphql.GraphQLID },
     title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     originalFileName: {
-      type: new graphql.GraphQLNonNull(graphql.GraphQLString)
+      type: new graphql.GraphQLNonNull(graphql.GraphQLString),
     },
     mimeType: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     size: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
-    altText: { type: graphql.GraphQLString }
-  }
+    altText: { type: graphql.GraphQLString },
+  },
 });
 
 const mediaUpdateType = new graphql.GraphQLInputObjectType({
@@ -19,11 +19,11 @@ const mediaUpdateType = new graphql.GraphQLInputObjectType({
   fields: {
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     title: { type: graphql.GraphQLString },
-    altText: { type: graphql.GraphQLString }
-  }
+    altText: { type: graphql.GraphQLString },
+  },
 });
 
 module.exports = {
   creatorMediaType,
-  mediaUpdateType
+  mediaUpdateType,
 };

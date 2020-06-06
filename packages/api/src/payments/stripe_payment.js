@@ -1,7 +1,7 @@
 const Payment = require("./payment.js");
 const {
   stripe_invalid_settings: stripeInvalidSettings,
-  currency_iso_not_set: currencyISONotSet
+  currency_iso_not_set: currencyISONotSet,
 } = require("../config/strings.js").responses;
 const stripeSDK = require("stripe");
 const Settings = require("../models/Settings.js");
@@ -27,7 +27,7 @@ class StripePayment extends Payment {
   async initiate(amount, currency) {
     const paymentIntent = await this.stripe.paymentIntents.create({
       amount,
-      currency
+      currency,
     });
 
     return paymentIntent.client_secret;

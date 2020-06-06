@@ -26,10 +26,10 @@ app.use(`${routePrefix}/auth`, require("./routes/auth.js")(passport));
 app.use(
   `${routePrefix}/graph`,
   optionalAuthMiddlewareCreator(passport),
-  graphqlHTTP(req => ({
+  graphqlHTTP((req) => ({
     schema: require("./graphql/schema.js"),
     graphiql: true,
-    context: { user: req.user }
+    context: { user: req.user },
   }))
 );
 app.use(

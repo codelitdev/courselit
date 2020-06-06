@@ -5,12 +5,12 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "PORT=8000 NODE_ENV=production node index.js"
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "The Recurze team",
   "license": "MIT",
   "dependencies": {
-    "@courselit/api": "^0.1.1"
+    "@courselit/api": "^0.1.2"
   }
 }

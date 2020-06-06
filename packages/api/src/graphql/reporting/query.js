@@ -6,9 +6,9 @@ module.exports = {
   getUserPurchases: {
     type: types.userPurchasesType,
     args: {
-      offset: { type: graphql.GraphQLInt }
+      offset: { type: graphql.GraphQLInt },
     },
     resolve: (root, { offset }, context) =>
-      logic.getUserPurchases(context, offset)
-  }
+      logic.getUserPurchases(context, offset),
+  },
 };

@@ -10,16 +10,16 @@ const UserSchema = new mongoose.Schema({
   active: { type: Boolean, required: true, default: true },
   password: { type: String, required: true },
   name: { type: String, required: true },
-  purchases: [mongoose.Schema.Types.ObjectId]
+  purchases: [mongoose.Schema.Types.ObjectId],
 });
 
 UserSchema.index({
   email: "text",
-  name: "text"
+  name: "text",
 });
 
 // This pre-hook hashes the plain text password before saving it to the db
-UserSchema.pre("save", async function(next) {
+UserSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
     const user = this;
     const hash = await bcrypt.hash(user.password, constants.saltRounds);
@@ -28,7 +28,7 @@ UserSchema.pre("save", async function(next) {
   next();
 });
 
-UserSchema.methods.isPasswordValid = async function(password) {
+UserSchema.methods.isPasswordValid = async function (password) {
   const user = this;
   const compare = await bcrypt.compare(password, user.password);
   return compare;

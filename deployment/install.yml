@@ -114,6 +114,8 @@
                               - DB_CONNECTION_STRING=${DB_CONNECTION_STRING?'DB_CONNECTION_STRING environment variable is is not defined'}
                               - JWT_SECRET=${JWT_SECRET?'JWT_SECRET environment variable is not defined'}
                               - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+                              - NODE_ENV=production
+                              - PORT=8000
                             volumes:
                               - "{{ media_folder }}:/data"
                             expose:

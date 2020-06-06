@@ -9,10 +9,10 @@ const userPurchasesType = graphql.GraphQLObjectType({
     paymentMethod: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     paymentId: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     amount: { type: new graphql.GraphQLNonNull(graphql.GraphQLFloat) },
-    discount: { type: graphql.GraphQLFloat }
-  }
+    discount: { type: graphql.GraphQLFloat },
+  },
 });
 
 module.exports = {
-  userPurchasesType
+  userPurchasesType,
 };

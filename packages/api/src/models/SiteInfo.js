@@ -20,7 +20,7 @@ const SiteInfoSchema = new mongoose.Schema({
   codeInjectionHead: { type: String },
   stripeSecret: { type: String },
   paytmSecret: { type: String },
-  paypalSecret: { type: String }
+  paypalSecret: { type: String },
 });
 
 module.exports = mongoose.model("SiteInfo", SiteInfoSchema);

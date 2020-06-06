@@ -3,7 +3,7 @@ const { decode } = require("base-64");
 const strings = require("../config/strings.js");
 const constants = require("../config/constants.js");
 
-exports.checkIfAuthenticated = ctx => {
+exports.checkIfAuthenticated = (ctx) => {
   if (!ctx.user) throw new Error(strings.responses.request_not_authenticated);
 };
 
@@ -14,7 +14,7 @@ exports.checkIfAuthenticated = ctx => {
  * @param {ObjectId} id MongoDB ObjectId for the item
  * @param {Object} ctx context received from the GraphQL resolver
  */
-exports.checkOwnership = Model => async (id, ctx) => {
+exports.checkOwnership = (Model) => async (id, ctx) => {
   const item = await Model.findOne({ _id: id });
   if (!item || item.creatorId.toString() !== ctx.user._id.toString()) {
     throw new Error(strings.responses.item_not_found);
@@ -23,7 +23,7 @@ exports.checkOwnership = Model => async (id, ctx) => {
   return item;
 };
 
-exports.validateOffset = offset => {
+exports.validateOffset = (offset) => {
   if (offset < 1) throw new Error(strings.responses.invalid_offset);
 };
 
@@ -60,7 +60,7 @@ exports.checkIfItemExists = async (Model, id) => {
   return item;
 };
 
-const validateMongooseTextSearchQuery = query => {
+const validateMongooseTextSearchQuery = (query) => {
   if (typeof query !== "object") {
     throw new Error(strings.responses.invalid_input);
   }
@@ -78,7 +78,10 @@ const validateMongooseTextSearchQuery = query => {
  *  itemsPerPage: number
  * }
  */
-exports.makeModelTextSearchable = Model => async (searchData, options = {}) => {
+exports.makeModelTextSearchable = (Model) => async (
+  searchData,
+  options = {}
+) => {
   const itemsPerPage =
     options.itemsPerPage || constants.defaultPaginationItemsPerPage;
   const checkIfRequestIsAuthenticated =

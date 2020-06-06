@@ -7,14 +7,14 @@ const {
   checkIfAuthenticated,
   checkAdminOrSelf,
   checkIfItemExists,
-  makeModelTextSearchable
+  makeModelTextSearchable,
 } = require("../../lib/graphql.js");
 const constants = require("../../config/constants.js");
 
 const removeAdminFieldsFromUserObject = ({ id, email, name }) => ({
   id,
   email,
-  name
+  name,
 });
 
 exports.getUser = async (email, ctx) => {
@@ -87,11 +87,11 @@ exports.getSiteUsers = async (searchData = {}, ctx) => {
   if (ctx.user.isAdmin) {
     return users;
   } else {
-    return users.map(x => removeAdminFieldsFromUserObject(x));
+    return users.map((x) => removeAdminFieldsFromUserObject(x));
   }
 };
 
-exports.getUsersSummary = async ctx => {
+exports.getUsersSummary = async (ctx) => {
   checkIfAuthenticated(ctx);
   if (!ctx.user.isAdmin) {
     throw new Error(strings.responses.action_not_allowed);
@@ -101,7 +101,7 @@ exports.getUsersSummary = async ctx => {
     count: await User.countDocuments(),
     verified: await User.countDocuments({ verified: true }),
     admins: await User.countDocuments({ isAdmin: true }),
-    creators: await User.countDocuments({ isCreator: true })
+    creators: await User.countDocuments({ isCreator: true }),
   };
 };
 

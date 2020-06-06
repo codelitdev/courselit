@@ -237,11 +237,11 @@ module.exports = {
     "xau",
     "xpd",
     "xpt",
-    "xag"
+    "xag",
   ],
 
   // transaction statuses
   transactionInitiated: "initiated",
   transactionSuccess: "success",
-  transactionFailed: "failed"
+  transactionFailed: "failed",
 };

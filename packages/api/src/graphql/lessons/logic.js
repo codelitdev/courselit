@@ -7,7 +7,7 @@ const Lesson = require("../../models/Lesson.js");
 const strings = require("../../config/strings.js");
 const {
   checkIfAuthenticated,
-  checkOwnership
+  checkOwnership,
 } = require("../../lib/graphql.js");
 const Course = require("../../models/Course.js");
 
@@ -18,7 +18,7 @@ const checkLessonOwnership = checkOwnership(Lesson);
  *
  * @param {Object} lessonData
  */
-const lessonValidator = lessonData => {
+const lessonValidator = (lessonData) => {
   if (lessonData.type === text && !lessonData.content) {
     throw new Error(strings.responses.content_cannot_be_null);
   }
@@ -71,7 +71,7 @@ exports.createLesson = async (lessonData, ctx) => {
       contentURL: lessonData.contentURL,
       downloadable: lessonData.downloadable,
       creatorId: ctx.user._id,
-      courseId: course._id
+      courseId: course._id,
     });
 
     course.lessons.push(lesson.id);
@@ -152,15 +152,15 @@ exports.updateLesson = async (lessonData, ctx) => {
 exports.getAllLessonsOfACourse = async (course, ctx) => {
   const lessons = await Lesson.find({
     _id: {
-      $in: [...course.lessons]
-    }
+      $in: [...course.lessons],
+    },
   });
 
-  const onlyLessonMeta = lesson => ({
+  const onlyLessonMeta = (lesson) => ({
     id: lesson.id,
     title: lesson.title,
     requiresEnrollment: lesson.requiresEnrollment,
-    courseId: lesson.courseId
+    courseId: lesson.courseId,
   });
 
   return lessons.map(onlyLessonMeta);
