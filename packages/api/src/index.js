@@ -1,10 +1,8 @@
 "use strict";
 
-process.env.NODE_ENV = process.env.NODE_ENV || "production";
-
 const internalResponse = require("./config/strings.js").internal;
-const { uploadFolder, thumbnailsFolder } = require("./config/constants.js");
-const fs = require("fs");
+
+process.env.NODE_ENV = process.env.NODE_ENV || "production";
 
 const checkForNecessaryEnvironmentVars = () => {
   for (const field of ["USER_CONTENT_DIRECTORY", "JWT_SECRET"]) {
@@ -16,6 +14,9 @@ const checkForNecessaryEnvironmentVars = () => {
 };
 
 const createFoldersForUserData = () => {
+  const { uploadFolder, thumbnailsFolder } = require("./config/constants.js");
+  const fs = require("fs");
+
   if (!fs.existsSync(uploadFolder)) {
     fs.mkdirSync(uploadFolder, { recursive: true });
   }
