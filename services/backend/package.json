@@ -4,10 +4,8 @@
   "description": "A headless CMS for educators and teachers",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js"
   },
-  "keywords": [],
   "author": "The Recurze team",
   "license": "MIT",
   "dependencies": {

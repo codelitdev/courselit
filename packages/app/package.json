@@ -3,6 +3,17 @@
   "version": "0.1.1",
   "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "dev": "next",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "lint": "eslint pages components redux types.js theme.js --fix",
+    "prettier": "prettier --write 'pages/**/*.js' 'components/**/*.js' 'redux/**/*.js' types.js theme.js",
+    "test": "jest"
+  },
+  "bin": {
+    "courselit-app": "./bin/server.js"
+  },
   "dependencies": {
     "@babel/runtime": "^7.8.3",
     "@material-ui/core": "^4.8.1",
@@ -22,14 +33,6 @@
     "react-stripe-elements": "^6.0.1",
     "redux": "^4.0.5",
     "redux-thunk": "^2.3.0"
-  },
-  "scripts": {
-    "dev": "next",
-    "build": "next build",
-    "start": "next start -p 3000",
-    "lint": "eslint pages components redux types.js theme.js --fix",
-    "prettier": "prettier --write 'pages/**/*.js' 'components/**/*.js' 'redux/**/*.js' types.js theme.js",
-    "test": "jest"
   },
   "devDependencies": {
     "@babel/core": "^7.7.7",
