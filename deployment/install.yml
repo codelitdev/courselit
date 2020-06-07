@@ -37,6 +37,11 @@
           private: no
           default: "14d"
 
+        - name: docker_image_version
+          prompt: "Which version would you like to deploy? Press enter if you do not know."
+          private: no
+          default: "latest"
+
       tasks:
               - name: Check user input
                 fail: msg="The answer to the domain propagation question is not correct. Exiting."
@@ -108,7 +113,7 @@
                             container_name: db
 
                           backend:
-                            image: codelit/courselit-backend:latest
+                            image: recurze/courselit-backend:{{ docker_image_version }}
                             environment:
                               - API_PREFIX=${API_PREFIX}
                               - DB_CONNECTION_STRING=${DB_CONNECTION_STRING?'DB_CONNECTION_STRING environment variable is is not defined'}
@@ -126,7 +131,7 @@
                             container_name: backend
 
                           frontend:
-                            image: codelit/courselit-frontend:latest
+                            image: recurze/courselit-frontend:{{ docker_image_version }}
                             environment:
                               - SITE_URL=${SITE_URL?'SITE_URL environment variable is not defined'}
                               - API_PREFIX=${API_PREFIX}
@@ -138,7 +143,7 @@
                             container_name: frontend
 
                           proxy:
-                            image: codelit/courselit-proxy:latest
+                            image: recurze/courselit-proxy:{{ docker_image_version }}
                             environment:
                               - API_PREFIX=${API_PREFIX}
                               - DOMAIN=${DOMAIN?'DOMAIN environment variable is not defined'}
@@ -163,5 +168,5 @@
                     JWT_EXPIRES_IN: "{{ jwt_expires }}"
                     DOMAIN: "{{ domain }}"
 
-              - debug:
-                    var: output
+            #   - debug:
+            #         var: output
