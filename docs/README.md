@@ -47,8 +47,14 @@ Check out a live example to see what you can build with CourseLit. [Click here](
 ## Getting Started
 The recommended way to deploy CourseLit on your server is via Ansible. Follow the below mentioned instructions.
 
+### Install with SSL
 ```
 ansible-playbook deployment/install.yml -l <host> -u <host_user> --ask-become-pass -e 'ansible_python_interpreter=/usr/bin/python3'
+```
+
+### Install without SSL
+```
+ansible-playbook deployment/install-without-ssl.yml -l <host> -u <host_user> --ask-become-pass -e 'ansible_python_interpreter=/usr/bin/python3'
 ```
 
 > Tested on Ubuntu 18.04 LTS and 20.04 LTS versions.

@@ -6,7 +6,7 @@ A proxy server to route traffic to courselit-backend and courselit-frontend.
 
 ## Docker
 
-Easily spin up a new courselit-backend server using the following command
+Easily spin up a new courselit-proxy server using the following command.
 
 ```
 docker run -v <directory_containing_letsencrypt_certificate>:/etc/letsencrypt codelit/courselit-backend
@@ -18,4 +18,4 @@ where `directory_containing_letsencrypt_certificate` is the directory on your ho
 
 **DOMAIN**
 
-The domain name for which the ssl certificate is issued.
+The domain name for which the SSL certificate is issued. It is only required if you want to serve the traffic over SSL. Optional parameter. No default value.
