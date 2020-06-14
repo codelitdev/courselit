@@ -4,24 +4,24 @@
 
 <p align="center">
   <b>
-    <a href="https://codelit.github.io/courselit">Website</a> |
-    <a href="#getting-started">Getting started</a> |
-    <a href="https://github.com/codelit/courselit/wiki">Documentation</a>
+    <a href="https://courselit.recurze.com">Website</a> |
+    <a href="https://recurze.gitbook.io/courselit/getting-started">Getting started</a> |
+    <a href="https://recurze.gitbook.io/courselit">Documentation</a>
   </b>
 </p>
 
 <p align="center">
-  <a href="https://github.com/codelit/courselit/blob/deployment/LICENSE">
-    <img src="https://badgen.net/github/license/codelit/courselit" alt="License">
+  <a href="https://github.com/recurzery/courselit/blob/deployment/LICENSE">
+    <img src="https://badgen.net/github/license/recurzery/courselit" alt="License">
   </a>
-  <a href="https://github.com/codelit/courselit/actions">
-    <img src="https://badgen.net/github/status/codelit/courselit" alt="Status">
+  <a href="https://github.com/recurzery/courselit/actions">
+    <img src="https://badgen.net/github/status/recurzery/courselit" alt="Status">
   </a>
-  <a href="https://hub.docker.com/r/codelit/courselit-proxy">
-    <img src="https://badgen.net/docker/pulls/codelit/courselit-proxy" alt="Downloads">
+  <a href="https://hub.docker.com/r/recurze/courselit-proxy">
+    <img src="https://badgen.net/docker/pulls/recurze/courselit-proxy" alt="Downloads">
   </a>
-  <a href="https://github.com/codelit/courselit">
-    <img src="https://badgen.net/github/last-commit/codelit/courselit" alt="Last commit">
+  <a href="https://github.com/recurzery/courselit">
+    <img src="https://badgen.net/github/last-commit/recurzery/courselit" alt="Last commit">
   </a>
   <a href="https://lgtm.com/projects/g/codelit/courselit/alerts/">
     <img src="https://img.shields.io/lgtm/alerts/g/codelit/courselit.svg?logo=lgtm&logoWidth=18" alt="Lgtm">
@@ -38,7 +38,7 @@ Using CourseLit, which is a content management system (also known as a CMS) spec
 
 CourseLit comes pre-equipped with all the basic tools you'd require to efficiently run and administer your online teaching business. Features include student management, payment processing (via Stripe), customization and analytics (very limited as of now). 
 
-Check out a live example to see what you can build with CourseLit. [Click here](https://codelit.dev).
+Check out a live example to see what you can build with CourseLit. [Click here](https://recurze.com).
 
 ## Screenshot
 
