@@ -2,14 +2,22 @@
 
 A proxy server to route traffic to courselit-backend and courselit-frontend.
 
-> This container on its own is useless unless you have courselit-backend and courselit-frontend containers running via the names 'backend' and 'frontend' respectively and they should be on the same docker network.
+> This container on its own is useless unless you have courselit-backend and courselit-frontend containers running via the names 'backend' and 'frontend' respectively and they should be on the same Docker network.
 
 ## Docker
 
 Easily spin up a new courselit-proxy server using the following command.
 
+### Without SSL certificate
+
+```sh
+docker run recurze/courselit-proxy
 ```
-docker run -v <directory_containing_letsencrypt_certificate>:/etc/letsencrypt codelit/courselit-backend
+
+### With SSL certificate
+
+```sh
+docker run --env DOMAIN=<your_domain.com> -v <directory_containing_letsencrypt_certificate>:/etc/letsencrypt recurze/courselit-proxy
 ```
 
 where `directory_containing_letsencrypt_certificate` is the directory on your host system which contains the ssl certificate issued by [Let's Encrypt](https://letsencrypt.org/).
