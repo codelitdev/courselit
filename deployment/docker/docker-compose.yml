@@ -14,7 +14,7 @@ services:
     container_name: db
   
   backend:
-    image: codelit/courselit-backend:latest
+    image: recurze/courselit-backend:${TAG?'TAG environment variable is not defined'}
     environment:
       - API_PREFIX=${API_PREFIX}
       - DB_CONNECTION_STRING=${DB_CONNECTION_STRING?'DB_CONNECTION_STRING environment variable is is not defined'}
@@ -29,7 +29,7 @@ services:
     container_name: backend
 
   frontend:
-    image: codelit/courselit-frontend:latest
+    image: recurze/courselit-frontend:${TAG?'TAG environment variable is not defined'}
     environment:
       - SITE_URL=${SITE_URL?'SITE_URL environment variable is not defined'}
       - API_PREFIX=${API_PREFIX}
@@ -41,7 +41,7 @@ services:
     container_name: frontend
 
   proxy:
-    image: codelit/courselit-proxy:latest
+    image: recurze/courselit-proxy:${TAG?'TAG environment variable is not defined'}
     environment:
       - API_PREFIX=${API_PREFIX}
     ports:

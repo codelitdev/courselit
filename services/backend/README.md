@@ -1,22 +1,16 @@
 # Introduction
 
-A headless CMS for hosting your own teaching courses. Features include course creation, student management, media management and website customisation. [Learn more](https://courselit.recurze.com/).
+A headless CMS for hosting your own teaching courses. Features include course authoring, students management, media management and website customisation. [Learn more](https://courselit.recurze.com/).
 
 ## Getting started
 
 Easily spin up a new CourseLit headless server using the following command.
 
 ```sh
-export USER_CONTENT_DIRECTORY=local_directory_to_hold_user_data
-export JWT_SECRET=string_of_your_choice
-yarn start
-
-# the server will be available at http://localhost/api
+docker run --env USER_CONTENT_DIRECTORY=<directory_of_your_choice> --env JWT_SECRET=<string_of_your_choice> recurze/courselit-backend
 ```
 
-> The above commands assume that you have a MongoDB server running on your local machine. If that is not the case, specify the DB_CONNECTION_STRING environment as well.
-
-Additionally, you need to have `imagemagick` and `ffmpeg` softwares installed locally for media upload functionality to work.
+The above command assumes that you have a MongoDB server running on your local machine. If that is not the case, specify the DB_CONNECTION_STRING environment as well.
 
 ### Environment variables
 
@@ -43,6 +37,7 @@ This will make the server available at `/<API_PREFIX>` path. Defaults to `/api`.
 **JWT_EXPIRES_IN**
 
 The duration after while the generated JWT expires. For more information click [this](https://www.npmjs.com/package/jsonwebtoken) link. Defaults to `1d`.
+
 
 ## Support
 Come chat with us in our official [Spectrum chat](https://spectrum.chat/courselit/general).

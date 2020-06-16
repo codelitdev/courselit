@@ -23,7 +23,7 @@
           private: no
           default: "14d"
 
-        - name: docker_image_version
+        - name: docker_image_tag
           prompt: "Which version of CourseLit would you like to deploy? Visit https://hub.docker.com/repository/registry-1.docker.io/recurze/courselit-proxy/tags for all versions. Press Enter if you do not know."
           private: no
           default: "latest"
@@ -97,6 +97,7 @@
             DB_CONNECTION_STRING: "mongodb://{{ mongo_user_name }}:{{ mongo_password }}@db"
             JWT_SECRET: "{{ jwt_secret }}"
             JWT_EXPIRES_IN: "{{ jwt_expires }}"
+            TAG: "{{ docker_image_tag }}"
           when: not ssl_enabled|bool
 
         - name: Start CourseLit (with SSL)
@@ -118,4 +119,5 @@
             JWT_SECRET: "{{ jwt_secret }}"
             JWT_EXPIRES_IN: "{{ jwt_expires }}"
             DOMAIN: "{{ domain }}"
+            TAG: "{{ docker_image_tag }}"
           when: ssl_enabled|bool
