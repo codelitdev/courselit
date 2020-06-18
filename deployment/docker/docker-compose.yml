@@ -20,6 +20,7 @@ services:
       - DB_CONNECTION_STRING=${DB_CONNECTION_STRING?'DB_CONNECTION_STRING environment variable is is not defined'}
       - JWT_SECRET=${JWT_SECRET?'JWT_SECRET environment variable is not defined'}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+      - USER_CONTENT_DIRECTORY=${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}
     volumes:
       - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}:/data
     expose:
