@@ -21,6 +21,8 @@ services:
       - JWT_SECRET=${JWT_SECRET?'JWT_SECRET environment variable is not defined'}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
       - USER_CONTENT_DIRECTORY=${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}
+      - PORT=8000
+      - NODE_ENV=production
     volumes:
       - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}:/data
     expose:
@@ -35,6 +37,7 @@ services:
       - SITE_URL=${SITE_URL?'SITE_URL environment variable is not defined'}
       - API_PREFIX=${API_PREFIX}
       - SSR_SITE_URL=http://backend:8000
+      - NODE_ENV=production
     expose:
       - "3000"
     depends_on:
