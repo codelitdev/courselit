@@ -3,20 +3,6 @@
       become: true
 
       vars_prompt:
-
-        - name: domain
-          prompt: "Enter your domain name (without http://)"
-          private: no
-
-        - name: email
-          prompt: "Enter your email for getting emails from LetsEncrypt"
-          private: no
-
-        - name: domain_propagation_complete
-          prompt: "Is the domain propagation complete? It is required for acquiring a SSL certificate."
-          private: no
-          default: "no"
-
         - name: media_folder
           prompt: "Which folder would you like to store your files in?"
           private: no
@@ -37,128 +23,101 @@
           private: no
           default: "14d"
 
+        - name: docker_image_tag
+          prompt: "Which version of CourseLit would you like to deploy? Visit https://hub.docker.com/repository/registry-1.docker.io/recurze/courselit-proxy/tags for all versions. Press Enter if you do not know."
+          private: no
+          default: "latest"
+
       tasks:
-              - name: Check user input
-                fail: msg="The answer to the domain propagation question is not correct. Exiting."
-                when: domain_propagation_complete != "yes"
+        # Ask user if she wants to setup SSL
+        - pause:
+            prompt: "Would you like to enable SSL? [yes/no]"
+          register: prompt
+        - set_fact:
+            ssl_enabled: "{{ 'yes' if prompt.user_input|bool else 'no' }}"
+
+        - pause:
+            prompt: "Make sure that the domain propagation is complete. It is required to acquire a SSL certificate from Let's Encrypt. Press Enter to continue."
+          when: ssl_enabled|bool
+
+        # Collect user's domain name
+        - pause:
+            prompt: "Enter your domain name (without http://) or IP address."
+          register: prompt
+          when: not ssl_enabled|bool
+        
+        - set_fact:
+            domain: "{{ prompt.user_input }}"
+          when: not ssl_enabled|bool
+
+        - pause:
+            prompt: "Enter your domain name (without http://)"
+          register: prompt
+          when: ssl_enabled|bool
+
+        - set_fact:
+            domain: "{{ prompt.user_input }}"
+          when: ssl_enabled|bool
+
+        # Collect user's email address if she wants to setup SSL
+        - pause:
+            prompt: "Enter a valid email for getting emails from Let's Encrypt about your SSL certificate."
+          register: prompt
+          when: ssl_enabled|bool
+
+        - set_fact:
+            email: "{{ prompt.user_input }}"
+          when: ssl_enabled|bool
+
+        - include_role:
+            name: common
           
-              - name: Install required system packages
-                apt: name={{ item }} state=present update_cache=yes
-                loop: [ 'apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common', 'python3-pip']
+        - name: copy docker compose files
+          copy:
+            src: docker
+            dest: "{{ ansible_env.HOME }}"
+            owner: "{{ ansible_user }}"
+            group: "{{ ansible_user }}"
+            mode: 0644
 
-              - name: Install Python setuptools
-                pip:
-                  name:
-                    - setuptools
-          
-              - name: Install Docker packages
-                apt:
-                  name: ['docker-compose']
-                  state: present
+        - name: Start CourseLit (without SSL)
+          docker_compose:
+            project_name: courselit
+            project_src: "{{ ansible_env.HOME }}/docker"
+            files:
+                - "docker-compose.yml"
+            build: no
+            pull: yes
+          register: output
+          environment:
+            SITE_URL: http://{{ domain }}
+            MEDIA_FOLDER: "{{ media_folder }}"
+            MONGO_ROOT_USERNAME: "{{ mongo_user_name }}"
+            MONGO_ROOT_PASSWORD: "{{ mongo_password }}"
+            DB_CONNECTION_STRING: "mongodb://{{ mongo_user_name }}:{{ mongo_password }}@db"
+            JWT_SECRET: "{{ jwt_secret }}"
+            JWT_EXPIRES_IN: "{{ jwt_expires }}"
+            TAG: "{{ docker_image_tag }}"
+          when: not ssl_enabled|bool
 
-              - name: Install Python Docker packages
-                pip:
-                  name:
-                    - docker
-                    - docker-compose
-
-              - name: Install certbot
-                apt: update_cache=yes name=certbot state=present
-
-              - name: Add the firewall rule
-                ufw:
-                    rule: allow
-                    port: '80'
-                    proto: tcp
-
-              - name: Run certbot
-                command: certbot certonly --standalone --non-interactive --agree-tos -m {{ email }} -d {{ domain }}
-
-              - name: Combine certificates
-                shell:
-                    cmd: cat fullchain.pem privkey.pem > haproxy.pem
-                    chdir: /etc/letsencrypt/live/{{ domain }}/
-                    creates: haproxy.pem
-
-              - name: Unmask Docker
-                command: systemctl unmask docker
-
-              - name: Start Docker service
-                systemd: 
-                  name: docker
-                  state: started
-
-              - name: Run Docker compose
-                docker_compose:
-                  debug: yes
-                  project_name: courselit
-                  definition:
-                      version: '3'
-                      services:
-                          db:
-                            image: mongo
-                            ports:
-                              - "27017:27017"
-                            environment:
-                              MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME?'MONGO_ROOT_USERNAME environment variable is not defined'}
-                              MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD?'MONGO_ROOT_PASSWORD environment variable is not defined'}
-                            volumes:
-                              - "{{ media_folder }}/mongo/data/db:/data/db"
-                            command: --quiet
-                            container_name: db
-
-                          backend:
-                            image: codelit/courselit-backend:latest
-                            environment:
-                              - API_PREFIX=${API_PREFIX}
-                              - DB_CONNECTION_STRING=${DB_CONNECTION_STRING?'DB_CONNECTION_STRING environment variable is is not defined'}
-                              - JWT_SECRET=${JWT_SECRET?'JWT_SECRET environment variable is not defined'}
-                              - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
-                            volumes:
-                              - "{{ media_folder }}:/data"
-                            expose:
-                              - "8000"
-                            depends_on:
-                              - db
-                            container_name: backend
-
-                          frontend:
-                            image: codelit/courselit-frontend:latest
-                            environment:
-                              - SITE_URL=${SITE_URL?'SITE_URL environment variable is not defined'}
-                              - API_PREFIX=${API_PREFIX}
-                              - SSR_SITE_URL=http://backend:8000
-                            expose:
-                              - "3000"
-                            depends_on:
-                              - backend
-                            container_name: frontend
-
-                          proxy:
-                            image: codelit/courselit-proxy:latest
-                            environment:
-                              - API_PREFIX=${API_PREFIX}
-                              - DOMAIN=${DOMAIN?'DOMAIN environment variable is not defined'}
-                            volumes:
-                              - /etc/letsencrypt:/etc/letsencrypt
-                            ports:
-                              - "443:443"
-                            depends_on:
-                              - backend
-                              - frontend
-                            container_name: proxy
-                  build: no
-                  pull: yes
-                register: output
-                environment:
-                    SITE_URL: http://{{ domain }}
-                    MEDIA_FOLDER: "{{ media_folder }}"
-                    MONGO_ROOT_USERNAME: "{{ mongo_user_name }}"
-                    MONGO_ROOT_PASSWORD: "{{ mongo_password }}"
-                    DB_CONNECTION_STRING: "mongodb://{{ mongo_user_name }}:{{ mongo_password }}@db"
-                    JWT_SECRET: "{{ jwt_secret }}"
-                    JWT_EXPIRES_IN: "{{ jwt_expires }}"
-                    DOMAIN: "{{ domain }}"
-
-              - debug:
-                    var: output
+        - name: Start CourseLit (with SSL)
+          docker_compose:
+            project_name: courselit
+            project_src: "{{ ansible_env.HOME }}/docker"
+            files:
+                - "docker-compose.yml"
+                - "docker-compose.ssl.yml"
+            build: no
+            pull: yes
+          register: output
+          environment:
+            SITE_URL: http://{{ domain }}
+            MEDIA_FOLDER: "{{ media_folder }}"
+            MONGO_ROOT_USERNAME: "{{ mongo_user_name }}"
+            MONGO_ROOT_PASSWORD: "{{ mongo_password }}"
+            DB_CONNECTION_STRING: "mongodb://{{ mongo_user_name }}:{{ mongo_password }}@db"
+            JWT_SECRET: "{{ jwt_secret }}"
+            JWT_EXPIRES_IN: "{{ jwt_expires }}"
+            DOMAIN: "{{ domain }}"
+            TAG: "{{ docker_image_tag }}"
+          when: ssl_enabled|bool

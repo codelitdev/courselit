@@ -1,0 +1,14 @@
+{
+  "name": "courselit-backend",
+  "version": "0.1.0",
+  "description": "A headless CMS for educators and teachers",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "The Recurze team",
+  "license": "MIT",
+  "dependencies": {
+    "@courselit/api": "^0.1.2"
+  }
+}
