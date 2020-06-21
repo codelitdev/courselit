@@ -1,0 +1,36 @@
+- name: Install required system packages
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  loop: [ 'apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common', 'python3-pip']
+
+- name: Install Python setuptools
+  pip:
+    name:
+    - setuptools
+
+- name: Install Docker packages
+  apt:
+    name: ['docker-compose']
+    state: present
+
+- name: Install Python Docker packages
+  pip:
+    name:
+    - docker
+    - docker-compose
+
+- name: Add the firewall rule
+  ufw:
+    rule: allow
+    port: '80'
+    proto: tcp
+
+- name: Unmask Docker
+  command: systemctl unmask docker
+
+- name: Start Docker service
+  systemd: 
+    name: docker
+    state: started
