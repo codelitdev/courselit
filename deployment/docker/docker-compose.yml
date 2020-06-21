@@ -1,0 +1,56 @@
+version: "3"
+
+services:
+  db:
+    image: mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME?'MONGO_ROOT_USERNAME environment variable is not defined'}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD?'MONGO_ROOT_PASSWORD environment variable is not defined'}
+    volumes:
+      - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}/mongo/data/db:/data/db
+    command: --quiet
+    container_name: db
+  
+  backend:
+    image: recurze/courselit-backend:${TAG?'TAG environment variable is not defined'}
+    environment:
+      - API_PREFIX=${API_PREFIX}
+      - DB_CONNECTION_STRING=${DB_CONNECTION_STRING?'DB_CONNECTION_STRING environment variable is is not defined'}
+      - JWT_SECRET=${JWT_SECRET?'JWT_SECRET environment variable is not defined'}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+      - USER_CONTENT_DIRECTORY=${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}
+      - PORT=8000
+      - NODE_ENV=production
+    volumes:
+      - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}:/data
+    expose:
+      - "8000"
+    depends_on:
+      - db
+    container_name: backend
+
+  frontend:
+    image: recurze/courselit-frontend:${TAG?'TAG environment variable is not defined'}
+    environment:
+      - SITE_URL=${SITE_URL?'SITE_URL environment variable is not defined'}
+      - API_PREFIX=${API_PREFIX}
+      - SSR_SITE_URL=http://backend:8000
+      - NODE_ENV=production
+    expose:
+      - "3000"
+    depends_on:
+      - backend
+    container_name: frontend
+
+  proxy:
+    image: recurze/courselit-proxy:${TAG?'TAG environment variable is not defined'}
+    environment:
+      - API_PREFIX=${API_PREFIX}
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - frontend
+    container_name: proxy
