@@ -7,7 +7,7 @@
     "dev": "next",
     "build": "next build",
     "start": "next start -p 3000",
-    "lint": "eslint pages components redux types.js theme.js --fix",
+    "lint": "eslint pages components redux types.js --fix",
     "prettier": "prettier --write 'pages/**/*.js' 'components/**/*.js' 'redux/**/*.js' types.js theme.js",
     "test": "jest"
   },

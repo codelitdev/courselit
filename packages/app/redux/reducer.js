@@ -8,7 +8,8 @@ import {
   SITEINFO_AVAILABLE,
   AUTH_CHECKED,
   SET_MESSAGE,
-  CLEAR_MESSAGE
+  CLEAR_MESSAGE,
+  THEME_AVAILABLE
 } from "./actionTypes.js";
 import {
   GENERIC_TITLE,
@@ -60,6 +61,10 @@ const initialState = {
     open: false,
     message: "",
     action: null
+  },
+  theme: {
+    layout: {},
+    styles: {}
   }
 };
 
@@ -165,10 +170,37 @@ function messageReducer(state = initialState.message, action) {
   }
 }
 
+function themeReducer(state = initialState.theme, action) {
+  let layout, styles;
+
+  switch (action.type) {
+    case THEME_AVAILABLE:
+      try {
+        layout = JSON.parse(action.theme.layout);
+      } catch (err) {
+        layout = {};
+      }
+
+      try {
+        styles = JSON.parse(action.theme.styles);
+      } catch (err) {
+        styles = {};
+      }
+
+      return {
+        layout,
+        styles
+      };
+    default:
+      return state;
+  }
+}
+
 export default combineReducers({
   auth: authReducer,
   siteinfo: siteinfoReducer,
   networkAction: networkActionReducer,
   profile: profileReducer,
-  message: messageReducer
+  message: messageReducer,
+  theme: themeReducer
 });

@@ -7,20 +7,27 @@ import { JWT_COOKIE_NAME, USERID_COOKIE_NAME } from "../config/constants.js";
 import {
   signedIn,
   updateSiteInfo,
-  authHasBeenChecked
+  authHasBeenChecked,
+  updateSiteTheme
 } from "../redux/actions.js";
 import { ThemeProvider } from "@material-ui/styles";
-import theme from "../theme";
 import CodeInjector from "../components/CodeInjector.js";
+import { responsiveFontSizes, createMuiTheme } from "@material-ui/core";
 
 class MyApp extends App {
   static async getInitialProps(props) {
     const { Component, ctx } = props;
-    await ctx.store.dispatch(updateSiteInfo());
+    await this.fetchSiteSettings(ctx);
+
     const pageProps = Component.getInitialProps
       ? await Component.getInitialProps(ctx)
       : {};
     return { pageProps };
+  }
+
+  static async fetchSiteSettings(ctx) {
+    await ctx.store.dispatch(updateSiteInfo());
+    await ctx.store.dispatch(updateSiteTheme());
   }
 
   componentDidMount() {
@@ -48,10 +55,14 @@ class MyApp extends App {
 
   render() {
     const { Component, pageProps, store } = this.props;
+    const { theme } = store.getState();
+    const muiTheme = responsiveFontSizes(
+      createMuiTheme(Object.keys(theme.styles).length ? theme.styles : {})
+    );
 
     return (
       <Provider store={store}>
-        <ThemeProvider theme={theme}>
+        <ThemeProvider theme={muiTheme}>
           <Component {...pageProps} />
           <CodeInjector />
         </ThemeProvider>
