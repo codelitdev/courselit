@@ -5,8 +5,8 @@
     "packages/*"
   ],
   "author": {
-    "name": "The Recurze team",
-    "email": "recurzery@gmail.com"
+    "name": "The Recurze Team",
+    "email": "hi@recurze.com"
   },
   "homepage": "",
   "repository": {
@@ -18,6 +18,7 @@
     "lerna": "^3.22.0"
   },
   "scripts": {
-    "lerna:publish": "lerna publish"
+    "lerna:publish": "lerna publish",
+    "lerna:bootstrap": "lerna bootstrap"
   }
 }

@@ -7,10 +7,10 @@ import { siteInfoProps } from "../types.js";
 const About = props =>
   props.siteInfo.about ? (
     <Grid container spacing={2}>
-      <Grid item>
+      <Grid container item>
         <Typography variant="h2">{HEADER_ABOUT_SECTION}</Typography>
       </Grid>
-      <Grid item>
+      <Grid container item>
         <Card>
           <CardContent>
             <Typography variant="body1">{props.siteInfo.about}</Typography>

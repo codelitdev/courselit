@@ -17,7 +17,10 @@ import { makeStyles } from "@material-ui/styles";
 import ContainedBodyLayout from "../components/ContainedBodyLayout.js";
 import About from "../components/About.js";
 import FetchBuilder from "../lib/fetch.js";
-
+// import ReactTemplateLayout from '@courselit/react-template-layout';
+import ReactTemplateLayout from '../components/ReactTemplateLayout.js'
+;
+import TestAbout from "../components/TestAbout.js";
 const useStyles = makeStyles(theme => ({
   root: {
     marginTop: 10
@@ -73,6 +76,50 @@ const Index = props => {
     }
     props.dispatch(networkAction(false));
   };
+
+  const layout = {
+    width: {xs: 12, sm:5, md: 12, lg: 2},
+    rows: [
+      About,
+      About,
+      About,
+      [
+        {
+          width: {xs: 4},
+          rows: [
+            About,
+            About
+          ]
+        },
+        // {
+        //   width: {xs: 5},
+        //   rows: [
+        //     About,
+        //     About,
+        //     [
+        //       {
+        //         width: 2,
+        //         rows: [
+        //           About
+        //         ]
+        //       }
+        //     ]
+        //   ]
+        // }
+      ]
+    ]
+  }
+
+  // console.log(ReactTemplateLayout);
+
+  return (
+    <>
+      <TestAbout />
+      <ReactTemplateLayout layout={layout}></ReactTemplateLayout>
+    </>
+  )
+
+  return (<ReactTemplateLayout layout={layout}></ReactTemplateLayout>)
 
   return (
     <MasterLayout title={props.siteinfo.subtitle}>
