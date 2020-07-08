@@ -8,7 +8,8 @@ import {
   LibraryBooks,
   SupervisedUserCircle,
   PermMedia,
-  SettingsApplications
+  SettingsApplications,
+  Palette
 } from "@material-ui/icons";
 import ResponsiveDrawer from "../components/ResponsiveDrawer.js";
 import SiteSettings from "../components/SiteSettings.js";
@@ -17,6 +18,7 @@ import MediaManager from "../components/MediaManager.js";
 import Courses from "../components/CoursesManager.js";
 import UsersManager from "../components/UsersManager.js";
 import AppLoader from "../components/AppLoader.js";
+import PageDesigner from "../components/PageDesigner/index.js";
 
 const Create = props => {
   useEffect(() => {
@@ -48,14 +50,19 @@ const Create = props => {
     items.push(
       ...[
         {
+          name: "Settings",
+          element: <SiteSettings />,
+          icon: <SettingsApplications />
+        },
+        {
           name: "Users",
           element: <UsersManager />,
           icon: <SupervisedUserCircle />
         },
         {
-          name: "Settings",
-          element: <SiteSettings />,
-          icon: <SettingsApplications />
+          name: "Design",
+          element: <PageDesigner />,
+          icon: <Palette />
         }
       ]
     );
