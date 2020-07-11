@@ -50,6 +50,7 @@ exports.responses = {
   invalid_payment_method: "Invalid payment method",
   invalid_theme: "Invalid theme",
   theme_not_installed: "The theme is not installed",
+  invalid_layout: "Invalid layout",
 };
 
 exports.internal = {

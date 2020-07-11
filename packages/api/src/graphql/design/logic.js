@@ -4,12 +4,12 @@
 const Theme = require("../../models/Theme.js");
 const { checkIfAuthenticated } = require("../../lib/graphql.js");
 const strings = require("../../config/strings.js");
+const Layout = require("../../models/Layout.js");
 
 // TODO: write tests for all functions
 
 exports.getTheme = async () => {
   const theme = await Theme.findOne({ active: true });
-  console.log(theme, transformThemeForOutput(theme));
   return transformThemeForOutput(theme);
 };
 
@@ -42,26 +42,22 @@ exports.addTheme = async (themeData, ctx) => {
   checkIfAuthenticated(ctx);
   if (!ctx.user.isAdmin) throw new Error(strings.responses.is_not_admin);
 
-  if (!themeData.layout && !themeData.styles)
+  if (!themeData.styles) {
     throw new Error(strings.responses.invalid_theme);
+  }
 
-  let layout, styles;
+  let styles;
   try {
-    if (themeData.layout) {
-      layout = JSON.parse(themeData.layout);
-    }
     if (themeData.styles) {
       styles = JSON.parse(themeData.styles);
     }
   } catch (err) {
-    console.log(err, themeData);
     throw new Error(strings.responses.invalid_theme);
   }
 
   const theme = await Theme.create({
     id: themeData.id,
     name: themeData.name,
-    layout: layout,
     styles: styles,
     screenshot: themeData.screenshot,
     url: themeData.url,
@@ -70,12 +66,46 @@ exports.addTheme = async (themeData, ctx) => {
   return transformThemeForOutput(theme);
 };
 
+exports.getLayout = async () => {
+  const layout = await Layout.findOne();
+  return layout
+    ? {
+        layout: JSON.stringify(layout.layout),
+      }
+    : null;
+};
+
+exports.setLayout = async (layoutData, ctx) => {
+  checkIfAuthenticated(ctx);
+  if (!ctx.user.isAdmin) throw new Error(strings.responses.is_not_admin);
+
+  let layoutObject;
+  try {
+    layoutObject = JSON.parse(layoutData.layout);
+  } catch (err) {
+    throw new Error(strings.responses.invalid_layout);
+  }
+
+  let layout = await Layout.findOne();
+  if (layout) {
+    layout.layout = layoutObject;
+    layout = await layout.save();
+  } else {
+    layout = await Layout.create({
+      layout: layoutObject,
+    });
+  }
+
+  return {
+    layout: JSON.stringify(layout.layout),
+  };
+};
+
 const transformThemeForOutput = (theme) =>
   theme
     ? {
         id: theme.id,
         name: theme.name,
-        layout: theme.layout ? JSON.stringify(theme.layout) : "",
         styles: theme.styles ? JSON.stringify(theme.styles) : "",
         screenshot: theme.screenshot,
         url: theme.url,

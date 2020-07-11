@@ -8,7 +8,8 @@ import {
   signedIn,
   updateSiteInfo,
   authHasBeenChecked,
-  updateSiteTheme
+  updateSiteTheme,
+  updateSiteLayout
 } from "../redux/actions.js";
 import { ThemeProvider } from "@material-ui/styles";
 import CodeInjector from "../components/CodeInjector.js";
@@ -27,6 +28,7 @@ class MyApp extends App {
 
   static async fetchSiteSettings(ctx) {
     await ctx.store.dispatch(updateSiteInfo());
+    await ctx.store.dispatch(updateSiteLayout());
     await ctx.store.dispatch(updateSiteTheme());
   }
 

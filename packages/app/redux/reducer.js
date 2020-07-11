@@ -9,7 +9,8 @@ import {
   AUTH_CHECKED,
   SET_MESSAGE,
   CLEAR_MESSAGE,
-  THEME_AVAILABLE
+  THEME_AVAILABLE,
+  LAYOUT_AVAILABLE
 } from "./actionTypes.js";
 import {
   GENERIC_TITLE,
@@ -62,9 +63,11 @@ const initialState = {
     message: "",
     action: null
   },
-  theme: {
-    layout: {},
-    styles: {}
+  theme: {},
+  layout: {
+    top: [],
+    bottom: [],
+    aside: []
   }
 };
 
@@ -171,26 +174,37 @@ function messageReducer(state = initialState.message, action) {
 }
 
 function themeReducer(state = initialState.theme, action) {
-  let layout, styles;
+  let styles;
 
   switch (action.type) {
     case THEME_AVAILABLE:
       try {
-        layout = JSON.parse(action.theme.layout);
-      } catch (err) {
-        layout = {};
-      }
-
-      try {
         styles = JSON.parse(action.theme.styles);
       } catch (err) {
-        styles = {};
+        styles = state;
       }
 
-      return {
-        layout,
-        styles
-      };
+      return Object.assign({}, action.theme, {
+        styles: styles
+      });
+    default:
+      return state;
+  }
+}
+
+function layoutReducer(state = initialState.layout, action) {
+  let layout;
+
+  switch (action.type) {
+    case LAYOUT_AVAILABLE:
+      console.log(`Layout`, action.layout);
+      try {
+        layout = JSON.parse(action.layout);
+      } catch (err) {
+        layout = state;
+      }
+
+      return Object.assign({}, layout);
     default:
       return state;
   }
@@ -202,5 +216,6 @@ export default combineReducers({
   networkAction: networkActionReducer,
   profile: profileReducer,
   message: messageReducer,
-  theme: themeReducer
+  theme: themeReducer,
+  layout: layoutReducer
 });

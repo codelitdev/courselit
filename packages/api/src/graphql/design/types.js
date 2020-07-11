@@ -25,7 +25,23 @@ const themeInputType = new graphql.GraphQLInputObjectType({
   },
 });
 
+const layoutType = new graphql.GraphQLObjectType({
+  name: "Layout",
+  fields: {
+    layout: { type: graphql.GraphQLString },
+  },
+});
+
+const layoutInputType = new graphql.GraphQLInputObjectType({
+  name: "LayoutInput",
+  fields: {
+    layout: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+  },
+});
+
 module.exports = {
   themeType,
   themeInputType,
+  layoutType,
+  layoutInputType,
 };

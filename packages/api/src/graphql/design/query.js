@@ -11,4 +11,8 @@ module.exports = {
     type: new graphql.GraphQLList(types.themeType),
     resolve: (root, { a = {} }, context) => logic.getAllThemes(context),
   },
+  getLayout: {
+    type: types.layoutType,
+    resolve: () => logic.getLayout(),
+  },
 };

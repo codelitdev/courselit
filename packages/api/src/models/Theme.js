@@ -9,7 +9,6 @@ const ThemeSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   name: { type: String, required: true, unique: true },
   active: { type: Boolean, required: true, default: false },
-  layout: mongoose.Schema.Types.Mixed,
   styles: mongoose.Schema.Types.Mixed,
   screenshot: String,
   url: String,

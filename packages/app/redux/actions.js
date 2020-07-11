@@ -11,7 +11,8 @@ import {
   AUTH_CHECKED,
   SET_MESSAGE,
   CLEAR_MESSAGE,
-  THEME_AVAILABLE
+  THEME_AVAILABLE,
+  LAYOUT_AVAILABLE
 } from "./actionTypes.js";
 import {
   BACKEND,
@@ -143,8 +144,8 @@ export function updateSiteTheme() {
       dispatch(networkAction(true));
 
       const query = `
-      { theme: getTheme {
-          layout,
+      { 
+        theme: getTheme {
           styles
         }
       }
@@ -166,4 +167,37 @@ export function updateSiteTheme() {
 
 export function themeAvailable(theme) {
   return { type: THEME_AVAILABLE, theme };
+}
+
+export function updateSiteLayout() {
+  return async dispatch => {
+    try {
+      dispatch(networkAction(true));
+
+      const query = `
+      {
+        layout: getLayout {
+          layout
+        }
+      }
+      `;
+
+      const fetch = new FetchBuilder()
+        .setUrl(`${BACKEND}/graph`)
+        .setPayload(query)
+        .setIsGraphQLEndpoint(true)
+        .build();
+      const response = await fetch.exec();
+      console.log(`Response`, response);
+
+      dispatch(networkAction(false));
+      dispatch(layoutAvailable(response.layout && response.layout.layout));
+    } finally {
+      dispatch(networkAction(false));
+    }
+  };
+}
+
+export function layoutAvailable(layout) {
+  return { type: LAYOUT_AVAILABLE, layout };
 }

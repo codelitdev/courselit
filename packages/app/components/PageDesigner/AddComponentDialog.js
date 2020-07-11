@@ -19,7 +19,7 @@ const AddComponentDialog = props => {
   const [selectedComponentName, setSelectedComponentName] = useState("");
 
   const handleSelection = () => {
-    onClose(selectedComponentName);
+    onClose(props.showComponentsCompatibleWith, selectedComponentName);
     setSelectedComponentName("");
   };
 

@@ -147,3 +147,4 @@ export const CARD_HEADER_PAGE_LAYOUT = "Layout"
 export const CARD_HEADER_THEME = "Theme"
 export const CARD_DESCRIPTION_PAGE_LAYOUT = "Use the '+' buttons to add your favorite components to the desired sections of your page."
 export const ADD_COMPONENT_POPUP_HEADER = 'Add component'
+export const APP_MESSAGE_CHANGES_SAVED = 'Changes saved'

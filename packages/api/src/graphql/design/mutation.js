@@ -21,4 +21,14 @@ module.exports = {
     },
     resolve: async (root, { id }, context) => logic.setTheme(id, context),
   },
+  setLayout: {
+    type: types.layoutType,
+    args: {
+      layoutData: {
+        type: new graphql.GraphQLNonNull(types.layoutInputType),
+      },
+    },
+    resolve: async (root, { layoutData }, context) =>
+      logic.setLayout(layoutData, context),
+  },
 };
