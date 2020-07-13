@@ -18,7 +18,7 @@ import MediaManager from "../components/MediaManager.js";
 import Courses from "../components/CoursesManager.js";
 import UsersManager from "../components/UsersManager.js";
 import AppLoader from "../components/AppLoader.js";
-import PageDesigner from "../components/PageDesigner/index.js";
+import PageDesigner from "../components/Admin/PageDesigner/index.js";
 
 const Create = props => {
   useEffect(() => {

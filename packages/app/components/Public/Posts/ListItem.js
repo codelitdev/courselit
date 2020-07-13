@@ -1,10 +1,10 @@
 import React from "react";
 import PropTypes from "prop-types";
 import Link from "next/link";
-import { URL_EXTENTION_POSTS } from "../config/constants.js";
+import { URL_EXTENTION_POSTS } from "../../../config/constants.js";
 import { Grid, Typography, Card, CardContent } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
-import Img from "./Img.js";
+import Img from "../../Img.js";
 
 const useStyles = makeStyles({
   featuredimagecontainer: {
@@ -22,7 +22,7 @@ const useStyles = makeStyles({
   }
 });
 
-const BlogPostItem = props => {
+const ListItem = props => {
   const classes = useStyles();
 
   return (
@@ -68,7 +68,7 @@ const BlogPostItem = props => {
   );
 };
 
-BlogPostItem.propTypes = {
+ListItem.propTypes = {
   id: PropTypes.string.isRequired,
   title: PropTypes.string.isRequired,
   description: PropTypes.string.isRequired,
@@ -78,4 +78,4 @@ BlogPostItem.propTypes = {
   featuredImage: PropTypes.string
 };
 
-export default BlogPostItem;
+export default ListItem;

@@ -17,22 +17,22 @@ import {
   ADD_COMPONENT_POPUP_HEADER,
   BUTTON_SAVE,
   APP_MESSAGE_CHANGES_SAVED
-} from "../../config/strings.js";
+} from "../../../config/strings.js";
 import { makeStyles } from "@material-ui/styles";
 import { AddCircle } from "@material-ui/icons";
 
 import AddComponentDialog from "./AddComponentDialog.js";
 import AddedComponent from "./AddedComponent.js";
 import { connect } from "react-redux";
-import FetchBuilder from "../../lib/fetch.js";
-import { BACKEND } from "../../config/constants.js";
+import FetchBuilder from "../../../lib/fetch.js";
+import { BACKEND } from "../../../config/constants.js";
 import {
   networkAction,
   layoutAvailable,
   setAppMessage
-} from "../../redux/actions.js";
-import AppMessage from "../../models/app-message.js";
-import { authProps } from "../../types.js";
+} from "../../../redux/actions.js";
+import AppMessage from "../../../models/app-message.js";
+import { authProps } from "../../../types.js";
 
 const useStyles = makeStyles(theme => ({
   container: {

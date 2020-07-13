@@ -8,14 +8,14 @@ import {
   CardContent
 } from "@material-ui/core";
 import PropTypes from "prop-types";
-import { featuredCourse, siteInfoProps } from "../types.js";
+import { siteInfoProps } from "../../types.js";
 import { makeStyles } from "@material-ui/styles";
 import { connect } from "react-redux";
-import { formulateMediaUrl } from "../lib/utils";
-import { MEDIA_BACKEND, URL_EXTENTION_COURSES, BACKEND } from "../config/constants";
-import { FREE_COST, FEATURED_SECTION_HEADER } from "../config/strings.js";
+import { formulateMediaUrl } from "../../lib/utils";
+import { MEDIA_BACKEND, URL_EXTENTION_COURSES, BACKEND } from "../../config/constants.js";
+import { FREE_COST, FEATURED_SECTION_HEADER } from "../../config/strings.js";
 import Link from "next/link";
-import FetchBuilder from "../lib/fetch.js";
+import FetchBuilder from "../../lib/fetch.js";
 
 const useStyles = makeStyles(theme => ({
   container: {
