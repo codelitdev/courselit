@@ -53,7 +53,7 @@ const List = props => {
     return posts.length > 0 ? (
         <Grid item xs={12}>
           <section>
-            <Typography variant="h2">
+            <Typography variant="h4">
               {HEADER_BLOG_POSTS_SECTION}
             </Typography>
             {posts.map((x, index) => (

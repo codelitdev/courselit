@@ -16,6 +16,7 @@ import { MEDIA_BACKEND, URL_EXTENTION_COURSES, BACKEND } from "../../config/cons
 import { FREE_COST, FEATURED_SECTION_HEADER } from "../../config/strings.js";
 import Link from "next/link";
 import FetchBuilder from "../../lib/fetch.js";
+import Header from "./Header.js";
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -64,7 +65,7 @@ const FeaturedContent = props => {
     <div className={classes.container}>
       <Grid container className={classes.header}>
         <Grid item>
-          <Typography variant="h2">{FEATURED_SECTION_HEADER}</Typography>
+          <Header text={FEATURED_SECTION_HEADER} />
         </Grid>
       </Grid>
       <Grid container alignItems="center" justify="space-between" spacing={2}>

@@ -4,6 +4,7 @@ import { HEADER_ABOUT_SECTION } from "../../config/strings.js";
 import { connect } from "react-redux";
 import { siteInfoProps } from "../../types.js";
 import { makeStyles } from "@material-ui/styles";
+import Header from "./Header.js";
 
 const useStyles = makeStyles({
   justified: {
@@ -17,7 +18,7 @@ const About = props => {
   return props.siteInfo.about ? (
     <Grid container spacing={1}>
       <Grid item xs={12}>
-        <Typography variant="h4">{HEADER_ABOUT_SECTION}</Typography>
+        <Header text={HEADER_ABOUT_SECTION} />
       </Grid>
       <Grid item xs={12}>
         <Typography variant="body1" className={classes.justified}>{props.siteInfo.about}</Typography>

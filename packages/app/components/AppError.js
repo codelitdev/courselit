@@ -1,10 +1,10 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Card, CardContent, Typography } from "@material-ui/core";
+import { Card, CardContent, Typography, Grid } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import { USER_ERROR_HEADER } from "../config/strings";
 import ContainedBodyLayout from "./ContainedBodyLayout";
-import Masterlayout from "./Masterlayout";
+import BaseLayout from './Public/BaseLayout';
 
 const useStyles = makeStyles(theme => ({
   header: {
@@ -18,22 +18,22 @@ const AppError = props => {
   const classes = useStyles();
 
   return (
-    <Masterlayout>
-      <ContainedBodyLayout>
-        <Card>
-          <CardContent>
-            <Typography
-              variant="body1"
-              color="textSecondary"
-              className={classes.header}
-            >
-              {USER_ERROR_HEADER}
-            </Typography>
-            <Typography variant="h5">{error}</Typography>
-          </CardContent>
-        </Card>
-      </ContainedBodyLayout>
-    </Masterlayout>
+    <BaseLayout>
+        <Grid item>
+          <Card>
+            <CardContent>
+              <Typography
+                variant="body1"
+                color="textSecondary"
+                className={classes.header}
+              >
+                {USER_ERROR_HEADER}
+              </Typography>
+              <Typography variant="h5">{error}</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+    </BaseLayout>
   );
 };
 
