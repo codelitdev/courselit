@@ -7,11 +7,10 @@ import {
 } from "../../../lib/utils.js";
 import { makeStyles, Grid } from "@material-ui/core";
 import Head from "next/head";
-import ContainedBodyLayout from "../../../components/ContainedBodyLayout.js";
-import Article from "../../../components/Article.js";
 import FetchBuilder from "../../../lib/fetch.js";
 import { siteInfoProps } from "../../../types.js";
 import BaseLayout from "../../../components/Public/BaseLayout";
+import Article from "../../../components/Public/Article.js";
 
 const useStyles = makeStyles(theme => ({
   articleMarginAdjust: {

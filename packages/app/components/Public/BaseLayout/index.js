@@ -12,6 +12,7 @@ import { siteInfoProps } from "../../../types.js";
 import Footer from "../../Footer.js";
 import Section from "./Section.js";
 import ContainedBodyLayout from "../../ContainedBodyLayout.js";
+import { useRouter } from "next/router";
 
 const useStyles = makeStyles({
   showProgressBar: props => ({
@@ -24,7 +25,8 @@ const useStyles = makeStyles({
 
 const MasterLayout = props => {
   const classes = useStyles(props);
-  
+  const router = useRouter();
+
   return (
     <>
       <Head>
@@ -47,16 +49,16 @@ const MasterLayout = props => {
       <LinearProgress className={classes.showProgressBar} />
       <ContainedBodyLayout>
         <Grid container>
-          <Section name='top' />
-          <Grid container item direction='row' spacing={2}>
-            <Grid container item direction='column' xs={12} sm={8} md={9}>
+          {router.pathname === "/" && <Section name="top" />}
+          <Grid container item direction="row" spacing={2}>
+            <Grid container item direction="column" xs={12} sm={8} md={9}>
               <Grid container item className={classes.mainContent}>
                 {props.children}
               </Grid>
-              <Section name='bottom' />
+              <Section name="bottom" />
             </Grid>
-            <Grid container item direction='column' xs={12} sm={4} md={3}>
-              <Section name='aside' />
+            <Grid container item direction="column" xs={12} sm={4} md={3}>
+              <Section name="aside" />
             </Grid>
           </Grid>
         </Grid>

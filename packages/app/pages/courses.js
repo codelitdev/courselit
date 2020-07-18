@@ -42,21 +42,21 @@ const Courses = props => {
 
   return (
     <BaseLayout title={PAGE_HEADER_ALL_COURSES}>
-        <Grid item>
-          <Typography variant="h2" className={classes.header}>
-            {PAGE_HEADER_ALL_COURSES}
-          </Typography>
-          {courses.map(course => (
-            <CourseItem course={course} key={course.id} isPublicView={true} />
-          ))}
-          <Button
-            onClick={getMoreCourses}
-            disabled={hasMorePages ? null : "disabled"}
-            className={classes.loadMoreBtn}
-          >
-            {BTN_LOAD_MORE}
-          </Button>
-        </Grid>
+      <Grid item>
+        <Typography variant="h2" className={classes.header}>
+          {PAGE_HEADER_ALL_COURSES}
+        </Typography>
+        {courses.map(course => (
+          <CourseItem course={course} key={course.id} isPublicView={true} />
+        ))}
+        <Button
+          onClick={getMoreCourses}
+          disabled={hasMorePages ? null : "disabled"}
+          className={classes.loadMoreBtn}
+        >
+          {BTN_LOAD_MORE}
+        </Button>
+      </Grid>
     </BaseLayout>
   );
 };

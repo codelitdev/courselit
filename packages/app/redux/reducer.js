@@ -197,9 +197,8 @@ function layoutReducer(state = initialState.layout, action) {
 
   switch (action.type) {
     case LAYOUT_AVAILABLE:
-      console.log(`Layout`, action.layout);
       try {
-        layout = Object.assign({}, state, JSON.parse(action.layout))
+        layout = Object.assign({}, state, JSON.parse(action.layout));
       } catch (err) {
         layout = state;
       }

@@ -4,7 +4,7 @@ import { Card, CardContent, Typography, Grid } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import { USER_ERROR_HEADER } from "../config/strings";
 import ContainedBodyLayout from "./ContainedBodyLayout";
-import BaseLayout from './Public/BaseLayout';
+import BaseLayout from "./Public/BaseLayout";
 
 const useStyles = makeStyles(theme => ({
   header: {
@@ -19,20 +19,20 @@ const AppError = props => {
 
   return (
     <BaseLayout>
-        <Grid item>
-          <Card>
-            <CardContent>
-              <Typography
-                variant="body1"
-                color="textSecondary"
-                className={classes.header}
-              >
-                {USER_ERROR_HEADER}
-              </Typography>
-              <Typography variant="h5">{error}</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+      <Grid item>
+        <Card>
+          <CardContent>
+            <Typography
+              variant="body1"
+              color="textSecondary"
+              className={classes.header}
+            >
+              {USER_ERROR_HEADER}
+            </Typography>
+            <Typography variant="h5">{error}</Typography>
+          </CardContent>
+        </Card>
+      </Grid>
     </BaseLayout>
   );
 };

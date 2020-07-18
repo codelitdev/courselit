@@ -4,7 +4,7 @@
 import About from "../About";
 import FeaturedContent from "../FeaturedContent";
 
-export default ({
-    'About': About,
-    'Featured': FeaturedContent
-})
+export default {
+  About: About,
+  Featured: FeaturedContent
+};

@@ -11,7 +11,10 @@ import {
   Button,
   ListItemText
 } from "@material-ui/core";
-import { DIALOG_SELECT_BUTTON, BUTTON_CANCEL_TEXT } from "../../../config/strings";
+import {
+  DIALOG_SELECT_BUTTON,
+  BUTTON_CANCEL_TEXT
+} from "../../../config/strings";
 import CompatibleComponentsMap from "./CompatibleComponentsMap";
 
 const AddComponentDialog = props => {

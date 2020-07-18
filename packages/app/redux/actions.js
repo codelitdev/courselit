@@ -188,7 +188,6 @@ export function updateSiteLayout() {
         .setIsGraphQLEndpoint(true)
         .build();
       const response = await fetch.exec();
-      console.log(`Response`, response);
 
       dispatch(networkAction(false));
       dispatch(layoutAvailable(response.layout && response.layout.layout));

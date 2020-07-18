@@ -110,7 +110,6 @@ const MediaGallery = props => {
         console.log(filteredMedia, props.mimeTypesToShow);
         setUserMedia([...userMedia, ...filteredMedia]);
         setMediaOffset(mediaOffset + 1);
-        console.log(response.media);
       }
     } catch (err) {
       console.log(err);
@@ -236,101 +235,91 @@ const MediaGallery = props => {
   return (
     <>
       {!mediaBeingEdited && (
-        <Card>
-          <CardContent>
-            <form onSubmit={searchMedia}>
-              <Grid container direction="row" alignItems="center">
-                <Grid item className={classes.searchField}>
-                  <TextField
-                    value={searchText}
-                    variant="outlined"
-                    label=""
-                    fullWidth
-                    margin="normal"
-                    placeholder={MEDIA_SEARCH_INPUT_PLACEHOLDER}
-                    onChange={onSearchTextChanged}
-                  />
-                </Grid>
-                <Grid item>
-                  <Button
-                    type="submit"
-                    variant={
-                      searchText.trim().length !== 0 ? "contained" : "text"
-                    }
-                    disabled={searchText.trim().length === 0}
-                  >
-                    {BUTTON_SEARCH}
-                  </Button>
-                </Grid>
+        <div>
+          <form onSubmit={searchMedia}>
+            <Grid container direction="row" alignItems="center">
+              <Grid item className={classes.searchField}>
+                <TextField
+                  value={searchText}
+                  variant="outlined"
+                  label=""
+                  fullWidth
+                  margin="normal"
+                  placeholder={MEDIA_SEARCH_INPUT_PLACEHOLDER}
+                  onChange={onSearchTextChanged}
+                />
               </Grid>
-            </form>
-            <GridList cols={3} className={classes.mediaGrid}>
-              <GridListTile cols={3} key="Subheader" style={{ height: "auto" }}>
-                <ListSubheader component="div">
-                  {HEADER_YOUR_MEDIA}
-                </ListSubheader>
-              </GridListTile>
-              {userMedia.map(item => (
-                <GridListTile
-                  key={item.id}
-                  cols={1}
-                  onClick={() => onMediaSelected(item.id)}
+              <Grid item>
+                <Button
+                  type="submit"
+                  variant={
+                    searchText.trim().length !== 0 ? "contained" : "text"
+                  }
+                  disabled={searchText.trim().length === 0}
                 >
-                  <MediaGalleryItem
-                    item={item}
-                    toggleMediaEditForm={toggleMediaEditForm}
-                  />
-                </GridListTile>
-              ))}
-            </GridList>
-            {props.networkAction && <AppLoader />}
-          </CardContent>
-          <CardActions>
-            <Button onClick={loadMedia}>{LOAD_MORE_TEXT}</Button>
-          </CardActions>
-        </Card>
+                  {BUTTON_SEARCH}
+                </Button>
+              </Grid>
+            </Grid>
+          </form>
+          <GridList cols={3} className={classes.mediaGrid}>
+            <GridListTile cols={3} key="Subheader" style={{ height: "auto" }}>
+              <ListSubheader component="div">{HEADER_YOUR_MEDIA}</ListSubheader>
+            </GridListTile>
+            {userMedia.map(item => (
+              <GridListTile
+                key={item.id}
+                cols={1}
+                onClick={() => onMediaSelected(item.id)}
+              >
+                <MediaGalleryItem
+                  item={item}
+                  toggleMediaEditForm={toggleMediaEditForm}
+                />
+              </GridListTile>
+            ))}
+          </GridList>
+          {props.networkAction && <AppLoader />}
+          <Button onClick={loadMedia}>{LOAD_MORE_TEXT}</Button>
+        </div>
       )}
       {mediaBeingEdited && (
-        <Card>
-          <CardContent>
-            <Typography variant="h6">{HEADER_EDITING_MEDIA}</Typography>
-            <MediaPreview
-              id={mediaBeingEdited.id}
-              mimeType={mediaBeingEdited.mimeType}
+        <div>
+          <Typography variant="h6">{HEADER_EDITING_MEDIA}</Typography>
+          <MediaPreview
+            id={mediaBeingEdited.id}
+            mimeType={mediaBeingEdited.mimeType}
+          />
+          <form>
+            <TextField
+              required
+              variant="outlined"
+              label="Title"
+              fullWidth
+              margin="normal"
+              name="title"
+              value={mediaBeingEdited.title}
+              onChange={onMediaBeingEditedChanged}
             />
-            <form>
-              <TextField
-                required
-                variant="outlined"
-                label="Title"
-                fullWidth
-                margin="normal"
-                name="title"
-                value={mediaBeingEdited.title}
-                onChange={onMediaBeingEditedChanged}
-              />
-              <TextField
-                required
-                variant="outlined"
-                label="Alt text"
-                fullWidth
-                margin="normal"
-                name="altText"
-                value={mediaBeingEdited.altText}
-                onChange={onMediaBeingEditedChanged}
-              />
-            </form>
-          </CardContent>
-          <CardActions>
-            <Button onClick={updateMedia}>{BUTTON_SAVE}</Button>
-            <Button onClick={() => toggleMediaEditForm()}>
-              {BUTTON_CANCEL_TEXT}
-            </Button>
-            <Button onClick={() => setDeleteMediaPopupOpened(true)}>
-              {BUTTON_DELETE_MEDIA}
-            </Button>
-          </CardActions>
-        </Card>
+            <TextField
+              required
+              variant="outlined"
+              label="Alt text"
+              fullWidth
+              margin="normal"
+              name="altText"
+              value={mediaBeingEdited.altText}
+              onChange={onMediaBeingEditedChanged}
+            />
+          </form>
+          <Button onClick={updateMedia}>{BUTTON_SAVE}</Button>
+          <Button onClick={() => toggleMediaEditForm()}>
+            {BUTTON_CANCEL_TEXT}
+          </Button>
+          <Button onClick={() => setDeleteMediaPopupOpened(true)}>
+            {BUTTON_DELETE_MEDIA}
+          </Button>
+        </div>
       )}
       <AppDialog
         onOpen={deleteMediaPopupOpened}

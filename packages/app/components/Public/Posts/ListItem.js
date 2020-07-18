@@ -1,70 +1,63 @@
 import React from "react";
 import PropTypes from "prop-types";
 import Link from "next/link";
-import { URL_EXTENTION_POSTS } from "../../../config/constants.js";
-import { Grid, Typography, Card, CardContent } from "@material-ui/core";
+import { BACKEND, URL_EXTENTION_POSTS } from "../../../config/constants.js";
+import { Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import Img from "../../Img.js";
+import { formulateMediaUrl } from "../../../lib/utils.js";
+import Card from "../Card.js";
 
-const useStyles = makeStyles({
-  featuredimagecontainer: {
-    display: "flex"
-  },
-  bloglink: {
-    textDecoration: "none",
-    display: "block",
-    marginTop: "0.8em",
-    marginBottom: "1em",
-    "&:hover": {
-      background: "#eee"
+const useStyles = featuredImage =>
+  makeStyles(theme => ({
+    link: {
+      textDecoration: "none",
+      color: "inherit"
     },
-    color: "inherit"
-  }
-});
+    featuredImage: {
+      height: 200,
+      width: "100%",
+      background: `url('${formulateMediaUrl(
+        BACKEND,
+        featuredImage
+      )}') no-repeat center center`,
+      backgroundSize: "cover"
+    },
+    title: {
+      marginTop: theme.spacing(1)
+    }
+  }));
 
 const ListItem = props => {
-  const classes = useStyles();
+  const classes = useStyles(props.featuredImage)();
 
   return (
-    <Link
-      href={`/${URL_EXTENTION_POSTS}/[id]/[slug]`}
-      as={`/${URL_EXTENTION_POSTS}/${props.id}/${props.slug}`}
-    >
-      <a className={classes.bloglink}>
-        <Card>
-          <CardContent>
-            <article>
-              <Grid container direction="row" spacing={2}>
-                {props.featuredImage && (
-                  <Grid
-                    item
-                    className={classes.featuredimagecontainer}
-                    sm={12}
-                    md={2}
-                  >
-                    <Img src={props.featuredImage} />
-                  </Grid>
-                )}
-                <Grid item sm={12} md={10}>
-                  <Grid container direction="column">
-                    <Grid item>
-                      <Typography variant="h6" className="title">
-                        {props.title}
-                      </Typography>
-                    </Grid>
-                    <Grid item>
-                      <Typography variant="body1" color="textSecondary">
-                        {props.description}
-                      </Typography>
-                    </Grid>
-                  </Grid>
-                </Grid>
+    <Grid item xs={12} md={6}>
+      <Link
+        href={`/${URL_EXTENTION_POSTS}/[id]/[slug]`}
+        as={`/${URL_EXTENTION_POSTS}/${props.id}/${props.slug}`}
+      >
+        <a className={classes.link}>
+          <Card>
+            <Grid item container direction="column" component="article">
+              {props.featuredImage && (
+                <Grid item className={classes.featuredImage} />
+              )}
+              <Grid item className={classes.title}>
+                <Typography variant="h6" className={classes.title}>
+                  {props.title}
+                </Typography>
               </Grid>
-            </article>
-          </CardContent>
-        </Card>
-      </a>
-    </Link>
+              <Grid item>
+                <Typography variant="body1" color="textSecondary">
+                  {props.description}
+                </Typography>
+              </Grid>
+            </Grid>
+          </Card>
+        </a>
+      </Link>
+    </Grid>
   );
 };
 

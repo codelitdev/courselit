@@ -1,5 +1,11 @@
 import React from "react";
-import { Typography, Card, CardContent, Grid, CardActionArea } from "@material-ui/core";
+import {
+  Typography,
+  Card,
+  CardContent,
+  Grid,
+  CardActionArea
+} from "@material-ui/core";
 import { HEADER_ABOUT_SECTION } from "../../config/strings.js";
 import { connect } from "react-redux";
 import { siteInfoProps } from "../../types.js";
@@ -8,12 +14,12 @@ import Header from "./Header.js";
 
 const useStyles = makeStyles({
   justified: {
-    textAlign: 'justified'
+    textAlign: "justified"
   }
-})
+});
 
 const About = props => {
-  const classes = useStyles()
+  const classes = useStyles();
 
   return props.siteInfo.about ? (
     <Grid container spacing={1}>
@@ -21,13 +27,15 @@ const About = props => {
         <Header text={HEADER_ABOUT_SECTION} />
       </Grid>
       <Grid item xs={12}>
-        <Typography variant="body1" className={classes.justified}>{props.siteInfo.about}</Typography>
+        <Typography variant="body1" className={classes.justified}>
+          {props.siteInfo.about}
+        </Typography>
       </Grid>
     </Grid>
   ) : (
     <></>
   );
-}
+};
 
 About.propTypes = {
   siteInfo: siteInfoProps

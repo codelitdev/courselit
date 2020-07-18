@@ -7,15 +7,15 @@ import {
   Divider
 } from "@material-ui/core";
 import Link from "next/link";
-import TextEditor from "./TextEditor";
+import TextEditor from "../TextEditor";
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/styles";
-import { BACKEND } from "../config/constants";
-import { formulateMediaUrl, formattedLocaleDate } from "../lib/utils";
-import { publicCourse, profileProps } from "../types";
-import BuyButton from "./Checkout";
+import { BACKEND } from "../../config/constants.js";
+import { formulateMediaUrl, formattedLocaleDate } from "../../lib/utils";
+import { publicCourse, profileProps } from "../../types";
+import BuyButton from "../Checkout";
 import { connect } from "react-redux";
-import PriceTag from "./PriceTag";
+import PriceTag from "../PriceTag";
 
 const useStyles = featuredImage =>
   makeStyles(theme => ({

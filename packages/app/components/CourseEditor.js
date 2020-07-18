@@ -478,7 +478,7 @@ const CourseEditor = props => {
                 title={FORM_FIELD_FEATURED_IMAGE}
                 src={courseData.course.featuredImage}
                 onSelection={onFeaturedImageSelection}
-                mimeTypesToShow={[MIMETYPE_IMAGE]}
+                mimeTypesToShow={[...MIMETYPE_IMAGE]}
               />
             </CardContent>
             <CardActions>

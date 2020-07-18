@@ -179,7 +179,7 @@ const EditorUI = props => {
         onClose={handleMediaManagerClose}
         title={MEDIA_MANAGER_DIALOG_TITLE}
         mediaAdditionAllowed={false}
-        mimeTypesToShow={[MIMETYPE_IMAGE]}
+        mimeTypesToShow={[...MIMETYPE_IMAGE]}
       />
     </>
   );
