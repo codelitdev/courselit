@@ -5,7 +5,7 @@
   "license": "MIT",
   "author": "The Recurze Team <hi@recurze.com>",
   "scripts": {
-    "dev": "next",
+    "dev": "next -H 0.0.0.0",
     "build": "next build",
     "start": "next start -p 3000",
     "lint": "eslint pages components redux types.js --fix",
@@ -30,8 +30,7 @@
     "react-redux": "^7.1.3",
     "react-stripe-elements": "^6.0.1",
     "redux": "^4.0.5",
-    "redux-thunk": "^2.3.0",
-    "@courselit/react-template-layout": "*"
+    "redux-thunk": "^2.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.7.7",

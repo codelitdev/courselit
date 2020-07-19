@@ -9,13 +9,12 @@ import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
-import { Menu, Launch } from "@material-ui/icons";
+import { Menu } from "@material-ui/icons";
 import { Toolbar, Typography, Grid } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
 import SessionButton from "./SessionButton.js";
 import AppToast from "./AppToast";
-import Link from "next/link";
 
 const drawerWidth = 240;
 
@@ -109,15 +108,6 @@ const ResponsiveDrawer = props => {
           </ListItem>
         ))}
       </List>
-      {/* <Divider />
-      <List>
-        {['Market'].map((text, index) => (
-          <ListItem button key={text}>
-            <ListItemIcon><ShoppingCart /></ListItemIcon>
-            <ListItemText primary={text} />
-          </ListItem>
-        ))}
-      </List> */}
     </div>
   );
 
@@ -143,13 +133,13 @@ const ResponsiveDrawer = props => {
                     {props.pageTitle}
                   </Typography>
                 </Grid>
-                <Grid item>
+                {/* <Grid item>
                   <Link href="/">
                     <a target="_blank" className={classes.visitSiteLink}>
                       <Launch />
                     </a>
                   </Link>
-                </Grid>
+                </Grid> */}
               </Grid>
             </Grid>
             <Grid item>
@@ -158,7 +148,7 @@ const ResponsiveDrawer = props => {
           </Grid>
         </Toolbar>
       </AppBar>
-      <nav className={classes.drawer} aria-label="mailbox folders">
+      <nav className={classes.drawer} aria-label="menu">
         {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
         <Hidden smUp implementation="css">
           <Drawer

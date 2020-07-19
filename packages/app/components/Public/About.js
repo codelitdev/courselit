@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  Typography,
-  Card,
-  CardContent,
-  Grid,
-  CardActionArea
-} from "@material-ui/core";
+import { Typography, Grid } from "@material-ui/core";
 import { HEADER_ABOUT_SECTION } from "../../config/strings.js";
 import { connect } from "react-redux";
 import { siteInfoProps } from "../../types.js";

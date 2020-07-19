@@ -27,7 +27,6 @@ import {
   CardContent,
   Typography
 } from "@material-ui/core";
-import ContainedBodyLayout from "../components/ContainedBodyLayout.js";
 import FetchBuilder from "../lib/fetch.js";
 import { makeStyles } from "@material-ui/styles";
 import BaseLayout from "../components/Public/BaseLayout";
@@ -173,7 +172,9 @@ const Login = props => {
   }
 
   return (
-    <BaseLayout>
+    <BaseLayout
+      title={showSignupForm ? SIGNUP_SECTION_HEADER : LOGIN_SECTION_HEADER}
+    >
       <Grid item xs={12}>
         <Grid container direction="row">
           <Grid item xs={12}>

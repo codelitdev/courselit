@@ -6,9 +6,9 @@ import FetchBuilder from "../../../lib/fetch";
 import { BACKEND } from "../../../config/constants";
 import { Grid, Typography, Button } from "@material-ui/core";
 import {
-  HEADER_BLOG_POSTS_SECTION,
+  HEADER_COURSES_SECTION,
   BTN_LOAD_MORE,
-  SUBHEADER_BLOG_POSTS_SECTION
+  SUBHEADER_COURSES_SECTION
 } from "../../../config/strings";
 import ListItem from "./ListItem";
 import { makeStyles } from "@material-ui/styles";
@@ -40,18 +40,20 @@ const List = props => {
 
   const getPosts = async () => {
     const query = `
-        query {
-            posts: getPosts(offset: ${postsOffset}) {
-                id,
-                title,
-                description,
-                updated,
-                creatorName,
-                slug,
-                featuredImage
-            }
-        }
-        `;
+    query {
+      courses: getPublicCourses(offset: ${postsOffset}) {
+        id
+        title,
+        description,
+        featuredImage,
+        updated,
+        creatorName,
+        cost,
+        slug,
+        isFeatured
+      }
+    }
+    `;
 
     try {
       props.dispatch && props.dispatch(networkAction(true));
@@ -62,8 +64,8 @@ const List = props => {
         .build();
       const response = await fetch.exec();
       console.log(response);
-      if (response.posts) {
-        setPosts([...posts, ...response.posts]);
+      if (response.courses) {
+        setPosts([...posts, ...response.courses]);
       }
     } finally {
       props.dispatch && props.dispatch(networkAction(false));
@@ -75,11 +77,11 @@ const List = props => {
       <Grid container component="section">
         <Grid item container className={classes.header}>
           <Grid item xs={12} className={classes.headerTop}>
-            <Typography variant="h4">{HEADER_BLOG_POSTS_SECTION}</Typography>
+            <Typography variant="h4">{HEADER_COURSES_SECTION}</Typography>
           </Grid>
           <Grid item xs={12}>
             <Typography variant="body1" color="textSecondary">
-              {SUBHEADER_BLOG_POSTS_SECTION}
+              {SUBHEADER_COURSES_SECTION}
             </Typography>
           </Grid>
         </Grid>

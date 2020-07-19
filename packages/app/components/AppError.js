@@ -3,7 +3,6 @@ import PropTypes from "prop-types";
 import { Card, CardContent, Typography, Grid } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import { USER_ERROR_HEADER } from "../config/strings";
-import ContainedBodyLayout from "./ContainedBodyLayout";
 import BaseLayout from "./Public/BaseLayout";
 
 const useStyles = makeStyles(theme => ({

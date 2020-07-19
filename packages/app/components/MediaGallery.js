@@ -8,10 +8,7 @@ import {
   GridListTile,
   ListSubheader,
   Button,
-  Typography,
-  Card,
-  CardContent,
-  CardActions
+  Typography
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import { authProps } from "../types.js";

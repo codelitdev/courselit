@@ -11,7 +11,6 @@ import {
   SettingsApplications,
   Palette
 } from "@material-ui/icons";
-import ResponsiveDrawer from "../components/ResponsiveDrawer.js";
 import SiteSettings from "../components/SiteSettings.js";
 import { CREATOR_AREA_PAGE_TITLE } from "../config/strings.js";
 import MediaManager from "../components/MediaManager.js";
@@ -19,6 +18,7 @@ import Courses from "../components/CoursesManager.js";
 import UsersManager from "../components/UsersManager.js";
 import AppLoader from "../components/AppLoader.js";
 import PageDesigner from "../components/Admin/PageDesigner/index.js";
+import ResponsiveDrawer from "../components/ResponsiveDrawer.js";
 
 const Create = props => {
   useEffect(() => {

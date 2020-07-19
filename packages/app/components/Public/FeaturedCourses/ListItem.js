@@ -1,11 +1,12 @@
 import React from "react";
 import PropTypes from "prop-types";
 import Link from "next/link";
-import { BACKEND, URL_EXTENTION_POSTS } from "../../../config/constants.js";
+import { BACKEND, URL_EXTENTION_COURSES } from "../../../config/constants.js";
 import { Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import { formulateMediaUrl } from "../../../lib/utils.js";
 import Card from "../Card.js";
+import PriceTag from "../../PriceTag.js";
 
 const useStyles = featuredImage =>
   makeStyles(theme => ({
@@ -16,7 +17,7 @@ const useStyles = featuredImage =>
       display: "block"
     },
     featuredImage: {
-      height: 240,
+      height: 360,
       width: "100%",
       background: `url('${formulateMediaUrl(
         BACKEND,
@@ -34,10 +35,10 @@ const ListItem = props => {
   const classes = useStyles(props.featuredImage)();
 
   return (
-    <Grid item xs={12} md={6}>
+    <Grid item xs={12} md={4}>
       <Link
-        href={`/${URL_EXTENTION_POSTS}/[id]/[slug]`}
-        as={`/${URL_EXTENTION_POSTS}/${props.id}/${props.slug}`}
+        href={`/${URL_EXTENTION_COURSES}/[id]/[slug]`}
+        as={`/${URL_EXTENTION_COURSES}/${props.id}/${props.slug}`}
       >
         <a className={classes.link}>
           <Card>
@@ -45,13 +46,21 @@ const ListItem = props => {
               {props.featuredImage && (
                 <Grid item className={classes.featuredImage} />
               )}
-              <Grid item className={classes.title}>
-                <Typography variant="h5">{props.title}</Typography>
-              </Grid>
-              <Grid item>
-                <Typography variant="body1" color="textSecondary">
-                  {props.description}
-                </Typography>
+              <Grid
+                item
+                container
+                className={classes.title}
+                justify="space-between"
+                alignItems="center"
+              >
+                <Grid item>
+                  <Typography variant="h5">{props.title}</Typography>
+                </Grid>
+                <Grid item>
+                  <Typography variant="h6">
+                    <PriceTag cost={props.cost}></PriceTag>
+                  </Typography>
+                </Grid>
               </Grid>
             </Grid>
           </Card>
@@ -68,7 +77,8 @@ ListItem.propTypes = {
   updated: PropTypes.string.isRequired,
   creatorName: PropTypes.string.isRequired,
   slug: PropTypes.string.isRequired,
-  featuredImage: PropTypes.string
+  featuredImage: PropTypes.string,
+  cost: PropTypes.number.isRequired
 };
 
 export default ListItem;
