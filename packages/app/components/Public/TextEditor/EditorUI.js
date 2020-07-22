@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Editor from "./Editor.js";
 import PropTypes from "prop-types";
-import { BACKEND, MIMETYPE_IMAGE } from "../../config/constants.js";
+import { BACKEND, MIMETYPE_IMAGE } from "../../../config/constants.js";
 
 import {
   IconButton,
@@ -15,8 +15,8 @@ import {
 } from "@material-ui/core";
 import { Edit, TextFormat, InsertPhoto, Done } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/styles";
-import { MEDIA_MANAGER_DIALOG_TITLE } from "../../config/strings.js";
-import MediaManagerDialog from "../MediaManagerDialog.js";
+import { MEDIA_MANAGER_DIALOG_TITLE } from "../../../config/strings.js";
+import MediaManagerDialog from "../../MediaManagerDialog.js";
 
 const useStyles = makeStyles(theme => ({
   editorContainer: {

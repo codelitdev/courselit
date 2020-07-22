@@ -8,7 +8,7 @@ import Footer from "./Footer";
 
 const useStyles = makeStyles({
   mainContent: {
-    minHeight: "90vh"
+    minHeight: "80vh"
   }
 });
 

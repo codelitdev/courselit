@@ -13,11 +13,9 @@ import BaseLayout from "../../../components/Public/BaseLayout";
 import Article from "../../../components/Public/Article.js";
 
 const useStyles = makeStyles(theme => ({
-  articleMarginAdjust: {
-    marginTop: theme.spacing(2)
-  },
-  articleMarginBottomAdjust: {
-    marginBottom: theme.spacing(2)
+  content: {
+    padding: theme.spacing(4),
+    paddingTop: theme.spacing(8)
   }
 }));
 
@@ -30,7 +28,7 @@ const Post = props => {
   return (
     <BaseLayout title={props.post.title}>
       {props.post && (
-        <Grid item xs={12}>
+        <Grid item xs={12} className={classes.content}>
           <Head>
             <meta
               property="og:url"
@@ -53,11 +51,7 @@ const Post = props => {
               />
             )}
           </Head>
-          <>
-            <div className={classes.articleMarginAdjust} />
-            <Article course={props.post} options={articleOptions} />
-            <div className={classes.articleMarginBottomAdjust} />
-          </>
+          <Article course={props.post} options={articleOptions} />
         </Grid>
       )}
     </BaseLayout>

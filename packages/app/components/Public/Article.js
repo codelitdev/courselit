@@ -2,12 +2,10 @@ import React from "react";
 import {
   Typography,
   Grid,
-  Card,
-  CardContent,
   Divider
 } from "@material-ui/core";
 import Link from "next/link";
-import TextEditor from "../TextEditor";
+import TextEditor from "../Public/TextEditor";
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/styles";
 import { BACKEND } from "../../config/constants.js";
@@ -40,9 +38,9 @@ const useStyles = featuredImage =>
     featuredimagecontainer: {
       width: "100%",
       height: 240,
+      marginTop: theme.spacing(2),
+      marginBottom: theme.spacing(4),
       [theme.breakpoints.up("sm")]: {
-        marginTop: theme.spacing(2),
-        marginBottom: theme.spacing(2),
         height: 480,
         backgroundSize: "cover"
       },
@@ -73,10 +71,8 @@ const Article = props => {
   }
 
   return (
-    <Card>
-      <CardContent>
         <article className={classes.article}>
-          <Typography variant="h2" className={classes.header}>
+          <Typography variant="h3" className={classes.header}>
             {course.title}
           </Typography>
           {options.showAttribution && (
@@ -130,8 +126,6 @@ const Article = props => {
             />
           )}
         </article>
-      </CardContent>
-    </Card>
   );
 };
 

@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import FetchBuilder from "../lib/fetch";
+import FetchBuilder from "../../lib/fetch";
 import {
   BACKEND,
   LESSON_TYPE_VIDEO,
   LESSON_TYPE_AUDIO,
   MEDIA_BACKEND
-} from "../config/constants";
+} from "../../config/constants";
 import { connect } from "react-redux";
-import { networkAction } from "../redux/actions";
-import TextEditor from "./TextEditor";
+import { networkAction } from "../../redux/actions";
 import { Typography, Card, CardContent, Grid } from "@material-ui/core";
-import { ENROLL_IN_THE_COURSE, USER_ERROR_HEADER } from "../config/strings";
+import { ENROLL_IN_THE_COURSE, USER_ERROR_HEADER } from "../../config/strings";
 import { makeStyles } from "@material-ui/styles";
-import { lesson, authProps, profileProps } from "../types";
-import { formulateMediaUrl } from "../lib/utils.js";
+import { lesson, authProps, profileProps } from "../../types";
+import { formulateMediaUrl } from "../../lib/utils.js";
+import TextEditor from "./TextEditor";
 
 const useStyles = makeStyles(theme => ({
   notEnrolledHeader: {
