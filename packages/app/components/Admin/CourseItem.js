@@ -1,14 +1,14 @@
 import React from "react";
 import PropTypes from "prop-types";
 import Link from "next/link";
-import { creatorCourse } from "../types";
+import { creatorCourse } from "../../types";
 import TextEditor from "./TextEditor";
-import { URL_EXTENTION_COURSES } from "../config/constants.js";
+import { URL_EXTENTION_COURSES } from "../../config/constants.js";
 import { CardContent, Card, Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
-import PriceTag from "../components/PriceTag.js";
-import { COURSE_CREATOR_PREFIX } from "../config/strings.js";
-import Img from "./Img";
+import PriceTag from "../PriceTag.js";
+import { COURSE_CREATOR_PREFIX } from "../../config/strings.js";
+import Img from "../Img";
 
 const useStyles = makeStyles({
   featuredimagecontainer: {

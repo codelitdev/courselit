@@ -1,9 +1,5 @@
 import React from "react";
-import {
-  Typography,
-  Grid,
-  Divider
-} from "@material-ui/core";
+import { Typography, Grid, Divider } from "@material-ui/core";
 import Link from "next/link";
 import TextEditor from "../Public/TextEditor";
 import PropTypes from "prop-types";
@@ -71,61 +67,54 @@ const Article = props => {
   }
 
   return (
-        <article className={classes.article}>
-          <Typography variant="h3" className={classes.header}>
-            {course.title}
-          </Typography>
-          {options.showAttribution && (
-            <Grid container className={classes.creatorcard}>
-              <Grid item className={classes.creatoravatarcontainer}>
-                <img
-                  src="/static/logo.jpg"
-                  className={classes.creatoravatar}
-                ></img>
-              </Grid>
-              <Grid item>
-                <Typography variant="overline" component="p">
-                  <Link
-                    href="/creator/[id]"
-                    as={`/creator/${course.creatorId}`}
-                  >
-                    <a>{course.creatorName}</a>
-                  </Link>
-                </Typography>
-                <Typography variant="overline" className={classes.updatedtime}>
-                  {formattedLocaleDate(course.updated)}
-                </Typography>
-              </Grid>
+    <article className={classes.article}>
+      <Typography variant="h3" className={classes.header}>
+        {course.title}
+      </Typography>
+      {options.showAttribution && (
+        <Grid container className={classes.creatorcard}>
+          <Grid item className={classes.creatoravatarcontainer}>
+            <img src="/static/logo.jpg" className={classes.creatoravatar}></img>
+          </Grid>
+          <Grid item>
+            <Typography variant="overline" component="p">
+              <Link href="/creator/[id]" as={`/creator/${course.creatorId}`}>
+                <a>{course.creatorName}</a>
+              </Link>
+            </Typography>
+            <Typography variant="overline" className={classes.updatedtime}>
+              {formattedLocaleDate(course.updated)}
+            </Typography>
+          </Grid>
+        </Grid>
+      )}
+      {course.featuredImage && (
+        <div className={classes.featuredimagecontainer} />
+      )}
+      {options.showEnrollmentArea && !profile.purchases.includes(course.id) && (
+        <div className={classes.enrollmentArea}>
+          <Grid container direction="row" alignItems="center">
+            <Grid item className={classes.enrollmentAreaPriceTag}>
+              <PriceTag cost={course.cost} />
             </Grid>
-          )}
-          {course.featuredImage && (
-            <div className={classes.featuredimagecontainer} />
-          )}
-          {options.showEnrollmentArea &&
-            !profile.purchases.includes(course.id) && (
-              <div className={classes.enrollmentArea}>
-                <Grid container direction="row" alignItems="center">
-                  <Grid item className={classes.enrollmentAreaPriceTag}>
-                    <PriceTag cost={course.cost} />
-                  </Grid>
-                  <Grid>
-                    <BuyButton
-                      course={course}
-                      onTransactionSuccess={() => {}}
-                      onTransactionFailure={() => {}}
-                    />
-                  </Grid>
-                </Grid>
-                <Divider></Divider>
-              </div>
-            )}
-          {courseDescriptionHydrated && (
-            <TextEditor
-              initialContentState={TextEditor.hydrate(course.description)}
-              readOnly={true}
-            />
-          )}
-        </article>
+            <Grid>
+              <BuyButton
+                course={course}
+                onTransactionSuccess={() => {}}
+                onTransactionFailure={() => {}}
+              />
+            </Grid>
+          </Grid>
+          <Divider></Divider>
+        </div>
+      )}
+      {courseDescriptionHydrated && (
+        <TextEditor
+          initialContentState={TextEditor.hydrate(course.description)}
+          readOnly={true}
+        />
+      )}
+    </article>
   );
 };
 

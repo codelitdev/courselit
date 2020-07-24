@@ -9,8 +9,8 @@ import { connect } from "react-redux";
 import {
   GENERIC_SIGNOUT_TEXT,
   GENERIC_SIGNIN_TEXT
-} from "../config/strings.js";
-import { authProps, profileProps } from "../types.js";
+} from "../../config/strings.js";
+import { authProps, profileProps } from "../../types.js";
 import { Button } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 

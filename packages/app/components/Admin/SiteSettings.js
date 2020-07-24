@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
-import { siteInfoProps, authProps } from "../types";
+import { siteInfoProps, authProps } from "../../types";
 import {
   getGraphQLQueryFields,
   getObjectContainingOnlyChangedFields,
   areObjectsDifferent,
   capitalize
-} from "../lib/utils.js";
+} from "../../lib/utils.js";
 import {
   BACKEND,
   PAYMENT_METHOD_PAYPAL,
   PAYMENT_METHOD_PAYTM,
   PAYMENT_METHOD_STRIPE,
   PAYMENT_METHOD_NONE
-} from "../config/constants.js";
-import { newSiteInfoAvailable, setAppMessage } from "../redux/actions.js";
-import MediaSelector from "./MediaSelector.js";
+} from "../../config/constants.js";
+import { newSiteInfoAvailable, setAppMessage } from "../../redux/actions.js";
+import MediaSelector from "./Media/MediaSelector.js";
 import {
   TextField,
   Button,
@@ -49,12 +49,10 @@ import {
   SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT,
   APP_MESSAGE_SETTINGS_SAVED,
   SITE_CUSTOMISATIONS_SETTING_HEADER,
-  // SITE_CUSTOMISATIONS_SETTING_PRIMARY_COLOR,
-  // SITE_CUSTOMISATIONS_SETTING_SECONDARY_COLOR,
   SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD
-} from "../config/strings.js";
-import AppMessage from "../models/app-message.js";
-import FetchBuilder from "../lib/fetch";
+} from "../../config/strings.js";
+import AppMessage from "../../models/app-message.js";
+import FetchBuilder from "../../lib/fetch";
 
 const useStyles = makeStyles(theme => ({
   formControl: {

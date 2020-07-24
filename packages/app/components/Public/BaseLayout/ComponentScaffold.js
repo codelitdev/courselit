@@ -7,14 +7,15 @@ import Hidden from "@material-ui/core/Hidden";
 import IconButton from "@material-ui/core/IconButton";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
-import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
 import { Menu } from "@material-ui/icons";
-import { Toolbar, Typography, Grid } from "@material-ui/core";
+import { Toolbar, Grid } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
-import SessionButton from "./SessionButton.js";
-import AppToast from "./AppToast";
+import AppToast from "../../AppToast";
+import DrawerListItemIcon from "./DrawerListItemIcon.js";
+import Footer from "./Footer.js";
+import Header from "./Header.js";
 
 const drawerWidth = 240;
 
@@ -45,24 +46,22 @@ const useStyles = makeStyles(theme => ({
     width: drawerWidth
   },
   content: {
-    flexGrow: 1,
-    padding: theme.spacing(3)
+    flexGrow: 1
   },
   activeItem: {
     background: "#d6d6d6"
   },
   visitSiteLink: {
     color: "#fff"
+  },
+  contentMain: {
+    padding: theme.spacing(2),
+    paddingTop: theme.spacing(8),
+    minHeight: "80vh"
   }
 }));
 
-const IconComponent = props => (
-  <Grid item>
-    <ListItemIcon>{props.icon}</ListItemIcon>
-  </Grid>
-);
-
-const ResponsiveDrawer = props => {
+const ComponentScaffold = props => {
   const classes = useStyles();
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -96,13 +95,13 @@ const ResponsiveDrawer = props => {
           >
             <Grid container direction="row" alignItems="center">
               {item.icon && !item.iconPlacementRight && (
-                <IconComponent icon={item.icon} />
+                <DrawerListItemIcon icon={item.icon} />
               )}
               <Grid item>
                 <ListItemText primary={item.name} />
               </Grid>
               {item.icon && item.iconPlacementRight && (
-                <IconComponent icon={item.icon} />
+                <DrawerListItemIcon icon={item.icon} />
               )}
             </Grid>
           </ListItem>
@@ -125,27 +124,7 @@ const ResponsiveDrawer = props => {
           >
             <Menu />
           </IconButton>
-          <Grid container justify="space-between" alignItems="center">
-            <Grid item>
-              <Grid container alignItems="center" spacing={2}>
-                <Grid item>
-                  <Typography variant="h6" noWrap>
-                    {props.pageTitle}
-                  </Typography>
-                </Grid>
-                {/* <Grid item>
-                  <Link href="/">
-                    <a target="_blank" className={classes.visitSiteLink}>
-                      <Launch />
-                    </a>
-                  </Link>
-                </Grid> */}
-              </Grid>
-            </Grid>
-            <Grid item>
-              <SessionButton />
-            </Grid>
-          </Grid>
+          <Header />
         </Toolbar>
       </AppBar>
       <nav className={classes.drawer} aria-label="menu">
@@ -180,18 +159,19 @@ const ResponsiveDrawer = props => {
       </nav>
       <main className={classes.content}>
         <div className={classes.toolbar} />
-        {visibleComponent}
+        <Grid container className={classes.contentMain}>
+          <Grid item xs={12}>
+            {visibleComponent}
+          </Grid>
+        </Grid>
+        <Footer />
       </main>
       <AppToast />
     </div>
   );
 };
 
-IconComponent.propTypes = {
-  icon: PropTypes.object
-};
-
-ResponsiveDrawer.propTypes = {
+ComponentScaffold.propTypes = {
   pageTitle: PropTypes.string,
   items: PropTypes.arrayOf(
     PropTypes.shape({
@@ -206,4 +186,4 @@ ResponsiveDrawer.propTypes = {
   )
 };
 
-export default ResponsiveDrawer;
+export default ComponentScaffold;

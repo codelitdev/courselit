@@ -9,19 +9,18 @@ import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
 import { Menu } from "@material-ui/icons";
-import { Toolbar, Typography, Grid } from "@material-ui/core";
+import { Toolbar } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
 import AppToast from "../../AppToast.js";
-import SessionButton from "../../SessionButton.js";
 import {
   PAGE_HEADER_ALL_COURSES,
   PAGE_HEADER_ALL_POSTS
 } from "../../../config/strings.js";
 import Link from "next/link";
-import Img from "../../Img.js";
 import { connect } from "react-redux";
 import { siteInfoProps } from "../../../types.js";
+import Header from "./Header.js";
 
 const drawerWidth = 240;
 
@@ -59,18 +58,6 @@ const useStyles = makeStyles(theme => ({
   },
   visitSiteLink: {
     color: "#fff"
-  },
-  logo: {
-    display: "flex"
-  },
-  logocontainer: {
-    width: "2em",
-    height: "2em",
-    marginRight: theme.spacing(1),
-    display: "flex"
-  },
-  logoimg: {
-    borderRadius: "0.2em"
   }
 }));
 
@@ -116,36 +103,7 @@ const Scaffold = props => {
           >
             <Menu />
           </IconButton>
-          <Grid
-            container
-            justify="space-between"
-            direction="row"
-            alignItems="center"
-          >
-            <Grid item>
-              <Grid container direction="row" alignItems="center">
-                <Grid item>
-                  <Link href="/">
-                    <a className={classes.logo}>
-                      <div className={classes.logocontainer}>
-                        <Img
-                          src={props.siteinfo.logopath}
-                          isThumbnail={true}
-                          classes={classes.logoimg}
-                        />
-                      </div>
-                    </a>
-                  </Link>
-                </Grid>
-                <Grid item>
-                  <Typography variant="h5">{props.siteinfo.title}</Typography>
-                </Grid>
-              </Grid>
-            </Grid>
-            <Grid item>
-              <SessionButton />
-            </Grid>
-          </Grid>
+          <Header />
         </Toolbar>
       </AppBar>
       <nav className={classes.drawer} aria-label="menu">

@@ -28,8 +28,8 @@ import {
   POPUP_OK_ACTION,
   APP_MESSAGE_LESSON_DELETED,
   APP_MESSAGE_LESSON_SAVED
-} from "../config/strings";
-import { lesson as lessonType, authProps } from "../types.js";
+} from "../../config/strings";
+import { lesson as lessonType, authProps } from "../../types.js";
 import {
   BACKEND,
   LESSON_TYPE_TEXT,
@@ -37,16 +37,16 @@ import {
   LESSON_TYPE_VIDEO,
   LESSON_TYPE_PDF,
   LESSON_TYPE_QUIZ
-} from "../config/constants.js";
-import { capitalize } from "../lib/utils";
+} from "../../config/constants.js";
+import { capitalize } from "../../lib/utils";
 import { makeStyles } from "@material-ui/styles";
-import TextEditor from "./TextEditor";
-import MediaSelector from "./MediaSelector";
-import FetchBuilder from "../lib/fetch";
-import { networkAction, setAppMessage } from "../redux/actions";
+import MediaSelector from "./Media/MediaSelector.js";
+import FetchBuilder from "../../lib/fetch";
+import { networkAction, setAppMessage } from "../../redux/actions";
 import { connect } from "react-redux";
-import AppDialog from "./AppDialog";
-import AppMessage from "../models/app-message.js";
+import AppDialog from "../Public/AppDialog";
+import AppMessage from "../../models/app-message.js";
+import TextEditor from "../Public/TextEditor";
 
 const useStyles = makeStyles(theme => ({
   formControl: {

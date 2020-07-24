@@ -11,14 +11,14 @@ import {
   SettingsApplications,
   Palette
 } from "@material-ui/icons";
-import SiteSettings from "../components/SiteSettings.js";
+import SiteSettings from "../components/Admin/SiteSettings.js";
 import { CREATOR_AREA_PAGE_TITLE } from "../config/strings.js";
-import MediaManager from "../components/MediaManager.js";
-import Courses from "../components/CoursesManager.js";
+import MediaManager from "../components/Admin/Media/MediaManager.js";
+import Courses from "../components/Admin/CoursesManager.js";
 import UsersManager from "../components/UsersManager.js";
 import AppLoader from "../components/AppLoader.js";
 import PageDesigner from "../components/Admin/PageDesigner/index.js";
-import ResponsiveDrawer from "../components/ResponsiveDrawer.js";
+import ComponentScaffold from "../components/Public/BaseLayout/ComponentScaffold.js";
 
 const Create = props => {
   useEffect(() => {
@@ -69,7 +69,7 @@ const Create = props => {
   }
 
   return props.profile.fetched && props.profile.isCreator ? (
-    <ResponsiveDrawer items={items} pageTitle={CREATOR_AREA_PAGE_TITLE} />
+    <ComponentScaffold items={items} pageTitle={CREATOR_AREA_PAGE_TITLE} />
   ) : (
     <AppLoader />
   );

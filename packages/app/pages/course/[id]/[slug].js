@@ -1,5 +1,4 @@
 import { connect } from "react-redux";
-import ResponsiveDrawer from "../../../components/ResponsiveDrawer.js";
 import Head from "next/head";
 import {
   formulateCourseUrl,
@@ -13,6 +12,7 @@ import CourseIntroduction from "../../../components/CourseIntroduction.js";
 import LessonViewer from "../../../components/Public/LessonViewer.js";
 import FetchBuilder from "../../../lib/fetch.js";
 import AppError from "../../../components/AppError.js";
+import ComponentScaffold from "../../../components/Public/BaseLayout/ComponentScaffold.js";
 
 const Course = props => {
   const { course, profile, error } = props;
@@ -66,7 +66,7 @@ const Course = props => {
               />
             )}
           </Head>
-          <ResponsiveDrawer items={lessons} pageTitle={course.title} />
+          <ComponentScaffold items={lessons} pageTitle={course.title} />
         </>
       )}
     </>

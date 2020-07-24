@@ -8,34 +8,28 @@ import {
   MEDIA_MANAGER_DIALOG_TITLE,
   BUTTON_ADD_FILE,
   FILE_UPLOAD_SUCCESS
-} from "../config/strings.js";
-import { BACKEND } from "../config/constants.js";
-import { authProps } from "../types.js";
-import { setAppMessage } from "../redux/actions.js";
+} from "../../../config/strings.js";
+import { BACKEND } from "../../../config/constants.js";
+import { authProps } from "../../../types.js";
+import { setAppMessage } from "../../../redux/actions.js";
 import {
   TextField,
   Button,
   Grid,
   Typography,
-  Fab,
   CardActions,
   Card,
   CardContent
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import { Add, Done } from "@material-ui/icons";
-import AppMessage from "../models/app-message.js";
+import AppMessage from "../../../models/app-message.js";
 
 import MediaGallery from "./MediaGallery.js";
 
 const useStyles = makeStyles(theme => ({
   header: {
     marginBottom: theme.spacing(1)
-  },
-  fab: {
-    position: "fixed",
-    bottom: theme.spacing(4),
-    right: theme.spacing(4)
   },
   fileUploadInput: {
     display: "none"
@@ -112,8 +106,20 @@ const MediaManager = props => {
   return (
     <>
       <Grid container direction="column">
-        <Grid item className={classes.header}>
-          <Typography variant="h3">{MEDIA_MANAGER_PAGE_HEADING}</Typography>
+        <Grid item container justify="space-between" alignItems="center">
+          <Grid item className={classes.header}>
+            <Typography variant="h3">{MEDIA_MANAGER_PAGE_HEADING}</Typography>
+          </Grid>
+          <Grid item>
+            <Button
+              variant="contained"
+              color={uploadFormVisible ? "secondary" : "primary"}
+              className={classes.fab}
+              onClick={showUploadForm}
+            >
+              {uploadFormVisible ? <Done /> : <Add />}
+            </Button>
+          </Grid>
         </Grid>
         {uploadFormVisible && (
           <Card>
@@ -159,13 +165,6 @@ const MediaManager = props => {
           </Card>
         )}
         {!uploadFormVisible && <MediaGallery />}
-        <Fab
-          color={uploadFormVisible ? "default" : "secondary"}
-          className={classes.fab}
-          onClick={showUploadForm}
-        >
-          {uploadFormVisible ? <Done /> : <Add />}
-        </Fab>
       </Grid>
     </>
   );

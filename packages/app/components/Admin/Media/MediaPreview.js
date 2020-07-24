@@ -1,10 +1,13 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { formulateMediaUrl } from "../lib/utils";
-import { MEDIA_BACKEND } from "../config/constants";
+import { formulateMediaUrl } from "../../../lib/utils";
+import { MEDIA_BACKEND } from "../../../config/constants.js";
 import { makeStyles } from "@material-ui/styles";
 import { Typography } from "@material-ui/core";
-import { HEADER_MEDIA_PREVIEW, PREVIEW_PDF_FILE } from "../config/strings";
+import {
+  HEADER_MEDIA_PREVIEW,
+  PREVIEW_PDF_FILE
+} from "../../../config/strings";
 
 const useStyles = makeStyles({
   video: {

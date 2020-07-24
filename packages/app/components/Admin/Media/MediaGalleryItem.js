@@ -1,7 +1,7 @@
 import { GridListTileBar, IconButton } from "@material-ui/core";
 import { Edit } from "@material-ui/icons";
 import React, { useState } from "react";
-import { BACKEND } from "../config/constants";
+import { BACKEND } from "../../../config/constants.js";
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/styles";
 

@@ -16,7 +16,7 @@ import {
 import { Edit, TextFormat, InsertPhoto, Done } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/styles";
 import { MEDIA_MANAGER_DIALOG_TITLE } from "../../../config/strings.js";
-import MediaManagerDialog from "../../MediaManagerDialog.js";
+import MediaManagerDialog from "../../Admin/Media/MediaManagerDialog.js";
 
 const useStyles = makeStyles(theme => ({
   editorContainer: {

@@ -11,7 +11,7 @@ import {
   Typography
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
-import { authProps } from "../types.js";
+import { authProps } from "../../../types.js";
 import {
   MEDIA_SEARCH_INPUT_PLACEHOLDER,
   LOAD_MORE_TEXT,
@@ -26,20 +26,20 @@ import {
   APP_MESSAGE_MEDIA_DELETED,
   BUTTON_SAVE,
   APP_MESSAGE_MEDIA_UPDATED
-} from "../config/strings.js";
-import AppLoader from "./AppLoader.js";
-import FetchBuilder from "../lib/fetch.js";
-import { networkAction, setAppMessage } from "../redux/actions.js";
-import { BACKEND } from "../config/constants.js";
+} from "../../../config/strings.js";
+import AppLoader from "../../AppLoader.js";
+import FetchBuilder from "../../../lib/fetch.js";
+import { networkAction, setAppMessage } from "../../../redux/actions.js";
+import { BACKEND } from "../../../config/constants.js";
 import MediaGalleryItem from "./MediaGalleryItem.js";
-import AppDialog from "./AppDialog.js";
+import AppDialog from "../../Public/AppDialog.js";
 import MediaPreview from "./MediaPreview.js";
 import fetch from "isomorphic-unfetch";
-import AppMessage from "../models/app-message.js";
+import AppMessage from "../../../models/app-message.js";
 import {
   getObjectContainingOnlyChangedFields,
   getGraphQLQueryFields
-} from "../lib/utils.js";
+} from "../../../lib/utils.js";
 import Router from "next/router";
 
 const useStyles = makeStyles(theme => ({

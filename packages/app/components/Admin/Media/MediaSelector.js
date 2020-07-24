@@ -3,8 +3,8 @@ import PropTypes from "prop-types";
 import {
   BUTTON_SELECT_MEDIA,
   DIALOG_TITLE_FEATURED_IMAGE
-} from "../config/strings.js";
-import Img from "./Img.js";
+} from "../../../config/strings.js";
+import Img from "../../Img.js";
 import MediaManagerDialog from "./MediaManagerDialog.js";
 import { Grid, Button, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";

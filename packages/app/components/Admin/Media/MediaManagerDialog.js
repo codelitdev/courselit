@@ -8,7 +8,10 @@ import {
   Button
 } from "@material-ui/core";
 import MediaGallery from "./MediaGallery.js";
-import { BUTTON_CANCEL_TEXT, DIALOG_SELECT_BUTTON } from "../config/strings.js";
+import {
+  BUTTON_CANCEL_TEXT,
+  DIALOG_SELECT_BUTTON
+} from "../../../config/strings.js";
 
 const MediaManagerDialog = props => {
   const { onClose, onOpen } = props;

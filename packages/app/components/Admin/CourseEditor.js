@@ -1,7 +1,7 @@
 import React, { useState, useEffect /* useRef */ } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
-import { authProps, profileProps } from "../types.js";
+import { authProps, profileProps } from "../../types.js";
 import {
   BTN_DELETE_COURSE,
   ERR_COURSE_COST_REQUIRED,
@@ -18,10 +18,9 @@ import {
   BLOG_POST_SWITCH,
   APP_MESSAGE_COURSE_SAVED,
   COURSE_EDITOR_DESCRIPTION
-} from "../config/strings.js";
-import TextEditor from "./TextEditor";
-import { networkAction, setAppMessage } from "../redux/actions.js";
-import { queryGraphQL, formulateCourseUrl } from "../lib/utils.js";
+} from "../../config/strings.js";
+import { networkAction, setAppMessage } from "../../redux/actions.js";
+import { queryGraphQL, formulateCourseUrl } from "../../lib/utils.js";
 import Link from "next/link";
 import {
   Grid,
@@ -38,13 +37,14 @@ import {
   CardContent
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
-import { useExecuteGraphQLQuery } from "./CustomHooks.js";
-import MediaSelector from "./MediaSelector.js";
+import { useExecuteGraphQLQuery } from "../CustomHooks.js";
+import MediaSelector from "./Media/MediaSelector.js";
 import { Delete, Add } from "@material-ui/icons";
-import AppDialog from "./AppDialog.js";
+import AppDialog from "../Public/AppDialog.js";
 import LessonEditor from "./LessonEditor.js";
-import AppMessage from "../models/app-message.js";
-import { BACKEND, MIMETYPE_IMAGE } from "../config/constants.js";
+import AppMessage from "../../models/app-message.js";
+import { BACKEND, MIMETYPE_IMAGE } from "../../config/constants.js";
+import TextEditor from "../Public/TextEditor/index.js";
 
 const useStyles = makeStyles(theme => ({
   title: {

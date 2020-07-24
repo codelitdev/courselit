@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
-import { authProps, profileProps } from "../types.js";
+import { authProps, profileProps } from "../../types.js";
 import { makeStyles } from "@material-ui/styles";
-import { Grid, Typography, Fab } from "@material-ui/core";
+import { Grid, Typography, Button } from "@material-ui/core";
 import CourseEditor from "./CourseEditor.js";
 import CreatorCoursesList from "./CreatorCoursesList.js";
 import {
@@ -12,29 +12,15 @@ import {
   POPUP_CANCEL_ACTION,
   POPUP_OK_ACTION,
   DISCARD_COURSE_CHANGES_POPUP_HEADER
-} from "../config/strings.js";
-import { useExecuteGraphQLQuery } from "./CustomHooks.js";
+} from "../../config/strings.js";
+import { useExecuteGraphQLQuery } from "../CustomHooks.js";
 import { Add, Done } from "@material-ui/icons";
-import AppDialog from "./AppDialog.js";
-
-const useStyles = makeStyles(theme => ({
-  button: {
-    margin: theme.spacing(1)
-  },
-  fab: {
-    position: "fixed",
-    bottom: theme.spacing(4),
-    right: theme.spacing(4)
-  }
-}));
-
-// let creatorCoursesPaginationOffset = 1
+import AppDialog from "../Public/AppDialog.js";
 
 const Courses = props => {
   // const [courseFormVisible, setCourseFormVisible] = useState(false)
   const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1);
   const [creatorCourses, setCreatorCourses] = useState([]);
-  const classes = useStyles();
   const [courseEditorVisible, setCourseEditorVisible] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [courseEditorDirty, setCourseEditorDirty] = useState(false);
@@ -99,21 +85,21 @@ const Courses = props => {
           justify="space-between"
           alignItems="center"
         >
-          <Grid item xs={12} sm={10}>
+          <Grid item>
             <Typography variant="h3">
               {courseEditorVisible
                 ? NEW_COURSE_PAGE_HEADING
                 : MANAGE_COURSES_PAGE_HEADING}
             </Typography>
           </Grid>
-          <Grid item xs={12} sm={2}>
-            <Fab
-              color={courseEditorVisible ? "default" : "secondary"}
-              className={classes.fab}
+          <Grid item>
+            <Button
+              variant="contained"
+              color={courseEditorVisible ? "" : "primary"}
               onClick={() => showEditor()}
             >
               {courseEditorVisible ? <Done /> : <Add />}
-            </Fab>
+            </Button>
           </Grid>
         </Grid>
       </div>

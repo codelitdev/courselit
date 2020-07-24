@@ -1,8 +1,8 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { creatorCourse } from "../types.js";
+import { creatorCourse } from "../../types.js";
 import { Button, Card, Typography, CardContent } from "@material-ui/core";
-import { LOAD_MORE_TEXT } from "../config/strings.js";
+import { LOAD_MORE_TEXT } from "../../config/strings.js";
 import { makeStyles } from "@material-ui/styles";
 
 const useStyles = makeStyles({
