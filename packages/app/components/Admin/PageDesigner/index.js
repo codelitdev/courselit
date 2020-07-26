@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import {
   Grid,
@@ -8,7 +8,9 @@ import {
   Typography,
   IconButton,
   CardActions,
-  Button
+  Button,
+  TextField,
+  Link
 } from "@material-ui/core";
 import {
   CARD_HEADER_PAGE_LAYOUT,
@@ -16,7 +18,19 @@ import {
   CARD_DESCRIPTION_PAGE_LAYOUT,
   ADD_COMPONENT_POPUP_HEADER,
   BUTTON_SAVE,
-  APP_MESSAGE_CHANGES_SAVED
+  APP_MESSAGE_CHANGES_SAVED,
+  SUBHEADER_THEME_ADD_THEME,
+  SUBHEADER_THEME_ADD_THEME_INPUT_LABEL,
+  SUBHEADER_THEME_ADD_THEME_INPUT_PLACEHOLDER,
+  SUBHEADER_THEME_INSTALLED_THEMES,
+  BUTTON_GET_THEMES,
+  REMIXED_THEME_PREFIX,
+  APP_MESSAGE_THEME_COPIED,
+  NO_THEMES_INSTALLED,
+  BUTTON_THEME_INSTALL,
+  APP_MESSAGE_THEME_INSTALLED,
+  ERROR_SNACKBAR_PREFIX,
+  APP_MESSAGE_THEME_APPLIED
 } from "../../../config/strings.js";
 import { makeStyles } from "@material-ui/styles";
 import { AddCircle } from "@material-ui/icons";
@@ -25,7 +39,7 @@ import AddComponentDialog from "./AddComponentDialog.js";
 import AddedComponent from "./AddedComponent.js";
 import { connect } from "react-redux";
 import FetchBuilder from "../../../lib/fetch.js";
-import { BACKEND } from "../../../config/constants.js";
+import { BACKEND, THEMES_REPO } from "../../../config/constants.js";
 import {
   networkAction,
   layoutAvailable,
@@ -33,6 +47,7 @@ import {
 } from "../../../redux/actions.js";
 import AppMessage from "../../../models/app-message.js";
 import { authProps } from "../../../types.js";
+import ThemeItem from "./ThemeItem.js";
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -80,6 +95,38 @@ const PageDesigner = props => {
   ] = useState("");
   const classes = useStyles();
   const [layout, setLayout] = useState(props.layout);
+  const [installedThemes, setInstalledThemes] = useState([]);
+  const [newThemeText, setNewThemeText] = useState("");
+  const [isNewThemeTextValid, setIsNewThemeTextValid] = useState(false);
+  const themeInputRef = useRef();
+  const fetch = new FetchBuilder()
+    .setUrl(`${BACKEND}/graph`)
+    .setIsGraphQLEndpoint(true)
+    .setAuthToken(props.auth.token);
+
+  useEffect(() => {
+    loadInstalledThemes();
+  }, []);
+
+  const loadInstalledThemes = async () => {
+    const query = `
+    query {
+      themes: getAllThemes {
+        id,
+        name,
+        active,
+        styles,
+        url
+      }
+    }`;
+    try {
+      const fetcher = fetch.setPayload(query).build();
+      const response = await fetcher.exec();
+      if (response.themes) {
+        setInstalledThemes(response.themes);
+      }
+    } catch (e) {}
+  };
 
   const onSelection = (forSection, componentName) => {
     if (componentName) {
@@ -112,7 +159,7 @@ const PageDesigner = props => {
   };
 
   const saveLayout = async () => {
-    const query = `
+    const mutation = `
       mutation {
         layout: setLayout(layoutData: {
           layout: "${JSON.stringify(layout).replace(/"/g, '\\"')}"
@@ -121,18 +168,11 @@ const PageDesigner = props => {
         }
       }
       `;
-    console.log(query);
-    const fetch = new FetchBuilder()
-      .setUrl(`${BACKEND}/graph`)
-      .setPayload(query)
-      .setIsGraphQLEndpoint(true)
-      .setAuthToken(props.auth.token)
-      .build();
+    const fetcher = fetch.setPayload(mutation).build();
 
     try {
       props.dispatch(networkAction(true));
-      const response = await fetch.exec();
-      console.log(response);
+      const response = await fetcher.exec();
 
       if (response.layout) {
         props.dispatch(layoutAvailable(response.layout.layout));
@@ -145,6 +185,118 @@ const PageDesigner = props => {
       props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_CHANGES_SAVED)));
     }
   };
+
+  const addTheme = async () => {
+    try {
+      const parsedTheme = JSON.parse(newThemeText);
+
+      const mutation = `
+      mutation {
+        theme: addTheme(theme: {
+          id: "${parsedTheme.id}",
+          name: "${parsedTheme.name}",
+          styles: ${JSON.stringify(parsedTheme.styles)},
+          url: "${parsedTheme.url}"
+        }) {
+          id
+        }
+      }
+      `;
+      const fetcher = fetch.setPayload(mutation).build();
+
+      const response = await fetcher.exec();
+      if (response.errors) {
+        throw new Error(
+          `${ERROR_SNACKBAR_PREFIX}: ${response.errors[0].message}`
+        );
+      }
+
+      if (response.theme) {
+        setNewThemeText("");
+        setIsNewThemeTextValid(false);
+        loadInstalledThemes();
+        props.dispatch(
+          setAppMessage(new AppMessage(APP_MESSAGE_THEME_INSTALLED))
+        );
+      }
+    } catch (err) {
+      props.dispatch(setAppMessage(new AppMessage(err.message)));
+    } finally {
+      props.dispatch(networkAction(false));
+    }
+  };
+
+  const validateNewThemeText = text => {
+    if (!text) {
+      return false;
+    }
+
+    try {
+      const parsedTheme = JSON.parse(text);
+
+      if (!parsedTheme.id || (!parsedTheme.name && !parsedTheme.styles)) {
+        return false;
+      }
+    } catch {
+      return false;
+    }
+
+    return true;
+  };
+
+  const onNewThemeTextChanged = e => {
+    setNewThemeText(e.target.value);
+
+    if (validateNewThemeText(e.target.value)) {
+      setIsNewThemeTextValid(true);
+    } else {
+      setIsNewThemeTextValid(false);
+    }
+  };
+
+  const onThemeApply = async themeId => {
+    const mutation = `
+      mutation {
+        theme: setTheme(id: "${themeId}") {
+          id
+        }
+      }
+    `;
+
+    const fetcher = fetch.setPayload(mutation).build();
+
+    try {
+      props.dispatch(networkAction(true));
+      const response = await fetcher.exec();
+
+      if (response.theme) {
+        props.dispatch(
+          setAppMessage(new AppMessage(APP_MESSAGE_THEME_APPLIED))
+        );
+        loadInstalledThemes();
+      }
+    } catch (err) {
+      props.dispatch(setAppMessage(new AppMessage(err.message)));
+    } finally {
+      props.dispatch(networkAction(false));
+    }
+  };
+
+  const onThemeRemix = themeId => {
+    const theme = installedThemes.find(theme => theme.id === themeId);
+    if (theme) {
+      const themeCopy = Object.assign({}, theme);
+      themeCopy.id = themeCopy.id + `_${REMIXED_THEME_PREFIX.toLowerCase()}`;
+      themeCopy.name = themeCopy.name + ` ${REMIXED_THEME_PREFIX}`;
+      setNewThemeText(JSON.stringify(themeCopy, null, 3));
+
+      props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_THEME_COPIED)));
+
+      themeInputRef.current.focus();
+    }
+  };
+
+  const onThemeUninstall = themeId => {};
 
   return (
     <Grid container spacing={2}>
@@ -319,7 +471,73 @@ const PageDesigner = props => {
       <Grid item xs={12}>
         <Card>
           <CardHeader title={CARD_HEADER_THEME} />
-          <CardContent>hHi</CardContent>
+          <CardContent>
+            <Grid container direction="column" spacing={4}>
+              <Grid item>
+                <Typography variant="h6">
+                  {SUBHEADER_THEME_INSTALLED_THEMES}
+                </Typography>
+              </Grid>
+              {installedThemes.length !== 0 && (
+                <Grid item container direction="column" spacing={2}>
+                  {installedThemes.map(theme => (
+                    <ThemeItem
+                      theme={theme}
+                      key={theme.id}
+                      onApply={onThemeApply}
+                      onRemix={onThemeRemix}
+                      onUninstall={onThemeUninstall}
+                    />
+                  ))}
+                </Grid>
+              )}
+              {installedThemes.length === 0 && (
+                <Grid item>
+                  <Typography variant="body1" color="textSecondary">
+                    {NO_THEMES_INSTALLED}
+                  </Typography>
+                </Grid>
+              )}
+              <Grid item>
+                <Link href={THEMES_REPO} target="_blank" rel="noopener">
+                  {BUTTON_GET_THEMES}
+                </Link>
+              </Grid>
+              <Grid item container direction="column" spacing={2}>
+                <Grid
+                  item
+                  container
+                  justify="space-between"
+                  alignItems="center"
+                >
+                  <Typography variant="h6">
+                    {SUBHEADER_THEME_ADD_THEME}
+                  </Typography>
+                </Grid>
+                <Grid item>
+                  <form>
+                    <TextField
+                      required
+                      variant="outlined"
+                      label={SUBHEADER_THEME_ADD_THEME_INPUT_LABEL}
+                      fullWidth
+                      value={newThemeText}
+                      onChange={onNewThemeTextChanged}
+                      placeholder={SUBHEADER_THEME_ADD_THEME_INPUT_PLACEHOLDER}
+                      multiline
+                      rows={10}
+                      inputRef={themeInputRef}
+                    />
+                  </form>
+                </Grid>
+              </Grid>
+            </Grid>
+          </CardContent>
+          <CardActions>
+            <Button disabled={!isNewThemeTextValid} onClick={addTheme}>
+              {BUTTON_THEME_INSTALL}
+            </Button>
+          </CardActions>
         </Card>
       </Grid>
       <AddComponentDialog

@@ -6,9 +6,7 @@ const themeType = new graphql.GraphQLObjectType({
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     name: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     active: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
-    layout: { type: graphql.GraphQLString },
-    styles: { type: graphql.GraphQLString },
-    screenshot: { type: graphql.GraphQLString },
+    styles: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     url: { type: graphql.GraphQLString },
   },
 });
@@ -18,9 +16,7 @@ const themeInputType = new graphql.GraphQLInputObjectType({
   fields: {
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     name: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-    layout: { type: graphql.GraphQLString },
-    styles: { type: graphql.GraphQLString },
-    screenshot: { type: graphql.GraphQLString },
+    styles: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     url: { type: graphql.GraphQLString },
   },
 });

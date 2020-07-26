@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import { authProps, profileProps } from "../../types.js";
-import { makeStyles } from "@material-ui/styles";
 import { Grid, Typography, Button } from "@material-ui/core";
 import CourseEditor from "./CourseEditor.js";
 import CreatorCoursesList from "./CreatorCoursesList.js";

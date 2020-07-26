@@ -58,7 +58,7 @@ exports.addTheme = async (themeData, ctx) => {
   const theme = await Theme.create({
     id: themeData.id,
     name: themeData.name,
-    styles: styles,
+    styles,
     screenshot: themeData.screenshot,
     url: themeData.url,
   });

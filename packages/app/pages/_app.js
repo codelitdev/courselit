@@ -14,6 +14,7 @@ import {
 import { ThemeProvider } from "@material-ui/styles";
 import CodeInjector from "../components/CodeInjector.js";
 import { responsiveFontSizes, createMuiTheme } from "@material-ui/core";
+import { CONSOLE_MESSAGE_THEME_INVALID } from "../config/strings.js";
 
 class MyApp extends App {
   static async getInitialProps(props) {
@@ -58,9 +59,15 @@ class MyApp extends App {
   render() {
     const { Component, pageProps, store } = this.props;
     const { theme } = store.getState();
-    const muiTheme = responsiveFontSizes(
-      createMuiTheme(Object.keys(theme.styles).length ? theme.styles : {})
-    );
+    let muiTheme;
+    try {
+      muiTheme = responsiveFontSizes(
+        createMuiTheme(Object.keys(theme.styles).length ? theme.styles : {})
+      );
+    } catch (err) {
+      console.warn(CONSOLE_MESSAGE_THEME_INVALID);
+      muiTheme = responsiveFontSizes(createMuiTheme({}));
+    }
 
     return (
       <Provider store={store}>

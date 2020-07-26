@@ -559,7 +559,7 @@ const CourseEditor = props => {
           { name: POPUP_CANCEL_ACTION, callback: closeDeleteCoursePopup },
           { name: POPUP_OK_ACTION, callback: onCourseDelete }
         ]}
-      ></AppDialog>
+      />
     </Grid>
   );
 };
