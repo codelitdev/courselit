@@ -21,6 +21,15 @@ module.exports = {
     },
     resolve: async (root, { id }, context) => logic.setTheme(id, context),
   },
+  removeTheme: {
+    type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean),
+    args: {
+      id: {
+        type: new graphql.GraphQLNonNull(graphql.GraphQLString),
+      },
+    },
+    resolve: async (root, { id }, context) => logic.removeTheme(id, context),
+  },
   setLayout: {
     type: types.layoutType,
     args: {

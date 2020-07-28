@@ -30,6 +30,15 @@ exports.setTheme = async (id, ctx) => {
   return transformThemeForOutput(theme);
 };
 
+exports.removeTheme = async (id, ctx) => {
+  checkIfAuthenticated(ctx);
+  if (!ctx.user.isAdmin) throw new Error(strings.responses.is_not_admin);
+
+  await Theme.deleteOne({ id });
+
+  return true;
+};
+
 exports.getAllThemes = async (ctx) => {
   checkIfAuthenticated(ctx);
   if (!ctx.user.isAdmin) throw new Error(strings.responses.is_not_admin);

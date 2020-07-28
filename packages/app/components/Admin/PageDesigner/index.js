@@ -30,7 +30,8 @@ import {
   BUTTON_THEME_INSTALL,
   APP_MESSAGE_THEME_INSTALLED,
   ERROR_SNACKBAR_PREFIX,
-  APP_MESSAGE_THEME_APPLIED
+  APP_MESSAGE_THEME_APPLIED,
+  APP_MESSAGE_THEME_UNINSTALLED
 } from "../../../config/strings.js";
 import { makeStyles } from "@material-ui/styles";
 import { AddCircle } from "@material-ui/icons";
@@ -282,6 +283,32 @@ const PageDesigner = props => {
     }
   };
 
+  const onThemeUninstall = async themeId => {
+    const mutation = `
+      mutation c {
+        removeTheme(id: "${themeId}")
+      }
+    `;
+
+    const fetcher = fetch.setPayload(mutation).build();
+
+    try {
+      props.dispatch(networkAction(true));
+      const response = await fetcher.exec();
+
+      if (response.removeTheme) {
+        props.dispatch(
+          setAppMessage(new AppMessage(APP_MESSAGE_THEME_UNINSTALLED))
+        );
+        loadInstalledThemes();
+      }
+    } catch (err) {
+      props.dispatch(setAppMessage(new AppMessage(err.message)));
+    } finally {
+      props.dispatch(networkAction(false));
+    }
+  };
+
   const onThemeRemix = themeId => {
     const theme = installedThemes.find(theme => theme.id === themeId);
     if (theme) {
@@ -295,8 +322,6 @@ const PageDesigner = props => {
       themeInputRef.current.focus();
     }
   };
-
-  const onThemeUninstall = themeId => {};
 
   return (
     <Grid container spacing={2}>
