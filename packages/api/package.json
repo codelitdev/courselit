@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "eslint src __tests__ --fix",
     "prettier": "prettier --write 'src/**/*.js' '__tests__/**/*.js'",
-    "dev": "JWT_SECRET=notsecure USER_CONTENT_DIRECTORY=~/courselit-local PORT=8000 nodemon src",
+    "dev": "NODE_ENV=dev JWT_SECRET=notsecure USER_CONTENT_DIRECTORY=~/courselit-local PORT=8000 nodemon src",
     "test:server": "NODE_ENV=test yarn dev",
     "test:inte": "NODE_ENV=test jest",
     "start": "node src"
