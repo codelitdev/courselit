@@ -5,19 +5,21 @@
     "packages/*"
   ],
   "author": {
-    "name": "The Recurze team",
-    "email": "recurzery@gmail.com"
+    "name": "The CodeLit Team",
+    "email": "hi@codelit.dev"
   },
   "homepage": "",
   "repository": {
     "type": "git",
-    "url": "https://github.com/recurzery/courselit"
+    "url": "https://github.com/codelitdev/courselit"
   },
   "license": "MIT",
   "devDependencies": {
     "lerna": "^3.22.0"
   },
   "scripts": {
-    "lerna:publish": "lerna publish"
+    "lerna:publish": "lerna publish",
+    "lerna:bootstrap": "lerna bootstrap",
+    "lerna:create": "lerna create"
   }
 }

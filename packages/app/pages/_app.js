@@ -7,20 +7,30 @@ import { JWT_COOKIE_NAME, USERID_COOKIE_NAME } from "../config/constants.js";
 import {
   signedIn,
   updateSiteInfo,
-  authHasBeenChecked
+  authHasBeenChecked,
+  updateSiteTheme,
+  updateSiteLayout
 } from "../redux/actions.js";
 import { ThemeProvider } from "@material-ui/styles";
-import theme from "../theme";
-import CodeInjector from "../components/CodeInjector.js";
+import { responsiveFontSizes, createMuiTheme } from "@material-ui/core";
+import { CONSOLE_MESSAGE_THEME_INVALID } from "../config/strings.js";
+import CodeInjector from "../components/Public/CodeInjector.js";
 
 class MyApp extends App {
   static async getInitialProps(props) {
     const { Component, ctx } = props;
-    await ctx.store.dispatch(updateSiteInfo());
+    await this.fetchSiteSettings(ctx);
+
     const pageProps = Component.getInitialProps
       ? await Component.getInitialProps(ctx)
       : {};
     return { pageProps };
+  }
+
+  static async fetchSiteSettings(ctx) {
+    await ctx.store.dispatch(updateSiteInfo());
+    await ctx.store.dispatch(updateSiteLayout());
+    await ctx.store.dispatch(updateSiteTheme());
   }
 
   componentDidMount() {
@@ -48,10 +58,20 @@ class MyApp extends App {
 
   render() {
     const { Component, pageProps, store } = this.props;
+    const { theme } = store.getState();
+    let muiTheme;
+    try {
+      muiTheme = responsiveFontSizes(
+        createMuiTheme(Object.keys(theme.styles).length ? theme.styles : {})
+      );
+    } catch (err) {
+      console.warn(CONSOLE_MESSAGE_THEME_INVALID);
+      muiTheme = responsiveFontSizes(createMuiTheme({}));
+    }
 
     return (
       <Provider store={store}>
-        <ThemeProvider theme={theme}>
+        <ThemeProvider theme={muiTheme}>
           <Component {...pageProps} />
           <CodeInjector />
         </ThemeProvider>

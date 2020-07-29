@@ -1,5 +1,4 @@
 import { connect } from "react-redux";
-import ResponsiveDrawer from "../../../components/ResponsiveDrawer.js";
 import Head from "next/head";
 import {
   formulateCourseUrl,
@@ -10,13 +9,13 @@ import { Lock } from "@material-ui/icons";
 import { BACKEND, FRONTEND, MEDIA_BACKEND } from "../../../config/constants.js";
 import { SIDEBAR_TEXT_COURSE_ABOUT } from "../../../config/strings.js";
 import CourseIntroduction from "../../../components/CourseIntroduction.js";
-import LessonViewer from "../../../components/LessonViewer.js";
+import LessonViewer from "../../../components/Public/LessonViewer.js";
 import FetchBuilder from "../../../lib/fetch.js";
 import AppError from "../../../components/AppError.js";
+import ComponentScaffold from "../../../components/Public/BaseLayout/ComponentScaffold.js";
 
 const Course = props => {
   const { course, profile, error } = props;
-  console.log(error);
   const lessons = [];
   let key = 0;
 
@@ -66,7 +65,7 @@ const Course = props => {
               />
             )}
           </Head>
-          <ResponsiveDrawer items={lessons} pageTitle={course.title} />
+          <ComponentScaffold items={lessons} pageTitle={course.title} />
         </>
       )}
     </>

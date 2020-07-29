@@ -48,6 +48,10 @@ exports.responses = {
   payment_method_not_saved:
     "Set a payment method before setting its corresponding secret key",
   invalid_payment_method: "Invalid payment method",
+  invalid_theme: "Invalid theme",
+  theme_not_installed: "The theme is not installed",
+  invalid_layout: "Invalid layout",
+  destination_dont_exist: "Destination does not exist",
 };
 
 exports.internal = {

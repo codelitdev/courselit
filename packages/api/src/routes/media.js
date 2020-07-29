@@ -5,9 +5,11 @@ const express = require("express");
 const Media = require("../models/Media.js");
 const responses = require("../config/strings").responses;
 const constants = require("../config/constants.js");
-const thumbnail = require("media-thumbnail");
+const thumbnail = require("@courselit/thumbnail");
 const path = require("path");
 const fs = require("fs");
+const { foldersExist } = require("../lib/utils.js");
+const { uploadFolder, thumbnailsFolder } = require("../config/constants.js");
 
 /**
  * A pure function to generate a string by appending current epoch
@@ -67,6 +69,11 @@ const postHandler = async (req, res) => {
   }
   if (!req.files || !req.files.file) {
     return res.status(400).json({ message: responses.file_is_required });
+  }
+
+  // check if destination folders exists
+  if (!foldersExist([uploadFolder, thumbnailsFolder])) {
+    return res.status(500).json({ message: responses.destination_dont_exist });
   }
 
   // create unique file name for the uploaded file
