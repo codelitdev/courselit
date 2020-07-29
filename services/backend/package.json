@@ -6,7 +6,10 @@
   "scripts": {
     "start": "node index.js"
   },
-  "author": "The Recurze team",
+  "author": {
+    "name": "The CodeLit Team",
+    "email": "hi@codelit.dev"
+  },
   "license": "MIT",
   "dependencies": {
     "@courselit/api": "^0.1.2"

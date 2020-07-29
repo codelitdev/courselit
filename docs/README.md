@@ -4,30 +4,30 @@
 
 <p align="center">
   <b>
-    <a href="https://courselit.recurze.com">Website</a> |
-    <a href="https://recurze.gitbook.io/courselit/getting-started">Getting started</a> |
-    <a href="https://recurze.gitbook.io/courselit">Documentation</a>
+    <a href="https://courselit.codelit.dev">Website</a> |
+    <a href="https://codelit.gitbook.io/courselit/getting-started">Getting started</a> |
+    <a href="https://codelit.gitbook.io/courselit">Documentation</a>
   </b>
 </p>
 
 <p align="center">
-  <a href="https://github.com/recurzery/courselit/blob/deployment/LICENSE">
-    <img src="https://badgen.net/github/license/recurzery/courselit" alt="License">
+  <a href="https://github.com/codelitdev/courselit/actions">
+    <img src="https://badgen.net/github/status/codelitdev/courselit" alt="Status">
   </a>
-  <a href="https://github.com/recurzery/courselit/actions">
-    <img src="https://badgen.net/github/status/recurzery/courselit" alt="Status">
+  <a href="https://discord.gg/GR4bQsN">
+    <img src="https://img.shields.io/badge/chat-discord-blue" alt="Chat">
   </a>
   <a href="https://hub.docker.com/r/recurze/courselit-proxy">
     <img src="https://badgen.net/docker/pulls/recurze/courselit-proxy" alt="Downloads">
   </a>
-  <a href="https://github.com/recurzery/courselit">
-    <img src="https://badgen.net/github/last-commit/recurzery/courselit" alt="Last commit">
+  <a href="https://github.com/codelitdev/courselit">
+    <img src="https://badgen.net/github/last-commit/codelitdev/courselit" alt="Last commit">
   </a>
-  <a href="https://lgtm.com/projects/g/codelit/courselit/alerts/">
-    <img src="https://img.shields.io/lgtm/alerts/g/codelit/courselit.svg?logo=lgtm&logoWidth=18" alt="Lgtm">
+  <a href="https://lgtm.com/projects/g/codelitdev/courselit/alerts/">
+    <img src="https://img.shields.io/lgtm/alerts/g/codelitdev/courselit.svg?logo=lgtm&logoWidth=18" alt="Lgtm">
   </a>
-  <a href="https://spectrum.chat/courselit">
-    <img src="https://img.shields.io/badge/chat-spectrum-blue" alt="Chat">
+  <a href="https://github.com/codelitdev/courselit/blob/deployment/LICENSE">
+    <img src="https://badgen.net/github/license/codelitdev/courselit" alt="License">
   </a>
 </p>
 
@@ -38,7 +38,7 @@ Using CourseLit, which is a content management system (also known as a CMS) spec
 
 CourseLit comes pre-equipped with all the basic tools you'd require to efficiently run and administer your online teaching business. Features include student management, payment processing (via Stripe), customization and analytics (very limited as of now). 
 
-Check out a live example to see what you can build with CourseLit. [Click here](https://recurze.com).
+Check out a live example to see what you can build with CourseLit. [Click here](https://codelit.dev).
 
 ## Screenshot
 
