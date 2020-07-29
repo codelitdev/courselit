@@ -63,7 +63,6 @@ const List = props => {
         .setIsGraphQLEndpoint(true)
         .build();
       const response = await fetch.exec();
-      console.log(response);
       if (response.courses) {
         setPosts([...posts, ...response.courses]);
       }

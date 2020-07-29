@@ -53,6 +53,7 @@ import {
 } from "../../config/strings.js";
 import AppMessage from "../../models/app-message.js";
 import FetchBuilder from "../../lib/fetch";
+import { decode, encode } from "base-64";
 
 const useStyles = makeStyles(theme => ({
   formControl: {
@@ -127,6 +128,11 @@ const SiteSettings = props => {
   };
 
   const setSettingsState = settingsResponse => {
+    if (settingsResponse.codeInjectionHead) {
+      settingsResponse.codeInjectionHead = decode(
+        settingsResponse.codeInjectionHead
+      );
+    }
     setSettings(Object.assign({}, settings, settingsResponse));
     setNewSettings(Object.assign({}, newSettings, settingsResponse));
   };
@@ -137,6 +143,11 @@ const SiteSettings = props => {
       settings,
       newSettings
     );
+    if (onlyChangedSettings.codeInjectionHead) {
+      onlyChangedSettings.codeInjectionHead = encode(
+        onlyChangedSettings.codeInjectionHead
+      );
+    }
     const formattedQuery = getGraphQLQueryFields(onlyChangedSettings);
     const query = `
     mutation {
@@ -158,6 +169,7 @@ const SiteSettings = props => {
         paytmSecret
       }
     }`;
+
     try {
       const fetchRequest = fetch.setPayload(query).build();
       const response = await fetchRequest.exec();
@@ -176,7 +188,7 @@ const SiteSettings = props => {
             stripePublishableKey: settings.stripePublishableKey,
             themePrimaryColor: settings.themePrimaryColor,
             themeSecondaryColor: settings.themeSecondaryColor,
-            codeInjectionHead: settings.codeInjectionHead
+            codeInjectionHead: encode(settings.codeInjectionHead)
           })
         );
         props.dispatch(

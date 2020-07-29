@@ -95,7 +95,6 @@ const MediaGallery = props => {
     try {
       props.dispatch(networkAction(true));
       const response = await fetch.exec();
-      console.log(response);
 
       if (response.media && response.media.length > 0) {
         const filteredMedia =
@@ -104,12 +103,10 @@ const MediaGallery = props => {
                 props.mimeTypesToShow.includes(item.mimeType)
               )
             : response.media;
-        console.log(filteredMedia, props.mimeTypesToShow);
         setUserMedia([...userMedia, ...filteredMedia]);
         setMediaOffset(mediaOffset + 1);
       }
     } catch (err) {
-      console.log(err);
     } finally {
       props.dispatch(networkAction(false));
     }
@@ -203,7 +200,6 @@ const MediaGallery = props => {
       }
     }
     `;
-    console.log(query);
     const fetch = new FetchBuilder()
       .setUrl(`${BACKEND}/graph`)
       .setPayload(query)

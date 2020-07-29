@@ -13,7 +13,6 @@ const useStyles = makeStyles(theme => ({
 
 const AppError = props => {
   const { error } = props;
-  console.log(error);
   const classes = useStyles();
 
   return (

@@ -19,6 +19,7 @@
   },
   "scripts": {
     "lerna:publish": "lerna publish",
-    "lerna:bootstrap": "lerna bootstrap"
+    "lerna:bootstrap": "lerna bootstrap",
+    "lerna:create": "lerna create"
   }
 }

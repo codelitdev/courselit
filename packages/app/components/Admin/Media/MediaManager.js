@@ -94,7 +94,6 @@ const MediaManager = props => {
         props.dispatch(setAppMessage(new AppMessage(res.message)));
       }
     } catch (err) {
-      console.log(err);
       props.dispatch(setAppMessage(new AppMessage(e.message)));
     }
   };

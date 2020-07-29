@@ -1,3 +1,4 @@
+import { decode } from "base-64";
 import { combineReducers } from "redux";
 import {
   SIGN_IN,
@@ -119,7 +120,7 @@ function siteinfoReducer(state = initialState.siteinfo, action) {
             action.siteinfo.themeSecondaryColor ||
             initialState.siteinfo.themeSecondaryColor,
           codeInjectionHead:
-            action.siteinfo.codeInjectionHead ||
+            decode(action.siteinfo.codeInjectionHead) ||
             initialState.siteinfo.codeInjectionHead
         };
       } catch (e) {

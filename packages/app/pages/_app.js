@@ -12,9 +12,9 @@ import {
   updateSiteLayout
 } from "../redux/actions.js";
 import { ThemeProvider } from "@material-ui/styles";
-import CodeInjector from "../components/CodeInjector.js";
 import { responsiveFontSizes, createMuiTheme } from "@material-ui/core";
 import { CONSOLE_MESSAGE_THEME_INVALID } from "../config/strings.js";
+import CodeInjector from "../components/Public/CodeInjector.js";
 
 class MyApp extends App {
   static async getInitialProps(props) {

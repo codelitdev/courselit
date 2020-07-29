@@ -17,7 +17,6 @@ import { Add, Done } from "@material-ui/icons";
 import AppDialog from "../Public/AppDialog.js";
 
 const Courses = props => {
-  // const [courseFormVisible, setCourseFormVisible] = useState(false)
   const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1);
   const [creatorCourses, setCreatorCourses] = useState([]);
   const [courseEditorVisible, setCourseEditorVisible] = useState(false);
@@ -49,9 +48,7 @@ const Courses = props => {
         setCreatorCourses([...creatorCourses, ...response.courses]);
         setCoursesPaginationOffset(coursesPaginationOffset + 1);
       }
-    } catch (err) {
-      console.log(err);
-    }
+    } catch (err) {}
   };
 
   const showEditor = courseId => {

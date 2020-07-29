@@ -16,7 +16,6 @@ import ComponentScaffold from "../../../components/Public/BaseLayout/ComponentSc
 
 const Course = props => {
   const { course, profile, error } = props;
-  console.log(error);
   const lessons = [];
   let key = 0;
 

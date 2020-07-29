@@ -3,7 +3,10 @@
   "version": "0.1.8",
   "main": "./src/index.js",
   "license": "MIT",
-  "author": "The Recurze Team <hi@recurze.com>",
+  "author": {
+    "name": "The CodeLit Team",
+    "email": "hi@codelit.dev"
+  },
   "scripts": {
     "lint": "eslint src __tests__ --fix",
     "prettier": "prettier --write 'src/**/*.js' '__tests__/**/*.js'",
@@ -24,7 +27,7 @@
     "express-graphql": "^0.9.0",
     "graphql": "^14.5.8",
     "jsonwebtoken": "^8.5.1",
-    "media-thumbnail": "^1.0.0",
+    "@courselit/thumbnail": "^0.1.8",
     "mongoose": "^5.7.11",
     "passport": "^0.4.0",
     "passport-jwt": "^4.0.0",

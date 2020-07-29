@@ -69,7 +69,6 @@ const LessonViewer = props => {
       const response = await fetch.exec();
 
       if (response.lesson) {
-        console.log(response.lesson);
         setLesson(
           Object.assign({}, response.lesson, {
             content: TextEditor.hydrate(response.lesson.content)
@@ -77,7 +76,6 @@ const LessonViewer = props => {
         );
       }
     } catch (err) {
-      console.log(err);
     } finally {
       props.dispatch(networkAction(false));
     }

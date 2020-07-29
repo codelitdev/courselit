@@ -179,7 +179,6 @@ const PageDesigner = props => {
         props.dispatch(layoutAvailable(response.layout.layout));
       }
     } catch (err) {
-      console.log(err);
       props.dispatch(setAppMessage(new AppMessage(err.message)));
     } finally {
       props.dispatch(networkAction(false));

@@ -3,7 +3,10 @@
   "version": "0.1.7",
   "main": "index.js",
   "license": "MIT",
-  "author": "The Recurze Team <hi@recurze.com>",
+  "author": {
+    "name": "The CodeLit Team",
+    "email": "hi@codelit.dev"
+  },
   "scripts": {
     "dev": "next",
     "build": "next build",

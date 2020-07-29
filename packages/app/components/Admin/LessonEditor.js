@@ -116,7 +116,6 @@ const LessonEditor = props => {
       const response = await fetch.exec();
 
       if (response.lesson) {
-        console.log(response.lesson);
         setLesson(
           Object.assign({}, response.lesson, {
             content: TextEditor.hydrate(response.lesson.content)
@@ -132,7 +131,6 @@ const LessonEditor = props => {
 
   const onLessonCreate = async e => {
     e.preventDefault();
-    // setError('')
 
     if (lesson.id) {
       await updateLesson();
@@ -173,11 +171,7 @@ const LessonEditor = props => {
 
     try {
       props.dispatch(networkAction(true));
-      const response = await fetch.exec();
-
-      if (response.lesson) {
-        console.log(response.lesson);
-      }
+      await fetch.exec();
     } catch (err) {
       props.dispatch(setAppMessage(new AppMessage(err.message)));
     } finally {

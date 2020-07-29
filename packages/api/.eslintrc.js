@@ -9,5 +9,8 @@ module.exports = {
   },
   "globals": {
     "apiUrl": true
+  },
+  "rules": {
+    // "no-console": ["error", {"allow": ["warn"]}]
   }
 };

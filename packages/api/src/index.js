@@ -1,6 +1,8 @@
 "use strict";
 
 const internalResponse = require("./config/strings.js").internal;
+const { uploadFolder, thumbnailsFolder } = require("./config/constants.js");
+const { createFolders } = require("./lib/utils.js");
 
 process.env.NODE_ENV = process.env.NODE_ENV || "production";
 
@@ -13,20 +15,8 @@ const checkForNecessaryEnvironmentVars = () => {
   }
 };
 
-const createFoldersForUserData = () => {
-  const { uploadFolder, thumbnailsFolder } = require("./config/constants.js");
-  const fs = require("fs");
-
-  if (!fs.existsSync(uploadFolder)) {
-    fs.mkdirSync(uploadFolder, { recursive: true });
-  }
-  if (!fs.existsSync(thumbnailsFolder)) {
-    fs.mkdirSync(thumbnailsFolder, { recursive: true });
-  }
-};
-
 checkForNecessaryEnvironmentVars();
-createFoldersForUserData();
+createFolders([uploadFolder, thumbnailsFolder]);
 
 const app = require("./app.js");
 

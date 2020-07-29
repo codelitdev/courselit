@@ -15,7 +15,6 @@ class CodeInjector extends React.Component {
     tempContainer.innerHTML = this.props.codeForHead;
     const children = tempContainer.children;
     for (let i = 0; i < children.length; i++) {
-      console.log(i, children[i]);
       let elem = children[i];
       if (elem.nodeName === "SCRIPT") {
         const script = document.createElement("script");
