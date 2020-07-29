@@ -11,13 +11,13 @@ Easily spin up a new courselit-proxy server using the following command.
 ### Without SSL certificate
 
 ```sh
-docker run recurze/courselit-proxy
+docker run codelit/courselit-proxy
 ```
 
 ### With SSL certificate
 
 ```sh
-docker run --env DOMAIN=<your_domain.com> -v <directory_containing_letsencrypt_certificate>:/etc/letsencrypt recurze/courselit-proxy
+docker run --env DOMAIN=<your_domain.com> -v <directory_containing_letsencrypt_certificate>:/etc/letsencrypt codelit/courselit-proxy
 ```
 
 where `directory_containing_letsencrypt_certificate` is the directory on your host system which contains the ssl certificate issued by [Let's Encrypt](https://letsencrypt.org/).
@@ -27,3 +27,6 @@ where `directory_containing_letsencrypt_certificate` is the directory on your ho
 **DOMAIN**
 
 The domain name for which the SSL certificate is issued. It is only required if you want to serve the traffic over SSL. Optional parameter. No default value.
+
+## Support
+Come chat with us in our official [Discord channel](https://discord.gg/GR4bQsN).

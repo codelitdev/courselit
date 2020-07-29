@@ -17,8 +17,8 @@
   <a href="https://discord.gg/GR4bQsN">
     <img src="https://img.shields.io/badge/chat-discord-blue" alt="Chat">
   </a>
-  <a href="https://hub.docker.com/r/recurze/courselit-proxy">
-    <img src="https://badgen.net/docker/pulls/recurze/courselit-proxy" alt="Downloads">
+  <a href="https://hub.docker.com/r/codelit/courselit-proxy">
+    <img src="https://badgen.net/docker/pulls/codelit/courselit-proxy" alt="Downloads">
   </a>
   <a href="https://github.com/codelitdev/courselit">
     <img src="https://badgen.net/github/last-commit/codelitdev/courselit" alt="Last commit">

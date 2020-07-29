@@ -12,6 +12,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@courselit/api": "^0.1.2"
+    "@courselit/api": "*"
   }
 }
