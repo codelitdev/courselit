@@ -8,7 +8,7 @@ import Footer from "./Footer";
 
 const useStyles = makeStyles({
   mainContent: {
-    minHeight: "80vh"
+    // minHeight: "80vh"
   }
 });
 
@@ -25,7 +25,9 @@ const Template = props => {
             <Grid container item className={classes.mainContent}>
               {props.children}
             </Grid>
-            <Section name="bottom" />
+            <Grid item container>
+              <Section name="bottom" />
+            </Grid>
           </Grid>
           <Grid container item direction="column" xs={12} sm={4} md={3}>
             <Section name="aside" />

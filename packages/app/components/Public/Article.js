@@ -105,7 +105,6 @@ const Article = props => {
               />
             </Grid>
           </Grid>
-          <Divider></Divider>
         </div>
       )}
       {courseDescriptionHydrated && (
