@@ -21,8 +21,8 @@ module.exports = {
   jwtExpire: process.env.JWT_EXPIRES_IN || "1d",
 
   // Media uploads config
-  uploadFolder: path.join(USER_CONTENT_DIRECTORY || "", "uploads"),
-  thumbnailsFolder: path.join(USER_CONTENT_DIRECTORY || "", "thumbs"),
+  uploadFolder: path.join(USER_CONTENT_DIRECTORY, "uploads"),
+  thumbnailsFolder: path.join(USER_CONTENT_DIRECTORY, "thumbs"),
   thumbnailFileExtension: "jpg",
   thumbnailContentType: "image/jpeg", // the following constants are as per the 16:9 aspect ratio
   thumbnailWidth: 120,
@@ -42,7 +42,7 @@ module.exports = {
 
   // Pagination config
   mycoursesLimit: 10,
-  postsPerPageLimit: 5,
+  postsPerPageLimit: 2,
   postDescTruncLimit: 30,
   coursesPerPageLimit: 5,
   mymediaLimit: 5,

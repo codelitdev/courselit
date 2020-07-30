@@ -1,3 +1,4 @@
+import { decode } from "base-64";
 import { combineReducers } from "redux";
 import {
   SIGN_IN,
@@ -8,7 +9,9 @@ import {
   SITEINFO_AVAILABLE,
   AUTH_CHECKED,
   SET_MESSAGE,
-  CLEAR_MESSAGE
+  CLEAR_MESSAGE,
+  THEME_AVAILABLE,
+  LAYOUT_AVAILABLE
 } from "./actionTypes.js";
 import {
   GENERIC_TITLE,
@@ -60,6 +63,12 @@ const initialState = {
     open: false,
     message: "",
     action: null
+  },
+  theme: {},
+  layout: {
+    top: [],
+    bottom: [],
+    aside: []
   }
 };
 
@@ -111,7 +120,7 @@ function siteinfoReducer(state = initialState.siteinfo, action) {
             action.siteinfo.themeSecondaryColor ||
             initialState.siteinfo.themeSecondaryColor,
           codeInjectionHead:
-            action.siteinfo.codeInjectionHead ||
+            decode(action.siteinfo.codeInjectionHead) ||
             initialState.siteinfo.codeInjectionHead
         };
       } catch (e) {
@@ -165,10 +174,48 @@ function messageReducer(state = initialState.message, action) {
   }
 }
 
+function themeReducer(state = initialState.theme, action) {
+  let styles;
+
+  switch (action.type) {
+    case THEME_AVAILABLE:
+      try {
+        styles = JSON.parse(action.theme.styles);
+      } catch (err) {
+        styles = state;
+      }
+
+      return Object.assign({}, action.theme, {
+        styles: styles
+      });
+    default:
+      return state;
+  }
+}
+
+function layoutReducer(state = initialState.layout, action) {
+  let layout;
+
+  switch (action.type) {
+    case LAYOUT_AVAILABLE:
+      try {
+        layout = Object.assign({}, state, JSON.parse(action.layout));
+      } catch (err) {
+        layout = state;
+      }
+
+      return Object.assign({}, layout);
+    default:
+      return state;
+  }
+}
+
 export default combineReducers({
   auth: authReducer,
   siteinfo: siteinfoReducer,
   networkAction: networkActionReducer,
   profile: profileReducer,
-  message: messageReducer
+  message: messageReducer,
+  theme: themeReducer,
+  layout: layoutReducer
 });

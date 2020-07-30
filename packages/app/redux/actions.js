@@ -10,7 +10,9 @@ import {
   SITEINFO_AVAILABLE,
   AUTH_CHECKED,
   SET_MESSAGE,
-  CLEAR_MESSAGE
+  CLEAR_MESSAGE,
+  THEME_AVAILABLE,
+  LAYOUT_AVAILABLE
 } from "./actionTypes.js";
 import {
   BACKEND,
@@ -87,10 +89,6 @@ export function clearProfile() {
   return { type: PROFILE_CLEAR };
 }
 
-export function newSiteInfoAvailable(info) {
-  return { type: SITEINFO_AVAILABLE, siteinfo: info };
-}
-
 export function updateSiteInfo() {
   return async (dispatch, getState) => {
     try {
@@ -128,10 +126,77 @@ export function updateSiteInfo() {
   };
 }
 
+export function newSiteInfoAvailable(info) {
+  return { type: SITEINFO_AVAILABLE, siteinfo: info };
+}
+
 export function setAppMessage(message) {
   return dispatch => dispatch({ type: SET_MESSAGE, message });
 }
 
 export function clearAppMessage() {
   return dispatch => dispatch({ type: CLEAR_MESSAGE });
+}
+
+export function updateSiteTheme() {
+  return async (dispatch, getState) => {
+    try {
+      dispatch(networkAction(true));
+
+      const query = `
+      { 
+        theme: getTheme {
+          styles
+        }
+      }
+      `;
+      const fetch = new FetchBuilder()
+        .setUrl(`${BACKEND}/graph`)
+        .setPayload(query)
+        .setIsGraphQLEndpoint(true)
+        .build();
+      const response = await fetch.exec();
+
+      dispatch(networkAction(false));
+      dispatch(themeAvailable(response.theme));
+    } finally {
+      dispatch(networkAction(false));
+    }
+  };
+}
+
+export function themeAvailable(theme) {
+  return { type: THEME_AVAILABLE, theme };
+}
+
+export function updateSiteLayout() {
+  return async dispatch => {
+    try {
+      dispatch(networkAction(true));
+
+      const query = `
+      {
+        layout: getLayout {
+          layout
+        }
+      }
+      `;
+
+      const fetch = new FetchBuilder()
+        .setUrl(`${BACKEND}/graph`)
+        .setPayload(query)
+        .setIsGraphQLEndpoint(true)
+        .build();
+      const response = await fetch.exec();
+
+      dispatch(networkAction(false));
+      dispatch(layoutAvailable(response.layout && response.layout.layout));
+    } finally {
+      dispatch(networkAction(false));
+    }
+  };
+}
+
+export function layoutAvailable(layout) {
+  return { type: LAYOUT_AVAILABLE, layout };
 }

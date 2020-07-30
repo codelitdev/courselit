@@ -1,7 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 import { publicCourse } from "../types";
-import Article from "./Article";
+import Article from "./Public/Article.js";
 
 const CourseIntroduction = props => {
   const { course } = props;

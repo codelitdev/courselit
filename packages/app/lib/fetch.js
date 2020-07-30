@@ -21,7 +21,7 @@ Fetch.prototype.exec = async function () {
   }
 
   if (this.token) {
-    fetchOptions.headers['Authorization'] = `Bearer ${this.token}`
+    fetchOptions.headers.Authorization = `Bearer ${this.token}`
   }
 
   if (this.isGraphQLEndpoint) {

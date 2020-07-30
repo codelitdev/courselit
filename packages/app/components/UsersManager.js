@@ -47,11 +47,8 @@ const UsersManager = props => {
           admins: response.summary.admins,
           creators: response.summary.creators
         });
-        // creatorCoursesPaginationOffset += 1
       }
-    } catch (err) {
-      console.log(err);
-    }
+    } catch (err) {}
   };
 
   const loadUsers = async () => {
@@ -77,9 +74,7 @@ const UsersManager = props => {
       if (response.users && response.users.length > 0) {
         setUsers([...users, ...response.users]);
       }
-    } catch (err) {
-      console.log(err);
-    }
+    } catch (err) {}
   };
 
   // const handleSearch = event => {
