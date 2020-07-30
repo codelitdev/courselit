@@ -1,24 +1,21 @@
 import { connect } from "react-redux";
-import MasterLayout from "../../../components/Masterlayout.js";
 import { BACKEND, FRONTEND, MEDIA_BACKEND } from "../../../config/constants.js";
 import {
   formulateMediaUrl,
   formulateCourseUrl,
   getPostDescriptionSnippet
 } from "../../../lib/utils.js";
-import { makeStyles } from "@material-ui/core";
+import { makeStyles, Grid } from "@material-ui/core";
 import Head from "next/head";
-import ContainedBodyLayout from "../../../components/ContainedBodyLayout.js";
-import Article from "../../../components/Article.js";
 import FetchBuilder from "../../../lib/fetch.js";
 import { siteInfoProps } from "../../../types.js";
+import BaseLayout from "../../../components/Public/BaseLayout";
+import Article from "../../../components/Public/Article.js";
 
 const useStyles = makeStyles(theme => ({
-  articleMarginAdjust: {
-    marginTop: theme.spacing(2)
-  },
-  articleMarginBottomAdjust: {
-    marginBottom: theme.spacing(2)
+  content: {
+    padding: theme.spacing(4),
+    paddingTop: theme.spacing(8)
   }
 }));
 
@@ -29,9 +26,9 @@ const Post = props => {
   };
 
   return (
-    <MasterLayout title={props.post.title}>
+    <BaseLayout title={props.post.title}>
       {props.post && (
-        <>
+        <Grid item xs={12} className={classes.content}>
           <Head>
             <meta
               property="og:url"
@@ -54,14 +51,10 @@ const Post = props => {
               />
             )}
           </Head>
-          <ContainedBodyLayout>
-            <div className={classes.articleMarginAdjust} />
-            <Article course={props.post} options={articleOptions} />
-            <div className={classes.articleMarginBottomAdjust} />
-          </ContainedBodyLayout>
-        </>
+          <Article course={props.post} options={articleOptions} />
+        </Grid>
       )}
-    </MasterLayout>
+    </BaseLayout>
   );
 };
 

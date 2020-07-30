@@ -1,6 +1,6 @@
 # Introduction
 
-A headless CMS for hosting your own teaching courses. Features include course creation, student management, media management and website customisation. [Learn more](https://courselit.recurze.com/).
+A headless CMS for hosting your own teaching courses. Features include course creation, student management, media management and website customisation. [Learn more](https://courselit.codelit.com/).
 
 ## Getting started
 

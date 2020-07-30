@@ -8,7 +8,8 @@ module.exports = {
         "react-hooks"
     ],
     rules: {
-        "react-hooks/rules-of-hooks": "error"
+        "react-hooks/rules-of-hooks": "error",
+        "no-console": ["error", {allow: ["warn"]}]
     },
     settings: {
         react: {

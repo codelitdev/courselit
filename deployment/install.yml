@@ -24,7 +24,7 @@
           default: "14d"
 
         - name: docker_image_tag
-          prompt: "Which version of CourseLit would you like to deploy? Visit https://hub.docker.com/repository/registry-1.docker.io/recurze/courselit-proxy/tags for all versions. Press Enter if you do not know."
+          prompt: "Which version of CourseLit would you like to deploy? Visit https://hub.docker.com/repository/registry-1.docker.io/codelit/courselit-proxy/tags for all versions. Press Enter if you do not know."
           private: no
           default: "latest"
 

@@ -3,7 +3,7 @@ import {
   URL_EXTENTION_POSTS,
   URL_EXTENTION_COURSES
 } from '../config/constants.js'
-import TextEditor from '../components/TextEditor/index.js'
+import TextEditor from '../components/Public/TextEditor/index.js'
 
 export const queryGraphQL = async (url, query, token) => {
   const options = {
@@ -30,14 +30,12 @@ export const queryGraphQLWithUIEffects = (backend, dispatch, networkAction, toke
   async (query) => {
     try {
       dispatch(networkAction(false))
-      let response = await queryGraphQL(
+      const response = await queryGraphQL(
         `${backend}/graph`,
         query,
         token)
 
       return response
-    } catch (err) {
-      throw err
     } finally {
       dispatch(networkAction(false))
     }
