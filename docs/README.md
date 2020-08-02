@@ -79,6 +79,7 @@ MONGO_ROOT_PASSWORD=password
 DB_CONNECTION_STRING=mongodb://username:password@db
 JWT_SECRET=yoursecret
 JWT_EXPIRES_IN=2d
+TAG=latest
 ```
 
 3. Start the application.
@@ -117,6 +118,10 @@ The duration after while the generated JWT expires. For more information [check 
 **DOMAIN**
 
 The domain name for which the ssl certificate is issued. Optional parameter, only required if using a SSL certificate. No default value.
+
+**TAG**
+
+The Docker tag. To see what all tags are available, visit [CourseLit on Docker Hub](https://hub.docker.com/repository/registry-1.docker.io/codelit/courselit-proxy/tags).
 
 ## Security
 Although, we've done everything in our power to secure the application by following the best practices, we hope you understand that no one can guarantee that it's the most secure implementation out there and it will always stay secure.
