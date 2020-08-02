@@ -3,7 +3,7 @@
     name: "{{ item }}"
     state: present
     update_cache: yes
-  loop: [ 'apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common', 'python3-pip']
+  loop: [ 'apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common', 'python3-pip', 'ufw']
 
 - name: Install Python setuptools
   pip:
@@ -30,7 +30,7 @@
 - name: Unmask Docker
   command: systemctl unmask docker
 
-- name: Start Docker service
+- name: Bounce Docker service
   systemd: 
     name: docker
-    state: started
+    state: restarted
