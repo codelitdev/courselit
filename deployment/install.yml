@@ -71,8 +71,13 @@
 
         - include_role:
             name: common
+
+        - name: Set up SSL certificate
+          include_role:
+            name: letsencrypt
+          when: ssl_enabled|bool
           
-        - name: copy docker compose files
+        - name: Copy docker compose files
           copy:
             src: docker
             dest: "{{ ansible_env.HOME }}"
@@ -111,7 +116,7 @@
             pull: yes
           register: output
           environment:
-            SITE_URL: http://{{ domain }}
+            SITE_URL: https://{{ domain }}
             MEDIA_FOLDER: "{{ media_folder }}"
             MONGO_ROOT_USERNAME: "{{ mongo_user_name }}"
             MONGO_ROOT_PASSWORD: "{{ mongo_password }}"
