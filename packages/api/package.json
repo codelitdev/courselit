@@ -24,7 +24,7 @@
     "dotenv": "^8.2.0",
     "draft-js": "^0.11.2",
     "express": "^4.17.1",
-    "express-fileupload": "^1.1.6-alpha.6",
+    "express-fileupload": "^1.1.9",
     "express-graphql": "^0.9.0",
     "graphql": "^14.5.8",
     "jsonwebtoken": "^8.5.1",
