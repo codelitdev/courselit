@@ -15,7 +15,7 @@ import PropTypes from "prop-types";
 import AppToast from "../../AppToast.js";
 import {
   PAGE_HEADER_ALL_COURSES,
-  PAGE_HEADER_ALL_POSTS
+  PAGE_HEADER_ALL_POSTS,
 } from "../../../config/strings.js";
 import Link from "next/link";
 import { connect } from "react-redux";
@@ -24,44 +24,44 @@ import Header from "./Header.js";
 
 const drawerWidth = 240;
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   root: {
-    display: "flex"
+    display: "flex",
   },
   drawer: {
     [theme.breakpoints.up("sm")]: {
       width: drawerWidth,
-      flexShrink: 0
-    }
+      flexShrink: 0,
+    },
   },
   appBar: {
     marginLeft: drawerWidth,
     [theme.breakpoints.up("sm")]: {
-      width: `calc(100% - ${drawerWidth}px)`
-    }
+      width: `calc(100% - ${drawerWidth}px)`,
+    },
   },
   menuButton: {
     marginRight: theme.spacing(2),
     [theme.breakpoints.up("sm")]: {
-      display: "none"
-    }
+      display: "none",
+    },
   },
   toolbar: theme.mixins.toolbar,
   drawerPaper: {
-    width: drawerWidth
+    width: drawerWidth,
   },
   content: {
-    flexGrow: 1
+    flexGrow: 1,
   },
   activeItem: {
-    background: "#d6d6d6"
+    background: "#d6d6d6",
   },
   visitSiteLink: {
-    color: "#fff"
-  }
+    color: "#fff",
+  },
 }));
 
-const Scaffold = props => {
+const Scaffold = (props) => {
   const classes = useStyles();
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -115,10 +115,10 @@ const Scaffold = props => {
             open={mobileOpen}
             onClose={handleDrawerToggle}
             classes={{
-              paper: classes.drawerPaper
+              paper: classes.drawerPaper,
             }}
             ModalProps={{
-              keepMounted: true // Better open performance on mobile.
+              keepMounted: true, // Better open performance on mobile.
             }}
           >
             {drawer}
@@ -127,7 +127,7 @@ const Scaffold = props => {
         <Hidden xsDown implementation="css">
           <Drawer
             classes={{
-              paper: classes.drawerPaper
+              paper: classes.drawerPaper,
             }}
             variant="permanent"
             open
@@ -148,11 +148,11 @@ const Scaffold = props => {
 
 Scaffold.propTypes = {
   children: PropTypes.object,
-  siteinfo: siteInfoProps
+  siteinfo: siteInfoProps,
 };
 
-const mapStateToProps = state => ({
-  siteinfo: state.siteinfo
+const mapStateToProps = (state) => ({
+  siteinfo: state.siteinfo,
 });
 
 export default connect(mapStateToProps)(Scaffold);

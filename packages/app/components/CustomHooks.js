@@ -14,7 +14,7 @@ import { networkAction } from "../redux/actions.js";
 // ))
 
 export const useExecuteGraphQLQuery = () => {
-  const auth = useSelector(state => state.auth);
+  const auth = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
   return queryGraphQLWithUIEffects(

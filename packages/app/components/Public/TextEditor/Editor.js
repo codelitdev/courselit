@@ -5,7 +5,7 @@ import {
   RichUtils,
   AtomicBlockUtils,
   DefaultDraftBlockRenderMap,
-  CompositeDecorator
+  CompositeDecorator,
 } from "draft-js";
 import PropTypes from "prop-types";
 import MediaRenderer from "./MediaRenderer.js";
@@ -16,7 +16,7 @@ import TextRenderer from "./TextRenderer.js";
 import BlockquoteRenderer from "./BlockquoteRenderer.js";
 import LinkRenderer from "./LinkRenderer.js";
 
-const Editor = props => {
+const Editor = (props) => {
   const handleKeyCommand = (command, editorState) => {
     const newState = RichUtils.handleKeyCommand(editorState, command);
     if (newState) {
@@ -26,7 +26,7 @@ const Editor = props => {
     return "not handled";
   };
 
-  const customBlockRenderer = block => {
+  const customBlockRenderer = (block) => {
     const blockType = block.getType();
     switch (blockType) {
       case "atomic":
@@ -34,8 +34,8 @@ const Editor = props => {
           component: MediaRenderer,
           editable: false,
           props: {
-            styles: props.theme.media
-          }
+            styles: props.theme.media,
+          },
         };
       default:
       // do nothing
@@ -45,16 +45,16 @@ const Editor = props => {
   const blockRenderMap = Map({
     unstyled: {
       element: "span",
-      wrapper: <TextRenderer />
+      wrapper: <TextRenderer />,
     },
     blockquote: {
       element: "span",
-      wrapper: <BlockquoteRenderer style={props.theme.blockquote} />
+      wrapper: <BlockquoteRenderer style={props.theme.blockquote} />,
     },
     "code-block": {
       element: "span",
-      wrapper: <CodeRenderer style={props.theme.code} />
-    }
+      wrapper: <CodeRenderer style={props.theme.code} />,
+    },
   });
   const extendedBlockRenderMap = DefaultDraftBlockRenderMap.merge(
     blockRenderMap
@@ -82,15 +82,15 @@ Editor.addImage = (editorState, url) => {
   );
   const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
   const newEditorState = EditorState.set(editorState, {
-    currentContent: contentStateWithEntity
+    currentContent: contentStateWithEntity,
   });
   return AtomicBlockUtils.insertAtomicBlock(newEditorState, entityKey, " ");
 };
 
-Editor.toggleCode = editorState => RichUtils.toggleCode(editorState);
-Editor.toggleLink = editorState =>
+Editor.toggleCode = (editorState) => RichUtils.toggleCode(editorState);
+Editor.toggleLink = (editorState) =>
   RichUtils.toggleLink(editorState, editorState.getSelection(), null);
-Editor.toggleBlockquote = editorState =>
+Editor.toggleBlockquote = (editorState) =>
   RichUtils.toggleBlockType(editorState, "blockquote");
 
 Editor.getDecorators = () => {
@@ -128,12 +128,12 @@ Editor.getDecorators = () => {
   return new CompositeDecorator([
     {
       strategy: videoStrategy,
-      component: VideoRenderer
+      component: VideoRenderer,
     },
     {
       strategy: linkStrategy,
-      component: LinkRenderer
-    }
+      component: LinkRenderer,
+    },
   ]);
 };
 
@@ -141,7 +141,7 @@ Editor.propTypes = {
   editorState: PropTypes.object,
   onChange: PropTypes.func,
   readOnly: PropTypes.bool,
-  theme: PropTypes.object
+  theme: PropTypes.object,
 };
 
 export default Editor;

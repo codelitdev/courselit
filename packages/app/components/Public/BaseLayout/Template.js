@@ -9,10 +9,10 @@ import Footer from "./Footer";
 const useStyles = makeStyles({
   mainContent: {
     // minHeight: "80vh"
-  }
+  },
 });
 
-const Template = props => {
+const Template = (props) => {
   const classes = useStyles(props);
   const router = useRouter();
 
@@ -40,7 +40,7 @@ const Template = props => {
 };
 
 Template.propTypes = {
-  children: PropTypes.object
+  children: PropTypes.object,
 };
 
 export default Template;

@@ -19,49 +19,49 @@ import Header from "./Header.js";
 
 const drawerWidth = 240;
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   root: {
-    display: "flex"
+    display: "flex",
   },
   drawer: {
     [theme.breakpoints.up("sm")]: {
       width: drawerWidth,
-      flexShrink: 0
-    }
+      flexShrink: 0,
+    },
   },
   appBar: {
     marginLeft: drawerWidth,
     [theme.breakpoints.up("sm")]: {
-      width: `calc(100% - ${drawerWidth}px)`
-    }
+      width: `calc(100% - ${drawerWidth}px)`,
+    },
   },
   menuButton: {
     marginRight: theme.spacing(2),
     [theme.breakpoints.up("sm")]: {
-      display: "none"
-    }
+      display: "none",
+    },
   },
   toolbar: theme.mixins.toolbar,
   drawerPaper: {
-    width: drawerWidth
+    width: drawerWidth,
   },
   content: {
-    flexGrow: 1
+    flexGrow: 1,
   },
   activeItem: {
-    background: "#d6d6d6"
+    background: "#d6d6d6",
   },
   visitSiteLink: {
-    color: "#fff"
+    color: "#fff",
   },
   contentMain: {
     padding: theme.spacing(2),
     paddingTop: theme.spacing(8),
-    minHeight: "80vh"
-  }
+    minHeight: "80vh",
+  },
 }));
 
-const ComponentScaffold = props => {
+const ComponentScaffold = (props) => {
   const classes = useStyles();
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -136,10 +136,10 @@ const ComponentScaffold = props => {
             open={mobileOpen}
             onClose={handleDrawerToggle}
             classes={{
-              paper: classes.drawerPaper
+              paper: classes.drawerPaper,
             }}
             ModalProps={{
-              keepMounted: true // Better open performance on mobile.
+              keepMounted: true, // Better open performance on mobile.
             }}
           >
             {drawer}
@@ -148,7 +148,7 @@ const ComponentScaffold = props => {
         <Hidden xsDown implementation="css">
           <Drawer
             classes={{
-              paper: classes.drawerPaper
+              paper: classes.drawerPaper,
             }}
             variant="permanent"
             open
@@ -180,10 +180,10 @@ ComponentScaffold.propTypes = {
       icon: PropTypes.object,
       props: PropTypes.object,
       progress: PropTypes.shape({
-        status: PropTypes.bool.isRequired
-      })
+        status: PropTypes.bool.isRequired,
+      }),
     })
-  )
+  ),
 };
 
 export default ComponentScaffold;

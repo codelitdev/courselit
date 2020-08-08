@@ -6,14 +6,14 @@ import { siteInfoProps } from "../../types.js";
 import { makeStyles } from "@material-ui/styles";
 import Header from "./Header.js";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   container: {
     padding: theme.spacing(4),
-    paddingTop: theme.spacing(8)
-  }
+    paddingTop: theme.spacing(8),
+  },
 }));
 
-const About = props => {
+const About = (props) => {
   const classes = useStyles();
 
   return props.siteInfo.about ? (
@@ -33,11 +33,11 @@ const About = props => {
 };
 
 About.propTypes = {
-  siteInfo: siteInfoProps
+  siteInfo: siteInfoProps,
 };
 
-const mapStateToProps = state => ({
-  siteInfo: state.siteinfo
+const mapStateToProps = (state) => ({
+  siteInfo: state.siteinfo,
 });
 
 export default connect(mapStateToProps)(About);

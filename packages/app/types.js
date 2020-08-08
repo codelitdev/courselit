@@ -5,7 +5,7 @@ import PropTypes from "prop-types";
 
 export const authProps = PropTypes.shape({
   guest: PropTypes.bool,
-  token: PropTypes.string
+  token: PropTypes.string,
 });
 
 export const profileProps = PropTypes.shape({
@@ -14,7 +14,7 @@ export const profileProps = PropTypes.shape({
   id: PropTypes.string,
   fetched: PropTypes.bool,
   email: PropTypes.string,
-  purchases: PropTypes.arrayOf(PropTypes.string)
+  purchases: PropTypes.arrayOf(PropTypes.string),
 });
 
 export const latestPostsProps = PropTypes.shape({
@@ -23,14 +23,14 @@ export const latestPostsProps = PropTypes.shape({
   description: PropTypes.string.isRequired,
   creatorName: PropTypes.string.isRequired,
   updated: PropTypes.number.isRequired,
-  slug: PropTypes.string.isRequired
+  slug: PropTypes.string.isRequired,
 });
 
 export const siteInfoProps = PropTypes.shape({
   title: PropTypes.string,
   subtitle: PropTypes.string,
   logopath: PropTypes.string,
-  currencyUnit: PropTypes.string
+  currencyUnit: PropTypes.string,
 });
 
 export const publicCourse = PropTypes.shape({
@@ -42,7 +42,7 @@ export const publicCourse = PropTypes.shape({
   slug: PropTypes.string.isRequired,
   isFeatured: PropTypes.bool,
   cost: PropTypes.number,
-  creatorId: PropTypes.string
+  creatorId: PropTypes.string,
 });
 
 export const creatorCourse = PropTypes.shape({
@@ -53,7 +53,7 @@ export const creatorCourse = PropTypes.shape({
   updated: PropTypes.string,
   slug: PropTypes.string,
   isFeatured: PropTypes.bool,
-  cost: PropTypes.number
+  cost: PropTypes.number,
 });
 
 export const siteUser = PropTypes.shape({
@@ -63,14 +63,14 @@ export const siteUser = PropTypes.shape({
   isCreator: PropTypes.bool.isRequired,
   isAdmin: PropTypes.bool.isRequired,
   avatar: PropTypes.string,
-  purchases: PropTypes.arrayOf(PropTypes.string)
+  purchases: PropTypes.arrayOf(PropTypes.string),
 });
 
 export const featuredCourse = PropTypes.shape({
   id: PropTypes.string.isRequired,
   title: PropTypes.string.isRequired,
   cost: PropTypes.number.isRequired,
-  featuredImage: PropTypes.string
+  featuredImage: PropTypes.string,
 });
 
 export const appMessage = PropTypes.shape({
@@ -78,8 +78,8 @@ export const appMessage = PropTypes.shape({
   message: PropTypes.string.isRequired,
   action: PropTypes.shape({
     text: PropTypes.string.isRequired,
-    cb: PropTypes.func.isRequired
-  })
+    cb: PropTypes.func.isRequired,
+  }),
 });
 
 export const lesson = PropTypes.shape({
@@ -87,5 +87,5 @@ export const lesson = PropTypes.shape({
   type: PropTypes.string,
   downloadable: PropTypes.bool,
   content: PropTypes.string,
-  contentURL: PropTypes.string
+  contentURL: PropTypes.string,
 });

@@ -1,4 +1,5 @@
 # Introduction
+
 > Create thumbnails from your image and video files for your Node.js based application.
 
 For generating thumbnails, this package uses imagemagick (for images) and ffmpeg (for videos) utilities, so make sure those are installed on your machine before using this package.
@@ -6,21 +7,26 @@ For generating thumbnails, this package uses imagemagick (for images) and ffmpeg
 _Note: This module will always overwrite the thumbnail file, if already exists._
 
 ### Features
+
 1. Promise based API
 2. Supports both images and videos
 
 ## Install
+
 ```
 npm install @courselit/thumbnail
 ```
 
 **NOTE**: You need to have the following softwares installed on your machine to use this package. For Ubuntu, the command is listed.
+
 ```
 apt install imagemagick ffmpeg
 ```
 
 ## Usage
+
 With default options
+
 ```
 const mt = require('@courselit/thumbnail')
 
@@ -31,6 +37,7 @@ mt.forImage(
 ```
 
 With custom options
+
 ```
 const mt = require('@courselit/thumbnail')
 
@@ -48,28 +55,32 @@ mt.forImage(
 ## API
 
 ### forImage(source, destination, [options])
-__source__
+
+**source**
 
 An absolute or relative path to the original image.
 
-__destination__
+**destination**
 
 An absolute or relative path to the thumbnail folder.
 
-__options__
+**options**
+
 1. width [number]: Preferred width of the thumbnail. Defaults to '100'.
 2. height [number]: Preferred height of the thumnail. Defaults to '100'.
 3. preserveAspectRatio [boolean]: If set to `false`, only then the resulting thumbnail will be of specified width x height. Otherwise the width of the resulting thumbnail would be min(width, height) and the aspect ratio will be preserved. Defaults to `true`.
 
 ### forVideo(source, destination, [options])
-__source__
+
+**source**
 
 An absolute or relative path to the original video.
 
-__destination__
+**destination**
 
 An absolute or relative path to the thumbnail folder.
 
-__options__
+**options**
+
 1. width [number]: Preferred width of the thumbnail. Defaults to '100'.
 2. height [number]: Preferred height of the thumnail. Defaults to '-1'. This default preserves the aspect ratio.

@@ -8,25 +8,25 @@ import { Grid, Typography, Button } from "@material-ui/core";
 import {
   HEADER_BLOG_POSTS_SECTION,
   BTN_LOAD_MORE,
-  SUBHEADER_BLOG_POSTS_SECTION
+  SUBHEADER_BLOG_POSTS_SECTION,
 } from "../../../config/strings";
 import ListItem from "./ListItem";
 import { makeStyles } from "@material-ui/styles";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   content: {
     padding: theme.spacing(2),
-    paddingTop: theme.spacing(8)
+    paddingTop: theme.spacing(8),
   },
   header: {
-    marginLeft: theme.spacing(2)
+    marginLeft: theme.spacing(2),
   },
   headerTop: {
-    marginBottom: theme.spacing(2)
-  }
+    marginBottom: theme.spacing(2),
+  },
 }));
 
-const List = props => {
+const List = (props) => {
   const [posts, setPosts] = useState([]);
   const [postsOffset, setPostsOffset] = useState(1);
   const shouldShowLoadMoreButton = props.showLoadMoreButton
@@ -103,13 +103,13 @@ const List = props => {
 
 List.propTypes = {
   showLoadMoreButton: PropTypes.bool,
-  dispatch: PropTypes.func.isRequired
+  dispatch: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = state => ({});
+const mapStateToProps = (state) => ({});
 
-const mapDispatchToProps = dispatch => ({
-  dispatch: dispatch
+const mapDispatchToProps = (dispatch) => ({
+  dispatch: dispatch,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(List);

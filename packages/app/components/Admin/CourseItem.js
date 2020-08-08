@@ -12,7 +12,7 @@ import Img from "../Img";
 
 const useStyles = makeStyles({
   featuredimagecontainer: {
-    display: "flex"
+    display: "flex",
   },
   courselink: {
     textDecoration: "none",
@@ -20,13 +20,13 @@ const useStyles = makeStyles({
     marginTop: "0.8em",
     marginBottom: "1em",
     "&:hover": {
-      background: "#eee"
+      background: "#eee",
     },
-    color: "inherit"
-  }
+    color: "inherit",
+  },
 });
 
-const CourseItem = props => {
+const CourseItem = (props) => {
   const { course } = props;
   const classes = useStyles();
 
@@ -92,7 +92,7 @@ const CourseItem = props => {
 
 CourseItem.propTypes = {
   course: creatorCourse,
-  isPublicView: PropTypes.bool.isRequired
+  isPublicView: PropTypes.bool.isRequired,
 };
 
 export default CourseItem;

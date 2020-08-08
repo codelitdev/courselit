@@ -8,7 +8,7 @@ import Link from "next/link";
 import { connect } from "react-redux";
 import {
   GENERIC_SIGNOUT_TEXT,
-  GENERIC_SIGNIN_TEXT
+  GENERIC_SIGNIN_TEXT,
 } from "../../config/strings.js";
 import { authProps, profileProps } from "../../types.js";
 import { Button } from "@material-ui/core";
@@ -16,8 +16,8 @@ import { makeStyles } from "@material-ui/styles";
 
 const useStyles = makeStyles({
   button: {
-    color: "white"
-  }
+    color: "white",
+  },
 });
 
 function SessionButton(props) {
@@ -40,12 +40,12 @@ function SessionButton(props) {
 
 SessionButton.propTypes = {
   auth: authProps,
-  profile: profileProps
+  profile: profileProps,
 };
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   auth: state.auth,
-  profile: state.profile
+  profile: state.profile,
 });
 
 export default connect(mapStateToProps)(SessionButton);

@@ -9,7 +9,7 @@ import {
   SupervisedUserCircle,
   PermMedia,
   SettingsApplications,
-  Palette
+  Palette,
 } from "@material-ui/icons";
 import SiteSettings from "../components/Admin/SiteSettings.js";
 import { CREATOR_AREA_PAGE_TITLE } from "../config/strings.js";
@@ -20,7 +20,7 @@ import AppLoader from "../components/AppLoader.js";
 import PageDesigner from "../components/Admin/PageDesigner/index.js";
 import ComponentScaffold from "../components/Public/BaseLayout/ComponentScaffold.js";
 
-const Create = props => {
+const Create = (props) => {
   useEffect(() => {
     if (props.profile.fetched && !props.profile.isCreator) {
       Router.push("/");
@@ -37,13 +37,13 @@ const Create = props => {
     {
       name: "Courses",
       element: <Courses />,
-      icon: <LibraryBooks />
+      icon: <LibraryBooks />,
     },
     {
       name: "Media",
       element: <MediaManager onMediaSelected={() => {}} />,
-      icon: <PermMedia />
-    }
+      icon: <PermMedia />,
+    },
   ];
 
   if (props.profile.isAdmin) {
@@ -52,18 +52,18 @@ const Create = props => {
         {
           name: "Settings",
           element: <SiteSettings />,
-          icon: <SettingsApplications />
+          icon: <SettingsApplications />,
         },
         {
           name: "Users",
           element: <UsersManager />,
-          icon: <SupervisedUserCircle />
+          icon: <SupervisedUserCircle />,
         },
         {
           name: "Design",
           element: <PageDesigner />,
-          icon: <Palette />
-        }
+          icon: <Palette />,
+        },
       ]
     );
   }
@@ -75,9 +75,9 @@ const Create = props => {
   );
 };
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   auth: state.auth,
-  profile: state.profile
+  profile: state.profile,
 });
 
 export default connect(mapStateToProps)(Create);

@@ -9,7 +9,7 @@ import {
   updateSiteInfo,
   authHasBeenChecked,
   updateSiteTheme,
-  updateSiteLayout
+  updateSiteLayout,
 } from "../redux/actions.js";
 import { ThemeProvider } from "@material-ui/styles";
 import { responsiveFontSizes, createMuiTheme } from "@material-ui/core";

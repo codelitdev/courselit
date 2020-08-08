@@ -12,20 +12,20 @@ const useStyles = makeStyles({
     marginTop: "0.8em",
     marginBottom: "1em",
     "&:hover": {
-      background: "#eee"
+      background: "#eee",
     },
-    color: "inherit"
-  }
+    color: "inherit",
+  },
 });
 
-const CreatorCoursesList = props => {
+const CreatorCoursesList = (props) => {
   const classes = useStyles();
 
   return (
     <div>
-      {props.courses.map(course => (
+      {props.courses.map((course) => (
         <a key={course.id} href="#" className={classes.courselink}>
-          <Card onClick={e => props.onClick(course.id)}>
+          <Card onClick={(e) => props.onClick(course.id)}>
             <CardContent>
               <Typography variant="h6">{course.title}</Typography>
             </CardContent>
@@ -40,7 +40,7 @@ const CreatorCoursesList = props => {
 CreatorCoursesList.propTypes = {
   courses: PropTypes.arrayOf(creatorCourse),
   onClick: PropTypes.func,
-  onLoadMoreClick: PropTypes.func
+  onLoadMoreClick: PropTypes.func,
 };
 
 export default CreatorCoursesList;

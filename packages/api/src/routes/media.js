@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * An end point for managing file uploads.
  */
@@ -87,7 +89,6 @@ const postHandler = async (req, res) => {
   try {
     await move(req.files.file, filePath);
   } catch (err) {
-    console.log(constants.uploadFolder, err);
     return res.status(500).json({ message: responses.error_in_moving_file });
   }
 

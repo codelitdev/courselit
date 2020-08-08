@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import { FREE_COST } from "../config/strings";
 import { siteInfoProps } from "../types";
 
-const PriceTag = props => {
+const PriceTag = (props) => {
   const cost = props.cost || 0;
   const costText =
     cost <= 0
@@ -18,11 +18,11 @@ const PriceTag = props => {
 
 PriceTag.propTypes = {
   cost: PropTypes.number.isRequired,
-  siteInfo: siteInfoProps.isRequired
+  siteInfo: siteInfoProps.isRequired,
 };
 
-const mapStateToProps = state => ({
-  siteInfo: state.siteinfo
+const mapStateToProps = (state) => ({
+  siteInfo: state.siteinfo,
 });
 
 export default connect(mapStateToProps)(PriceTag);

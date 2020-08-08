@@ -2099,7 +2099,7 @@ describe("GraphQL API tests", () => {
       expect(result.data).toHaveProperty("media");
       expect(result.data.media.title).toBe(newTitle);
       expect(result.data.media.altText).toBe(newAltText);
-      console.log(result.data.media.title, result.data.media.altText);
+      // console.log(result.data.media.title, result.data.media.altText);
     });
   });
 

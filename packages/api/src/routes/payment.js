@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * An endpoint for managing payments
  */
@@ -135,7 +137,6 @@ const webhookHandler = async (req, res) => {
         paymentId: paymentMethod.getPaymentIdentifier(body),
       })
     )[0];
-    console.log("Webhook verified", purchaseRecord);
 
     if (purchaseRecord) {
       purchaseRecord.status = transactionSuccess;

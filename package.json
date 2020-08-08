@@ -1,5 +1,5 @@
 {
-  "name": "@courselit/mono-repo",
+  "name": "courselit",
   "private": true,
   "workspaces": [
     "packages/*"
@@ -14,12 +14,12 @@
     "url": "https://github.com/codelitdev/courselit"
   },
   "license": "MIT",
-  "devDependencies": {
-    "lerna": "^3.22.0"
-  },
   "scripts": {
     "lerna:publish": "lerna publish",
     "lerna:bootstrap": "lerna bootstrap",
-    "lerna:create": "lerna create"
+    "lerna:create": "lerna create",
+    "lint": "eslint packages",
+    "prettier": "prettier --write packages",
+    "lerna:add": "lerna add"
   }
 }

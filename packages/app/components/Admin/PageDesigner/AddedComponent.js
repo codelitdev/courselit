@@ -4,14 +4,14 @@ import { Grid, Typography, IconButton } from "@material-ui/core";
 import { RemoveCircle } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/styles";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   container: {
     padding: theme.spacing(1),
-    border: "1px solid #eee"
-  }
+    border: "1px solid #eee",
+  },
 }));
 
-const AddedComponent = props => {
+const AddedComponent = (props) => {
   const classes = useStyles();
 
   return (
@@ -43,7 +43,7 @@ AddedComponent.propTypes = {
   section: PropTypes.string.isRequired,
   title: PropTypes.string.isRequired,
   index: PropTypes.number.isRequired,
-  removeComponent: PropTypes.func.isRequired
+  removeComponent: PropTypes.func.isRequired,
 };
 
 export default AddedComponent;
