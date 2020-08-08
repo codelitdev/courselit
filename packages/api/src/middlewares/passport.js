@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * Configuration for PassportJS authentication via JWT
  */
@@ -35,7 +37,6 @@ module.exports = (passport) => {
           }
 
           const notTheFirstUser = await User.countDocuments();
-          console.log(notTheFirstUser);
           user = await User.create({
             email,
             password,

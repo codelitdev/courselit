@@ -3,7 +3,7 @@ import Head from "next/head";
 import {
   formulateCourseUrl,
   formulateMediaUrl,
-  getPostDescriptionSnippet
+  getPostDescriptionSnippet,
 } from "../../../lib/utils.js";
 import { Lock } from "@material-ui/icons";
 import { BACKEND, FRONTEND, MEDIA_BACKEND } from "../../../config/constants.js";
@@ -14,7 +14,7 @@ import FetchBuilder from "../../../lib/fetch.js";
 import AppError from "../../../components/AppError.js";
 import ComponentScaffold from "../../../components/Public/BaseLayout/ComponentScaffold.js";
 
-const Course = props => {
+const Course = (props) => {
   const { course, profile, error } = props;
   const lessons = [];
   let key = 0;
@@ -22,7 +22,7 @@ const Course = props => {
   if (course) {
     lessons.push({
       name: SIDEBAR_TEXT_COURSE_ABOUT,
-      element: <CourseIntroduction key={key++} course={course} />
+      element: <CourseIntroduction key={key++} course={course} />,
     });
     for (const lesson of course.lessons) {
       lessons.push({
@@ -33,7 +33,7 @@ const Course = props => {
           !profile.purchases.includes(course.id) ? (
             <Lock />
           ) : null,
-        iconPlacementRight: true
+        iconPlacementRight: true,
       });
     }
   }
@@ -105,19 +105,19 @@ Course.getInitialProps = async ({ query }) => {
     const response = await fetch.exec();
     return {
       course: response.post,
-      error: null
+      error: null,
     };
   } catch (err) {
     return {
       course: null,
-      error: err.message
+      error: err.message,
     };
   }
 };
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   profile: state.profile,
-  siteInfo: state.siteinfo
+  siteInfo: state.siteinfo,
 });
 
 export default connect(mapStateToProps)(Course);

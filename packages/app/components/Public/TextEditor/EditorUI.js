@@ -11,40 +11,40 @@ import {
   Slide,
   Grid,
   Menu,
-  MenuItem
+  MenuItem,
 } from "@material-ui/core";
 import { Edit, TextFormat, InsertPhoto, Done } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/styles";
 import { MEDIA_MANAGER_DIALOG_TITLE } from "../../../config/strings.js";
 import MediaManagerDialog from "../../Admin/Media/MediaManagerDialog.js";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   editorContainer: {
     margin: theme.spacing(2),
-    marginBottom: theme.spacing(16)
+    marginBottom: theme.spacing(16),
   },
   appBar: {
     top: "auto",
-    bottom: 0
-  }
+    bottom: 0,
+  },
 }));
 
 const stylingForInternalComponentsOfDraftJS = {
   media: {
     container: {
       display: "flex",
-      justifyContent: "center"
+      justifyContent: "center",
     },
     img: {
-      maxWidth: "100%"
-    }
+      maxWidth: "100%",
+    },
   },
   code: {
     background: "rgb(45, 45, 45)",
     color: "#e2e7ff",
     padding: "10px 16px",
     borderRadius: 2,
-    fontFamily: '"Fira Code", monospace'
+    fontFamily: '"Fira Code", monospace',
   },
   blockquote: {
     fontStyle: "italic",
@@ -53,26 +53,26 @@ const stylingForInternalComponentsOfDraftJS = {
     borderLeft: "5px solid #cecece",
     paddingLeft: 10,
     fontSize: "1.6em",
-    color: "#686868"
-  }
+    color: "#686868",
+  },
 };
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const EditorUI = props => {
+const EditorUI = (props) => {
   const [open, setOpen] = useState(false);
   const [addImageDialogOpened, setAddImageDialogOpened] = useState(false);
   const [insertAnchorEl, setinsertAnchorEl] = useState(null);
   const [formatAnchorEl, setFormatAnchorEl] = useState(null);
   const classes = useStyles();
 
-  const onChange = editorState => {
+  const onChange = (editorState) => {
     props.onChange(editorState);
   };
 
-  const handleMediaManagerClose = url => {
+  const handleMediaManagerClose = (url) => {
     setAddImageDialogOpened(false);
     // TODO: Add capability to add other media types like videos, pdfs etc.
     props.onChange(
@@ -97,10 +97,10 @@ const EditorUI = props => {
 
   const closeEditor = () => setOpen(false);
 
-  const handleInsertOpen = event => setinsertAnchorEl(event.currentTarget);
+  const handleInsertOpen = (event) => setinsertAnchorEl(event.currentTarget);
   const handleInsertClose = () => setinsertAnchorEl(null);
 
-  const handleFormatOpen = event => setFormatAnchorEl(event.currentTarget);
+  const handleFormatOpen = (event) => setFormatAnchorEl(event.currentTarget);
   const handleFormatClose = () => setFormatAnchorEl(null);
 
   const editor = (
@@ -190,7 +190,7 @@ EditorUI.getDecorators = Editor.getDecorators;
 EditorUI.propTypes = {
   editorState: PropTypes.object,
   onChange: PropTypes.func,
-  readOnly: PropTypes.bool
+  readOnly: PropTypes.bool,
 };
 
 export default EditorUI;

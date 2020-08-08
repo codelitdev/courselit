@@ -12,12 +12,12 @@ import {
   SET_MESSAGE,
   CLEAR_MESSAGE,
   THEME_AVAILABLE,
-  LAYOUT_AVAILABLE
+  LAYOUT_AVAILABLE,
 } from "./actionTypes.js";
 import {
   BACKEND,
   JWT_COOKIE_NAME,
-  USERID_COOKIE_NAME
+  USERID_COOKIE_NAME,
 } from "../config/constants.js";
 import FetchBuilder from "../lib/fetch.js";
 import { removeCookie } from "../lib/session.js";
@@ -63,7 +63,7 @@ export function refreshUserProfile(userId) {
 }
 
 export function signedOut() {
-  return dispatch => {
+  return (dispatch) => {
     removeCookie(JWT_COOKIE_NAME);
     removeCookie(USERID_COOKIE_NAME);
     dispatch(clearProfile());
@@ -72,13 +72,13 @@ export function signedOut() {
 }
 
 export function authHasBeenChecked() {
-  return dispatch => {
+  return (dispatch) => {
     dispatch({ type: AUTH_CHECKED });
   };
 }
 
 export function networkAction(flag) {
-  return dispatch => dispatch({ type: NETWORK_ACTION, flag });
+  return (dispatch) => dispatch({ type: NETWORK_ACTION, flag });
 }
 
 export function updateProfile(profile) {
@@ -131,11 +131,11 @@ export function newSiteInfoAvailable(info) {
 }
 
 export function setAppMessage(message) {
-  return dispatch => dispatch({ type: SET_MESSAGE, message });
+  return (dispatch) => dispatch({ type: SET_MESSAGE, message });
 }
 
 export function clearAppMessage() {
-  return dispatch => dispatch({ type: CLEAR_MESSAGE });
+  return (dispatch) => dispatch({ type: CLEAR_MESSAGE });
 }
 
 export function updateSiteTheme() {
@@ -170,7 +170,7 @@ export function themeAvailable(theme) {
 }
 
 export function updateSiteLayout() {
-  return async dispatch => {
+  return async (dispatch) => {
     try {
       dispatch(networkAction(true));
 

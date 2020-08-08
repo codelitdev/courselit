@@ -10,7 +10,7 @@ import {
   CardActions,
   Button,
   TextField,
-  Link
+  Link,
 } from "@material-ui/core";
 import {
   CARD_HEADER_PAGE_LAYOUT,
@@ -31,7 +31,7 @@ import {
   APP_MESSAGE_THEME_INSTALLED,
   ERROR_SNACKBAR_PREFIX,
   APP_MESSAGE_THEME_APPLIED,
-  APP_MESSAGE_THEME_UNINSTALLED
+  APP_MESSAGE_THEME_UNINSTALLED,
 } from "../../../config/strings.js";
 import { makeStyles } from "@material-ui/styles";
 import { AddCircle } from "@material-ui/icons";
@@ -44,55 +44,55 @@ import { BACKEND, THEMES_REPO } from "../../../config/constants.js";
 import {
   networkAction,
   layoutAvailable,
-  setAppMessage
+  setAppMessage,
 } from "../../../redux/actions.js";
 import AppMessage from "../../../models/app-message.js";
 import { authProps } from "../../../types.js";
 import ThemeItem from "./ThemeItem.js";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   container: {
     borderRadius: theme.spacing(1),
     overflow: "hidden",
-    border: "5px solid black"
+    border: "5px solid black",
   },
   outline: {
     border: "1px solid #eaeaea",
-    textAlign: "center"
+    textAlign: "center",
   },
   box: {
     background: "#fbfbfb",
-    padding: theme.spacing(1)
+    padding: theme.spacing(1),
   },
   fixedBox: {
-    background: "#aaa"
+    background: "#aaa",
   },
   margin: {
-    margin: theme.spacing(2)
+    margin: theme.spacing(2),
   },
   pad: {
-    padding: theme.spacing(1)
+    padding: theme.spacing(1),
   },
   marginBottom: {
-    marginBottom: theme.spacing(2)
+    marginBottom: theme.spacing(2),
   },
   pageLayout: {
     marginTop: theme.spacing(4),
-    marginBottom: theme.spacing(1)
+    marginBottom: theme.spacing(1),
   },
   mainContent: {
-    height: "12em"
-  }
+    height: "12em",
+  },
 }));
 
-const PageDesigner = props => {
+const PageDesigner = (props) => {
   const [
     componentSelectionDialogOpened,
-    setComponentSelectionDialogOpened
+    setComponentSelectionDialogOpened,
   ] = useState(false);
   const [
     showComponentsCompatibleWith,
-    setShowComponentsCompatibleWith
+    setShowComponentsCompatibleWith,
   ] = useState("");
   const classes = useStyles();
   const [layout, setLayout] = useState(props.layout);
@@ -135,7 +135,7 @@ const PageDesigner = props => {
         Object.assign({}, layout, {
           [forSection]: layout[forSection]
             ? [...layout[forSection], componentName]
-            : [componentName]
+            : [componentName],
         })
       );
     }
@@ -143,7 +143,7 @@ const PageDesigner = props => {
     setComponentSelectionDialogOpened(!componentSelectionDialogOpened);
   };
 
-  const openAddComponentDialog = showComponentsCompatibleWith => {
+  const openAddComponentDialog = (showComponentsCompatibleWith) => {
     setShowComponentsCompatibleWith(showComponentsCompatibleWith);
     setComponentSelectionDialogOpened(true);
   };
@@ -154,7 +154,7 @@ const PageDesigner = props => {
 
     setLayout(
       Object.assign({}, layout, {
-        [fromSection]: arrayToRemoveComponentFrom
+        [fromSection]: arrayToRemoveComponentFrom,
       })
     );
   };
@@ -226,7 +226,7 @@ const PageDesigner = props => {
     }
   };
 
-  const validateNewThemeText = text => {
+  const validateNewThemeText = (text) => {
     if (!text) {
       return false;
     }
@@ -244,7 +244,7 @@ const PageDesigner = props => {
     return true;
   };
 
-  const onNewThemeTextChanged = e => {
+  const onNewThemeTextChanged = (e) => {
     setNewThemeText(e.target.value);
 
     if (validateNewThemeText(e.target.value)) {
@@ -254,7 +254,7 @@ const PageDesigner = props => {
     }
   };
 
-  const onThemeApply = async themeId => {
+  const onThemeApply = async (themeId) => {
     const mutation = `
       mutation {
         theme: setTheme(id: "${themeId}") {
@@ -282,7 +282,7 @@ const PageDesigner = props => {
     }
   };
 
-  const onThemeUninstall = async themeId => {
+  const onThemeUninstall = async (themeId) => {
     const mutation = `
       mutation c {
         removeTheme(id: "${themeId}")
@@ -308,8 +308,8 @@ const PageDesigner = props => {
     }
   };
 
-  const onThemeRemix = themeId => {
-    const theme = installedThemes.find(theme => theme.id === themeId);
+  const onThemeRemix = (themeId) => {
+    const theme = installedThemes.find((theme) => theme.id === themeId);
     if (theme) {
       const themeCopy = Object.assign({}, theme);
       themeCopy.id = themeCopy.id + `_${REMIXED_THEME_PREFIX.toLowerCase()}`;
@@ -406,7 +406,7 @@ const PageDesigner = props => {
                         className={[
                           classes.fixedBox,
                           classes.outline,
-                          classes.mainContent
+                          classes.mainContent,
                         ]}
                       >
                         <Typography variant="h6">Main Content</Typography>
@@ -504,7 +504,7 @@ const PageDesigner = props => {
               </Grid>
               {installedThemes.length !== 0 && (
                 <Grid item container direction="column" spacing={2}>
-                  {installedThemes.map(theme => (
+                  {installedThemes.map((theme) => (
                     <ThemeItem
                       theme={theme}
                       key={theme.id}
@@ -577,12 +577,12 @@ const PageDesigner = props => {
 PageDesigner.propTypes = {
   layout: PropTypes.object.isRequired,
   auth: authProps,
-  dispatch: PropTypes.func.isRequired
+  dispatch: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   layout: state.layout,
-  auth: state.auth
+  auth: state.auth,
 });
 
 export default connect(mapStateToProps)(PageDesigner);

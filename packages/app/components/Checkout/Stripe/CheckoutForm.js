@@ -5,7 +5,7 @@ import { Button, Grid } from "@material-ui/core";
 import { PAYMENT_MODAL_PAY_NOW_BUTTON_CAPTION } from "../../../config/strings.js";
 import { makeStyles } from "@material-ui/styles";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   // cardElement: {
   //   base: {
   //     color: '#303238',
@@ -26,23 +26,23 @@ const useStyles = makeStyles(theme => ({
   //   },
   // },
   payButtonContainer: {
-    textAlign: "right"
+    textAlign: "right",
   },
   payButton: {
-    margin: theme.spacing(1, 0)
+    margin: theme.spacing(1, 0),
   },
   cardElement: {
     margin: theme.spacing(1, 0),
-    textAlign: "center"
-  }
+    textAlign: "center",
+  },
 }));
 
-const CheckoutForm = props => {
+const CheckoutForm = (props) => {
   const { stripe, elements } = props;
   const [loading, setLoading] = useState(false);
   const classes = useStyles();
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
@@ -51,8 +51,8 @@ const CheckoutForm = props => {
       props.clientSecret,
       {
         payment_method: {
-          card: cardElement
-        }
+          card: cardElement,
+        },
       }
     );
 
@@ -92,7 +92,7 @@ CheckoutForm.propTypes = {
   onSuccess: PropTypes.func.isRequired,
   onError: PropTypes.func.isRequired,
   stripe: PropTypes.object,
-  elements: PropTypes.object
+  elements: PropTypes.object,
 };
 
 export default injectStripe(CheckoutForm);

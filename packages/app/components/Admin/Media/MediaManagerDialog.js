@@ -5,15 +5,15 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button
+  Button,
 } from "@material-ui/core";
 import MediaGallery from "./MediaGallery.js";
 import {
   BUTTON_CANCEL_TEXT,
-  DIALOG_SELECT_BUTTON
+  DIALOG_SELECT_BUTTON,
 } from "../../../config/strings.js";
 
-const MediaManagerDialog = props => {
+const MediaManagerDialog = (props) => {
   const { onClose, onOpen } = props;
   const [selectedMediaId, setSelectedMediaId] = useState("");
 
@@ -24,7 +24,7 @@ const MediaManagerDialog = props => {
       <DialogTitle>{props.title}</DialogTitle>
       <DialogContent>
         <MediaGallery
-          onMediaSelected={mediaId => setSelectedMediaId(mediaId)}
+          onMediaSelected={(mediaId) => setSelectedMediaId(mediaId)}
           mimeTypesToShow={props.mimeTypesToShow}
         />
       </DialogContent>
@@ -43,7 +43,7 @@ MediaManagerDialog.propTypes = {
   onClose: PropTypes.func.isRequired,
   title: PropTypes.string.isRequired,
   mediaAdditionAllowed: PropTypes.bool,
-  mimeTypesToShow: PropTypes.arrayOf(PropTypes.string)
+  mimeTypesToShow: PropTypes.arrayOf(PropTypes.string),
 };
 
 export default MediaManagerDialog;

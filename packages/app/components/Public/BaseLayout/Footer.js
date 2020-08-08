@@ -5,14 +5,14 @@ import { Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import { GENERIC_COPYRIGHT_TEXT } from "../../../config/strings.js";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   container: {
     padding: theme.spacing(2),
-    borderTop: "1px solid #ccc"
-  }
+    borderTop: "1px solid #ccc",
+  },
 }));
 
-const Footer = props => {
+const Footer = (props) => {
   const classes = useStyles();
 
   return (
@@ -36,11 +36,11 @@ const Footer = props => {
 };
 
 Footer.propTypes = {
-  siteInfo: siteInfoProps
+  siteInfo: siteInfoProps,
 };
 
-const mapStateToProps = state => ({
-  siteInfo: state.siteinfo
+const mapStateToProps = (state) => ({
+  siteInfo: state.siteinfo,
 });
 
 export default connect(mapStateToProps)(Footer);

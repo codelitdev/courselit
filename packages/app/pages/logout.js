@@ -8,7 +8,7 @@ import { signedOut } from "../redux/actions";
 //   USERID_COOKIE_NAME
 // } from '../config/constants.js'
 
-const Logout = props => {
+const Logout = (props) => {
   useEffect(() => {
     // removeCookie(JWT_COOKIE_NAME)
     // removeCookie(USERID_COOKIE_NAME)
@@ -19,11 +19,11 @@ const Logout = props => {
   return <div></div>;
 };
 
-const mapStateToProps = state => ({
-  auth: state.auth
+const mapStateToProps = (state) => ({
+  auth: state.auth,
 });
-const mapDispatchToProps = dispatch => ({
-  dispatch: dispatch
+const mapDispatchToProps = (dispatch) => ({
+  dispatch: dispatch,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Logout);

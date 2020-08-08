@@ -6,23 +6,23 @@ const useStyles = makeStyles({
   container: {
     alignItems: "center",
     overflowX: "hidden",
-    margin: "1em auto"
+    margin: "1em auto",
   },
   videocontainer: {
     width: 480,
     height: 270,
-    display: "flex"
+    display: "flex",
   },
   video: {
-    flex: 1
+    flex: 1,
   },
   caption: {
     color: "#6d6d6d",
-    paddingTop: 5
-  }
+    paddingTop: 5,
+  },
 });
 
-const VideoRenderer = props => {
+const VideoRenderer = (props) => {
   const tokenizedURL = props.decoratedText.split("/");
   const videoID = tokenizedURL[tokenizedURL.length - 1];
   const classes = useStyles();
@@ -47,7 +47,7 @@ const VideoRenderer = props => {
 
 VideoRenderer.propTypes = {
   decoratedText: PropTypes.string,
-  children: PropTypes.array
+  children: PropTypes.array,
 };
 
 export default VideoRenderer;

@@ -6,7 +6,7 @@ import { clearAppMessage } from "../redux/actions";
 import { appMessage } from "../types";
 import { Close } from "@material-ui/icons";
 
-const AppToast = props => {
+const AppToast = (props) => {
   const { message } = props;
   const action = message && message.action;
 
@@ -27,7 +27,7 @@ const AppToast = props => {
         onClick={handleClose}
       >
         <Close />
-      </IconButton>
+      </IconButton>,
     ];
     if (action) {
       actionButtonsArray.unshift(
@@ -51,7 +51,7 @@ const AppToast = props => {
         <Snackbar
           anchorOrigin={{
             vertical: "bottom",
-            horizontal: "left"
+            horizontal: "left",
           }}
           open={message.open}
           autoHideDuration={6000}
@@ -66,15 +66,15 @@ const AppToast = props => {
 
 AppToast.propTypes = {
   message: appMessage.isRequired,
-  dispatch: PropTypes.func.isRequired
+  dispatch: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = state => ({
-  message: state.message
+const mapStateToProps = (state) => ({
+  message: state.message,
 });
 
-const mapDispatchToProps = dispatch => ({
-  dispatch: dispatch
+const mapDispatchToProps = (dispatch) => ({
+  dispatch: dispatch,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(AppToast);
