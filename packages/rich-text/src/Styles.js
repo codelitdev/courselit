@@ -3,6 +3,40 @@
  */
 
 export default {
+  controls: {
+    container: {
+      display: "flex",
+      flexDirection: "column",
+      border: "1px solid #eee",
+    },
+    editor: {
+      maxHeight: "50vh",
+      overflowX: "none",
+      overflowY: "scroll",
+      padding: 10,
+    },
+    toolbar: {
+      padding: 10,
+      background: "#f7f7f7",
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    toolbarInput: {
+      background: "rgb(179 188 255)",
+      padding: 10,
+    },
+    toolbarButton: {
+      border: "none",
+      background: "transparent",
+      padding: 10,
+      "&:hover": {
+        background: "#585858",
+      },
+      fontWeight: "bold",
+      fontSize: 16,
+    },
+  },
   media: {
     container: {
       display: "flex",
@@ -21,14 +55,17 @@ export default {
   },
   blockquote: {
     fontStyle: "italic",
+    fontFamily: "serif",
     marginTop: 10,
     marginBottom: 10,
-    borderLeft: "5px solid #cecece",
+    borderLeft: "5px solid rgb(179 188 255)",
     paddingLeft: 10,
     fontSize: "1.6em",
-    color: "#686868",
+    color: "rgb(58 58 58)",
   },
   text: {
     textAlign: "justify",
+    lineHeight: "2em",
+    fontSize: "1.2em",
   },
 };

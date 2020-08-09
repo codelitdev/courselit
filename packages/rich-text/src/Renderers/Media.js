@@ -1,18 +1,18 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-const MediaRenderer = (props) => {
+const Media = (props) => {
   const entity = props.contentState.getEntity(props.block.getEntityAt(0));
   const type = entity.getType();
   const { options } = entity.getData();
   const { styles } = props.blockProps;
 
   let element;
-  if (type === MediaRenderer.IMAGE_TYPE) {
+  if (type === Media.IMAGE_TYPE) {
     element = <img style={styles.img} src={options.url} alt={options.alt} />;
   }
 
-  if (type === MediaRenderer.VIDEO_TYPE) {
+  if (type === Media.VIDEO_TYPE) {
     element = (
       <video controls controlsList="nodownload">
         <source src={options.url} type="video/mp4" />
@@ -24,11 +24,11 @@ const MediaRenderer = (props) => {
   return <div style={styles.container}>{element}</div>;
 };
 
-MediaRenderer.IMAGE_TYPE = "IMAGE";
-MediaRenderer.AUDIO_TYPE = "AUDIO";
-MediaRenderer.VIDEO_TYPE = "VIDEO";
+Media.IMAGE_TYPE = "IMAGE";
+Media.AUDIO_TYPE = "AUDIO";
+Media.VIDEO_TYPE = "VIDEO";
 
-MediaRenderer.propTypes = {
+Media.propTypes = {
   contentState: PropTypes.object,
   blockProps: PropTypes.object,
   block: PropTypes.object,
@@ -38,4 +38,4 @@ MediaRenderer.propTypes = {
   }),
 };
 
-export default MediaRenderer;
+export default Media;

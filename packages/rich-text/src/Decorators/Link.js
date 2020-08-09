@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-const LinkRenderer = (props) => (
+const Link = (props) => (
   <span>
     <a href={props.decoratedText} target="_blank" rel="noopener noreferrer">
       {props.children}
@@ -9,9 +9,9 @@ const LinkRenderer = (props) => (
   </span>
 );
 
-LinkRenderer.propTypes = {
+Link.propTypes = {
   children: PropTypes.array,
   decoratedText: PropTypes.string,
 };
 
-export default LinkRenderer;
+export default Link;
