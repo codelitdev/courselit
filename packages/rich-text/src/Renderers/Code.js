@@ -1,13 +1,13 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-const CodeRenderer = (props) => {
+const Code = (props) => {
   return <div style={props.style}>{props.children}</div>;
 };
 
-CodeRenderer.propTypes = {
+Code.propTypes = {
   style: PropTypes.object.isRequired,
   children: PropTypes.array,
 };
 
-export default CodeRenderer;
+export default Code;

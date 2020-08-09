@@ -9,13 +9,13 @@ import {
 } from "draft-js";
 import "draft-js/dist/Draft.css";
 import PropTypes from "prop-types";
-import MediaRenderer from "./Renderers/MediaRenderer.js";
-import CodeRenderer from "./Renderers/CodeRenderer.js";
+import Media from "./Renderers/Media.js";
+import Code from "./Renderers/Code.js";
 import { Map } from "immutable";
-import YTVideoRenderer from "./Renderers/YTVideoRenderer.js";
-import TextRenderer from "./Renderers/TextRenderer.js";
-import BlockquoteRenderer from "./Renderers/BlockquoteRenderer.js";
-import LinkRenderer from "./Renderers/LinkRenderer.js";
+import YouTube from "./Decorators/YouTube.js";
+import Text from "./Renderers/Text.js";
+import Blockquote from "./Renderers/Blockquote.js";
+import Link from "./Decorators/Link.js";
 
 const Editor = (props) => {
   const handleKeyCommand = (command, editorState) => {
@@ -32,7 +32,7 @@ const Editor = (props) => {
     switch (blockType) {
       case "atomic":
         return {
-          component: MediaRenderer,
+          component: Media,
           editable: false,
           props: {
             styles: props.theme.media,
@@ -46,15 +46,15 @@ const Editor = (props) => {
   const blockRenderMap = Map({
     unstyled: {
       element: "span",
-      wrapper: <TextRenderer style={props.theme.text} />,
+      wrapper: <Text style={props.theme.text} />,
     },
     blockquote: {
       element: "span",
-      wrapper: <BlockquoteRenderer style={props.theme.blockquote} />,
+      wrapper: <Blockquote style={props.theme.blockquote} />,
     },
     "code-block": {
       element: "span",
-      wrapper: <CodeRenderer style={props.theme.code} />,
+      wrapper: <Code style={props.theme.code} />,
     },
   });
   const extendedBlockRenderMap = DefaultDraftBlockRenderMap.merge(
@@ -77,7 +77,7 @@ const Editor = (props) => {
 Editor.addImage = (editorState, url) => {
   const contentState = editorState.getCurrentContent();
   const contentStateWithEntity = contentState.createEntity(
-    MediaRenderer.IMAGE_TYPE,
+    Media.IMAGE_TYPE,
     "IMMUTABLE",
     { options: { url } }
   );
@@ -93,6 +93,14 @@ Editor.toggleLink = (editorState) =>
   RichUtils.toggleLink(editorState, editorState.getSelection(), null);
 Editor.toggleBlockquote = (editorState) =>
   RichUtils.toggleBlockType(editorState, "blockquote");
+Editor.toggleBold = (editorState) =>
+  RichUtils.toggleInlineStyle(editorState, "BOLD");
+Editor.toggleItalic = (editorState) =>
+  RichUtils.toggleInlineStyle(editorState, "ITALIC");
+Editor.toggleHeading = (editorState) =>
+  RichUtils.toggleBlockType(editorState, "header-one");
+Editor.toggleSubHeading = (editorState) =>
+  RichUtils.toggleBlockType(editorState, "header-two");
 
 Editor.getDecorators = () => {
   // From https://draftjs.org/docs/advanced-topics-decorators
@@ -119,11 +127,11 @@ Editor.getDecorators = () => {
   return new CompositeDecorator([
     {
       strategy: videoStrategy,
-      component: YTVideoRenderer,
+      component: YouTube,
     },
     {
       strategy: linkStrategy,
-      component: LinkRenderer,
+      component: Link,
     },
   ]);
 };

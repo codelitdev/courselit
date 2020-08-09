@@ -15,11 +15,7 @@
   },
   "license": "MIT",
   "scripts": {
-    "lerna:publish": "lerna publish",
-    "lerna:bootstrap": "lerna bootstrap",
-    "lerna:create": "lerna create",
     "lint": "eslint packages",
-    "prettier": "prettier --write packages",
-    "lerna:add": "lerna add"
+    "prettier": "prettier --write packages"
   }
 }

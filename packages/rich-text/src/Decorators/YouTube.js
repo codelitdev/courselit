@@ -1,5 +1,5 @@
 /**
- * Renderer for YouTube videos.
+ * Decorator for YouTube videos.
  *
  * It works with the following two forms of YouTube URLs.
  *
@@ -24,32 +24,47 @@ const getVideoID = (str) => {
 
 const styles = {
   container: {
+    textAlign: "center",
+  },
+  iframeContainer: {
     height: 480,
+    overflow: "hidden",
   },
   iframe: {
-    position: "absolute",
     height: "100%",
     width: "100%",
   },
+  link: {
+    display: "block",
+    marginTop: "1em",
+    color: "#676767",
+  },
 };
 
-const YTVideoRenderer = (props) => {
+const YouTube = (props) => {
   return (
     <div style={styles.container}>
-      <iframe
-        src={`https://www.youtube.com/embed/${getVideoID(props.decoratedText)}`}
-        frameBorder="0"
-        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-        style={styles.iframe}
-      />
+      <div style={styles.iframeContainer}>
+        <iframe
+          src={`https://www.youtube.com/embed/${getVideoID(
+            props.decoratedText
+          )}`}
+          frameBorder="0"
+          allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          style={styles.iframe}
+        />
+      </div>
+      <a href={props.decoratedText} style={styles.link}>
+        {props.children}
+      </a>
     </div>
   );
 };
 
-YTVideoRenderer.propTypes = {
+YouTube.propTypes = {
   decoratedText: PropTypes.string,
   children: PropTypes.array,
 };
 
-export default YTVideoRenderer;
+export default YouTube;
