@@ -11,7 +11,7 @@ jobs:
         node-version: '14.x'
     - run: npm install -g yarn
     - run: yarn install
-    - name: linting and prettifying
+    - name: Linting and prettifying
       run: |
         yarn lint
         yarn prettier
