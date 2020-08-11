@@ -10,36 +10,57 @@ import AddPhoto from "./Icons/add_photo_alternate-24px.svg";
 
 const EditorUI = (props) => {
   const [imageAddFormVisible, setImageAddFormVisible] = useState(false);
+  const [imageURL, setImageURL] = useState("");
 
   const onChange = (editorState) => {
     props.onChange(editorState);
   };
 
-  const highlightCode = () => {
+  const highlightCode = (e) => {
+    e.preventDefault();
     props.onChange(Editor.toggleCode(props.editorState));
   };
 
-  const toggleBlockquote = () => {
+  const toggleBlockquote = (e) => {
+    e.preventDefault();
     props.onChange(Editor.toggleBlockquote(props.editorState));
   };
 
-  const toggleBold = () => {
+  const toggleBold = (e) => {
+    e.preventDefault();
     props.onChange(Editor.toggleBold(props.editorState));
   };
 
-  const toggleItalic = () => {
+  const toggleItalic = (e) => {
+    e.preventDefault();
     props.onChange(Editor.toggleItalic(props.editorState));
   };
 
-  const toggleHeading = () => {
+  const toggleHeading = (e) => {
+    e.preventDefault();
     props.onChange(Editor.toggleHeading(props.editorState));
   };
 
-  const toggleSubHeading = () => {
+  const toggleSubHeading = (e) => {
+    e.preventDefault();
     props.onChange(Editor.toggleSubHeading(props.editorState));
   };
 
-  const toggleImageAdd = () => setImageAddFormVisible(!imageAddFormVisible);
+  const toggleImageAdd = (e) => {
+    e.preventDefault();
+    setImageAddFormVisible(!imageAddFormVisible);
+  };
+
+  const insertImage = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (imageURL) {
+      props.onChange(Editor.addImage(props.editorState, imageURL));
+
+      setImageURL("");
+    }
+  };
 
   const editor = (
     <Editor
@@ -57,10 +78,17 @@ const EditorUI = (props) => {
       <div style={Styles.controls.editor}>{editor}</div>
       {imageAddFormVisible && (
         <div style={Styles.controls.toolbarInput}>
-          <form>
-            <label htmlFor="imageurl">Image URL</label>
-            <input name="imageurl" />
-            <input type="submit" value="Add" />
+          <form onSubmit={insertImage}>
+            <label>
+              Image URL:
+              <input
+                type="text"
+                name="imageurl"
+                value={imageURL}
+                onChange={(e) => setImageURL(e.target.value)}
+              />
+            </label>
+            <button>Add</button>
           </form>
         </div>
       )}

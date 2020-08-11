@@ -1,7 +1,7 @@
 import React from "react";
 import { Typography, Grid } from "@material-ui/core";
 import Link from "next/link";
-import TextEditor from "../Public/TextEditor";
+import TextEditor from "@courselit/rich-text";
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/styles";
 import { BACKEND } from "../../config/constants.js";
