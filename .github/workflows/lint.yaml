@@ -10,6 +10,7 @@ jobs:
       with:
         node-version: '14.x'
     - run: npm install -g yarn
+    - run: yarn install
     - name: linting and prettifying
       run: |
         yarn lint
