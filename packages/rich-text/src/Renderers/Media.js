@@ -9,7 +9,7 @@ const Media = (props) => {
 
   let element;
   if (type === Media.IMAGE_TYPE) {
-    element = <img style={styles.img} src={options.url} alt={options.alt} />;
+    element = <img style={styles.img} src={options.url} />;
   }
 
   if (type === Media.VIDEO_TYPE) {
@@ -21,7 +21,12 @@ const Media = (props) => {
     );
   }
 
-  return <div style={styles.container}>{element}</div>;
+  return (
+    <div style={styles.container}>
+      {element}
+      {props.children}
+    </div>
+  );
 };
 
 Media.IMAGE_TYPE = "IMAGE";
@@ -36,6 +41,7 @@ Media.propTypes = {
     href: PropTypes.string,
     alt: PropTypes.string,
   }),
+  children: PropTypes.array,
 };
 
 export default Media;
