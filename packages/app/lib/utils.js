@@ -3,7 +3,7 @@ import {
   URL_EXTENTION_POSTS,
   URL_EXTENTION_COURSES,
 } from "../config/constants.js";
-import TextEditor from "../components/Public/TextEditor/index.js";
+import TextEditor from "@courselit/rich-text";
 
 export const queryGraphQL = async (url, query, token) => {
   const options = {
