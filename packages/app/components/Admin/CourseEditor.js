@@ -44,7 +44,6 @@ import AppDialog from "../Public/AppDialog.js";
 import LessonEditor from "./LessonEditor.js";
 import AppMessage from "../../models/app-message.js";
 import { BACKEND, MIMETYPE_IMAGE } from "../../config/constants.js";
-// import TextEditor from "../Public/TextEditor/index.js";
 import TextEditor from "@courselit/rich-text";
 
 const useStyles = makeStyles((theme) => ({
@@ -365,24 +364,13 @@ const CourseEditor = (props) => {
                 value={courseData.course.title}
                 onChange={onCourseDetailsChange}
               />
-              <Grid
-                container
-                className={classes.formControl}
-                alignItems="center"
-                justify="space-between"
-              >
-                <Grid item>
-                  <Typography variant="body1">
-                    {COURSE_EDITOR_DESCRIPTION}
-                  </Typography>
-                </Grid>
-                <Grid item>
-                  <TextEditor
-                    initialContentState={courseData.course.description}
-                    onChange={onDescriptionChange}
-                  />
-                </Grid>
-              </Grid>
+              <Typography variant="body1">
+                {COURSE_EDITOR_DESCRIPTION}
+              </Typography>
+              <TextEditor
+                initialContentState={courseData.course.description}
+                onChange={onDescriptionChange}
+              />
               <Grid container alignItems="center">
                 <Grid item xs={12} sm={6}>
                   <TextField

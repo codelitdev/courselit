@@ -46,7 +46,7 @@ import { networkAction, setAppMessage } from "../../redux/actions";
 import { connect } from "react-redux";
 import AppDialog from "../Public/AppDialog";
 import AppMessage from "../../models/app-message.js";
-import TextEditor from "../Public/TextEditor";
+import TextEditor from "@courselit/rich-text";
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -340,25 +340,25 @@ const LessonEditor = (props) => {
                 />
               </div>
             )}
-            <Grid
-              container
-              className={classes.formControl}
-              alignItems="center"
-              justify="space-between"
-            >
-              <Grid item>
-                <Typography variant="body1">{LESSON_CONTENT_HEADER}</Typography>
+            {lesson.type.toLowerCase() === LESSON_TYPE_TEXT && (
+              <Grid
+                container
+                className={classes.formControl}
+                direction="column"
+              >
+                <Grid item>
+                  <Typography variant="body1">
+                    {LESSON_CONTENT_HEADER}
+                  </Typography>
+                </Grid>
+                <Grid item>
+                  <TextEditor
+                    initialContentState={lesson.content}
+                    onChange={changeTextContent}
+                  />
+                </Grid>
               </Grid>
-              <Grid item>
-                <TextEditor
-                  initialContentState={lesson.content}
-                  onChange={changeTextContent}
-                />
-                {/* <IconButton onClick={() => setOpen(true)}>
-                <Edit />
-              </IconButton> */}
-              </Grid>
-            </Grid>
+            )}
             {[LESSON_TYPE_VIDEO, LESSON_TYPE_AUDIO, LESSON_TYPE_PDF].includes(
               lesson.type
             ) && (
