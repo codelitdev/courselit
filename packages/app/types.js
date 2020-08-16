@@ -89,3 +89,10 @@ export const lesson = PropTypes.shape({
   content: PropTypes.string,
   contentURL: PropTypes.string,
 });
+
+export const link = PropTypes.shape({
+  text: PropTypes.string.isRequired,
+  destination: PropTypes.string.isRequired,
+  category: PropTypes.string.isRequired,
+  newTab: PropTypes.bool.isRequired,
+});

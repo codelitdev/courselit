@@ -12,6 +12,7 @@ import {
   CLEAR_MESSAGE,
   THEME_AVAILABLE,
   LAYOUT_AVAILABLE,
+  NAVIGATION_AVAILABLE,
 } from "./actionTypes.js";
 import {
   GENERIC_TITLE,
@@ -69,7 +70,10 @@ const initialState = {
     top: [],
     bottom: [],
     aside: [],
+    footerLeft: [],
+    footerRight: [],
   },
+  navigation: [],
 };
 
 function authReducer(state = initialState.auth, action) {
@@ -210,6 +214,15 @@ function layoutReducer(state = initialState.layout, action) {
   }
 }
 
+function navigationReducer(state = initialState.navigation, action) {
+  switch (action.type) {
+    case NAVIGATION_AVAILABLE:
+      return action.links;
+    default:
+      return state;
+  }
+}
+
 export default combineReducers({
   auth: authReducer,
   siteinfo: siteinfoReducer,
@@ -218,4 +231,5 @@ export default combineReducers({
   message: messageReducer,
   theme: themeReducer,
   layout: layoutReducer,
+  navigation: navigationReducer,
 });

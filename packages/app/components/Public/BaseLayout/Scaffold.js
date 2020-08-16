@@ -6,21 +6,15 @@ import Drawer from "@material-ui/core/Drawer";
 import Hidden from "@material-ui/core/Hidden";
 import IconButton from "@material-ui/core/IconButton";
 import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemText from "@material-ui/core/ListItemText";
 import { Menu } from "@material-ui/icons";
 import { Toolbar } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
 import AppToast from "../../AppToast.js";
-import {
-  PAGE_HEADER_ALL_COURSES,
-  PAGE_HEADER_ALL_POSTS,
-} from "../../../config/strings.js";
-import Link from "next/link";
 import { connect } from "react-redux";
-import { siteInfoProps } from "../../../types.js";
+import { siteInfoProps, link } from "../../../types.js";
 import Header from "./Header.js";
+import ScaffoldMenuItem from "./ScaffoldMenuItem.js";
 
 const drawerWidth = 240;
 
@@ -70,21 +64,23 @@ const Scaffold = (props) => {
     setMobileOpen(!mobileOpen);
   }
 
-  const drawer = (
+  const makeDrawer = (forMobile = false) => (
     <div>
       <div className={classes.toolbar} />
       <Divider />
       <List>
-        <Link href="/courses">
-          <ListItem button component="a">
-            <ListItemText primary={PAGE_HEADER_ALL_COURSES}></ListItemText>
-          </ListItem>
-        </Link>
-        <Link href="/posts">
-          <ListItem button component="a">
-            <ListItemText primary={PAGE_HEADER_ALL_POSTS}></ListItemText>
-          </ListItem>
-        </Link>
+        {props.navigation &&
+          props.navigation.map((link) =>
+            forMobile ? (
+              <ScaffoldMenuItem
+                link={link}
+                key={link.destination}
+                closeDrawer={handleDrawerToggle}
+              />
+            ) : (
+              <ScaffoldMenuItem link={link} key={link.destination} />
+            )
+          )}
       </List>
     </div>
   );
@@ -121,7 +117,7 @@ const Scaffold = (props) => {
               keepMounted: true, // Better open performance on mobile.
             }}
           >
-            {drawer}
+            {makeDrawer(true)}
           </Drawer>
         </Hidden>
         <Hidden xsDown implementation="css">
@@ -132,7 +128,7 @@ const Scaffold = (props) => {
             variant="permanent"
             open
           >
-            {drawer}
+            {makeDrawer()}
           </Drawer>
         </Hidden>
       </nav>
@@ -149,10 +145,12 @@ const Scaffold = (props) => {
 Scaffold.propTypes = {
   children: PropTypes.object,
   siteinfo: siteInfoProps,
+  navigation: PropTypes.arrayOf(link),
 };
 
 const mapStateToProps = (state) => ({
   siteinfo: state.siteinfo,
+  navigation: state.navigation,
 });
 
 export default connect(mapStateToProps)(Scaffold);

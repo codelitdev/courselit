@@ -68,6 +68,12 @@ const MediaPreview = (props) => {
           Your browser does not support the video tag.
         </audio>
       )}
+      <Typography variant="body1">
+        Direct URL:{" "}
+        <a href={formulateMediaUrl(MEDIA_BACKEND, id, false)}>
+          {formulateMediaUrl(MEDIA_BACKEND, id, false)}
+        </a>
+      </Typography>
     </>
   );
 };

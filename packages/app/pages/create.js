@@ -17,7 +17,7 @@ import MediaManager from "../components/Admin/Media/MediaManager.js";
 import Courses from "../components/Admin/CoursesManager.js";
 import UsersManager from "../components/UsersManager.js";
 import AppLoader from "../components/AppLoader.js";
-import PageDesigner from "../components/Admin/PageDesigner/index.js";
+import Design from "../components/Admin/Design";
 import ComponentScaffold from "../components/Public/BaseLayout/ComponentScaffold.js";
 
 const Create = (props) => {
@@ -60,8 +60,8 @@ const Create = (props) => {
           icon: <SupervisedUserCircle />,
         },
         {
-          name: "Design",
-          element: <PageDesigner />,
+          name: "Design & Navigation",
+          element: <Design />,
           icon: <Palette />,
         },
       ]
