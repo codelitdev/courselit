@@ -6,14 +6,14 @@ import {
   getGraphQLQueryFields,
   getObjectContainingOnlyChangedFields,
   areObjectsDifferent,
-  capitalize
+  capitalize,
 } from "../../lib/utils.js";
 import {
   BACKEND,
   PAYMENT_METHOD_PAYPAL,
   PAYMENT_METHOD_PAYTM,
   PAYMENT_METHOD_STRIPE,
-  PAYMENT_METHOD_NONE
+  PAYMENT_METHOD_NONE,
 } from "../../config/constants.js";
 import { newSiteInfoAvailable, setAppMessage } from "../../redux/actions.js";
 import MediaSelector from "./Media/MediaSelector.js";
@@ -28,7 +28,7 @@ import {
   Grid,
   Card,
   CardContent,
-  CardActions
+  CardActions,
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import {
@@ -49,23 +49,23 @@ import {
   SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT,
   APP_MESSAGE_SETTINGS_SAVED,
   SITE_CUSTOMISATIONS_SETTING_HEADER,
-  SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD
+  SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD,
 } from "../../config/strings.js";
 import AppMessage from "../../models/app-message.js";
 import FetchBuilder from "../../lib/fetch";
 import { decode, encode } from "base-64";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   formControl: {
     minWidth: "100%",
-    margin: "1em 0em"
+    margin: "1em 0em",
   },
   section: {
-    marginBottom: theme.spacing(4)
-  }
+    marginBottom: theme.spacing(4),
+  },
 }));
 
-const SiteSettings = props => {
+const SiteSettings = (props) => {
   const defaultSettingsState = {
     title: "",
     subtitle: "",
@@ -81,7 +81,7 @@ const SiteSettings = props => {
     codeInjectionHead: "",
     stripeSecret: "",
     paypalSecret: "",
-    paytmSecret: ""
+    paytmSecret: "",
   };
 
   const [settings, setSettings] = useState(defaultSettingsState);
@@ -127,7 +127,7 @@ const SiteSettings = props => {
     } catch (e) {}
   };
 
-  const setSettingsState = settingsResponse => {
+  const setSettingsState = (settingsResponse) => {
     if (settingsResponse.codeInjectionHead) {
       settingsResponse.codeInjectionHead = decode(
         settingsResponse.codeInjectionHead
@@ -137,7 +137,7 @@ const SiteSettings = props => {
     setNewSettings(Object.assign({}, newSettings, settingsResponse));
   };
 
-  const handleSettingsSubmit = async event => {
+  const handleSettingsSubmit = async (event) => {
     event.preventDefault();
     const onlyChangedSettings = getObjectContainingOnlyChangedFields(
       settings,
@@ -188,7 +188,7 @@ const SiteSettings = props => {
             stripePublishableKey: settings.stripePublishableKey,
             themePrimaryColor: settings.themePrimaryColor,
             themeSecondaryColor: settings.themeSecondaryColor,
-            codeInjectionHead: encode(settings.codeInjectionHead)
+            codeInjectionHead: encode(settings.codeInjectionHead),
           })
         );
         props.dispatch(
@@ -200,7 +200,7 @@ const SiteSettings = props => {
     }
   };
 
-  const onChangeData = e => {
+  const onChangeData = (e) => {
     const change =
       typeof e === "string"
         ? { logopath: e }
@@ -369,7 +369,7 @@ const SiteSettings = props => {
                     onChange={onChangeData}
                     inputProps={{
                       name: "paymentMethod",
-                      id: "outlined-paymentmethod-simple"
+                      id: "outlined-paymentmethod-simple",
                     }}
                   >
                     <MenuItem value={PAYMENT_METHOD_NONE}>&nbsp;</MenuItem>
@@ -633,16 +633,16 @@ const SiteSettings = props => {
 SiteSettings.propTypes = {
   siteinfo: siteInfoProps,
   auth: authProps,
-  dispatch: PropTypes.func.isRequired
+  dispatch: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   siteinfo: state.siteinfo,
-  auth: state.auth
+  auth: state.auth,
 });
 
-const mapDispatchToProps = dispatch => ({
-  dispatch: dispatch
+const mapDispatchToProps = (dispatch) => ({
+  dispatch: dispatch,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(SiteSettings);

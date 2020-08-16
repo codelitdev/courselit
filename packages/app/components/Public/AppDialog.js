@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Dialog, DialogTitle, DialogActions, Button } from "@material-ui/core";
 
-const AppDialog = props => {
+const AppDialog = (props) => {
   const { onClose, onOpen } = props;
   const dialogActions = [];
 
@@ -33,9 +33,9 @@ AppDialog.propTypes = {
   actions: PropTypes.arrayOf(
     PropTypes.shape({
       name: PropTypes.string.isRequired,
-      callback: PropTypes.func.isRequired
+      callback: PropTypes.func.isRequired,
     })
-  )
+  ),
 };
 
 export default AppDialog;

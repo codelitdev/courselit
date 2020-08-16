@@ -5,7 +5,7 @@ import {
   Card,
   CardActionArea,
   CardMedia,
-  CardContent
+  CardContent,
 } from "@material-ui/core";
 import PropTypes from "prop-types";
 import { featuredCourse, siteInfoProps } from "../types.js";
@@ -16,20 +16,20 @@ import { MEDIA_BACKEND, URL_EXTENTION_COURSES } from "../config/constants";
 import { FREE_COST, FEATURED_SECTION_HEADER } from "../config/strings.js";
 import Link from "next/link";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   container: {
     marginBottom: theme.spacing(1),
     [theme.breakpoints.up("md")]: {
-      marginBottom: theme.spacing(2)
-    }
+      marginBottom: theme.spacing(2),
+    },
   },
   header: {
     marginTop: theme.spacing(2),
-    paddingBottom: theme.spacing(2)
-  }
+    paddingBottom: theme.spacing(2),
+  },
 }));
 
-const Hero = props => {
+const Hero = (props) => {
   const { featuredCourses } = props;
   const classes = useStyles();
 
@@ -41,7 +41,7 @@ const Hero = props => {
         </Grid>
       </Grid>
       <Grid container alignItems="center" justify="space-between" spacing={2}>
-        {featuredCourses.map(course => (
+        {featuredCourses.map((course) => (
           <Grid item xs={12} sm={6} md={4} lg={3} key={course.id}>
             <Card className={classes.item}>
               <Link
@@ -86,11 +86,11 @@ const Hero = props => {
 
 Hero.propTypes = {
   featuredCourses: PropTypes.arrayOf(featuredCourse),
-  siteInfo: siteInfoProps
+  siteInfo: siteInfoProps,
 };
 
-const mapStateToProps = state => ({
-  siteInfo: state.siteinfo
+const mapStateToProps = (state) => ({
+  siteInfo: state.siteinfo,
 });
 
 export default connect(mapStateToProps)(Hero);

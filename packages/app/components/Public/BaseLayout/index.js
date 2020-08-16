@@ -17,7 +17,7 @@ import Scaffold from "./Scaffold.js";
 //   }
 // });
 
-const MasterLayout = props => {
+const MasterLayout = (props) => {
   return (
     <>
       <Head>
@@ -87,13 +87,13 @@ MasterLayout.propTypes = {
   networkAction: PropTypes.bool,
   siteInfo: siteInfoProps.isRequired,
   title: PropTypes.string.isRequired,
-  layout: PropTypes.object.isRequired
+  layout: PropTypes.object.isRequired,
 };
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   networkAction: state.networkAction,
   siteInfo: state.siteinfo,
-  layout: state.layout
+  layout: state.layout,
 });
 
 export default connect(mapStateToProps)(MasterLayout);

@@ -11,29 +11,29 @@ import Link from "next/link";
 import SessionButton from "./SessionButton.js";
 import Img from "./Img.js";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   root: {
-    flexGrow: 1
+    flexGrow: 1,
   },
   offset: {
     ...theme.mixins.toolbar,
-    flexGrow: 1
+    flexGrow: 1,
   },
   logo: {
-    display: "flex"
+    display: "flex",
   },
   logocontainer: {
     width: "3.6em",
     height: "3.6em",
     marginRight: "0.8em",
-    display: "flex"
+    display: "flex",
   },
   logoimg: {
-    borderRadius: "0.2em"
-  }
+    borderRadius: "0.2em",
+  },
 }));
 
-const Header = props => {
+const Header = (props) => {
   const classes = useStyles();
 
   return (
@@ -81,13 +81,13 @@ const Header = props => {
 Header.propTypes = {
   title: PropTypes.string,
   subtitle: PropTypes.string,
-  logoPath: PropTypes.string
+  logoPath: PropTypes.string,
 };
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   title: state.siteinfo.title,
   subtitle: state.siteinfo.subtitle,
-  logoPath: state.siteinfo.logopath
+  logoPath: state.siteinfo.logopath,
 });
 
 export default connect(mapStateToProps)(Header);

@@ -8,28 +8,28 @@ import {
   POPUP_CANCEL_ACTION,
   POPUP_OK_ACTION,
   DELETE_THEME_POPUP_HEADER,
-  APPLY_THEME_POPUP_HEADER
+  APPLY_THEME_POPUP_HEADER,
 } from "../../../config/strings";
 import { makeStyles } from "@material-ui/styles";
 import AppDialog from "../../Public/AppDialog";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   container: {
     border: "1px solid transparent",
     "&:hover": {
-      border: "1px solid #ccc"
-    }
-  }
+      border: "1px solid #ccc",
+    },
+  },
 }));
 
-const ThemeItem = props => {
+const ThemeItem = (props) => {
   const [
     uninstallConfirmationPopupOpened,
-    setUninstallConfirmationPopupOpened
+    setUninstallConfirmationPopupOpened,
   ] = useState(false);
   const [
     applyConfirmationPopupOpened,
-    setApplyConfirmationPopupOpened
+    setApplyConfirmationPopupOpened,
   ] = useState(false);
   const classes = useStyles();
 
@@ -95,9 +95,9 @@ const ThemeItem = props => {
         actions={[
           {
             name: POPUP_CANCEL_ACTION,
-            callback: closeUninstallConfirmationPopup
+            callback: closeUninstallConfirmationPopup,
           },
-          { name: POPUP_OK_ACTION, callback: uninstallTheme }
+          { name: POPUP_OK_ACTION, callback: uninstallTheme },
         ]}
       />
       <AppDialog
@@ -106,7 +106,7 @@ const ThemeItem = props => {
         title={`${APPLY_THEME_POPUP_HEADER} ${props.theme.name}?`}
         actions={[
           { name: POPUP_CANCEL_ACTION, callback: closeApplyConfirmationPopup },
-          { name: POPUP_OK_ACTION, callback: applyTheme }
+          { name: POPUP_OK_ACTION, callback: applyTheme },
         ]}
       />
     </Grid>
@@ -117,7 +117,7 @@ ThemeItem.propTypes = {
   theme: PropTypes.object.isRequired,
   onApply: PropTypes.func.isRequired,
   onRemix: PropTypes.func.isRequired,
-  onUninstall: PropTypes.func.isRequired
+  onUninstall: PropTypes.func.isRequired,
 };
 
 export default ThemeItem;

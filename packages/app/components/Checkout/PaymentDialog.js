@@ -10,14 +10,14 @@ import {
   DialogActions,
   Button,
   CircularProgress,
-  Divider
+  Divider,
 } from "@material-ui/core";
 import {
   CHECKOUT_DIALOG_TITLE,
   PAYMENT_MODAL_PAYMENT_DETAILS_HEADER,
   PAYMENT_VERIFICATION_FAILED,
   CAPTION_TRY_AGAIN,
-  CAPTION_CLOSE
+  CAPTION_CLOSE,
 } from "../../config/strings";
 import { siteInfoProps, publicCourse, authProps } from "../../types";
 import Stripe from "./Stripe";
@@ -29,7 +29,7 @@ import {
   TRANSACTION_INITIATED,
   TRANSACTION_SUCCESS,
   TRANSACTION_FAILED,
-  CONSECUTIVE_PAYMENT_VERIFICATION_REQUEST_GAP
+  CONSECUTIVE_PAYMENT_VERIFICATION_REQUEST_GAP,
 } from "../../config/constants";
 import { makeStyles } from "@material-ui/styles";
 import { ShoppingCart } from "@material-ui/icons";
@@ -37,31 +37,31 @@ import Router from "next/router";
 import { refreshUserProfile } from "../../redux/actions";
 import fetch from "isomorphic-unfetch";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   header: {},
   divider: {
-    margin: theme.spacing(2, 0)
+    margin: theme.spacing(2, 0),
   },
   paymentHeader: {
-    marginBotton: theme.spacing(1)
+    marginBotton: theme.spacing(1),
   },
   progressBar: {
-    margin: theme.spacing(2, 0)
+    margin: theme.spacing(2, 0),
   },
   checkoutIcon: {
     display: "flex",
     alignItems: "center",
-    marginRight: theme.spacing(1)
+    marginRight: theme.spacing(1),
   },
   error: {
-    color: "red"
+    color: "red",
   },
   paymentTemplate: {
-    margin: "0.8em 0em"
-  }
+    margin: "0.8em 0em",
+  },
 }));
 
-const PaymentDialog = props => {
+const PaymentDialog = (props) => {
   const { onClose, open, course, auth } = props;
   const { paymentMethod } = props.siteInfo;
   const [paymentTracker, setPaymentTracker] = useState("");
@@ -104,16 +104,16 @@ const PaymentDialog = props => {
     }
   };
 
-  const makePaymentRequest = async courseId => {
+  const makePaymentRequest = async (courseId) => {
     const formData = new window.FormData();
     formData.append("courseid", courseId);
 
     const res = await fetch(`${BACKEND}/payment/initiate`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${auth.token}`
+        Authorization: `Bearer ${auth.token}`,
       },
-      body: formData
+      body: formData,
     });
 
     if (res.status === 401) {
@@ -144,7 +144,7 @@ const PaymentDialog = props => {
       if (paymentIsVerifiedOnServer) {
         break;
       }
-      await new Promise(resolve =>
+      await new Promise((resolve) =>
         setTimeout(resolve, CONSECUTIVE_PAYMENT_VERIFICATION_REQUEST_GAP)
       );
     }
@@ -164,9 +164,9 @@ const PaymentDialog = props => {
     let res = await fetch(`${BACKEND}/payment/verify`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${auth.token}`
+        Authorization: `Bearer ${auth.token}`,
       },
-      body: formData
+      body: formData,
     });
 
     if (res.status === 401) {
@@ -182,7 +182,7 @@ const PaymentDialog = props => {
     }
   };
 
-  const paymentError = error => setError(error.message);
+  const paymentError = (error) => setError(error.message);
 
   return (
     <Dialog onClose={onClose} open={open} maxWidth="sm" fullWidth={true}>
@@ -344,16 +344,16 @@ PaymentDialog.propTypes = {
   open: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   auth: authProps,
-  dispatch: PropTypes.func.isRequired
+  dispatch: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   auth: state.auth,
-  siteInfo: state.siteinfo
+  siteInfo: state.siteinfo,
 });
 
-const mapDispatchToProps = dispatch => ({
-  dispatch: dispatch
+const mapDispatchToProps = (dispatch) => ({
+  dispatch: dispatch,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(PaymentDialog);

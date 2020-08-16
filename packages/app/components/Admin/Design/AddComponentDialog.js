@@ -9,15 +9,15 @@ import {
   List,
   ListItem,
   Button,
-  ListItemText
+  ListItemText,
 } from "@material-ui/core";
 import {
   DIALOG_SELECT_BUTTON,
-  BUTTON_CANCEL_TEXT
+  BUTTON_CANCEL_TEXT,
 } from "../../../config/strings";
 import CompatibleComponentsMap from "./CompatibleComponentsMap";
 
-const AddComponentDialog = props => {
+const AddComponentDialog = (props) => {
   const { onClose, onOpen, showComponentsCompatibleWith } = props;
   const [selectedComponentName, setSelectedComponentName] = useState("");
 
@@ -66,7 +66,7 @@ AddComponentDialog.propTypes = {
   onOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   title: PropTypes.string.isRequired,
-  showComponentsCompatibleWith: PropTypes.string.isRequired
+  showComponentsCompatibleWith: PropTypes.string.isRequired,
 };
 
 export default AddComponentDialog;

@@ -5,7 +5,7 @@ import {
   BACKEND,
   LESSON_TYPE_VIDEO,
   LESSON_TYPE_AUDIO,
-  MEDIA_BACKEND
+  MEDIA_BACKEND,
 } from "../../config/constants";
 import { connect } from "react-redux";
 import { networkAction } from "../../redux/actions";
@@ -14,22 +14,22 @@ import { ENROLL_IN_THE_COURSE, USER_ERROR_HEADER } from "../../config/strings";
 import { makeStyles } from "@material-ui/styles";
 import { lesson, authProps, profileProps } from "../../types";
 import { formulateMediaUrl } from "../../lib/utils.js";
-import TextEditor from "./TextEditor";
+import TextEditor from "@courselit/rich-text";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   notEnrolledHeader: {
-    marginBottom: theme.spacing(1)
+    marginBottom: theme.spacing(1),
   },
   videoPlayer: {
     width: "100%",
-    height: "auto"
+    height: "auto",
   },
   section: {
-    marginTop: "1.6em"
-  }
+    marginTop: "1.6em",
+  },
 }));
 
-const LessonViewer = props => {
+const LessonViewer = (props) => {
   const [lesson, setLesson] = useState(props.lesson);
   const [isEnrolled] = useState(
     !lesson.requiresEnrollment ||
@@ -41,7 +41,7 @@ const LessonViewer = props => {
     props.lesson.id && isEnrolled && loadLesson(props.lesson.id);
   }, [props.lesson]);
 
-  const loadLesson = async id => {
+  const loadLesson = async (id) => {
     const query = `
     query {
       lesson: getLessonDetails(id: "${id}") {
@@ -71,7 +71,7 @@ const LessonViewer = props => {
       if (response.lesson) {
         setLesson(
           Object.assign({}, response.lesson, {
-            content: TextEditor.hydrate(response.lesson.content)
+            content: TextEditor.hydrate(response.lesson.content),
           })
         );
       }
@@ -164,16 +164,16 @@ LessonViewer.propTypes = {
   lesson: lesson,
   auth: authProps,
   profile: profileProps,
-  dispatch: PropTypes.func.isRequired
+  dispatch: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   auth: state.auth,
-  profile: state.profile
+  profile: state.profile,
 });
 
-const mapDispatchToProps = dispatch => ({
-  dispatch: dispatch
+const mapDispatchToProps = (dispatch) => ({
+  dispatch: dispatch,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(LessonViewer);

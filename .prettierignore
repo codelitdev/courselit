@@ -1,0 +1,5 @@
+# Ignoring NextJS files
+.next/
+
+# Ignore build files
+dist/
