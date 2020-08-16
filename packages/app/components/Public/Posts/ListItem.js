@@ -7,13 +7,13 @@ import { makeStyles } from "@material-ui/styles";
 import { formulateMediaUrl } from "../../../lib/utils.js";
 import Card from "../Card.js";
 
-const useStyles = featuredImage =>
-  makeStyles(theme => ({
+const useStyles = (featuredImage) =>
+  makeStyles((theme) => ({
     link: {
       textDecoration: "none",
       color: "inherit",
       marginBottom: theme.spacing(4),
-      display: "block"
+      display: "block",
     },
     featuredImage: {
       height: 240,
@@ -22,15 +22,15 @@ const useStyles = featuredImage =>
         BACKEND,
         featuredImage
       )}') no-repeat center center`,
-      backgroundSize: "cover"
+      backgroundSize: "cover",
     },
     title: {
       marginTop: theme.spacing(2),
-      marginBottom: theme.spacing(0.5)
-    }
+      marginBottom: theme.spacing(0.5),
+    },
   }));
 
-const ListItem = props => {
+const ListItem = (props) => {
   const classes = useStyles(props.featuredImage)();
 
   return (
@@ -68,7 +68,7 @@ ListItem.propTypes = {
   updated: PropTypes.string.isRequired,
   creatorName: PropTypes.string.isRequired,
   slug: PropTypes.string.isRequired,
-  featuredImage: PropTypes.string
+  featuredImage: PropTypes.string,
 };
 
 export default ListItem;

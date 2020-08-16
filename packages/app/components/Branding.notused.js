@@ -9,20 +9,20 @@ import { makeStyles } from "@material-ui/core/styles";
 const useStyles = makeStyles({
   logo: {
     height: 98,
-    width: 98
+    width: 98,
   },
   title: {
     fontWeight: "bold",
     fontSize: 30,
-    margin: 2
+    margin: 2,
   },
   subtitle: {
     fontSize: 18,
-    color: "#6f6f6f"
-  }
+    color: "#6f6f6f",
+  },
 });
 
-const Branding = props => {
+const Branding = (props) => {
   const classes = useStyles();
   return (
     <Grid container spacing={1}>
@@ -50,13 +50,13 @@ const Branding = props => {
 Branding.propTypes = {
   title: PropTypes.string,
   subtitle: PropTypes.string,
-  logoPath: PropTypes.string
+  logoPath: PropTypes.string,
 };
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   title: state.siteinfo.title,
   subtitle: state.siteinfo.subtitle,
-  logoPath: state.siteinfo.logopath
+  logoPath: state.siteinfo.logopath,
 });
 
 export default connect(mapStateToProps)(Branding);

@@ -10,13 +10,13 @@ import {
   MANAGE_COURSES_PAGE_HEADING,
   POPUP_CANCEL_ACTION,
   POPUP_OK_ACTION,
-  DISCARD_COURSE_CHANGES_POPUP_HEADER
+  DISCARD_COURSE_CHANGES_POPUP_HEADER,
 } from "../../config/strings.js";
 import { useExecuteGraphQLQuery } from "../CustomHooks.js";
 import { Add, Done } from "@material-ui/icons";
 import AppDialog from "../Public/AppDialog.js";
 
-const Courses = props => {
+const Courses = (props) => {
   const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1);
   const [creatorCourses, setCreatorCourses] = useState([]);
   const [courseEditorVisible, setCourseEditorVisible] = useState(false);
@@ -51,7 +51,7 @@ const Courses = props => {
     } catch (err) {}
   };
 
-  const showEditor = courseId => {
+  const showEditor = (courseId) => {
     if (courseEditorVisible) {
       if (courseEditorDirty) {
         setUserDismissingDirtyEditor(true);
@@ -121,7 +121,7 @@ const Courses = props => {
         title={DISCARD_COURSE_CHANGES_POPUP_HEADER}
         actions={[
           { name: POPUP_CANCEL_ACTION, callback: markDirtyEditorClean },
-          { name: POPUP_OK_ACTION, callback: dismissEditor }
+          { name: POPUP_OK_ACTION, callback: dismissEditor },
         ]}
       ></AppDialog>
     </div>
@@ -131,16 +131,16 @@ const Courses = props => {
 Courses.propTypes = {
   auth: authProps,
   profile: profileProps,
-  dispatch: PropTypes.func.isRequired
+  dispatch: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   auth: state.auth,
-  profile: state.profile
+  profile: state.profile,
 });
 
-const mapDispatchToProps = dispatch => ({
-  dispatch: dispatch
+const mapDispatchToProps = (dispatch) => ({
+  dispatch: dispatch,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Courses);

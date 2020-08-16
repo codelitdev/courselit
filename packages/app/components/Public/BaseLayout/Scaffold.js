@@ -6,62 +6,56 @@ import Drawer from "@material-ui/core/Drawer";
 import Hidden from "@material-ui/core/Hidden";
 import IconButton from "@material-ui/core/IconButton";
 import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemText from "@material-ui/core/ListItemText";
 import { Menu } from "@material-ui/icons";
 import { Toolbar } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
 import AppToast from "../../AppToast.js";
-import {
-  PAGE_HEADER_ALL_COURSES,
-  PAGE_HEADER_ALL_POSTS
-} from "../../../config/strings.js";
-import Link from "next/link";
 import { connect } from "react-redux";
-import { siteInfoProps } from "../../../types.js";
+import { siteInfoProps, link } from "../../../types.js";
 import Header from "./Header.js";
+import ScaffoldMenuItem from "./ScaffoldMenuItem.js";
 
 const drawerWidth = 240;
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   root: {
-    display: "flex"
+    display: "flex",
   },
   drawer: {
     [theme.breakpoints.up("sm")]: {
       width: drawerWidth,
-      flexShrink: 0
-    }
+      flexShrink: 0,
+    },
   },
   appBar: {
     marginLeft: drawerWidth,
     [theme.breakpoints.up("sm")]: {
-      width: `calc(100% - ${drawerWidth}px)`
-    }
+      width: `calc(100% - ${drawerWidth}px)`,
+    },
   },
   menuButton: {
     marginRight: theme.spacing(2),
     [theme.breakpoints.up("sm")]: {
-      display: "none"
-    }
+      display: "none",
+    },
   },
   toolbar: theme.mixins.toolbar,
   drawerPaper: {
-    width: drawerWidth
+    width: drawerWidth,
   },
   content: {
-    flexGrow: 1
+    flexGrow: 1,
   },
   activeItem: {
-    background: "#d6d6d6"
+    background: "#d6d6d6",
   },
   visitSiteLink: {
-    color: "#fff"
-  }
+    color: "#fff",
+  },
 }));
 
-const Scaffold = props => {
+const Scaffold = (props) => {
   const classes = useStyles();
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -70,21 +64,23 @@ const Scaffold = props => {
     setMobileOpen(!mobileOpen);
   }
 
-  const drawer = (
+  const makeDrawer = (forMobile = false) => (
     <div>
       <div className={classes.toolbar} />
       <Divider />
       <List>
-        <Link href="/courses">
-          <ListItem button component="a">
-            <ListItemText primary={PAGE_HEADER_ALL_COURSES}></ListItemText>
-          </ListItem>
-        </Link>
-        <Link href="/posts">
-          <ListItem button component="a">
-            <ListItemText primary={PAGE_HEADER_ALL_POSTS}></ListItemText>
-          </ListItem>
-        </Link>
+        {props.navigation &&
+          props.navigation.map((link) =>
+            forMobile ? (
+              <ScaffoldMenuItem
+                link={link}
+                key={link.destination}
+                closeDrawer={handleDrawerToggle}
+              />
+            ) : (
+              <ScaffoldMenuItem link={link} key={link.destination} />
+            )
+          )}
       </List>
     </div>
   );
@@ -115,24 +111,24 @@ const Scaffold = props => {
             open={mobileOpen}
             onClose={handleDrawerToggle}
             classes={{
-              paper: classes.drawerPaper
+              paper: classes.drawerPaper,
             }}
             ModalProps={{
-              keepMounted: true // Better open performance on mobile.
+              keepMounted: true, // Better open performance on mobile.
             }}
           >
-            {drawer}
+            {makeDrawer(true)}
           </Drawer>
         </Hidden>
         <Hidden xsDown implementation="css">
           <Drawer
             classes={{
-              paper: classes.drawerPaper
+              paper: classes.drawerPaper,
             }}
             variant="permanent"
             open
           >
-            {drawer}
+            {makeDrawer()}
           </Drawer>
         </Hidden>
       </nav>
@@ -148,11 +144,13 @@ const Scaffold = props => {
 
 Scaffold.propTypes = {
   children: PropTypes.object,
-  siteinfo: siteInfoProps
+  siteinfo: siteInfoProps,
+  navigation: PropTypes.arrayOf(link),
 };
 
-const mapStateToProps = state => ({
-  siteinfo: state.siteinfo
+const mapStateToProps = (state) => ({
+  siteinfo: state.siteinfo,
+  navigation: state.navigation,
 });
 
 export default connect(mapStateToProps)(Scaffold);

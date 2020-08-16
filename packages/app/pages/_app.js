@@ -9,7 +9,8 @@ import {
   updateSiteInfo,
   authHasBeenChecked,
   updateSiteTheme,
-  updateSiteLayout
+  updateSiteLayout,
+  updateSiteNavigation,
 } from "../redux/actions.js";
 import { ThemeProvider } from "@material-ui/styles";
 import { responsiveFontSizes, createMuiTheme } from "@material-ui/core";
@@ -31,6 +32,7 @@ class MyApp extends App {
     await ctx.store.dispatch(updateSiteInfo());
     await ctx.store.dispatch(updateSiteLayout());
     await ctx.store.dispatch(updateSiteTheme());
+    await ctx.store.dispatch(updateSiteNavigation());
   }
 
   componentDidMount() {

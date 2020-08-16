@@ -7,10 +7,10 @@ const useStyles = makeStyles({
   loader: {
     // height: '100vh',
     // width: '100vw'
-  }
+  },
 });
 
-const AppLoader = props => {
+const AppLoader = (props) => {
   const classes = useStyles();
 
   return (

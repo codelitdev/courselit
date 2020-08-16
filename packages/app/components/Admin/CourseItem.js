@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import Link from "next/link";
 import { creatorCourse } from "../../types";
-import TextEditor from "./TextEditor";
+import TextEditor from "@courselit/rich-text";
 import { URL_EXTENTION_COURSES } from "../../config/constants.js";
 import { CardContent, Card, Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
@@ -12,7 +12,7 @@ import Img from "../Img";
 
 const useStyles = makeStyles({
   featuredimagecontainer: {
-    display: "flex"
+    display: "flex",
   },
   courselink: {
     textDecoration: "none",
@@ -20,13 +20,13 @@ const useStyles = makeStyles({
     marginTop: "0.8em",
     marginBottom: "1em",
     "&:hover": {
-      background: "#eee"
+      background: "#eee",
     },
-    color: "inherit"
-  }
+    color: "inherit",
+  },
 });
 
-const CourseItem = props => {
+const CourseItem = (props) => {
   const { course } = props;
   const classes = useStyles();
 
@@ -92,7 +92,7 @@ const CourseItem = props => {
 
 CourseItem.propTypes = {
   course: creatorCourse,
-  isPublicView: PropTypes.bool.isRequired
+  isPublicView: PropTypes.bool.isRequired,
 };
 
 export default CourseItem;

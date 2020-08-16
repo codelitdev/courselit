@@ -12,12 +12,13 @@ import {
   SET_MESSAGE,
   CLEAR_MESSAGE,
   THEME_AVAILABLE,
-  LAYOUT_AVAILABLE
+  LAYOUT_AVAILABLE,
+  NAVIGATION_AVAILABLE,
 } from "./actionTypes.js";
 import {
   BACKEND,
   JWT_COOKIE_NAME,
-  USERID_COOKIE_NAME
+  USERID_COOKIE_NAME,
 } from "../config/constants.js";
 import FetchBuilder from "../lib/fetch.js";
 import { removeCookie } from "../lib/session.js";
@@ -63,7 +64,7 @@ export function refreshUserProfile(userId) {
 }
 
 export function signedOut() {
-  return dispatch => {
+  return (dispatch) => {
     removeCookie(JWT_COOKIE_NAME);
     removeCookie(USERID_COOKIE_NAME);
     dispatch(clearProfile());
@@ -72,13 +73,13 @@ export function signedOut() {
 }
 
 export function authHasBeenChecked() {
-  return dispatch => {
+  return (dispatch) => {
     dispatch({ type: AUTH_CHECKED });
   };
 }
 
 export function networkAction(flag) {
-  return dispatch => dispatch({ type: NETWORK_ACTION, flag });
+  return (dispatch) => dispatch({ type: NETWORK_ACTION, flag });
 }
 
 export function updateProfile(profile) {
@@ -131,11 +132,11 @@ export function newSiteInfoAvailable(info) {
 }
 
 export function setAppMessage(message) {
-  return dispatch => dispatch({ type: SET_MESSAGE, message });
+  return (dispatch) => dispatch({ type: SET_MESSAGE, message });
 }
 
 export function clearAppMessage() {
-  return dispatch => dispatch({ type: CLEAR_MESSAGE });
+  return (dispatch) => dispatch({ type: CLEAR_MESSAGE });
 }
 
 export function updateSiteTheme() {
@@ -170,7 +171,7 @@ export function themeAvailable(theme) {
 }
 
 export function updateSiteLayout() {
-  return async dispatch => {
+  return async (dispatch) => {
     try {
       dispatch(networkAction(true));
 
@@ -199,4 +200,38 @@ export function updateSiteLayout() {
 
 export function layoutAvailable(layout) {
   return { type: LAYOUT_AVAILABLE, layout };
+}
+
+export function updateSiteNavigation() {
+  return async (dispatch) => {
+    try {
+      dispatch(networkAction(true));
+
+      const query = `
+      query {
+        siteNavigation: getPublicNavigation {
+          text,
+          destination,
+          category,
+          newTab,
+        }
+      }
+      `;
+      const fetch = new FetchBuilder()
+        .setUrl(`${BACKEND}/graph`)
+        .setPayload(query)
+        .setIsGraphQLEndpoint(true)
+        .build();
+      const response = await fetch.exec();
+
+      dispatch(networkAction(false));
+      dispatch(navigationAvailable(response.siteNavigation));
+    } finally {
+      dispatch(networkAction(false));
+    }
+  };
+}
+
+export function navigationAvailable(links) {
+  return { type: NAVIGATION_AVAILABLE, links };
 }

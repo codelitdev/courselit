@@ -6,5 +6,5 @@ import FeaturedContent from "../FeaturedCourses/List.js";
 
 export default {
   About: About,
-  Featured: FeaturedContent
+  Featured: FeaturedContent,
 };

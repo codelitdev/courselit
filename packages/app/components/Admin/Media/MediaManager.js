@@ -7,7 +7,7 @@ import {
   MEDIA_MANAGER_PAGE_HEADING,
   MEDIA_MANAGER_DIALOG_TITLE,
   BUTTON_ADD_FILE,
-  FILE_UPLOAD_SUCCESS
+  FILE_UPLOAD_SUCCESS,
 } from "../../../config/strings.js";
 import { BACKEND } from "../../../config/constants.js";
 import { authProps } from "../../../types.js";
@@ -19,7 +19,7 @@ import {
   Typography,
   CardActions,
   Card,
-  CardContent
+  CardContent,
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import { Add, Done } from "@material-ui/icons";
@@ -27,27 +27,27 @@ import AppMessage from "../../../models/app-message.js";
 
 import MediaGallery from "./MediaGallery.js";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   header: {
-    marginBottom: theme.spacing(1)
+    marginBottom: theme.spacing(1),
   },
   fileUploadInput: {
-    display: "none"
-  }
+    display: "none",
+  },
 }));
 
-const MediaManager = props => {
+const MediaManager = (props) => {
   const defaults = {
     uploadData: {
       title: "",
       altText: "",
-      uploading: false
+      uploading: false,
     },
     uploadFormVisibility:
       typeof props.mediaAdditionAllowed !== "undefined"
         ? props.mediaAdditionAllowed
         : true,
-    selectedMedia: null
+    selectedMedia: null,
   };
   const [uploadData, setUploadData] = useState(defaults.uploadData);
   // const [selectedMedia] = useState(defaults.selectedMedia)
@@ -55,14 +55,14 @@ const MediaManager = props => {
   const classes = useStyles();
   const [uploadFormVisible, setUploadFormVisible] = useState(false);
 
-  const onUploadDataChanged = e =>
+  const onUploadDataChanged = (e) =>
     setUploadData(
       Object.assign({}, uploadData, {
-        [e.target.name]: e.target.value
+        [e.target.name]: e.target.value,
       })
     );
 
-  const onUpload = async e => {
+  const onUpload = async (e) => {
     e.preventDefault();
 
     const fD = new window.FormData();
@@ -72,7 +72,7 @@ const MediaManager = props => {
 
     setUploadData(
       Object.assign({}, uploadData, {
-        uploading: true
+        uploading: true,
       })
     );
 
@@ -80,9 +80,9 @@ const MediaManager = props => {
       let res = await fetch(`${BACKEND}/media`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${props.auth.token}`
+          Authorization: `Bearer ${props.auth.token}`,
         },
-        body: fD
+        body: fD,
       });
       res = await res.json();
 
@@ -174,16 +174,16 @@ MediaManager.propTypes = {
   dispatch: PropTypes.func.isRequired,
   onMediaSelected: PropTypes.func.isRequired,
   mediaAdditionAllowed: PropTypes.bool,
-  networkAction: PropTypes.bool.isRequired
+  networkAction: PropTypes.bool.isRequired,
 };
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   auth: state.auth,
-  networkAction: state.networkAction
+  networkAction: state.networkAction,
 });
 
-const mapDispatchToProps = dispatch => ({
-  dispatch: dispatch
+const mapDispatchToProps = (dispatch) => ({
+  dispatch: dispatch,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(MediaManager);

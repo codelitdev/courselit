@@ -21,7 +21,7 @@ import Posts from "../components/Public/Courses/List.js";
 //   }
 // }));
 
-const Courses = props => {
+const Courses = (props) => {
   // const [courses, setCourses] = useState(props.courses);
   // const [hasMorePages, setHasMorePages] = useState(true);
   // const classes = useStyles();

@@ -7,15 +7,15 @@ import { makeStyles } from "@material-ui/styles";
 
 const useStyles = makeStyles({
   gridListItemIcon: {
-    color: "#fff"
+    color: "#fff",
   },
   thumbnail: {
     width: "100%",
-    height: "auto"
-  }
+    height: "auto",
+  },
 });
 
-const MediaGalleryItem = props => {
+const MediaGalleryItem = (props) => {
   const { item, toggleMediaEditForm } = props;
   const [imgSrc, setImgSrc] = useState(`${BACKEND}/media/${item.id}?thumb=1`);
   const classes = useStyles();
@@ -47,7 +47,7 @@ const MediaGalleryItem = props => {
 
 MediaGalleryItem.propTypes = {
   item: PropTypes.object.isRequired,
-  toggleMediaEditForm: PropTypes.func.isRequired
+  toggleMediaEditForm: PropTypes.func.isRequired,
 };
 
 export default MediaGalleryItem;

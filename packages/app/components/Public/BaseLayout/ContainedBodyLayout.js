@@ -5,11 +5,11 @@ import { makeStyles } from "@material-ui/styles";
 
 const useStyles = makeStyles({
   root: {
-    marginTop: 10
-  }
+    marginTop: 10,
+  },
 });
 
-const ContainedBodyLayout = props => {
+const ContainedBodyLayout = (props) => {
   const classes = useStyles();
 
   return (
@@ -20,7 +20,7 @@ const ContainedBodyLayout = props => {
 };
 
 ContainedBodyLayout.propTypes = {
-  children: PropTypes.any
+  children: PropTypes.any,
 };
 
 export default ContainedBodyLayout;
