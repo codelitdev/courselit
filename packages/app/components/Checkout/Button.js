@@ -7,7 +7,7 @@ import PaymentDialog from "./PaymentDialog.js";
 import Router from "next/router";
 import { ENROLL_BUTTON_TEXT } from "../../config/strings";
 
-const CheckoutButton = props => {
+const CheckoutButton = (props) => {
   const [dialogOpened, setDialogOpened] = useState(false);
   const { course, auth } = props;
 
@@ -40,12 +40,12 @@ CheckoutButton.propTypes = {
   onTransactionSuccess: PropTypes.func.isRequired,
   onTransactionFailure: PropTypes.func.isRequired,
   auth: authProps,
-  profile: profileProps
+  profile: profileProps,
 };
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   auth: state.auth,
-  profile: state.profile
+  profile: state.profile,
 });
 
 export default connect(mapStateToProps)(CheckoutButton);

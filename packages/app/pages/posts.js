@@ -23,7 +23,7 @@ import Posts from "../components/Public/Posts/List.js";
 //   }
 // }));
 
-const Posts2 = props => {
+const Posts2 = (props) => {
   //   const [courses, setCourses] = useState(props.courses);
   //   const [hasMorePages, setHasMorePages] = useState(true);
   //   const classes = useStyles();

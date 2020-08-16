@@ -57,6 +57,11 @@ module.exports = {
   paytm: "paytm",
   none: "",
 
+  // transaction statuses
+  transactionInitiated: "initiated",
+  transactionSuccess: "success",
+  transactionFailed: "failed",
+
   // acceptable currency codes for payments
   currencyISOCodes: [
     "afn",
@@ -239,9 +244,4 @@ module.exports = {
     "xpt",
     "xag",
   ],
-
-  // transaction statuses
-  transactionInitiated: "initiated",
-  transactionSuccess: "success",
-  transactionFailed: "failed",
 };

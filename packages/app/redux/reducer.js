@@ -11,7 +11,8 @@ import {
   SET_MESSAGE,
   CLEAR_MESSAGE,
   THEME_AVAILABLE,
-  LAYOUT_AVAILABLE
+  LAYOUT_AVAILABLE,
+  NAVIGATION_AVAILABLE,
 } from "./actionTypes.js";
 import {
   GENERIC_TITLE,
@@ -25,7 +26,7 @@ import {
   GENERIC_PAYMENT_METHOD,
   GENERIC_THEME_COLOR_PRIMARY,
   GENERIC_THEME_COLOR_SECONDARY,
-  GENERIC_CODE_INJECTION_HEAD
+  GENERIC_CODE_INJECTION_HEAD,
 } from "../config/strings.js";
 
 const initialState = {
@@ -33,7 +34,7 @@ const initialState = {
     guest: true,
     token: null,
     userid: null,
-    checked: false
+    checked: false,
   },
   siteinfo: {
     title: GENERIC_TITLE,
@@ -47,7 +48,7 @@ const initialState = {
     stripePublishableKey: GENERIC_STRIPE_PUBLISHABLE_KEY_TEXT,
     themePrimaryColor: GENERIC_THEME_COLOR_PRIMARY,
     themeSecondaryColor: GENERIC_THEME_COLOR_SECONDARY,
-    codeInjectionHead: GENERIC_CODE_INJECTION_HEAD
+    codeInjectionHead: GENERIC_CODE_INJECTION_HEAD,
   },
   networkAction: false,
   profile: {
@@ -57,19 +58,22 @@ const initialState = {
     fetched: false,
     isAdmin: false,
     purchases: [],
-    email: null
+    email: null,
   },
   message: {
     open: false,
     message: "",
-    action: null
+    action: null,
   },
   theme: {},
   layout: {
     top: [],
     bottom: [],
-    aside: []
-  }
+    aside: [],
+    footerLeft: [],
+    footerRight: [],
+  },
+  navigation: [],
 };
 
 function authReducer(state = initialState.auth, action) {
@@ -79,7 +83,7 @@ function authReducer(state = initialState.auth, action) {
         guest: false,
         token: action.token,
         userid: action.userid,
-        checked: true
+        checked: true,
       };
     case SIGN_OUT:
       return initialState.auth;
@@ -121,7 +125,7 @@ function siteinfoReducer(state = initialState.siteinfo, action) {
             initialState.siteinfo.themeSecondaryColor,
           codeInjectionHead:
             decode(action.siteinfo.codeInjectionHead) ||
-            initialState.siteinfo.codeInjectionHead
+            initialState.siteinfo.codeInjectionHead,
         };
       } catch (e) {
         return state;
@@ -150,7 +154,7 @@ function profileReducer(state = initialState.profile, action) {
         fetched: true,
         isAdmin: (action.profile && action.profile.isAdmin) || false,
         purchases: (action.profile && action.profile.purchases) || [],
-        email: action.profile && action.profile.email
+        email: action.profile && action.profile.email,
       };
     case PROFILE_CLEAR:
       return initialState.profile;
@@ -165,7 +169,7 @@ function messageReducer(state = initialState.message, action) {
       return {
         message: action.message.message,
         action: action.message.action,
-        open: true
+        open: true,
       };
     case CLEAR_MESSAGE:
       return initialState.message;
@@ -186,7 +190,7 @@ function themeReducer(state = initialState.theme, action) {
       }
 
       return Object.assign({}, action.theme, {
-        styles: styles
+        styles: styles,
       });
     default:
       return state;
@@ -210,6 +214,15 @@ function layoutReducer(state = initialState.layout, action) {
   }
 }
 
+function navigationReducer(state = initialState.navigation, action) {
+  switch (action.type) {
+    case NAVIGATION_AVAILABLE:
+      return action.links;
+    default:
+      return state;
+  }
+}
+
 export default combineReducers({
   auth: authReducer,
   siteinfo: siteinfoReducer,
@@ -217,5 +230,6 @@ export default combineReducers({
   profile: profileReducer,
   message: messageReducer,
   theme: themeReducer,
-  layout: layoutReducer
+  layout: layoutReducer,
+  navigation: navigationReducer,
 });

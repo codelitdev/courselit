@@ -8,7 +8,7 @@ import {
   GridListTile,
   ListSubheader,
   Button,
-  Typography
+  Typography,
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import { authProps } from "../../../types.js";
@@ -25,7 +25,7 @@ import {
   HEADER_EDITING_MEDIA,
   APP_MESSAGE_MEDIA_DELETED,
   BUTTON_SAVE,
-  APP_MESSAGE_MEDIA_UPDATED
+  APP_MESSAGE_MEDIA_UPDATED,
 } from "../../../config/strings.js";
 import AppLoader from "../../AppLoader.js";
 import FetchBuilder from "../../../lib/fetch.js";
@@ -38,30 +38,30 @@ import fetch from "isomorphic-unfetch";
 import AppMessage from "../../../models/app-message.js";
 import {
   getObjectContainingOnlyChangedFields,
-  getGraphQLQueryFields
+  getGraphQLQueryFields,
 } from "../../../lib/utils.js";
 import Router from "next/router";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   searchField: {
     flexGrow: 1,
-    marginRight: theme.spacing(2)
+    marginRight: theme.spacing(2),
   },
   cardHeader: {
-    marginBottom: theme.spacing(2)
+    marginBottom: theme.spacing(2),
   },
   mediaGrid: {
-    paddingBottom: theme.spacing(2)
+    paddingBottom: theme.spacing(2),
   },
   mediaGridHeader: {
-    height: "auto"
+    height: "auto",
   },
   gridListItemIcon: {
-    color: "#fff"
-  }
+    color: "#fff",
+  },
 }));
 
-const MediaGallery = props => {
+const MediaGallery = (props) => {
   const defaultUserMedia = [];
   const defaultMediaOffset = 1;
   const [mediaOffset, setMediaOffset] = useState(defaultMediaOffset);
@@ -99,7 +99,7 @@ const MediaGallery = props => {
       if (response.media && response.media.length > 0) {
         const filteredMedia =
           props.mimeTypesToShow && props.mimeTypesToShow.length
-            ? response.media.filter(item =>
+            ? response.media.filter((item) =>
                 props.mimeTypesToShow.includes(item.mimeType)
               )
             : response.media;
@@ -112,7 +112,7 @@ const MediaGallery = props => {
     }
   };
 
-  const searchMedia = e => {
+  const searchMedia = (e) => {
     e.preventDefault();
     reset();
 
@@ -124,9 +124,9 @@ const MediaGallery = props => {
     setMediaOffset(defaultMediaOffset);
   };
 
-  const onSearchTextChanged = e => setSearchText(e.target.value);
+  const onSearchTextChanged = (e) => setSearchText(e.target.value);
 
-  const onMediaSelected = mediaId =>
+  const onMediaSelected = (mediaId) =>
     props.onMediaSelected && props.onMediaSelected(mediaId);
 
   const toggleMediaEditForm = (mediaItem = null) =>
@@ -134,10 +134,10 @@ const MediaGallery = props => {
 
   const closeDeleteMediaPopup = () => setDeleteMediaPopupOpened(false);
 
-  const onMediaBeingEditedChanged = e =>
+  const onMediaBeingEditedChanged = (e) =>
     setMediaBeingEdited(
       Object.assign({}, mediaBeingEdited, {
-        [e.target.name]: e.target.value
+        [e.target.name]: e.target.value,
       })
     );
 
@@ -149,8 +149,8 @@ const MediaGallery = props => {
       const res = await fetch(`${BACKEND}/media/${mediaBeingEdited.id}`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${props.auth.token}`
-        }
+          Authorization: `Bearer ${props.auth.token}`,
+        },
       });
 
       if (res.status === 401) {
@@ -163,11 +163,11 @@ const MediaGallery = props => {
           setAppMessage(new AppMessage(APP_MESSAGE_MEDIA_DELETED))
         );
         const indexOfDeletedMedia = userMedia
-          .map(media => media.id)
+          .map((media) => media.id)
           .indexOf(mediaBeingEdited.id);
         setUserMedia([
           ...userMedia.slice(0, indexOfDeletedMedia),
-          ...userMedia.slice(indexOfDeletedMedia + 1)
+          ...userMedia.slice(indexOfDeletedMedia + 1),
         ]);
         toggleMediaEditForm();
       }
@@ -180,7 +180,7 @@ const MediaGallery = props => {
 
   const updateMedia = async () => {
     const indexOfUpdatedMedia = userMedia
-      .map(media => media.id)
+      .map((media) => media.id)
       .indexOf(mediaBeingEdited.id);
     const onlyChangedFields = getObjectContainingOnlyChangedFields(
       userMedia[indexOfUpdatedMedia],
@@ -259,7 +259,7 @@ const MediaGallery = props => {
             <GridListTile cols={3} key="Subheader" style={{ height: "auto" }}>
               <ListSubheader component="div">{HEADER_YOUR_MEDIA}</ListSubheader>
             </GridListTile>
-            {userMedia.map(item => (
+            {userMedia.map((item) => (
               <GridListTile
                 key={item.id}
                 cols={1}
@@ -320,7 +320,7 @@ const MediaGallery = props => {
         title={DELETE_MEDIA_POPUP_HEADER}
         actions={[
           { name: POPUP_CANCEL_ACTION, callback: closeDeleteMediaPopup },
-          { name: POPUP_OK_ACTION, callback: onMediaDelete }
+          { name: POPUP_OK_ACTION, callback: onMediaDelete },
         ]}
       ></AppDialog>
     </>
@@ -332,16 +332,16 @@ MediaGallery.propTypes = {
   dispatch: PropTypes.func.isRequired,
   networkAction: PropTypes.bool.isRequired,
   onMediaSelected: PropTypes.func,
-  mimeTypesToShow: PropTypes.arrayOf(PropTypes.string)
+  mimeTypesToShow: PropTypes.arrayOf(PropTypes.string),
 };
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   auth: state.auth,
-  networkAction: state.networkAction
+  networkAction: state.networkAction,
 });
 
-const mapDispatchToProps = dispatch => ({
-  dispatch: dispatch
+const mapDispatchToProps = (dispatch) => ({
+  dispatch: dispatch,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(MediaGallery);

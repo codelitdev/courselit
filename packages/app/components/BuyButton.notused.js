@@ -5,7 +5,7 @@ import { connect } from "react-redux";
 import PriceTag from "./PriceTag";
 import { publicCourse } from "../types";
 
-const BuyButton = props => {
+const BuyButton = (props) => {
   const [purchased] = useState(false);
   const { course } = props;
 
@@ -25,7 +25,7 @@ const BuyButton = props => {
 BuyButton.propTypes = {
   course: publicCourse.isRequired,
   onTransactionSuccess: PropTypes.func.isRequired,
-  onTransactionFailure: PropTypes.func.isRequired
+  onTransactionFailure: PropTypes.func.isRequired,
 };
 
 export default connect()(BuyButton);

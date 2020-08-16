@@ -7,22 +7,22 @@ import { siteInfoProps } from "../../../types";
 import { makeStyles } from "@material-ui/styles";
 import Img from "../../Img";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   logo: {
-    display: "flex"
+    display: "flex",
   },
   logocontainer: {
     width: "2em",
     height: "2em",
     marginRight: theme.spacing(1),
-    display: "flex"
+    display: "flex",
   },
   logoimg: {
-    borderRadius: "0.2em"
-  }
+    borderRadius: "0.2em",
+  },
 }));
 
-const Header = props => {
+const Header = (props) => {
   const classes = useStyles();
 
   return (
@@ -55,11 +55,11 @@ const Header = props => {
 };
 
 Header.propTypes = {
-  siteinfo: siteInfoProps
+  siteinfo: siteInfoProps,
 };
 
-const mapStateToProps = state => ({
-  siteinfo: state.siteinfo
+const mapStateToProps = (state) => ({
+  siteinfo: state.siteinfo,
 });
 
 export default connect(mapStateToProps)(Header);

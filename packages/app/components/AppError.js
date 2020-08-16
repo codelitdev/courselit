@@ -5,13 +5,13 @@ import { makeStyles } from "@material-ui/styles";
 import { USER_ERROR_HEADER } from "../config/strings";
 import BaseLayout from "./Public/BaseLayout";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   header: {
-    marginBottom: theme.spacing(1)
-  }
+    marginBottom: theme.spacing(1),
+  },
 }));
 
-const AppError = props => {
+const AppError = (props) => {
   const { error } = props;
   const classes = useStyles();
 
@@ -36,7 +36,7 @@ const AppError = props => {
 };
 
 AppError.propTypes = {
-  error: PropTypes.string.isRequired
+  error: PropTypes.string.isRequired,
 };
 
 export default AppError;

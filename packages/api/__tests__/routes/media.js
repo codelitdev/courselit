@@ -196,7 +196,7 @@ describe.skip("Media Test Suite", () => {
       },
       (err, res, body) => {
         if (err) {
-          console.log(err);
+          // console.log(err);
         }
 
         expect(res.headers["content-type"]).toBe("image/jpeg");
@@ -212,7 +212,7 @@ describe.skip("Media Test Suite", () => {
       },
       (err, res, body) => {
         if (err) {
-          console.log(err);
+          // console.log(err);
         }
 
         expect(res.statusCode).toBe(401);
@@ -238,7 +238,7 @@ describe.skip("Media Test Suite", () => {
       },
       (err, res, body) => {
         if (err) {
-          console.log(err);
+          // console.log(err);
         }
 
         expect(res.statusCode).toBe(404);
@@ -257,7 +257,7 @@ describe.skip("Media Test Suite", () => {
       },
       (err, res, body) => {
         if (err) {
-          console.log(err);
+          // console.log(err);
         }
 
         expect(res.statusCode).toBe(200);
@@ -276,7 +276,7 @@ describe.skip("Media Test Suite", () => {
       },
       (err, res, body) => {
         if (err) {
-          console.log(err);
+          // console.log(err);
         }
 
         expect(res.statusCode).toBe(200);
@@ -295,7 +295,7 @@ describe.skip("Media Test Suite", () => {
       },
       (err, res, body) => {
         if (err) {
-          console.log(err);
+          // console.log(err);
         }
 
         expect(res.statusCode).toBe(200);

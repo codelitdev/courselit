@@ -7,7 +7,7 @@ import {
   TextField,
   Button,
   Switch,
-  Card
+  Card,
 } from "@material-ui/core";
 import { ExpandMore, ExpandLess, AccountCircle } from "@material-ui/icons";
 import {
@@ -20,7 +20,7 @@ import {
   SWITCH_IS_CREATOR,
   SWITCH_ACCOUNT_ACTIVE,
   ERR_PASSWORDS_DONT_MATCH,
-  ENROLLED_COURSES_HEADER
+  ENROLLED_COURSES_HEADER,
 } from "../config/strings";
 import { makeStyles } from "@material-ui/styles";
 import { useExecuteGraphQLQuery } from "./CustomHooks.js";
@@ -28,33 +28,33 @@ import { BACKEND } from "../config/constants";
 import FetchBuilder from "../lib/fetch";
 import { connect } from "react-redux";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   container: {
     padding: "0.8em 1.2em",
-    marginBottom: "0.6em"
+    marginBottom: "0.6em",
   },
   error: {
-    color: "#ff0000"
+    color: "#ff0000",
   },
   avatar: {
     height: "1.6em",
-    width: "auto"
+    width: "auto",
   },
   expanded: {
-    marginTop: "1em"
+    marginTop: "1em",
   },
   enrolledCourseItem: {
-    marginTop: theme.spacing(1)
-  }
+    marginTop: theme.spacing(1),
+  },
 }));
 
-const UserDetails = props => {
+const UserDetails = (props) => {
   const newUserDataDefaults = {
     isAdmin: props.user.isAdmin,
     isCreator: props.user.isCreator,
     active: props.user.active || false,
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
   };
   const [expanded, setExpanded] = useState(false);
   const [userData, setUserData] = useState(props.user);
@@ -112,7 +112,7 @@ const UserDetails = props => {
     setExpanded(!expanded);
   };
 
-  const saveUserChanges = async e => {
+  const saveUserChanges = async (e) => {
     e.preventDefault();
     setError(getUserDataError());
 
@@ -147,12 +147,12 @@ const UserDetails = props => {
     }
   };
 
-  const getNewUserDataObject = user => ({
+  const getNewUserDataObject = (user) => ({
     isAdmin: user.isAdmin,
     isCreator: user.isCreator,
     active: user.active,
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
   });
 
   const getChangedFieldsForMutation = () => {
@@ -291,7 +291,7 @@ const UserDetails = props => {
                         type="checkbox"
                         name="isAdmin"
                         checked={newUserData.isAdmin}
-                        onChange={e =>
+                        onChange={(e) =>
                           updateUserData("isAdmin", e.target.checked)
                         }
                       />
@@ -311,7 +311,7 @@ const UserDetails = props => {
                         type="checkbox"
                         name="isAdmin"
                         checked={newUserData.isCreator}
-                        onChange={e =>
+                        onChange={(e) =>
                           updateUserData("isCreator", e.target.checked)
                         }
                       />
@@ -331,7 +331,7 @@ const UserDetails = props => {
                         type="checkbox"
                         name="active"
                         checked={newUserData.active}
-                        onChange={e =>
+                        onChange={(e) =>
                           updateUserData("active", e.target.checked)
                         }
                       />
@@ -346,7 +346,9 @@ const UserDetails = props => {
                       name="password"
                       type="password"
                       value={newUserData.password}
-                      onChange={e => updateUserData("password", e.target.value)}
+                      onChange={(e) =>
+                        updateUserData("password", e.target.value)
+                      }
                     />
                     <TextField
                       variant="outlined"
@@ -356,7 +358,7 @@ const UserDetails = props => {
                       name="confirmPassword"
                       type="password"
                       value={newUserData.confirmPassword}
-                      onChange={e =>
+                      onChange={(e) =>
                         updateUserData("confirmPassword", e.target.value)
                       }
                     />
@@ -388,7 +390,7 @@ const UserDetails = props => {
                   {ENROLLED_COURSES_HEADER} ({props.user.purchases.length})
                 </Typography>
                 <Grid container direction="column">
-                  {enrolledCourses.map(course => (
+                  {enrolledCourses.map((course) => (
                     <Grid
                       item
                       key={course.id}
@@ -409,11 +411,11 @@ const UserDetails = props => {
 
 UserDetails.propTypes = {
   auth: authProps,
-  user: siteUser
+  user: siteUser,
 };
 
-const mapStateToProps = state => ({
-  auth: state.auth
+const mapStateToProps = (state) => ({
+  auth: state.auth,
 });
 
 export default connect(mapStateToProps)(UserDetails);

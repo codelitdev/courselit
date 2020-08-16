@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { MEDIA_BACKEND } from "../config/constants.js";
 import { formulateMediaUrl } from "../lib/utils.js";
 
-const Img = props => {
+const Img = (props) => {
   const { src, isThumbnail, classes } = props;
 
   return (
@@ -34,7 +34,7 @@ const Img = props => {
 Img.propTypes = {
   src: PropTypes.string,
   isThumbnail: PropTypes.bool,
-  classes: PropTypes.string
+  classes: PropTypes.string,
 };
 
 export default Img;

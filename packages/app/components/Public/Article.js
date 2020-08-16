@@ -1,7 +1,7 @@
 import React from "react";
 import { Typography, Grid } from "@material-ui/core";
 import Link from "next/link";
-import TextEditor from "../Public/TextEditor";
+import TextEditor from "@courselit/rich-text";
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/styles";
 import { BACKEND } from "../../config/constants.js";
@@ -11,25 +11,25 @@ import BuyButton from "../Checkout";
 import { connect } from "react-redux";
 import PriceTag from "../PriceTag";
 
-const useStyles = featuredImage =>
-  makeStyles(theme => ({
+const useStyles = (featuredImage) =>
+  makeStyles((theme) => ({
     header: {
       marginBottom: theme.spacing(1),
       [theme.breakpoints.up("sm")]: {
-        marginBottom: theme.spacing(4)
-      }
+        marginBottom: theme.spacing(4),
+      },
     },
     creatoravatarcontainer: {
       display: "flex",
-      alignItems: "center"
+      alignItems: "center",
     },
     creatorcard: {
-      paddingTop: "0.8em"
+      paddingTop: "0.8em",
     },
     creatoravatar: {
       borderRadius: "1.5em",
       width: "3em",
-      marginRight: "1em"
+      marginRight: "1em",
     },
     featuredimagecontainer: {
       width: "100%",
@@ -38,25 +38,25 @@ const useStyles = featuredImage =>
       marginBottom: theme.spacing(4),
       [theme.breakpoints.up("sm")]: {
         height: 480,
-        backgroundSize: "cover"
+        backgroundSize: "cover",
       },
       overflow: "hidden",
       background: `url('${formulateMediaUrl(
         BACKEND,
         featuredImage
       )}') no-repeat center center`,
-      backgroundSize: "contain"
+      backgroundSize: "contain",
     },
     enrollmentArea: {
       marginTop: theme.spacing(3),
-      marginBottom: theme.spacing(4)
+      marginBottom: theme.spacing(4),
     },
     enrollmentAreaPriceTag: {
-      marginRight: theme.spacing(2)
-    }
+      marginRight: theme.spacing(2),
+    },
   }));
 
-const Article = props => {
+const Article = (props) => {
   const { course, options, profile } = props;
   const classes = useStyles(course.featuredImage)();
   let courseDescriptionHydrated;
@@ -121,13 +121,13 @@ Article.propTypes = {
   course: publicCourse.isRequired,
   options: PropTypes.shape({
     showAttribution: PropTypes.bool,
-    showEnrollmentArea: PropTypes.bool
+    showEnrollmentArea: PropTypes.bool,
   }).isRequired,
-  profile: profileProps
+  profile: profileProps,
 };
 
-const mapStateToProps = state => ({
-  profile: state.profile
+const mapStateToProps = (state) => ({
+  profile: state.profile,
 });
 
 export default connect(mapStateToProps)(Article);
