@@ -4,7 +4,7 @@ FROM node:12.9.0-alpine
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-RUN npm install @courselit/app
+RUN npm install @courselit/app@latest
 
 RUN mv node_modules/@courselit/app/* .
 RUN rm -rf node_modules
