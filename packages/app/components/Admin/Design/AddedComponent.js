@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { Grid, Typography, IconButton } from "@material-ui/core";
-import { RemoveCircle } from "@material-ui/icons";
+import { Remove } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/styles";
 
 const useStyles = makeStyles((theme) => ({
@@ -29,10 +29,10 @@ const AddedComponent = (props) => {
       <Grid item>
         <IconButton
           color="default"
-          aria-label="remove component from top section"
+          aria-label="remove component"
           onClick={() => props.removeComponent(props.section, props.index)}
         >
-          <RemoveCircle />
+          <Remove />
         </IconButton>
       </Grid>
     </Grid>

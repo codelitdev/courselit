@@ -32,9 +32,10 @@ import {
   ERROR_SNACKBAR_PREFIX,
   APP_MESSAGE_THEME_APPLIED,
   APP_MESSAGE_THEME_UNINSTALLED,
+  HEADER_NAVIGATION,
 } from "../../../config/strings.js";
 import { makeStyles } from "@material-ui/styles";
-import { AddCircle } from "@material-ui/icons";
+import { Add } from "@material-ui/icons";
 
 import AddComponentDialog from "./AddComponentDialog.js";
 import AddedComponent from "./AddedComponent.js";
@@ -49,15 +50,16 @@ import {
 import AppMessage from "../../../models/app-message.js";
 import { authProps } from "../../../types.js";
 import ThemeItem from "./ThemeItem.js";
+import NavigationLinks from "./NavigationLinks/index.js";
 
 const useStyles = makeStyles((theme) => ({
   container: {
     borderRadius: theme.spacing(1),
     overflow: "hidden",
-    border: "5px solid black",
+    border: "2px solid #eee",
   },
   outline: {
-    border: "1px solid #eaeaea",
+    border: "2px dashed #eaeaea",
     textAlign: "center",
   },
   box: {
@@ -66,6 +68,7 @@ const useStyles = makeStyles((theme) => ({
   },
   fixedBox: {
     background: "#aaa",
+    textAlign: "center",
   },
   margin: {
     margin: theme.spacing(2),
@@ -338,11 +341,12 @@ const PageDesigner = (props) => {
                 direction="column"
                 xs={12}
                 sm={9}
-                className={[classes.container, classes.outline]}
+                className={classes.container}
               >
-                <Grid item className={[classes.outline, classes.fixedBox]}>
+                <Grid item className={classes.fixedBox}>
                   <Typography variant="caption">Header</Typography>
                 </Grid>
+
                 <Grid container item>
                   <Grid
                     container
@@ -383,10 +387,11 @@ const PageDesigner = (props) => {
                         aria-label="add component to the top section"
                         onClick={() => openAddComponentDialog("top")}
                       >
-                        <AddCircle />
+                        <Add />
                       </IconButton>
                     </Grid>
                   </Grid>
+
                   <Grid
                     container
                     item
@@ -436,7 +441,7 @@ const PageDesigner = (props) => {
                             aria-label="add component to main section"
                             onClick={() => openAddComponentDialog("bottom")}
                           >
-                            <AddCircle />
+                            <Add />
                           </IconButton>
                         </Grid>
                       </Grid>
@@ -469,14 +474,86 @@ const PageDesigner = (props) => {
                           aria-label="add component to main section"
                           onClick={() => openAddComponentDialog("aside")}
                         >
-                          <AddCircle />
+                          <Add />
                         </IconButton>
                       </Grid>
                     </Grid>
                   </Grid>
                 </Grid>
-                <Grid item className={[classes.outline, classes.fixedBox]}>
-                  <Typography variant="caption">Footer</Typography>
+
+                <Grid
+                  container
+                  item
+                  className={[classes.outline, classes.box]}
+                  direction="column"
+                >
+                  <Grid item>
+                    <Typography variant="h6">Footer</Typography>
+                  </Grid>
+                  <Grid item container direction="row" justify="space-between">
+                    <Grid
+                      item
+                      container
+                      className={classes.outline}
+                      xs={12}
+                      md={6}
+                      direction="column"
+                    >
+                      <Grid item>
+                        <Typography variant="h6">Left Section</Typography>
+                      </Grid>
+                      {layout.footerLeft &&
+                        layout.footerLeft.map((item, index) => (
+                          <AddedComponent
+                            section="footerLeft"
+                            title={item}
+                            index={index}
+                            removeComponent={removeComponent}
+                            key={index}
+                          />
+                        ))}
+                      <Grid item>
+                        <IconButton
+                          color="primary"
+                          aria-label="add component to the footer's left section"
+                          onClick={() => openAddComponentDialog("footerLeft")}
+                        >
+                          <Add />
+                        </IconButton>
+                      </Grid>
+                    </Grid>
+                    <Grid
+                      item
+                      container
+                      className={classes.outline}
+                      xs={12}
+                      md={6}
+                      direction="column"
+                    >
+                      <Grid item>
+                        <Typography variant="h6">Right Section</Typography>
+                      </Grid>
+                      {layout.footerRight &&
+                        layout.footerRight.map((item, index) => (
+                          <AddedComponent
+                            section="footerRight"
+                            title={item}
+                            index={index}
+                            removeComponent={removeComponent}
+                            key={index}
+                          />
+                        ))}
+                      <Grid item>
+                        <IconButton
+                          color="primary"
+                          aria-label="add component to the footer section"
+                          onClick={() => openAddComponentDialog("footerRight")}
+                        >
+                          <Add />
+                        </IconButton>
+                      </Grid>
+                    </Grid>
+                  </Grid>
                 </Grid>
               </Grid>
             </Grid>
@@ -563,6 +640,21 @@ const PageDesigner = (props) => {
             </Button>
           </CardActions>
         </Card>
+      </Grid>
+
+      <Grid item container xs direction="column">
+        <Card>
+          <CardHeader title={HEADER_NAVIGATION} />
+          <CardContent>
+            <NavigationLinks />
+          </CardContent>
+        </Card>
+        {/* <Grid item>
+          <Typography variant="h4">{HEADER_NAVIGATION}</Typography>
+        </Grid>
+        <Grid item>
+          <NavigationLinks />
+        </Grid> */}
       </Grid>
       <AddComponentDialog
         onClose={onSelection}

@@ -62,3 +62,7 @@ export const MIMETYPE_AUDIO = ["audio/mp3"];
 export const MIMETYPE_IMAGE = ["image/png", "image/jpeg"];
 
 export const THEMES_REPO = "https://github.com/codelitdev/courselit-themes";
+
+// Navigation categories
+export const NAVIGATION_CATEGORY_MAIN = "main";
+export const NAVIGATION_CATEGORY_FOOTER = "footer";

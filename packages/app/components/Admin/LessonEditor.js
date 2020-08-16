@@ -290,7 +290,6 @@ const LessonEditor = (props) => {
               </InputLabel>
               <Select
                 labelId="select-type"
-                id="demo-simple-select-outlined"
                 value={lesson.type}
                 onChange={onLessonDetailsChange}
                 labelWidth={labelWidth}

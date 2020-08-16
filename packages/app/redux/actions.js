@@ -13,6 +13,7 @@ import {
   CLEAR_MESSAGE,
   THEME_AVAILABLE,
   LAYOUT_AVAILABLE,
+  NAVIGATION_AVAILABLE,
 } from "./actionTypes.js";
 import {
   BACKEND,
@@ -199,4 +200,38 @@ export function updateSiteLayout() {
 
 export function layoutAvailable(layout) {
   return { type: LAYOUT_AVAILABLE, layout };
+}
+
+export function updateSiteNavigation() {
+  return async (dispatch) => {
+    try {
+      dispatch(networkAction(true));
+
+      const query = `
+      query {
+        siteNavigation: getPublicNavigation {
+          text,
+          destination,
+          category,
+          newTab,
+        }
+      }
+      `;
+      const fetch = new FetchBuilder()
+        .setUrl(`${BACKEND}/graph`)
+        .setPayload(query)
+        .setIsGraphQLEndpoint(true)
+        .build();
+      const response = await fetch.exec();
+
+      dispatch(networkAction(false));
+      dispatch(navigationAvailable(response.siteNavigation));
+    } finally {
+      dispatch(networkAction(false));
+    }
+  };
+}
+
+export function navigationAvailable(links) {
+  return { type: NAVIGATION_AVAILABLE, links };
 }
