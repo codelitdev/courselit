@@ -2,24 +2,24 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 import {
   BUTTON_SELECT_MEDIA,
-  DIALOG_TITLE_FEATURED_IMAGE
+  DIALOG_TITLE_FEATURED_IMAGE,
 } from "../../../config/strings.js";
 import Img from "../../Img.js";
 import MediaManagerDialog from "./MediaManagerDialog.js";
 import { Grid, Button, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   control: {
-    marginLeft: theme.spacing(1)
-  }
+    marginLeft: theme.spacing(1),
+  },
 }));
 
-const MediaSelector = props => {
+const MediaSelector = (props) => {
   const [dialogOpened, setDialogOpened] = useState(false);
   const classes = useStyles();
 
-  const onSelection = mediaID => {
+  const onSelection = (mediaID) => {
     setDialogOpened(!dialogOpened);
     props.onSelection(mediaID);
   };
@@ -52,7 +52,7 @@ MediaSelector.propTypes = {
   title: PropTypes.string,
   src: PropTypes.string,
   onSelection: PropTypes.func.isRequired,
-  mimeTypesToShow: PropTypes.arrayOf(PropTypes.string)
+  mimeTypesToShow: PropTypes.arrayOf(PropTypes.string),
 };
 
 export default MediaSelector;

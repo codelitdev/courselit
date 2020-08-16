@@ -8,13 +8,13 @@ import { formulateMediaUrl } from "../../../lib/utils.js";
 import Card from "../Card.js";
 import PriceTag from "../../PriceTag.js";
 
-const useStyles = featuredImage =>
-  makeStyles(theme => ({
+const useStyles = (featuredImage) =>
+  makeStyles((theme) => ({
     link: {
       textDecoration: "none",
       color: "inherit",
       marginBottom: theme.spacing(4),
-      display: "block"
+      display: "block",
     },
     featuredImage: {
       height: 360,
@@ -23,15 +23,15 @@ const useStyles = featuredImage =>
         BACKEND,
         featuredImage
       )}') no-repeat center center`,
-      backgroundSize: "cover"
+      backgroundSize: "cover",
     },
     title: {
       marginTop: theme.spacing(2),
-      marginBottom: theme.spacing(0.5)
-    }
+      marginBottom: theme.spacing(0.5),
+    },
   }));
 
-const ListItem = props => {
+const ListItem = (props) => {
   const classes = useStyles(props.featuredImage)();
 
   return (
@@ -78,7 +78,7 @@ ListItem.propTypes = {
   creatorName: PropTypes.string.isRequired,
   slug: PropTypes.string.isRequired,
   featuredImage: PropTypes.string,
-  cost: PropTypes.number.isRequired
+  cost: PropTypes.number.isRequired,
 };
 
 export default ListItem;

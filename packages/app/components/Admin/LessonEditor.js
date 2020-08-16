@@ -12,7 +12,7 @@ import {
   Select,
   FormControl,
   InputLabel,
-  MenuItem
+  MenuItem,
 } from "@material-ui/core";
 import {
   BUTTON_SAVE,
@@ -27,7 +27,7 @@ import {
   POPUP_CANCEL_ACTION,
   POPUP_OK_ACTION,
   APP_MESSAGE_LESSON_DELETED,
-  APP_MESSAGE_LESSON_SAVED
+  APP_MESSAGE_LESSON_SAVED,
 } from "../../config/strings";
 import { lesson as lessonType, authProps } from "../../types.js";
 import {
@@ -36,7 +36,7 @@ import {
   LESSON_TYPE_AUDIO,
   LESSON_TYPE_VIDEO,
   LESSON_TYPE_PDF,
-  LESSON_TYPE_QUIZ
+  LESSON_TYPE_QUIZ,
 } from "../../config/constants.js";
 import { capitalize } from "../../lib/utils";
 import { makeStyles } from "@material-ui/styles";
@@ -46,18 +46,18 @@ import { networkAction, setAppMessage } from "../../redux/actions";
 import { connect } from "react-redux";
 import AppDialog from "../Public/AppDialog";
 import AppMessage from "../../models/app-message.js";
-import TextEditor from "../Public/TextEditor";
+import TextEditor from "@courselit/rich-text";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   formControl: {
     marginBottom: theme.spacing(2),
-    minWidth: "100%"
+    minWidth: "100%",
   },
   controlRow: {
     marginTop: theme.spacing(2),
     marginBottom: theme.spacing(2),
     display: "flex",
-    alignItems: "center"
+    alignItems: "center",
   },
   editor: {
     border: "1px solid #cacaca",
@@ -65,15 +65,15 @@ const useStyles = makeStyles(theme => ({
     padding: "10px 8px",
     maxHeight: 300,
     overflow: "auto",
-    marginBottom: theme.spacing(2)
+    marginBottom: theme.spacing(2),
   },
   editorLabel: {
     fontSize: "1em",
-    marginBottom: theme.spacing(1)
-  }
+    marginBottom: theme.spacing(1),
+  },
 }));
 
-const LessonEditor = props => {
+const LessonEditor = (props) => {
   const [lesson, setLesson] = useState(props.lesson);
   // const [error, setError] = useState('')
   const classes = useStyles();
@@ -89,7 +89,7 @@ const LessonEditor = props => {
     props.lesson.id && loadLesson(props.lesson.id);
   }, [props.lesson.id]);
 
-  const loadLesson = async id => {
+  const loadLesson = async (id) => {
     const query = `
     query {
       lesson: getLesson(id: "${id}") {
@@ -118,7 +118,7 @@ const LessonEditor = props => {
       if (response.lesson) {
         setLesson(
           Object.assign({}, response.lesson, {
-            content: TextEditor.hydrate(response.lesson.content)
+            content: TextEditor.hydrate(response.lesson.content),
           })
         );
       }
@@ -129,7 +129,7 @@ const LessonEditor = props => {
     }
   };
 
-  const onLessonCreate = async e => {
+  const onLessonCreate = async (e) => {
     e.preventDefault();
 
     if (lesson.id) {
@@ -220,7 +220,7 @@ const LessonEditor = props => {
     }
   };
 
-  const onLessonDelete = async index => {
+  const onLessonDelete = async (index) => {
     setDeleteLessonPopupOpened(false);
     // setError()
 
@@ -254,15 +254,15 @@ const LessonEditor = props => {
     props.onLessonDeleted(lesson.lessonIndex);
   };
 
-  const onLessonDetailsChange = e =>
+  const onLessonDetailsChange = (e) =>
     setLesson(
       Object.assign({}, lesson, {
         [e.target.name]:
-          e.target.type === "checkbox" ? e.target.checked : e.target.value
+          e.target.type === "checkbox" ? e.target.checked : e.target.value,
       })
     );
 
-  const changeTextContent = editorState =>
+  const changeTextContent = (editorState) =>
     setLesson(Object.assign({}, lesson, { content: editorState }));
 
   const closeDeleteLessonPopup = () => setDeleteLessonPopupOpened(false);
@@ -290,12 +290,11 @@ const LessonEditor = props => {
               </InputLabel>
               <Select
                 labelId="select-type"
-                id="demo-simple-select-outlined"
                 value={lesson.type}
                 onChange={onLessonDetailsChange}
                 labelWidth={labelWidth}
                 inputProps={{
-                  name: "type"
+                  name: "type",
                 }}
               >
                 {/* <MenuItem value="TEXT">Text</MenuItem> */}
@@ -326,13 +325,13 @@ const LessonEditor = props => {
             </FormControl>
             {![
               String.prototype.toUpperCase.call(LESSON_TYPE_TEXT),
-              String.prototype.toUpperCase.call(LESSON_TYPE_QUIZ)
+              String.prototype.toUpperCase.call(LESSON_TYPE_QUIZ),
             ].includes(lesson.type) && (
               <div className={classes.formControl}>
                 <MediaSelector
                   title={CONTENT_URL_LABEL}
                   src={lesson.contentURL}
-                  onSelection={mediaId =>
+                  onSelection={(mediaId) =>
                     setLesson(
                       Object.assign({}, lesson, { contentURL: mediaId })
                     )
@@ -340,25 +339,25 @@ const LessonEditor = props => {
                 />
               </div>
             )}
-            <Grid
-              container
-              className={classes.formControl}
-              alignItems="center"
-              justify="space-between"
-            >
-              <Grid item>
-                <Typography variant="body1">{LESSON_CONTENT_HEADER}</Typography>
+            {lesson.type.toLowerCase() === LESSON_TYPE_TEXT && (
+              <Grid
+                container
+                className={classes.formControl}
+                direction="column"
+              >
+                <Grid item>
+                  <Typography variant="body1">
+                    {LESSON_CONTENT_HEADER}
+                  </Typography>
+                </Grid>
+                <Grid item>
+                  <TextEditor
+                    initialContentState={lesson.content}
+                    onChange={changeTextContent}
+                  />
+                </Grid>
               </Grid>
-              <Grid item>
-                <TextEditor
-                  initialContentState={lesson.content}
-                  onChange={changeTextContent}
-                />
-                {/* <IconButton onClick={() => setOpen(true)}>
-                <Edit />
-              </IconButton> */}
-              </Grid>
-            </Grid>
+            )}
             {[LESSON_TYPE_VIDEO, LESSON_TYPE_AUDIO, LESSON_TYPE_PDF].includes(
               lesson.type
             ) && (
@@ -416,7 +415,7 @@ const LessonEditor = props => {
         title={DELETE_LESSON_POPUP_HEADER}
         actions={[
           { name: POPUP_CANCEL_ACTION, callback: closeDeleteLessonPopup },
-          { name: POPUP_OK_ACTION, callback: onLessonDelete }
+          { name: POPUP_OK_ACTION, callback: onLessonDelete },
         ]}
       ></AppDialog>
     </Card>
@@ -429,22 +428,22 @@ LessonEditor.emptyLesson = {
   content: TextEditor.emptyState(),
   contentURL: "",
   downloadable: false,
-  requiresEnrollment: false
+  requiresEnrollment: false,
 };
 
 LessonEditor.propTypes = {
   onLessonDeleted: PropTypes.func.isRequired,
   auth: authProps,
   dispatch: PropTypes.func.isRequired,
-  lesson: lessonType
+  lesson: lessonType,
 };
 
-const mapStateToProps = state => ({
-  auth: state.auth
+const mapStateToProps = (state) => ({
+  auth: state.auth,
 });
 
-const mapDispatchToProps = dispatch => ({
-  dispatch: dispatch
+const mapDispatchToProps = (dispatch) => ({
+  dispatch: dispatch,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(LessonEditor);

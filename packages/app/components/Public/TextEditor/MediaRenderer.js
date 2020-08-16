@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-const MediaRenderer = props => {
+const MediaRenderer = (props) => {
   const entity = props.contentState.getEntity(props.block.getEntityAt(0));
   const type = entity.getType();
   const { options } = entity.getData();
@@ -34,8 +34,8 @@ MediaRenderer.propTypes = {
   block: PropTypes.object,
   options: PropTypes.shape({
     href: PropTypes.string,
-    alt: PropTypes.string
-  })
+    alt: PropTypes.string,
+  }),
 };
 
 export default MediaRenderer;

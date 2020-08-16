@@ -17,7 +17,7 @@ import {
   POPUP_OK_ACTION,
   BLOG_POST_SWITCH,
   APP_MESSAGE_COURSE_SAVED,
-  COURSE_EDITOR_DESCRIPTION
+  COURSE_EDITOR_DESCRIPTION,
 } from "../../config/strings.js";
 import { networkAction, setAppMessage } from "../../redux/actions.js";
 import { queryGraphQL, formulateCourseUrl } from "../../lib/utils.js";
@@ -34,7 +34,7 @@ import {
   Button,
   Card,
   CardActions,
-  CardContent
+  CardContent,
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import { useExecuteGraphQLQuery } from "../CustomHooks.js";
@@ -44,15 +44,15 @@ import AppDialog from "../Public/AppDialog.js";
 import LessonEditor from "./LessonEditor.js";
 import AppMessage from "../../models/app-message.js";
 import { BACKEND, MIMETYPE_IMAGE } from "../../config/constants.js";
-import TextEditor from "../Public/TextEditor/index.js";
+import TextEditor from "@courselit/rich-text";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   title: {
-    marginTop: theme.spacing(3)
+    marginTop: theme.spacing(3),
   },
   formControl: {
     margin: theme.spacing(1),
-    minWidth: "100%"
+    minWidth: "100%",
   },
   editor: {
     border: "1px solid #cacaca",
@@ -60,32 +60,32 @@ const useStyles = makeStyles(theme => ({
     padding: "10px 8px",
     maxHeight: 300,
     overflow: "auto",
-    marginBottom: theme.spacing(2)
+    marginBottom: theme.spacing(2),
   },
   editorLabel: {
     fontSize: "1em",
-    marginBottom: theme.spacing(1)
+    marginBottom: theme.spacing(1),
   },
   controlRow: {
     marginTop: theme.spacing(2),
-    marginBottom: theme.spacing(2)
+    marginBottom: theme.spacing(2),
   },
   link: {
     textDecoration: "none",
-    color: "inherit"
+    color: "inherit",
   },
   cardHeader: {
-    marginBottom: theme.spacing(1)
+    marginBottom: theme.spacing(1),
   },
   lessonItem: {
-    marginBottom: theme.spacing(2)
+    marginBottom: theme.spacing(2),
   },
   addLesson: {
-    marginBottom: theme.spacing(2)
-  }
+    marginBottom: theme.spacing(2),
+  },
 }));
 
-const CourseEditor = props => {
+const CourseEditor = (props) => {
   const initCourseMetaData = {
     title: "",
     cost: "",
@@ -96,10 +96,10 @@ const CourseEditor = props => {
     featuredImage: "",
     id: null,
     isFeatured: false,
-    slug: ""
+    slug: "",
   };
   const initCourseData = {
-    course: initCourseMetaData
+    course: initCourseMetaData,
   };
   const [courseData, setCourseData] = useState(initCourseData);
   const [userError, setUserError] = useState("");
@@ -125,7 +125,7 @@ const CourseEditor = props => {
   // To clear the error, call setError().
   const setError = (msg = "") => setUserError(msg);
 
-  const onCourseCreate = async e => {
+  const onCourseCreate = async (e) => {
     e.preventDefault();
     setError();
 
@@ -207,7 +207,7 @@ const CourseEditor = props => {
     }
   };
 
-  const onCourseDetailsChange = e => {
+  const onCourseDetailsChange = (e) => {
     changeCourseDetails(
       e.target.name,
       e.target.type === "checkbox" ? e.target.checked : e.target.value
@@ -220,20 +220,20 @@ const CourseEditor = props => {
     setCourseData(
       Object.assign({}, courseData, {
         course: Object.assign({}, courseData.course, {
-          [key]: value
-        })
+          [key]: value,
+        }),
       })
     );
   };
 
-  const onDescriptionChange = editorState => {
+  const onDescriptionChange = (editorState) => {
     props.markDirty(true);
 
     setCourseData(
       Object.assign({}, courseData, {
         course: Object.assign({}, courseData.course, {
-          description: editorState
-        })
+          description: editorState,
+        }),
       })
     );
   };
@@ -256,7 +256,7 @@ const CourseEditor = props => {
       if (response.result) {
         setCourseData(
           Object.assign({}, courseData, {
-            course: initCourseMetaData
+            course: initCourseMetaData,
           })
         );
         props.closeEditor();
@@ -268,18 +268,18 @@ const CourseEditor = props => {
     }
   };
 
-  const setCourseDataWithDescription = course => {
+  const setCourseDataWithDescription = (course) => {
     setCourseData(
       Object.assign({}, courseData, {
         course: Object.assign({}, course, {
-          description: TextEditor.hydrate(course.description)
-        })
+          description: TextEditor.hydrate(course.description),
+        }),
       })
     );
     course.lessons && setLessons([...lessons, ...course.lessons]);
   };
 
-  const loadCourse = async courseId => {
+  const loadCourse = async (courseId) => {
     const query = `
     query {
       course: getCourse(id: "${courseId}") {
@@ -311,7 +311,7 @@ const CourseEditor = props => {
     }
   };
 
-  const onFeaturedImageSelection = url =>
+  const onFeaturedImageSelection = (url) =>
     changeCourseDetails("featuredImage", url);
 
   const closeDeleteCoursePopup = () => setDeleteCoursePopupOpened(false);
@@ -322,20 +322,20 @@ const CourseEditor = props => {
       LessonEditor.emptyLesson,
       {
         lessonIndex: lessonIndex,
-        courseId: courseData.course.id
+        courseId: courseData.course.id,
       }
     );
     setLessonIndex(lessonIndex + 1);
     setLessons([...lessons, emptyLessonWithLocalIndexKey]);
   };
 
-  const onLessonDeleted = lessonIndex => {
+  const onLessonDeleted = (lessonIndex) => {
     const indexOfDeletedLesson = lessons
-      .map(lesson => lesson.lessonIndex)
+      .map((lesson) => lesson.lessonIndex)
       .indexOf(lessonIndex);
     setLessons([
       ...lessons.slice(0, indexOfDeletedLesson),
-      ...lessons.slice(indexOfDeletedLesson + 1)
+      ...lessons.slice(indexOfDeletedLesson + 1),
     ]);
   };
 
@@ -364,24 +364,13 @@ const CourseEditor = props => {
                 value={courseData.course.title}
                 onChange={onCourseDetailsChange}
               />
-              <Grid
-                container
-                className={classes.formControl}
-                alignItems="center"
-                justify="space-between"
-              >
-                <Grid item>
-                  <Typography variant="body1">
-                    {COURSE_EDITOR_DESCRIPTION}
-                  </Typography>
-                </Grid>
-                <Grid item>
-                  <TextEditor
-                    initialContentState={courseData.course.description}
-                    onChange={onDescriptionChange}
-                  />
-                </Grid>
-              </Grid>
+              <Typography variant="body1">
+                {COURSE_EDITOR_DESCRIPTION}
+              </Typography>
+              <TextEditor
+                initialContentState={courseData.course.description}
+                onChange={onDescriptionChange}
+              />
               <Grid container alignItems="center">
                 <Grid item xs={12} sm={6}>
                   <TextField
@@ -415,7 +404,7 @@ const CourseEditor = props => {
                       labelwidth={labelWidth}
                       inputProps={{
                         name: "privacy",
-                        id: "outlined-privacy-simple"
+                        id: "outlined-privacy-simple",
                       }}
                     >
                       <MenuItem value="PUBLIC">Public</MenuItem>
@@ -557,7 +546,7 @@ const CourseEditor = props => {
         title={DELETE_COURSE_POPUP_HEADER}
         actions={[
           { name: POPUP_CANCEL_ACTION, callback: closeDeleteCoursePopup },
-          { name: POPUP_OK_ACTION, callback: onCourseDelete }
+          { name: POPUP_OK_ACTION, callback: onCourseDelete },
         ]}
       />
     </Grid>
@@ -570,16 +559,16 @@ CourseEditor.propTypes = {
   courseId: PropTypes.string,
   dispatch: PropTypes.func.isRequired,
   closeEditor: PropTypes.func.isRequired,
-  markDirty: PropTypes.func.isRequired
+  markDirty: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   auth: state.auth,
-  profile: state.profile
+  profile: state.profile,
 });
 
-const mapDispatchToProps = dispatch => ({
-  dispatch: dispatch
+const mapDispatchToProps = (dispatch) => ({
+  dispatch: dispatch,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(CourseEditor);

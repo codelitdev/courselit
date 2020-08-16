@@ -6,21 +6,21 @@ import { makeStyles } from "@material-ui/styles";
 import { Typography } from "@material-ui/core";
 import {
   HEADER_MEDIA_PREVIEW,
-  PREVIEW_PDF_FILE
+  PREVIEW_PDF_FILE,
 } from "../../../config/strings";
 
 const useStyles = makeStyles({
   video: {
     width: 300,
-    height: "auto"
+    height: "auto",
   },
   img: {
     width: 300,
-    height: "auto"
-  }
+    height: "auto",
+  },
 });
 
-const MediaPreview = props => {
+const MediaPreview = (props) => {
   const { mimeType, id } = props;
   const classes = useStyles();
 
@@ -31,7 +31,7 @@ const MediaPreview = props => {
         "image/png",
         "image/jpeg",
         "video/mp4",
-        "audio/mp3"
+        "audio/mp3",
       ].includes(mimeType) && (
         <Typography variant="subtitle1">{HEADER_MEDIA_PREVIEW}</Typography>
       )}
@@ -68,13 +68,19 @@ const MediaPreview = props => {
           Your browser does not support the video tag.
         </audio>
       )}
+      <Typography variant="body1">
+        Direct URL:{" "}
+        <a href={formulateMediaUrl(MEDIA_BACKEND, id, false)}>
+          {formulateMediaUrl(MEDIA_BACKEND, id, false)}
+        </a>
+      </Typography>
     </>
   );
 };
 
 MediaPreview.propTypes = {
   id: PropTypes.string,
-  mimeType: PropTypes.string
+  mimeType: PropTypes.string,
 };
 
 export default MediaPreview;

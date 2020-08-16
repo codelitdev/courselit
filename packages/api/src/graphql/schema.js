@@ -6,6 +6,7 @@ const courses = require("./courses");
 const siteinfo = require("./siteinfo");
 const media = require("./media");
 const design = require("./design");
+const navigation = require("./navigation");
 
 module.exports = new graphql.GraphQLSchema({
   query: new graphql.GraphQLObjectType({
@@ -17,6 +18,7 @@ module.exports = new graphql.GraphQLSchema({
       ...siteinfo.queries,
       ...media.queries,
       ...design.queries,
+      ...navigation.queries,
     },
   }),
   mutation: new graphql.GraphQLObjectType({
@@ -28,6 +30,7 @@ module.exports = new graphql.GraphQLSchema({
       ...siteinfo.mutations,
       ...media.mutations,
       ...design.mutations,
+      ...navigation.mutations,
     },
   }),
 });

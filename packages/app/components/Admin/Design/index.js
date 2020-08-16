@@ -10,7 +10,7 @@ import {
   CardActions,
   Button,
   TextField,
-  Link
+  Link,
 } from "@material-ui/core";
 import {
   CARD_HEADER_PAGE_LAYOUT,
@@ -31,10 +31,11 @@ import {
   APP_MESSAGE_THEME_INSTALLED,
   ERROR_SNACKBAR_PREFIX,
   APP_MESSAGE_THEME_APPLIED,
-  APP_MESSAGE_THEME_UNINSTALLED
+  APP_MESSAGE_THEME_UNINSTALLED,
+  HEADER_NAVIGATION,
 } from "../../../config/strings.js";
 import { makeStyles } from "@material-ui/styles";
-import { AddCircle } from "@material-ui/icons";
+import { Add } from "@material-ui/icons";
 
 import AddComponentDialog from "./AddComponentDialog.js";
 import AddedComponent from "./AddedComponent.js";
@@ -44,55 +45,57 @@ import { BACKEND, THEMES_REPO } from "../../../config/constants.js";
 import {
   networkAction,
   layoutAvailable,
-  setAppMessage
+  setAppMessage,
 } from "../../../redux/actions.js";
 import AppMessage from "../../../models/app-message.js";
 import { authProps } from "../../../types.js";
 import ThemeItem from "./ThemeItem.js";
+import NavigationLinks from "./NavigationLinks/index.js";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   container: {
     borderRadius: theme.spacing(1),
     overflow: "hidden",
-    border: "5px solid black"
+    border: "2px solid #eee",
   },
   outline: {
-    border: "1px solid #eaeaea",
-    textAlign: "center"
+    border: "2px dashed #eaeaea",
+    textAlign: "center",
   },
   box: {
     background: "#fbfbfb",
-    padding: theme.spacing(1)
+    padding: theme.spacing(1),
   },
   fixedBox: {
-    background: "#aaa"
+    background: "#aaa",
+    textAlign: "center",
   },
   margin: {
-    margin: theme.spacing(2)
+    margin: theme.spacing(2),
   },
   pad: {
-    padding: theme.spacing(1)
+    padding: theme.spacing(1),
   },
   marginBottom: {
-    marginBottom: theme.spacing(2)
+    marginBottom: theme.spacing(2),
   },
   pageLayout: {
     marginTop: theme.spacing(4),
-    marginBottom: theme.spacing(1)
+    marginBottom: theme.spacing(1),
   },
   mainContent: {
-    height: "12em"
-  }
+    height: "12em",
+  },
 }));
 
-const PageDesigner = props => {
+const PageDesigner = (props) => {
   const [
     componentSelectionDialogOpened,
-    setComponentSelectionDialogOpened
+    setComponentSelectionDialogOpened,
   ] = useState(false);
   const [
     showComponentsCompatibleWith,
-    setShowComponentsCompatibleWith
+    setShowComponentsCompatibleWith,
   ] = useState("");
   const classes = useStyles();
   const [layout, setLayout] = useState(props.layout);
@@ -135,7 +138,7 @@ const PageDesigner = props => {
         Object.assign({}, layout, {
           [forSection]: layout[forSection]
             ? [...layout[forSection], componentName]
-            : [componentName]
+            : [componentName],
         })
       );
     }
@@ -143,7 +146,7 @@ const PageDesigner = props => {
     setComponentSelectionDialogOpened(!componentSelectionDialogOpened);
   };
 
-  const openAddComponentDialog = showComponentsCompatibleWith => {
+  const openAddComponentDialog = (showComponentsCompatibleWith) => {
     setShowComponentsCompatibleWith(showComponentsCompatibleWith);
     setComponentSelectionDialogOpened(true);
   };
@@ -154,7 +157,7 @@ const PageDesigner = props => {
 
     setLayout(
       Object.assign({}, layout, {
-        [fromSection]: arrayToRemoveComponentFrom
+        [fromSection]: arrayToRemoveComponentFrom,
       })
     );
   };
@@ -226,7 +229,7 @@ const PageDesigner = props => {
     }
   };
 
-  const validateNewThemeText = text => {
+  const validateNewThemeText = (text) => {
     if (!text) {
       return false;
     }
@@ -244,7 +247,7 @@ const PageDesigner = props => {
     return true;
   };
 
-  const onNewThemeTextChanged = e => {
+  const onNewThemeTextChanged = (e) => {
     setNewThemeText(e.target.value);
 
     if (validateNewThemeText(e.target.value)) {
@@ -254,7 +257,7 @@ const PageDesigner = props => {
     }
   };
 
-  const onThemeApply = async themeId => {
+  const onThemeApply = async (themeId) => {
     const mutation = `
       mutation {
         theme: setTheme(id: "${themeId}") {
@@ -282,7 +285,7 @@ const PageDesigner = props => {
     }
   };
 
-  const onThemeUninstall = async themeId => {
+  const onThemeUninstall = async (themeId) => {
     const mutation = `
       mutation c {
         removeTheme(id: "${themeId}")
@@ -308,8 +311,8 @@ const PageDesigner = props => {
     }
   };
 
-  const onThemeRemix = themeId => {
-    const theme = installedThemes.find(theme => theme.id === themeId);
+  const onThemeRemix = (themeId) => {
+    const theme = installedThemes.find((theme) => theme.id === themeId);
     if (theme) {
       const themeCopy = Object.assign({}, theme);
       themeCopy.id = themeCopy.id + `_${REMIXED_THEME_PREFIX.toLowerCase()}`;
@@ -338,11 +341,12 @@ const PageDesigner = props => {
                 direction="column"
                 xs={12}
                 sm={9}
-                className={[classes.container, classes.outline]}
+                className={classes.container}
               >
-                <Grid item className={[classes.outline, classes.fixedBox]}>
+                <Grid item className={classes.fixedBox}>
                   <Typography variant="caption">Header</Typography>
                 </Grid>
+
                 <Grid container item>
                   <Grid
                     container
@@ -383,10 +387,11 @@ const PageDesigner = props => {
                         aria-label="add component to the top section"
                         onClick={() => openAddComponentDialog("top")}
                       >
-                        <AddCircle />
+                        <Add />
                       </IconButton>
                     </Grid>
                   </Grid>
+
                   <Grid
                     container
                     item
@@ -406,7 +411,7 @@ const PageDesigner = props => {
                         className={[
                           classes.fixedBox,
                           classes.outline,
-                          classes.mainContent
+                          classes.mainContent,
                         ]}
                       >
                         <Typography variant="h6">Main Content</Typography>
@@ -436,7 +441,7 @@ const PageDesigner = props => {
                             aria-label="add component to main section"
                             onClick={() => openAddComponentDialog("bottom")}
                           >
-                            <AddCircle />
+                            <Add />
                           </IconButton>
                         </Grid>
                       </Grid>
@@ -469,14 +474,86 @@ const PageDesigner = props => {
                           aria-label="add component to main section"
                           onClick={() => openAddComponentDialog("aside")}
                         >
-                          <AddCircle />
+                          <Add />
                         </IconButton>
                       </Grid>
                     </Grid>
                   </Grid>
                 </Grid>
-                <Grid item className={[classes.outline, classes.fixedBox]}>
-                  <Typography variant="caption">Footer</Typography>
+
+                <Grid
+                  container
+                  item
+                  className={[classes.outline, classes.box]}
+                  direction="column"
+                >
+                  <Grid item>
+                    <Typography variant="h6">Footer</Typography>
+                  </Grid>
+                  <Grid item container direction="row" justify="space-between">
+                    <Grid
+                      item
+                      container
+                      className={classes.outline}
+                      xs={12}
+                      md={6}
+                      direction="column"
+                    >
+                      <Grid item>
+                        <Typography variant="h6">Left Section</Typography>
+                      </Grid>
+                      {layout.footerLeft &&
+                        layout.footerLeft.map((item, index) => (
+                          <AddedComponent
+                            section="footerLeft"
+                            title={item}
+                            index={index}
+                            removeComponent={removeComponent}
+                            key={index}
+                          />
+                        ))}
+                      <Grid item>
+                        <IconButton
+                          color="primary"
+                          aria-label="add component to the footer's left section"
+                          onClick={() => openAddComponentDialog("footerLeft")}
+                        >
+                          <Add />
+                        </IconButton>
+                      </Grid>
+                    </Grid>
+                    <Grid
+                      item
+                      container
+                      className={classes.outline}
+                      xs={12}
+                      md={6}
+                      direction="column"
+                    >
+                      <Grid item>
+                        <Typography variant="h6">Right Section</Typography>
+                      </Grid>
+                      {layout.footerRight &&
+                        layout.footerRight.map((item, index) => (
+                          <AddedComponent
+                            section="footerRight"
+                            title={item}
+                            index={index}
+                            removeComponent={removeComponent}
+                            key={index}
+                          />
+                        ))}
+                      <Grid item>
+                        <IconButton
+                          color="primary"
+                          aria-label="add component to the footer section"
+                          onClick={() => openAddComponentDialog("footerRight")}
+                        >
+                          <Add />
+                        </IconButton>
+                      </Grid>
+                    </Grid>
+                  </Grid>
                 </Grid>
               </Grid>
             </Grid>
@@ -504,7 +581,7 @@ const PageDesigner = props => {
               </Grid>
               {installedThemes.length !== 0 && (
                 <Grid item container direction="column" spacing={2}>
-                  {installedThemes.map(theme => (
+                  {installedThemes.map((theme) => (
                     <ThemeItem
                       theme={theme}
                       key={theme.id}
@@ -564,6 +641,21 @@ const PageDesigner = props => {
           </CardActions>
         </Card>
       </Grid>
+
+      <Grid item container xs direction="column">
+        <Card>
+          <CardHeader title={HEADER_NAVIGATION} />
+          <CardContent>
+            <NavigationLinks />
+          </CardContent>
+        </Card>
+        {/* <Grid item>
+          <Typography variant="h4">{HEADER_NAVIGATION}</Typography>
+        </Grid>
+        <Grid item>
+          <NavigationLinks />
+        </Grid> */}
+      </Grid>
       <AddComponentDialog
         onClose={onSelection}
         onOpen={componentSelectionDialogOpened}
@@ -577,12 +669,12 @@ const PageDesigner = props => {
 PageDesigner.propTypes = {
   layout: PropTypes.object.isRequired,
   auth: authProps,
-  dispatch: PropTypes.func.isRequired
+  dispatch: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   layout: state.layout,
-  auth: state.auth
+  auth: state.auth,
 });
 
 export default connect(mapStateToProps)(PageDesigner);

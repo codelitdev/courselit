@@ -10,12 +10,12 @@ import {
   LOGIN_SECTION_BUTTON,
   SIGNUP_SECTION_HEADER,
   SIGNUP_SECTION_BUTTON,
-  LOGIN_INSTEAD_BUTTON
+  LOGIN_INSTEAD_BUTTON,
 } from "../config/strings.js";
 import {
   BACKEND,
   JWT_COOKIE_NAME,
-  USERID_COOKIE_NAME
+  USERID_COOKIE_NAME,
 } from "../config/constants.js";
 import { signedIn, networkAction } from "../redux/actions.js";
 import { setCookie } from "../lib/session.js";
@@ -24,14 +24,14 @@ import FetchBuilder from "../lib/fetch.js";
 import { makeStyles } from "@material-ui/styles";
 import BaseLayout from "../components/Public/BaseLayout";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   content: {
     padding: theme.spacing(2),
-    paddingTop: theme.spacing(8)
-  }
+    paddingTop: theme.spacing(8),
+  },
 }));
 
-const Login = props => {
+const Login = (props) => {
   const emptyStringPat = /^\s*$/;
   const defaultSignupData = {
     email: "",
@@ -39,7 +39,7 @@ const Login = props => {
     conf: "",
     name: "",
     err: "",
-    msg: ""
+    msg: "",
   };
   const defaultLoginData = { email: "", pass: "", err: "" };
   const [loginData, setLoginData] = useState(defaultLoginData);
@@ -116,7 +116,7 @@ const Login = props => {
       return setSignupData(
         Object.assign({}, signupData, {
           err: ERR_PASSWORDS_DONT_MATCH,
-          msg: ""
+          msg: "",
         })
       );
     }
@@ -142,14 +142,14 @@ const Login = props => {
         setSignupData(
           Object.assign({}, defaultSignupData, {
             err: "",
-            msg: SIGNUP_SUCCESS
+            msg: SIGNUP_SUCCESS,
           })
         );
       } else {
         setSignupData(
           Object.assign({}, signupData, {
             err: message,
-            msg: ""
+            msg: "",
           })
         );
       }
@@ -157,7 +157,7 @@ const Login = props => {
       setSignupData(
         Object.assign({}, signupData, {
           err: err.message,
-          msg: ""
+          msg: "",
         })
       );
     } finally {
@@ -188,10 +188,10 @@ const Login = props => {
                     label="Email"
                     fullWidth
                     margin="normal"
-                    onChange={e =>
+                    onChange={(e) =>
                       setLoginData(
                         Object.assign({}, loginData, {
-                          email: e.target.value
+                          email: e.target.value,
                         })
                       )
                     }
@@ -203,10 +203,10 @@ const Login = props => {
                     label="Password"
                     fullWidth
                     margin="normal"
-                    onChange={e =>
+                    onChange={(e) =>
                       setLoginData(
                         Object.assign({}, loginData, {
-                          pass: e.target.value
+                          pass: e.target.value,
                         })
                       )
                     }
@@ -241,10 +241,10 @@ const Login = props => {
                     label="Email"
                     fullWidth
                     margin="normal"
-                    onChange={e =>
+                    onChange={(e) =>
                       setSignupData(
                         Object.assign({}, signupData, {
-                          email: e.target.value
+                          email: e.target.value,
                         })
                       )
                     }
@@ -256,10 +256,10 @@ const Login = props => {
                     label="Password"
                     fullWidth
                     margin="normal"
-                    onChange={e =>
+                    onChange={(e) =>
                       setSignupData(
                         Object.assign({}, signupData, {
-                          pass: e.target.value
+                          pass: e.target.value,
                         })
                       )
                     }
@@ -271,10 +271,10 @@ const Login = props => {
                     label="Confirm password"
                     fullWidth
                     margin="normal"
-                    onChange={e =>
+                    onChange={(e) =>
                       setSignupData(
                         Object.assign({}, signupData, {
-                          conf: e.target.value
+                          conf: e.target.value,
                         })
                       )
                     }
@@ -286,10 +286,10 @@ const Login = props => {
                     label="Name"
                     fullWidth
                     margin="normal"
-                    onChange={e =>
+                    onChange={(e) =>
                       setSignupData(
                         Object.assign({}, signupData, {
-                          name: e.target.value
+                          name: e.target.value,
                         })
                       )
                     }
@@ -316,8 +316,8 @@ const Login = props => {
   );
 };
 
-const mapStateToProps = state => ({
-  auth: state.auth
+const mapStateToProps = (state) => ({
+  auth: state.auth,
 });
 
 export default connect(mapStateToProps)(Login);
