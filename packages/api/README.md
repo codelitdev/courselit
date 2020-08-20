@@ -1,6 +1,6 @@
 # Introduction
 
-A headless CMS for hosting your own teaching courses. Features include course creation, student management, media management and website customisation. [Learn more](https://courselit.recurze.com/).
+A headless CMS for hosting your own teaching courses. Features include course creation, student management, media management and website customisation. [Learn more](https://courselit.codelit.com/).
 
 ## Getting started
 
@@ -45,4 +45,5 @@ This will make the server available at `/<API_PREFIX>` path. Defaults to `/api`.
 The duration after while the generated JWT expires. For more information click [this](https://www.npmjs.com/package/jsonwebtoken) link. Defaults to `1d`.
 
 ## Support
+
 Come chat with us in our official [Spectrum chat](https://spectrum.chat/courselit/general).

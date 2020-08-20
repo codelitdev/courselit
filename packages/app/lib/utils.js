@@ -1,50 +1,51 @@
-import fetch from 'isomorphic-unfetch'
+import fetch from "isomorphic-unfetch";
 import {
   URL_EXTENTION_POSTS,
-  URL_EXTENTION_COURSES
-} from '../config/constants.js'
-import TextEditor from '../components/TextEditor/index.js'
+  URL_EXTENTION_COURSES,
+} from "../config/constants.js";
+import TextEditor from "@courselit/rich-text";
 
 export const queryGraphQL = async (url, query, token) => {
   const options = {
-    method: 'POST',
-    headers: token ? {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    } : { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query })
-  }
-  let response = await fetch(url, options)
-  response = await response.json()
+    method: "POST",
+    headers: token
+      ? {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        }
+      : { "Content-Type": "application/json" },
+    body: JSON.stringify({ query }),
+  };
+  let response = await fetch(url, options);
+  response = await response.json();
 
   if (response.errors && response.errors.length > 0) {
-    throw new Error(response.errors[0].message)
+    throw new Error(response.errors[0].message);
   }
 
-  return response.data
-}
+  return response.data;
+};
 
-export const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1)
+export const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
-export const queryGraphQLWithUIEffects = (backend, dispatch, networkAction, token) =>
-  async (query) => {
-    try {
-      dispatch(networkAction(false))
-      let response = await queryGraphQL(
-        `${backend}/graph`,
-        query,
-        token)
+export const queryGraphQLWithUIEffects = (
+  backend,
+  dispatch,
+  networkAction,
+  token
+) => async (query) => {
+  try {
+    dispatch(networkAction(false));
+    const response = await queryGraphQL(`${backend}/graph`, query, token);
 
-      return response
-    } catch (err) {
-      throw err
-    } finally {
-      dispatch(networkAction(false))
-    }
+    return response;
+  } finally {
+    dispatch(networkAction(false));
   }
+};
 
 export const formattedLocaleDate = (epochString) =>
-  (new Date(Number(epochString))).toLocaleString('en-US')
+  new Date(Number(epochString)).toLocaleString("en-US");
 
 // export const removeEmptyProperties = (obj, propToExclude) =>
 //   Object
@@ -59,50 +60,60 @@ export const formattedLocaleDate = (epochString) =>
 //       }, {})
 
 // Regex copied from: https://stackoverflow.com/a/48675160/942589
-export const makeGraphQLQueryStringFromJSObject = obj =>
-  JSON.stringify(obj).replace(/"([^(")"]+)":/g, '$1:')
+export const makeGraphQLQueryStringFromJSObject = (obj) =>
+  JSON.stringify(obj).replace(/"([^(")"]+)":/g, "$1:");
 
-export const formulateMediaUrl =
-  (backend, mediaID, generateThumbnailUrl = false) =>
-    mediaID ? `${backend}/media/${mediaID}${generateThumbnailUrl ? '?thumb=1' : ''}` : ''
+export const formulateMediaUrl = (
+  backend,
+  mediaID,
+  generateThumbnailUrl = false
+) =>
+  mediaID
+    ? `${backend}/media/${mediaID}${generateThumbnailUrl ? "?thumb=1" : ""}`
+    : "";
 
-export const formulateCourseUrl = (course, backend = '') =>
-  `${backend}/${course.isBlog ? URL_EXTENTION_POSTS : URL_EXTENTION_COURSES}/${course.id}/${course.slug}`
+export const formulateCourseUrl = (course, backend = "") =>
+  `${backend}/${course.isBlog ? URL_EXTENTION_POSTS : URL_EXTENTION_COURSES}/${
+    course.id
+  }/${course.slug}`;
 
 export const getPostDescriptionSnippet = (rawDraftJSContentState) => {
-  const firstSentence = TextEditor
-    .hydrate(rawDraftJSContentState)
+  const firstSentence = TextEditor.hydrate(rawDraftJSContentState)
     .getCurrentContent()
     .getPlainText()
-    .split('.')[0]
+    .split(".")[0];
 
-  return firstSentence ? firstSentence + '.' : firstSentence
-}
+  return firstSentence ? firstSentence + "." : firstSentence;
+};
 
-export const getGraphQLQueryFields = (jsObj, fieldsNotPutBetweenQuotes = []) => {
-  let queryString = '{'
-  for (let i of Object.keys(jsObj)) {
+export const getGraphQLQueryFields = (
+  jsObj,
+  fieldsNotPutBetweenQuotes = []
+) => {
+  let queryString = "{";
+  for (const i of Object.keys(jsObj)) {
     if (jsObj[i] !== undefined) {
-      queryString += fieldsNotPutBetweenQuotes.includes(i) ?
-        `${i}: ${jsObj[i]},` : `${i}: "${jsObj[i]}",`
+      queryString += fieldsNotPutBetweenQuotes.includes(i)
+        ? `${i}: ${jsObj[i]},`
+        : `${i}: "${jsObj[i]}",`;
     }
   }
-  queryString += '}'
+  queryString += "}";
 
-  return queryString
-}
+  return queryString;
+};
 
 export const getObjectContainingOnlyChangedFields = (baseline, obj) => {
-  const result = {}
-  for (let i of Object.keys(baseline)) {
+  const result = {};
+  for (const i of Object.keys(baseline)) {
     if (baseline[i] !== obj[i]) {
-      result[i] = obj[i]
+      result[i] = obj[i];
     }
   }
-  return result
-}
+  return result;
+};
 
 export const areObjectsDifferent = (baseline, obj) => {
   const onlyChangedFields = getObjectContainingOnlyChangedFields(baseline, obj);
   return !!Object.keys(onlyChangedFields).length;
-}
+};

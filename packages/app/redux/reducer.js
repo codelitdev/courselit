@@ -1,3 +1,4 @@
+import { decode } from "base-64";
 import { combineReducers } from "redux";
 import {
   SIGN_IN,
@@ -8,7 +9,10 @@ import {
   SITEINFO_AVAILABLE,
   AUTH_CHECKED,
   SET_MESSAGE,
-  CLEAR_MESSAGE
+  CLEAR_MESSAGE,
+  THEME_AVAILABLE,
+  LAYOUT_AVAILABLE,
+  NAVIGATION_AVAILABLE,
 } from "./actionTypes.js";
 import {
   GENERIC_TITLE,
@@ -22,7 +26,7 @@ import {
   GENERIC_PAYMENT_METHOD,
   GENERIC_THEME_COLOR_PRIMARY,
   GENERIC_THEME_COLOR_SECONDARY,
-  GENERIC_CODE_INJECTION_HEAD
+  GENERIC_CODE_INJECTION_HEAD,
 } from "../config/strings.js";
 
 const initialState = {
@@ -30,7 +34,7 @@ const initialState = {
     guest: true,
     token: null,
     userid: null,
-    checked: false
+    checked: false,
   },
   siteinfo: {
     title: GENERIC_TITLE,
@@ -44,7 +48,7 @@ const initialState = {
     stripePublishableKey: GENERIC_STRIPE_PUBLISHABLE_KEY_TEXT,
     themePrimaryColor: GENERIC_THEME_COLOR_PRIMARY,
     themeSecondaryColor: GENERIC_THEME_COLOR_SECONDARY,
-    codeInjectionHead: GENERIC_CODE_INJECTION_HEAD
+    codeInjectionHead: GENERIC_CODE_INJECTION_HEAD,
   },
   networkAction: false,
   profile: {
@@ -54,13 +58,22 @@ const initialState = {
     fetched: false,
     isAdmin: false,
     purchases: [],
-    email: null
+    email: null,
   },
   message: {
     open: false,
     message: "",
-    action: null
-  }
+    action: null,
+  },
+  theme: {},
+  layout: {
+    top: [],
+    bottom: [],
+    aside: [],
+    footerLeft: [],
+    footerRight: [],
+  },
+  navigation: [],
 };
 
 function authReducer(state = initialState.auth, action) {
@@ -70,7 +83,7 @@ function authReducer(state = initialState.auth, action) {
         guest: false,
         token: action.token,
         userid: action.userid,
-        checked: true
+        checked: true,
       };
     case SIGN_OUT:
       return initialState.auth;
@@ -111,8 +124,8 @@ function siteinfoReducer(state = initialState.siteinfo, action) {
             action.siteinfo.themeSecondaryColor ||
             initialState.siteinfo.themeSecondaryColor,
           codeInjectionHead:
-            action.siteinfo.codeInjectionHead ||
-            initialState.siteinfo.codeInjectionHead
+            decode(action.siteinfo.codeInjectionHead) ||
+            initialState.siteinfo.codeInjectionHead,
         };
       } catch (e) {
         return state;
@@ -141,7 +154,7 @@ function profileReducer(state = initialState.profile, action) {
         fetched: true,
         isAdmin: (action.profile && action.profile.isAdmin) || false,
         purchases: (action.profile && action.profile.purchases) || [],
-        email: action.profile && action.profile.email
+        email: action.profile && action.profile.email,
       };
     case PROFILE_CLEAR:
       return initialState.profile;
@@ -156,10 +169,55 @@ function messageReducer(state = initialState.message, action) {
       return {
         message: action.message.message,
         action: action.message.action,
-        open: true
+        open: true,
       };
     case CLEAR_MESSAGE:
       return initialState.message;
+    default:
+      return state;
+  }
+}
+
+function themeReducer(state = initialState.theme, action) {
+  let styles;
+
+  switch (action.type) {
+    case THEME_AVAILABLE:
+      try {
+        styles = JSON.parse(action.theme.styles);
+      } catch (err) {
+        styles = state;
+      }
+
+      return Object.assign({}, action.theme, {
+        styles: styles,
+      });
+    default:
+      return state;
+  }
+}
+
+function layoutReducer(state = initialState.layout, action) {
+  let layout;
+
+  switch (action.type) {
+    case LAYOUT_AVAILABLE:
+      try {
+        layout = Object.assign({}, state, JSON.parse(action.layout));
+      } catch (err) {
+        layout = state;
+      }
+
+      return Object.assign({}, layout);
+    default:
+      return state;
+  }
+}
+
+function navigationReducer(state = initialState.navigation, action) {
+  switch (action.type) {
+    case NAVIGATION_AVAILABLE:
+      return action.links;
     default:
       return state;
   }
@@ -170,5 +228,8 @@ export default combineReducers({
   siteinfo: siteinfoReducer,
   networkAction: networkActionReducer,
   profile: profileReducer,
-  message: messageReducer
+  message: messageReducer,
+  theme: themeReducer,
+  layout: layoutReducer,
+  navigation: navigationReducer,
 });

@@ -1,0 +1,54 @@
+{
+  "name": "@courselit/rich-text",
+  "version": "0.2.2",
+  "description": "Edit and display rich text in React apps. Built using DraftJS.",
+  "keywords": [
+    "rte",
+    "rich-text-editor",
+    "draftjs",
+    "react-text-editor",
+    "text-editor"
+  ],
+  "author": "Rajat Saxena <social@rajats.xyz>",
+  "homepage": "https://github.com/codelitdev/courselit#readme",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codelitdev/courselit.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1",
+    "build": "webpack"
+  },
+  "bugs": {
+    "url": "https://github.com/codelitdev/courselit/issues"
+  },
+  "dependencies": {
+    "draft-js": "^0.11.6",
+    "prop-types": "^15.7.2"
+  },
+  "peerDependencies": {
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.11.1",
+    "babel-loader": "^8.1.0",
+    "css-loader": "^4.2.1",
+    "style-loader": "^1.2.1",
+    "svg-react-loader": "^0.4.6",
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.12"
+  }
+}

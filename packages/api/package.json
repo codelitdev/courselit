@@ -1,17 +1,22 @@
 {
   "name": "@courselit/api",
-  "version": "0.1.8",
+  "version": "0.2.2",
   "main": "./src/index.js",
   "license": "MIT",
+  "author": {
+    "name": "The CodeLit Team",
+    "email": "hi@codelit.dev"
+  },
   "scripts": {
-    "lint": "eslint src __tests__ --fix",
-    "prettier": "prettier --write 'src/**/*.js' '__tests__/**/*.js'",
+    "lint": "eslint .",
+    "prettier": "prettier --write .",
     "dev": "NODE_ENV=dev JWT_SECRET=notsecure USER_CONTENT_DIRECTORY=~/courselit-local PORT=8000 nodemon src",
     "test:server": "NODE_ENV=test yarn dev",
     "test:inte": "NODE_ENV=test jest",
     "start": "node src"
   },
   "dependencies": {
+    "@courselit/thumbnail": "^0.2.2",
     "base-64": "^0.1.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
@@ -19,11 +24,10 @@
     "dotenv": "^8.2.0",
     "draft-js": "^0.11.2",
     "express": "^4.17.1",
-    "express-fileupload": "^1.1.6-alpha.6",
+    "express-fileupload": "^1.1.9",
     "express-graphql": "^0.9.0",
     "graphql": "^14.5.8",
     "jsonwebtoken": "^8.5.1",
-    "media-thumbnail": "^1.0.0",
     "mongoose": "^5.7.11",
     "passport": "^0.4.0",
     "passport-jwt": "^4.0.0",
@@ -58,5 +62,6 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "gitHead": "f3c24d027b009ca5b5b60855902cda9acb71eba0"
 }

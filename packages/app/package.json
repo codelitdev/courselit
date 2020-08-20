@@ -1,18 +1,23 @@
 {
   "name": "@courselit/app",
-  "version": "0.1.7",
+  "version": "0.2.2",
   "main": "index.js",
   "license": "MIT",
+  "author": {
+    "name": "The CodeLit Team",
+    "email": "hi@codelit.dev"
+  },
   "scripts": {
     "dev": "next",
     "build": "next build",
     "start": "next start -p 3000",
-    "lint": "eslint pages components redux types.js theme.js --fix",
+    "lint": "eslint pages components redux types.js --fix",
     "prettier": "prettier --write 'pages/**/*.js' 'components/**/*.js' 'redux/**/*.js' types.js theme.js",
     "test": "jest"
   },
   "dependencies": {
     "@babel/runtime": "^7.8.3",
+    "@courselit/rich-text": "^0.2.2",
     "@material-ui/core": "^4.8.1",
     "@material-ui/icons": "^4.4.1",
     "@material-ui/styles": "^4.7.1",
@@ -63,5 +68,6 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "gitHead": "f3c24d027b009ca5b5b60855902cda9acb71eba0"
 }

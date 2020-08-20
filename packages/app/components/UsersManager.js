@@ -2,17 +2,17 @@ import React, { useState, useEffect } from "react";
 import { Grid, Typography, Button } from "@material-ui/core";
 import {
   USERS_MANAGER_PAGE_HEADING,
-  LOAD_MORE_TEXT
+  LOAD_MORE_TEXT,
 } from "../config/strings.js";
 import UserDetails from "./UserDetails.js";
 import { useExecuteGraphQLQuery } from "./CustomHooks.js";
 
-const UsersManager = props => {
+const UsersManager = (props) => {
   const [, setUsersSummary] = useState({
     count: 0,
     verified: 0,
     admins: 0,
-    creators: 0
+    creators: 0,
   });
   const [usersPaginationOffset, setUsersPaginationOffset] = useState(1);
   const [users, setUsers] = useState([]);
@@ -45,13 +45,10 @@ const UsersManager = props => {
           count: response.summary.count,
           verified: response.summary.verified,
           admins: response.summary.admins,
-          creators: response.summary.creators
+          creators: response.summary.creators,
         });
-        // creatorCoursesPaginationOffset += 1
       }
-    } catch (err) {
-      console.log(err);
-    }
+    } catch (err) {}
   };
 
   const loadUsers = async () => {
@@ -77,9 +74,7 @@ const UsersManager = props => {
       if (response.users && response.users.length > 0) {
         setUsers([...users, ...response.users]);
       }
-    } catch (err) {
-      console.log(err);
-    }
+    } catch (err) {}
   };
 
   // const handleSearch = event => {
@@ -116,7 +111,7 @@ const UsersManager = props => {
         </Grid> */}
       </Grid>
       <Grid item>
-        {users.map(user => (
+        {users.map((user) => (
           <UserDetails user={user} key={user.id} />
         ))}
       </Grid>
