@@ -23,4 +23,3 @@ RUN apt-get update \
 COPY startup.sh /usr/local/bin
 RUN ln -s /usr/local/bin/startup.sh /
 RUN ["chmod", "+x", "/usr/local/bin/startup.sh"]
-RUN startup.sh

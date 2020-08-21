@@ -1,11 +1,9 @@
 {
     "name": "CourseLit LMS",
     "dockerfile": "Dockerfile",
-
     "settings": {
 		"terminal.integrated.shell.linux": "/bin/bash"
 	},
-
 	"forwardPorts": [
 		3000,
 		8000,
@@ -16,4 +14,5 @@
 		"eamodio.gitlens",
 		"ms-vscode.vscode-typescript-next"
 	],
+	"postAttachCommand": "startup.sh"
 }
