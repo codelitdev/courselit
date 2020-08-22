@@ -32,35 +32,18 @@
 </p>
 
 # Introduction
-Hi there! Are you an educator looking for a way to start your own online teaching website or business? Have you been to the sites which let you start your own online classes but charge a lot or take a lot commission but you don't want to give away a significant amount of your income to those businesses? Then you are at the right place.
+CourseLit is a content management system (aka CMS) for starting your own online course website. It is designed keeping educators in mind. Consider it an open-source alternative to those paid tutoring sites.
 
-Using CourseLit, which is a content management system (also known as a CMS) specially designed for educators and teachers, you can easily host your own courses on any cheap cloud based server, something like [a $5/month droplet on Digitalocean](https://www.digitalocean.com/pricing/) for example. 
+It comes pre-equipped with all the basic tools you'd require to efficiently run and administer your online teaching business. Features include course authoring, student management, payment processing (via Stripe), website customization and analytics (very limited as of now).
 
-CourseLit comes pre-equipped with all the basic tools you'd require to efficiently run and administer your online teaching business. Features include student management, payment processing (via Stripe), customization and analytics (very limited as of now). 
-
-Check out a live example to see what you can build with CourseLit. [Click here](https://codelit.dev).
+Check out this live example to see what you can build with CourseLit. [Click here](https://codelit.dev).
 
 ## Screenshot
 
 ![courselit cms screenshot](./assets/screenshot.png)
 
 ## Getting Started
-The recommended way to deploy CourseLit on your server is via Ansible. Follow the below mentioned instructions.
-
-### Install with SSL
-```
-ansible-playbook deployment/install.yml -l <host> -u <host_user> --ask-become-pass -e 'ansible_python_interpreter=/usr/bin/python3'
-```
-
-### Install without SSL
-```
-ansible-playbook deployment/install-without-ssl.yml -l <host> -u <host_user> --ask-become-pass -e 'ansible_python_interpreter=/usr/bin/python3'
-```
-
-> Tested on Ubuntu 18.04 LTS and 20.04 LTS versions.
-
-## Troubleshooting
-If the above Ansible installer fails, retry the operation after deleting the `media folder` from the server which you specified while running the installer. The default location is `~/courselit-data`.
+To install CourseLit on your cloud server, please follow [our official guide](https://codelit.gitbook.io/courselit/getting-started).
 
 ## Running on local
 You can run a local instance of CourseLit on your local machine via [Docker Compose](https://docs.docker.com/compose/). Follow the below mentioned instructions.
@@ -122,6 +105,18 @@ The domain name for which the ssl certificate is issued. Optional parameter, onl
 **TAG**
 
 The Docker tag. To see what all tags are available, visit [CourseLit on Docker Hub](https://hub.docker.com/repository/registry-1.docker.io/codelit/courselit-proxy/tags).
+
+## Development
+The project is organised as a [mono-repo](https://en.wikipedia.org/wiki/Monorepo). It uses [Lerna](https://github.com/lerna/lerna) for managing the mono-repo. You need to run both backend and frontend servers, located in `packages/api` and `packages/app` respectively, in order to see your local changes.
+
+We recommend using [Visual Studio Code](https://code.visualstudio.com/) for development as it allows you to develop your code in isolation inside a container using the [Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension. Install both the editor and the extension.
+
+Once you have this setup, follow these steps.
+
+1. Press `Ctrl + Shift + P` to open the command palette of Visual Studio Code, type in "Remote-Containers: Open Workspace in Container" and press enter after selecting it.
+2. Once the code opens up, open two terminal windows in your Visual Studio Code and type in the following commands to start the backend and frontend servers respectively.
+  - `yarn lerna run dev --scope=@courselit/api --stream`
+  - `yarn lerna run dev --scope=@courselit/app --stream`
 
 ## Security
 Although, we've done everything in our power to secure the application by following the best practices, we hope you understand that no one can guarantee that it's the most secure implementation out there and it will always stay secure.
