@@ -16,6 +16,10 @@
   "license": "MIT",
   "scripts": {
     "lint": "eslint packages",
-    "prettier": "prettier --write packages"
+    "prettier": "prettier --write packages",
+    "lerna": "lerna"
+  },
+  "devDependencies": {
+    "lerna": "^3.22.1"
   }
 }
