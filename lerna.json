@@ -4,9 +4,5 @@
   ],
   "version": "0.2.2",
   "useWorkspaces": true,
-  "command": {
-    "run": {
-      "npmClient": "yarn"
-    }
-  }
+  "npmClient": "yarn"
 }
