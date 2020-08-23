@@ -4,7 +4,7 @@ import Link from "next/link";
 import TextEditor from "@courselit/rich-text";
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/styles";
-import { BACKEND } from "../../config/constants.js";
+import { MEDIA_BACKEND } from "../../config/constants.js";
 import { formulateMediaUrl, formattedLocaleDate } from "../../lib/utils";
 import { publicCourse, profileProps } from "../../types";
 import BuyButton from "../Checkout";
@@ -42,7 +42,7 @@ const useStyles = (featuredImage) =>
       },
       overflow: "hidden",
       background: `url('${formulateMediaUrl(
-        BACKEND,
+        MEDIA_BACKEND,
         featuredImage
       )}') no-repeat center center`,
       backgroundSize: "contain",
