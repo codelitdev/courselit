@@ -1,7 +1,10 @@
 import React from "react";
 import PropTypes from "prop-types";
 import Link from "next/link";
-import { BACKEND, URL_EXTENTION_POSTS } from "../../../config/constants.js";
+import {
+  MEDIA_BACKEND,
+  URL_EXTENTION_POSTS,
+} from "../../../config/constants.js";
 import { Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import { formulateMediaUrl } from "../../../lib/utils.js";
@@ -19,7 +22,7 @@ const useStyles = (featuredImage) =>
       height: 240,
       width: "100%",
       background: `url('${formulateMediaUrl(
-        BACKEND,
+        MEDIA_BACKEND,
         featuredImage
       )}') no-repeat center center`,
       backgroundSize: "cover",
