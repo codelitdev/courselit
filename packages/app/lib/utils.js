@@ -74,7 +74,7 @@ export const formulateMediaUrl = (
 
 export const formulateCourseUrl = (course, backend = "") =>
   `${backend}/${course.isBlog ? URL_EXTENTION_POSTS : URL_EXTENTION_COURSES}/${
-    course.id
+    course.courseId
   }/${course.slug}`;
 
 export const getPostDescriptionSnippet = (rawDraftJSContentState) => {

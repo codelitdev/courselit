@@ -61,7 +61,7 @@ const Post = (props) => {
 Post.getInitialProps = async ({ query }) => {
   const graphQuery = `
     query {
-      post: getCourse(id: "${query.id}") {
+      post: getCourse(id: ${query.id}) {
           id,
           title,
           description,
