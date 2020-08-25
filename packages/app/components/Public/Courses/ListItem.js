@@ -41,7 +41,7 @@ const ListItem = (props) => {
     <Grid item xs={12} md={6}>
       <Link
         href={`/${URL_EXTENTION_COURSES}/[id]/[slug]`}
-        as={`/${URL_EXTENTION_COURSES}/${props.id}/${props.slug}`}
+        as={`/${URL_EXTENTION_COURSES}/${props.courseId}/${props.slug}`}
       >
         <a className={classes.link}>
           <Card>
@@ -82,6 +82,7 @@ ListItem.propTypes = {
   slug: PropTypes.string.isRequired,
   featuredImage: PropTypes.string,
   cost: PropTypes.number.isRequired,
+  courseId: PropTypes.number.isRequired,
 };
 
 export default ListItem;

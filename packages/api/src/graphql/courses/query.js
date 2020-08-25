@@ -7,10 +7,14 @@ module.exports = {
     type: types.courseType,
     args: {
       id: {
-        type: new graphql.GraphQLNonNull(graphql.GraphQLString),
+        type: graphql.GraphQLString,
+      },
+      courseId: {
+        type: graphql.GraphQLInt,
       },
     },
-    resolve: (root, { id }, context) => logic.getCourse(id, context),
+    resolve: (root, { id, courseId }, context) =>
+      logic.getCourse(id, courseId, context),
   },
   getCreatorCourses: {
     type: new graphql.GraphQLList(types.myCoursesItemType),

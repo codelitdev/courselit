@@ -50,7 +50,8 @@ const List = (props) => {
         creatorName,
         cost,
         slug,
-        isFeatured
+        isFeatured,
+        courseId
       }
     }
     `;
