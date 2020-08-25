@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const AutoIncrement = require("mongoose-sequence")(mongoose);
 const { unlisted, open, closed } = require("../config/constants.js");
 
 const CourseSchema = new mongoose.Schema({
@@ -16,5 +17,7 @@ const CourseSchema = new mongoose.Schema({
   description: String,
   featuredImage: String,
 });
+
+CourseSchema.plugin(AutoIncrement, { inc_field: "courseId" });
 
 module.exports = mongoose.model("Course", CourseSchema);

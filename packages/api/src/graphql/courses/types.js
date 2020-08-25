@@ -31,6 +31,7 @@ const courseType = new graphql.GraphQLObjectType({
     },
     updated: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     slug: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+    courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
     description: { type: graphql.GraphQLString },
     featuredImage: { type: graphql.GraphQLString },
   },
@@ -98,6 +99,7 @@ const publicCoursesType = new graphql.GraphQLObjectType({
     creatorName: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     description: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     isFeatured: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
+    courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
   },
 });
 

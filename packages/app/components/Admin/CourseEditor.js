@@ -97,6 +97,7 @@ const CourseEditor = (props) => {
     id: null,
     isFeatured: false,
     slug: "",
+    courseId: -1,
   };
   const initCourseData = {
     course: initCourseMetaData,
@@ -162,7 +163,8 @@ const CourseEditor = (props) => {
           description,
           featuredImage,
           isFeatured,
-          slug
+          slug,
+          courseId
         }
       }
       `;
@@ -189,7 +191,8 @@ const CourseEditor = (props) => {
           description,
           featuredImage,
           isFeatured,
-          slug
+          slug,
+          courseId
         }
       }
       `;
@@ -296,7 +299,8 @@ const CourseEditor = (props) => {
           title
         },
         isFeatured,
-        slug
+        slug,
+        courseId
       }
     }
     `;
