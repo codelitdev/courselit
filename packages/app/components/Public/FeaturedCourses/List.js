@@ -47,7 +47,8 @@ const List = (props) => {
         title,
         cost,
         featuredImage,
-        slug
+        slug,
+        courseId
       }
     }
     `;
