@@ -4,6 +4,7 @@
 service mongodb start
 
 # Lerna bootstrap
+yarn install
 echo 'y' | yarn lerna clean
 yarn lerna bootstrap
 

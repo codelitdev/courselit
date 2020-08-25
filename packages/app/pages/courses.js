@@ -40,7 +40,7 @@ const Courses = (props) => {
 
   return (
     <BaseLayout title={PAGE_HEADER_ALL_COURSES}>
-      <Posts />
+      <Posts showLoadMoreButton={true} />
     </BaseLayout>
   );
 };

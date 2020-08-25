@@ -83,6 +83,7 @@ const postType = new graphql.GraphQLObjectType({
     creatorName: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     updated: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     slug: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+    courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
     featuredImage: { type: graphql.GraphQLString },
   },
 });
