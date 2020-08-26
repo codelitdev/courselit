@@ -35,16 +35,24 @@ const validateBlogPosts = (courseData) => {
   return courseData;
 };
 
-exports.getCourse = async (id, ctx) => {
-  const course = await Course.findById(id);
+exports.getCourse = async (id = null, courseId = null, ctx) => {
+  if (!id && !courseId) {
+    throw new Error(strings.responses.invalid_course_id);
+  }
+
+  let course;
+  if (id) {
+    course = await Course.findById(id);
+  } else {
+    course = await Course.findOne({ courseId });
+  }
 
   if (!course) {
     throw new Error(strings.responses.item_not_found);
   }
 
   const notTheOwner =
-    course &&
-    (!ctx.user || course.creatorId.toString() !== ctx.user._id.toString());
+    !ctx.user || course.creatorId.toString() !== ctx.user._id.toString();
   if (notTheOwner) {
     if (!course.published || course.privacy === closed) {
       throw new Error(strings.responses.item_not_found);
@@ -162,7 +170,7 @@ exports.getPosts = async (offset) => {
   };
   const posts = await Course.find(
     query,
-    "id title description creatorName updated slug featuredImage"
+    "id title description creatorName updated slug featuredImage courseId"
   )
     .sort({ updated: -1 })
     .skip((offset - 1) * postsPerPageLimit)
@@ -179,6 +187,7 @@ exports.getPosts = async (offset) => {
     updated: x.updated,
     slug: x.slug,
     featuredImage: x.featuredImage,
+    courseId: x.courseId,
   }));
 };
 
@@ -194,7 +203,7 @@ exports.getPublicCourses = async (offset, onlyShowFeatured = false) => {
 
   let dbQuery = Course.find(
     query,
-    "id title featuredImage cost creatorName slug description updated isFeatured"
+    "id title featuredImage cost creatorName slug description updated isFeatured courseId"
   ).sort({ updated: -1 });
   if (!onlyShowFeatured) {
     dbQuery = dbQuery

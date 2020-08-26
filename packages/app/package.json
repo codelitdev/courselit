@@ -1,6 +1,6 @@
 {
   "name": "@courselit/app",
-  "version": "0.2.3",
+  "version": "0.2.5",
   "main": "index.js",
   "license": "MIT",
   "author": {
@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.8.3",
-    "@courselit/rich-text": "^0.2.3",
+    "@courselit/rich-text": "^0.2.5",
     "@material-ui/core": "^4.8.1",
     "@material-ui/icons": "^4.4.1",
     "@material-ui/styles": "^4.7.1",

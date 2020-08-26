@@ -1,6 +1,6 @@
 {
   "name": "@courselit/api",
-  "version": "0.2.3",
+  "version": "0.2.5",
   "main": "./src/index.js",
   "license": "MIT",
   "author": {
@@ -16,7 +16,7 @@
     "start": "node src"
   },
   "dependencies": {
-    "@courselit/thumbnail": "^0.2.3",
+    "@courselit/thumbnail": "^0.2.5",
     "base-64": "^0.1.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
@@ -29,6 +29,7 @@
     "graphql": "^14.5.8",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.7.11",
+    "mongoose-sequence": "^5.2.2",
     "passport": "^0.4.0",
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",

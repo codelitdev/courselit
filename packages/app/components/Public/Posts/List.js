@@ -48,7 +48,8 @@ const List = (props) => {
                 updated,
                 creatorName,
                 slug,
-                featuredImage
+                featuredImage,
+                courseId
             }
         }
         `;
