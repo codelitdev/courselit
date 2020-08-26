@@ -52,8 +52,7 @@ exports.getCourse = async (id = null, courseId = null, ctx) => {
   }
 
   const notTheOwner =
-    course &&
-    (!ctx.user || course.creatorId.toString() !== ctx.user._id.toString());
+    !ctx.user || course.creatorId.toString() !== ctx.user._id.toString();
   if (notTheOwner) {
     if (!course.published || course.privacy === closed) {
       throw new Error(strings.responses.item_not_found);
