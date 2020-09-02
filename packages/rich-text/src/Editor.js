@@ -16,15 +16,43 @@ import YouTube from "./Decorators/YouTube.js";
 import Text from "./Renderers/Text.js";
 import Blockquote from "./Renderers/Blockquote.js";
 import Link from "./Decorators/Link.js";
+import Tweet from './Decorators/Tweet.js'
 
 const Editor = (props) => {
   const handleKeyCommand = (command, editorState) => {
     const newState = RichUtils.handleKeyCommand(editorState, command);
+
     if (newState) {
       props.onChange(newState);
       return "handled";
     }
-    return "not handled";
+
+    return "not-handled";
+  };
+
+  // const mapKeyToEditorCommand = (e) => {
+  //   console.log(`Came here`, e.keyCode);
+  //   if (e.keyCode === 9 /* TAB */) {
+  //     console.log(`Came here man 2`);
+  //     const newEditorState = RichUtils.onTab(
+  //       e,
+  //       props.editorState,
+  //       4, /* maxDepth */
+  //     )
+
+  //     if (newEditorState !== props.editorState) {
+  //       console.log(`Came here man`);
+  //       props.onChange(newEditorState);
+  //     }
+
+  //     return 'tab-key-pressed';
+  //   }
+
+  //   return getDefaultKeyBinding(e);
+  // }
+  const handleTab = (event) => {
+    event.preventDefault();
+    props.onChange(RichUtils.onTab(event, props.editorState, 4));
   };
 
   const customBlockRenderer = (block) => {
@@ -57,6 +85,7 @@ const Editor = (props) => {
       wrapper: <Code style={props.theme.code} />,
     },
   });
+
   const extendedBlockRenderMap = DefaultDraftBlockRenderMap.merge(
     blockRenderMap
   );
@@ -70,6 +99,8 @@ const Editor = (props) => {
       handleKeyCommand={handleKeyCommand}
       blockRendererFn={customBlockRenderer}
       blockRenderMap={extendedBlockRenderMap}
+      spellCheck={true}
+      onTab={handleTab}
     />
   );
 };
@@ -101,6 +132,10 @@ Editor.toggleHeading = (editorState) =>
   RichUtils.toggleBlockType(editorState, "header-one");
 Editor.toggleSubHeading = (editorState) =>
   RichUtils.toggleBlockType(editorState, "header-two");
+Editor.toggleUnorderedListItem = (editorState) =>
+  RichUtils.toggleBlockType(editorState, "unordered-list-item");
+Editor.toggleOrderedListItem = (editorState) =>
+  RichUtils.toggleBlockType(editorState, "ordered-list-item");
 
 Editor.getDecorators = () => {
   // From https://draftjs.org/docs/advanced-topics-decorators
@@ -124,6 +159,10 @@ Editor.getDecorators = () => {
     findWithRegex(LINK_REGEX, contentBlock, callback);
   };
 
+  const twitterStrategy = (contentBlock, callback, contentState) => {
+    const TWITTER_REGEX = /https?:\/\/twitter\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)/g
+  }
+
   return new CompositeDecorator([
     {
       strategy: videoStrategy,
@@ -133,6 +172,10 @@ Editor.getDecorators = () => {
       strategy: linkStrategy,
       component: Link,
     },
+    {
+      strategy: twitterStrategy,
+      component: Tweet
+    }
   ]);
 };
 
