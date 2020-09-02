@@ -7,6 +7,8 @@ import Blockquote from "./Icons/format_quote-24px.svg";
 import Bold from "./Icons/format_bold-24px.svg";
 import Italic from "./Icons/format_italic-24px.svg";
 import AddPhoto from "./Icons/add_photo_alternate-24px.svg";
+import UnorderedListItem from "./Icons/format_list_bulleted-24px.svg";
+import OrderedListItem from "./Icons/format_list_numbered-24px.svg";
 
 const EditorUI = (props) => {
   const [imageAddFormVisible, setImageAddFormVisible] = useState(false);
@@ -44,6 +46,16 @@ const EditorUI = (props) => {
   const toggleSubHeading = (e) => {
     e.preventDefault();
     props.onChange(Editor.toggleSubHeading(props.editorState));
+  };
+
+  const toggleUnorderedListItem = (e) => {
+    e.preventDefault();
+    props.onChange(Editor.toggleUnorderedListItem(props.editorState));
+  };
+
+  const toggleOrderedListItem = (e) => {
+    e.preventDefault();
+    props.onChange(Editor.toggleOrderedListItem(props.editorState));
   };
 
   const toggleImageAdd = (e) => {
@@ -119,6 +131,18 @@ const EditorUI = (props) => {
         </button>
         <button onClick={toggleImageAdd} style={Styles.controls.toolbarButton}>
           <AddPhoto />
+        </button>
+        <button
+          onClick={toggleUnorderedListItem}
+          style={Styles.controls.toolbarButton}
+        >
+          <UnorderedListItem />
+        </button>
+        <button
+          onClick={toggleOrderedListItem}
+          style={Styles.controls.toolbarButton}
+        >
+          <OrderedListItem />
         </button>
       </div>
     </div>
