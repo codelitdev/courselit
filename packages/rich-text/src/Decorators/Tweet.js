@@ -1,11 +1,8 @@
 /**
  * Decorator for tweets.
  */
-import React from "react";
+import React, { createRef, useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import { useEffect } from "react";
-import { useState } from "react";
-import TweetEmbed from 'react-tweet-embed';
 
 const styles = {
   container: {
@@ -22,41 +19,61 @@ const styles = {
 };
 
 const Tweet = (props) => {
-  const [tweetId, setTweetId] = useState('');
-  const twttr = window['twttr'];
+  const { twttr } = window;
   const callbacks = [];
+  const [tweetId, setTweetId] = useState("");
+  const container = createRef();
 
   useEffect(() => {
-    const tokens = props.decoratedText.split('\/');
+    const tokens = props.decoratedText.split("/");
     setTweetId(tokens[tokens.length - 1]);
 
     if (!(twttr && twttr.ready)) {
-      addScript(`https://platform.twitter.com/widgets.js`, renderTweet)
+      addScript(`https://platform.twitter.com/widgets.js`, renderTweet);
+    } else {
+      renderTweet();
     }
-  }, [props.decoratedText])
-
+  });
 
   const addScript = (src, cb) => {
     if (callbacks.length === 0) {
-      callbacks.push(cb)
-      var s = document.createElement('script')
-      s.setAttribute('src', src)
-      s.onload = () => callbacks.forEach((cb) => cb())
-      document.body.appendChild(s)
+      callbacks.push(cb);
+      var s = document.createElement("script");
+      s.setAttribute("src", src);
+      s.onload = () => callbacks.forEach((cb) => cb());
+      document.body.appendChild(s);
     } else {
-      callbacks.push(cb)
+      callbacks.push(cb);
     }
-  }
+  };
 
   const renderTweet = () => {
-    
-  }
+    const { twttr } = window;
+    if (tweetId && container.current) {
+      clearPreviousContent();
+      twttr.widgets.createTweet(tweetId, container.current, { theme: "light" });
+    }
+
+    // twttr.ready().then(({ widgets}) => {
+    //   // clearPreviousContent()
+
+    //   widgets.createTweet('20', container.current, {
+    //     theme: 'dark'
+    //   })
+    //     .then(response => console.log('Tweet loaded'))
+    //     .catch(err => console.log(err))
+    // })
+  };
+
+  const clearPreviousContent = () => {
+    if (container) {
+      container.current.innerHTML = "";
+    }
+  };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.iframeContainer}>
-        <TweetEmbed id={tweetId} />
-      </div>
+    <div>
+      <div ref={container} />
       <a href={props.decoratedText} style={styles.link}>
         {props.children}
       </a>

@@ -16,7 +16,7 @@ import YouTube from "./Decorators/YouTube.js";
 import Text from "./Renderers/Text.js";
 import Blockquote from "./Renderers/Blockquote.js";
 import Link from "./Decorators/Link.js";
-import Tweet from './Decorators/Tweet.js'
+import Tweet from "./Decorators/Tweet.js";
 
 const Editor = (props) => {
   const handleKeyCommand = (command, editorState) => {
@@ -160,9 +160,9 @@ Editor.getDecorators = () => {
   };
 
   const twitterStrategy = (contentBlock, callback, contentState) => {
-    const TWITTER_REGEX = /https?:\/\/twitter\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)/g
+    const TWITTER_REGEX = /https?:\/\/twitter\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)/g;
     findWithRegex(TWITTER_REGEX, contentBlock, callback);
-  }
+  };
 
   return new CompositeDecorator([
     {
@@ -171,7 +171,7 @@ Editor.getDecorators = () => {
     },
     {
       strategy: twitterStrategy,
-      component: Tweet
+      component: Tweet,
     },
     {
       strategy: linkStrategy,
