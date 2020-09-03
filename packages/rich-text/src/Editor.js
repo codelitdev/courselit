@@ -161,6 +161,7 @@ Editor.getDecorators = () => {
 
   const twitterStrategy = (contentBlock, callback, contentState) => {
     const TWITTER_REGEX = /https?:\/\/twitter\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)/g
+    findWithRegex(TWITTER_REGEX, contentBlock, callback);
   }
 
   return new CompositeDecorator([
@@ -169,13 +170,13 @@ Editor.getDecorators = () => {
       component: YouTube,
     },
     {
+      strategy: twitterStrategy,
+      component: Tweet
+    },
+    {
       strategy: linkStrategy,
       component: Link,
     },
-    {
-      strategy: twitterStrategy,
-      component: Tweet
-    }
   ]);
 };
 
