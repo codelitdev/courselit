@@ -36,7 +36,8 @@
   },
   "dependencies": {
     "draft-js": "^0.11.7",
-    "prop-types": "^15.7.2"
+    "prop-types": "^15.7.2",
+    "react-tweet-embed": "^1.2.2"
   },
   "peerDependencies": {
     "react": "^16.13.1",
