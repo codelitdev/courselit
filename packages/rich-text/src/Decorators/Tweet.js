@@ -1,7 +1,7 @@
 /**
  * Decorator for tweets.
  */
-import React, { createRef, useEffect, useState } from "react";
+import React, { createRef, useEffect } from "react";
 import PropTypes from "prop-types";
 
 const styles = {
@@ -23,69 +23,48 @@ const styles = {
     display: "hidden",
     marginTop: "1em",
     color: "#676767",
+    fontSize: '.8em',
   },
 };
 
 const Tweet = (props) => {
-  const callbacks = [];
-  const [tweetId, setTweetId] = useState("");
-  const container = createRef();
+  const tweetRef = createRef();
 
   useEffect(() => {
-    addScript(`https://platform.twitter.com/widgets.js`, () => {})
+    if (!window.twttr) {
+      window.twttr = twitterFunc(document, "script", "twitter-wjs");
+    }
   }, []);
 
+  const twitterFunc = function(d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0],  t = window.twttr || {};
+    if (d.getElementById(id)) return t;
+    js = d.createElement(s); js.id = id;
+    js.src = "https://platform.twitter.com/widgets.js";
+    fjs.parentNode.insertBefore(js, fjs);
+    t._e = []; t.ready = function(f) {
+      t._e.push(f);
+    };
+    return t;
+  }
+
   useEffect(() => {
-    const twttr = window.twttr;
     const tokens = props.decoratedText.split("/");
-    setTweetId(tokens[tokens.length - 1]);
-    if (twttr) {
-      renderTweet();
-    }
-  });
-
-  const addScript = (src, cb) => {
-    if (callbacks.length === 0) {
-      callbacks.push(cb);
-      var s = document.createElement("script");
-      s.setAttribute("src", src);
-      s.onload = () => callbacks.forEach((cb) => cb());
-      document.body.appendChild(s);
-    } else {
-      callbacks.push(cb);
-    }
-  };
-
-  const renderTweet = () => {
-    const twttr = window.twttr;
-    if (tweetId && container.current) {
-      clearPreviousContent();
-      twttr.widgets.createTweet(tweetId, container.current, {
-        theme: "light",
-        align: "center",
-      });
-    }
-
-    // twttr.ready().then(({ widgets}) => {
-    //   // clearPreviousContent()
-
-    //   widgets.createTweet('20', container.current, {
-    //     theme: 'dark'
-    //   })
-    //     .then(response => console.log('Tweet loaded'))
-    //     .catch(err => console.log(err))
-    // })
-  };
-
-  const clearPreviousContent = () => {
-    if (container) {
-      container.current.innerHTML = "";
-    }
-  };
+    window.twttr.ready((twttr) => {
+      twttr.widgets.createTweet(
+        tokens[tokens.length - 1],
+        tweetRef.current,
+        {
+          theme: 'dark',
+          align: 'center'
+        }
+      );
+    });
+  }, [props.decoratedText])
 
   return (
     <div style={styles.container}>
-      <div ref={container} style={styles.iframeContainer} />
+      <div ref={tweetRef} style={styles.iframeContainer} />
       <a href={props.decoratedText} style={styles.link}>
         {props.children}
       </a>
