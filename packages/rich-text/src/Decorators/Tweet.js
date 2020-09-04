@@ -11,19 +11,19 @@ const styles = {
   iframeContainer: {
     position: "relative",
     overflow: "hidden",
-    '& iframe': {
+    "& iframe": {
       position: "absolute",
       top: 0,
       left: 0,
       width: "100%",
       height: "100%",
-    }
+    },
   },
   link: {
     display: "hidden",
     marginTop: "1em",
     color: "#676767",
-    fontSize: '.8em',
+    fontSize: ".8em",
   },
 };
 
@@ -36,31 +36,33 @@ const Tweet = (props) => {
     }
   }, []);
 
-  const twitterFunc = function(d, s, id) {
-    var js, fjs = d.getElementsByTagName(s)[0],  t = window.twttr || {};
+  /* eslint-disable one-var */
+  const twitterFunc = function (d, s, id) {
+    var js,
+      fjs = d.getElementsByTagName(s)[0],
+      t = window.twttr || {};
     if (d.getElementById(id)) return t;
-    js = d.createElement(s); js.id = id;
+    js = d.createElement(s);
+    js.id = id;
     js.src = "https://platform.twitter.com/widgets.js";
     fjs.parentNode.insertBefore(js, fjs);
-    t._e = []; t.ready = function(f) {
+    t._e = [];
+    t.ready = function (f) {
       t._e.push(f);
     };
     return t;
-  }
+  };
+  /* eslint-enable one-var */
 
   useEffect(() => {
     const tokens = props.decoratedText.split("/");
     window.twttr.ready((twttr) => {
-      twttr.widgets.createTweet(
-        tokens[tokens.length - 1],
-        tweetRef.current,
-        {
-          theme: 'dark',
-          align: 'center'
-        }
-      );
+      twttr.widgets.createTweet(tokens[tokens.length - 1], tweetRef.current, {
+        theme: "dark",
+        align: "center",
+      });
     });
-  }, [props.decoratedText])
+  }, [props.decoratedText]);
 
   return (
     <div style={styles.container}>
