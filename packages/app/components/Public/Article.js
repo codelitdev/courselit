@@ -107,7 +107,7 @@ const Article = (props) => {
           </Grid>
         </div>
       )}
-      {courseDescriptionHydrated && (
+      {courseDescriptionHydrated && process.browser && (
         <TextEditor
           initialContentState={TextEditor.hydrate(course.description)}
           readOnly={true}

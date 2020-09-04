@@ -9,7 +9,15 @@ const styles = {
     textAlign: "center",
   },
   iframeContainer: {
+    position: "relative",
     overflow: "hidden",
+    '& iframe': {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+    }
   },
   link: {
     display: "hidden",
@@ -19,18 +27,19 @@ const styles = {
 };
 
 const Tweet = (props) => {
-  const { twttr } = window;
   const callbacks = [];
   const [tweetId, setTweetId] = useState("");
   const container = createRef();
 
   useEffect(() => {
+    addScript(`https://platform.twitter.com/widgets.js`, () => {})
+  }, []);
+
+  useEffect(() => {
+    const twttr = window.twttr;
     const tokens = props.decoratedText.split("/");
     setTweetId(tokens[tokens.length - 1]);
-
-    if (!(twttr && twttr.ready)) {
-      addScript(`https://platform.twitter.com/widgets.js`, renderTweet);
-    } else {
+    if (twttr) {
       renderTweet();
     }
   });
@@ -48,10 +57,13 @@ const Tweet = (props) => {
   };
 
   const renderTweet = () => {
-    const { twttr } = window;
+    const twttr = window.twttr;
     if (tweetId && container.current) {
       clearPreviousContent();
-      twttr.widgets.createTweet(tweetId, container.current, { theme: "light" });
+      twttr.widgets.createTweet(tweetId, container.current, {
+        theme: "light",
+        align: "center",
+      });
     }
 
     // twttr.ready().then(({ widgets}) => {
@@ -72,8 +84,8 @@ const Tweet = (props) => {
   };
 
   return (
-    <div>
-      <div ref={container} />
+    <div style={styles.container}>
+      <div ref={container} style={styles.iframeContainer} />
       <a href={props.decoratedText} style={styles.link}>
         {props.children}
       </a>
