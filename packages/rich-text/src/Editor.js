@@ -30,26 +30,6 @@ const Editor = (props) => {
     return "not-handled";
   };
 
-  // const mapKeyToEditorCommand = (e) => {
-  //   console.log(`Came here`, e.keyCode);
-  //   if (e.keyCode === 9 /* TAB */) {
-  //     console.log(`Came here man 2`);
-  //     const newEditorState = RichUtils.onTab(
-  //       e,
-  //       props.editorState,
-  //       4, /* maxDepth */
-  //     )
-
-  //     if (newEditorState !== props.editorState) {
-  //       console.log(`Came here man`);
-  //       props.onChange(newEditorState);
-  //     }
-
-  //     return 'tab-key-pressed';
-  //   }
-
-  //   return getDefaultKeyBinding(e);
-  // }
   const handleTab = (event) => {
     event.preventDefault();
     props.onChange(RichUtils.onTab(event, props.editorState, 4));
