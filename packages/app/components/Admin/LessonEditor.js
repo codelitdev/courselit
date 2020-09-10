@@ -46,7 +46,7 @@ import { networkAction, setAppMessage } from "../../redux/actions";
 import { connect } from "react-redux";
 import AppDialog from "../Public/AppDialog";
 import AppMessage from "../../models/app-message.js";
-import TextEditor from "@courselit/rich-text";
+import TextEditor from "../Public/RichText.js";
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
