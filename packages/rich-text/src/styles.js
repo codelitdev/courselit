@@ -65,8 +65,8 @@ export default {
   },
   text: {
     textAlign: "justify",
-    lineHeight: "1.8em",
-    fontSize: "1.2em",
-    fontFamily: 'Open Sans, "Helvetica Neue", Helvetica, Arial, sans-serif'
+    lineHeight: "1.5em",
+    fontSize: "1em",
+    fontFamily: 'Open Sans, "Helvetica Neue", Helvetica, Arial, sans-serif',
   },
 };
