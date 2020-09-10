@@ -91,7 +91,7 @@ const Courses = (props) => {
           <Grid item>
             <Button
               variant="contained"
-              color={courseEditorVisible ? "" : "primary"}
+              color={courseEditorVisible ? "secondary" : "primary"}
               onClick={() => showEditor()}
             >
               {courseEditorVisible ? <Done /> : <Add />}
