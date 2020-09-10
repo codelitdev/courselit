@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.8.3",
-    "@courselit/rich-text": "^0.2.6-alpha.0",
+    "@courselit/rich-text": "*",
     "@material-ui/core": "^4.8.1",
     "@material-ui/icons": "^4.4.1",
     "@material-ui/styles": "^4.7.1",
