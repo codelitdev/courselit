@@ -1,7 +1,7 @@
 import React from "react";
 import { Typography, Grid } from "@material-ui/core";
 import Link from "next/link";
-import TextEditor from "@courselit/rich-text";
+import TextEditor from "./RichText.js";
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/styles";
 import { MEDIA_BACKEND } from "../../config/constants.js";
@@ -107,7 +107,7 @@ const Article = (props) => {
           </Grid>
         </div>
       )}
-      {courseDescriptionHydrated && (
+      {courseDescriptionHydrated && process.browser && (
         <TextEditor
           initialContentState={TextEditor.hydrate(course.description)}
           readOnly={true}

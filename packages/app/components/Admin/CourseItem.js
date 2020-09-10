@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import Link from "next/link";
 import { creatorCourse } from "../../types";
-import TextEditor from "@courselit/rich-text";
+import TextEditor from "../Public/RichText.js";
 import { URL_EXTENTION_COURSES } from "../../config/constants.js";
 import { CardContent, Card, Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";

@@ -38,6 +38,7 @@ const styles = {
     display: "block",
     marginTop: "1em",
     color: "#676767",
+    fontSize: ".8em",
   },
 };
 
