@@ -44,7 +44,7 @@ import AppDialog from "../Public/AppDialog.js";
 import LessonEditor from "./LessonEditor.js";
 import AppMessage from "../../models/app-message.js";
 import { BACKEND, MIMETYPE_IMAGE } from "../../config/constants.js";
-import TextEditor from "@courselit/rich-text";
+import TextEditor from "../Public/RichText.js";
 
 const useStyles = makeStyles((theme) => ({
   title: {

@@ -14,7 +14,7 @@ import { ENROLL_IN_THE_COURSE, USER_ERROR_HEADER } from "../../config/strings";
 import { makeStyles } from "@material-ui/styles";
 import { lesson, authProps, profileProps } from "../../types";
 import { formulateMediaUrl } from "../../lib/utils.js";
-import TextEditor from "@courselit/rich-text";
+import TextEditor from "./RichText.js";
 
 const useStyles = makeStyles((theme) => ({
   notEnrolledHeader: {
