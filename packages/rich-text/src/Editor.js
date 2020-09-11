@@ -16,15 +16,23 @@ import YouTube from "./Decorators/YouTube.js";
 import Text from "./Renderers/Text.js";
 import Blockquote from "./Renderers/Blockquote.js";
 import Link from "./Decorators/Link.js";
+import Tweet from "./Decorators/Tweet.js";
 
 const Editor = (props) => {
   const handleKeyCommand = (command, editorState) => {
     const newState = RichUtils.handleKeyCommand(editorState, command);
+
     if (newState) {
       props.onChange(newState);
       return "handled";
     }
-    return "not handled";
+
+    return "not-handled";
+  };
+
+  const handleTab = (event) => {
+    event.preventDefault();
+    props.onChange(RichUtils.onTab(event, props.editorState, 4));
   };
 
   const customBlockRenderer = (block) => {
@@ -57,6 +65,7 @@ const Editor = (props) => {
       wrapper: <Code style={props.theme.code} />,
     },
   });
+
   const extendedBlockRenderMap = DefaultDraftBlockRenderMap.merge(
     blockRenderMap
   );
@@ -70,6 +79,8 @@ const Editor = (props) => {
       handleKeyCommand={handleKeyCommand}
       blockRendererFn={customBlockRenderer}
       blockRenderMap={extendedBlockRenderMap}
+      spellCheck={true}
+      onTab={handleTab}
     />
   );
 };
@@ -101,6 +112,10 @@ Editor.toggleHeading = (editorState) =>
   RichUtils.toggleBlockType(editorState, "header-one");
 Editor.toggleSubHeading = (editorState) =>
   RichUtils.toggleBlockType(editorState, "header-two");
+Editor.toggleUnorderedListItem = (editorState) =>
+  RichUtils.toggleBlockType(editorState, "unordered-list-item");
+Editor.toggleOrderedListItem = (editorState) =>
+  RichUtils.toggleBlockType(editorState, "ordered-list-item");
 
 Editor.getDecorators = () => {
   // From https://draftjs.org/docs/advanced-topics-decorators
@@ -124,10 +139,19 @@ Editor.getDecorators = () => {
     findWithRegex(LINK_REGEX, contentBlock, callback);
   };
 
+  const twitterStrategy = (contentBlock, callback, contentState) => {
+    const TWITTER_REGEX = /https?:\/\/twitter\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)/g;
+    findWithRegex(TWITTER_REGEX, contentBlock, callback);
+  };
+
   return new CompositeDecorator([
     {
       strategy: videoStrategy,
       component: YouTube,
+    },
+    {
+      strategy: twitterStrategy,
+      component: Tweet,
     },
     {
       strategy: linkStrategy,

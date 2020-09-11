@@ -31,6 +31,7 @@ const TextEditor = (props) => {
       editorState={editorState}
       onChange={onChange}
       readOnly={props.readOnly}
+      styles={props.styles}
     />
   );
 };
@@ -50,6 +51,7 @@ TextEditor.propTypes = {
   initialContentState: PropTypes.any,
   onChange: PropTypes.func,
   readOnly: PropTypes.bool,
+  styles: PropTypes.object,
 };
 
 export default TextEditor;
