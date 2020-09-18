@@ -23,4 +23,13 @@ module.exports = {
     resolve: async (root, { widgetData }, ctx) =>
       logic.saveWidgetData(widgetData, ctx),
   },
+  clearWidgetData: {
+    type: graphql.GraphQLBoolean,
+    args: {
+      name: {
+        type: new graphql.GraphQLNonNull(graphql.GraphQLString),
+      },
+    },
+    resolve: async (root, { name }, ctx) => logic.clearWidgetData(name, ctx),
+  },
 };

@@ -41,7 +41,7 @@ exports.saveWidgetSettings = async (widgetSettingsData, ctx) => {
 
   if (!ctx.user.isAdmin) throw new Error(strings.responses.is_not_admin);
 
-  if (widgetSettingsData.settings) {
+  if (widgetSettingsData.settings !== undefined) {
     try {
       JSON.parse(widgetSettingsData.settings);
     } catch (err) {
@@ -77,7 +77,7 @@ exports.saveWidgetSettings = async (widgetSettingsData, ctx) => {
 
 exports.saveWidgetData = async (widgetData, ctx) => {
   let data;
-  if (widgetData.data) {
+  if (widgetData.data !== undefined) {
     try {
       data = JSON.parse(widgetData.data);
     } catch (err) {
@@ -99,6 +99,23 @@ exports.saveWidgetData = async (widgetData, ctx) => {
   existingData.push(data);
   widget.data = JSON.stringify(existingData);
 
+  await widget.save();
+
+  return true;
+};
+
+exports.clearWidgetData = async (name, ctx) => {
+  checkIfAuthenticated(ctx);
+
+  if (!ctx.user.isAdmin) throw new Error(strings.responses.is_not_admin);
+
+  const widget = await Widget.findOne({ name });
+
+  if (!widget) {
+    throw new Error(strings.responses.item_not_found);
+  }
+
+  widget.data = "[]";
   await widget.save();
 
   return true;
