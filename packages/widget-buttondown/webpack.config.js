@@ -24,5 +24,7 @@ module.exports = {
   externals: {
     react: "react",
     "react-dom": "react-dom",
+    "react-redux": "react-redux",
+    "prop-types": "prop-types",
   },
 };

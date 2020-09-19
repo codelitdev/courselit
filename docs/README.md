@@ -118,6 +118,9 @@ Once you have this setup, follow these steps.
   - `yarn lerna run dev --scope=@courselit/api --stream`
   - `yarn lerna run dev --scope=@courselit/app --stream`
 
+## Writing Your Own Widget
+You can add additional functionality to your application via building your own widgets. The widgets operate
+
 ## Security
 Although, we've done everything in our power to secure the application by following the best practices, we hope you understand that no one can guarantee that it's the most secure implementation out there and it will always stay secure.
 

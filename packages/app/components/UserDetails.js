@@ -74,10 +74,11 @@ const UserDetails = (props) => {
     }
   }, [expanded]);
 
+  // TODO: test this method. A hard-coded userId was there in the query.
   const getEnrolledCourses = async () => {
     const query = `
     query {
-      enrolledCourses: getEnrolledCourses(userId: "5e8069a4942cc60a3d0196b1") {
+      enrolledCourses: getEnrolledCourses(userId: "${userData.id}") {
         id,
         title
       }

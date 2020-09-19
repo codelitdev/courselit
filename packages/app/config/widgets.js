@@ -1,5 +1,5 @@
-import buttondown from '@courselit/widget-buttondown';
+import buttondown from "@courselit/widget-buttondown";
 
 export default {
-    [buttondown.info.id]: buttondown
-}
+  [buttondown.metadata.name]: buttondown,
+};

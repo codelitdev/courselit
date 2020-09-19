@@ -1,4 +1,4 @@
-import widgets from '../../../config/widgets.js'
+import widgets from "../../../config/widgets.js";
 
 // const CompatibleComponentsMap = {
 //   top: ["Featured"],
@@ -12,21 +12,18 @@ const CompatibleComponentsMap = {
   bottom: [],
   aside: [],
   footerLeft: [],
-  footerRight: []
+  footerRight: [],
 };
 
-// for (let widgetName of Object.keys(widgets)) {
-//   for (let area of widgets[widgetName].info.compatible) {
-//     CompatibleComponentsMap[area].push([widget.info.id, widget.info.name]);
-//   }
-// }
-
-Object.keys(widgets).map(widgetName => {
+Object.keys(widgets).map((widgetName) => {
   const widget = widgets[widgetName];
 
-  widget.info.compatible.map(area => {
-    CompatibleComponentsMap[area].push([widget.info.id, widget.info.name]);
-  })
-})
+  widget.metadata.compatibleWith.map((area) => {
+    CompatibleComponentsMap[area].push([
+      widget.metadata.name,
+      widget.metadata.displayName,
+    ]);
+  });
+});
 
 export default CompatibleComponentsMap;

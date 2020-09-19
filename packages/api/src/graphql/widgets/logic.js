@@ -16,7 +16,6 @@ exports.getWidgetSettings = async (name, ctx) => {
 
   return {
     settings: widget.settings,
-    allowGuests: widget.allowGuests,
   };
 };
 
@@ -89,10 +88,6 @@ exports.saveWidgetData = async (widgetData, ctx) => {
 
   if (!widget) {
     throw new Error(strings.responses.item_not_found);
-  }
-
-  if (!widget.allowGuests) {
-    checkIfAuthenticated(ctx);
   }
 
   const existingData = JSON.parse(widget.data);

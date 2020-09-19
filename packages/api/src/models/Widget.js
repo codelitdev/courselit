@@ -8,7 +8,6 @@ const WidgetSchema = new mongoose.Schema({
   name: { type: String, required: true, unique: true },
   settings: mongoose.Schema.Types.Mixed,
   data: mongoose.Schema.Types.Mixed,
-  allowGuests: { type: Boolean, required: true, default: false },
 });
 
 module.exports = mongoose.model("Widget", WidgetSchema);

@@ -4,9 +4,6 @@ const widgetSettingsType = new graphql.GraphQLObjectType({
   name: "WidgetSettings",
   fields: {
     settings: { type: graphql.GraphQLString },
-    allowGuests: {
-      type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean),
-    },
   },
 });
 
@@ -22,7 +19,6 @@ const widgetSettingsInputType = new graphql.GraphQLInputObjectType({
   fields: {
     name: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     settings: { type: graphql.GraphQLString },
-    allowGuests: { type: graphql.GraphQLBoolean },
   },
 });
 
