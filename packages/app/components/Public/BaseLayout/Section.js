@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import { Grid } from "@material-ui/core";
-import ComponentFromComponentsMap from "./ComponentFromComponentsMap";
+import WidgetByName from "./WidgetByName";
 
 const Section = (props) => {
   const { name, layout } = props;
@@ -12,7 +12,7 @@ const Section = (props) => {
     <Grid container item direction="column">
       {sectionLayout.map((item, index) => (
         <Grid item key={index}>
-          <ComponentFromComponentsMap name={item} />
+          <WidgetByName name={item} />
         </Grid>
       ))}
     </Grid>

@@ -1,9 +1,9 @@
-import ButtondownAdmin from './ButtondownAdmin';
-import Buttondown from './Buttondown';
-import Information from './Information';
+import ButtondownAdmin from "./ButtondownAdmin";
+import Buttondown from "./Buttondown";
+import metadata from "./metadata";
 
 export default {
-    widget: Buttondown,
-    adminWidget: ButtondownAdmin,
-    info: Information
-}
+  widget: Buttondown,
+  adminWidget: ButtondownAdmin,
+  metadata,
+};
