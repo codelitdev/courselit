@@ -26,5 +26,6 @@ module.exports = {
     "react-dom": "react-dom",
     "react-redux": "react-redux",
     "prop-types": "prop-types",
+    "@material-ui": "@material-ui",
   },
 };

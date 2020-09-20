@@ -1,5 +1,3 @@
-import buttondown from "@courselit/widget-buttondown";
+import Config from "../courselit.js";
 
-export default {
-  [buttondown.metadata.name]: buttondown,
-};
+export default Config.widgets;
