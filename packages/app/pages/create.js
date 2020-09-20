@@ -19,6 +19,8 @@ import UsersManager from "../components/UsersManager.js";
 import AppLoader from "../components/AppLoader.js";
 import Design from "../components/Admin/Design";
 import ComponentScaffold from "../components/Public/BaseLayout/ComponentScaffold.js";
+import MasterDetails from "../components/Public/MasterDetails/index.js";
+import widgets from "../config/widgets.js";
 
 const Create = (props) => {
   useEffect(() => {
@@ -47,6 +49,15 @@ const Create = (props) => {
   ];
 
   if (props.profile.isAdmin) {
+    const widgetsMap = {};
+    Object.keys(widgets).map((name) => {
+      widgetsMap[widgets[name].metadata.name] = {
+        icon: widgets[name].metadata.icon,
+        caption: widgets[name].metadata.displayName,
+        component: widgets[name].adminWidget,
+      };
+    });
+
     items.push(
       ...[
         {
@@ -62,6 +73,11 @@ const Create = (props) => {
         {
           name: "Design & Navigation",
           element: <Design />,
+          icon: <Palette />,
+        },
+        {
+          name: "Widget",
+          element: <MasterDetails componentsMap={widgetsMap} />,
           icon: <Palette />,
         },
       ]

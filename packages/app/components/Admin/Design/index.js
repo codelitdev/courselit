@@ -376,7 +376,7 @@ const PageDesigner = (props) => {
                       layout.top.map((item, index) => (
                         <AddedComponent
                           section="top"
-                          title={widgets[item].metadata.name}
+                          title={widgets[item].metadata.displayName}
                           index={index}
                           removeComponent={removeComponent}
                           key={index}
@@ -430,7 +430,7 @@ const PageDesigner = (props) => {
                           layout.bottom.map((item, index) => (
                             <AddedComponent
                               section="bottom"
-                              title={widgets[item].metadata.name}
+                              title={widgets[item].metadata.displayName}
                               index={index}
                               removeComponent={removeComponent}
                               key={index}
@@ -463,7 +463,7 @@ const PageDesigner = (props) => {
                         layout.aside.map((item, index) => (
                           <AddedComponent
                             section="aside"
-                            title={widgets[item].metadata.name}
+                            title={widgets[item].metadata.displayName}
                             index={index}
                             removeComponent={removeComponent}
                             key={index}
@@ -507,7 +507,7 @@ const PageDesigner = (props) => {
                         layout.footerLeft.map((item, index) => (
                           <AddedComponent
                             section="footerLeft"
-                            title={widgets[item].metadata.name}
+                            title={widgets[item].metadata.displayName}
                             index={index}
                             removeComponent={removeComponent}
                             key={index}
@@ -538,7 +538,7 @@ const PageDesigner = (props) => {
                         layout.footerRight.map((item, index) => (
                           <AddedComponent
                             section="footerRight"
-                            title={widgets[item].metadata.name}
+                            title={widgets[item].metadata.displayName}
                             index={index}
                             removeComponent={removeComponent}
                             key={index}
