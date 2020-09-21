@@ -7,7 +7,7 @@ import Hidden from "@material-ui/core/Hidden";
 import IconButton from "@material-ui/core/IconButton";
 import List from "@material-ui/core/List";
 import { Menu } from "@material-ui/icons";
-import { Toolbar } from "@material-ui/core";
+import { LinearProgress, Toolbar } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
 import AppToast from "../../AppToast.js";
@@ -53,10 +53,13 @@ const useStyles = makeStyles((theme) => ({
   visitSiteLink: {
     color: "#fff",
   },
+  showProgressBar: (props) => ({
+    visibility: props.networkAction ? "visible" : "hidden",
+  }),
 }));
 
 const Scaffold = (props) => {
-  const classes = useStyles();
+  const classes = useStyles(props);
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -135,6 +138,7 @@ const Scaffold = (props) => {
 
       <main className={classes.content}>
         <div className={classes.toolbar} />
+        <LinearProgress className={classes.showProgressBar} />
         {props.children}
       </main>
       <AppToast />
@@ -146,11 +150,13 @@ Scaffold.propTypes = {
   children: PropTypes.object,
   siteinfo: siteInfoProps,
   navigation: PropTypes.arrayOf(link),
+  networkAction: PropTypes.bool.isRequired,
 };
 
 const mapStateToProps = (state) => ({
   siteinfo: state.siteinfo,
   navigation: state.navigation,
+  networkAction: state.networkAction,
 });
 
 export default connect(mapStateToProps)(Scaffold);
