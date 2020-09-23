@@ -21,6 +21,10 @@ const useStyles = makeStyles((theme) => ({
       width: 64,
     },
   },
+  caption: {
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
 }));
 
 const Master = (props) => {
@@ -42,7 +46,7 @@ const Master = (props) => {
                   <br />
                 </>
               )}
-              <Typography variant="body1">
+              <Typography variant="body1" className={classes.caption}>
                 {componentsMap[name].caption}
               </Typography>
             </div>
