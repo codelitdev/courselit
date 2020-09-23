@@ -51,6 +51,7 @@ import AppMessage from "../../../models/app-message.js";
 import { authProps } from "../../../types.js";
 import ThemeItem from "./ThemeItem.js";
 import NavigationLinks from "./NavigationLinks/index.js";
+import widgets from "../../../config/widgets.js";
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -375,7 +376,7 @@ const PageDesigner = (props) => {
                       layout.top.map((item, index) => (
                         <AddedComponent
                           section="top"
-                          title={item}
+                          title={widgets[item].metadata.displayName}
                           index={index}
                           removeComponent={removeComponent}
                           key={index}
@@ -429,7 +430,7 @@ const PageDesigner = (props) => {
                           layout.bottom.map((item, index) => (
                             <AddedComponent
                               section="bottom"
-                              title={item}
+                              title={widgets[item].metadata.displayName}
                               index={index}
                               removeComponent={removeComponent}
                               key={index}
@@ -462,7 +463,7 @@ const PageDesigner = (props) => {
                         layout.aside.map((item, index) => (
                           <AddedComponent
                             section="aside"
-                            title={item}
+                            title={widgets[item].metadata.displayName}
                             index={index}
                             removeComponent={removeComponent}
                             key={index}
@@ -506,7 +507,7 @@ const PageDesigner = (props) => {
                         layout.footerLeft.map((item, index) => (
                           <AddedComponent
                             section="footerLeft"
-                            title={item}
+                            title={widgets[item].metadata.displayName}
                             index={index}
                             removeComponent={removeComponent}
                             key={index}
@@ -537,7 +538,7 @@ const PageDesigner = (props) => {
                         layout.footerRight.map((item, index) => (
                           <AddedComponent
                             section="footerRight"
-                            title={item}
+                            title={widgets[item].metadata.displayName}
                             index={index}
                             removeComponent={removeComponent}
                             key={index}

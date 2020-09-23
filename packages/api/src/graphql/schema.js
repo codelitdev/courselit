@@ -7,6 +7,7 @@ const siteinfo = require("./siteinfo");
 const media = require("./media");
 const design = require("./design");
 const navigation = require("./navigation");
+const widgets = require("./widgets");
 
 module.exports = new graphql.GraphQLSchema({
   query: new graphql.GraphQLObjectType({
@@ -19,6 +20,7 @@ module.exports = new graphql.GraphQLSchema({
       ...media.queries,
       ...design.queries,
       ...navigation.queries,
+      ...widgets.queries,
     },
   }),
   mutation: new graphql.GraphQLObjectType({
@@ -31,6 +33,7 @@ module.exports = new graphql.GraphQLSchema({
       ...media.mutations,
       ...design.mutations,
       ...navigation.mutations,
+      ...widgets.mutations,
     },
   }),
 });

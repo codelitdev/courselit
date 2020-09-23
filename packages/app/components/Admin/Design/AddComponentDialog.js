@@ -42,11 +42,11 @@ const AddComponentDialog = (props) => {
                 <ListItem
                   key={index}
                   onClick={() => {
-                    setSelectedComponentName(item);
+                    setSelectedComponentName(item[0]);
                   }}
                   button
                 >
-                  <ListItemText primary={item} />
+                  <ListItemText primary={item[1]} />
                 </ListItem>
               )
             )}
