@@ -10,6 +10,7 @@ import {
   PermMedia,
   SettingsApplications,
   Palette,
+  Widgets,
 } from "@material-ui/icons";
 import SiteSettings from "../components/Admin/SiteSettings.js";
 import { CREATOR_AREA_PAGE_TITLE } from "../config/strings.js";
@@ -61,11 +62,6 @@ const Create = (props) => {
     items.push(
       ...[
         {
-          name: "Settings",
-          element: <SiteSettings />,
-          icon: <SettingsApplications />,
-        },
-        {
           name: "Users",
           element: <UsersManager />,
           icon: <SupervisedUserCircle />,
@@ -76,9 +72,14 @@ const Create = (props) => {
           icon: <Palette />,
         },
         {
-          name: "Widget",
+          name: "Widgets",
           element: <MasterDetails componentsMap={widgetsMap} />,
-          icon: <Palette />,
+          icon: <Widgets />,
+        },
+        {
+          name: "Settings",
+          element: <SiteSettings />,
+          icon: <SettingsApplications />,
         },
       ]
     );
