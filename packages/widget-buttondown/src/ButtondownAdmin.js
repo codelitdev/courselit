@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
-import { TextField, Typography, Grid } from "@material-ui/core";
+import { TextField, Typography, Grid, Button } from "@material-ui/core";
 
 const ButtondownAdmin = (props) => {
   const { fetchBuilder, name, auth } = props;
@@ -71,11 +71,8 @@ const ButtondownAdmin = (props) => {
   };
 
   return (
-    <>
-      <Grid item>
-        <Typography variant="h4">Buttondown</Typography>
-      </Grid>
-      <Grid item>
+    <Grid container direction="column" spacing={2}>
+      <Grid item xs>
         <Typography variant="h6" color="textSecondary">
           Settings
         </Typography>
@@ -92,16 +89,18 @@ const ButtondownAdmin = (props) => {
             onChange={onChangeData}
             required
           />
-          <button
+          <Button
+            variant="contained"
+            color="primary"
             type="submit"
             value="Save"
             disabled={newSettings.url === settings.url}
           >
             Save
-          </button>
+          </Button>
         </form>
       </Grid>
-    </>
+    </Grid>
   );
 };
 

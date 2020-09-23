@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import { Grid, Typography } from "@material-ui/core";
+import { Grid, IconButton, Typography } from "@material-ui/core";
 import { WIDGETS_PAGE_HEADER } from "../../../config/strings";
 import Master from "./Master";
 import Details from "./Details";
 import { makeStyles } from "@material-ui/styles";
+import { ArrowBack } from "@material-ui/icons";
 
 const useStyles = makeStyles((theme) => ({
   main: {
@@ -19,17 +20,34 @@ const MasterDetails = (props) => {
 
   return (
     <Grid container direction="column">
-      <Grid item>
-        <Typography variant="h3">{WIDGETS_PAGE_HEADER}</Typography>
+      <Grid item xs={12}>
+        {selectedWidgetName && (
+          <Grid item xs>
+            <Grid container alignItems="center">
+              <Grid item>
+                <IconButton onClick={() => setSelectedWidgetName("")}>
+                  <ArrowBack />
+                </IconButton>
+              </Grid>
+              <Grid item>
+                <Typography variant="h3">
+                  {componentsMap[selectedWidgetName].caption}
+                </Typography>
+              </Grid>
+            </Grid>
+          </Grid>
+        )}
+        {!selectedWidgetName && (
+          <Typography variant="h3">{WIDGETS_PAGE_HEADER}</Typography>
+        )}
       </Grid>
-      <Grid item className={classes.main}>
+      <Grid item className={classes.main} xs={12}>
         {componentsMap && (
           <>
             {selectedWidgetName && (
               <Details
                 name={selectedWidgetName}
-                onBackPressed={() => setSelectedWidgetName("")}
-                component={componentsMap[selectedWidgetName].component}
+                component={componentsMap[selectedWidgetName]}
               />
             )}
             {!selectedWidgetName && (
