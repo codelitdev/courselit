@@ -12,7 +12,8 @@
 	"dockerFile": "Dockerfile",
 	"extensions": [
 		"eamodio.gitlens",
-		"ms-vscode.vscode-typescript-next"
+		"ms-vscode.vscode-typescript-next",
+		"wayou.vscode-todo-highlight"
 	],
 	"postAttachCommand": "startup.sh"
 }
