@@ -1,6 +1,6 @@
 {
   "name": "@courselit/widget-buttondown",
-  "version": "0.2.9",
+  "version": "0.2.10",
   "description": "Buttondown widget for CourseLit",
   "keywords": [
     "courselit",
@@ -34,13 +34,13 @@
     "url": "https://github.com/recurzery/courselit/issues"
   },
   "peerDependencies": {
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
-    "react-redux": "^7.2.1",
-    "prop-types": "^15.7.2",
     "@material-ui/core": "^4.8.1",
     "@material-ui/icons": "^4.4.1",
-    "@material-ui/styles": "^4.7.1"
+    "@material-ui/styles": "^4.7.1",
+    "prop-types": "^15.7.2",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-redux": "^7.2.1"
   },
   "devDependencies": {
     "@babel/core": "^7.11.1",
