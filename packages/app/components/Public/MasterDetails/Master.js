@@ -22,9 +22,9 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   caption: {
-    overflow: 'hidden',
-    textOverflow: 'ellipsis'
-  }
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
 }));
 
 const Master = (props) => {
