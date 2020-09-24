@@ -9,13 +9,14 @@ import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
 import { Menu } from "@material-ui/icons";
-import { Toolbar, Grid } from "@material-ui/core";
+import { Toolbar, Grid, LinearProgress } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
 import AppToast from "../../AppToast";
 import DrawerListItemIcon from "./DrawerListItemIcon.js";
 import Footer from "./Footer.js";
 import Header from "./Header.js";
+import { connect } from "react-redux";
 
 const drawerWidth = 240;
 
@@ -59,10 +60,13 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: theme.spacing(8),
     minHeight: "80vh",
   },
+  showProgressBar: (props) => ({
+    visibility: props.networkAction ? "visible" : "hidden",
+  }),
 }));
 
 const ComponentScaffold = (props) => {
-  const classes = useStyles();
+  const classes = useStyles(props);
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [visibleComponent, setVisibleComponent] = useState();
@@ -159,6 +163,7 @@ const ComponentScaffold = (props) => {
       </nav>
       <main className={classes.content}>
         <div className={classes.toolbar} />
+        <LinearProgress className={classes.showProgressBar} />
         <Grid container className={classes.contentMain}>
           <Grid item xs={12}>
             {visibleComponent}
@@ -184,6 +189,11 @@ ComponentScaffold.propTypes = {
       }),
     })
   ),
+  networkAction: PropTypes.bool.isRequired,
 };
 
-export default ComponentScaffold;
+const mapStateToProps = (state) => ({
+  networkAction: state.networkAction,
+});
+
+export default connect(mapStateToProps)(ComponentScaffold);

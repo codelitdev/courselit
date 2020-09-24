@@ -52,6 +52,7 @@ exports.responses = {
   theme_not_installed: "The theme is not installed",
   invalid_layout: "Invalid layout",
   destination_dont_exist: "Destination does not exist",
+  invalid_format: "Invalid format",
 };
 
 exports.internal = {
