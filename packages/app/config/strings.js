@@ -194,3 +194,4 @@ export const LABEL_NAVIGATION_LINK_DESTINATION = "URL";
 export const LINK_DROPDOWN = "Location";
 export const ADD_NEW_LINK_BUTTON = "Add new link";
 export const LABEL_NAVIGATION_LINK_NEWTAB = "New tab";
+export const WIDGETS_PAGE_HEADER = "Widgets";

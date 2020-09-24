@@ -1,13 +1,12 @@
 {
-  "name": "@courselit/rich-text",
-  "version": "0.2.11",
-  "description": "Edit and display rich text in React apps. Built using DraftJS.",
+  "name": "@courselit/widget-buttondown",
+  "version": "0.2.12",
+  "description": "Buttondown widget for CourseLit",
   "keywords": [
-    "rte",
-    "rich-text-editor",
-    "draftjs",
-    "react-text-editor",
-    "text-editor"
+    "courselit",
+    "buttondown",
+    "widget",
+    "buttondown courselit widget"
   ],
   "author": "Rajat Saxena <social@rajats.xyz>",
   "homepage": "https://github.com/codelitdev/courselit#readme",
@@ -32,23 +31,21 @@
     "build": "webpack"
   },
   "bugs": {
-    "url": "https://github.com/codelitdev/courselit/issues"
-  },
-  "dependencies": {
-    "draft-js": "^0.11.7",
-    "prop-types": "^15.7.2",
-    "react-tweet-embed": "^1.2.2"
+    "url": "https://github.com/recurzery/courselit/issues"
   },
   "peerDependencies": {
+    "@material-ui/core": "^4.8.1",
+    "@material-ui/icons": "^4.4.1",
+    "@material-ui/styles": "^4.7.1",
+    "prop-types": "^15.7.2",
     "react": "^16.13.1",
-    "react-dom": "^16.13.1"
+    "react-dom": "^16.13.1",
+    "react-redux": "^7.2.1"
   },
   "devDependencies": {
     "@babel/core": "^7.11.1",
+    "@babel/preset-react": "^7.10.4",
     "babel-loader": "^8.1.0",
-    "css-loader": "^4.2.1",
-    "style-loader": "^1.2.1",
-    "svg-react-loader": "^0.4.6",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12"
   }
