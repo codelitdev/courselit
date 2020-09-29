@@ -15,7 +15,6 @@ const User = require("../../src/models/User.js");
 const Lesson = require("../../src/models/Lesson.js");
 const Course = require("../../src/models/Course.js");
 const SiteInfo = require("../../src/models/SiteInfo.js");
-const Settings = require("../../src/models/Settings.js");
 const Media = require("../../src/models/Media.js");
 
 const responses = require("../../src/config/strings.js").responses;
@@ -60,7 +59,6 @@ describe("GraphQL API tests", () => {
       { email: user4, password: "lol", name: "Tester #4", verified: false },
     ])
       .then(() => SiteInfo.deleteMany({}))
-      .then(() => Settings.deleteMany({}))
       .then(() => done());
   });
 

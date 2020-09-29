@@ -4,30 +4,40 @@ const {
   currency_iso_not_set: currencyISONotSet,
 } = require("../config/strings.js").responses;
 const stripeSDK = require("stripe");
-const Settings = require("../models/Settings.js");
 const SiteInfo = require("../models/SiteInfo.js");
 
 class StripePayment extends Payment {
   async setup() {
     const siteinfo = (await SiteInfo.find())[0];
-    const settings = (await Settings.find())[0];
 
     if (!siteinfo.currencyISOCode) {
       throw new Error(currencyISONotSet);
     }
 
-    if (!siteinfo.stripePublishableKey || !settings.stripeSecret) {
+    if (!siteinfo.stripePublishableKey || !siteinfo.stripeSecret) {
       throw new Error(stripeInvalidSettings);
     }
 
-    this.stripe = stripeSDK(settings.stripeSecret);
+    this.stripe = stripeSDK(siteinfo.stripeSecret);
     return this;
   }
 
-  async initiate(amount, currency) {
+  async initiate({ amount, currency, description, shipping }) {
     const paymentIntent = await this.stripe.paymentIntents.create({
       amount,
       currency,
+      description,
+      shipping,
+      // {
+      //   name: 'Some user',
+      //   address: {
+      //     line1: 'Shastri Nager',
+      //     // postal_code: '122004',
+      //     // city: 'Agra',
+      //     // state: 'UP',
+      //     // country: 'US'
+      //   }
+      // }
     });
 
     return paymentIntent.client_secret;

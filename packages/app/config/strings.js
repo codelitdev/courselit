@@ -195,3 +195,4 @@ export const LINK_DROPDOWN = "Location";
 export const ADD_NEW_LINK_BUTTON = "Add new link";
 export const LABEL_NAVIGATION_LINK_NEWTAB = "New tab";
 export const WIDGETS_PAGE_HEADER = "Widgets";
+export const PAYMENTS_SHIPPING_ADDRESS_SECTION_HEADER = "Shipping Address";

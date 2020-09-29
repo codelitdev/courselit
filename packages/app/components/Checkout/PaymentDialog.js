@@ -11,6 +11,7 @@ import {
   Button,
   CircularProgress,
   Divider,
+  TextField,
 } from "@material-ui/core";
 import {
   CHECKOUT_DIALOG_TITLE,
@@ -18,6 +19,7 @@ import {
   PAYMENT_VERIFICATION_FAILED,
   CAPTION_TRY_AGAIN,
   CAPTION_CLOSE,
+  PAYMENTS_SHIPPING_ADDRESS_SECTION_HEADER,
 } from "../../config/strings";
 import { siteInfoProps, publicCourse, authProps } from "../../types";
 import Stripe from "./Stripe";
@@ -69,6 +71,14 @@ const PaymentDialog = (props) => {
   const [error, setError] = useState("");
   const classes = useStyles();
   const [loading, setLoading] = useState(false);
+  const [shippingAddress, setShippingAddress] = useState({
+    name: "",
+    addressLineOne: "",
+    postalCode: "",
+    city: "",
+    state: "",
+    country: "",
+  });
 
   useEffect(() => {
     initiatePayment();
@@ -184,6 +194,14 @@ const PaymentDialog = (props) => {
 
   const paymentError = (error) => setError(error.message);
 
+  const onShippingDetailsChanged = (e) => {
+    setShippingAddress(
+      Object.assign({}, shippingAddress, {
+        [e.target.name]: e.target.value,
+      })
+    );
+  };
+
   return (
     <Dialog onClose={onClose} open={open} maxWidth="sm" fullWidth={true}>
       <DialogTitle>
@@ -207,9 +225,6 @@ const PaymentDialog = (props) => {
           </Grid>
         </Grid>
         <Divider variant="middle" className={classes.divider} />
-        <Typography variant="h6" className={classes.paymentHeader}>
-          {PAYMENT_MODAL_PAYMENT_DETAILS_HEADER}
-        </Typography>
 
         {loading && (
           <Grid container justify="center" className={classes.paymentTemplate}>
@@ -246,6 +261,88 @@ const PaymentDialog = (props) => {
               <>
                 {paymentTracker && (
                   <>
+                    <Typography variant="h6">
+                      {PAYMENTS_SHIPPING_ADDRESS_SECTION_HEADER}
+                    </Typography>
+                    <TextField
+                      required
+                      variant="outlined"
+                      label="Name"
+                      fullWidth
+                      margin="normal"
+                      name="name"
+                      value={shippingAddress.name}
+                      onChange={onShippingDetailsChanged}
+                      autoComplete="name"
+                    />
+                    <TextField
+                      required
+                      variant="outlined"
+                      label="Address Line 1"
+                      fullWidth
+                      margin="normal"
+                      name="addressLineOne"
+                      value={shippingAddress.addressLineOne}
+                      onChange={onShippingDetailsChanged}
+                      autoComplete="shipping street-address"
+                    />
+                    <Grid container direction="row" spacing={1}>
+                      <Grid item xs={6}>
+                        <TextField
+                          variant="outlined"
+                          label="City"
+                          fullWidth
+                          margin="normal"
+                          name="city"
+                          value={shippingAddress.city}
+                          onChange={onShippingDetailsChanged}
+                          autoComplete="shipping locality"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          variant="outlined"
+                          label="State"
+                          fullWidth
+                          margin="normal"
+                          name="state"
+                          value={shippingAddress.state}
+                          onChange={onShippingDetailsChanged}
+                          autoComplete="shipping region"
+                        />
+                      </Grid>
+                    </Grid>
+
+                    <Grid container direction="row" spacing={1}>
+                      <Grid item xs={6}>
+                        <TextField
+                          variant="outlined"
+                          label="Postal Code"
+                          fullWidth
+                          margin="normal"
+                          name="postalCode"
+                          value={shippingAddress.postalCode}
+                          onChange={onShippingDetailsChanged}
+                          autoComplete="shipping postal-code"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          variant="outlined"
+                          label="Country"
+                          fullWidth
+                          margin="normal"
+                          name="country"
+                          value={shippingAddress.country}
+                          onChange={onShippingDetailsChanged}
+                          autoComplete="shipping country"
+                        />
+                      </Grid>
+                    </Grid>
+
+                    <Typography variant="h6" className={classes.paymentHeader}>
+                      {PAYMENT_MODAL_PAYMENT_DETAILS_HEADER}
+                    </Typography>
                     {paymentMethod === PAYMENT_METHOD_STRIPE && (
                       <Stripe
                         clientSecret={paymentTracker}
