@@ -18,19 +18,11 @@ const {
 
 const initiateHandler = async (req, res) => {
   const { user, body } = req;
-  const { courseid, description/*, shipping, purchasingfor*/ } = body;
+  const { courseid, metadata, purchasingfor } = body;
 
   if (!courseid) {
     return res.status(400).json({ error: responses.invalid_course_id });
   }
-
-  // if (!description) {
-  //   return res.status(400).json({ error: responses.description_is_required });
-  // }
-
-  // if (!isShippingInfoValid(shipping)) {
-  //   return res.status(400).json({ error: responses.invalid_shipping_info });
-  // }
 
   try {
     const course = await Course.findById(courseid);
@@ -79,8 +71,7 @@ const initiateHandler = async (req, res) => {
     const paymentTracker = await paymentMethod.initiate({
       course,
       currency: siteinfo.currencyISOCode,
-      // description,
-      // shipping,
+      metadata: JSON.parse(metadata)
     });
 
     const purchase = await Purchase.create({
@@ -89,7 +80,7 @@ const initiateHandler = async (req, res) => {
       purchasedBy: user.id,
       paymentMethod: siteinfo.paymentMethod,
       paymentId: paymentTracker,
-      amount: amountToBeCharged,
+      amount: course.cost * 100,
       currencyISOCode: siteinfo.currencyISOCode,
     });
 
@@ -104,16 +95,6 @@ const initiateHandler = async (req, res) => {
       error: err.message,
     });
   }
-};
-
-const isShippingInfoValid = (shipping) => {
-  if (!shipping || typeof shipping !== "object") return false;
-
-  if (!shipping.name) return false;
-
-  if (!shipping.address || typeof shipping.address !== "object") return false;
-
-  return true;
 };
 
 const finalizeCoursePurchase = async (userId, courseId) => {

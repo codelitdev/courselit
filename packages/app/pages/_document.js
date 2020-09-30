@@ -21,7 +21,6 @@ class MyDocument extends Document {
             rel="stylesheet"
             href="https://fonts.googleapis.com/css?family=Fira+Code&display=swap"
           />
-          <script id="stripe-js" src="https://js.stripe.com/v3/" async></script>
         </Head>
         <body style={{ height: "100%", width: "100%", margin: 0 }}>
           <Main />

@@ -19,10 +19,11 @@ class StripePayment extends Payment {
     }
 
     this.stripe = stripeSDK(siteinfo.stripeSecret);
+
     return this;
   }
 
-  async initiate({ course, currrency }) {
+  async initiate({ course, currency, metadata }) {
     // const paymentIntent = await this.stripe.paymentIntents.create({
     //   amount,
     //   currency,
@@ -39,6 +40,7 @@ class StripePayment extends Payment {
     //     }
     //   }
     // });
+    console.log(metadata);
     const session = await this.stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -48,14 +50,14 @@ class StripePayment extends Payment {
             product_data: {
               name: course.title
             },
-            unit_amount: cost.price
+            unit_amount: course.cost * 100
           },
           quantity: 1
         }
       ],
       mode: 'payment',
-      success_url: ``,
-      cancel_url: ``
+      success_url: metadata.successUrl,
+      cancel_url: metadata.cancelUrl
     })
 
     // return paymentIntent.client_secret;

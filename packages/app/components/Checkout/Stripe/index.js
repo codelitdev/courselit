@@ -13,7 +13,7 @@ const Stripe = (props) => {
   // const [stripe] = useState(window.Stripe('pk_test_TPqKXuR984C65Bb7yWdnkAnT'))
   const stripePromise = loadStripe(siteInfo.stripePublishableKey);
 
-  const onClick = async () => {
+  const handleClick = async () => {
     const stripe = await stripePromise;
     const result = await stripe.redirectToCheckout({
       sessionId
