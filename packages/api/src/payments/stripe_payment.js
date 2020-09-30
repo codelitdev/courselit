@@ -22,25 +22,44 @@ class StripePayment extends Payment {
     return this;
   }
 
-  async initiate({ amount, currency, description, shipping }) {
-    const paymentIntent = await this.stripe.paymentIntents.create({
-      amount,
-      currency,
-      description,
-      shipping,
-      // {
-      //   name: 'Some user',
-      //   address: {
-      //     line1: 'Shastri Nager',
-      //     // postal_code: '122004',
-      //     // city: 'Agra',
-      //     // state: 'UP',
-      //     // country: 'US'
-      //   }
-      // }
-    });
+  async initiate({ course, currrency }) {
+    // const paymentIntent = await this.stripe.paymentIntents.create({
+    //   amount,
+    //   currency,
+    //   description,
+    //   shipping,
+    //   {
+    //     name: 'Some user',
+    //     address: {
+    //       line1: 'Shastri Nager',
+    //       // postal_code: '122004',
+    //       // city: 'Agra',
+    //       // state: 'UP',
+    //       // country: 'US'
+    //     }
+    //   }
+    // });
+    const session = await this.stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency,
+            product_data: {
+              name: course.title
+            },
+            unit_amount: cost.price
+          },
+          quantity: 1
+        }
+      ],
+      mode: 'payment',
+      success_url: ``,
+      cancel_url: ``
+    })
 
-    return paymentIntent.client_secret;
+    // return paymentIntent.client_secret;
+    return session.id;
   }
 
   async verify(event) {

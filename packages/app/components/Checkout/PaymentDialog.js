@@ -261,7 +261,7 @@ const PaymentDialog = (props) => {
               <>
                 {paymentTracker && (
                   <>
-                    <Typography variant="h6">
+                    {/* <Typography variant="h6">
                       {PAYMENTS_SHIPPING_ADDRESS_SECTION_HEADER}
                     </Typography>
                     <TextField
@@ -338,14 +338,14 @@ const PaymentDialog = (props) => {
                           autoComplete="shipping country"
                         />
                       </Grid>
-                    </Grid>
+                    </Grid> */}
 
                     <Typography variant="h6" className={classes.paymentHeader}>
                       {PAYMENT_MODAL_PAYMENT_DETAILS_HEADER}
                     </Typography>
                     {paymentMethod === PAYMENT_METHOD_STRIPE && (
                       <Stripe
-                        clientSecret={paymentTracker}
+                        sessionId={paymentTracker}
                         onSuccess={paymentSuccess}
                         onError={paymentError}
                       />
