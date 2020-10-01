@@ -67,26 +67,28 @@ const initiateHandler = async (req, res) => {
     const paymentMethod = await Payment.getPaymentMethod(
       siteinfo.paymentMethod
     );
-    // const amountToBeCharged = course.cost * 100;
-    const paymentTracker = await paymentMethod.initiate({
-      course,
-      currency: siteinfo.currencyISOCode,
-      metadata: JSON.parse(metadata)
-    });
 
     const purchase = await Purchase.create({
       courseId: course.id,
       purchasedOn: new Date(),
       purchasedBy: user.id,
       paymentMethod: siteinfo.paymentMethod,
-      paymentId: paymentTracker,
       amount: course.cost * 100,
       currencyISOCode: siteinfo.currencyISOCode,
     });
 
+    const paymentTracker = await paymentMethod.initiate({
+      course,
+      currency: siteinfo.currencyISOCode,
+      metadata: JSON.parse(metadata),
+      purchaseId: purchase.id,
+    });
+
+    purchase.paymentId = paymentTracker;
+    await purchase.save();
+
     res.status(200).json({
       status: transactionInitiated,
-      purchaseId: purchase.id,
       paymentTracker,
     });
   } catch (err) {
@@ -130,14 +132,12 @@ const webhookHandler = async (req, res) => {
   const siteinfo = (await SiteInfo.find())[0];
   const paymentMethod = await Payment.getPaymentMethod(siteinfo.paymentMethod);
 
-  const paymentVerified = await paymentMethod.verify(body);
+  const paymentVerified = paymentMethod.verify(body);
 
   if (paymentVerified) {
-    const purchaseRecord = (
-      await Purchase.find({
-        paymentId: paymentMethod.getPaymentIdentifier(body),
-      })
-    )[0];
+    const purchaseRecord = await Purchase.findById(
+      paymentMethod.getPaymentIdentifier(body)
+    );
 
     if (purchaseRecord) {
       purchaseRecord.status = transactionSuccess;

@@ -21,7 +21,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Stripe CLI
-RUN wget https://github.com/stripe/stripe-cli/releases/download/v1.5.1/stripe_1.5.1_linux_amd64.deb -O stripe_cli.deb
+RUN wget https://github.com/stripe/stripe-cli/releases/download/v1.5.2/stripe_1.5.2_linux_amd64.deb -O stripe_cli.deb
 RUN dpkg -i ./stripe_cli.deb
 
 COPY startup.sh /usr/local/bin

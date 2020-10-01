@@ -23,7 +23,7 @@ class StripePayment extends Payment {
     return this;
   }
 
-  async initiate({ course, currency, metadata }) {
+  async initiate({ course, currency, metadata, purchaseId }) {
     // const paymentIntent = await this.stripe.paymentIntents.create({
     //   amount,
     //   currency,
@@ -40,36 +40,43 @@ class StripePayment extends Payment {
     //     }
     //   }
     // });
-    console.log(metadata);
     const session = await this.stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
+      payment_method_types: ["card"],
       line_items: [
         {
           price_data: {
             currency,
             product_data: {
-              name: course.title
+              name: course.title,
             },
-            unit_amount: course.cost * 100
+            unit_amount: course.cost * 100,
           },
-          quantity: 1
-        }
+          quantity: 1,
+        },
       ],
-      mode: 'payment',
-      success_url: metadata.successUrl,
-      cancel_url: metadata.cancelUrl
-    })
+      mode: "payment",
+      success_url: `${metadata.successUrl}?id=${purchaseId}`,
+      cancel_url: metadata.cancelUrl,
+      metadata: {
+        purchaseId,
+      },
+    });
 
-    // return paymentIntent.client_secret;
     return session.id;
   }
 
-  async verify(event) {
-    return event.type === "payment_intent.succeeded";
+  verify(event) {
+    return (
+      event &&
+      event.data &&
+      event.data.object &&
+      event.data.object.object === "checkout.session" &&
+      event.data.object.payment_status === "paid"
+    );
   }
 
   getPaymentIdentifier(event) {
-    return event.data.object.client_secret;
+    return event.data.object.metadata.purchaseId;
   }
 }
 

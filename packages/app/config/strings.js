@@ -196,3 +196,7 @@ export const ADD_NEW_LINK_BUTTON = "Add new link";
 export const LABEL_NAVIGATION_LINK_NEWTAB = "New tab";
 export const WIDGETS_PAGE_HEADER = "Widgets";
 export const PAYMENTS_SHIPPING_ADDRESS_SECTION_HEADER = "Shipping Address";
+export const HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK =
+  "Payment Confirmation Webhook URL";
+export const SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK =
+  "Your payment processor sends out notifications about purchases. CourseLit needs those notifications to correctly reflect user purchases. Paste the following URL into your payment processor's dashboard.";

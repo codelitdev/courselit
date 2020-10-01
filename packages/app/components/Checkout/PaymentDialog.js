@@ -11,7 +11,6 @@ import {
   Button,
   CircularProgress,
   Divider,
-  TextField,
 } from "@material-ui/core";
 import {
   CHECKOUT_DIALOG_TITLE,
@@ -19,7 +18,6 @@ import {
   PAYMENT_VERIFICATION_FAILED,
   CAPTION_TRY_AGAIN,
   CAPTION_CLOSE,
-  PAYMENTS_SHIPPING_ADDRESS_SECTION_HEADER,
 } from "../../config/strings";
 import { siteInfoProps, publicCourse, authProps } from "../../types";
 import Stripe from "./Stripe";
@@ -71,14 +69,6 @@ const PaymentDialog = (props) => {
   const [error, setError] = useState("");
   const classes = useStyles();
   const [loading, setLoading] = useState(false);
-  const [shippingAddress, setShippingAddress] = useState({
-    name: "",
-    addressLineOne: "",
-    postalCode: "",
-    city: "",
-    state: "",
-    country: "",
-  });
 
   useEffect(() => {
     initiatePayment();
@@ -193,14 +183,6 @@ const PaymentDialog = (props) => {
   };
 
   const paymentError = (error) => setError(error.message);
-
-  const onShippingDetailsChanged = (e) => {
-    setShippingAddress(
-      Object.assign({}, shippingAddress, {
-        [e.target.name]: e.target.value,
-      })
-    );
-  };
 
   return (
     <Dialog onClose={onClose} open={open} maxWidth="sm" fullWidth={true}>
