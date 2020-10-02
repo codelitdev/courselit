@@ -149,11 +149,6 @@ export const SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD =
 export const DISCARD_COURSE_CHANGES_POPUP_HEADER =
   "Discard changes made to the course?";
 export const FEATURED_SECTION_HEADER = "Featured Resources";
-export const EMPTY_PAGE_PLACEHOLDER =
-  "There is nothing here. Check back later.";
-export const EMPTY_PAGE_CREATOR_USER_PLACEHOLDER =
-  "There is nothing here. Create fresh content for your users.";
-export const BTN_GO_TO_DASHBOARD = "Go to dashboard";
 export const CARD_HEADER_PAGE_LAYOUT = "Page Layout";
 export const CARD_HEADER_THEME = "Theme";
 export const CARD_DESCRIPTION_PAGE_LAYOUT =

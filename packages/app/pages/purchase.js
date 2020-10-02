@@ -14,7 +14,7 @@ const Payment = (props) => {
     if (props.auth && props.auth.token) {
       getPaymentStatus();
     }
-  });
+  }, [props.auth.token]);
 
   const getPaymentStatus = async () => {
     let paymentStatus = await makePaymentStatusRequest({

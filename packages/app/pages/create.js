@@ -22,6 +22,8 @@ import Design from "../components/Admin/Design";
 import ComponentScaffold from "../components/Public/BaseLayout/ComponentScaffold.js";
 import MasterDetails from "../components/Public/MasterDetails/index.js";
 import widgets from "../config/widgets.js";
+import { siteInfoProps } from "../types.js";
+import Head from 'next/head';
 
 const Create = (props) => {
   useEffect(() => {
@@ -86,7 +88,28 @@ const Create = (props) => {
   }
 
   return props.profile.fetched && props.profile.isCreator ? (
-    <ComponentScaffold items={items} pageTitle={CREATOR_AREA_PAGE_TITLE} />
+    <>
+      <Head>
+        <title>
+          {CREATOR_AREA_PAGE_TITLE} | {props.siteInfo.title}
+        </title>
+        {props.siteInfo.logopath && (
+          <link
+            rel="icon"
+            href={formulateMediaUrl(
+              MEDIA_BACKEND,
+              props.siteInfo.logopath,
+              true
+            )}
+          />
+        )}
+        <meta
+          name="viewport"
+          content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
+        />
+      </Head>
+      <ComponentScaffold items={items} pageTitle={CREATOR_AREA_PAGE_TITLE} />
+    </>
   ) : (
     <AppLoader />
   );
@@ -95,6 +118,7 @@ const Create = (props) => {
 const mapStateToProps = (state) => ({
   auth: state.auth,
   profile: state.profile,
+  siteInfo: siteInfoProps
 });
 
 export default connect(mapStateToProps)(Create);

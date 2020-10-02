@@ -28,4 +28,5 @@ COPY startup.sh /usr/local/bin
 RUN ln -s /usr/local/bin/startup.sh /
 RUN echo 'alias api="yarn lerna run dev --scope=@courselit/api --stream"' >> ~/.bashrc
 RUN echo 'alias app="yarn lerna run dev --scope=@courselit/app --stream"' >> ~/.bashrc
+RUN echo 'alias stripe-listen="stripe listen --forward-to localhost:8000/payment/webhook"' >> ~/.bashrc
 RUN ["chmod", "+x", "/usr/local/bin/startup.sh"]
