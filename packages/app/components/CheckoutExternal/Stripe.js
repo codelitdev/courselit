@@ -74,7 +74,11 @@ const Stripe = (props) => {
     }
   };
 
-  return <Button onClick={handleClick}>{ENROLL_BUTTON_TEXT}</Button>;
+  return (
+    <Button onClick={handleClick} variant="contained" color="primary">
+      {ENROLL_BUTTON_TEXT}
+    </Button>
+  );
 };
 
 Stripe.propTypes = {

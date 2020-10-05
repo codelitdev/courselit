@@ -18,6 +18,7 @@ import {
   TRANSACTION_STATUS_SUCCESS_DETAILS,
   VERIFY_PAYMENT_BUTTON,
   VISIT_COURSE_BUTTON,
+  PURCHASE_ID_HEADER,
 } from "../../config/strings";
 import { makeStyles } from "@material-ui/styles";
 import Link from "next/link";
@@ -60,6 +61,11 @@ const PurchaseStatus = (props) => {
 
     if (paymentStatus.status === 401) {
       router.push("/login");
+      return;
+    }
+
+    if (paymentStatus.status === 404) {
+      router.push("/");
       return;
     }
 
@@ -123,6 +129,11 @@ const PurchaseStatus = (props) => {
                 </Typography>
               </Grid>
               <Grid item>
+                <Typography variant="subtitle2">
+                  {PURCHASE_ID_HEADER}: {id}
+                </Typography>
+              </Grid>
+              <Grid item>
                 <Button
                   variant="contained"
                   color="primary"
@@ -143,6 +154,11 @@ const PurchaseStatus = (props) => {
           <Grid item>
             <Typography variant="body1" color="textSecondary">
               {TRANSACTION_STATUS_FAILED_DETAILS}
+            </Typography>
+          </Grid>
+          <Grid item>
+            <Typography variant="subtitle2">
+              {PURCHASE_ID_HEADER}: {id}
             </Typography>
           </Grid>
           <Grid item>
