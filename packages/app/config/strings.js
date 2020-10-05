@@ -194,7 +194,7 @@ export const PAYMENTS_SHIPPING_ADDRESS_SECTION_HEADER = "Shipping Address";
 export const HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK =
   "Payment Confirmation Webhook URL";
 export const SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK =
-  "Your payment processor sends out notifications about purchases. CourseLit needs those notifications to correctly reflect user purchases. Paste the following URL into your payment processor's dashboard.";
+  "Your payment processor sends out notifications about purchases. CourseLit needs those notifications to correctly reflect user purchases. Right click the following link and copy the link address. Paste that into your payment processor's webhook settings.";
 export const PURCHASE_STATUS_PAGE_HEADER = "Purchase Status";
 export const MAIN_MENU_ITEM_DASHBOARD = "Dashboard";
 export const LAYOUT_SECTION_MAIN_CONTENT = "Main Content";
