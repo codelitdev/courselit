@@ -118,6 +118,11 @@ Once you have this setup, follow these steps.
 2. Once the code opens up, open two terminal windows in your Visual Studio Code and type in the following commands to start the backend and frontend servers respectively.
   - `yarn lerna run dev --scope=@courselit/api --stream`
   - `yarn lerna run dev --scope=@courselit/app --stream`
+  
+  > The above commands are also exported as `bash` aliases, so you can simply type `api` and `app` in separate terminal windows to run backend and frontend servers respectively.
+
+## Writing Your Own Widget
+You can add additional functionality to your application via building your own widgets. Look at [this](widgets.md) document.
 
 ## Writing Your Own Widget
 You can add additional functionality to your application via building your own widgets. Look at [this](widgets.md) document.

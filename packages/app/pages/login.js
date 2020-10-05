@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { connect } from "react-redux";
-import Router from "next/router";
+import { useRouter } from "next/router";
 import {
   ERR_ALL_FIELDS_REQUIRED,
   ERR_PASSWORDS_DONT_MATCH,
@@ -46,10 +46,12 @@ const Login = (props) => {
   const [signupData, setSignupData] = useState(defaultSignupData);
   const [showSignupForm, setShowSignupForm] = useState(false);
   const classes = useStyles();
+  const router = useRouter();
 
   useEffect(() => {
     if (!props.auth.guest) {
-      Router.replace("/");
+      const { query } = router;
+      query.redirect ? router.push(`${query.redirect}`) : router.push("/");
     }
   });
 

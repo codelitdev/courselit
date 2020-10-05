@@ -18,6 +18,8 @@ import {
   BLOG_POST_SWITCH,
   APP_MESSAGE_COURSE_SAVED,
   COURSE_EDITOR_DESCRIPTION,
+  VISIT_POST_BUTTON,
+  VISIT_COURSE_BUTTON,
 } from "../../config/strings.js";
 import { networkAction, setAppMessage } from "../../redux/actions.js";
 import { queryGraphQL, formulateCourseUrl } from "../../lib/utils.js";
@@ -345,7 +347,7 @@ const CourseEditor = (props) => {
 
   return (
     <Grid container direction="column">
-      <Grid item>
+      <Grid item xs>
         <Card>
           <form onSubmit={onCourseCreate}>
             <CardContent>
@@ -480,7 +482,9 @@ const CourseEditor = (props) => {
                 <Button>
                   <Link href={formulateCourseUrl(courseData.course)}>
                     <a className={classes.link} target="_blank">
-                      Visit {courseData.course.isBlog ? "post" : "course"}
+                      {courseData.course.isBlog
+                        ? VISIT_POST_BUTTON
+                        : VISIT_COURSE_BUTTON}
                     </a>
                   </Link>
                 </Button>

@@ -48,6 +48,10 @@ const Course = (props) => {
               {course.title} | {props.siteInfo.title}
             </title>
             <meta
+              name="viewport"
+              content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
+            />
+            <meta
               property="og:url"
               content={formulateCourseUrl(course, FRONTEND)}
             />
@@ -65,7 +69,7 @@ const Course = (props) => {
               />
             )}
           </Head>
-          <ComponentScaffold items={lessons} pageTitle={course.title} />
+          <ComponentScaffold items={lessons} />
         </>
       )}
     </>
