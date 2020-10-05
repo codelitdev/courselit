@@ -67,7 +67,7 @@ const Article = (props) => {
   }
 
   return (
-    <article className={classes.article}>
+    <article>
       <Typography variant="h3" className={classes.header}>
         {course.title}
       </Typography>

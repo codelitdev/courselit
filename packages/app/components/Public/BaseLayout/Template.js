@@ -6,11 +6,13 @@ import Section from "./Section";
 import { makeStyles } from "@material-ui/styles";
 import Footer from "./Footer";
 
-const useStyles = makeStyles({
+const useStyles = makeStyles((theme) => ({
   mainContent: {
-    // minHeight: "80vh"
+    // [theme.breakpoints.up("md")]: {
+    minHeight: "80vh",
+    // },
   },
-});
+}));
 
 const Template = (props) => {
   const classes = useStyles(props);
@@ -20,15 +22,18 @@ const Template = (props) => {
     <>
       <Grid container>
         {router.pathname === "/" && <Section name="top" />}
-        <Grid container item direction="row">
+        <Grid container item direction="row" className={classes.mainContent} xs>
+          {/** Main */}
           <Grid container item direction="column" xs={12} sm={8} md={9}>
-            <Grid container item className={classes.mainContent}>
+            <Grid container item>
               {props.children}
             </Grid>
             <Grid item container>
               <Section name="bottom" />
             </Grid>
           </Grid>
+
+          {/** Aside */}
           <Grid container item direction="column" xs={12} sm={4} md={3}>
             <Section name="aside" />
           </Grid>

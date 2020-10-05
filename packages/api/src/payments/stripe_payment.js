@@ -55,7 +55,7 @@ class StripePayment extends Payment {
         },
       ],
       mode: "payment",
-      success_url: `${metadata.successUrl}?id=${purchaseId}`,
+      success_url: `${metadata.successUrl}?id=${purchaseId}&source=${metadata.sourceUrl}`,
       cancel_url: metadata.cancelUrl,
       metadata: {
         purchaseId,

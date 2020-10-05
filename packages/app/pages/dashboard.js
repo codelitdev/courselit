@@ -3,7 +3,7 @@
  */
 import { useEffect } from "react";
 import { connect } from "react-redux";
-import Router from "next/router";
+import { useRouter } from "next/router";
 import {
   LibraryBooks,
   SupervisedUserCircle,
@@ -22,19 +22,35 @@ import Design from "../components/Admin/Design";
 import ComponentScaffold from "../components/Public/BaseLayout/ComponentScaffold.js";
 import MasterDetails from "../components/Public/MasterDetails/index.js";
 import widgets from "../config/widgets.js";
-import { siteInfoProps } from "../types.js";
-import Head from 'next/head';
+import Head from "next/head";
+import { MEDIA_BACKEND } from "../config/constants.js";
+import { formulateMediaUrl } from "../lib/utils.js";
+import { Grid } from "@material-ui/core";
+import { makeStyles } from "@material-ui/styles";
+
+const useStyles = makeStyles({
+  loaderContainer: {
+    height: "100vh",
+    width: "100vw",
+  },
+});
 
 const Create = (props) => {
+  const router = useRouter();
+  const classes = useStyles();
+
   useEffect(() => {
-    if (props.profile.fetched && !props.profile.isCreator) {
-      Router.push("/");
+    if (
+      props.profile.fetched &&
+      !(props.profile.isCreator || props.profile.isAdmin)
+    ) {
+      router.push("/");
     }
   }, [props.profile.fetched]);
 
   useEffect(() => {
     if (props.auth.checked && props.auth.guest) {
-      Router.push("/");
+      router.push("/");
     }
   }, [props.auth.checked]);
 
@@ -87,13 +103,17 @@ const Create = (props) => {
     );
   }
 
-  return props.profile.fetched && props.profile.isCreator ? (
+  return props.profile.fetched &&
+    (props.profile.isCreator || props.profile.isAdmin) ? (
     <>
       <Head>
         <title>
-          {CREATOR_AREA_PAGE_TITLE} | {props.siteInfo.title}
+          {CREATOR_AREA_PAGE_TITLE}{" "}
+          {props.siteInfo &&
+            props.siteInfo.title &&
+            `| ${props.siteInfo.title}`}
         </title>
-        {props.siteInfo.logopath && (
+        {props.siteInfo && props.siteInfo.logopath && (
           <link
             rel="icon"
             href={formulateMediaUrl(
@@ -108,17 +128,26 @@ const Create = (props) => {
           content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
         />
       </Head>
-      <ComponentScaffold items={items} pageTitle={CREATOR_AREA_PAGE_TITLE} />
+      <ComponentScaffold items={items} />
     </>
   ) : (
-    <AppLoader />
+    <Grid
+      container
+      justify="center"
+      alignItems="center"
+      className={classes.loaderContainer}
+    >
+      <Grid item>
+        <AppLoader />
+      </Grid>
+    </Grid>
   );
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
   profile: state.profile,
-  siteInfo: siteInfoProps
+  siteInfo: state.siteinfo,
 });
 
 export default connect(mapStateToProps)(Create);

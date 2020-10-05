@@ -12,9 +12,11 @@ import { makeStyles, useTheme } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
 import AppToast from "../../AppToast.js";
 import { connect } from "react-redux";
-import { siteInfoProps, link } from "../../../types.js";
+import { siteInfoProps, link, profileProps } from "../../../types.js";
 import Header from "./Header.js";
 import ScaffoldMenuItem from "./ScaffoldMenuItem.js";
+import { MAIN_MENU_ITEM_DASHBOARD } from "../../../config/strings.js";
+import { NAVIGATION_CATEGORY_MAIN } from "../../../config/constants.js";
 
 const drawerWidth = 240;
 
@@ -84,6 +86,17 @@ const Scaffold = (props) => {
               <ScaffoldMenuItem link={link} key={link.destination} />
             )
           )}
+        {props.profile.fetched &&
+          (props.profile.isAdmin || props.profile.isCreator) && (
+            <ScaffoldMenuItem
+              link={{
+                text: MAIN_MENU_ITEM_DASHBOARD,
+                destination: "/dashboard",
+                category: NAVIGATION_CATEGORY_MAIN,
+                newTab: false,
+              }}
+            />
+          )}
       </List>
     </div>
   );
@@ -151,12 +164,14 @@ Scaffold.propTypes = {
   siteinfo: siteInfoProps,
   navigation: PropTypes.arrayOf(link),
   networkAction: PropTypes.bool.isRequired,
+  profile: profileProps,
 };
 
 const mapStateToProps = (state) => ({
   siteinfo: state.siteinfo,
   navigation: state.navigation,
   networkAction: state.networkAction,
+  profile: state.profile,
 });
 
 export default connect(mapStateToProps)(Scaffold);

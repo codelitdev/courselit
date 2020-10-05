@@ -33,6 +33,13 @@ import {
   APP_MESSAGE_THEME_APPLIED,
   APP_MESSAGE_THEME_UNINSTALLED,
   HEADER_NAVIGATION,
+  LAYOUT_SECTION_MAIN_CONTENT,
+  LAYOUT_SECTION_FOOTER_RIGHT,
+  LAYOUT_SECTION_FOOTER_LEFT,
+  LAYOUT_SECTION_TOP,
+  LAYOUT_SECTION_FOOTER,
+  LAYOUT_SECTION_BOTTOM,
+  LAYOUT_SECTION_ASIDE,
 } from "../../../config/strings.js";
 import { makeStyles } from "@material-ui/styles";
 import { Add } from "@material-ui/icons";
@@ -60,7 +67,7 @@ const useStyles = makeStyles((theme) => ({
     border: "2px solid #eee",
   },
   outline: {
-    border: "2px dashed #eaeaea",
+    border: "1px dashed #d2d2d2",
     textAlign: "center",
   },
   box: {
@@ -68,7 +75,7 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(1),
   },
   fixedBox: {
-    background: "#aaa",
+    background: "#efefef",
     textAlign: "center",
   },
   margin: {
@@ -352,7 +359,7 @@ const PageDesigner = (props) => {
                   <Grid
                     container
                     item
-                    className={[classes.outline, classes.box, classes.margin]}
+                    className={`${classes.outline} ${classes.box} ${classes.margin}`}
                     direction="column"
                   >
                     <Grid
@@ -364,11 +371,8 @@ const PageDesigner = (props) => {
                       spacing={1}
                     >
                       <Grid item>
-                        <Typography variant="h6">Top</Typography>
-                      </Grid>
-                      <Grid item>
-                        <Typography variant="body2">
-                          (Only visible on the homepage)
+                        <Typography variant="h6">
+                          {LAYOUT_SECTION_TOP}
                         </Typography>
                       </Grid>
                     </Grid>
@@ -409,22 +413,27 @@ const PageDesigner = (props) => {
                     >
                       <Grid
                         item
-                        className={[
-                          classes.fixedBox,
-                          classes.outline,
-                          classes.mainContent,
-                        ]}
+                        container
+                        className={`${classes.fixedBox} ${classes.outline} ${classes.mainContent}`}
+                        justify="center"
+                        alignItems="center"
                       >
-                        <Typography variant="h6">Main Content</Typography>
+                        <Grid item>
+                          <Typography variant="h6">
+                            {LAYOUT_SECTION_MAIN_CONTENT}
+                          </Typography>
+                        </Grid>
                       </Grid>
                       <Grid
                         container
                         item
                         direction="column"
-                        className={[classes.box, classes.outline]}
+                        className={`${classes.box} ${classes.outline}`}
                       >
                         <Grid item>
-                          <Typography variant="h6">Bottom</Typography>
+                          <Typography variant="h6">
+                            {LAYOUT_SECTION_BOTTOM}
+                          </Typography>
                         </Grid>
                         {layout.bottom &&
                           layout.bottom.map((item, index) => (
@@ -454,10 +463,12 @@ const PageDesigner = (props) => {
                       xs={12}
                       sm={12}
                       md={3}
-                      className={[classes.box, classes.outline]}
+                      className={`${classes.box} ${classes.outline}`}
                     >
                       <Grid item>
-                        <Typography variant="h6">Aside</Typography>
+                        <Typography variant="h6">
+                          {LAYOUT_SECTION_ASIDE}
+                        </Typography>
                       </Grid>
                       {layout.aside &&
                         layout.aside.map((item, index) => (
@@ -485,11 +496,13 @@ const PageDesigner = (props) => {
                 <Grid
                   container
                   item
-                  className={[classes.outline, classes.box]}
+                  className={`${classes.outline} ${classes.box}`}
                   direction="column"
                 >
                   <Grid item>
-                    <Typography variant="h6">Footer</Typography>
+                    <Typography variant="h6">
+                      {LAYOUT_SECTION_FOOTER}
+                    </Typography>
                   </Grid>
                   <Grid item container direction="row" justify="space-between">
                     <Grid
@@ -501,7 +514,9 @@ const PageDesigner = (props) => {
                       direction="column"
                     >
                       <Grid item>
-                        <Typography variant="h6">Left Section</Typography>
+                        <Typography variant="h6">
+                          {LAYOUT_SECTION_FOOTER_LEFT}
+                        </Typography>
                       </Grid>
                       {layout.footerLeft &&
                         layout.footerLeft.map((item, index) => (
@@ -532,7 +547,9 @@ const PageDesigner = (props) => {
                       direction="column"
                     >
                       <Grid item>
-                        <Typography variant="h6">Right Section</Typography>
+                        <Typography variant="h6">
+                          {LAYOUT_SECTION_FOOTER_RIGHT}
+                        </Typography>
                       </Grid>
                       {layout.footerRight &&
                         layout.footerRight.map((item, index) => (
@@ -650,13 +667,8 @@ const PageDesigner = (props) => {
             <NavigationLinks />
           </CardContent>
         </Card>
-        {/* <Grid item>
-          <Typography variant="h4">{HEADER_NAVIGATION}</Typography>
-        </Grid>
-        <Grid item>
-          <NavigationLinks />
-        </Grid> */}
       </Grid>
+
       <AddComponentDialog
         onClose={onSelection}
         onOpen={componentSelectionDialogOpened}

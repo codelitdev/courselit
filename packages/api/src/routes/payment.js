@@ -110,22 +110,35 @@ const finalizeCoursePurchase = async (userId, courseId) => {
 };
 
 const verifyHandler = async (req, res) => {
+  const { user } = req;
   const { purchaseid } = req.body;
 
   if (!purchaseid) {
     return res.status(400).json({ message: responses.invalid_input });
   }
 
-  const purchaseRecord = await Purchase.findById(purchaseid);
+  try {
+    const purchaseRecord = await Purchase.findById(purchaseid);
 
-  if (!purchaseRecord) {
-    return res.status(404).json({ message: responses.item_not_found });
+    if (
+      !purchaseRecord ||
+      !adminOrSelf({ loggedInUser: user, buyerId: purchaseRecord.purchasedBy })
+    ) {
+      return res.status(404).json({ message: responses.item_not_found });
+    }
+
+    res.status(200).json({
+      status: purchaseRecord.status,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
   }
-
-  res.status(200).json({
-    status: purchaseRecord.status,
-  });
 };
+
+const adminOrSelf = ({ loggedInUser, buyerId }) =>
+  loggedInUser.id === buyerId.toString() || loggedInUser.isAdmin;
 
 const webhookHandler = async (req, res) => {
   const { body } = req;

@@ -5,8 +5,8 @@ import { makeStyles } from "@material-ui/styles";
 
 const useStyles = makeStyles({
   loader: {
-    // height: '100vh',
-    // width: '100vw'
+    // height: '100%',
+    // width: '100%'
   },
 });
 

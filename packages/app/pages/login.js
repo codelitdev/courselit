@@ -51,7 +51,7 @@ const Login = (props) => {
   useEffect(() => {
     if (!props.auth.guest) {
       const { query } = router;
-      query.redirect ? router.push(`/${query.redirect}`) : router.push("/");
+      query.redirect ? router.push(`${query.redirect}`) : router.push("/");
     }
   });
 

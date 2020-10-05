@@ -195,3 +195,22 @@ export const HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK =
   "Payment Confirmation Webhook URL";
 export const SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK =
   "Your payment processor sends out notifications about purchases. CourseLit needs those notifications to correctly reflect user purchases. Paste the following URL into your payment processor's dashboard.";
+export const PURCHASE_STATUS_PAGE_HEADER = "Purchase Status";
+export const MAIN_MENU_ITEM_DASHBOARD = "Dashboard";
+export const LAYOUT_SECTION_MAIN_CONTENT = "Main Content";
+export const LAYOUT_SECTION_FOOTER_LEFT = "Left Section";
+export const LAYOUT_SECTION_FOOTER_RIGHT = "Right Section";
+export const LAYOUT_SECTION_TOP = "Top";
+export const LAYOUT_SECTION_FOOTER = "Footer";
+export const LAYOUT_SECTION_BOTTOM = "Bottom";
+export const LAYOUT_SECTION_ASIDE = "Aside";
+export const TRANSACTION_STATUS_SUCCESS = "Payment Confirmed.";
+export const TRANSACTION_STATUS_SUCCESS_DETAILS =
+  "Thank you. You can now head over to your course and start learning.";
+export const TRANSACTION_STATUS_INITIATED = "Payment Not Yet Confirmed.";
+export const TRANSACTION_STATUS_FAILED = "Payment Failed.";
+export const TRANSACTION_STATUS_FAILED_DETAILS =
+  "The payment service provider was unable to process your payment. Please go back and try again.";
+export const VISIT_COURSE_BUTTON = "Visit course";
+export const VISIT_POST_BUTTON = "Visit post";
+export const VERIFY_PAYMENT_BUTTON = "Re-check Payment Status";

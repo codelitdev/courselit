@@ -23,7 +23,7 @@ const Stripe = (props) => {
     });
 
     if (initiatePaymentResponse.status === 401) {
-      router.push("/login");
+      router.push(`/login?redirect=${router.asPath}`);
       return;
     }
 
@@ -50,6 +50,7 @@ const Stripe = (props) => {
       JSON.stringify({
         cancelUrl: `${frontend}${router.asPath}`,
         successUrl: `${frontend}/purchase`,
+        sourceUrl: router.asPath,
       })
     );
 

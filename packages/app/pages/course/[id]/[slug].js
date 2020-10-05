@@ -69,7 +69,7 @@ const Course = (props) => {
               />
             )}
           </Head>
-          <ComponentScaffold items={lessons} pageTitle={course.title} />
+          <ComponentScaffold items={lessons} />
         </>
       )}
     </>
