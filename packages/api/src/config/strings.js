@@ -53,8 +53,6 @@ exports.responses = {
   invalid_layout: "Invalid layout",
   destination_dont_exist: "Destination does not exist",
   invalid_format: "Invalid format",
-  invalid_shipping_info: "Invalid shipping information",
-  description_is_required: "Description is required",
 };
 
 exports.internal = {
