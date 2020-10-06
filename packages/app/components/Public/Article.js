@@ -7,7 +7,7 @@ import { makeStyles } from "@material-ui/styles";
 import { MEDIA_BACKEND } from "../../config/constants.js";
 import { formulateMediaUrl, formattedLocaleDate } from "../../lib/utils";
 import { publicCourse, profileProps } from "../../types";
-import BuyButton from "../Checkout";
+import BuyButton from "../CheckoutExternal";
 import { connect } from "react-redux";
 import PriceTag from "../PriceTag";
 
@@ -67,7 +67,7 @@ const Article = (props) => {
   }
 
   return (
-    <article className={classes.article}>
+    <article>
       <Typography variant="h3" className={classes.header}>
         {course.title}
       </Typography>
