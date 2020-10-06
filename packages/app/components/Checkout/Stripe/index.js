@@ -9,7 +9,6 @@ import { siteInfoProps } from "../../../types.js";
 
 const Stripe = (props) => {
   const { siteInfo } = props;
-  // const [stripe] = useState(window.Stripe('pk_test_TPqKXuR984C65Bb7yWdnkAnT'))
 
   return (
     <>
@@ -34,10 +33,11 @@ const Stripe = (props) => {
 };
 
 Stripe.propTypes = {
-  clientSecret: PropTypes.string.isRequired,
+  sessionId: PropTypes.string.isRequired,
   onSuccess: PropTypes.func.isRequired,
   onError: PropTypes.func.isRequired,
   siteInfo: siteInfoProps,
+  clientSecret: PropTypes.string,
 };
 
 const mapStateToProps = (state) => ({

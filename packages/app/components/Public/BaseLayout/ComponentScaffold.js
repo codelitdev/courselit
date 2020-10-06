@@ -177,7 +177,6 @@ const ComponentScaffold = (props) => {
 };
 
 ComponentScaffold.propTypes = {
-  pageTitle: PropTypes.string,
   items: PropTypes.arrayOf(
     PropTypes.shape({
       name: PropTypes.string.isRequired,

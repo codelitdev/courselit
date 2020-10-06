@@ -4,41 +4,79 @@ const {
   currency_iso_not_set: currencyISONotSet,
 } = require("../config/strings.js").responses;
 const stripeSDK = require("stripe");
-const Settings = require("../models/Settings.js");
 const SiteInfo = require("../models/SiteInfo.js");
 
 class StripePayment extends Payment {
   async setup() {
     const siteinfo = (await SiteInfo.find())[0];
-    const settings = (await Settings.find())[0];
 
     if (!siteinfo.currencyISOCode) {
       throw new Error(currencyISONotSet);
     }
 
-    if (!siteinfo.stripePublishableKey || !settings.stripeSecret) {
+    if (!siteinfo.stripePublishableKey || !siteinfo.stripeSecret) {
       throw new Error(stripeInvalidSettings);
     }
 
-    this.stripe = stripeSDK(settings.stripeSecret);
+    this.stripe = stripeSDK(siteinfo.stripeSecret);
+
     return this;
   }
 
-  async initiate(amount, currency) {
-    const paymentIntent = await this.stripe.paymentIntents.create({
-      amount,
-      currency,
+  async initiate({ course, currency, metadata, purchaseId }) {
+    // const paymentIntent = await this.stripe.paymentIntents.create({
+    //   amount,
+    //   currency,
+    //   description,
+    //   shipping,
+    //   {
+    //     name: 'Some user',
+    //     address: {
+    //       line1: 'Shastri Nager',
+    //       // postal_code: '122004',
+    //       // city: 'Agra',
+    //       // state: 'UP',
+    //       // country: 'US'
+    //     }
+    //   }
+    // });
+    const session = await this.stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price_data: {
+            currency,
+            product_data: {
+              name: course.title,
+            },
+            unit_amount: course.cost * 100,
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "payment",
+      success_url: `${metadata.successUrl}?id=${purchaseId}&source=${metadata.sourceUrl}`,
+      cancel_url: metadata.cancelUrl,
+      metadata: {
+        purchaseId,
+      },
     });
 
-    return paymentIntent.client_secret;
+    return session.id;
   }
 
-  async verify(event) {
-    return event.type === "payment_intent.succeeded";
+  verify(event) {
+    return (
+      event &&
+      event.data &&
+      event.data.object &&
+      event.data.object.object === "checkout.session" &&
+      event.data.object.payment_status === "paid"
+    );
   }
 
   getPaymentIdentifier(event) {
-    return event.data.object.client_secret;
+    return event.data.object.metadata.purchaseId;
   }
 }
 

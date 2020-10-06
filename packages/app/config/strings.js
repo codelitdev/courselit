@@ -129,7 +129,7 @@ export const APP_MESSAGE_COURSE_SAVED = "Course details saved";
 export const ENROLL_IN_THE_COURSE =
   "Please enroll in the course to access this lesson.";
 export const USER_ERROR_HEADER = "Yikes!";
-export const ENROLL_BUTTON_TEXT = "Enroll now";
+export const ENROLL_BUTTON_TEXT = "Buy";
 export const BUTTON_DELETE_MEDIA = "Delete";
 export const DELETE_MEDIA_POPUP_HEADER = "Delete media";
 export const HEADER_EDITING_MEDIA = "Edit media details";
@@ -149,11 +149,6 @@ export const SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD =
 export const DISCARD_COURSE_CHANGES_POPUP_HEADER =
   "Discard changes made to the course?";
 export const FEATURED_SECTION_HEADER = "Featured Resources";
-export const EMPTY_PAGE_PLACEHOLDER =
-  "There is nothing here. Check back later.";
-export const EMPTY_PAGE_CREATOR_USER_PLACEHOLDER =
-  "There is nothing here. Create fresh content for your users.";
-export const BTN_GO_TO_DASHBOARD = "Go to dashboard";
 export const CARD_HEADER_PAGE_LAYOUT = "Page Layout";
 export const CARD_HEADER_THEME = "Theme";
 export const CARD_DESCRIPTION_PAGE_LAYOUT =
@@ -195,3 +190,28 @@ export const LINK_DROPDOWN = "Location";
 export const ADD_NEW_LINK_BUTTON = "Add new link";
 export const LABEL_NAVIGATION_LINK_NEWTAB = "New tab";
 export const WIDGETS_PAGE_HEADER = "Widgets";
+export const PAYMENTS_SHIPPING_ADDRESS_SECTION_HEADER = "Shipping Address";
+export const HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK =
+  "Payment Confirmation Webhook URL";
+export const SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK =
+  "Your payment processor sends out notifications about purchases. CourseLit needs those notifications to correctly reflect user purchases. Right click the following link and copy the link address. Paste that into your payment processor's webhook settings.";
+export const PURCHASE_STATUS_PAGE_HEADER = "Purchase Status";
+export const MAIN_MENU_ITEM_DASHBOARD = "Dashboard";
+export const LAYOUT_SECTION_MAIN_CONTENT = "Main Content";
+export const LAYOUT_SECTION_FOOTER_LEFT = "Left Section";
+export const LAYOUT_SECTION_FOOTER_RIGHT = "Right Section";
+export const LAYOUT_SECTION_TOP = "Top";
+export const LAYOUT_SECTION_FOOTER = "Footer";
+export const LAYOUT_SECTION_BOTTOM = "Bottom";
+export const LAYOUT_SECTION_ASIDE = "Aside";
+export const TRANSACTION_STATUS_SUCCESS = "Payment Confirmed.";
+export const TRANSACTION_STATUS_SUCCESS_DETAILS =
+  "Thank you. You can now head over to your course and start learning.";
+export const TRANSACTION_STATUS_INITIATED = "Payment Not Yet Confirmed.";
+export const TRANSACTION_STATUS_FAILED = "Payment Failed.";
+export const TRANSACTION_STATUS_FAILED_DETAILS =
+  "The payment service provider was unable to process your payment. Please go back and try again.";
+export const VISIT_COURSE_BUTTON = "Visit course";
+export const VISIT_POST_BUTTON = "Visit post";
+export const VERIFY_PAYMENT_BUTTON = "Re-check Payment Status";
+export const PURCHASE_ID_HEADER = "Purchase ID";

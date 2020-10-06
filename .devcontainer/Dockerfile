@@ -20,6 +20,13 @@ RUN apt-get update \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Stripe CLI
+RUN wget https://github.com/stripe/stripe-cli/releases/download/v1.5.2/stripe_1.5.2_linux_amd64.deb -O stripe_cli.deb
+RUN dpkg -i ./stripe_cli.deb
+
 COPY startup.sh /usr/local/bin
 RUN ln -s /usr/local/bin/startup.sh /
+RUN echo 'alias api="yarn lerna run dev --scope=@courselit/api --stream"' >> ~/.bashrc
+RUN echo 'alias app="yarn lerna run dev --scope=@courselit/app --stream"' >> ~/.bashrc
+RUN echo 'alias stripe-listen="stripe listen --forward-to localhost:8000/payment/webhook"' >> ~/.bashrc
 RUN ["chmod", "+x", "/usr/local/bin/startup.sh"]

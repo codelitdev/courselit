@@ -39,7 +39,7 @@ exports.updateSiteInfo = async (siteData, ctx) => {
 
   if (
     siteData.currencyISOCode &&
-    !currencyISOCodes.includes(siteData.currencyISOCode)
+    !currencyISOCodes.includes(siteData.currencyISOCode.toLowerCase())
   ) {
     throw new Error(responses.unrecognised_currency_code);
   }
@@ -57,6 +57,9 @@ exports.updateSiteInfo = async (siteData, ctx) => {
   // populate changed data
   for (const key of Object.keys(siteData)) {
     siteInfo[key] = siteData[key];
+  }
+  if (siteData.currencyISOCode) {
+    siteInfo.currencyISOCode = siteData.currencyISOCode.toLowerCase();
   }
 
   const invalidPaymentMethod = checkForInvalidPaymentMethod(siteInfo);

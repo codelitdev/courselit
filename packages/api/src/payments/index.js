@@ -10,7 +10,7 @@ exports.getPaymentMethod = async (methodName) => {
     case paypal:
       throw new Error(notYetSupported);
     case stripe:
-      return new StripePayment().setup();
+      return await new StripePayment().setup();
     case paytm:
       throw new Error(notYetSupported);
     default:
