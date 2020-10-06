@@ -50,6 +50,8 @@ import {
   APP_MESSAGE_SETTINGS_SAVED,
   SITE_CUSTOMISATIONS_SETTING_HEADER,
   SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD,
+  HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK,
+  SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK,
 } from "../../config/strings.js";
 import AppMessage from "../../models/app-message.js";
 import FetchBuilder from "../../lib/fetch";
@@ -405,6 +407,25 @@ const SiteSettings = (props) => {
                       value={newSettings.stripeSecret || ""}
                       onChange={onChangeData}
                     />
+                    <Grid container direction="column" spacing={1}>
+                      <Grid item>
+                        <Typography variant="subtitle2">
+                          {HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK}
+                        </Typography>
+                      </Grid>
+                      <Grid item>
+                        <Typography variant="body2" color="textSecondary">
+                          {SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK}
+                        </Typography>
+                      </Grid>
+                      <Grid item>
+                        <Typography>
+                          <a href={`${BACKEND}/payment/webhook`}>
+                            {`${BACKEND}/payment/webhook`}
+                          </a>
+                        </Typography>
+                      </Grid>
+                    </Grid>
                   </>
                 )}
                 {newSettings.paymentMethod === PAYMENT_METHOD_PAYPAL && (

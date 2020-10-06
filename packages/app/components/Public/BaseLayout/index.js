@@ -34,6 +34,10 @@ const MasterLayout = (props) => {
             )}
           />
         )}
+        <meta
+          name="viewport"
+          content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
+        />
       </Head>
       <Scaffold>
         <Template>{props.children}</Template>

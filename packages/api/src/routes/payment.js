@@ -18,7 +18,7 @@ const {
 
 const initiateHandler = async (req, res) => {
   const { user, body } = req;
-  const { courseid, purchasingfor } = body;
+  const { courseid, metadata, purchasingfor } = body;
 
   if (!courseid) {
     return res.status(400).json({ error: responses.invalid_course_id });
@@ -67,25 +67,28 @@ const initiateHandler = async (req, res) => {
     const paymentMethod = await Payment.getPaymentMethod(
       siteinfo.paymentMethod
     );
-    const amountToBeCharged = course.cost * 100;
-    const paymentTracker = await paymentMethod.initiate(
-      amountToBeCharged,
-      siteinfo.currencyISOCode
-    );
 
     const purchase = await Purchase.create({
       courseId: course.id,
       purchasedOn: new Date(),
       purchasedBy: user.id,
       paymentMethod: siteinfo.paymentMethod,
-      paymentId: paymentTracker,
-      amount: amountToBeCharged,
+      amount: course.cost * 100,
       currencyISOCode: siteinfo.currencyISOCode,
     });
 
+    const paymentTracker = await paymentMethod.initiate({
+      course,
+      currency: siteinfo.currencyISOCode,
+      metadata: JSON.parse(metadata),
+      purchaseId: purchase.id,
+    });
+
+    purchase.paymentId = paymentTracker;
+    await purchase.save();
+
     res.status(200).json({
       status: transactionInitiated,
-      purchaseId: purchase.id,
       paymentTracker,
     });
   } catch (err) {
@@ -107,36 +110,47 @@ const finalizeCoursePurchase = async (userId, courseId) => {
 };
 
 const verifyHandler = async (req, res) => {
+  const { user } = req;
   const { purchaseid } = req.body;
 
   if (!purchaseid) {
     return res.status(400).json({ message: responses.invalid_input });
   }
 
-  const purchaseRecord = await Purchase.findById(purchaseid);
+  try {
+    const purchaseRecord = await Purchase.findById(purchaseid);
 
-  if (!purchaseRecord) {
-    return res.status(404).json({ message: responses.item_not_found });
+    if (
+      !purchaseRecord ||
+      !adminOrSelf({ loggedInUser: user, buyerId: purchaseRecord.purchasedBy })
+    ) {
+      return res.status(404).json({ message: responses.item_not_found });
+    }
+
+    res.status(200).json({
+      status: purchaseRecord.status,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
   }
-
-  res.status(200).json({
-    status: purchaseRecord.status,
-  });
 };
+
+const adminOrSelf = ({ loggedInUser, buyerId }) =>
+  loggedInUser.id === buyerId.toString() || loggedInUser.isAdmin;
 
 const webhookHandler = async (req, res) => {
   const { body } = req;
   const siteinfo = (await SiteInfo.find())[0];
   const paymentMethod = await Payment.getPaymentMethod(siteinfo.paymentMethod);
 
-  const paymentVerified = await paymentMethod.verify(body);
+  const paymentVerified = paymentMethod.verify(body);
 
   if (paymentVerified) {
-    const purchaseRecord = (
-      await Purchase.find({
-        paymentId: paymentMethod.getPaymentIdentifier(body),
-      })
-    )[0];
+    const purchaseRecord = await Purchase.findById(
+      paymentMethod.getPaymentIdentifier(body)
+    );
 
     if (purchaseRecord) {
       purchaseRecord.status = transactionSuccess;

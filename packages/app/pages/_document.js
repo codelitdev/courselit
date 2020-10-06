@@ -8,10 +8,6 @@ class MyDocument extends Document {
       <html lang="en" style={{ height: "100%", width: "100%" }}>
         <Head>
           <meta charSet="utf-8" />
-          <meta
-            name="viewport"
-            content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
-          />
           {/* <meta name="theme-color" content={theme.palette.primary.main} /> */}
           <link
             rel="stylesheet"
@@ -21,7 +17,6 @@ class MyDocument extends Document {
             rel="stylesheet"
             href="https://fonts.googleapis.com/css?family=Fira+Code&display=swap"
           />
-          <script id="stripe-js" src="https://js.stripe.com/v3/" async></script>
         </Head>
         <body style={{ height: "100%", width: "100%", margin: 0 }}>
           <Main />
