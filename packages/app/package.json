@@ -1,6 +1,6 @@
 {
   "name": "@courselit/app",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "main": "index.js",
   "license": "MIT",
   "author": {
@@ -17,8 +17,8 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.8.3",
-    "@courselit/rich-text": "^0.3.1",
-    "@courselit/widget-buttondown": "^0.3.1",
+    "@courselit/rich-text": "^0.3.3",
+    "@courselit/widget-buttondown": "^0.3.3",
     "@material-ui/core": "^4.8.1",
     "@material-ui/icons": "^4.4.1",
     "@material-ui/styles": "^4.7.1",
