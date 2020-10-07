@@ -1,0 +1,56 @@
+# Copy docker compose files
+- name: Copy docker compose files
+  copy:
+    src: docker
+    dest: "{{ ansible_env.HOME }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: 0644
+
+- pause:
+    prompt: "Which folder would you like to store your files in? [~/courselit-data]"
+  register: prompt
+
+- set_fact:
+    media_folder: "{{ prompt.user_input if prompt.user_input|bool else '~/courselit-data' }}"
+
+- pause:
+    prompt: "Specify a username for the database. Keep it safe for future maintanences."
+  register: prompt
+
+- set_fact:
+    mongo_user_name: "{{ prompt.user_input }}"
+
+- pause:
+    prompt: "Specify the password for the above user. Keep it safe for future maintanences."
+  register: prompt
+
+- set_fact:
+    mongo_password: "{{ prompt.user_input }}"
+
+- pause:
+    prompt: "Specify a secret string which will be used to hash password. Keep it safe for future maintanences."
+  register: prompt
+
+- set_fact:
+    jwt_secret: "{{ prompt.user_input }}"
+
+# - pause:
+#     prompt: "How long should an access token stay valid? It keeps your users logged in. Examples: 2d or 1h or 3y. [14d]"
+#   register: prompt
+
+# - set_fact:
+#     jwt_expires: "{{ prompt.user_input if prompt.user_input|bool else '14d' }}"
+
+# - pause:
+#     prompt: "Which version of CourseLit would you like to deploy? Visit https://hub.docker.com/repository/registry-1.docker.io/codelit/courselit-proxy/tags for all versions. [latest]"
+#   register: prompt
+
+# - set_fact:
+#     docker_image_tag: "{{ prompt.user_input if prompt.user_input|bool else 'latest' }}"
+
+# Copy the environment file
+- name: Copy the environment file
+  template:
+    src: .env.ssl.j2
+    dest: $HOME/docker/.env

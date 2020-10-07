@@ -1,3 +1,4 @@
+# Install dependencies
 - name: Install required system packages
   apt:
     name: "{{ item }}"
@@ -5,6 +6,7 @@
     update_cache: yes
   loop: [ 'apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common', 'python3-pip', 'ufw']
 
+# Install Docker and docker-compose
 - name: Install Python setuptools
   pip:
     name:
@@ -21,16 +23,9 @@
     - docker
     - docker-compose
 
+# Opening the appropriate port
 - name: Add the firewall rule
   ufw:
     rule: allow
     port: '80'
     proto: tcp
-
-- name: Unmask Docker
-  command: systemctl unmask docker
-
-- name: Bounce Docker service
-  systemd: 
-    name: docker
-    state: restarted
