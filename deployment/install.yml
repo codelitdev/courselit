@@ -2,110 +2,49 @@
     - hosts: all
       become: true
 
-      vars_prompt:
-        - name: media_folder
-          prompt: "Which folder would you like to store your files in?"
-          private: no
-          default: "~/courselit-data"
-
-        - name: mongo_user_name
-          prompt: "Specify a username for the database. Keep it safe for future maintanences."
-          private: no
-
-        - name: mongo_password
-          prompt: "Specify the password for the above user. Keep it safe for future maintanences."
-
-        - name: jwt_secret
-          prompt: "Specify a secret string which will be used to hash password. Keep it safe for future maintanences."
-
-        - name: jwt_expires
-          prompt: "How long should an access token stay valid? It keeps your users logged in. Examples (2d or 1h or 3y)."
-          private: no
-          default: "14d"
-
-        - name: docker_image_tag
-          prompt: "Which version of CourseLit would you like to deploy? Visit https://hub.docker.com/repository/registry-1.docker.io/codelit/courselit-proxy/tags for all versions. Press Enter if you do not know."
-          private: no
-          default: "latest"
-
       tasks:
-        # Ask user if she wants to setup SSL
-        - pause:
-            prompt: "Would you like to enable SSL? [yes/no]"
-          register: prompt
-        - set_fact:
-            ssl_enabled: "{{ 'yes' if prompt.user_input|bool else 'no' }}"
+        - name: Check previous installation
+          stat:
+            path: $HOME/docker/.env
+          register: previous_install
 
+        # Ask user if she wants to use existing installation
         - pause:
-            prompt: "Make sure that the domain propagation is complete. It is required to acquire a SSL certificate from Let's Encrypt. Press Enter to continue."
-          when: ssl_enabled|bool
-
-        # Collect user's domain name
-        - pause:
-            prompt: "Enter your domain name (without http://) or IP address."
+            prompt: "Previous installation detected. Would you like to use the existing settings? [yes/no]"
           register: prompt
-          when: not ssl_enabled|bool
-        
-        - set_fact:
-            domain: "{{ prompt.user_input }}"
-          when: not ssl_enabled|bool
-
-        - pause:
-            prompt: "Enter your domain name (without http://)"
-          register: prompt
-          when: ssl_enabled|bool
+          when: previous_install.stat.exists
 
         - set_fact:
-            domain: "{{ prompt.user_input }}"
-          when: ssl_enabled|bool
-
-        # Collect user's email address if she wants to setup SSL
-        - pause:
-            prompt: "Enter a valid email for getting emails from Let's Encrypt about your SSL certificate."
-          register: prompt
-          when: ssl_enabled|bool
+            use_existing_installation: "{{ true if prompt.user_input|bool else false }}"
+          when: previous_install.stat.exists
 
         - set_fact:
-            email: "{{ prompt.user_input }}"
-          when: ssl_enabled|bool
+            use_existing_installation: false
+          when: not previous_install.stat.exists
 
         - include_role:
-            name: common
+            name: install_softwares
+          when: not use_existing_installation
+
+        - pause:
+            prompt: "Enter your domain name (FQDN)."
+          register: prompt
+          when: not use_existing_installation
+
+        - set_fact:
+            domain: "{{ prompt.user_input }}"
+          when: not use_existing_installation
 
         - name: Set up SSL certificate
           include_role:
             name: letsencrypt
-          when: ssl_enabled|bool
-          
-        - name: Copy docker compose files
-          copy:
-            src: docker
-            dest: "{{ ansible_env.HOME }}"
-            owner: "{{ ansible_user }}"
-            group: "{{ ansible_user }}"
-            mode: 0644
+          when: not use_existing_installation
 
-        - name: Start CourseLit (without SSL)
-          docker_compose:
-            project_name: courselit
-            project_src: "{{ ansible_env.HOME }}/docker"
-            files:
-                - "docker-compose.yml"
-            build: no
-            pull: yes
-          register: output
-          environment:
-            SITE_URL: http://{{ domain }}
-            MEDIA_FOLDER: "{{ media_folder }}"
-            MONGO_ROOT_USERNAME: "{{ mongo_user_name }}"
-            MONGO_ROOT_PASSWORD: "{{ mongo_password }}"
-            DB_CONNECTION_STRING: "mongodb://{{ mongo_user_name }}:{{ mongo_password }}@db"
-            JWT_SECRET: "{{ jwt_secret }}"
-            JWT_EXPIRES_IN: "{{ jwt_expires }}"
-            TAG: "{{ docker_image_tag }}"
-          when: not ssl_enabled|bool
+        - include_role:
+            name: setup_docker
+          when: not use_existing_installation
 
-        - name: Start CourseLit (with SSL)
+        - name: Start CourseLit
           docker_compose:
             project_name: courselit
             project_src: "{{ ansible_env.HOME }}/docker"
@@ -115,14 +54,3 @@
             build: no
             pull: yes
           register: output
-          environment:
-            SITE_URL: https://{{ domain }}
-            MEDIA_FOLDER: "{{ media_folder }}"
-            MONGO_ROOT_USERNAME: "{{ mongo_user_name }}"
-            MONGO_ROOT_PASSWORD: "{{ mongo_password }}"
-            DB_CONNECTION_STRING: "mongodb://{{ mongo_user_name }}:{{ mongo_password }}@db"
-            JWT_SECRET: "{{ jwt_secret }}"
-            JWT_EXPIRES_IN: "{{ jwt_expires }}"
-            DOMAIN: "{{ domain }}"
-            TAG: "{{ docker_image_tag }}"
-          when: ssl_enabled|bool
