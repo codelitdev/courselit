@@ -54,3 +54,10 @@
   template:
     src: .env.ssl.j2
     dest: $HOME/docker/.env
+
+- name: Schedule an automatic backup job
+  cron:
+    name: "backup"
+    minute: "0"
+    hour: "7"
+    job: "tar -cvf {{ media_folder }} >> courselit-backup.log"
