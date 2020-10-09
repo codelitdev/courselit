@@ -60,4 +60,4 @@
     name: "backup"
     minute: "0"
     hour: "7"
-    job: "tar -cvf {{ media_folder }} >> courselit-backup.log"
+    job: "tar -cvz --exclude=**/diagnostic.data/* -f courselit-backup-`date +'%d%m%y'`.tar.gz {{ media_folder }} >> courselit-backup-`date +'%d%m%y'`.log"
