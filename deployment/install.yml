@@ -26,31 +26,43 @@
             name: install_softwares
           when: not use_existing_installation
 
+        # Ask user if she wants to setup SSL
+        - pause:
+            prompt: "Would you like to enable SSL? [yes/no]"
+          register: prompt
+          when: not use_existing_installation
+        - set_fact:
+            enable_ssl: "{{ true if prompt.user_input|bool else false }}"
+          when: not use_existing_installation
+
+        - pause:
+            prompt: "Make sure that the domain propagation is complete. It is required to acquire a SSL certificate from Let's Encrypt. Press Enter to continue."
+          when: enable_ssl
+
+        # Collect user's domain name or IP address
         - pause:
             prompt: "Enter your domain name (FQDN)."
           register: prompt
-          when: not use_existing_installation
+          when: not use_existing_installation and enable_ssl
 
         - set_fact:
             domain: "{{ prompt.user_input }}"
-          when: not use_existing_installation
+          when: not use_existing_installation and enable_ssl
+
+        - pause:
+            prompt: "Enter your domain name or IP address."
+          register: prompt
+          when: not use_existing_installation and not enable_ssl
+        
+        - set_fact:
+            domain: "{{ prompt.user_input }}"
+          when: not use_existing_installation and not enable_ssl
 
         - name: Set up SSL certificate
           include_role:
             name: letsencrypt
-          when: not use_existing_installation
+          when: not use_existing_installation and enable_ssl
 
         - include_role:
             name: setup_docker
           when: not use_existing_installation
-
-        - name: Start CourseLit
-          docker_compose:
-            project_name: courselit
-            project_src: "{{ ansible_env.HOME }}/docker"
-            files:
-                - "docker-compose.yml"
-                - "docker-compose.ssl.yml"
-            build: no
-            pull: yes
-          register: output

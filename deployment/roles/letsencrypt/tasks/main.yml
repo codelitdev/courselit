@@ -7,6 +7,10 @@
     name: docker
     state: restarted
 
+# Install Certbot
+- name: Install certbot
+  apt: update_cache=yes name=certbot state=present
+
 # Collect user's email address if she wants to setup SSL
 - pause:
     prompt: "Enter a valid email for getting emails from Let's Encrypt about your SSL certificate."
@@ -16,10 +20,6 @@
 - set_fact:
     email: "{{ prompt.user_input }}"
   when: not use_existing_installation
-
-# Install Certbot
-- name: Install certbot
-  apt: update_cache=yes name=certbot state=present
 
 # Acquire certificate
 - name: Run certbot

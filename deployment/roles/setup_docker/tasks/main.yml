@@ -52,8 +52,39 @@
 # Copy the environment file
 - name: Copy the environment file
   template:
+    src: .env.j2
+    dest: $HOME/docker/.env
+  when: not enable_ssl
+
+- name: Copy the environment file
+  template:
     src: .env.ssl.j2
     dest: $HOME/docker/.env
+  when: enable_ssl
+
+# Start the application
+- name: Start CourseLit (without HTTPS)
+  docker_compose:
+    project_name: courselit
+    project_src: "{{ ansible_env.HOME }}/docker"
+    files:
+        - "docker-compose.yml"
+    build: no
+    pull: yes
+  register: output
+  when: not enable_ssl
+
+- name: Start CourseLit
+  docker_compose:
+    project_name: courselit
+    project_src: "{{ ansible_env.HOME }}/docker"
+    files:
+        - "docker-compose.yml"
+        - "docker-compose.ssl.yml"
+    build: no
+    pull: yes
+  register: output
+  when: enable_ssl
 
 - name: Schedule an automatic backup job
   cron:
