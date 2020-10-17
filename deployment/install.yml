@@ -37,7 +37,7 @@
 
         - pause:
             prompt: "Make sure that the domain propagation is complete. It is required to acquire a SSL certificate from Let's Encrypt. Press Enter to continue."
-          when: enable_ssl
+          when: not use_existing_installation and enable_ssl
 
         # Collect user's domain name or IP address
         - pause:
