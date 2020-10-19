@@ -12,6 +12,8 @@ services:
       - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}/mongo/data/db:/data/db
     command: --quiet
     container_name: db
+    logging:
+      driver: "none"
   
   backend:
     image: codelit/courselit-backend:${TAG?'TAG environment variable is not defined'}
@@ -44,13 +46,26 @@ services:
       - backend
     container_name: frontend
 
+  # proxy:
+  #   image: codelit/courselit-proxy:${TAG?'TAG environment variable is not defined'}
+  #   environment:
+  #     - API_PREFIX=${API_PREFIX}
+  #   ports:
+  #     - "80:80"
+  #   depends_on:
+  #     - backend
+  #     - frontend
+  #   container_name: proxy
   proxy:
-    image: codelit/courselit-proxy:${TAG?'TAG environment variable is not defined'}
-    environment:
-      - API_PREFIX=${API_PREFIX}
+    image: caddy:2.1.1-alpine
+    restart: unless-stopped
     ports:
       - "80:80"
-    depends_on:
-      - backend
-      - frontend
-    container_name: proxy
+      - "443:443"
+    environment:
+      - API_PREFIX=${API_PREFIX}
+      - DOMAIN=${DOMAIN?'DOMAIN environment variable is not defined'}
+    volumes:
+      - $PWD/Caddyfile:/etc/caddy/Caddyfile
+      - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}/caddy/data:/data
+      - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}/caddy/config:/config
