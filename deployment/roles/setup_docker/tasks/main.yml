@@ -1,3 +1,21 @@
+# Reset the Docker service
+- name: Unmask Docker
+  command: systemctl unmask docker
+
+- name: Bounce Docker service
+  systemd:
+    name: docker
+    state: restarted
+
+# Delete old and dangling Docker data
+- name: Prune everything
+  docker_prune:
+    containers: yes
+    images: yes
+    networks: yes
+    volumes: yes
+    builder_cache: yes
+
 # Copy docker compose files
 - name: Copy docker compose files
   copy:
@@ -7,6 +25,7 @@
     group: "{{ ansible_user }}"
     mode: 0644
 
+# Take user inputs for custom values
 - pause:
     prompt: "Which folder would you like to store your files in? [~/courselit-data]"
   register: prompt
@@ -35,32 +54,11 @@
 - set_fact:
     jwt_secret: "{{ prompt.user_input }}"
 
-# - pause:
-#     prompt: "How long should an access token stay valid? It keeps your users logged in. Examples: 2d or 1h or 3y. [14d]"
-#   register: prompt
-
-# - set_fact:
-#     jwt_expires: "{{ prompt.user_input if prompt.user_input|bool else '14d' }}"
-
-# - pause:
-#     prompt: "Which version of CourseLit would you like to deploy? Visit https://hub.docker.com/repository/registry-1.docker.io/codelit/courselit-proxy/tags for all versions. [latest]"
-#   register: prompt
-
-# - set_fact:
-#     docker_image_tag: "{{ prompt.user_input if prompt.user_input|bool else 'latest' }}"
-
-# Copy the environment file
+# Copy the environment file to be used by docker-compose
 - name: Copy the environment file
   template:
     src: .env.j2
     dest: $HOME/docker/.env
-  when: not enable_ssl
-
-- name: Copy the environment file
-  template:
-    src: .env.ssl.j2
-    dest: $HOME/docker/.env
-  when: enable_ssl
 
 # Start the application
 - name: Start CourseLit (without HTTPS)
@@ -72,20 +70,8 @@
     build: no
     pull: yes
   register: output
-  when: not enable_ssl
 
-- name: Start CourseLit
-  docker_compose:
-    project_name: courselit
-    project_src: "{{ ansible_env.HOME }}/docker"
-    files:
-        - "docker-compose.yml"
-        - "docker-compose.ssl.yml"
-    build: no
-    pull: yes
-  register: output
-  when: enable_ssl
-
+# Schedule a backup cronjob
 - name: Schedule an automatic backup job
   cron:
     name: "backup"

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Start MongoDB
-service mongodb start
+#service mongodb start
 
 # Lerna bootstrap
 yarn install
