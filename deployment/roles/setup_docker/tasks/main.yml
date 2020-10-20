@@ -16,6 +16,12 @@
     volumes: yes
     builder_cache: yes
 
+# Delete old Caddyfile
+- name: Deleting existing Caddyfile
+  file:
+    path: "{{ ansible_env.HOME }}/docker/Caddyfile"
+    state: absent
+
 # Copy docker compose files
 - name: Copy docker compose files
   copy:
@@ -61,7 +67,7 @@
     dest: $HOME/docker/.env
 
 # Start the application
-- name: Start CourseLit (without HTTPS)
+- name: Start CourseLit
   docker_compose:
     project_name: courselit
     project_src: "{{ ansible_env.HOME }}/docker"
