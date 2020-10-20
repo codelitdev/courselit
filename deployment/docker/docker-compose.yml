@@ -59,3 +59,7 @@ services:
       - "./Caddyfile:/etc/caddy/Caddyfile"
       - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}/caddy/data:/data
       - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}/caddy/config:/config
+    depends_on:
+      - backend
+      - frontend
+    container_name: proxy
