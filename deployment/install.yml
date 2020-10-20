@@ -3,40 +3,17 @@
       become: true
 
       tasks:
-        - name: Check previous installation
-          stat:
-            path: $HOME/docker/.env
-          register: previous_install
-
-        # Ask user if she wants to use existing installation
-        - pause:
-            prompt: "Previous installation detected. Would you like to use the existing settings? [yes/no]"
-          register: prompt
-          when: previous_install.stat.exists
-
-        - set_fact:
-            use_existing_installation: "{{ true if prompt.user_input|bool else false }}"
-          when: previous_install.stat.exists
-
-        - set_fact:
-            use_existing_installation: false
-          when: not previous_install.stat.exists
-
         - include_role:
             name: install_softwares
-          when: not use_existing_installation
 
         # Collect user's domain name or IP address
         - pause:
             prompt: "Enter your domain name (FQDN)."
           register: prompt
-          when: not use_existing_installation
 
         - set_fact:
             domain: "{{ prompt.user_input }}"
-          when: not use_existing_installation
 
         # Setup Docker
         - include_role:
             name: setup_docker
-          when: not use_existing_installation
