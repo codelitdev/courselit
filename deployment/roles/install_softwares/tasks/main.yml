@@ -20,3 +20,6 @@
     groups: docker
     append: yes
   become: true
+
+- name: Reset connection to reflect changes to the current user
+  meta: reset_connection
