@@ -1,19 +1,9 @@
 ---
     - hosts: all
-      become: true
 
       tasks:
         - include_role:
             name: install_softwares
 
-        # Collect user's domain name or IP address
-        - pause:
-            prompt: "Enter your domain name (FQDN)."
-          register: prompt
-
-        - set_fact:
-            domain: "{{ prompt.user_input }}"
-
-        # Setup Docker
         - include_role:
             name: setup_docker

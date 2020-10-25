@@ -4,28 +4,19 @@
     name: "{{ item }}"
     state: present
     update_cache: yes
-  loop: [ 'apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common', 'python3-pip', 'ufw']
-
-# Install Docker and docker-compose
-- name: Install Python setuptools
-  pip:
-    name:
-    - setuptools
-
-- name: Install Docker packages
-  apt:
-    name: ['docker-compose']
-    state: present
+  loop: [ 'apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common', 'python3-pip', 'docker-compose']
+  become: true
 
 - name: Install Python Docker packages
   pip:
     name:
+    - setuptools
     - docker
     - docker-compose
 
-# Opening the appropriate port
-- name: Add the firewall rule
-  ufw:
-    rule: allow
-    port: '80'
-    proto: tcp
+- name: Add the current user to the docker group
+  user:
+    name: '{{ ansible_user }}'
+    groups: docker
+    append: yes
+  become: true
