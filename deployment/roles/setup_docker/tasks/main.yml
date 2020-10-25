@@ -1,11 +1,13 @@
 # Reset the Docker service
 - name: Unmask Docker
   command: systemctl unmask docker
+  become: true
 
 - name: Bounce Docker service
   systemd:
     name: docker
     state: restarted
+  become: true
 
 # Delete old and dangling Docker data
 - name: Prune everything
@@ -17,10 +19,11 @@
     builder_cache: yes
 
 # Delete old Caddyfile
-- name: Deleting existing Caddyfile
+- name: Deleting existing Docker files
   file:
-    path: "{{ ansible_env.HOME }}/docker/Caddyfile"
+    path: "{{ ansible_env.HOME }}/docker/"
     state: absent
+  become: true
 
 # Copy docker compose files
 - name: Copy docker compose files
@@ -32,6 +35,13 @@
     mode: 0644
 
 # Take user inputs for custom values
+- pause:
+    prompt: "Enter your domain name (FQDN)."
+  register: prompt
+
+- set_fact:
+    domain: "{{ prompt.user_input }}"
+
 - pause:
     prompt: "Which folder would you like to store your files in? [~/courselit-data]"
   register: prompt
@@ -82,5 +92,5 @@
   cron:
     name: "backup"
     minute: "0"
-    hour: "7"
-    job: "tar -cvz --exclude=**/diagnostic.data/* -f courselit-backup-`date +'%d%m%y'`.tar.gz {{ media_folder }} >> courselit-backup-`date +'%d%m%y'`.log"
+    hour: "12"
+    job: "tar -cvz --exclude=**/diagnostic.data/* -f courselit-backup-`date +'\\%d\\%m\\%y'`.tar.gz {{ media_folder }} >> courselit-backup-`date +'\\%d\\%m\\%y'`.log"
