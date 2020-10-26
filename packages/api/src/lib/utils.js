@@ -2,6 +2,7 @@
  * General utilities
  */
 const fs = require("fs");
+const { spawn } = require("child_process");
 
 exports.capitalize = (s) => {
   if (typeof s !== "string") return "";
@@ -25,3 +26,61 @@ exports.createFolders = (folders) => {
     }
   }
 };
+
+/**
+ * A pure function to generate a string by appending current epoch
+ * to the provided filename.
+ *
+ * @param {string} filename
+ */
+exports.uniqueFileNameGenerator = (filename) => {
+  const extention = filename.split(".");
+  const uniqueNameWithoutExtention = `${extention.slice(
+    0,
+    extention.length - 1
+  )}_${Date.now()}`;
+
+  return {
+    name: uniqueNameWithoutExtention,
+    ext: extention[extention.length - 1],
+  };
+};
+
+/**
+ * A wrapper to promisify the move function of express-upload.
+ *
+ * @param {object} file - The express-upload file object
+ * @param {string} path - Where to move the current file
+ */
+exports.fileMove = (file, path) =>
+  new Promise((resolve, reject) => {
+    file.mv(path, (err) => {
+      if (err) reject(err.message);
+
+      resolve();
+    });
+  });
+
+/**
+ * Promisifies command line utility cwebp.
+ * 
+ * @param {string} path - file path of the file to be converted 
+ * @param {quality} quality - a number representing quality of the output. 0 is worst and 100 is best. 
+ */
+exports.convertToWebp = (path, quality = 100) =>
+  new Promise((resolve, reject) => {
+    const process = spawn(
+      "cwebp",
+      [
+        `"${path}"`,
+        `-o "${path}"`
+      ],
+      { shell: true }
+    );
+
+    process.on("exit", (code) => {
+      if (code !== 0) { reject(new Error("Error in converting the file to Webp format.")); }
+
+      resolve();
+    });
+  })
