@@ -52,7 +52,7 @@ exports.uniqueFileNameGenerator = (filename) => {
  * @param {object} file - The express-upload file object
  * @param {string} path - Where to move the current file
  */
-exports.fileMove = (file, path) =>
+exports.moveFile = (file, path) =>
   new Promise((resolve, reject) => {
     file.mv(path, (err) => {
       if (err) reject(err.message);
@@ -63,24 +63,21 @@ exports.fileMove = (file, path) =>
 
 /**
  * Promisifies command line utility cwebp.
- * 
- * @param {string} path - file path of the file to be converted 
- * @param {quality} quality - a number representing quality of the output. 0 is worst and 100 is best. 
+ *
+ * @param {string} path - file path of the file to be converted
+ * @param {quality} quality - a number representing quality of the output. 0 is worst and 100 is best.
  */
 exports.convertToWebp = (path, quality = 100) =>
   new Promise((resolve, reject) => {
-    const process = spawn(
-      "cwebp",
-      [
-        `"${path}"`,
-        `-o "${path}"`
-      ],
-      { shell: true }
-    );
+    const process = spawn("cwebp", [`"${path}"`, `-o "${path}"`], {
+      shell: true,
+    });
 
     process.on("exit", (code) => {
-      if (code !== 0) { reject(new Error("Error in converting the file to Webp format.")); }
+      if (code !== 0) {
+        reject(new Error("Error in converting the file to Webp format."));
+      }
 
       resolve();
     });
-  })
+  });
