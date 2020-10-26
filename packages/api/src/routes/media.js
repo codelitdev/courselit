@@ -11,41 +11,7 @@ const thumbnail = require("@courselit/thumbnail");
 const path = require("path");
 const fs = require("fs");
 const { foldersExist } = require("../lib/utils.js");
-const { uploadFolder, thumbnailsFolder } = require("../config/constants.js");
-
-/**
- * A pure function to generate a string by appending current epoch
- * to the provided filename.
- *
- * @param {string} filename
- */
-const uniqueFileNameGenerator = (filename) => {
-  const extention = filename.split(".");
-  const uniqueNameWithoutExtention = `${extention.slice(
-    0,
-    extention.length - 1
-  )}_${Date.now()}`;
-
-  return {
-    name: uniqueNameWithoutExtention,
-    ext: extention[extention.length - 1],
-  };
-};
-
-/**
- * A wrapper to promisify the move function of express-upload.
- *
- * @param {object} file express-upload file object
- * @param {string} path where to move the current file
- */
-const move = (file, path) =>
-  new Promise((resolve, reject) => {
-    file.mv(path, (err) => {
-      if (err) reject(err.message);
-
-      resolve();
-    });
-  });
+const { uploadFolder, thumbnailsFolder, webpQuality, useWebp, thumbnailFileExtension } = require("../config/constants.js");
 
 const getHandler = async (req, res) => {
   const media = await Media.findById(req.params.mediaId);
@@ -53,7 +19,7 @@ const getHandler = async (req, res) => {
   const { thumb } = req.query;
 
   if (thumb === "1") {
-    res.contentType(constants.thumbnailContentType);
+    res.contentType(useWebp ? "image/webp" : "image/jpeg");
     res.sendFile(`${constants.thumbnailsFolder}/${media.thumbnail}`);
   } else {
     res.contentType(media.mimeType);
@@ -73,6 +39,8 @@ const postHandler = async (req, res) => {
     return res.status(400).json({ message: responses.file_is_required });
   }
 
+  const fileExtension = useWebp ? "webp" : "jpg";
+
   // check if destination folders exists
   if (!foldersExist([uploadFolder, thumbnailsFolder])) {
     return res.status(500).json({ message: responses.destination_dont_exist });
@@ -82,33 +50,43 @@ const postHandler = async (req, res) => {
   const fileName = uniqueFileNameGenerator(req.files.file.name);
   const filePath = path.join(
     constants.uploadFolder,
-    `${fileName.name}.${fileName.ext}`
+    `${fileName.name}.${useWebp ? "webp" : fileName.ext}`
   );
 
   // move the uploaded file to the upload folder
   try {
     await move(req.files.file, filePath);
+    if (useWebp) {
+      await convertToWebp(filePath, webpQuality);
+    }
   } catch (err) {
+    console.log(err);
     return res.status(500).json({ message: responses.error_in_moving_file });
   }
 
   // generate thumbnail for a video or image
   const imagePattern = /image/;
   const videoPattern = /video/;
-  const thumbPath = `${constants.thumbnailsFolder}/${fileName.name}.${constants.thumbnailFileExtension}`;
+  const thumbPath = `${constants.thumbnailsFolder}/${fileName.name}.${fileExtension}`;
   let isThumbGenerated = false; // to indicate if the thumbnail name is to be saved to the DB
   try {
     if (imagePattern.test(req.files.file.mimetype)) {
       await thumbnail.forImage(filePath, thumbPath, {
-        width: constants.thumbnailWidth,
+        width: constants.thumbnailWidth
       });
+      if (useWebp) {
+        await convertToWebp(thumbPath);
+      }
       isThumbGenerated = true;
     }
     if (videoPattern.test(req.files.file.mimetype)) {
       await thumbnail.forVideo(filePath, thumbPath, {
         width: constants.thumbnailWidth,
-        height: constants.thumbnailHeight,
+        height: constants.thumbnailHeight
       });
+      if (useWebp) {
+        await convertToWebp(thumbPath);
+      }
       isThumbGenerated = true;
     }
   } catch (err) {
@@ -124,7 +102,7 @@ const postHandler = async (req, res) => {
     size: req.files.file.size,
   };
   if (isThumbGenerated) {
-    mediaObject.thumbnail = `${fileName.name}.${constants.thumbnailFileExtension}`;
+    mediaObject.thumbnail = `${fileName.name}.${fileExtension}`;
   }
   if (data.altText) mediaObject.altText = data.altText;
 

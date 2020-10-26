@@ -1,7 +1,7 @@
 FROM node
 
 RUN apt-get update \
-    && apt-get -y install git mongodb ffmpeg imagemagick \
+    && apt-get -y install git mongodb ffmpeg imagemagick webp \
     # 
     # Remove outdated yarn from /opt and install via package 
     # so it can be easily updated via apt-get upgrade yarn.
