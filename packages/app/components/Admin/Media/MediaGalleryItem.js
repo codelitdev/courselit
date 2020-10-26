@@ -20,7 +20,7 @@ const MediaGalleryItem = (props) => {
   const [imgSrc, setImgSrc] = useState(`${BACKEND}/media/${item.id}?thumb=1`);
   const classes = useStyles();
 
-  const onImgLoadError = () => setImgSrc("/default.png");
+  const onImgLoadError = () => setImgSrc("/courselit_backdrop.webp");
 
   return (
     <>

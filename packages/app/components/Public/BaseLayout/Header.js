@@ -37,6 +37,8 @@ const Header = (props) => {
                     src={props.siteinfo.logopath}
                     isThumbnail={true}
                     classes={classes.logoimg}
+                    alt="logo"
+                    defaultImage="/courselit_backdrop_square.webp"
                   />
                 </div>
               </a>

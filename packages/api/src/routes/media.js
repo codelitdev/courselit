@@ -10,8 +10,18 @@ const constants = require("../config/constants.js");
 const thumbnail = require("@courselit/thumbnail");
 const path = require("path");
 const fs = require("fs");
-const { foldersExist } = require("../lib/utils.js");
-const { uploadFolder, thumbnailsFolder, webpQuality, useWebp, thumbnailFileExtension } = require("../config/constants.js");
+const {
+  foldersExist,
+  uniqueFileNameGenerator,
+  moveFile,
+  convertToWebp,
+} = require("../lib/utils.js");
+const {
+  uploadFolder,
+  thumbnailsFolder,
+  webpQuality,
+  useWebp,
+} = require("../config/constants.js");
 
 const getHandler = async (req, res) => {
   const media = await Media.findById(req.params.mediaId);
@@ -55,12 +65,11 @@ const postHandler = async (req, res) => {
 
   // move the uploaded file to the upload folder
   try {
-    await move(req.files.file, filePath);
+    await moveFile(req.files.file, filePath);
     if (useWebp) {
       await convertToWebp(filePath, webpQuality);
     }
   } catch (err) {
-    console.log(err);
     return res.status(500).json({ message: responses.error_in_moving_file });
   }
 
@@ -72,7 +81,7 @@ const postHandler = async (req, res) => {
   try {
     if (imagePattern.test(req.files.file.mimetype)) {
       await thumbnail.forImage(filePath, thumbPath, {
-        width: constants.thumbnailWidth
+        width: constants.thumbnailWidth,
       });
       if (useWebp) {
         await convertToWebp(thumbPath);
@@ -82,7 +91,7 @@ const postHandler = async (req, res) => {
     if (videoPattern.test(req.files.file.mimetype)) {
       await thumbnail.forVideo(filePath, thumbPath, {
         width: constants.thumbnailWidth,
-        height: constants.thumbnailHeight
+        height: constants.thumbnailHeight,
       });
       if (useWebp) {
         await convertToWebp(thumbPath);
@@ -96,7 +105,7 @@ const postHandler = async (req, res) => {
   const mediaObject = {
     title: data.title,
     originalFileName: req.files.file.name,
-    fileName: `${fileName.name}.${fileName.ext}`,
+    fileName: `${fileName.name}.${useWebp ? "webp" : fileName.ext}`,
     creatorId: req.user._id,
     mimeType: req.files.file.mimetype,
     size: req.files.file.size,
