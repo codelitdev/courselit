@@ -2,7 +2,7 @@ import { createStore, applyMiddleware } from "redux";
 import thunk from "redux-thunk";
 import reducer from "./reducer.js";
 
-export default (initialState) => {
+const Store = (initialState) => {
   const store = createStore(reducer, initialState, applyMiddleware(thunk));
 
   store.subscribe(() => {
@@ -11,3 +11,5 @@ export default (initialState) => {
 
   return store;
 };
+
+export default Store;

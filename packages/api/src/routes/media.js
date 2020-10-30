@@ -107,7 +107,7 @@ const postHandler = async (req, res) => {
     originalFileName: req.files.file.name,
     fileName: `${fileName.name}.${useWebp ? "webp" : fileName.ext}`,
     creatorId: req.user._id,
-    mimeType: req.files.file.mimetype,
+    mimeType: useWebp ? "image/webp" : req.files.file.mimetype,
     size: req.files.file.size,
   };
   if (isThumbGenerated) {

@@ -1,11 +1,11 @@
 import React from "react";
-import Document, { Head, Main, NextScript } from "next/document";
+import Document, { Html, Head, Main, NextScript } from "next/document";
 import { ServerStyleSheets } from "@material-ui/styles";
 
 class MyDocument extends Document {
   render() {
     return (
-      <html lang="en" style={{ height: "100%", width: "100%" }}>
+      <Html lang="en" style={{ height: "100%", width: "100%" }}>
         <Head>
           <meta charSet="utf-8" />
           {/* <meta name="theme-color" content={theme.palette.primary.main} /> */}
@@ -22,7 +22,7 @@ class MyDocument extends Document {
           <Main />
           <NextScript />
         </body>
-      </html>
+      </Html>
     );
   }
 }
