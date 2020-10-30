@@ -16,7 +16,7 @@ const useStyles = makeStyles({
     height: "auto",
   },
   img: {
-    width: '60%',
+    width: "60%",
     height: "auto",
   },
 });
@@ -33,7 +33,7 @@ const MediaPreview = (props) => {
         "image/jpeg",
         "image/webp",
         "video/mp4",
-        "audio/mp3"
+        "audio/mp3",
       ].includes(mimeType) && (
         <Typography variant="subtitle1">{HEADER_MEDIA_PREVIEW}</Typography>
       )}
@@ -46,11 +46,13 @@ const MediaPreview = (props) => {
           {PREVIEW_PDF_FILE}
         </a>
       )}
-      {(mimeType === "image/png" || mimeType === "image/jpeg" || mimeType === "image/webp") &&
+      {(mimeType === "image/png" ||
+        mimeType === "image/jpeg" ||
+        mimeType === "image/webp") && (
         <div className={classes.img}>
           <Img src={id} />
         </div>
-      }
+      )}
       {mimeType === "video/mp4" && (
         <video controls controlsList="nodownload" className={classes.video}>
           <source
