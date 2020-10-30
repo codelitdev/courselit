@@ -8,6 +8,7 @@ import {
   HEADER_MEDIA_PREVIEW,
   PREVIEW_PDF_FILE,
 } from "../../../config/strings";
+import Img from "../../Img";
 
 const useStyles = makeStyles({
   video: {
@@ -15,7 +16,7 @@ const useStyles = makeStyles({
     height: "auto",
   },
   img: {
-    width: 300,
+    width: '60%',
     height: "auto",
   },
 });
@@ -30,8 +31,9 @@ const MediaPreview = (props) => {
         "application/pdf",
         "image/png",
         "image/jpeg",
+        "image/webp",
         "video/mp4",
-        "audio/mp3",
+        "audio/mp3"
       ].includes(mimeType) && (
         <Typography variant="subtitle1">{HEADER_MEDIA_PREVIEW}</Typography>
       )}
@@ -44,12 +46,11 @@ const MediaPreview = (props) => {
           {PREVIEW_PDF_FILE}
         </a>
       )}
-      {(mimeType === "image/png" || mimeType === "image/jpeg") && (
-        <img
-          src={`${formulateMediaUrl(MEDIA_BACKEND, id, false)}`}
-          className={classes.img}
-        />
-      )}
+      {(mimeType === "image/png" || mimeType === "image/jpeg" || mimeType === "image/webp") &&
+        <div className={classes.img}>
+          <Img src={id} />
+        </div>
+      }
       {mimeType === "video/mp4" && (
         <video controls controlsList="nodownload" className={classes.video}>
           <source
