@@ -8,6 +8,7 @@ import {
   MEDIA_MANAGER_DIALOG_TITLE,
   BUTTON_ADD_FILE,
   FILE_UPLOAD_SUCCESS,
+  MEDIA_UPLOADING,
 } from "../../../config/strings.js";
 import { BACKEND } from "../../../config/constants.js";
 import { authProps } from "../../../types.js";
@@ -54,6 +55,7 @@ const MediaManager = (props) => {
   const fileInput = createRef();
   const classes = useStyles();
   const [uploadFormVisible, setUploadFormVisible] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const onUploadDataChanged = (e) =>
     setUploadData(
@@ -77,6 +79,8 @@ const MediaManager = (props) => {
     );
 
     try {
+      setUploading(true);
+
       let res = await fetch(`${BACKEND}/media`, {
         method: "POST",
         headers: {
@@ -95,6 +99,8 @@ const MediaManager = (props) => {
       }
     } catch (err) {
       props.dispatch(setAppMessage(new AppMessage(e.message)));
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -158,7 +164,9 @@ const MediaManager = (props) => {
                 />
               </CardContent>
               <CardActions>
-                <Button type="submit">{MEDIA_UPLOAD_BUTTON_TEXT}</Button>
+                <Button type="submit" disabled={uploading}>
+                  {uploading ? MEDIA_UPLOADING : MEDIA_UPLOAD_BUTTON_TEXT}
+                </Button>
               </CardActions>
             </form>
           </Card>

@@ -67,11 +67,15 @@ exports.moveFile = (file, path) =>
  * @param {string} path - file path of the file to be converted
  * @param {quality} quality - a number representing quality of the output. 0 is worst and 100 is best.
  */
-exports.convertToWebp = (path, quality = 100) =>
+exports.convertToWebp = (path, quality = 75) =>
   new Promise((resolve, reject) => {
-    const process = spawn("cwebp", [`"${path}"`, `-o "${path}"`], {
-      shell: true,
-    });
+    const process = spawn(
+      "cwebp",
+      [`"${path}"`, `-o "${path}"`, `-q ${quality}`],
+      {
+        shell: true,
+      }
+    );
 
     process.on("exit", (code) => {
       if (code !== 0) {
