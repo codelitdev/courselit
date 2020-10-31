@@ -12,6 +12,9 @@ import Card from "../Card.js";
 
 const useStyles = (featuredImage) =>
   makeStyles((theme) => ({
+    container: {
+      overflow: "hidden",
+    },
     link: {
       textDecoration: "none",
       color: "inherit",
@@ -44,7 +47,13 @@ const ListItem = (props) => {
       >
         <a className={classes.link}>
           <Card>
-            <Grid item container direction="column" component="article">
+            <Grid
+              item
+              container
+              direction="column"
+              component="article"
+              className={classes.container}
+            >
               {props.featuredImage && (
                 <Grid item className={classes.featuredImage} />
               )}

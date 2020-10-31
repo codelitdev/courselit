@@ -1,7 +1,7 @@
 FROM node:12.9.0-alpine
 
 # install required softwares
-RUN apk add --no-cache ffmpeg imagemagick webp
+RUN apk add --no-cache ffmpeg imagemagick libwebp libwebp-tools
 
 # create app directory
 RUN mkdir -p /usr/src/app
