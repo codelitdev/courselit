@@ -23,8 +23,8 @@ module.exports = {
   // Media uploads config
   uploadFolder: path.join(USER_CONTENT_DIRECTORY, "uploads"),
   thumbnailsFolder: path.join(USER_CONTENT_DIRECTORY, "thumbs"),
-  useWebp: false,
-  webpOutputQuality: 80,
+  useWebp: process.env.USE_WEBP === "true",
+  webpOutputQuality: parseInt(process.env.WEBP_QUALITY) || 75,
   // the following constants are as per the 16:9 aspect ratio
   thumbnailWidth: 120,
   thumbnailHeight: 68,
