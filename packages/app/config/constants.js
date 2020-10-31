@@ -59,7 +59,7 @@ export const CONSECUTIVE_PAYMENT_VERIFICATION_REQUEST_GAP = 2000;
 // mime types
 export const MIMETYPE_VIDEO = ["video/mp4"];
 export const MIMETYPE_AUDIO = ["audio/mp3"];
-export const MIMETYPE_IMAGE = ["image/png", "image/jpeg"];
+export const MIMETYPE_IMAGE = ["image/png", "image/jpeg", "image/webp"];
 
 export const THEMES_REPO = "https://github.com/codelitdev/courselit-themes";
 

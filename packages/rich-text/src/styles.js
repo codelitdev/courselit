@@ -21,6 +21,7 @@ export default {
       display: "flex",
       flexDirection: "row",
       alignItems: "center",
+      flexWrap: "wrap",
     },
     toolbarInput: {
       background: "rgb(179 188 255)",

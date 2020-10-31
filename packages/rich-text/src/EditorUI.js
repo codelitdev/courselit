@@ -90,18 +90,16 @@ const EditorUI = (props) => {
       <div style={styles.controls.editor}>{editor}</div>
       {imageAddFormVisible && (
         <div style={styles.controls.toolbarInput}>
-          <form onSubmit={insertImage}>
-            <label>
-              Image URL:
-              <input
-                type="text"
-                name="imageurl"
-                value={imageURL}
-                onChange={(e) => setImageURL(e.target.value)}
-              />
-            </label>
-            <button>Add</button>
-          </form>
+          <label>
+            Image URL:
+            <input
+              type="text"
+              name="imageurl"
+              value={imageURL}
+              onChange={(e) => setImageURL(e.target.value)}
+            />
+          </label>
+          <button onClick={insertImage}>Add</button>
         </div>
       )}
       <div style={styles.controls.toolbar}>
