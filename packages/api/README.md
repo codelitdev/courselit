@@ -44,6 +44,12 @@ This will make the server available at `/<API_PREFIX>` path. Defaults to `/api`.
 
 The duration after while the generated JWT expires. For more information click [this](https://www.npmjs.com/package/jsonwebtoken) link. Defaults to `1d`.
 
+**USE_WEBP**
+If this is set to `true`, the app will convert the image being uploaded to WEBP format. The generated thumbnail will be a WEBP file as well.
+
+**WEBP_QUALITY**
+The quality of output while converting images to WEBP format. Only applies when `USE_WEBP` is set to `true`. Defaults to `75`.
+
 ## Support
 
 Come chat with us in our official [Spectrum chat](https://spectrum.chat/courselit/general).

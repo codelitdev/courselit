@@ -53,6 +53,7 @@ exports.responses = {
   invalid_layout: "Invalid layout",
   destination_dont_exist: "Destination does not exist",
   invalid_format: "Invalid format",
+  no_thumbnail: "No thumbnail available",
 };
 
 exports.internal = {
