@@ -27,9 +27,9 @@ const Widget = (props) => {
     ? props.showLoadMoreButton
     : false;
   const classes = useStyles();
-  const FEATURED_SECTION_HEADER = '';
-  const BTN_LOAD_MORE = '';
-  const SUBHEADER_FEATURED_SECTION = '';
+  const FEATURED_SECTION_HEADER = "";
+  const BTN_LOAD_MORE = "";
+  const SUBHEADER_FEATURED_SECTION = "";
 
   useEffect(() => {
     getPosts();
@@ -73,7 +73,12 @@ const Widget = (props) => {
         </Grid>
         <Grid item container xs={12}>
           {posts.map((x, index) => (
-            <ListItem key={index} appUtilities={utilities} appConfig={config} {...x} />
+            <ListItem
+              key={index}
+              appUtilities={utilities}
+              appConfig={config}
+              {...x}
+            />
           ))}
         </Grid>
         {shouldShowLoadMoreButton && posts.length > 0 && (

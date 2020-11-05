@@ -1,8 +1,7 @@
-import React from "react";
-import PropTypes from "prop-types";
+import * as React from "react";
 import { makeStyles } from "@material-ui/styles";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles((theme: any) => ({
   card: {
     padding: theme.spacing(2),
     border: "1px solid transparent",
@@ -14,14 +13,14 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const Card = (props) => {
+interface CardProps {
+  children: () => {};
+}
+
+const Card = (props: CardProps) => {
   const classes = useStyles();
 
   return <div className={classes.card}>{props.children}</div>;
-};
-
-Card.propTypes = {
-  children: PropTypes.object,
 };
 
 export default Card;
