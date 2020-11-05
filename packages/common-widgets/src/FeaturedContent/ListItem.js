@@ -1,17 +1,10 @@
 import React from "react";
 import PropTypes from "prop-types";
 import Link from "next/link";
-import {
-  MEDIA_BACKEND,
-  URL_EXTENTION_COURSES,
-} from "../../../config/constants.js";
 import { Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
-import { formulateMediaUrl } from "../../../lib/utils.js";
-import Card from "../Card.js";
-import PriceTag from "../../PriceTag.js";
 
-const useStyles = (featuredImage) =>
+const useStyles = ({featuredImage, utilities, config}) =>
   makeStyles((theme) => ({
     link: {
       textDecoration: "none",
@@ -22,8 +15,8 @@ const useStyles = (featuredImage) =>
     featuredImage: {
       height: 360,
       width: "100%",
-      background: `url('${formulateMediaUrl(
-        MEDIA_BACKEND,
+      background: `url('${utilities.formulateMediaUrl(
+        config.MEDIA_BACKEND,
         featuredImage
       )}') no-repeat center center`,
       backgroundSize: "cover",
@@ -32,19 +25,33 @@ const useStyles = (featuredImage) =>
       marginTop: theme.spacing(2),
       marginBottom: theme.spacing(0.5),
     },
+    card: {
+      padding: theme.spacing(2),
+      border: "1px solid transparent",
+      borderRadius: 1,
+      "&:hover": {
+        border: "1px solid #cccccc",
+        cursor: "pointer",
+      },
+    },
   }));
 
 const ListItem = (props) => {
-  const classes = useStyles(props.featuredImage)();
+  const { appUtilities, appConfig } = props;
+  const classes = useStyles({
+    featuredImage: props.featuredImage,
+    utilities: appUtilities,
+    config: appConfig
+  })();
 
   return (
     <Grid item xs={12} md={4}>
       <Link
-        href={`/${URL_EXTENTION_COURSES}/[id]/[slug]`}
-        as={`/${URL_EXTENTION_COURSES}/${props.courseId}/${props.slug}`}
+        href={`/${appConfig.URL_EXTENTION_COURSES}/[id]/[slug]`}
+        as={`/${appConfig.URL_EXTENTION_COURSES}/${props.courseId}/${props.slug}`}
       >
         <a className={classes.link}>
-          <Card>
+          <div className={classes.card}>
             <Grid item container direction="column" component="article">
               {props.featuredImage && (
                 <Grid item className={classes.featuredImage} />
@@ -61,12 +68,13 @@ const ListItem = (props) => {
                 </Grid>
                 <Grid item>
                   <Typography variant="h6">
-                    <PriceTag cost={props.cost}></PriceTag>
+                    {/* <PriceTag cost={props.cost}></PriceTag> */}
+                    {props.cost}
                   </Typography>
                 </Grid>
               </Grid>
             </Grid>
-          </Card>
+          </div>
         </a>
       </Link>
     </Grid>
@@ -83,6 +91,8 @@ ListItem.propTypes = {
   featuredImage: PropTypes.string,
   cost: PropTypes.number.isRequired,
   courseId: PropTypes.number.isRequired,
+  appConfig: PropTypes.object.isRequired,
+  appUtilities: PropTypes.object.isRequired
 };
 
 export default ListItem;

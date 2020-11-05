@@ -37,6 +37,8 @@ The `widget` and `adminWidget` components receive the following props from the s
 1. **name**: The name of the widget. This can be used while interacting with the database via GraphQL endpoints (described in the following sections).
 2. **fetchBuilder**: A modified `fetch` object which includes the information like the backend URL. The widget can use this custom `fetch` object to make requests to the GraphQL endpoint.
 3. **theme**: A [Material UI](https://material-ui.com/) [theme](https://material-ui.com/customization/theming/) object. Use this to custom style the widget.
+4. **config**: An object containing various configuration settings. Check [this](../packages/app/config/constants.js) file to see what all configurations are available.
+5. **utilities**: An object containing utility functions from the core app. Check [this](../packages/app/lib/utils.js) file to see what all functions are available.
 
 ## Metadata
 
