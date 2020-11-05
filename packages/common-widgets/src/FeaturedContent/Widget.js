@@ -1,22 +1,14 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
-// import { networkAction } from "../../../redux/actions";
-// import FetchBuilder from "../../../lib/fetch";
-// import { BACKEND } from "../../../config/constants";
 import { Grid, Typography, Button } from "@material-ui/core";
-// import {
-//   FEATURED_SECTION_HEADER,
-//   BTN_LOAD_MORE,
-//   SUBHEADER_FEATURED_SECTION,
-// } from "../../../config/strings";
 import ListItem from "./ListItem";
 import { makeStyles } from "@material-ui/styles";
 
 const useStyles = makeStyles((theme) => ({
   content: {
     padding: theme.spacing(2),
-    paddingTop: theme.spacing(8),
+    paddingTop: theme.spacing(2),
     background: "#eee",
   },
   header: {
@@ -28,7 +20,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const Widget = (props) => {
-  const { fetchBuilder, auth } = props;
+  const { fetchBuilder, auth, utilities, config } = props;
   const [posts, setPosts] = useState([]);
   const [postsOffset, setPostsOffset] = useState(1);
   const shouldShowLoadMoreButton = props.showLoadMoreButton
@@ -81,7 +73,7 @@ const Widget = (props) => {
         </Grid>
         <Grid item container xs={12}>
           {posts.map((x, index) => (
-            <ListItem key={index} {...x} />
+            <ListItem key={index} appUtilities={utilities} appConfig={config} {...x} />
           ))}
         </Grid>
         {shouldShowLoadMoreButton && posts.length > 0 && (
@@ -98,7 +90,7 @@ const Widget = (props) => {
   );
 };
 
-List.propTypes = {
+Widget.propTypes = {
   showLoadMoreButton: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
 };
@@ -109,4 +101,4 @@ const mapDispatchToProps = (dispatch) => ({
   dispatch: dispatch,
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(List);
+export default connect(mapStateToProps, mapDispatchToProps)(Widget);
