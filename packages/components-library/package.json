@@ -1,0 +1,41 @@
+{
+  "name": "@courselit/components-library",
+  "version": "0.4.2",
+  "description": "A library of React components used by CourseLit LMS.",
+  "keywords": [
+    "react",
+    "components",
+    "courselit"
+  ],
+  "author": "Rajat Saxena <social@rajats.xyz>",
+  "homepage": "https://github.com/codelitdev/courselit#readme",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "directories": {
+    "lib": "src",
+    "test": "__tests__"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.yarnpkg.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codelitdev/courselit.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1",
+    "build": "webpack",
+    "prepublishOnly": "yarn run build"
+  },
+  "bugs": {
+    "url": "https://github.com/codelitdev/courselit/issues"
+  },
+  "devDependencies": {
+    "@types/react-redux": "^7.1.11",
+    "ts-loader": "^8.0.9",
+    "typescript": "^4.0.5"
+  }
+}
