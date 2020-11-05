@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { GridList, GridListTile, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
-import Card from "../Card";
+import { Card } from "@courselit/components-library";
 
 const useStyles = makeStyles((theme) => ({
   widgetCard: {

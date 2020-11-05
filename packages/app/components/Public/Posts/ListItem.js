@@ -8,7 +8,7 @@ import {
 import { Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import { formulateMediaUrl } from "../../../lib/utils.js";
-import Card from "../Card.js";
+import { Card } from "@courselit/components-library";
 
 const useStyles = (featuredImage) =>
   makeStyles((theme) => ({

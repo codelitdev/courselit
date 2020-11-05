@@ -9,7 +9,8 @@ import { formulateMediaUrl, formattedLocaleDate } from "../../lib/utils";
 import { publicCourse, profileProps } from "../../types";
 import BuyButton from "../CheckoutExternal";
 import { connect } from "react-redux";
-import PriceTag from "../PriceTag";
+import { PriceTag } from "@courselit/components-library";
+import { FREE_COST } from "../../config/strings.js";
 
 const useStyles = (featuredImage) =>
   makeStyles((theme) => ({
@@ -95,7 +96,7 @@ const Article = (props) => {
         <div className={classes.enrollmentArea}>
           <Grid container direction="row" alignItems="center">
             <Grid item className={classes.enrollmentAreaPriceTag}>
-              <PriceTag cost={course.cost} />
+              <PriceTag cost={course.cost} freeCostCaption={FREE_COST} />
             </Grid>
             <Grid>
               <BuyButton

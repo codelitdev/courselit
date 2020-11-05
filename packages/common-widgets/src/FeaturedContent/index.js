@@ -1,6 +1,6 @@
-import React from 'react';
+import React from "react";
 import metadata from "./metadata";
-import Widget from './Widget';
+import Widget from "./Widget";
 
 export default {
   widget: Widget,

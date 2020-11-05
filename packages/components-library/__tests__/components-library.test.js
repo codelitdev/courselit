@@ -1,7 +1,7 @@
-'use strict';
+"use strict";
 
-const componentsLibrary = require('..');
+const componentsLibrary = require("..");
 
-describe('@courselit/components-library', () => {
-    it('needs tests');
+describe("@courselit/components-library", () => {
+  it("needs tests");
 });

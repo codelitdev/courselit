@@ -1,12 +1,12 @@
 import buttondown from "@courselit/widget-buttondown";
-import CommonWidgets from '@courselit/common-widgets';
+import CommonWidgets from "@courselit/common-widgets";
 
 const config = {
   widgets: {},
 };
 
 // Add common widgets to CourseLit
-for (let widget of CommonWidgets) {
+for (const widget of CommonWidgets) {
   config.widgets[widget.metadata.name] = widget;
 }
 

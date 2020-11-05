@@ -4,8 +4,8 @@ import widgets from "../../../config/widgets";
 import FetchBuilder from "../../../lib/fetch";
 import { BACKEND } from "../../../config/constants";
 import { useTheme } from "@material-ui/styles";
-import * as config from '../../../config/constants';
-import * as utilities from '../../../lib/utils';
+import * as config from "../../../config/constants";
+import * as utilities from "../../../lib/utils";
 
 const WidgetByName = (props) => {
   const { name } = props;
@@ -22,7 +22,8 @@ const WidgetByName = (props) => {
         fetchBuilder={fetch}
         theme={theme}
         config={config}
-        utilities={utilities} />
+        utilities={utilities}
+      />
     </div>
   );
 };
