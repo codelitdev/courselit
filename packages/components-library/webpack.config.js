@@ -22,10 +22,11 @@ module.exports = {
     ],
   },
   resolve: {
-    extensions: [ '.tsx', '.ts']
+    extensions: [".tsx", ".ts"],
   },
   externals: {
-    "react": "react",
-    "react-redux": "react-redux"
+    react: "react",
+    "react-redux": "react-redux",
+    "@material-ui/styles": "@material-ui/styles",
   },
 };

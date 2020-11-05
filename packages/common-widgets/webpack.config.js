@@ -28,6 +28,6 @@ module.exports = {
     "prop-types": "prop-types",
     "@material-ui/core": "@material-ui/core",
     "@material-ui/styles": "@material-ui/styles",
-    "next/link": "next/link"
+    "next/link": "next/link",
   },
 };

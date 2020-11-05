@@ -8,8 +8,8 @@ import {
 import { Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import { formulateMediaUrl } from "../../../lib/utils.js";
-import Card from "../Card.js";
-import PriceTag from "../../PriceTag.js";
+import { PriceTag, Card } from "@courselit/components-library";
+import { FREE_COST } from "../../../config/strings.js";
 
 const useStyles = (featuredImage) =>
   makeStyles((theme) => ({
@@ -61,7 +61,7 @@ const ListItem = (props) => {
                 </Grid>
                 <Grid item>
                   <Typography variant="h6">
-                    <PriceTag cost={props.cost}></PriceTag>
+                    <PriceTag cost={props.cost} freeCostCaption={FREE_COST} />
                   </Typography>
                 </Grid>
               </Grid>

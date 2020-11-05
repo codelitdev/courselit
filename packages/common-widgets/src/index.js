@@ -1,5 +1,3 @@
 import FeaturedContent from "./FeaturedContent";
 
-export default [
-    FeaturedContent
-]
+export default [FeaturedContent];

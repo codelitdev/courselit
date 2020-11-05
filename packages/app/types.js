@@ -31,6 +31,7 @@ export const siteInfoProps = PropTypes.shape({
   subtitle: PropTypes.string,
   logopath: PropTypes.string,
   currencyUnit: PropTypes.string,
+  currencyISOCode: PropTypes.string,
 });
 
 export const publicCourse = PropTypes.shape({

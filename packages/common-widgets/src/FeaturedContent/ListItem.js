@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 
-const useStyles = ({featuredImage, utilities, config}) =>
+const useStyles = ({ featuredImage, utilities, config }) =>
   makeStyles((theme) => ({
     link: {
       textDecoration: "none",
@@ -41,7 +41,7 @@ const ListItem = (props) => {
   const classes = useStyles({
     featuredImage: props.featuredImage,
     utilities: appUtilities,
-    config: appConfig
+    config: appConfig,
   })();
 
   return (
@@ -92,7 +92,7 @@ ListItem.propTypes = {
   cost: PropTypes.number.isRequired,
   courseId: PropTypes.number.isRequired,
   appConfig: PropTypes.object.isRequired,
-  appUtilities: PropTypes.object.isRequired
+  appUtilities: PropTypes.object.isRequired,
 };
 
 export default ListItem;
