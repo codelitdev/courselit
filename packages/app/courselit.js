@@ -1,7 +1,16 @@
 import buttondown from "@courselit/widget-buttondown";
+import CommonWidgets from '@courselit/common-widgets';
 
-export default {
-  widgets: {
-    [buttondown.metadata.name]: buttondown,
-  },
+const config = {
+  widgets: {},
 };
+
+// Add common widgets to CourseLit
+for (let widget of CommonWidgets) {
+  config.widgets[widget.metadata.name] = widget;
+}
+
+// Additional widgets are added here
+config.widgets[buttondown.metadata.name] = buttondown;
+
+export default config;

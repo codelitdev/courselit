@@ -1,0 +1,53 @@
+{
+  "name": "@courselit/common-widgets",
+  "version": "0.4.2",
+  "description": "A collection of common widgets for CourseLit LMS",
+  "keywords": [
+    "widgets",
+    "lms",
+    "courselit",
+    "course"
+  ],
+  "author": "Rajat Saxena <social@rajats.xyz>",
+  "homepage": "https://github.com/codelitdev/courselit#readme",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "directories": {
+    "lib": "src",
+    "test": "__tests__"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.yarnpkg.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codelitdev/courselit.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1",
+    "build": "webpack",
+    "prepublishOnly": "yarn run build"
+  },
+  "bugs": {
+    "url": "https://github.com/codelitdev/courselit/issues"
+  },
+  "peerDependencies": {
+    "@material-ui/core": "^4.8.1",
+    "@material-ui/icons": "^4.4.1",
+    "@material-ui/styles": "^4.7.1",
+    "prop-types": "^15.7.2",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-redux": "^7.2.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.11.1",
+    "@babel/preset-react": "^7.10.4",
+    "babel-loader": "^8.1.0",
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.12"
+  }
+}
