@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import metadata from "./metadata";
 import Widget from "./Widget";
 

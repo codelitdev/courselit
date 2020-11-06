@@ -1,7 +1,7 @@
 {
   "name": "@courselit/components-library",
   "version": "0.4.2",
-  "description": "A library of React components used by CourseLit LMS.",
+  "description": "A library of React components for CourseLit LMS.",
   "keywords": [
     "react",
     "components",
@@ -11,6 +11,7 @@
   "homepage": "https://github.com/codelitdev/courselit#readme",
   "license": "MIT",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "directories": {
     "lib": "src",
     "test": "__tests__"
@@ -27,7 +28,7 @@
   },
   "scripts": {
     "test": "echo \"Error: run tests from root\" && exit 1",
-    "build": "webpack",
+    "build": "tsc",
     "prepublishOnly": "yarn run build"
   },
   "bugs": {
@@ -36,7 +37,11 @@
   "devDependencies": {
     "@types/material-ui": "^0.21.8",
     "@types/react-redux": "^7.1.11",
-    "ts-loader": "^8.0.9",
     "typescript": "^4.0.5"
+  },
+  "peerDependencies": {
+    "react": "^16.13.1",
+    "react-redux": "^7.2.1",
+    "@material-ui/styles": "^4.7.1"
   }
 }
