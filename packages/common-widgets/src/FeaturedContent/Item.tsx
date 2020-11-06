@@ -1,11 +1,16 @@
-import React from "react";
-import PropTypes from "prop-types";
+import * as React from "react";
 import Link from "next/link";
 import { Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
+import { PriceTag } from "@courselit/components-library";
 
-const useStyles = ({ featuredImage, utilities, config }) =>
-  makeStyles((theme) => ({
+interface Styles {
+  featuredImage: string;
+  utilities: any;
+  config: any;
+}
+const useStyles = ({ featuredImage, utilities, config }: Styles) =>
+  makeStyles((theme: any) => ({
     link: {
       textDecoration: "none",
       color: "inherit",
@@ -36,7 +41,7 @@ const useStyles = ({ featuredImage, utilities, config }) =>
     },
   }));
 
-const ListItem = (props) => {
+const Item = (props: any) => {
   const { appUtilities, appConfig } = props;
   const classes = useStyles({
     featuredImage: props.featuredImage,
@@ -68,8 +73,10 @@ const ListItem = (props) => {
                 </Grid>
                 <Grid item>
                   <Typography variant="h6">
-                    {/* <PriceTag cost={props.cost}></PriceTag> */}
-                    {props.cost}
+                    <PriceTag
+                      cost={props.cost}
+                      freeCostCaption="FREE"
+                    ></PriceTag>
                   </Typography>
                 </Grid>
               </Grid>
@@ -81,18 +88,18 @@ const ListItem = (props) => {
   );
 };
 
-ListItem.propTypes = {
-  id: PropTypes.string.isRequired,
-  title: PropTypes.string.isRequired,
-  description: PropTypes.string.isRequired,
-  updated: PropTypes.string.isRequired,
-  creatorName: PropTypes.string.isRequired,
-  slug: PropTypes.string.isRequired,
-  featuredImage: PropTypes.string,
-  cost: PropTypes.number.isRequired,
-  courseId: PropTypes.number.isRequired,
-  appConfig: PropTypes.object.isRequired,
-  appUtilities: PropTypes.object.isRequired,
-};
+// Item.propTypes = {
+//   id: PropTypes.string.isRequired,
+//   title: PropTypes.string.isRequired,
+//   description: PropTypes.string.isRequired,
+//   updated: PropTypes.string.isRequired,
+//   creatorName: PropTypes.string.isRequired,
+//   slug: PropTypes.string.isRequired,
+//   featuredImage: PropTypes.string,
+//   cost: PropTypes.number.isRequired,
+//   courseId: PropTypes.number.isRequired,
+//   appConfig: PropTypes.object.isRequired,
+//   appUtilities: PropTypes.object.isRequired,
+// };
 
-export default ListItem;
+export default Item;

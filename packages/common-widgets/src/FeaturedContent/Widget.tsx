@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from "react";
-import PropTypes from "prop-types";
-import { connect } from "react-redux";
+import * as React from "react";
 import { Grid, Typography, Button } from "@material-ui/core";
-import ListItem from "./ListItem";
+import Item from "./Item";
 import { makeStyles } from "@material-ui/styles";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles((theme: any) => ({
   content: {
     padding: theme.spacing(2),
     paddingTop: theme.spacing(2),
@@ -19,10 +17,10 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const Widget = (props) => {
+const Widget = (props: any) => {
   const { fetchBuilder, auth, utilities, config } = props;
-  const [posts, setPosts] = useState([]);
-  const [postsOffset, setPostsOffset] = useState(1);
+  const [posts, setPosts] = React.useState([]);
+  const [postsOffset, setPostsOffset] = React.useState(1);
   const shouldShowLoadMoreButton = props.showLoadMoreButton
     ? props.showLoadMoreButton
     : false;
@@ -31,7 +29,7 @@ const Widget = (props) => {
   const BTN_LOAD_MORE = "";
   const SUBHEADER_FEATURED_SECTION = "";
 
-  useEffect(() => {
+  React.useEffect(() => {
     getPosts();
   }, [postsOffset]);
 
@@ -73,7 +71,7 @@ const Widget = (props) => {
         </Grid>
         <Grid item container xs={12}>
           {posts.map((x, index) => (
-            <ListItem
+            <Item
               key={index}
               appUtilities={utilities}
               appConfig={config}
@@ -95,15 +93,15 @@ const Widget = (props) => {
   );
 };
 
-Widget.propTypes = {
-  showLoadMoreButton: PropTypes.bool,
-  dispatch: PropTypes.func.isRequired,
-};
+// Widget.propTypes = {
+//   showLoadMoreButton: PropTypes.bool,
+//   dispatch: PropTypes.func.isRequired,
+// };
 
-const mapStateToProps = (state) => ({});
+// const mapStateToProps = (state) => ({});
 
-const mapDispatchToProps = (dispatch) => ({
-  dispatch: dispatch,
-});
+// const mapDispatchToProps = (dispatch) => ({
+//   dispatch: dispatch,
+// });
 
-export default connect(mapStateToProps, mapDispatchToProps)(Widget);
+export default Widget;
