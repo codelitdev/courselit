@@ -2,6 +2,9 @@ import * as React from "react";
 import { Grid, Typography, Button } from "@material-ui/core";
 import Item from "./Item";
 import { makeStyles } from "@material-ui/styles";
+import { connect } from "react-redux";
+import { WidgetProps } from "@courselit/components-library";
+import Link from "next/link";
 
 const useStyles = makeStyles((theme: any) => ({
   content: {
@@ -15,21 +18,27 @@ const useStyles = makeStyles((theme: any) => ({
   headerTop: {
     marginBottom: theme.spacing(2),
   },
+  link: {
+    textDecoration: "none",
+    color: "inherit",
+  },
 }));
 
-const Widget = (props: any) => {
-  const { fetchBuilder, auth, utilities, config } = props;
+export interface FeaturedWidgetProps extends WidgetProps {
+  dispatch: any;
+}
+
+const Widget = (props: FeaturedWidgetProps) => {
+  const { fetchBuilder, utilities, config, dispatch, name } = props;
   const [posts, setPosts] = React.useState([]);
   const [postsOffset, setPostsOffset] = React.useState(1);
-  const shouldShowLoadMoreButton = props.showLoadMoreButton
-    ? props.showLoadMoreButton
-    : false;
   const classes = useStyles();
-  const FEATURED_SECTION_HEADER = "";
-  const BTN_LOAD_MORE = "";
+  const BTN_LOAD_MORE = "View all";
   const SUBHEADER_FEATURED_SECTION = "";
+  const [settings, setSettings] = React.useState<any>({});
 
   React.useEffect(() => {
+    getSettings();
     getPosts();
   }, [postsOffset]);
 
@@ -49,11 +58,39 @@ const Widget = (props: any) => {
 
     const fetch = fetchBuilder.setPayload(query).build();
     try {
+      dispatch({ type: "NETWORK_ACTION", flag: true });
       const response = await fetch.exec();
       if (response.courses) {
         setPosts([...posts, ...response.courses]);
       }
-    } catch (err) {}
+    } catch (err) {
+    } finally {
+      dispatch({ type: "NETWORK_ACTION", flag: false });
+    }
+  };
+
+  const getSettings = async () => {
+    const query = `
+    query {
+      settings: getWidgetSettings(name: "${name}") {
+        settings
+      }
+    }
+    `;
+
+    const fetch = fetchBuilder.setPayload(query).build();
+    try {
+      dispatch({ type: "NETWORK_ACTION", flag: true });
+      const response = await fetch.exec();
+      if (response.settings) {
+        // console.log(settings, response.settings, response.settings.settings);
+        setSettings(JSON.parse(response.settings.settings));
+      }
+      console.log(settings);
+    } catch (err) {
+    } finally {
+      dispatch({ type: "NETWORK_ACTION", flag: false });
+    }
   };
 
   return posts.length > 0 ? (
@@ -61,28 +98,30 @@ const Widget = (props: any) => {
       <Grid container component="section">
         <Grid item container className={classes.header}>
           <Grid item xs={12} className={classes.headerTop}>
-            <Typography variant="h3">{FEATURED_SECTION_HEADER}</Typography>
+            <Typography variant="h4">{settings.title}</Typography>
           </Grid>
           <Grid item xs={12}>
             <Typography variant="body1" color="textSecondary">
-              {SUBHEADER_FEATURED_SECTION}
+              {settings.subtitle}
             </Typography>
           </Grid>
         </Grid>
         <Grid item container xs={12}>
-          {posts.map((x, index) => (
+          {posts.map((post, index) => (
             <Item
               key={index}
               appUtilities={utilities}
               appConfig={config}
-              {...x}
+              course={post}
             />
           ))}
         </Grid>
-        {shouldShowLoadMoreButton && posts.length > 0 && (
+        {posts.length > 0 && (
           <Grid item xs={12}>
-            <Button onClick={() => setPostsOffset(postsOffset + 1)}>
-              {BTN_LOAD_MORE}
+            <Button>
+              <Link href="/featured">
+                <a className={classes.link}>{BTN_LOAD_MORE}</a>
+              </Link>
             </Button>
           </Grid>
         )}
@@ -93,15 +132,8 @@ const Widget = (props: any) => {
   );
 };
 
-// Widget.propTypes = {
-//   showLoadMoreButton: PropTypes.bool,
-//   dispatch: PropTypes.func.isRequired,
-// };
+const mapDispatchToProps = (dispatch: any) => ({
+  dispatch: dispatch,
+});
 
-// const mapStateToProps = (state) => ({});
-
-// const mapDispatchToProps = (dispatch) => ({
-//   dispatch: dispatch,
-// });
-
-export default Widget;
+export default connect(() => ({}), mapDispatchToProps)(Widget);
