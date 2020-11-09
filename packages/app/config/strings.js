@@ -216,3 +216,4 @@ export const VISIT_COURSE_BUTTON = "Visit course";
 export const VISIT_POST_BUTTON = "Visit post";
 export const VERIFY_PAYMENT_BUTTON = "Re-check Payment Status";
 export const PURCHASE_ID_HEADER = "Purchase ID";
+export const PAGE_HEADER_FEATURED = "Featured Content";
