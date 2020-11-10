@@ -28,6 +28,7 @@ import {
   GENERIC_THEME_COLOR_SECONDARY,
   GENERIC_CODE_INJECTION_HEAD,
 } from "../config/strings.js";
+import {HYDRATE} from 'next-redux-wrapper';
 
 const initialState = {
   auth: {
@@ -223,7 +224,7 @@ function navigationReducer(state = initialState.navigation, action) {
   }
 }
 
-export default combineReducers({
+const appReducers = combineReducers({
   auth: authReducer,
   siteinfo: siteinfoReducer,
   networkAction: networkActionReducer,
@@ -233,3 +234,17 @@ export default combineReducers({
   layout: layoutReducer,
   navigation: navigationReducer,
 });
+
+const reducer = (state, action) => {
+  console.log(`reducer`, action);
+  if (action.type === HYDRATE) {
+    return {
+      ...state,
+      ...action.payload
+    }
+  } else {
+    return appReducers;
+  }
+}
+
+export default reducer;

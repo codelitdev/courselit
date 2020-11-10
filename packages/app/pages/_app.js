@@ -1,7 +1,5 @@
 import { Provider } from "react-redux";
 import App from "next/app";
-import makeStore from "../redux/store.js";
-import withRedux from "next-redux-wrapper";
 import { getCookie } from "../lib/session.js";
 import { JWT_COOKIE_NAME, USERID_COOKIE_NAME } from "../config/constants.js";
 import {
@@ -15,12 +13,16 @@ import {
 import { ThemeProvider } from "@material-ui/styles";
 import { responsiveFontSizes, createMuiTheme } from "@material-ui/core";
 import { CONSOLE_MESSAGE_THEME_INVALID } from "../config/strings.js";
-import CodeInjector from "../components/Public/CodeInjector.js";
+import { useEffect } from "react";
+// import CodeInjector from "../components/Public/CodeInjector.js";
+import wrapper from '../redux/store.js';
 
 class MyApp extends App {
-  static async getInitialProps(props) {
-    const { Component, ctx } = props;
-    await this.fetchSiteSettings(ctx);
+  static async getInitialProps({ Component, ctx }) {
+    await ctx.store.dispatch(updateSiteInfo());
+    await ctx.store.dispatch(updateSiteLayout());
+    await ctx.store.dispatch(updateSiteTheme());
+    await ctx.store.dispatch(updateSiteNavigation());
 
     const pageProps = Component.getInitialProps
       ? await Component.getInitialProps(ctx)
@@ -28,16 +30,9 @@ class MyApp extends App {
     return { pageProps };
   }
 
-  static async fetchSiteSettings(ctx) {
-    await ctx.store.dispatch(updateSiteInfo());
-    await ctx.store.dispatch(updateSiteLayout());
-    await ctx.store.dispatch(updateSiteTheme());
-    await ctx.store.dispatch(updateSiteNavigation());
-  }
-
   componentDidMount() {
-    this.setUpCookies();
-    this.removeServerSideInjectedCSS();
+    // this.setUpCookies();
+    // this.removeServerSideInjectedCSS();
   }
 
   setUpCookies() {
@@ -60,26 +55,67 @@ class MyApp extends App {
 
   render() {
     const { Component, pageProps, store } = this.props;
-    const { theme } = store.getState();
+    // const { theme } = store.getState();
     let muiTheme;
-    try {
-      muiTheme = responsiveFontSizes(
-        createMuiTheme(Object.keys(theme.styles).length ? theme.styles : {})
-      );
-    } catch (err) {
-      console.warn(CONSOLE_MESSAGE_THEME_INVALID);
-      muiTheme = responsiveFontSizes(createMuiTheme({}));
-    }
+    // try {
+    //   muiTheme = responsiveFontSizes(
+    //     createMuiTheme(Object.keys(theme.styles).length ? theme.styles : {})
+    //   );
+    // } catch (err) {
+    //   console.warn(CONSOLE_MESSAGE_THEME_INVALID);
+    //   muiTheme = responsiveFontSizes(createMuiTheme({}));
+    // }
 
     return (
-      <Provider store={store}>
-        <ThemeProvider theme={muiTheme}>
+      <>
+        {/* <ThemeProvider theme={muiTheme}> */}
           <Component {...pageProps} />
-          <CodeInjector />
-        </ThemeProvider>
-      </Provider>
+          {/* <CodeInjector /> */}
+        {/* </ThemeProvider> */}
+      </>
     );
   }
 }
 
-export default withRedux(makeStore)(MyApp);
+const wrappedApp = ({ Component, pageProps }) => {
+  let muiTheme;
+  try {
+    muiTheme = responsiveFontSizes(
+      // createMuiTheme(Object.keys(theme.styles).length ? theme.styles : {})
+      createMuiTheme({})
+    );
+  } catch (err) {
+    console.warn(CONSOLE_MESSAGE_THEME_INVALID);
+    muiTheme = responsiveFontSizes(createMuiTheme({}));
+  }
+
+  useEffect(() => {
+    removeServerSideInjectedCSS();
+  }, []);
+
+  const removeServerSideInjectedCSS = () => {
+    const jssStyles = document.querySelector("#jss-server-side");
+    if (jssStyles) {
+      jssStyles.parentNode.removeChild(jssStyles);
+    }
+  }
+
+  return (
+    <ThemeProvider theme={muiTheme}>
+      <Component {...pageProps} />
+    </ThemeProvider>
+  )
+}
+
+wrappedApp.getInitialProps = async (appContext) => {
+  const { ctx } = appContext;
+  await ctx.store.dispatch(updateSiteInfo());
+  await ctx.store.dispatch(updateSiteLayout());
+  await ctx.store.dispatch(updateSiteTheme());
+  await ctx.store.dispatch(updateSiteNavigation());
+
+  const appProps = await App.getInitialProps(appContext);
+  return { ...appProps }
+}
+
+export default wrapper.withRedux(wrappedApp);
