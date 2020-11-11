@@ -1,4 +1,4 @@
-import { Provider } from "react-redux";
+import { Provider, useStore } from "react-redux";
 import App from "next/app";
 import { getCookie } from "../lib/session.js";
 import { JWT_COOKIE_NAME, USERID_COOKIE_NAME } from "../config/constants.js";
@@ -14,29 +14,29 @@ import { ThemeProvider } from "@material-ui/styles";
 import { responsiveFontSizes, createMuiTheme } from "@material-ui/core";
 import { CONSOLE_MESSAGE_THEME_INVALID } from "../config/strings.js";
 import { useEffect } from "react";
-// import CodeInjector from "../components/Public/CodeInjector.js";
+import CodeInjector from "../components/Public/CodeInjector.js";
 import wrapper from '../redux/store.js';
 
-class MyApp extends App {
-  static async getInitialProps({ Component, ctx }) {
-    await ctx.store.dispatch(updateSiteInfo());
-    await ctx.store.dispatch(updateSiteLayout());
-    await ctx.store.dispatch(updateSiteTheme());
-    await ctx.store.dispatch(updateSiteNavigation());
-
-    const pageProps = Component.getInitialProps
-      ? await Component.getInitialProps(ctx)
-      : {};
-    return { pageProps };
+const wrappedApp = ({ Component, pageProps }) => {
+  const store = useStore();
+  let muiTheme;
+  const { theme } = store.getState();
+  try {
+    muiTheme = responsiveFontSizes(
+      createMuiTheme(Object.keys(theme.styles).length ? theme.styles : {})
+    );
+  } catch (err) {
+    console.warn(CONSOLE_MESSAGE_THEME_INVALID);
+    muiTheme = responsiveFontSizes(createMuiTheme({}));
   }
 
-  componentDidMount() {
-    // this.setUpCookies();
-    // this.removeServerSideInjectedCSS();
-  }
+  useEffect(() => {
+    setUpCookies();
+    removeServerSideInjectedCSS();
+  }, []);
 
-  setUpCookies() {
-    const { store } = this.props;
+  const setUpCookies = () => {
+    console.log(`setUpCookies called`);
     const tokenCookie = getCookie(JWT_COOKIE_NAME);
     if (tokenCookie) {
       store.dispatch(
@@ -46,53 +46,6 @@ class MyApp extends App {
     store.dispatch(authHasBeenChecked());
   }
 
-  removeServerSideInjectedCSS() {
-    const jssStyles = document.querySelector("#jss-server-side");
-    if (jssStyles) {
-      jssStyles.parentNode.removeChild(jssStyles);
-    }
-  }
-
-  render() {
-    const { Component, pageProps, store } = this.props;
-    // const { theme } = store.getState();
-    let muiTheme;
-    // try {
-    //   muiTheme = responsiveFontSizes(
-    //     createMuiTheme(Object.keys(theme.styles).length ? theme.styles : {})
-    //   );
-    // } catch (err) {
-    //   console.warn(CONSOLE_MESSAGE_THEME_INVALID);
-    //   muiTheme = responsiveFontSizes(createMuiTheme({}));
-    // }
-
-    return (
-      <>
-        {/* <ThemeProvider theme={muiTheme}> */}
-          <Component {...pageProps} />
-          {/* <CodeInjector /> */}
-        {/* </ThemeProvider> */}
-      </>
-    );
-  }
-}
-
-const wrappedApp = ({ Component, pageProps }) => {
-  let muiTheme;
-  try {
-    muiTheme = responsiveFontSizes(
-      // createMuiTheme(Object.keys(theme.styles).length ? theme.styles : {})
-      createMuiTheme({})
-    );
-  } catch (err) {
-    console.warn(CONSOLE_MESSAGE_THEME_INVALID);
-    muiTheme = responsiveFontSizes(createMuiTheme({}));
-  }
-
-  useEffect(() => {
-    removeServerSideInjectedCSS();
-  }, []);
-
   const removeServerSideInjectedCSS = () => {
     const jssStyles = document.querySelector("#jss-server-side");
     if (jssStyles) {
@@ -101,9 +54,12 @@ const wrappedApp = ({ Component, pageProps }) => {
   }
 
   return (
-    <ThemeProvider theme={muiTheme}>
-      <Component {...pageProps} />
-    </ThemeProvider>
+    <Provider store={store}>
+      <ThemeProvider theme={muiTheme}>
+        <Component {...pageProps} />
+        <CodeInjector />
+      </ThemeProvider>
+    </Provider>
   )
 }
 
