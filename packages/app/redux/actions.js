@@ -121,7 +121,6 @@ export function updateSiteInfo() {
 
       dispatch(networkAction(false));
       dispatch(newSiteInfoAvailable(response.site));
-      console.log(`State`, getState())
     } finally {
       dispatch(networkAction(false));
     }
