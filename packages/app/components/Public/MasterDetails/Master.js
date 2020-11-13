@@ -33,26 +33,37 @@ const Master = (props) => {
 
   return (
     <GridList cols={3}>
-      {Object.keys(componentsMap).map((name) => (
-        <GridListTile key={name} onClick={() => onWidgetSelect(name)}>
-          <Card>
-            <div className={classes.widgetCard}>
-              {componentsMap[name].icon && (
-                <>
-                  <img
-                    src={componentsMap[name].icon}
-                    className={classes.widgetCardLogo}
-                  />
-                  <br />
-                </>
-              )}
-              <Typography variant="body1" className={classes.caption}>
-                {componentsMap[name].caption}
-              </Typography>
-            </div>
-          </Card>
-        </GridListTile>
-      ))}
+      {Object.keys(componentsMap).map((name) => 
+        componentsMap[name]['component'] ? (
+          <GridListTile key={name} onClick={() => onWidgetSelect(name)}>
+            <Card>
+              <div className={classes.widgetCard}>
+                {componentsMap[name].icon && (
+                  <>
+                    <img
+                      src={componentsMap[name].icon}
+                      className={classes.widgetCardLogo}
+                    />
+                    <br />
+                  </>
+                )}
+                {!componentsMap[name].icon && (
+                  <>
+                    <img
+                      src="/courselit_backdrop_square.webp"
+                      className={classes.widgetCardLogo}
+                    />
+                    <br />
+                  </>
+                )}
+                <Typography variant="body1" className={classes.caption}>
+                  {componentsMap[name].caption}
+                </Typography>
+              </div>
+            </Card>
+          </GridListTile>
+        ) : null
+      )}
     </GridList>
   );
 };

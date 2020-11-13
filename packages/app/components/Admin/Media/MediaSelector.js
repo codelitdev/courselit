@@ -12,6 +12,7 @@ import { makeStyles } from "@material-ui/styles";
 const useStyles = makeStyles((theme) => ({
   control: {
     marginLeft: theme.spacing(1),
+    width: '6rem'
   },
 }));
 
@@ -32,7 +33,7 @@ const MediaSelector = (props) => {
       <Grid item className={classes.control}>
         <Img src={props.src} isThumbnail={true} />
       </Grid>
-      <Grid item className={classes.control}>
+      <Grid item>
         <Button onClick={() => setDialogOpened(!dialogOpened)}>
           {BUTTON_SELECT_MEDIA}
         </Button>
