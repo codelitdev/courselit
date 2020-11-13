@@ -6,14 +6,20 @@ import { connect } from "react-redux";
 import { WidgetProps } from "@courselit/components-library";
 import Link from "next/link";
 
-const useStyles = makeStyles((theme: any) => ({
+interface UseStylesProps {
+  backgroundColor: string;
+}
+
+const useStyles = ({ backgroundColor }: UseStylesProps) => makeStyles((theme: any) => ({
   content: {
     padding: theme.spacing(2),
     paddingTop: theme.spacing(2),
-    background: "#eee",
+    background: backgroundColor || "inherit",
   },
   header: {
-    marginLeft: theme.spacing(2),
+    [theme.breakpoints.up("md")]: {
+      marginLeft: theme.spacing(2)
+    }
   },
   headerTop: {
     marginBottom: theme.spacing(2),
@@ -22,6 +28,11 @@ const useStyles = makeStyles((theme: any) => ({
     textDecoration: "none",
     color: "inherit",
   },
+  callToAction: {
+    [theme.breakpoints.up("md")]: {
+      marginLeft: theme.spacing(2)
+    }
+  }
 }));
 
 export interface FeaturedWidgetProps extends WidgetProps {
@@ -32,10 +43,9 @@ const Widget = (props: FeaturedWidgetProps) => {
   const { fetchBuilder, utilities, config, dispatch, name } = props;
   const [posts, setPosts] = React.useState([]);
   const [postsOffset, setPostsOffset] = React.useState(1);
-  const classes = useStyles();
   const BTN_LOAD_MORE = "View all";
-  const SUBHEADER_FEATURED_SECTION = "";
   const [settings, setSettings] = React.useState<any>({});
+  const classes = useStyles(settings)();
 
   React.useEffect(() => {
     getSettings();
@@ -83,10 +93,8 @@ const Widget = (props: FeaturedWidgetProps) => {
       dispatch({ type: "NETWORK_ACTION", flag: true });
       const response = await fetch.exec();
       if (response.settings) {
-        // console.log(settings, response.settings, response.settings.settings);
         setSettings(JSON.parse(response.settings.settings));
       }
-      console.log(settings);
     } catch (err) {
     } finally {
       dispatch({ type: "NETWORK_ACTION", flag: false });
@@ -118,7 +126,7 @@ const Widget = (props: FeaturedWidgetProps) => {
         </Grid>
         {posts.length > 0 && (
           <Grid item xs={12}>
-            <Button>
+            <Button variant='contained' disableElevation className={classes.callToAction}>
               <Link href="/featured">
                 <a className={classes.link}>{BTN_LOAD_MORE}</a>
               </Link>

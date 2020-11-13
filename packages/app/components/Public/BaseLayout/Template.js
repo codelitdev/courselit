@@ -21,14 +21,16 @@ const Template = (props) => {
   return (
     <>
       <Grid container>
+        {/** Top */}
         {router.pathname === "/" && <Section name="top" />}
+        
         <Grid container item direction="row" className={classes.mainContent} xs>
           {/** Main */}
           <Grid container item direction="column" xs={12} sm={8} md={9}>
             <Grid container item>
               {props.children}
             </Grid>
-            <Grid item container>
+            <Grid container item>
               <Section name="bottom" />
             </Grid>
           </Grid>
@@ -39,7 +41,15 @@ const Template = (props) => {
           </Grid>
         </Grid>
       </Grid>
-      <Footer />
+      {/** Footer */}
+      <Grid container direction="row">
+        <Grid container item direction="column" xs={12} md={6}>
+          <Section name="footerLeft" />
+        </Grid>
+        <Grid container item direction="column" xs={12} md={6}>
+          <Section name="footerRight" />
+        </Grid>
+      </Grid>
     </>
   );
 };

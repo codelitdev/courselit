@@ -3,9 +3,12 @@ import PropTypes from 'prop-types';
 import Items from "../components/Public/Items/List.js";
 import BaseLayout from "../components/Public/BaseLayout";
 import { publicCourse, siteInfoProps } from "../types.js";
-import { HEADER_BLOG_POSTS_SECTION, SUBHEADER_BLOG_POSTS_SECTION } from "../config/strings.js";
-import { Grid, Typography } from "@material-ui/core";
+import { HEADER_BLOG_POSTS_SECTION, SUBHEADER_BLOG_POSTS_SECTION, BTN_VIEW_ALL } from "../config/strings.js";
+import { Button, Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
+import Link from "next/link";
+import FetchBuilder from "../lib/fetch.js";
+import { BACKEND } from "../config/constants.js";
 
 const useStyles = makeStyles((theme) => ({
   content: {
@@ -13,11 +16,22 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: theme.spacing(8),
   },
   header: {
-    marginLeft: theme.spacing(2),
+    [theme.breakpoints.up("md")]: {
+      marginLeft: theme.spacing(2)
+    }
   },
   headerTop: {
     marginBottom: theme.spacing(2),
   },
+  link: {
+    textDecoration: "none",
+    color: "inherit",
+  },
+  callToAction: {
+    [theme.breakpoints.up("md")]: {
+      marginLeft: theme.spacing(2)
+    }
+  }
 }));
 
 const generateQuery = (pageOffset = 1) => `
@@ -53,9 +67,17 @@ const Index = (props) => {
             </Grid>
           </Grid>
           <Items
-            showLoadMoreButton={true}
             generateQuery={generateQuery}
             initialItems={props.courses} />
+          {props.courses.length > 0 && (
+            <Grid item xs={12}>
+              <Button variant='contained' disableElevation className={classes.callToAction}>
+                <Link href="/posts">
+                  <a className={classes.link}>{BTN_VIEW_ALL}</a>
+                </Link>
+              </Button>
+            </Grid>
+          )}
         </Grid>
       </Grid>
     </BaseLayout>

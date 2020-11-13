@@ -3,18 +3,20 @@ import { makeStyles } from "@material-ui/styles";
 
 const useStyles = makeStyles((theme: any) => ({
   card: {
-    padding: theme.spacing(2),
-    border: "1px solid transparent",
-    borderRadius: 1,
-    "&:hover": {
-      border: "1px solid #cccccc",
-      cursor: "pointer",
+    [theme.breakpoints.up("md")]: {
+      padding: theme.spacing(2),
+      border: "1px solid transparent",
+      borderRadius: 1,
+      "&:hover": {
+        border: "1px solid #cccccc",
+        cursor: "pointer",
+      }
     },
   },
 }));
 
 interface CardProps {
-  children: () => {};
+  children: any;
 }
 
 const Card = (props: CardProps) => {

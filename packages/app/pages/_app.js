@@ -36,7 +36,6 @@ const wrappedApp = ({ Component, pageProps }) => {
   }, []);
 
   const setUpCookies = () => {
-    console.log(`setUpCookies called`);
     const tokenCookie = getCookie(JWT_COOKIE_NAME);
     if (tokenCookie) {
       store.dispatch(
