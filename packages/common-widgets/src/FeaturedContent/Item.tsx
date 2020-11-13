@@ -2,7 +2,7 @@ import * as React from "react";
 import Link from "next/link";
 import { Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
-import { PriceTag, Course } from "@courselit/components-library";
+import { PriceTag, Course, Card } from "@courselit/components-library";
 
 interface Styles {
   featuredImage: string;
@@ -65,7 +65,7 @@ const Item = (props: ItemProps) => {
         as={`/${appConfig.URL_EXTENTION_COURSES}/${props.course.courseId}/${props.course.slug}`}
       >
         <a className={classes.link}>
-          <div className={classes.card}>
+          <Card>
             <Grid item container direction="column" component="article">
               {props.course.featuredImage && (
                 <Grid item className={classes.featuredImage} />
@@ -90,7 +90,7 @@ const Item = (props: ItemProps) => {
                 </Grid>
               </Grid>
             </Grid>
-          </div>
+          </Card>
         </a>
       </Link>
     </Grid>

@@ -95,7 +95,6 @@ const AdminWidget = (props: AdminWidgetProps) => {
             name="title"
             value={newSettings.title || ""}
             onChange={onChangeData}
-            required
           />
           <TextField
             variant="outlined"
@@ -105,7 +104,16 @@ const AdminWidget = (props: AdminWidgetProps) => {
             name="subtitle"
             value={newSettings.subtitle || ""}
             onChange={onChangeData}
-            required
+          />
+          <TextField
+            variant="outlined"
+            label="Background color"
+            placeholder="Enter the color's HEX code"
+            fullWidth
+            margin="normal"
+            name="backgroundColor"
+            value={newSettings.backgroundColor || ""}
+            onChange={onChangeData}
           />
           <Button
             variant="contained"

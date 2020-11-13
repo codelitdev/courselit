@@ -1,4 +1,3 @@
-import * as React from "react";
 import AdminWidget from "./AdminWidget";
 import metadata from "./metadata";
 import Widget from "./Widget";

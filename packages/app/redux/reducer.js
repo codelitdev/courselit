@@ -177,7 +177,6 @@ const appReducers = combineReducers({
 
 const reducer = (state = initialState, action) => {
   if (action.type === HYDRATE) {
-    console.log('Before Hydrate', state);
     const nextState = {
       ...state,
       ...action.payload
@@ -188,8 +187,7 @@ const reducer = (state = initialState, action) => {
       nextState.auth = state.auth;
       nextState.profile = state.profile;
     }
-
-    console.log('After Hydrate', state);
+    
     return nextState;
   } else {
     return appReducers(state, action);
