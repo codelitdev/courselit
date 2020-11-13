@@ -7,7 +7,7 @@ module.exports = {
     filename: "index.js",
     path: path.resolve(__dirname, "dist"),
     libraryTarget: "umd",
-    library: "@courselit/widget-buttondown",
+    library: "@courselit/components-library",
     globalObject: "this",
   },
   module: {

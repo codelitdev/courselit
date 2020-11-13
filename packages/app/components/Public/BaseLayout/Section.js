@@ -19,7 +19,7 @@ const Section = (props) => {
           <div key={index}></div>
         ) : (
           <Grid item key={index}>
-            <WidgetByName name={item} />
+            <WidgetByName name={item} section={name} />
           </Grid>
         )
       )}

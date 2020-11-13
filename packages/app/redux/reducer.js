@@ -14,8 +14,8 @@ import {
   LAYOUT_AVAILABLE,
   NAVIGATION_AVAILABLE,
 } from "./actionTypes.js";
-import {HYDRATE} from 'next-redux-wrapper';
-import initialState from './defaultState';
+import { HYDRATE } from "next-redux-wrapper";
+import initialState from "./defaultState";
 
 function authReducer(state = initialState.auth, action) {
   switch (action.type) {
@@ -179,19 +179,19 @@ const reducer = (state = initialState, action) => {
   if (action.type === HYDRATE) {
     const nextState = {
       ...state,
-      ...action.payload
-    }
-    
+      ...action.payload,
+    };
+
     // preserve values on client side navigation
     if (!state.auth.guest) {
       nextState.auth = state.auth;
       nextState.profile = state.profile;
     }
-    
+
     return nextState;
   } else {
     return appReducers(state, action);
   }
-}
+};
 
 export default reducer;

@@ -12,7 +12,7 @@ import { makeStyles } from "@material-ui/styles";
 const useStyles = makeStyles((theme) => ({
   control: {
     marginLeft: theme.spacing(1),
-    width: '6rem'
+    width: "6rem",
   },
 }));
 

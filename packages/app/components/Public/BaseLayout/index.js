@@ -34,6 +34,14 @@ const MasterLayout = (props) => {
             )}
           />
         )}
+        <link
+          rel="icon"
+          href={
+            props.siteInfo.logopath
+              ? formulateMediaUrl(MEDIA_BACKEND, props.siteInfo.logopath, true)
+              : "/courselit_backdrop_square.webp"
+          }
+        />
         <meta
           name="viewport"
           content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"

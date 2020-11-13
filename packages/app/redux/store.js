@@ -4,9 +4,9 @@ import thunk from "redux-thunk";
 import reducer from "./reducer.js";
 
 const makeStore = () => {
-    const store = createStore(reducer, applyMiddleware(thunk));
-    // store.subscribe(() => console.log(store.getState()));
-    return store;
-}
+  const store = createStore(reducer, applyMiddleware(thunk));
+  // store.subscribe(() => console.log(store.getState()));
+  return store;
+};
 
-export default createWrapper(makeStore, {debug: false});
+export default createWrapper(makeStore, { debug: false });
