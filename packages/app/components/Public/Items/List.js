@@ -12,9 +12,11 @@ import { publicCourse } from "../../../types";
 const List = (props) => {
   const [courses, setCourses] = useState(props.initialItems || []);
   const [offset, setOffset] = useState(2);
-  const [shouldShowLoadMoreButton, setShouldShowLoadMoreButton] = useState(typeof props.showLoadMoreButton === 'boolean'
-    ? props.showLoadMoreButton
-    : false);
+  const [shouldShowLoadMoreButton, setShouldShowLoadMoreButton] = useState(
+    typeof props.showLoadMoreButton === "boolean"
+      ? props.showLoadMoreButton
+      : false
+  );
   const { generateQuery } = props;
 
   useEffect(() => {
@@ -36,7 +38,7 @@ const List = (props) => {
         } else {
           setShouldShowLoadMoreButton(false);
         }
-      } 
+      }
     } finally {
       props.dispatch && props.dispatch(networkAction(false));
     }
@@ -51,9 +53,7 @@ const List = (props) => {
       </Grid>
       {shouldShowLoadMoreButton && courses.length > 0 && (
         <Grid item xs={12}>
-          <Button onClick={() => setOffset(offset + 1)}>
-            {BTN_LOAD_MORE}
-          </Button>
+          <Button onClick={() => setOffset(offset + 1)}>{BTN_LOAD_MORE}</Button>
         </Grid>
       )}
     </>

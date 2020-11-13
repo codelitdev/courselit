@@ -27,5 +27,6 @@ module.exports = {
     "react-redux": "react-redux",
     "prop-types": "prop-types",
     "@material-ui/core": "@material-ui/core",
+    "@material-ui/styles": "@material-ui/styles",
   },
 };

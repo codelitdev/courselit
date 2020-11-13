@@ -1,20 +1,23 @@
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
+import { makeStyles } from "@material-ui/styles";
 
-const Buttondown = (props) => {
-  const { fetchBuilder, name, theme } = props;
+const useStyles = makeStyles((theme) => ({
+  container: {
+    margin: theme.spacing(2),
+  },
+  iframe: {
+    width: "100%",
+    height: 220,
+    border: "1px #ccc solid",
+  },
+}));
+
+const Widget = (props) => {
+  const { fetchBuilder, name } = props;
   const [settings, setSettings] = useState({});
-  const styles = {
-    container: {
-      margin: theme.spacing(2),
-    },
-    iframe: {
-      width: "100%",
-      height: 220,
-      border: "1px #ccc solid",
-    },
-  };
+  const classes = useStyles();
 
   useEffect(() => {
     getSettings();
@@ -37,12 +40,12 @@ const Buttondown = (props) => {
   };
 
   return (
-    <div style={styles.container}>
+    <div className={classes.container}>
       {settings.url && (
         <>
           <iframe
             scrolling="no"
-            style={styles.iframe}
+            className={classes.iframe}
             src={`${settings.url}?as_embed=true`}
           ></iframe>
           <br />
@@ -53,7 +56,7 @@ const Buttondown = (props) => {
   );
 };
 
-Buttondown.propTypes = {
+Widget.propTypes = {
   name: PropTypes.string.isRequired,
   fetchBuilder: PropTypes.object.isRequired,
   theme: PropTypes.object.isRequired,
@@ -63,4 +66,4 @@ const mapStateToProps = (state) => ({
   auth: state.auth,
 });
 
-export default connect(mapStateToProps)(Buttondown);
+export default connect(mapStateToProps)(Widget);

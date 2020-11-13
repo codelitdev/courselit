@@ -9,7 +9,7 @@ interface FetchBuilder {
 interface WidgetProps {
   name: string;
   fetchBuilder: FetchBuilder;
-  theme: any;
+  section: string;
   config: any;
   utilities: any;
 }

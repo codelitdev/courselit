@@ -37,7 +37,6 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   menuButton: {
-    marginRight: theme.spacing(1),
     [theme.breakpoints.up("sm")]: {
       display: "none",
     },
@@ -169,7 +168,7 @@ Scaffold.propTypes = {
 
 const mapStateToProps = (state) => ({
   siteinfo: state.siteinfo,
-  navigation: state.navigation,
+  navigation: state.navigation.filter((link) => link.category === "main"),
   networkAction: state.networkAction,
   profile: state.profile,
 });

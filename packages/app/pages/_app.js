@@ -15,9 +15,9 @@ import { responsiveFontSizes, createMuiTheme } from "@material-ui/core";
 import { CONSOLE_MESSAGE_THEME_INVALID } from "../config/strings.js";
 import { useEffect } from "react";
 import CodeInjector from "../components/Public/CodeInjector.js";
-import wrapper from '../redux/store.js';
+import wrapper from "../redux/store.js";
 
-const wrappedApp = ({ Component, pageProps }) => {
+const WrappedApp = ({ Component, pageProps }) => {
   const store = useStore();
   let muiTheme;
   const { theme } = store.getState();
@@ -43,14 +43,14 @@ const wrappedApp = ({ Component, pageProps }) => {
       );
     }
     store.dispatch(authHasBeenChecked());
-  }
+  };
 
   const removeServerSideInjectedCSS = () => {
     const jssStyles = document.querySelector("#jss-server-side");
     if (jssStyles) {
       jssStyles.parentNode.removeChild(jssStyles);
     }
-  }
+  };
 
   return (
     <Provider store={store}>
@@ -59,10 +59,10 @@ const wrappedApp = ({ Component, pageProps }) => {
         <CodeInjector />
       </ThemeProvider>
     </Provider>
-  )
-}
+  );
+};
 
-wrappedApp.getInitialProps = async (appContext) => {
+WrappedApp.getInitialProps = async (appContext) => {
   const { ctx } = appContext;
   await ctx.store.dispatch(updateSiteInfo());
   await ctx.store.dispatch(updateSiteLayout());
@@ -70,7 +70,7 @@ wrappedApp.getInitialProps = async (appContext) => {
   await ctx.store.dispatch(updateSiteNavigation());
 
   const appProps = await App.getInitialProps(appContext);
-  return { ...appProps }
-}
+  return { ...appProps };
+};
 
-export default wrapper.withRedux(wrappedApp);
+export default wrapper.withRedux(WrappedApp);
