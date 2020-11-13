@@ -10,30 +10,31 @@ interface UseStylesProps {
   backgroundColor: string;
 }
 
-const useStyles = ({ backgroundColor }: UseStylesProps) => makeStyles((theme: any) => ({
-  content: {
-    padding: theme.spacing(2),
-    paddingTop: theme.spacing(2),
-    background: backgroundColor || "inherit",
-  },
-  header: {
-    [theme.breakpoints.up("md")]: {
-      marginLeft: theme.spacing(2)
-    }
-  },
-  headerTop: {
-    marginBottom: theme.spacing(2),
-  },
-  link: {
-    textDecoration: "none",
-    color: "inherit",
-  },
-  callToAction: {
-    [theme.breakpoints.up("md")]: {
-      marginLeft: theme.spacing(2)
-    }
-  }
-}));
+const useStyles = ({ backgroundColor }: UseStylesProps) =>
+  makeStyles((theme: any) => ({
+    content: {
+      padding: theme.spacing(2),
+      paddingTop: theme.spacing(2),
+      background: backgroundColor || "inherit",
+    },
+    header: {
+      [theme.breakpoints.up("md")]: {
+        marginLeft: theme.spacing(2),
+      },
+    },
+    headerTop: {
+      marginBottom: theme.spacing(2),
+    },
+    link: {
+      textDecoration: "none",
+      color: "inherit",
+    },
+    callToAction: {
+      [theme.breakpoints.up("md")]: {
+        marginLeft: theme.spacing(2),
+      },
+    },
+  }));
 
 export interface FeaturedWidgetProps extends WidgetProps {
   dispatch: any;
@@ -126,7 +127,11 @@ const Widget = (props: FeaturedWidgetProps) => {
         </Grid>
         {posts.length > 0 && (
           <Grid item xs={12}>
-            <Button variant='contained' disableElevation className={classes.callToAction}>
+            <Button
+              variant="contained"
+              disableElevation
+              className={classes.callToAction}
+            >
               <Link href="/featured">
                 <a className={classes.link}>{BTN_LOAD_MORE}</a>
               </Link>

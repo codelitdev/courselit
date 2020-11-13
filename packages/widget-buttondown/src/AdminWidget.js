@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import { TextField, Typography, Grid, Button } from "@material-ui/core";
 
-const ButtondownAdmin = (props) => {
+const AdminWidget = (props) => {
   const { fetchBuilder, name, auth } = props;
   const [settings, setSettings] = useState({});
   const [newSettings, setNewSettings] = useState({});
@@ -104,7 +104,7 @@ const ButtondownAdmin = (props) => {
   );
 };
 
-ButtondownAdmin.propTypes = {
+AdminWidget.propTypes = {
   name: PropTypes.string.isRequired,
   fetchBuilder: PropTypes.object.isRequired,
   theme: PropTypes.object.isRequired,
@@ -118,4 +118,4 @@ const mapStateToProps = (state) => ({
   auth: state.auth,
 });
 
-export default connect(mapStateToProps)(ButtondownAdmin);
+export default connect(mapStateToProps)(AdminWidget);

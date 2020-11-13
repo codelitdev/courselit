@@ -3,13 +3,11 @@ import PropTypes from "prop-types";
 import widgets from "../../../config/widgets";
 import FetchBuilder from "../../../lib/fetch";
 import { BACKEND } from "../../../config/constants";
-import { useTheme } from "@material-ui/styles";
 import * as config from "../../../config/constants";
 import * as utilities from "../../../lib/utils";
 
 const WidgetByName = (props) => {
-  const { name } = props;
-  const theme = useTheme();
+  const { name, section } = props;
   const Widget = widgets[name].widget;
   const fetch = new FetchBuilder()
     .setUrl(`${BACKEND}/graph`)
@@ -20,7 +18,7 @@ const WidgetByName = (props) => {
       <Widget
         name={name}
         fetchBuilder={fetch}
-        theme={theme}
+        section={section}
         config={config}
         utilities={utilities}
       />
@@ -30,6 +28,7 @@ const WidgetByName = (props) => {
 
 WidgetByName.propTypes = {
   name: PropTypes.string.isRequired,
+  section: PropTypes.string.isRequired,
 };
 
 export default WidgetByName;

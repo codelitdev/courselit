@@ -10,7 +10,7 @@ const useStyles = makeStyles((theme: any) => ({
       "&:hover": {
         border: "1px solid #cccccc",
         cursor: "pointer",
-      }
+      },
     },
   },
 }));

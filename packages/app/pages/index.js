@@ -1,9 +1,13 @@
 import { connect } from "react-redux";
-import PropTypes from 'prop-types';
+import PropTypes from "prop-types";
 import Items from "../components/Public/Items/List.js";
 import BaseLayout from "../components/Public/BaseLayout";
 import { publicCourse, siteInfoProps } from "../types.js";
-import { HEADER_BLOG_POSTS_SECTION, SUBHEADER_BLOG_POSTS_SECTION, BTN_VIEW_ALL } from "../config/strings.js";
+import {
+  HEADER_BLOG_POSTS_SECTION,
+  SUBHEADER_BLOG_POSTS_SECTION,
+  BTN_VIEW_ALL,
+} from "../config/strings.js";
 import { Button, Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import Link from "next/link";
@@ -17,8 +21,8 @@ const useStyles = makeStyles((theme) => ({
   },
   header: {
     [theme.breakpoints.up("md")]: {
-      marginLeft: theme.spacing(2)
-    }
+      marginLeft: theme.spacing(2),
+    },
   },
   headerTop: {
     marginBottom: theme.spacing(2),
@@ -29,9 +33,9 @@ const useStyles = makeStyles((theme) => ({
   },
   callToAction: {
     [theme.breakpoints.up("md")]: {
-      marginLeft: theme.spacing(2)
-    }
-  }
+      marginLeft: theme.spacing(2),
+    },
+  },
 }));
 
 const generateQuery = (pageOffset = 1) => `
@@ -66,12 +70,14 @@ const Index = (props) => {
               </Typography>
             </Grid>
           </Grid>
-          <Items
-            generateQuery={generateQuery}
-            initialItems={props.courses} />
+          <Items generateQuery={generateQuery} initialItems={props.courses} />
           {props.courses.length > 0 && (
             <Grid item xs={12}>
-              <Button variant='contained' disableElevation className={classes.callToAction}>
+              <Button
+                variant="contained"
+                disableElevation
+                className={classes.callToAction}
+              >
                 <Link href="/posts">
                   <a className={classes.link}>{BTN_VIEW_ALL}</a>
                 </Link>
@@ -88,10 +94,10 @@ const getCourses = async () => {
   let courses = [];
   try {
     const fetch = new FetchBuilder()
-        .setUrl(`${BACKEND}/graph`)
-        .setPayload(generateQuery())
-        .setIsGraphQLEndpoint(true)
-        .build();
+      .setUrl(`${BACKEND}/graph`)
+      .setPayload(generateQuery())
+      .setIsGraphQLEndpoint(true)
+      .build();
     const response = await fetch.exec();
     courses = response.courses;
   } catch (e) {}
@@ -100,12 +106,12 @@ const getCourses = async () => {
 
 export async function getServerSideProps() {
   const courses = await getCourses();
-  return { props: { courses } }
+  return { props: { courses } };
 }
 
 Index.propTypes = {
   courses: PropTypes.arrayOf(publicCourse),
-  siteinfo: siteInfoProps
+  siteinfo: siteInfoProps,
 };
 
 const mapStateToProps = (state) => ({

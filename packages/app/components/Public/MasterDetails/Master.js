@@ -33,8 +33,8 @@ const Master = (props) => {
 
   return (
     <GridList cols={3}>
-      {Object.keys(componentsMap).map((name) => 
-        componentsMap[name]['component'] ? (
+      {Object.keys(componentsMap).map((name) =>
+        componentsMap[name].component ? (
           <GridListTile key={name} onClick={() => onWidgetSelect(name)}>
             <Card>
               <div className={classes.widgetCard}>
