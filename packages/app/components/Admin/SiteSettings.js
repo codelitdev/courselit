@@ -36,8 +36,6 @@ import {
   SITE_SETTINGS_SUBTITLE,
   SITE_SETTINGS_CURRENCY_UNIT,
   SITE_SETTINGS_LOGO,
-  SITE_SETTINGS_COPYRIGHT_TEXT,
-  SITE_SETTINGS_ABOUT_TEXT,
   SITE_SETTINGS_PAGE_HEADING,
   SITE_SETTINGS_CURRENCY_ISO_CODE_TEXT,
   SITE_ADMIN_SETTINGS_STRIPE_SECRET,
@@ -73,9 +71,7 @@ const SiteSettings = (props) => {
     subtitle: "",
     logopath: "",
     currencyUnit: "",
-    copyrightText: "",
     currencyISOCode: "",
-    about: "",
     paymentMethod: "",
     stripePublishableKey: "",
     themePrimaryColor: "",
@@ -107,9 +103,7 @@ const SiteSettings = (props) => {
         subtitle,
         logopath,
         currencyUnit,
-        copyrightText,
         currencyISOCode,
-        about,
         paymentMethod,
         stripePublishableKey,
         themePrimaryColor,
@@ -158,9 +152,7 @@ const SiteSettings = (props) => {
         subtitle,
         logopath,
         currencyUnit,
-        copyrightText,
         currencyISOCode,
-        about,
         paymentMethod,
         stripePublishableKey,
         themePrimaryColor,
@@ -183,9 +175,7 @@ const SiteSettings = (props) => {
             subtitle: settings.subtitle,
             logopath: settings.logopath,
             currencyUnit: settings.currencyUnit,
-            copyrightText: settings.copyrightText,
             currencyISOCode: settings.currencyISOCode,
-            about: settings.about,
             paymentMethod: settings.paymentMethod,
             stripePublishableKey: settings.stripePublishableKey,
             themePrimaryColor: settings.themePrimaryColor,
@@ -294,6 +284,11 @@ const SiteSettings = (props) => {
                 <Typography variant="h6">
                   {SITE_SETTINGS_SECTION_GENERAL}
                 </Typography>
+                <MediaSelector
+                  title={SITE_SETTINGS_LOGO}
+                  src={newSettings.logopath || props.siteinfo.logopath}
+                  onSelection={onChangeData}
+                />
                 <TextField
                   variant="outlined"
                   label={SITE_SETTINGS_TITLE}
@@ -313,29 +308,6 @@ const SiteSettings = (props) => {
                   value={newSettings.subtitle || ""}
                   onChange={onChangeData}
                   required
-                />
-                <TextField
-                  variant="outlined"
-                  label={SITE_SETTINGS_COPYRIGHT_TEXT}
-                  fullWidth
-                  margin="normal"
-                  name="copyrightText"
-                  value={newSettings.copyrightText || ""}
-                  onChange={onChangeData}
-                />
-                <TextField
-                  variant="outlined"
-                  label={SITE_SETTINGS_ABOUT_TEXT}
-                  fullWidth
-                  margin="normal"
-                  name="about"
-                  value={newSettings.about || ""}
-                  onChange={onChangeData}
-                />
-                <MediaSelector
-                  title={SITE_SETTINGS_LOGO}
-                  src={newSettings.logopath || props.siteinfo.logopath}
-                  onSelection={onChangeData}
                 />
               </div>
               <div className={classes.section}>

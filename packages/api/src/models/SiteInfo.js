@@ -11,8 +11,6 @@ const SiteInfoSchema = new mongoose.Schema({
   logopath: { type: String },
   currencyUnit: { type: String },
   currencyISOCode: { type: String, maxlength: 3 },
-  copyrightText: { type: String },
-  about: { type: String },
   paymentMethod: { type: String },
   stripePublishableKey: { type: String },
   themePrimaryColor: { type: String },

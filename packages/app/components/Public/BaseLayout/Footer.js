@@ -3,7 +3,6 @@ import { connect } from "react-redux";
 import { siteInfoProps } from "../../../types.js";
 import { Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
-import { GENERIC_COPYRIGHT_TEXT } from "../../../config/strings.js";
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -25,11 +24,6 @@ const Footer = (props) => {
       <Grid item>
         <Typography variant="h5">{props.siteInfo.title}</Typography>
         <Typography variant="subtitle2">{props.siteInfo.subtitle}</Typography>
-      </Grid>
-      <Grid item>
-        <Typography variant="body2">
-          {props.siteInfo.copyrightText || GENERIC_COPYRIGHT_TEXT}
-        </Typography>
       </Grid>
     </Grid>
   );

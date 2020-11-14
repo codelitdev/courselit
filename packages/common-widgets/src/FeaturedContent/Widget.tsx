@@ -5,6 +5,7 @@ import { makeStyles } from "@material-ui/styles";
 import { connect } from "react-redux";
 import { WidgetProps } from "@courselit/components-library";
 import Link from "next/link";
+import { getWidgetSettings } from "../utils/settings";
 
 interface UseStylesProps {
   backgroundColor: string;
@@ -81,25 +82,12 @@ const Widget = (props: FeaturedWidgetProps) => {
   };
 
   const getSettings = async () => {
-    const query = `
-    query {
-      settings: getWidgetSettings(name: "${name}") {
-        settings
-      }
-    }
-    `;
-
-    const fetch = fetchBuilder.setPayload(query).build();
-    try {
-      dispatch({ type: "NETWORK_ACTION", flag: true });
-      const response = await fetch.exec();
-      if (response.settings) {
-        setSettings(JSON.parse(response.settings.settings));
-      }
-    } catch (err) {
-    } finally {
-      dispatch({ type: "NETWORK_ACTION", flag: false });
-    }
+    const settings = await getWidgetSettings({
+      widgetName: name,
+      fetchBuilder,
+      dispatch,
+    });
+    setSettings(settings);
   };
 
   return posts.length > 0 ? (

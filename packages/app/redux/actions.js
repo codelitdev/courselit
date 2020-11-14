@@ -102,8 +102,6 @@ export function updateSiteInfo() {
           logopath,
           currencyUnit,
           currencyISOCode,
-          copyrightText,
-          about,
           paymentMethod,
           stripePublishableKey,
           themePrimaryColor,
