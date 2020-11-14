@@ -48,10 +48,6 @@ function siteinfoReducer(state = initialState.siteinfo, action) {
           currencyISOCode:
             action.siteinfo.currencyISOCode ||
             initialState.siteinfo.currencyISOCode,
-          copyrightText:
-            action.siteinfo.copyrightText ||
-            initialState.siteinfo.copyrightText,
-          about: action.siteinfo.about || initialState.siteinfo.about,
           paymentMethod:
             action.siteinfo.paymentMethod ||
             initialState.siteinfo.paymentMethod,

@@ -11,8 +11,6 @@ interface SiteInfo {
   logopath: string;
   currencyUnit: string;
   currencyISOCode: string;
-  copyrightText: string;
-  about: string;
   paymentMethod: string;
   stripePublishableKey: string;
   themePrimaryColor: string;

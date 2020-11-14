@@ -16,7 +16,7 @@ const { capitalize } = require("../../lib/utils.js");
 exports.getSiteInfo = async () => {
   const siteinfo = await SiteInfo.find(
     {},
-    "title subtitle logopath currencyUnit currencyISOCode copyrightText about paymentMethod stripePublishableKey themePrimaryColor themeSecondaryColor codeInjectionHead"
+    "title subtitle logopath currencyUnit currencyISOCode paymentMethod stripePublishableKey themePrimaryColor themeSecondaryColor codeInjectionHead"
   );
 
   return siteinfo[0];

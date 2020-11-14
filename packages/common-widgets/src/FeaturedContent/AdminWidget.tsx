@@ -2,13 +2,15 @@ import * as React from "react";
 import { WidgetProps } from "@courselit/components-library";
 import { connect } from "react-redux";
 import { Button, Grid, TextField, Typography } from "@material-ui/core";
+import { getWidgetSettings, saveWidgetSettings } from "../utils/settings";
 
 export interface AdminWidgetProps extends WidgetProps {
   auth: any;
+  dispatch: any;
 }
 
 const AdminWidget = (props: AdminWidgetProps) => {
-  const { name, fetchBuilder, auth } = props;
+  const { name, fetchBuilder, auth, dispatch } = props;
   const [settings, setSettings] = React.useState<any>({});
   const [newSettings, setNewSettings] = React.useState<any>({});
 
@@ -17,53 +19,29 @@ const AdminWidget = (props: AdminWidgetProps) => {
   }, [name]);
 
   const getSettings = async () => {
-    const query = `
-        query {
-            settings: getWidgetSettings(name: "${name}") {
-                settings
-            }
-        }
-        `;
-
-    const fetch = fetchBuilder.setPayload(query).build();
-    try {
-      const response = await fetch.exec();
-      if (response.settings) {
-        onNewSettingsReceived(response.settings.settings);
-      }
-    } catch (err) {}
+    const settings = await getWidgetSettings({
+      widgetName: name,
+      fetchBuilder,
+      dispatch,
+    });
+    onNewSettingsReceived(settings);
   };
 
   const onNewSettingsReceived = (settings: any) => {
-    const parsedSettings = JSON.parse(settings);
-    setSettings(parsedSettings);
-    setNewSettings(parsedSettings);
+    setSettings(settings);
+    setNewSettings(settings);
   };
 
-  const saveWidgetSettings = async (event: any) => {
+  const saveSettings = async (event: any) => {
     event.preventDefault();
-
-    const mutation = `
-        mutation {
-          settings: saveWidgetSettings(widgetSettingsData: {
-            name: "${name}",
-            settings: "${JSON.stringify(newSettings).replace(/"/g, '\\"')}"
-          }) {
-            settings
-          }
-        }
-        `;
-
-    const fetch = fetchBuilder
-      .setPayload(mutation)
-      .setAuthToken(auth.token)
-      .build();
-    try {
-      const response = await fetch.exec();
-      if (response.settings) {
-        onNewSettingsReceived(response.settings.settings);
-      }
-    } catch (err) {}
+    const result = await saveWidgetSettings({
+      widgetName: name,
+      newSettings,
+      fetchBuilder,
+      auth,
+      dispatch,
+    });
+    onNewSettingsReceived(result);
   };
 
   const onChangeData = (e: any) => {
@@ -86,7 +64,7 @@ const AdminWidget = (props: AdminWidgetProps) => {
         </Typography>
       </Grid>
       <Grid item>
-        <form onSubmit={saveWidgetSettings}>
+        <form onSubmit={saveSettings}>
           <TextField
             variant="outlined"
             label="Section Title"
@@ -134,4 +112,8 @@ const mapStateToProps = (state: any) => ({
   auth: state.auth,
 });
 
-export default connect(mapStateToProps)(AdminWidget);
+const mapDispatchToProps = (dispatch: any) => ({
+  dispatch: dispatch,
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(AdminWidget);
