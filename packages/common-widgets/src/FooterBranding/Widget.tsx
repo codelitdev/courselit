@@ -1,11 +1,11 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import { WidgetProps, AppState } from "@courselit/components-library";
-import { Grid, Typography } from "@material-ui/core";
+import { Grid, Theme, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 
 const useStyles = (sectionName: string) =>
-  makeStyles((theme: any) => ({
+  makeStyles((theme: Theme) => ({
     container: {
       padding: theme.spacing(2),
       textAlign: sectionName === "footerRight" ? "end" : "start",

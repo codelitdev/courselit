@@ -1,8 +1,7 @@
 import * as React from "react";
-import { WidgetProps } from "@courselit/components-library";
+import { WidgetProps, WidgetHelpers } from "@courselit/components-library";
 import { connect } from "react-redux";
 import { Button, Grid, TextField, Typography } from "@material-ui/core";
-import { getWidgetSettings, saveWidgetSettings } from "../utils/settings";
 
 export interface AdminWidgetProps extends WidgetProps {
   auth: any;
@@ -19,7 +18,7 @@ const AdminWidget = (props: AdminWidgetProps) => {
   }, [name]);
 
   const getSettings = async () => {
-    const settings = await getWidgetSettings({
+    const settings = await WidgetHelpers.getWidgetSettings({
       widgetName: name,
       fetchBuilder,
       dispatch,
@@ -34,7 +33,7 @@ const AdminWidget = (props: AdminWidgetProps) => {
 
   const saveSettings = async (event: any) => {
     event.preventDefault();
-    const result = await saveWidgetSettings({
+    const result = await WidgetHelpers.saveWidgetSettings({
       widgetName: name,
       newSettings,
       fetchBuilder,

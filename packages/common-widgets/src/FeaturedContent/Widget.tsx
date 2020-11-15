@@ -1,18 +1,17 @@
 import * as React from "react";
-import { Grid, Typography, Button } from "@material-ui/core";
+import { Grid, Typography, Button, Theme } from "@material-ui/core";
 import Item from "./Item";
 import { makeStyles } from "@material-ui/styles";
 import { connect } from "react-redux";
-import { WidgetProps } from "@courselit/components-library";
+import { WidgetProps, WidgetHelpers } from "@courselit/components-library";
 import Link from "next/link";
-import { getWidgetSettings } from "../utils/settings";
 
 interface UseStylesProps {
   backgroundColor: string;
 }
 
 const useStyles = ({ backgroundColor }: UseStylesProps) =>
-  makeStyles((theme: any) => ({
+  makeStyles((theme: Theme) => ({
     content: {
       padding: theme.spacing(2),
       paddingTop: theme.spacing(2),
@@ -82,7 +81,7 @@ const Widget = (props: FeaturedWidgetProps) => {
   };
 
   const getSettings = async () => {
-    const settings = await getWidgetSettings({
+    const settings = await WidgetHelpers.getWidgetSettings({
       widgetName: name,
       fetchBuilder,
       dispatch,

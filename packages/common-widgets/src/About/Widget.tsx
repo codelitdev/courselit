@@ -1,30 +1,60 @@
 import * as React from "react";
-import { WidgetProps } from "@courselit/components-library";
+import { WidgetProps, WidgetHelpers } from "@courselit/components-library";
 import { connect } from "react-redux";
-import { getWidgetSettings } from "../utils/settings";
+import Settings from "./Settings";
+import TextEditor from "@courselit/rich-text";
+import { makeStyles } from "@material-ui/styles";
+import { Grid, Theme } from "@material-ui/core";
+
+const useStyles = makeStyles((theme: Theme) => ({
+  container: {
+    padding: theme.spacing(2),
+  },
+}));
 
 export interface AboutWidgetProps extends WidgetProps {
-    dispatch: any;
+  dispatch: any;
 }
 
 const Widget = (props: AboutWidgetProps) => {
-    const { fetchBuilder, dispatch, name } = props;
-    const [settings, setSettings] = React.useState<any>({});
+  const { fetchBuilder, dispatch, name } = props;
+  const [settings, setSettings] = React.useState<Settings>({
+    text: TextEditor.emptyState(),
+  });
+  const classes = useStyles();
 
-    React.useEffect(() => {
-        getSettings();
+  React.useEffect(() => {
+    getSettings();
+  }, []);
+
+  const getSettings = async () => {
+    const settings: any = await WidgetHelpers.getWidgetSettings({
+      widgetName: name,
+      fetchBuilder,
+      dispatch,
     });
 
-    const getSettings = async () => {
-        const settings = await getWidgetSettings({
-            widgetName: name,
-            fetchBuilder,
-            dispatch,
-        });
-        setSettings(settings);
-    };
+    if (settings) {
+      hydrateAndSetSettings(settings);
+    }
+  };
 
-  return <div>About</div>;
+  const hydrateAndSetSettings = (settings: Settings) => {
+    const hydratedText = settings.text
+      ? TextEditor.hydrate(settings.text)
+      : TextEditor.emptyState();
+    setSettings(
+      Object.assign({}, settings, {
+        text: hydratedText,
+      })
+    );
+  };
+
+  return (
+    <Grid item xs className={classes.container}>
+      <TextEditor initialContentState={settings.text} readOnly={true} />
+    </Grid>
+  );
 };
 
 const mapDispatchToProps = (dispatch: any) => ({
