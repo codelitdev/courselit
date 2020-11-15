@@ -1,6 +1,6 @@
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
-import Items from "../components/Public/Items/List.js";
+import Items from "../components/Public/Items/index.js";
 import BaseLayout from "../components/Public/BaseLayout";
 import { publicCourse, siteInfoProps } from "../types.js";
 import {
@@ -60,29 +60,37 @@ const Index = (props) => {
     <BaseLayout title={props.siteinfo.subtitle}>
       <Grid item xs={12} className={classes.content}>
         <Grid container component="section">
-          <Grid item container className={classes.header}>
-            <Grid item xs={12} className={classes.headerTop}>
-              <Typography variant="h4">{HEADER_BLOG_POSTS_SECTION}</Typography>
-            </Grid>
-            <Grid item xs={12}>
-              <Typography variant="body1" color="textSecondary">
-                {SUBHEADER_BLOG_POSTS_SECTION}
-              </Typography>
-            </Grid>
-          </Grid>
-          <Items generateQuery={generateQuery} initialItems={props.courses} />
           {props.courses.length > 0 && (
-            <Grid item xs={12}>
-              <Button
-                variant="contained"
-                disableElevation
-                className={classes.callToAction}
-              >
-                <Link href="/posts">
-                  <a className={classes.link}>{BTN_VIEW_ALL}</a>
-                </Link>
-              </Button>
-            </Grid>
+            <>
+              <Grid item container className={classes.header}>
+                <Grid item xs={12} className={classes.headerTop}>
+                  <Typography variant="h4">
+                    {HEADER_BLOG_POSTS_SECTION}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12}>
+                  <Typography variant="body1" color="textSecondary">
+                    {SUBHEADER_BLOG_POSTS_SECTION}
+                  </Typography>
+                </Grid>
+              </Grid>
+              <Items
+                generateQuery={generateQuery}
+                initialItems={props.courses}
+                posts={true}
+              />
+              <Grid item xs={12}>
+                <Button
+                  variant="contained"
+                  disableElevation
+                  className={classes.callToAction}
+                >
+                  <Link href="/posts">
+                    <a className={classes.link}>{BTN_VIEW_ALL}</a>
+                  </Link>
+                </Button>
+              </Grid>
+            </>
           )}
         </Grid>
       </Grid>

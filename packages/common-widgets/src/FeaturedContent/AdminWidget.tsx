@@ -2,6 +2,7 @@ import * as React from "react";
 import { WidgetProps, WidgetHelpers } from "@courselit/components-library";
 import { connect } from "react-redux";
 import { Button, Grid, TextField, Typography } from "@material-ui/core";
+import Settings from "./Settings";
 
 export interface AdminWidgetProps extends WidgetProps {
   auth: any;
@@ -10,8 +11,11 @@ export interface AdminWidgetProps extends WidgetProps {
 
 const AdminWidget = (props: AdminWidgetProps) => {
   const { name, fetchBuilder, auth, dispatch } = props;
-  const [settings, setSettings] = React.useState<any>({});
-  const [newSettings, setNewSettings] = React.useState<any>({});
+  const [settings, setSettings] = React.useState<Settings>({
+    title: "",
+    subtitle: "",
+  });
+  const [newSettings, setNewSettings] = React.useState<Settings>(settings);
 
   React.useEffect(() => {
     getSettings();
@@ -23,7 +27,10 @@ const AdminWidget = (props: AdminWidgetProps) => {
       fetchBuilder,
       dispatch,
     });
-    onNewSettingsReceived(settings);
+
+    if (settings) {
+      onNewSettingsReceived(settings);
+    }
   };
 
   const onNewSettingsReceived = (settings: any) => {

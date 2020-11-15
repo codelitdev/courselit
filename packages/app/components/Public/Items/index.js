@@ -6,8 +6,9 @@ import FetchBuilder from "../../../lib/fetch";
 import { BACKEND } from "../../../config/constants";
 import { Grid, Button } from "@material-ui/core";
 import { BTN_LOAD_MORE } from "../../../config/strings";
-import ListItem from "./ListItem";
+import Post from "./Post";
 import { publicCourse } from "../../../types";
+import Course from "./Course";
 
 const List = (props) => {
   const [courses, setCourses] = useState(props.initialItems || []);
@@ -18,6 +19,7 @@ const List = (props) => {
       : false
   );
   const { generateQuery } = props;
+  const posts = typeof props.posts === "boolean" ? props.posts : false;
 
   useEffect(() => {
     getPosts();
@@ -47,9 +49,9 @@ const List = (props) => {
   return courses.length > 0 ? (
     <>
       <Grid item container xs={12} justify="space-between">
-        {courses.map((x, index) => (
-          <ListItem key={index} {...x} />
-        ))}
+        {courses.map((x, index) =>
+          posts ? <Post key={index} {...x} /> : <Course key={index} {...x} />
+        )}
       </Grid>
       {shouldShowLoadMoreButton && courses.length > 0 && (
         <Grid item xs={12}>
@@ -67,12 +69,11 @@ List.propTypes = {
   initialItems: PropTypes.arrayOf(publicCourse),
   showLoadMoreButton: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
+  posts: PropTypes.bool,
 };
-
-// const mapStateToProps = () => ({});
 
 const mapDispatchToProps = (dispatch) => ({
   dispatch: dispatch,
 });
 
-export default connect(null, mapDispatchToProps)(List);
+export default connect(() => ({}), mapDispatchToProps)(List);

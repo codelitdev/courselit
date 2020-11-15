@@ -27,14 +27,13 @@ const AdminWidget = (props: AboutWidgetProps) => {
       fetchBuilder,
       dispatch,
     });
-    onNewSettingsReceived(settings);
+
+    if (settings) {
+      onNewSettingsReceived(settings);
+    }
   };
 
   const onNewSettingsReceived = (settings: any) => {
-    if (!settings) {
-      return;
-    }
-
     const newSettings = Object.assign({}, settings, {
       text: settings.text
         ? TextEditor.hydrate(settings.text)
@@ -64,7 +63,6 @@ const AdminWidget = (props: AboutWidgetProps) => {
   };
 
   const onChangeData = (editorState: any) => {
-    console.log(`onChangeData`, editorState);
     setNewSettings(
       Object.assign({}, newSettings, {
         text: editorState,

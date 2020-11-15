@@ -58,7 +58,7 @@ const Widget = (props) => {
 
 Widget.propTypes = {
   name: PropTypes.string.isRequired,
-  fetchBuilder: PropTypes.object.isRequired
+  fetchBuilder: PropTypes.object.isRequired,
 };
 
 const mapStateToProps = (state) => ({
