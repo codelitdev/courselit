@@ -11,7 +11,7 @@ exports.getWidgetSettings = async (name, ctx) => {
   const widget = await Widget.findOne({ name });
 
   if (!widget) {
-    return {}
+    return {};
   }
 
   return {
@@ -27,7 +27,7 @@ exports.getWidgetData = async (name, ctx) => {
   const widget = await Widget.findOne({ name });
 
   if (!widget) {
-    return {}
+    return {};
   }
 
   return {

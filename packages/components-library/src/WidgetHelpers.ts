@@ -1,4 +1,4 @@
-import { FetchBuilder } from "@courselit/components-library";
+import { FetchBuilder } from "./Widget";
 
 interface Auth {
   token: string;
@@ -86,4 +86,4 @@ const saveWidgetSettings = async ({
   return result;
 };
 
-export { getWidgetSettings, saveWidgetSettings };
+export default { getWidgetSettings, saveWidgetSettings };
