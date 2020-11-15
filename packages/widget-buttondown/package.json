@@ -28,7 +28,8 @@
   },
   "scripts": {
     "test": "echo \"Error: run tests from root\" && exit 1",
-    "build": "webpack"
+    "build": "webpack",
+    "prepublishOnly": "yarn run build"
   },
   "bugs": {
     "url": "https://github.com/recurzery/courselit/issues"
