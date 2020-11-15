@@ -38,7 +38,7 @@ module.exports = {
     },
     resolve: (root, { offset }, context) => logic.getPosts(offset),
   },
-  getPublicCourses: {
+  getCourses: {
     type: new graphql.GraphQLList(types.publicCoursesType),
     args: {
       offset: {
@@ -49,7 +49,7 @@ module.exports = {
       },
     },
     resolve: (root, { offset, onlyShowFeatured }, context) =>
-      logic.getPublicCourses(offset, onlyShowFeatured),
+      logic.getCourses(offset, onlyShowFeatured),
   },
   getEnrolledCourses: {
     type: new graphql.GraphQLList(types.myCoursesItemType),
