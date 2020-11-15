@@ -5,7 +5,7 @@ import { makeStyles } from "@material-ui/styles";
 
 const useStyles = makeStyles((theme) => ({
   container: {
-    margin: theme.spacing(2),
+    padding: theme.spacing(2),
   },
   iframe: {
     width: "100%",
@@ -58,8 +58,7 @@ const Widget = (props) => {
 
 Widget.propTypes = {
   name: PropTypes.string.isRequired,
-  fetchBuilder: PropTypes.object.isRequired,
-  theme: PropTypes.object.isRequired,
+  fetchBuilder: PropTypes.object.isRequired
 };
 
 const mapStateToProps = (state) => ({

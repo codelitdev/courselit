@@ -24,7 +24,7 @@ const AdminWidget = (props) => {
     const fetch = fetchBuilder.setPayload(query).build();
     try {
       const response = await fetch.exec();
-      if (response.settings) {
+      if (response.settings.settings) {
         onNewSettingsReceived(response.settings.settings);
       }
     } catch (err) {}
