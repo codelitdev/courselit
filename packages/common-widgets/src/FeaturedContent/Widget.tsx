@@ -5,12 +5,9 @@ import { makeStyles } from "@material-ui/styles";
 import { connect } from "react-redux";
 import { WidgetProps, WidgetHelpers } from "@courselit/components-library";
 import Link from "next/link";
+import Settings from "./Settings";
 
-interface UseStylesProps {
-  backgroundColor: string;
-}
-
-const useStyles = ({ backgroundColor }: UseStylesProps) =>
+const useStyles = ({ backgroundColor }: Settings) =>
   makeStyles((theme: Theme) => ({
     content: {
       padding: theme.spacing(2),
@@ -45,7 +42,10 @@ const Widget = (props: FeaturedWidgetProps) => {
   const [posts, setPosts] = React.useState([]);
   const [postsOffset, setPostsOffset] = React.useState(1);
   const BTN_LOAD_MORE = "View all";
-  const [settings, setSettings] = React.useState<any>({});
+  const [settings, setSettings] = React.useState<Settings>({
+    title: "",
+    subtitle: "",
+  });
   const classes = useStyles(settings)();
 
   React.useEffect(() => {
@@ -56,7 +56,7 @@ const Widget = (props: FeaturedWidgetProps) => {
   const getPosts = async () => {
     const query = `
     query {
-      courses: getPublicCourses(offset: 1, onlyShowFeatured: true) {
+      courses: getCourses(offset: 1, onlyShowFeatured: true) {
         id,
         title,
         cost,
@@ -81,7 +81,7 @@ const Widget = (props: FeaturedWidgetProps) => {
   };
 
   const getSettings = async () => {
-    const settings = await WidgetHelpers.getWidgetSettings({
+    const settings: any = await WidgetHelpers.getWidgetSettings({
       widgetName: name,
       fetchBuilder,
       dispatch,

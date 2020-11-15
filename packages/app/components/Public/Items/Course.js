@@ -3,18 +3,16 @@ import PropTypes from "prop-types";
 import Link from "next/link";
 import {
   MEDIA_BACKEND,
-  URL_EXTENTION_POSTS,
+  URL_EXTENTION_COURSES,
 } from "../../../config/constants.js";
 import { Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import { formulateMediaUrl } from "../../../lib/utils.js";
-import { Card } from "@courselit/components-library";
+import { PriceTag, Card } from "@courselit/components-library";
+import { FREE_COST } from "../../../config/strings.js";
 
 const useStyles = (featuredImage) =>
   makeStyles((theme) => ({
-    container: {
-      overflow: "hidden",
-    },
     link: {
       textDecoration: "none",
       color: "inherit",
@@ -36,34 +34,36 @@ const useStyles = (featuredImage) =>
     },
   }));
 
-const ListItem = (props) => {
+const Course = (props) => {
   const classes = useStyles(props.featuredImage)();
 
   return (
     <Grid item xs={12} md={6}>
       <Link
-        href={`/${URL_EXTENTION_POSTS}/[id]/[slug]`}
-        as={`/${URL_EXTENTION_POSTS}/${props.courseId}/${props.slug}`}
+        href={`/${URL_EXTENTION_COURSES}/[id]/[slug]`}
+        as={`/${URL_EXTENTION_COURSES}/${props.courseId}/${props.slug}`}
       >
         <a className={classes.link}>
           <Card>
-            <Grid
-              item
-              container
-              direction="column"
-              component="article"
-              className={classes.container}
-            >
+            <Grid item container direction="column" component="article">
               {props.featuredImage && (
                 <Grid item className={classes.featuredImage} />
               )}
-              <Grid item className={classes.title}>
-                <Typography variant="h5">{props.title}</Typography>
-              </Grid>
-              <Grid item>
-                <Typography variant="body1" color="textSecondary">
-                  {props.description}
-                </Typography>
+              <Grid
+                item
+                container
+                className={classes.title}
+                justify="space-between"
+                alignItems="center"
+              >
+                <Grid item>
+                  <Typography variant="h5">{props.title}</Typography>
+                </Grid>
+                <Grid item>
+                  <Typography variant="h6">
+                    <PriceTag cost={props.cost} freeCostCaption={FREE_COST} />
+                  </Typography>
+                </Grid>
               </Grid>
             </Grid>
           </Card>
@@ -73,7 +73,7 @@ const ListItem = (props) => {
   );
 };
 
-ListItem.propTypes = {
+Course.propTypes = {
   id: PropTypes.string.isRequired,
   title: PropTypes.string.isRequired,
   description: PropTypes.string.isRequired,
@@ -81,7 +81,8 @@ ListItem.propTypes = {
   creatorName: PropTypes.string.isRequired,
   slug: PropTypes.string.isRequired,
   featuredImage: PropTypes.string,
+  cost: PropTypes.number.isRequired,
   courseId: PropTypes.number.isRequired,
 };
 
-export default ListItem;
+export default Course;

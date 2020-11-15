@@ -1,85 +1,94 @@
-// import { useState } from "react";
-// import PropTypes from "prop-types";
-// import { publicCourse } from "../types.js";
-// import { queryGraphQL } from "../lib/utils.js";
-// import { BACKEND } from "../config/constants.js";
-import { PAGE_HEADER_ALL_COURSES } from "../config/strings.js";
-// import { makeStyles } from "@material-ui/styles";
+import PropTypes from "prop-types";
+import {
+  HEADER_COURSES_SECTION,
+  PAGE_HEADER_ALL_COURSES,
+} from "../config/strings.js";
 import BaseLayout from "../components/Public/BaseLayout";
-import Posts from "../components/Public/Courses/List.js";
+import Items from "../components/Public/Items/index.js";
+import { publicCourse } from "../types.js";
+import { Grid, Typography } from "@material-ui/core";
+import { makeStyles } from "@material-ui/styles";
+import FetchBuilder from "../lib/fetch.js";
+import { BACKEND } from "../config/constants.js";
 
-// const useStyles = makeStyles(theme => ({
-//   header: {
-//     marginTop: theme.spacing(2),
-//     marginBottom: theme.spacing(2),
-//     [theme.breakpoints.up("sm")]: {
-//       marginTop: theme.spacing(4)
-//     }
-//   },
-//   loadMoreBtn: {
-//     marginBottom: theme.spacing(4)
-//   }
-// }));
+const useStyles = makeStyles((theme) => ({
+  content: {
+    padding: theme.spacing(2),
+    paddingTop: theme.spacing(8),
+  },
+  header: {
+    marginLeft: theme.spacing(2),
+  },
+  headerTop: {
+    marginBottom: theme.spacing(2),
+  },
+}));
+
+const generateQuery = (pageOffset = 1) => `
+  query {
+    courses: getCourses(offset: ${pageOffset}) {
+      id
+      title,
+      description,
+      featuredImage,
+      updated,
+      creatorName,
+      cost,
+      slug,
+      isFeatured,
+      courseId
+    }
+  }
+`;
 
 const Courses = (props) => {
-  // const [courses, setCourses] = useState(props.courses);
-  // const [hasMorePages, setHasMorePages] = useState(true);
-  // const classes = useStyles();
-
-  // const getMoreCourses = async () => {
-  //   if (hasMorePages) {
-  //     pageOffset += 1;
-  //     const moreCourses = await getCourses();
-  //     if (moreCourses.length > 0) {
-  //       setCourses([...courses, ...moreCourses]);
-  //     } else {
-  //       setHasMorePages(false);
-  //     }
-  //   }
-  // };
+  const classes = useStyles();
 
   return (
     <BaseLayout title={PAGE_HEADER_ALL_COURSES}>
-      <Posts showLoadMoreButton={true} />
+      <Grid item xs={12} className={classes.content}>
+        <Grid container component="section">
+          <Grid item container className={classes.header}>
+            <Grid item xs={12} className={classes.headerTop}>
+              <Typography variant="h4">{HEADER_COURSES_SECTION}</Typography>
+            </Grid>
+            {/* <Grid item xs={12}>
+              <Typography variant="body1" color="textSecondary">{SUBHEADER_BLOG_POSTS_SECTION}</Typography>
+            </Grid> */}
+          </Grid>
+          <Items
+            showLoadMoreButton={true}
+            generateQuery={generateQuery}
+            initialItems={props.courses}
+          />
+        </Grid>
+      </Grid>
     </BaseLayout>
   );
 };
 
-// let pageOffset = 1;
-// const getQuery = () => `
-//   query {
-//     courses: getPublicCourses(offset: ${pageOffset}) {
-//       id
-//       title,
-//       description,
-//       featuredImage,
-//       updated,
-//       creatorName,
-//       cost,
-//       slug,
-//       isFeatured
-//     }
-//   }
-// `;
+const getCourses = async () => {
+  let courses = [];
+  const query = generateQuery();
+  try {
+    const fetch = new FetchBuilder()
+      .setUrl(`${BACKEND}/graph`)
+      .setPayload(query)
+      .setIsGraphQLEndpoint(true)
+      .build();
+    const response = await fetch.exec();
+    courses = response.courses;
+  } catch (e) {}
+  return courses;
+};
 
-// const getCourses = async () => {
-//   let courses = [];
-//   try {
-//     const response = await queryGraphQL(`${BACKEND}/graph`, getQuery());
-//     courses = response.courses;
-//   } catch (e) {
-//     // do nothing
-//   }
-//   return courses;
-// };
+export async function getServerSideProps() {
+  const courses = await getCourses();
+  return { props: { courses } };
+}
 
-// Courses.getInitialProps = async props => {
-//   const courses = await getCourses();
-//   return { courses };
-// };
-
-// Courses.propTypes = {
-//   courses: PropTypes.arrayOf(publicCourse)
-// };
+Courses.propTypes = {
+  courses: PropTypes.arrayOf(publicCourse),
+};
 
 export default Courses;

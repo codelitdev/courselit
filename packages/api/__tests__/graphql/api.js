@@ -1242,7 +1242,7 @@ describe("GraphQL API tests", () => {
       const userId = mongoose.Types.ObjectId("000000000000000000000000");
       const query = `
       query y {
-        courses: getPublicCourses(offset: 1) {
+        courses: getCourses(offset: 1) {
           title,
           id
         }
@@ -1261,7 +1261,7 @@ describe("GraphQL API tests", () => {
       const userId = mongoose.Types.ObjectId("000000000000000000000000");
       const query = `
       query y {
-        courses: getPublicCourses(offset: 1, onlyShowFeatured: true) {
+        courses: getCourses(offset: 1, onlyShowFeatured: true) {
           title,
           id
         }

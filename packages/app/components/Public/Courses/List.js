@@ -41,7 +41,7 @@ const List = (props) => {
   const getPosts = async () => {
     const query = `
     query {
-      courses: getPublicCourses(offset: ${postsOffset}) {
+      courses: getCourses(offset: ${postsOffset}) {
         id
         title,
         description,

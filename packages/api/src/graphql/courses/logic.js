@@ -191,7 +191,7 @@ exports.getPosts = async (offset) => {
   }));
 };
 
-exports.getPublicCourses = async (offset, onlyShowFeatured = false) => {
+exports.getCourses = async (offset, onlyShowFeatured = false) => {
   const query = {
     isBlog: false,
     published: true,
