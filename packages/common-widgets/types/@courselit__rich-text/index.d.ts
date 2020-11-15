@@ -1,1 +1,1 @@
-declare module '@courselit/rich-text';
+declare module "@courselit/rich-text";

@@ -1,61 +1,76 @@
 import * as React from "react";
-import { WidgetProps } from "@courselit/components-library";
+import { WidgetProps, WidgetHelpers } from "@courselit/components-library";
 import { connect } from "react-redux";
-import { getWidgetSettings, saveWidgetSettings } from "../utils/settings";
 import { Button, Grid, Typography } from "@material-ui/core";
 import TextEditor from "@courselit/rich-text";
+import Settings from "./Settings";
 
 export interface AboutWidgetProps extends WidgetProps {
   auth: any;
-    dispatch: any;
+  dispatch: any;
 }
 
 const AdminWidget = (props: AboutWidgetProps) => {
-    const { fetchBuilder, dispatch, name, auth } = props;
-    const [settings, setSettings] = React.useState<any>({});
-  const [newSettings, setNewSettings] = React.useState<any>({});
+  const { fetchBuilder, dispatch, name, auth } = props;
+  const [settings, setSettings] = React.useState<Settings>({
+    text: TextEditor.emptyState(),
+  });
+  const [newSettings, setNewSettings] = React.useState<Settings>(settings);
 
-    React.useEffect(() => {
-        getSettings();
+  React.useEffect(() => {
+    getSettings();
+  }, []);
+
+  const getSettings = async () => {
+    const settings = await WidgetHelpers.getWidgetSettings({
+      widgetName: name,
+      fetchBuilder,
+      dispatch,
     });
+    onNewSettingsReceived(settings);
+  };
 
-    const getSettings = async () => {
-        const settings = await getWidgetSettings({
-          widgetName: name,
-          fetchBuilder,
-          dispatch,
-        });
-        onNewSettingsReceived(settings);
-    };
+  const onNewSettingsReceived = (settings: any) => {
+    if (!settings) {
+      return;
+    }
 
-    const onNewSettingsReceived = (settings: any) => {
-      setSettings(settings);
-      setNewSettings(settings);
-    };
+    const newSettings = Object.assign({}, settings, {
+      text: settings.text
+        ? TextEditor.hydrate(settings.text)
+        : TextEditor.emptyState(),
+    });
+    setSettings(newSettings);
+    setNewSettings(newSettings);
+  };
 
-    const saveSettings = async (event: any) => {
-      event.preventDefault();
-      const result = await saveWidgetSettings({
-        widgetName: name,
-        newSettings,
-        fetchBuilder,
-        auth,
-        dispatch,
-      });
-      onNewSettingsReceived(result);
-    };
+  const saveSettings = async (event: any) => {
+    event.preventDefault();
 
-    const isDirty = (): boolean => {
-      return settings !== newSettings;
-    };
+    const result = await WidgetHelpers.saveWidgetSettings({
+      widgetName: name,
+      newSettings: Object.assign({}, newSettings, {
+        text: TextEditor.stringify(newSettings.text),
+      }),
+      fetchBuilder,
+      auth,
+      dispatch,
+    });
+    onNewSettingsReceived(result);
+  };
 
-    const onChangeData = (editorState: any) => {
-      setNewSettings(
-        Object.assign({}, newSettings, {
-          text: editorState,
-        })
-      );
-    };
+  const isDirty = (): boolean => {
+    return settings !== newSettings;
+  };
+
+  const onChangeData = (editorState: any) => {
+    console.log(`onChangeData`, editorState);
+    setNewSettings(
+      Object.assign({}, newSettings, {
+        text: editorState,
+      })
+    );
+  };
 
   return (
     <Grid container direction="column" spacing={2}>
@@ -67,7 +82,7 @@ const AdminWidget = (props: AboutWidgetProps) => {
       <Grid item>
         <form onSubmit={saveSettings}>
           <TextEditor
-            initialContentState={TextEditor.emptyState()}
+            initialContentState={settings.text}
             onChange={onChangeData}
           />
           <Button

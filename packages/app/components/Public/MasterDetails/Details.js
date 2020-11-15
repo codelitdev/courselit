@@ -18,9 +18,9 @@ const Details = (props) => {
 Details.propTypes = {
   name: PropTypes.string.isRequired,
   component: PropTypes.shape({
-    icon: PropTypes.string.isRequired,
     caption: PropTypes.string.isRequired,
     component: PropTypes.object.isRequired,
+    icon: PropTypes.string,
   }),
 };
 
