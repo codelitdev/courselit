@@ -14,9 +14,7 @@ const {
 const {
   closed,
   open,
-  mycoursesLimit,
-  postsPerPageLimit,
-  coursesPerPageLimit,
+  itemsPerPage,
   blogPostSnippetLength,
 } = require("../../config/constants.js");
 
@@ -155,8 +153,8 @@ exports.getCreatorCourses = async (id, offset, ctx) => {
 
   const courses = await Course.find({ creatorId: id })
     .sort({ updated: -1 })
-    .skip((offset - 1) * mycoursesLimit)
-    .limit(mycoursesLimit);
+    .skip((offset - 1) * itemsPerPage)
+    .limit(itemsPerPage);
 
   return courses;
 };
@@ -173,8 +171,8 @@ exports.getPosts = async (offset) => {
     "id title description creatorName updated slug featuredImage courseId"
   )
     .sort({ updated: -1 })
-    .skip((offset - 1) * postsPerPageLimit)
-    .limit(postsPerPageLimit);
+    .skip((offset - 1) * itemsPerPage)
+    .limit(itemsPerPage);
 
   return posts.map((x) => ({
     id: x.id,
@@ -205,11 +203,7 @@ exports.getCourses = async (offset, onlyShowFeatured = false) => {
     query,
     "id title featuredImage cost creatorName slug description updated isFeatured courseId"
   ).sort({ updated: -1 });
-  if (!onlyShowFeatured) {
-    dbQuery = dbQuery
-      .skip((offset - 1) * coursesPerPageLimit)
-      .limit(coursesPerPageLimit);
-  }
+  dbQuery = dbQuery.skip((offset - 1) * itemsPerPage).limit(itemsPerPage);
 
   return dbQuery;
 };

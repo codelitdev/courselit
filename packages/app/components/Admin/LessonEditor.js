@@ -13,6 +13,7 @@ import {
   FormControl,
   InputLabel,
   MenuItem,
+  capitalize,
 } from "@material-ui/core";
 import {
   BUTTON_SAVE,
@@ -38,7 +39,6 @@ import {
   LESSON_TYPE_PDF,
   LESSON_TYPE_QUIZ,
 } from "../../config/constants.js";
-import { capitalize } from "../../lib/utils";
 import { makeStyles } from "@material-ui/styles";
 import MediaSelector from "./Media/MediaSelector.js";
 import FetchBuilder from "../../lib/fetch";

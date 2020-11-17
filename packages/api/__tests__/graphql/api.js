@@ -474,9 +474,7 @@ describe("GraphQL API tests", () => {
       });
       expect(result).toHaveProperty("data");
       expect(result.data).toHaveProperty("users");
-      expect(result.data.users.length).toBeLessThan(
-        constants.siteUsersPerPage + 1
-      );
+      expect(result.data.users.length).toBeLessThan(constants.itemsPerPage + 1);
       // expect(result.data.users[0].email).toBe(user)
       // expect(result.data.users[0].isCreator).not.toBeTruthy()
       // expect(result.data.users[0].isAdmin).toBeTruthy()

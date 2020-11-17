@@ -141,6 +141,13 @@ const fetch = props
     .build();
 ```
 
+## Theming
+CourseLit uses [Material-UI's Theming](https://material-ui.com/customization/theming/) system hence you can introduce additional [custom variables](https://material-ui.com/customization/theming/#custom-variables) to the app's theme which you can later consume in your widget.
+
+> Make sure there is a default styling as other themes may or may not provide the custom variables required by your Widget.
+
+To learn how to design themes for CourseLit, see this [link](https://codelit.gitbook.io/courselit/administration-1/layout-and-themes#themes).
+
 ## Something's Not Clear?
 Come chat with us in our [official Discord channel](https://discord.com/invite/GR4bQsN).
 

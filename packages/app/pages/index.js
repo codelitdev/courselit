@@ -3,11 +3,7 @@ import PropTypes from "prop-types";
 import Items from "../components/Public/Items/index.js";
 import BaseLayout from "../components/Public/BaseLayout";
 import { publicCourse, siteInfoProps } from "../types.js";
-import {
-  HEADER_BLOG_POSTS_SECTION,
-  SUBHEADER_BLOG_POSTS_SECTION,
-  BTN_VIEW_ALL,
-} from "../config/strings.js";
+import { HEADER_BLOG_POSTS_SECTION, BTN_VIEW_ALL } from "../config/strings.js";
 import { Button, Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import Link from "next/link";
@@ -16,8 +12,11 @@ import { BACKEND } from "../config/constants.js";
 
 const useStyles = makeStyles((theme) => ({
   content: {
-    padding: theme.spacing(2),
-    paddingTop: theme.spacing(8),
+    [theme.breakpoints.down("sm")]: {
+      padding: theme.spacing(2),
+    },
+    paddingTop: theme.spacing(2),
+    marginBottom: theme.spacing(2),
   },
   header: {
     [theme.breakpoints.up("md")]: {
@@ -66,11 +65,6 @@ const Index = (props) => {
                 <Grid item xs={12} className={classes.headerTop}>
                   <Typography variant="h4">
                     {HEADER_BLOG_POSTS_SECTION}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12}>
-                  <Typography variant="body1" color="textSecondary">
-                    {SUBHEADER_BLOG_POSTS_SECTION}
                   </Typography>
                 </Grid>
               </Grid>

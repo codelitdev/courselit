@@ -9,6 +9,15 @@ import { BTN_LOAD_MORE } from "../../../config/strings";
 import Post from "./Post";
 import { publicCourse } from "../../../types";
 import Course from "./Course";
+import { makeStyles } from "@material-ui/styles";
+
+const useStyles = makeStyles((theme) => ({
+  loadMoreBtn: {
+    [theme.breakpoints.up("md")]: {
+      marginLeft: theme.spacing(2),
+    },
+  },
+}));
 
 const List = (props) => {
   const [courses, setCourses] = useState(props.initialItems || []);
@@ -20,6 +29,7 @@ const List = (props) => {
   );
   const { generateQuery } = props;
   const posts = typeof props.posts === "boolean" ? props.posts : false;
+  const classes = useStyles();
 
   useEffect(() => {
     getPosts();
@@ -55,7 +65,14 @@ const List = (props) => {
       </Grid>
       {shouldShowLoadMoreButton && courses.length > 0 && (
         <Grid item xs={12}>
-          <Button onClick={() => setOffset(offset + 1)}>{BTN_LOAD_MORE}</Button>
+          <Button
+            variant="contained"
+            disableElevation
+            onClick={() => setOffset(offset + 1)}
+            className={classes.loadMoreBtn}
+          >
+            {BTN_LOAD_MORE}
+          </Button>
         </Grid>
       )}
     </>

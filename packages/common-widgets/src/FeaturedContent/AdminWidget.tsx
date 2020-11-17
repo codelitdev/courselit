@@ -65,9 +65,7 @@ const AdminWidget = (props: AdminWidgetProps) => {
   return (
     <Grid container direction="column" spacing={2}>
       <Grid item xs>
-        <Typography variant="h6" color="textSecondary">
-          Settings
-        </Typography>
+        <Typography variant="h6">Settings</Typography>
       </Grid>
       <Grid item>
         <form onSubmit={saveSettings}>
@@ -109,6 +107,12 @@ const AdminWidget = (props: AdminWidgetProps) => {
             Save
           </Button>
         </form>
+      </Grid>
+      <Grid item xs>
+        <Typography variant="subtitle1" color="textSecondary">
+          * All featured items will be visible on the UI. Hence use only limited
+          number of items as featured.
+        </Typography>
       </Grid>
     </Grid>
   );
