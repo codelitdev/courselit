@@ -20,7 +20,7 @@
     "dist"
   ],
   "publishConfig": {
-    "registry": "https://registry.yarnpkg.com"
+    "access": "public"
   },
   "repository": {
     "type": "git",
@@ -43,5 +43,6 @@
     "@material-ui/styles": "^4.7.1",
     "react": "^16.13.1",
     "react-redux": "^7.2.1"
-  }
+  },
+  "gitHead": "d168f586351a4ed018da572e596a881c38ad2bf0"
 }

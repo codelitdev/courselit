@@ -21,7 +21,7 @@
     "dist"
   ],
   "publishConfig": {
-    "registry": "https://registry.yarnpkg.com"
+    "access": "public"
   },
   "repository": {
     "type": "git",
@@ -49,5 +49,6 @@
   "dependencies": {
     "@courselit/components-library": "^0.5.0",
     "@courselit/rich-text": "^0.5.0"
-  }
+  },
+  "gitHead": "d168f586351a4ed018da572e596a881c38ad2bf0"
 }
