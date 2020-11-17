@@ -65,6 +65,11 @@ const AdminWidget = (props: AdminWidgetProps) => {
   return (
     <Grid container direction="column" spacing={2}>
       <Grid item xs>
+        <Typography variant="body1">
+          Display featured items on the top section of the landing page.
+        </Typography>
+      </Grid>
+      <Grid item xs>
         <Typography variant="h6">Settings</Typography>
       </Grid>
       <Grid item>
@@ -107,12 +112,6 @@ const AdminWidget = (props: AdminWidgetProps) => {
             Save
           </Button>
         </form>
-      </Grid>
-      <Grid item xs>
-        <Typography variant="subtitle1" color="textSecondary">
-          * All featured items will be visible on the UI. Hence use only limited
-          number of items as featured.
-        </Typography>
       </Grid>
     </Grid>
   );
