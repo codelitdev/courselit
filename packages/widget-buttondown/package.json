@@ -49,5 +49,6 @@
     "babel-loader": "^8.1.0",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12"
-  }
+  },
+  "gitHead": "d168f586351a4ed018da572e596a881c38ad2bf0"
 }
