@@ -7,9 +7,7 @@ import { makeStyles } from "@material-ui/styles";
 
 const useStyles = makeStyles((theme) => ({
   mainContent: {
-    // [theme.breakpoints.up("md")]: {
     minHeight: "80vh",
-    // },
     backgroundColor: theme.main && theme.main.backgroundColor,
   },
   footer: theme.footer,

@@ -10,8 +10,11 @@ import Settings from "./Settings";
 const useStyles = ({ backgroundColor }: Settings) =>
   makeStyles((theme: Theme) => ({
     content: {
-      padding: theme.spacing(2),
+      [theme.breakpoints.down("sm")]: {
+        padding: theme.spacing(2),
+      },
       paddingTop: theme.spacing(2),
+      marginBottom: theme.spacing(2),
       background: backgroundColor || "inherit",
     },
     header: {
@@ -30,6 +33,7 @@ const useStyles = ({ backgroundColor }: Settings) =>
       [theme.breakpoints.up("md")]: {
         marginLeft: theme.spacing(2),
       },
+      marginBottom: theme.spacing(2),
     },
   }));
 

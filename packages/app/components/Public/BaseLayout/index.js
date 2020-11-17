@@ -8,15 +8,6 @@ import { siteInfoProps } from "../../../types.js";
 import Template from "./Template.js";
 import Scaffold from "./Scaffold.js";
 
-// const useStyles = makeStyles({
-//   showProgressBar: props => ({
-//     visibility: props.networkAction ? "visible" : "hidden"
-//   }),
-//   mainContent: {
-//     minHeight: "90vh"
-//   }
-// });
-
 const MasterLayout = (props) => {
   return (
     <>

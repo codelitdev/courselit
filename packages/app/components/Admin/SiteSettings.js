@@ -6,7 +6,6 @@ import {
   getGraphQLQueryFields,
   getObjectContainingOnlyChangedFields,
   areObjectsDifferent,
-  capitalize,
 } from "../../lib/utils.js";
 import {
   BACKEND,
@@ -29,6 +28,7 @@ import {
   Card,
   CardContent,
   CardActions,
+  capitalize,
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import {

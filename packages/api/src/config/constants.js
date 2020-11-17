@@ -42,15 +42,9 @@ module.exports = {
   closed: "private",
 
   // Pagination config
-  mycoursesLimit: 10,
-  postsPerPageLimit: 1,
-  postDescTruncLimit: 30,
-  coursesPerPageLimit: 5,
-  mymediaLimit: 5,
-  blogPostSnippetLength: 135,
-  defaultPaginationItemsPerPage: 5,
+  itemsPerPage: 1,
   defaultOffset: 1,
-  siteUsersPerPage: 10,
+  blogPostSnippetLength: 135,
 
   // Payment methods
   paypal: "paypal",

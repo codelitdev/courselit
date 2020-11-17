@@ -1,10 +1,7 @@
 import PropTypes from "prop-types";
 import { publicCourse } from "../types.js";
 import { BACKEND } from "../config/constants.js";
-import {
-  HEADER_BLOG_POSTS_SECTION,
-  SUBHEADER_BLOG_POSTS_SECTION,
-} from "../config/strings.js";
+import { HEADER_BLOG_POSTS_SECTION } from "../config/strings.js";
 import BaseLayout from "../components/Public/BaseLayout";
 import Items from "../components/Public/Items/index.js";
 import FetchBuilder from "../lib/fetch.js";
@@ -13,11 +10,15 @@ import { makeStyles } from "@material-ui/styles";
 
 const useStyles = makeStyles((theme) => ({
   content: {
-    padding: theme.spacing(2),
-    paddingTop: theme.spacing(8),
+    [theme.breakpoints.down("sm")]: {
+      padding: theme.spacing(2),
+    },
+    paddingTop: theme.spacing(2),
   },
   header: {
-    marginLeft: theme.spacing(2),
+    [theme.breakpoints.up("md")]: {
+      marginLeft: theme.spacing(2),
+    },
   },
   headerTop: {
     marginBottom: theme.spacing(2),
@@ -49,11 +50,6 @@ function Posts(props) {
           <Grid item container className={classes.header}>
             <Grid item xs={12} className={classes.headerTop}>
               <Typography variant="h4">{HEADER_BLOG_POSTS_SECTION}</Typography>
-            </Grid>
-            <Grid item xs={12}>
-              <Typography variant="body1" color="textSecondary">
-                {SUBHEADER_BLOG_POSTS_SECTION}
-              </Typography>
             </Grid>
           </Grid>
           <Items
