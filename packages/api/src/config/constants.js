@@ -42,7 +42,7 @@ module.exports = {
   closed: "private",
 
   // Pagination config
-  itemsPerPage: 1,
+  itemsPerPage: 5,
   defaultOffset: 1,
   blogPostSnippetLength: 135,
 

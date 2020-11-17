@@ -44,7 +44,7 @@ export interface FeaturedWidgetProps extends WidgetProps {
 const Widget = (props: FeaturedWidgetProps) => {
   const { fetchBuilder, utilities, config, dispatch, name } = props;
   const [posts, setPosts] = React.useState([]);
-  const [postsOffset, setPostsOffset] = React.useState(1);
+  const [postsOffset] = React.useState(1);
   const BTN_LOAD_MORE = "View all";
   const [settings, setSettings] = React.useState<Settings>({
     title: "",
