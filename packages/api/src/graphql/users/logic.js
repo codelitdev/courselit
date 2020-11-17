@@ -81,7 +81,7 @@ exports.getSiteUsers = async (searchData = {}, ctx) => {
 
   const users = await searchUsers(
     { offset: searchData.offset, query, graphQLContext: ctx },
-    { itemsPerPage: constants.siteUsersPerPage }
+    { itemsPerPage: constants.itemsPerPage }
   );
 
   if (ctx.user.isAdmin) {

@@ -3,7 +3,7 @@
  */
 const Media = require("../../models/Media.js");
 const { makeModelTextSearchable } = require("../../lib/graphql.js");
-const { mymediaLimit } = require("../../config/constants.js");
+const { itemsPerPage } = require("../../config/constants.js");
 const {
   checkIfAuthenticated,
   checkOwnership,
@@ -23,7 +23,7 @@ exports.getCreatorMedia = async (offset, ctx, text) => {
   return searchMedia(
     { offset, query, graphQLContext: ctx },
     {
-      itemsPerPage: mymediaLimit,
+      itemsPerPage,
       sortByColumn: "_id",
       sortOrder: -1,
     }

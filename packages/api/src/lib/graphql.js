@@ -82,8 +82,7 @@ exports.makeModelTextSearchable = (Model) => async (
   searchData,
   options = {}
 ) => {
-  const itemsPerPage =
-    options.itemsPerPage || constants.defaultPaginationItemsPerPage;
+  const itemsPerPage = options.itemsPerPage || constants.itemsPerPage;
   const checkIfRequestIsAuthenticated =
     options.checkIfRequestIsAuthenticated || true;
   const offset = (searchData.offset || constants.defaultOffset) - 1;

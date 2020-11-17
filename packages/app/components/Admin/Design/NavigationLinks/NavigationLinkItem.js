@@ -11,6 +11,7 @@ import {
   FormControlLabel,
   Checkbox,
   IconButton,
+  capitalize,
 } from "@material-ui/core";
 import {
   LABEL_NAVIGATION_LINK_TEXT,
@@ -23,7 +24,6 @@ import {
   NAVIGATION_CATEGORY_FOOTER,
   BACKEND,
 } from "../../../../config/constants";
-import { capitalize } from "../../../../lib/utils";
 import { makeStyles } from "@material-ui/styles";
 import { Done, Delete } from "@material-ui/icons";
 import { connect } from "react-redux";
