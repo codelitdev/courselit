@@ -9,13 +9,14 @@ import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
 import { Menu } from "@material-ui/icons";
-import { Toolbar, Grid, LinearProgress } from "@material-ui/core";
+import { Toolbar, Grid, LinearProgress, Typography } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
 import AppToast from "../../AppToast";
 import DrawerListItemIcon from "./DrawerListItemIcon.js";
 import Header from "./Header.js";
 import { connect } from "react-redux";
+import { siteInfoProps } from "../../../types";
 
 const drawerWidth = 240;
 
@@ -30,10 +31,7 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   appBar: {
-    marginLeft: drawerWidth,
-    [theme.breakpoints.up("sm")]: {
-      width: `calc(100% - ${drawerWidth}px)`,
-    },
+    zIndex: theme.zIndex.drawer + 1
   },
   menuButton: {
     [theme.breakpoints.up("sm")]: {
@@ -61,6 +59,9 @@ const useStyles = makeStyles((theme) => ({
   showProgressBar: (props) => ({
     visibility: props.networkAction ? "visible" : "hidden",
   }),
+  menuTitle: {
+    marginLeft: theme.spacing(2)
+  }
 }));
 
 const ComponentScaffold = (props) => {
@@ -85,7 +86,11 @@ const ComponentScaffold = (props) => {
 
   const drawer = (
     <div>
-      <div className={classes.toolbar} />
+      <Grid container alignItems='center' className={classes.toolbar}>
+        <Grid item className={classes.menuTitle}>
+        <Typography variant="h5">{props.siteinfo.title}</Typography>
+        </Grid>
+      </Grid>
       <Divider />
       <List>
         {props.items.map((item, index) => (
@@ -186,10 +191,12 @@ ComponentScaffold.propTypes = {
     })
   ),
   networkAction: PropTypes.bool.isRequired,
+  siteinfo: siteInfoProps
 };
 
 const mapStateToProps = (state) => ({
   networkAction: state.networkAction,
+  siteinfo: state.siteinfo
 });
 
 export default connect(mapStateToProps)(ComponentScaffold);
