@@ -24,7 +24,24 @@ const useStyles = makeStyles((theme) => ({
   root: {
     display: "flex",
   },
+  drawer: {
+    [theme.breakpoints.up("sm")]: {
+      width: drawerWidth,
+      flexShrink: 0,
+    },
+  },
+  appBar: {
+    zIndex: theme.zIndex.drawer + 1
+  },
+  menuButton: {
+    [theme.breakpoints.up("sm")]: {
+      display: "none",
+    },
+  },
   toolbar: theme.mixins.toolbar,
+  drawerPaper: {
+    width: drawerWidth,
+  },
   content: {
     flexGrow: 1,
   },
@@ -37,6 +54,9 @@ const useStyles = makeStyles((theme) => ({
   showProgressBar: (props) => ({
     visibility: props.networkAction ? "visible" : "hidden",
   }),
+  menuTitle: {
+    marginLeft: theme.spacing(2)
+  }
 }));
 
 const Scaffold = (props) => {
@@ -50,12 +70,11 @@ const Scaffold = (props) => {
 
   const makeDrawer = (forMobile = false) => (
     <div>
-      {forMobile &&
-        <Grid container alignItems='center' className={classes.toolbar}>
-          <Grid item>
-            <Typography variant="h5">{props.siteinfo.title}</Typography>
-          </Grid>
-        </Grid>}
+      <Grid container alignItems='center' className={classes.toolbar}>
+        <Grid item className={classes.menuTitle}>
+          <Typography variant="h5">{props.siteinfo.title}</Typography>
+        </Grid>
+      </Grid>
       <Divider />
       <List>
         {props.navigation &&
@@ -88,33 +107,49 @@ const Scaffold = (props) => {
   return (
     <div className={classes.root}>
       <CssBaseline />
-      <AppBar position="fixed">
+      <AppBar position="fixed" className={classes.appBar}>
         <Toolbar>
           <IconButton
             color="inherit"
             aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
+            className={classes.menuButton}
           >
             <Menu />
           </IconButton>
           <Header />
         </Toolbar>
       </AppBar>
-      <nav aria-label="menu">
-        <Drawer
-          variant="temporary"
-          anchor={theme.direction === "rtl" ? "right" : "left"}
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          classes={{
-            paper: classes.drawerPaper,
-          }}
-          ModalProps={{
-            keepMounted: true, // Better open performance on mobile.
-          }}>
-          {makeDrawer(true)}
-        </Drawer>
+      <nav className={classes.drawer} aria-label="menu">
+        {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
+        <Hidden smUp implementation="css">
+          <Drawer
+            variant="temporary"
+            anchor={theme.direction === "rtl" ? "right" : "left"}
+            open={mobileOpen}
+            onClose={handleDrawerToggle}
+            classes={{
+              paper: classes.drawerPaper,
+            }}
+            ModalProps={{
+              keepMounted: true, // Better open performance on mobile.
+            }}
+          >
+            {makeDrawer(true)}
+          </Drawer>
+        </Hidden>
+        <Hidden xsDown implementation="css">
+          <Drawer
+            classes={{
+              paper: classes.drawerPaper,
+            }}
+            variant="permanent"
+            open
+          >
+            {makeDrawer()}
+          </Drawer>
+        </Hidden>
       </nav>
 
       <main className={classes.content}>
