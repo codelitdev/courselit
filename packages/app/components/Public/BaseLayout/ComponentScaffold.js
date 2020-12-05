@@ -14,7 +14,6 @@ import { makeStyles, useTheme } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
 import AppToast from "../../AppToast";
 import DrawerListItemIcon from "./DrawerListItemIcon.js";
-import Footer from "./Footer.js";
 import Header from "./Header.js";
 import { connect } from "react-redux";
 
@@ -168,7 +167,6 @@ const ComponentScaffold = (props) => {
             {visibleComponent}
           </Grid>
         </Grid>
-        <Footer />
       </main>
       <AppToast />
     </div>
