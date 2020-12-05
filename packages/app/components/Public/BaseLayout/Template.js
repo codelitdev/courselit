@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Grid } from "@material-ui/core";
+import { Divider, Grid } from "@material-ui/core";
 import { useRouter } from "next/router";
 import Section from "./Section";
 import { makeStyles } from "@material-ui/styles";
@@ -40,15 +40,19 @@ const Template = (props) => {
           </Grid>
         </Grid>
       </Grid>
+
       {/** Footer */}
-      <Grid container direction="row" className={classes.footer}>
-        <Grid container item direction="column" xs={12} md={6}>
-          <Section name="footerLeft" />
+      <>
+        <Divider light />
+        <Grid container direction="row" className={classes.footer}>
+          <Grid container item direction="column" xs={12} md={6}>
+            <Section name="footerLeft" />
+          </Grid>
+          <Grid container item direction="column" xs={12} md={6}>
+            <Section name="footerRight" />
+          </Grid>
         </Grid>
-        <Grid container item direction="column" xs={12} md={6}>
-          <Section name="footerRight" />
-        </Grid>
-      </Grid>
+      </>
     </>
   );
 };

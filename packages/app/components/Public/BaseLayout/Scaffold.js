@@ -7,7 +7,7 @@ import Hidden from "@material-ui/core/Hidden";
 import IconButton from "@material-ui/core/IconButton";
 import List from "@material-ui/core/List";
 import { Menu } from "@material-ui/icons";
-import { LinearProgress, Toolbar } from "@material-ui/core";
+import { Grid, LinearProgress, Toolbar, Typography } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
 import AppToast from "../../AppToast.js";
@@ -24,27 +24,7 @@ const useStyles = makeStyles((theme) => ({
   root: {
     display: "flex",
   },
-  drawer: {
-    [theme.breakpoints.up("sm")]: {
-      width: drawerWidth,
-      flexShrink: 0,
-    },
-  },
-  appBar: {
-    marginLeft: drawerWidth,
-    [theme.breakpoints.up("sm")]: {
-      width: `calc(100% - ${drawerWidth}px)`,
-    },
-  },
-  menuButton: {
-    [theme.breakpoints.up("sm")]: {
-      display: "none",
-    },
-  },
   toolbar: theme.mixins.toolbar,
-  drawerPaper: {
-    width: drawerWidth,
-  },
   content: {
     flexGrow: 1,
   },
@@ -70,7 +50,12 @@ const Scaffold = (props) => {
 
   const makeDrawer = (forMobile = false) => (
     <div>
-      <div className={classes.toolbar} />
+      {forMobile &&
+        <Grid container alignItems='center' className={classes.toolbar}>
+          <Grid item>
+            <Typography variant="h5">{props.siteinfo.title}</Typography>
+          </Grid>
+        </Grid>}
       <Divider />
       <List>
         {props.navigation &&
@@ -103,49 +88,33 @@ const Scaffold = (props) => {
   return (
     <div className={classes.root}>
       <CssBaseline />
-      <AppBar position="fixed" className={classes.appBar}>
+      <AppBar position="fixed">
         <Toolbar>
           <IconButton
             color="inherit"
             aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            className={classes.menuButton}
           >
             <Menu />
           </IconButton>
           <Header />
         </Toolbar>
       </AppBar>
-      <nav className={classes.drawer} aria-label="menu">
-        {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
-        <Hidden smUp implementation="css">
-          <Drawer
-            variant="temporary"
-            anchor={theme.direction === "rtl" ? "right" : "left"}
-            open={mobileOpen}
-            onClose={handleDrawerToggle}
-            classes={{
-              paper: classes.drawerPaper,
-            }}
-            ModalProps={{
-              keepMounted: true, // Better open performance on mobile.
-            }}
-          >
-            {makeDrawer(true)}
-          </Drawer>
-        </Hidden>
-        <Hidden xsDown implementation="css">
-          <Drawer
-            classes={{
-              paper: classes.drawerPaper,
-            }}
-            variant="permanent"
-            open
-          >
-            {makeDrawer()}
-          </Drawer>
-        </Hidden>
+      <nav aria-label="menu">
+        <Drawer
+          variant="temporary"
+          anchor={theme.direction === "rtl" ? "right" : "left"}
+          open={mobileOpen}
+          onClose={handleDrawerToggle}
+          classes={{
+            paper: classes.drawerPaper,
+          }}
+          ModalProps={{
+            keepMounted: true, // Better open performance on mobile.
+          }}>
+          {makeDrawer(true)}
+        </Drawer>
       </nav>
 
       <main className={classes.content}>
