@@ -12,7 +12,10 @@ import OrderedListItem from "./Icons/format_list_numbered-24px.svg";
 
 const EditorUI = (props) => {
   const [imageAddFormVisible, setImageAddFormVisible] = useState(false);
+  const [linkAddFormVisible, setLinkAddFormVisible] = useState(false);
   const [imageURL, setImageURL] = useState("");
+  const [linkLocation, setLinkLocation] = useState("");
+  const [linkNewTab, setLinkNewTab] = useState(false);
 
   const onChange = (editorState) => {
     props.onChange(editorState);
@@ -63,6 +66,11 @@ const EditorUI = (props) => {
     setImageAddFormVisible(!imageAddFormVisible);
   };
 
+  const toggleLinkAdd = (e) => {
+    e.preventDefault();
+    setLinkAddFormVisible(!linkAddFormVisible);
+  };
+
   const insertImage = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -73,6 +81,18 @@ const EditorUI = (props) => {
       setImageURL("");
     }
   };
+
+  const insertLink = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (linkLocation) {
+      props.onChange(Editor.addLink(props.editorState, linkLocation, linkNewTab))
+
+      setLinkLocation("");
+      setLinkNewTab(false);
+    }
+  }
 
   const editor = (
     <Editor
@@ -102,6 +122,20 @@ const EditorUI = (props) => {
           <button onClick={insertImage}>Add</button>
         </div>
       )}
+      {linkAddFormVisible && (
+        <div style={styles.controls.toolbarInput}>
+          <label>
+            Link:
+            <input
+              type="text"
+              name="linkLocation"
+              value={linkLocation}
+              onChange={(e) => setLinkLocation(e.target.value)}
+            />
+          </label>
+          <button onClick={insertLink}>Add</button>
+        </div>
+      )}
       <div style={styles.controls.toolbar}>
         <button onClick={toggleHeading} style={styles.controls.toolbarButton}>
           H1
@@ -128,6 +162,9 @@ const EditorUI = (props) => {
           <Blockquote />
         </button>
         <button onClick={toggleImageAdd} style={styles.controls.toolbarButton}>
+          <AddPhoto />
+        </button>
+        <button onClick={toggleLinkAdd} style={styles.controls.toolbarButton}>
           <AddPhoto />
         </button>
         <button
