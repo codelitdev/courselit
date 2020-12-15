@@ -7,16 +7,19 @@ import {
   DefaultDraftBlockRenderMap,
   CompositeDecorator,
 } from "draft-js";
-import "draft-js/dist/Draft.css";
 import PropTypes from "prop-types";
 import Media from "./Renderers/Media.js";
 import Code from "./Renderers/Code.js";
 import { Map } from "immutable";
 import YouTube from "./Decorators/YouTube.js";
-import Text from "./Renderers/Text.js";
 import Blockquote from "./Renderers/Blockquote.js";
 import Link from "./Decorators/Link.js";
 import Tweet from "./Decorators/Tweet.js";
+import MultiDecorator from "draft-js-multidecorators";
+import PrismDecorator from "draft-js-prism";
+import Prism from "prismjs";
+import "draft-js/dist/Draft.css";
+import "prismjs/themes/prism-tomorrow.css";
 
 const Editor = (props) => {
   const handleKeyCommand = (command, editorState) => {
@@ -53,15 +56,14 @@ const Editor = (props) => {
 
   const blockRenderMap = Map({
     unstyled: {
-      element: "span",
-      wrapper: <Text style={props.theme.text} />,
+      element: "p",
     },
     blockquote: {
-      element: "span",
+      element: "blockquote",
       wrapper: <Blockquote style={props.theme.blockquote} />,
     },
     "code-block": {
-      element: "span",
+      element: "pre",
       wrapper: <Code style={props.theme.code} />,
     },
   });
@@ -99,6 +101,22 @@ Editor.addImage = (editorState, url) => {
   return AtomicBlockUtils.insertAtomicBlock(newEditorState, entityKey, " ");
 };
 
+Editor.addLink = (editorState, url, newTab = false) => {
+  const contentState = editorState.getCurrentContent();
+  const contentStateWithEntity = contentState.createEntity("LINK", "MUTABLE", {
+    url,
+  });
+  const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
+  const newEditorState = EditorState.set(editorState, {
+    currentContent: contentStateWithEntity,
+  });
+  return RichUtils.toggleLink(
+    newEditorState,
+    newEditorState.getSelection(),
+    entityKey
+  );
+};
+
 Editor.toggleCode = (editorState) => RichUtils.toggleCode(editorState);
 Editor.toggleLink = (editorState) =>
   RichUtils.toggleLink(editorState, editorState.getSelection(), null);
@@ -117,7 +135,7 @@ Editor.toggleUnorderedListItem = (editorState) =>
 Editor.toggleOrderedListItem = (editorState) =>
   RichUtils.toggleBlockType(editorState, "ordered-list-item");
 
-Editor.getDecorators = () => {
+Editor.getDecorators = ({ prismDefaultLanguage = "javascript" }) => {
   // From https://draftjs.org/docs/advanced-topics-decorators
   const findWithRegex = (regex, contentBlock, callback) => {
     const text = contentBlock.getText();
@@ -144,19 +162,25 @@ Editor.getDecorators = () => {
     findWithRegex(TWITTER_REGEX, contentBlock, callback);
   };
 
-  return new CompositeDecorator([
-    {
-      strategy: videoStrategy,
-      component: YouTube,
-    },
-    {
-      strategy: twitterStrategy,
-      component: Tweet,
-    },
-    {
-      strategy: linkStrategy,
-      component: Link,
-    },
+  return new MultiDecorator([
+    new PrismDecorator({
+      prism: Prism,
+      defaultSyntax: prismDefaultLanguage,
+    }),
+    new CompositeDecorator([
+      {
+        strategy: videoStrategy,
+        component: YouTube,
+      },
+      {
+        strategy: twitterStrategy,
+        component: Tweet,
+      },
+      {
+        strategy: linkStrategy,
+        component: Link,
+      },
+    ]),
   ]);
 };
 

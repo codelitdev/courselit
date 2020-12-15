@@ -118,7 +118,7 @@ const LessonEditor = (props) => {
       if (response.lesson) {
         setLesson(
           Object.assign({}, response.lesson, {
-            content: TextEditor.hydrate(response.lesson.content),
+            content: TextEditor.hydrate({ data: response.lesson.content }),
           })
         );
       }

@@ -9,8 +9,9 @@ import Italic from "./Icons/format_italic-24px.svg";
 import AddPhoto from "./Icons/add_photo_alternate-24px.svg";
 import UnorderedListItem from "./Icons/format_list_bulleted-24px.svg";
 import OrderedListItem from "./Icons/format_list_numbered-24px.svg";
+import Link from "./Icons/link-24px.svg";
 
-const EditorUI = (props) => {
+const EditorWithToolbar = (props) => {
   const [imageAddFormVisible, setImageAddFormVisible] = useState(false);
   const [linkAddFormVisible, setLinkAddFormVisible] = useState(false);
   const [imageURL, setImageURL] = useState("");
@@ -87,12 +88,14 @@ const EditorUI = (props) => {
     e.stopPropagation();
 
     if (linkLocation) {
-      props.onChange(Editor.addLink(props.editorState, linkLocation, linkNewTab))
+      props.onChange(
+        Editor.addLink(props.editorState, linkLocation, linkNewTab)
+      );
 
       setLinkLocation("");
       setLinkNewTab(false);
     }
-  }
+  };
 
   const editor = (
     <Editor
@@ -165,7 +168,7 @@ const EditorUI = (props) => {
           <AddPhoto />
         </button>
         <button onClick={toggleLinkAdd} style={styles.controls.toolbarButton}>
-          <AddPhoto />
+          <Link />
         </button>
         <button
           onClick={toggleUnorderedListItem}
@@ -184,13 +187,13 @@ const EditorUI = (props) => {
   );
 };
 
-EditorUI.getDecorators = Editor.getDecorators;
+EditorWithToolbar.getDecorators = Editor.getDecorators;
 
-EditorUI.propTypes = {
+EditorWithToolbar.propTypes = {
   editorState: PropTypes.object,
   onChange: PropTypes.func,
   readOnly: PropTypes.bool,
   styles: PropTypes.object,
 };
 
-export default EditorUI;
+export default EditorWithToolbar;

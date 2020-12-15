@@ -16,6 +16,7 @@ import { CONSOLE_MESSAGE_THEME_INVALID } from "../config/strings.js";
 import { useEffect } from "react";
 import CodeInjector from "../components/Public/CodeInjector.js";
 import wrapper from "../redux/store.js";
+import "@courselit/rich-text/dist/main.css";
 
 const WrappedApp = ({ Component, pageProps }) => {
   const store = useStore();

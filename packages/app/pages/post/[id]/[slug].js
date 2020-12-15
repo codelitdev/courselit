@@ -3,7 +3,7 @@ import { BACKEND, FRONTEND, MEDIA_BACKEND } from "../../../config/constants.js";
 import {
   formulateMediaUrl,
   formulateCourseUrl,
-  getPostDescriptionSnippet,
+  // getPostDescriptionSnippet,
 } from "../../../lib/utils.js";
 import { makeStyles, Grid } from "@material-ui/core";
 import Head from "next/head";
@@ -36,10 +36,11 @@ const Post = (props) => {
             />
             <meta property="og:type" content="article" />
             <meta property="og:title" content={props.post.title} />
-            <meta
+            {/** TODO: re-enable the following meta tag once SSR is supported */}
+            {/* <meta
               property="og:description"
               content={getPostDescriptionSnippet(props.post.description)}
-            />
+            /> */}
             <meta property="og:author" content={props.post.creatorName} />
             {props.post.featuredImage && (
               <meta
@@ -58,7 +59,7 @@ const Post = (props) => {
   );
 };
 
-Post.getInitialProps = async ({ query }) => {
+export async function getServerSideProps({ query }) {
   const graphQuery = `
     query {
       post: getCourse(courseId: ${query.id}) {
@@ -79,10 +80,23 @@ Post.getInitialProps = async ({ query }) => {
     .setPayload(graphQuery)
     .setIsGraphQLEndpoint(true)
     .build();
-  const response = await fetch.exec();
 
-  return { post: response.post };
-};
+  let post = null;
+  try {
+    const response = await fetch.exec();
+    post = response.post;
+  } catch (err) {
+    post = {
+      title: err.message,
+    };
+  }
+
+  return {
+    props: {
+      post,
+    },
+  };
+}
 
 Post.propTypes = {
   siteInfo: siteInfoProps,

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Editor from "./EditorUI.js";
+import Editor from "./EditorWithToolbar.js";
 import { convertFromRaw, convertToRaw, EditorState } from "draft-js";
 import PropTypes from "prop-types";
 import { encode, decode } from "base-64";
@@ -12,9 +12,7 @@ const stringifyAndEncode = {
 };
 
 const TextEditor = (props) => {
-  const initState =
-    props.initialContentState ||
-    EditorState.createEmpty(Editor.getDecorators());
+  const initState = props.initialContentState || TextEditor.emptyState();
   const [editorState, setEditorState] = useState(initState);
 
   React.useEffect(() => {
@@ -36,16 +34,19 @@ const TextEditor = (props) => {
   );
 };
 
-TextEditor.hydrate = (encodedEditorStateString) =>
+TextEditor.hydrate = ({
+  data: encodedEditorStateString,
+  prismDefaultLanguage,
+}) =>
   EditorState.createWithContent(
     convertFromRaw(stringifyAndEncode.decode(encodedEditorStateString)),
-    Editor.getDecorators()
+    Editor.getDecorators({ prismDefaultLanguage })
   );
 
 TextEditor.stringify = (editorState) =>
   stringifyAndEncode.encode(convertToRaw(editorState.getCurrentContent()));
 
-TextEditor.emptyState = () => EditorState.createEmpty(Editor.getDecorators());
+TextEditor.emptyState = () => EditorState.createEmpty(Editor.getDecorators({}));
 
 TextEditor.propTypes = {
   initialContentState: PropTypes.any,

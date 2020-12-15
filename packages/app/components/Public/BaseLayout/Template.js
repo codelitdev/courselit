@@ -8,9 +8,7 @@ import { makeStyles } from "@material-ui/styles";
 const useStyles = makeStyles((theme) => ({
   mainContent: {
     minHeight: "80vh",
-    backgroundColor: theme.main && theme.main.backgroundColor,
   },
-  footer: theme.footer,
 }));
 
 const Template = (props) => {
@@ -44,7 +42,7 @@ const Template = (props) => {
       {/** Footer */}
       <>
         <Divider light />
-        <Grid container direction="row" className={classes.footer}>
+        <Grid container direction="row">
           <Grid container item direction="column" xs={12} md={6}>
             <Section name="footerLeft" />
           </Grid>

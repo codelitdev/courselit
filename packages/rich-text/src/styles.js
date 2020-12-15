@@ -30,12 +30,13 @@ export default {
     toolbarButton: {
       border: "none",
       background: "transparent",
-      padding: 10,
+      padding: "10 4",
       "&:hover": {
         background: "#585858",
       },
       fontWeight: "bold",
       fontSize: 16,
+      cursor: "pointer",
     },
   },
   media: {
@@ -50,9 +51,11 @@ export default {
   code: {
     background: "rgb(45, 45, 45)",
     color: "#e2e7ff",
-    padding: "10px 16px",
+    padding: 10,
     borderRadius: 2,
-    fontFamily: '"Fira Code", monospace',
+    marginBottom: 16,
+    fontSize: "1.2em",
+    overflowWrap: "anywhere",
   },
   blockquote: {
     fontStyle: "italic",
@@ -65,9 +68,6 @@ export default {
     color: "rgb(58 58 58)",
   },
   text: {
-    textAlign: "justify",
-    lineHeight: "1.5em",
-    fontSize: "1em",
-    fontFamily: 'Open Sans, "Helvetica Neue", Helvetica, Arial, sans-serif',
+    marginBottom: "2rem",
   },
 };
