@@ -277,7 +277,9 @@ const CourseEditor = (props) => {
     setCourseData(
       Object.assign({}, courseData, {
         course: Object.assign({}, course, {
-          description: TextEditor.hydrate(course.description),
+          description: TextEditor.hydrate({
+            data: course.description,
+          }),
         }),
       })
     );

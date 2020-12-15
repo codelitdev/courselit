@@ -23,9 +23,7 @@ const useStyles = (sectionName: string) =>
       },
     },
     link: {
-      color: "inherit",
-      cursor: "pointer",
-      textDecoration: "underline",
+      color: theme.palette.text.primary,
     },
   }));
 
@@ -57,13 +55,9 @@ const Widget = (props: FooterMenuWidgetProps) => {
               className={classes.linkContainer}
             >
               <Link href={link.destination} key={link.text}>
-                <Typography
-                  variant="body2"
-                  component="a"
-                  className={classes.link}
-                >
-                  {link.text}
-                </Typography>
+                <a className={classes.link}>
+                  <Typography variant="body2">{link.text}</Typography>
+                </a>
               </Link>
             </Grid>
           ))}

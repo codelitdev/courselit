@@ -31,7 +31,7 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   appBar: {
-    zIndex: theme.zIndex.drawer + 1
+    zIndex: theme.zIndex.drawer + 1,
   },
   menuButton: {
     [theme.breakpoints.up("sm")]: {
@@ -60,8 +60,8 @@ const useStyles = makeStyles((theme) => ({
     visibility: props.networkAction ? "visible" : "hidden",
   }),
   menuTitle: {
-    marginLeft: theme.spacing(2)
-  }
+    marginLeft: theme.spacing(2),
+  },
 }));
 
 const ComponentScaffold = (props) => {
@@ -86,9 +86,9 @@ const ComponentScaffold = (props) => {
 
   const drawer = (
     <div>
-      <Grid container alignItems='center' className={classes.toolbar}>
+      <Grid container alignItems="center" className={classes.toolbar}>
         <Grid item className={classes.menuTitle}>
-        <Typography variant="h5">{props.siteinfo.title}</Typography>
+          <Typography variant="h5">{props.siteinfo.title}</Typography>
         </Grid>
       </Grid>
       <Divider />
@@ -191,12 +191,12 @@ ComponentScaffold.propTypes = {
     })
   ),
   networkAction: PropTypes.bool.isRequired,
-  siteinfo: siteInfoProps
+  siteinfo: siteInfoProps,
 };
 
 const mapStateToProps = (state) => ({
   networkAction: state.networkAction,
-  siteinfo: state.siteinfo
+  siteinfo: state.siteinfo,
 });
 
 export default connect(mapStateToProps)(ComponentScaffold);

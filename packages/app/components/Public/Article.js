@@ -62,7 +62,9 @@ const Article = (props) => {
   const classes = useStyles(course.featuredImage)();
   let courseDescriptionHydrated;
   try {
-    courseDescriptionHydrated = TextEditor.hydrate(course.description);
+    courseDescriptionHydrated = TextEditor.hydrate({
+      data: course.description,
+    });
   } catch (err) {
     // do nothing
   }
@@ -110,7 +112,7 @@ const Article = (props) => {
       )}
       {courseDescriptionHydrated && process.browser && (
         <TextEditor
-          initialContentState={TextEditor.hydrate(course.description)}
+          initialContentState={courseDescriptionHydrated}
           readOnly={true}
         />
       )}
