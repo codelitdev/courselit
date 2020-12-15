@@ -41,7 +41,7 @@ const Widget = (props: AboutWidgetProps) => {
 
   const hydrateAndSetSettings = (settings: Settings) => {
     const hydratedText = settings.text
-      ? TextEditor.hydrate(settings.text)
+      ? TextEditor.hydrate({ data: settings.text })
       : TextEditor.emptyState();
     setSettings(
       Object.assign({}, settings, {

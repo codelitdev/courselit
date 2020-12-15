@@ -36,7 +36,7 @@ const AdminWidget = (props: AboutWidgetProps) => {
   const onNewSettingsReceived = (settings: any) => {
     const newSettings = Object.assign({}, settings, {
       text: settings.text
-        ? TextEditor.hydrate(settings.text)
+        ? TextEditor.hydrate({ data: settings.text })
         : TextEditor.emptyState(),
     });
     setSettings(newSettings);

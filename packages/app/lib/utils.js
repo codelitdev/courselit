@@ -78,7 +78,7 @@ export const formulateCourseUrl = (course, backend = "") =>
   }/${course.slug}`;
 
 export const getPostDescriptionSnippet = (rawDraftJSContentState) => {
-  const firstSentence = TextEditor.hydrate(rawDraftJSContentState)
+  const firstSentence = TextEditor.hydrate({ data: rawDraftJSContentState })
     .getCurrentContent()
     .getPlainText()
     .split(".")[0];

@@ -61,9 +61,7 @@ const Post = (props) => {
                 <Typography variant="h5">{props.title}</Typography>
               </Grid>
               <Grid item>
-                <Typography variant="body1">
-                  {props.description}
-                </Typography>
+                <Typography variant="body1">{props.description}</Typography>
               </Grid>
             </Grid>
           </Card>

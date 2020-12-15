@@ -31,7 +31,7 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   appBar: {
-    zIndex: theme.zIndex.drawer + 1
+    zIndex: theme.zIndex.drawer + 1,
   },
   menuButton: {
     [theme.breakpoints.up("sm")]: {
@@ -55,8 +55,8 @@ const useStyles = makeStyles((theme) => ({
     visibility: props.networkAction ? "visible" : "hidden",
   }),
   menuTitle: {
-    marginLeft: theme.spacing(2)
-  }
+    marginLeft: theme.spacing(2),
+  },
 }));
 
 const Scaffold = (props) => {
@@ -70,7 +70,7 @@ const Scaffold = (props) => {
 
   const makeDrawer = (forMobile = false) => (
     <div>
-      <Grid container alignItems='center' className={classes.toolbar}>
+      <Grid container alignItems="center" className={classes.toolbar}>
         <Grid item className={classes.menuTitle}>
           <Typography variant="h5">{props.siteinfo.title}</Typography>
         </Grid>

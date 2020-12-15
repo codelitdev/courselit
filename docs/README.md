@@ -45,35 +45,25 @@ Check out this live example to see what you can build with CourseLit. [Click her
 ## Getting Started
 To install CourseLit on your cloud server, please follow [our official guide](https://codelit.gitbook.io/courselit/getting-started).
 
-## Running on local
-You can run a local instance of CourseLit on your local machine via [Docker Compose](https://docs.docker.com/compose/). Follow the below mentioned instructions.
+## Development
+The project is organised as a [mono-repo](https://en.wikipedia.org/wiki/Monorepo). It uses [Lerna](https://github.com/lerna/lerna) for managing the mono-repo. You need to run both backend and frontend servers, located in `packages/api` and `packages/app` respectively, in order to run the portal in its entirety.
 
-1. Cd to the `deployment` folder.
-```
-cd courselit/deployment
-```
+We recommend using [Visual Studio Code](https://code.visualstudio.com/) for development as it allows you to develop your code in isolation inside a container using the [Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension. Install both the editor and the extension.
 
-2. Create a `.env` file in this directory with the following variables and change the values as per your environment.
-```
-SITE_URL=http://localhost
-MEDIA_FOLDER=~/courselit
-MONGO_ROOT_USERNAME=username
-MONGO_ROOT_PASSWORD=password
-DB_CONNECTION_STRING=mongodb://username:password@db
-JWT_SECRET=yoursecret
-JWT_EXPIRES_IN=2d
-TAG=latest
-```
+Once you have this setup, follow these steps.
 
-3. Start the application.
+1. Press `Ctrl + Shift + P` to open the command palette of Visual Studio Code, type in "Remote-Containers: Open Workspace in Container" and press enter after selecting it.
 
-```
-docker-compose -f docker-compose.yml up
-```
+2. Once the code opens up, open two terminal windows in your Visual Studio Code and type in the following commands to start the backend and frontend servers respectively.
+  - `yarn lerna run dev --scope=@courselit/api --stream`
+  - `yarn lerna run dev --scope=@courselit/app --stream`
+  
+  > The above commands are also exported as `bash` aliases, so you can simply type `api` and `app` in separate terminal windows to run backend and frontend servers respectively.
 
-4. Visit `http://localhost` in your browser.
+## Writing Your Own Widget
+You can add additional functionality to your application via building your own widgets. Look at [this](widgets.md) document.
 
-### Environment variables.
+## Environment variables.
 **SITE_URL**
 
 The public address of the site. Required parameter. No default value.
@@ -105,24 +95,6 @@ The domain name for which the ssl certificate is issued. Optional parameter, onl
 **TAG**
 
 The Docker tag. To see what all tags are available, visit [CourseLit on Docker Hub](https://hub.docker.com/repository/registry-1.docker.io/codelit/courselit-proxy/tags).
-
-## Development
-The project is organised as a [mono-repo](https://en.wikipedia.org/wiki/Monorepo). It uses [Lerna](https://github.com/lerna/lerna) for managing the mono-repo. You need to run both backend and frontend servers, located in `packages/api` and `packages/app` respectively, in order to run the portal in its entirety.
-
-We recommend using [Visual Studio Code](https://code.visualstudio.com/) for development as it allows you to develop your code in isolation inside a container using the [Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension. Install both the editor and the extension.
-
-Once you have this setup, follow these steps.
-
-1. Press `Ctrl + Shift + P` to open the command palette of Visual Studio Code, type in "Remote-Containers: Open Workspace in Container" and press enter after selecting it.
-
-2. Once the code opens up, open two terminal windows in your Visual Studio Code and type in the following commands to start the backend and frontend servers respectively.
-  - `yarn lerna run dev --scope=@courselit/api --stream`
-  - `yarn lerna run dev --scope=@courselit/app --stream`
-  
-  > The above commands are also exported as `bash` aliases, so you can simply type `api` and `app` in separate terminal windows to run backend and frontend servers respectively.
-
-## Writing Your Own Widget
-You can add additional functionality to your application via building your own widgets. Look at [this](widgets.md) document.
 
 ## Security
 Although, we've done everything in our power to secure the application by following the best practices, we hope you understand that no one can guarantee that it's the most secure implementation out there and it will always stay secure.

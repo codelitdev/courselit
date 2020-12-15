@@ -8,7 +8,7 @@ Pass in an object containing styling information to the `styles` prop in order t
 
 ```
 <TextEditor
-    initialContentState={TextEditor.hydrate(course.description)}
+    initialContentState={TextEditor.hydrate({ data: course.description })}
     readOnly={true}
     styles={{text: {fontSize: 30}}}
 />
@@ -77,13 +77,7 @@ The following object details the default styles and what all components you can 
     paddingLeft: 10,
     fontSize: "1.6em",
     color: "rgb(58 58 58)",
-  },
-  text: {
-    textAlign: "justify",
-    lineHeight: "1.8em",
-    fontSize: "1.2em",
-    fontFamily: 'Open Sans, "Helvetica Neue", Helvetica, Arial, sans-serif'
-  },
+  }
 }
 ```
 
@@ -100,3 +94,11 @@ Paste any tweet's URL in the editor and the tweet will be embedded.
 ## Known issues
 
 1. While editing, making changes to a tweet's URL might show previous content. The workaround is to delete the tweet URL entirely and then paste the new URL.
+
+## Code Blocks
+
+The editor uses [Prism](https://prismjs.com/) for syntax highlighting. You can change the default language from `javascript` to something else using the following syntax.
+
+```
+TextEditor.hydrate({ data, prismDefaultLanguage: "rust" })
+```
