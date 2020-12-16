@@ -31,9 +31,6 @@ export default {
       border: "none",
       background: "transparent",
       padding: "10 4",
-      "&:hover": {
-        background: "#585858",
-      },
       fontWeight: "bold",
       fontSize: 16,
       cursor: "pointer",
