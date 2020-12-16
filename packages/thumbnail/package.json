@@ -1,6 +1,6 @@
 {
   "name": "@courselit/thumbnail",
-  "version": "0.5.2",
+  "version": "0.5.4",
   "description": "Creates thumbnails for your images and videos.",
   "keywords": [
     "thumbnail"

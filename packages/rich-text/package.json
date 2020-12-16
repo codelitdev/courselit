@@ -1,6 +1,6 @@
 {
   "name": "@courselit/rich-text",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "Edit and display rich text in React apps. Built using DraftJS.",
   "keywords": [
     "rte",
@@ -58,5 +58,5 @@
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12"
   },
-  "gitHead": "fca7d2f8455c835f1c185a1ebc8513c6269ebe5b"
+  "gitHead": "e91494470733b09bc3e772a9079162a844b40d97"
 }
