@@ -39,6 +39,7 @@
     "draft-js": "^0.11.7",
     "draft-js-multidecorators": "^1.0.0",
     "draft-js-prism": "^1.0.6",
+    "immutable": "^4.0.0-rc.12",
     "prismjs": "^1.22.0",
     "prop-types": "^15.7.2",
     "react-jss": "^10.5.0"
