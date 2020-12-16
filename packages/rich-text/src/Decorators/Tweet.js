@@ -24,6 +24,7 @@ const styles = {
     marginTop: "1em",
     color: "#676767",
     fontSize: ".8em",
+    overflowWrap: "anywhere",
   },
 };
 
@@ -58,7 +59,7 @@ const Tweet = (props) => {
     const tokens = props.decoratedText.split("/");
     window.twttr.ready((twttr) => {
       twttr.widgets.createTweet(tokens[tokens.length - 1], tweetRef.current, {
-        theme: "dark",
+        theme: "light",
         align: "center",
       });
     });

@@ -16,7 +16,6 @@ const EditorWithToolbar = (props) => {
   const [linkAddFormVisible, setLinkAddFormVisible] = useState(false);
   const [imageURL, setImageURL] = useState("");
   const [linkLocation, setLinkLocation] = useState("");
-  const [linkNewTab, setLinkNewTab] = useState(false);
 
   const onChange = (editorState) => {
     props.onChange(editorState);
@@ -88,12 +87,9 @@ const EditorWithToolbar = (props) => {
     e.stopPropagation();
 
     if (linkLocation) {
-      props.onChange(
-        Editor.addLink(props.editorState, linkLocation, linkNewTab)
-      );
+      props.onChange(Editor.addLink(props.editorState, linkLocation));
 
       setLinkLocation("");
-      setLinkNewTab(false);
     }
   };
 

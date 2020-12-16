@@ -14,8 +14,9 @@ import { Map } from "immutable";
 import YouTube from "./Decorators/YouTube.js";
 import Blockquote from "./Renderers/Blockquote.js";
 import Link from "./Decorators/Link.js";
+import NormalLink from "./Decorators/NormalLink.js";
 import Tweet from "./Decorators/Tweet.js";
-import MultiDecorator from "draft-js-multidecorators";
+import MultiDecorator from "./Multidecorator.js";
 import PrismDecorator from "draft-js-prism";
 import Prism from "prismjs";
 import "draft-js/dist/Draft.css";
@@ -101,7 +102,7 @@ Editor.addImage = (editorState, url) => {
   return AtomicBlockUtils.insertAtomicBlock(newEditorState, entityKey, " ");
 };
 
-Editor.addLink = (editorState, url, newTab = false) => {
+Editor.addLink = (editorState, url) => {
   const contentState = editorState.getCurrentContent();
   const contentStateWithEntity = contentState.createEntity("LINK", "MUTABLE", {
     url,
@@ -162,6 +163,16 @@ Editor.getDecorators = ({ prismDefaultLanguage = "javascript" }) => {
     findWithRegex(TWITTER_REGEX, contentBlock, callback);
   };
 
+  const normalLinkStrategy = (contentBlock, callback, contentState) => {
+    contentBlock.findEntityRanges((character) => {
+      const entityKey = character.getEntity();
+      return (
+        entityKey !== null &&
+        contentState.getEntity(entityKey).getType() === "LINK"
+      );
+    }, callback);
+  };
+
   return new MultiDecorator([
     new PrismDecorator({
       prism: Prism,
@@ -179,6 +190,10 @@ Editor.getDecorators = ({ prismDefaultLanguage = "javascript" }) => {
       {
         strategy: linkStrategy,
         component: Link,
+      },
+      {
+        strategy: normalLinkStrategy,
+        component: NormalLink,
       },
     ]),
   ]);
