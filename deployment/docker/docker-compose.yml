@@ -49,7 +49,6 @@ services:
 
   proxy:
     image: caddy:2.1.1-alpine
-    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
