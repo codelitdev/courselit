@@ -35,16 +35,18 @@ echo "Enter your domain name (FQDN)."
 read DOMAIN
 [[ -z "$DOMAIN" ]] && { echo "Domain name is necessary to continue. Please try again."; exit 1; }
 
+CONFIGHOME=/home/$USER/.config/${DOMAIN}
+
+function generate_config () {
 # Generate random username and password for database
 DBUSER=$(tr -dc 'a-z' </dev/urandom | head -c 7)
 DBPASSWORD=$(tr -dc 'a-zA-Z0-9' </dev/urandom | head -c 20)
 JWTSECRET=$(tr -dc 'a-z' </dev/urandom | head -c 10)
 
-echo $DOMAIN
-echo $DBUSER
-echo $DBPASSWORD
+#echo $DOMAIN
+#echo $DBUSER
+#echo $DBPASSWORD
 
-CONFIGHOME=/home/$USER/.config/${DOMAIN}
 mkdir $CONFIGHOME
 
 cat > $CONFIGHOME/.env <<EOF
@@ -68,6 +70,14 @@ wget \
 wget \
     https://raw.githubusercontent.com/codelitdev/courselit/master/deployment/docker/Caddyfile \
     -P $CONFIGHOME
+}
+
+# Check if configuration exists
+if [ ! -d "$CONFIGHOME" ]; then
+	generate_config
+else
+	echo "Existing configuration found. Using that."
+fi
 
 # Start the app
-(cd $CONFIGHOME; docker-compose up)
+(cd $CONFIGHOME; docker-compose up -d)
