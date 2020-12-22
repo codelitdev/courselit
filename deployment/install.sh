@@ -16,7 +16,7 @@ pip3 install setuptools docker docker-compose
 sudo usermod -a -G docker $USER
 
 # Reload docker group
-# exec newgrp docker
+exec newgrp docker
 
 # Unmask docker
 sudo systemctl unmask docker
@@ -76,8 +76,8 @@ wget \
 if [ ! -d "$CONFIGHOME" ]; then
 	generate_config
 else
-	echo "Existing configuration found. Using that."
+	echo "Existing configuration found for $DOMAIN. Using that."
 fi
 
 # Start the app
-(cd $CONFIGHOME; docker-compose up -d)
+(cd $CONFIGHOME; docker-compose pull && docker-compose up -d)
