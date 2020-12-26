@@ -15,9 +15,6 @@ pip3 install setuptools docker docker-compose
 # Add the current user to the docker group
 sudo usermod -a -G docker $USER
 
-# Reload docker group
-# exec newgrp docker
-
 # Unmask docker
 sudo systemctl unmask docker
 
@@ -98,5 +95,7 @@ setup_ssl
 # Start the app
 (cd $CONFIGHOME; docker-compose pull && docker-compose up -d)
 
+tput setaf 2; echo "SUCCESS: Configuration file '.env' is stored in $CONFIGHOME. Make sure to back it up."
+
 # Schedule a cronjob to take regular backups at 12:00 am everyday
-crontab -l | { cat; echo "0 0 * * * sh $CONFIGHOME/backup.sh"; } | crontab -
+# crontab -l | { cat; echo "0 0 * * * sh $CONFIGHOME/backup.sh"; } | crontab -
