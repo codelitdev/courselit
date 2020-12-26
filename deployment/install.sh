@@ -16,7 +16,7 @@ pip3 install setuptools docker docker-compose
 sudo usermod -a -G docker $USER
 
 # Reload docker group
-exec newgrp docker
+# exec newgrp docker
 
 # Unmask docker
 sudo systemctl unmask docker
@@ -43,11 +43,7 @@ DBUSER=$(tr -dc 'a-z' </dev/urandom | head -c 7)
 DBPASSWORD=$(tr -dc 'a-zA-Z0-9' </dev/urandom | head -c 20)
 JWTSECRET=$(tr -dc 'a-z' </dev/urandom | head -c 10)
 
-#echo $DOMAIN
-#echo $DBUSER
-#echo $DBPASSWORD
-
-mkdir $CONFIGHOME
+mkdir -p $CONFIGHOME
 
 cat > $CONFIGHOME/.env <<EOF
 MEDIA_FOLDER=/home/$USER/$DOMAIN
@@ -67,9 +63,27 @@ EOF
 wget \
     https://raw.githubusercontent.com/codelitdev/courselit/master/deployment/docker/docker-compose.yml \
     -P $CONFIGHOME
-wget \
-    https://raw.githubusercontent.com/codelitdev/courselit/master/deployment/docker/Caddyfile \
-    -P $CONFIGHOME
+
+# Create a cronjob file to take backups
+cat > $CONFIGHOME/backup.sh <<EOF
+tar -cvz --exclude=**/diagnostic.data/* -f courselit-backup-\`date +'%d%m%y'\`.tar.gz /home/$USER/$DOMAIN >> courselit-backup-\`date +'%d%m%y'\`.log
+EOF
+}
+
+function setup_ssl () {
+    # Refresh the Caddyfile
+    rm $CONFIGHOME/Caddyfile
+    wget \
+        https://raw.githubusercontent.com/codelitdev/courselit/master/deployment/docker/Caddyfile \
+        -P $CONFIGHOME
+
+    # Turn off HTTPS by prepending http:// to Caddyfile
+    read -p "Do you want to turn off SSL? " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]
+    then
+        echo -e "http://$(cat $CONFIGHOME/Caddyfile)" > $CONFIGHOME/Caddyfile
+    fi
 }
 
 # Check if configuration exists
@@ -79,5 +93,10 @@ else
 	echo "Existing configuration found for $DOMAIN. Using that."
 fi
 
+setup_ssl
+
 # Start the app
 (cd $CONFIGHOME; docker-compose pull && docker-compose up -d)
+
+# Schedule a cronjob to take regular backups at 12:00 am everyday
+crontab -l | { cat; echo "0 0 * * * sh $CONFIGHOME/backup.sh"; } | crontab -
