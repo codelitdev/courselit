@@ -113,7 +113,7 @@ const MediaManager = (props) => {
       <Grid container direction="column">
         <Grid item container justify="space-between" alignItems="center">
           <Grid item className={classes.header}>
-            <Typography variant="h3">{MEDIA_MANAGER_PAGE_HEADING}</Typography>
+            <Typography variant="h1">{MEDIA_MANAGER_PAGE_HEADING}</Typography>
           </Grid>
           <Grid item>
             <Button

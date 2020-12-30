@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { siteUser, authProps } from "../types";
 import {
   Grid,
   IconButton,
@@ -7,9 +6,9 @@ import {
   TextField,
   Button,
   Switch,
-  Card,
 } from "@material-ui/core";
 import { ExpandMore, ExpandLess, AccountCircle } from "@material-ui/icons";
+import { connect } from "react-redux";
 import {
   CAPTION_VERIFIED,
   CAPTION_UNVERIFIED,
@@ -21,17 +20,19 @@ import {
   SWITCH_ACCOUNT_ACTIVE,
   ERR_PASSWORDS_DONT_MATCH,
   ENROLLED_COURSES_HEADER,
-} from "../config/strings";
+  HEADER_RESET_PASSWORD,
+} from "../../../config/strings";
 import { makeStyles } from "@material-ui/styles";
-import { useExecuteGraphQLQuery } from "./CustomHooks.js";
-import { BACKEND } from "../config/constants";
-import FetchBuilder from "../lib/fetch";
-import { connect } from "react-redux";
+import { BACKEND } from "../../../config/constants";
+import FetchBuilder from "../../../lib/fetch";
+import { siteUser, authProps } from "../../../types";
+import { Card } from "@courselit/components-library";
 
 const useStyles = makeStyles((theme) => ({
   container: {
     padding: "0.8em 1.2em",
     marginBottom: "0.6em",
+    background: "white",
   },
   error: {
     color: "#ff0000",
@@ -61,7 +62,6 @@ const UserDetails = (props) => {
   const [newUserData, setNewUserData] = useState(newUserDataDefaults);
   const classes = useStyles();
   const [error, setError] = useState("");
-  const executeGQLCall = useExecuteGraphQLQuery();
   const [enrolledCourses, setEnrolledCourses] = useState([]);
 
   useEffect(() => {
@@ -84,18 +84,16 @@ const UserDetails = (props) => {
       }
     }
     `;
+    const fetch = new FetchBuilder()
+      .setUrl(`${BACKEND}/graph`)
+      .setPayload(query)
+      .setIsGraphQLEndpoint(true)
+      .setAuthToken(props.auth.token)
+      .build();
     try {
-      const fetch = new FetchBuilder()
-        .setUrl(`${BACKEND}/graph`)
-        .setPayload(query)
-        .setIsGraphQLEndpoint(true)
-        .setAuthToken(props.auth.token)
-        .build();
       const response = await fetch.exec();
       setEnrolledCourses(response.enrolledCourses);
-    } catch (err) {
-      //
-    }
+    } catch (err) {}
   };
 
   const getUserDataError = () => {
@@ -135,9 +133,14 @@ const UserDetails = (props) => {
          }
     }
     `;
-
+    const fetch = new FetchBuilder()
+      .setUrl(`${BACKEND}/graph`)
+      .setPayload(mutation)
+      .setIsGraphQLEndpoint(true)
+      .setAuthToken(props.auth.token)
+      .build();
     try {
-      const response = await executeGQLCall(mutation);
+      const response = await fetch.exec();
       if (response.user) {
         setNewUserData(getNewUserDataObject(response.user));
         setUserData(response.user);
@@ -208,8 +211,8 @@ const UserDetails = (props) => {
     setNewUserData(Object.assign({}, newUserData, { [key]: value }));
 
   return (
-    <Card className={classes.container}>
-      <Grid container direction="column">
+    <Card>
+      <Grid container direction="column" className={classes.container}>
         <Grid
           container
           direction="row"
@@ -337,6 +340,11 @@ const UserDetails = (props) => {
                         }
                       />
                     </Grid>
+                  </Grid>
+                  <Grid item>
+                    <Typography variant="h6">
+                      {HEADER_RESET_PASSWORD}
+                    </Typography>
                   </Grid>
                   <Grid item>
                     <TextField

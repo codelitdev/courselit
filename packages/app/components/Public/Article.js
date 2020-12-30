@@ -54,6 +54,7 @@ const useStyles = (featuredImage) =>
     },
     enrollmentAreaPriceTag: {
       marginRight: theme.spacing(2),
+      marginBottom: theme.spacing(2),
     },
   }));
 
@@ -71,7 +72,7 @@ const Article = (props) => {
 
   return (
     <article>
-      <Typography variant="h2" className={classes.header}>
+      <Typography variant="h1" className={classes.header}>
         {course.title}
       </Typography>
       {options.showAttribution && (
@@ -96,16 +97,12 @@ const Article = (props) => {
       )}
       {options.showEnrollmentArea && !profile.purchases.includes(course.id) && (
         <div className={classes.enrollmentArea}>
-          <Grid container direction="row" alignItems="center">
+          <Grid container direction="column">
             <Grid item className={classes.enrollmentAreaPriceTag}>
               <PriceTag cost={course.cost} freeCostCaption={FREE_COST} />
             </Grid>
             <Grid>
-              <BuyButton
-                course={course}
-                onTransactionSuccess={() => {}}
-                onTransactionFailure={() => {}}
-              />
+              <BuyButton course={course} />
             </Grid>
           </Grid>
         </div>
