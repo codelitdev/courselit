@@ -2,15 +2,14 @@ import React, { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import {
   Grid,
-  Card,
-  CardHeader,
-  CardContent,
   Typography,
   IconButton,
   CardActions,
   Button,
   TextField,
   Link,
+  CardHeader,
+  CardContent,
 } from "@material-ui/core";
 import {
   CARD_HEADER_PAGE_LAYOUT,
@@ -40,10 +39,10 @@ import {
   LAYOUT_SECTION_FOOTER,
   LAYOUT_SECTION_BOTTOM,
   LAYOUT_SECTION_ASIDE,
+  HEADER_DESIGN,
 } from "../../../config/strings.js";
 import { makeStyles } from "@material-ui/styles";
 import { Add } from "@material-ui/icons";
-
 import AddComponentDialog from "./AddComponentDialog.js";
 import AddedComponent from "./AddedComponent.js";
 import { connect } from "react-redux";
@@ -59,6 +58,7 @@ import { authProps } from "../../../types.js";
 import ThemeItem from "./ThemeItem.js";
 import NavigationLinks from "./NavigationLinks/index.js";
 import widgets from "../../../config/widgets.js";
+import { Card } from "@courselit/components-library";
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -93,6 +93,16 @@ const useStyles = makeStyles((theme) => ({
   },
   mainContent: {
     height: "12em",
+  },
+  section: {
+    background: "white",
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    paddingLeft: theme.spacing(1),
+    paddingRight: theme.spacing(1),
+  },
+  sectionHeader: {
+    marginBottom: theme.spacing(2),
   },
 }));
 
@@ -335,6 +345,9 @@ const PageDesigner = (props) => {
 
   return (
     <Grid container spacing={2}>
+      <Grid item xs>
+        <Typography variant="h1">{HEADER_DESIGN}</Typography>
+      </Grid>
       <Grid item xs={12}>
         <Card>
           <CardHeader title={CARD_HEADER_PAGE_LAYOUT} />
@@ -589,8 +602,10 @@ const PageDesigner = (props) => {
 
       <Grid item xs={12}>
         <Card>
-          <CardHeader title={CARD_HEADER_THEME} />
-          <CardContent>
+          <div className={classes.section}>
+            <Typography variant="h4" className={classes.sectionHeader}>
+              {CARD_HEADER_THEME}
+            </Typography>
             <Grid container direction="column" spacing={4}>
               <Grid item>
                 <Typography variant="h6">
@@ -649,23 +664,25 @@ const PageDesigner = (props) => {
                     />
                   </form>
                 </Grid>
+                <Grid item>
+                  <Button disabled={!isNewThemeTextValid} onClick={addTheme}>
+                    {BUTTON_THEME_INSTALL}
+                  </Button>
+                </Grid>
               </Grid>
             </Grid>
-          </CardContent>
-          <CardActions>
-            <Button disabled={!isNewThemeTextValid} onClick={addTheme}>
-              {BUTTON_THEME_INSTALL}
-            </Button>
-          </CardActions>
+          </div>
         </Card>
       </Grid>
 
       <Grid item container xs direction="column">
         <Card>
-          <CardHeader title={HEADER_NAVIGATION} />
-          <CardContent>
+          <div className={classes.section}>
+            <Typography variant="h4" className={classes.sectionHeader}>
+              {HEADER_NAVIGATION}
+            </Typography>
             <NavigationLinks />
-          </CardContent>
+          </div>
         </Card>
       </Grid>
 

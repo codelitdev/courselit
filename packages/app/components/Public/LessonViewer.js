@@ -84,18 +84,12 @@ const LessonViewer = (props) => {
   return (
     <>
       {!isEnrolled && (
-        <Card>
-          <CardContent>
-            <Typography
-              variant="body1"
-              color="textSecondary"
-              className={classes.notEnrolledHeader}
-            >
-              {USER_ERROR_HEADER}
-            </Typography>
-            <Typography variant="h5">{ENROLL_IN_THE_COURSE}</Typography>
-          </CardContent>
-        </Card>
+        <>
+          <Typography variant="h1" className={classes.notEnrolledHeader}>
+            {USER_ERROR_HEADER}
+          </Typography>
+          <Typography variant="body1">{ENROLL_IN_THE_COURSE}</Typography>
+        </>
       )}
       {isEnrolled && (
         <Card>

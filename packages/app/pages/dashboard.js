@@ -1,6 +1,3 @@
-/**
- * Dashboard for creators.
- */
 import { useEffect } from "react";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
@@ -12,15 +9,15 @@ import {
   Palette,
   Widgets,
 } from "@material-ui/icons";
-import SiteSettings from "../components/Admin/SiteSettings.js";
+import Settings from "../components/Admin/Settings.js";
 import { CREATOR_AREA_PAGE_TITLE } from "../config/strings.js";
 import MediaManager from "../components/Admin/Media/MediaManager.js";
-import Courses from "../components/Admin/CoursesManager.js";
-import UsersManager from "../components/UsersManager.js";
+import Courses from "../components/Admin/Courses";
+import Users from "../components/Admin/Users";
 import AppLoader from "../components/AppLoader.js";
 import Design from "../components/Admin/Design";
 import ComponentScaffold from "../components/Public/BaseLayout/ComponentScaffold.js";
-import MasterDetails from "../components/Public/MasterDetails/index.js";
+import MasterDetails from "../components/Admin/Widgets";
 import widgets from "../config/widgets.js";
 import Head from "next/head";
 import { MEDIA_BACKEND } from "../config/constants.js";
@@ -81,7 +78,7 @@ const Create = (props) => {
       ...[
         {
           name: "Users",
-          element: <UsersManager />,
+          element: <Users />,
           icon: <SupervisedUserCircle />,
         },
         {
@@ -96,7 +93,7 @@ const Create = (props) => {
         },
         {
           name: "Settings",
-          element: <SiteSettings />,
+          element: <Settings />,
           icon: <SettingsApplications />,
         },
       ]

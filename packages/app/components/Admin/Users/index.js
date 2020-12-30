@@ -1,11 +1,23 @@
 import React, { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import { Grid, Typography, Button } from "@material-ui/core";
 import {
   USERS_MANAGER_PAGE_HEADING,
   LOAD_MORE_TEXT,
-} from "../config/strings.js";
+} from "../../../config/strings.js";
 import UserDetails from "./UserDetails.js";
-import { useExecuteGraphQLQuery } from "./CustomHooks.js";
+import FetchBuilder from "../../../lib/fetch.js";
+import { BACKEND } from "../../../config/constants.js";
+import { connect } from "react-redux";
+import { authProps } from "../../../types.js";
+import { networkAction } from "../../../redux/actions.js";
+import { makeStyles } from "@material-ui/styles";
+
+const useStyles = makeStyles((theme) => ({
+  header: {
+    marginBottom: theme.spacing(1),
+  },
+}));
 
 const UsersManager = (props) => {
   const [, setUsersSummary] = useState({
@@ -17,7 +29,7 @@ const UsersManager = (props) => {
   const [usersPaginationOffset, setUsersPaginationOffset] = useState(1);
   const [users, setUsers] = useState([]);
   // const [searchText, setSearchText] = useState("");
-  const executeGQLCall = useExecuteGraphQLQuery();
+  const classes = useStyles();
 
   useEffect(() => {
     loadUsersSummary();
@@ -38,8 +50,14 @@ const UsersManager = (props) => {
       }
     }
     `;
+    const fetch = new FetchBuilder()
+      .setUrl(`${BACKEND}/graph`)
+      .setPayload(query)
+      .setIsGraphQLEndpoint(true)
+      .setAuthToken(props.auth.token)
+      .build();
     try {
-      const response = await executeGQLCall(query);
+      const response = await fetch.exec();
       if (response.summary) {
         setUsersSummary({
           count: response.summary.count,
@@ -69,17 +87,23 @@ const UsersManager = (props) => {
       }
     }
     `;
+    const fetch = new FetchBuilder()
+      .setUrl(`${BACKEND}/graph`)
+      .setPayload(query)
+      .setIsGraphQLEndpoint(true)
+      .setAuthToken(props.auth.token)
+      .build();
     try {
-      const response = await executeGQLCall(query);
+      props.dispatch(networkAction(true));
+      const response = await fetch.exec();
       if (response.users && response.users.length > 0) {
         setUsers([...users, ...response.users]);
       }
-    } catch (err) {}
+    } catch (err) {
+    } finally {
+      props.dispatch(networkAction(false));
+    }
   };
-
-  // const handleSearch = event => {
-  //   event.preventDefault();
-  // };
 
   const onLoadMoreClick = () =>
     setUsersPaginationOffset(usersPaginationOffset + 1);
@@ -92,9 +116,10 @@ const UsersManager = (props) => {
         direction="row"
         justify="space-between"
         alignItems="center"
+        className={classes.header}
       >
         <Grid item xs={12} sm={8}>
-          <Typography variant="h3">{USERS_MANAGER_PAGE_HEADING}</Typography>
+          <Typography variant="h1">{USERS_MANAGER_PAGE_HEADING}</Typography>
         </Grid>
         {/* <Grid item xs={12} sm={4}>
           <form onSubmit={handleSearch}>
@@ -122,4 +147,13 @@ const UsersManager = (props) => {
   );
 };
 
-export default UsersManager;
+UsersManager.propTypes = {
+  auth: authProps,
+  dispatch: PropTypes.func.isRequired,
+};
+
+const mapStateToProps = (state) => ({
+  auth: state.auth,
+});
+
+export default connect(mapStateToProps)(UsersManager);
