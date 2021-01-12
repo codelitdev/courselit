@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const constants = require("../config/constants.js");
+const AutoIncrement = require("mongoose-sequence")(mongoose);
 
 const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
@@ -11,6 +12,7 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   name: { type: String, required: true },
   purchases: [mongoose.Schema.Types.ObjectId],
+  bio: { type: String },
 });
 
 UserSchema.index({
@@ -33,5 +35,7 @@ UserSchema.methods.isPasswordValid = async function (password) {
   const compare = await bcrypt.compare(password, user.password);
   return compare;
 };
+
+UserSchema.plugin(AutoIncrement, { inc_field: "userId" });
 
 module.exports = mongoose.model("User", UserSchema);

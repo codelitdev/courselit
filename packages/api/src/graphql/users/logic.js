@@ -10,25 +10,45 @@ const {
   makeModelTextSearchable,
 } = require("../../lib/graphql.js");
 const constants = require("../../config/constants.js");
+const ObjectId = require("mongoose").Types.ObjectId;
 
-const removeAdminFieldsFromUserObject = ({ id, email, name }) => ({
+const removeAdminFieldsFromUserObject = ({ id, name, userId, bio, email }) => ({
   id,
-  email,
   name,
+  userId,
+  bio,
+  email,
 });
 
-exports.getUser = async (email, ctx) => {
+exports.getUser = async (email = null, userId = null, ctx) => {
+  if (!email && !userId) {
+    throw new Error(strings.responses.invalid_user_id);
+  }
+
   const loggedUserEmail = ctx.user && ctx.user.email;
+  const loggedUserId = ctx.user && ctx.user.userId;
   const isAdmin = ctx.user && ctx.user.isAdmin;
 
-  const user = await User.findOne({ email });
+  let user;
+  if (email) {
+    user = await User.findOne({ email });
+  } else {
+    // userId can be either a Mongodb ObjectID or userId from User schema
+    if (ObjectId.isValid(userId)) {
+      user = await User.findById(userId);
+    } else {
+      user = await User.findOne({ userId });
+    }
+  }
 
   if (!user) {
     throw new Error(strings.responses.item_not_found);
   }
 
+  user.userId = user.userId || -1; // Set -1 for empty userIds; Backward compatibility;
+
   const result =
-    loggedUserEmail === email || isAdmin
+    loggedUserEmail === email || loggedUserId === userId || isAdmin
       ? user
       : removeAdminFieldsFromUserObject(user);
 

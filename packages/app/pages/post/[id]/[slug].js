@@ -22,7 +22,7 @@ const useStyles = makeStyles((theme) => ({
 const Post = (props) => {
   const classes = useStyles();
   const articleOptions = {
-    showAttribution: false,
+    showAttribution: true,
   };
 
   return (
