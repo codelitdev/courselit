@@ -14,23 +14,21 @@ import { FREE_COST } from "../../config/strings.js";
 
 const useStyles = (featuredImage) =>
   makeStyles((theme) => ({
-    header: {
-      marginBottom: theme.spacing(1),
-      [theme.breakpoints.up("sm")]: {
-        marginBottom: theme.spacing(4),
-      },
-    },
+    header: {},
     creatoravatarcontainer: {
       display: "flex",
       alignItems: "center",
     },
     creatorcard: {
-      paddingTop: "0.8em",
+      marginTop: theme.spacing(1),
     },
     creatoravatar: {
       borderRadius: "1.5em",
       width: "3em",
       marginRight: "1em",
+    },
+    creatorName: {
+      color: "inherit",
     },
     featuredimagecontainer: {
       width: "100%",
@@ -56,6 +54,9 @@ const useStyles = (featuredImage) =>
       marginRight: theme.spacing(2),
       marginBottom: theme.spacing(2),
     },
+    content: {
+      marginTop: theme.spacing(4),
+    },
   }));
 
 const Article = (props) => {
@@ -77,13 +78,10 @@ const Article = (props) => {
       </Typography>
       {options.showAttribution && (
         <Grid container className={classes.creatorcard}>
-          <Grid item className={classes.creatoravatarcontainer}>
-            <img src="/static/logo.jpg" className={classes.creatoravatar}></img>
-          </Grid>
           <Grid item>
             <Typography variant="overline" component="p">
-              <Link href="/creator/[id]" as={`/creator/${course.creatorId}`}>
-                <a>{course.creatorName}</a>
+              <Link href="/profile/[id]" as={`/profile/${course.creatorId}`}>
+                <a className={classes.creatorName}>{course.creatorName}</a>
               </Link>
             </Typography>
             <Typography variant="overline" className={classes.updatedtime}>
@@ -108,10 +106,12 @@ const Article = (props) => {
         </div>
       )}
       {courseDescriptionHydrated && process.browser && (
-        <TextEditor
-          initialContentState={courseDescriptionHydrated}
-          readOnly={true}
-        />
+        <div className={classes.content}>
+          <TextEditor
+            initialContentState={courseDescriptionHydrated}
+            readOnly={true}
+          />
+        </div>
       )}
     </article>
   );

@@ -92,6 +92,7 @@ function profileReducer(state = initialState.profile, action) {
         isAdmin: (action.profile && action.profile.isAdmin) || false,
         purchases: (action.profile && action.profile.purchases) || [],
         email: action.profile && action.profile.email,
+        userId: action.profile && action.profile.userId,
       };
     case PROFILE_CLEAR:
       return initialState.profile;

@@ -45,19 +45,11 @@ export const queryGraphQLWithUIEffects = (
 };
 
 export const formattedLocaleDate = (epochString) =>
-  new Date(Number(epochString)).toLocaleString("en-US");
-
-// export const removeEmptyProperties = (obj, propToExclude) =>
-//   Object
-//     .keys(obj)
-//     .filter(i => i !== propToExclude)
-//     .reduce(
-//       (acc, item, index) => {
-//         if (obj[item] !== '') {
-//           acc[item] = obj[item]
-//         }
-//         return acc
-//       }, {})
+  new Date(Number(epochString)).toLocaleString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
 // Regex copied from: https://stackoverflow.com/a/48675160/942589
 export const makeGraphQLQueryStringFromJSObject = (obj) =>

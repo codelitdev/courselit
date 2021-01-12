@@ -191,6 +191,7 @@ export const SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK =
   "Your payment processor sends out notifications about purchases. CourseLit needs those notifications to correctly reflect user purchases. Right click the following link and copy the link address. Paste that into your payment processor's webhook settings.";
 export const PURCHASE_STATUS_PAGE_HEADER = "Purchase Status";
 export const MAIN_MENU_ITEM_DASHBOARD = "Dashboard";
+export const MAIN_MENU_ITEM_PROFILE = "Profile";
 export const LAYOUT_SECTION_MAIN_CONTENT = "Main Content";
 export const LAYOUT_SECTION_FOOTER_LEFT = "Left Section";
 export const LAYOUT_SECTION_FOOTER_RIGHT = "Right Section";
@@ -221,3 +222,8 @@ export const PROFILE_PAGE_HEADER = "Profile";
 export const PROFILE_MY_COURSES = "My Courses";
 export const PROFILE_PAGE_NOT_ENROLLED = "You are not enrolled in any course.";
 export const PROFILE_PAGE_BROWSE_COURSES_TEXT = "Browse our courses";
+export const PROFILE_SECTION_DETAILS_NAME = "Name";
+export const PROFILE_SECTION_DETAILS_EMAIL = "Email";
+export const PROFILE_SECTION_DETAILS_BIO = "Bio";
+export const PROFILE_SECTION_DETAILS_BIO_EMPTY =
+  "The user has not filled the bio.";

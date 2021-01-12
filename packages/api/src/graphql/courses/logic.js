@@ -78,7 +78,7 @@ exports.createCourse = async (courseData, ctx) => {
     isFeatured: courseData.isFeatured,
     description: courseData.description,
     featuredImage: courseData.featuredImage,
-    creatorId: ctx.user._id,
+    creatorId: ctx.user.userId || ctx.user._id,
     creatorName: ctx.user.name,
     slug: slugify(courseData.title.toLowerCase()),
   });
