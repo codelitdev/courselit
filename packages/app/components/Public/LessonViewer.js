@@ -9,12 +9,12 @@ import {
 } from "../../config/constants";
 import { connect } from "react-redux";
 import { networkAction } from "../../redux/actions";
-import { Typography, Card, CardContent, Grid } from "@material-ui/core";
+import { Typography, Grid } from "@material-ui/core";
 import { ENROLL_IN_THE_COURSE, USER_ERROR_HEADER } from "../../config/strings";
 import { makeStyles } from "@material-ui/styles";
 import { lesson, authProps, profileProps } from "../../types";
 import { formulateMediaUrl } from "../../lib/utils.js";
-import TextEditor from "./RichText.js";
+import { RichText as TextEditor } from "@courselit/components-library";
 
 const useStyles = makeStyles((theme) => ({
   notEnrolledHeader: {
@@ -92,63 +92,61 @@ const LessonViewer = (props) => {
         </>
       )}
       {isEnrolled && (
-        <Card>
-          <CardContent>
-            <Grid container direction="column">
-              <Grid item>
-                <Typography variant="h3">{lesson.title}</Typography>
-              </Grid>
-              {String.prototype.toUpperCase.call(LESSON_TYPE_VIDEO) ===
-                lesson.type && (
-                <Grid item>
-                  <video
-                    controls
-                    controlsList="nodownload"
-                    className={`${classes.videoPlayer} ${classes.section}`}
-                  >
-                    <source
-                      src={`${formulateMediaUrl(
-                        MEDIA_BACKEND,
-                        lesson.contentURL,
-                        false
-                      )}`}
-                      type="video/mp4"
-                    />
-                    Your browser does not support the video tag.
-                  </video>
-                </Grid>
-              )}
-              {String.prototype.toUpperCase.call(LESSON_TYPE_AUDIO) ===
-                lesson.type && (
-                <Grid item>
-                  <audio
-                    controls
-                    controlsList="nodownload"
-                    className={classes.section}
-                  >
-                    <source
-                      src={`${formulateMediaUrl(
-                        MEDIA_BACKEND,
-                        lesson.contentURL,
-                        false
-                      )}`}
-                      type="audio/mpeg"
-                    />
-                    Your browser does not support the video tag.
-                  </audio>
-                </Grid>
-              )}
-              {lesson.content && (
-                <Grid item className={classes.section}>
-                  <TextEditor
-                    initialContentState={lesson.content}
-                    readOnly={true}
-                  />
-                </Grid>
-              )}
+        <Grid container direction="column" component="article">
+          <Grid item>
+            <header>
+              <Typography variant="h1">{lesson.title}</Typography>
+            </header>
+          </Grid>
+          {String.prototype.toUpperCase.call(LESSON_TYPE_VIDEO) ===
+            lesson.type && (
+            <Grid item>
+              <video
+                controls
+                controlsList="nodownload"
+                className={`${classes.videoPlayer} ${classes.section}`}
+              >
+                <source
+                  src={`${formulateMediaUrl(
+                    MEDIA_BACKEND,
+                    lesson.contentURL,
+                    false
+                  )}`}
+                  type="video/mp4"
+                />
+                Your browser does not support the video tag.
+              </video>
             </Grid>
-          </CardContent>
-        </Card>
+          )}
+          {String.prototype.toUpperCase.call(LESSON_TYPE_AUDIO) ===
+            lesson.type && (
+            <Grid item>
+              <audio
+                controls
+                controlsList="nodownload"
+                className={classes.section}
+              >
+                <source
+                  src={`${formulateMediaUrl(
+                    MEDIA_BACKEND,
+                    lesson.contentURL,
+                    false
+                  )}`}
+                  type="audio/mpeg"
+                />
+                Your browser does not support the video tag.
+              </audio>
+            </Grid>
+          )}
+          {lesson.content && (
+            <Grid item className={classes.section}>
+              <TextEditor
+                initialContentState={lesson.content}
+                readOnly={true}
+              />
+            </Grid>
+          )}
+        </Grid>
       )}
     </>
   );

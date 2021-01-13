@@ -42,9 +42,8 @@ import AppDialog from "../../Public/AppDialog.js";
 import LessonEditor from "./LessonEditor.js";
 import AppMessage from "../../../models/app-message.js";
 import { BACKEND, MIMETYPE_IMAGE } from "../../../config/constants.js";
-import TextEditor from "../../Public/RichText.js";
 import FetchBuilder from "../../../lib/fetch";
-import { Card } from "@courselit/components-library";
+import { Card, RichText as TextEditor } from "@courselit/components-library";
 
 const useStyles = makeStyles((theme) => ({
   title: {

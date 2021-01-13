@@ -22,6 +22,7 @@ import Prism from "prismjs";
 import "draft-js/dist/Draft.css";
 import "prismjs/themes/prism-tomorrow.css";
 
+// TODO: Remove props.theme
 const Editor = (props) => {
   const handleKeyCommand = (command, editorState) => {
     const newState = RichUtils.handleKeyCommand(editorState, command);
@@ -55,19 +56,25 @@ const Editor = (props) => {
     }
   };
 
-  const blockRenderMap = Map({
-    unstyled: {
-      element: "p",
-    },
-    blockquote: {
-      element: "blockquote",
-      wrapper: <Blockquote style={props.theme.blockquote} />,
-    },
-    "code-block": {
-      element: "pre",
-      wrapper: <Code style={props.theme.code} />,
-    },
-  });
+  const blockRenderMap = Map(
+    Object.assign(
+      {},
+      {
+        unstyled: {
+          element: "p",
+        },
+        blockquote: {
+          element: "blockquote",
+          wrapper: <Blockquote style={props.theme.blockquote} />,
+        },
+        "code-block": {
+          element: "pre",
+          wrapper: <Code style={props.theme.code} />,
+        },
+      },
+      props.blockRenderMap
+    )
+  );
 
   const extendedBlockRenderMap = DefaultDraftBlockRenderMap.merge(
     blockRenderMap
@@ -204,6 +211,7 @@ Editor.propTypes = {
   onChange: PropTypes.func,
   readOnly: PropTypes.bool,
   theme: PropTypes.object,
+  blockRenderMap: PropTypes.object,
 };
 
 export default Editor;

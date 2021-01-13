@@ -30,6 +30,7 @@ const TextEditor = (props) => {
       onChange={onChange}
       readOnly={props.readOnly}
       styles={props.styles}
+      blockRenderMap={props.blockRenderMap}
     />
   );
 };
@@ -53,6 +54,7 @@ TextEditor.propTypes = {
   onChange: PropTypes.func,
   readOnly: PropTypes.bool,
   styles: PropTypes.object,
+  blockRenderMap: PropTypes.object,
 };
 
 export default TextEditor;

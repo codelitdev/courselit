@@ -1,7 +1,6 @@
 import React from "react";
 import { Typography, Grid } from "@material-ui/core";
 import Link from "next/link";
-import TextEditor from "./RichText.js";
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/styles";
 import { MEDIA_BACKEND } from "../../config/constants.js";
@@ -9,7 +8,10 @@ import { formulateMediaUrl, formattedLocaleDate } from "../../lib/utils";
 import { publicCourse, profileProps } from "../../types";
 import BuyButton from "../CheckoutExternal";
 import { connect } from "react-redux";
-import { PriceTag } from "@courselit/components-library";
+import {
+  PriceTag,
+  RichText as TextEditor,
+} from "@courselit/components-library";
 import { FREE_COST } from "../../config/strings.js";
 
 const useStyles = (featuredImage) =>
@@ -73,9 +75,11 @@ const Article = (props) => {
 
   return (
     <article>
-      <Typography variant="h1" className={classes.header}>
-        {course.title}
-      </Typography>
+      <header>
+        <Typography variant="h1" className={classes.header}>
+          {course.title}
+        </Typography>
+      </header>
       {options.showAttribution && (
         <Grid container className={classes.creatorcard}>
           <Grid item>
