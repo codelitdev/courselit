@@ -4,6 +4,7 @@ import Course from "./Course";
 import { FetchBuilder, WidgetProps } from "./Widget";
 import AppState from "./AppState";
 import WidgetHelpers from "./WidgetHelpers";
+import RichText from "./RichText";
 
 export {
   PriceTag,
@@ -13,4 +14,5 @@ export {
   FetchBuilder,
   AppState,
   WidgetHelpers,
+  RichText,
 };
