@@ -1,10 +1,10 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { link } from "../../../types";
 import { makeStyles } from "@material-ui/styles";
 import { ListItem, ListItemText, ListItemIcon } from "@material-ui/core";
 import { OpenInNew } from "@material-ui/icons";
 import Link from "next/link";
+import { link } from "../../../../types";
 
 const useStyles = makeStyles({
   externalLink: {
@@ -14,7 +14,7 @@ const useStyles = makeStyles({
   },
 });
 
-const ScaffoldMenuItem = (props) => {
+const MenuItem = (props) => {
   const { link } = props;
   const classes = useStyles();
 
@@ -49,9 +49,9 @@ const ScaffoldMenuItem = (props) => {
   );
 };
 
-ScaffoldMenuItem.propTypes = {
+MenuItem.propTypes = {
   link: link,
   closeDrawer: PropTypes.func,
 };
 
-export default ScaffoldMenuItem;
+export default MenuItem;

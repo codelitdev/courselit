@@ -1,7 +1,6 @@
 import React from "react";
 import { Typography, Grid } from "@material-ui/core";
 import Link from "next/link";
-import TextEditor from "./RichText.js";
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/styles";
 import { MEDIA_BACKEND } from "../../config/constants.js";
@@ -9,28 +8,29 @@ import { formulateMediaUrl, formattedLocaleDate } from "../../lib/utils";
 import { publicCourse, profileProps } from "../../types";
 import BuyButton from "../CheckoutExternal";
 import { connect } from "react-redux";
-import { PriceTag } from "@courselit/components-library";
+import {
+  PriceTag,
+  RichText as TextEditor,
+} from "@courselit/components-library";
 import { FREE_COST } from "../../config/strings.js";
 
 const useStyles = (featuredImage) =>
   makeStyles((theme) => ({
-    header: {
-      marginBottom: theme.spacing(1),
-      [theme.breakpoints.up("sm")]: {
-        marginBottom: theme.spacing(4),
-      },
-    },
+    header: {},
     creatoravatarcontainer: {
       display: "flex",
       alignItems: "center",
     },
     creatorcard: {
-      paddingTop: "0.8em",
+      marginTop: theme.spacing(1),
     },
     creatoravatar: {
       borderRadius: "1.5em",
       width: "3em",
       marginRight: "1em",
+    },
+    creatorName: {
+      color: "inherit",
     },
     featuredimagecontainer: {
       width: "100%",
@@ -54,6 +54,10 @@ const useStyles = (featuredImage) =>
     },
     enrollmentAreaPriceTag: {
       marginRight: theme.spacing(2),
+      marginBottom: theme.spacing(2),
+    },
+    content: {
+      marginTop: theme.spacing(4),
     },
   }));
 
@@ -71,18 +75,17 @@ const Article = (props) => {
 
   return (
     <article>
-      <Typography variant="h2" className={classes.header}>
-        {course.title}
-      </Typography>
+      <header>
+        <Typography variant="h1" className={classes.header}>
+          {course.title}
+        </Typography>
+      </header>
       {options.showAttribution && (
         <Grid container className={classes.creatorcard}>
-          <Grid item className={classes.creatoravatarcontainer}>
-            <img src="/static/logo.jpg" className={classes.creatoravatar}></img>
-          </Grid>
           <Grid item>
             <Typography variant="overline" component="p">
-              <Link href="/creator/[id]" as={`/creator/${course.creatorId}`}>
-                <a>{course.creatorName}</a>
+              <Link href="/profile/[id]" as={`/profile/${course.creatorId}`}>
+                <a className={classes.creatorName}>{course.creatorName}</a>
               </Link>
             </Typography>
             <Typography variant="overline" className={classes.updatedtime}>
@@ -96,25 +99,23 @@ const Article = (props) => {
       )}
       {options.showEnrollmentArea && !profile.purchases.includes(course.id) && (
         <div className={classes.enrollmentArea}>
-          <Grid container direction="row" alignItems="center">
+          <Grid container direction="column">
             <Grid item className={classes.enrollmentAreaPriceTag}>
               <PriceTag cost={course.cost} freeCostCaption={FREE_COST} />
             </Grid>
             <Grid>
-              <BuyButton
-                course={course}
-                onTransactionSuccess={() => {}}
-                onTransactionFailure={() => {}}
-              />
+              <BuyButton course={course} />
             </Grid>
           </Grid>
         </div>
       )}
       {courseDescriptionHydrated && process.browser && (
-        <TextEditor
-          initialContentState={courseDescriptionHydrated}
-          readOnly={true}
-        />
+        <div className={classes.content}>
+          <TextEditor
+            initialContentState={courseDescriptionHydrated}
+            readOnly={true}
+          />
+        </div>
       )}
     </article>
   );

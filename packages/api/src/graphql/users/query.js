@@ -6,9 +6,11 @@ module.exports = {
   getUser: {
     type: types.userType,
     args: {
-      email: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+      email: { type: graphql.GraphQLString },
+      userId: { type: graphql.GraphQLString },
     },
-    resolve: (root, { email }, context) => logic.getUser(email, context),
+    resolve: (root, { email, userId }, context) =>
+      logic.getUser(email, userId, context),
   },
   getSiteUsers: {
     type: new graphql.GraphQLList(types.userType),

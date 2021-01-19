@@ -16,7 +16,9 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: theme.spacing(2),
   },
   header: {
-    marginLeft: theme.spacing(2),
+    [theme.breakpoints.up("md")]: {
+      marginLeft: theme.spacing(2),
+    },
   },
   headerTop: {
     marginBottom: theme.spacing(2),
@@ -51,7 +53,7 @@ const Courses = (props) => {
         <Grid container component="section">
           <Grid item container className={classes.header}>
             <Grid item xs={12} className={classes.headerTop}>
-              <Typography variant="h4">{path}</Typography>
+              <Typography variant="h1">{path}</Typography>
             </Grid>
           </Grid>
           <Items

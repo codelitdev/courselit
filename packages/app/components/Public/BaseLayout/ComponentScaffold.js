@@ -53,7 +53,7 @@ const useStyles = makeStyles((theme) => ({
   },
   contentMain: {
     padding: theme.spacing(2),
-    paddingTop: theme.spacing(8),
+    paddingTop: theme.spacing(4),
     minHeight: "80vh",
   },
   showProgressBar: (props) => ({

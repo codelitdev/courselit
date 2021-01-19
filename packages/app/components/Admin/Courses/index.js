@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
-import { authProps, profileProps } from "../../types.js";
+import { authProps, profileProps } from "../../../types.js";
 import { Grid, Typography, Button } from "@material-ui/core";
 import CourseEditor from "./CourseEditor.js";
 import CreatorCoursesList from "./CreatorCoursesList.js";
@@ -11,12 +11,21 @@ import {
   POPUP_CANCEL_ACTION,
   POPUP_OK_ACTION,
   DISCARD_COURSE_CHANGES_POPUP_HEADER,
-} from "../../config/strings.js";
-import { useExecuteGraphQLQuery } from "../CustomHooks.js";
+  EMPTY_COURSES_LIST_ADMIN,
+  LOAD_MORE_TEXT,
+} from "../../../config/strings.js";
+import { useExecuteGraphQLQuery } from "../../CustomHooks.js";
 import { Add, Done } from "@material-ui/icons";
-import AppDialog from "../Public/AppDialog.js";
+import AppDialog from "../../Public/AppDialog.js";
+import { makeStyles } from "@material-ui/styles";
 
-const Courses = (props) => {
+const useStyles = makeStyles((theme) => ({
+  header: {
+    marginBottom: theme.spacing(1),
+  },
+}));
+
+const CoursesManager = (props) => {
   const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1);
   const [creatorCourses, setCreatorCourses] = useState([]);
   const [courseEditorVisible, setCourseEditorVisible] = useState(false);
@@ -26,6 +35,7 @@ const Courses = (props) => {
     false
   );
   const executeGQLCall = useExecuteGraphQLQuery();
+  const classes = useStyles();
 
   useEffect(() => {
     loadCreatorCourses();
@@ -37,7 +47,10 @@ const Courses = (props) => {
     }
     const query = `
     query {
-      courses: getCreatorCourses(id: "${props.profile.id}", offset: ${coursesPaginationOffset}) {
+      courses: getCreatorCourses(
+        id: "${props.profile.id}",
+        offset: ${coursesPaginationOffset}
+      ) {
         id, title
       }
     }
@@ -74,38 +87,48 @@ const Courses = (props) => {
 
   return (
     <div>
-      <div>
-        <Grid
-          container
-          direction="row"
-          justify="space-between"
-          alignItems="center"
-        >
-          <Grid item>
-            <Typography variant="h3">
-              {courseEditorVisible
-                ? NEW_COURSE_PAGE_HEADING
-                : MANAGE_COURSES_PAGE_HEADING}
-            </Typography>
-          </Grid>
-          <Grid item>
-            <Button
-              variant="contained"
-              color={courseEditorVisible ? "secondary" : "primary"}
-              onClick={() => showEditor()}
-            >
-              {courseEditorVisible ? <Done /> : <Add />}
-            </Button>
-          </Grid>
+      <Grid
+        container
+        direction="row"
+        justify="space-between"
+        alignItems="center"
+        className={classes.header}
+      >
+        <Grid item>
+          <Typography variant="h1">
+            {courseEditorVisible
+              ? NEW_COURSE_PAGE_HEADING
+              : MANAGE_COURSES_PAGE_HEADING}
+          </Typography>
         </Grid>
-      </div>
-      <div>
+        <Grid item>
+          <Button
+            variant="contained"
+            color={courseEditorVisible ? "secondary" : "primary"}
+            onClick={() => showEditor()}
+          >
+            {courseEditorVisible ? <Done /> : <Add />}
+          </Button>
+        </Grid>
+      </Grid>
+      <>
         {!courseEditorVisible && (
-          <CreatorCoursesList
-            courses={creatorCourses}
-            onClick={showEditor}
-            onLoadMoreClick={loadCreatorCourses}
-          />
+          <>
+            {creatorCourses.length > 0 && (
+              <>
+                <CreatorCoursesList
+                  courses={creatorCourses}
+                  onClick={showEditor}
+                />
+                <Button onClick={loadCreatorCourses}>{LOAD_MORE_TEXT}</Button>
+              </>
+            )}
+            {creatorCourses.length <= 0 && (
+              <Typography variant="body1">
+                {EMPTY_COURSES_LIST_ADMIN}
+              </Typography>
+            )}
+          </>
         )}
         {courseEditorVisible && (
           <CourseEditor
@@ -114,7 +137,7 @@ const Courses = (props) => {
             closeEditor={showEditor}
           />
         )}
-      </div>
+      </>
       <AppDialog
         onOpen={userDismissingDirtyEditor}
         onClose={markDirtyEditorClean}
@@ -128,7 +151,7 @@ const Courses = (props) => {
   );
 };
 
-Courses.propTypes = {
+CoursesManager.propTypes = {
   auth: authProps,
   profile: profileProps,
   dispatch: PropTypes.func.isRequired,
@@ -143,4 +166,4 @@ const mapDispatchToProps = (dispatch) => ({
   dispatch: dispatch,
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(Courses);
+export default connect(mapStateToProps, mapDispatchToProps)(CoursesManager);

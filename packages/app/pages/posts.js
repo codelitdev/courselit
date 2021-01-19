@@ -49,7 +49,7 @@ function Posts(props) {
         <Grid container component="section">
           <Grid item container className={classes.header}>
             <Grid item xs={12} className={classes.headerTop}>
-              <Typography variant="h4">{HEADER_BLOG_POSTS_SECTION}</Typography>
+              <Typography variant="h1">{HEADER_BLOG_POSTS_SECTION}</Typography>
             </Grid>
           </Grid>
           <Items

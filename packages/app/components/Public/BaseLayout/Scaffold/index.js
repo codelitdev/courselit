@@ -10,13 +10,16 @@ import { Menu } from "@material-ui/icons";
 import { Grid, LinearProgress, Toolbar, Typography } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
-import AppToast from "../../AppToast.js";
+import AppToast from "../../../AppToast.js";
 import { connect } from "react-redux";
-import { siteInfoProps, link, profileProps } from "../../../types.js";
-import Header from "./Header.js";
-import ScaffoldMenuItem from "./ScaffoldMenuItem.js";
-import { MAIN_MENU_ITEM_DASHBOARD } from "../../../config/strings.js";
-import { NAVIGATION_CATEGORY_MAIN } from "../../../config/constants.js";
+import { siteInfoProps, link, profileProps } from "../../../../types.js";
+import Header from "../Header.js";
+import {
+  MAIN_MENU_ITEM_DASHBOARD,
+  MAIN_MENU_ITEM_PROFILE,
+} from "../../../../config/strings.js";
+import { NAVIGATION_CATEGORY_MAIN } from "../../../../config/constants.js";
+import MenuItem from "./MenuItem.js";
 
 const drawerWidth = 240;
 
@@ -77,28 +80,48 @@ const Scaffold = (props) => {
       </Grid>
       <Divider />
       <List>
+        {props.profile.fetched && (
+          <>
+            {props.profile.id && (
+              <>
+                <MenuItem
+                  link={{
+                    text: MAIN_MENU_ITEM_PROFILE,
+                    destination: `/profile/${
+                      props.profile.userId && props.profile.userId !== -1
+                        ? props.profile.userId
+                        : props.profile.id
+                    }`,
+                    category: NAVIGATION_CATEGORY_MAIN,
+                    newTab: false,
+                  }}
+                />
+                <Divider />
+              </>
+            )}
+            {(props.profile.isAdmin || props.profile.isCreator) && (
+              <MenuItem
+                link={{
+                  text: MAIN_MENU_ITEM_DASHBOARD,
+                  destination: "/dashboard",
+                  category: NAVIGATION_CATEGORY_MAIN,
+                  newTab: false,
+                }}
+              />
+            )}
+          </>
+        )}
         {props.navigation &&
           props.navigation.map((link) =>
             forMobile ? (
-              <ScaffoldMenuItem
+              <MenuItem
                 link={link}
                 key={link.destination}
                 closeDrawer={handleDrawerToggle}
               />
             ) : (
-              <ScaffoldMenuItem link={link} key={link.destination} />
+              <MenuItem link={link} key={link.destination} />
             )
-          )}
-        {props.profile.fetched &&
-          (props.profile.isAdmin || props.profile.isCreator) && (
-            <ScaffoldMenuItem
-              link={{
-                text: MAIN_MENU_ITEM_DASHBOARD,
-                destination: "/dashboard",
-                category: NAVIGATION_CATEGORY_MAIN,
-                newTab: false,
-              }}
-            />
           )}
       </List>
     </div>

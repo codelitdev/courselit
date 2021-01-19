@@ -40,6 +40,7 @@ exports.responses = {
   course_already_purchased: "You have already purchased this item",
   payment_settings_invalid_suffix: "settings are invalid",
   invalid_course_id: "Invalid course ID",
+  invalid_user_id: "Invalid user ID",
   payment_settings_invalid:
     "Payment method is not set up. Please contact site admin.",
   not_enrolled: "You are not enrolled in the course",

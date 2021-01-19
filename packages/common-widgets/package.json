@@ -46,8 +46,7 @@
     "typescript": "^4.0.5"
   },
   "dependencies": {
-    "@courselit/components-library": "^0.5.4",
-    "@courselit/rich-text": "^0.5.4"
+    "@courselit/components-library": "^0.5.4"
   },
   "gitHead": "e91494470733b09bc3e772a9079162a844b40d97"
 }

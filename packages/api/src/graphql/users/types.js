@@ -8,10 +8,12 @@ const userType = new graphql.GraphQLObjectType({
     name: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     purchases: { type: new graphql.GraphQLList(graphql.GraphQLID) },
     active: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
+    userId: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
     verified: { type: graphql.GraphQLBoolean },
     isCreator: { type: graphql.GraphQLBoolean },
     isAdmin: { type: graphql.GraphQLBoolean },
     avatar: { type: graphql.GraphQLString },
+    bio: { type: graphql.GraphQLString },
   },
 });
 
@@ -25,6 +27,7 @@ const userUpdateInput = new graphql.GraphQLInputObjectType({
     isAdmin: { type: graphql.GraphQLBoolean },
     active: { type: graphql.GraphQLBoolean },
     password: { type: graphql.GraphQLString },
+    bio: { type: graphql.GraphQLString },
   },
 });
 

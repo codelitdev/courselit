@@ -1,8 +1,11 @@
 import * as React from "react";
-import { WidgetProps, WidgetHelpers } from "@courselit/components-library";
+import {
+  WidgetProps,
+  WidgetHelpers,
+  RichText as TextEditor,
+} from "@courselit/components-library";
 import { connect } from "react-redux";
 import Settings from "./Settings";
-import TextEditor from "@courselit/rich-text";
 import { makeStyles } from "@material-ui/styles";
 import { Grid, Theme } from "@material-ui/core";
 

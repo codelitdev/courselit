@@ -6,7 +6,7 @@ import { MEDIA_BACKEND } from "../../../config/constants.js";
 import { formulateMediaUrl } from "../../../lib/utils.js";
 import { siteInfoProps } from "../../../types.js";
 import Template from "./Template.js";
-import Scaffold from "./Scaffold.js";
+import Scaffold from "./Scaffold";
 
 const MasterLayout = (props) => {
   return (

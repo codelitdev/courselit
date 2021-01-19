@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import {
-  Card,
-  CardContent,
-  CardActions,
   Button,
   TextField,
   Typography,
@@ -29,8 +26,8 @@ import {
   POPUP_OK_ACTION,
   APP_MESSAGE_LESSON_DELETED,
   APP_MESSAGE_LESSON_SAVED,
-} from "../../config/strings";
-import { lesson as lessonType, authProps } from "../../types.js";
+} from "../../../config/strings";
+import { lesson as lessonType, authProps } from "../../../types.js";
 import {
   BACKEND,
   LESSON_TYPE_TEXT,
@@ -38,15 +35,15 @@ import {
   LESSON_TYPE_VIDEO,
   LESSON_TYPE_PDF,
   LESSON_TYPE_QUIZ,
-} from "../../config/constants.js";
+} from "../../../config/constants.js";
 import { makeStyles } from "@material-ui/styles";
-import MediaSelector from "./Media/MediaSelector.js";
-import FetchBuilder from "../../lib/fetch";
-import { networkAction, setAppMessage } from "../../redux/actions";
+import MediaSelector from "../Media/MediaSelector.js";
+import FetchBuilder from "../../../lib/fetch";
+import { networkAction, setAppMessage } from "../../../redux/actions";
 import { connect } from "react-redux";
-import AppDialog from "../Public/AppDialog";
-import AppMessage from "../../models/app-message.js";
-import TextEditor from "../Public/RichText.js";
+import AppDialog from "../../Public/AppDialog";
+import AppMessage from "../../../models/app-message.js";
+import { Card, RichText as TextEditor } from "@courselit/components-library";
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -70,6 +67,13 @@ const useStyles = makeStyles((theme) => ({
   editorLabel: {
     fontSize: "1em",
     marginBottom: theme.spacing(1),
+  },
+  section: {
+    background: "white",
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    paddingLeft: theme.spacing(1),
+    paddingRight: theme.spacing(1),
   },
 }));
 
@@ -269,7 +273,7 @@ const LessonEditor = (props) => {
 
   return (
     <Card>
-      <CardContent>
+      <div className={classes.section}>
         <Typography variant="h6">{LESSON_EDITOR_HEADER}</Typography>
         {lesson.type && (
           <form>
@@ -387,7 +391,7 @@ const LessonEditor = (props) => {
               className={classes.formControl}
             >
               <Grid item>
-                <Typography variant="body1">
+                <Typography variant="body1" color="textSecondary">
                   {LESSON_REQUIRES_ENROLLMENT}
                 </Typography>
               </Grid>
@@ -402,13 +406,22 @@ const LessonEditor = (props) => {
             </Grid>
           </form>
         )}
-      </CardContent>
-      <CardActions>
-        <Button onClick={onLessonCreate}>{BUTTON_SAVE}</Button>
-        <Button onClick={() => setDeleteLessonPopupOpened(true)}>
-          {BUTTON_DELETE_LESSON_TEXT}
-        </Button>
-      </CardActions>
+        <Grid container direction="row" spacing={2}>
+          <Grid item>
+            <Button onClick={onLessonCreate} variant="contained">
+              {BUTTON_SAVE}
+            </Button>
+          </Grid>
+          <Grid item>
+            <Button
+              onClick={() => setDeleteLessonPopupOpened(true)}
+              variant="contained"
+            >
+              {BUTTON_DELETE_LESSON_TEXT}
+            </Button>
+          </Grid>
+        </Grid>
+      </div>
       <AppDialog
         onOpen={deleteLessonPopupOpened}
         onClose={closeDeleteLessonPopup}
