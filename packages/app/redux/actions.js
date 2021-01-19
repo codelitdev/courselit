@@ -43,7 +43,8 @@ export function refreshUserProfile(userId) {
           id,
           isAdmin,
           email,
-          purchases
+          purchases,
+          userId
         }
       }
       `;

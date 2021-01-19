@@ -1,7 +1,7 @@
 import React, { useState, useEffect /* useRef */ } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
-import { authProps, profileProps } from "../../types.js";
+import { authProps, profileProps } from "../../../types.js";
 import {
   BTN_DELETE_COURSE,
   ERR_COURSE_COST_REQUIRED,
@@ -20,9 +20,9 @@ import {
   COURSE_EDITOR_DESCRIPTION,
   VISIT_POST_BUTTON,
   VISIT_COURSE_BUTTON,
-} from "../../config/strings.js";
-import { networkAction, setAppMessage } from "../../redux/actions.js";
-import { queryGraphQL, formulateCourseUrl } from "../../lib/utils.js";
+} from "../../../config/strings.js";
+import { networkAction, setAppMessage } from "../../../redux/actions.js";
+import { queryGraphQL, formulateCourseUrl } from "../../../lib/utils.js";
 import Link from "next/link";
 import {
   Grid,
@@ -34,19 +34,16 @@ import {
   InputLabel,
   Switch,
   Button,
-  Card,
-  CardActions,
-  CardContent,
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
-import { useExecuteGraphQLQuery } from "../CustomHooks.js";
-import MediaSelector from "./Media/MediaSelector.js";
+import MediaSelector from "../Media/MediaSelector.js";
 import { Delete, Add } from "@material-ui/icons";
-import AppDialog from "../Public/AppDialog.js";
+import AppDialog from "../../Public/AppDialog.js";
 import LessonEditor from "./LessonEditor.js";
-import AppMessage from "../../models/app-message.js";
-import { BACKEND, MIMETYPE_IMAGE } from "../../config/constants.js";
-import TextEditor from "../Public/RichText.js";
+import AppMessage from "../../../models/app-message.js";
+import { BACKEND, MIMETYPE_IMAGE } from "../../../config/constants.js";
+import FetchBuilder from "../../../lib/fetch";
+import { Card, RichText as TextEditor } from "@courselit/components-library";
 
 const useStyles = makeStyles((theme) => ({
   title: {
@@ -85,6 +82,18 @@ const useStyles = makeStyles((theme) => ({
   addLesson: {
     marginBottom: theme.spacing(2),
   },
+  section: {
+    background: "white",
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    paddingLeft: theme.spacing(1),
+    paddingRight: theme.spacing(1),
+  },
+  deleteButton: {
+    background: "red",
+    color: "white",
+    marginTop: theme.spacing(2),
+  },
 }));
 
 const CourseEditor = (props) => {
@@ -109,7 +118,6 @@ const CourseEditor = (props) => {
   const [deleteCoursePopupOpened, setDeleteCoursePopupOpened] = useState(false);
   const [lessons, setLessons] = useState([]);
   const classes = useStyles();
-  const executeGQLCall = useExecuteGraphQLQuery();
   const [lessonIndex, setLessonIndex] = useState(0);
 
   useEffect(() => {
@@ -199,9 +207,14 @@ const CourseEditor = (props) => {
       }
       `;
     }
-
+    const fetch = new FetchBuilder()
+      .setUrl(`${BACKEND}/graph`)
+      .setPayload(query)
+      .setIsGraphQLEndpoint(true)
+      .setAuthToken(props.auth.token)
+      .build();
     try {
-      const response = await executeGQLCall(query);
+      const response = await fetch.exec();
       if (response.course) {
         setCourseDataWithDescription(response.course);
         props.markDirty(false);
@@ -308,9 +321,13 @@ const CourseEditor = (props) => {
       }
     }
     `;
-
+    const fetch = new FetchBuilder()
+      .setUrl(`${BACKEND}/graph`)
+      .setPayload(query)
+      .setIsGraphQLEndpoint(true)
+      .build();
     try {
-      const response = await executeGQLCall(query);
+      const response = await fetch.exec();
       if (response.course) {
         setCourseDataWithDescription(response.course);
       }
@@ -352,12 +369,8 @@ const CourseEditor = (props) => {
       <Grid item xs>
         <Card>
           <form onSubmit={onCourseCreate}>
-            <CardContent>
-              <Typography
-                color="textSecondary"
-                variant="h5"
-                className={classes.cardHeader}
-              >
+            <div className={classes.section}>
+              <Typography variant="h4" className={classes.cardHeader}>
                 {COURSE_DETAILS_CARD_HEADER}
               </Typography>
 
@@ -477,21 +490,27 @@ const CourseEditor = (props) => {
                 onSelection={onFeaturedImageSelection}
                 mimeTypesToShow={[...MIMETYPE_IMAGE]}
               />
-            </CardContent>
-            <CardActions>
-              <Button type="submit">{BUTTON_SAVE}</Button>
-              {courseData.course.id && (
-                <Button>
-                  <Link href={formulateCourseUrl(courseData.course)}>
-                    <a className={classes.link} target="_blank">
-                      {courseData.course.isBlog
-                        ? VISIT_POST_BUTTON
-                        : VISIT_COURSE_BUTTON}
-                    </a>
-                  </Link>
-                </Button>
-              )}
-            </CardActions>
+              <Grid container direction="row" spacing={2}>
+                <Grid item>
+                  <Button type="submit" variant="contained">
+                    {BUTTON_SAVE}
+                  </Button>
+                </Grid>
+                {courseData.course.id && (
+                  <Grid item>
+                    <Button>
+                      <Link href={formulateCourseUrl(courseData.course)}>
+                        <a className={classes.link} target="_blank">
+                          {courseData.course.isBlog
+                            ? VISIT_POST_BUTTON
+                            : VISIT_COURSE_BUTTON}
+                        </a>
+                      </Link>
+                    </Button>
+                  </Grid>
+                )}
+              </Grid>
+            </div>
           </form>
         </Card>
       </Grid>
@@ -525,27 +544,22 @@ const CourseEditor = (props) => {
           )}
           <Grid item xs={12}>
             <Card>
-              <CardContent>
-                <Typography
-                  variant="h5"
-                  color="textSecondary"
-                  className={classes.cardHeader}
-                >
+              <div className={classes.section}>
+                <Typography variant="h4" className={classes.cardHeader}>
                   {DANGER_ZONE_HEADER}
                 </Typography>
                 <Typography variant="body2">
                   {DANGER_ZONE_DESCRIPTION}
                 </Typography>
-              </CardContent>
-              <CardActions>
                 <Button
-                  color="secondary"
+                  variant="contained"
                   onClick={() => setDeleteCoursePopupOpened(true)}
                   startIcon={<Delete />}
+                  className={classes.deleteButton}
                 >
                   {BTN_DELETE_COURSE}
                 </Button>
-              </CardActions>
+              </div>
             </Card>
           </Grid>
         </Grid>

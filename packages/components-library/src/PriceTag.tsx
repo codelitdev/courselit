@@ -1,3 +1,4 @@
+import { Typography } from "@material-ui/core";
 import * as React from "react";
 import { connect } from "react-redux";
 
@@ -16,7 +17,7 @@ const PriceTag = (props: PriceTagProps) => {
       ? `${props.siteInfo.currencyUnit}${cost}`
       : `${cost} ${props.siteInfo.currencyISOCode}`;
 
-  return <>{costText}</>;
+  return <Typography variant="h2">{costText}</Typography>;
 };
 
 const mapStateToProps = (state: any) => ({

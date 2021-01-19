@@ -7,7 +7,9 @@ import { makeStyles } from "@material-ui/styles";
 
 const useStyles = makeStyles((theme) => ({
   mainContent: {
+    maxWidth: 1240,
     minHeight: "80vh",
+    margin: "0 auto",
   },
 }));
 
@@ -23,7 +25,7 @@ const Template = (props) => {
 
         <Grid container item direction="row" xs>
           {/** Main */}
-          <Grid container item direction="column" xs={12} sm={8} md={9}>
+          <Grid container item direction="column" xs={12} md={8}>
             <Grid container item>
               {props.children}
             </Grid>
@@ -33,7 +35,7 @@ const Template = (props) => {
           </Grid>
 
           {/** Aside */}
-          <Grid container item direction="column" xs={12} sm={4} md={3}>
+          <Grid container item direction="column" xs={12} md={4}>
             <Section name="aside" />
           </Grid>
         </Grid>

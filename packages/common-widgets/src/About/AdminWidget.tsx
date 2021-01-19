@@ -1,8 +1,11 @@
 import * as React from "react";
-import { WidgetProps, WidgetHelpers } from "@courselit/components-library";
+import {
+  WidgetProps,
+  WidgetHelpers,
+  RichText as TextEditor,
+} from "@courselit/components-library";
 import { connect } from "react-redux";
 import { Button, Grid, Typography } from "@material-ui/core";
-import TextEditor from "@courselit/rich-text";
 import Settings from "./Settings";
 
 export interface AboutWidgetProps extends WidgetProps {

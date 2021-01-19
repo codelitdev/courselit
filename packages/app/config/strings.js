@@ -39,7 +39,7 @@ export const LOAD_MORE_TEXT = "Load more";
 export const MANAGE_MEDIA_BUTTON_TEXT = "Insert media";
 export const MANAGE_COURSES_PAGE_HEADING = "Courses";
 export const USERS_MANAGER_PAGE_HEADING = "Users";
-export const NEW_COURSE_PAGE_HEADING = "Editing a course";
+export const NEW_COURSE_PAGE_HEADING = "Edit course";
 export const MEDIA_MANAGER_DIALOG_TITLE = "Add media";
 export const BUTTON_NEW_COURSE = "New";
 export const BUTTON_DONE_TEXT = "Done";
@@ -191,6 +191,7 @@ export const SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK =
   "Your payment processor sends out notifications about purchases. CourseLit needs those notifications to correctly reflect user purchases. Right click the following link and copy the link address. Paste that into your payment processor's webhook settings.";
 export const PURCHASE_STATUS_PAGE_HEADER = "Purchase Status";
 export const MAIN_MENU_ITEM_DASHBOARD = "Dashboard";
+export const MAIN_MENU_ITEM_PROFILE = "Profile";
 export const LAYOUT_SECTION_MAIN_CONTENT = "Main Content";
 export const LAYOUT_SECTION_FOOTER_LEFT = "Left Section";
 export const LAYOUT_SECTION_FOOTER_RIGHT = "Right Section";
@@ -211,3 +212,18 @@ export const VERIFY_PAYMENT_BUTTON = "Re-check Payment Status";
 export const PURCHASE_ID_HEADER = "Purchase ID";
 export const PAGE_HEADER_FEATURED = "Featured Content";
 export const BTN_VIEW_ALL = "View all";
+export const EMPTY_COURSES_LIST_ADMIN =
+  "Create your first course by clicking the + button on the top right.";
+export const HEADER_RESET_PASSWORD = "Reset password";
+export const HEADER_DESIGN = "Design & Navigation";
+export const HEADER_YOUR_PROFILE = "Your Profile";
+export const PROFILE_PAGE_MESSAGE_NOT_LOGGED_IN = "to see your profile.";
+export const PROFILE_PAGE_HEADER = "Profile";
+export const PROFILE_MY_COURSES = "My Courses";
+export const PROFILE_PAGE_NOT_ENROLLED = "You are not enrolled in any course.";
+export const PROFILE_PAGE_BROWSE_COURSES_TEXT = "Browse our courses";
+export const PROFILE_SECTION_DETAILS_NAME = "Name";
+export const PROFILE_SECTION_DETAILS_EMAIL = "Email";
+export const PROFILE_SECTION_DETAILS_BIO = "Bio";
+export const PROFILE_SECTION_DETAILS_BIO_EMPTY =
+  "The user has not filled the bio.";

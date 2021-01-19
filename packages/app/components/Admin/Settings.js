@@ -25,9 +25,6 @@ import {
   InputLabel,
   MenuItem,
   Grid,
-  Card,
-  CardContent,
-  CardActions,
   capitalize,
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
@@ -54,18 +51,30 @@ import {
 import AppMessage from "../../models/app-message.js";
 import FetchBuilder from "../../lib/fetch";
 import { decode, encode } from "base-64";
+import { Card } from "@courselit/components-library";
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
     minWidth: "100%",
     margin: "1em 0em",
   },
-  section: {
-    marginBottom: theme.spacing(4),
+  section: {},
+  header: {
+    marginBottom: theme.spacing(1),
+  },
+  sectionContent: {
+    background: "white",
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    paddingLeft: theme.spacing(1),
+    paddingRight: theme.spacing(1),
+  },
+  saveButton: {
+    marginTop: theme.spacing(4),
   },
 }));
 
-const SiteSettings = (props) => {
+const Settings = (props) => {
   const defaultSettingsState = {
     title: "",
     subtitle: "",
@@ -200,88 +209,18 @@ const SiteSettings = (props) => {
     setNewSettings(Object.assign({}, newSettings, change));
   };
 
-  // const toggleMediaManagerVisibility = () =>
-  //   setMediaManagerVisibility(!mediaManagerVisibility);
-
-  // const onAdminSettingsChanged = e => {
-  //   const change = { [e.target.name]: e.target.value };
-  //   setNewAdminSettings(Object.assign({}, newAdminSettings, change));
-  // };
-
-  // const handleAdminSettingsSubmit = async event => {
-  //   event.preventDefault();
-  //   const query = `
-  //   mutation {
-  //     adminSettings: updateSettings(settingsData: ${
-  //       makeGraphQLQueryStringFromJSObject(newAdminSettings)
-  //       // getGraphQLQueryFields(removeEmptyProperties(adminSettings), ['paymentMethod'])
-  //     }) {
-  //       stripeSecret,
-  //       paypalSecret,
-  //       paytmSecret
-  //     }
-  //   }`;
-  //   try {
-  //     const fetchRequest = fetch.setPayload(query).build();
-  //     const response = await fetchRequest.exec();
-  //     setAdminSettings(
-  //       Object.assign({}, adminSettings, response.adminSettings)
-  //     );
-  //     setNewAdminSettings(
-  //       Object.assign({}, newAdminSettings, response.adminSettings)
-  //     );
-  //     props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)));
-  //   } catch (e) {
-  //     console.log(e);
-  //     props.dispatch(setAppMessage(new AppMessage(e.message)));
-  //   }
-  // };
-
-  // const onCustomisationsChanged = e => {
-  //   const change = { [e.target.name]: e.target.value };
-  //   setNewCustomisations(Object.assign({}, newCustomisations, change));
-  // }
-
-  // const handleCustomisationsChanged = async event => {
-  //   event.preventDefault();
-  //   const query = `
-  //   mutation {
-  //     customisations: updateCustomisations(customisationsData: ${
-  //       makeGraphQLQueryStringFromJSObject(newCustomisations)
-  //       // getGraphQLQueryFields(removeEmptyProperties(adminSettings), ['paymentMethod'])
-  //     }) {
-  //       themePrimaryColor,
-  //       themeSecondaryColor,
-  //       codeInjectionHead
-  //     }
-  //   }`;
-  //   try {
-  //     const fetchRequest = fetch.setPayload(query).build();
-  //     const response = await fetchRequest.exec();
-  //     setCustomisations(
-  //       Object.assign({}, customisations, response.customisations)
-  //     );
-  //     setNewCustomisations(
-  //       Object.assign({}, newCustomisations, response.customisations)
-  //     );
-  //     props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)));
-  //   } catch (e) {
-  //     props.dispatch(setAppMessage(new AppMessage(e.message)));
-  //   }
-  // }
-
   return (
     <Grid container>
-      <Grid item>
-        <Typography variant="h3">{SITE_SETTINGS_PAGE_HEADING}</Typography>
+      <Grid item className={classes.header}>
+        <Typography variant="h1">{SITE_SETTINGS_PAGE_HEADING}</Typography>
       </Grid>
 
       <Grid item xs={12} className={classes.section}>
-        <Card>
-          <form onSubmit={handleSettingsSubmit}>
-            <CardContent>
-              <div className={classes.section}>
-                <Typography variant="h6">
+        <form onSubmit={handleSettingsSubmit}>
+          <div className={classes.section}>
+            <Card>
+              <div className={classes.sectionContent}>
+                <Typography variant="h4">
                   {SITE_SETTINGS_SECTION_GENERAL}
                 </Typography>
                 <MediaSelector
@@ -310,8 +249,12 @@ const SiteSettings = (props) => {
                   required
                 />
               </div>
-              <div className={classes.section}>
-                <Typography variant="h6">
+            </Card>
+          </div>
+          <div className={classes.section}>
+            <Card>
+              <div className={classes.sectionContent}>
+                <Typography variant="h4">
                   {SITE_SETTINGS_SECTION_PAYMENT}
                 </Typography>
                 <TextField
@@ -431,28 +374,14 @@ const SiteSettings = (props) => {
                   </>
                 )}
               </div>
-              <div className={classes.section}>
-                <Typography variant="h6">
+            </Card>
+          </div>
+          <div className={classes.section}>
+            <Card>
+              <div className={classes.sectionContent}>
+                <Typography variant="h4">
                   {SITE_CUSTOMISATIONS_SETTING_HEADER}
                 </Typography>
-                {/* <TextField
-                  variant="outlined"
-                  label={SITE_CUSTOMISATIONS_SETTING_PRIMARY_COLOR}
-                  fullWidth
-                  margin="normal"
-                  name="themePrimaryColor"
-                  value={newSettings.themePrimaryColor || ""}
-                  onChange={onChangeData}
-                />
-                <TextField
-                  variant="outlined"
-                  label={SITE_CUSTOMISATIONS_SETTING_SECONDARY_COLOR}
-                  fullWidth
-                  margin="normal"
-                  name="themeSecondaryColor"
-                  value={newSettings.themeSecondaryColor || ""}
-                  onChange={onChangeData}
-                /> */}
                 <TextField
                   variant="outlined"
                   label={SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD}
@@ -465,165 +394,29 @@ const SiteSettings = (props) => {
                   rows={10}
                 />
               </div>
-            </CardContent>
-            <CardActions>
-              <Button
-                type="submit"
-                value="Save"
-                disabled={
-                  !areObjectsDifferent(settings, newSettings) ||
-                  !newSettings.title ||
-                  !newSettings.subtitle
-                }
-              >
-                Save
-              </Button>
-            </CardActions>
-          </form>
-        </Card>
-
-        {/* <Grid container direction='column'>
-          <Grid item>
-            <Typography variant='h5'>
-              {SITE_SETTINGS_SECTION_GENERAL}
-            </Typography>
-          </Grid>
-          <Grid item>
-            <form onSubmit={handleGeneralSettingsSubmit}>
-
-              <Button
-                variant='contained'
-                color='default'
-                type='submit'
-                value='Save'
-                disabled={!!((!settings.title && !settings.subtitle && !settings.logopath))}>
-                  Save
-              </Button>
-            </form>
-          </Grid>
-        </Grid> */}
+            </Card>
+          </div>
+          <Button
+            type="submit"
+            value="Save"
+            variant="contained"
+            color="primary"
+            className={classes.saveButton}
+            disabled={
+              !areObjectsDifferent(settings, newSettings) ||
+              !newSettings.title ||
+              !newSettings.subtitle
+            }
+          >
+            Save
+          </Button>
+        </form>
       </Grid>
-
-      {/* <Grid item xs={12} className={classes.section}>
-        <Card>
-          <form onSubmit={handleAdminSettingsSubmit}>
-            <CardContent>
-              <Typography variant="h6">
-                {SITE_SETTINGS_SECTION_PAYMENT}
-              </Typography>
-              <TextField
-                variant="outlined"
-                label={SITE_ADMIN_SETTINGS_STRIPE_SECRET}
-                fullWidth
-                margin="normal"
-                name="stripeSecret"
-                type="password"
-                value={newAdminSettings.stripeSecret || ""}
-                onChange={onAdminSettingsChanged}
-              />
-              <TextField
-                variant="outlined"
-                label={SITE_ADMIN_SETTINGS_PAYPAL_SECRET}
-                fullWidth
-                margin="normal"
-                name="paypalSecret"
-                type="password"
-                value={newAdminSettings.paypalSecret || ""}
-                onChange={onAdminSettingsChanged}
-                disabled={true}
-              />
-              <TextField
-                variant="outlined"
-                label={SITE_ADMIN_SETTINGS_PAYTM_SECRET}
-                fullWidth
-                margin="normal"
-                name="paytmSecret"
-                type="password"
-                value={newAdminSettings.paytmSecret || ""}
-                onChange={onAdminSettingsChanged}
-                disabled={true}
-              />
-            </CardContent>
-            <CardActions>
-              <Button
-                type="submit"
-                value="Save"
-                disabled={!areObjectsDifferent(adminSettings, newAdminSettings)}
-              >
-                Save
-              </Button>
-            </CardActions>
-          </form>
-        </Card>
-
-        <Grid container direction='column'>
-          <Grid item>
-            <Typography variant='h5'>
-              {SITE_SETTINGS_SECTION_PAYMENT}
-            </Typography>
-          </Grid>
-          <Grid item>
-            <form onSubmit={handleAdminSettingsSubmit}>
-
-            </form>
-          </Grid>
-        </Grid>
-      </Grid>
-
-      <Grid item xs={12} className={classes.section}>
-        <Card>
-          <form onSubmit={handleCustomisationsChanged}>
-            <CardContent>
-              <Typography variant="h6">
-                {SITE_CUSTOMISATIONS_SETTING_HEADER}
-              </Typography>
-              <TextField
-                variant="outlined"
-                label={SITE_CUSTOMISATIONS_SETTING_PRIMARY_COLOR}
-                fullWidth
-                margin="normal"
-                name="themePrimaryColor"
-                value={newCustomisations.themePrimaryColor || ""}
-                onChange={onCustomisationsChanged}
-              />
-              <TextField
-                variant="outlined"
-                label={SITE_CUSTOMISATIONS_SETTING_SECONDARY_COLOR}
-                fullWidth
-                margin="normal"
-                name="themeSecondaryColor"
-                value={newCustomisations.themeSecondaryColor || ""}
-                onChange={onCustomisationsChanged}
-              />
-              <TextField
-                variant="outlined"
-                label={SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD}
-                fullWidth
-                margin="normal"
-                name="codeInjectionHead"
-                value={newCustomisations.codeInjectionHead || ""}
-                onChange={onCustomisationsChanged}
-                multiline
-                rows={10}
-              />
-            </CardContent>
-            <CardActions>
-              <Button
-                type="submit"
-                value="Save"
-                disabled={!areObjectsDifferent(customisations, newCustomisations)}
-              >
-                Save
-              </Button>
-            </CardActions>
-          </form>
-        </Card>
-      </Grid> */}
     </Grid>
   );
 };
 
-SiteSettings.propTypes = {
+Settings.propTypes = {
   siteinfo: siteInfoProps,
   auth: authProps,
   dispatch: PropTypes.func.isRequired,
@@ -638,4 +431,4 @@ const mapDispatchToProps = (dispatch) => ({
   dispatch: dispatch,
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(SiteSettings);
+export default connect(mapStateToProps, mapDispatchToProps)(Settings);

@@ -10,37 +10,50 @@ const {
   makeModelTextSearchable,
 } = require("../../lib/graphql.js");
 const constants = require("../../config/constants.js");
+const ObjectId = require("mongoose").Types.ObjectId;
 
-const removeAdminFieldsFromUserObject = ({ id, email, name }) => ({
+const removeAdminFieldsFromUserObject = ({ id, name, userId, bio, email }) => ({
   id,
-  email,
   name,
+  userId,
+  bio,
+  email,
 });
 
-exports.getUser = async (email, ctx) => {
+exports.getUser = async (email = null, userId = null, ctx) => {
+  if (!email && !userId) {
+    throw new Error(strings.responses.invalid_user_id);
+  }
+
   const loggedUserEmail = ctx.user && ctx.user.email;
+  const loggedUserId = ctx.user && ctx.user.userId;
   const isAdmin = ctx.user && ctx.user.isAdmin;
 
-  const user = await User.findOne({ email });
+  let user;
+  if (email) {
+    user = await User.findOne({ email });
+  } else {
+    // userId can be either a Mongodb ObjectID or userId from User schema
+    if (ObjectId.isValid(userId)) {
+      user = await User.findById(userId);
+    } else {
+      user = await User.findOne({ userId });
+    }
+  }
 
   if (!user) {
     throw new Error(strings.responses.item_not_found);
   }
 
+  user.userId = user.userId || -1; // Set -1 for empty userIds; Backward compatibility;
+
   const result =
-    loggedUserEmail === email || isAdmin
+    loggedUserEmail === email || loggedUserId === userId || isAdmin
       ? user
       : removeAdminFieldsFromUserObject(user);
 
   return result;
 };
-
-// exports.updateName = async (name, ctx) => {
-//   checkIfAuthenticated(ctx)
-//   ctx.user.name = name
-//   await ctx.user.save()
-//   return ctx.user
-// }
 
 exports.updateUser = async (userData, ctx) => {
   checkIfAuthenticated(ctx);
@@ -104,60 +117,3 @@ exports.getUsersSummary = async (ctx) => {
     creators: await User.countDocuments({ isCreator: true }),
   };
 };
-
-// exports.initiatePurchase = async (purchaseData = {}, ctx) => {
-//   const response = {
-//     status: constants.transactionInitiated
-//   }
-
-//   checkIfAuthenticated(ctx)
-//   const someOneElse = purchaseData.purchasingFor
-//   const myself = ctx.user.id
-
-//   if (someOneElse && !ctx.user.isAdmin) {
-//     throw new Error(strings.responses.only_admins_can_purchase)
-//   }
-
-//   const purchasingFor = someOneElse || myself
-//   const buyer = await checkIfItemExists(User, purchasingFor)
-//   const course = await checkIfItemExists(Course, purchaseData.courseId)
-
-//   if (buyer.purchases.includes(course.id)) {
-//     throw new Error(strings.responses.course_already_purchased)
-//   }
-
-//   if (course.cost === 0) {
-//     await finalizePurchase(course, user)
-//     return response
-//   }
-
-//   const siteinfo = (await SiteInfo.find())[0]
-//   console.log(siteinfo)
-// }
-
-// const finalizePurchase = async (course, user) => {
-//   user.purchases.push(course.id)
-//   await user.save()
-//   return user
-// }
-
-// exports.purchaseMade = async (purchaseData = {}, ctx) => {
-//   checkIfAuthenticated(ctx)
-//   const { purchasedBy } = purchaseData
-//   let user = await checkIfItemExists(User, purchasedBy)
-//   checkAdminOrSelf(purchasedBy, ctx)
-
-//   await Purchase.create({
-//     courseId: purchaseData.courseId,
-//     purchasedOn: purchaseData.purchasedOn,
-//     purchasedBy: purchaseData.purchasedBy,
-//     paymentMethod: purchaseData.paymentMethod,
-//     paymentId: purchaseData.paymentId,
-//     amount: purchaseData.amount,
-//     discount: purchaseData.discount
-//   })
-
-//   user.purchases.push(purchaseData.courseId)
-//   user = await user.save()
-//   return user
-// }

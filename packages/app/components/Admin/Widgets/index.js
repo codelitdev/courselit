@@ -38,7 +38,7 @@ const MasterDetails = (props) => {
           </Grid>
         )}
         {!selectedWidgetName && (
-          <Typography variant="h3">{WIDGETS_PAGE_HEADER}</Typography>
+          <Typography variant="h1">{WIDGETS_PAGE_HEADER}</Typography>
         )}
       </Grid>
       <Grid item className={classes.main} xs={12}>

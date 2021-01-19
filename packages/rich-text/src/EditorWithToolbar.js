@@ -99,6 +99,7 @@ const EditorWithToolbar = (props) => {
       onChange={onChange}
       readOnly={props.readOnly}
       theme={Object.assign({}, styles, props.styles)}
+      blockRenderMap={props.blockRenderMap}
     />
   );
 
@@ -190,6 +191,7 @@ EditorWithToolbar.propTypes = {
   onChange: PropTypes.func,
   readOnly: PropTypes.bool,
   styles: PropTypes.object,
+  blockRenderMap: PropTypes.object,
 };
 
 export default EditorWithToolbar;
