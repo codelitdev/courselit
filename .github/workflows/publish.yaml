@@ -41,3 +41,33 @@ jobs:
           GH_TOKEN: ${{ secrets.PAT }}
           GITHUB_TOKEN: ${{ secrets.PAT }}
           NPM_TOKEN: ${{ secrets.NPM }}
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERNAME }}
+          password: ${{ secrets.DOCKERTOKEN }}
+
+      - name: Build and push backend
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          context: ./services/backend
+          file: ./services/backend/Dockerfile
+          push: true
+          tags: codelit/courselit-backend:latest
+
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
+
+      - name: Build and push frontend
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          context: ./services/frontend
+          file: ./services/frontend/Dockerfile
+          push: true
+          tags: codelit/courselit-frontend:latest
+
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
