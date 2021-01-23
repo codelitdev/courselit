@@ -17,6 +17,7 @@ const {
   itemsPerPage,
   blogPostSnippetLength,
 } = require("../../config/constants.js");
+const ObjectId = require("mongoose").Types.ObjectId;
 
 const checkCourseOwnership = checkOwnership(Course);
 
@@ -151,7 +152,12 @@ exports.getCreatorCourses = async (id, offset, ctx) => {
   checkIfAuthenticated(ctx);
   validateOffset(offset);
 
-  const courses = await Course.find({ creatorId: id })
+  const user = await User.findById(id);
+  if (!user) {
+    throw new Error(strings.responses.user_not_found)
+  }
+
+  const courses = await Course.find({ creatorId: `${user.userId || user.id}` })
     .sort({ updated: -1 })
     .skip((offset - 1) * itemsPerPage)
     .limit(itemsPerPage);
