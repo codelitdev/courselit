@@ -17,7 +17,6 @@ const {
   itemsPerPage,
   blogPostSnippetLength,
 } = require("../../config/constants.js");
-const ObjectId = require("mongoose").Types.ObjectId;
 
 const checkCourseOwnership = checkOwnership(Course);
 
