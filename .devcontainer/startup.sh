@@ -10,3 +10,5 @@ yarn lerna bootstrap
 
 # Building packages
 yarn lerna run build --scope=@courselit/rich-text
+yarn lerna run build --scope=@courselit/components-library
+yarn lerna run build --scope=@courselit/common-widgets
