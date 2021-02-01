@@ -28,7 +28,7 @@ const useStyles = makeStyles((theme) => ({
   },
   leftMargin: {
     [theme.breakpoints.up("md")]: {
-      marginLeft: theme.spacing(2),
+      paddingLeft: theme.spacing(2),
     },
   },
   headerTop: {
