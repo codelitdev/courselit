@@ -153,7 +153,7 @@ exports.getCreatorCourses = async (id, offset, ctx) => {
 
   const user = await User.findById(id);
   if (!user) {
-    throw new Error(strings.responses.user_not_found)
+    throw new Error(strings.responses.user_not_found);
   }
 
   const courses = await Course.find({ creatorId: `${user.userId || user.id}` })

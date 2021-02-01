@@ -44,7 +44,8 @@ export function refreshUserProfile(userId) {
           isAdmin,
           email,
           purchases,
-          userId
+          userId,
+          bio
         }
       }
       `;
@@ -55,7 +56,6 @@ export function refreshUserProfile(userId) {
         .setAuthToken(getState().auth.token)
         .build();
       const response = await fetch.exec();
-
       dispatch(networkAction(false));
       dispatch(updateProfile(response.profile));
     } finally {
