@@ -1,7 +1,7 @@
 import BaseLayout from "../../components/Public/BaseLayout";
 import { BACKEND } from "../../config/constants";
 import FetchBuilder from "../../lib/fetch";
-import { Grid, Typography } from "@material-ui/core";
+import { Button, Grid, TextField, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import {
   PROFILE_PAGE_HEADER,
@@ -12,9 +12,12 @@ import {
   PROFILE_MY_COURSES,
   PROFILE_PAGE_NOT_ENROLLED,
   PROFILE_PAGE_BROWSE_COURSES_TEXT,
+  BUTTON_SAVE,
 } from "../../config/strings";
 import { connect } from "react-redux";
 import Link from "next/link";
+import { useState } from "react";
+import { networkAction, refreshUserProfile } from "../../redux/actions";
 
 const useStyles = makeStyles((theme) => ({
   content: {
@@ -33,9 +36,43 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function Profile({ user, profile }) {
+function Profile({ user, profile, auth, dispatch }) {
   const classes = useStyles();
   const isMyProfile = profile && profile.id === user.id;
+  const [bio, setBio] = useState(user.bio || "");
+  const [name, setName] = useState(user.name || "");
+
+  const saveDetails = async () => {
+    const graphQuery = `
+      mutation {
+        user: updateUser(userData: {
+          id: "${profile.id}"
+          name: "${name}",
+          bio: "${bio}"
+        }) {
+          id,
+          bio
+        }
+      }
+    `;
+    const fetch = new FetchBuilder()
+      .setUrl(`${BACKEND}/graph`)
+      .setPayload(graphQuery)
+      .setIsGraphQLEndpoint(true)
+      .setAuthToken(auth.token)
+      .build();
+
+    try {
+      dispatch(networkAction(true));
+      await fetch.exec();
+      if (isMyProfile) {
+        dispatch(refreshUserProfile());
+      }
+    } catch (err) {
+    } finally {
+      dispatch(networkAction(false));
+    }
+  };
 
   return (
     <BaseLayout title={user.name}>
@@ -70,9 +107,22 @@ function Profile({ user, profile }) {
                     </Typography>
                   </Grid>
                   <Grid item>
-                    <Typography variant="body1" color="textSecondary">
-                      {user.name}
-                    </Typography>
+                    {!isMyProfile && (
+                      <Typography variant="body1" color="textSecondary">
+                        {user.name}
+                      </Typography>
+                    )}
+                    {isMyProfile && (
+                      <TextField
+                        variant="outlined"
+                        fullWidth
+                        margin="normal"
+                        name="name"
+                        value={name}
+                        onChange={(event) => setName(event.target.value)}
+                        required
+                      />
+                    )}
                   </Grid>
                 </Grid>
                 <Grid item container direction="column" spacing={1}>
@@ -82,12 +132,40 @@ function Profile({ user, profile }) {
                     </Typography>
                   </Grid>
                   <Grid item>
-                    <Typography variant="body1" color="textSecondary">
-                      {user.bio || PROFILE_SECTION_DETAILS_BIO_EMPTY}
-                    </Typography>
+                    {!isMyProfile && (
+                      <Typography variant="body1" color="textSecondary">
+                        {user.bio || PROFILE_SECTION_DETAILS_BIO_EMPTY}
+                      </Typography>
+                    )}
+                    {isMyProfile && (
+                      <TextField
+                        variant="outlined"
+                        fullWidth
+                        margin="normal"
+                        name="bio"
+                        value={bio}
+                        onChange={(event) => setBio(event.target.value)}
+                        multiline={true}
+                        rowsMax={5}
+                        required
+                      />
+                    )}
                   </Grid>
                 </Grid>
+                {isMyProfile && (
+                  <Grid item>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={saveDetails}
+                      disabled={bio === user.bio && name === user.name}
+                    >
+                      {BUTTON_SAVE}
+                    </Button>
+                  </Grid>
+                )}
               </Grid>
+
               {isMyProfile && (
                 <Grid item container spacing={2} direction="column">
                   <Grid item>
@@ -129,13 +207,13 @@ function Profile({ user, profile }) {
 export async function getServerSideProps({ query }) {
   const graphQuery = `
     query {
-        user: getUser(userId: "${query.userId}") {
-            id,
-            userId,
-            email,
-            name,
-            bio
-        }
+      user: getUser(userId: "${query.userId}") {
+        id,
+        userId,
+        email,
+        name,
+        bio
+      }
     }
   `;
   const fetch = new FetchBuilder()
@@ -160,8 +238,14 @@ export async function getServerSideProps({ query }) {
     },
   };
 }
+
 const mapStateToProps = (state) => ({
   profile: state.profile,
+  auth: state.auth,
 });
 
-export default connect(mapStateToProps)(Profile);
+const mapDispatchToProps = (dispatch) => ({
+  dispatch: dispatch,
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(Profile);
