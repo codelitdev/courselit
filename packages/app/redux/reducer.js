@@ -93,6 +93,7 @@ function profileReducer(state = initialState.profile, action) {
         purchases: (action.profile && action.profile.purchases) || [],
         email: action.profile && action.profile.email,
         userId: action.profile && action.profile.userId,
+        bio: action.profile && action.profile.bio,
       };
     case PROFILE_CLEAR:
       return initialState.profile;

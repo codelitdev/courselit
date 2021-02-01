@@ -39,6 +39,7 @@ export default {
     isAdmin: false,
     purchases: [],
     email: null,
+    bio: null,
   },
   message: {
     open: false,
