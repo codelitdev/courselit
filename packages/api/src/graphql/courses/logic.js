@@ -17,6 +17,7 @@ const {
   itemsPerPage,
   blogPostSnippetLength,
 } = require("../../config/constants.js");
+const ObjectId = require("mongoose").Types.ObjectId;
 
 const checkCourseOwnership = checkOwnership(Course);
 
@@ -50,7 +51,10 @@ exports.getCourse = async (id = null, courseId = null, ctx) => {
   }
 
   const notTheOwner =
-    !ctx.user || course.creatorId.toString() !== ctx.user._id.toString();
+    !ctx.user ||
+    (ObjectId.isValid(course.creatorId)
+      ? course.creatorId.toString() !== ctx.user._id.toString()
+      : course.creatorId.toString() !== ctx.user.userId.toString());
   if (notTheOwner) {
     if (!course.published || course.privacy === closed) {
       throw new Error(strings.responses.item_not_found);

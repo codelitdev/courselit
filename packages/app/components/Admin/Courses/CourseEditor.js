@@ -325,6 +325,7 @@ const CourseEditor = (props) => {
       .setUrl(`${BACKEND}/graph`)
       .setPayload(query)
       .setIsGraphQLEndpoint(true)
+      .setAuthToken(props.auth.token)
       .build();
     try {
       const response = await fetch.exec();
