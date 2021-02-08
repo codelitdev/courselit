@@ -2,6 +2,7 @@
  * Business logic for managing users.
  */
 const User = require("../../models/User.js");
+const Course = require("../../models/Course.js");
 const strings = require("../../config/strings.js");
 const {
   checkIfAuthenticated,
@@ -83,7 +84,23 @@ exports.updateUser = async (userData, ctx) => {
   }
 
   user = await user.save();
+
+  if (userData.name) {
+    await updateCoursesForCreatorName(user.userId || user.id, user.name);
+  }
+
   return user;
+};
+
+const updateCoursesForCreatorName = async (creatorId, creatorName) => {
+  await Course.updateMany(
+    {
+      creatorId,
+    },
+    {
+      creatorName,
+    }
+  );
 };
 
 exports.getSiteUsers = async (searchData = {}, ctx) => {

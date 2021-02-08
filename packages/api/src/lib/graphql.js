@@ -2,6 +2,7 @@ const { EditorState, convertFromRaw } = require("draft-js");
 const { decode } = require("base-64");
 const strings = require("../config/strings.js");
 const constants = require("../config/constants.js");
+const ObjectId = require("mongoose").Types.ObjectId;
 
 exports.checkIfAuthenticated = (ctx) => {
   if (!ctx.user) throw new Error(strings.responses.request_not_authenticated);
@@ -16,7 +17,12 @@ exports.checkIfAuthenticated = (ctx) => {
  */
 exports.checkOwnership = (Model) => async (id, ctx) => {
   const item = await Model.findOne({ _id: id });
-  if (!item || item.creatorId.toString() !== ctx.user._id.toString()) {
+  if (
+    !item ||
+    (ObjectId.isValid(item.creatorId)
+      ? item.creatorId.toString() !== ctx.user._id.toString()
+      : item.creatorId.toString() !== ctx.user.userId.toString())
+  ) {
     throw new Error(strings.responses.item_not_found);
   }
 
