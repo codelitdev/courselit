@@ -17,6 +17,7 @@ import DrawerListItemIcon from "./DrawerListItemIcon.js";
 import Header from "./Header.js";
 import { connect } from "react-redux";
 import { siteInfoProps } from "../../../types";
+import useMediaQuery from "@material-ui/core/useMediaQuery";
 
 const drawerWidth = 240;
 
@@ -70,10 +71,19 @@ const ComponentScaffold = (props) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [visibleComponent, setVisibleComponent] = useState();
   const [activeItemIndex, setActiveItemIndex] = useState(0);
+  const matches = useMediaQuery((theme) => theme.breakpoints.down("xs"));
+  const [firstLoad, setFirstLoad] = useState(false);
 
   useEffect(() => {
     showComponent(props.items[0].element);
+    setFirstLoad(true);
   }, []);
+
+  useEffect(() => {
+    if (firstLoad && matches) {
+      setMobileOpen(true);
+    }
+  }, [firstLoad]);
 
   function handleDrawerToggle() {
     setMobileOpen(!mobileOpen);
