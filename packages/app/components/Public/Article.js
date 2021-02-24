@@ -53,8 +53,8 @@ const useStyles = (featuredImage) =>
       marginBottom: theme.spacing(4),
     },
     enrollmentAreaPriceTag: {
-      marginRight: theme.spacing(2),
-      marginBottom: theme.spacing(2),
+      // marginRight: theme.spacing(2),
+      // marginBottom: theme.spacing(2),
     },
     content: {
       marginTop: theme.spacing(4),
@@ -99,7 +99,12 @@ const Article = (props) => {
       )}
       {options.showEnrollmentArea && !profile.purchases.includes(course.id) && (
         <div className={classes.enrollmentArea}>
-          <Grid container direction="column">
+          <Grid
+            container
+            direction="row"
+            justify="space-between"
+            alignItems="center"
+          >
             <Grid item className={classes.enrollmentAreaPriceTag}>
               <PriceTag cost={course.cost} freeCostCaption={FREE_COST} />
             </Grid>
