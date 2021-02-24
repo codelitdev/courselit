@@ -100,7 +100,16 @@ const ComponentScaffold = (props) => {
             onClick={() => showComponent(item.element, index)}
             className={activeItemIndex === index ? classes.activeItem : null}
           >
-            <Grid container direction="row" alignItems="center">
+            <Grid
+              container
+              direction="row"
+              alignItems="center"
+              justify={
+                item.icon && item.iconPlacementRight
+                  ? "space-between"
+                  : "flex-start"
+              }
+            >
               {item.icon && !item.iconPlacementRight && (
                 <DrawerListItemIcon icon={item.icon} />
               )}
@@ -108,7 +117,7 @@ const ComponentScaffold = (props) => {
                 <ListItemText primary={item.name} />
               </Grid>
               {item.icon && item.iconPlacementRight && (
-                <DrawerListItemIcon icon={item.icon} />
+                <DrawerListItemIcon icon={item.icon} right={true} />
               )}
             </Grid>
           </ListItem>

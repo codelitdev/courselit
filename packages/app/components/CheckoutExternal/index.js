@@ -7,6 +7,7 @@ import {
 } from "../../config/constants";
 import { publicCourse, siteInfoProps } from "../../types";
 import Stripe from "./Stripe.js";
+import Free from "./Free.js";
 
 const CheckoutExternal = (props) => {
   const { course } = props;
@@ -14,9 +15,16 @@ const CheckoutExternal = (props) => {
 
   return (
     <>
-      {paymentMethod === PAYMENT_METHOD_STRIPE && <Stripe course={course} />}
-      {paymentMethod === PAYMENT_METHOD_PAYTM && <></>}
-      {paymentMethod === PAYMENT_METHOD_PAYPAL && <></>}
+      {course.cost === 0 && <Free course={course} />}
+      {course.cost !== 0 && (
+        <>
+          {paymentMethod === PAYMENT_METHOD_STRIPE && (
+            <Stripe course={course} />
+          )}
+          {paymentMethod === PAYMENT_METHOD_PAYTM && <></>}
+          {paymentMethod === PAYMENT_METHOD_PAYPAL && <></>}
+        </>
+      )}
     </>
   );
 };
