@@ -18,6 +18,8 @@ const {
   blogPostSnippetLength,
 } = require("../../config/constants.js");
 const ObjectId = require("mongoose").Types.ObjectId;
+const SiteInfo = require("../../models/SiteInfo.js");
+const { getPaymentMethod } = require("../../payments/index.js");
 
 const checkCourseOwnership = checkOwnership(Course);
 
@@ -26,12 +28,28 @@ const validateBlogPosts = (courseData) => {
     if (!courseData.description) {
       throw new Error(strings.responses.blog_description_empty);
     }
+
     courseData.cost = 0;
-  } else {
-    if (courseData.cost < 0) throw new Error(strings.responses.invalid_cost);
   }
 
   return courseData;
+};
+
+const validateCost = async (courseData) => {
+  if (courseData.cost < 0) {
+    throw new Error(strings.responses.invalid_cost);
+  }
+
+  if (courseData.cost > 0) {
+    await validatePaymentMethod();
+  }
+
+  return courseData;
+};
+
+const validatePaymentMethod = async () => {
+  const siteinfo = (await SiteInfo.find())[0];
+  await getPaymentMethod(siteinfo && siteinfo.paymentMethod);
 };
 
 exports.getCourse = async (id = null, courseId = null, ctx) => {
@@ -71,7 +89,7 @@ exports.createCourse = async (courseData, ctx) => {
     throw new Error(strings.responses.not_a_creator);
   }
 
-  courseData = validateBlogPosts(courseData);
+  courseData = await validateCost(validateBlogPosts(courseData));
 
   const course = await Course.create({
     title: courseData.title,
@@ -98,7 +116,7 @@ exports.updateCourse = async (courseData, ctx) => {
     course[key] = courseData[key];
   }
 
-  course = validateBlogPosts(course);
+  course = await validateCost(validateBlogPosts(course));
   course = await course.save();
   return course;
 };

@@ -125,7 +125,7 @@ export const APP_MESSAGE_COURSE_SAVED = "Course details saved";
 export const ENROLL_IN_THE_COURSE =
   "Please enroll in the course to access this lesson.";
 export const USER_ERROR_HEADER = "Yikes!";
-export const ENROLL_BUTTON_TEXT = "Buy";
+export const ENROLL_BUTTON_TEXT = "Enroll";
 export const BUTTON_DELETE_MEDIA = "Delete";
 export const DELETE_MEDIA_POPUP_HEADER = "Delete media";
 export const HEADER_EDITING_MEDIA = "Edit media details";

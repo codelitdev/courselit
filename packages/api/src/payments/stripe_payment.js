@@ -24,22 +24,6 @@ class StripePayment extends Payment {
   }
 
   async initiate({ course, currency, metadata, purchaseId }) {
-    // const paymentIntent = await this.stripe.paymentIntents.create({
-    //   amount,
-    //   currency,
-    //   description,
-    //   shipping,
-    //   {
-    //     name: 'Some user',
-    //     address: {
-    //       line1: 'Shastri Nager',
-    //       // postal_code: '122004',
-    //       // city: 'Agra',
-    //       // state: 'UP',
-    //       // country: 'US'
-    //     }
-    //   }
-    // });
     const session = await this.stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
