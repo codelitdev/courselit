@@ -55,17 +55,17 @@ const initiateHandler = async (req, res) => {
     if (course.cost === 0) {
       try {
         await finalizeCoursePurchase(user.id, course.id);
-        res.status(200).json({
+        return res.status(200).json({
           status: transactionSuccess,
         });
       } catch (err) {
-        res.status(500).json({ error: err.message });
+        return res.status(500).json({ error: err.message });
       }
     }
 
     const siteinfo = (await SiteInfo.find())[0];
     const paymentMethod = await Payment.getPaymentMethod(
-      siteinfo.paymentMethod
+      siteinfo && siteinfo.paymentMethod
     );
 
     const purchase = await Purchase.create({

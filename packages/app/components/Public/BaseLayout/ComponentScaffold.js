@@ -17,6 +17,7 @@ import DrawerListItemIcon from "./DrawerListItemIcon.js";
 import Header from "./Header.js";
 import { connect } from "react-redux";
 import { siteInfoProps } from "../../../types";
+import useMediaQuery from "@material-ui/core/useMediaQuery";
 
 const drawerWidth = 240;
 
@@ -70,10 +71,19 @@ const ComponentScaffold = (props) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [visibleComponent, setVisibleComponent] = useState();
   const [activeItemIndex, setActiveItemIndex] = useState(0);
+  const matches = useMediaQuery((theme) => theme.breakpoints.down("xs"));
+  const [firstLoad, setFirstLoad] = useState(false);
 
   useEffect(() => {
     showComponent(props.items[0].element);
+    setFirstLoad(true);
   }, []);
+
+  useEffect(() => {
+    if (firstLoad && matches) {
+      setMobileOpen(true);
+    }
+  }, [firstLoad]);
 
   function handleDrawerToggle() {
     setMobileOpen(!mobileOpen);
@@ -100,7 +110,16 @@ const ComponentScaffold = (props) => {
             onClick={() => showComponent(item.element, index)}
             className={activeItemIndex === index ? classes.activeItem : null}
           >
-            <Grid container direction="row" alignItems="center">
+            <Grid
+              container
+              direction="row"
+              alignItems="center"
+              justify={
+                item.icon && item.iconPlacementRight
+                  ? "space-between"
+                  : "flex-start"
+              }
+            >
               {item.icon && !item.iconPlacementRight && (
                 <DrawerListItemIcon icon={item.icon} />
               )}
@@ -108,7 +127,7 @@ const ComponentScaffold = (props) => {
                 <ListItemText primary={item.name} />
               </Grid>
               {item.icon && item.iconPlacementRight && (
-                <DrawerListItemIcon icon={item.icon} />
+                <DrawerListItemIcon icon={item.icon} right={true} />
               )}
             </Grid>
           </ListItem>
