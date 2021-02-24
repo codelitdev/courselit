@@ -1,6 +1,6 @@
 {
   "name": "@courselit/api",
-  "version": "0.5.9",
+  "version": "0.5.10",
   "main": "./src/index.js",
   "license": "MIT",
   "author": {
