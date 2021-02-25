@@ -1,9 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import Link from "next/link";
-import {
-  URL_EXTENTION_COURSES,
-} from "../../../config/constants.js";
+import { URL_EXTENTION_COURSES } from "../../../config/constants.js";
 import { Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import { PriceTag, Card } from "@courselit/components-library";
@@ -44,7 +42,8 @@ const Course = (props) => {
                 <Grid item>
                   <Img
                     src={props.featuredImage}
-                    classes={classes.featuredImage} />
+                    classes={classes.featuredImage}
+                  />
                 </Grid>
               )}
               <Grid
