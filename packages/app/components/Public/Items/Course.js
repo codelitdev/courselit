@@ -2,14 +2,13 @@ import React from "react";
 import PropTypes from "prop-types";
 import Link from "next/link";
 import {
-  MEDIA_BACKEND,
   URL_EXTENTION_COURSES,
 } from "../../../config/constants.js";
 import { Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
-import { formulateMediaUrl } from "../../../lib/utils.js";
 import { PriceTag, Card } from "@courselit/components-library";
 import { FREE_COST } from "../../../config/strings.js";
+import Img from "../../Img.js";
 
 const useStyles = (featuredImage) =>
   makeStyles((theme) => ({
@@ -20,13 +19,8 @@ const useStyles = (featuredImage) =>
       display: "block",
     },
     featuredImage: {
-      height: 240,
+      height: "auto",
       width: "100%",
-      background: `url('${formulateMediaUrl(
-        MEDIA_BACKEND,
-        featuredImage
-      )}') no-repeat center center`,
-      backgroundSize: "cover",
     },
     title: {
       marginTop: theme.spacing(2),
@@ -47,7 +41,11 @@ const Course = (props) => {
           <Card>
             <Grid item container direction="column" component="article">
               {props.featuredImage && (
-                <Grid item className={classes.featuredImage} />
+                <Grid item>
+                  <Img
+                    src={props.featuredImage}
+                    classes={classes.featuredImage} />
+                </Grid>
               )}
               <Grid
                 item
@@ -60,9 +58,7 @@ const Course = (props) => {
                   <Typography variant="h5">{props.title}</Typography>
                 </Grid>
                 <Grid item>
-                  <Typography variant="h6">
-                    <PriceTag cost={props.cost} freeCostCaption={FREE_COST} />
-                  </Typography>
+                  <PriceTag cost={props.cost} freeCostCaption={FREE_COST} />
                 </Grid>
               </Grid>
             </Grid>
