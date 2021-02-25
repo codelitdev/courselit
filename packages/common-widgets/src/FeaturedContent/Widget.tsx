@@ -21,9 +21,10 @@ const useStyles = ({ backgroundColor }: Settings) =>
       [theme.breakpoints.up("md")]: {
         marginLeft: theme.spacing(2),
       },
+      marginBottom: theme.spacing(2),
     },
     headerTop: {
-      marginBottom: theme.spacing(2),
+      marginBottom: theme.spacing(1),
     },
     link: {
       textDecoration: "none",
@@ -98,7 +99,7 @@ const Widget = (props: FeaturedWidgetProps) => {
       <Grid container component="section">
         <Grid item container className={classes.header}>
           <Grid item xs={12} className={classes.headerTop}>
-            <Typography variant="h4">{settings.title}</Typography>
+            <Typography variant="h2">{settings.title}</Typography>
           </Grid>
           <Grid item xs={12}>
             <Typography variant="body1" color="textSecondary">
