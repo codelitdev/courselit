@@ -9,6 +9,7 @@ import { Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import { formulateMediaUrl } from "../../../lib/utils.js";
 import { Card } from "@courselit/components-library";
+import Img from "../../Img.js";
 
 const useStyles = (featuredImage) =>
   makeStyles((theme) => ({
@@ -22,13 +23,8 @@ const useStyles = (featuredImage) =>
       display: "block",
     },
     featuredImage: {
-      height: 240,
+      height: "auto",
       width: "100%",
-      background: `url('${formulateMediaUrl(
-        MEDIA_BACKEND,
-        featuredImage
-      )}') no-repeat center center`,
-      backgroundSize: "cover",
     },
     title: {
       marginTop: theme.spacing(2),
@@ -55,7 +51,11 @@ const Post = (props) => {
               className={classes.container}
             >
               {props.featuredImage && (
-                <Grid item className={classes.featuredImage} />
+                <Grid item>
+                  <Img
+                    src={props.featuredImage}
+                    classes={classes.featuredImage} />
+                </Grid>
               )}
               <Grid item className={classes.title}>
                 <Typography variant="h5">{props.title}</Typography>

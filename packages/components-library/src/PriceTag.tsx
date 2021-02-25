@@ -17,7 +17,7 @@ const PriceTag = (props: PriceTagProps) => {
       ? `${props.siteInfo.currencyUnit}${cost}`
       : `${cost} ${props.siteInfo.currencyISOCode}`;
 
-  return <Typography variant="h2">{costText}</Typography>;
+  return <Typography variant="h6">{costText}</Typography>;
 };
 
 const mapStateToProps = (state: any) => ({

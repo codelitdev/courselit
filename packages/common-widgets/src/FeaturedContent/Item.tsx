@@ -18,16 +18,8 @@ const useStyles = ({ featuredImage, utilities, config }: Styles) =>
       display: "block",
     },
     featuredImage: {
-      height: "8rem",
+      height: "auto",
       width: "100%",
-      background: `url('${utilities.formulateMediaUrl(
-        config.MEDIA_BACKEND,
-        featuredImage
-      )}') no-repeat center center`,
-      backgroundSize: "cover",
-      [theme.breakpoints.up("sm")]: {
-        height: "12rem",
-      },
     },
     title: {
       marginTop: theme.spacing(2),
@@ -68,7 +60,15 @@ const Item = (props: ItemProps) => {
           <Card>
             <Grid item container direction="column" component="article">
               {props.course.featuredImage && (
-                <Grid item className={classes.featuredImage} />
+                <Grid item>
+                  <img
+                    src={appUtilities.formulateMediaUrl(
+                      appConfig.MEDIA_BACKEND,
+                      props.course.featuredImage
+                    )}
+                    className={classes.featuredImage}
+                  />
+                </Grid>
               )}
               <Grid
                 item
@@ -81,12 +81,7 @@ const Item = (props: ItemProps) => {
                   <Typography variant="h5">{props.course.title}</Typography>
                 </Grid>
                 <Grid item>
-                  <Typography variant="h6">
-                    <PriceTag
-                      cost={props.course.cost}
-                      freeCostCaption="FREE"
-                    ></PriceTag>
-                  </Typography>
+                  <PriceTag cost={props.course.cost} freeCostCaption="FREE" />
                 </Grid>
               </Grid>
             </Grid>

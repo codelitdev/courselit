@@ -53,7 +53,7 @@ const Courses = (props) => {
         <Grid container component="section">
           <Grid item container className={classes.header}>
             <Grid item xs={12} className={classes.headerTop}>
-              <Typography variant="h1">{path}</Typography>
+              <Typography variant="h2">{path}</Typography>
             </Grid>
           </Grid>
           <Items
