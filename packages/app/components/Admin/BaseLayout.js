@@ -9,21 +9,21 @@ import {
   Palette,
   Widgets,
 } from "@material-ui/icons";
-import Settings from "../components/Admin/Settings.js";
-import { CREATOR_AREA_PAGE_TITLE } from "../config/strings.js";
-import MediaManager from "../components/Admin/Media/MediaManager.js";
-import Courses from "../components/Admin/Courses";
-import Users from "../components/Admin/Users";
-import AppLoader from "../components/AppLoader.js";
-import Design from "../components/Admin/Design";
-import ComponentScaffold from "../components/Public/BaseLayout/ComponentScaffold.js";
-import MasterDetails from "../components/Admin/Widgets";
-import widgets from "../config/widgets.js";
+import Settings from "../../components/Admin/Settings.js";
+import { CREATOR_AREA_PAGE_TITLE } from "../../config/strings.js";
+import MediaManager from "../../components/Admin/Media/MediaManager.js";
+import Courses from "../../components/Admin/Courses";
+import Users from "../../components/Admin/Users";
+import AppLoader from "../../components/AppLoader.js";
+import Design from "../../components/Admin/Design";
+import MasterDetails from "../../components/Admin/Widgets";
+import widgets from "../../config/widgets.js";
 import Head from "next/head";
-import { MEDIA_BACKEND } from "../config/constants.js";
-import { formulateMediaUrl } from "../lib/utils.js";
+import { MEDIA_BACKEND } from "../../config/constants.js";
+import { formulateMediaUrl } from "../../lib/utils.js";
 import { Grid } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
+import RouteBasedComponentScaffold from "../Public/BaseLayout/RouteBasedComponentScaffold.js";
 
 const useStyles = makeStyles({
   loaderContainer: {
@@ -32,39 +32,41 @@ const useStyles = makeStyles({
   },
 });
 
-const Create = (props) => {
+const BaseLayoutAdmin = ({ auth, profile, siteInfo }) => {
   const router = useRouter();
   const classes = useStyles();
 
   useEffect(() => {
     if (
-      props.profile.fetched &&
-      !(props.profile.isCreator || props.profile.isAdmin)
+      profile.fetched &&
+      !(profile.isCreator || profile.isAdmin)
     ) {
       router.push("/");
     }
-  }, [props.profile.fetched]);
+  }, [profile.fetched]);
 
   useEffect(() => {
-    if (props.auth.checked && props.auth.guest) {
+    if (auth.checked && auth.guest) {
       router.push("/");
     }
-  }, [props.auth.checked]);
+  }, [auth.checked]);
 
   const items = [
     {
       name: "Courses",
-      element: <Courses />,
+    //   element: <Courses />,
+      route: "/dashboard/courses",
       icon: <LibraryBooks />,
     },
     {
       name: "Media",
-      element: <MediaManager onMediaSelected={() => {}} />,
+      route: "/dashboard/media",
+        //   element: <MediaManager onMediaSelected={() => {}} />,
       icon: <PermMedia />,
     },
   ];
 
-  if (props.profile.isAdmin) {
+  if (profile.isAdmin) {
     const widgetsMap = {};
     Object.keys(widgets).map((name) => {
       widgetsMap[widgets[name].metadata.name] = {
@@ -78,44 +80,48 @@ const Create = (props) => {
       ...[
         {
           name: "Users",
-          element: <Users />,
+          route: "/dashboard/users",
+        //   element: <Users />,
           icon: <SupervisedUserCircle />,
         },
         {
           name: "Design & Navigation",
-          element: <Design />,
+          route: "/dashboard/design",
+        //   element: <Design />,
           icon: <Palette />,
         },
         {
           name: "Widgets",
-          element: <MasterDetails componentsMap={widgetsMap} />,
+          route: "/dashboard/widgets",
+        //   element: <MasterDetails componentsMap={widgetsMap} />,
           icon: <Widgets />,
         },
         {
           name: "Settings",
-          element: <Settings />,
+          route: "/dashboard/settings",
+        //   element: <Settings />,
           icon: <SettingsApplications />,
         },
       ]
     );
   }
 
-  return props.profile.fetched &&
-    (props.profile.isCreator || props.profile.isAdmin) ? (
+  return profile.fetched &&
+    (profile.isCreator || profile.isAdmin) ? (
     <>
       <Head>
         <title>
           {CREATOR_AREA_PAGE_TITLE}{" "}
-          {props.siteInfo &&
-            props.siteInfo.title &&
-            `| ${props.siteInfo.title}`}
+          {siteInfo &&
+            siteInfo.title &&
+            `| ${siteInfo.title}`}
         </title>
-        {props.siteInfo && props.siteInfo.logopath && (
+        {siteInfo && siteInfo.logopath && (
           <link
             rel="icon"
             href={formulateMediaUrl(
               MEDIA_BACKEND,
-              props.siteInfo.logopath,
+              siteInfo.logopath,
               true
             )}
           />
@@ -125,7 +131,7 @@ const Create = (props) => {
           content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
         />
       </Head>
-      <ComponentScaffold items={items} />
+      <RouteBasedComponentScaffold items={items} />
     </>
   ) : (
     <Grid
@@ -147,4 +153,4 @@ const mapStateToProps = (state) => ({
   siteInfo: state.siteinfo,
 });
 
-export default connect(mapStateToProps)(Create);
+export default connect(mapStateToProps)(BaseLayoutAdmin);
