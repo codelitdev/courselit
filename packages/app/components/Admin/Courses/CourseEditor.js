@@ -119,8 +119,10 @@ const CourseEditor = (props) => {
   const [lessons, setLessons] = useState([]);
   const classes = useStyles();
   const [lessonIndex, setLessonIndex] = useState(0);
+  const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
+    console.log('CourseEdit', props.courseId)
     if (props.courseId) {
       loadCourse(props.courseId);
     }
@@ -130,6 +132,7 @@ const CourseEditor = (props) => {
   const inputLabel = React.useRef(null);
   const [labelWidth, setLabelWidth] = React.useState(0);
   useEffect(() => {
+    console.log('CourseEdit [empty]', props.courseId)
     setLabelWidth(inputLabel.current.offsetWidth);
   }, []);
 
@@ -217,7 +220,7 @@ const CourseEditor = (props) => {
       const response = await fetch.exec();
       if (response.course) {
         setCourseDataWithDescription(response.course);
-        props.markDirty(false);
+        setDirty(false);
         props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_COURSE_SAVED)));
       }
     } catch (err) {
@@ -233,7 +236,7 @@ const CourseEditor = (props) => {
   };
 
   const changeCourseDetails = (key, value) => {
-    props.markDirty(true);
+    setDirty(true);
 
     setCourseData(
       Object.assign({}, courseData, {
@@ -245,7 +248,7 @@ const CourseEditor = (props) => {
   };
 
   const onDescriptionChange = (editorState) => {
-    props.markDirty(true);
+    setDirty(true);
 
     setCourseData(
       Object.assign({}, courseData, {
@@ -518,7 +521,6 @@ const CourseEditor = (props) => {
 
       {courseData.course.id && (
         <Grid item container>
-          {/* <button onClick={onCourseDelete}>Delete course</button> */}
           {!courseData.course.isBlog && (
             <Grid item container direction="column">
               {lessons.map((item, index) => (
@@ -583,8 +585,8 @@ CourseEditor.propTypes = {
   profile: profileProps,
   courseId: PropTypes.string,
   dispatch: PropTypes.func.isRequired,
-  closeEditor: PropTypes.func.isRequired,
-  markDirty: PropTypes.func.isRequired,
+  // closeEditor: PropTypes.func.isRequired,
+  // markDirty: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({

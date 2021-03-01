@@ -18,6 +18,7 @@ import { useExecuteGraphQLQuery } from "../../CustomHooks.js";
 import { Add, Done } from "@material-ui/icons";
 import AppDialog from "../../Public/AppDialog.js";
 import { makeStyles } from "@material-ui/styles";
+import { useRouter } from "next/router";
 
 const useStyles = makeStyles((theme) => ({
   header: {
@@ -36,6 +37,7 @@ const CoursesManager = (props) => {
   );
   const executeGQLCall = useExecuteGraphQLQuery();
   const classes = useStyles();
+  const router = useRouter();
 
   useEffect(() => {
     loadCreatorCourses();
@@ -65,16 +67,18 @@ const CoursesManager = (props) => {
   };
 
   const showEditor = (courseId) => {
-    if (courseEditorVisible) {
-      if (courseEditorDirty) {
-        setUserDismissingDirtyEditor(true);
-      } else {
-        setCourseEditorVisible(false);
-      }
-    } else {
-      setSelectedCourse(courseId);
-      setCourseEditorVisible(true);
-    }
+    // console.log(courseId)
+    // if (courseEditorVisible) {
+    //   if (courseEditorDirty) {
+    //     setUserDismissingDirtyEditor(true);
+    //   } else {
+    //     setCourseEditorVisible(false);
+    //   }
+    // } else {
+    //   setSelectedCourse(courseId);
+    //   setCourseEditorVisible(true);
+    // }
+    courseId && router.push(`/dashboard/courses/edit/${courseId}`)
   };
 
   const markDirtyEditorClean = () => setUserDismissingDirtyEditor(false);

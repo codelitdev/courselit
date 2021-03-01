@@ -70,7 +70,6 @@ const ComponentScaffold = (props) => {
   const classes = useStyles(props);
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [activeItemIndex, setActiveItemIndex] = useState(0);
   const matches = useMediaQuery((theme) => theme.breakpoints.down("xs"));
   const [firstLoad, setFirstLoad] = useState(false);
   const router = useRouter();
@@ -89,9 +88,8 @@ const ComponentScaffold = (props) => {
     setMobileOpen(!mobileOpen);
   }
 
-  function navigateTo(item) {
-    console.log("navigating...", item);
-    item.route && router.push(item.route);
+  function navigateTo(route) {
+    router.push(route);
   }
 
   const drawer = (
@@ -108,7 +106,9 @@ const ComponentScaffold = (props) => {
             button
             key={index}
             onClick={() => navigateTo(item.route)}
-            className={activeItemIndex === index ? classes.activeItem : null}
+            className={
+              router.pathname === item.route ? classes.activeItem : null
+            }
           >
             <Grid
               container
@@ -188,7 +188,7 @@ const ComponentScaffold = (props) => {
         <LinearProgress className={classes.showProgressBar} />
         <Grid container className={classes.contentMain}>
           <Grid item xs={12}>
-            {/* {visibleComponent} */}
+            {props.children}
           </Grid>
         </Grid>
       </main>
@@ -201,7 +201,7 @@ ComponentScaffold.propTypes = {
   items: PropTypes.arrayOf(
     PropTypes.shape({
       name: PropTypes.string.isRequired,
-      route: PropTypes.object.isRequired,
+      route: PropTypes.string.isRequired,
       icon: PropTypes.object,
       props: PropTypes.object,
       progress: PropTypes.shape({
@@ -211,6 +211,7 @@ ComponentScaffold.propTypes = {
   ),
   networkAction: PropTypes.bool.isRequired,
   siteinfo: siteInfoProps,
+  children: PropTypes.object,
 };
 
 const mapStateToProps = (state) => ({
