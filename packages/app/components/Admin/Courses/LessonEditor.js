@@ -79,7 +79,6 @@ const useStyles = makeStyles((theme) => ({
 
 const LessonEditor = (props) => {
   const [lesson, setLesson] = useState(props.lesson);
-  // const [error, setError] = useState('')
   const classes = useStyles();
   const inputLabel = React.useRef(null);
   const [labelWidth, setLabelWidth] = React.useState(0);
@@ -433,15 +432,6 @@ const LessonEditor = (props) => {
       ></AppDialog>
     </Card>
   );
-};
-
-LessonEditor.emptyLesson = {
-  title: "",
-  type: String.prototype.toUpperCase.call(LESSON_TYPE_TEXT),
-  content: TextEditor.emptyState(),
-  contentURL: "",
-  downloadable: false,
-  requiresEnrollment: false,
 };
 
 LessonEditor.propTypes = {

@@ -38,12 +38,17 @@ import {
 import { makeStyles } from "@material-ui/styles";
 import MediaSelector from "../Media/MediaSelector.js";
 import { Delete, Add } from "@material-ui/icons";
-import AppDialog from "../../Public/AppDialog.js";
-import LessonEditor from "./LessonEditor.js";
 import AppMessage from "../../../models/app-message.js";
-import { BACKEND, MIMETYPE_IMAGE } from "../../../config/constants.js";
+import {
+  BACKEND,
+  LESSON_TYPE_TEXT,
+  MIMETYPE_IMAGE,
+} from "../../../config/constants.js";
 import FetchBuilder from "../../../lib/fetch";
 import { Card, RichText as TextEditor } from "@courselit/components-library";
+import dynamic from "next/dynamic";
+const LessonEditor = dynamic(() => import("./LessonEditor.js"));
+const AppDialog = dynamic(() => import("../../Public/AppDialog.js"));
 
 const useStyles = makeStyles((theme) => ({
   title: {
@@ -119,10 +124,8 @@ const CourseEditor = (props) => {
   const [lessons, setLessons] = useState([]);
   const classes = useStyles();
   const [lessonIndex, setLessonIndex] = useState(0);
-  const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
-    console.log('CourseEdit', props.courseId)
     if (props.courseId) {
       loadCourse(props.courseId);
     }
@@ -132,7 +135,6 @@ const CourseEditor = (props) => {
   const inputLabel = React.useRef(null);
   const [labelWidth, setLabelWidth] = React.useState(0);
   useEffect(() => {
-    console.log('CourseEdit [empty]', props.courseId)
     setLabelWidth(inputLabel.current.offsetWidth);
   }, []);
 
@@ -220,7 +222,7 @@ const CourseEditor = (props) => {
       const response = await fetch.exec();
       if (response.course) {
         setCourseDataWithDescription(response.course);
-        setDirty(false);
+        props.markDirty(false);
         props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_COURSE_SAVED)));
       }
     } catch (err) {
@@ -236,7 +238,7 @@ const CourseEditor = (props) => {
   };
 
   const changeCourseDetails = (key, value) => {
-    setDirty(true);
+    props.markDirty(true);
 
     setCourseData(
       Object.assign({}, courseData, {
@@ -248,7 +250,7 @@ const CourseEditor = (props) => {
   };
 
   const onDescriptionChange = (editorState) => {
-    setDirty(true);
+    props.markDirty(true);
 
     setCourseData(
       Object.assign({}, courseData, {
@@ -331,12 +333,15 @@ const CourseEditor = (props) => {
       .setAuthToken(props.auth.token)
       .build();
     try {
+      props.dispatch(networkAction(true));
       const response = await fetch.exec();
       if (response.course) {
         setCourseDataWithDescription(response.course);
       }
     } catch (err) {
       setError(err.message);
+    } finally {
+      props.dispatch(networkAction(false));
     }
   };
 
@@ -348,10 +353,15 @@ const CourseEditor = (props) => {
   const onAddLesson = () => {
     const emptyLessonWithLocalIndexKey = Object.assign(
       {},
-      LessonEditor.emptyLesson,
       {
         lessonIndex: lessonIndex,
         courseId: courseData.course.id,
+        title: "",
+        type: String.prototype.toUpperCase.call(LESSON_TYPE_TEXT),
+        content: TextEditor.emptyState(),
+        contentURL: "",
+        downloadable: false,
+        requiresEnrollment: false,
       }
     );
     setLessonIndex(lessonIndex + 1);
@@ -521,6 +531,7 @@ const CourseEditor = (props) => {
 
       {courseData.course.id && (
         <Grid item container>
+          {/* <button onClick={onCourseDelete}>Delete course</button> */}
           {!courseData.course.isBlog && (
             <Grid item container direction="column">
               {lessons.map((item, index) => (
@@ -585,8 +596,8 @@ CourseEditor.propTypes = {
   profile: profileProps,
   courseId: PropTypes.string,
   dispatch: PropTypes.func.isRequired,
-  // closeEditor: PropTypes.func.isRequired,
-  // markDirty: PropTypes.func.isRequired,
+  closeEditor: PropTypes.func.isRequired,
+  markDirty: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({
