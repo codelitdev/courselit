@@ -1,4 +1,4 @@
-import { GridListTile, GridListTileBar } from "@material-ui/core";
+import { GridListTileBar, Button } from "@material-ui/core";
 import React, { useEffect, useState } from "react";
 import { connect } from "react-redux";
 import { BACKEND } from "../../../config/constants";
@@ -7,14 +7,13 @@ import {
   NEW_COURSE_PAGE_HEADING,
   COURSE_TYPE_BLOG,
   COURSE_TYPE_COURSE,
+  LOAD_MORE_TEXT,
 } from "../../../config/strings";
 import FetchBuilder from "../../../lib/fetch";
 import { authProps, profileProps } from "../../../types";
 import Img from "../../Img";
+import { OverviewAndDetail } from "@courselit/components-library";
 import dynamic from "next/dynamic";
-const OverviewAndDetail = dynamic(() =>
-  import("../../Public/OverviewAndDetail")
-);
 const CourseEditor = dynamic(() => import("./CourseEditor"));
 
 const Index = (props) => {
@@ -32,13 +31,13 @@ const Index = (props) => {
       map.push({
         subtitle: NEW_COURSE_PAGE_HEADING,
         Overview: (
-          <GridListTile key={course.id} cols={1}>
+          <>
             <Img src={course.featuredImage} isThumbnail={true} />
             <GridListTileBar
               title={course.title}
               subtitle={course.isBlog ? COURSE_TYPE_BLOG : COURSE_TYPE_COURSE}
             />
-          </GridListTile>
+          </>
         ),
         Detail: (
           <CourseEditor
@@ -48,6 +47,19 @@ const Index = (props) => {
           />
         ),
       });
+    });
+    map.unshift({
+      subtitle: NEW_COURSE_PAGE_HEADING,
+      Overview: (
+        <>
+          <Img src="" isThumbnail={true} />
+          <GridListTileBar title="Add new" />
+        </>
+      ),
+      Detail: <CourseEditor markDirty={() => {}} closeEditor={() => {}} />,
+    });
+    map.push({
+      Overview: <Button onClick={loadCreatorCourses}>{LOAD_MORE_TEXT}</Button>,
     });
     setComponentsMap(map);
   }, [coursesPaginationOffset]);

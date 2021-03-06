@@ -101,6 +101,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+// TODO: Refactor away closeEditor() and markDirty()
 const CourseEditor = (props) => {
   const initCourseMetaData = {
     title: "",
