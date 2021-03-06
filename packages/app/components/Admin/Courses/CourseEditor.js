@@ -88,7 +88,6 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: theme.spacing(2),
   },
   section: {
-    background: "white",
     paddingTop: theme.spacing(2),
     paddingBottom: theme.spacing(2),
     paddingLeft: theme.spacing(1),
@@ -382,7 +381,6 @@ const CourseEditor = (props) => {
   return (
     <Grid container direction="column">
       <Grid item xs>
-        <Card>
           <form onSubmit={onCourseCreate}>
             <div className={classes.section}>
               <Typography variant="h4" className={classes.cardHeader}>
@@ -527,7 +525,6 @@ const CourseEditor = (props) => {
               </Grid>
             </div>
           </form>
-        </Card>
       </Grid>
 
       {courseData.course.id && (

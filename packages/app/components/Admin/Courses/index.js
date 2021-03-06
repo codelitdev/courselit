@@ -27,26 +27,11 @@ const Index = (props) => {
 
   useEffect(() => {
     const map = [];
-    creatorCourses.map((course) => {
-      map.push({
-        subtitle: NEW_COURSE_PAGE_HEADING,
-        Overview: (
-          <>
-            <Img src={course.featuredImage} isThumbnail={true} />
-            <GridListTileBar
-              title={course.title}
-              subtitle={course.isBlog ? COURSE_TYPE_BLOG : COURSE_TYPE_COURSE}
-            />
-          </>
-        ),
-        Detail: (
-          <CourseEditor
-            courseId={course.id}
-            markDirty={() => {}}
-            closeEditor={() => {}}
-          />
-        ),
-      });
+    creatorCourses.map(course => {
+      map.push(getComponent(course));
+    });
+    map.push({
+      Overview: <Button onClick={loadCreatorCourses}>{LOAD_MORE_TEXT}</Button>,
     });
     map.unshift({
       subtitle: NEW_COURSE_PAGE_HEADING,
@@ -58,11 +43,28 @@ const Index = (props) => {
       ),
       Detail: <CourseEditor markDirty={() => {}} closeEditor={() => {}} />,
     });
-    map.push({
-      Overview: <Button onClick={loadCreatorCourses}>{LOAD_MORE_TEXT}</Button>,
-    });
     setComponentsMap(map);
   }, [coursesPaginationOffset]);
+
+  const getComponent = (course) => ({
+    subtitle: NEW_COURSE_PAGE_HEADING,
+    Overview: (
+      <>
+        <Img src={course.featuredImage} isThumbnail={true} />
+        <GridListTileBar
+          title={course.title}
+          subtitle={course.isBlog ? COURSE_TYPE_BLOG : COURSE_TYPE_COURSE}
+        />
+      </>
+    ),
+    Detail: (
+      <CourseEditor
+        courseId={course.id}
+        markDirty={() => {}}
+        closeEditor={() => {}}
+      />
+    ),
+  })
 
   const loadCreatorCourses = async () => {
     if (!props.profile.id) {
