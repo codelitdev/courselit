@@ -36,7 +36,9 @@ module.exports = (passport) => {
             });
           }
 
-          const notTheFirstUserOfDomain = await User.countDocuments({ domain: req.domain._id });
+          const notTheFirstUserOfDomain = await User.countDocuments({
+            domain: req.domain._id,
+          });
           user = await User.create({
             domain: req.domain._id,
             email,
@@ -94,13 +96,13 @@ module.exports = (passport) => {
     jsonWebTokenOptions: {
       expiresIn: constants.jwtExpire,
     },
-    passReqToCallback: true
+    passReqToCallback: true,
   };
 
   passport.use(
     new JwtStrategy(jwtStrategyOptions, function (req, jwtToken, done) {
       const { email, domain } = jwtToken;
-      
+
       if (domain !== req.domain._id.toString()) {
         return done(null, false);
       }
