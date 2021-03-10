@@ -4,6 +4,7 @@
 const mongoose = require("mongoose");
 
 const LayoutSchema = new mongoose.Schema({
+  domain: { type: mongoose.Schema.Types.ObjectId, required: true },
   layout: mongoose.Schema.Types.Mixed,
 });
 

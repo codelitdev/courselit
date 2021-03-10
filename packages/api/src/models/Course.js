@@ -3,6 +3,7 @@ const AutoIncrement = require("mongoose-sequence")(mongoose);
 const { unlisted, open, closed } = require("../config/constants.js");
 
 const CourseSchema = new mongoose.Schema({
+  domain: { type: mongoose.Schema.Types.ObjectId, required: true },
   title: { type: String, required: true },
   slug: { type: String, required: true },
   cost: { type: Number, required: true },
