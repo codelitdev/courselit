@@ -1,18 +1,11 @@
 import { useEffect } from "react";
 import { connect } from "react-redux";
 import Router from "next/router";
-// import { removeCookie } from '../lib/session.js'
 import { signedOut } from "../redux/actions";
-// import {
-//   JWT_COOKIE_NAME,
-//   USERID_COOKIE_NAME
-// } from '../config/constants.js'
 
-const Logout = (props) => {
+const Logout = ({ dispatch, address }) => {
   useEffect(() => {
-    // removeCookie(JWT_COOKIE_NAME)
-    // removeCookie(USERID_COOKIE_NAME)
-    props.dispatch(signedOut());
+    dispatch(signedOut(address.domain));
     Router.replace("/");
   });
 
@@ -21,7 +14,9 @@ const Logout = (props) => {
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
+  address: state.address,
 });
+
 const mapDispatchToProps = (dispatch) => ({
   dispatch: dispatch,
 });

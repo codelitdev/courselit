@@ -13,6 +13,7 @@ import {
   THEME_AVAILABLE,
   LAYOUT_AVAILABLE,
   NAVIGATION_AVAILABLE,
+  SET_ADDRESS,
 } from "./actionTypes.js";
 import { HYDRATE } from "next-redux-wrapper";
 import initialState from "./defaultState";
@@ -162,6 +163,19 @@ function navigationReducer(state = initialState.navigation, action) {
   }
 }
 
+function addressReducer(state = initialState.address, action) {
+  switch (action.type) {
+    case SET_ADDRESS:
+      return {
+        backend: action.address.backend,
+        frontend: action.address.frontend,
+        domain: action.address.domain,
+      };
+    default:
+      return state;
+  }
+}
+
 const appReducers = combineReducers({
   auth: authReducer,
   siteinfo: siteinfoReducer,
@@ -171,6 +185,7 @@ const appReducers = combineReducers({
   theme: themeReducer,
   layout: layoutReducer,
   navigation: navigationReducer,
+  address: addressReducer,
 });
 
 const reducer = (state = initialState, action) => {

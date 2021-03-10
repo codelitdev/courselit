@@ -5,18 +5,18 @@
 
 import Cookies from "js-cookie";
 
-export const setCookie = (key, value) => {
+export const setCookie = ({ key, value, domain }) => {
   if (process.browser) {
-    Cookies.set(key, value, { expires: 1, path: "/" });
+    Cookies.set(key, value, { expires: 365, domain });
   }
 };
 
-export const getCookie = (key) => {
-  return process.browser ? Cookies.get(key) : null;
+export const getCookie = ({ key, domain }) => {
+  return process.browser ? Cookies.get(key, { domain }) : null;
 };
 
-export const removeCookie = (key) => {
+export const removeCookie = ({ key, domain }) => {
   if (process.browser) {
-    Cookies.remove(key);
+    Cookies.remove(key, { domain });
   }
 };
