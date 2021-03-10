@@ -4,7 +4,6 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const passport = require("passport");
 const graphqlHTTP = require("express-graphql");
-const cors = require("cors");
 const fileUpload = require("express-fileupload");
 const optionalAuthMiddlewareCreator = require("./middlewares/optionalAuth.js");
 const { routePrefix } = require("./config/constants.js");
@@ -18,7 +17,9 @@ require("./config/db.js")();
 const app = express();
 
 // Middlewares
-app.use(cors({ origin: "http://localhost:3000" })); // for next.js development server
+if (process.env.NODE_ENV !== "production") {
+  app.use(require("cors")());
+}
 app.use(passport.initialize());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());

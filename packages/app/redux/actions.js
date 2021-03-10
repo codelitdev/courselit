@@ -14,6 +14,7 @@ import {
   THEME_AVAILABLE,
   LAYOUT_AVAILABLE,
   NAVIGATION_AVAILABLE,
+  SET_ADDRESS,
 } from "./actionTypes.js";
 import {
   BACKEND,
@@ -22,6 +23,7 @@ import {
 } from "../config/constants.js";
 import FetchBuilder from "../lib/fetch.js";
 import { removeCookie } from "../lib/session.js";
+import { getAddress } from "../lib/utils.js";
 
 export function signedIn(userid, token) {
   return async (dispatch, getState) => {
@@ -64,10 +66,10 @@ export function refreshUserProfile(userId) {
   };
 }
 
-export function signedOut() {
+export function signedOut(domain) {
   return (dispatch) => {
-    removeCookie(JWT_COOKIE_NAME);
-    removeCookie(USERID_COOKIE_NAME);
+    removeCookie({ key: JWT_COOKIE_NAME, domain });
+    removeCookie({ key: USERID_COOKIE_NAME, domain });
     dispatch(clearProfile());
     dispatch({ type: SIGN_OUT });
   };
@@ -112,7 +114,7 @@ export function updateSiteInfo() {
       }
       `;
       const fetch = new FetchBuilder()
-        .setUrl(`${BACKEND}/graph`)
+        .setUrl(`${getState().address.backend}/graph`)
         .setPayload(query)
         .setIsGraphQLEndpoint(true)
         .build();
@@ -233,4 +235,8 @@ export function updateSiteNavigation() {
 
 export function navigationAvailable(links) {
   return { type: NAVIGATION_AVAILABLE, links };
+}
+
+export function updateBackend(host) {
+  return { type: SET_ADDRESS, address: getAddress(host) };
 }

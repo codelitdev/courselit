@@ -109,3 +109,21 @@ export const areObjectsDifferent = (baseline, obj) => {
   const onlyChangedFields = getObjectContainingOnlyChangedFields(baseline, obj);
   return !!Object.keys(onlyChangedFields).length;
 };
+
+export const getAddress = (host) => {
+  const domain = host.split(":")[0];
+
+  if (process.env.NODE_ENV === "production") {
+    return {
+      backend: `http://${domain}/api`,
+      frontend: `http://${host}`,
+      domain,
+    };
+  } else {
+    return {
+      backend: `http://${domain}:8000`,
+      frontend: `http://${host}`,
+      domain,
+    };
+  }
+};
