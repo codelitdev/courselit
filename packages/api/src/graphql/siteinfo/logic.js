@@ -32,9 +32,7 @@ exports.getSiteInfoAsAdmin = async (ctx) => {
 };
 
 exports.updateSiteInfo = async (siteData, ctx) => {
-  console.log("Request came here");
   checkIfAuthenticated(ctx);
-  console.log(ctx);
 
   // check if the user is an admin
   if (!ctx.user.isAdmin) throw new Error(responses.is_not_admin);
@@ -53,7 +51,7 @@ exports.updateSiteInfo = async (siteData, ctx) => {
   if (siteInfo === null) {
     shouldCreate = true;
     siteInfo = {
-      domain: ctx.domain._id
+      domain: ctx.domain._id,
     };
   }
 
