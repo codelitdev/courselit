@@ -33,7 +33,7 @@ module.exports = (passport) => {
               .json({ message: responses.error, details: err.message });
           }
 
-          const token = jwt.sign({ email: user.email }, constants.jwtSecret, {
+          const token = jwt.sign({ email: user.email, domain: req.domain._id }, constants.jwtSecret, {
             expiresIn: constants.jwtExpire,
           });
 

@@ -11,6 +11,9 @@ exports.responses = {
   email_or_passwd_invalid: "Email or password is invalid",
   auth_user_not_found: "No account was found with this email id",
   email_already_registered: "This email is already registered",
+  domain_missing: "Domain is missing",
+  domain_doesnt_exist: "Domain does not exist",
+  cross_domain_access_prohibited: "Invalid credentials",
 
   // graphql responses
   user_not_found: "User not found.",
