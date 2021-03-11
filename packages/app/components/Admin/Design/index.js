@@ -47,14 +47,14 @@ import AddComponentDialog from "./AddComponentDialog.js";
 import AddedComponent from "./AddedComponent.js";
 import { connect } from "react-redux";
 import FetchBuilder from "../../../lib/fetch.js";
-import { BACKEND, THEMES_REPO } from "../../../config/constants.js";
+import { THEMES_REPO } from "../../../config/constants.js";
 import {
   networkAction,
   layoutAvailable,
   setAppMessage,
 } from "../../../redux/actions.js";
 import AppMessage from "../../../models/app-message.js";
-import { authProps } from "../../../types.js";
+import { addressProps, authProps } from "../../../types.js";
 import ThemeItem from "./ThemeItem.js";
 import NavigationLinks from "./NavigationLinks/index.js";
 import widgets from "../../../config/widgets.js";
@@ -122,7 +122,7 @@ const PageDesigner = (props) => {
   const [isNewThemeTextValid, setIsNewThemeTextValid] = useState(false);
   const themeInputRef = useRef();
   const fetch = new FetchBuilder()
-    .setUrl(`${BACKEND}/graph`)
+    .setUrl(`${props.address.backend}/graph`)
     .setIsGraphQLEndpoint(true)
     .setAuthToken(props.auth.token);
 
@@ -700,11 +700,13 @@ PageDesigner.propTypes = {
   layout: PropTypes.object.isRequired,
   auth: authProps,
   dispatch: PropTypes.func.isRequired,
+  address: addressProps,
 };
 
 const mapStateToProps = (state) => ({
   layout: state.layout,
   auth: state.auth,
+  address: state.address,
 });
 
 export default connect(mapStateToProps)(PageDesigner);

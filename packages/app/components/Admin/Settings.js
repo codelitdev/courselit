@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
-import { siteInfoProps, authProps } from "../../types";
+import { siteInfoProps, authProps, addressProps } from "../../types";
 import {
   getGraphQLQueryFields,
   getObjectContainingOnlyChangedFields,
@@ -96,7 +96,7 @@ const Settings = (props) => {
 
   const classes = useStyles();
   const fetch = new FetchBuilder()
-    .setUrl(`${BACKEND}/graph`)
+    .setUrl(`${props.address.backend}/graph`)
     .setIsGraphQLEndpoint(true)
     .setAuthToken(props.auth.token);
 
@@ -420,11 +420,13 @@ Settings.propTypes = {
   siteinfo: siteInfoProps,
   auth: authProps,
   dispatch: PropTypes.func.isRequired,
+  address: addressProps,
 };
 
 const mapStateToProps = (state) => ({
   siteinfo: state.siteinfo,
   auth: state.auth,
+  address: state.address,
 });
 
 const mapDispatchToProps = (dispatch) => ({

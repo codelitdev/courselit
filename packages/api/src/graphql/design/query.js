@@ -5,7 +5,7 @@ const logic = require("./logic.js");
 module.exports = {
   getTheme: {
     type: types.themeType,
-    resolve: () => logic.getTheme(),
+    resolve: (root, _, context) => logic.getTheme(context),
   },
   getAllThemes: {
     type: new graphql.GraphQLList(types.themeType),
@@ -13,6 +13,6 @@ module.exports = {
   },
   getLayout: {
     type: types.layoutType,
-    resolve: () => logic.getLayout(),
+    resolve: (root, _, context) => logic.getLayout(context),
   },
 };

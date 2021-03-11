@@ -33,7 +33,6 @@ import {
   addressProps,
 } from "../../../types.js";
 import {
-  BACKEND,
   LESSON_TYPE_TEXT,
   LESSON_TYPE_AUDIO,
   LESSON_TYPE_VIDEO,

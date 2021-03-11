@@ -1,3 +1,4 @@
+const strings = require("../../config/strings.js");
 const { text, audio, video, pdf } = require("../../config/constants.js");
 
 exports.lessonValidator = (lessonData) => {

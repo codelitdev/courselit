@@ -16,11 +16,7 @@ import {
   NAVIGATION_AVAILABLE,
   SET_ADDRESS,
 } from "./actionTypes.js";
-import {
-  BACKEND,
-  JWT_COOKIE_NAME,
-  USERID_COOKIE_NAME,
-} from "../config/constants.js";
+import { JWT_COOKIE_NAME, USERID_COOKIE_NAME } from "../config/constants.js";
 import FetchBuilder from "../lib/fetch.js";
 import { removeCookie } from "../lib/session.js";
 import { getAddress } from "../lib/utils.js";
@@ -153,7 +149,7 @@ export function updateSiteTheme() {
       }
       `;
       const fetch = new FetchBuilder()
-        .setUrl(`${BACKEND}/graph`)
+        .setUrl(`${getState().address.backend}/graph`)
         .setPayload(query)
         .setIsGraphQLEndpoint(true)
         .build();
@@ -172,7 +168,7 @@ export function themeAvailable(theme) {
 }
 
 export function updateSiteLayout() {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
     try {
       dispatch(networkAction(true));
 
@@ -185,7 +181,7 @@ export function updateSiteLayout() {
       `;
 
       const fetch = new FetchBuilder()
-        .setUrl(`${BACKEND}/graph`)
+        .setUrl(`${getState().address.backend}/graph`)
         .setPayload(query)
         .setIsGraphQLEndpoint(true)
         .build();
@@ -204,7 +200,7 @@ export function layoutAvailable(layout) {
 }
 
 export function updateSiteNavigation() {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
     try {
       dispatch(networkAction(true));
 
@@ -219,7 +215,7 @@ export function updateSiteNavigation() {
       }
       `;
       const fetch = new FetchBuilder()
-        .setUrl(`${BACKEND}/graph`)
+        .setUrl(`${getState().address.backend}/graph`)
         .setPayload(query)
         .setIsGraphQLEndpoint(true)
         .build();
