@@ -25,6 +25,7 @@ exports.responses = {
   course_not_empty: "Delete all lessons before trying deleting the course",
   invalid_offset: "Invalid offset",
   is_not_admin: "Insufficient privileges",
+  is_not_admin_or_creator: "Insufficient privileges",
   blog_description_empty: "Description field is required",
   cost_not_provided: "Cost field is required",
   invalid_cost: "Invalid cost",

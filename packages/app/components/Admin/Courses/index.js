@@ -47,7 +47,7 @@ const CoursesManager = (props) => {
     }
     const query = `
     query {
-      courses: getCreatorCourses(
+      courses: getCoursesAsAdmin(
         id: "${props.profile.id}",
         offset: ${coursesPaginationOffset}
       ) {

@@ -41,7 +41,7 @@ import { Delete, Add } from "@material-ui/icons";
 import AppDialog from "../../Public/AppDialog.js";
 import LessonEditor from "./LessonEditor.js";
 import AppMessage from "../../../models/app-message.js";
-import { BACKEND, MIMETYPE_IMAGE } from "../../../config/constants.js";
+import { MIMETYPE_IMAGE } from "../../../config/constants.js";
 import FetchBuilder from "../../../lib/fetch";
 import { Card, RichText as TextEditor } from "@courselit/components-library";
 
@@ -208,7 +208,7 @@ const CourseEditor = (props) => {
       `;
     }
     const fetch = new FetchBuilder()
-      .setUrl(`${BACKEND}/graph`)
+      .setUrl(`${props.address.backend}/graph`)
       .setPayload(query)
       .setIsGraphQLEndpoint(true)
       .setAuthToken(props.auth.token)
@@ -266,7 +266,7 @@ const CourseEditor = (props) => {
     try {
       props.dispatch(networkAction(true));
       const response = await queryGraphQL(
-        `${BACKEND}/graph`,
+        `${props.address.backend}/graph`,
         query,
         props.auth.token
       );
@@ -322,7 +322,7 @@ const CourseEditor = (props) => {
     }
     `;
     const fetch = new FetchBuilder()
-      .setUrl(`${BACKEND}/graph`)
+      .setUrl(`${props.address.backend}/graph`)
       .setPayload(query)
       .setIsGraphQLEndpoint(true)
       .setAuthToken(props.auth.token)
@@ -590,6 +590,7 @@ CourseEditor.propTypes = {
 const mapStateToProps = (state) => ({
   auth: state.auth,
   profile: state.profile,
+  address: state.address
 });
 
 const mapDispatchToProps = (dispatch) => ({
