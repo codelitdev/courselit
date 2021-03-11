@@ -1,5 +1,4 @@
 import BaseLayout from "../../components/Public/BaseLayout";
-import { BACKEND } from "../../config/constants";
 import FetchBuilder from "../../lib/fetch";
 import { Button, Grid, TextField, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
@@ -205,10 +204,7 @@ function Profile({ user, profile, auth, dispatch, address }) {
   );
 }
 
-export async function getServerSideProps(context) {
-  
-  const { query, req } = context;
-  console.log(req.headers.host);
+export async function getServerSideProps({ query, req }) {
   const graphQuery = `
     query {
       user: getUser(userId: "${query.userId}") {
@@ -246,7 +242,7 @@ export async function getServerSideProps(context) {
 const mapStateToProps = (state) => ({
   profile: state.profile,
   auth: state.auth,
-  address: state.address
+  address: state.address,
 });
 
 const mapDispatchToProps = (dispatch) => ({

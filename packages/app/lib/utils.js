@@ -114,7 +114,7 @@ export const getAddress = (host) => {
   return {
     domain: extractDomainFromURL(host),
     backend: getBackendAddress(host),
-    frontend: `http://${host}`
+    frontend: `http://${host}`,
   };
 };
 
@@ -126,8 +126,8 @@ export const getBackendAddress = (host) => {
   } else {
     return `http://${domain}:8000`;
   }
-}
+};
 
 const extractDomainFromURL = (host) => {
   return host.split(":")[0];
-}
+};

@@ -150,16 +150,16 @@ const UsersManager = ({ auth, address, dispatch }) => {
 UsersManager.propTypes = {
   auth: authProps,
   dispatch: PropTypes.func.isRequired,
-  address: addressProps
+  address: addressProps,
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
-  address: state.address
+  address: state.address,
 });
 
 const mapDispatchToProps = (dispatch) => ({
   dispatch: dispatch,
-})
+});
 
 export default connect(mapStateToProps, mapDispatchToProps)(UsersManager);

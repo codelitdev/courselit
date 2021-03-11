@@ -7,7 +7,6 @@ const strings = require("../../config/strings.js");
 const {
   checkIfAuthenticated,
   checkAdminOrSelf,
-  checkIfItemExists,
   makeModelTextSearchable,
 } = require("../../lib/graphql.js");
 const constants = require("../../config/constants.js");
@@ -59,7 +58,7 @@ exports.getUser = async (email = null, userId = null, ctx) => {
 exports.updateUser = async (userData, ctx) => {
   checkIfAuthenticated(ctx);
   const { id } = userData;
-  
+
   let user = await User.findOne({ _id: id, domain: ctx.domain._id });
   if (!user) throw new Error(strings.responses.item_not_found);
   checkAdminOrSelf(id, ctx);
@@ -131,8 +130,17 @@ exports.getUsersSummary = async (ctx) => {
 
   return {
     count: await User.countDocuments({ domain: ctx.domain._id }),
-    verified: await User.countDocuments({ verified: true, domain: ctx.domain._id }),
-    admins: await User.countDocuments({ isAdmin: true, domain: ctx.domain._id }),
-    creators: await User.countDocuments({ isCreator: true, domain: ctx.domain._id }),
+    verified: await User.countDocuments({
+      verified: true,
+      domain: ctx.domain._id,
+    }),
+    admins: await User.countDocuments({
+      isAdmin: true,
+      domain: ctx.domain._id,
+    }),
+    creators: await User.countDocuments({
+      isCreator: true,
+      domain: ctx.domain._id,
+    }),
   };
 };

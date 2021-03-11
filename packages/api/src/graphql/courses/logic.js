@@ -18,9 +18,7 @@ const {
   blogPostSnippetLength,
 } = require("../../config/constants.js");
 const ObjectId = require("mongoose").Types.ObjectId;
-const SiteInfo = require("../../models/SiteInfo.js");
-const { getPaymentMethod } = require("../../payments/index.js");
-const { validateBlogPosts, validateCost, validatePaymentMethod} = require('./helpers.js');
+const { validateBlogPosts, validateCost } = require("./helpers.js");
 
 const checkCourseOwnership = checkOwnership(Course);
 
@@ -149,20 +147,20 @@ exports.getCoursesAsAdmin = async (offset, ctx) => {
   const user = ctx.user;
 
   if (!(user.isCreator || user.isAdmin)) {
-    throw new Error(string.responses.is_not_admin_or_creator)
+    throw new Error(strings.responses.is_not_admin_or_creator);
   }
 
   const query = {
-    domain: ctx.domain._id 
-  }
+    domain: ctx.domain._id,
+  };
   if (user.isCreator) {
-    query.creatorId = `${user.userId || user.id}`
+    query.creatorId = `${user.userId || user.id}`;
   }
 
   const courses = await Course.find(query)
-      .sort({ updated: -1 })
-      .skip((offset - 1) * itemsPerPage)
-      .limit(itemsPerPage);
+    .sort({ updated: -1 })
+    .skip((offset - 1) * itemsPerPage)
+    .limit(itemsPerPage);
 
   return courses;
 };
@@ -173,7 +171,7 @@ exports.getPosts = async (offset, ctx) => {
     isBlog: true,
     published: true,
     privacy: open.toLowerCase(),
-    domain: ctx.domain._id 
+    domain: ctx.domain._id,
   };
   const posts = await Course.find(
     query,
@@ -203,7 +201,7 @@ exports.getCourses = async (offset, onlyShowFeatured = false, ctx) => {
     isBlog: false,
     published: true,
     privacy: open.toLowerCase(),
-    domain: ctx.domain._id
+    domain: ctx.domain._id,
   };
   if (onlyShowFeatured) {
     query.isFeatured = true;
@@ -238,7 +236,7 @@ exports.getEnrolledCourses = async (userId, ctx) => {
       _id: {
         $in: [...user.purchases],
       },
-      domain: ctx.domain._id
+      domain: ctx.domain._id,
     },
     "id title"
   );

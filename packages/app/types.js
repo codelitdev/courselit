@@ -101,5 +101,5 @@ export const link = PropTypes.shape({
 export const addressProps = PropTypes.shape({
   backend: PropTypes.string.isRequired,
   frontend: PropTypes.string.isRequired,
-  domain: PropTypes.string.isRequired
-})
+  domain: PropTypes.string.isRequired,
+});

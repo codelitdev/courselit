@@ -27,7 +27,7 @@ const courseType = new graphql.GraphQLObjectType({
     lessons: {
       type: new graphql.GraphQLList(lessonMetaType),
       resolve: (course, args, context, info) =>
-        lessonLogic.getAllLessonsOfACourse(course, context),
+        lessonLogic.getAllLessons(course, context),
     },
     updated: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     slug: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
