@@ -1,7 +1,7 @@
 import React, { useState, useEffect /* useRef */ } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
-import { authProps, profileProps } from "../../../types.js";
+import { authProps, profileProps, addressProps } from "../../../types.js";
 import {
   BTN_DELETE_COURSE,
   ERR_COURSE_COST_REQUIRED,
@@ -585,12 +585,13 @@ CourseEditor.propTypes = {
   dispatch: PropTypes.func.isRequired,
   closeEditor: PropTypes.func.isRequired,
   markDirty: PropTypes.func.isRequired,
+  address: addressProps,
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
   profile: state.profile,
-  address: state.address
+  address: state.address,
 });
 
 const mapDispatchToProps = (dispatch) => ({

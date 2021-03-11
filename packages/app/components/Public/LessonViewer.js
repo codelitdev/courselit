@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import FetchBuilder from "../../lib/fetch";
 import {
-  BACKEND,
   LESSON_TYPE_VIDEO,
   LESSON_TYPE_AUDIO,
   MEDIA_BACKEND,
@@ -12,7 +11,7 @@ import { networkAction } from "../../redux/actions";
 import { Typography, Grid } from "@material-ui/core";
 import { ENROLL_IN_THE_COURSE, USER_ERROR_HEADER } from "../../config/strings";
 import { makeStyles } from "@material-ui/styles";
-import { lesson, authProps, profileProps } from "../../types";
+import { lesson, authProps, profileProps, addressProps } from "../../types";
 import { formulateMediaUrl } from "../../lib/utils.js";
 import { RichText as TextEditor } from "@courselit/components-library";
 
@@ -58,7 +57,7 @@ const LessonViewer = (props) => {
     `;
 
     const fetch = new FetchBuilder()
-      .setUrl(`${BACKEND}/graph`)
+      .setUrl(`${props.address.backend}/graph`)
       .setPayload(query)
       .setIsGraphQLEndpoint(true)
       .setAuthToken(props.auth.token)
@@ -157,11 +156,13 @@ LessonViewer.propTypes = {
   auth: authProps,
   profile: profileProps,
   dispatch: PropTypes.func.isRequired,
+  address: addressProps,
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
   profile: state.profile,
+  address: state.address,
 });
 
 const mapDispatchToProps = (dispatch) => ({

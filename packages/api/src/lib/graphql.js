@@ -59,12 +59,12 @@ exports.checkAdminOrSelf = (userID, GraphQLContext) => {
   }
 };
 
-exports.checkIfItemExists = async (Model, id) => {
-  const item = await Model.findById(id);
-  if (!item) throw new Error(strings.responses.item_not_found);
+// exports.checkIfItemExists = async (Model, id) => {
+//   const item = await Model.findById(id);
+//   if (!item) throw new Error(strings.responses.item_not_found);
 
-  return item;
-};
+//   return item;
+// };
 
 const validateMongooseTextSearchQuery = (query) => {
   if (typeof query !== "object") {

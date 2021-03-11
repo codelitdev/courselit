@@ -143,7 +143,7 @@ const UserDetails = (props) => {
       .setAuthToken(auth.token)
       .build();
     try {
-      dispatch(networkAction(true))
+      dispatch(networkAction(true));
       const response = await fetch.exec();
       if (response.user) {
         setNewUserData(getNewUserDataObject(response.user));
@@ -153,7 +153,7 @@ const UserDetails = (props) => {
       setError(err.message);
       setNewUserData(newUserDataDefaults);
     } finally {
-      dispatch(networkAction(false))
+      dispatch(networkAction(false));
     }
   };
 
@@ -433,11 +433,11 @@ UserDetails.propTypes = {
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
-  address: state.address
+  address: state.address,
 });
 
 const mapDispatchToProps = (dispatch) => ({
   dispatch: dispatch,
-})
+});
 
 export default connect(mapStateToProps, mapDispatchToProps)(UserDetails);
