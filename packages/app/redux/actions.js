@@ -26,7 +26,7 @@ import { removeCookie } from "../lib/session.js";
 import { getAddress } from "../lib/utils.js";
 
 export function signedIn(userid, token) {
-  return async (dispatch, getState) => {
+  return async (dispatch) => {
     dispatch({ type: SIGN_IN, token, userid });
     dispatch(refreshUserProfile(userid));
   };
@@ -52,7 +52,7 @@ export function refreshUserProfile(userId) {
       }
       `;
       const fetch = new FetchBuilder()
-        .setUrl(`${BACKEND}/graph`)
+        .setUrl(`${getState().address.backend}/graph`)
         .setPayload(query)
         .setIsGraphQLEndpoint(true)
         .setAuthToken(getState().auth.token)

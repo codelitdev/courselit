@@ -111,19 +111,23 @@ export const areObjectsDifferent = (baseline, obj) => {
 };
 
 export const getAddress = (host) => {
-  const domain = host.split(":")[0];
+  return {
+    domain: extractDomainFromURL(host),
+    backend: getBackendAddress(host),
+    frontend: `http://${host}`
+  };
+};
+
+export const getBackendAddress = (host) => {
+  const domain = extractDomainFromURL(host);
 
   if (process.env.NODE_ENV === "production") {
-    return {
-      backend: `http://${domain}/api`,
-      frontend: `http://${host}`,
-      domain,
-    };
+    return `http://${domain}/api`;
   } else {
-    return {
-      backend: `http://${domain}:8000`,
-      frontend: `http://${host}`,
-      domain,
-    };
+    return `http://${domain}:8000`;
   }
-};
+}
+
+const extractDomainFromURL = (host) => {
+  return host.split(":")[0];
+}
