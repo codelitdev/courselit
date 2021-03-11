@@ -66,8 +66,8 @@ const courseUpdateInput = new graphql.GraphQLInputObjectType({
   },
 });
 
-const myCoursesItemType = new graphql.GraphQLObjectType({
-  name: "MyCoursesItem",
+const creatorOrAdminCoursesItemType = new graphql.GraphQLObjectType({
+  name: "CreatorOrAdminCoursesItem",
   fields: {
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
@@ -109,7 +109,7 @@ module.exports = {
   courseStatusType,
   courseInputType,
   courseUpdateInput,
-  myCoursesItemType,
+  creatorOrAdminCoursesItemType,
   postType,
   publicCoursesType,
 };

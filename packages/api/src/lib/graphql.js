@@ -16,7 +16,7 @@ exports.checkIfAuthenticated = (ctx) => {
  * @param {Object} ctx context received from the GraphQL resolver
  */
 exports.checkOwnership = (Model) => async (id, ctx) => {
-  const item = await Model.findOne({ _id: id });
+  const item = await Model.findOne({ _id: id, domain: ctx.domain._id });
   if (
     !item ||
     (ObjectId.isValid(item.creatorId)
