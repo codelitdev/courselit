@@ -4,14 +4,12 @@
 const SiteInfo = require("../../models/SiteInfo.js");
 const { checkIfAuthenticated } = require("../../lib/graphql.js");
 const { responses } = require("../../config/strings.js");
+const { currencyISOCodes } = require("../../config/constants.js");
 const {
-  currencyISOCodes,
-  paypal,
-  stripe,
-  paytm,
-  none,
-} = require("../../config/constants.js");
-const { capitalize } = require("../../lib/utils.js");
+  checkForInvalidPaymentMethod,
+  checkForInvalidPaymentSettings,
+  getPaymentInvalidException,
+} = require("./helpers.js");
 
 exports.getSiteInfo = async (ctx) => {
   const siteinfo = await SiteInfo.findOne(
@@ -81,43 +79,3 @@ exports.updateSiteInfo = async (siteData, ctx) => {
 
   return siteInfo;
 };
-
-const checkForInvalidPaymentMethod = (siteInfo) => {
-  if (!siteInfo.paymentMethod) {
-    return;
-  }
-
-  if (![paypal, stripe, paytm, none].includes(siteInfo.paymentMethod)) {
-    return new Error(responses.invalid_payment_method);
-  }
-};
-
-const checkForInvalidPaymentSettings = (siteInfo) => {
-  if (!siteInfo.paymentMethod) {
-    return;
-  }
-
-  let failedPaymentMethod = null;
-
-  if (siteInfo.paymentMethod === paytm && !siteInfo.paytmSecret) {
-    failedPaymentMethod = paytm;
-  }
-
-  if (siteInfo.paymentMethod === paypal && !siteInfo.paypalSecret) {
-    failedPaymentMethod = paypal;
-  }
-
-  if (
-    siteInfo.paymentMethod === stripe &&
-    !(siteInfo.stripeSecret && siteInfo.stripePublishableKey)
-  ) {
-    failedPaymentMethod = stripe;
-  }
-
-  return failedPaymentMethod;
-};
-
-const getPaymentInvalidException = (paymentMethod) =>
-  new Error(
-    `${capitalize(paymentMethod)} ${responses.payment_settings_invalid_suffix}`
-  );

@@ -1,12 +1,12 @@
 import PropTypes from "prop-types";
 import { publicCourse } from "../types.js";
-import { BACKEND } from "../config/constants.js";
 import { HEADER_BLOG_POSTS_SECTION } from "../config/strings.js";
 import BaseLayout from "../components/Public/BaseLayout";
 import Items from "../components/Public/Items/index.js";
 import FetchBuilder from "../lib/fetch.js";
 import { Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
+import { getBackendAddress } from "../lib/utils.js";
 
 const useStyles = makeStyles((theme) => ({
   content: {
@@ -64,11 +64,11 @@ function Posts(props) {
   );
 }
 
-const getCourses = async () => {
+const getCourses = async (backend) => {
   let courses = [];
   try {
     const fetch = new FetchBuilder()
-      .setUrl(`${BACKEND}/graph`)
+      .setUrl(`${backend}/graph`)
       .setPayload(generateQuery())
       .setIsGraphQLEndpoint(true)
       .build();
@@ -78,8 +78,8 @@ const getCourses = async () => {
   return courses;
 };
 
-export async function getServerSideProps() {
-  const courses = await getCourses();
+export async function getServerSideProps({ req }) {
+  const courses = await getCourses(getBackendAddress(req.headers.host));
   return { props: { courses } };
 }
 

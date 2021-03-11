@@ -6,11 +6,7 @@
 const mongoose = require("mongoose");
 
 const ThemeSchema = new mongoose.Schema({
-  domain: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-    unique: true,
-  },
+  domain: { type: mongoose.Schema.Types.ObjectId, required: true },
   id: { type: String, required: true },
   name: { type: String, required: true },
   active: { type: Boolean, required: true, default: false },

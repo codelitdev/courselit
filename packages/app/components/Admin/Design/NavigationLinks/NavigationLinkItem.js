@@ -22,12 +22,11 @@ import {
 import {
   NAVIGATION_CATEGORY_MAIN,
   NAVIGATION_CATEGORY_FOOTER,
-  BACKEND,
 } from "../../../../config/constants";
 import { makeStyles } from "@material-ui/styles";
 import { Done, Delete } from "@material-ui/icons";
 import { connect } from "react-redux";
-import { authProps } from "../../../../types";
+import { addressProps, authProps } from "../../../../types";
 import FetchBuilder from "../../../../lib/fetch";
 import { networkAction, setAppMessage } from "../../../../redux/actions";
 import AppMessage from "../../../../models/app-message";
@@ -47,7 +46,7 @@ const NavigationLinkItem = (props) => {
   const [dirty, setDirty] = useState(false);
   const [requestInProgress, setRequestInProgress] = useState(false);
   const fetcher = new FetchBuilder()
-    .setUrl(`${BACKEND}/graph`)
+    .setUrl(`${props.address.backend}/graph`)
     .setIsGraphQLEndpoint(true)
     .setAuthToken(props.auth.token);
 
@@ -244,11 +243,13 @@ NavigationLinkItem.propTypes = {
   dispatch: PropTypes.func.isRequired,
   index: PropTypes.number.isRequired,
   removeItem: PropTypes.func.isRequired,
+  address: addressProps,
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
   networkAction: state.networkAction,
+  address: state.address,
 });
 
 const mapDispatchToProps = (dispatch) => ({
