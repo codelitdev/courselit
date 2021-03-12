@@ -6,7 +6,7 @@ const MediaSchema = new mongoose.Schema({
   originalFileName: { type: String, required: true },
   fileName: { type: String, required: true },
   mimeType: { type: String, required: true },
-  size: { type: String, required: true },
+  size: { type: Number, required: true },
   creatorId: { type: mongoose.Schema.Types.ObjectId, required: true },
   altText: { type: String },
   thumbnail: { type: String },

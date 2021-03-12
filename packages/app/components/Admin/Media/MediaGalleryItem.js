@@ -1,9 +1,10 @@
 import { GridListTileBar, IconButton } from "@material-ui/core";
 import { Edit } from "@material-ui/icons";
 import React, { useState } from "react";
-import { BACKEND } from "../../../config/constants.js";
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/styles";
+import { connect } from "react-redux";
+import { addressProps } from "../../../types";
 
 const useStyles = makeStyles({
   gridListItemIcon: {
@@ -15,9 +16,10 @@ const useStyles = makeStyles({
   },
 });
 
-const MediaGalleryItem = (props) => {
-  const { item, toggleMediaEditForm } = props;
-  const [imgSrc, setImgSrc] = useState(`${BACKEND}/media/${item.id}?thumb=1`);
+const MediaGalleryItem = ({ item, toggleMediaEditForm, address }) => {
+  const [imgSrc, setImgSrc] = useState(
+    `${address.backend}/media/${item.id}?thumb=1`
+  );
   const classes = useStyles();
 
   const onImgLoadError = () => setImgSrc("/courselit_backdrop.webp");
@@ -48,6 +50,11 @@ const MediaGalleryItem = (props) => {
 MediaGalleryItem.propTypes = {
   item: PropTypes.object.isRequired,
   toggleMediaEditForm: PropTypes.func.isRequired,
+  address: addressProps,
 };
 
-export default MediaGalleryItem;
+const mapStateToProps = (state) => ({
+  address: state.address,
+});
+
+export default connect(mapStateToProps)(MediaGalleryItem);

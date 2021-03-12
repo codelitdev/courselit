@@ -3,9 +3,8 @@ import { Typography, Grid } from "@material-ui/core";
 import Link from "next/link";
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/styles";
-import { MEDIA_BACKEND } from "../../config/constants.js";
 import { formulateMediaUrl, formattedLocaleDate } from "../../lib/utils";
-import { publicCourse, profileProps } from "../../types";
+import { publicCourse, profileProps, addressProps } from "../../types";
 import BuyButton from "../CheckoutExternal";
 import { connect } from "react-redux";
 import {
@@ -14,7 +13,7 @@ import {
 } from "@courselit/components-library";
 import { FREE_COST } from "../../config/strings.js";
 
-const useStyles = (featuredImage) =>
+const useStyles = ({ featuredImage, backendUrl }) =>
   makeStyles((theme) => ({
     header: {},
     creatoravatarcontainer: {
@@ -43,7 +42,7 @@ const useStyles = (featuredImage) =>
       },
       overflow: "hidden",
       background: `url('${formulateMediaUrl(
-        MEDIA_BACKEND,
+        backendUrl,
         featuredImage
       )}') no-repeat center center`,
       backgroundSize: "contain",
@@ -62,16 +61,17 @@ const useStyles = (featuredImage) =>
   }));
 
 const Article = (props) => {
-  const { course, options, profile } = props;
-  const classes = useStyles(course.featuredImage)();
+  const { course, options, profile, address } = props;
+  const classes = useStyles({
+    featuredImage: course.featuredImage,
+    backendUrl: address.backend,
+  })();
   let courseDescriptionHydrated;
   try {
     courseDescriptionHydrated = TextEditor.hydrate({
       data: course.description,
     });
-  } catch (err) {
-    // do nothing
-  }
+  } catch (err) {}
 
   return (
     <article>
@@ -133,10 +133,12 @@ Article.propTypes = {
     showEnrollmentArea: PropTypes.bool,
   }).isRequired,
   profile: profileProps,
+  address: addressProps,
 };
 
 const mapStateToProps = (state) => ({
   profile: state.profile,
+  address: state.address,
 });
 
 export default connect(mapStateToProps)(Article);

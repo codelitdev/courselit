@@ -7,7 +7,6 @@ import {
 } from "../../../config/strings.js";
 import UserDetails from "./UserDetails.js";
 import FetchBuilder from "../../../lib/fetch.js";
-// import { BACKEND } from "../../../config/constants.js";
 import { connect } from "react-redux";
 import { addressProps, authProps } from "../../../types.js";
 import { networkAction } from "../../../redux/actions.js";

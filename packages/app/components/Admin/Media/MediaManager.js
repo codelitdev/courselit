@@ -10,8 +10,7 @@ import {
   FILE_UPLOAD_SUCCESS,
   MEDIA_UPLOADING,
 } from "../../../config/strings.js";
-import { BACKEND } from "../../../config/constants.js";
-import { authProps } from "../../../types.js";
+import { addressProps, authProps } from "../../../types.js";
 import { setAppMessage } from "../../../redux/actions.js";
 import {
   TextField,
@@ -51,7 +50,6 @@ const MediaManager = (props) => {
     selectedMedia: null,
   };
   const [uploadData, setUploadData] = useState(defaults.uploadData);
-  // const [selectedMedia] = useState(defaults.selectedMedia)
   const fileInput = createRef();
   const classes = useStyles();
   const [uploadFormVisible, setUploadFormVisible] = useState(false);
@@ -81,7 +79,7 @@ const MediaManager = (props) => {
     try {
       setUploading(true);
 
-      let res = await fetch(`${BACKEND}/media`, {
+      let res = await fetch(`${props.address.backend}/media`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${props.auth.token}`,
@@ -183,11 +181,13 @@ MediaManager.propTypes = {
   onMediaSelected: PropTypes.func.isRequired,
   mediaAdditionAllowed: PropTypes.bool,
   networkAction: PropTypes.bool.isRequired,
+  address: addressProps,
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
   networkAction: state.networkAction,
+  address: state.address,
 });
 
 const mapDispatchToProps = (dispatch) => ({

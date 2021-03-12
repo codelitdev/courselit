@@ -1,7 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { formulateMediaUrl } from "../../../lib/utils";
-import { MEDIA_BACKEND } from "../../../config/constants.js";
 import { makeStyles } from "@material-ui/styles";
 import { Typography } from "@material-ui/core";
 import {
@@ -9,6 +8,8 @@ import {
   PREVIEW_PDF_FILE,
 } from "../../../config/strings";
 import Img from "../../Img";
+import { connect } from "react-redux";
+import { addressProps } from "../../../types";
 
 const useStyles = makeStyles({
   video: {
@@ -22,7 +23,7 @@ const useStyles = makeStyles({
 });
 
 const MediaPreview = (props) => {
-  const { mimeType, id } = props;
+  const { mimeType, id, address } = props;
   const classes = useStyles();
 
   return (
@@ -39,7 +40,7 @@ const MediaPreview = (props) => {
       )}
       {mimeType === "application/pdf" && (
         <a
-          href={`${formulateMediaUrl(MEDIA_BACKEND, id, false)}`}
+          href={`${formulateMediaUrl(address.backend, id, false)}`}
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -56,7 +57,7 @@ const MediaPreview = (props) => {
       {mimeType === "video/mp4" && (
         <video controls controlsList="nodownload" className={classes.video}>
           <source
-            src={`${formulateMediaUrl(MEDIA_BACKEND, id, false)}`}
+            src={`${formulateMediaUrl(address.backend, id, false)}`}
             type="video/mp4"
           />
           Your browser does not support the video tag.
@@ -65,7 +66,7 @@ const MediaPreview = (props) => {
       {mimeType === "audio/mp3" && (
         <audio controls controlsList="nodownload">
           <source
-            src={`${formulateMediaUrl(MEDIA_BACKEND, id, false)}`}
+            src={`${formulateMediaUrl(address.backend, id, false)}`}
             type="audio/mpeg"
           />
           Your browser does not support the video tag.
@@ -73,8 +74,8 @@ const MediaPreview = (props) => {
       )}
       <Typography variant="body1">
         Direct URL:{" "}
-        <a href={formulateMediaUrl(MEDIA_BACKEND, id, false)}>
-          {formulateMediaUrl(MEDIA_BACKEND, id, false)}
+        <a href={formulateMediaUrl(address.backend, id, false)}>
+          {formulateMediaUrl(address.backend, id, false)}
         </a>
       </Typography>
     </>
@@ -84,6 +85,11 @@ const MediaPreview = (props) => {
 MediaPreview.propTypes = {
   id: PropTypes.string,
   mimeType: PropTypes.string,
+  address: addressProps,
 };
 
-export default MediaPreview;
+const mapStateToProps = (state) => ({
+  address: state.address,
+});
+
+export default connect(mapStateToProps)(MediaPreview);

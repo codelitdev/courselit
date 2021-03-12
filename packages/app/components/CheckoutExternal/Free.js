@@ -1,16 +1,15 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Button } from "@material-ui/core";
-import { authProps, publicCourse } from "../../types";
+import { addressProps, authProps, publicCourse } from "../../types";
 import { ENROLL_BUTTON_TEXT } from "../../config/strings";
 import { connect } from "react-redux";
 import fetch from "isomorphic-unfetch";
-import { BACKEND } from "../../config/constants";
 import { useRouter } from "next/router";
 import { networkAction, setAppMessage } from "../../redux/actions";
 import AppMessage from "../../models/app-message";
 
-const Free = ({ course, auth, dispatch }) => {
+const Free = ({ course, auth, dispatch, address }) => {
   const router = useRouter();
   const [disabled, setDisabled] = useState(false);
 
@@ -21,7 +20,7 @@ const Free = ({ course, auth, dispatch }) => {
 
       let initiatePaymentResponse = await makePaymentRequest({
         courseId: course.id,
-        backend: BACKEND,
+        backend: address.backend,
         token: auth.token,
         dispatch,
       });
@@ -76,10 +75,12 @@ Free.propTypes = {
   course: publicCourse.isRequired,
   auth: authProps,
   dispatch: PropTypes.func.isRequired,
+  address: addressProps,
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
+  address: state.address,
 });
 
 const mapDispatchToProps = (dispatch) => ({

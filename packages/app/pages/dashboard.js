@@ -20,7 +20,6 @@ import ComponentScaffold from "../components/Public/BaseLayout/ComponentScaffold
 import MasterDetails from "../components/Admin/Widgets";
 import widgets from "../config/widgets.js";
 import Head from "next/head";
-import { MEDIA_BACKEND } from "../config/constants.js";
 import { formulateMediaUrl } from "../lib/utils.js";
 import { Grid } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
@@ -114,7 +113,7 @@ const Create = (props) => {
           <link
             rel="icon"
             href={formulateMediaUrl(
-              MEDIA_BACKEND,
+              props.address.backend,
               props.siteInfo.logopath,
               true
             )}
@@ -145,6 +144,7 @@ const mapStateToProps = (state) => ({
   auth: state.auth,
   profile: state.profile,
   siteInfo: state.siteinfo,
+  address: state.address,
 });
 
 export default connect(mapStateToProps)(Create);
