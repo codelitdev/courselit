@@ -8,7 +8,6 @@ import {
   areObjectsDifferent,
 } from "../../lib/utils.js";
 import {
-  BACKEND,
   PAYMENT_METHOD_PAYPAL,
   PAYMENT_METHOD_PAYTM,
   PAYMENT_METHOD_STRIPE,
@@ -335,8 +334,8 @@ const Settings = (props) => {
                       </Grid>
                       <Grid item>
                         <Typography>
-                          <a href={`${BACKEND}/payment/webhook`}>
-                            {`${BACKEND}/payment/webhook`}
+                          <a href={`${props.address.backend}/payment/webhook`}>
+                            {`${props.address.backend}/payment/webhook`}
                           </a>
                         </Typography>
                       </Grid>

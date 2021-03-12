@@ -8,7 +8,7 @@ const { checkIfAuthenticated } = require("../../lib/graphql.js");
 const Widget = require("../../models/Widget.js");
 
 exports.getWidgetSettings = async (name, ctx) => {
-  const widget = await Widget.findOne({ name });
+  const widget = await Widget.findOne({ name, domain: ctx.domain._id });
 
   if (!widget) {
     return {};
@@ -24,7 +24,7 @@ exports.getWidgetData = async (name, ctx) => {
 
   if (!ctx.user.isAdmin) throw new Error(strings.responses.is_not_admin);
 
-  const widget = await Widget.findOne({ name });
+  const widget = await Widget.findOne({ name, domain: ctx.domain._id });
 
   if (!widget) {
     return {};
@@ -48,12 +48,17 @@ exports.saveWidgetSettings = async (widgetSettingsData, ctx) => {
     }
   }
 
-  let widgetSettings = await Widget.findOne({ name: widgetSettingsData.name });
+  let widgetSettings = await Widget.findOne({
+    name: widgetSettingsData.name,
+    domain: ctx.domain._id,
+  });
 
   let shouldCreate = false;
   if (!widgetSettings) {
     shouldCreate = true;
-    widgetSettings = {};
+    widgetSettings = {
+      domain: ctx.domain._id,
+    };
   }
 
   // populate changed data
@@ -84,7 +89,10 @@ exports.saveWidgetData = async (widgetData, ctx) => {
     }
   }
 
-  const widget = await Widget.findOne({ name: widgetData.name });
+  const widget = await Widget.findOne({
+    name: widgetData.name,
+    domain: ctx.domain._id,
+  });
 
   if (!widget) {
     throw new Error(strings.responses.item_not_found);
@@ -104,7 +112,7 @@ exports.clearWidgetData = async (name, ctx) => {
 
   if (!ctx.user.isAdmin) throw new Error(strings.responses.is_not_admin);
 
-  const widget = await Widget.findOne({ name });
+  const widget = await Widget.findOne({ name, domain: ctx.domain._id });
 
   if (!widget) {
     throw new Error(strings.responses.item_not_found);

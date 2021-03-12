@@ -23,7 +23,6 @@ import {
   HEADER_RESET_PASSWORD,
 } from "../../../config/strings";
 import { makeStyles } from "@material-ui/styles";
-// import { BACKEND } from "../../../config/constants";
 import FetchBuilder from "../../../lib/fetch";
 import { siteUser, authProps, addressProps } from "../../../types";
 import { Card } from "@courselit/components-library";

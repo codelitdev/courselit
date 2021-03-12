@@ -8,11 +8,11 @@ import {
   CardContent,
 } from "@material-ui/core";
 import PropTypes from "prop-types";
-import { featuredCourse, siteInfoProps } from "../types.js";
+import { addressProps, featuredCourse, siteInfoProps } from "../types.js";
 import { makeStyles } from "@material-ui/styles";
 import { connect } from "react-redux";
 import { formulateMediaUrl } from "../lib/utils";
-import { MEDIA_BACKEND, URL_EXTENTION_COURSES } from "../config/constants";
+import { URL_EXTENTION_COURSES } from "../config/constants";
 import { FREE_COST, FEATURED_SECTION_HEADER } from "../config/strings.js";
 import Link from "next/link";
 
@@ -30,7 +30,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const Hero = (props) => {
-  const { featuredCourses } = props;
+  const { featuredCourses, address } = props;
   const classes = useStyles();
 
   return featuredCourses.length ? (
@@ -55,7 +55,7 @@ const Hero = (props) => {
                     title={course.title}
                     image={
                       formulateMediaUrl(
-                        MEDIA_BACKEND,
+                        address.backend,
                         course.featuredImage,
                         false
                       ) || "/default.png"
@@ -87,10 +87,12 @@ const Hero = (props) => {
 Hero.propTypes = {
   featuredCourses: PropTypes.arrayOf(featuredCourse),
   siteInfo: siteInfoProps,
+  address: addressProps,
 };
 
 const mapStateToProps = (state) => ({
   siteInfo: state.siteinfo,
+  address: state.address,
 });
 
 export default connect(mapStateToProps)(Hero);

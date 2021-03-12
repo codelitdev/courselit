@@ -7,7 +7,6 @@ import {
   getPostDescriptionSnippet,
 } from "../../../lib/utils.js";
 import { Lock } from "@material-ui/icons";
-// import { BACKEND, FRONTEND, MEDIA_BACKEND } from "../../../config/constants.js";
 import { SIDEBAR_TEXT_COURSE_ABOUT } from "../../../config/strings.js";
 import CourseIntroduction from "../../../components/CourseIntroduction.js";
 import LessonViewer from "../../../components/Public/LessonViewer.js";
