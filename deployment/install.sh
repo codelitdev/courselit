@@ -70,9 +70,33 @@ EOF
 function setup_ssl () {
     # Refresh the Caddyfile
     rm $CONFIGHOME/Caddyfile
-    wget \
-        https://raw.githubusercontent.com/codelitdev/courselit/multi-tenant/deployment/docker/Caddyfile \
-        -P $CONFIGHOME
+    # wget \
+    #     https://raw.githubusercontent.com/codelitdev/courselit/multi-tenant/deployment/docker/Caddyfile \
+    #     -P $CONFIGHOME
+    echo "Enter an email to be used for issuing SSL certificates."
+    read EMAIL
+    [[ -z "$EMAIL" ]] && { echo "A email is necessary to continue. Please try again."; exit 1; }
+
+    echo "Enter your Cloudflare API Key."
+    read CLOUDFLARE_API_TOKEN
+    [[ -z "$CLOUDFLARE_API_TOKEN" ]] && { echo "A Cloudflare key is necessary to continue. Please try again."; exit 1; }
+
+cat > $CONFIGHOME/Caddyfile <<EOF
+*.${DOMAIN} {
+	tls { 
+		dns cloudflare ${CLOUDFLARE_API_TOKEN}
+	}
+
+	reverse_proxy {$API_PREFIX}/* backend:8000
+	reverse_proxy frontend:3000
+
+	encode gzip
+}
+
+{
+	email ${CLOUDFLARE_EMAIL}
+}
+EOF
 
     # Turn off HTTPS by prepending http:// to Caddyfile
     read -p "Do you want to turn off SSL? " -n 1 -r
