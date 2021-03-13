@@ -89,6 +89,10 @@ function setup_ssl () {
         [[ -z "$CLOUDFLARE_API_TOKEN" ]] && { echo "A Cloudflare key is necessary to continue. Please try again."; exit 1; }
 
 cat > $CONFIGHOME/Caddyfile <<EOF
+{
+	email ${EMAIL}
+}
+
 *.${DOMAIN} {
 	tls { 
 		dns cloudflare ${CLOUDFLARE_API_TOKEN}
@@ -98,10 +102,6 @@ cat > $CONFIGHOME/Caddyfile <<EOF
 	reverse_proxy frontend:3000
 
 	encode gzip
-}
-
-{
-	email ${EMAIL}
 }
 EOF
     else
