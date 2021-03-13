@@ -75,12 +75,12 @@ WrappedApp.getInitialProps = async (appContext) => {
 
   if (ctx.req && ctx.req.headers && ctx.req.headers.host) {
     ctx.store.dispatch(updateBackend(ctx.req.headers.host));
+    await ctx.store.dispatch(updateSiteInfo());
+    await ctx.store.dispatch(updateSiteLayout());
+    await ctx.store.dispatch(updateSiteTheme());
+    await ctx.store.dispatch(updateSiteNavigation());
   }
-  await ctx.store.dispatch(updateSiteInfo());
-  await ctx.store.dispatch(updateSiteLayout());
-  await ctx.store.dispatch(updateSiteTheme());
-  await ctx.store.dispatch(updateSiteNavigation());
-
+  
   const appProps = await App.getInitialProps(appContext);
   return { ...appProps };
 };
