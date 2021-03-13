@@ -58,7 +58,7 @@ EOF
 
 # Download necessary files
 wget \
-    https://raw.githubusercontent.com/codelitdev/courselit/master/deployment/docker/docker-compose.yml \
+    https://raw.githubusercontent.com/codelitdev/courselit/multi-tenant/deployment/docker/docker-compose.yml \
     -P $CONFIGHOME
 
 # Create a cronjob file to take backups
@@ -71,7 +71,7 @@ function setup_ssl () {
     # Refresh the Caddyfile
     rm $CONFIGHOME/Caddyfile
     wget \
-        https://raw.githubusercontent.com/codelitdev/courselit/master/deployment/docker/Caddyfile \
+        https://raw.githubusercontent.com/codelitdev/courselit/multi-tenant/deployment/docker/Caddyfile \
         -P $CONFIGHOME
 
     # Turn off HTTPS by prepending http:// to Caddyfile
