@@ -106,7 +106,7 @@ cat > $CONFIGHOME/Caddyfile <<EOF
 EOF
     else
 cat > $CONFIGHOME/Caddyfile <<EOF
-${DOMAIN} {
+http://${DOMAIN} {
 	reverse_proxy {\$API_PREFIX}/* backend:8000
 	reverse_proxy frontend:3000
 
