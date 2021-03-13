@@ -1,6 +1,7 @@
 {
   "name": "@courselit/app",
   "version": "0.5.12-multitenant.0",
+  "private": true,
   "main": "index.js",
   "license": "MIT",
   "author": {
