@@ -55,6 +55,8 @@ services:
     environment:
       - API_PREFIX=${API_PREFIX}
       - DOMAIN=${DOMAIN?'DOMAIN environment variable is not defined'}
+      - CLOUDFLARE_EMAIL=${CLOUDFLARE_EMAIL?'CLOUDFLARE_EMAIL environment variable is not defined'}
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN??'CLOUDFLARE_API_TOKEN environment variable is not defined'}
     volumes:
       - "./Caddyfile:/etc/caddy/Caddyfile"
       - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}/caddy/data:/data
