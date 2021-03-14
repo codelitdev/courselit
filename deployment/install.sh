@@ -90,18 +90,32 @@ function setup_ssl () {
 
 cat > $CONFIGHOME/Caddyfile <<EOF
 {
-	email ${EMAIL}
+        email ${EMAIL}
+        on_demand_tls {
+                ask https://corelit.free.beeceptor.com/my/api/path
+        }
+}
+
+:443 {
+        tls {
+                on_demand
+        }
+
+        reverse_proxy {\$API_PREFIX}/* backend:8000
+        reverse_proxy frontend:3000
+
+        encode gzip
 }
 
 *.${DOMAIN} {
-	tls { 
-		dns cloudflare ${CLOUDFLARE_API_TOKEN}
-	}
+        tls {
+                dns cloudflare ${CLOUDFLARE_API_TOKEN}
+        }
 
-	reverse_proxy {\$API_PREFIX}/* backend:8000
-	reverse_proxy frontend:3000
+        reverse_proxy {\$API_PREFIX}/* backend:8000
+        reverse_proxy frontend:3000
 
-	encode gzip
+        encode gzip
 }
 EOF
     else
