@@ -15,5 +15,10 @@
 		"ms-vscode.vscode-typescript-next",
 		"wayou.vscode-todo-highlight"
 	],
-	"postAttachCommand": "startup.sh"
+	"postAttachCommand": "startup.sh",
+	"runArgs": [
+		"--add-host=domain1.localsite.com:127.0.0.1",
+		"--add-host=domain2.localsite.com:127.0.0.1",
+		"--add-host=localsite.com:127.0.0.1"
+	]
 }
