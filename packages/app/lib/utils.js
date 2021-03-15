@@ -122,7 +122,9 @@ export const getBackendAddress = (host) => {
   const domain = extractDomainFromURL(host);
 
   if (process.env.NODE_ENV === "production") {
-    return `${process.env.INSECURE === 'true' ? 'http' : 'https'}://${domain}/api`;
+    return `${
+      process.env.INSECURE === "true" ? "http" : "https"
+    }://${domain}/api`;
   } else {
     return `http://${domain}:8000`;
   }

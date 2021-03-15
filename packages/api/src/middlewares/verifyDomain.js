@@ -5,6 +5,27 @@
 const Domain = require("../models/Domain.js");
 const responses = require("../config/strings.js").responses;
 
+const getDomainBasedOnSubdomain = async (subdomain) => {
+  return await Domain.findOne({ name: subdomain });
+};
+
+const getDomainBasedOnCustomDomain = async (customDomain) => {
+  return await Domain.findOne({ customDomain });
+};
+
+const getDomain = async ({ hostName, domainName }) => {
+  const domainBoundToLiveWebsite = new RegExp(`${process.env.DOMAIN}$`);
+
+  if (
+    process.env.NODE_ENV === "production" &&
+    !domainBoundToLiveWebsite.test(hostName)
+  ) {
+    return await getDomainBasedOnCustomDomain(hostName);
+  } else {
+    return await getDomainBasedOnSubdomain(domainName);
+  }
+};
+
 module.exports = async (req, res, next) => {
   const domainName = req.subdomains[0];
 
@@ -13,7 +34,10 @@ module.exports = async (req, res, next) => {
     return next(responses.domain_missing);
   }
 
-  const domain = await Domain.findOne({ name: domainName });
+  const domain = await getDomain({
+    hostName: req.hostname,
+    domainName,
+  });
 
   if (!domain) {
     res.status(400).json({ message: responses.domain_doesnt_exist });

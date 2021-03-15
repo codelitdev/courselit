@@ -26,6 +26,7 @@ services:
       - USE_WEBP=${USE_WEBP}
       - USER_CONTENT_DIRECTORY=/data
       - PORT=8000
+      - DOMAIN=${DOMAIN}
     volumes:
       - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}:/data
     expose:

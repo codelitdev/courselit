@@ -80,7 +80,7 @@ WrappedApp.getInitialProps = async (appContext) => {
     await ctx.store.dispatch(updateSiteTheme());
     await ctx.store.dispatch(updateSiteNavigation());
   }
-  
+
   const appProps = await App.getInitialProps(appContext);
   return { ...appProps };
 };
