@@ -115,7 +115,7 @@ function setup_ssl () {
     if [[ $REPLY =~ ^[Yy]$ ]]
     then
 cat > $CONFIGHOME/Caddyfile <<EOF
-http://*.${DOMAIN} {
+http://${DOMAIN} {
 	reverse_proxy {\$API_PREFIX}/* backend:8000
 	reverse_proxy frontend:3000
 
