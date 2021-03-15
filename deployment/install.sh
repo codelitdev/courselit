@@ -53,7 +53,6 @@ API_PREFIX=/api
 JWT_EXPIRES_IN=14d
 TAG=latest
 USE_WEBP=true
-INSECURE=false
 EOF
 
 # Download necessary files
@@ -114,6 +113,9 @@ function setup_ssl () {
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]
     then
+    # Activate insecure mode in the config
+    echo "INSECURE=true" >> $CONFIGHOME/.env
+
 cat > $CONFIGHOME/Caddyfile <<EOF
 http://${DOMAIN} {
 	reverse_proxy {\$API_PREFIX}/* backend:8000
