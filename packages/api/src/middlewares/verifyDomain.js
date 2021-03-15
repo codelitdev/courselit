@@ -4,6 +4,7 @@
 
 const Domain = require("../models/Domain.js");
 const responses = require("../config/strings.js").responses;
+const { domainNameForSingleTenancy } = require("../config/constants.js");
 
 const getDomainBasedOnSubdomain = async (subdomain) => {
   return await Domain.findOne({ name: subdomain });
@@ -27,22 +28,33 @@ const getDomain = async ({ hostName, domainName }) => {
 };
 
 module.exports = async (req, res, next) => {
-  const domainName = req.subdomains[0];
+  if (process.env.MULTITENANT === "true") {
+    const domainName = req.subdomains[0];
 
-  if (!domainName) {
-    res.status(400).json({ message: responses.domain_missing });
-    return next(responses.domain_missing);
-  }
+    if (!domainName) {
+      res.status(400).json({ message: responses.domain_missing });
+      return next(responses.domain_missing);
+    }
 
-  const domain = await getDomain({
-    hostName: req.hostname,
-    domainName,
-  });
+    const domain = await getDomain({
+      hostName: req.hostname,
+      domainName,
+    });
 
-  if (!domain) {
-    res.status(400).json({ message: responses.domain_doesnt_exist });
-    return next(responses.domain_doesnt_exist);
+    if (!domain) {
+      res.status(400).json({ message: responses.domain_doesnt_exist });
+      return next(responses.domain_doesnt_exist);
+    } else {
+      req.domain = domain;
+      next();
+    }
   } else {
+    let domain = await Domain.findOne({ name: domainNameForSingleTenancy });
+
+    if (!domain) {
+      domain = await Domain.create({ name: domainNameForSingleTenancy });
+    }
+
     req.domain = domain;
     next();
   }

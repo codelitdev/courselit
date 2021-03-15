@@ -67,26 +67,14 @@ tar -cvz --exclude=**/diagnostic.data/* -f courselit-backup-\`date +'%d%m%y'\`.t
 EOF
 }
 
-function setup_ssl () {
-    # Refresh the Caddyfile
-    rm $CONFIGHOME/Caddyfile
-    # wget \
-    #     https://raw.githubusercontent.com/codelitdev/courselit/multi-tenant/deployment/docker/Caddyfile \
-    #     -P $CONFIGHOME
-    
+function setup_ssl_multitenant () {
+    echo "Enter an email to be used for issuing SSL certificates."
+    read EMAIL
+    [[ -z "$EMAIL" ]] && { echo "A email is necessary to continue. Please try again."; exit 1; }
 
-    # Turn off HTTPS by prepending http:// to Caddyfile
-    read -p "Do you want HTTPS? " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]
-    then
-        echo "Enter an email to be used for issuing SSL certificates."
-        read EMAIL
-        [[ -z "$EMAIL" ]] && { echo "A email is necessary to continue. Please try again."; exit 1; }
-
-        echo "Enter your Cloudflare API Key."
-        read CLOUDFLARE_API_TOKEN
-        [[ -z "$CLOUDFLARE_API_TOKEN" ]] && { echo "A Cloudflare key is necessary to continue. Please try again."; exit 1; }
+    echo "Enter your Cloudflare API Key."
+    read CLOUDFLARE_API_TOKEN
+    [[ -z "$CLOUDFLARE_API_TOKEN" ]] && { echo "A Cloudflare key is necessary to continue. Please try again."; exit 1; }
 
 cat > $CONFIGHOME/Caddyfile <<EOF
 {
@@ -118,9 +106,25 @@ cat > $CONFIGHOME/Caddyfile <<EOF
         encode gzip
 }
 EOF
-    else
+}
+
+function setup_ssl () {
+    # Turn off HTTPS by prepending http:// to Caddyfile
+    read -p "Do you want to turn off HTTPS?" -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]
+    then
 cat > $CONFIGHOME/Caddyfile <<EOF
 http://*.${DOMAIN} {
+	reverse_proxy {\$API_PREFIX}/* backend:8000
+	reverse_proxy frontend:3000
+
+	encode gzip
+}
+EOF
+    else
+cat > $CONFIGHOME/Caddyfile <<EOF
+${DOMAIN} {
 	reverse_proxy {\$API_PREFIX}/* backend:8000
 	reverse_proxy frontend:3000
 
@@ -137,7 +141,15 @@ else
 	echo "Existing configuration found for $DOMAIN. Using that."
 fi
 
-setup_ssl
+# Setup Multitenancy
+rm $CONFIGHOME/Caddyfile
+if [[ -z "$MULTITENANT" ]]; then
+	setup_ssl
+else
+    # Activate multitenancy in the config
+    echo "MULTITENANT=true" >> $CONFIGHOME/.env
+	setup_ssl_multitenant
+fi
 
 # Start the app
 (cd $CONFIGHOME; docker-compose pull && docker-compose up -d)

@@ -27,6 +27,7 @@ services:
       - USER_CONTENT_DIRECTORY=/data
       - PORT=8000
       - DOMAIN=${DOMAIN}
+      - MULTITENANT=${MULTITENANT}
     volumes:
       - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}:/data
     expose:
