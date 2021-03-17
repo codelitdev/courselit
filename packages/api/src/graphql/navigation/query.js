@@ -5,7 +5,7 @@ const logic = require("./logic.js");
 module.exports = {
   getPublicNavigation: {
     type: new graphql.GraphQLList(types.publicLinkType),
-    resolve: () => logic.getPublicNavigation(),
+    resolve: (root, _, ctx) => logic.getPublicNavigation(ctx),
   },
   getNavigation: {
     type: new graphql.GraphQLList(types.linkType),

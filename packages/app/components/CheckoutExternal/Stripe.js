@@ -1,24 +1,28 @@
 import React from "react";
 import { Button } from "@material-ui/core";
-import { authProps, publicCourse, siteInfoProps } from "../../types";
+import {
+  addressProps,
+  authProps,
+  publicCourse,
+  siteInfoProps,
+} from "../../types";
 import { loadStripe } from "@stripe/stripe-js";
 import { ENROLL_BUTTON_TEXT } from "../../config/strings";
 import { connect } from "react-redux";
-import { BACKEND, FRONTEND } from "../../config/constants";
 import { useRouter } from "next/router";
 import fetch from "isomorphic-unfetch";
 
 const Stripe = (props) => {
-  const { course, siteInfo, auth } = props;
+  const { course, siteInfo, auth, address } = props;
   const stripePromise = loadStripe(siteInfo.stripePublishableKey);
   const router = useRouter();
 
   const handleClick = async () => {
     let initiatePaymentResponse = await makePaymentRequest({
       courseId: course.id,
-      backend: BACKEND,
+      backend: address.backend,
       token: auth.token,
-      frontend: FRONTEND,
+      frontend: address.frontend,
       router,
     });
 
@@ -85,11 +89,13 @@ Stripe.propTypes = {
   course: publicCourse.isRequired,
   siteInfo: siteInfoProps,
   auth: authProps,
+  address: addressProps,
 };
 
 const mapStateToProps = (state) => ({
   siteInfo: state.siteinfo,
   auth: state.auth,
+  address: state.address,
 });
 
 export default connect(mapStateToProps)(Stripe);

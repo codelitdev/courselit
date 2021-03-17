@@ -16,7 +16,7 @@ exports.checkIfAuthenticated = (ctx) => {
  * @param {Object} ctx context received from the GraphQL resolver
  */
 exports.checkOwnership = (Model) => async (id, ctx) => {
-  const item = await Model.findOne({ _id: id });
+  const item = await Model.findOne({ _id: id, domain: ctx.domain._id });
   if (
     !item ||
     (ObjectId.isValid(item.creatorId)
@@ -59,12 +59,12 @@ exports.checkAdminOrSelf = (userID, GraphQLContext) => {
   }
 };
 
-exports.checkIfItemExists = async (Model, id) => {
-  const item = await Model.findById(id);
-  if (!item) throw new Error(strings.responses.item_not_found);
+// exports.checkIfItemExists = async (Model, id) => {
+//   const item = await Model.findById(id);
+//   if (!item) throw new Error(strings.responses.item_not_found);
 
-  return item;
-};
+//   return item;
+// };
 
 const validateMongooseTextSearchQuery = (query) => {
   if (typeof query !== "object") {

@@ -1,14 +1,14 @@
 import React from "react";
 import PropTypes from "prop-types";
 import FetchBuilder from "../../../lib/fetch";
-import { BACKEND } from "../../../config/constants";
 import { useTheme } from "@material-ui/styles";
+import { connect } from "react-redux";
+import { addressProps } from "../../../types";
 
-const Details = (props) => {
-  const { name, component } = props;
+const Details = ({ name, component, address }) => {
   const theme = useTheme();
   const fetch = new FetchBuilder()
-    .setUrl(`${BACKEND}/graph`)
+    .setUrl(`${address.backend}/graph`)
     .setIsGraphQLEndpoint(true);
   const { component: Component } = component;
 
@@ -22,6 +22,11 @@ Details.propTypes = {
     component: PropTypes.object.isRequired,
     icon: PropTypes.string,
   }),
+  address: addressProps,
 };
 
-export default Details;
+const mapStateToProps = (state) => ({
+  address: state.address,
+});
+
+export default connect(mapStateToProps)(Details);

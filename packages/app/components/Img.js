@@ -1,10 +1,11 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { MEDIA_BACKEND } from "../config/constants.js";
 import { formulateMediaUrl } from "../lib/utils.js";
+import { connect } from "react-redux";
+import { addressProps } from "../types.js";
 
 const Img = (props) => {
-  const { src, isThumbnail, classes, alt, defaultImage } = props;
+  const { src, isThumbnail, classes, alt, defaultImage, address } = props;
 
   return (
     <>
@@ -12,7 +13,7 @@ const Img = (props) => {
         className={classes}
         src={
           src
-            ? `${formulateMediaUrl(MEDIA_BACKEND, src, isThumbnail)}`
+            ? `${formulateMediaUrl(address.backend, src, isThumbnail)}`
             : defaultImage || "/courselit_backdrop.webp"
         }
         alt={alt}
@@ -33,6 +34,11 @@ Img.propTypes = {
   classes: PropTypes.string,
   alt: PropTypes.string,
   defaultImage: PropTypes.string,
+  address: addressProps,
 };
 
-export default Img;
+const mapStateToProps = (state) => ({
+  address: state.address,
+});
+
+export default connect(mapStateToProps)(Img);

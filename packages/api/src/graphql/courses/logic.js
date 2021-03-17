@@ -18,39 +18,9 @@ const {
   blogPostSnippetLength,
 } = require("../../config/constants.js");
 const ObjectId = require("mongoose").Types.ObjectId;
-const SiteInfo = require("../../models/SiteInfo.js");
-const { getPaymentMethod } = require("../../payments/index.js");
+const { validateBlogPosts, validateCost } = require("./helpers.js");
 
 const checkCourseOwnership = checkOwnership(Course);
-
-const validateBlogPosts = (courseData) => {
-  if (courseData.isBlog) {
-    if (!courseData.description) {
-      throw new Error(strings.responses.blog_description_empty);
-    }
-
-    courseData.cost = 0;
-  }
-
-  return courseData;
-};
-
-const validateCost = async (courseData) => {
-  if (courseData.cost < 0) {
-    throw new Error(strings.responses.invalid_cost);
-  }
-
-  if (courseData.cost > 0) {
-    await validatePaymentMethod();
-  }
-
-  return courseData;
-};
-
-const validatePaymentMethod = async () => {
-  const siteinfo = (await SiteInfo.find())[0];
-  await getPaymentMethod(siteinfo && siteinfo.paymentMethod);
-};
 
 exports.getCourse = async (id = null, courseId = null, ctx) => {
   if (!id && !courseId) {
@@ -59,9 +29,9 @@ exports.getCourse = async (id = null, courseId = null, ctx) => {
 
   let course;
   if (id) {
-    course = await Course.findById(id);
+    course = await Course.findOne({ _id: id, domain: ctx.domain._id });
   } else {
-    course = await Course.findOne({ courseId });
+    course = await Course.findOne({ courseId, domain: ctx.domain._id });
   }
 
   if (!course) {
@@ -92,6 +62,7 @@ exports.createCourse = async (courseData, ctx) => {
   courseData = await validateCost(validateBlogPosts(courseData));
 
   const course = await Course.create({
+    domain: ctx.domain._id,
     title: courseData.title,
     cost: courseData.cost,
     published: courseData.published,
@@ -169,16 +140,24 @@ exports.removeLesson = async (courseId, lessonId, ctx) => {
   return true;
 };
 
-exports.getCreatorCourses = async (id, offset, ctx) => {
+exports.getCoursesAsAdmin = async (offset, ctx) => {
   checkIfAuthenticated(ctx);
   validateOffset(offset);
 
-  const user = await User.findById(id);
-  if (!user) {
-    throw new Error(strings.responses.user_not_found);
+  const user = ctx.user;
+
+  if (!(user.isCreator || user.isAdmin)) {
+    throw new Error(strings.responses.is_not_admin_or_creator);
   }
 
-  const courses = await Course.find({ creatorId: `${user.userId || user.id}` })
+  const query = {
+    domain: ctx.domain._id,
+  };
+  if (user.isCreator) {
+    query.creatorId = `${user.userId || user.id}`;
+  }
+
+  const courses = await Course.find(query)
     .sort({ updated: -1 })
     .skip((offset - 1) * itemsPerPage)
     .limit(itemsPerPage);
@@ -186,12 +165,13 @@ exports.getCreatorCourses = async (id, offset, ctx) => {
   return courses;
 };
 
-exports.getPosts = async (offset) => {
+exports.getPosts = async (offset, ctx) => {
   validateOffset(offset);
   const query = {
     isBlog: true,
     published: true,
     privacy: open.toLowerCase(),
+    domain: ctx.domain._id,
   };
   const posts = await Course.find(
     query,
@@ -216,11 +196,12 @@ exports.getPosts = async (offset) => {
   }));
 };
 
-exports.getCourses = async (offset, onlyShowFeatured = false) => {
+exports.getCourses = async (offset, onlyShowFeatured = false, ctx) => {
   const query = {
     isBlog: false,
     published: true,
     privacy: open.toLowerCase(),
+    domain: ctx.domain._id,
   };
   if (onlyShowFeatured) {
     query.isFeatured = true;
@@ -245,7 +226,7 @@ exports.getEnrolledCourses = async (userId, ctx) => {
     throw new Error(strings.responses.item_not_found);
   }
 
-  const user = await User.findById(userId);
+  const user = await User.findOne({ _id: userId, domain: ctx.domain._id });
   if (!user) {
     throw new Error(strings.responses.user_not_found);
   }
@@ -255,6 +236,7 @@ exports.getEnrolledCourses = async (userId, ctx) => {
       _id: {
         $in: [...user.purchases],
       },
+      domain: ctx.domain._id,
     },
     "id title"
   );

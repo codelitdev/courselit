@@ -4,12 +4,7 @@ import { Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import { PriceTag, Course, Card } from "@courselit/components-library";
 
-interface Styles {
-  featuredImage: string;
-  utilities: any;
-  config: any;
-}
-const useStyles = ({ featuredImage, utilities, config }: Styles) =>
+const useStyles = () =>
   makeStyles((theme: any) => ({
     link: {
       textDecoration: "none",
@@ -44,11 +39,7 @@ interface ItemProps {
 
 const Item = (props: ItemProps) => {
   const { appUtilities, appConfig } = props;
-  const classes = useStyles({
-    featuredImage: props.course.featuredImage,
-    utilities: appUtilities,
-    config: appConfig,
-  })();
+  const classes = useStyles()();
 
   return (
     <Grid item xs={12} md={4}>
@@ -63,7 +54,7 @@ const Item = (props: ItemProps) => {
                 <Grid item>
                   <img
                     src={appUtilities.formulateMediaUrl(
-                      appConfig.MEDIA_BACKEND,
+                      appConfig.BACKEND,
                       props.course.featuredImage
                     )}
                     className={classes.featuredImage}

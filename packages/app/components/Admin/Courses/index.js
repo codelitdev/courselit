@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
-import { authProps, profileProps } from "../../../types.js";
+import { addressProps, authProps, profileProps } from "../../../types.js";
 import { Grid, Typography, Button } from "@material-ui/core";
 import CourseEditor from "./CourseEditor.js";
 import CreatorCoursesList from "./CreatorCoursesList.js";
@@ -14,10 +14,11 @@ import {
   EMPTY_COURSES_LIST_ADMIN,
   LOAD_MORE_TEXT,
 } from "../../../config/strings.js";
-import { useExecuteGraphQLQuery } from "../../CustomHooks.js";
 import { Add, Done } from "@material-ui/icons";
 import AppDialog from "../../Public/AppDialog.js";
 import { makeStyles } from "@material-ui/styles";
+import FetchBuilder from "../../../lib/fetch.js";
+import { networkAction } from "../../../redux/actions.js";
 
 const useStyles = makeStyles((theme) => ({
   header: {
@@ -34,34 +35,39 @@ const CoursesManager = (props) => {
   const [userDismissingDirtyEditor, setUserDismissingDirtyEditor] = useState(
     false
   );
-  const executeGQLCall = useExecuteGraphQLQuery();
   const classes = useStyles();
 
   useEffect(() => {
     loadCreatorCourses();
-  }, [props.profile.id]);
+  }, []);
 
   const loadCreatorCourses = async () => {
-    if (!props.profile.id) {
-      return;
-    }
     const query = `
     query {
-      courses: getCreatorCourses(
-        id: "${props.profile.id}",
+      courses: getCoursesAsAdmin(
         offset: ${coursesPaginationOffset}
       ) {
         id, title
       }
     }
     `;
+    const fetch = new FetchBuilder()
+      .setUrl(`${props.address.backend}/graph`)
+      .setPayload(query)
+      .setIsGraphQLEndpoint(true)
+      .setAuthToken(props.auth.token)
+      .build();
     try {
-      const response = await executeGQLCall(query);
+      props.dispatch(networkAction(true));
+      const response = await fetch.exec();
       if (response.courses && response.courses.length > 0) {
         setCreatorCourses([...creatorCourses, ...response.courses]);
         setCoursesPaginationOffset(coursesPaginationOffset + 1);
       }
-    } catch (err) {}
+    } catch (err) {
+    } finally {
+      props.dispatch(networkAction(false));
+    }
   };
 
   const showEditor = (courseId) => {
@@ -155,11 +161,13 @@ CoursesManager.propTypes = {
   auth: authProps,
   profile: profileProps,
   dispatch: PropTypes.func.isRequired,
+  address: addressProps,
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
   profile: state.profile,
+  address: state.address,
 });
 
 const mapDispatchToProps = (dispatch) => ({

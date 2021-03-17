@@ -15,7 +15,7 @@ jobs:
       - name: Configure CI Git User
         run: |
           git config --global user.name 'Rajat Saxena'
-          git config --global user.email 'social@rajats.xyz'
+          git config --global user.email 'hi@sub.rajatsaxena.dev'
           git remote set-url origin https://$GITHUB_ACTOR:$GITHUB_PAT@github.com/codelitdev/courselit
         env:
           GITHUB_PAT: ${{ secrets.PAT }}
@@ -55,7 +55,7 @@ jobs:
         id: docker_build_backend
         uses: docker/build-push-action@v2
         with:
-          context: ./services/backend
+          context: .
           file: ./services/backend/Dockerfile
           push: true
           tags: codelit/courselit-backend:latest
@@ -67,10 +67,22 @@ jobs:
         id: docker_build_frontend
         uses: docker/build-push-action@v2
         with:
-          context: ./services/frontend
+          context: .
           file: ./services/frontend/Dockerfile
           push: true
           tags: codelit/courselit-frontend:latest
 
       - name: Image digest
         run: echo ${{ steps.docker_build_frontend.outputs.digest }}
+
+      - name: Build and push proxy
+        id: docker_build_proxy
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./services/proxy/Dockerfile
+          push: true
+          tags: codelit/courselit-proxy:latest
+
+      - name: Image digest
+        run: echo ${{ steps.docker_build_proxy.outputs.digest }}

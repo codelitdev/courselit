@@ -16,18 +16,15 @@ module.exports = {
     resolve: (root, { id, courseId }, context) =>
       logic.getCourse(id, courseId, context),
   },
-  getCreatorCourses: {
-    type: new graphql.GraphQLList(types.myCoursesItemType),
+  getCoursesAsAdmin: {
+    type: new graphql.GraphQLList(types.creatorOrAdminCoursesItemType),
     args: {
-      id: {
-        type: new graphql.GraphQLNonNull(graphql.GraphQLID),
-      },
       offset: {
         type: new graphql.GraphQLNonNull(graphql.GraphQLInt),
       },
     },
-    resolve: (root, { id, offset }, context) =>
-      logic.getCreatorCourses(id, offset, context),
+    resolve: (root, { offset }, context) =>
+      logic.getCoursesAsAdmin(offset, context),
   },
   getPosts: {
     type: new graphql.GraphQLList(types.postType),
@@ -36,7 +33,7 @@ module.exports = {
         type: new graphql.GraphQLNonNull(graphql.GraphQLInt),
       },
     },
-    resolve: (root, { offset }, context) => logic.getPosts(offset),
+    resolve: (root, { offset }, context) => logic.getPosts(offset, context),
   },
   getCourses: {
     type: new graphql.GraphQLList(types.publicCoursesType),
@@ -49,10 +46,10 @@ module.exports = {
       },
     },
     resolve: (root, { offset, onlyShowFeatured }, context) =>
-      logic.getCourses(offset, onlyShowFeatured),
+      logic.getCourses(offset, onlyShowFeatured, context),
   },
   getEnrolledCourses: {
-    type: new graphql.GraphQLList(types.myCoursesItemType),
+    type: new graphql.GraphQLList(types.creatorOrAdminCoursesItemType),
     args: {
       userId: {
         type: new graphql.GraphQLNonNull(graphql.GraphQLID),

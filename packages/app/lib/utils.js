@@ -109,3 +109,27 @@ export const areObjectsDifferent = (baseline, obj) => {
   const onlyChangedFields = getObjectContainingOnlyChangedFields(baseline, obj);
   return !!Object.keys(onlyChangedFields).length;
 };
+
+export const getAddress = (host) => {
+  return {
+    domain: extractDomainFromURL(host),
+    backend: getBackendAddress(host),
+    frontend: `http://${host}`,
+  };
+};
+
+export const getBackendAddress = (host) => {
+  const domain = extractDomainFromURL(host);
+
+  if (process.env.NODE_ENV === "production") {
+    return `${
+      process.env.INSECURE === "true" ? "http" : "https"
+    }://${domain}/api`;
+  } else {
+    return `http://${domain}:8000`;
+  }
+};
+
+const extractDomainFromURL = (host) => {
+  return host.split(":")[0];
+};

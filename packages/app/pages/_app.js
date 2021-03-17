@@ -9,6 +9,7 @@ import {
   updateSiteTheme,
   updateSiteLayout,
   updateSiteNavigation,
+  updateBackend,
 } from "../redux/actions.js";
 import { ThemeProvider } from "@material-ui/styles";
 import { responsiveFontSizes, createMuiTheme } from "@material-ui/core";
@@ -21,7 +22,7 @@ import "@courselit/rich-text/dist/main.css";
 const WrappedApp = ({ Component, pageProps }) => {
   const store = useStore();
   let muiTheme;
-  const { theme } = store.getState();
+  const { theme, address } = store.getState();
   try {
     muiTheme = responsiveFontSizes(
       createMuiTheme(Object.keys(theme.styles).length ? theme.styles : {})
@@ -37,10 +38,16 @@ const WrappedApp = ({ Component, pageProps }) => {
   }, []);
 
   const setUpCookies = () => {
-    const tokenCookie = getCookie(JWT_COOKIE_NAME);
+    const tokenCookie = getCookie({
+      key: JWT_COOKIE_NAME,
+      domain: address.domain,
+    });
     if (tokenCookie) {
       store.dispatch(
-        signedIn(getCookie(USERID_COOKIE_NAME), getCookie(JWT_COOKIE_NAME))
+        signedIn(
+          getCookie({ key: USERID_COOKIE_NAME, domain: address.domain }),
+          tokenCookie
+        )
       );
     }
     store.dispatch(authHasBeenChecked());
@@ -65,10 +72,14 @@ const WrappedApp = ({ Component, pageProps }) => {
 
 WrappedApp.getInitialProps = async (appContext) => {
   const { ctx } = appContext;
-  await ctx.store.dispatch(updateSiteInfo());
-  await ctx.store.dispatch(updateSiteLayout());
-  await ctx.store.dispatch(updateSiteTheme());
-  await ctx.store.dispatch(updateSiteNavigation());
+
+  if (ctx.req && ctx.req.headers && ctx.req.headers.host) {
+    ctx.store.dispatch(updateBackend(ctx.req.headers.host));
+    await ctx.store.dispatch(updateSiteInfo());
+    await ctx.store.dispatch(updateSiteLayout());
+    await ctx.store.dispatch(updateSiteTheme());
+    await ctx.store.dispatch(updateSiteNavigation());
+  }
 
   const appProps = await App.getInitialProps(appContext);
   return { ...appProps };

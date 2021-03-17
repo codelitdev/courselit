@@ -4,22 +4,20 @@
 const SiteInfo = require("../../models/SiteInfo.js");
 const { checkIfAuthenticated } = require("../../lib/graphql.js");
 const { responses } = require("../../config/strings.js");
+const { currencyISOCodes } = require("../../config/constants.js");
 const {
-  currencyISOCodes,
-  paypal,
-  stripe,
-  paytm,
-  none,
-} = require("../../config/constants.js");
-const { capitalize } = require("../../lib/utils.js");
+  checkForInvalidPaymentMethod,
+  checkForInvalidPaymentSettings,
+  getPaymentInvalidException,
+} = require("./helpers.js");
 
-exports.getSiteInfo = async () => {
-  const siteinfo = await SiteInfo.find(
-    {},
+exports.getSiteInfo = async (ctx) => {
+  const siteinfo = await SiteInfo.findOne(
+    { domain: ctx.domain._id },
     "title subtitle logopath currencyUnit currencyISOCode paymentMethod stripePublishableKey themePrimaryColor themeSecondaryColor codeInjectionHead"
   );
 
-  return siteinfo[0];
+  return siteinfo;
 };
 
 exports.getSiteInfoAsAdmin = async (ctx) => {
@@ -27,8 +25,8 @@ exports.getSiteInfoAsAdmin = async (ctx) => {
 
   if (!ctx.user.isAdmin) throw new Error(responses.is_not_admin);
 
-  const siteinfo = await SiteInfo.find();
-  return siteinfo[0];
+  const siteinfo = await SiteInfo.findOne({ domain: ctx.domain._id });
+  return siteinfo;
 };
 
 exports.updateSiteInfo = async (siteData, ctx) => {
@@ -44,14 +42,15 @@ exports.updateSiteInfo = async (siteData, ctx) => {
     throw new Error(responses.unrecognised_currency_code);
   }
 
-  let siteInfo = await SiteInfo.find();
-  siteInfo = siteInfo[0];
+  let siteInfo = await SiteInfo.findOne({ domain: ctx.domain._id });
 
   // create a new entry if not existing
   let shouldCreate = false;
-  if (siteInfo === undefined) {
+  if (siteInfo === null) {
     shouldCreate = true;
-    siteInfo = {};
+    siteInfo = {
+      domain: ctx.domain._id,
+    };
   }
 
   // populate changed data
@@ -80,43 +79,3 @@ exports.updateSiteInfo = async (siteData, ctx) => {
 
   return siteInfo;
 };
-
-const checkForInvalidPaymentMethod = (siteInfo) => {
-  if (!siteInfo.paymentMethod) {
-    return;
-  }
-
-  if (![paypal, stripe, paytm, none].includes(siteInfo.paymentMethod)) {
-    return new Error(responses.invalid_payment_method);
-  }
-};
-
-const checkForInvalidPaymentSettings = (siteInfo) => {
-  if (!siteInfo.paymentMethod) {
-    return;
-  }
-
-  let failedPaymentMethod = null;
-
-  if (siteInfo.paymentMethod === paytm && !siteInfo.paytmSecret) {
-    failedPaymentMethod = paytm;
-  }
-
-  if (siteInfo.paymentMethod === paypal && !siteInfo.paypalSecret) {
-    failedPaymentMethod = paypal;
-  }
-
-  if (
-    siteInfo.paymentMethod === stripe &&
-    !(siteInfo.stripeSecret && siteInfo.stripePublishableKey)
-  ) {
-    failedPaymentMethod = stripe;
-  }
-
-  return failedPaymentMethod;
-};
-
-const getPaymentInvalidException = (paymentMethod) =>
-  new Error(
-    `${capitalize(paymentMethod)} ${responses.payment_settings_invalid_suffix}`
-  );

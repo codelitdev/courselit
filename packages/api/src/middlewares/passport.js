@@ -29,20 +29,23 @@ module.exports = (passport) => {
         }
 
         try {
-          let user = await User.findOne({ email });
+          let user = await User.findOne({ email, domain: req.domain._id });
           if (user) {
             return next(null, false, {
               message: responses.email_already_registered,
             });
           }
 
-          const notTheFirstUser = await User.countDocuments();
+          const notTheFirstUserOfDomain = await User.countDocuments({
+            domain: req.domain._id,
+          });
           user = await User.create({
+            domain: req.domain._id,
             email,
             password,
             name: req.body.name,
-            isCreator: !notTheFirstUser,
-            isAdmin: !notTheFirstUser,
+            isCreator: !notTheFirstUserOfDomain,
+            isAdmin: !notTheFirstUserOfDomain,
             active: true,
           });
           return next(null, user);
@@ -63,7 +66,7 @@ module.exports = (passport) => {
       },
       async (req, email, password, next) => {
         try {
-          const user = await User.findOne({ email });
+          const user = await User.findOne({ email, domain: req.domain._id });
 
           if (!user) {
             return next(null, false, {
@@ -87,17 +90,24 @@ module.exports = (passport) => {
     )
   );
 
-  // For verifying JWT
-  const opts = {
+  const jwtStrategyOptions = {
     jwtFromRequest: extractJwt.fromAuthHeaderAsBearerToken(),
     secretOrKey: constants.jwtSecret,
     jsonWebTokenOptions: {
       expiresIn: constants.jwtExpire,
     },
+    passReqToCallback: true,
   };
+
   passport.use(
-    new JwtStrategy(opts, function (jwtPayload, done) {
-      User.findOne({ email: jwtPayload.email }, function (err, user) {
+    new JwtStrategy(jwtStrategyOptions, function (req, jwtToken, done) {
+      const { email, domain } = jwtToken;
+
+      if (domain !== req.domain._id.toString()) {
+        return done(null, false);
+      }
+
+      User.findOne({ email, domain }, function (err, user) {
         if (err) {
           return done(err, false);
         }
