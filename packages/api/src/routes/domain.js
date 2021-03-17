@@ -9,7 +9,7 @@ const router = express.Router();
 router.get("/verify", async (req, res) => {
   const { domain } = req.query;
 
-  const domainObj = await Domain.findOne({ customDomain: domain });
+  const domainObj = await Domain.findOne({ customDomain: domain || "" });
 
   if (domainObj) {
     res.status(200).json({ message: "Success" });
