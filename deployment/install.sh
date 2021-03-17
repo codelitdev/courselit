@@ -79,7 +79,7 @@ cat > $CONFIGHOME/Caddyfile <<EOF
 {
         email ${EMAIL}
         on_demand_tls {
-                ask https://corelit.free.beeceptor.com/my/api/path
+                ask https://${DOMAIN}/{\$API_PREFIX}/domain/verify
         }
 }
 
