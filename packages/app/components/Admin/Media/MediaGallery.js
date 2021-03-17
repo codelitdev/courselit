@@ -11,7 +11,7 @@ import {
   Typography,
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
-import { authProps } from "../../../types.js";
+import { addressProps, authProps } from "../../../types.js";
 import {
   MEDIA_SEARCH_INPUT_PLACEHOLDER,
   LOAD_MORE_TEXT,
@@ -30,7 +30,6 @@ import {
 import AppLoader from "../../AppLoader.js";
 import FetchBuilder from "../../../lib/fetch.js";
 import { networkAction, setAppMessage } from "../../../redux/actions.js";
-import { BACKEND } from "../../../config/constants.js";
 import MediaGalleryItem from "./MediaGalleryItem.js";
 import AppDialog from "../../Public/AppDialog.js";
 import MediaPreview from "./MediaPreview.js";
@@ -87,7 +86,7 @@ const MediaGallery = (props) => {
     }
     `;
     const fetch = new FetchBuilder()
-      .setUrl(`${BACKEND}/graph`)
+      .setUrl(`${props.address.backend}/graph`)
       .setPayload(query)
       .setIsGraphQLEndpoint(true)
       .setAuthToken(props.auth.token)
@@ -146,12 +145,15 @@ const MediaGallery = (props) => {
 
     try {
       props.dispatch(networkAction(true));
-      const res = await fetch(`${BACKEND}/media/${mediaBeingEdited.id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${props.auth.token}`,
-        },
-      });
+      const res = await fetch(
+        `${props.address.backend}/media/${mediaBeingEdited.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${props.auth.token}`,
+          },
+        }
+      );
 
       if (res.status === 401) {
         Router.push("/login");
@@ -201,7 +203,7 @@ const MediaGallery = (props) => {
     }
     `;
     const fetch = new FetchBuilder()
-      .setUrl(`${BACKEND}/graph`)
+      .setUrl(`${props.address.backend}/graph`)
       .setPayload(query)
       .setIsGraphQLEndpoint(true)
       .setAuthToken(props.auth.token)
@@ -333,11 +335,13 @@ MediaGallery.propTypes = {
   networkAction: PropTypes.bool.isRequired,
   onMediaSelected: PropTypes.func,
   mimeTypesToShow: PropTypes.arrayOf(PropTypes.string),
+  address: addressProps,
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
   networkAction: state.networkAction,
+  address: state.address,
 });
 
 const mapDispatchToProps = (dispatch) => ({

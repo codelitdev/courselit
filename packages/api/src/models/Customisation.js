@@ -5,6 +5,7 @@ const CustomisationSchema = new mongoose.Schema({
   themePrimaryColor: { type: String },
   themeSecondaryColor: { type: String },
 
+  domain: { type: mongoose.Schema.Types.ObjectId, required: true },
   codeInjectionHead: { type: String },
 });
 

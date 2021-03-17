@@ -8,7 +8,7 @@ import { Button, Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import Link from "next/link";
 import FetchBuilder from "../lib/fetch.js";
-import { BACKEND } from "../config/constants.js";
+import { getBackendAddress } from "../lib/utils.js";
 
 const useStyles = makeStyles((theme) => ({
   content: {
@@ -92,11 +92,11 @@ const Index = (props) => {
   );
 };
 
-const getCourses = async () => {
+const getCourses = async (backend) => {
   let courses = [];
   try {
     const fetch = new FetchBuilder()
-      .setUrl(`${BACKEND}/graph`)
+      .setUrl(`${backend}/graph`)
       .setPayload(generateQuery())
       .setIsGraphQLEndpoint(true)
       .build();
@@ -106,8 +106,9 @@ const getCourses = async () => {
   return courses;
 };
 
-export async function getServerSideProps() {
-  const courses = await getCourses();
+export async function getServerSideProps(context) {
+  const { req } = context;
+  const courses = await getCourses(getBackendAddress(req.headers.host));
   return { props: { courses } };
 }
 

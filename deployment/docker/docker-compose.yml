@@ -18,6 +18,7 @@ services:
   backend:
     image: codelit/courselit-backend:${TAG?'TAG environment variable is not defined'}
     environment:
+      - NODE_ENV=production
       - API_PREFIX=${API_PREFIX}
       - DB_CONNECTION_STRING=${DB_CONNECTION_STRING?'DB_CONNECTION_STRING environment variable is is not defined'}
       - JWT_SECRET=${JWT_SECRET?'JWT_SECRET environment variable is not defined'}
@@ -25,7 +26,8 @@ services:
       - USE_WEBP=${USE_WEBP}
       - USER_CONTENT_DIRECTORY=/data
       - PORT=8000
-      - NODE_ENV=production
+      - DOMAIN=${DOMAIN}
+      - MULTITENANT=${MULTITENANT}
     volumes:
       - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}:/data
     expose:
@@ -37,10 +39,9 @@ services:
   frontend:
     image: codelit/courselit-frontend:${TAG?'TAG environment variable is not defined'}
     environment:
-      - SITE_URL=${SITE_URL?'SITE_URL environment variable is not defined'}
-      - API_PREFIX=${API_PREFIX}
-      - SSR_SITE_URL=http://backend:8000
       - NODE_ENV=production
+      - API_PREFIX=${API_PREFIX}
+      - INSECURE=${INSECURE}
     expose:
       - "3000"
     depends_on:
@@ -48,13 +49,12 @@ services:
     container_name: frontend
 
   proxy:
-    image: caddy:2.1.1-alpine
+    image: codelit/courselit-proxy:${TAG?'TAG environment variable is not defined'}
     ports:
       - "80:80"
       - "443:443"
     environment:
       - API_PREFIX=${API_PREFIX}
-      - DOMAIN=${DOMAIN?'DOMAIN environment variable is not defined'}
     volumes:
       - "./Caddyfile:/etc/caddy/Caddyfile"
       - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}/caddy/data:/data

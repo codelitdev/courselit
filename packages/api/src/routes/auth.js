@@ -33,9 +33,13 @@ module.exports = (passport) => {
               .json({ message: responses.error, details: err.message });
           }
 
-          const token = jwt.sign({ email: user.email }, constants.jwtSecret, {
-            expiresIn: constants.jwtExpire,
-          });
+          const token = jwt.sign(
+            { email: user.email, domain: req.domain._id },
+            constants.jwtSecret,
+            {
+              expiresIn: constants.jwtExpire,
+            }
+          );
 
           return res.json({ token });
         });

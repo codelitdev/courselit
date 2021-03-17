@@ -7,9 +7,8 @@ import {
 } from "../../../config/strings.js";
 import UserDetails from "./UserDetails.js";
 import FetchBuilder from "../../../lib/fetch.js";
-import { BACKEND } from "../../../config/constants.js";
 import { connect } from "react-redux";
-import { authProps } from "../../../types.js";
+import { addressProps, authProps } from "../../../types.js";
 import { networkAction } from "../../../redux/actions.js";
 import { makeStyles } from "@material-ui/styles";
 
@@ -19,7 +18,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const UsersManager = (props) => {
+const UsersManager = ({ auth, address, dispatch }) => {
   const [, setUsersSummary] = useState({
     count: 0,
     verified: 0,
@@ -51,10 +50,10 @@ const UsersManager = (props) => {
     }
     `;
     const fetch = new FetchBuilder()
-      .setUrl(`${BACKEND}/graph`)
+      .setUrl(`${address.backend}/graph`)
       .setPayload(query)
       .setIsGraphQLEndpoint(true)
-      .setAuthToken(props.auth.token)
+      .setAuthToken(auth.token)
       .build();
     try {
       const response = await fetch.exec();
@@ -88,20 +87,20 @@ const UsersManager = (props) => {
     }
     `;
     const fetch = new FetchBuilder()
-      .setUrl(`${BACKEND}/graph`)
+      .setUrl(`${address.backend}/graph`)
       .setPayload(query)
       .setIsGraphQLEndpoint(true)
-      .setAuthToken(props.auth.token)
+      .setAuthToken(auth.token)
       .build();
     try {
-      props.dispatch(networkAction(true));
+      dispatch(networkAction(true));
       const response = await fetch.exec();
       if (response.users && response.users.length > 0) {
         setUsers([...users, ...response.users]);
       }
     } catch (err) {
     } finally {
-      props.dispatch(networkAction(false));
+      dispatch(networkAction(false));
     }
   };
 
@@ -150,10 +149,16 @@ const UsersManager = (props) => {
 UsersManager.propTypes = {
   auth: authProps,
   dispatch: PropTypes.func.isRequired,
+  address: addressProps,
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
+  address: state.address,
 });
 
-export default connect(mapStateToProps)(UsersManager);
+const mapDispatchToProps = (dispatch) => ({
+  dispatch: dispatch,
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(UsersManager);

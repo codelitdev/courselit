@@ -97,3 +97,9 @@ export const link = PropTypes.shape({
   category: PropTypes.string.isRequired,
   newTab: PropTypes.bool.isRequired,
 });
+
+export const addressProps = PropTypes.shape({
+  backend: PropTypes.string.isRequired,
+  frontend: PropTypes.string.isRequired,
+  domain: PropTypes.string.isRequired,
+});

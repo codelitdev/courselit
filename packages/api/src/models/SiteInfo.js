@@ -6,6 +6,11 @@
 const mongoose = require("mongoose");
 
 const SiteInfoSchema = new mongoose.Schema({
+  domain: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    unique: true,
+  },
   title: { type: String },
   subtitle: { type: String },
   logopath: { type: String },

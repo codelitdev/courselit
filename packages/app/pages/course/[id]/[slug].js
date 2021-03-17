@@ -3,10 +3,10 @@ import Head from "next/head";
 import {
   formulateCourseUrl,
   formulateMediaUrl,
+  getBackendAddress,
   getPostDescriptionSnippet,
 } from "../../../lib/utils.js";
 import { Lock } from "@material-ui/icons";
-import { BACKEND, FRONTEND, MEDIA_BACKEND } from "../../../config/constants.js";
 import { SIDEBAR_TEXT_COURSE_ABOUT } from "../../../config/strings.js";
 import CourseIntroduction from "../../../components/CourseIntroduction.js";
 import LessonViewer from "../../../components/Public/LessonViewer.js";
@@ -53,7 +53,7 @@ const Course = (props) => {
             />
             <meta
               property="og:url"
-              content={formulateCourseUrl(course, FRONTEND)}
+              content={formulateCourseUrl(course, props.address.frontend)}
             />
             <meta property="og:type" content="article" />
             <meta property="og:title" content={course.title} />
@@ -65,7 +65,10 @@ const Course = (props) => {
             {course.featuredImage && (
               <meta
                 property="og:image"
-                content={formulateMediaUrl(MEDIA_BACKEND, course.featuredImage)}
+                content={formulateMediaUrl(
+                  props.address.backend,
+                  course.featuredImage
+                )}
               />
             )}
           </Head>
@@ -76,7 +79,7 @@ const Course = (props) => {
   );
 };
 
-Course.getInitialProps = async ({ query }) => {
+export async function getServerSideProps({ query, req }) {
   const graphQuery = `
     query {
       post: getCourse(courseId: ${query.id}) {
@@ -100,7 +103,7 @@ Course.getInitialProps = async ({ query }) => {
     }
   `;
   const fetch = new FetchBuilder()
-    .setUrl(`${BACKEND}/graph`)
+    .setUrl(`${getBackendAddress(req.headers.host)}/graph`)
     .setPayload(graphQuery)
     .setIsGraphQLEndpoint(true)
     .build();
@@ -108,20 +111,25 @@ Course.getInitialProps = async ({ query }) => {
   try {
     const response = await fetch.exec();
     return {
-      course: response.post,
-      error: null,
+      props: {
+        course: response.post,
+        error: null,
+      },
     };
   } catch (err) {
     return {
-      course: null,
-      error: err.message,
+      props: {
+        course: null,
+        error: err.message,
+      },
     };
   }
-};
+}
 
 const mapStateToProps = (state) => ({
   profile: state.profile,
   siteInfo: state.siteinfo,
+  address: state.address,
 });
 
 export default connect(mapStateToProps)(Course);

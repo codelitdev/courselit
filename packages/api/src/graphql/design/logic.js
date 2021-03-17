@@ -8,8 +8,8 @@ const Layout = require("../../models/Layout.js");
 
 // TODO: write tests for all functions
 
-exports.getTheme = async () => {
-  const theme = await Theme.findOne({ active: true });
+exports.getTheme = async (ctx) => {
+  const theme = await Theme.findOne({ active: true, domain: ctx.domain._id });
   return transformThemeForOutput(theme);
 };
 
@@ -17,9 +17,12 @@ exports.setTheme = async (id, ctx) => {
   checkIfAuthenticated(ctx);
   if (!ctx.user.isAdmin) throw new Error(strings.responses.is_not_admin);
 
-  await Theme.updateMany({}, { $set: { active: "false" } });
+  await Theme.updateMany(
+    { domain: ctx.domain._id },
+    { $set: { active: "false" } }
+  );
 
-  const theme = await Theme.findOne({ id });
+  const theme = await Theme.findOne({ id, domain: ctx.domain._id });
   if (!theme) {
     throw new Error(strings.responses.theme_not_installed);
   }
@@ -34,7 +37,7 @@ exports.removeTheme = async (id, ctx) => {
   checkIfAuthenticated(ctx);
   if (!ctx.user.isAdmin) throw new Error(strings.responses.is_not_admin);
 
-  await Theme.deleteOne({ id });
+  await Theme.deleteOne({ id, domain: ctx.domain._id });
 
   return true;
 };
@@ -43,7 +46,7 @@ exports.getAllThemes = async (ctx) => {
   checkIfAuthenticated(ctx);
   if (!ctx.user.isAdmin) throw new Error(strings.responses.is_not_admin);
 
-  const themes = await Theme.find();
+  const themes = await Theme.find({ domain: ctx.domain._id });
   return themes.map(transformThemeForOutput);
 };
 
@@ -65,6 +68,7 @@ exports.addTheme = async (themeData, ctx) => {
   }
 
   const theme = await Theme.create({
+    domain: ctx.domain._id,
     id: themeData.id,
     name: themeData.name,
     styles,
@@ -75,8 +79,8 @@ exports.addTheme = async (themeData, ctx) => {
   return transformThemeForOutput(theme);
 };
 
-exports.getLayout = async () => {
-  const layout = await Layout.findOne();
+exports.getLayout = async (ctx) => {
+  const layout = await Layout.findOne({ domain: ctx.domain._id });
   return layout
     ? {
         layout: JSON.stringify(layout.layout),
@@ -95,12 +99,13 @@ exports.setLayout = async (layoutData, ctx) => {
     throw new Error(strings.responses.invalid_layout);
   }
 
-  let layout = await Layout.findOne();
+  let layout = await Layout.findOne({ domain: ctx.domain._id });
   if (layout) {
     layout.layout = layoutObject;
     layout = await layout.save();
   } else {
     layout = await Layout.create({
+      domain: ctx.domain._id,
       layout: layoutObject,
     });
   }

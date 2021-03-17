@@ -3,12 +3,11 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import fetch from "isomorphic-unfetch";
 import {
-  BACKEND,
   TRANSACTION_FAILED,
   TRANSACTION_INITIATED,
   TRANSACTION_SUCCESS,
 } from "../../config/constants";
-import { authProps } from "../../types";
+import { addressProps, authProps } from "../../types";
 import { Button, Grid, Typography } from "@material-ui/core";
 import {
   TRANSACTION_STATUS_FAILED,
@@ -55,7 +54,7 @@ const PurchaseStatus = (props) => {
   const getPaymentStatus = async () => {
     let paymentStatus = await makePaymentStatusRequest({
       purchaseId: id,
-      backend: BACKEND,
+      backend: props.address.backend,
       token: props.auth.token,
     });
 
@@ -176,10 +175,12 @@ const PurchaseStatus = (props) => {
 
 PurchaseStatus.propTypes = {
   auth: authProps,
+  address: addressProps,
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
+  address: state.address,
 });
 
 export default connect(mapStateToProps)(PurchaseStatus);

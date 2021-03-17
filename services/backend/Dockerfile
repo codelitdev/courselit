@@ -7,11 +7,10 @@ RUN apk add --no-cache ffmpeg imagemagick libwebp libwebp-tools
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-# install dependencies
-COPY package.json /usr/src/app 
-RUN npm install
+# copy files
+COPY packages/api .
 
-# copy local files to container
-COPY . /usr/src/app
+# install dependencies
+RUN npm install
 
 CMD ["npm", "start", "--silent"]

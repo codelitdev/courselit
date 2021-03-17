@@ -32,6 +32,7 @@
 </p>
 
 # Introduction
+
 CourseLit is a content management system (aka CMS) for starting your own online course website. It is designed keeping educators in mind. Consider it an open-source alternative to those paid tutoring sites.
 
 It comes pre-equipped with all the basic tools you'd require to efficiently run and administer your online teaching business. Features include course authoring, student management, payment processing (via Stripe), website customization and analytics (very limited as of now).
@@ -43,27 +44,53 @@ Check out this live example to see what you can build with CourseLit. [Click her
 ![courselit cms screenshot](./assets/screenshot.png)
 
 ## Getting Started
+
 To install CourseLit on your cloud server, please follow [our official guide](https://codelit.gitbook.io/courselit/getting-started).
 
 ## Development
+
 The project is organised as a [mono-repo](https://en.wikipedia.org/wiki/Monorepo). It uses [Lerna](https://github.com/lerna/lerna) for managing the mono-repo. You need to run both backend and frontend servers, located in `packages/api` and `packages/app` respectively, in order to run the portal in its entirety.
 
 We recommend using [Visual Studio Code](https://code.visualstudio.com/) for development as it allows you to develop your code in isolation inside a container using the [Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension. Install both the editor and the extension.
 
 Once you have this setup, follow these steps.
 
-1. Press `Ctrl + Shift + P` to open the command palette of Visual Studio Code, type in "Remote-Containers: Open Workspace in Container" and press enter after selecting it.
+1. Add the following entries to your operating system's host file. These are required for multitenancy.
 
-2. Once the code opens up, open two terminal windows in your Visual Studio Code and type in the following commands to start the backend and frontend servers respectively.
-  - `yarn lerna run dev --scope=@courselit/api --stream`
-  - `yarn lerna run dev --scope=@courselit/app --stream`
-  
-  > The above commands are also exported as `bash` aliases, so you can simply type `api` and `app` in separate terminal windows to run backend and frontend servers respectively.
+```
+127.0.0.1       domain1.localsite.com
+127.0.0.1       domain2.localsite.com
+127.0.0.1       localsite.com
+```
+
+2. Press `Ctrl + Shift + P` to open the command palette of Visual Studio Code, type in "Remote-Containers: Open Workspace in Container" and press enter after selecting it.
+
+3. Once the code opens up, open two terminal windows in your Visual Studio Code and type in the following commands to start the backend and frontend servers respectively.
+
+- `yarn lerna run dev --scope=@courselit/api --stream`
+- `yarn lerna run dev --scope=@courselit/app --stream`
+
+> The above commands are also exported as `bash` aliases, so you can simply type `api` and `app` in separate terminal windows to run backend and frontend servers respectively.
+
+4. Inside the development container, open up a terminal window and type the following commands in sequence.
+
+```
+mongo
+use app
+db.domains.insert({ name: "domain1" })
+db.domains.insert({ name: "domain2" })
+```
+
+This will enable the invidual sites listed in step `1`.
+
+5. Visit `domain1.localsite.com` to see CourseLit in action.
 
 ## Writing Your Own Widget
+
 You can add additional functionality to your application via building your own widgets. Look at [this](widgets.md) document.
 
 ## Environment variables.
+
 **SITE_URL**
 
 The public address of the site. Required parameter. No default value.
@@ -95,10 +122,3 @@ The domain name for which the ssl certificate is issued. Optional parameter, onl
 **TAG**
 
 The Docker tag. To see what all tags are available, visit [CourseLit on Docker Hub](https://hub.docker.com/repository/registry-1.docker.io/codelit/courselit-proxy/tags).
-
-## Security
-Although, we've done everything in our power to secure the application by following the best practices, we hope you understand that no one can guarantee that it's the most secure implementation out there and it will always stay secure.
-
-Please audit the environment files, docker-compose files and other configurations properly as per your company's security standards. If you've discovered a security vulnerability, consider fixing the issue and submitting a PR.
-
-Use the application at your own risk. People who have worked on this project will not be responsible for any sort of damage that happens to you by using the application.

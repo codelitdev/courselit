@@ -6,6 +6,7 @@ const path = require("path");
 const USER_CONTENT_DIRECTORY = process.env.USER_CONTENT_DIRECTORY;
 
 module.exports = {
+  domainNameForSingleTenancy: "main",
   dbConnectionString:
     process.env.DB_CONNECTION_STRING ||
     `mongodb://localhost/${process.env.NODE_ENV === "test" ? "test" : "app"}`,
