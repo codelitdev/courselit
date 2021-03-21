@@ -1,5 +1,6 @@
-import { GridListTileBar, Button } from "@material-ui/core";
 import React, { useEffect, useState } from "react";
+import PropTypes from "prop-types";
+import { GridListTileBar, Button } from "@material-ui/core";
 import { connect } from "react-redux";
 import {
   MANAGE_COURSES_PAGE_HEADING,
@@ -9,10 +10,11 @@ import {
   LOAD_MORE_TEXT,
 } from "../../../config/strings";
 import FetchBuilder from "../../../lib/fetch";
-import { authProps, profileProps } from "../../../types";
+import { addressProps, authProps, profileProps } from "../../../types";
 import Img from "../../Img";
 import { OverviewAndDetail } from "@courselit/components-library";
 import dynamic from "next/dynamic";
+import { networkAction } from "../../../redux/actions";
 const CourseEditor = dynamic(() => import("./CourseEditor"));
 
 const Index = (props) => {
@@ -26,7 +28,7 @@ const Index = (props) => {
 
   useEffect(() => {
     const map = [];
-    creatorCourses.map(course => {
+    creatorCourses.map((course) => {
       map.push(getComponent(course));
     });
     map.push({
@@ -63,7 +65,7 @@ const Index = (props) => {
         closeEditor={() => {}}
       />
     ),
-  })
+  });
 
   const loadCreatorCourses = async () => {
     const query = `

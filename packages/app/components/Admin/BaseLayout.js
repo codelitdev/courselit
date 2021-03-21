@@ -17,7 +17,12 @@ import { formulateMediaUrl } from "../../lib/utils.js";
 import { Grid } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import RouteBasedComponentScaffold from "../Public/BaseLayout/RouteBasedComponentScaffold.js";
-import { addressProps, authProps, profileProps, siteInfoProps } from "../../types.js";
+import {
+  addressProps,
+  authProps,
+  profileProps,
+  siteInfoProps,
+} from "../../types.js";
 
 const useStyles = makeStyles({
   loaderContainer: {
@@ -26,7 +31,14 @@ const useStyles = makeStyles({
   },
 });
 
-const BaseLayoutAdmin = ({ auth, profile, siteInfo, children, title, address }) => {
+const BaseLayoutAdmin = ({
+  auth,
+  profile,
+  siteInfo,
+  children,
+  title,
+  address,
+}) => {
   const router = useRouter();
   const classes = useStyles();
 
@@ -124,7 +136,7 @@ BaseLayoutAdmin.propTypes = {
   siteInfo: siteInfoProps,
   children: PropTypes.object,
   title: PropTypes.string,
-  address: addressProps
+  address: addressProps,
 };
 
 const mapStateToProps = (state) => ({
