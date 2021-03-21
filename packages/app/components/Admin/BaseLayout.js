@@ -13,12 +13,11 @@ import {
 import { CREATOR_AREA_PAGE_TITLE } from "../../config/strings.js";
 import AppLoader from "../../components/AppLoader.js";
 import Head from "next/head";
-import { MEDIA_BACKEND } from "../../config/constants.js";
 import { formulateMediaUrl } from "../../lib/utils.js";
 import { Grid } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import RouteBasedComponentScaffold from "../Public/BaseLayout/RouteBasedComponentScaffold.js";
-import { authProps, profileProps, siteInfoProps } from "../../types.js";
+import { addressProps, authProps, profileProps, siteInfoProps } from "../../types.js";
 
 const useStyles = makeStyles({
   loaderContainer: {
@@ -27,7 +26,7 @@ const useStyles = makeStyles({
   },
 });
 
-const BaseLayoutAdmin = ({ auth, profile, siteInfo, children, title }) => {
+const BaseLayoutAdmin = ({ auth, profile, siteInfo, children, title, address }) => {
   const router = useRouter();
   const classes = useStyles();
 
@@ -93,7 +92,7 @@ const BaseLayoutAdmin = ({ auth, profile, siteInfo, children, title }) => {
         {siteInfo && siteInfo.logopath && (
           <link
             rel="icon"
-            href={formulateMediaUrl(MEDIA_BACKEND, siteInfo.logopath, true)}
+            href={formulateMediaUrl(address.backend, siteInfo.logopath, true)}
           />
         )}
         <meta
@@ -125,12 +124,14 @@ BaseLayoutAdmin.propTypes = {
   siteInfo: siteInfoProps,
   children: PropTypes.object,
   title: PropTypes.string,
+  address: addressProps
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
   profile: state.profile,
   siteInfo: state.siteinfo,
+  address: state.address,
 });
 
 export default connect(mapStateToProps)(BaseLayoutAdmin);
