@@ -4,9 +4,8 @@ import NavigationLinkItem from "./NavigationLinkItem";
 import { Button } from "@material-ui/core";
 import { ADD_NEW_LINK_BUTTON } from "../../../../config/strings";
 import FetchBuilder from "../../../../lib/fetch";
-import { BACKEND } from "../../../../config/constants";
 import { connect } from "react-redux";
-import { authProps } from "../../../../types";
+import { authProps, addressProps } from "../../../../types";
 import { networkAction } from "../../../../redux/actions";
 
 const NavigationLinks = (props) => {
@@ -29,15 +28,13 @@ const NavigationLinks = (props) => {
         }
         `;
     const fetch = new FetchBuilder()
-      .setUrl(`${BACKEND}/graph`)
+      .setUrl(`${props.address.backend}/graph`)
       .setIsGraphQLEndpoint(true)
       .setAuthToken(props.auth.token)
       .setPayload(query)
       .build();
-
-    props.dispatch(networkAction(true));
-
     try {
+      props.dispatch(networkAction(true));
       const response = await fetch.exec();
       if (response.links) {
         setLinks(response.links);
@@ -85,10 +82,12 @@ const NavigationLinks = (props) => {
 NavigationLinks.propTypes = {
   auth: authProps,
   dispatch: PropTypes.func.isRequired,
+  address: addressProps,
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
+  address: state.address,
 });
 
 const mapDispatchToProps = (dispatch) => ({

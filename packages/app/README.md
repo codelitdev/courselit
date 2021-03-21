@@ -16,17 +16,13 @@ npm run start
 
 ### Environment variables
 
-**SITE_URL**
-
-The public address of the site. Defaults to none.
-
 **API_PREFIX**
 
 The path where the API is located on the server. Defaults to `/api`.
 
-**SSR_SITE_URL**
+**INSECURE**
 
-The server address to resolve `getInitialProps` calls for server side rendering. Defaults to none.
+If you want to serve the app over HTTP, instead of HTTPS, set this to `true`. Defaults to `false`.
 
 ## Support
 

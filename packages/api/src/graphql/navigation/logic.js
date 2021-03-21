@@ -8,8 +8,13 @@ const strings = require("../../config/strings.js");
 
 // TODO: write test for the entire feature
 
-exports.getPublicNavigation = async () => {
-  return await Link.find({}, "text destination category newTab");
+exports.getPublicNavigation = async (ctx) => {
+  return await Link.find(
+    {
+      domain: ctx.domain._id,
+    },
+    "text destination category newTab"
+  );
 };
 
 exports.getNavigation = async (ctx) => {
@@ -17,7 +22,7 @@ exports.getNavigation = async (ctx) => {
 
   if (!ctx.user.isAdmin) throw new Error(responses.is_not_admin);
 
-  return await Link.find();
+  return await Link.find({ domain: ctx.domain._id });
 };
 
 exports.saveLink = async (linkData, ctx) => {
@@ -29,7 +34,7 @@ exports.saveLink = async (linkData, ctx) => {
 
   if (linkData.id) {
     // update the existing record
-    link = await Link.findById(linkData.id);
+    link = await Link.findOne({ _id: linkData.id, domain: ctx.domain._id });
 
     if (!link) {
       throw new Error(strings.responses.item_not_found);
@@ -44,6 +49,7 @@ exports.saveLink = async (linkData, ctx) => {
   } else {
     // create a new record
     link = Link.create({
+      domain: ctx.domain._id,
       text: linkData.text,
       destination: linkData.destination,
       category: linkData.category,
@@ -57,10 +63,9 @@ exports.saveLink = async (linkData, ctx) => {
 exports.deleteLink = async (id, ctx) => {
   checkIfAuthenticated(ctx);
 
-  // check if the user is an admin
   if (!ctx.user.isAdmin) throw new Error(responses.is_not_admin);
 
-  const link = await Link.findById(id);
+  const link = await Link.findOne({ _id: id, domain: ctx.domain._id });
   if (link) {
     await link.remove();
   }

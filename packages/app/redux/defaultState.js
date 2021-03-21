@@ -55,4 +55,9 @@ export default {
     footerRight: [],
   },
   navigation: [],
+  address: {
+    backend: "",
+    frontend: "",
+    domain: "",
+  },
 };

@@ -1,5 +1,4 @@
 import BaseLayout from "../../components/Public/BaseLayout";
-import { BACKEND } from "../../config/constants";
 import FetchBuilder from "../../lib/fetch";
 import { Button, Grid, TextField, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
@@ -18,6 +17,7 @@ import { connect } from "react-redux";
 import Link from "next/link";
 import { useState } from "react";
 import { networkAction, refreshUserProfile } from "../../redux/actions";
+import { getBackendAddress } from "../../lib/utils";
 
 const useStyles = makeStyles((theme) => ({
   content: {
@@ -36,7 +36,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function Profile({ user, profile, auth, dispatch }) {
+function Profile({ user, profile, auth, dispatch, address }) {
   const classes = useStyles();
   const isMyProfile = profile && profile.id === user.id;
   const [bio, setBio] = useState(user.bio || "");
@@ -56,7 +56,7 @@ function Profile({ user, profile, auth, dispatch }) {
       }
     `;
     const fetch = new FetchBuilder()
-      .setUrl(`${BACKEND}/graph`)
+      .setUrl(`${address.backend}/graph`)
       .setPayload(graphQuery)
       .setIsGraphQLEndpoint(true)
       .setAuthToken(auth.token)
@@ -204,7 +204,7 @@ function Profile({ user, profile, auth, dispatch }) {
   );
 }
 
-export async function getServerSideProps({ query }) {
+export async function getServerSideProps({ query, req }) {
   const graphQuery = `
     query {
       user: getUser(userId: "${query.userId}") {
@@ -217,7 +217,7 @@ export async function getServerSideProps({ query }) {
     }
   `;
   const fetch = new FetchBuilder()
-    .setUrl(`${BACKEND}/graph`)
+    .setUrl(`${getBackendAddress(req.headers.host)}/graph`)
     .setPayload(graphQuery)
     .setIsGraphQLEndpoint(true)
     .build();
@@ -242,6 +242,7 @@ export async function getServerSideProps({ query }) {
 const mapStateToProps = (state) => ({
   profile: state.profile,
   auth: state.auth,
+  address: state.address,
 });
 
 const mapDispatchToProps = (dispatch) => ({

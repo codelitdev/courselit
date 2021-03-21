@@ -23,10 +23,11 @@ import {
   HEADER_RESET_PASSWORD,
 } from "../../../config/strings";
 import { makeStyles } from "@material-ui/styles";
-import { BACKEND } from "../../../config/constants";
 import FetchBuilder from "../../../lib/fetch";
-import { siteUser, authProps } from "../../../types";
+import { siteUser, authProps, addressProps } from "../../../types";
 import { Card } from "@courselit/components-library";
+import PropTypes from "prop-types";
+import { networkAction } from "../../../redux/actions";
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -63,6 +64,7 @@ const UserDetails = (props) => {
   const classes = useStyles();
   const [error, setError] = useState("");
   const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const { auth, address, dispatch } = props;
 
   useEffect(() => {
     setError(getUserDataError());
@@ -85,10 +87,10 @@ const UserDetails = (props) => {
     }
     `;
     const fetch = new FetchBuilder()
-      .setUrl(`${BACKEND}/graph`)
+      .setUrl(`${address.backend}/graph`)
       .setPayload(query)
       .setIsGraphQLEndpoint(true)
-      .setAuthToken(props.auth.token)
+      .setAuthToken(auth.token)
       .build();
     try {
       const response = await fetch.exec();
@@ -134,12 +136,13 @@ const UserDetails = (props) => {
     }
     `;
     const fetch = new FetchBuilder()
-      .setUrl(`${BACKEND}/graph`)
+      .setUrl(`${address.backend}/graph`)
       .setPayload(mutation)
       .setIsGraphQLEndpoint(true)
-      .setAuthToken(props.auth.token)
+      .setAuthToken(auth.token)
       .build();
     try {
+      dispatch(networkAction(true));
       const response = await fetch.exec();
       if (response.user) {
         setNewUserData(getNewUserDataObject(response.user));
@@ -148,6 +151,8 @@ const UserDetails = (props) => {
     } catch (err) {
       setError(err.message);
       setNewUserData(newUserDataDefaults);
+    } finally {
+      dispatch(networkAction(false));
     }
   };
 
@@ -421,10 +426,17 @@ const UserDetails = (props) => {
 UserDetails.propTypes = {
   auth: authProps,
   user: siteUser,
+  address: addressProps,
+  dispatch: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
+  address: state.address,
 });
 
-export default connect(mapStateToProps)(UserDetails);
+const mapDispatchToProps = (dispatch) => ({
+  dispatch: dispatch,
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(UserDetails);

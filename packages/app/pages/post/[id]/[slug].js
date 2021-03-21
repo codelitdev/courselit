@@ -1,14 +1,13 @@
 import { connect } from "react-redux";
-import { BACKEND, FRONTEND, MEDIA_BACKEND } from "../../../config/constants.js";
 import {
   formulateMediaUrl,
   formulateCourseUrl,
-  // getPostDescriptionSnippet,
+  getBackendAddress,
 } from "../../../lib/utils.js";
 import { makeStyles, Grid } from "@material-ui/core";
 import Head from "next/head";
 import FetchBuilder from "../../../lib/fetch.js";
-import { siteInfoProps } from "../../../types.js";
+import { addressProps, siteInfoProps } from "../../../types.js";
 import BaseLayout from "../../../components/Public/BaseLayout";
 import Article from "../../../components/Public/Article.js";
 
@@ -32,7 +31,7 @@ const Post = (props) => {
           <Head>
             <meta
               property="og:url"
-              content={formulateCourseUrl(props.post, FRONTEND)}
+              content={formulateCourseUrl(props.post, props.address.frontend)}
             />
             <meta property="og:type" content="article" />
             <meta property="og:title" content={props.post.title} />
@@ -46,7 +45,7 @@ const Post = (props) => {
               <meta
                 property="og:image"
                 content={formulateMediaUrl(
-                  MEDIA_BACKEND,
+                  props.address.backend,
                   props.post.featuredImage
                 )}
               />
@@ -59,7 +58,7 @@ const Post = (props) => {
   );
 };
 
-export async function getServerSideProps({ query }) {
+export async function getServerSideProps({ query, req }) {
   const graphQuery = `
     query {
       post: getCourse(courseId: ${query.id}) {
@@ -76,7 +75,7 @@ export async function getServerSideProps({ query }) {
     }
   `;
   const fetch = new FetchBuilder()
-    .setUrl(`${BACKEND}/graph`)
+    .setUrl(`${getBackendAddress(req.headers.host)}/graph`)
     .setPayload(graphQuery)
     .setIsGraphQLEndpoint(true)
     .build();
@@ -100,10 +99,12 @@ export async function getServerSideProps({ query }) {
 
 Post.propTypes = {
   siteInfo: siteInfoProps,
+  address: addressProps,
 };
 
 const mapStateToProps = (state) => ({
   siteInfo: state.siteinfo,
+  address: state.address,
 });
 
 export default connect(mapStateToProps)(Post);

@@ -24,7 +24,10 @@ const {
 } = require("../config/constants.js");
 
 const getHandler = async (req, res) => {
-  const media = await Media.findById(req.params.mediaId);
+  const media = await Media.findOne({
+    _id: req.params.mediaId,
+    domain: req.domain._id,
+  });
 
   const { thumb } = req.query;
 
@@ -112,6 +115,7 @@ const postHandler = async (req, res) => {
   }
 
   const mediaObject = {
+    domain: req.domain._id,
     title: data.title,
     originalFileName: req.files.file.name,
     fileName: `${fileName.name}.${
@@ -147,7 +151,10 @@ const postHandler = async (req, res) => {
 };
 
 const deleteHandler = async (req, res) => {
-  const media = await Media.findById(req.params.mediaId);
+  const media = await Media.findOne({
+    _id: req.params.mediaId,
+    domain: req.domain._id,
+  });
 
   if (!isOwner(media, req.user)) {
     return res.status(404).json({ message: responses.item_not_found });

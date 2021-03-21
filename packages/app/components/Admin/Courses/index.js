@@ -1,7 +1,6 @@
 import { GridListTileBar, Button } from "@material-ui/core";
 import React, { useEffect, useState } from "react";
 import { connect } from "react-redux";
-import { BACKEND } from "../../../config/constants";
 import {
   MANAGE_COURSES_PAGE_HEADING,
   NEW_COURSE_PAGE_HEADING,
@@ -23,7 +22,7 @@ const Index = (props) => {
 
   useEffect(() => {
     loadCreatorCourses();
-  }, [props.profile.id]);
+  }, []);
 
   useEffect(() => {
     const map = [];
@@ -67,32 +66,32 @@ const Index = (props) => {
   })
 
   const loadCreatorCourses = async () => {
-    if (!props.profile.id) {
-      return;
-    }
     const query = `
-        query {
-          courses: getCreatorCourses(
-            id: "${props.profile.id}",
-            offset: ${coursesPaginationOffset}
-          ) {
-            id, title, featuredImage, isBlog
-          }
-        }
-        `;
+    query {
+      courses: getCoursesAsAdmin(
+        offset: ${coursesPaginationOffset}
+      ) {
+        id, title
+      }
+    }
+    `;
     const fetch = new FetchBuilder()
-      .setUrl(`${BACKEND}/graph`)
+      .setUrl(`${props.address.backend}/graph`)
       .setPayload(query)
       .setIsGraphQLEndpoint(true)
       .setAuthToken(props.auth.token)
       .build();
     try {
+      props.dispatch(networkAction(true));
       const response = await fetch.exec();
       if (response.courses && response.courses.length > 0) {
         setCreatorCourses([...creatorCourses, ...response.courses]);
         setCoursesPaginationOffset(coursesPaginationOffset + 1);
       }
-    } catch (err) {}
+    } catch (err) {
+    } finally {
+      props.dispatch(networkAction(false));
+    }
   };
 
   return (
@@ -106,11 +105,14 @@ const Index = (props) => {
 Index.propTypes = {
   auth: authProps,
   profile: profileProps,
+  dispatch: PropTypes.func.isRequired,
+  address: addressProps,
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
   profile: state.profile,
+  address: state.address,
 });
 
 export default connect(mapStateToProps)(Index);

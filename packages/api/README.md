@@ -50,6 +50,9 @@ If this is set to `true`, the app will convert the image being uploaded to WEBP 
 **WEBP_QUALITY**
 The quality of output while converting images to WEBP format. Only applies when `USE_WEBP` is set to `true`. Defaults to `75`.
 
+**DOMAIN**
+The actual domain name the live website is bound to. For example `corelit.xyz`.
+
 ## Support
 
 Come chat with us in our official [Spectrum chat](https://spectrum.chat/courselit/general).

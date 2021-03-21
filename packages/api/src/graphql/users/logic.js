@@ -7,7 +7,6 @@ const strings = require("../../config/strings.js");
 const {
   checkIfAuthenticated,
   checkAdminOrSelf,
-  checkIfItemExists,
   makeModelTextSearchable,
 } = require("../../lib/graphql.js");
 const constants = require("../../config/constants.js");
@@ -26,19 +25,15 @@ exports.getUser = async (email = null, userId = null, ctx) => {
     throw new Error(strings.responses.invalid_user_id);
   }
 
-  const loggedUserEmail = ctx.user && ctx.user.email;
-  const loggedUserId = ctx.user && ctx.user.userId;
-  const isAdmin = ctx.user && ctx.user.isAdmin;
-
   let user;
   if (email) {
-    user = await User.findOne({ email });
+    user = await User.findOne({ email, domain: ctx.domain._id });
   } else {
     // userId can be either a Mongodb ObjectID or userId from User schema
     if (ObjectId.isValid(userId)) {
-      user = await User.findById(userId);
+      user = await User.findOne({ _id: userId, domain: ctx.domain._id });
     } else {
-      user = await User.findOne({ userId });
+      user = await User.findOne({ userId, domain: ctx.domain._id });
     }
   }
 
@@ -47,6 +42,10 @@ exports.getUser = async (email = null, userId = null, ctx) => {
   }
 
   user.userId = user.userId || -1; // Set -1 for empty userIds; Backward compatibility;
+
+  const loggedUserEmail = ctx.user && ctx.user.email;
+  const loggedUserId = ctx.user && ctx.user.userId;
+  const isAdmin = ctx.user && ctx.user.isAdmin;
 
   const result =
     loggedUserEmail === email || loggedUserId === userId || isAdmin
@@ -59,7 +58,9 @@ exports.getUser = async (email = null, userId = null, ctx) => {
 exports.updateUser = async (userData, ctx) => {
   checkIfAuthenticated(ctx);
   const { id } = userData;
-  let user = await checkIfItemExists(User, id);
+
+  let user = await User.findOne({ _id: id, domain: ctx.domain._id });
+  if (!user) throw new Error(strings.responses.item_not_found);
   checkAdminOrSelf(id, ctx);
 
   for (const key of Object.keys(userData)) {
@@ -104,7 +105,7 @@ const updateCoursesForCreatorName = async (creatorId, creatorName) => {
 };
 
 exports.getSiteUsers = async (searchData = {}, ctx) => {
-  const query = {};
+  const query = { domain: ctx.domain._id };
   if (searchData.searchText) query.$text = { $search: searchData.searchText };
 
   const searchUsers = makeModelTextSearchable(User);
@@ -128,9 +129,18 @@ exports.getUsersSummary = async (ctx) => {
   }
 
   return {
-    count: await User.countDocuments(),
-    verified: await User.countDocuments({ verified: true }),
-    admins: await User.countDocuments({ isAdmin: true }),
-    creators: await User.countDocuments({ isCreator: true }),
+    count: await User.countDocuments({ domain: ctx.domain._id }),
+    verified: await User.countDocuments({
+      verified: true,
+      domain: ctx.domain._id,
+    }),
+    admins: await User.countDocuments({
+      isAdmin: true,
+      domain: ctx.domain._id,
+    }),
+    creators: await User.countDocuments({
+      isCreator: true,
+      domain: ctx.domain._id,
+    }),
   };
 };

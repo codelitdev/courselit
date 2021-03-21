@@ -1,6 +1,0 @@
-{env.DOMAIN} {
-	reverse_proxy {$API_PREFIX}/* backend:8000
-	reverse_proxy frontend:3000
-
-	encode gzip
-}

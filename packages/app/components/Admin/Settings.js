@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
-import { siteInfoProps, authProps } from "../../types";
+import { siteInfoProps, authProps, addressProps } from "../../types";
 import {
   getGraphQLQueryFields,
   getObjectContainingOnlyChangedFields,
   areObjectsDifferent,
 } from "../../lib/utils.js";
 import {
-  BACKEND,
   PAYMENT_METHOD_PAYPAL,
   PAYMENT_METHOD_PAYTM,
   PAYMENT_METHOD_STRIPE,
@@ -96,7 +95,7 @@ const Settings = (props) => {
 
   const classes = useStyles();
   const fetch = new FetchBuilder()
-    .setUrl(`${BACKEND}/graph`)
+    .setUrl(`${props.address.backend}/graph`)
     .setIsGraphQLEndpoint(true)
     .setAuthToken(props.auth.token);
 
@@ -335,8 +334,8 @@ const Settings = (props) => {
                       </Grid>
                       <Grid item>
                         <Typography>
-                          <a href={`${BACKEND}/payment/webhook`}>
-                            {`${BACKEND}/payment/webhook`}
+                          <a href={`${props.address.backend}/payment/webhook`}>
+                            {`${props.address.backend}/payment/webhook`}
                           </a>
                         </Typography>
                       </Grid>
@@ -420,11 +419,13 @@ Settings.propTypes = {
   siteinfo: siteInfoProps,
   auth: authProps,
   dispatch: PropTypes.func.isRequired,
+  address: addressProps,
 };
 
 const mapStateToProps = (state) => ({
   siteinfo: state.siteinfo,
   auth: state.auth,
+  address: state.address,
 });
 
 const mapDispatchToProps = (dispatch) => ({

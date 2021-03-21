@@ -27,9 +27,12 @@ import {
   APP_MESSAGE_LESSON_DELETED,
   APP_MESSAGE_LESSON_SAVED,
 } from "../../../config/strings";
-import { lesson as lessonType, authProps } from "../../../types.js";
 import {
-  BACKEND,
+  lesson as lessonType,
+  authProps,
+  addressProps,
+} from "../../../types.js";
+import {
   LESSON_TYPE_TEXT,
   LESSON_TYPE_AUDIO,
   LESSON_TYPE_VIDEO,
@@ -108,7 +111,7 @@ const LessonEditor = (props) => {
     `;
 
     const fetch = new FetchBuilder()
-      .setUrl(`${BACKEND}/graph`)
+      .setUrl(`${props.address.backend}/graph`)
       .setPayload(query)
       .setIsGraphQLEndpoint(true)
       .setAuthToken(props.auth.token)
@@ -166,7 +169,7 @@ const LessonEditor = (props) => {
     }
     `;
     const fetch = new FetchBuilder()
-      .setUrl(`${BACKEND}/graph`)
+      .setUrl(`${props.address.backend}/graph`)
       .setPayload(query)
       .setIsGraphQLEndpoint(true)
       .setAuthToken(props.auth.token)
@@ -202,7 +205,7 @@ const LessonEditor = (props) => {
     }
     `;
     const fetch = new FetchBuilder()
-      .setUrl(`${BACKEND}/graph`)
+      .setUrl(`${props.address.backend}/graph`)
       .setPayload(query)
       .setIsGraphQLEndpoint(true)
       .setAuthToken(props.auth.token)
@@ -214,12 +217,12 @@ const LessonEditor = (props) => {
 
       if (response.lesson) {
         setLesson(Object.assign({}, lesson, { id: response.lesson.id }));
+        props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_LESSON_SAVED)));
       }
     } catch (err) {
       props.dispatch(setAppMessage(new AppMessage(err.message)));
     } finally {
       props.dispatch(networkAction(false));
-      props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_LESSON_SAVED)));
     }
   };
 
@@ -234,7 +237,7 @@ const LessonEditor = (props) => {
       }
       `;
       const fetch = new FetchBuilder()
-        .setUrl(`${BACKEND}/graph`)
+        .setUrl(`${props.address.backend}/graph`)
         .setPayload(query)
         .setIsGraphQLEndpoint(true)
         .setAuthToken(props.auth.token)
@@ -439,10 +442,12 @@ LessonEditor.propTypes = {
   auth: authProps,
   dispatch: PropTypes.func.isRequired,
   lesson: lessonType,
+  address: addressProps,
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
+  address: state.address,
 });
 
 const mapDispatchToProps = (dispatch) => ({

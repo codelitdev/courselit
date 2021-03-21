@@ -4,7 +4,8 @@ const constants = require("../config/constants.js");
 const AutoIncrement = require("mongoose-sequence")(mongoose);
 
 const UserSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true },
+  domain: { type: mongoose.Schema.Types.ObjectId, required: true },
+  email: { type: String, required: true },
   verified: { type: Boolean, required: true, default: false },
   isCreator: { type: Boolean, required: true, default: false },
   isAdmin: { type: Boolean, required: true, default: false },
@@ -19,6 +20,14 @@ UserSchema.index({
   email: "text",
   name: "text",
 });
+
+UserSchema.index(
+  {
+    domain: 1,
+    email: 1,
+  },
+  { unique: true }
+);
 
 // This pre-hook hashes the plain text password before saving it to the db
 UserSchema.pre("save", async function (next) {

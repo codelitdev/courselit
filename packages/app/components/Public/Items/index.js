@@ -3,11 +3,10 @@ import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import { networkAction } from "../../../redux/actions";
 import FetchBuilder from "../../../lib/fetch";
-import { BACKEND } from "../../../config/constants";
 import { Grid, Button } from "@material-ui/core";
 import { BTN_LOAD_MORE } from "../../../config/strings";
 import Post from "./Post";
-import { publicCourse } from "../../../types";
+import { addressProps, publicCourse } from "../../../types";
 import Course from "./Course";
 import { makeStyles } from "@material-ui/styles";
 
@@ -39,7 +38,7 @@ const List = (props) => {
     try {
       props.dispatch && props.dispatch(networkAction(true));
       const fetch = new FetchBuilder()
-        .setUrl(`${BACKEND}/graph`)
+        .setUrl(`${props.address.backend}/graph`)
         .setPayload(generateQuery(offset))
         .setIsGraphQLEndpoint(true)
         .build();
@@ -87,10 +86,15 @@ List.propTypes = {
   showLoadMoreButton: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
   posts: PropTypes.bool,
+  address: addressProps,
 };
+
+const mapStateToProps = (state) => ({
+  address: state.address,
+});
 
 const mapDispatchToProps = (dispatch) => ({
   dispatch: dispatch,
 });
 
-export default connect(() => ({}), mapDispatchToProps)(List);
+export default connect(mapStateToProps, mapDispatchToProps)(List);

@@ -12,11 +12,7 @@ import {
   SIGNUP_SECTION_BUTTON,
   LOGIN_INSTEAD_BUTTON,
 } from "../config/strings.js";
-import {
-  BACKEND,
-  JWT_COOKIE_NAME,
-  USERID_COOKIE_NAME,
-} from "../config/constants.js";
+import { JWT_COOKIE_NAME, USERID_COOKIE_NAME } from "../config/constants.js";
 import { signedIn, networkAction } from "../redux/actions.js";
 import { setCookie } from "../lib/session.js";
 import { Grid, TextField, Button, Typography } from "@material-ui/core";
@@ -47,6 +43,7 @@ const Login = (props) => {
   const [showSignupForm, setShowSignupForm] = useState(false);
   const classes = useStyles();
   const router = useRouter();
+  const { address } = props;
 
   useEffect(() => {
     if (!props.auth.guest) {
@@ -75,15 +72,23 @@ const Login = (props) => {
       formData.append("password", loginData.pass);
 
       const fetch = new FetchBuilder()
-        .setUrl(`${BACKEND}/auth/login`)
+        .setUrl(`${address.backend}/auth/login`)
         .setPayload(formData)
         .build();
       const response = await fetch.exec();
       const { token, message } = response;
 
       if (token) {
-        setCookie(JWT_COOKIE_NAME, token);
-        setCookie(USERID_COOKIE_NAME, loginData.email);
+        setCookie({
+          key: JWT_COOKIE_NAME,
+          value: token,
+          domain: address.domain,
+        });
+        setCookie({
+          key: USERID_COOKIE_NAME,
+          value: loginData.email,
+          domain: address.domain,
+        });
         props.dispatch(signedIn(loginData.email, token));
       } else {
         setLoginData(Object.assign({}, loginData, { err: message }));
@@ -134,7 +139,7 @@ const Login = (props) => {
       formData.append("name", signupData.name);
 
       const fetch = new FetchBuilder()
-        .setUrl(`${BACKEND}/auth/signup`)
+        .setUrl(`${address.backend}/auth/signup`)
         .setPayload(formData)
         .build();
       const response = await fetch.exec();
@@ -320,6 +325,7 @@ const Login = (props) => {
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
+  address: state.address,
 });
 
 export default connect(mapStateToProps)(Login);

@@ -14,17 +14,15 @@ import {
   THEME_AVAILABLE,
   LAYOUT_AVAILABLE,
   NAVIGATION_AVAILABLE,
+  SET_ADDRESS,
 } from "./actionTypes.js";
-import {
-  BACKEND,
-  JWT_COOKIE_NAME,
-  USERID_COOKIE_NAME,
-} from "../config/constants.js";
+import { JWT_COOKIE_NAME, USERID_COOKIE_NAME } from "../config/constants.js";
 import FetchBuilder from "../lib/fetch.js";
 import { removeCookie } from "../lib/session.js";
+import { getAddress } from "../lib/utils.js";
 
 export function signedIn(userid, token) {
-  return async (dispatch, getState) => {
+  return async (dispatch) => {
     dispatch({ type: SIGN_IN, token, userid });
     dispatch(refreshUserProfile(userid));
   };
@@ -50,7 +48,7 @@ export function refreshUserProfile(userId) {
       }
       `;
       const fetch = new FetchBuilder()
-        .setUrl(`${BACKEND}/graph`)
+        .setUrl(`${getState().address.backend}/graph`)
         .setPayload(query)
         .setIsGraphQLEndpoint(true)
         .setAuthToken(getState().auth.token)
@@ -64,10 +62,10 @@ export function refreshUserProfile(userId) {
   };
 }
 
-export function signedOut() {
+export function signedOut(domain) {
   return (dispatch) => {
-    removeCookie(JWT_COOKIE_NAME);
-    removeCookie(USERID_COOKIE_NAME);
+    removeCookie({ key: JWT_COOKIE_NAME, domain });
+    removeCookie({ key: USERID_COOKIE_NAME, domain });
     dispatch(clearProfile());
     dispatch({ type: SIGN_OUT });
   };
@@ -112,7 +110,7 @@ export function updateSiteInfo() {
       }
       `;
       const fetch = new FetchBuilder()
-        .setUrl(`${BACKEND}/graph`)
+        .setUrl(`${getState().address.backend}/graph`)
         .setPayload(query)
         .setIsGraphQLEndpoint(true)
         .build();
@@ -151,7 +149,7 @@ export function updateSiteTheme() {
       }
       `;
       const fetch = new FetchBuilder()
-        .setUrl(`${BACKEND}/graph`)
+        .setUrl(`${getState().address.backend}/graph`)
         .setPayload(query)
         .setIsGraphQLEndpoint(true)
         .build();
@@ -170,7 +168,7 @@ export function themeAvailable(theme) {
 }
 
 export function updateSiteLayout() {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
     try {
       dispatch(networkAction(true));
 
@@ -183,7 +181,7 @@ export function updateSiteLayout() {
       `;
 
       const fetch = new FetchBuilder()
-        .setUrl(`${BACKEND}/graph`)
+        .setUrl(`${getState().address.backend}/graph`)
         .setPayload(query)
         .setIsGraphQLEndpoint(true)
         .build();
@@ -202,7 +200,7 @@ export function layoutAvailable(layout) {
 }
 
 export function updateSiteNavigation() {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
     try {
       dispatch(networkAction(true));
 
@@ -217,7 +215,7 @@ export function updateSiteNavigation() {
       }
       `;
       const fetch = new FetchBuilder()
-        .setUrl(`${BACKEND}/graph`)
+        .setUrl(`${getState().address.backend}/graph`)
         .setPayload(query)
         .setIsGraphQLEndpoint(true)
         .build();
@@ -233,4 +231,8 @@ export function updateSiteNavigation() {
 
 export function navigationAvailable(links) {
   return { type: NAVIGATION_AVAILABLE, links };
+}
+
+export function updateBackend(host) {
+  return { type: SET_ADDRESS, address: getAddress(host) };
 }

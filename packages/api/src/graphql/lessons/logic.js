@@ -2,7 +2,6 @@
  * Business logic for managing lessons
  */
 // const slugify = require('slugify')
-const { text, audio, video, pdf } = require("../../config/constants.js");
 const Lesson = require("../../models/Lesson.js");
 const strings = require("../../config/strings.js");
 const {
@@ -10,28 +9,9 @@ const {
   checkOwnership,
 } = require("../../lib/graphql.js");
 const Course = require("../../models/Course.js");
+const { lessonValidator } = require("./helpers.js");
 
 const checkLessonOwnership = checkOwnership(Lesson);
-
-/**
- * Helper function to validate the lesson data for storing.
- *
- * @param {Object} lessonData
- */
-const lessonValidator = (lessonData) => {
-  if (lessonData.type === text && !lessonData.content) {
-    throw new Error(strings.responses.content_cannot_be_null);
-  }
-
-  if (
-    (lessonData.type === audio ||
-      lessonData.type === video ||
-      lessonData.type === pdf) &&
-    !lessonData.contentURL
-  ) {
-    throw new Error(strings.responses.content_url_cannot_be_null);
-  }
-};
 
 exports.getLesson = async (id, ctx) => {
   checkIfAuthenticated(ctx);
@@ -40,11 +20,12 @@ exports.getLesson = async (id, ctx) => {
 };
 
 exports.getLessonDetails = async (id, ctx) => {
-  const lesson = await Lesson.findById(id);
+  const lesson = await Lesson.findOne({ _id: id, domain: ctx.domain._id });
 
   if (!lesson) {
     throw new Error(strings.responses.item_not_found);
   }
+
   if (
     lesson.requiresEnrollment &&
     (!ctx.user || !ctx.user.purchases.includes(lesson.courseId))
@@ -60,11 +41,15 @@ exports.createLesson = async (lessonData, ctx) => {
   lessonValidator(lessonData);
 
   try {
-    const course = await Course.findById(lessonData.courseId);
+    const course = await Course.findOne({
+      _id: lessonData.courseId,
+      domain: ctx.domain._id,
+    });
     if (!course) throw new Error(strings.responses.item_not_found);
     if (course.isBlog) throw new Error(strings.responses.cannot_add_to_blogs);
 
     const lesson = await Lesson.create({
+      domain: ctx.domain._id,
       title: lessonData.title,
       type: lessonData.type,
       content: lessonData.content,
@@ -89,7 +74,9 @@ exports.deleteLesson = async (id, ctx) => {
 
   try {
     // remove from the parent Course's lessons array
-    let course = await Course.find().elemMatch("lessons", { $eq: lesson.id });
+    let course = await Course.find({
+      domain: ctx.domain._id,
+    }).elemMatch("lessons", { $eq: lesson.id });
     course = course[0];
     if (~course.lessons.indexOf(lesson.id)) {
       course.lessons.splice(course.lessons.indexOf(lesson.id), 1);
@@ -103,37 +90,37 @@ exports.deleteLesson = async (id, ctx) => {
   }
 };
 
-exports.changeTitle = async (id, newTitle, ctx) => {
-  checkIfAuthenticated(ctx);
-  let lesson = await checkLessonOwnership(id, ctx);
-  lesson.title = newTitle;
-  lesson = await lesson.save();
-  return lesson;
-};
+// exports.changeTitle = async (id, newTitle, ctx) => {
+//   checkIfAuthenticated(ctx);
+//   let lesson = await checkLessonOwnership(id, ctx);
+//   lesson.title = newTitle;
+//   lesson = await lesson.save();
+//   return lesson;
+// };
 
-exports.changeContent = async (id, content, ctx) => {
-  checkIfAuthenticated(ctx);
-  let lesson = await checkLessonOwnership(id, ctx);
-  lesson.content = content;
-  lesson = await lesson.save();
-  return lesson;
-};
+// exports.changeContent = async (id, content, ctx) => {
+//   checkIfAuthenticated(ctx);
+//   let lesson = await checkLessonOwnership(id, ctx);
+//   lesson.content = content;
+//   lesson = await lesson.save();
+//   return lesson;
+// };
 
-exports.changeContentURL = async (id, url, ctx) => {
-  checkIfAuthenticated(ctx);
-  let lesson = await checkLessonOwnership(id, ctx);
-  lesson.contentURL = url;
-  lesson = await lesson.save();
-  return lesson;
-};
+// exports.changeContentURL = async (id, url, ctx) => {
+//   checkIfAuthenticated(ctx);
+//   let lesson = await checkLessonOwnership(id, ctx);
+//   lesson.contentURL = url;
+//   lesson = await lesson.save();
+//   return lesson;
+// };
 
-exports.changeDownloadable = async (id, flag, ctx) => {
-  checkIfAuthenticated(ctx);
-  let lesson = await checkLessonOwnership(id, ctx);
-  lesson.downloadable = flag;
-  lesson = await lesson.save();
-  return lesson;
-};
+// exports.changeDownloadable = async (id, flag, ctx) => {
+//   checkIfAuthenticated(ctx);
+//   let lesson = await checkLessonOwnership(id, ctx);
+//   lesson.downloadable = flag;
+//   lesson = await lesson.save();
+//   return lesson;
+// };
 
 exports.updateLesson = async (lessonData, ctx) => {
   checkIfAuthenticated(ctx);
@@ -149,19 +136,20 @@ exports.updateLesson = async (lessonData, ctx) => {
   return lesson;
 };
 
-exports.getAllLessonsOfACourse = async (course, ctx) => {
+exports.getAllLessons = async (course, ctx) => {
   const lessons = await Lesson.find({
     _id: {
       $in: [...course.lessons],
     },
+    domain: ctx.domain._id,
   });
 
-  const onlyLessonMeta = (lesson) => ({
+  const lessonMetaOnly = (lesson) => ({
     id: lesson.id,
     title: lesson.title,
     requiresEnrollment: lesson.requiresEnrollment,
     courseId: lesson.courseId,
   });
 
-  return lessons.map(onlyLessonMeta);
+  return lessons.map(lessonMetaOnly);
 };

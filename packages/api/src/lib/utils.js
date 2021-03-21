@@ -85,3 +85,11 @@ exports.convertToWebp = (path, quality = 75) =>
       resolve();
     });
   });
+
+/**
+ * Async handler for async middlewares.
+ *
+ * Copied from: https://stackoverflow.com/questions/61086833/async-await-in-express-middleware
+ */
+exports.asyncHandler = (fn) => (req, res, next) =>
+  Promise.resolve(fn(req, res, next)).catch(next);

@@ -3,9 +3,9 @@ import { connect } from "react-redux";
 import Router from "next/router";
 import { signedOut } from "../redux/actions";
 
-const Logout = (props) => {
+const Logout = ({ dispatch, address }) => {
   useEffect(() => {
-    props.dispatch(signedOut());
+    dispatch(signedOut(address.domain));
     Router.replace("/");
   });
 
@@ -14,7 +14,9 @@ const Logout = (props) => {
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
+  address: state.address,
 });
+
 const mapDispatchToProps = (dispatch) => ({
   dispatch: dispatch,
 });

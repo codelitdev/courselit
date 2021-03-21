@@ -11,6 +11,9 @@ exports.responses = {
   email_or_passwd_invalid: "Email or password is invalid",
   auth_user_not_found: "No account was found with this email id",
   email_already_registered: "This email is already registered",
+  domain_missing: "Domain is missing",
+  domain_doesnt_exist: "Domain does not exist",
+  cross_domain_access_prohibited: "Invalid credentials",
 
   // graphql responses
   user_not_found: "User not found.",
@@ -22,6 +25,7 @@ exports.responses = {
   course_not_empty: "Delete all lessons before trying deleting the course",
   invalid_offset: "Invalid offset",
   is_not_admin: "Insufficient privileges",
+  is_not_admin_or_creator: "Insufficient privileges",
   blog_description_empty: "Description field is required",
   cost_not_provided: "Cost field is required",
   invalid_cost: "Invalid cost",

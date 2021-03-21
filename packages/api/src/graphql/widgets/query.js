@@ -10,7 +10,7 @@ module.exports = {
         type: new graphql.GraphQLNonNull(graphql.GraphQLString),
       },
     },
-    resolve: (root, { name }, ctx) => logic.getWidgetSettings(name),
+    resolve: (root, { name }, ctx) => logic.getWidgetSettings(name, ctx),
   },
   getWidgetData: {
     type: types.widgetDataType,
