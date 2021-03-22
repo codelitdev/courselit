@@ -7,9 +7,11 @@ import {
   HEADER_MEDIA_PREVIEW,
   PREVIEW_PDF_FILE,
 } from "../../../config/strings";
-import Img from "../../Img";
 import { connect } from "react-redux";
 import { addressProps } from "../../../types";
+import dynamic from "next/dynamic";
+
+const Img = dynamic(() => import("../../Img.js"));
 
 const useStyles = makeStyles({
   video: {

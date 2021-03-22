@@ -18,7 +18,9 @@ import { setCookie } from "../lib/session.js";
 import { Grid, TextField, Button, Typography } from "@material-ui/core";
 import FetchBuilder from "../lib/fetch.js";
 import { makeStyles } from "@material-ui/styles";
-import BaseLayout from "../components/Public/BaseLayout";
+import dynamic from "next/dynamic";
+
+const BaseLayout = dynamic(() => import("../components/Public/BaseLayout"));
 
 const useStyles = makeStyles((theme) => ({
   content: {

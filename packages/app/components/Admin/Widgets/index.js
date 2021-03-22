@@ -5,9 +5,11 @@ import widgets from "../../../config/widgets";
 import { addressProps, profileProps } from "../../../types";
 import { connect } from "react-redux";
 import { GridListTileBar } from "@material-ui/core";
-import Img from "../../Img";
 import { useTheme } from "@material-ui/styles";
 import FetchBuilder from "../../../lib/fetch";
+import dynamic from "next/dynamic";
+
+const Img = dynamic(() => import("../../Img.js"));
 
 function Widgets({ address }) {
   const [componentsMap, setComponentsMap] = useState([]);

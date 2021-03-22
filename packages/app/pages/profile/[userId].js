@@ -1,4 +1,3 @@
-import BaseLayout from "../../components/Public/BaseLayout";
 import FetchBuilder from "../../lib/fetch";
 import { Button, Grid, TextField, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
@@ -18,6 +17,9 @@ import Link from "next/link";
 import { useState } from "react";
 import { networkAction, refreshUserProfile } from "../../redux/actions";
 import { getBackendAddress } from "../../lib/utils";
+import dynamic from "next/dynamic";
+
+const BaseLayout = dynamic(() => import("../../components/Public/BaseLayout"));
 
 const useStyles = makeStyles((theme) => ({
   content: {

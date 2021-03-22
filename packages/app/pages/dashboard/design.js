@@ -1,6 +1,8 @@
-import BaseLayout from "../../components/Admin/BaseLayout";
-import Design from "../../components/Admin/Design";
+import dynamic from "next/dynamic";
 import { HEADER_DESIGN } from "../../config/strings";
+
+const BaseLayout = dynamic(() => import("../../components/Admin/BaseLayout"));
+const Design = dynamic(() => import("../../components/Admin/Design"));
 
 export default function Designer() {
   return (

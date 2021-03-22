@@ -154,6 +154,11 @@ const NavigationLinkItem = (props) => {
 
   return (
     <Grid container direction="row" spacing={1} alignItems="center">
+      <Grid item xs={12} sm={12} md={1}>
+        <IconButton onClick={deleteLink} disabled={requestInProgress}>
+          <Delete />
+        </IconButton>
+      </Grid>
       <Grid item xs={12} sm={12} md={3}>
         <TextField
           variant="outlined"
@@ -221,11 +226,6 @@ const NavigationLinkItem = (props) => {
             <Done />
           </IconButton>
         )}
-      </Grid>
-      <Grid item xs={12} sm={12} md={1}>
-        <IconButton onClick={deleteLink} disabled={requestInProgress}>
-          <Delete />
-        </IconButton>
       </Grid>
     </Grid>
   );

@@ -5,7 +5,9 @@ import { URL_EXTENTION_POSTS } from "../../../config/constants.js";
 import { Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import { Card } from "@courselit/components-library";
-import Img from "../../Img.js";
+import dynamic from "next/dynamic";
+
+const Img = dynamic(() => import("../../Img.js"));
 
 const useStyles = (featuredImage) =>
   makeStyles((theme) => ({

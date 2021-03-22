@@ -11,11 +11,11 @@ import {
 } from "../../../config/strings";
 import FetchBuilder from "../../../lib/fetch";
 import { addressProps, authProps, profileProps } from "../../../types";
-import Img from "../../Img";
 import { OverviewAndDetail } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 import { networkAction } from "../../../redux/actions";
 const CourseEditor = dynamic(() => import("./CourseEditor"));
+const Img = dynamic(() => import("../../Img.js"));
 
 const Index = (props) => {
   const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1);

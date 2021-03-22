@@ -6,8 +6,10 @@ import {
   PAYMENT_METHOD_STRIPE,
 } from "../../config/constants";
 import { publicCourse, siteInfoProps } from "../../types";
-import Stripe from "./Stripe.js";
-import Free from "./Free.js";
+import dynamic from "next/dynamic";
+
+const Stripe = dynamic(() => import("./Stripe.js"));
+const Free = dynamic(() => import("./Free.js"));
 
 const CheckoutExternal = (props) => {
   const { course } = props;

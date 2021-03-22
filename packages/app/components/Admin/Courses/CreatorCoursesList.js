@@ -2,11 +2,13 @@ import React from "react";
 import PropTypes from "prop-types";
 import { creatorCourse } from "../../../types.js";
 import { GridList, GridListTile, GridListTileBar } from "@material-ui/core";
-import Img from "../../Img.js";
 import {
   COURSE_TYPE_BLOG,
   COURSE_TYPE_COURSE,
 } from "../../../config/strings.js";
+import dynamic from "next/dynamic";
+
+const Img = dynamic(() => import("../../Img.js"));
 
 const CreatorCoursesList = ({ courses, onClick }) => {
   return (

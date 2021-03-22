@@ -10,12 +10,12 @@ import {
 } from "../../../config/strings";
 import FetchBuilder from "../../../lib/fetch";
 import { addressProps, authProps, profileProps } from "../../../types";
-import Img from "../../Img";
 import { OverviewAndDetail } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 import { networkAction } from "../../../redux/actions";
 const Upload = dynamic(() => import("./Upload.js"));
 const Editor = dynamic(() => import("./Editor.js"));
+const Img = dynamic(() => import("../../Img.js"));
 
 const Index = (props) => {
   const [mediaPaginationOffset, setMediaPaginationOffset] = useState(1);

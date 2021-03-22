@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import NavigationLinkItem from "./NavigationLinkItem";
 import { Button } from "@material-ui/core";
 import { ADD_NEW_LINK_BUTTON } from "../../../../config/strings";
 import FetchBuilder from "../../../../lib/fetch";
 import { connect } from "react-redux";
 import { authProps, addressProps } from "../../../../types";
 import { networkAction } from "../../../../redux/actions";
+import dynamic from "next/dynamic";
+const NavigationLinkItem = dynamic(() => import("./NavigationLinkItem"));
 
 const NavigationLinks = (props) => {
   const [links, setLinks] = useState([]);

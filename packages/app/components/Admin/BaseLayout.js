@@ -9,6 +9,7 @@ import {
   SettingsApplications,
   Palette,
   Widgets,
+  List,
 } from "@material-ui/icons";
 import { CREATOR_AREA_PAGE_TITLE } from "../../config/strings.js";
 import AppLoader from "../../components/AppLoader.js";
@@ -76,9 +77,14 @@ const BaseLayoutAdmin = ({
           icon: <SupervisedUserCircle />,
         },
         {
-          name: "Design & Navigation",
+          name: "Appearance",
           route: "/dashboard/design",
           icon: <Palette />,
+        },
+        {
+          name: "Menus",
+          route: "/dashboard/navigation",
+          icon: <List />,
         },
         {
           name: "Widgets",

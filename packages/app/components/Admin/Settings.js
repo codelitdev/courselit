@@ -14,7 +14,6 @@ import {
   PAYMENT_METHOD_NONE,
 } from "../../config/constants.js";
 import { newSiteInfoAvailable, setAppMessage } from "../../redux/actions.js";
-import MediaSelector from "./Media/MediaSelector.js";
 import {
   TextField,
   Button,
@@ -47,10 +46,13 @@ import {
   HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK,
   SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK,
 } from "../../config/strings.js";
-import AppMessage from "../../models/app-message.js";
 import FetchBuilder from "../../lib/fetch";
 import { decode, encode } from "base-64";
 import { Card } from "@courselit/components-library";
+import dynamic from "next/dynamic";
+
+const MediaSelector = dynamic(() => import("./Media/MediaSelector.js"));
+const AppMessage = dynamic(() => import("../../models/app-message.js"));
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -62,7 +64,6 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: theme.spacing(1),
   },
   sectionContent: {
-    background: "white",
     paddingTop: theme.spacing(2),
     paddingBottom: theme.spacing(2),
     paddingLeft: theme.spacing(1),

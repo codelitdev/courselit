@@ -5,7 +5,9 @@ import { connect } from "react-redux";
 import SessionButton from "../SessionButton";
 import { siteInfoProps } from "../../../types";
 import { makeStyles } from "@material-ui/styles";
-import Img from "../../Img";
+import dynamic from "next/dynamic";
+
+const Img = dynamic(() => import("../../Img.js"));
 
 const useStyles = makeStyles((theme) => ({
   logo: {
