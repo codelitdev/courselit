@@ -1,3 +1,3 @@
-import Config from "../courselit.js";
+import { widgets } from "../courselit.js";
 
-export default Config.widgets;
+export default widgets;
