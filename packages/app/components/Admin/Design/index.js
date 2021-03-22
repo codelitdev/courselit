@@ -93,10 +93,7 @@ const useStyles = makeStyles((theme) => ({
     height: "12em",
   },
   section: {
-    paddingTop: theme.spacing(2),
-    paddingBottom: theme.spacing(2),
-    paddingLeft: theme.spacing(1),
-    paddingRight: theme.spacing(1),
+    marginBottom: theme.spacing(2),
   },
   sectionHeader: {
     marginBottom: theme.spacing(2),

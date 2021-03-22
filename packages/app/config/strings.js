@@ -136,7 +136,7 @@ export const APP_MESSAGE_MEDIA_DELETED = "Media deleted";
 export const APP_MESSAGE_MEDIA_UPDATED = "Media details updated";
 export const PAGE_HEADER_ALL_COURSES = "Courses";
 export const PAGE_HEADER_ALL_POSTS = "Articles";
-export const COURSE_TYPE_BLOG = "Article";
+export const COURSE_TYPE_BLOG = "Post";
 export const COURSE_TYPE_COURSE = "Course";
 export const COURSE_CREATOR_PREFIX = "By";
 export const COURSE_EDITOR_DESCRIPTION = "Description";
@@ -218,7 +218,7 @@ export const BTN_VIEW_ALL = "View all";
 export const EMPTY_COURSES_LIST_ADMIN =
   "Create your first course by clicking the + button on the top right.";
 export const HEADER_RESET_PASSWORD = "Reset password";
-export const HEADER_DESIGN = "Design & Navigation";
+export const HEADER_DESIGN = "Appearance";
 export const HEADER_YOUR_PROFILE = "Your Profile";
 export const PROFILE_PAGE_MESSAGE_NOT_LOGGED_IN = "to see your profile.";
 export const PROFILE_PAGE_HEADER = "Profile";

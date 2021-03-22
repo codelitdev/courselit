@@ -36,7 +36,6 @@ import {
   Button,
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
-import MediaSelector from "../Media/MediaSelector.js";
 import { Delete, Add } from "@material-ui/icons";
 import AppMessage from "../../../models/app-message.js";
 import { LESSON_TYPE_TEXT, MIMETYPE_IMAGE } from "../../../config/constants.js";
@@ -45,6 +44,7 @@ import { Card, RichText as TextEditor } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 const LessonEditor = dynamic(() => import("./LessonEditor.js"));
 const AppDialog = dynamic(() => import("../../Public/AppDialog.js"));
+const MediaSelector = dynamic(() => import("../Media/MediaSelector.js"));
 
 const useStyles = makeStyles((theme) => ({
   title: {
@@ -583,8 +583,11 @@ CourseEditor.propTypes = {
   profile: profileProps,
   courseId: PropTypes.string,
   dispatch: PropTypes.func.isRequired,
+
+  // TODO: Refactor away the following two properties.
   closeEditor: PropTypes.func.isRequired,
   markDirty: PropTypes.func.isRequired,
+
   address: addressProps,
 };
 

@@ -78,7 +78,7 @@ const Article = (props) => {
   return (
     <article>
       <header>
-        <Typography variant="h1" className={classes.header}>
+        <Typography variant="h2" className={classes.header}>
           {course.title}
         </Typography>
       </header>

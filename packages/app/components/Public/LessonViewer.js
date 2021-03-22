@@ -80,7 +80,7 @@ const LessonViewer = (props) => {
     <>
       {!isEnrolled && (
         <>
-          <Typography variant="h1" className={classes.notEnrolledHeader}>
+          <Typography variant="h2" className={classes.notEnrolledHeader}>
             {USER_ERROR_HEADER}
           </Typography>
           <Typography variant="body1">{ENROLL_IN_THE_COURSE}</Typography>
@@ -90,7 +90,7 @@ const LessonViewer = (props) => {
         <Grid container direction="column" component="article">
           <Grid item>
             <header>
-              <Typography variant="h1">{lesson.title}</Typography>
+              <Typography variant="h2">{lesson.title}</Typography>
             </header>
           </Grid>
           {String.prototype.toUpperCase.call(LESSON_TYPE_VIDEO) ===

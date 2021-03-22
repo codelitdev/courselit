@@ -74,7 +74,8 @@ export async function getServerSideProps({ query, req }) {
           creatorName,
           creatorId,
           slug,
-          isBlog
+          isBlog,
+          courseId,
       }
     }
   `;

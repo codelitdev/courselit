@@ -81,7 +81,7 @@ function Profile({ user, profile, auth, dispatch, address }) {
       <Grid item xs={12} className={classes.content}>
         <Grid container component="section" className={classes.leftMargin}>
           <Grid item xs={12}>
-            <Typography variant="h1" className={classes.headerTop}>
+            <Typography variant="h2" className={classes.headerTop}>
               {PROFILE_PAGE_HEADER}
             </Typography>
           </Grid>
@@ -171,7 +171,7 @@ function Profile({ user, profile, auth, dispatch, address }) {
               {isMyProfile && (
                 <Grid item container spacing={2} direction="column">
                   <Grid item>
-                    <Typography variant="h2">{PROFILE_MY_COURSES}</Typography>
+                    <Typography variant="h3">{PROFILE_MY_COURSES}</Typography>
                   </Grid>
                   {profile.purchases.length > 0 && (
                     <Grid item>

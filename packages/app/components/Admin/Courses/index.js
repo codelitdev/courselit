@@ -73,7 +73,10 @@ const Index = (props) => {
       courses: getCoursesAsAdmin(
         offset: ${coursesPaginationOffset}
       ) {
-        id, title
+        id,
+        title,
+        featuredImage,
+        isBlog
       }
     }
     `;

@@ -103,7 +103,7 @@ const Scaffold = (props) => {
               <MenuItem
                 link={{
                   text: MAIN_MENU_ITEM_DASHBOARD,
-                  destination: "/dashboard",
+                  destination: "/dashboard/courses",
                   category: NAVIGATION_CATEGORY_MAIN,
                   newTab: false,
                 }}

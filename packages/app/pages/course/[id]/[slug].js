@@ -101,6 +101,7 @@ export async function getServerSideProps({ query, req }) {
         slug,
         isBlog,
         cost,
+        courseId,
         lessons {
           id,
           title,

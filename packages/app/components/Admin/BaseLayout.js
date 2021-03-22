@@ -83,7 +83,7 @@ const BaseLayoutAdmin = ({
         },
         {
           name: "Menus",
-          route: "/dashboard/navigation",
+          route: "/dashboard/menus",
           icon: <List />,
         },
         {
