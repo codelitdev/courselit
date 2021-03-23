@@ -5,19 +5,25 @@ import { connect } from "react-redux";
 import { addressProps } from "../types.js";
 
 const Img = (props) => {
-  const { src, isThumbnail, classes, alt, defaultImage, address } = props;
+  const {
+    src,
+    isThumbnail,
+    classes,
+    alt,
+    defaultImage,
+    address,
+    isExternal = false,
+  } = props;
+
+  const source = src
+    ? isExternal
+      ? src
+      : formulateMediaUrl(address.backend, src, isThumbnail)
+    : defaultImage || "/courselit_backdrop.webp";
 
   return (
     <>
-      <img
-        className={classes}
-        src={
-          src
-            ? `${formulateMediaUrl(address.backend, src, isThumbnail)}`
-            : defaultImage || "/courselit_backdrop.webp"
-        }
-        alt={alt}
-      />
+      <img className={classes} src={source} alt={alt} />
       <style jsx>{`
         img {
           width: 100%;
@@ -35,6 +41,7 @@ Img.propTypes = {
   alt: PropTypes.string,
   defaultImage: PropTypes.string,
   address: addressProps,
+  isExternal: PropTypes.bool,
 };
 
 const mapStateToProps = (state) => ({

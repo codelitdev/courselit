@@ -40,13 +40,15 @@ import {
   LESSON_TYPE_QUIZ,
 } from "../../../config/constants.js";
 import { makeStyles } from "@material-ui/styles";
-import MediaSelector from "../Media/MediaSelector.js";
 import FetchBuilder from "../../../lib/fetch";
 import { networkAction, setAppMessage } from "../../../redux/actions";
 import { connect } from "react-redux";
-import AppDialog from "../../Public/AppDialog";
 import AppMessage from "../../../models/app-message.js";
 import { Card, RichText as TextEditor } from "@courselit/components-library";
+import dynamic from "next/dynamic";
+
+const AppDialog = dynamic(() => import("../../Public/AppDialog"));
+const MediaSelector = dynamic(() => import("../Media/MediaSelector.js"));
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -435,15 +437,6 @@ const LessonEditor = (props) => {
       ></AppDialog>
     </Card>
   );
-};
-
-LessonEditor.emptyLesson = {
-  title: "",
-  type: String.prototype.toUpperCase.call(LESSON_TYPE_TEXT),
-  content: TextEditor.emptyState(),
-  contentURL: "",
-  downloadable: false,
-  requiresEnrollment: false,
 };
 
 LessonEditor.propTypes = {

@@ -21,7 +21,9 @@ import {
 } from "../../config/strings";
 import { makeStyles } from "@material-ui/styles";
 import Link from "next/link";
-import AppLoader from "../AppLoader";
+import dynamic from "next/dynamic";
+
+const AppLoader = dynamic(() => import("../AppLoader"));
 
 const useStyles = makeStyles((theme) => ({
   content: {

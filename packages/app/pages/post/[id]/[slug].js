@@ -8,8 +8,12 @@ import { makeStyles, Grid } from "@material-ui/core";
 import Head from "next/head";
 import FetchBuilder from "../../../lib/fetch.js";
 import { addressProps, siteInfoProps } from "../../../types.js";
-import BaseLayout from "../../../components/Public/BaseLayout";
-import Article from "../../../components/Public/Article.js";
+import dynamic from "next/dynamic";
+
+const BaseLayout = dynamic(() =>
+  import("../../../components/Public/BaseLayout")
+);
+const Article = dynamic(() => import("../../../components/Public/Article.js"));
 
 const useStyles = makeStyles((theme) => ({
   content: {
@@ -70,7 +74,8 @@ export async function getServerSideProps({ query, req }) {
           creatorName,
           creatorId,
           slug,
-          isBlog
+          isBlog,
+          courseId,
       }
     }
   `;

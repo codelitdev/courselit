@@ -8,11 +8,19 @@ import {
 } from "../../../lib/utils.js";
 import { Lock } from "@material-ui/icons";
 import { SIDEBAR_TEXT_COURSE_ABOUT } from "../../../config/strings.js";
-import CourseIntroduction from "../../../components/CourseIntroduction.js";
-import LessonViewer from "../../../components/Public/LessonViewer.js";
 import FetchBuilder from "../../../lib/fetch.js";
-import AppError from "../../../components/AppError.js";
-import ComponentScaffold from "../../../components/Public/BaseLayout/ComponentScaffold.js";
+import dynamic from "next/dynamic";
+
+const CourseIntroduction = dynamic(() =>
+  import("../../../components/CourseIntroduction.js")
+);
+const LessonViewer = dynamic(() =>
+  import("../../../components/Public/LessonViewer.js")
+);
+const AppError = dynamic(() => import("../../../components/AppError.js"));
+const ComponentScaffold = dynamic(() =>
+  import("../../../components/Public/BaseLayout/ComponentScaffold.js")
+);
 
 const Course = (props) => {
   const { course, profile, error } = props;
@@ -93,6 +101,7 @@ export async function getServerSideProps({ query, req }) {
         slug,
         isBlog,
         cost,
+        courseId,
         lessons {
           id,
           title,

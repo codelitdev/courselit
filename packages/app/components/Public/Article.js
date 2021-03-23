@@ -5,13 +5,15 @@ import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/styles";
 import { formulateMediaUrl, formattedLocaleDate } from "../../lib/utils";
 import { publicCourse, profileProps, addressProps } from "../../types";
-import BuyButton from "../CheckoutExternal";
 import { connect } from "react-redux";
 import {
   PriceTag,
   RichText as TextEditor,
 } from "@courselit/components-library";
 import { FREE_COST } from "../../config/strings.js";
+import dynamic from "next/dynamic";
+
+const BuyButton = dynamic(() => import("../CheckoutExternal"));
 
 const useStyles = ({ featuredImage, backendUrl }) =>
   makeStyles((theme) => ({
@@ -76,7 +78,7 @@ const Article = (props) => {
   return (
     <article>
       <header>
-        <Typography variant="h1" className={classes.header}>
+        <Typography variant="h2" className={classes.header}>
           {course.title}
         </Typography>
       </header>

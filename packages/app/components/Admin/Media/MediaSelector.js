@@ -4,10 +4,12 @@ import {
   BUTTON_SELECT_MEDIA,
   DIALOG_TITLE_FEATURED_IMAGE,
 } from "../../../config/strings.js";
-import Img from "../../Img.js";
-import MediaManagerDialog from "./MediaManagerDialog.js";
 import { Grid, Button, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
+import dynamic from "next/dynamic";
+
+const Img = dynamic(() => import("../../Img.js"));
+const MediaManagerDialog = dynamic(() => import("./MediaManagerDialog.js"));
 
 const useStyles = makeStyles((theme) => ({
   control: {

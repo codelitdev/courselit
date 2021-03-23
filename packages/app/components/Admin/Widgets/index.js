@@ -1,70 +1,69 @@
-import React, { useState } from "react";
-import PropTypes from "prop-types";
-import { Grid, IconButton, Typography } from "@material-ui/core";
+import React, { useEffect, useState } from "react";
+import { OverviewAndDetail } from "@courselit/components-library";
 import { WIDGETS_PAGE_HEADER } from "../../../config/strings";
-import Master from "./Master";
-import Details from "./Details";
-import { makeStyles } from "@material-ui/styles";
-import { ArrowBack } from "@material-ui/icons";
+import widgets from "../../../config/widgets";
+import { addressProps, profileProps } from "../../../types";
+import { connect } from "react-redux";
+import { GridListTileBar } from "@material-ui/core";
+import { useTheme } from "@material-ui/styles";
+import FetchBuilder from "../../../lib/fetch";
+import dynamic from "next/dynamic";
 
-const useStyles = makeStyles((theme) => ({
-  main: {
-    marginTop: theme.spacing(2),
-  },
-}));
+const Img = dynamic(() => import("../../Img.js"));
 
-const MasterDetails = (props) => {
-  const [selectedWidgetName, setSelectedWidgetName] = useState("");
-  const { componentsMap } = props;
-  const classes = useStyles();
+function Widgets({ address }) {
+  const [componentsMap, setComponentsMap] = useState([]);
+  const theme = useTheme();
+  const fetch = new FetchBuilder()
+    .setUrl(`${address.backend}/graph`)
+    .setIsGraphQLEndpoint(true);
+
+  useEffect(() => {
+    const map = [];
+    Object.values(widgets).map((widget) => {
+      Object.prototype.hasOwnProperty.call(widget, "adminWidget") &&
+        map.push(getComponent(widget));
+    });
+    setComponentsMap(map);
+  }, []);
+
+  const getComponent = (widget) => {
+    const AdminWidget = widget.adminWidget;
+
+    return {
+      subtitle: widget.metadata.displayName,
+      Overview: (
+        <>
+          <Img src={widget.metadata.icon} isExternal={true} />
+          <GridListTileBar title={widget.metadata.displayName} />
+        </>
+      ),
+      Detail: (
+        <AdminWidget
+          name={widget.metadata.name}
+          fetchBuilder={fetch}
+          theme={theme}
+        />
+      ),
+    };
+  };
 
   return (
-    <Grid container direction="column">
-      <Grid item xs={12}>
-        {selectedWidgetName && (
-          <Grid item xs>
-            <Grid container alignItems="center">
-              <Grid item>
-                <IconButton onClick={() => setSelectedWidgetName("")}>
-                  <ArrowBack />
-                </IconButton>
-              </Grid>
-              <Grid item>
-                <Typography variant="h3">
-                  {componentsMap[selectedWidgetName].caption}
-                </Typography>
-              </Grid>
-            </Grid>
-          </Grid>
-        )}
-        {!selectedWidgetName && (
-          <Typography variant="h1">{WIDGETS_PAGE_HEADER}</Typography>
-        )}
-      </Grid>
-      <Grid item className={classes.main} xs={12}>
-        {componentsMap && (
-          <>
-            {selectedWidgetName && (
-              <Details
-                name={selectedWidgetName}
-                component={componentsMap[selectedWidgetName]}
-              />
-            )}
-            {!selectedWidgetName && (
-              <Master
-                componentsMap={componentsMap}
-                onWidgetSelect={(name) => setSelectedWidgetName(name)}
-              />
-            )}
-          </>
-        )}
-      </Grid>
-    </Grid>
+    <OverviewAndDetail
+      title={WIDGETS_PAGE_HEADER}
+      componentsMap={componentsMap}
+    />
   );
+}
+
+Widgets.propTypes = {
+  profile: profileProps,
+  address: addressProps,
 };
 
-MasterDetails.propTypes = {
-  componentsMap: PropTypes.object.isRequired,
-};
+const mapStateToProps = (state) => ({
+  profile: state.profile,
+  address: state.address,
+});
 
-export default MasterDetails;
+export default connect(mapStateToProps)(Widgets);

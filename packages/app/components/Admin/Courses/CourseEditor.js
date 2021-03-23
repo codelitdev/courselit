@@ -36,14 +36,15 @@ import {
   Button,
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
-import MediaSelector from "../Media/MediaSelector.js";
 import { Delete, Add } from "@material-ui/icons";
-import AppDialog from "../../Public/AppDialog.js";
-import LessonEditor from "./LessonEditor.js";
 import AppMessage from "../../../models/app-message.js";
-import { MIMETYPE_IMAGE } from "../../../config/constants.js";
+import { LESSON_TYPE_TEXT, MIMETYPE_IMAGE } from "../../../config/constants.js";
 import FetchBuilder from "../../../lib/fetch";
 import { Card, RichText as TextEditor } from "@courselit/components-library";
+import dynamic from "next/dynamic";
+const LessonEditor = dynamic(() => import("./LessonEditor.js"));
+const AppDialog = dynamic(() => import("../../Public/AppDialog.js"));
+const MediaSelector = dynamic(() => import("../Media/MediaSelector.js"));
 
 const useStyles = makeStyles((theme) => ({
   title: {
@@ -83,7 +84,6 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: theme.spacing(2),
   },
   section: {
-    background: "white",
     paddingTop: theme.spacing(2),
     paddingBottom: theme.spacing(2),
     paddingLeft: theme.spacing(1),
@@ -96,6 +96,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+// TODO: Refactor away closeEditor() and markDirty()
 const CourseEditor = (props) => {
   const initCourseMetaData = {
     title: "",
@@ -328,12 +329,15 @@ const CourseEditor = (props) => {
       .setAuthToken(props.auth.token)
       .build();
     try {
+      props.dispatch(networkAction(true));
       const response = await fetch.exec();
       if (response.course) {
         setCourseDataWithDescription(response.course);
       }
     } catch (err) {
       setError(err.message);
+    } finally {
+      props.dispatch(networkAction(false));
     }
   };
 
@@ -345,10 +349,15 @@ const CourseEditor = (props) => {
   const onAddLesson = () => {
     const emptyLessonWithLocalIndexKey = Object.assign(
       {},
-      LessonEditor.emptyLesson,
       {
         lessonIndex: lessonIndex,
         courseId: courseData.course.id,
+        title: "",
+        type: String.prototype.toUpperCase.call(LESSON_TYPE_TEXT),
+        content: TextEditor.emptyState(),
+        contentURL: "",
+        downloadable: false,
+        requiresEnrollment: false,
       }
     );
     setLessonIndex(lessonIndex + 1);
@@ -368,152 +377,143 @@ const CourseEditor = (props) => {
   return (
     <Grid container direction="column">
       <Grid item xs>
-        <Card>
-          <form onSubmit={onCourseCreate}>
-            <div className={classes.section}>
-              <Typography variant="h4" className={classes.cardHeader}>
-                {COURSE_DETAILS_CARD_HEADER}
-              </Typography>
+        <form onSubmit={onCourseCreate}>
+          <div className={classes.section}>
+            <Typography variant="h4" className={classes.cardHeader}>
+              {COURSE_DETAILS_CARD_HEADER}
+            </Typography>
 
-              {userError && <div>{userError}</div>}
-              <TextField
-                required
-                variant="outlined"
-                label="Title"
-                fullWidth
-                margin="normal"
-                name="title"
-                value={courseData.course.title}
-                onChange={onCourseDetailsChange}
-              />
-              <Typography variant="body1">
-                {COURSE_EDITOR_DESCRIPTION}
-              </Typography>
-              <TextEditor
-                initialContentState={courseData.course.description}
-                onChange={onDescriptionChange}
-              />
-              <Grid container alignItems="center">
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    required
-                    type="number"
-                    variant="outlined"
-                    label="Cost"
-                    fullWidth
-                    margin="normal"
-                    name="cost"
-                    step="0.1"
-                    value={courseData.course.cost}
-                    onChange={onCourseDetailsChange}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <FormControl
-                    variant="outlined"
-                    className={classes.formControl}
+            {userError && <div>{userError}</div>}
+            <TextField
+              required
+              variant="outlined"
+              label="Title"
+              fullWidth
+              margin="normal"
+              name="title"
+              value={courseData.course.title}
+              onChange={onCourseDetailsChange}
+            />
+            <Typography variant="body1">{COURSE_EDITOR_DESCRIPTION}</Typography>
+            <TextEditor
+              initialContentState={courseData.course.description}
+              onChange={onDescriptionChange}
+            />
+            <Grid container alignItems="center">
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  required
+                  type="number"
+                  variant="outlined"
+                  label="Cost"
+                  fullWidth
+                  margin="normal"
+                  name="cost"
+                  step="0.1"
+                  value={courseData.course.cost}
+                  onChange={onCourseDetailsChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl variant="outlined" className={classes.formControl}>
+                  <InputLabel
+                    ref={inputLabel}
+                    htmlFor="outlined-privacy-simple"
                   >
-                    <InputLabel
-                      ref={inputLabel}
-                      htmlFor="outlined-privacy-simple"
-                    >
-                      Privacy
-                    </InputLabel>
-                    <Select
-                      autoWidth
-                      value={courseData.course.privacy}
+                    Privacy
+                  </InputLabel>
+                  <Select
+                    autoWidth
+                    value={courseData.course.privacy}
+                    onChange={onCourseDetailsChange}
+                    labelwidth={labelWidth}
+                    inputProps={{
+                      name: "privacy",
+                      id: "outlined-privacy-simple",
+                    }}
+                  >
+                    <MenuItem value="PUBLIC">Public</MenuItem>
+                    <MenuItem value="PRIVATE">Private</MenuItem>
+                    <MenuItem value="UNLISTED">Unlisted</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+            <Grid container className={classes.controlRow}>
+              <Grid item xs={12} sm={4}>
+                <Grid container justify="space-between" alignItems="center">
+                  <Grid item>
+                    <Typography variant="body1">{BLOG_POST_SWITCH}</Typography>
+                  </Grid>
+                  <Grid item>
+                    <Switch
+                      type="checkbox"
+                      name="isBlog"
+                      checked={courseData.course.isBlog}
                       onChange={onCourseDetailsChange}
-                      labelwidth={labelWidth}
-                      inputProps={{
-                        name: "privacy",
-                        id: "outlined-privacy-simple",
-                      }}
-                    >
-                      <MenuItem value="PUBLIC">Public</MenuItem>
-                      <MenuItem value="PRIVATE">Private</MenuItem>
-                      <MenuItem value="UNLISTED">Unlisted</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-              </Grid>
-              <Grid container className={classes.controlRow}>
-                <Grid item xs={12} sm={4}>
-                  <Grid container justify="space-between" alignItems="center">
-                    <Grid item>
-                      <Typography variant="body1">
-                        {BLOG_POST_SWITCH}
-                      </Typography>
-                    </Grid>
-                    <Grid item>
-                      <Switch
-                        type="checkbox"
-                        name="isBlog"
-                        checked={courseData.course.isBlog}
-                        onChange={onCourseDetailsChange}
-                      />
-                    </Grid>
-                  </Grid>
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <Grid container justify="space-between" alignItems="center">
-                    <Grid item>
-                      <Typography variant="body1">Published</Typography>
-                    </Grid>
-                    <Grid item>
-                      <Switch
-                        type="checkbox"
-                        name="published"
-                        checked={courseData.course.published}
-                        onChange={onCourseDetailsChange}
-                      />
-                    </Grid>
-                  </Grid>
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <Grid container justify="space-between" alignItems="center">
-                    <Grid item>
-                      <Typography variant="body1">Featured course</Typography>
-                    </Grid>
-                    <Grid item>
-                      <Switch
-                        type="checkbox"
-                        name="isFeatured"
-                        checked={courseData.course.isFeatured}
-                        onChange={onCourseDetailsChange}
-                      />
-                    </Grid>
+                    />
                   </Grid>
                 </Grid>
               </Grid>
-              <MediaSelector
-                title={FORM_FIELD_FEATURED_IMAGE}
-                src={courseData.course.featuredImage}
-                onSelection={onFeaturedImageSelection}
-                mimeTypesToShow={[...MIMETYPE_IMAGE]}
-              />
-              <Grid container direction="row" spacing={2}>
+              <Grid item xs={12} sm={4}>
+                <Grid container justify="space-between" alignItems="center">
+                  <Grid item>
+                    <Typography variant="body1">Published</Typography>
+                  </Grid>
+                  <Grid item>
+                    <Switch
+                      type="checkbox"
+                      name="published"
+                      checked={courseData.course.published}
+                      onChange={onCourseDetailsChange}
+                    />
+                  </Grid>
+                </Grid>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Grid container justify="space-between" alignItems="center">
+                  <Grid item>
+                    <Typography variant="body1">Featured course</Typography>
+                  </Grid>
+                  <Grid item>
+                    <Switch
+                      type="checkbox"
+                      name="isFeatured"
+                      checked={courseData.course.isFeatured}
+                      onChange={onCourseDetailsChange}
+                    />
+                  </Grid>
+                </Grid>
+              </Grid>
+            </Grid>
+            <MediaSelector
+              title={FORM_FIELD_FEATURED_IMAGE}
+              src={courseData.course.featuredImage}
+              onSelection={onFeaturedImageSelection}
+              mimeTypesToShow={[...MIMETYPE_IMAGE]}
+            />
+            <Grid container direction="row" spacing={2}>
+              <Grid item>
+                <Button type="submit" variant="contained">
+                  {BUTTON_SAVE}
+                </Button>
+              </Grid>
+              {courseData.course.id && (
                 <Grid item>
-                  <Button type="submit" variant="contained">
-                    {BUTTON_SAVE}
+                  <Button>
+                    <Link href={formulateCourseUrl(courseData.course)}>
+                      <a className={classes.link} target="_blank">
+                        {courseData.course.isBlog
+                          ? VISIT_POST_BUTTON
+                          : VISIT_COURSE_BUTTON}
+                      </a>
+                    </Link>
                   </Button>
                 </Grid>
-                {courseData.course.id && (
-                  <Grid item>
-                    <Button>
-                      <Link href={formulateCourseUrl(courseData.course)}>
-                        <a className={classes.link} target="_blank">
-                          {courseData.course.isBlog
-                            ? VISIT_POST_BUTTON
-                            : VISIT_COURSE_BUTTON}
-                        </a>
-                      </Link>
-                    </Button>
-                  </Grid>
-                )}
-              </Grid>
-            </div>
-          </form>
-        </Card>
+              )}
+            </Grid>
+          </div>
+        </form>
       </Grid>
 
       {courseData.course.id && (
@@ -583,8 +583,11 @@ CourseEditor.propTypes = {
   profile: profileProps,
   courseId: PropTypes.string,
   dispatch: PropTypes.func.isRequired,
+
+  // TODO: Refactor away the following two properties.
   closeEditor: PropTypes.func.isRequired,
   markDirty: PropTypes.func.isRequired,
+
   address: addressProps,
 };
 

@@ -5,6 +5,7 @@ import { FetchBuilder, WidgetProps } from "./Widget";
 import AppState from "./AppState";
 import WidgetHelpers from "./WidgetHelpers";
 import RichText from "./RichText";
+import OverviewAndDetail from "./OverviewAndDetail";
 
 export {
   PriceTag,
@@ -15,4 +16,5 @@ export {
   AppState,
   WidgetHelpers,
   RichText,
+  OverviewAndDetail,
 };
