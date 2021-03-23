@@ -71,6 +71,8 @@ const creatorOrAdminCoursesItemType = new graphql.GraphQLObjectType({
   fields: {
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+    featuredImage: { type: graphql.GraphQLString },
+    isBlog: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
   },
 });
 

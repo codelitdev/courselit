@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AppBar from "@material-ui/core/AppBar";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import Divider from "@material-ui/core/Divider";
@@ -6,20 +6,19 @@ import Drawer from "@material-ui/core/Drawer";
 import Hidden from "@material-ui/core/Hidden";
 import IconButton from "@material-ui/core/IconButton";
 import List from "@material-ui/core/List";
+import ListItem from "@material-ui/core/ListItem";
+import ListItemText from "@material-ui/core/ListItemText";
 import { Menu } from "@material-ui/icons";
-import { Grid, LinearProgress, Toolbar, Typography } from "@material-ui/core";
+import { Toolbar, Grid, LinearProgress, Typography } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
-import AppToast from "../../../AppToast.js";
+import AppToast from "../../AppToast";
+import DrawerListItemIcon from "./DrawerListItemIcon.js";
+import Header from "./Header.js";
 import { connect } from "react-redux";
-import { siteInfoProps, link, profileProps } from "../../../../types.js";
-import Header from "../Header.js";
-import {
-  MAIN_MENU_ITEM_DASHBOARD,
-  MAIN_MENU_ITEM_PROFILE,
-} from "../../../../config/strings.js";
-import { NAVIGATION_CATEGORY_MAIN } from "../../../../config/constants.js";
-import MenuItem from "./MenuItem.js";
+import { siteInfoProps } from "../../../types";
+import useMediaQuery from "@material-ui/core/useMediaQuery";
+import { useRouter } from "next/router";
 
 const drawerWidth = 240;
 
@@ -54,6 +53,11 @@ const useStyles = makeStyles((theme) => ({
   visitSiteLink: {
     color: "#fff",
   },
+  contentMain: {
+    padding: theme.spacing(2),
+    paddingTop: theme.spacing(4),
+    minHeight: "80vh",
+  },
   showProgressBar: (props) => ({
     visibility: props.networkAction ? "visible" : "hidden",
   }),
@@ -62,16 +66,33 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const Scaffold = (props) => {
+const ComponentScaffold = (props) => {
   const classes = useStyles(props);
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const matches = useMediaQuery((theme) => theme.breakpoints.down("xs"));
+  const [firstLoad, setFirstLoad] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    setFirstLoad(true);
+  }, []);
+
+  useEffect(() => {
+    if (firstLoad && matches) {
+      setMobileOpen(true);
+    }
+  }, [firstLoad]);
 
   function handleDrawerToggle() {
     setMobileOpen(!mobileOpen);
   }
 
-  const makeDrawer = (forMobile = false) => (
+  function navigateTo(route) {
+    router.push(route);
+  }
+
+  const drawer = (
     <div>
       <Grid container alignItems="center" className={classes.toolbar}>
         <Grid item className={classes.menuTitle}>
@@ -80,49 +101,37 @@ const Scaffold = (props) => {
       </Grid>
       <Divider />
       <List>
-        {props.profile.fetched && (
-          <>
-            {props.profile.id && (
-              <>
-                <MenuItem
-                  link={{
-                    text: MAIN_MENU_ITEM_PROFILE,
-                    destination: `/profile/${
-                      props.profile.userId && props.profile.userId !== -1
-                        ? props.profile.userId
-                        : props.profile.id
-                    }`,
-                    category: NAVIGATION_CATEGORY_MAIN,
-                    newTab: false,
-                  }}
-                />
-                <Divider />
-              </>
-            )}
-            {(props.profile.isAdmin || props.profile.isCreator) && (
-              <MenuItem
-                link={{
-                  text: MAIN_MENU_ITEM_DASHBOARD,
-                  destination: "/dashboard/courses",
-                  category: NAVIGATION_CATEGORY_MAIN,
-                  newTab: false,
-                }}
-              />
-            )}
-          </>
-        )}
-        {props.navigation &&
-          props.navigation.map((link) =>
-            forMobile ? (
-              <MenuItem
-                link={link}
-                key={link.destination}
-                closeDrawer={handleDrawerToggle}
-              />
-            ) : (
-              <MenuItem link={link} key={link.destination} />
-            )
-          )}
+        {props.items.map((item, index) => (
+          <ListItem
+            button
+            key={index}
+            onClick={() => navigateTo(item.route)}
+            className={
+              router.pathname === item.route ? classes.activeItem : null
+            }
+          >
+            <Grid
+              container
+              direction="row"
+              alignItems="center"
+              justify={
+                item.icon && item.iconPlacementRight
+                  ? "space-between"
+                  : "flex-start"
+              }
+            >
+              {item.icon && !item.iconPlacementRight && (
+                <DrawerListItemIcon icon={item.icon} />
+              )}
+              <Grid item>
+                <ListItemText primary={item.name} />
+              </Grid>
+              {item.icon && item.iconPlacementRight && (
+                <DrawerListItemIcon icon={item.icon} right={true} />
+              )}
+            </Grid>
+          </ListItem>
+        ))}
       </List>
     </div>
   );
@@ -159,7 +168,7 @@ const Scaffold = (props) => {
               keepMounted: true, // Better open performance on mobile.
             }}
           >
-            {makeDrawer(true)}
+            {drawer}
           </Drawer>
         </Hidden>
         <Hidden xsDown implementation="css">
@@ -170,34 +179,44 @@ const Scaffold = (props) => {
             variant="permanent"
             open
           >
-            {makeDrawer()}
+            {drawer}
           </Drawer>
         </Hidden>
       </nav>
-
       <main className={classes.content}>
         <div className={classes.toolbar} />
         <LinearProgress className={classes.showProgressBar} />
-        {props.children}
+        <Grid container className={classes.contentMain}>
+          <Grid item xs={12}>
+            {props.children}
+          </Grid>
+        </Grid>
       </main>
       <AppToast />
     </div>
   );
 };
 
-Scaffold.propTypes = {
-  children: PropTypes.object,
-  siteinfo: siteInfoProps,
-  navigation: PropTypes.arrayOf(link),
+ComponentScaffold.propTypes = {
+  items: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      route: PropTypes.string.isRequired,
+      icon: PropTypes.object,
+      props: PropTypes.object,
+      progress: PropTypes.shape({
+        status: PropTypes.bool.isRequired,
+      }),
+    })
+  ),
   networkAction: PropTypes.bool.isRequired,
-  profile: profileProps,
+  siteinfo: siteInfoProps,
+  children: PropTypes.object,
 };
 
 const mapStateToProps = (state) => ({
-  siteinfo: state.siteinfo,
-  navigation: state.navigation.filter((link) => link.category === "main"),
   networkAction: state.networkAction,
-  profile: state.profile,
+  siteinfo: state.siteinfo,
 });
 
-export default connect(mapStateToProps)(Scaffold);
+export default connect(mapStateToProps)(ComponentScaffold);

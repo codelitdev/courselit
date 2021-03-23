@@ -1,37 +1,33 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { creatorCourse } from "../../../types.js";
-import { Typography } from "@material-ui/core";
-import { makeStyles } from "@material-ui/styles";
-import { Card } from "@courselit/components-library";
+import { GridList, GridListTile, GridListTileBar } from "@material-ui/core";
+import {
+  COURSE_TYPE_BLOG,
+  COURSE_TYPE_COURSE,
+} from "../../../config/strings.js";
+import dynamic from "next/dynamic";
 
-const useStyles = makeStyles((theme) => ({
-  courselink: {
-    textDecoration: "none",
-    display: "block",
-    color: "inherit",
-    background: "white",
-    paddingTop: theme.spacing(2),
-    paddingBottom: theme.spacing(2),
-    paddingLeft: theme.spacing(1),
-    paddingRight: theme.spacing(1),
-  },
-}));
+const Img = dynamic(() => import("../../Img.js"));
 
 const CreatorCoursesList = ({ courses, onClick }) => {
-  const classes = useStyles();
-
-  return courses.map((course) => (
-    <Card key={course.id}>
-      <a
-        href="#"
-        className={classes.courselink}
-        onClick={(e) => onClick(course.id)}
-      >
-        <Typography variant="h5">{course.title}</Typography>
-      </a>
-    </Card>
-  ));
+  return (
+    <GridList cols={3}>
+      {courses.map((course) => (
+        <GridListTile
+          key={course.id}
+          cols={1}
+          onClick={(e) => onClick(course.id)}
+        >
+          <Img src={course.featuredImage} isThumbnail={true} />
+          <GridListTileBar
+            title={course.title}
+            subtitle={course.isBlog ? COURSE_TYPE_BLOG : COURSE_TYPE_COURSE}
+          />
+        </GridListTile>
+      ))}
+    </GridList>
+  );
 };
 
 CreatorCoursesList.propTypes = {

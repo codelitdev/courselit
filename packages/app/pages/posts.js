@@ -1,12 +1,14 @@
 import PropTypes from "prop-types";
 import { publicCourse } from "../types.js";
 import { HEADER_BLOG_POSTS_SECTION } from "../config/strings.js";
-import BaseLayout from "../components/Public/BaseLayout";
-import Items from "../components/Public/Items/index.js";
 import FetchBuilder from "../lib/fetch.js";
 import { Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import { getBackendAddress } from "../lib/utils.js";
+import dynamic from "next/dynamic";
+
+const BaseLayout = dynamic(() => import("../components/Public/BaseLayout"));
+const Items = dynamic(() => import("../components/Public/Items"));
 
 const useStyles = makeStyles((theme) => ({
   content: {

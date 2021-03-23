@@ -1,7 +1,5 @@
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
-import Items from "../components/Public/Items/index.js";
-import BaseLayout from "../components/Public/BaseLayout";
 import { publicCourse, siteInfoProps } from "../types.js";
 import { HEADER_BLOG_POSTS_SECTION, BTN_VIEW_ALL } from "../config/strings.js";
 import { Button, Grid, Typography } from "@material-ui/core";
@@ -9,6 +7,10 @@ import { makeStyles } from "@material-ui/styles";
 import Link from "next/link";
 import FetchBuilder from "../lib/fetch.js";
 import { getBackendAddress } from "../lib/utils.js";
+import dynamic from "next/dynamic";
+
+const BaseLayout = dynamic(() => import("../components/Public/BaseLayout"));
+const Items = dynamic(() => import("../components/Public/Items"));
 
 const useStyles = makeStyles((theme) => ({
   content: {

@@ -15,9 +15,13 @@ import { ThemeProvider } from "@material-ui/styles";
 import { responsiveFontSizes, createMuiTheme } from "@material-ui/core";
 import { CONSOLE_MESSAGE_THEME_INVALID } from "../config/strings.js";
 import { useEffect } from "react";
-import CodeInjector from "../components/Public/CodeInjector.js";
 import wrapper from "../redux/store.js";
 import "@courselit/rich-text/dist/main.css";
+import dynamic from "next/dynamic";
+
+const CodeInjector = dynamic(() =>
+  import("../components/Public/CodeInjector.js")
+);
 
 const WrappedApp = ({ Component, pageProps }) => {
   const store = useStore();

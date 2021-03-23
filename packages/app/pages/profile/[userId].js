@@ -1,4 +1,3 @@
-import BaseLayout from "../../components/Public/BaseLayout";
 import FetchBuilder from "../../lib/fetch";
 import { Button, Grid, TextField, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
@@ -18,6 +17,9 @@ import Link from "next/link";
 import { useState } from "react";
 import { networkAction, refreshUserProfile } from "../../redux/actions";
 import { getBackendAddress } from "../../lib/utils";
+import dynamic from "next/dynamic";
+
+const BaseLayout = dynamic(() => import("../../components/Public/BaseLayout"));
 
 const useStyles = makeStyles((theme) => ({
   content: {
@@ -79,7 +81,7 @@ function Profile({ user, profile, auth, dispatch, address }) {
       <Grid item xs={12} className={classes.content}>
         <Grid container component="section" className={classes.leftMargin}>
           <Grid item xs={12}>
-            <Typography variant="h1" className={classes.headerTop}>
+            <Typography variant="h2" className={classes.headerTop}>
               {PROFILE_PAGE_HEADER}
             </Typography>
           </Grid>
@@ -169,7 +171,7 @@ function Profile({ user, profile, auth, dispatch, address }) {
               {isMyProfile && (
                 <Grid item container spacing={2} direction="column">
                   <Grid item>
-                    <Typography variant="h2">{PROFILE_MY_COURSES}</Typography>
+                    <Typography variant="h3">{PROFILE_MY_COURSES}</Typography>
                   </Grid>
                   {profile.purchases.length > 0 && (
                     <Grid item>

@@ -31,7 +31,6 @@ import {
   ERROR_SNACKBAR_PREFIX,
   APP_MESSAGE_THEME_APPLIED,
   APP_MESSAGE_THEME_UNINSTALLED,
-  HEADER_NAVIGATION,
   LAYOUT_SECTION_MAIN_CONTENT,
   LAYOUT_SECTION_FOOTER_RIGHT,
   LAYOUT_SECTION_FOOTER_LEFT,
@@ -56,7 +55,6 @@ import {
 import AppMessage from "../../../models/app-message.js";
 import { addressProps, authProps } from "../../../types.js";
 import ThemeItem from "./ThemeItem.js";
-import NavigationLinks from "./NavigationLinks/index.js";
 import widgets from "../../../config/widgets.js";
 import { Card } from "@courselit/components-library";
 
@@ -95,11 +93,7 @@ const useStyles = makeStyles((theme) => ({
     height: "12em",
   },
   section: {
-    background: "white",
-    paddingTop: theme.spacing(2),
-    paddingBottom: theme.spacing(2),
-    paddingLeft: theme.spacing(1),
-    paddingRight: theme.spacing(1),
+    marginBottom: theme.spacing(2),
   },
   sectionHeader: {
     marginBottom: theme.spacing(2),
@@ -671,17 +665,6 @@ const PageDesigner = (props) => {
                 </Grid>
               </Grid>
             </Grid>
-          </div>
-        </Card>
-      </Grid>
-
-      <Grid item container xs direction="column">
-        <Card>
-          <div className={classes.section}>
-            <Typography variant="h4" className={classes.sectionHeader}>
-              {HEADER_NAVIGATION}
-            </Typography>
-            <NavigationLinks />
           </div>
         </Card>
       </Grid>

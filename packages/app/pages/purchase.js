@@ -1,6 +1,10 @@
-import BaseLayout from "../components/Public/BaseLayout";
-import PurchaseStatus from "../components/Public/PurchaseStatus";
 import { PURCHASE_STATUS_PAGE_HEADER } from "../config/strings.js";
+import dynamic from "next/dynamic";
+
+const BaseLayout = dynamic(() => import("../components/Public/BaseLayout"));
+const PurchaseStatus = dynamic(() =>
+  import("../components/Public/PurchaseStatus")
+);
 
 const Payment = (props) => {
   return (

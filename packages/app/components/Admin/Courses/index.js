@@ -1,45 +1,71 @@
-import React, { useState, useEffect } from "react";
-import { connect } from "react-redux";
+import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import { addressProps, authProps, profileProps } from "../../../types.js";
-import { Grid, Typography, Button } from "@material-ui/core";
-import CourseEditor from "./CourseEditor.js";
-import CreatorCoursesList from "./CreatorCoursesList.js";
+import { GridListTileBar, Button } from "@material-ui/core";
+import { connect } from "react-redux";
 import {
-  NEW_COURSE_PAGE_HEADING,
   MANAGE_COURSES_PAGE_HEADING,
-  POPUP_CANCEL_ACTION,
-  POPUP_OK_ACTION,
-  DISCARD_COURSE_CHANGES_POPUP_HEADER,
-  EMPTY_COURSES_LIST_ADMIN,
+  NEW_COURSE_PAGE_HEADING,
+  COURSE_TYPE_BLOG,
+  COURSE_TYPE_COURSE,
   LOAD_MORE_TEXT,
-} from "../../../config/strings.js";
-import { Add, Done } from "@material-ui/icons";
-import AppDialog from "../../Public/AppDialog.js";
-import { makeStyles } from "@material-ui/styles";
-import FetchBuilder from "../../../lib/fetch.js";
-import { networkAction } from "../../../redux/actions.js";
+} from "../../../config/strings";
+import FetchBuilder from "../../../lib/fetch";
+import { addressProps, authProps, profileProps } from "../../../types";
+import { OverviewAndDetail } from "@courselit/components-library";
+import dynamic from "next/dynamic";
+import { networkAction } from "../../../redux/actions";
+const CourseEditor = dynamic(() => import("./CourseEditor"));
+const Img = dynamic(() => import("../../Img.js"));
 
-const useStyles = makeStyles((theme) => ({
-  header: {
-    marginBottom: theme.spacing(1),
-  },
-}));
-
-const CoursesManager = (props) => {
+const Index = (props) => {
   const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1);
   const [creatorCourses, setCreatorCourses] = useState([]);
-  const [courseEditorVisible, setCourseEditorVisible] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState(null);
-  const [courseEditorDirty, setCourseEditorDirty] = useState(false);
-  const [userDismissingDirtyEditor, setUserDismissingDirtyEditor] = useState(
-    false
-  );
-  const classes = useStyles();
+  const [componentsMap, setComponentsMap] = useState([]);
 
   useEffect(() => {
     loadCreatorCourses();
   }, []);
+
+  useEffect(() => {
+    const map = [];
+    creatorCourses.map((course) => {
+      map.push(getComponent(course));
+    });
+    map.push({
+      Overview: <Button onClick={loadCreatorCourses}>{LOAD_MORE_TEXT}</Button>,
+    });
+    map.unshift({
+      subtitle: NEW_COURSE_PAGE_HEADING,
+      Overview: (
+        <>
+          <Img src="" isThumbnail={true} />
+          <GridListTileBar title="Add new" />
+        </>
+      ),
+      Detail: <CourseEditor markDirty={() => {}} closeEditor={() => {}} />,
+    });
+    setComponentsMap(map);
+  }, [coursesPaginationOffset]);
+
+  const getComponent = (course) => ({
+    subtitle: NEW_COURSE_PAGE_HEADING,
+    Overview: (
+      <>
+        <Img src={course.featuredImage} isThumbnail={true} />
+        <GridListTileBar
+          title={course.title}
+          subtitle={course.isBlog ? COURSE_TYPE_BLOG : COURSE_TYPE_COURSE}
+        />
+      </>
+    ),
+    Detail: (
+      <CourseEditor
+        courseId={course.id}
+        markDirty={() => {}}
+        closeEditor={() => {}}
+      />
+    ),
+  });
 
   const loadCreatorCourses = async () => {
     const query = `
@@ -47,7 +73,10 @@ const CoursesManager = (props) => {
       courses: getCoursesAsAdmin(
         offset: ${coursesPaginationOffset}
       ) {
-        id, title
+        id,
+        title,
+        featuredImage,
+        isBlog
       }
     }
     `;
@@ -70,94 +99,15 @@ const CoursesManager = (props) => {
     }
   };
 
-  const showEditor = (courseId) => {
-    if (courseEditorVisible) {
-      if (courseEditorDirty) {
-        setUserDismissingDirtyEditor(true);
-      } else {
-        setCourseEditorVisible(false);
-      }
-    } else {
-      setSelectedCourse(courseId);
-      setCourseEditorVisible(true);
-    }
-  };
-
-  const markDirtyEditorClean = () => setUserDismissingDirtyEditor(false);
-
-  const dismissEditor = () => {
-    setUserDismissingDirtyEditor(false);
-    setCourseEditorDirty(false);
-    setCourseEditorVisible(false);
-  };
-
   return (
-    <div>
-      <Grid
-        container
-        direction="row"
-        justify="space-between"
-        alignItems="center"
-        className={classes.header}
-      >
-        <Grid item>
-          <Typography variant="h1">
-            {courseEditorVisible
-              ? NEW_COURSE_PAGE_HEADING
-              : MANAGE_COURSES_PAGE_HEADING}
-          </Typography>
-        </Grid>
-        <Grid item>
-          <Button
-            variant="contained"
-            color={courseEditorVisible ? "secondary" : "primary"}
-            onClick={() => showEditor()}
-          >
-            {courseEditorVisible ? <Done /> : <Add />}
-          </Button>
-        </Grid>
-      </Grid>
-      <>
-        {!courseEditorVisible && (
-          <>
-            {creatorCourses.length > 0 && (
-              <>
-                <CreatorCoursesList
-                  courses={creatorCourses}
-                  onClick={showEditor}
-                />
-                <Button onClick={loadCreatorCourses}>{LOAD_MORE_TEXT}</Button>
-              </>
-            )}
-            {creatorCourses.length <= 0 && (
-              <Typography variant="body1">
-                {EMPTY_COURSES_LIST_ADMIN}
-              </Typography>
-            )}
-          </>
-        )}
-        {courseEditorVisible && (
-          <CourseEditor
-            courseId={selectedCourse}
-            markDirty={setCourseEditorDirty}
-            closeEditor={showEditor}
-          />
-        )}
-      </>
-      <AppDialog
-        onOpen={userDismissingDirtyEditor}
-        onClose={markDirtyEditorClean}
-        title={DISCARD_COURSE_CHANGES_POPUP_HEADER}
-        actions={[
-          { name: POPUP_CANCEL_ACTION, callback: markDirtyEditorClean },
-          { name: POPUP_OK_ACTION, callback: dismissEditor },
-        ]}
-      ></AppDialog>
-    </div>
+    <OverviewAndDetail
+      title={MANAGE_COURSES_PAGE_HEADING}
+      componentsMap={componentsMap}
+    />
   );
 };
 
-CoursesManager.propTypes = {
+Index.propTypes = {
   auth: authProps,
   profile: profileProps,
   dispatch: PropTypes.func.isRequired,
@@ -170,8 +120,4 @@ const mapStateToProps = (state) => ({
   address: state.address,
 });
 
-const mapDispatchToProps = (dispatch) => ({
-  dispatch: dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(CoursesManager);
+export default connect(mapStateToProps)(Index);
