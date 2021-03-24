@@ -10,6 +10,7 @@ const {
   checkOwnership,
   validateOffset,
   extractPlainTextFromDraftJS,
+  checkPermission,
 } = require("../../lib/graphql.js");
 const {
   closed,
@@ -19,6 +20,7 @@ const {
 } = require("../../config/constants.js");
 const ObjectId = require("mongoose").Types.ObjectId;
 const { validateBlogPosts, validateCost } = require("./helpers.js");
+const permissions = require("../../config/constants.js").permissions;
 
 const checkCourseOwnership = checkOwnership(Course);
 
@@ -44,7 +46,10 @@ exports.getCourse = async (id = null, courseId = null, ctx) => {
       ? course.creatorId.toString() !== ctx.user._id.toString()
       : course.creatorId.toString() !== ctx.user.userId.toString());
   if (notTheOwner) {
-    if (!course.published || course.privacy === closed) {
+    if (
+      !checkPermission(ctx.user.permissions, [permissions.manageAnyCourse]) &&
+      (!course.published || course.privacy === closed)
+    ) {
       throw new Error(strings.responses.item_not_found);
     }
   }
@@ -55,9 +60,7 @@ exports.getCourse = async (id = null, courseId = null, ctx) => {
 exports.createCourse = async (courseData, ctx) => {
   checkIfAuthenticated(ctx);
 
-  if (ctx.user.isCreator === undefined || !ctx.user.isCreator) {
-    throw new Error(strings.responses.not_a_creator);
-  }
+  checkPermission(ctx.user.permissions, [permissions.manageCourse]);
 
   courseData = await validateCost(validateBlogPosts(courseData));
 
@@ -65,7 +68,6 @@ exports.createCourse = async (courseData, ctx) => {
     domain: ctx.domain._id,
     title: courseData.title,
     cost: courseData.cost,
-    published: courseData.published,
     privacy: courseData.privacy,
     isBlog: courseData.isBlog,
     isFeatured: courseData.isFeatured,
@@ -81,9 +83,25 @@ exports.createCourse = async (courseData, ctx) => {
 
 exports.updateCourse = async (courseData, ctx) => {
   checkIfAuthenticated(ctx);
-  let course = await checkCourseOwnership(courseData.id, ctx);
+  const { permissions: userPerms } = ctx.user;
+
+  let course;
+  if (!checkPermission(userPerms, [permissions.manageAnyCourse])) {
+    if (checkPermission(userPerms, [permissions.manageCourse])) {
+      course = await checkCourseOwnership(courseData.id, ctx);
+    } else {
+      throw new Error(strings.responses.not_allowed);
+    }
+  }
 
   for (const key of Object.keys(courseData)) {
+    if (
+      key === "published" &&
+      !checkPermission(userPerms, [permissions.publishCourse])
+    ) {
+      throw new Error(strings.responses.not_allowed);
+    }
+
     course[key] = courseData[key];
   }
 
@@ -94,7 +112,16 @@ exports.updateCourse = async (courseData, ctx) => {
 
 exports.deleteCourse = async (id, ctx) => {
   checkIfAuthenticated(ctx);
-  const course = await checkCourseOwnership(id, ctx);
+  const { permissions: userPerms } = ctx.user;
+
+  let course;
+  if (!checkPermission(userPerms, [permissions.manageAnyCourse])) {
+    if (checkPermission(userPerms, [permissions.manageCourse])) {
+      course = await checkCourseOwnership(id, ctx);
+    } else {
+      throw new Error(strings.responses.not_allowed);
+    }
+  }
 
   if (course.lessons.length > 0) {
     throw new Error(strings.responses.course_not_empty);
@@ -110,7 +137,17 @@ exports.deleteCourse = async (id, ctx) => {
 
 exports.addLesson = async (courseId, lessonId, ctx) => {
   checkIfAuthenticated(ctx);
-  const course = await checkCourseOwnership(courseId, ctx);
+  const { permissions: userPerms } = ctx.user;
+
+  let course;
+  if (!checkPermission(userPerms, [permissions.manageAnyCourse])) {
+    if (checkPermission(userPerms, [permissions.manageCourse])) {
+      course = await checkCourseOwnership(courseId, ctx);
+    } else {
+      throw new Error(strings.responses.not_allowed);
+    }
+  }
+
   if (course.lessons.indexOf(lessonId) === -1) {
     course.lessons.push(lessonId);
   }
@@ -126,7 +163,17 @@ exports.addLesson = async (courseId, lessonId, ctx) => {
 
 exports.removeLesson = async (courseId, lessonId, ctx) => {
   checkIfAuthenticated(ctx);
-  const course = await checkCourseOwnership(courseId, ctx);
+  const { permissions: userPerms } = ctx.user;
+
+  let course;
+  if (!checkPermission(userPerms, [permissions.manageAnyCourse])) {
+    if (checkPermission(userPerms, [permissions.manageCourse])) {
+      course = await checkCourseOwnership(courseId, ctx);
+    } else {
+      throw new Error(strings.responses.not_allowed);
+    }
+  }
+
   if (~course.lessons.indexOf(lessonId)) {
     course.lessons.splice(course.lessons.indexOf(lessonId), 1);
   }
@@ -143,17 +190,21 @@ exports.removeLesson = async (courseId, lessonId, ctx) => {
 exports.getCoursesAsAdmin = async (offset, ctx) => {
   checkIfAuthenticated(ctx);
   validateOffset(offset);
-
   const user = ctx.user;
 
-  if (!(user.isCreator || user.isAdmin)) {
-    throw new Error(strings.responses.is_not_admin_or_creator);
+  if (
+    checkPermission(user.permissions, [
+      permissions.manageCourse,
+      permissions.manageAnyCourse,
+    ])
+  ) {
+    throw new Error(strings.responses.not_allowed);
   }
 
   const query = {
     domain: ctx.domain._id,
   };
-  if (user.isCreator) {
+  if (!checkPermission(user.permissions, [permissions.manageAnyCourse])) {
     query.creatorId = `${user.userId || user.id}`;
   }
 
@@ -216,14 +267,11 @@ exports.getCourses = async (offset, onlyShowFeatured = false, ctx) => {
   return dbQuery;
 };
 
-// TODO: write tests
 exports.getEnrolledCourses = async (userId, ctx) => {
   checkIfAuthenticated(ctx);
-  const notAdminOrSelf =
-    !(ctx.user.isCreator || ctx.user.isAdmin) && userId !== ctx.user.id;
 
-  if (notAdminOrSelf) {
-    throw new Error(strings.responses.item_not_found);
+  if (!checkPermission(ctx.user.permissions, [permissions.manageAnyCourse])) {
+    throw new Error(strings.responses.not_allowed);
   }
 
   const user = await User.findOne({ _id: userId, domain: ctx.domain._id });

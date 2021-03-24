@@ -58,6 +58,23 @@ module.exports = {
   transactionSuccess: "success",
   transactionFailed: "failed",
 
+  // permissions for role-based access
+  permissions: {
+    manageCourse: "course:manage",
+    manageAnyCourse: "course:manage_any",
+    publishCourse: "course:publish",
+    enrollInCourse: "course:enroll",
+    manageMedia: "media:manage",
+    manageAnyMedia: "media:manage_any",
+    uploadMedia: "media:upload",
+    manageLayout: "layout:manage",
+    manageThemes: "theme:manage",
+    manageMenus: "menu:manage",
+    manageWidgets: "widget:manage",
+    manageSettings: "setting:manage",
+    manageUsers: "user:manage",
+  },
+
   // acceptable currency codes for payments
   currencyISOCodes: [
     "afn",

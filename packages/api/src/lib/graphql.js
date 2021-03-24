@@ -112,3 +112,8 @@ const validateSearchInput = (searchData, checkIfRequestIsAuthenticated) => {
     this.checkIfAuthenticated(searchData.graphQLContext);
   }
 };
+
+exports.checkPermission = (actualPermissions, desiredPermissions) =>
+  actualPermissions.some((permission) =>
+    desiredPermissions.includes(permission)
+  );

@@ -16,6 +16,7 @@ exports.responses = {
   cross_domain_access_prohibited: "Invalid credentials",
 
   // graphql responses
+  not_allowed: "Action not allowed",
   user_not_found: "User not found.",
   request_not_authenticated: "Request not authenticated",
   content_cannot_be_null: "Content cannot be empty",

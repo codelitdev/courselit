@@ -41,7 +41,6 @@ const courseInputType = new graphql.GraphQLInputObjectType({
   name: "CourseInput",
   fields: {
     title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-    published: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
     privacy: { type: new graphql.GraphQLNonNull(courseStatusType) },
     isBlog: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
     isFeatured: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
