@@ -90,7 +90,7 @@ exports.updateCourse = async (courseData, ctx) => {
     if (checkPermission(userPerms, [permissions.manageCourse])) {
       course = await checkCourseOwnership(courseData.id, ctx);
     } else {
-      throw new Error(strings.responses.not_allowed);
+      throw new Error(strings.responses.action_not_allowed);
     }
   }
 
@@ -99,7 +99,7 @@ exports.updateCourse = async (courseData, ctx) => {
       key === "published" &&
       !checkPermission(userPerms, [permissions.publishCourse])
     ) {
-      throw new Error(strings.responses.not_allowed);
+      throw new Error(strings.responses.action_not_allowed);
     }
 
     course[key] = courseData[key];
@@ -119,7 +119,7 @@ exports.deleteCourse = async (id, ctx) => {
     if (checkPermission(userPerms, [permissions.manageCourse])) {
       course = await checkCourseOwnership(id, ctx);
     } else {
-      throw new Error(strings.responses.not_allowed);
+      throw new Error(strings.responses.action_not_allowed);
     }
   }
 
@@ -144,7 +144,7 @@ exports.addLesson = async (courseId, lessonId, ctx) => {
     if (checkPermission(userPerms, [permissions.manageCourse])) {
       course = await checkCourseOwnership(courseId, ctx);
     } else {
-      throw new Error(strings.responses.not_allowed);
+      throw new Error(strings.responses.action_not_allowed);
     }
   }
 
@@ -170,7 +170,7 @@ exports.removeLesson = async (courseId, lessonId, ctx) => {
     if (checkPermission(userPerms, [permissions.manageCourse])) {
       course = await checkCourseOwnership(courseId, ctx);
     } else {
-      throw new Error(strings.responses.not_allowed);
+      throw new Error(strings.responses.action_not_allowed);
     }
   }
 
@@ -198,7 +198,7 @@ exports.getCoursesAsAdmin = async (offset, ctx) => {
       permissions.manageAnyCourse,
     ])
   ) {
-    throw new Error(strings.responses.not_allowed);
+    throw new Error(strings.responses.action_not_allowed);
   }
 
   const query = {
@@ -271,7 +271,7 @@ exports.getEnrolledCourses = async (userId, ctx) => {
   checkIfAuthenticated(ctx);
 
   if (!checkPermission(ctx.user.permissions, [permissions.manageAnyCourse])) {
-    throw new Error(strings.responses.not_allowed);
+    throw new Error(strings.responses.action_not_allowed);
   }
 
   const user = await User.findOne({ _id: userId, domain: ctx.domain._id });

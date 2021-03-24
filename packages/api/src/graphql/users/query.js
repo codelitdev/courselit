@@ -20,8 +20,4 @@ module.exports = {
     resolve: (root, { searchData }, context) =>
       logic.getSiteUsers(searchData, context),
   },
-  getUsersSummary: {
-    type: types.usersSummaryType,
-    resolve: (root, { a = {} }, context) => logic.getUsersSummary(context),
-  },
 };
