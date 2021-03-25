@@ -2,9 +2,12 @@
  * Business logic for managing site information.
  */
 const SiteInfo = require("../../models/SiteInfo.js");
-const { checkIfAuthenticated } = require("../../lib/graphql.js");
+const {
+  checkIfAuthenticated,
+  checkPermission,
+} = require("../../lib/graphql.js");
 const { responses } = require("../../config/strings.js");
-const { currencyISOCodes } = require("../../config/constants.js");
+const { currencyISOCodes, permissions } = require("../../config/constants.js");
 const {
   checkForInvalidPaymentMethod,
   checkForInvalidPaymentSettings,
@@ -23,7 +26,9 @@ exports.getSiteInfo = async (ctx) => {
 exports.getSiteInfoAsAdmin = async (ctx) => {
   checkIfAuthenticated(ctx);
 
-  if (!ctx.user.isAdmin) throw new Error(responses.is_not_admin);
+  if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
+    throw new Error(responses.action_not_allowed);
+  }
 
   const siteinfo = await SiteInfo.findOne({ domain: ctx.domain._id });
   return siteinfo;
@@ -32,8 +37,9 @@ exports.getSiteInfoAsAdmin = async (ctx) => {
 exports.updateSiteInfo = async (siteData, ctx) => {
   checkIfAuthenticated(ctx);
 
-  // check if the user is an admin
-  if (!ctx.user.isAdmin) throw new Error(responses.is_not_admin);
+  if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
+    throw new Error(responses.action_not_allowed);
+  }
 
   if (
     siteData.currencyISOCode &&

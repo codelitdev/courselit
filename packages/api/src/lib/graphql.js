@@ -29,6 +29,19 @@ exports.checkOwnership = (Model) => async (id, ctx) => {
   return item;
 };
 
+exports.checkOwnershipWithoutModel = (item, ctx) => {
+  if (
+    !item ||
+    (ObjectId.isValid(item.creatorId)
+      ? item.creatorId.toString() !== ctx.user._id.toString()
+      : item.creatorId.toString() !== ctx.user.userId.toString())
+  ) {
+    return false;
+  }
+
+  return true;
+};
+
 exports.validateOffset = (offset) => {
   if (offset < 1) throw new Error(strings.responses.invalid_offset);
 };

@@ -7,10 +7,10 @@ const User = require("../../models/User.js");
 const strings = require("../../config/strings.js");
 const {
   checkIfAuthenticated,
-  checkOwnership,
   validateOffset,
   extractPlainTextFromDraftJS,
   checkPermission,
+  checkOwnershipWithoutModel,
 } = require("../../lib/graphql.js");
 const {
   closed,
@@ -22,7 +22,27 @@ const ObjectId = require("mongoose").Types.ObjectId;
 const { validateBlogPosts, validateCost } = require("./helpers.js");
 const permissions = require("../../config/constants.js").permissions;
 
-const checkCourseOwnership = checkOwnership(Course);
+const getCourseOrThrow = async (id, ctx) => {
+  checkIfAuthenticated(ctx);
+
+  const course = await Course.findOne({ _id: id, domain: ctx.domain._id });
+
+  if (!course) {
+    throw new Error(strings.responses.item_not_found);
+  }
+
+  if (!checkPermission(ctx.user.permissions, [permissions.manageAnyCourse])) {
+    if (!checkOwnershipWithoutModel(course, ctx)) {
+      throw new Error(strings.responses.item_not_found);
+    } else {
+      if (!checkPermission(ctx.user.permissions, [permissions.manageCourse])) {
+        throw new Error(strings.responses.action_not_allowed);
+      }
+    }
+  }
+
+  return course;
+};
 
 exports.getCourse = async (id = null, courseId = null, ctx) => {
   if (!id && !courseId) {
@@ -59,8 +79,9 @@ exports.getCourse = async (id = null, courseId = null, ctx) => {
 
 exports.createCourse = async (courseData, ctx) => {
   checkIfAuthenticated(ctx);
-
-  checkPermission(ctx.user.permissions, [permissions.manageCourse]);
+  if (!checkPermission(ctx.user.permissions, [permissions.manageCourse])) {
+    throw new Error(strings.responses.action_not_allowed);
+  }
 
   courseData = await validateCost(validateBlogPosts(courseData));
 
@@ -82,22 +103,12 @@ exports.createCourse = async (courseData, ctx) => {
 };
 
 exports.updateCourse = async (courseData, ctx) => {
-  checkIfAuthenticated(ctx);
-  const { permissions: userPerms } = ctx.user;
-
-  let course;
-  if (!checkPermission(userPerms, [permissions.manageAnyCourse])) {
-    if (checkPermission(userPerms, [permissions.manageCourse])) {
-      course = await checkCourseOwnership(courseData.id, ctx);
-    } else {
-      throw new Error(strings.responses.action_not_allowed);
-    }
-  }
+  let course = await getCourseOrThrow(courseData.id, ctx);
 
   for (const key of Object.keys(courseData)) {
     if (
       key === "published" &&
-      !checkPermission(userPerms, [permissions.publishCourse])
+      !checkPermission(ctx.user.permissions, [permissions.publishCourse])
     ) {
       throw new Error(strings.responses.action_not_allowed);
     }
@@ -111,17 +122,7 @@ exports.updateCourse = async (courseData, ctx) => {
 };
 
 exports.deleteCourse = async (id, ctx) => {
-  checkIfAuthenticated(ctx);
-  const { permissions: userPerms } = ctx.user;
-
-  let course;
-  if (!checkPermission(userPerms, [permissions.manageAnyCourse])) {
-    if (checkPermission(userPerms, [permissions.manageCourse])) {
-      course = await checkCourseOwnership(id, ctx);
-    } else {
-      throw new Error(strings.responses.action_not_allowed);
-    }
-  }
+  const course = await getCourseOrThrow(id, ctx);
 
   if (course.lessons.length > 0) {
     throw new Error(strings.responses.course_not_empty);
@@ -136,17 +137,7 @@ exports.deleteCourse = async (id, ctx) => {
 };
 
 exports.addLesson = async (courseId, lessonId, ctx) => {
-  checkIfAuthenticated(ctx);
-  const { permissions: userPerms } = ctx.user;
-
-  let course;
-  if (!checkPermission(userPerms, [permissions.manageAnyCourse])) {
-    if (checkPermission(userPerms, [permissions.manageCourse])) {
-      course = await checkCourseOwnership(courseId, ctx);
-    } else {
-      throw new Error(strings.responses.action_not_allowed);
-    }
-  }
+  const course = await getCourseOrThrow(courseId, ctx);
 
   if (course.lessons.indexOf(lessonId) === -1) {
     course.lessons.push(lessonId);
@@ -162,17 +153,7 @@ exports.addLesson = async (courseId, lessonId, ctx) => {
 };
 
 exports.removeLesson = async (courseId, lessonId, ctx) => {
-  checkIfAuthenticated(ctx);
-  const { permissions: userPerms } = ctx.user;
-
-  let course;
-  if (!checkPermission(userPerms, [permissions.manageAnyCourse])) {
-    if (checkPermission(userPerms, [permissions.manageCourse])) {
-      course = await checkCourseOwnership(courseId, ctx);
-    } else {
-      throw new Error(strings.responses.action_not_allowed);
-    }
-  }
+  const course = await getCourseOrThrow(courseId, ctx);
 
   if (~course.lessons.indexOf(lessonId)) {
     course.lessons.splice(course.lessons.indexOf(lessonId), 1);

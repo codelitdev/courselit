@@ -206,7 +206,7 @@ export function updateSiteNavigation() {
 
       const query = `
       query {
-        siteNavigation: getPublicNavigation {
+        siteNavigation: getMenu {
           text,
           destination,
           category,
