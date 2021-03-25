@@ -3,6 +3,7 @@ const { decode } = require("base-64");
 const strings = require("../config/strings.js");
 const constants = require("../config/constants.js");
 const ObjectId = require("mongoose").Types.ObjectId;
+const Media = require("../models/Media.js");
 
 exports.checkIfAuthenticated = (ctx) => {
   if (!ctx.user) throw new Error(strings.responses.request_not_authenticated);
@@ -130,3 +131,33 @@ exports.checkPermission = (actualPermissions, desiredPermissions) =>
   actualPermissions.some((permission) =>
     desiredPermissions.includes(permission)
   );
+
+exports.getMediaOrThrow = async (id, ctx) => {
+  this.checkIfAuthenticated(ctx);
+
+  const media = await Media.findOne({ _id: id, domain: ctx.domain._id });
+
+  if (!media) {
+    throw new Error(strings.responses.item_not_found);
+  }
+
+  if (
+    !this.checkPermission(ctx.user.permissions, [
+      constants.permissions.manageAnyMedia,
+    ])
+  ) {
+    if (!this.checkOwnershipWithoutModel(media, ctx)) {
+      throw new Error(strings.responses.item_not_found);
+    } else {
+      if (
+        !this.checkPermission(ctx.user.permissions, [
+          constants.permissions.manageMedia,
+        ])
+      ) {
+        throw new Error(strings.responses.action_not_allowed);
+      }
+    }
+  }
+
+  return media;
+};

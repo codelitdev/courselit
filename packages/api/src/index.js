@@ -1,7 +1,7 @@
 "use strict";
 
 const internalResponse = require("./config/strings.js").internal;
-const { uploadFolder, thumbnailsFolder } = require("./config/constants.js");
+const { uploadFolder } = require("./config/constants.js");
 const { createFolders } = require("./lib/utils.js");
 
 process.env.NODE_ENV = process.env.NODE_ENV || "production";
@@ -16,7 +16,7 @@ const checkForNecessaryEnvironmentVars = () => {
 };
 
 checkForNecessaryEnvironmentVars();
-createFolders([uploadFolder, thumbnailsFolder]);
+createFolders([uploadFolder]);
 
 const app = require("./app.js");
 

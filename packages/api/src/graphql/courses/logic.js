@@ -189,12 +189,10 @@ exports.getCoursesAsAdmin = async (offset, ctx) => {
     query.creatorId = `${user.userId || user.id}`;
   }
 
-  const courses = await Course.find(query)
+  return await Course.find(query)
     .sort({ updated: -1 })
     .skip((offset - 1) * itemsPerPage)
     .limit(itemsPerPage);
-
-  return courses;
 };
 
 exports.getPosts = async (offset, ctx) => {
