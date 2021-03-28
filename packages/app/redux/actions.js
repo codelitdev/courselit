@@ -37,13 +37,12 @@ export function refreshUserProfile(userId) {
       const query = `
       { profile: getUser(email: "${userID}") {
           name,
-          isCreator,
           id,
-          isAdmin,
           email,
           purchases,
           userId,
-          bio
+          bio,
+          permissions
         }
       }
       `;

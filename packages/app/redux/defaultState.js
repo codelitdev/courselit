@@ -32,14 +32,13 @@ export default {
   },
   networkAction: false,
   profile: {
-    isCreator: false,
     name: null,
     id: null,
     fetched: false,
-    isAdmin: false,
     purchases: [],
     email: null,
     bio: null,
+    permissions: [],
   },
   message: {
     open: false,

@@ -13,6 +13,8 @@ import { addressProps, authProps, profileProps } from "../../../types";
 import { OverviewAndDetail } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 import { networkAction } from "../../../redux/actions";
+import { checkPermission } from "../../../lib/utils";
+import { permissions } from "../../../config/constants";
 const Upload = dynamic(() => import("./Upload.js"));
 const Editor = dynamic(() => import("./Editor.js"));
 const Img = dynamic(() => import("../../Img.js"));
@@ -72,7 +74,9 @@ const Index = (props) => {
     map.push({
       Overview: <Button onClick={loadMedia}>{LOAD_MORE_TEXT}</Button>,
     });
-    map.unshift(getAddMediaComponentConfig());
+    if (checkPermission(props.profile.permissions, [permissions.manageMedia])) {
+      map.unshift(getAddMediaComponentConfig());
+    }
     setComponentsMap(map);
   }, [mediaPaginationOffset]);
 

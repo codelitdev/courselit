@@ -14,6 +14,8 @@ import { addressProps, authProps, profileProps } from "../../../types";
 import { OverviewAndDetail } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 import { networkAction } from "../../../redux/actions";
+import { checkPermission } from "../../../lib/utils";
+import { permissions } from "../../../config/constants";
 const CourseEditor = dynamic(() => import("./CourseEditor"));
 const Img = dynamic(() => import("../../Img.js"));
 
@@ -34,16 +36,20 @@ const Index = (props) => {
     map.push({
       Overview: <Button onClick={loadCreatorCourses}>{LOAD_MORE_TEXT}</Button>,
     });
-    map.unshift({
-      subtitle: NEW_COURSE_PAGE_HEADING,
-      Overview: (
-        <>
-          <Img src="" isThumbnail={true} />
-          <GridListTileBar title="Add new" />
-        </>
-      ),
-      Detail: <CourseEditor markDirty={() => {}} closeEditor={() => {}} />,
-    });
+    if (
+      checkPermission(props.profile.permissions, [permissions.manageCourse])
+    ) {
+      map.unshift({
+        subtitle: NEW_COURSE_PAGE_HEADING,
+        Overview: (
+          <>
+            <Img src="" isThumbnail={true} />
+            <GridListTileBar title="Add new" />
+          </>
+        ),
+        Detail: <CourseEditor markDirty={() => {}} closeEditor={() => {}} />,
+      });
+    }
     setComponentsMap(map);
   }, [coursesPaginationOffset]);
 
