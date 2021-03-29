@@ -165,7 +165,14 @@ const postHandler = async (req, res) => {
 };
 
 const deleteHandler = async (req, res) => {
-  const media = getMediaOrThrow(req.params.mediaId, req);
+  let media;
+
+  try {
+    media = await getMediaOrThrow(req.params.mediaId, req);
+  } catch (err) {
+    return res.status(200).json({ message: err.message });
+  }
+
   const { uploadFolderForDomain, thumbFolderForDomain } = generateFolderPaths({
     uploadFolder,
     domainName: req.domain.name,

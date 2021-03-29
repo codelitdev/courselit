@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Button, TextField } from "@material-ui/core";
 import {
-  APP_MESSAGE_MEDIA_DELETED,
-  APP_MESSAGE_MEDIA_UPDATED,
+  APP_MESSAGE_CHANGES_SAVED,
   DELETE_MEDIA_POPUP_HEADER,
   POPUP_CANCEL_ACTION,
   POPUP_OK_ACTION,
@@ -59,14 +58,8 @@ function Editor({ auth, media, address, dispatch }) {
       }
 
       if (res.status === 200) {
-        dispatch(setAppMessage(new AppMessage(APP_MESSAGE_MEDIA_DELETED)));
-        // const indexOfDeletedMedia = userMedia
-        //   .map((media) => media.id)
-        //   .indexOf(mediaBeingEdited.id);
-        // setUserMedia([
-        //   ...userMedia.slice(0, indexOfDeletedMedia),
-        //   ...userMedia.slice(indexOfDeletedMedia + 1),
-        // ]);
+        const { message } = await res.json();
+        dispatch(setAppMessage(new AppMessage(message)));
       }
     } catch (err) {
       dispatch(setAppMessage(new AppMessage(err.message)));
@@ -105,7 +98,7 @@ function Editor({ auth, media, address, dispatch }) {
       const response = await fetch.exec();
 
       if (response.media) {
-        dispatch(setAppMessage(new AppMessage(APP_MESSAGE_MEDIA_UPDATED)));
+        dispatch(setAppMessage(new AppMessage(APP_MESSAGE_CHANGES_SAVED)));
       }
     } catch (err) {
       dispatch(setAppMessage(new AppMessage(err.message)));
