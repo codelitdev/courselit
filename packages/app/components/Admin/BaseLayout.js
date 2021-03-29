@@ -55,6 +55,7 @@ const getSidebarMenuItems = (profile) => {
 
   if (
     checkPermission(profile.permissions, [
+      permissions.viewAnyMedia,
       permissions.manageMedia,
       permissions.manageAnyMedia,
     ])

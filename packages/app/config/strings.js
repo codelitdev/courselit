@@ -241,6 +241,7 @@ export const PERM_ENROLL_IN_COURSE = "Enroll in courses";
 export const PERM_MEDIA_UPLOAD = "Upload new media";
 export const PERM_MEDIA_MANAGE = "Manage uploaded media";
 export const PERM_MEDIA_MANAGE_ANY = "Manage any existing media";
+export const PERM_MEDIA_VIEW_ANY = "View any media";
 export const PERM_LAYOUT = "Manage layout";
 export const PERM_THEMES = "Manage themes";
 export const PERM_MENUS = "Manage menus";

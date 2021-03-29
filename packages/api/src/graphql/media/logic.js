@@ -18,7 +18,8 @@ exports.getCreatorMedia = async (offset, ctx, text) => {
   const user = ctx.user;
 
   if (
-    checkPermission(user.permissions, [
+    !checkPermission(user.permissions, [
+      permissions.viewAnyMedia,
       permissions.manageMedia,
       permissions.manageAnyMedia,
     ])
@@ -29,7 +30,12 @@ exports.getCreatorMedia = async (offset, ctx, text) => {
   const query = {
     domain: ctx.domain._id,
   };
-  if (!checkPermission(user.permissions, [permissions.manageAnyCourse])) {
+  if (
+    !checkPermission(user.permissions, [
+      permissions.manageAnyMedia,
+      permissions.viewAnyMedia,
+    ])
+  ) {
     query.creatorId = ctx.user._id;
   }
 

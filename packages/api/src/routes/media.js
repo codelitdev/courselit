@@ -50,7 +50,9 @@ const getHandler = async (req, res) => {
 };
 
 const postHandler = async (req, res) => {
-  if (!checkPermission(req.user, [constants.permissions.manageMedia])) {
+  if (
+    !checkPermission(req.user.permissions, [constants.permissions.uploadMedia])
+  ) {
     return res.status(400).json({ message: responses.action_not_allowed });
   }
 

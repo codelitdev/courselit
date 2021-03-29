@@ -74,7 +74,7 @@ const Index = (props) => {
     map.push({
       Overview: <Button onClick={loadMedia}>{LOAD_MORE_TEXT}</Button>,
     });
-    if (checkPermission(props.profile.permissions, [permissions.manageMedia])) {
+    if (checkPermission(props.profile.permissions, [permissions.uploadMedia])) {
       map.unshift(getAddMediaComponentConfig());
     }
     setComponentsMap(map);
