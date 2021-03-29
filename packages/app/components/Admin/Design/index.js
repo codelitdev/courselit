@@ -46,17 +46,18 @@ import AddComponentDialog from "./AddComponentDialog.js";
 import AddedComponent from "./AddedComponent.js";
 import { connect } from "react-redux";
 import FetchBuilder from "../../../lib/fetch.js";
-import { THEMES_REPO } from "../../../config/constants.js";
+import { permissions, THEMES_REPO } from "../../../config/constants.js";
 import {
   networkAction,
   layoutAvailable,
   setAppMessage,
 } from "../../../redux/actions.js";
 import AppMessage from "../../../models/app-message.js";
-import { addressProps, authProps } from "../../../types.js";
+import { addressProps, authProps, profileProps } from "../../../types.js";
 import ThemeItem from "./ThemeItem.js";
 import widgets from "../../../config/widgets.js";
 import { Card } from "@courselit/components-library";
+import { checkPermission } from "../../../lib/utils.js";
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -121,8 +122,35 @@ const PageDesigner = (props) => {
     .setAuthToken(props.auth.token);
 
   useEffect(() => {
+    loadLayout();
     loadInstalledThemes();
   }, []);
+
+  const loadLayout = async () => {
+    const query = `
+    {
+      layout: getLayout {
+        layout
+      }
+    }
+    `;
+
+    const fetcher = fetch.setPayload(query).build();
+
+    try {
+      props.dispatch(networkAction(true));
+      const response = await fetcher.exec();
+
+      if (response.layout && response.layout.layout) {
+        setLayout(JSON.parse(response.layout.layout));
+        props.dispatch(
+          layoutAvailable(response.layout && response.layout.layout)
+        );
+      }
+    } finally {
+      props.dispatch(networkAction(false));
+    }
+  };
 
   const loadInstalledThemes = async () => {
     const query = `
@@ -135,13 +163,18 @@ const PageDesigner = (props) => {
         url
       }
     }`;
+
+    const fetcher = fetch.setPayload(query).build();
+
     try {
-      const fetcher = fetch.setPayload(query).build();
+      props.dispatch(networkAction(true));
       const response = await fetcher.exec();
       if (response.themes) {
         setInstalledThemes(response.themes);
       }
-    } catch (e) {}
+    } finally {
+      props.dispatch(networkAction(false));
+    }
   };
 
   const onSelection = (forSection, componentName) => {
@@ -346,110 +379,148 @@ const PageDesigner = (props) => {
       <Grid item xs>
         <Typography variant="h1">{HEADER_DESIGN}</Typography>
       </Grid>
-      <Grid item xs={12}>
-        <Card>
-          <CardHeader title={CARD_HEADER_PAGE_LAYOUT} />
-          <CardContent className={classes.center}>
-            <Typography variant="body1" className={classes.marginBottom}>
-              {CARD_DESCRIPTION_PAGE_LAYOUT}
-            </Typography>
-            <Grid container justify="center" className={classes.pageLayout}>
-              <Grid
-                container
-                item
-                direction="column"
-                xs={12}
-                sm={9}
-                className={classes.container}
-              >
-                <Grid item className={classes.fixedBox}>
-                  <Typography variant="caption">Header</Typography>
-                </Grid>
+      {checkPermission(props.profile.permissions, [
+        permissions.manageLayout,
+      ]) && (
+        <Grid item xs={12}>
+          <Card>
+            <CardHeader title={CARD_HEADER_PAGE_LAYOUT} />
+            <CardContent className={classes.center}>
+              <Typography variant="body1" className={classes.marginBottom}>
+                {CARD_DESCRIPTION_PAGE_LAYOUT}
+              </Typography>
+              <Grid container justify="center" className={classes.pageLayout}>
+                <Grid
+                  container
+                  item
+                  direction="column"
+                  xs={12}
+                  sm={9}
+                  className={classes.container}
+                >
+                  <Grid item className={classes.fixedBox}>
+                    <Typography variant="caption">Header</Typography>
+                  </Grid>
 
-                <Grid container item>
-                  <Grid
-                    container
-                    item
-                    className={`${classes.outline} ${classes.box} ${classes.margin}`}
-                    direction="column"
-                  >
+                  <Grid container item>
+                    <Grid
+                      container
+                      item
+                      className={`${classes.outline} ${classes.box} ${classes.margin}`}
+                      direction="column"
+                    >
+                      <Grid
+                        container
+                        item
+                        direction="row"
+                        justify="center"
+                        alignItems="center"
+                        spacing={1}
+                      >
+                        <Grid item>
+                          <Typography variant="h6">
+                            {LAYOUT_SECTION_TOP}
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                      {layout.top &&
+                        layout.top.map((item, index) => (
+                          <AddedComponent
+                            section="top"
+                            title={widgets[item].metadata.displayName}
+                            index={index}
+                            removeComponent={removeComponent}
+                            key={index}
+                          />
+                        ))}
+                      <Grid item>
+                        <IconButton
+                          color="primary"
+                          aria-label="add component to the top section"
+                          onClick={() => openAddComponentDialog("top")}
+                        >
+                          <Add />
+                        </IconButton>
+                      </Grid>
+                    </Grid>
+
                     <Grid
                       container
                       item
                       direction="row"
-                      justify="center"
-                      alignItems="center"
-                      spacing={1}
-                    >
-                      <Grid item>
-                        <Typography variant="h6">
-                          {LAYOUT_SECTION_TOP}
-                        </Typography>
-                      </Grid>
-                    </Grid>
-                    {layout.top &&
-                      layout.top.map((item, index) => (
-                        <AddedComponent
-                          section="top"
-                          title={widgets[item].metadata.displayName}
-                          index={index}
-                          removeComponent={removeComponent}
-                          key={index}
-                        />
-                      ))}
-                    <Grid item>
-                      <IconButton
-                        color="primary"
-                        aria-label="add component to the top section"
-                        onClick={() => openAddComponentDialog("top")}
-                      >
-                        <Add />
-                      </IconButton>
-                    </Grid>
-                  </Grid>
-
-                  <Grid
-                    container
-                    item
-                    direction="row"
-                    className={classes.margin}
-                  >
-                    <Grid
-                      container
-                      item
-                      direction="column"
-                      xs={12}
-                      sm={12}
-                      md={9}
+                      className={classes.margin}
                     >
                       <Grid
-                        item
                         container
-                        className={`${classes.fixedBox} ${classes.outline} ${classes.mainContent}`}
-                        justify="center"
-                        alignItems="center"
+                        item
+                        direction="column"
+                        xs={12}
+                        sm={12}
+                        md={9}
                       >
-                        <Grid item>
-                          <Typography variant="h6">
-                            {LAYOUT_SECTION_MAIN_CONTENT}
-                          </Typography>
+                        <Grid
+                          item
+                          container
+                          className={`${classes.fixedBox} ${classes.outline} ${classes.mainContent}`}
+                          justify="center"
+                          alignItems="center"
+                        >
+                          <Grid item>
+                            <Typography variant="h6">
+                              {LAYOUT_SECTION_MAIN_CONTENT}
+                            </Typography>
+                          </Grid>
+                        </Grid>
+                        <Grid
+                          container
+                          item
+                          direction="column"
+                          className={`${classes.box} ${classes.outline}`}
+                        >
+                          <Grid item>
+                            <Typography variant="h6">
+                              {LAYOUT_SECTION_BOTTOM}
+                            </Typography>
+                          </Grid>
+                          {layout.bottom &&
+                            layout.bottom.map((item, index) => (
+                              <AddedComponent
+                                section="bottom"
+                                title={widgets[item].metadata.displayName}
+                                index={index}
+                                removeComponent={removeComponent}
+                                key={index}
+                              />
+                            ))}
+                          <Grid item>
+                            <IconButton
+                              color="primary"
+                              aria-label="add component to main section"
+                              onClick={() => openAddComponentDialog("bottom")}
+                            >
+                              <Add />
+                            </IconButton>
+                          </Grid>
                         </Grid>
                       </Grid>
                       <Grid
                         container
                         item
                         direction="column"
+                        xs={12}
+                        sm={12}
+                        md={3}
                         className={`${classes.box} ${classes.outline}`}
                       >
                         <Grid item>
                           <Typography variant="h6">
-                            {LAYOUT_SECTION_BOTTOM}
+                            {LAYOUT_SECTION_ASIDE}
                           </Typography>
                         </Grid>
-                        {layout.bottom &&
-                          layout.bottom.map((item, index) => (
+                        {layout.aside &&
+                          layout.aside.map((item, index) => (
                             <AddedComponent
-                              section="bottom"
+                              section="aside"
                               title={widgets[item].metadata.displayName}
                               index={index}
                               removeComponent={removeComponent}
@@ -460,218 +531,199 @@ const PageDesigner = (props) => {
                           <IconButton
                             color="primary"
                             aria-label="add component to main section"
-                            onClick={() => openAddComponentDialog("bottom")}
+                            onClick={() => openAddComponentDialog("aside")}
                           >
                             <Add />
                           </IconButton>
                         </Grid>
                       </Grid>
                     </Grid>
+                  </Grid>
+
+                  <Grid
+                    container
+                    item
+                    className={`${classes.outline} ${classes.box}`}
+                    direction="column"
+                  >
+                    <Grid item>
+                      <Typography variant="h6">
+                        {LAYOUT_SECTION_FOOTER}
+                      </Typography>
+                    </Grid>
                     <Grid
-                      container
                       item
-                      direction="column"
-                      xs={12}
-                      sm={12}
-                      md={3}
-                      className={`${classes.box} ${classes.outline}`}
+                      container
+                      direction="row"
+                      justify="space-between"
                     >
-                      <Grid item>
-                        <Typography variant="h6">
-                          {LAYOUT_SECTION_ASIDE}
-                        </Typography>
+                      <Grid
+                        item
+                        container
+                        className={classes.outline}
+                        xs={12}
+                        md={6}
+                        direction="column"
+                      >
+                        <Grid item>
+                          <Typography variant="h6">
+                            {LAYOUT_SECTION_FOOTER_LEFT}
+                          </Typography>
+                        </Grid>
+                        {layout.footerLeft &&
+                          layout.footerLeft.map((item, index) => (
+                            <AddedComponent
+                              section="footerLeft"
+                              title={widgets[item].metadata.displayName}
+                              index={index}
+                              removeComponent={removeComponent}
+                              key={index}
+                            />
+                          ))}
+                        <Grid item>
+                          <IconButton
+                            color="primary"
+                            aria-label="add component to the footer's left section"
+                            onClick={() => openAddComponentDialog("footerLeft")}
+                          >
+                            <Add />
+                          </IconButton>
+                        </Grid>
                       </Grid>
-                      {layout.aside &&
-                        layout.aside.map((item, index) => (
-                          <AddedComponent
-                            section="aside"
-                            title={widgets[item].metadata.displayName}
-                            index={index}
-                            removeComponent={removeComponent}
-                            key={index}
-                          />
-                        ))}
-                      <Grid item>
-                        <IconButton
-                          color="primary"
-                          aria-label="add component to main section"
-                          onClick={() => openAddComponentDialog("aside")}
-                        >
-                          <Add />
-                        </IconButton>
+                      <Grid
+                        item
+                        container
+                        className={classes.outline}
+                        xs={12}
+                        md={6}
+                        direction="column"
+                      >
+                        <Grid item>
+                          <Typography variant="h6">
+                            {LAYOUT_SECTION_FOOTER_RIGHT}
+                          </Typography>
+                        </Grid>
+                        {layout.footerRight &&
+                          layout.footerRight.map((item, index) => (
+                            <AddedComponent
+                              section="footerRight"
+                              title={widgets[item].metadata.displayName}
+                              index={index}
+                              removeComponent={removeComponent}
+                              key={index}
+                            />
+                          ))}
+                        <Grid item>
+                          <IconButton
+                            color="primary"
+                            aria-label="add component to the footer section"
+                            onClick={() =>
+                              openAddComponentDialog("footerRight")
+                            }
+                          >
+                            <Add />
+                          </IconButton>
+                        </Grid>
                       </Grid>
                     </Grid>
                   </Grid>
                 </Grid>
+              </Grid>
+            </CardContent>
+            <CardActions>
+              <Button
+                disabled={
+                  JSON.stringify(layout) === JSON.stringify(props.layout)
+                }
+                onClick={saveLayout}
+              >
+                {BUTTON_SAVE}
+              </Button>
+            </CardActions>
+          </Card>
+        </Grid>
+      )}
 
-                <Grid
-                  container
-                  item
-                  className={`${classes.outline} ${classes.box}`}
-                  direction="column"
-                >
+      {checkPermission(props.profile.permissions, [
+        permissions.manageThemes,
+      ]) && (
+        <Grid item xs={12}>
+          <Card>
+            <div className={classes.section}>
+              <Typography variant="h4" className={classes.sectionHeader}>
+                {CARD_HEADER_THEME}
+              </Typography>
+              <Grid container direction="column" spacing={4}>
+                <Grid item>
+                  <Typography variant="h6">
+                    {SUBHEADER_THEME_INSTALLED_THEMES}
+                  </Typography>
+                </Grid>
+                {installedThemes.length !== 0 && (
+                  <Grid item container direction="column" spacing={2}>
+                    {installedThemes.map((theme) => (
+                      <ThemeItem
+                        theme={theme}
+                        key={theme.id}
+                        onApply={onThemeApply}
+                        onRemix={onThemeRemix}
+                        onUninstall={onThemeUninstall}
+                      />
+                    ))}
+                  </Grid>
+                )}
+                {installedThemes.length === 0 && (
                   <Grid item>
-                    <Typography variant="h6">
-                      {LAYOUT_SECTION_FOOTER}
+                    <Typography variant="body1" color="textSecondary">
+                      {NO_THEMES_INSTALLED}
                     </Typography>
                   </Grid>
-                  <Grid item container direction="row" justify="space-between">
-                    <Grid
-                      item
-                      container
-                      className={classes.outline}
-                      xs={12}
-                      md={6}
-                      direction="column"
-                    >
-                      <Grid item>
-                        <Typography variant="h6">
-                          {LAYOUT_SECTION_FOOTER_LEFT}
-                        </Typography>
-                      </Grid>
-                      {layout.footerLeft &&
-                        layout.footerLeft.map((item, index) => (
-                          <AddedComponent
-                            section="footerLeft"
-                            title={widgets[item].metadata.displayName}
-                            index={index}
-                            removeComponent={removeComponent}
-                            key={index}
-                          />
-                        ))}
-                      <Grid item>
-                        <IconButton
-                          color="primary"
-                          aria-label="add component to the footer's left section"
-                          onClick={() => openAddComponentDialog("footerLeft")}
-                        >
-                          <Add />
-                        </IconButton>
-                      </Grid>
-                    </Grid>
-                    <Grid
-                      item
-                      container
-                      className={classes.outline}
-                      xs={12}
-                      md={6}
-                      direction="column"
-                    >
-                      <Grid item>
-                        <Typography variant="h6">
-                          {LAYOUT_SECTION_FOOTER_RIGHT}
-                        </Typography>
-                      </Grid>
-                      {layout.footerRight &&
-                        layout.footerRight.map((item, index) => (
-                          <AddedComponent
-                            section="footerRight"
-                            title={widgets[item].metadata.displayName}
-                            index={index}
-                            removeComponent={removeComponent}
-                            key={index}
-                          />
-                        ))}
-                      <Grid item>
-                        <IconButton
-                          color="primary"
-                          aria-label="add component to the footer section"
-                          onClick={() => openAddComponentDialog("footerRight")}
-                        >
-                          <Add />
-                        </IconButton>
-                      </Grid>
-                    </Grid>
+                )}
+                <Grid item>
+                  <Link href={THEMES_REPO} target="_blank" rel="noopener">
+                    {BUTTON_GET_THEMES}
+                  </Link>
+                </Grid>
+                <Grid item container direction="column" spacing={2}>
+                  <Grid
+                    item
+                    container
+                    justify="space-between"
+                    alignItems="center"
+                  >
+                    <Typography variant="h6">
+                      {SUBHEADER_THEME_ADD_THEME}
+                    </Typography>
+                  </Grid>
+                  <Grid item>
+                    <form>
+                      <TextField
+                        required
+                        variant="outlined"
+                        label={SUBHEADER_THEME_ADD_THEME_INPUT_LABEL}
+                        fullWidth
+                        value={newThemeText}
+                        onChange={onNewThemeTextChanged}
+                        placeholder={
+                          SUBHEADER_THEME_ADD_THEME_INPUT_PLACEHOLDER
+                        }
+                        multiline
+                        rows={10}
+                        inputRef={themeInputRef}
+                      />
+                    </form>
+                  </Grid>
+                  <Grid item>
+                    <Button disabled={!isNewThemeTextValid} onClick={addTheme}>
+                      {BUTTON_THEME_INSTALL}
+                    </Button>
                   </Grid>
                 </Grid>
               </Grid>
-            </Grid>
-          </CardContent>
-          <CardActions>
-            <Button
-              disabled={JSON.stringify(layout) === JSON.stringify(props.layout)}
-              onClick={saveLayout}
-            >
-              {BUTTON_SAVE}
-            </Button>
-          </CardActions>
-        </Card>
-      </Grid>
-
-      <Grid item xs={12}>
-        <Card>
-          <div className={classes.section}>
-            <Typography variant="h4" className={classes.sectionHeader}>
-              {CARD_HEADER_THEME}
-            </Typography>
-            <Grid container direction="column" spacing={4}>
-              <Grid item>
-                <Typography variant="h6">
-                  {SUBHEADER_THEME_INSTALLED_THEMES}
-                </Typography>
-              </Grid>
-              {installedThemes.length !== 0 && (
-                <Grid item container direction="column" spacing={2}>
-                  {installedThemes.map((theme) => (
-                    <ThemeItem
-                      theme={theme}
-                      key={theme.id}
-                      onApply={onThemeApply}
-                      onRemix={onThemeRemix}
-                      onUninstall={onThemeUninstall}
-                    />
-                  ))}
-                </Grid>
-              )}
-              {installedThemes.length === 0 && (
-                <Grid item>
-                  <Typography variant="body1" color="textSecondary">
-                    {NO_THEMES_INSTALLED}
-                  </Typography>
-                </Grid>
-              )}
-              <Grid item>
-                <Link href={THEMES_REPO} target="_blank" rel="noopener">
-                  {BUTTON_GET_THEMES}
-                </Link>
-              </Grid>
-              <Grid item container direction="column" spacing={2}>
-                <Grid
-                  item
-                  container
-                  justify="space-between"
-                  alignItems="center"
-                >
-                  <Typography variant="h6">
-                    {SUBHEADER_THEME_ADD_THEME}
-                  </Typography>
-                </Grid>
-                <Grid item>
-                  <form>
-                    <TextField
-                      required
-                      variant="outlined"
-                      label={SUBHEADER_THEME_ADD_THEME_INPUT_LABEL}
-                      fullWidth
-                      value={newThemeText}
-                      onChange={onNewThemeTextChanged}
-                      placeholder={SUBHEADER_THEME_ADD_THEME_INPUT_PLACEHOLDER}
-                      multiline
-                      rows={10}
-                      inputRef={themeInputRef}
-                    />
-                  </form>
-                </Grid>
-                <Grid item>
-                  <Button disabled={!isNewThemeTextValid} onClick={addTheme}>
-                    {BUTTON_THEME_INSTALL}
-                  </Button>
-                </Grid>
-              </Grid>
-            </Grid>
-          </div>
-        </Card>
-      </Grid>
+            </div>
+          </Card>
+        </Grid>
+      )}
 
       <AddComponentDialog
         onClose={onSelection}
@@ -688,12 +740,14 @@ PageDesigner.propTypes = {
   auth: authProps,
   dispatch: PropTypes.func.isRequired,
   address: addressProps,
+  profile: profileProps,
 };
 
 const mapStateToProps = (state) => ({
   layout: state.layout,
   auth: state.auth,
   address: state.address,
+  profile: state.profile,
 });
 
 export default connect(mapStateToProps)(PageDesigner);
