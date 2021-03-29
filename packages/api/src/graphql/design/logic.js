@@ -17,7 +17,7 @@ exports.getTheme = async (ctx) => {
 
 exports.setTheme = async (id, ctx) => {
   checkIfAuthenticated(ctx);
-  if (checkPermission(ctx.user.permissions, [permissions.manageThemes])) {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageThemes])) {
     throw new Error(strings.responses.action_not_allowed);
   }
 
@@ -39,7 +39,7 @@ exports.setTheme = async (id, ctx) => {
 
 exports.removeTheme = async (id, ctx) => {
   checkIfAuthenticated(ctx);
-  if (checkPermission(ctx.user.permissions, [permissions.manageThemes])) {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageThemes])) {
     throw new Error(strings.responses.action_not_allowed);
   }
 
@@ -50,7 +50,7 @@ exports.removeTheme = async (id, ctx) => {
 
 exports.getAllThemes = async (ctx) => {
   checkIfAuthenticated(ctx);
-  if (checkPermission(ctx.user.permissions, [permissions.manageThemes])) {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageThemes])) {
     throw new Error(strings.responses.action_not_allowed);
   }
 
@@ -60,7 +60,7 @@ exports.getAllThemes = async (ctx) => {
 
 exports.addTheme = async (themeData, ctx) => {
   checkIfAuthenticated(ctx);
-  if (checkPermission(ctx.user.permissions, [permissions.manageThemes])) {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageThemes])) {
     throw new Error(strings.responses.action_not_allowed);
   }
 
@@ -100,7 +100,7 @@ exports.getLayout = async (ctx) => {
 
 exports.setLayout = async (layoutData, ctx) => {
   checkIfAuthenticated(ctx);
-  if (checkPermission(ctx.user.permissions, [permissions.manageLayout])) {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageLayout])) {
     throw new Error(strings.responses.action_not_allowed);
   }
 

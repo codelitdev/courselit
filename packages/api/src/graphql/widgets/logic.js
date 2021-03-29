@@ -25,8 +25,7 @@ exports.getWidgetSettings = async (name, ctx) => {
 
 exports.getWidgetData = async (name, ctx) => {
   checkIfAuthenticated(ctx);
-
-  if (checkPermission(ctx.user.permissions, [permissions.manageWidgets])) {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageWidgets])) {
     throw new Error(strings.responses.action_not_allowed);
   }
 
@@ -43,8 +42,7 @@ exports.getWidgetData = async (name, ctx) => {
 
 exports.saveWidgetSettings = async (widgetSettingsData, ctx) => {
   checkIfAuthenticated(ctx);
-
-  if (checkPermission(ctx.user.permissions, [permissions.manageWidgets])) {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageWidgets])) {
     throw new Error(strings.responses.action_not_allowed);
   }
 
@@ -117,8 +115,7 @@ exports.saveWidgetData = async (widgetData, ctx) => {
 
 exports.clearWidgetData = async (name, ctx) => {
   checkIfAuthenticated(ctx);
-
-  if (checkPermission(ctx.user.permissions, [permissions.manageWidgets])) {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageWidgets])) {
     throw new Error(strings.responses.action_not_allowed);
   }
 

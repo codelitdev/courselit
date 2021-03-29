@@ -15,7 +15,7 @@ import { networkAction } from "../../../redux/actions.js";
 import { OverviewAndDetail } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 const Img = dynamic(() => import("../../Img"));
-const UserDetails = dynamic(() => import("./UserDetails.js"));
+const Details = dynamic(() => import("./Details.js"));
 
 const UsersManager = ({ auth, address, dispatch }) => {
   // const [, setUsersSummary] = useState({
@@ -69,19 +69,13 @@ const UsersManager = ({ auth, address, dispatch }) => {
 
   const loadUsers = async () => {
     const query = `
-    query c {
+    query {
       users: getSiteUsers(searchData: {
         offset: ${usersPaginationOffset}
       }) {
         id,
-        email,
         name,
-        verified,
-        isCreator,
-        isAdmin,
-        avatar,
-        purchases,
-        active
+        userId
       }
     }
     `;
@@ -132,7 +126,7 @@ const UsersManager = ({ auth, address, dispatch }) => {
         />
       </>
     ),
-    Detail: <UserDetails user={user} />,
+    Detail: <Details userId={user.userId} />,
   });
 
   return (

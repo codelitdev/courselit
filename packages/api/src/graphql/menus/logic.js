@@ -22,7 +22,7 @@ exports.getMenu = async (ctx) => {
 exports.getMenuAsAdmin = async (ctx) => {
   checkIfAuthenticated(ctx);
 
-  if (checkPermission(ctx.user.permissions, [permissions.manageMenus])) {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageMenus])) {
     throw new Error(responses.action_not_allowed);
   }
 
@@ -32,7 +32,7 @@ exports.getMenuAsAdmin = async (ctx) => {
 exports.saveLink = async (linkData, ctx) => {
   checkIfAuthenticated(ctx);
 
-  if (checkPermission(ctx.user.permissions, [permissions.manageMenus])) {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageMenus])) {
     throw new Error(responses.action_not_allowed);
   }
 
@@ -68,7 +68,7 @@ exports.saveLink = async (linkData, ctx) => {
 exports.deleteLink = async (id, ctx) => {
   checkIfAuthenticated(ctx);
 
-  if (checkPermission(ctx.user.permissions, [permissions.manageMenus])) {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageMenus])) {
     throw new Error(responses.action_not_allowed);
   }
 

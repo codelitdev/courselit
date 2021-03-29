@@ -192,12 +192,16 @@ const PageDesigner = (props) => {
 
       if (response.layout) {
         props.dispatch(layoutAvailable(response.layout.layout));
+        props.dispatch(
+          setAppMessage(new AppMessage(APP_MESSAGE_CHANGES_SAVED))
+        );
+      } else {
+        props.dispatch(setAppMessage(new AppMessage(response.message)));
       }
     } catch (err) {
       props.dispatch(setAppMessage(new AppMessage(err.message)));
     } finally {
       props.dispatch(networkAction(false));
-      props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_CHANGES_SAVED)));
     }
   };
 

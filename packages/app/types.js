@@ -61,10 +61,9 @@ export const siteUser = PropTypes.shape({
   email: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
   verified: PropTypes.bool.isRequired,
-  isCreator: PropTypes.bool.isRequired,
-  isAdmin: PropTypes.bool.isRequired,
   avatar: PropTypes.string,
   purchases: PropTypes.arrayOf(PropTypes.string),
+  permissions: PropTypes.arrayOf(PropTypes.string),
 });
 
 export const featuredCourse = PropTypes.shape({
@@ -103,3 +102,7 @@ export const addressProps = PropTypes.shape({
   frontend: PropTypes.string.isRequired,
   domain: PropTypes.string.isRequired,
 });
+
+export const networkActionProps = PropTypes.bool;
+
+export const dispatchProps = PropTypes.func;

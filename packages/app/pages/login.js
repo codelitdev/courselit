@@ -13,12 +13,13 @@ import {
   LOGIN_INSTEAD_BUTTON,
 } from "../config/strings.js";
 import { JWT_COOKIE_NAME, USERID_COOKIE_NAME } from "../config/constants.js";
-import { signedIn, networkAction } from "../redux/actions.js";
+import { signedIn, networkAction, setAppMessage } from "../redux/actions.js";
 import { setCookie } from "../lib/session.js";
 import { Grid, TextField, Button, Typography } from "@material-ui/core";
 import FetchBuilder from "../lib/fetch.js";
 import { makeStyles } from "@material-ui/styles";
 import dynamic from "next/dynamic";
+import AppMessage from "../models/app-message.js";
 
 const BaseLayout = dynamic(() => import("../components/Public/BaseLayout"));
 
@@ -39,16 +40,16 @@ const Login = (props) => {
     err: "",
     msg: "",
   };
-  const defaultLoginData = { email: "", pass: "", err: "" };
+  const defaultLoginData = { email: "", pass: "" };
   const [loginData, setLoginData] = useState(defaultLoginData);
   const [signupData, setSignupData] = useState(defaultSignupData);
   const [showSignupForm, setShowSignupForm] = useState(false);
   const classes = useStyles();
   const router = useRouter();
-  const { address } = props;
+  const { address, dispatch, auth } = props;
 
   useEffect(() => {
-    if (!props.auth.guest) {
+    if (!auth.guest) {
       const { query } = router;
       query.redirect ? router.push(`${query.redirect}`) : router.push("/");
     }
@@ -59,24 +60,25 @@ const Login = (props) => {
 
     // validating the data
     if (!loginData.email || emptyStringPat.test(loginData.pass)) {
-      return setLoginData(
-        Object.assign({}, loginData, { err: ERR_ALL_FIELDS_REQUIRED })
-      );
+      // return setLoginData(
+      //   Object.assign({}, loginData, { err: ERR_ALL_FIELDS_REQUIRED })
+      // );
+      return dispatch(setAppMessage(new AppMessage(ERR_ALL_FIELDS_REQUIRED)));
     }
 
     clearLoginErrors();
 
+    const formData = new window.FormData();
+    formData.append("email", loginData.email);
+    formData.append("password", loginData.pass);
+
+    const fetch = new FetchBuilder()
+      .setUrl(`${address.backend}/auth/login`)
+      .setPayload(formData)
+      .build();
+
     try {
-      props.dispatch(networkAction(true));
-
-      const formData = new window.FormData();
-      formData.append("email", loginData.email);
-      formData.append("password", loginData.pass);
-
-      const fetch = new FetchBuilder()
-        .setUrl(`${address.backend}/auth/login`)
-        .setPayload(formData)
-        .build();
+      dispatch(networkAction(true));
       const response = await fetch.exec();
       const { token, message } = response;
 
@@ -93,10 +95,12 @@ const Login = (props) => {
         });
         props.dispatch(signedIn(loginData.email, token));
       } else {
-        setLoginData(Object.assign({}, loginData, { err: message }));
+        // setLoginData(Object.assign({}, loginData, { err: message }));
+        dispatch(setAppMessage(new AppMessage(message)));
       }
     } catch (err) {
-      setLoginData(Object.assign({}, loginData, { err: err.message }));
+      // setLoginData(Object.assign({}, loginData, { err: err.message }));
+      dispatch(setAppMessage(new AppMessage(err.message)));
     } finally {
       props.dispatch(networkAction(false));
     }

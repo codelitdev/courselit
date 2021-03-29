@@ -20,9 +20,15 @@ import {
   COURSE_EDITOR_DESCRIPTION,
   VISIT_POST_BUTTON,
   VISIT_COURSE_BUTTON,
+  BTN_PUBLISH,
+  BTN_UNPUBLISH,
 } from "../../../config/strings.js";
 import { networkAction, setAppMessage } from "../../../redux/actions.js";
-import { queryGraphQL, formulateCourseUrl } from "../../../lib/utils.js";
+import {
+  queryGraphQL,
+  formulateCourseUrl,
+  checkPermission,
+} from "../../../lib/utils.js";
 import Link from "next/link";
 import {
   Grid,
@@ -38,7 +44,11 @@ import {
 import { makeStyles } from "@material-ui/styles";
 import { Delete, Add } from "@material-ui/icons";
 import AppMessage from "../../../models/app-message.js";
-import { LESSON_TYPE_TEXT, MIMETYPE_IMAGE } from "../../../config/constants.js";
+import {
+  LESSON_TYPE_TEXT,
+  MIMETYPE_IMAGE,
+  permissions,
+} from "../../../config/constants.js";
 import FetchBuilder from "../../../lib/fetch";
 import { Card, RichText as TextEditor } from "@courselit/components-library";
 import dynamic from "next/dynamic";
@@ -185,8 +195,7 @@ const CourseEditor = (props) => {
       mutation {
         course: createCourse(courseData: {
           title: "${courseData.course.title}",
-          cost: ${courseData.course.isBlog ? 0 : courseData.course.cost},
-          published: ${courseData.course.published},
+          cost: ${courseData.course.isBlog ? 0 : courseData.course.cost}
           privacy: ${courseData.course.privacy.toUpperCase()},
           isBlog: ${courseData.course.isBlog},
           description: "${TextEditor.stringify(courseData.course.description)}",
@@ -458,21 +467,6 @@ const CourseEditor = (props) => {
               <Grid item xs={12} sm={4}>
                 <Grid container justify="space-between" alignItems="center">
                   <Grid item>
-                    <Typography variant="body1">Published</Typography>
-                  </Grid>
-                  <Grid item>
-                    <Switch
-                      type="checkbox"
-                      name="published"
-                      checked={courseData.course.published}
-                      onChange={onCourseDetailsChange}
-                    />
-                  </Grid>
-                </Grid>
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <Grid container justify="space-between" alignItems="center">
-                  <Grid item>
                     <Typography variant="body1">Featured course</Typography>
                   </Grid>
                   <Grid item>
@@ -499,17 +493,28 @@ const CourseEditor = (props) => {
                 </Button>
               </Grid>
               {courseData.course.id && (
-                <Grid item>
-                  <Button>
-                    <Link href={formulateCourseUrl(courseData.course)}>
-                      <a className={classes.link} target="_blank">
-                        {courseData.course.isBlog
-                          ? VISIT_POST_BUTTON
-                          : VISIT_COURSE_BUTTON}
-                      </a>
-                    </Link>
-                  </Button>
-                </Grid>
+                <>
+                  {checkPermission(props.profile.permissions, [
+                    permissions.publishCourse,
+                  ]) && (
+                    <Button onClick={() => {}}>
+                      {courseData.course.published
+                        ? BTN_UNPUBLISH
+                        : BTN_PUBLISH}
+                    </Button>
+                  )}
+                  <Grid item>
+                    <Button>
+                      <Link href={formulateCourseUrl(courseData.course)}>
+                        <a className={classes.link} target="_blank">
+                          {courseData.course.isBlog
+                            ? VISIT_POST_BUTTON
+                            : VISIT_COURSE_BUTTON}
+                        </a>
+                      </Link>
+                    </Button>
+                  </Grid>
+                </>
               )}
             </Grid>
           </div>
