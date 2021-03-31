@@ -52,10 +52,13 @@ module.exports = (passport) => {
             newUser.permissions = [permissions.enrollInCourse];
           } else {
             newUser.permissions = [
+              permissions.manageCourse,
               permissions.manageAnyCourse,
               permissions.publishCourse,
+              permissions.manageMedia,
               permissions.manageAnyMedia,
               permissions.uploadMedia,
+              permissions.viewAnyMedia,
               permissions.manageLayout,
               permissions.manageThemes,
               permissions.manageMenus,

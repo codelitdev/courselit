@@ -23,7 +23,7 @@ const Editor = dynamic(() => import("./Editor.js"));
 const Img = dynamic(() => import("../../Img.js"));
 
 const useStyles = makeStyles((theme) => ({
-  addNewButton: {
+  btn: {
     width: "100%",
     height: "100%",
   },
@@ -93,7 +93,13 @@ const Index = (props) => {
       map.push(getComponentConfig(media));
     });
     map.push({
-      Overview: <Button onClick={() => loadMedia()}>{LOAD_MORE_TEXT}</Button>,
+      Overview: (
+        <Button
+          variant="contained"
+          className={classes.btn}
+          onClick={() => loadMedia()}>
+          {LOAD_MORE_TEXT}
+        </Button>)
     });
     if (
       !props.selectionMode &&
@@ -132,13 +138,11 @@ const Index = (props) => {
     subtitle: MEDIA_MANAGER_DIALOG_TITLE,
     Overview: (
       <>
-        {/* <Img src="" isThumbnail={true} />
-        <GridListTileBar title="Add new" /> */}
         <Button
           variant="contained"
           color="primary"
           startIcon={<Add />}
-          className={classes.addNewButton}
+          className={classes.btn}
         >
           Add new
         </Button>

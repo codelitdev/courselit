@@ -168,7 +168,6 @@ const CourseEditor = (props) => {
           id: "${courseData.course.id}"
           title: "${courseData.course.title}",
           cost: ${courseData.course.isBlog ? 0 : courseData.course.cost},
-          published: ${courseData.course.published},
           privacy: ${courseData.course.privacy.toUpperCase()},
           isBlog: ${courseData.course.isBlog},
           description: "${TextEditor.stringify(courseData.course.description)}",

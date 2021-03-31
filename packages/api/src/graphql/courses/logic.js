@@ -174,7 +174,7 @@ exports.getCoursesAsAdmin = async (offset, ctx) => {
   const user = ctx.user;
 
   if (
-    checkPermission(user.permissions, [
+    !checkPermission(user.permissions, [
       permissions.manageCourse,
       permissions.manageAnyCourse,
     ])
