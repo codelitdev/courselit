@@ -37,17 +37,32 @@ const useStyles = makeStyles((theme: any) => ({
 interface OverviewAndDetailProps {
   title: string;
   componentsMap: ComponentProps[];
+  onSelect?: (index: number) => void;
 }
 
 const OverviewAndDetail = ({
   title,
   componentsMap,
+  onSelect: onSelectFromParent,
 }: OverviewAndDetailProps) => {
   const [selectedComponentIndex, setSelectedComponentIndex] = React.useState(
     -1
   );
   const classes = useStyles();
   const selectedComponent = componentsMap[selectedComponentIndex];
+
+  const onSelectComponentWithDetail = (index: number) => {
+    setSelectedComponentIndex(index);
+    if (onSelectFromParent) {
+      onSelectFromParent(index);
+    }
+  };
+
+  const onSelectComponentWithoutDetail = (index: number) => {
+    if (onSelectFromParent) {
+      onSelectFromParent(index);
+    }
+  };
 
   return (
     <Grid container direction="column">
@@ -82,7 +97,8 @@ const OverviewAndDetail = ({
             {selectedComponentIndex === -1 && (
               <OverviewList
                 componentsMap={componentsMap}
-                onSelect={(index: number) => setSelectedComponentIndex(index)}
+                onSelectComponentWithDetail={onSelectComponentWithDetail}
+                onSelectComponentWithoutDetail={onSelectComponentWithoutDetail}
               />
             )}
           </>

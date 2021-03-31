@@ -30,14 +30,18 @@ const getHandler = async (req, res) => {
     domain: req.domain._id,
   });
 
+  if (!media) {
+    return res.status(404).json({ message: responses.item_not_found });
+  }
+
+  const { uploadFolderForDomain, thumbFolderForDomain } = generateFolderPaths({
+    uploadFolder,
+    domainName: req.domain.name,
+  });
   const { thumb } = req.query;
 
   if (thumb === "1") {
     if (media.thumbnail) {
-      const { thumbFolderForDomain } = generateFolderPaths({
-        uploadFolder,
-        domainName: req.domain.name,
-      });
       res.contentType(useWebp ? "image/webp" : "image/jpeg");
       res.sendFile(`${thumbFolderForDomain}/${media.thumbnail}`);
     } else {
@@ -45,7 +49,7 @@ const getHandler = async (req, res) => {
     }
   } else {
     res.contentType(media.mimeType);
-    res.sendFile(`${constants.uploadFolder}/${media.fileName}`);
+    res.sendFile(`${uploadFolderForDomain}/${media.fileName}`);
   }
 };
 

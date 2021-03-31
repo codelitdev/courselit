@@ -25,7 +25,14 @@ import fetch from "isomorphic-unfetch";
 const AppDialog = dynamic(() => import("../../Public/AppDialog"));
 const MediaPreview = dynamic(() => import("./MediaPreview"));
 
-function Editor({ auth, media, address, dispatch }) {
+function Editor({
+  auth,
+  media,
+  address,
+  dispatch,
+  onMediaEdited,
+  onMediaDeleted,
+}) {
   const [mediaBeingEdited, setMediaBeingEdited] = useState(media);
   const [deleteMediaPopupOpened, setDeleteMediaPopupOpened] = useState(false);
   const Router = useRouter();
@@ -60,6 +67,7 @@ function Editor({ auth, media, address, dispatch }) {
       if (res.status === 200) {
         const { message } = await res.json();
         dispatch(setAppMessage(new AppMessage(message)));
+        onMediaDeleted(mediaBeingEdited.id);
       }
     } catch (err) {
       dispatch(setAppMessage(new AppMessage(err.message)));
@@ -83,6 +91,7 @@ function Editor({ auth, media, address, dispatch }) {
       media: updateMedia(mediaData: ${formattedGraphQLQuery}) {
         id,
         title,
+        mimeType,
         altText
       }
     }
@@ -99,6 +108,7 @@ function Editor({ auth, media, address, dispatch }) {
 
       if (response.media) {
         dispatch(setAppMessage(new AppMessage(APP_MESSAGE_CHANGES_SAVED)));
+        onMediaEdited(response.media);
       }
     } catch (err) {
       dispatch(setAppMessage(new AppMessage(err.message)));
@@ -159,6 +169,8 @@ Editor.propTypes = {
   auth: authProps,
   address: addressProps,
   dispatch: PropTypes.func.isRequired,
+  onMediaEdited: PropTypes.func.isRequired,
+  onMediaDeleted: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({

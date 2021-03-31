@@ -48,7 +48,7 @@ import { Card, RichText as TextEditor } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 
 const AppDialog = dynamic(() => import("../../Public/AppDialog"));
-const MediaSelector = dynamic(() => import("../Media/MediaSelector.js"));
+const MediaSelector = dynamic(() => import("../Media/MediaSelector"));
 
 const useStyles = makeStyles((theme) => ({
   formControl: {

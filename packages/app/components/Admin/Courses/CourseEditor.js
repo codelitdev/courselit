@@ -54,7 +54,7 @@ import { Card, RichText as TextEditor } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 const LessonEditor = dynamic(() => import("./LessonEditor.js"));
 const AppDialog = dynamic(() => import("../../Public/AppDialog.js"));
-const MediaSelector = dynamic(() => import("../Media/MediaSelector.js"));
+const MediaSelector = dynamic(() => import("../Media/MediaSelector"));
 
 const useStyles = makeStyles((theme) => ({
   title: {

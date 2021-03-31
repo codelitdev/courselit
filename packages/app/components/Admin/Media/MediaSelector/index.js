@@ -3,12 +3,12 @@ import PropTypes from "prop-types";
 import {
   BUTTON_SELECT_MEDIA,
   DIALOG_TITLE_FEATURED_IMAGE,
-} from "../../../config/strings.js";
+} from "../../../../config/strings";
 import { Grid, Button, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import dynamic from "next/dynamic";
 
-const Img = dynamic(() => import("../../Img.js"));
+const Img = dynamic(() => import("../../../Img.js"));
 const MediaManagerDialog = dynamic(() => import("./MediaManagerDialog.js"));
 
 const useStyles = makeStyles((theme) => ({

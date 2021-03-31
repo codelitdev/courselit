@@ -7,11 +7,11 @@ import {
   DialogActions,
   Button,
 } from "@material-ui/core";
-import MediaGallery from "./MediaGallery.js";
+import MediaGallery from "../index";
 import {
   BUTTON_CANCEL_TEXT,
   DIALOG_SELECT_BUTTON,
-} from "../../../config/strings.js";
+} from "../../../../config/strings";
 
 const MediaManagerDialog = (props) => {
   const { onClose, onOpen } = props;
@@ -24,8 +24,8 @@ const MediaManagerDialog = (props) => {
       <DialogTitle>{props.title}</DialogTitle>
       <DialogContent>
         <MediaGallery
-          onMediaSelected={(mediaId) => setSelectedMediaId(mediaId)}
-          mimeTypesToShow={props.mimeTypesToShow}
+          selectionMode={true}
+          onSelect={(mediaId) => setSelectedMediaId(mediaId)}
         />
       </DialogContent>
       <DialogActions>
