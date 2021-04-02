@@ -36,6 +36,10 @@ function Editor({
   const [mediaBeingEdited, setMediaBeingEdited] = useState(media);
   const [deleteMediaPopupOpened, setDeleteMediaPopupOpened] = useState(false);
   const Router = useRouter();
+  const onlyChangedFields = getObjectContainingOnlyChangedFields(
+    media,
+    mediaBeingEdited
+  );
 
   const onMediaBeingEditedChanged = (e) =>
     setMediaBeingEdited(
@@ -64,10 +68,12 @@ function Editor({
         return;
       }
 
+      const { message } = await res.json();
       if (res.status === 200) {
-        const { message } = await res.json();
         dispatch(setAppMessage(new AppMessage(message)));
         onMediaDeleted(mediaBeingEdited.id);
+      } else {
+        throw new Error(message);
       }
     } catch (err) {
       dispatch(setAppMessage(new AppMessage(err.message)));
@@ -77,10 +83,10 @@ function Editor({
   };
 
   const updateMedia = async () => {
-    const onlyChangedFields = getObjectContainingOnlyChangedFields(
-      media,
-      mediaBeingEdited
-    );
+    // const onlyChangedFields = getObjectContainingOnlyChangedFields(
+    //   media,
+    //   mediaBeingEdited
+    // );
     if (Object.keys(onlyChangedFields).length === 0) {
       return;
     }
@@ -147,7 +153,12 @@ function Editor({
           onChange={onMediaBeingEditedChanged}
         />
       </form>
-      <Button onClick={updateMedia}>{BUTTON_SAVE}</Button>
+      <Button
+        onClick={updateMedia}
+        disabled={Object.keys(onlyChangedFields).length === 0}
+      >
+        {BUTTON_SAVE}
+      </Button>
       <Button onClick={() => setDeleteMediaPopupOpened(true)}>
         {BUTTON_DELETE_MEDIA}
       </Button>

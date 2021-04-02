@@ -29,7 +29,7 @@ const MediaManagerDialog = (props) => {
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{BUTTON_CANCEL_TEXT}</Button>
+        <Button onClick={() => onClose()}>{BUTTON_CANCEL_TEXT}</Button>
         <Button onClick={handleSelection} disabled={!selectedMediaId}>
           {DIALOG_SELECT_BUTTON}
         </Button>

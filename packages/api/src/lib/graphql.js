@@ -4,6 +4,7 @@ const strings = require("../config/strings.js");
 const constants = require("../config/constants.js");
 const ObjectId = require("mongoose").Types.ObjectId;
 const Media = require("../models/Media.js");
+const HttpError = require("./HttpError.js");
 
 exports.checkIfAuthenticated = (ctx) => {
   if (!ctx.user) throw new Error(strings.responses.request_not_authenticated);
@@ -138,7 +139,7 @@ exports.getMediaOrThrow = async (id, ctx) => {
   const media = await Media.findOne({ _id: id, domain: ctx.domain._id });
 
   if (!media) {
-    throw new Error(strings.responses.item_not_found);
+    throw new HttpError(strings.responses.item_not_found, 404);
   }
 
   if (
@@ -147,14 +148,14 @@ exports.getMediaOrThrow = async (id, ctx) => {
     ])
   ) {
     if (!this.checkOwnershipWithoutModel(media, ctx)) {
-      throw new Error(strings.responses.item_not_found);
+      throw new HttpError(strings.responses.item_not_found, 403);
     } else {
       if (
         !this.checkPermission(ctx.user.permissions, [
           constants.permissions.manageMedia,
         ])
       ) {
-        throw new Error(strings.responses.action_not_allowed);
+        throw new HttpError(strings.responses.action_not_allowed, 403);
       }
     }
   }

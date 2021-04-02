@@ -198,6 +198,10 @@ const Settings = (props) => {
   };
 
   const onChangeData = (e) => {
+    if (!e) {
+      return;
+    }
+
     const change =
       typeof e === "string"
         ? { logopath: e }

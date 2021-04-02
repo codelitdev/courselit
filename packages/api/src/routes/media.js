@@ -174,7 +174,7 @@ const deleteHandler = async (req, res) => {
   try {
     media = await getMediaOrThrow(req.params.mediaId, req);
   } catch (err) {
-    return res.status(200).json({ message: err.message });
+    return res.status(err.statusCode).json({ message: err.message });
   }
 
   const { uploadFolderForDomain, thumbFolderForDomain } = generateFolderPaths({
