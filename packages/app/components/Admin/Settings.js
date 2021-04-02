@@ -49,9 +49,9 @@ import {
 import FetchBuilder from "../../lib/fetch";
 import { decode, encode } from "base-64";
 import dynamic from "next/dynamic";
+import AppMessage from "../../models/app-message.js";
 
-const MediaSelector = dynamic(() => import("./Media/MediaSelector.js"));
-const AppMessage = dynamic(() => import("../../models/app-message.js"));
+const MediaSelector = dynamic(() => import("./Media/MediaSelector"));
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -198,6 +198,10 @@ const Settings = (props) => {
   };
 
   const onChangeData = (e) => {
+    if (!e) {
+      return;
+    }
+
     const change =
       typeof e === "string"
         ? { logopath: e }

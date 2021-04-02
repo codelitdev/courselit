@@ -1,23 +1,45 @@
 /**
- * Bussiness logic for managing media
+ * Bussiness logic for managing media.
  */
 const Media = require("../../models/Media.js");
-const { makeModelTextSearchable } = require("../../lib/graphql.js");
-const { itemsPerPage } = require("../../config/constants.js");
 const {
-  checkIfAuthenticated,
-  checkOwnership,
+  makeModelTextSearchable,
+  checkPermission,
+  validateOffset,
+  getMediaOrThrow,
 } = require("../../lib/graphql.js");
+const { itemsPerPage, permissions } = require("../../config/constants.js");
+const { checkIfAuthenticated } = require("../../lib/graphql.js");
 const strings = require("../../config/strings.js");
 
-const checkMediaOwnership = checkOwnership(Media);
-
 exports.getCreatorMedia = async (offset, ctx, text) => {
-  const query = {
-    creatorId: ctx && ctx.user && ctx.user._id,
-  };
-  if (text) query.$text = { $search: text };
+  checkIfAuthenticated(ctx);
+  validateOffset(offset);
+  const user = ctx.user;
 
+  if (
+    !checkPermission(user.permissions, [
+      permissions.viewAnyMedia,
+      permissions.manageMedia,
+      permissions.manageAnyMedia,
+    ])
+  ) {
+    throw new Error(strings.responses.action_not_allowed);
+  }
+
+  const query = {
+    domain: ctx.domain._id,
+  };
+  if (
+    !checkPermission(user.permissions, [
+      permissions.manageAnyMedia,
+      permissions.viewAnyMedia,
+    ])
+  ) {
+    query.creatorId = ctx.user._id;
+  }
+
+  if (text) query.$text = { $search: text };
   const searchMedia = makeModelTextSearchable(Media);
 
   return searchMedia(
@@ -31,8 +53,7 @@ exports.getCreatorMedia = async (offset, ctx, text) => {
 };
 
 exports.updateMedia = async (mediaData, ctx) => {
-  checkIfAuthenticated(ctx);
-  let media = await checkMediaOwnership(mediaData.id, ctx);
+  const media = await getMediaOrThrow(mediaData.id, ctx);
 
   for (const key of Object.keys(mediaData)) {
     media[key] = mediaData[key];
@@ -42,6 +63,5 @@ exports.updateMedia = async (mediaData, ctx) => {
     throw new Error(strings.responses.title_is_required);
   }
 
-  media = await media.save();
-  return media;
+  return await media.save();
 };

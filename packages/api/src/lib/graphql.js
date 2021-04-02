@@ -3,6 +3,8 @@ const { decode } = require("base-64");
 const strings = require("../config/strings.js");
 const constants = require("../config/constants.js");
 const ObjectId = require("mongoose").Types.ObjectId;
+const Media = require("../models/Media.js");
+const HttpError = require("./HttpError.js");
 
 exports.checkIfAuthenticated = (ctx) => {
   if (!ctx.user) throw new Error(strings.responses.request_not_authenticated);
@@ -27,6 +29,19 @@ exports.checkOwnership = (Model) => async (id, ctx) => {
   }
 
   return item;
+};
+
+exports.checkOwnershipWithoutModel = (item, ctx) => {
+  if (
+    !item ||
+    (ObjectId.isValid(item.creatorId)
+      ? item.creatorId.toString() !== ctx.user._id.toString()
+      : item.creatorId.toString() !== ctx.user.userId.toString())
+  ) {
+    return false;
+  }
+
+  return true;
 };
 
 exports.validateOffset = (offset) => {
@@ -111,4 +126,39 @@ const validateSearchInput = (searchData, checkIfRequestIsAuthenticated) => {
   if (checkIfRequestIsAuthenticated) {
     this.checkIfAuthenticated(searchData.graphQLContext);
   }
+};
+
+exports.checkPermission = (actualPermissions, desiredPermissions) =>
+  actualPermissions.some((permission) =>
+    desiredPermissions.includes(permission)
+  );
+
+exports.getMediaOrThrow = async (id, ctx) => {
+  this.checkIfAuthenticated(ctx);
+
+  const media = await Media.findOne({ _id: id, domain: ctx.domain._id });
+
+  if (!media) {
+    throw new HttpError(strings.responses.item_not_found, 404);
+  }
+
+  if (
+    !this.checkPermission(ctx.user.permissions, [
+      constants.permissions.manageAnyMedia,
+    ])
+  ) {
+    if (!this.checkOwnershipWithoutModel(media, ctx)) {
+      throw new HttpError(strings.responses.item_not_found, 403);
+    } else {
+      if (
+        !this.checkPermission(ctx.user.permissions, [
+          constants.permissions.manageMedia,
+        ])
+      ) {
+        throw new HttpError(strings.responses.action_not_allowed, 403);
+      }
+    }
+  }
+
+  return media;
 };

@@ -20,7 +20,7 @@ const useStyles = makeStyles({
   },
 });
 
-function Upload({ auth, address, dispatch }) {
+function Upload({ auth, address, dispatch, resetOverview }) {
   const defaultUploadData = {
     title: "",
     altText: "",
@@ -67,6 +67,7 @@ function Upload({ auth, address, dispatch }) {
       if (res.media) {
         setUploadData(defaultUploadData);
         dispatch(setAppMessage(new AppMessage(FILE_UPLOAD_SUCCESS)));
+        await resetOverview();
       } else {
         dispatch(setAppMessage(new AppMessage(res.message)));
       }
@@ -119,6 +120,7 @@ Upload.propTypes = {
   address: addressProps,
   auth: authProps,
   dispatch: PropTypes.func.isRequired,
+  resetOverview: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({

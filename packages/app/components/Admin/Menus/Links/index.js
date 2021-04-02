@@ -13,13 +13,13 @@ const NavigationLinks = (props) => {
   const [links, setLinks] = useState([]);
 
   useEffect(() => {
-    getNavigationLinks();
+    getMenu();
   }, []);
 
-  const getNavigationLinks = async () => {
+  const getMenu = async () => {
     const query = `
         query {
-            links: getNavigation {
+            links: getMenuAsAdmin {
                 id,
                 text,
                 destination,

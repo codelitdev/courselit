@@ -6,17 +6,37 @@ const Lesson = require("../../models/Lesson.js");
 const strings = require("../../config/strings.js");
 const {
   checkIfAuthenticated,
-  checkOwnership,
+  checkPermission,
+  checkOwnershipWithoutModel,
 } = require("../../lib/graphql.js");
 const Course = require("../../models/Course.js");
 const { lessonValidator } = require("./helpers.js");
+const { permissions } = require("../../config/constants.js");
 
-const checkLessonOwnership = checkOwnership(Lesson);
+const getLessonOrThrow = async (id, ctx) => {
+  checkIfAuthenticated(ctx);
+
+  const lesson = await Lesson.findOne({ _id: id, domain: ctx.domain._id });
+
+  if (!lesson) {
+    throw new Error(strings.responses.item_not_found);
+  }
+
+  if (!checkPermission(ctx.user.permissions, [permissions.manageAnyCourse])) {
+    if (!checkOwnershipWithoutModel(lesson, ctx)) {
+      throw new Error(strings.responses.item_not_found);
+    } else {
+      if (!checkPermission(ctx.user.permissions, [permissions.manageCourse])) {
+        throw new Error(strings.responses.action_not_allowed);
+      }
+    }
+  }
+
+  return lesson;
+};
 
 exports.getLesson = async (id, ctx) => {
-  checkIfAuthenticated(ctx);
-  const lesson = await checkLessonOwnership(id, ctx);
-  return lesson;
+  return await getLessonOrThrow(id, ctx);
 };
 
 exports.getLessonDetails = async (id, ctx) => {
@@ -38,6 +58,10 @@ exports.getLessonDetails = async (id, ctx) => {
 
 exports.createLesson = async (lessonData, ctx) => {
   checkIfAuthenticated(ctx);
+  if (!checkPermission(ctx.user.permissions, [permissions.manageCourse])) {
+    throw new Error(strings.responses.action_not_allowed);
+  }
+
   lessonValidator(lessonData);
 
   try {
@@ -68,9 +92,21 @@ exports.createLesson = async (lessonData, ctx) => {
   }
 };
 
+exports.updateLesson = async (lessonData, ctx) => {
+  let lesson = await getLessonOrThrow(lessonData.id, ctx);
+
+  lessonValidator(lessonData);
+
+  for (const key of Object.keys(lessonData)) {
+    lesson[key] = lessonData[key];
+  }
+
+  lesson = await lesson.save();
+  return lesson;
+};
+
 exports.deleteLesson = async (id, ctx) => {
-  checkIfAuthenticated(ctx);
-  const lesson = await checkLessonOwnership(id, ctx);
+  const lesson = await getLessonOrThrow(id, ctx);
 
   try {
     // remove from the parent Course's lessons array
@@ -121,20 +157,6 @@ exports.deleteLesson = async (id, ctx) => {
 //   lesson = await lesson.save();
 //   return lesson;
 // };
-
-exports.updateLesson = async (lessonData, ctx) => {
-  checkIfAuthenticated(ctx);
-  let lesson = await checkLessonOwnership(lessonData.id, ctx);
-
-  lessonValidator(lessonData);
-
-  for (const key of Object.keys(lessonData)) {
-    lesson[key] = lessonData[key];
-  }
-
-  lesson = await lesson.save();
-  return lesson;
-};
 
 exports.getAllLessons = async (course, ctx) => {
   const lessons = await Lesson.find({

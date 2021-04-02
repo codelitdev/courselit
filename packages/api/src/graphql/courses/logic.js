@@ -7,20 +7,40 @@ const User = require("../../models/User.js");
 const strings = require("../../config/strings.js");
 const {
   checkIfAuthenticated,
-  checkOwnership,
   validateOffset,
   extractPlainTextFromDraftJS,
+  checkPermission,
+  checkOwnershipWithoutModel,
 } = require("../../lib/graphql.js");
 const {
-  closed,
   open,
   itemsPerPage,
   blogPostSnippetLength,
 } = require("../../config/constants.js");
-const ObjectId = require("mongoose").Types.ObjectId;
 const { validateBlogPosts, validateCost } = require("./helpers.js");
+const permissions = require("../../config/constants.js").permissions;
 
-const checkCourseOwnership = checkOwnership(Course);
+const getCourseOrThrow = async (id, ctx) => {
+  checkIfAuthenticated(ctx);
+
+  const course = await Course.findOne({ _id: id, domain: ctx.domain._id });
+
+  if (!course) {
+    throw new Error(strings.responses.item_not_found);
+  }
+
+  if (!checkPermission(ctx.user.permissions, [permissions.manageAnyCourse])) {
+    if (!checkOwnershipWithoutModel(course, ctx)) {
+      throw new Error(strings.responses.item_not_found);
+    } else {
+      if (!checkPermission(ctx.user.permissions, [permissions.manageCourse])) {
+        throw new Error(strings.responses.action_not_allowed);
+      }
+    }
+  }
+
+  return course;
+};
 
 exports.getCourse = async (id = null, courseId = null, ctx) => {
   if (!id && !courseId) {
@@ -38,25 +58,26 @@ exports.getCourse = async (id = null, courseId = null, ctx) => {
     throw new Error(strings.responses.item_not_found);
   }
 
-  const notTheOwner =
-    !ctx.user ||
-    (ObjectId.isValid(course.creatorId)
-      ? course.creatorId.toString() !== ctx.user._id.toString()
-      : course.creatorId.toString() !== ctx.user.userId.toString());
-  if (notTheOwner) {
-    if (!course.published || course.privacy === closed) {
-      throw new Error(strings.responses.item_not_found);
+  if (ctx.user) {
+    if (
+      checkPermission(ctx.user.permissions, [permissions.manageAnyCourse]) ||
+      checkOwnershipWithoutModel(course, ctx)
+    ) {
+      return course;
     }
   }
 
-  return course;
+  if (course.published) {
+    return course;
+  } else {
+    throw new Error(strings.responses.item_not_found);
+  }
 };
 
 exports.createCourse = async (courseData, ctx) => {
   checkIfAuthenticated(ctx);
-
-  if (ctx.user.isCreator === undefined || !ctx.user.isCreator) {
-    throw new Error(strings.responses.not_a_creator);
+  if (!checkPermission(ctx.user.permissions, [permissions.manageCourse])) {
+    throw new Error(strings.responses.action_not_allowed);
   }
 
   courseData = await validateCost(validateBlogPosts(courseData));
@@ -65,7 +86,6 @@ exports.createCourse = async (courseData, ctx) => {
     domain: ctx.domain._id,
     title: courseData.title,
     cost: courseData.cost,
-    published: courseData.published,
     privacy: courseData.privacy,
     isBlog: courseData.isBlog,
     isFeatured: courseData.isFeatured,
@@ -80,10 +100,16 @@ exports.createCourse = async (courseData, ctx) => {
 };
 
 exports.updateCourse = async (courseData, ctx) => {
-  checkIfAuthenticated(ctx);
-  let course = await checkCourseOwnership(courseData.id, ctx);
+  let course = await getCourseOrThrow(courseData.id, ctx);
 
   for (const key of Object.keys(courseData)) {
+    if (
+      key === "published" &&
+      !checkPermission(ctx.user.permissions, [permissions.publishCourse])
+    ) {
+      throw new Error(strings.responses.action_not_allowed);
+    }
+
     course[key] = courseData[key];
   }
 
@@ -93,8 +119,7 @@ exports.updateCourse = async (courseData, ctx) => {
 };
 
 exports.deleteCourse = async (id, ctx) => {
-  checkIfAuthenticated(ctx);
-  const course = await checkCourseOwnership(id, ctx);
+  const course = await getCourseOrThrow(id, ctx);
 
   if (course.lessons.length > 0) {
     throw new Error(strings.responses.course_not_empty);
@@ -109,8 +134,8 @@ exports.deleteCourse = async (id, ctx) => {
 };
 
 exports.addLesson = async (courseId, lessonId, ctx) => {
-  checkIfAuthenticated(ctx);
-  const course = await checkCourseOwnership(courseId, ctx);
+  const course = await getCourseOrThrow(courseId, ctx);
+
   if (course.lessons.indexOf(lessonId) === -1) {
     course.lessons.push(lessonId);
   }
@@ -125,8 +150,8 @@ exports.addLesson = async (courseId, lessonId, ctx) => {
 };
 
 exports.removeLesson = async (courseId, lessonId, ctx) => {
-  checkIfAuthenticated(ctx);
-  const course = await checkCourseOwnership(courseId, ctx);
+  const course = await getCourseOrThrow(courseId, ctx);
+
   if (~course.lessons.indexOf(lessonId)) {
     course.lessons.splice(course.lessons.indexOf(lessonId), 1);
   }
@@ -143,26 +168,28 @@ exports.removeLesson = async (courseId, lessonId, ctx) => {
 exports.getCoursesAsAdmin = async (offset, ctx) => {
   checkIfAuthenticated(ctx);
   validateOffset(offset);
-
   const user = ctx.user;
 
-  if (!(user.isCreator || user.isAdmin)) {
-    throw new Error(strings.responses.is_not_admin_or_creator);
+  if (
+    !checkPermission(user.permissions, [
+      permissions.manageCourse,
+      permissions.manageAnyCourse,
+    ])
+  ) {
+    throw new Error(strings.responses.action_not_allowed);
   }
 
   const query = {
     domain: ctx.domain._id,
   };
-  if (user.isCreator) {
+  if (!checkPermission(user.permissions, [permissions.manageAnyCourse])) {
     query.creatorId = `${user.userId || user.id}`;
   }
 
-  const courses = await Course.find(query)
+  return await Course.find(query)
     .sort({ updated: -1 })
     .skip((offset - 1) * itemsPerPage)
     .limit(itemsPerPage);
-
-  return courses;
 };
 
 exports.getPosts = async (offset, ctx) => {
@@ -216,14 +243,11 @@ exports.getCourses = async (offset, onlyShowFeatured = false, ctx) => {
   return dbQuery;
 };
 
-// TODO: write tests
 exports.getEnrolledCourses = async (userId, ctx) => {
   checkIfAuthenticated(ctx);
-  const notAdminOrSelf =
-    !(ctx.user.isCreator || ctx.user.isAdmin) && userId !== ctx.user.id;
 
-  if (notAdminOrSelf) {
-    throw new Error(strings.responses.item_not_found);
+  if (!checkPermission(ctx.user.permissions, [permissions.manageAnyCourse])) {
+    throw new Error(strings.responses.action_not_allowed);
   }
 
   const user = await User.findOne({ _id: userId, domain: ctx.domain._id });

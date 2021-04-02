@@ -20,9 +20,15 @@ import {
   COURSE_EDITOR_DESCRIPTION,
   VISIT_POST_BUTTON,
   VISIT_COURSE_BUTTON,
+  BTN_PUBLISH,
+  BTN_UNPUBLISH,
 } from "../../../config/strings.js";
 import { networkAction, setAppMessage } from "../../../redux/actions.js";
-import { queryGraphQL, formulateCourseUrl } from "../../../lib/utils.js";
+import {
+  queryGraphQL,
+  formulateCourseUrl,
+  checkPermission,
+} from "../../../lib/utils.js";
 import Link from "next/link";
 import {
   Grid,
@@ -38,13 +44,17 @@ import {
 import { makeStyles } from "@material-ui/styles";
 import { Delete, Add } from "@material-ui/icons";
 import AppMessage from "../../../models/app-message.js";
-import { LESSON_TYPE_TEXT, MIMETYPE_IMAGE } from "../../../config/constants.js";
+import {
+  LESSON_TYPE_TEXT,
+  MIMETYPE_IMAGE,
+  permissions,
+} from "../../../config/constants.js";
 import FetchBuilder from "../../../lib/fetch";
 import { Card, RichText as TextEditor } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 const LessonEditor = dynamic(() => import("./LessonEditor.js"));
 const AppDialog = dynamic(() => import("../../Public/AppDialog.js"));
-const MediaSelector = dynamic(() => import("../Media/MediaSelector.js"));
+const MediaSelector = dynamic(() => import("../Media/MediaSelector"));
 
 const useStyles = makeStyles((theme) => ({
   title: {
@@ -102,7 +112,7 @@ const CourseEditor = (props) => {
     title: "",
     cost: "",
     published: false,
-    privacy: "PRIVATE",
+    privacy: "UNLISTED",
     isBlog: false,
     description: TextEditor.emptyState(),
     featuredImage: "",
@@ -158,7 +168,6 @@ const CourseEditor = (props) => {
           id: "${courseData.course.id}"
           title: "${courseData.course.title}",
           cost: ${courseData.course.isBlog ? 0 : courseData.course.cost},
-          published: ${courseData.course.published},
           privacy: ${courseData.course.privacy.toUpperCase()},
           isBlog: ${courseData.course.isBlog},
           description: "${TextEditor.stringify(courseData.course.description)}",
@@ -185,8 +194,7 @@ const CourseEditor = (props) => {
       mutation {
         course: createCourse(courseData: {
           title: "${courseData.course.title}",
-          cost: ${courseData.course.isBlog ? 0 : courseData.course.cost},
-          published: ${courseData.course.published},
+          cost: ${courseData.course.isBlog ? 0 : courseData.course.cost}
           privacy: ${courseData.course.privacy.toUpperCase()},
           isBlog: ${courseData.course.isBlog},
           description: "${TextEditor.stringify(courseData.course.description)}",
@@ -223,6 +231,48 @@ const CourseEditor = (props) => {
       }
     } catch (err) {
       props.dispatch(setAppMessage(new AppMessage(err.message)));
+    }
+  };
+
+  const togglePublishedStatus = async (e) => {
+    const query = `
+      mutation {
+        course: updateCourse(courseData: {
+          id: "${courseData.course.id}"
+          published: ${!courseData.course.published}
+        }) {
+          id,
+          title,
+          cost,
+          published,
+          privacy,
+          isBlog,
+          description,
+          featuredImage,
+          isFeatured,
+          slug,
+          courseId
+        }
+      }
+    `;
+    const fetch = new FetchBuilder()
+      .setUrl(`${props.address.backend}/graph`)
+      .setPayload(query)
+      .setIsGraphQLEndpoint(true)
+      .setAuthToken(props.auth.token)
+      .build();
+    try {
+      props.dispatch(networkAction(true));
+      const response = await fetch.exec();
+      if (response.course) {
+        setCourseDataWithDescription(response.course);
+        props.markDirty(false);
+        props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_COURSE_SAVED)));
+      }
+    } catch (err) {
+      props.dispatch(setAppMessage(new AppMessage(err.message)));
+    } finally {
+      props.dispatch(networkAction(false));
     }
   };
 
@@ -433,7 +483,6 @@ const CourseEditor = (props) => {
                     }}
                   >
                     <MenuItem value="PUBLIC">Public</MenuItem>
-                    <MenuItem value="PRIVATE">Private</MenuItem>
                     <MenuItem value="UNLISTED">Unlisted</MenuItem>
                   </Select>
                 </FormControl>
@@ -450,21 +499,6 @@ const CourseEditor = (props) => {
                       type="checkbox"
                       name="isBlog"
                       checked={courseData.course.isBlog}
-                      onChange={onCourseDetailsChange}
-                    />
-                  </Grid>
-                </Grid>
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <Grid container justify="space-between" alignItems="center">
-                  <Grid item>
-                    <Typography variant="body1">Published</Typography>
-                  </Grid>
-                  <Grid item>
-                    <Switch
-                      type="checkbox"
-                      name="published"
-                      checked={courseData.course.published}
                       onChange={onCourseDetailsChange}
                     />
                   </Grid>
@@ -499,17 +533,35 @@ const CourseEditor = (props) => {
                 </Button>
               </Grid>
               {courseData.course.id && (
-                <Grid item>
-                  <Button>
-                    <Link href={formulateCourseUrl(courseData.course)}>
-                      <a className={classes.link} target="_blank">
-                        {courseData.course.isBlog
-                          ? VISIT_POST_BUTTON
-                          : VISIT_COURSE_BUTTON}
-                      </a>
-                    </Link>
-                  </Button>
-                </Grid>
+                <>
+                  {checkPermission(props.profile.permissions, [
+                    permissions.publishCourse,
+                  ]) && (
+                    <Grid item>
+                      <Button
+                        variant="contained"
+                        onClick={togglePublishedStatus}
+                      >
+                        {courseData.course.published
+                          ? BTN_UNPUBLISH
+                          : BTN_PUBLISH}
+                      </Button>
+                    </Grid>
+                  )}
+                  {courseData.course.published && (
+                    <Grid item>
+                      <Button>
+                        <Link href={formulateCourseUrl(courseData.course)}>
+                          <a className={classes.link} target="_blank">
+                            {courseData.course.isBlog
+                              ? VISIT_POST_BUTTON
+                              : VISIT_COURSE_BUTTON}
+                          </a>
+                        </Link>
+                      </Button>
+                    </Grid>
+                  )}
+                </>
               )}
             </Grid>
           </div>

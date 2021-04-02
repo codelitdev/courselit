@@ -9,9 +9,9 @@ import {
   POPUP_OK_ACTION,
   DELETE_THEME_POPUP_HEADER,
   APPLY_THEME_POPUP_HEADER,
-} from "../../../config/strings";
+} from "../../../../config/strings";
 import { makeStyles } from "@material-ui/styles";
-import AppDialog from "../../Public/AppDialog";
+import AppDialog from "../../../Public/AppDialog";
 
 const useStyles = makeStyles((theme) => ({
   container: {

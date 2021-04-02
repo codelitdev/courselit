@@ -33,6 +33,10 @@ module.exports = (passport) => {
               .json({ message: responses.error, details: err.message });
           }
 
+          if (!user.active) {
+            return res.status(403).json({ message: responses.locked });
+          }
+
           const token = jwt.sign(
             { email: user.email, domain: req.domain._id },
             constants.jwtSecret,

@@ -4,10 +4,15 @@ import ComponentProps from "./ComponentProps";
 
 interface OverviewProps {
   componentsMap: ComponentProps[];
-  onSelect: (index: number) => void;
+  onSelectComponentWithDetail: (index: number) => void;
+  onSelectComponentWithoutDetail: (index: number) => void;
 }
 
-const OverviewList = ({ componentsMap, onSelect }: OverviewProps) => {
+const OverviewList = ({
+  componentsMap,
+  onSelectComponentWithDetail,
+  onSelectComponentWithoutDetail,
+}: OverviewProps) => {
   const tablet = useMediaQuery((theme: any) => theme.breakpoints.down("sm"));
   const mobile = useMediaQuery((theme: any) => theme.breakpoints.down("xs"));
 
@@ -16,7 +21,11 @@ const OverviewList = ({ componentsMap, onSelect }: OverviewProps) => {
       {componentsMap.map((component, index) => (
         <GridListTile
           key={index}
-          onClick={() => ("Detail" in component ? onSelect(index) : null)}
+          onClick={() =>
+            "Detail" in component
+              ? onSelectComponentWithDetail(index)
+              : onSelectComponentWithoutDetail(index)
+          }
           cols={1}
         >
           {component.Overview}

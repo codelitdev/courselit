@@ -14,7 +14,11 @@ import {
 import { CREATOR_AREA_PAGE_TITLE } from "../../config/strings.js";
 import AppLoader from "../../components/AppLoader.js";
 import Head from "next/head";
-import { formulateMediaUrl } from "../../lib/utils.js";
+import {
+  canAccessDashboard,
+  checkPermission,
+  formulateMediaUrl,
+} from "../../lib/utils.js";
 import { Grid } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import RouteBasedComponentScaffold from "../Public/BaseLayout/RouteBasedComponentScaffold.js";
@@ -24,6 +28,7 @@ import {
   profileProps,
   siteInfoProps,
 } from "../../types.js";
+import { permissions } from "../../config/constants.js";
 
 const useStyles = makeStyles({
   loaderContainer: {
@@ -31,6 +36,84 @@ const useStyles = makeStyles({
     width: "100vw",
   },
 });
+
+const getSidebarMenuItems = (profile) => {
+  const items = [];
+
+  if (
+    checkPermission(profile.permissions, [
+      permissions.manageCourse,
+      permissions.manageAnyCourse,
+    ])
+  ) {
+    items.push({
+      name: "Courses",
+      route: "/dashboard/courses",
+      icon: <LibraryBooks />,
+    });
+  }
+
+  if (
+    checkPermission(profile.permissions, [
+      permissions.viewAnyMedia,
+      permissions.manageMedia,
+      permissions.manageAnyMedia,
+    ])
+  ) {
+    items.push({
+      name: "Media",
+      route: "/dashboard/media",
+      icon: <PermMedia />,
+    });
+  }
+
+  if (profile.permissions.includes(permissions.manageUsers)) {
+    items.push({
+      name: "Users",
+      route: "/dashboard/users",
+      icon: <SupervisedUserCircle />,
+    });
+  }
+
+  if (
+    checkPermission(profile.permissions, [
+      permissions.manageLayout,
+      permissions.manageThemes,
+    ])
+  ) {
+    items.push({
+      name: "Appearance",
+      route: "/dashboard/design",
+      icon: <Palette />,
+    });
+  }
+
+  if (profile.permissions.includes(permissions.manageMenus)) {
+    items.push({
+      name: "Menus",
+      route: "/dashboard/menus",
+      icon: <List />,
+    });
+  }
+
+  if (profile.permissions.includes(permissions.manageWidgets)) {
+    items.push({
+      name: "Widgets",
+      route: "/dashboard/widgets",
+      icon: <Widgets />,
+    });
+  }
+
+  if (profile.permissions.includes(permissions.manageSettings)) {
+    items.push({
+      name: "Settings",
+      route: "/dashboard/settings",
+      icon: <SettingsApplications />,
+    });
+  }
+
+  return items;
+};
 
 const BaseLayoutAdmin = ({
   auth,
@@ -44,7 +127,7 @@ const BaseLayoutAdmin = ({
   const classes = useStyles();
 
   useEffect(() => {
-    if (profile.fetched && !(profile.isCreator || profile.isAdmin)) {
+    if (profile.fetched && !canAccessDashboard(profile)) {
       router.push("/");
     }
   }, [profile.fetched]);
@@ -55,52 +138,9 @@ const BaseLayoutAdmin = ({
     }
   }, [auth.checked]);
 
-  const items = [
-    {
-      name: "Courses",
-      route: "/dashboard/courses",
-      icon: <LibraryBooks />,
-    },
-    {
-      name: "Media",
-      route: "/dashboard/media",
-      icon: <PermMedia />,
-    },
-  ];
+  const items = getSidebarMenuItems(profile);
 
-  if (profile.isAdmin) {
-    items.push(
-      ...[
-        {
-          name: "Users",
-          route: "/dashboard/users",
-          icon: <SupervisedUserCircle />,
-        },
-        {
-          name: "Appearance",
-          route: "/dashboard/design",
-          icon: <Palette />,
-        },
-        {
-          name: "Menus",
-          route: "/dashboard/menus",
-          icon: <List />,
-        },
-        {
-          name: "Widgets",
-          route: "/dashboard/widgets",
-          icon: <Widgets />,
-        },
-        {
-          name: "Settings",
-          route: "/dashboard/settings",
-          icon: <SettingsApplications />,
-        },
-      ]
-    );
-  }
-
-  return profile.fetched && (profile.isCreator || profile.isAdmin) ? (
+  return profile.fetched && canAccessDashboard(profile) ? (
     <>
       <Head>
         <title>

@@ -1,4 +1,4 @@
-import widgets from "../../../config/widgets.js";
+import widgets from "../../../../config/widgets";
 
 const CompatibleComponentsMap = {
   top: [],

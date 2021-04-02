@@ -66,3 +66,21 @@ export const THEMES_REPO = "https://github.com/codelitdev/courselit-themes";
 // Navigation categories
 export const NAVIGATION_CATEGORY_MAIN = "main";
 export const NAVIGATION_CATEGORY_FOOTER = "footer";
+
+// Role-based access permissions
+export const permissions = {
+  manageCourse: "course:manage",
+  manageAnyCourse: "course:manage_any",
+  publishCourse: "course:publish",
+  enrollInCourse: "course:enroll",
+  manageMedia: "media:manage",
+  manageAnyMedia: "media:manage_any",
+  uploadMedia: "media:upload",
+  viewAnyMedia: "media:view_any",
+  manageLayout: "layout:manage",
+  manageThemes: "theme:manage",
+  manageMenus: "menu:manage",
+  manageWidgets: "widget:manage",
+  manageSettings: "setting:manage",
+  manageUsers: "user:manage",
+};

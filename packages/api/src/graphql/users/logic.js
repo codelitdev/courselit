@@ -6,11 +6,13 @@ const Course = require("../../models/Course.js");
 const strings = require("../../config/strings.js");
 const {
   checkIfAuthenticated,
-  checkAdminOrSelf,
   makeModelTextSearchable,
+  checkPermission,
 } = require("../../lib/graphql.js");
 const constants = require("../../config/constants.js");
 const ObjectId = require("mongoose").Types.ObjectId;
+
+const { permissions } = constants;
 
 const removeAdminFieldsFromUserObject = ({ id, name, userId, bio, email }) => ({
   id,
@@ -43,46 +45,59 @@ exports.getUser = async (email = null, userId = null, ctx) => {
 
   user.userId = user.userId || -1; // Set -1 for empty userIds; Backward compatibility;
 
-  const loggedUserEmail = ctx.user && ctx.user.email;
-  const loggedUserId = ctx.user && ctx.user.userId;
-  const isAdmin = ctx.user && ctx.user.isAdmin;
+  const { user: loggedInUser } = ctx;
+  const loggedUserEmail = loggedInUser && loggedInUser.email;
+  const loggedUserId = loggedInUser && loggedInUser.userId;
 
-  const result =
-    loggedUserEmail === email || loggedUserId === userId || isAdmin
-      ? user
-      : removeAdminFieldsFromUserObject(user);
+  return loggedInUser &&
+    (loggedUserEmail === email ||
+      loggedUserId === userId ||
+      checkPermission(loggedInUser.permissions, [permissions.manageUsers]))
+    ? user
+    : removeAdminFieldsFromUserObject(user);
+};
 
-  return result;
+const validateUserProperties = (user) => {
+  if (!user.name) {
+    throw new Error(strings.responses.user_name_cant_be_null);
+  }
+
+  for (const permission of user.permissions) {
+    if (!Object.values(permissions).includes(permission)) {
+      throw new Error(strings.responses.invalid_permission);
+    }
+  }
 };
 
 exports.updateUser = async (userData, ctx) => {
   checkIfAuthenticated(ctx);
   const { id } = userData;
 
+  const hasPermissionToManageUser = checkPermission(ctx.user.permissions, [
+    permissions.manageUsers,
+  ]);
+  if (!hasPermissionToManageUser) {
+    if (id !== ctx.user.id) {
+      throw new Error(strings.responses.action_not_allowed);
+    }
+  }
+
   let user = await User.findOne({ _id: id, domain: ctx.domain._id });
   if (!user) throw new Error(strings.responses.item_not_found);
-  checkAdminOrSelf(id, ctx);
 
   for (const key of Object.keys(userData)) {
     if (key === "id") {
       continue;
     }
-    if (~["isCreator", "isAdmin", "active"].indexOf(key)) {
-      if (ctx.user.isAdmin) {
-        if (ctx.user.id === id && ~["active", "isAdmin"].indexOf(key)) {
-          throw new Error(strings.responses.action_not_allowed);
-        }
 
-        user[key] = userData[key];
-      }
-      continue;
+    if (!["bio", "name"].includes(key) && id === ctx.user.id) {
+      throw new Error(strings.responses.action_not_allowed);
     }
+
     user[key] = userData[key];
   }
 
-  if (!user.name) {
-    throw new Error(strings.responses.user_name_cant_be_null);
-  }
+  validateUserProperties(user);
 
   user = await user.save();
 
@@ -105,6 +120,11 @@ const updateCoursesForCreatorName = async (creatorId, creatorName) => {
 };
 
 exports.getSiteUsers = async (searchData = {}, ctx) => {
+  checkIfAuthenticated(ctx);
+  if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+    throw new Error(strings.responses.action_not_allowed);
+  }
+
   const query = { domain: ctx.domain._id };
   if (searchData.searchText) query.$text = { $search: searchData.searchText };
 
@@ -115,32 +135,5 @@ exports.getSiteUsers = async (searchData = {}, ctx) => {
     { itemsPerPage: constants.itemsPerPage }
   );
 
-  if (ctx.user.isAdmin) {
-    return users;
-  } else {
-    return users.map((x) => removeAdminFieldsFromUserObject(x));
-  }
-};
-
-exports.getUsersSummary = async (ctx) => {
-  checkIfAuthenticated(ctx);
-  if (!ctx.user.isAdmin) {
-    throw new Error(strings.responses.action_not_allowed);
-  }
-
-  return {
-    count: await User.countDocuments({ domain: ctx.domain._id }),
-    verified: await User.countDocuments({
-      verified: true,
-      domain: ctx.domain._id,
-    }),
-    admins: await User.countDocuments({
-      isAdmin: true,
-      domain: ctx.domain._id,
-    }),
-    creators: await User.countDocuments({
-      isCreator: true,
-      domain: ctx.domain._id,
-    }),
-  };
+  return users;
 };

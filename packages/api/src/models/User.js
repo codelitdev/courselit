@@ -7,13 +7,12 @@ const UserSchema = new mongoose.Schema({
   domain: { type: mongoose.Schema.Types.ObjectId, required: true },
   email: { type: String, required: true },
   verified: { type: Boolean, required: true, default: false },
-  isCreator: { type: Boolean, required: true, default: false },
-  isAdmin: { type: Boolean, required: true, default: false },
   active: { type: Boolean, required: true, default: true },
   password: { type: String, required: true },
   name: { type: String, required: true },
   purchases: [mongoose.Schema.Types.ObjectId],
   bio: { type: String },
+  permissions: [String],
 });
 
 UserSchema.index({
