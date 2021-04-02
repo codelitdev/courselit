@@ -16,13 +16,23 @@ import dynamic from "next/dynamic";
 import { networkAction } from "../../../redux/actions";
 import { checkPermission } from "../../../lib/utils";
 import { permissions } from "../../../config/constants";
+import { makeStyles } from "@material-ui/styles";
+import { Add } from "@material-ui/icons";
 const CourseEditor = dynamic(() => import("./CourseEditor"));
 const Img = dynamic(() => import("../../Img.js"));
+
+const useStyles = makeStyles((theme) => ({
+  btn: {
+    width: "100%",
+    height: "100%",
+  },
+}));
 
 const Index = (props) => {
   const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1);
   const [creatorCourses, setCreatorCourses] = useState([]);
   const [componentsMap, setComponentsMap] = useState([]);
+  const classes = useStyles();
 
   useEffect(() => {
     loadCreatorCourses();
@@ -34,7 +44,15 @@ const Index = (props) => {
       map.push(getComponent(course));
     });
     map.push({
-      Overview: <Button onClick={loadCreatorCourses}>{LOAD_MORE_TEXT}</Button>,
+      Overview: (
+        <Button
+          variant="contained"
+          className={classes.btn}
+          onClick={loadCreatorCourses}
+        >
+          {LOAD_MORE_TEXT}
+        </Button>
+      ),
     });
     if (
       checkPermission(props.profile.permissions, [permissions.manageCourse])
@@ -43,8 +61,14 @@ const Index = (props) => {
         subtitle: NEW_COURSE_PAGE_HEADING,
         Overview: (
           <>
-            <Img src="" isThumbnail={true} />
-            <GridListTileBar title="Add new" />
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<Add />}
+              className={classes.btn}
+            >
+              Add new
+            </Button>
           </>
         ),
         Detail: <CourseEditor markDirty={() => {}} closeEditor={() => {}} />,

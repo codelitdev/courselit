@@ -112,7 +112,7 @@ const CourseEditor = (props) => {
     title: "",
     cost: "",
     published: false,
-    privacy: "PRIVATE",
+    privacy: "UNLISTED",
     isBlog: false,
     description: TextEditor.emptyState(),
     featuredImage: "",
@@ -231,6 +231,48 @@ const CourseEditor = (props) => {
       }
     } catch (err) {
       props.dispatch(setAppMessage(new AppMessage(err.message)));
+    }
+  };
+
+  const togglePublishedStatus = async (e) => {
+    const query = `
+      mutation {
+        course: updateCourse(courseData: {
+          id: "${courseData.course.id}"
+          published: ${!courseData.course.published}
+        }) {
+          id,
+          title,
+          cost,
+          published,
+          privacy,
+          isBlog,
+          description,
+          featuredImage,
+          isFeatured,
+          slug,
+          courseId
+        }
+      }
+    `;
+    const fetch = new FetchBuilder()
+      .setUrl(`${props.address.backend}/graph`)
+      .setPayload(query)
+      .setIsGraphQLEndpoint(true)
+      .setAuthToken(props.auth.token)
+      .build();
+    try {
+      props.dispatch(networkAction(true));
+      const response = await fetch.exec();
+      if (response.course) {
+        setCourseDataWithDescription(response.course);
+        props.markDirty(false);
+        props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_COURSE_SAVED)));
+      }
+    } catch (err) {
+      props.dispatch(setAppMessage(new AppMessage(err.message)));
+    } finally {
+      props.dispatch(networkAction(false));
     }
   };
 
@@ -441,7 +483,6 @@ const CourseEditor = (props) => {
                     }}
                   >
                     <MenuItem value="PUBLIC">Public</MenuItem>
-                    <MenuItem value="PRIVATE">Private</MenuItem>
                     <MenuItem value="UNLISTED">Unlisted</MenuItem>
                   </Select>
                 </FormControl>
@@ -496,23 +537,30 @@ const CourseEditor = (props) => {
                   {checkPermission(props.profile.permissions, [
                     permissions.publishCourse,
                   ]) && (
-                    <Button onClick={() => {}}>
-                      {courseData.course.published
-                        ? BTN_UNPUBLISH
-                        : BTN_PUBLISH}
-                    </Button>
+                    <Grid item>
+                      <Button
+                        variant="contained"
+                        onClick={togglePublishedStatus}
+                      >
+                        {courseData.course.published
+                          ? BTN_UNPUBLISH
+                          : BTN_PUBLISH}
+                      </Button>
+                    </Grid>
                   )}
-                  <Grid item>
-                    <Button>
-                      <Link href={formulateCourseUrl(courseData.course)}>
-                        <a className={classes.link} target="_blank">
-                          {courseData.course.isBlog
-                            ? VISIT_POST_BUTTON
-                            : VISIT_COURSE_BUTTON}
-                        </a>
-                      </Link>
-                    </Button>
-                  </Grid>
+                  {courseData.course.published && (
+                    <Grid item>
+                      <Button>
+                        <Link href={formulateCourseUrl(courseData.course)}>
+                          <a className={classes.link} target="_blank">
+                            {courseData.course.isBlog
+                              ? VISIT_POST_BUTTON
+                              : VISIT_COURSE_BUTTON}
+                          </a>
+                        </Link>
+                      </Button>
+                    </Grid>
+                  )}
                 </>
               )}
             </Grid>

@@ -152,6 +152,6 @@ export const canAccessDashboard = (profile) => {
     permissions.manageWidgets,
     permissions.manageSettings,
     permissions.manageUsers,
-    permissions.viewAnyMedia
+    permissions.viewAnyMedia,
   ]);
 };

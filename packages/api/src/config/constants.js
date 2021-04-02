@@ -39,7 +39,6 @@ module.exports = {
   // Content privacy types
   unlisted: "unlisted",
   open: "public",
-  closed: "private",
 
   // Pagination config
   itemsPerPage: 5,

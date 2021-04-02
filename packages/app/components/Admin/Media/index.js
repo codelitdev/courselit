@@ -97,9 +97,11 @@ const Index = (props) => {
         <Button
           variant="contained"
           className={classes.btn}
-          onClick={() => loadMedia()}>
+          onClick={() => loadMedia()}
+        >
           {LOAD_MORE_TEXT}
-        </Button>)
+        </Button>
+      ),
     });
     if (
       !props.selectionMode &&

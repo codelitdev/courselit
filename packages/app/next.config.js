@@ -4,6 +4,6 @@ module.exports = {
   },
   compress: false,
   future: {
-    webpack5: true
-  }
+    webpack5: true,
+  },
 };

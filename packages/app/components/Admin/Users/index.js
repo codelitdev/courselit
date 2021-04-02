@@ -113,9 +113,11 @@ const UsersManager = ({ auth, address, dispatch }) => {
       map.push(getComponent(user));
     });
     map.push({
-      Overview: <Button variant="contained"
-      className={classes.btn}
-      onClick={loadUsers}>{LOAD_MORE_TEXT}</Button>,
+      Overview: (
+        <Button variant="contained" className={classes.btn} onClick={loadUsers}>
+          {LOAD_MORE_TEXT}
+        </Button>
+      ),
     });
     setComponentsMap(map);
   }, [usersPaginationOffset]);

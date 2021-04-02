@@ -13,12 +13,10 @@ const {
   checkOwnershipWithoutModel,
 } = require("../../lib/graphql.js");
 const {
-  closed,
   open,
   itemsPerPage,
   blogPostSnippetLength,
 } = require("../../config/constants.js");
-const ObjectId = require("mongoose").Types.ObjectId;
 const { validateBlogPosts, validateCost } = require("./helpers.js");
 const permissions = require("../../config/constants.js").permissions;
 
@@ -60,21 +58,20 @@ exports.getCourse = async (id = null, courseId = null, ctx) => {
     throw new Error(strings.responses.item_not_found);
   }
 
-  const notTheOwner =
-    !ctx.user ||
-    (ObjectId.isValid(course.creatorId)
-      ? course.creatorId.toString() !== ctx.user._id.toString()
-      : course.creatorId.toString() !== ctx.user.userId.toString());
-  if (notTheOwner) {
+  if (ctx.user) {
     if (
-      !checkPermission(ctx.user.permissions, [permissions.manageAnyCourse]) &&
-      (!course.published || course.privacy === closed)
+      checkPermission(ctx.user.permissions, [permissions.manageAnyCourse]) ||
+      checkOwnershipWithoutModel(course, ctx)
     ) {
-      throw new Error(strings.responses.item_not_found);
+      return course;
     }
   }
 
-  return course;
+  if (course.published) {
+    return course;
+  } else {
+    throw new Error(strings.responses.item_not_found);
+  }
 };
 
 exports.createCourse = async (courseData, ctx) => {
