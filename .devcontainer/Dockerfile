@@ -1,4 +1,4 @@
-FROM node
+FROM node:15
 
 RUN apt-get update \
     && apt-get -y install git mongodb ffmpeg imagemagick webp \

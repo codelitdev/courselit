@@ -3,7 +3,11 @@ import { Typography, Grid } from "@material-ui/core";
 import Link from "next/link";
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/styles";
-import { formulateMediaUrl, formattedLocaleDate } from "../../lib/utils";
+import {
+  formulateMediaUrl,
+  formattedLocaleDate,
+  checkPermission,
+} from "../../lib/utils";
 import { publicCourse, profileProps, addressProps } from "../../types";
 import { connect } from "react-redux";
 import {
@@ -12,6 +16,7 @@ import {
 } from "@courselit/components-library";
 import { FREE_COST } from "../../config/strings.js";
 import dynamic from "next/dynamic";
+import { permissions } from "../../config/constants";
 
 const BuyButton = dynamic(() => import("../CheckoutExternal"));
 
@@ -99,23 +104,27 @@ const Article = (props) => {
       {course.featuredImage && (
         <div className={classes.featuredimagecontainer} />
       )}
-      {options.showEnrollmentArea && !profile.purchases.includes(course.id) && (
-        <div className={classes.enrollmentArea}>
-          <Grid
-            container
-            direction="row"
-            justify="space-between"
-            alignItems="center"
-          >
-            <Grid item className={classes.enrollmentAreaPriceTag}>
-              <PriceTag cost={course.cost} freeCostCaption={FREE_COST} />
+      {options.showEnrollmentArea &&
+        (profile.fetched
+          ? !profile.purchases.includes(course.id) &&
+            checkPermission(profile.permissions, [permissions.enrollInCourse])
+          : true) && (
+          <div className={classes.enrollmentArea}>
+            <Grid
+              container
+              direction="row"
+              justify="space-between"
+              alignItems="center"
+            >
+              <Grid item className={classes.enrollmentAreaPriceTag}>
+                <PriceTag cost={course.cost} freeCostCaption={FREE_COST} />
+              </Grid>
+              <Grid>
+                <BuyButton course={course} />
+              </Grid>
             </Grid>
-            <Grid>
-              <BuyButton course={course} />
-            </Grid>
-          </Grid>
-        </div>
-      )}
+          </div>
+        )}
       {courseDescriptionHydrated && process.browser && (
         <div className={classes.content}>
           <TextEditor

@@ -14,8 +14,16 @@ import { addressProps, authProps } from "../../../types.js";
 import { networkAction } from "../../../redux/actions.js";
 import { OverviewAndDetail } from "@courselit/components-library";
 import dynamic from "next/dynamic";
+import { makeStyles } from "@material-ui/styles";
 const Img = dynamic(() => import("../../Img"));
-const UserDetails = dynamic(() => import("./UserDetails.js"));
+const Details = dynamic(() => import("./Details.js"));
+
+const useStyles = makeStyles((theme) => ({
+  btn: {
+    width: "100%",
+    height: "100%",
+  },
+}));
 
 const UsersManager = ({ auth, address, dispatch }) => {
   // const [, setUsersSummary] = useState({
@@ -27,6 +35,7 @@ const UsersManager = ({ auth, address, dispatch }) => {
   const [usersPaginationOffset, setUsersPaginationOffset] = useState(1);
   const [users, setUsers] = useState([]);
   const [componentsMap, setComponentsMap] = useState([]);
+  const classes = useStyles();
   // const [searchText, setSearchText] = useState("");
 
   // useEffect(() => {
@@ -69,19 +78,13 @@ const UsersManager = ({ auth, address, dispatch }) => {
 
   const loadUsers = async () => {
     const query = `
-    query c {
+    query {
       users: getSiteUsers(searchData: {
         offset: ${usersPaginationOffset}
       }) {
         id,
-        email,
         name,
-        verified,
-        isCreator,
-        isAdmin,
-        avatar,
-        purchases,
-        active
+        userId
       }
     }
     `;
@@ -110,7 +113,11 @@ const UsersManager = ({ auth, address, dispatch }) => {
       map.push(getComponent(user));
     });
     map.push({
-      Overview: <Button onClick={loadUsers}>{LOAD_MORE_TEXT}</Button>,
+      Overview: (
+        <Button variant="contained" className={classes.btn} onClick={loadUsers}>
+          {LOAD_MORE_TEXT}
+        </Button>
+      ),
     });
     setComponentsMap(map);
   }, [usersPaginationOffset]);
@@ -132,7 +139,7 @@ const UsersManager = ({ auth, address, dispatch }) => {
         />
       </>
     ),
-    Detail: <UserDetails user={user} />,
+    Detail: <Details userId={user.userId} />,
   });
 
   return (

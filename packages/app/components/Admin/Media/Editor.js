@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Button, TextField } from "@material-ui/core";
 import {
-  APP_MESSAGE_MEDIA_DELETED,
-  APP_MESSAGE_MEDIA_UPDATED,
+  APP_MESSAGE_CHANGES_SAVED,
   DELETE_MEDIA_POPUP_HEADER,
   POPUP_CANCEL_ACTION,
   POPUP_OK_ACTION,
@@ -26,10 +25,21 @@ import fetch from "isomorphic-unfetch";
 const AppDialog = dynamic(() => import("../../Public/AppDialog"));
 const MediaPreview = dynamic(() => import("./MediaPreview"));
 
-function Editor({ auth, media, address, dispatch }) {
+function Editor({
+  auth,
+  media,
+  address,
+  dispatch,
+  onMediaEdited,
+  onMediaDeleted,
+}) {
   const [mediaBeingEdited, setMediaBeingEdited] = useState(media);
   const [deleteMediaPopupOpened, setDeleteMediaPopupOpened] = useState(false);
   const Router = useRouter();
+  const onlyChangedFields = getObjectContainingOnlyChangedFields(
+    media,
+    mediaBeingEdited
+  );
 
   const onMediaBeingEditedChanged = (e) =>
     setMediaBeingEdited(
@@ -58,15 +68,12 @@ function Editor({ auth, media, address, dispatch }) {
         return;
       }
 
+      const { message } = await res.json();
       if (res.status === 200) {
-        dispatch(setAppMessage(new AppMessage(APP_MESSAGE_MEDIA_DELETED)));
-        // const indexOfDeletedMedia = userMedia
-        //   .map((media) => media.id)
-        //   .indexOf(mediaBeingEdited.id);
-        // setUserMedia([
-        //   ...userMedia.slice(0, indexOfDeletedMedia),
-        //   ...userMedia.slice(indexOfDeletedMedia + 1),
-        // ]);
+        dispatch(setAppMessage(new AppMessage(message)));
+        onMediaDeleted(mediaBeingEdited.id);
+      } else {
+        throw new Error(message);
       }
     } catch (err) {
       dispatch(setAppMessage(new AppMessage(err.message)));
@@ -76,10 +83,10 @@ function Editor({ auth, media, address, dispatch }) {
   };
 
   const updateMedia = async () => {
-    const onlyChangedFields = getObjectContainingOnlyChangedFields(
-      media,
-      mediaBeingEdited
-    );
+    // const onlyChangedFields = getObjectContainingOnlyChangedFields(
+    //   media,
+    //   mediaBeingEdited
+    // );
     if (Object.keys(onlyChangedFields).length === 0) {
       return;
     }
@@ -90,6 +97,7 @@ function Editor({ auth, media, address, dispatch }) {
       media: updateMedia(mediaData: ${formattedGraphQLQuery}) {
         id,
         title,
+        mimeType,
         altText
       }
     }
@@ -105,7 +113,8 @@ function Editor({ auth, media, address, dispatch }) {
       const response = await fetch.exec();
 
       if (response.media) {
-        dispatch(setAppMessage(new AppMessage(APP_MESSAGE_MEDIA_UPDATED)));
+        dispatch(setAppMessage(new AppMessage(APP_MESSAGE_CHANGES_SAVED)));
+        onMediaEdited(response.media);
       }
     } catch (err) {
       dispatch(setAppMessage(new AppMessage(err.message)));
@@ -144,7 +153,12 @@ function Editor({ auth, media, address, dispatch }) {
           onChange={onMediaBeingEditedChanged}
         />
       </form>
-      <Button onClick={updateMedia}>{BUTTON_SAVE}</Button>
+      <Button
+        onClick={updateMedia}
+        disabled={Object.keys(onlyChangedFields).length === 0}
+      >
+        {BUTTON_SAVE}
+      </Button>
       <Button onClick={() => setDeleteMediaPopupOpened(true)}>
         {BUTTON_DELETE_MEDIA}
       </Button>
@@ -166,6 +180,8 @@ Editor.propTypes = {
   auth: authProps,
   address: addressProps,
   dispatch: PropTypes.func.isRequired,
+  onMediaEdited: PropTypes.func.isRequired,
+  onMediaDeleted: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({

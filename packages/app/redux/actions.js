@@ -37,13 +37,12 @@ export function refreshUserProfile(userId) {
       const query = `
       { profile: getUser(email: "${userID}") {
           name,
-          isCreator,
           id,
-          isAdmin,
           email,
           purchases,
           userId,
-          bio
+          bio,
+          permissions
         }
       }
       `;
@@ -206,7 +205,7 @@ export function updateSiteNavigation() {
 
       const query = `
       query {
-        siteNavigation: getPublicNavigation {
+        siteNavigation: getMenu {
           text,
           destination,
           category,

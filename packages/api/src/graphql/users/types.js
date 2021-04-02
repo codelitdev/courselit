@@ -10,10 +10,9 @@ const userType = new graphql.GraphQLObjectType({
     active: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
     userId: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
     verified: { type: graphql.GraphQLBoolean },
-    isCreator: { type: graphql.GraphQLBoolean },
-    isAdmin: { type: graphql.GraphQLBoolean },
     avatar: { type: graphql.GraphQLString },
     bio: { type: graphql.GraphQLString },
+    permissions: { type: new graphql.GraphQLList(graphql.GraphQLString) },
   },
 });
 
@@ -23,11 +22,10 @@ const userUpdateInput = new graphql.GraphQLInputObjectType({
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     name: { type: graphql.GraphQLString },
     avatar: { type: graphql.GraphQLString },
-    isCreator: { type: graphql.GraphQLBoolean },
-    isAdmin: { type: graphql.GraphQLBoolean },
     active: { type: graphql.GraphQLBoolean },
     password: { type: graphql.GraphQLString },
     bio: { type: graphql.GraphQLString },
+    permissions: { type: new graphql.GraphQLList(graphql.GraphQLString) },
   },
 });
 

@@ -1,5 +1,5 @@
 const graphql = require("graphql");
-const { unlisted, open, closed } = require("../../config/constants.js");
+const { unlisted, open } = require("../../config/constants.js");
 const { lessonMetaType } = require("../lessons/types.js");
 const lessonLogic = require("../lessons/logic.js");
 
@@ -8,7 +8,6 @@ const courseStatusType = new graphql.GraphQLEnumType({
   values: {
     UNLISTED: { value: unlisted },
     PUBLIC: { value: open },
-    PRIVATE: { value: closed },
   },
 });
 
@@ -41,7 +40,6 @@ const courseInputType = new graphql.GraphQLInputObjectType({
   name: "CourseInput",
   fields: {
     title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-    published: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
     privacy: { type: new graphql.GraphQLNonNull(courseStatusType) },
     isBlog: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
     isFeatured: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },

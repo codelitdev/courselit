@@ -23,7 +23,6 @@ module.exports = {
 
   // Media uploads config
   uploadFolder: path.join(USER_CONTENT_DIRECTORY, "uploads"),
-  thumbnailsFolder: path.join(USER_CONTENT_DIRECTORY, "thumbs"),
   useWebp: process.env.USE_WEBP === "true",
   webpOutputQuality: parseInt(process.env.WEBP_QUALITY) || 75,
   // the following constants are as per the 16:9 aspect ratio
@@ -40,7 +39,6 @@ module.exports = {
   // Content privacy types
   unlisted: "unlisted",
   open: "public",
-  closed: "private",
 
   // Pagination config
   itemsPerPage: 5,
@@ -57,6 +55,24 @@ module.exports = {
   transactionInitiated: "initiated",
   transactionSuccess: "success",
   transactionFailed: "failed",
+
+  // permissions for role-based access
+  permissions: {
+    manageCourse: "course:manage",
+    manageAnyCourse: "course:manage_any",
+    publishCourse: "course:publish",
+    enrollInCourse: "course:enroll",
+    manageMedia: "media:manage",
+    manageAnyMedia: "media:manage_any",
+    uploadMedia: "media:upload",
+    viewAnyMedia: "media:view_any",
+    manageLayout: "layout:manage",
+    manageThemes: "theme:manage",
+    manageMenus: "menu:manage",
+    manageWidgets: "widget:manage",
+    manageSettings: "setting:manage",
+    manageUsers: "user:manage",
+  },
 
   // acceptable currency codes for payments
   currencyISOCodes: [

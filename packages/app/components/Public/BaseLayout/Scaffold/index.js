@@ -20,6 +20,7 @@ import {
 } from "../../../../config/strings.js";
 import { NAVIGATION_CATEGORY_MAIN } from "../../../../config/constants.js";
 import MenuItem from "./MenuItem.js";
+import { canAccessDashboard } from "../../../../lib/utils.js";
 
 const drawerWidth = 240;
 
@@ -99,7 +100,7 @@ const Scaffold = (props) => {
                 <Divider />
               </>
             )}
-            {(props.profile.isAdmin || props.profile.isCreator) && (
+            {canAccessDashboard(props.profile) && (
               <MenuItem
                 link={{
                   text: MAIN_MENU_ITEM_DASHBOARD,

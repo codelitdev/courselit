@@ -88,13 +88,12 @@ function profileReducer(state = initialState.profile, action) {
       return {
         id: action.profile && action.profile.id,
         name: action.profile && action.profile.name,
-        isCreator: (action.profile && action.profile.isCreator) || false,
         fetched: true,
-        isAdmin: (action.profile && action.profile.isAdmin) || false,
         purchases: (action.profile && action.profile.purchases) || [],
         email: action.profile && action.profile.email,
         userId: action.profile && action.profile.userId,
         bio: action.profile && action.profile.bio,
+        permissions: (action.profile && action.profile.permissions) || [],
       };
     case PROFILE_CLEAR:
       return initialState.profile;

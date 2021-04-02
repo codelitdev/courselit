@@ -90,8 +90,8 @@ export async function getServerSideProps({ query, req }) {
     const response = await fetch.exec();
     post = response.post;
   } catch (err) {
-    post = {
-      title: err.message,
+    return {
+      notFound: true,
     };
   }
 

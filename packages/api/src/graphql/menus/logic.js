@@ -1,14 +1,16 @@
 /**
  * Business logic for managing site navigation.
  */
-const { checkIfAuthenticated } = require("../../lib/graphql.js");
+const {
+  checkIfAuthenticated,
+  checkPermission,
+} = require("../../lib/graphql.js");
 const { responses } = require("../../config/strings.js");
 const Link = require("../../models/Link.js");
 const strings = require("../../config/strings.js");
+const { permissions } = require("../../config/constants.js");
 
-// TODO: write test for the entire feature
-
-exports.getPublicNavigation = async (ctx) => {
+exports.getMenu = async (ctx) => {
   return await Link.find(
     {
       domain: ctx.domain._id,
@@ -17,21 +19,24 @@ exports.getPublicNavigation = async (ctx) => {
   );
 };
 
-exports.getNavigation = async (ctx) => {
+exports.getMenuAsAdmin = async (ctx) => {
   checkIfAuthenticated(ctx);
 
-  if (!ctx.user.isAdmin) throw new Error(responses.is_not_admin);
+  if (!checkPermission(ctx.user.permissions, [permissions.manageMenus])) {
+    throw new Error(responses.action_not_allowed);
+  }
 
   return await Link.find({ domain: ctx.domain._id });
 };
 
 exports.saveLink = async (linkData, ctx) => {
   checkIfAuthenticated(ctx);
+
+  if (!checkPermission(ctx.user.permissions, [permissions.manageMenus])) {
+    throw new Error(responses.action_not_allowed);
+  }
+
   let link;
-
-  // check if the user is an admin
-  if (!ctx.user.isAdmin) throw new Error(responses.is_not_admin);
-
   if (linkData.id) {
     // update the existing record
     link = await Link.findOne({ _id: linkData.id, domain: ctx.domain._id });
@@ -63,7 +68,9 @@ exports.saveLink = async (linkData, ctx) => {
 exports.deleteLink = async (id, ctx) => {
   checkIfAuthenticated(ctx);
 
-  if (!ctx.user.isAdmin) throw new Error(responses.is_not_admin);
+  if (!checkPermission(ctx.user.permissions, [permissions.manageMenus])) {
+    throw new Error(responses.action_not_allowed);
+  }
 
   const link = await Link.findOne({ _id: id, domain: ctx.domain._id });
   if (link) {

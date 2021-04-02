@@ -15,13 +15,14 @@ const {
   uniqueFileNameGenerator,
   moveFile,
   convertToWebp,
+  createFolders,
 } = require("../lib/utils.js");
 const {
   uploadFolder,
-  thumbnailsFolder,
   webpOutputQuality,
   useWebp,
 } = require("../config/constants.js");
+const { checkPermission, getMediaOrThrow } = require("../lib/graphql.js");
 
 const getHandler = async (req, res) => {
   const media = await Media.findOne({
@@ -29,25 +30,36 @@ const getHandler = async (req, res) => {
     domain: req.domain._id,
   });
 
+  if (!media) {
+    return res.status(404).json({ message: responses.item_not_found });
+  }
+
+  const { uploadFolderForDomain, thumbFolderForDomain } = generateFolderPaths({
+    uploadFolder,
+    domainName: req.domain.name,
+  });
   const { thumb } = req.query;
 
   if (thumb === "1") {
     if (media.thumbnail) {
       res.contentType(useWebp ? "image/webp" : "image/jpeg");
-      res.sendFile(`${constants.thumbnailsFolder}/${media.thumbnail}`);
+      res.sendFile(`${thumbFolderForDomain}/${media.thumbnail}`);
     } else {
       res.status(200).json({ message: responses.no_thumbnail });
     }
   } else {
     res.contentType(media.mimeType);
-    res.sendFile(`${constants.uploadFolder}/${media.fileName}`);
+    res.sendFile(`${uploadFolderForDomain}/${media.fileName}`);
   }
 };
 
 const postHandler = async (req, res) => {
-  if (!req.user.isCreator) {
-    return res.status(400).json({ message: responses.not_a_creator });
+  if (
+    !checkPermission(req.user.permissions, [constants.permissions.uploadMedia])
+  ) {
+    return res.status(400).json({ message: responses.action_not_allowed });
   }
+
   const data = req.body;
   if (!data.title) {
     return res.status(400).json({ message: responses.title_is_required });
@@ -58,9 +70,15 @@ const postHandler = async (req, res) => {
 
   const thumbnailExtension = useWebp ? "webp" : "jpg";
 
-  // check if destination folders exists
-  if (!foldersExist([uploadFolder, thumbnailsFolder])) {
-    return res.status(500).json({ message: responses.destination_dont_exist });
+  const { uploadFolderForDomain, thumbFolderForDomain } = generateFolderPaths({
+    uploadFolder,
+    domainName: req.domain.name,
+  });
+  if (!foldersExist([uploadFolderForDomain])) {
+    createFolders([uploadFolderForDomain]);
+  }
+  if (!foldersExist([thumbFolderForDomain])) {
+    createFolders([thumbFolderForDomain]);
   }
 
   const imagePattern = /image/;
@@ -69,7 +87,7 @@ const postHandler = async (req, res) => {
   // create unique file name for the uploaded file
   const fileName = uniqueFileNameGenerator(req.files.file.name);
   const filePath = path.join(
-    constants.uploadFolder,
+    uploadFolderForDomain,
     `${fileName.name}.${
       useWebp && imagePattern.test(req.files.file.mimetype)
         ? "webp"
@@ -87,8 +105,8 @@ const postHandler = async (req, res) => {
     return res.status(500).json({ message: responses.error_in_moving_file });
   }
 
-  // generate thumbnail for a video or image
-  const thumbPath = `${constants.thumbnailsFolder}/${fileName.name}.${thumbnailExtension}`;
+  // generate thumbnails for videos and images
+  const thumbPath = `${thumbFolderForDomain}/${fileName.name}.${thumbnailExtension}`;
   let isThumbGenerated = false; // to indicate if the thumbnail name is to be saved to the DB
   try {
     if (imagePattern.test(req.files.file.mimetype)) {
@@ -151,22 +169,24 @@ const postHandler = async (req, res) => {
 };
 
 const deleteHandler = async (req, res) => {
-  const media = await Media.findOne({
-    _id: req.params.mediaId,
-    domain: req.domain._id,
-  });
+  let media;
 
-  if (!isOwner(media, req.user)) {
-    return res.status(404).json({ message: responses.item_not_found });
+  try {
+    media = await getMediaOrThrow(req.params.mediaId, req);
+  } catch (err) {
+    return res.status(err.statusCode).json({ message: err.message });
   }
 
-  const file = `${constants.uploadFolder}/${media.fileName}`;
+  const { uploadFolderForDomain, thumbFolderForDomain } = generateFolderPaths({
+    uploadFolder,
+    domainName: req.domain.name,
+  });
 
   try {
     if (media.thumbnail) {
-      fs.unlinkSync(`${constants.thumbnailsFolder}/${media.thumbnail}`);
+      fs.unlinkSync(`${thumbFolderForDomain}/${media.thumbnail}`);
     }
-    fs.unlinkSync(file);
+    fs.unlinkSync(`${uploadFolderForDomain}/${media.fileName}`);
     await Media.deleteOne({ _id: media.id });
 
     return res.status(200).json({ message: responses.success });
@@ -175,8 +195,8 @@ const deleteHandler = async (req, res) => {
   }
 };
 
-const isOwner = (media, user) =>
-  media.creatorId.toString() === user._id.toString();
+// const isOwner = (media, user) =>
+//   media.creatorId.toString() === user._id.toString();
 
 module.exports = (passport) => {
   const router = express.Router();
@@ -193,3 +213,10 @@ module.exports = (passport) => {
   );
   return router;
 };
+
+function generateFolderPaths({ uploadFolder, domainName }) {
+  const uploadRootFolderForDomain = `${uploadFolder}/${domainName}`;
+  const uploadFolderForDomain = `${uploadRootFolderForDomain}/files`;
+  const thumbFolderForDomain = `${uploadRootFolderForDomain}/thumbs`;
+  return { uploadFolderForDomain, thumbFolderForDomain };
+}

@@ -3,10 +3,10 @@ const graphql = require("graphql");
 const users = require("./users");
 const lessons = require("./lessons");
 const courses = require("./courses");
-const siteinfo = require("./siteinfo");
+const settings = require("./settings");
 const media = require("./media");
 const design = require("./design");
-const navigation = require("./navigation");
+const menus = require("./menus");
 const widgets = require("./widgets");
 
 module.exports = new graphql.GraphQLSchema({
@@ -16,10 +16,10 @@ module.exports = new graphql.GraphQLSchema({
       ...users.queries,
       ...lessons.queries,
       ...courses.queries,
-      ...siteinfo.queries,
+      ...settings.queries,
       ...media.queries,
       ...design.queries,
-      ...navigation.queries,
+      ...menus.queries,
       ...widgets.queries,
     },
   }),
@@ -29,10 +29,10 @@ module.exports = new graphql.GraphQLSchema({
       ...users.mutations,
       ...lessons.mutations,
       ...courses.mutations,
-      ...siteinfo.mutations,
+      ...settings.mutations,
       ...media.mutations,
       ...design.mutations,
-      ...navigation.mutations,
+      ...menus.mutations,
       ...widgets.mutations,
     },
   }),

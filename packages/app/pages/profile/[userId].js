@@ -229,8 +229,8 @@ export async function getServerSideProps({ query, req }) {
     const response = await fetch.exec();
     user = response.user;
   } catch (err) {
-    user = {
-      name: err.message,
+    return {
+      notFound: true,
     };
   }
 

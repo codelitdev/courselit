@@ -3,8 +3,12 @@
  */
 
 // TODO: Write tests for this file.
+const { permissions } = require("../../config/constants.js");
 const strings = require("../../config/strings.js");
-const { checkIfAuthenticated } = require("../../lib/graphql.js");
+const {
+  checkIfAuthenticated,
+  checkPermission,
+} = require("../../lib/graphql.js");
 const Widget = require("../../models/Widget.js");
 
 exports.getWidgetSettings = async (name, ctx) => {
@@ -21,8 +25,9 @@ exports.getWidgetSettings = async (name, ctx) => {
 
 exports.getWidgetData = async (name, ctx) => {
   checkIfAuthenticated(ctx);
-
-  if (!ctx.user.isAdmin) throw new Error(strings.responses.is_not_admin);
+  if (!checkPermission(ctx.user.permissions, [permissions.manageWidgets])) {
+    throw new Error(strings.responses.action_not_allowed);
+  }
 
   const widget = await Widget.findOne({ name, domain: ctx.domain._id });
 
@@ -37,8 +42,9 @@ exports.getWidgetData = async (name, ctx) => {
 
 exports.saveWidgetSettings = async (widgetSettingsData, ctx) => {
   checkIfAuthenticated(ctx);
-
-  if (!ctx.user.isAdmin) throw new Error(strings.responses.is_not_admin);
+  if (!checkPermission(ctx.user.permissions, [permissions.manageWidgets])) {
+    throw new Error(strings.responses.action_not_allowed);
+  }
 
   if (widgetSettingsData.settings !== undefined) {
     try {
@@ -109,8 +115,9 @@ exports.saveWidgetData = async (widgetData, ctx) => {
 
 exports.clearWidgetData = async (name, ctx) => {
   checkIfAuthenticated(ctx);
-
-  if (!ctx.user.isAdmin) throw new Error(strings.responses.is_not_admin);
+  if (!checkPermission(ctx.user.permissions, [permissions.manageWidgets])) {
+    throw new Error(strings.responses.action_not_allowed);
+  }
 
   const widget = await Widget.findOne({ name, domain: ctx.domain._id });
 

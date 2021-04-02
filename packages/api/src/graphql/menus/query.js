@@ -3,12 +3,12 @@ const types = require("./types.js");
 const logic = require("./logic.js");
 
 module.exports = {
-  getPublicNavigation: {
+  getMenu: {
     type: new graphql.GraphQLList(types.publicLinkType),
-    resolve: (root, _, ctx) => logic.getPublicNavigation(ctx),
+    resolve: (root, _, ctx) => logic.getMenu(ctx),
   },
-  getNavigation: {
+  getMenuAsAdmin: {
     type: new graphql.GraphQLList(types.linkType),
-    resolve: (root, _, ctx) => logic.getNavigation(ctx),
+    resolve: (root, _, ctx) => logic.getMenuAsAdmin(ctx),
   },
 };

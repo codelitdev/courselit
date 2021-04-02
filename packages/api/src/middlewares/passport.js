@@ -12,6 +12,8 @@ const constants = require("../config/constants.js");
 const responses = require("../config/strings.js").responses;
 const User = require("../models/User.js");
 
+const { permissions } = constants;
+
 module.exports = (passport) => {
   passport.use(
     "signup",
@@ -36,18 +38,36 @@ module.exports = (passport) => {
             });
           }
 
-          const notTheFirstUserOfDomain = await User.countDocuments({
-            domain: req.domain._id,
-          });
-          user = await User.create({
+          const newUser = {
             domain: req.domain._id,
             email,
             password,
             name: req.body.name,
-            isCreator: !notTheFirstUserOfDomain,
-            isAdmin: !notTheFirstUserOfDomain,
             active: true,
+          };
+          const notTheFirstUserOfDomain = await User.countDocuments({
+            domain: req.domain._id,
           });
+          if (notTheFirstUserOfDomain) {
+            newUser.permissions = [permissions.enrollInCourse];
+          } else {
+            newUser.permissions = [
+              permissions.manageCourse,
+              permissions.manageAnyCourse,
+              permissions.publishCourse,
+              permissions.manageMedia,
+              permissions.manageAnyMedia,
+              permissions.uploadMedia,
+              permissions.viewAnyMedia,
+              permissions.manageLayout,
+              permissions.manageThemes,
+              permissions.manageMenus,
+              permissions.manageWidgets,
+              permissions.manageSettings,
+              permissions.manageUsers,
+            ];
+          }
+          user = await User.create(newUser);
           return next(null, user);
         } catch (err) {
           return next(err, false);

@@ -2,6 +2,7 @@ import fetch from "isomorphic-unfetch";
 import {
   URL_EXTENTION_POSTS,
   URL_EXTENTION_COURSES,
+  permissions,
 } from "../config/constants.js";
 import { RichText as TextEditor } from "@courselit/components-library";
 
@@ -130,6 +131,27 @@ export const getBackendAddress = (host) => {
   }
 };
 
+export const checkPermission = (actualPermissions, desiredPermissions) =>
+  actualPermissions.some((permission) =>
+    desiredPermissions.includes(permission)
+  );
+
 const extractDomainFromURL = (host) => {
   return host.split(":")[0];
+};
+
+export const canAccessDashboard = (profile) => {
+  return checkPermission(profile.permissions, [
+    permissions.manageCourse,
+    permissions.manageAnyCourse,
+    permissions.manageMedia,
+    permissions.manageAnyMedia,
+    permissions.manageLayout,
+    permissions.manageThemes,
+    permissions.manageMenus,
+    permissions.manageWidgets,
+    permissions.manageSettings,
+    permissions.manageUsers,
+    permissions.viewAnyMedia,
+  ]);
 };

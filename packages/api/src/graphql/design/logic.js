@@ -2,11 +2,13 @@
  * Business logic for managing themes.
  */
 const Theme = require("../../models/Theme.js");
-const { checkIfAuthenticated } = require("../../lib/graphql.js");
+const {
+  checkIfAuthenticated,
+  checkPermission,
+} = require("../../lib/graphql.js");
 const strings = require("../../config/strings.js");
 const Layout = require("../../models/Layout.js");
-
-// TODO: write tests for all functions
+const { permissions } = require("../../config/constants.js");
 
 exports.getTheme = async (ctx) => {
   const theme = await Theme.findOne({ active: true, domain: ctx.domain._id });
@@ -15,7 +17,9 @@ exports.getTheme = async (ctx) => {
 
 exports.setTheme = async (id, ctx) => {
   checkIfAuthenticated(ctx);
-  if (!ctx.user.isAdmin) throw new Error(strings.responses.is_not_admin);
+  if (!checkPermission(ctx.user.permissions, [permissions.manageThemes])) {
+    throw new Error(strings.responses.action_not_allowed);
+  }
 
   await Theme.updateMany(
     { domain: ctx.domain._id },
@@ -35,7 +39,9 @@ exports.setTheme = async (id, ctx) => {
 
 exports.removeTheme = async (id, ctx) => {
   checkIfAuthenticated(ctx);
-  if (!ctx.user.isAdmin) throw new Error(strings.responses.is_not_admin);
+  if (!checkPermission(ctx.user.permissions, [permissions.manageThemes])) {
+    throw new Error(strings.responses.action_not_allowed);
+  }
 
   await Theme.deleteOne({ id, domain: ctx.domain._id });
 
@@ -44,7 +50,9 @@ exports.removeTheme = async (id, ctx) => {
 
 exports.getAllThemes = async (ctx) => {
   checkIfAuthenticated(ctx);
-  if (!ctx.user.isAdmin) throw new Error(strings.responses.is_not_admin);
+  if (!checkPermission(ctx.user.permissions, [permissions.manageThemes])) {
+    throw new Error(strings.responses.action_not_allowed);
+  }
 
   const themes = await Theme.find({ domain: ctx.domain._id });
   return themes.map(transformThemeForOutput);
@@ -52,7 +60,9 @@ exports.getAllThemes = async (ctx) => {
 
 exports.addTheme = async (themeData, ctx) => {
   checkIfAuthenticated(ctx);
-  if (!ctx.user.isAdmin) throw new Error(strings.responses.is_not_admin);
+  if (!checkPermission(ctx.user.permissions, [permissions.manageThemes])) {
+    throw new Error(strings.responses.action_not_allowed);
+  }
 
   if (!themeData.styles) {
     throw new Error(strings.responses.invalid_theme);
@@ -90,7 +100,9 @@ exports.getLayout = async (ctx) => {
 
 exports.setLayout = async (layoutData, ctx) => {
   checkIfAuthenticated(ctx);
-  if (!ctx.user.isAdmin) throw new Error(strings.responses.is_not_admin);
+  if (!checkPermission(ctx.user.permissions, [permissions.manageLayout])) {
+    throw new Error(strings.responses.action_not_allowed);
+  }
 
   let layoutObject;
   try {
