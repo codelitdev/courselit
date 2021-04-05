@@ -3,18 +3,22 @@ import { Grid, Typography, Button, Theme } from "@material-ui/core";
 import Item from "./Item";
 import { makeStyles } from "@material-ui/styles";
 import { connect } from "react-redux";
-import { WidgetProps, WidgetHelpers } from "@courselit/components-library";
+import {
+  WidgetProps,
+  WidgetHelpers,
+  Section,
+} from "@courselit/components-library";
 import Link from "next/link";
 import Settings from "./Settings";
 
 const useStyles = ({ backgroundColor }: Settings) =>
   makeStyles((theme: Theme) => ({
     content: {
-      [theme.breakpoints.down("sm")]: {
-        padding: theme.spacing(2),
-      },
-      paddingTop: theme.spacing(2),
-      marginBottom: theme.spacing(2),
+      // [theme.breakpoints.down("sm")]: {
+      //   padding: theme.spacing(2),
+      // },
+      // paddingTop: theme.spacing(2),
+      // marginBottom: theme.spacing(2),
       background: backgroundColor || "inherit",
     },
     header: {
@@ -95,43 +99,41 @@ const Widget = (props: FeaturedWidgetProps) => {
   };
 
   return posts.length > 0 ? (
-    <Grid item xs={12} className={classes.content}>
-      <Grid container component="section">
-        <Grid item container className={classes.header}>
-          <Grid item xs={12} className={classes.headerTop}>
-            <Typography variant="h2">{settings.title}</Typography>
+    <Section>
+      <Grid item xs={12} className={classes.content}>
+        <Grid container component="section">
+          <Grid item container className={classes.header}>
+            <Grid item xs={12} className={classes.headerTop}>
+              <Typography variant="h2">{settings.title}</Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="body1" color="textSecondary">
+                {settings.subtitle}
+              </Typography>
+            </Grid>
           </Grid>
-          <Grid item xs={12}>
-            <Typography variant="body1" color="textSecondary">
-              {settings.subtitle}
-            </Typography>
+          <Grid item container xs={12}>
+            {posts.map((post, index) => (
+              <Item
+                key={index}
+                appUtilities={utilities}
+                appConfig={config}
+                course={post}
+              />
+            ))}
           </Grid>
+          {posts.length > 0 && (
+            <Grid item xs={12}>
+              <Button disableElevation className={classes.callToAction}>
+                <Link href="/featured">
+                  <a className={classes.link}>{BTN_LOAD_MORE}</a>
+                </Link>
+              </Button>
+            </Grid>
+          )}
         </Grid>
-        <Grid item container xs={12}>
-          {posts.map((post, index) => (
-            <Item
-              key={index}
-              appUtilities={utilities}
-              appConfig={config}
-              course={post}
-            />
-          ))}
-        </Grid>
-        {posts.length > 0 && (
-          <Grid item xs={12}>
-            <Button
-              variant="contained"
-              disableElevation
-              className={classes.callToAction}
-            >
-              <Link href="/featured">
-                <a className={classes.link}>{BTN_LOAD_MORE}</a>
-              </Link>
-            </Button>
-          </Grid>
-        )}
       </Grid>
-    </Grid>
+    </Section>
   ) : (
     <></>
   );

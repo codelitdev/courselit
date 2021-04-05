@@ -4,10 +4,7 @@ import Link from "next/link";
 import { URL_EXTENTION_POSTS } from "../../../config/constants.js";
 import { Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
-import { Card } from "@courselit/components-library";
-import dynamic from "next/dynamic";
-
-const Img = dynamic(() => import("../../Img.js"));
+import Img from "../../Img.js";
 
 const useStyles = (featuredImage) =>
   makeStyles((theme) => ({
@@ -40,30 +37,28 @@ const Post = (props) => {
         as={`/${URL_EXTENTION_POSTS}/${props.courseId}/${props.slug}`}
       >
         <a className={classes.link}>
-          <Card>
-            <Grid
-              item
-              container
-              direction="column"
-              component="article"
-              className={classes.container}
-            >
-              {props.featuredImage && (
-                <Grid item>
-                  <Img
-                    src={props.featuredImage}
-                    classes={classes.featuredImage}
-                  />
-                </Grid>
-              )}
-              <Grid item className={classes.title}>
-                <Typography variant="h5">{props.title}</Typography>
-              </Grid>
+          <Grid
+            item
+            container
+            direction="column"
+            component="article"
+            className={classes.container}
+          >
+            {props.featuredImage && (
               <Grid item>
-                <Typography variant="body1">{props.description}</Typography>
+                <Img
+                  src={props.featuredImage}
+                  classes={classes.featuredImage}
+                />
               </Grid>
+            )}
+            <Grid item className={classes.title}>
+              <Typography variant="h5">{props.title}</Typography>
             </Grid>
-          </Card>
+            <Grid item>
+              <Typography variant="body1">{props.description}</Typography>
+            </Grid>
+          </Grid>
         </a>
       </Link>
     </Grid>

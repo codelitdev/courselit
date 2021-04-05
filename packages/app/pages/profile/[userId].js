@@ -17,6 +17,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { networkAction, refreshUserProfile } from "../../redux/actions";
 import { getBackendAddress } from "../../lib/utils";
+import { Section } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 
 const BaseLayout = dynamic(() => import("../../components/Public/BaseLayout"));
@@ -26,16 +27,15 @@ const useStyles = makeStyles((theme) => ({
     [theme.breakpoints.down("sm")]: {
       padding: theme.spacing(2),
     },
-    paddingTop: theme.spacing(2),
   },
-  leftMargin: {
-    [theme.breakpoints.up("md")]: {
-      paddingLeft: theme.spacing(2),
-    },
-  },
-  headerTop: {
-    marginBottom: theme.spacing(2),
-  },
+  // leftMargin: {
+  //   [theme.breakpoints.up("md")]: {
+  //     paddingLeft: theme.spacing(2),
+  //   },
+  // },
+  // headerTop: {
+  //   marginBottom: theme.spacing(2),
+  // },
 }));
 
 function Profile({ user, profile, auth, dispatch, address }) {
@@ -79,97 +79,102 @@ function Profile({ user, profile, auth, dispatch, address }) {
   return (
     <BaseLayout title={user.name}>
       <Grid item xs={12} className={classes.content}>
-        <Grid container component="section" className={classes.leftMargin}>
+        <Grid container direction="column" spacing={2}>
           <Grid item xs={12}>
-            <Typography variant="h2" className={classes.headerTop}>
-              {PROFILE_PAGE_HEADER}
-            </Typography>
+            <Section>
+              <Typography variant="h2">{PROFILE_PAGE_HEADER}</Typography>
+            </Section>
           </Grid>
           {user.id && (
-            <Grid item container direction="column" spacing={4}>
-              <Grid item container spacing={2}>
-                {isMyProfile && (
-                  <Grid item container direction="column" spacing={1}>
+            <Grid item xs={12}>
+              <Section>
+                <Grid container direction="column" spacing={1}>
+                  {isMyProfile && (
+                    <Grid item container direction="column">
+                      <Grid item>
+                        <Typography variant="h6">
+                          {PROFILE_SECTION_DETAILS_EMAIL}
+                        </Typography>
+                      </Grid>
+                      <Grid item>
+                        <Typography variant="body1" color="textSecondary">
+                          {profile.email}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  )}
+
+                  <Grid item container direction="column">
                     <Grid item>
                       <Typography variant="h6">
-                        {PROFILE_SECTION_DETAILS_EMAIL}
+                        {PROFILE_SECTION_DETAILS_NAME}
                       </Typography>
                     </Grid>
                     <Grid item>
-                      <Typography variant="body1" color="textSecondary">
-                        {profile.email}
-                      </Typography>
+                      {!isMyProfile && (
+                        <Typography variant="body1" color="textSecondary">
+                          {user.name}
+                        </Typography>
+                      )}
+                      {isMyProfile && (
+                        <TextField
+                          variant="outlined"
+                          fullWidth
+                          margin="normal"
+                          name="name"
+                          value={name}
+                          onChange={(event) => setName(event.target.value)}
+                          required
+                        />
+                      )}
                     </Grid>
                   </Grid>
-                )}
-                <Grid item container direction="column" spacing={1}>
-                  <Grid item>
-                    <Typography variant="h6">
-                      {PROFILE_SECTION_DETAILS_NAME}
-                    </Typography>
-                  </Grid>
-                  <Grid item>
-                    {!isMyProfile && (
-                      <Typography variant="body1" color="textSecondary">
-                        {user.name}
+
+                  <Grid item container direction="column">
+                    <Grid item>
+                      <Typography variant="h6">
+                        {PROFILE_SECTION_DETAILS_BIO}
                       </Typography>
-                    )}
-                    {isMyProfile && (
-                      <TextField
-                        variant="outlined"
-                        fullWidth
-                        margin="normal"
-                        name="name"
-                        value={name}
-                        onChange={(event) => setName(event.target.value)}
-                        required
-                      />
-                    )}
+                    </Grid>
+                    <Grid item>
+                      {!isMyProfile && (
+                        <Typography variant="body1" color="textSecondary">
+                          {user.bio || PROFILE_SECTION_DETAILS_BIO_EMPTY}
+                        </Typography>
+                      )}
+                      {isMyProfile && (
+                        <TextField
+                          variant="outlined"
+                          fullWidth
+                          margin="normal"
+                          name="bio"
+                          value={bio}
+                          onChange={(event) => setBio(event.target.value)}
+                          multiline={true}
+                          rowsMax={5}
+                          required
+                        />
+                      )}
+                    </Grid>
                   </Grid>
-                </Grid>
-                <Grid item container direction="column" spacing={1}>
-                  <Grid item>
-                    <Typography variant="h6">
-                      {PROFILE_SECTION_DETAILS_BIO}
-                    </Typography>
-                  </Grid>
-                  <Grid item>
-                    {!isMyProfile && (
-                      <Typography variant="body1" color="textSecondary">
-                        {user.bio || PROFILE_SECTION_DETAILS_BIO_EMPTY}
-                      </Typography>
-                    )}
-                    {isMyProfile && (
-                      <TextField
-                        variant="outlined"
-                        fullWidth
-                        margin="normal"
-                        name="bio"
-                        value={bio}
-                        onChange={(event) => setBio(event.target.value)}
-                        multiline={true}
-                        rowsMax={5}
-                        required
-                      />
-                    )}
-                  </Grid>
-                </Grid>
-                {isMyProfile && (
+
                   <Grid item>
                     <Button
-                      variant="contained"
-                      color="primary"
                       onClick={saveDetails}
                       disabled={bio === user.bio && name === user.name}
                     >
                       {BUTTON_SAVE}
                     </Button>
                   </Grid>
-                )}
-              </Grid>
+                </Grid>
+              </Section>
+            </Grid>
+          )}
 
-              {isMyProfile && (
-                <Grid item container spacing={2} direction="column">
+          {isMyProfile && (
+            <Grid item xs={12}>
+              <Section>
+                <Grid container direction="column" spacing={1}>
                   <Grid item>
                     <Typography variant="h3">{PROFILE_MY_COURSES}</Typography>
                   </Grid>
@@ -192,13 +197,15 @@ function Profile({ user, profile, auth, dispatch, address }) {
                     </Grid>
                   )}
                 </Grid>
-              )}
+              </Section>
             </Grid>
           )}
           {!user.id && (
-            <Typography variant="body1" className={classes.leftMargin}>
-              {user.name}
-            </Typography>
+            <Section>
+              <Typography variant="body1" className={classes.leftMargin}>
+                {user.name}
+              </Typography>
+            </Section>
           )}
         </Grid>
       </Grid>

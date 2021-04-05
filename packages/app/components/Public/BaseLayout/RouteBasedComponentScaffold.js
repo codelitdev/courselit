@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import AppBar from "@material-ui/core/AppBar";
 import CssBaseline from "@material-ui/core/CssBaseline";
-import Divider from "@material-ui/core/Divider";
 import Drawer from "@material-ui/core/Drawer";
 import Hidden from "@material-ui/core/Hidden";
 import IconButton from "@material-ui/core/IconButton";
@@ -9,7 +8,7 @@ import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
 import { Menu } from "@material-ui/icons";
-import { Toolbar, Grid, LinearProgress, Typography } from "@material-ui/core";
+import { Toolbar, Grid, LinearProgress } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
 import AppToast from "../../AppToast";
@@ -19,6 +18,9 @@ import { connect } from "react-redux";
 import { siteInfoProps } from "../../../types";
 import useMediaQuery from "@material-ui/core/useMediaQuery";
 import { useRouter } from "next/router";
+import dynamic from "next/dynamic";
+
+const Branding = dynamic(() => import("./Branding"));
 
 const drawerWidth = 240;
 
@@ -32,9 +34,17 @@ const useStyles = makeStyles((theme) => ({
       flexShrink: 0,
     },
   },
-  appBar: {
-    zIndex: theme.zIndex.drawer + 1,
-  },
+  appBar: Object.assign(
+    {},
+    {
+      zIndex: theme.zIndex.drawer + 1,
+      [theme.breakpoints.up("sm")]: {
+        width: `calc(100% - ${drawerWidth}px)`,
+        marginLeft: drawerWidth,
+      },
+    },
+    theme.appBar
+  ),
   menuButton: {
     [theme.breakpoints.up("sm")]: {
       display: "none",
@@ -53,10 +63,17 @@ const useStyles = makeStyles((theme) => ({
   visitSiteLink: {
     color: "#fff",
   },
-  contentMain: {
+  contentMain: Object.assign(
+    {},
+    {
+      maxWidth: 1240,
+      minHeight: "80vh",
+      margin: "0 auto",
+    },
+    theme.body
+  ),
+  contentPadding: {
     padding: theme.spacing(2),
-    paddingTop: theme.spacing(4),
-    minHeight: "80vh",
   },
   showProgressBar: (props) => ({
     visibility: props.networkAction ? "visible" : "hidden",
@@ -94,12 +111,7 @@ const ComponentScaffold = (props) => {
 
   const drawer = (
     <div>
-      <Grid container alignItems="center" className={classes.toolbar}>
-        <Grid item className={classes.menuTitle}>
-          <Typography variant="h5">{props.siteinfo.title}</Typography>
-        </Grid>
-      </Grid>
-      <Divider />
+      <Branding />
       <List>
         {props.items.map((item, index) => (
           <ListItem
@@ -186,8 +198,8 @@ const ComponentScaffold = (props) => {
       <main className={classes.content}>
         <div className={classes.toolbar} />
         <LinearProgress className={classes.showProgressBar} />
-        <Grid container className={classes.contentMain}>
-          <Grid item xs={12}>
+        <Grid container className={classes.contentPadding}>
+          <Grid item xs={12} className={classes.contentMain}>
             {props.children}
           </Grid>
         </Grid>

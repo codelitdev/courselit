@@ -27,6 +27,7 @@ import { makeStyles } from "@material-ui/styles";
 import { ArrowBack } from "@material-ui/icons";
 import ComponentProps, { isComponentWithDetailProps } from "./ComponentProps";
 import OverviewList from "./OverviewList";
+import Section from "../Section";
 
 const useStyles = makeStyles((theme: any) => ({
   main: {
@@ -67,26 +68,28 @@ const OverviewAndDetail = ({
   return (
     <Grid container direction="column">
       <Grid item xs={12}>
-        {selectedComponentIndex > -1 && (
-          <Grid item xs>
-            <Grid container alignItems="center">
-              <Grid item>
-                <IconButton onClick={() => setSelectedComponentIndex(-1)}>
-                  <ArrowBack />
-                </IconButton>
-              </Grid>
-              <Grid item>
-                <Typography variant="h1">
-                  {isComponentWithDetailProps(selectedComponent) &&
-                    selectedComponent.subtitle}
-                </Typography>
+        <Section>
+          {selectedComponentIndex > -1 && (
+            <Grid item xs>
+              <Grid container alignItems="center">
+                <Grid item>
+                  <IconButton onClick={() => setSelectedComponentIndex(-1)}>
+                    <ArrowBack />
+                  </IconButton>
+                </Grid>
+                <Grid item>
+                  <Typography variant="h1">
+                    {isComponentWithDetailProps(selectedComponent) &&
+                      selectedComponent.subtitle}
+                  </Typography>
+                </Grid>
               </Grid>
             </Grid>
-          </Grid>
-        )}
-        {selectedComponentIndex === -1 && (
-          <Typography variant="h1">{title}</Typography>
-        )}
+          )}
+          {selectedComponentIndex === -1 && (
+            <Typography variant="h1">{title}</Typography>
+          )}
+        </Section>
       </Grid>
       <Grid item className={classes.main} xs={12}>
         {componentsMap.length && (

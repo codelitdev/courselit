@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import AppBar from "@material-ui/core/AppBar";
 import CssBaseline from "@material-ui/core/CssBaseline";
-import Divider from "@material-ui/core/Divider";
 import Drawer from "@material-ui/core/Drawer";
 import Hidden from "@material-ui/core/Hidden";
 import IconButton from "@material-ui/core/IconButton";
@@ -9,7 +8,7 @@ import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
 import { Menu } from "@material-ui/icons";
-import { Toolbar, Grid, LinearProgress, Typography } from "@material-ui/core";
+import { Toolbar, Grid, LinearProgress } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
 import AppToast from "../../AppToast";
@@ -18,6 +17,9 @@ import Header from "./Header.js";
 import { connect } from "react-redux";
 import { siteInfoProps } from "../../../types";
 import useMediaQuery from "@material-ui/core/useMediaQuery";
+import dynamic from "next/dynamic";
+
+const Branding = dynamic(() => import("./Branding"));
 
 const drawerWidth = 240;
 
@@ -31,9 +33,17 @@ const useStyles = makeStyles((theme) => ({
       flexShrink: 0,
     },
   },
-  appBar: {
-    zIndex: theme.zIndex.drawer + 1,
-  },
+  appBar: Object.assign(
+    {},
+    {
+      zIndex: theme.zIndex.drawer + 1,
+      [theme.breakpoints.up("sm")]: {
+        width: `calc(100% - ${drawerWidth}px)`,
+        marginLeft: drawerWidth,
+      },
+    },
+    theme.appBar
+  ),
   menuButton: {
     [theme.breakpoints.up("sm")]: {
       display: "none",
@@ -96,12 +106,7 @@ const ComponentScaffold = (props) => {
 
   const drawer = (
     <div>
-      <Grid container alignItems="center" className={classes.toolbar}>
-        <Grid item className={classes.menuTitle}>
-          <Typography variant="h5">{props.siteinfo.title}</Typography>
-        </Grid>
-      </Grid>
-      <Divider />
+      <Branding />
       <List>
         {props.items.map((item, index) => (
           <ListItem

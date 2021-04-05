@@ -5,6 +5,7 @@ import { makeStyles } from "@material-ui/styles";
 import FetchBuilder from "../lib/fetch.js";
 import { useRouter } from "next/router";
 import { getBackendAddress } from "../lib/utils";
+import { Section } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 
 const BaseLayout = dynamic(() => import("../components/Public/BaseLayout"));
@@ -51,18 +52,20 @@ const Courses = ({ courses }) => {
   return (
     <BaseLayout title={path}>
       <Grid item xs={12} className={classes.content}>
-        <Grid container component="section">
-          <Grid item container className={classes.header}>
-            <Grid item xs={12} className={classes.headerTop}>
-              <Typography variant="h2">{path}</Typography>
+        <Section>
+          <Grid container>
+            <Grid item container>
+              <Grid item xs={12} className={classes.headerTop}>
+                <Typography variant="h2">{path}</Typography>
+              </Grid>
             </Grid>
+            <Items
+              showLoadMoreButton={true}
+              generateQuery={generateQuery}
+              initialItems={courses}
+            />
           </Grid>
-          <Items
-            showLoadMoreButton={true}
-            generateQuery={generateQuery}
-            initialItems={courses}
-          />
-        </Grid>
+        </Section>
       </Grid>
     </BaseLayout>
   );

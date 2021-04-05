@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Provider, useStore } from "react-redux";
 import App from "next/app";
 import { getCookie } from "../lib/session.js";
@@ -14,7 +15,6 @@ import {
 import { ThemeProvider } from "@material-ui/styles";
 import { responsiveFontSizes, createMuiTheme } from "@material-ui/core";
 import { CONSOLE_MESSAGE_THEME_INVALID } from "../config/strings.js";
-import { useEffect } from "react";
 import wrapper from "../redux/store.js";
 import "@courselit/rich-text/dist/main.css";
 import dynamic from "next/dynamic";
@@ -27,13 +27,40 @@ const WrappedApp = ({ Component, pageProps }) => {
   const store = useStore();
   let muiTheme;
   const { theme, address } = store.getState();
-  try {
-    muiTheme = responsiveFontSizes(
-      createMuiTheme(Object.keys(theme.styles).length ? theme.styles : {})
-    );
-  } catch (err) {
+  const defaultTheme = {
+    body: {
+      maxWidth: 1280,
+    },
+    appBar: {
+      background: "transparent",
+      boxShadow: "none",
+      backdropFilter: "blur(250px)",
+    },
+    logo: {
+      borderRadius: 50,
+      overflow: "hidden",
+    },
+    /**
+     * If you want to show the site name along with the logo, set display to block
+     */
+    siteName: {
+      // display: 'block'
+    },
+    drawer: {
+      backgroundColor: "transparent",
+    },
+    footerContainer: {
+      backgroundColor: "#eee",
+    },
+    footer: {},
+  };
+
+  if (theme.styles) {
+    const userTheme = Object.assign({}, defaultTheme, theme.styles);
+    muiTheme = responsiveFontSizes(createMuiTheme(userTheme));
+  } else {
     console.warn(CONSOLE_MESSAGE_THEME_INVALID);
-    muiTheme = responsiveFontSizes(createMuiTheme({}));
+    muiTheme = responsiveFontSizes(createMuiTheme(defaultTheme));
   }
 
   useEffect(() => {

@@ -45,11 +45,13 @@ import {
   SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD,
   HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK,
   SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK,
+  BUTTON_SAVE,
 } from "../../config/strings.js";
 import FetchBuilder from "../../lib/fetch";
 import { decode, encode } from "base-64";
 import dynamic from "next/dynamic";
 import AppMessage from "../../models/app-message.js";
+import { Section } from "@courselit/components-library";
 
 const MediaSelector = dynamic(() => import("./Media/MediaSelector"));
 
@@ -210,96 +212,112 @@ const Settings = (props) => {
   };
 
   return (
-    <Grid container>
-      <Grid item className={classes.header}>
-        <Typography variant="h1">{SITE_SETTINGS_PAGE_HEADING}</Typography>
-      </Grid>
+    <Section>
+      <Grid container>
+        <Grid item className={classes.header}>
+          <Typography variant="h1">{SITE_SETTINGS_PAGE_HEADING}</Typography>
+        </Grid>
 
-      <Grid item xs={12} className={classes.section}>
-        <form onSubmit={handleSettingsSubmit}>
-          <div className={classes.section}>
-            <div className={classes.sectionContent}>
-              <Typography variant="h4">
-                {SITE_SETTINGS_SECTION_GENERAL}
-              </Typography>
-              <MediaSelector
-                title={SITE_SETTINGS_LOGO}
-                src={newSettings.logopath || props.siteinfo.logopath}
-                onSelection={onChangeData}
-              />
-              <TextField
-                variant="outlined"
-                label={SITE_SETTINGS_TITLE}
-                fullWidth
-                margin="normal"
-                name="title"
-                value={newSettings.title || ""}
-                onChange={onChangeData}
-                required
-              />
-              <TextField
-                variant="outlined"
-                label={SITE_SETTINGS_SUBTITLE}
-                fullWidth
-                margin="normal"
-                name="subtitle"
-                value={newSettings.subtitle || ""}
-                onChange={onChangeData}
-                required
-              />
-            </div>
-          </div>
-          <div className={classes.section}>
-            <div className={classes.sectionContent}>
-              <Typography variant="h4">
-                {SITE_SETTINGS_SECTION_PAYMENT}
-              </Typography>
-              <TextField
-                variant="outlined"
-                label={SITE_SETTINGS_CURRENCY_UNIT}
-                fullWidth
-                margin="normal"
-                name="currencyUnit"
-                value={newSettings.currencyUnit || ""}
-                onChange={onChangeData}
-              />
-              <TextField
-                variant="outlined"
-                label={SITE_SETTINGS_CURRENCY_ISO_CODE_TEXT}
-                fullWidth
-                margin="normal"
-                name="currencyISOCode"
-                value={newSettings.currencyISOCode || ""}
-                onChange={onChangeData}
-                maxLength={3}
-              />
-              <FormControl variant="outlined" className={classes.formControl}>
-                <InputLabel htmlFor="outlined-paymentmethod-simple">
-                  {SITE_ADMIN_SETTINGS_PAYMENT_METHOD}
-                </InputLabel>
-                <Select
-                  autoWidth
-                  value={newSettings.paymentMethod}
+        <Grid item xs={12}>
+          <form onSubmit={handleSettingsSubmit}>
+            <Grid container direction="column" spacing={1}>
+              <Grid item>
+                <Typography variant="h4">
+                  {SITE_SETTINGS_SECTION_GENERAL}
+                </Typography>
+              </Grid>
+              <Grid item>
+                <TextField
+                  variant="outlined"
+                  label={SITE_SETTINGS_TITLE}
+                  fullWidth
+                  margin="normal"
+                  name="title"
+                  value={newSettings.title || ""}
                   onChange={onChangeData}
-                  inputProps={{
-                    name: "paymentMethod",
-                    id: "outlined-paymentmethod-simple",
-                  }}
-                >
-                  <MenuItem value={PAYMENT_METHOD_NONE}>&nbsp;</MenuItem>
-                  <MenuItem value={PAYMENT_METHOD_STRIPE}>
-                    {capitalize(PAYMENT_METHOD_STRIPE.toLowerCase())}
-                  </MenuItem>
-                  {/* <MenuItem value={PAYMENT_METHOD_PAYPAL} disabled={true}>
+                  required
+                />
+              </Grid>
+              <Grid item>
+                <TextField
+                  variant="outlined"
+                  label={SITE_SETTINGS_SUBTITLE}
+                  fullWidth
+                  margin="normal"
+                  name="subtitle"
+                  value={newSettings.subtitle || ""}
+                  onChange={onChangeData}
+                  required
+                />
+              </Grid>
+              <Grid item>
+                <MediaSelector
+                  title={SITE_SETTINGS_LOGO}
+                  src={newSettings.logopath || props.siteinfo.logopath}
+                  onSelection={onChangeData}
+                />
+              </Grid>
+            </Grid>
+
+            <Grid container direction="column" spacing={1}>
+              <Grid item>
+                <Typography variant="h4">
+                  {SITE_SETTINGS_SECTION_PAYMENT}
+                </Typography>
+              </Grid>
+              <Grid item>
+                <TextField
+                  variant="outlined"
+                  label={SITE_SETTINGS_CURRENCY_UNIT}
+                  fullWidth
+                  margin="normal"
+                  name="currencyUnit"
+                  value={newSettings.currencyUnit || ""}
+                  onChange={onChangeData}
+                />
+              </Grid>
+              <Grid item>
+                <TextField
+                  variant="outlined"
+                  label={SITE_SETTINGS_CURRENCY_ISO_CODE_TEXT}
+                  fullWidth
+                  margin="normal"
+                  name="currencyISOCode"
+                  value={newSettings.currencyISOCode || ""}
+                  onChange={onChangeData}
+                  maxLength={3}
+                />
+              </Grid>
+              <Grid item>
+                <FormControl variant="outlined" className={classes.formControl}>
+                  <InputLabel htmlFor="outlined-paymentmethod-simple">
+                    {SITE_ADMIN_SETTINGS_PAYMENT_METHOD}
+                  </InputLabel>
+                  <Select
+                    autoWidth
+                    value={newSettings.paymentMethod}
+                    onChange={onChangeData}
+                    inputProps={{
+                      name: "paymentMethod",
+                      id: "outlined-paymentmethod-simple",
+                    }}
+                  >
+                    <MenuItem value={PAYMENT_METHOD_NONE}>&nbsp;</MenuItem>
+                    <MenuItem value={PAYMENT_METHOD_STRIPE}>
+                      {capitalize(PAYMENT_METHOD_STRIPE.toLowerCase())}
+                    </MenuItem>
+                    {/* <MenuItem value={PAYMENT_METHOD_PAYPAL} disabled={true}>
                       {capitalize(PAYMENT_METHOD_PAYPAL.toLowerCase())}
                     </MenuItem> */}
-                  {/* <MenuItem value={PAYMENT_METHOD_PAYTM} disabled={true}>
+                    {/* <MenuItem value={PAYMENT_METHOD_PAYTM} disabled={true}>
                       {capitalize(PAYMENT_METHOD_PAYTM.toLowerCase())}
                     </MenuItem> */}
-                </Select>
-              </FormControl>
+                  </Select>
+                </FormControl>
+              </Grid>
+
               {newSettings.paymentMethod === PAYMENT_METHOD_STRIPE && (
-                <>
+                <Grid item>
                   <TextField
                     variant="outlined"
                     label={SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT}
@@ -338,10 +356,10 @@ const Settings = (props) => {
                       </Typography>
                     </Grid>
                   </Grid>
-                </>
+                </Grid>
               )}
               {newSettings.paymentMethod === PAYMENT_METHOD_PAYPAL && (
-                <>
+                <Grid item>
                   <TextField
                     variant="outlined"
                     label={SITE_ADMIN_SETTINGS_PAYPAL_SECRET}
@@ -353,10 +371,10 @@ const Settings = (props) => {
                     onChange={onChangeData}
                     disabled={true}
                   />
-                </>
+                </Grid>
               )}
               {newSettings.paymentMethod === PAYMENT_METHOD_PAYTM && (
-                <>
+                <Grid item>
                   <TextField
                     variant="outlined"
                     label={SITE_ADMIN_SETTINGS_PAYTM_SECRET}
@@ -368,45 +386,46 @@ const Settings = (props) => {
                     onChange={onChangeData}
                     disabled={true}
                   />
-                </>
+                </Grid>
               )}
-            </div>
-          </div>
-          <div className={classes.section}>
-            <div className={classes.sectionContent}>
-              <Typography variant="h4">
-                {SITE_CUSTOMISATIONS_SETTING_HEADER}
-              </Typography>
-              <TextField
-                variant="outlined"
-                label={SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD}
-                fullWidth
-                margin="normal"
-                name="codeInjectionHead"
-                value={newSettings.codeInjectionHead || ""}
-                onChange={onChangeData}
-                multiline
-                rows={10}
-              />
-            </div>
-          </div>
-          <Button
-            type="submit"
-            value="Save"
-            variant="contained"
-            color="primary"
-            className={classes.saveButton}
-            disabled={
-              !areObjectsDifferent(settings, newSettings) ||
-              !newSettings.title ||
-              !newSettings.subtitle
-            }
-          >
-            Save
-          </Button>
-        </form>
+            </Grid>
+            <Grid container direction="column">
+              <Grid item>
+                <Typography variant="h4">
+                  {SITE_CUSTOMISATIONS_SETTING_HEADER}
+                </Typography>
+              </Grid>
+              <Grid item>
+                <TextField
+                  variant="outlined"
+                  label={SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD}
+                  fullWidth
+                  margin="normal"
+                  name="codeInjectionHead"
+                  value={newSettings.codeInjectionHead || ""}
+                  onChange={onChangeData}
+                  multiline
+                  rows={10}
+                />
+              </Grid>
+            </Grid>
+            <Button
+              type="submit"
+              value="Save"
+              color="primary"
+              className={classes.saveButton}
+              disabled={
+                !areObjectsDifferent(settings, newSettings) ||
+                !newSettings.title ||
+                !newSettings.subtitle
+              }
+            >
+              {BUTTON_SAVE}
+            </Button>
+          </form>
+        </Grid>
       </Grid>
-    </Grid>
+    </Section>
   );
 };
 

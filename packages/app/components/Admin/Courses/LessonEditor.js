@@ -44,7 +44,7 @@ import FetchBuilder from "../../../lib/fetch";
 import { networkAction, setAppMessage } from "../../../redux/actions";
 import { connect } from "react-redux";
 import AppMessage from "../../../models/app-message.js";
-import { Card, RichText as TextEditor } from "@courselit/components-library";
+import { Section, RichText as TextEditor } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 
 const AppDialog = dynamic(() => import("../../Public/AppDialog"));
@@ -276,9 +276,9 @@ const LessonEditor = (props) => {
   const closeDeleteLessonPopup = () => setDeleteLessonPopupOpened(false);
 
   return (
-    <Card>
-      <div className={classes.section}>
-        <Typography variant="h6">{LESSON_EDITOR_HEADER}</Typography>
+    <>
+      <Section>
+        <Typography variant="h5">{LESSON_EDITOR_HEADER}</Typography>
         {lesson.type && (
           <form>
             <TextField
@@ -412,20 +412,15 @@ const LessonEditor = (props) => {
         )}
         <Grid container direction="row" spacing={2}>
           <Grid item>
-            <Button onClick={onLessonCreate} variant="contained">
-              {BUTTON_SAVE}
-            </Button>
+            <Button onClick={onLessonCreate}>{BUTTON_SAVE}</Button>
           </Grid>
           <Grid item>
-            <Button
-              onClick={() => setDeleteLessonPopupOpened(true)}
-              variant="contained"
-            >
+            <Button onClick={() => setDeleteLessonPopupOpened(true)}>
               {BUTTON_DELETE_LESSON_TEXT}
             </Button>
           </Grid>
         </Grid>
-      </div>
+      </Section>
       <AppDialog
         onOpen={deleteLessonPopupOpened}
         onClose={closeDeleteLessonPopup}
@@ -435,7 +430,7 @@ const LessonEditor = (props) => {
           { name: POPUP_OK_ACTION, callback: onLessonDelete },
         ]}
       ></AppDialog>
-    </Card>
+    </>
   );
 };
 

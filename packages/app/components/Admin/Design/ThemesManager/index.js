@@ -1,14 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
-import {
-  Grid,
-  Card,
-  Typography,
-  Link,
-  TextField,
-  Button,
-} from "@material-ui/core";
+import { Grid, Typography, Link, TextField, Button } from "@material-ui/core";
 import FetchBuilder from "../../../../lib/fetch";
 import { addressProps, authProps } from "../../../../types";
 import { networkAction, setAppMessage } from "../../../../redux/actions";
@@ -31,6 +24,7 @@ import {
 } from "../../../../config/strings";
 import { THEMES_REPO } from "../../../../config/constants";
 import { makeStyles } from "@material-ui/styles";
+import { Section } from "@courselit/components-library";
 import ThemeItem from "./ThemeItem.js";
 
 const useStyles = makeStyles((theme) => ({
@@ -214,14 +208,14 @@ const ThemesManager = ({ address, auth, dispatch }) => {
 
   return (
     <Grid item xs={12}>
-      <Card>
+      <Section>
         <div className={classes.section}>
           <Typography variant="h4" className={classes.sectionHeader}>
             {CARD_HEADER_THEME}
           </Typography>
           <Grid container direction="column" spacing={4}>
             <Grid item>
-              <Typography variant="h6">
+              <Typography variant="h5">
                 {SUBHEADER_THEME_INSTALLED_THEMES}
               </Typography>
             </Grid>
@@ -252,7 +246,7 @@ const ThemesManager = ({ address, auth, dispatch }) => {
             </Grid>
             <Grid item container direction="column" spacing={2}>
               <Grid item container justify="space-between" alignItems="center">
-                <Typography variant="h6">
+                <Typography variant="h5">
                   {SUBHEADER_THEME_ADD_THEME}
                 </Typography>
               </Grid>
@@ -280,7 +274,7 @@ const ThemesManager = ({ address, auth, dispatch }) => {
             </Grid>
           </Grid>
         </div>
-      </Card>
+      </Section>
     </Grid>
   );
 };

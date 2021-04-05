@@ -50,60 +50,57 @@ import {
   permissions,
 } from "../../../config/constants.js";
 import FetchBuilder from "../../../lib/fetch";
-import { Card, RichText as TextEditor } from "@courselit/components-library";
+import { Section, RichText as TextEditor } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 const LessonEditor = dynamic(() => import("./LessonEditor.js"));
 const AppDialog = dynamic(() => import("../../Public/AppDialog.js"));
 const MediaSelector = dynamic(() => import("../Media/MediaSelector"));
 
 const useStyles = makeStyles((theme) => ({
-  title: {
-    marginTop: theme.spacing(3),
-  },
-  formControl: {
-    margin: theme.spacing(1),
-    minWidth: "100%",
-  },
-  editor: {
-    border: "1px solid #cacaca",
-    borderRadius: "6px",
-    padding: "10px 8px",
-    maxHeight: 300,
-    overflow: "auto",
-    marginBottom: theme.spacing(2),
-  },
-  editorLabel: {
-    fontSize: "1em",
-    marginBottom: theme.spacing(1),
-  },
-  controlRow: {
-    marginTop: theme.spacing(2),
-    marginBottom: theme.spacing(2),
-  },
-  link: {
-    textDecoration: "none",
-    color: "inherit",
-  },
-  cardHeader: {
-    marginBottom: theme.spacing(1),
-  },
-  lessonItem: {
-    marginBottom: theme.spacing(2),
-  },
-  addLesson: {
-    marginBottom: theme.spacing(2),
-  },
-  section: {
-    paddingTop: theme.spacing(2),
-    paddingBottom: theme.spacing(2),
-    paddingLeft: theme.spacing(1),
-    paddingRight: theme.spacing(1),
-  },
-  deleteButton: {
-    background: "red",
-    color: "white",
-    marginTop: theme.spacing(2),
-  },
+  // title: {
+  //   marginTop: theme.spacing(3),
+  // },
+  // formControl: {
+  //   margin: theme.spacing(1),
+  //   minWidth: "100%",
+  // },
+  // editor: {
+  //   border: "1px solid #cacaca",
+  //   borderRadius: "6px",
+  //   padding: "10px 8px",
+  //   maxHeight: 300,
+  //   overflow: "auto",
+  //   marginBottom: theme.spacing(2),
+  // },
+  // editorLabel: {
+  //   fontSize: "1em",
+  //   marginBottom: theme.spacing(1),
+  // },
+  // controlRow: {
+  //   marginTop: theme.spacing(2),
+  //   marginBottom: theme.spacing(2),
+  // },
+  // link: {
+  //   textDecoration: "none",
+  //   color: "inherit",
+  // },
+  // cardHeader: {
+  //   // marginBottom: theme.spacing(1),
+  // },
+  // lessonItem: {
+  //   marginBottom: theme.spacing(2),
+  // },
+  // section: {
+  //   paddingTop: theme.spacing(2),
+  //   paddingBottom: theme.spacing(2),
+  //   paddingLeft: theme.spacing(1),
+  //   paddingRight: theme.spacing(1),
+  // },
+  // deleteButton: {
+  //   background: "red",
+  //   color: "white",
+  //   marginTop: theme.spacing(2),
+  // },
 }));
 
 // TODO: Refactor away closeEditor() and markDirty()
@@ -425,10 +422,10 @@ const CourseEditor = (props) => {
   };
 
   return (
-    <Grid container direction="column">
+    <Grid container direction="column" spacing={2}>
       <Grid item xs>
         <form onSubmit={onCourseCreate}>
-          <div className={classes.section}>
+          <Section>
             <Typography variant="h4" className={classes.cardHeader}>
               {COURSE_DETAILS_CARD_HEADER}
             </Typography>
@@ -528,9 +525,7 @@ const CourseEditor = (props) => {
             />
             <Grid container direction="row" spacing={2}>
               <Grid item>
-                <Button type="submit" variant="contained">
-                  {BUTTON_SAVE}
-                </Button>
+                <Button type="submit">{BUTTON_SAVE}</Button>
               </Grid>
               {courseData.course.id && (
                 <>
@@ -538,10 +533,7 @@ const CourseEditor = (props) => {
                     permissions.publishCourse,
                   ]) && (
                     <Grid item>
-                      <Button
-                        variant="contained"
-                        onClick={togglePublishedStatus}
-                      >
+                      <Button onClick={togglePublishedStatus}>
                         {courseData.course.published
                           ? BTN_UNPUBLISH
                           : BTN_PUBLISH}
@@ -564,15 +556,15 @@ const CourseEditor = (props) => {
                 </>
               )}
             </Grid>
-          </div>
+          </Section>
         </form>
       </Grid>
 
       {courseData.course.id && (
-        <Grid item container>
+        <Grid item container spacing={2}>
           {/* <button onClick={onCourseDelete}>Delete course</button> */}
           {!courseData.course.isBlog && (
-            <Grid item container direction="column">
+            <Grid item container direction="column" spacing={2}>
               {lessons.map((item, index) => (
                 <Grid item key={index} className={classes.lessonItem}>
                   <LessonEditor
@@ -583,37 +575,40 @@ const CourseEditor = (props) => {
                 </Grid>
               ))}
               <Grid item>
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  onClick={onAddLesson}
-                  startIcon={<Add />}
-                  className={classes.addLesson}
-                >
-                  {BUTTON_NEW_LESSON_TEXT}
-                </Button>
+                <Section>
+                  <Button onClick={onAddLesson} startIcon={<Add />}>
+                    {BUTTON_NEW_LESSON_TEXT}
+                  </Button>
+                </Section>
               </Grid>
             </Grid>
           )}
           <Grid item xs={12}>
-            <Card>
-              <div className={classes.section}>
-                <Typography variant="h4" className={classes.cardHeader}>
-                  {DANGER_ZONE_HEADER}
-                </Typography>
-                <Typography variant="body2">
-                  {DANGER_ZONE_DESCRIPTION}
-                </Typography>
-                <Button
-                  variant="contained"
-                  onClick={() => setDeleteCoursePopupOpened(true)}
-                  startIcon={<Delete />}
-                  className={classes.deleteButton}
-                >
-                  {BTN_DELETE_COURSE}
-                </Button>
-              </div>
-            </Card>
+            <Section>
+              <Grid container direction="column" spacing={1}>
+                <Grid item>
+                  <Typography variant="h4" className={classes.cardHeader}>
+                    {DANGER_ZONE_HEADER}
+                  </Typography>
+                </Grid>
+                <Grid item>
+                  <Typography variant="body1">
+                    {DANGER_ZONE_DESCRIPTION}
+                  </Typography>
+                </Grid>
+                <Grid item>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={() => setDeleteCoursePopupOpened(true)}
+                    startIcon={<Delete />}
+                    className={classes.deleteButton}
+                  >
+                    {BTN_DELETE_COURSE}
+                  </Button>
+                </Grid>
+              </Grid>
+            </Section>
           </Grid>
         </Grid>
       )}
