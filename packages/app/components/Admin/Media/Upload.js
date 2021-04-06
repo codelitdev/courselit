@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { Button, TextField } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import { connect } from "react-redux";
+import { Section } from "@courselit/components-library";
 import {
   BUTTON_ADD_FILE,
   MEDIA_UPLOAD_BUTTON_TEXT,
@@ -79,40 +80,42 @@ function Upload({ auth, address, dispatch, resetOverview }) {
   };
 
   return (
-    <form onSubmit={onUpload}>
-      <Button variant="contained" component="label" color="primary">
-        {BUTTON_ADD_FILE}
-        <input
-          type="file"
-          name="file"
-          ref={fileInput}
-          className={classes.fileUploadInput}
+    <Section>
+      <form onSubmit={onUpload}>
+        <Button variant="contained" component="label" color="primary">
+          {BUTTON_ADD_FILE}
+          <input
+            type="file"
+            name="file"
+            ref={fileInput}
+            className={classes.fileUploadInput}
+          />
+        </Button>
+        <TextField
+          required
+          variant="outlined"
+          label="Title"
+          fullWidth
+          margin="normal"
+          name="title"
+          value={uploadData.title}
+          onChange={onUploadDataChanged}
         />
-      </Button>
-      <TextField
-        required
-        variant="outlined"
-        label="Title"
-        fullWidth
-        margin="normal"
-        name="title"
-        value={uploadData.title}
-        onChange={onUploadDataChanged}
-      />
-      <TextField
-        required
-        variant="outlined"
-        label="Alt text"
-        fullWidth
-        margin="normal"
-        name="altText"
-        value={uploadData.altText}
-        onChange={onUploadDataChanged}
-      />
-      <Button type="submit" disabled={uploading}>
-        {uploading ? MEDIA_UPLOADING : MEDIA_UPLOAD_BUTTON_TEXT}
-      </Button>
-    </form>
+        <TextField
+          required
+          variant="outlined"
+          label="Alt text"
+          fullWidth
+          margin="normal"
+          name="altText"
+          value={uploadData.altText}
+          onChange={onUploadDataChanged}
+        />
+        <Button type="submit" disabled={uploading}>
+          {uploading ? MEDIA_UPLOADING : MEDIA_UPLOAD_BUTTON_TEXT}
+        </Button>
+      </form>
+    </Section>
   );
 }
 

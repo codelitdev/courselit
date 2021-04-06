@@ -50,9 +50,14 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   toolbar: theme.mixins.toolbar,
-  drawerPaper: {
-    width: drawerWidth,
-  },
+  drawerPaper: Object.assign(
+    {},
+    {
+      width: drawerWidth,
+    },
+    {},
+    theme.drawer
+  ),
   content: {
     flexGrow: 1,
   },
@@ -62,10 +67,17 @@ const useStyles = makeStyles((theme) => ({
   visitSiteLink: {
     color: "#fff",
   },
-  contentMain: {
+  contentMain: Object.assign(
+    {},
+    {
+      // maxWidth: 1240,
+      minHeight: "80vh",
+      margin: "0 auto",
+    },
+    theme.body
+  ),
+  contentPadding: {
     padding: theme.spacing(2),
-    paddingTop: theme.spacing(4),
-    minHeight: "80vh",
   },
   showProgressBar: (props) => ({
     visibility: props.networkAction ? "visible" : "hidden",
@@ -191,8 +203,8 @@ const ComponentScaffold = (props) => {
       <main className={classes.content}>
         <div className={classes.toolbar} />
         <LinearProgress className={classes.showProgressBar} />
-        <Grid container className={classes.contentMain}>
-          <Grid item xs={12}>
+        <Grid container className={classes.contentPadding}>
+          <Grid item xs={12} className={classes.contentMain}>
             {visibleComponent}
           </Grid>
         </Grid>

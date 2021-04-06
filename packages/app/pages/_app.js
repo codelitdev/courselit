@@ -29,17 +29,10 @@ const WrappedApp = ({ Component, pageProps }) => {
   const { theme, address } = store.getState();
   const defaultTheme = {
     body: {
-      maxWidth: 1280,
+      // maxWidth: 1280,
     },
-    appBar: {
-      background: "transparent",
-      boxShadow: "none",
-      backdropFilter: "blur(250px)",
-    },
-    logo: {
-      borderRadius: 50,
-      overflow: "hidden",
-    },
+    appBar: {},
+    logo: {},
     /**
      * If you want to show the site name along with the logo, set display to block
      */
@@ -47,12 +40,27 @@ const WrappedApp = ({ Component, pageProps }) => {
       // display: 'block'
     },
     drawer: {
-      backgroundColor: "transparent",
+      // backgroundColor: "transparent",
     },
     footerContainer: {
-      backgroundColor: "#eee",
+      backgroundColor: "#fdfdfd",
     },
-    footer: {},
+    footer: {
+      // maxWidth: 1240
+    },
+    section: {
+      borderRadius: "none",
+      background: "none",
+      boxShadow: "none",
+    },
+    palette: {
+      background: {
+        default: "#fff",
+      },
+    },
+    typography: {
+      fontFamily: "New Tegomin, Zilla Slab Highlight, Arial",
+    },
   };
 
   if (theme.styles) {

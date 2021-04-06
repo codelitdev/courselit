@@ -51,9 +51,14 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   toolbar: theme.mixins.toolbar,
-  drawerPaper: {
-    width: drawerWidth,
-  },
+  drawerPaper: Object.assign(
+    {},
+    {
+      width: drawerWidth,
+    },
+    {},
+    theme.drawer
+  ),
   content: {
     flexGrow: 1,
   },
@@ -66,7 +71,7 @@ const useStyles = makeStyles((theme) => ({
   contentMain: Object.assign(
     {},
     {
-      maxWidth: 1240,
+      // maxWidth: 1240,
       minHeight: "80vh",
       margin: "0 auto",
     },

@@ -5,7 +5,7 @@ const useStyles = makeStyles((theme: any) => ({
   card: Object.assign(
     {},
     {
-      background: theme.palette.background.paper,
+      backgroundColor: theme.palette.background.paper,
       padding: theme.spacing(2),
       borderRadius: theme.spacing(1),
       boxShadow: theme.shadows[12],

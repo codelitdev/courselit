@@ -12,16 +12,6 @@ const BaseLayout = dynamic(() => import("../components/Public/BaseLayout"));
 const Items = dynamic(() => import("../components/Public/Items"));
 
 const useStyles = makeStyles((theme) => ({
-  content: {
-    [theme.breakpoints.down("sm")]: {
-      padding: theme.spacing(2),
-    },
-    paddingTop: theme.spacing(2),
-    marginBottom: theme.spacing(8),
-  },
-  header: {
-    marginLeft: theme.spacing(2),
-  },
   headerTop: {
     marginBottom: theme.spacing(2),
   },
@@ -51,7 +41,7 @@ const Courses = ({ courses }) => {
 
   return (
     <BaseLayout title={path}>
-      <Grid item xs={12} className={classes.content}>
+      <Grid item xs={12}>
         <Section>
           <Grid container>
             <Grid item container>

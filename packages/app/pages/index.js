@@ -14,25 +14,12 @@ const BaseLayout = dynamic(() => import("../components/Public/BaseLayout"));
 const Items = dynamic(() => import("../components/Public/Items"));
 
 const useStyles = makeStyles((theme) => ({
-  content: {
-    // [theme.breakpoints.down("sm")]: {
-    //   padding: theme.spacing(2),
-    // },
-    // paddingTop: theme.spacing(2),
-    // marginBottom: theme.spacing(2),
-    // padding: theme.spacing(2),
-  },
   headerTop: {
     marginBottom: theme.spacing(2),
   },
   link: {
     textDecoration: "none",
     color: "inherit",
-  },
-  callToAction: {
-    // [theme.breakpoints.up("md")]: {
-    //   marginLeft: theme.spacing(2),
-    // },
   },
 }));
 
@@ -56,7 +43,7 @@ const Index = (props) => {
 
   return (
     <BaseLayout title={props.siteinfo.subtitle}>
-      <Grid item xs={12} className={classes.content}>
+      <Grid item xs={12}>
         {props.courses.length > 0 && (
           <Section>
             <Grid item container className={classes.header}>
@@ -72,7 +59,7 @@ const Index = (props) => {
               posts={true}
             />
             <Grid item xs={12}>
-              <Button disableElevation className={classes.callToAction}>
+              <Button>
                 <Link href="/posts">
                   <a className={classes.link}>{BTN_VIEW_ALL}</a>
                 </Link>
