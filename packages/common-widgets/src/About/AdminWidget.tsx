@@ -3,6 +3,7 @@ import {
   WidgetProps,
   WidgetHelpers,
   RichText as TextEditor,
+  Section,
 } from "@courselit/components-library";
 import { connect } from "react-redux";
 import { Button, Grid, Typography } from "@material-ui/core";
@@ -74,30 +75,32 @@ const AdminWidget = (props: AboutWidgetProps) => {
   };
 
   return (
-    <Grid container direction="column" spacing={2}>
-      <Grid item xs>
-        <Typography variant="h6" color="textSecondary">
-          Compose
-        </Typography>
+    <Section>
+      <Grid container direction="column" spacing={2}>
+        <Grid item xs>
+          <Typography variant="h6" color="textSecondary">
+            Compose
+          </Typography>
+        </Grid>
+        <Grid item>
+          <form onSubmit={saveSettings}>
+            <Grid container direction="column" spacing={2}>
+              <Grid item>
+                <TextEditor
+                  initialContentState={settings.text}
+                  onChange={onChangeData}
+                />
+              </Grid>
+              <Grid item>
+                <Button type="submit" value="Save" disabled={!isDirty()}>
+                  Save
+                </Button>
+              </Grid>
+            </Grid>
+          </form>
+        </Grid>
       </Grid>
-      <Grid item>
-        <form onSubmit={saveSettings}>
-          <TextEditor
-            initialContentState={settings.text}
-            onChange={onChangeData}
-          />
-          <Button
-            variant="contained"
-            color="primary"
-            type="submit"
-            value="Save"
-            disabled={!isDirty()}
-          >
-            Save
-          </Button>
-        </form>
-      </Grid>
-    </Grid>
+    </Section>
   );
 };
 

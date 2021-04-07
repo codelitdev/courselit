@@ -120,6 +120,7 @@ export const MEDIA_MANAGER_YOUR_MEDIA_HEADER = "Your media";
 export const DIALOG_SELECT_BUTTON = "Select";
 export const LESSON_REQUIRES_ENROLLMENT = "Available to only enrolled students";
 export const DELETE_LESSON_POPUP_HEADER = "Delete lesson";
+export const APP_MESSAGE_COURSE_DELETED = "Course deleted";
 export const APP_MESSAGE_LESSON_DELETED = "Lesson deleted";
 export const APP_MESSAGE_LESSON_SAVED = "Lesson details saved";
 export const APP_MESSAGE_COURSE_SAVED = "Course details saved";

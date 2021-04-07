@@ -14,11 +14,6 @@ import Settings from "./Settings";
 const useStyles = ({ backgroundColor }: Settings) =>
   makeStyles((theme: Theme) => ({
     content: {
-      // [theme.breakpoints.down("sm")]: {
-      //   padding: theme.spacing(2),
-      // },
-      // paddingTop: theme.spacing(2),
-      // marginBottom: theme.spacing(2),
       background: backgroundColor || "inherit",
     },
     header: {
@@ -95,7 +90,10 @@ const Widget = (props: FeaturedWidgetProps) => {
       fetchBuilder,
       dispatch,
     });
-    setSettings(settings);
+
+    if (settings) {
+      setSettings(settings);
+    }
   };
 
   return posts.length > 0 ? (

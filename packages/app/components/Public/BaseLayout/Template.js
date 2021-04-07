@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Grid } from "@material-ui/core";
+import { Grid, useTheme } from "@material-ui/core";
 import { useRouter } from "next/router";
 import Section from "./Section";
 import { makeStyles } from "@material-ui/styles";
@@ -25,7 +25,6 @@ const useStyles = makeStyles((theme) => ({
   footer: Object.assign(
     {},
     {
-      // maxWidth: 1280,
       margin: "0 auto",
       paddingTop: theme.spacing(4),
       paddingBottom: theme.spacing(4),
@@ -40,6 +39,7 @@ const useStyles = makeStyles((theme) => ({
 const Template = (props) => {
   const classes = useStyles(props);
   const router = useRouter();
+  const theme = useTheme();
 
   return (
     <>
@@ -51,7 +51,7 @@ const Template = (props) => {
       >
         {/** Top */}
         {router.pathname === "/" && (
-          <Grid item>
+          <Grid item className={classes.padding}>
             <Section name="top" />
           </Grid>
         )}
@@ -59,12 +59,20 @@ const Template = (props) => {
         <Grid item>
           <Grid container direction="row" spacing={0}>
             {/** Main */}
-            <Grid item md={8} xs={12}>
+            <Grid
+              item
+              md={theme.singleColumnLayout ? 12 : theme.mainContentWidth || 8}
+              xs={12}
+            >
               <Grid container direction="column" spacing={0}>
                 {/** Main Content */}
-                <Grid item className={classes.padding}>
-                  {props.children}
-                </Grid>
+                {props.children &&
+                  props.children.props &&
+                  props.children.props.children && (
+                    <Grid item className={classes.padding}>
+                      {props.children}
+                    </Grid>
+                  )}
 
                 {/** Bottom */}
                 <Grid item className={classes.padding}>
@@ -74,9 +82,16 @@ const Template = (props) => {
             </Grid>
 
             {/** Aside */}
-            <Grid item md={4} xs={12} className={classes.padding}>
-              <Section name="aside" />
-            </Grid>
+            {!theme.singleColumnLayout && (
+              <Grid
+                item
+                md={theme.asideWidth || 4}
+                xs={12}
+                className={classes.padding}
+              >
+                <Section name="aside" />
+              </Grid>
+            )}
           </Grid>
         </Grid>
       </Grid>

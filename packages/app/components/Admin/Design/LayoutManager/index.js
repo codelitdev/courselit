@@ -15,7 +15,7 @@ import {
   LAYOUT_SECTION_BOTTOM,
   LAYOUT_SECTION_ASIDE,
 } from "../../../../config/strings";
-import { makeStyles } from "@material-ui/styles";
+import { makeStyles, useTheme } from "@material-ui/styles";
 import { Add } from "@material-ui/icons";
 import { connect } from "react-redux";
 import {
@@ -37,6 +37,7 @@ const useStyles = makeStyles((theme) => ({
     borderRadius: theme.spacing(1),
     overflow: "hidden",
     border: "2px solid #eee",
+    padding: theme.spacing(2),
   },
   outline: {
     border: "1px dashed #d2d2d2",
@@ -72,6 +73,8 @@ const useStyles = makeStyles((theme) => ({
   sectionHeader: {
     marginBottom: theme.spacing(2),
   },
+  footerContainer: Object.assign({}, theme.footerContainer),
+  footer: Object.assign({}, theme.footer),
 }));
 
 const PageDesigner = (props) => {
@@ -85,6 +88,7 @@ const PageDesigner = (props) => {
   ] = useState("");
   const classes = useStyles();
   const [layout, setLayout] = useState(props.layout);
+  const theme = useTheme();
 
   const fetch = new FetchBuilder()
     .setUrl(`${props.address.backend}/graph`)
@@ -195,6 +199,206 @@ const PageDesigner = (props) => {
               {CARD_DESCRIPTION_PAGE_LAYOUT}
             </Typography>
           </Grid>
+
+          <div className={classes.container}>
+            <Grid container direction="column" spacing={2}>
+              {/** Top */}
+              <Grid item>
+                <Section>
+                  <Grid container direction="column" alignItems="center">
+                    <Grid item>
+                      <Typography variant="h6">{LAYOUT_SECTION_TOP}</Typography>
+                    </Grid>
+                    <Grid item>
+                      {layout.top &&
+                        layout.top.map((item, index) => (
+                          <AddedComponent
+                            section="top"
+                            title={widgets[item].metadata.displayName}
+                            index={index}
+                            removeComponent={removeComponent}
+                            key={index}
+                          />
+                        ))}
+                    </Grid>
+                    <Grid item>
+                      <IconButton
+                        color="primary"
+                        aria-label="add component to the top section"
+                        onClick={() => openAddComponentDialog("top")}
+                      >
+                        <Add />
+                      </IconButton>
+                    </Grid>
+                  </Grid>
+                </Section>
+              </Grid>
+
+              <Grid item>
+                <Grid container direction="row" spacing={2}>
+                  {/** Main */}
+                  <Grid
+                    item
+                    md={
+                      theme.singleColumnLayout
+                        ? 12
+                        : theme.mainContentWidth || 8
+                    }
+                    xs={12}
+                  >
+                    <Grid container direction="column" spacing={2}>
+                      {/** Main Content */}
+                      <Grid item className={classes.padding}>
+                        <Section>Main Content</Section>
+                      </Grid>
+
+                      {/** Bottom */}
+                      <Grid item className={classes.padding}>
+                        <Section>
+                          <Grid
+                            container
+                            direction="column"
+                            alignItems="center"
+                          >
+                            <Grid item>
+                              <Typography variant="h6">
+                                {LAYOUT_SECTION_BOTTOM}
+                              </Typography>
+                            </Grid>
+                            {layout.bottom &&
+                              layout.bottom.map((item, index) => (
+                                <AddedComponent
+                                  section="bottom"
+                                  title={widgets[item].metadata.displayName}
+                                  index={index}
+                                  removeComponent={removeComponent}
+                                  key={index}
+                                />
+                              ))}
+                            <Grid item>
+                              <IconButton
+                                color="primary"
+                                aria-label="add component to main section"
+                                onClick={() => openAddComponentDialog("bottom")}
+                              >
+                                <Add />
+                              </IconButton>
+                            </Grid>
+                          </Grid>
+                        </Section>
+                      </Grid>
+                    </Grid>
+                  </Grid>
+
+                  {/** Aside */}
+                  {!theme.singleColumnLayout && (
+                    <Grid
+                      item
+                      md={theme.asideWidth || 4}
+                      xs={12}
+                      className={classes.padding}
+                    >
+                      <Section>
+                        <Grid container>
+                          <Grid item>
+                            <Typography variant="h6">
+                              {LAYOUT_SECTION_ASIDE}
+                            </Typography>
+                          </Grid>
+                          {layout.aside &&
+                            layout.aside.map((item, index) => (
+                              <AddedComponent
+                                section="aside"
+                                title={widgets[item].metadata.displayName}
+                                index={index}
+                                removeComponent={removeComponent}
+                                key={index}
+                              />
+                            ))}
+                          <Grid item>
+                            <IconButton
+                              color="primary"
+                              aria-label="add component to main section"
+                              onClick={() => openAddComponentDialog("aside")}
+                            >
+                              <Add />
+                            </IconButton>
+                          </Grid>
+                        </Grid>
+                      </Section>
+                    </Grid>
+                  )}
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/** Footer */}
+            <Section className={classes.footerContainer}>
+              <Grid container spacing={0}>
+                <Grid item xs={12} className={classes.padding}>
+                  <Grid
+                    container
+                    direction="row"
+                    className={classes.footer}
+                    spacing={0}
+                  >
+                    <Grid container item direction="column" xs={12} md={6}>
+                      <Grid item>
+                        <Typography variant="h6">
+                          {LAYOUT_SECTION_FOOTER_LEFT}
+                        </Typography>
+                      </Grid>
+                      {layout.footerLeft &&
+                        layout.footerLeft.map((item, index) => (
+                          <AddedComponent
+                            section="footerLeft"
+                            title={widgets[item].metadata.displayName}
+                            index={index}
+                            removeComponent={removeComponent}
+                            key={index}
+                          />
+                        ))}
+                      <Grid item>
+                        <IconButton
+                          color="primary"
+                          aria-label="add component to the footer's left section"
+                          onClick={() => openAddComponentDialog("footerLeft")}
+                        >
+                          <Add />
+                        </IconButton>
+                      </Grid>
+                    </Grid>
+                    <Grid container item direction="column" xs={12} md={6}>
+                      <Grid item>
+                        <Typography variant="h6">
+                          {LAYOUT_SECTION_FOOTER_RIGHT}
+                        </Typography>
+                      </Grid>
+                      {layout.footerRight &&
+                        layout.footerRight.map((item, index) => (
+                          <AddedComponent
+                            section="footerRight"
+                            title={widgets[item].metadata.displayName}
+                            index={index}
+                            removeComponent={removeComponent}
+                            key={index}
+                          />
+                        ))}
+                      <Grid item>
+                        <IconButton
+                          color="primary"
+                          aria-label="add component to the footer section"
+                          onClick={() => openAddComponentDialog("footerRight")}
+                        >
+                          <Add />
+                        </IconButton>
+                      </Grid>
+                    </Grid>
+                  </Grid>
+                </Grid>
+              </Grid>
+            </Section>
+          </div>
 
           <Grid item xs>
             <Grid container justify="center" className={classes.pageLayout}>

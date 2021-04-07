@@ -30,36 +30,44 @@ const WrappedApp = ({ Component, pageProps }) => {
   const defaultTheme = {
     body: {
       // maxWidth: 1280,
+      // paddingTop: 30,
     },
-    appBar: {},
+    appBar: {
+      // height: "100px",
+    },
     logo: {},
     /**
      * If you want to show the site name along with the logo, set display to block
      */
     siteName: {
-      // display: 'block'
+      display: "block",
     },
     drawer: {
       // backgroundColor: "transparent",
     },
     footerContainer: {
-      backgroundColor: "#fdfdfd",
+      // backgroundColor: "#fdfdfd",
     },
     footer: {
       // maxWidth: 1240
     },
     section: {
-      borderRadius: "none",
-      background: "none",
-      boxShadow: "none",
+      // borderRadius: "none",
+      // background: "none",
+      // boxShadow: "none",
+      boxShadow: "0px 2px 5px #cecece",
     },
+    mainContentWidth: 8,
+    asideWidth: 4,
+    // singleColumnLayout: true,
+    hideLoginButton: true,
     palette: {
       background: {
-        default: "#fff",
+        // default: "#fff",
       },
     },
     typography: {
-      fontFamily: "New Tegomin, Zilla Slab Highlight, Arial",
+      // fontFamily: "New Tegomin, Zilla Slab Highlight, Arial",
     },
   };
 

@@ -7,11 +7,27 @@ You can target the following components in addition to the components from the [
     body: {},
     appBar: {},
     logo: {},
-    siteName: {},
     drawer: {},
     footerContainer: {},
     footer: {},
     section: {},
+
+    // If you want to show the site name alongside the logo, set
+    // the 'display' property to 'block'
+    siteName: {},
+
+    // Material-UI has a grid of twelve columns hence the addition
+    // of the following two columns should be equal to 12.
+    mainContentWidth: 8,
+    asideWidth: 4,
+
+    // If you want to hide the aside section, set the following to true
+    singleColumnLayout: true,
+
+    // If you want to hide the login/logout button, set the following to true
+    hideLoginButton: true,
+
+    // Other Material-UI Theme properties can go here
 }
 ```
 

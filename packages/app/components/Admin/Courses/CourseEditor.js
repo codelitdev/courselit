@@ -22,6 +22,7 @@ import {
   VISIT_COURSE_BUTTON,
   BTN_PUBLISH,
   BTN_UNPUBLISH,
+  APP_MESSAGE_COURSE_DELETED,
 } from "../../../config/strings.js";
 import { networkAction, setAppMessage } from "../../../redux/actions.js";
 import {
@@ -41,7 +42,6 @@ import {
   Switch,
   Button,
 } from "@material-ui/core";
-import { makeStyles } from "@material-ui/styles";
 import { Delete, Add } from "@material-ui/icons";
 import AppMessage from "../../../models/app-message.js";
 import {
@@ -55,53 +55,6 @@ import dynamic from "next/dynamic";
 const LessonEditor = dynamic(() => import("./LessonEditor.js"));
 const AppDialog = dynamic(() => import("../../Public/AppDialog.js"));
 const MediaSelector = dynamic(() => import("../Media/MediaSelector"));
-
-const useStyles = makeStyles((theme) => ({
-  // title: {
-  //   marginTop: theme.spacing(3),
-  // },
-  // formControl: {
-  //   margin: theme.spacing(1),
-  //   minWidth: "100%",
-  // },
-  // editor: {
-  //   border: "1px solid #cacaca",
-  //   borderRadius: "6px",
-  //   padding: "10px 8px",
-  //   maxHeight: 300,
-  //   overflow: "auto",
-  //   marginBottom: theme.spacing(2),
-  // },
-  // editorLabel: {
-  //   fontSize: "1em",
-  //   marginBottom: theme.spacing(1),
-  // },
-  // controlRow: {
-  //   marginTop: theme.spacing(2),
-  //   marginBottom: theme.spacing(2),
-  // },
-  // link: {
-  //   textDecoration: "none",
-  //   color: "inherit",
-  // },
-  // cardHeader: {
-  //   // marginBottom: theme.spacing(1),
-  // },
-  // lessonItem: {
-  //   marginBottom: theme.spacing(2),
-  // },
-  // section: {
-  //   paddingTop: theme.spacing(2),
-  //   paddingBottom: theme.spacing(2),
-  //   paddingLeft: theme.spacing(1),
-  //   paddingRight: theme.spacing(1),
-  // },
-  // deleteButton: {
-  //   background: "red",
-  //   color: "white",
-  //   marginTop: theme.spacing(2),
-  // },
-}));
 
 // TODO: Refactor away closeEditor() and markDirty()
 const CourseEditor = (props) => {
@@ -125,7 +78,6 @@ const CourseEditor = (props) => {
   const [userError, setUserError] = useState("");
   const [deleteCoursePopupOpened, setDeleteCoursePopupOpened] = useState(false);
   const [lessons, setLessons] = useState([]);
-  const classes = useStyles();
   const [lessonIndex, setLessonIndex] = useState(0);
 
   useEffect(() => {
@@ -325,12 +277,14 @@ const CourseEditor = (props) => {
             course: initCourseMetaData,
           })
         );
+        closeDeleteCoursePopup();
         props.closeEditor();
       }
     } catch (err) {
       setError(err.message);
     } finally {
       props.dispatch(networkAction(false));
+      props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_COURSE_DELETED)));
     }
   };
 
@@ -426,9 +380,7 @@ const CourseEditor = (props) => {
       <Grid item xs>
         <form onSubmit={onCourseCreate}>
           <Section>
-            <Typography variant="h4" className={classes.cardHeader}>
-              {COURSE_DETAILS_CARD_HEADER}
-            </Typography>
+            <Typography variant="h4">{COURSE_DETAILS_CARD_HEADER}</Typography>
 
             {userError && <div>{userError}</div>}
             <TextField
@@ -462,7 +414,7 @@ const CourseEditor = (props) => {
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <FormControl variant="outlined" className={classes.formControl}>
+                <FormControl variant="outlined">
                   <InputLabel
                     ref={inputLabel}
                     htmlFor="outlined-privacy-simple"
@@ -485,7 +437,7 @@ const CourseEditor = (props) => {
                 </FormControl>
               </Grid>
             </Grid>
-            <Grid container className={classes.controlRow}>
+            <Grid container>
               <Grid item xs={12} sm={4}>
                 <Grid container justify="space-between" alignItems="center">
                   <Grid item>
@@ -544,7 +496,7 @@ const CourseEditor = (props) => {
                     <Grid item>
                       <Button>
                         <Link href={formulateCourseUrl(courseData.course)}>
-                          <a className={classes.link} target="_blank">
+                          <a target="_blank">
                             {courseData.course.isBlog
                               ? VISIT_POST_BUTTON
                               : VISIT_COURSE_BUTTON}
@@ -566,7 +518,7 @@ const CourseEditor = (props) => {
           {!courseData.course.isBlog && (
             <Grid item container direction="column" spacing={2}>
               {lessons.map((item, index) => (
-                <Grid item key={index} className={classes.lessonItem}>
+                <Grid item key={index}>
                   <LessonEditor
                     lesson={item}
                     onLessonDeleted={onLessonDeleted}
@@ -587,9 +539,7 @@ const CourseEditor = (props) => {
             <Section>
               <Grid container direction="column" spacing={1}>
                 <Grid item>
-                  <Typography variant="h4" className={classes.cardHeader}>
-                    {DANGER_ZONE_HEADER}
-                  </Typography>
+                  <Typography variant="h4">{DANGER_ZONE_HEADER}</Typography>
                 </Grid>
                 <Grid item>
                   <Typography variant="body1">
@@ -602,7 +552,6 @@ const CourseEditor = (props) => {
                     color="secondary"
                     onClick={() => setDeleteCoursePopupOpened(true)}
                     startIcon={<Delete />}
-                    className={classes.deleteButton}
                   >
                     {BTN_DELETE_COURSE}
                   </Button>

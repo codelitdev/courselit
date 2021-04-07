@@ -19,6 +19,7 @@ import { authProps, addressProps } from "../../../types";
 import PropTypes from "prop-types";
 import { networkAction, setAppMessage } from "../../../redux/actions";
 import AppMessage from "../../../models/app-message.js";
+import { Section } from "@courselit/components-library";
 import PermissionsEditor from "./PermissionsEditor";
 
 const useStyles = makeStyles((theme) => ({
@@ -29,6 +30,9 @@ const useStyles = makeStyles((theme) => ({
   },
   enrolledCourseItem: {
     marginTop: theme.spacing(1),
+  },
+  fullHeight: {
+    height: "100%",
   },
 }));
 
@@ -208,116 +212,147 @@ const Details = ({ userId, auth, address, dispatch }) => {
   return (
     <>
       {userData && (
-        <Grid container direction="column" className={classes.container}>
-          <Grid item>
-            <Grid
-              container
-              item
-              direction="row"
-              alignItems="center"
-              spacing={1}
-            >
-              <Grid item>
-                <Grid container direction="column" alignItems="center">
-                  <AccountCircle className={classes.avatar} />
-                  <Typography variant="caption" color="textSecondary">
-                    {userData.verified ? CAPTION_VERIFIED : CAPTION_UNVERIFIED}
-                  </Typography>
-                </Grid>
-              </Grid>
-              <Grid item>
+        <Grid
+          container
+          direction="column"
+          className={classes.container}
+          spacing={2}
+        >
+          <Grid item container spacing={2}>
+            <Grid item xs={12} sm={4} md={3}>
+              <Section className={classes.fullHeight}>
                 <Grid
-                  item
                   container
+                  item
                   direction="row"
                   alignItems="center"
                   spacing={1}
+                  justify="center"
                 >
                   <Grid item>
-                    <Typography variant="h6">{userData.name}</Typography>
+                    <Grid container direction="column" alignItems="center">
+                      <AccountCircle className={classes.avatar} />
+                      <Typography variant="caption" color="textSecondary">
+                        {userData.verified
+                          ? CAPTION_VERIFIED
+                          : CAPTION_UNVERIFIED}
+                      </Typography>
+                    </Grid>
                   </Grid>
                   <Grid item>
-                    <Typography variant="body2">
-                      <a href={`mailto:${userData.email}`}>{userData.email}</a>
+                    <Grid
+                      item
+                      container
+                      direction="row"
+                      alignItems="center"
+                      spacing={1}
+                    >
+                      <Grid item>
+                        <Typography variant="h6">{userData.name}</Typography>
+                      </Grid>
+                      <Grid item>
+                        <Typography variant="body2">
+                          <a href={`mailto:${userData.email}`}>
+                            {userData.email}
+                          </a>
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </Grid>
+                </Grid>
+              </Section>
+            </Grid>
+            <Grid item xs={12} sm={8} md={9}>
+              <Section>
+                <Grid container direction="column">
+                  <Grid
+                    item
+                    container
+                    direction="row"
+                    justify="space-between"
+                    xs
+                  >
+                    <Typography variant="subtitle1">
+                      {SWITCH_ACCOUNT_ACTIVE}
+                    </Typography>
+                    <Switch
+                      type="checkbox"
+                      name="active"
+                      checked={userData.active}
+                      onChange={(e) => toggleActiveState(e.target.checked)}
+                    />
+                  </Grid>
+                  <Grid item>
+                    <Typography variant="h6">
+                      {HEADER_RESET_PASSWORD}
                     </Typography>
                   </Grid>
+                  <form onSubmit={savePassword}>
+                    <Grid item>
+                      <TextField
+                        variant="outlined"
+                        label={LABEL_NEW_PASSWORD}
+                        fullWidth
+                        margin="normal"
+                        name="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
+                      <TextField
+                        variant="outlined"
+                        label={LABEL_CONF_PASSWORD}
+                        fullWidth
+                        margin="normal"
+                        name="confirmPassword"
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                      />
+                    </Grid>
+                    <Grid container item justify="flex-end" alignItems="center">
+                      <Grid item>
+                        <Button
+                          color="primary"
+                          onClick={savePassword}
+                          disabled={!isPasswordValid()}
+                        >
+                          {BTN_RESET}
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  </form>
                 </Grid>
-              </Grid>
+              </Section>
             </Grid>
           </Grid>
+
+          <Grid item></Grid>
 
           <Grid item>
-            <Grid container direction="column">
-              <Grid item container direction="row" justify="space-between" xs>
-                <Typography variant="subtitle1">
-                  {SWITCH_ACCOUNT_ACTIVE}
-                </Typography>
-                <Switch
-                  type="checkbox"
-                  name="active"
-                  checked={userData.active}
-                  onChange={(e) => toggleActiveState(e.target.checked)}
-                />
-              </Grid>
-              <Grid item>
-                <Typography variant="h6">{HEADER_RESET_PASSWORD}</Typography>
-              </Grid>
-              <form onSubmit={savePassword}>
-                <Grid item>
-                  <TextField
-                    variant="outlined"
-                    label={LABEL_NEW_PASSWORD}
-                    fullWidth
-                    margin="normal"
-                    name="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                  <TextField
-                    variant="outlined"
-                    label={LABEL_CONF_PASSWORD}
-                    fullWidth
-                    margin="normal"
-                    name="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                  />
-                </Grid>
-                <Grid container item justify="flex-end" alignItems="center">
-                  <Grid item>
-                    <Button
-                      color="primary"
-                      onClick={savePassword}
-                      disabled={!isPasswordValid()}
-                    >
-                      {BTN_RESET}
-                    </Button>
-                  </Grid>
-                </Grid>
-              </form>
-            </Grid>
+            <Section>
+              <PermissionsEditor user={userData} />
+            </Section>
           </Grid>
-
-          <PermissionsEditor user={userData} />
 
           {userData.purchases && userData.purchases.length > 0 && (
             <Grid item>
-              <Typography variant="h6">
-                {ENROLLED_COURSES_HEADER} ({userData.purchases.length})
-              </Typography>
-              <Grid container direction="column">
-                {enrolledCourses.map((course) => (
-                  <Grid
-                    item
-                    key={course.id}
-                    className={classes.enrolledCourseItem}
-                  >
-                    {course.title}
-                  </Grid>
-                ))}
-              </Grid>
+              <Section>
+                <Typography variant="h6">
+                  {ENROLLED_COURSES_HEADER} ({userData.purchases.length})
+                </Typography>
+                <Grid container direction="column">
+                  {enrolledCourses.map((course) => (
+                    <Grid
+                      item
+                      key={course.id}
+                      className={classes.enrolledCourseItem}
+                    >
+                      {course.title}
+                    </Grid>
+                  ))}
+                </Grid>
+              </Section>
             </Grid>
           )}
         </Grid>
