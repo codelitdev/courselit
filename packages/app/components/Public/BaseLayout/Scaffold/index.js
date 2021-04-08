@@ -1,26 +1,20 @@
 import React, { useState } from "react";
 import AppBar from "@material-ui/core/AppBar";
 import CssBaseline from "@material-ui/core/CssBaseline";
-import Divider from "@material-ui/core/Divider";
 import Drawer from "@material-ui/core/Drawer";
 import Hidden from "@material-ui/core/Hidden";
 import IconButton from "@material-ui/core/IconButton";
-import List from "@material-ui/core/List";
 import { Menu } from "@material-ui/icons";
-import { Grid, LinearProgress, Toolbar, Typography } from "@material-ui/core";
+import { LinearProgress, Toolbar } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
 import AppToast from "../../../AppToast.js";
 import { connect } from "react-redux";
 import { siteInfoProps, link, profileProps } from "../../../../types.js";
 import Header from "../Header.js";
-import {
-  MAIN_MENU_ITEM_DASHBOARD,
-  MAIN_MENU_ITEM_PROFILE,
-} from "../../../../config/strings.js";
-import { NAVIGATION_CATEGORY_MAIN } from "../../../../config/constants.js";
-import MenuItem from "./MenuItem.js";
-import { canAccessDashboard } from "../../../../lib/utils.js";
+import dynamic from "next/dynamic";
+
+const DrawerContent = dynamic(() => import("./DrawerContent"));
 
 const drawerWidth = 240;
 
@@ -34,26 +28,33 @@ const useStyles = makeStyles((theme) => ({
       flexShrink: 0,
     },
   },
-  appBar: {
-    zIndex: theme.zIndex.drawer + 1,
-  },
+  appBar: Object.assign(
+    {},
+    {
+      zIndex: theme.zIndex.drawer + 1,
+      [theme.breakpoints.up("sm")]: {
+        width: `calc(100% - ${drawerWidth}px)`,
+        marginLeft: drawerWidth,
+      },
+    },
+    theme.appBar
+  ),
   menuButton: {
     [theme.breakpoints.up("sm")]: {
       display: "none",
     },
   },
   toolbar: theme.mixins.toolbar,
-  drawerPaper: {
-    width: drawerWidth,
-  },
+  drawerPaper: Object.assign(
+    {},
+    {
+      width: drawerWidth,
+    },
+    {},
+    theme.drawer
+  ),
   content: {
     flexGrow: 1,
-  },
-  activeItem: {
-    background: "#d6d6d6",
-  },
-  visitSiteLink: {
-    color: "#fff",
   },
   showProgressBar: (props) => ({
     visibility: props.networkAction ? "visible" : "hidden",
@@ -64,69 +65,13 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const Scaffold = (props) => {
+  const [mobileOpen, setMobileOpen] = useState(false);
   const classes = useStyles(props);
   const theme = useTheme();
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   function handleDrawerToggle() {
     setMobileOpen(!mobileOpen);
   }
-
-  const makeDrawer = (forMobile = false) => (
-    <div>
-      <Grid container alignItems="center" className={classes.toolbar}>
-        <Grid item className={classes.menuTitle}>
-          <Typography variant="h5">{props.siteinfo.title}</Typography>
-        </Grid>
-      </Grid>
-      <Divider />
-      <List>
-        {props.profile.fetched && (
-          <>
-            {props.profile.id && (
-              <>
-                <MenuItem
-                  link={{
-                    text: MAIN_MENU_ITEM_PROFILE,
-                    destination: `/profile/${
-                      props.profile.userId && props.profile.userId !== -1
-                        ? props.profile.userId
-                        : props.profile.id
-                    }`,
-                    category: NAVIGATION_CATEGORY_MAIN,
-                    newTab: false,
-                  }}
-                />
-                <Divider />
-              </>
-            )}
-            {canAccessDashboard(props.profile) && (
-              <MenuItem
-                link={{
-                  text: MAIN_MENU_ITEM_DASHBOARD,
-                  destination: "/dashboard/courses",
-                  category: NAVIGATION_CATEGORY_MAIN,
-                  newTab: false,
-                }}
-              />
-            )}
-          </>
-        )}
-        {props.navigation &&
-          props.navigation.map((link) =>
-            forMobile ? (
-              <MenuItem
-                link={link}
-                key={link.destination}
-                closeDrawer={handleDrawerToggle}
-              />
-            ) : (
-              <MenuItem link={link} key={link.destination} />
-            )
-          )}
-      </List>
-    </div>
-  );
 
   return (
     <div className={classes.root}>
@@ -160,7 +105,10 @@ const Scaffold = (props) => {
               keepMounted: true, // Better open performance on mobile.
             }}
           >
-            {makeDrawer(true)}
+            <DrawerContent
+              handleDrawerToggle={handleDrawerToggle}
+              forMobile={true}
+            />
           </Drawer>
         </Hidden>
         <Hidden xsDown implementation="css">
@@ -171,7 +119,7 @@ const Scaffold = (props) => {
             variant="permanent"
             open
           >
-            {makeDrawer()}
+            <DrawerContent handleDrawerToggle={handleDrawerToggle} />
           </Drawer>
         </Hidden>
       </nav>

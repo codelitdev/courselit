@@ -5,6 +5,7 @@ import FetchBuilder from "../lib/fetch.js";
 import { Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import { getBackendAddress } from "../lib/utils.js";
+import { Section } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 
 const BaseLayout = dynamic(() => import("../components/Public/BaseLayout"));
@@ -15,15 +16,6 @@ const useStyles = makeStyles((theme) => ({
     [theme.breakpoints.down("sm")]: {
       padding: theme.spacing(2),
     },
-    paddingTop: theme.spacing(2),
-  },
-  header: {
-    [theme.breakpoints.up("md")]: {
-      marginLeft: theme.spacing(2),
-    },
-  },
-  headerTop: {
-    marginBottom: theme.spacing(2),
   },
 }));
 
@@ -48,19 +40,23 @@ function Posts(props) {
   return (
     <BaseLayout title={HEADER_BLOG_POSTS_SECTION}>
       <Grid item xs={12} className={classes.content}>
-        <Grid container component="section">
-          <Grid item container className={classes.header}>
-            <Grid item xs={12} className={classes.headerTop}>
-              <Typography variant="h2">{HEADER_BLOG_POSTS_SECTION}</Typography>
+        <Section>
+          <Grid container>
+            <Grid item container>
+              <Grid item xs={12}>
+                <Typography variant="h2">
+                  {HEADER_BLOG_POSTS_SECTION}
+                </Typography>
+              </Grid>
             </Grid>
+            <Items
+              showLoadMoreButton={true}
+              generateQuery={generateQuery}
+              initialItems={props.courses}
+              posts={true}
+            />
           </Grid>
-          <Items
-            showLoadMoreButton={true}
-            generateQuery={generateQuery}
-            initialItems={props.courses}
-            posts={true}
-          />
-        </Grid>
+        </Section>
       </Grid>
     </BaseLayout>
   );

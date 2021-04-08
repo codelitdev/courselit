@@ -26,8 +26,9 @@ const Img = (props) => {
       <img className={classes} src={source} alt={alt} />
       <style jsx>{`
         img {
+          object-fit: "cover";
           width: 100%;
-          height: auto;
+          height: 100%;
         }
       `}</style>
     </>

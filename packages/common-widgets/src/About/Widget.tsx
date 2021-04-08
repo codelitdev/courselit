@@ -3,6 +3,7 @@ import {
   WidgetProps,
   WidgetHelpers,
   RichText as TextEditor,
+  Section,
 } from "@courselit/components-library";
 import { connect } from "react-redux";
 import Settings from "./Settings";
@@ -11,7 +12,7 @@ import { Grid, Theme } from "@material-ui/core";
 
 const useStyles = makeStyles((theme: Theme) => ({
   container: {
-    padding: theme.spacing(2),
+    // padding: theme.spacing(2),
   },
 }));
 
@@ -55,7 +56,9 @@ const Widget = (props: AboutWidgetProps) => {
 
   return (
     <Grid item xs className={classes.container}>
-      <TextEditor initialContentState={settings.text} readOnly={true} />
+      <Section>
+        <TextEditor initialContentState={settings.text} readOnly={true} />
+      </Section>
     </Grid>
   );
 };

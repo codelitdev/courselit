@@ -25,10 +25,16 @@ const {
 const { checkPermission, getMediaOrThrow } = require("../lib/graphql.js");
 
 const getHandler = async (req, res) => {
-  const media = await Media.findOne({
-    _id: req.params.mediaId,
-    domain: req.domain._id,
-  });
+  let media;
+
+  try {
+    media = await Media.findOne({
+      _id: req.params.mediaId,
+      domain: req.domain._id,
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
 
   if (!media) {
     return res.status(404).json({ message: responses.item_not_found });

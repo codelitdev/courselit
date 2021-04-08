@@ -8,34 +8,18 @@ import Link from "next/link";
 import FetchBuilder from "../lib/fetch.js";
 import { getBackendAddress } from "../lib/utils.js";
 import dynamic from "next/dynamic";
+import { Section } from "@courselit/components-library";
 
 const BaseLayout = dynamic(() => import("../components/Public/BaseLayout"));
 const Items = dynamic(() => import("../components/Public/Items"));
 
 const useStyles = makeStyles((theme) => ({
-  content: {
-    [theme.breakpoints.down("sm")]: {
-      padding: theme.spacing(2),
-    },
-    paddingTop: theme.spacing(2),
-    marginBottom: theme.spacing(2),
-  },
-  header: {
-    [theme.breakpoints.up("md")]: {
-      marginLeft: theme.spacing(2),
-    },
-  },
   headerTop: {
     marginBottom: theme.spacing(2),
   },
   link: {
     textDecoration: "none",
     color: "inherit",
-  },
-  callToAction: {
-    [theme.breakpoints.up("md")]: {
-      marginLeft: theme.spacing(2),
-    },
   },
 }));
 
@@ -59,36 +43,30 @@ const Index = (props) => {
 
   return (
     <BaseLayout title={props.siteinfo.subtitle}>
-      <Grid item xs={12} className={classes.content}>
-        <Grid container component="section">
-          {props.courses.length > 0 && (
-            <>
-              <Grid item container className={classes.header}>
-                <Grid item xs={12} className={classes.headerTop}>
-                  <Typography variant="h2">
-                    {HEADER_BLOG_POSTS_SECTION}
-                  </Typography>
-                </Grid>
+      <Grid item xs={12}>
+        {props.courses.length > 0 && (
+          <Section>
+            <Grid item container className={classes.header}>
+              <Grid item xs={12} className={classes.headerTop}>
+                <Typography variant="h2">
+                  {HEADER_BLOG_POSTS_SECTION}
+                </Typography>
               </Grid>
-              <Items
-                generateQuery={generateQuery}
-                initialItems={props.courses}
-                posts={true}
-              />
-              <Grid item xs={12}>
-                <Button
-                  variant="contained"
-                  disableElevation
-                  className={classes.callToAction}
-                >
-                  <Link href="/posts">
-                    <a className={classes.link}>{BTN_VIEW_ALL}</a>
-                  </Link>
-                </Button>
-              </Grid>
-            </>
-          )}
-        </Grid>
+            </Grid>
+            <Items
+              generateQuery={generateQuery}
+              initialItems={props.courses}
+              posts={true}
+            />
+            <Grid item xs={12}>
+              <Button>
+                <Link href="/posts">
+                  <a className={classes.link}>{BTN_VIEW_ALL}</a>
+                </Link>
+              </Button>
+            </Grid>
+          </Section>
+        )}
       </Grid>
     </BaseLayout>
   );

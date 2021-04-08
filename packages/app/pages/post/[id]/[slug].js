@@ -17,8 +17,8 @@ const Article = dynamic(() => import("../../../components/Public/Article.js"));
 
 const useStyles = makeStyles((theme) => ({
   content: {
-    padding: theme.spacing(2),
-    marginBottom: theme.spacing(4),
+    // padding: theme.spacing(2),
+    // marginBottom: theme.spacing(4),
   },
 }));
 

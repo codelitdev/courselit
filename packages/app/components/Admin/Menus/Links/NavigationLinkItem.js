@@ -153,7 +153,7 @@ const NavigationLinkItem = (props) => {
   };
 
   return (
-    <Grid container direction="row" spacing={1} alignItems="center">
+    <Grid item container direction="row" spacing={1} alignItems="center">
       <Grid item xs={12} sm={12} md={1}>
         <IconButton onClick={deleteLink} disabled={requestInProgress}>
           <Delete />

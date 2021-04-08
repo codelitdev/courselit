@@ -2,7 +2,7 @@ import * as React from "react";
 import Link from "next/link";
 import { Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
-import { PriceTag, Course, Card } from "@courselit/components-library";
+import { PriceTag, Course } from "@courselit/components-library";
 
 const useStyles = () =>
   makeStyles((theme: any) => ({
@@ -48,35 +48,33 @@ const Item = (props: ItemProps) => {
         as={`/${appConfig.URL_EXTENTION_COURSES}/${props.course.courseId}/${props.course.slug}`}
       >
         <a className={classes.link}>
-          <Card>
-            <Grid item container direction="column" component="article">
-              {props.course.featuredImage && (
-                <Grid item>
-                  <img
-                    src={appUtilities.formulateMediaUrl(
-                      appConfig.BACKEND,
-                      props.course.featuredImage
-                    )}
-                    className={classes.featuredImage}
-                  />
-                </Grid>
-              )}
-              <Grid
-                item
-                container
-                className={classes.title}
-                justify="space-between"
-                alignItems="center"
-              >
-                <Grid item>
-                  <Typography variant="h5">{props.course.title}</Typography>
-                </Grid>
-                <Grid item>
-                  <PriceTag cost={props.course.cost} freeCostCaption="FREE" />
-                </Grid>
+          <Grid item container direction="column" component="article">
+            {props.course.featuredImage && (
+              <Grid item>
+                <img
+                  src={appUtilities.formulateMediaUrl(
+                    appConfig.BACKEND,
+                    props.course.featuredImage
+                  )}
+                  className={classes.featuredImage}
+                />
+              </Grid>
+            )}
+            <Grid
+              item
+              container
+              className={classes.title}
+              justify="space-between"
+              alignItems="center"
+            >
+              <Grid item>
+                <Typography variant="h5">{props.course.title}</Typography>
+              </Grid>
+              <Grid item>
+                <PriceTag cost={props.course.cost} freeCostCaption="FREE" />
               </Grid>
             </Grid>
-          </Card>
+          </Grid>
         </a>
       </Link>
     </Grid>

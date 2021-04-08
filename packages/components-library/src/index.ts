@@ -1,5 +1,5 @@
 import PriceTag from "./PriceTag";
-import Card from "./Card";
+import Section from "./Section";
 import Course from "./Course";
 import { FetchBuilder, WidgetProps } from "./Widget";
 import AppState from "./AppState";
@@ -9,7 +9,7 @@ import OverviewAndDetail from "./OverviewAndDetail";
 
 export {
   PriceTag,
-  Card,
+  Section,
   Course,
   WidgetProps,
   FetchBuilder,

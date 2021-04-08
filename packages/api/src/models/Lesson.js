@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const AutoIncrement = require("mongoose-sequence")(mongoose);
 const { text, video, audio, pdf, quiz } = require("../config/constants.js");
 
 const LessonSchema = new mongoose.Schema({
@@ -12,5 +13,7 @@ const LessonSchema = new mongoose.Schema({
   courseId: mongoose.Schema.Types.ObjectId,
   requiresEnrollment: { type: Boolean, default: false },
 });
+
+LessonSchema.plugin(AutoIncrement, { inc_field: "lessonId" });
 
 module.exports = mongoose.model("Lesson", LessonSchema);
