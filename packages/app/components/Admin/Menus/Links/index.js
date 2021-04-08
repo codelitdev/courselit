@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { Button } from "@material-ui/core";
+import { Grid, Button } from "@material-ui/core";
 import { ADD_NEW_LINK_BUTTON } from "../../../../config/strings";
 import FetchBuilder from "../../../../lib/fetch";
 import { connect } from "react-redux";
@@ -64,7 +64,7 @@ const NavigationLinks = (props) => {
   };
 
   return (
-    <>
+    <Grid item container xs direction="column" spacing={1}>
       {links.map((link, index) => (
         <NavigationLinkItem
           key={link.destination}
@@ -73,10 +73,10 @@ const NavigationLinks = (props) => {
           removeItem={removeItemAt}
         />
       ))}
-      <Button variant="contained" onClick={addEmptyLinkItem}>
-        {ADD_NEW_LINK_BUTTON}
-      </Button>
-    </>
+      <Grid item>
+        <Button onClick={addEmptyLinkItem}>{ADD_NEW_LINK_BUTTON}</Button>
+      </Grid>
+    </Grid>
   );
 };
 

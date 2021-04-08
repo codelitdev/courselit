@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Provider, useStore } from "react-redux";
 import App from "next/app";
 import { getCookie } from "../lib/session.js";
@@ -14,10 +15,10 @@ import {
 import { ThemeProvider } from "@material-ui/styles";
 import { responsiveFontSizes, createMuiTheme } from "@material-ui/core";
 import { CONSOLE_MESSAGE_THEME_INVALID } from "../config/strings.js";
-import { useEffect } from "react";
 import wrapper from "../redux/store.js";
 import "@courselit/rich-text/dist/main.css";
 import dynamic from "next/dynamic";
+import defaultTheme from "../config/defaultTheme.js";
 
 const CodeInjector = dynamic(() =>
   import("../components/Public/CodeInjector.js")
@@ -27,13 +28,13 @@ const WrappedApp = ({ Component, pageProps }) => {
   const store = useStore();
   let muiTheme;
   const { theme, address } = store.getState();
-  try {
-    muiTheme = responsiveFontSizes(
-      createMuiTheme(Object.keys(theme.styles).length ? theme.styles : {})
-    );
-  } catch (err) {
+
+  if (theme.styles) {
+    const userTheme = Object.assign({}, defaultTheme, theme.styles);
+    muiTheme = responsiveFontSizes(createMuiTheme(userTheme));
+  } else {
     console.warn(CONSOLE_MESSAGE_THEME_INVALID);
-    muiTheme = responsiveFontSizes(createMuiTheme({}));
+    muiTheme = responsiveFontSizes(createMuiTheme(defaultTheme));
   }
 
   useEffect(() => {

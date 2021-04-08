@@ -12,26 +12,17 @@ import {
 } from "../../config/strings.js";
 import { authProps, profileProps } from "../../types.js";
 import { Button } from "@material-ui/core";
-import { makeStyles } from "@material-ui/styles";
-
-const useStyles = makeStyles({
-  button: {
-    color: "white",
-  },
-});
 
 function SessionButton(props) {
-  const classes = useStyles();
-
   return (
     <>
       {props.auth.guest ? (
         <Link href="/login">
-          <Button className={classes.button}>{GENERIC_SIGNIN_TEXT}</Button>
+          <Button>{GENERIC_SIGNIN_TEXT}</Button>
         </Link>
       ) : (
         <Link href="/logout">
-          <Button className={classes.button}>{GENERIC_SIGNOUT_TEXT}</Button>
+          <Button>{GENERIC_SIGNOUT_TEXT}</Button>
         </Link>
       )}
     </>

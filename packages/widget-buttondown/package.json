@@ -50,5 +50,8 @@
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12"
   },
-  "gitHead": "fca7d2f8455c835f1c185a1ebc8513c6269ebe5b"
+  "gitHead": "fca7d2f8455c835f1c185a1ebc8513c6269ebe5b",
+  "dependencies": {
+    "@courselit/components-library": "^0.5.14"
+  }
 }

@@ -1,6 +1,7 @@
 import * as React from "react";
 import { GridList, GridListTile, useMediaQuery } from "@material-ui/core";
 import ComponentProps from "./ComponentProps";
+import Section from "../Section";
 
 interface OverviewProps {
   componentsMap: ComponentProps[];
@@ -17,21 +18,23 @@ const OverviewList = ({
   const mobile = useMediaQuery((theme: any) => theme.breakpoints.down("xs"));
 
   return (
-    <GridList cols={mobile ? 1 : tablet ? 2 : 3}>
-      {componentsMap.map((component, index) => (
-        <GridListTile
-          key={index}
-          onClick={() =>
-            "Detail" in component
-              ? onSelectComponentWithDetail(index)
-              : onSelectComponentWithoutDetail(index)
-          }
-          cols={1}
-        >
-          {component.Overview}
-        </GridListTile>
-      ))}
-    </GridList>
+    <Section>
+      <GridList cols={mobile ? 1 : tablet ? 2 : 3}>
+        {componentsMap.map((component, index) => (
+          <GridListTile
+            key={index}
+            onClick={() =>
+              "Detail" in component
+                ? onSelectComponentWithDetail(index)
+                : onSelectComponentWithoutDetail(index)
+            }
+            cols={1}
+          >
+            {component.Overview}
+          </GridListTile>
+        ))}
+      </GridList>
+    </Section>
   );
 };
 

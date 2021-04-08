@@ -7,7 +7,6 @@ import { makeStyles } from "@material-ui/styles";
 const useStyles = (sectionName: string) =>
   makeStyles((theme: Theme) => ({
     container: {
-      padding: theme.spacing(2),
       textAlign: sectionName === "footerRight" ? "end" : "start",
       [theme.breakpoints.down("sm")]: {
         textAlign: "start",

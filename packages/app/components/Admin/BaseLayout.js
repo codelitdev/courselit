@@ -159,7 +159,7 @@ const BaseLayoutAdmin = ({
         />
       </Head>
       <RouteBasedComponentScaffold items={items}>
-        {children}
+        <div>{children}</div>
       </RouteBasedComponentScaffold>
     </>
   ) : (

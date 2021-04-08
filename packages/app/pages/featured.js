@@ -5,22 +5,13 @@ import { makeStyles } from "@material-ui/styles";
 import FetchBuilder from "../lib/fetch.js";
 import { useRouter } from "next/router";
 import { getBackendAddress } from "../lib/utils";
+import { Section } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 
 const BaseLayout = dynamic(() => import("../components/Public/BaseLayout"));
 const Items = dynamic(() => import("../components/Public/Items"));
 
 const useStyles = makeStyles((theme) => ({
-  content: {
-    [theme.breakpoints.down("sm")]: {
-      padding: theme.spacing(2),
-    },
-    paddingTop: theme.spacing(2),
-    marginBottom: theme.spacing(8),
-  },
-  header: {
-    marginLeft: theme.spacing(2),
-  },
   headerTop: {
     marginBottom: theme.spacing(2),
   },
@@ -50,19 +41,21 @@ const Courses = ({ courses }) => {
 
   return (
     <BaseLayout title={path}>
-      <Grid item xs={12} className={classes.content}>
-        <Grid container component="section">
-          <Grid item container className={classes.header}>
-            <Grid item xs={12} className={classes.headerTop}>
-              <Typography variant="h2">{path}</Typography>
+      <Grid item xs={12}>
+        <Section>
+          <Grid container>
+            <Grid item container>
+              <Grid item xs={12} className={classes.headerTop}>
+                <Typography variant="h2">{path}</Typography>
+              </Grid>
             </Grid>
+            <Items
+              showLoadMoreButton={true}
+              generateQuery={generateQuery}
+              initialItems={courses}
+            />
           </Grid>
-          <Items
-            showLoadMoreButton={true}
-            generateQuery={generateQuery}
-            initialItems={courses}
-          />
-        </Grid>
+        </Section>
       </Grid>
     </BaseLayout>
   );

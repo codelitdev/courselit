@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { GridList, GridListTile, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
-import { Card } from "@courselit/components-library";
+import { Section } from "@courselit/components-library";
 
 const useStyles = makeStyles((theme) => ({
   widgetCard: {
@@ -36,7 +36,7 @@ const Master = (props) => {
       {Object.keys(componentsMap).map((name) =>
         componentsMap[name].component ? (
           <GridListTile key={name} onClick={() => onWidgetSelect(name)}>
-            <Card>
+            <Section>
               <div className={classes.widgetCard}>
                 {componentsMap[name].icon && (
                   <>
@@ -60,7 +60,7 @@ const Master = (props) => {
                   {componentsMap[name].caption}
                 </Typography>
               </div>
-            </Card>
+            </Section>
           </GridListTile>
         ) : null
       )}

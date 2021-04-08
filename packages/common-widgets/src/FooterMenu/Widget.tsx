@@ -7,9 +7,6 @@ import Link from "next/link";
 
 const useStyles = (sectionName: string) =>
   makeStyles((theme: Theme) => ({
-    container: {
-      padding: theme.spacing(2),
-    },
     list: {
       listStyle: "none",
       margin: 0,
@@ -36,7 +33,7 @@ const Widget = (props: FooterMenuWidgetProps) => {
   const classes = useStyles(section)();
 
   return (
-    <Grid item xs className={classes.container}>
+    <Grid item>
       <nav>
         <Grid
           container

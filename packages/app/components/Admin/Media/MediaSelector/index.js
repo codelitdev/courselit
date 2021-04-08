@@ -12,9 +12,10 @@ const Img = dynamic(() => import("../../../Img.js"));
 const MediaManagerDialog = dynamic(() => import("./MediaManagerDialog.js"));
 
 const useStyles = makeStyles((theme) => ({
-  control: {
-    marginLeft: theme.spacing(1),
-    width: "6rem",
+  preview: {
+    // marginLeft: theme.spacing(1),
+    // width: "6rem",
+    width: 100,
   },
 }));
 
@@ -32,7 +33,7 @@ const MediaSelector = (props) => {
       <Grid item>
         <Typography variant="body1">{props.title}</Typography>
       </Grid>
-      <Grid item className={classes.control}>
+      <Grid item className={classes.preview}>
         <Img src={props.src} isThumbnail={true} />
       </Grid>
       <Grid item>

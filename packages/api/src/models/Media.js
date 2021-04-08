@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const AutoIncrement = require("mongoose-sequence")(mongoose);
 
 const MediaSchema = new mongoose.Schema({
   domain: { type: mongoose.Schema.Types.ObjectId, required: true },
@@ -17,5 +18,7 @@ MediaSchema.index({
   title: "text",
   altText: "text",
 });
+
+MediaSchema.plugin(AutoIncrement, { inc_field: "mediaId" });
 
 module.exports = mongoose.model("Media", MediaSchema);

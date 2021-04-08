@@ -9,7 +9,7 @@ import { ENROLL_IN_THE_COURSE, USER_ERROR_HEADER } from "../../config/strings";
 import { makeStyles } from "@material-ui/styles";
 import { lesson, authProps, profileProps, addressProps } from "../../types";
 import { formulateMediaUrl } from "../../lib/utils.js";
-import { RichText as TextEditor } from "@courselit/components-library";
+import { Section, RichText as TextEditor } from "@courselit/components-library";
 
 const useStyles = makeStyles((theme) => ({
   notEnrolledHeader: {
@@ -77,7 +77,7 @@ const LessonViewer = (props) => {
   };
 
   return (
-    <>
+    <Section>
       {!isEnrolled && (
         <>
           <Typography variant="h2" className={classes.notEnrolledHeader}>
@@ -143,7 +143,7 @@ const LessonViewer = (props) => {
           )}
         </Grid>
       )}
-    </>
+    </Section>
   );
 };
 

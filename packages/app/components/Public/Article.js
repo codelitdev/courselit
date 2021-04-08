@@ -1,5 +1,5 @@
 import React from "react";
-import { Typography, Grid } from "@material-ui/core";
+import { Typography, Grid, Divider } from "@material-ui/core";
 import Link from "next/link";
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/styles";
@@ -13,6 +13,7 @@ import { connect } from "react-redux";
 import {
   PriceTag,
   RichText as TextEditor,
+  Section,
 } from "@courselit/components-library";
 import { FREE_COST } from "../../config/strings.js";
 import dynamic from "next/dynamic";
@@ -81,59 +82,72 @@ const Article = (props) => {
   } catch (err) {}
 
   return (
-    <article>
-      <header>
-        <Typography variant="h2" className={classes.header}>
-          {course.title}
-        </Typography>
-      </header>
-      {options.showAttribution && (
-        <Grid container className={classes.creatorcard}>
-          <Grid item>
-            <Typography variant="overline" component="p">
-              <Link href="/profile/[id]" as={`/profile/${course.creatorId}`}>
-                <a className={classes.creatorName}>{course.creatorName}</a>
-              </Link>
-            </Typography>
-            <Typography variant="overline" className={classes.updatedtime}>
-              {formattedLocaleDate(course.updated)}
-            </Typography>
-          </Grid>
-        </Grid>
-      )}
-      {course.featuredImage && (
-        <div className={classes.featuredimagecontainer} />
-      )}
-      {options.showEnrollmentArea &&
-        (profile.fetched
-          ? !profile.purchases.includes(course.id) &&
-            checkPermission(profile.permissions, [permissions.enrollInCourse])
-          : true) && (
-          <div className={classes.enrollmentArea}>
-            <Grid
-              container
-              direction="row"
-              justify="space-between"
-              alignItems="center"
-            >
-              <Grid item className={classes.enrollmentAreaPriceTag}>
-                <PriceTag cost={course.cost} freeCostCaption={FREE_COST} />
-              </Grid>
-              <Grid>
-                <BuyButton course={course} />
-              </Grid>
+    <Section>
+      <article>
+        <header>
+          <Typography variant="h2" className={classes.header}>
+            {course.title}
+          </Typography>
+        </header>
+        {options.showAttribution && (
+          <Grid
+            container
+            className={classes.creatorcard}
+            direction="column"
+            spacing={2}
+          >
+            <Grid item>
+              <Divider />
             </Grid>
+            <Grid item>
+              <Typography variant="overline" component="p">
+                <Link href="/profile/[id]" as={`/profile/${course.creatorId}`}>
+                  <a className={classes.creatorName}>{course.creatorName}</a>
+                </Link>
+              </Typography>
+              <Typography variant="overline" className={classes.updatedtime}>
+                {formattedLocaleDate(course.updated)}
+              </Typography>
+            </Grid>
+            <Grid item>
+              <Divider />
+            </Grid>
+          </Grid>
+        )}
+        {course.featuredImage && (
+          <div className={classes.featuredimagecontainer} />
+        )}
+        {options.showEnrollmentArea &&
+          (profile.fetched
+            ? !profile.purchases.includes(course.id) &&
+              checkPermission(profile.permissions, [permissions.enrollInCourse])
+            : true) && (
+            <div className={classes.enrollmentArea}>
+              <Grid
+                container
+                direction="row"
+                justify="space-between"
+                alignItems="center"
+              >
+                <Grid item className={classes.enrollmentAreaPriceTag}>
+                  <PriceTag cost={course.cost} freeCostCaption={FREE_COST} />
+                </Grid>
+                <Grid>
+                  <BuyButton course={course} />
+                </Grid>
+              </Grid>
+            </div>
+          )}
+        {courseDescriptionHydrated && process.browser && (
+          <div className={classes.content}>
+            <TextEditor
+              initialContentState={courseDescriptionHydrated}
+              readOnly={true}
+            />
           </div>
         )}
-      {courseDescriptionHydrated && process.browser && (
-        <div className={classes.content}>
-          <TextEditor
-            initialContentState={courseDescriptionHydrated}
-            readOnly={true}
-          />
-        </div>
-      )}
-    </article>
+      </article>
+    </Section>
   );
 };
 
