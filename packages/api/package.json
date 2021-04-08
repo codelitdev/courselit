@@ -1,6 +1,6 @@
 {
   "name": "@courselit/api",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "main": "./src/index.js",
   "license": "MIT",
@@ -17,7 +17,7 @@
     "start": "node src"
   },
   "dependencies": {
-    "@courselit/thumbnail": "^0.6.0",
+    "@courselit/thumbnail": "^0.7.0",
     "base-64": "^0.1.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
