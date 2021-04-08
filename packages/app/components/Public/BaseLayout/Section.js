@@ -5,16 +5,9 @@ import { Grid } from "@material-ui/core";
 import WidgetByName from "./WidgetByName";
 import { useRouter } from "next/router";
 import widgets from "../../../config/widgets";
-import { withStyles } from "@material-ui/styles";
-
-const styles = (theme) => ({
-  spacing: {
-    marginBottom: theme.spacing(2),
-  },
-});
 
 const Section = (props) => {
-  const { name, layout, classes } = props;
+  const { name, layout } = props;
   const sectionLayout = layout[name];
   const router = useRouter();
 
@@ -25,7 +18,7 @@ const Section = (props) => {
         widgets[item].metadata.excludeFromPaths.includes(router.pathname) ? (
           <div key={index}></div>
         ) : (
-          <Grid item key={index} className={classes.spacing}>
+          <Grid item key={index}>
             <WidgetByName name={item} section={name} />
           </Grid>
         )
@@ -39,11 +32,10 @@ const Section = (props) => {
 Section.propTypes = {
   name: PropTypes.string.isRequired,
   layout: PropTypes.object.isRequired,
-  classes: PropTypes.object.isRequired,
 };
 
 const mapStateToProps = (state) => ({
   layout: state.layout,
 });
 
-export default connect(mapStateToProps)(withStyles(styles)(Section));
+export default connect(mapStateToProps)(Section);

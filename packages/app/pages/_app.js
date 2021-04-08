@@ -18,6 +18,7 @@ import { CONSOLE_MESSAGE_THEME_INVALID } from "../config/strings.js";
 import wrapper from "../redux/store.js";
 import "@courselit/rich-text/dist/main.css";
 import dynamic from "next/dynamic";
+import defaultTheme from "../config/defaultTheme.js";
 
 const CodeInjector = dynamic(() =>
   import("../components/Public/CodeInjector.js")
@@ -27,49 +28,6 @@ const WrappedApp = ({ Component, pageProps }) => {
   const store = useStore();
   let muiTheme;
   const { theme, address } = store.getState();
-  const defaultTheme = {
-    body: {
-      // maxWidth: 1280,
-      // paddingTop: 30,
-    },
-    appBar: {
-      // height: "100px",
-    },
-    logo: {},
-    /**
-     * If you want to show the site name along with the logo, set display to block
-     */
-    siteName: {
-      display: "block",
-    },
-    drawer: {
-      // backgroundColor: "transparent",
-    },
-    footerContainer: {
-      // backgroundColor: "#fdfdfd",
-    },
-    footer: {
-      // maxWidth: 1240
-    },
-    section: {
-      // borderRadius: "none",
-      // background: "none",
-      // boxShadow: "none",
-      boxShadow: "0px 2px 5px #cecece",
-    },
-    mainContentWidth: 8,
-    asideWidth: 4,
-    // singleColumnLayout: true,
-    hideLoginButton: true,
-    palette: {
-      background: {
-        // default: "#fff",
-      },
-    },
-    typography: {
-      // fontFamily: "New Tegomin, Zilla Slab Highlight, Arial",
-    },
-  };
 
   if (theme.styles) {
     const userTheme = Object.assign({}, defaultTheme, theme.styles);

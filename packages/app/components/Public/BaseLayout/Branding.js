@@ -15,8 +15,8 @@ const Img = dynamic(() => import("../../Img"));
 const styles = (theme) => ({
   toolbar: theme.mixins.toolbar,
   logoAdjustment: {
-    paddingLeft: theme.spacing(2),
-    paddingRight: theme.spacing(2),
+    // paddingLeft: theme.spacing(2),
+    // paddingRight: theme.spacing(2),
   },
   logocontainer: Object.assign(
     {},

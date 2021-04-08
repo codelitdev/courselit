@@ -17,10 +17,10 @@ const useStyles = ({ backgroundColor }: Settings) =>
       background: backgroundColor || "inherit",
     },
     header: {
-      [theme.breakpoints.up("md")]: {
-        marginLeft: theme.spacing(2),
-      },
-      marginBottom: theme.spacing(2),
+      // [theme.breakpoints.up("md")]: {
+      //   marginLeft: theme.spacing(2),
+      // },
+      // marginBottom: theme.spacing(2),
     },
     headerTop: {
       marginBottom: theme.spacing(1),
@@ -30,10 +30,10 @@ const useStyles = ({ backgroundColor }: Settings) =>
       color: "inherit",
     },
     callToAction: {
-      [theme.breakpoints.up("md")]: {
-        marginLeft: theme.spacing(2),
-      },
-      marginBottom: theme.spacing(2),
+      // [theme.breakpoints.up("md")]: {
+      //   marginLeft: theme.spacing(2),
+      // },
+      // marginBottom: theme.spacing(2),
     },
   }));
 
@@ -99,8 +99,8 @@ const Widget = (props: FeaturedWidgetProps) => {
   return posts.length > 0 ? (
     <Section>
       <Grid item xs={12} className={classes.content}>
-        <Grid container component="section">
-          <Grid item container className={classes.header}>
+        <Grid container spacing={2}>
+          <Grid item container className={classes.header} spacing={1}>
             <Grid item xs={12} className={classes.headerTop}>
               <Typography variant="h2">{settings.title}</Typography>
             </Grid>

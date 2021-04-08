@@ -10,9 +10,17 @@ import {
 } from "../../../../config/strings";
 import { NAVIGATION_CATEGORY_MAIN } from "../../../../config/constants";
 import { canAccessDashboard } from "../../../../lib/utils";
+import { makeStyles } from "@material-ui/styles";
 
 const MenuItem = dynamic(() => import("./MenuItem"));
 const Branding = dynamic(() => import("../Branding"));
+
+const useStyles = makeStyles((theme) => ({
+  branding: {
+    paddingLeft: theme.spacing(2),
+    paddingRight: theme.spacing(2),
+  },
+}));
 
 const DrawerContent = ({
   navigation,
@@ -20,9 +28,14 @@ const DrawerContent = ({
   handleDrawerToggle,
   forMobile = false,
 }) => {
+  const classes = useStyles();
+
   return (
-    <div>
-      <Branding />
+    <>
+      <div className={classes.branding}>
+        <Branding />
+      </div>
+
       <List>
         {profile.fetched && (
           <>
@@ -67,7 +80,7 @@ const DrawerContent = ({
             )
           )}
       </List>
-    </div>
+    </>
   );
 };
 

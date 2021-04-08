@@ -15,7 +15,9 @@ const Appearance = (props) => {
     <Grid container spacing={2}>
       <Grid item xs>
         <Section>
-          <Typography variant="h1">{HEADER_DESIGN}</Typography>
+          <Typography variant="h1" style={{ wordBreak: "break-word" }}>
+            {HEADER_DESIGN}
+          </Typography>
         </Section>
       </Grid>
       {checkPermission(props.profile.permissions, [

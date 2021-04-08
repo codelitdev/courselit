@@ -85,6 +85,10 @@ const useStyles = makeStyles((theme) => ({
   menuTitle: {
     marginLeft: theme.spacing(2),
   },
+  branding: {
+    paddingLeft: theme.spacing(2),
+    paddingRight: theme.spacing(2),
+  },
 }));
 
 const ComponentScaffold = (props) => {
@@ -117,8 +121,11 @@ const ComponentScaffold = (props) => {
   }
 
   const drawer = (
-    <div>
-      <Branding />
+    <>
+      <div className={classes.branding}>
+        <Branding />
+      </div>
+
       <List>
         {props.items.map((item, index) => (
           <ListItem
@@ -150,7 +157,7 @@ const ComponentScaffold = (props) => {
           </ListItem>
         ))}
       </List>
-    </div>
+    </>
   );
 
   return (

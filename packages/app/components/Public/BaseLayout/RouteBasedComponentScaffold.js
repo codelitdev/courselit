@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState /* useEffect */ } from "react";
 import AppBar from "@material-ui/core/AppBar";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import Drawer from "@material-ui/core/Drawer";
@@ -16,7 +16,7 @@ import DrawerListItemIcon from "./DrawerListItemIcon.js";
 import Header from "./Header.js";
 import { connect } from "react-redux";
 import { siteInfoProps } from "../../../types";
-import useMediaQuery from "@material-ui/core/useMediaQuery";
+// import useMediaQuery from "@material-ui/core/useMediaQuery";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
 
@@ -86,25 +86,29 @@ const useStyles = makeStyles((theme) => ({
   menuTitle: {
     marginLeft: theme.spacing(2),
   },
+  branding: {
+    paddingLeft: theme.spacing(2),
+    paddingRight: theme.spacing(2),
+  },
 }));
 
 const ComponentScaffold = (props) => {
   const classes = useStyles(props);
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const matches = useMediaQuery((theme) => theme.breakpoints.down("xs"));
-  const [firstLoad, setFirstLoad] = useState(false);
+  // const matches = useMediaQuery((theme) => theme.breakpoints.down("xs"));
+  // const [firstLoad, setFirstLoad] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    setFirstLoad(true);
-  }, []);
+  // useEffect(() => {
+  //   setFirstLoad(true);
+  // }, []);
 
-  useEffect(() => {
-    if (firstLoad && matches) {
-      setMobileOpen(true);
-    }
-  }, [firstLoad]);
+  // useEffect(() => {
+  //   if (firstLoad && matches) {
+  //     setMobileOpen(true);
+  //   }
+  // }, [firstLoad]);
 
   function handleDrawerToggle() {
     setMobileOpen(!mobileOpen);
@@ -115,8 +119,11 @@ const ComponentScaffold = (props) => {
   }
 
   const drawer = (
-    <div>
-      <Branding />
+    <>
+      <div className={classes.branding}>
+        <Branding />
+      </div>
+
       <List>
         {props.items.map((item, index) => (
           <ListItem
@@ -150,7 +157,7 @@ const ComponentScaffold = (props) => {
           </ListItem>
         ))}
       </List>
-    </div>
+    </>
   );
 
   return (

@@ -7,7 +7,6 @@ import {
   ADD_COMPONENT_POPUP_HEADER,
   BUTTON_SAVE,
   APP_MESSAGE_CHANGES_SAVED,
-  LAYOUT_SECTION_MAIN_CONTENT,
   LAYOUT_SECTION_FOOTER_RIGHT,
   LAYOUT_SECTION_FOOTER_LEFT,
   LAYOUT_SECTION_TOP,
@@ -333,8 +332,11 @@ const PageDesigner = (props) => {
             </Grid>
 
             {/** Footer */}
-            <Section className={classes.footerContainer}>
-              <Grid container spacing={0}>
+            <div className={classes.footerContainer}>
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <Typography variant="h6">{LAYOUT_SECTION_FOOTER}</Typography>
+                </Grid>
                 <Grid item xs={12} className={classes.padding}>
                   <Grid
                     container
@@ -397,244 +399,9 @@ const PageDesigner = (props) => {
                   </Grid>
                 </Grid>
               </Grid>
-            </Section>
+            </div>
           </div>
 
-          <Grid item xs>
-            <Grid container justify="center" className={classes.pageLayout}>
-              <Grid
-                container
-                item
-                direction="column"
-                xs={12}
-                sm={9}
-                className={classes.container}
-              >
-                <Grid item className={classes.fixedBox}>
-                  <Typography variant="caption">Header</Typography>
-                </Grid>
-
-                <Grid container item>
-                  <Grid
-                    container
-                    item
-                    className={`${classes.outline} ${classes.box} ${classes.margin}`}
-                    direction="column"
-                  >
-                    <Grid
-                      container
-                      item
-                      direction="row"
-                      justify="center"
-                      alignItems="center"
-                      spacing={1}
-                    >
-                      <Grid item>
-                        <Typography variant="h6">
-                          {LAYOUT_SECTION_TOP}
-                        </Typography>
-                      </Grid>
-                    </Grid>
-                    {layout.top &&
-                      layout.top.map((item, index) => (
-                        <AddedComponent
-                          section="top"
-                          title={widgets[item].metadata.displayName}
-                          index={index}
-                          removeComponent={removeComponent}
-                          key={index}
-                        />
-                      ))}
-                    <Grid item>
-                      <IconButton
-                        color="primary"
-                        aria-label="add component to the top section"
-                        onClick={() => openAddComponentDialog("top")}
-                      >
-                        <Add />
-                      </IconButton>
-                    </Grid>
-                  </Grid>
-
-                  <Grid
-                    container
-                    item
-                    direction="row"
-                    className={classes.margin}
-                  >
-                    <Grid
-                      container
-                      item
-                      direction="column"
-                      xs={12}
-                      sm={12}
-                      md={9}
-                    >
-                      <Grid
-                        item
-                        container
-                        className={`${classes.fixedBox} ${classes.outline} ${classes.mainContent}`}
-                        justify="center"
-                        alignItems="center"
-                      >
-                        <Grid item>
-                          <Typography variant="h6">
-                            {LAYOUT_SECTION_MAIN_CONTENT}
-                          </Typography>
-                        </Grid>
-                      </Grid>
-                      <Grid
-                        container
-                        item
-                        direction="column"
-                        className={`${classes.box} ${classes.outline}`}
-                      >
-                        <Grid item>
-                          <Typography variant="h6">
-                            {LAYOUT_SECTION_BOTTOM}
-                          </Typography>
-                        </Grid>
-                        {layout.bottom &&
-                          layout.bottom.map((item, index) => (
-                            <AddedComponent
-                              section="bottom"
-                              title={widgets[item].metadata.displayName}
-                              index={index}
-                              removeComponent={removeComponent}
-                              key={index}
-                            />
-                          ))}
-                        <Grid item>
-                          <IconButton
-                            color="primary"
-                            aria-label="add component to main section"
-                            onClick={() => openAddComponentDialog("bottom")}
-                          >
-                            <Add />
-                          </IconButton>
-                        </Grid>
-                      </Grid>
-                    </Grid>
-                    <Grid
-                      container
-                      item
-                      direction="column"
-                      xs={12}
-                      sm={12}
-                      md={3}
-                      className={`${classes.box} ${classes.outline}`}
-                    >
-                      <Grid item>
-                        <Typography variant="h6">
-                          {LAYOUT_SECTION_ASIDE}
-                        </Typography>
-                      </Grid>
-                      {layout.aside &&
-                        layout.aside.map((item, index) => (
-                          <AddedComponent
-                            section="aside"
-                            title={widgets[item].metadata.displayName}
-                            index={index}
-                            removeComponent={removeComponent}
-                            key={index}
-                          />
-                        ))}
-                      <Grid item>
-                        <IconButton
-                          color="primary"
-                          aria-label="add component to main section"
-                          onClick={() => openAddComponentDialog("aside")}
-                        >
-                          <Add />
-                        </IconButton>
-                      </Grid>
-                    </Grid>
-                  </Grid>
-                </Grid>
-
-                <Grid
-                  container
-                  item
-                  className={`${classes.outline} ${classes.box}`}
-                  direction="column"
-                >
-                  <Grid item>
-                    <Typography variant="h6">
-                      {LAYOUT_SECTION_FOOTER}
-                    </Typography>
-                  </Grid>
-                  <Grid item container direction="row" justify="space-between">
-                    <Grid
-                      item
-                      container
-                      className={classes.outline}
-                      xs={12}
-                      md={6}
-                      direction="column"
-                    >
-                      <Grid item>
-                        <Typography variant="h6">
-                          {LAYOUT_SECTION_FOOTER_LEFT}
-                        </Typography>
-                      </Grid>
-                      {layout.footerLeft &&
-                        layout.footerLeft.map((item, index) => (
-                          <AddedComponent
-                            section="footerLeft"
-                            title={widgets[item].metadata.displayName}
-                            index={index}
-                            removeComponent={removeComponent}
-                            key={index}
-                          />
-                        ))}
-                      <Grid item>
-                        <IconButton
-                          color="primary"
-                          aria-label="add component to the footer's left section"
-                          onClick={() => openAddComponentDialog("footerLeft")}
-                        >
-                          <Add />
-                        </IconButton>
-                      </Grid>
-                    </Grid>
-                    <Grid
-                      item
-                      container
-                      className={classes.outline}
-                      xs={12}
-                      md={6}
-                      direction="column"
-                    >
-                      <Grid item>
-                        <Typography variant="h6">
-                          {LAYOUT_SECTION_FOOTER_RIGHT}
-                        </Typography>
-                      </Grid>
-                      {layout.footerRight &&
-                        layout.footerRight.map((item, index) => (
-                          <AddedComponent
-                            section="footerRight"
-                            title={widgets[item].metadata.displayName}
-                            index={index}
-                            removeComponent={removeComponent}
-                            key={index}
-                          />
-                        ))}
-                      <Grid item>
-                        <IconButton
-                          color="primary"
-                          aria-label="add component to the footer section"
-                          onClick={() => openAddComponentDialog("footerRight")}
-                        >
-                          <Add />
-                        </IconButton>
-                      </Grid>
-                    </Grid>
-                  </Grid>
-                </Grid>
-              </Grid>
-            </Grid>
-          </Grid>
           <Grid item xs>
             <Button
               disabled={JSON.stringify(layout) === JSON.stringify(props.layout)}
