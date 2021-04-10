@@ -3,6 +3,7 @@ import {
   URL_EXTENTION_POSTS,
   URL_EXTENTION_COURSES,
   permissions,
+  mediaUrlPrefix,
 } from "../config/constants.js";
 import { RichText as TextEditor } from "@courselit/components-library";
 
@@ -57,12 +58,13 @@ export const makeGraphQLQueryStringFromJSObject = (obj) =>
   JSON.stringify(obj).replace(/"([^(")"]+)":/g, "$1:");
 
 export const formulateMediaUrl = (
-  backend,
+  prefix,
   mediaID,
+  extension,
   generateThumbnailUrl = false
 ) =>
   mediaID
-    ? `${backend}/media/${mediaID}${generateThumbnailUrl ? "?thumb=1" : ""}`
+    ? `${prefix}/${mediaID}/${generateThumbnailUrl ? "thumb.webp" : `main.${extension}` }`
     : "";
 
 export const formulateCourseUrl = (course, backend = "") =>

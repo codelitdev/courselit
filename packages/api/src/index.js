@@ -1,12 +1,18 @@
 "use strict";
 
 const internalResponse = require("./config/strings.js").internal;
-const { uploadFolder } = require("./config/constants.js");
+const {
+  uploadFolder,
+  cloudEndpoint,
+  cloudKey,
+  cloudSecret,
+  useCloudStorage,
+} = require("./config/constants.js");
 const { createFolders } = require("./lib/utils.js");
 
 process.env.NODE_ENV = process.env.NODE_ENV || "production";
 
-const checkForNecessaryEnvironmentVars = () => {
+const validateEnvironmentVars = () => {
   for (const field of ["USER_CONTENT_DIRECTORY", "JWT_SECRET"]) {
     if (!process.env[field]) {
       console.error(`${internalResponse.error_env_var_undefined}: ${field}`);
@@ -15,8 +21,19 @@ const checkForNecessaryEnvironmentVars = () => {
   }
 };
 
-checkForNecessaryEnvironmentVars();
-createFolders([uploadFolder]);
+const validateCloudSettings = () => {
+  if (!cloudEndpoint || !cloudKey || !cloudSecret) {
+    console.error(internalResponse.invalid_cloud_storage_settings);
+    process.exit(1);
+  }
+};
+
+validateEnvironmentVars();
+if (useCloudStorage) {
+  validateCloudSettings();
+} else {
+  createFolders([uploadFolder]);
+}
 
 const app = require("./app.js");
 

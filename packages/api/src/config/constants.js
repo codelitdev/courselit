@@ -28,6 +28,13 @@ module.exports = {
   // the following constants are as per the 16:9 aspect ratio
   thumbnailWidth: 120,
   thumbnailHeight: 68,
+  useCloudStorage: process.env.USE_CLOUD_STORAGE === "true",
+  cloudEndpoint: process.env.CLOUD_ENDPOINT || "",
+  cloudRegion: process.env.CLOUD_REGION || "",
+  cloudKey: process.env.CLOUD_KEY || "",
+  cloudSecret: process.env.CLOUD_SECRET || "",
+  cloudBucket: process.env.BUCKET_NAME || "",
+  maxFileUploadSize: process.env.MAX_UPLOAD_SIZE || 2147483648,
 
   // Content types
   text: "text",

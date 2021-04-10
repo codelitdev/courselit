@@ -23,7 +23,7 @@ const permissions = require("../../config/constants.js").permissions;
 const getCourseOrThrow = async (id, ctx) => {
   checkIfAuthenticated(ctx);
 
-  const course = await Course.findOne({ _id: id, domain: ctx.domain._id });
+  const course = await Course.findOne({ _id: id, domain: ctx.subdomain._id });
 
   if (!course) {
     throw new Error(strings.responses.item_not_found);
@@ -49,9 +49,9 @@ exports.getCourse = async (id = null, courseId = null, ctx) => {
 
   let course;
   if (id) {
-    course = await Course.findOne({ _id: id, domain: ctx.domain._id });
+    course = await Course.findOne({ _id: id, domain: ctx.subdomain._id });
   } else {
-    course = await Course.findOne({ courseId, domain: ctx.domain._id });
+    course = await Course.findOne({ courseId, domain: ctx.subdomain._id });
   }
 
   if (!course) {
@@ -83,7 +83,7 @@ exports.createCourse = async (courseData, ctx) => {
   courseData = await validateCost(validateBlogPosts(courseData));
 
   const course = await Course.create({
-    domain: ctx.domain._id,
+    domain: ctx.subdomain._id,
     title: courseData.title,
     cost: courseData.cost,
     privacy: courseData.privacy,
@@ -180,7 +180,7 @@ exports.getCoursesAsAdmin = async (offset, ctx) => {
   }
 
   const query = {
-    domain: ctx.domain._id,
+    domain: ctx.subdomain._id,
   };
   if (!checkPermission(user.permissions, [permissions.manageAnyCourse])) {
     query.creatorId = `${user.userId || user.id}`;
@@ -198,7 +198,7 @@ exports.getPosts = async (offset, ctx) => {
     isBlog: true,
     published: true,
     privacy: open.toLowerCase(),
-    domain: ctx.domain._id,
+    domain: ctx.subdomain._id,
   };
   const posts = await Course.find(
     query,
@@ -228,7 +228,7 @@ exports.getCourses = async (offset, onlyShowFeatured = false, ctx) => {
     isBlog: false,
     published: true,
     privacy: open.toLowerCase(),
-    domain: ctx.domain._id,
+    domain: ctx.subdomain._id,
   };
   if (onlyShowFeatured) {
     query.isFeatured = true;
@@ -250,7 +250,7 @@ exports.getEnrolledCourses = async (userId, ctx) => {
     throw new Error(strings.responses.action_not_allowed);
   }
 
-  const user = await User.findOne({ _id: userId, domain: ctx.domain._id });
+  const user = await User.findOne({ _id: userId, domain: ctx.subdomain._id });
   if (!user) {
     throw new Error(strings.responses.user_not_found);
   }
@@ -260,7 +260,7 @@ exports.getEnrolledCourses = async (userId, ctx) => {
       _id: {
         $in: [...user.purchases],
       },
-      domain: ctx.domain._id,
+      domain: ctx.subdomain._id,
     },
     "id title"
   );

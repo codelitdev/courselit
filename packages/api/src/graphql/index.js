@@ -3,7 +3,7 @@ const schema = require("./schema.js");
 
 module.exports = (req) => ({
   schema,
-  context: { user: req.user, domain: req.domain },
+  context: { user: req.user, subdomain: req.subdomain },
   graphiql: process.env.NODE_ENV === "dev",
   customFormatErrorFn: (err) => {
     return {

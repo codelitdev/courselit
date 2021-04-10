@@ -18,7 +18,7 @@ exports.checkIfAuthenticated = (ctx) => {
  * @param {Object} ctx context received from the GraphQL resolver
  */
 exports.checkOwnership = (Model) => async (id, ctx) => {
-  const item = await Model.findOne({ _id: id, domain: ctx.domain._id });
+  const item = await Model.findOne({ _id: id, domain: ctx.subdomain._id });
   if (
     !item ||
     (ObjectId.isValid(item.creatorId)
@@ -136,7 +136,7 @@ exports.checkPermission = (actualPermissions, desiredPermissions) =>
 exports.getMediaOrThrow = async (id, ctx) => {
   this.checkIfAuthenticated(ctx);
 
-  const media = await Media.findOne({ _id: id, domain: ctx.domain._id });
+  const media = await Media.findOne({ _id: id, domain: ctx.subdomain._id });
 
   if (!media) {
     throw new HttpError(strings.responses.item_not_found, 404);

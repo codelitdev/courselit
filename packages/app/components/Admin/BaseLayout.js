@@ -28,7 +28,7 @@ import {
   profileProps,
   siteInfoProps,
 } from "../../types.js";
-import { permissions } from "../../config/constants.js";
+import { mediaUrlPrefix, permissions } from "../../config/constants.js";
 
 const useStyles = makeStyles({
   loaderContainer: {
@@ -150,7 +150,7 @@ const BaseLayoutAdmin = ({
         {siteInfo && siteInfo.logopath && (
           <link
             rel="icon"
-            href={formulateMediaUrl(address.backend, siteInfo.logopath, true)}
+            href={formulateMediaUrl(mediaUrlPrefix, siteInfo.logopath, true)}
           />
         )}
         <meta

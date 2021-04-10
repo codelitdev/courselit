@@ -33,7 +33,7 @@ app.use(
   optionalAuthMiddlewareCreator(passport),
   graphqlHTTP(graphql)
 );
-app.use(`${routePrefix}/media`, require("./routes/media.js")(passport));
+app.use(`${routePrefix}/media`, require("./routes/media")(passport));
 app.use(`${routePrefix}/payment`, require("./routes/payment.js")(passport));
 app.use(`${routePrefix}/domain`, require("./routes/domain.js"));
 

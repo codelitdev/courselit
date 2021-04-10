@@ -28,7 +28,7 @@ exports.getCreatorMedia = async (offset, ctx, text) => {
   }
 
   const query = {
-    domain: ctx.domain._id,
+    domain: ctx.subdomain._id,
   };
   if (
     !checkPermission(user.permissions, [
