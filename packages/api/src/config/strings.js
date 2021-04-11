@@ -60,7 +60,9 @@ exports.responses = {
   destination_dont_exist: "Destination does not exist",
   invalid_format: "Invalid format",
   no_thumbnail: "No thumbnail available",
-  file_size_exceeded: "File size exceeded"
+  file_size_exceeded: "File size exceeded",
+  name_is_required: "Name is required",
+  mimetype_is_required: "Mimetype is required",
 };
 
 exports.internal = {

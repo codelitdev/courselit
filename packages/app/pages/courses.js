@@ -1,7 +1,6 @@
 import PropTypes from "prop-types";
 import { publicCourse } from "../types.js";
 import { capitalize, Grid, Typography } from "@material-ui/core";
-import { makeStyles } from "@material-ui/styles";
 import FetchBuilder from "../lib/fetch.js";
 import { useRouter } from "next/router";
 import { getBackendAddress } from "../lib/utils";
@@ -10,17 +9,6 @@ import dynamic from "next/dynamic";
 
 const BaseLayout = dynamic(() => import("../components/Public/BaseLayout"));
 const Items = dynamic(() => import("../components/Public/Items"));
-
-const useStyles = makeStyles((theme) => ({
-  content: {
-    [theme.breakpoints.down("sm")]: {
-      padding: theme.spacing(2),
-    },
-  },
-  headerTop: {
-    marginBottom: theme.spacing(2),
-  },
-}));
 
 const generateQuery = (pageOffset = 1) => `
   query {
@@ -41,24 +29,25 @@ const generateQuery = (pageOffset = 1) => `
 
 const Courses = (props) => {
   const router = useRouter();
-  const classes = useStyles();
   const path = capitalize(router.pathname.split("/")[1]);
 
   return (
     <BaseLayout title={path}>
-      <Grid item xs={12} className={classes.content}>
+      <Grid item xs={12}>
         <Section>
-          <Grid container>
+          <Grid container spacing={2}>
             <Grid item container>
-              <Grid item xs={12} className={classes.headerTop}>
+              <Grid item xs={12}>
                 <Typography variant="h2">{path}</Typography>
               </Grid>
             </Grid>
-            <Items
-              showLoadMoreButton={true}
-              generateQuery={generateQuery}
-              initialItems={props.courses}
-            />
+            <Grid item>
+              <Items
+                showLoadMoreButton={true}
+                generateQuery={generateQuery}
+                initialItems={props.courses}
+              />
+            </Grid>
           </Grid>
         </Section>
       </Grid>

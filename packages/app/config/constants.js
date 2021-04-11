@@ -40,6 +40,7 @@ export const CONSECUTIVE_PAYMENT_VERIFICATION_REQUEST_GAP = 2000;
 export const MIMETYPE_VIDEO = ["video/mp4"];
 export const MIMETYPE_AUDIO = ["audio/mp3"];
 export const MIMETYPE_IMAGE = ["image/png", "image/jpeg", "image/webp"];
+export const MIMETYPE_PDF = ["application/pdf"];
 
 export const THEMES_REPO = "https://github.com/codelitdev/courselit-themes";
 
@@ -64,7 +65,3 @@ export const permissions = {
   manageSettings: "setting:manage",
   manageUsers: "user:manage",
 };
-
-// Media URL prefix
-export const mediaUrlPrefix = process.env.NEXT_PUBLIC_USE_CLOUD_STORAGE ?
-  process.env.NEXT_PUBLIC_CLOUD_STORAGE_PREFIX : "http://localhost:8000"

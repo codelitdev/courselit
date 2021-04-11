@@ -3,7 +3,7 @@
  */
 const fs = require("fs");
 const { spawn } = require("child_process");
-const {v4: uuidv4} = require("uuid");
+const { v4: uuidv4 } = require("uuid");
 
 exports.capitalize = (s) => {
   if (typeof s !== "string") return "";

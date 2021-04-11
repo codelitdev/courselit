@@ -2,7 +2,6 @@ import { connect } from "react-redux";
 import Head from "next/head";
 import {
   formulateCourseUrl,
-  formulateMediaUrl,
   getBackendAddress,
   getPostDescriptionSnippet,
 } from "../../../lib/utils.js";
@@ -71,13 +70,7 @@ const Course = (props) => {
             />
             <meta property="og:author" content={course.creatorName} />
             {course.featuredImage && (
-              <meta
-                property="og:image"
-                content={formulateMediaUrl(
-                  props.address.backend,
-                  course.featuredImage
-                )}
-              />
+              <meta property="og:image" content={course.featuredImage} />
             )}
           </Head>
           <ComponentScaffold items={lessons} />

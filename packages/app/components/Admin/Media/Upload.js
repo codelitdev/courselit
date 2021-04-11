@@ -8,7 +8,7 @@ import {
   BUTTON_ADD_FILE,
   MEDIA_UPLOAD_BUTTON_TEXT,
   MEDIA_UPLOADING,
-  FILE_UPLOAD_SUCCESS
+  FILE_UPLOAD_SUCCESS,
 } from "../../../config/strings";
 import { addressProps, authProps } from "../../../types";
 import fetch from "isomorphic-unfetch";
@@ -75,7 +75,7 @@ function Upload({ auth, address, dispatch, resetOverview }) {
     } finally {
       setUploading(false);
     }
-  }
+  };
 
   const uploadToCloud = async () => {
     const fD = new window.FormData();
@@ -107,15 +107,15 @@ function Upload({ auth, address, dispatch, resetOverview }) {
     } finally {
       setUploading(false);
     }
-  }
+  };
 
   const onUpload = async (e) => {
     e.preventDefault();
 
     if (process.env.NEXT_PUBLIC_USE_CLOUD_STORAGE) {
-      await uploadToCloud()
+      await uploadToCloud();
     } else {
-      await uploadToLocalDisk()
+      await uploadToLocalDisk();
     }
   };
 

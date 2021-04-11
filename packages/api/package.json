@@ -11,7 +11,7 @@
   "scripts": {
     "lint": "eslint .",
     "prettier": "prettier --write .",
-    "dev": "USE_CLOUD_STORAGE=true CLOUD_ENDPOINT=https://sgp1.digitaloceanspaces.com CLOUD_REGION=sgp1 CLOUD_KEY=XPKRUIKWLIZGIYRZ27VI CLOUD_SECRET=hYCPSfwLVbasyLewDUFDEHLRv6TLhP/2W3UKQC4gyVM BUCKET_NAME=corelit NODE_ENV=dev JWT_SECRET=notsecure USER_CONTENT_DIRECTORY=~/courselit-local PORT=8000 nodemon src",
+    "dev": "nodemon src",
     "test:server": "NODE_ENV=test yarn dev",
     "test:inte": "NODE_ENV=test jest",
     "start": "node src"

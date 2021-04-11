@@ -1,5 +1,6 @@
 "use strict";
 
+require("dotenv").config();
 const internalResponse = require("./config/strings.js").internal;
 const {
   uploadFolder,
@@ -7,10 +8,11 @@ const {
   cloudKey,
   cloudSecret,
   useCloudStorage,
+  cloudCdnEndpoint,
+  cloudRegion,
+  cloudBucket,
 } = require("./config/constants.js");
 const { createFolders } = require("./lib/utils.js");
-
-process.env.NODE_ENV = process.env.NODE_ENV || "production";
 
 const validateEnvironmentVars = () => {
   for (const field of ["USER_CONTENT_DIRECTORY", "JWT_SECRET"]) {
@@ -22,7 +24,14 @@ const validateEnvironmentVars = () => {
 };
 
 const validateCloudSettings = () => {
-  if (!cloudEndpoint || !cloudKey || !cloudSecret) {
+  if (
+    !cloudEndpoint ||
+    !cloudKey ||
+    !cloudSecret ||
+    !cloudCdnEndpoint ||
+    !cloudRegion ||
+    !cloudBucket
+  ) {
     console.error(internalResponse.invalid_cloud_storage_settings);
     process.exit(1);
   }

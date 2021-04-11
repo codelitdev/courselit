@@ -3,7 +3,6 @@ import {
   URL_EXTENTION_POSTS,
   URL_EXTENTION_COURSES,
   permissions,
-  mediaUrlPrefix,
 } from "../config/constants.js";
 import { RichText as TextEditor } from "@courselit/components-library";
 
@@ -56,16 +55,6 @@ export const formattedLocaleDate = (epochString) =>
 // Regex copied from: https://stackoverflow.com/a/48675160/942589
 export const makeGraphQLQueryStringFromJSObject = (obj) =>
   JSON.stringify(obj).replace(/"([^(")"]+)":/g, "$1:");
-
-export const formulateMediaUrl = (
-  prefix,
-  mediaID,
-  extension,
-  generateThumbnailUrl = false
-) =>
-  mediaID
-    ? `${prefix}/${mediaID}/${generateThumbnailUrl ? "thumb.webp" : `main.${extension}` }`
-    : "";
 
 export const formulateCourseUrl = (course, backend = "") =>
   `${backend}/${course.isBlog ? URL_EXTENTION_POSTS : URL_EXTENTION_COURSES}/${
@@ -157,3 +146,6 @@ export const canAccessDashboard = (profile) => {
     permissions.viewAnyMedia,
   ]);
 };
+
+export const constructThumbnailUrlFromFileUrl = (url) =>
+  url ? url.replace(url.split("/").pop(), "thumb.webp") : null;

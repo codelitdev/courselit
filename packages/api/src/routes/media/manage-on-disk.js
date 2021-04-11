@@ -117,3 +117,23 @@ exports.upload = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
+
+exports.serve = async ({ media, req, res }) => {
+  const { uploadFolderForDomain, thumbFolderForDomain } = generateFolderPaths({
+    uploadFolder,
+    domainName: req.subdomain.name,
+  });
+  const { thumb } = req.query;
+
+  if (thumb === "1") {
+    if (media.thumbnail) {
+      res.contentType(useWebp ? "image/webp" : "image/jpeg");
+      res.sendFile(`${thumbFolderForDomain}/${media.thumbnail}`);
+    } else {
+      res.status(200).json({ message: responses.no_thumbnail });
+    }
+  } else {
+    res.contentType(media.mimeType);
+    res.sendFile(`${uploadFolderForDomain}/${media.fileName}`);
+  }
+};

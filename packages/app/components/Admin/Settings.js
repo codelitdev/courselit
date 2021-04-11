@@ -12,6 +12,7 @@ import {
   PAYMENT_METHOD_PAYTM,
   PAYMENT_METHOD_STRIPE,
   PAYMENT_METHOD_NONE,
+  MIMETYPE_IMAGE,
 } from "../../config/constants.js";
 import { newSiteInfoAvailable, setAppMessage } from "../../redux/actions.js";
 import {
@@ -204,10 +205,9 @@ const Settings = (props) => {
       return;
     }
 
-    const change =
-      typeof e === "string"
-        ? { logopath: e }
-        : { [e.target.name]: e.target.value };
+    const change = Object.prototype.hasOwnProperty.call(e, "file")
+      ? { logopath: e.file }
+      : { [e.target.name]: e.target.value };
     setNewSettings(Object.assign({}, newSettings, change));
   };
 
@@ -255,6 +255,7 @@ const Settings = (props) => {
                   title={SITE_SETTINGS_LOGO}
                   src={newSettings.logopath || props.siteinfo.logopath}
                   onSelection={onChangeData}
+                  mimeTypesToShow={[...MIMETYPE_IMAGE]}
                 />
               </Grid>
             </Grid>

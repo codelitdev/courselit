@@ -9,15 +9,13 @@ import dynamic from "next/dynamic";
 import { connect } from "react-redux";
 import { withStyles } from "@material-ui/styles";
 import { siteInfoProps } from "../../../types";
+import { constructThumbnailUrlFromFileUrl } from "../../../lib/utils";
 
 const Img = dynamic(() => import("../../Img"));
 
 const styles = (theme) => ({
   toolbar: theme.mixins.toolbar,
-  logoAdjustment: {
-    // paddingLeft: theme.spacing(2),
-    // paddingRight: theme.spacing(2),
-  },
+  logoAdjustment: {},
   logocontainer: Object.assign(
     {},
     {
@@ -49,12 +47,7 @@ const Branding = ({ classes, siteinfo }) => {
         className={`${classes.toolbar} ${classes.logoAdjustment}`}
       >
         <Grid item className={classes.logocontainer}>
-          <Img
-            src={siteinfo.logopath}
-            isThumbnail={true}
-            alt="logo"
-            defaultImage="/courselit_backdrop_square.webp"
-          />
+          <Img src={constructThumbnailUrlFromFileUrl(siteinfo.logopath)} />
         </Grid>
         <Grid item className={classes.siteName}>
           <Typography variant="h5">{siteinfo.title}</Typography>

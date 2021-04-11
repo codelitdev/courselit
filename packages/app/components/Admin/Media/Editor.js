@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import { Button, TextField } from "@material-ui/core";
+import { Button, TextField, Grid, Typography } from "@material-ui/core";
 import {
   APP_MESSAGE_CHANGES_SAVED,
   DELETE_MEDIA_POPUP_HEADER,
@@ -8,6 +8,7 @@ import {
   POPUP_OK_ACTION,
   BUTTON_DELETE_MEDIA,
   BUTTON_SAVE,
+  MEDIA_EDITOR_HEADER_EDIT_DETAILS,
 } from "../../../config/strings";
 import dynamic from "next/dynamic";
 import {
@@ -21,6 +22,7 @@ import { connect } from "react-redux";
 import { networkAction, setAppMessage } from "../../../redux/actions";
 import { useRouter } from "next/router";
 import fetch from "isomorphic-unfetch";
+import { Section } from "@courselit/components-library";
 
 const AppDialog = dynamic(() => import("../../Public/AppDialog"));
 const MediaPreview = dynamic(() => import("./MediaPreview"));
@@ -83,10 +85,6 @@ function Editor({
   };
 
   const updateMedia = async () => {
-    // const onlyChangedFields = getObjectContainingOnlyChangedFields(
-    //   media,
-    //   mediaBeingEdited
-    // );
     if (Object.keys(onlyChangedFields).length === 0) {
       return;
     }
@@ -96,7 +94,6 @@ function Editor({
     mutation {
       media: updateMedia(mediaData: ${formattedGraphQLQuery}) {
         id,
-        title,
         mimeType,
         altText
       }
@@ -126,42 +123,44 @@ function Editor({
   const closeDeleteMediaPopup = () => setDeleteMediaPopupOpened(false);
 
   return (
-    <div>
-      <MediaPreview
-        id={mediaBeingEdited.id}
-        mimeType={mediaBeingEdited.mimeType}
-      />
-      <form>
-        <TextField
-          required
-          variant="outlined"
-          label="Title"
-          fullWidth
-          margin="normal"
-          name="title"
-          value={mediaBeingEdited.title}
-          onChange={onMediaBeingEditedChanged}
-        />
-        <TextField
-          required
-          variant="outlined"
-          label="Alt text"
-          fullWidth
-          margin="normal"
-          name="altText"
-          value={mediaBeingEdited.altText}
-          onChange={onMediaBeingEditedChanged}
-        />
-      </form>
-      <Button
-        onClick={updateMedia}
-        disabled={Object.keys(onlyChangedFields).length === 0}
-      >
-        {BUTTON_SAVE}
-      </Button>
-      <Button onClick={() => setDeleteMediaPopupOpened(true)}>
-        {BUTTON_DELETE_MEDIA}
-      </Button>
+    <Grid container spacing={2}>
+      <Grid item xs={12} md={6}>
+        <Section>
+          <Grid container direction="column" spacing={1}>
+            <Grid item>
+              <Typography variant="h4">
+                {MEDIA_EDITOR_HEADER_EDIT_DETAILS}
+              </Typography>
+            </Grid>
+            <Grid item>
+              <form>
+                <TextField
+                  required
+                  variant="outlined"
+                  label="Alt text"
+                  fullWidth
+                  margin="normal"
+                  name="altText"
+                  value={mediaBeingEdited.altText}
+                  onChange={onMediaBeingEditedChanged}
+                />
+                <Button
+                  onClick={updateMedia}
+                  disabled={Object.keys(onlyChangedFields).length === 0}
+                >
+                  {BUTTON_SAVE}
+                </Button>
+                <Button onClick={() => setDeleteMediaPopupOpened(true)}>
+                  {BUTTON_DELETE_MEDIA}
+                </Button>
+              </form>
+            </Grid>
+          </Grid>
+        </Section>
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <MediaPreview item={media} />
+      </Grid>
       <AppDialog
         onOpen={deleteMediaPopupOpened}
         onClose={closeDeleteMediaPopup}
@@ -171,7 +170,7 @@ function Editor({
           { name: POPUP_OK_ACTION, callback: onMediaDelete },
         ]}
       />
-    </div>
+    </Grid>
   );
 }
 

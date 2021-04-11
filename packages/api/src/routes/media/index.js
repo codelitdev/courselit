@@ -14,9 +14,8 @@ const { generateFolderPaths } = require("./utils");
 
 const {
   uploadFolder,
-  useWebp,
   useCloudStorage,
-  maxFileUploadSize
+  maxFileUploadSize,
 } = require("../../config/constants.js");
 const { checkPermission, getMediaOrThrow } = require("../../lib/graphql.js");
 
@@ -36,22 +35,10 @@ const getHandler = async (req, res) => {
     return res.status(404).json({ message: responses.item_not_found });
   }
 
-  const { uploadFolderForDomain, thumbFolderForDomain } = generateFolderPaths({
-    uploadFolder,
-    domainName: req.subdomain.name,
-  });
-  const { thumb } = req.query;
-
-  if (thumb === "1") {
-    if (media.thumbnail) {
-      res.contentType(useWebp ? "image/webp" : "image/jpeg");
-      res.sendFile(`${thumbFolderForDomain}/${media.thumbnail}`);
-    } else {
-      res.status(200).json({ message: responses.no_thumbnail });
-    }
+  if (useCloudStorage) {
+    await manageOnCloud.serve({ media, res });
   } else {
-    res.contentType(media.mimeType);
-    res.sendFile(`${uploadFolderForDomain}/${media.fileName}`);
+    await manageOnDisk.serve({ media, req, res });
   }
 };
 
@@ -67,7 +54,7 @@ const postHandler = async (req, res) => {
   }
 
   if (req.files.file.size > maxFileUploadSize) {
-    return res.status(400).json({ message: responses.file_size_exceeded })
+    return res.status(400).json({ message: responses.file_size_exceeded });
   }
 
   if (useCloudStorage) {
@@ -86,19 +73,19 @@ const getSignedUrlForCloudUpload = async (req, res) => {
 
   const data = req.body;
   if (!data.name) {
-    return res.status(400).json({ message: responses.title_is_required });
+    return res.status(400).json({ message: responses.name_is_required });
   }
   if (!data.mimetype) {
-    return res.status(400).json({ message: responses.title_is_required });
+    return res.status(400).json({ message: responses.mimetype_is_required });
   }
 
   try {
     const url = await manageOnCloud.generateSignedUrl(data);
-    return res.status(200).json({ url })
+    return res.status(200).json({ url });
   } catch (err) {
-    return res.status(500).json({ message: err.message })
+    return res.status(500).json({ message: err.message });
   }
-}
+};
 
 const deleteHandler = async (req, res) => {
   let media;

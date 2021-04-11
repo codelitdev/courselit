@@ -1,43 +1,57 @@
 const aws = require("aws-sdk");
 const thumbnail = require("@courselit/thumbnail");
 const { createReadStream, rmdirSync } = require("fs");
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
-const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const {
   cloudEndpoint,
   cloudKey,
   cloudSecret,
   cloudBucket,
-  cloudRegion
+  cloudRegion,
+  cloudCdnEndpoint,
 } = require("../../config/constants");
 const { responses } = require("../../config/strings");
-const { uniqueFileNameGenerator, convertToWebp, foldersExist, createFolders, moveFile } = require("../../lib/utils");
+const {
+  uniqueFileNameGenerator,
+  convertToWebp,
+  foldersExist,
+  createFolders,
+  moveFile,
+} = require("../../lib/utils");
 const constants = require("../../config/constants.js");
 const Media = require("../../models/Media.js");
 
+const putObjectPromise = (params) =>
+  new Promise((resolve, reject) => {
+    const endpoint = new aws.Endpoint(cloudEndpoint);
+    const s3 = new aws.S3({
+      endpoint,
+      accessKeyId: cloudKey,
+      secretAccessKey: cloudSecret,
+    });
 
-const putObjectPromise = (params) =>  new Promise((resolve, reject) => {
-  const endpoint = new aws.Endpoint(cloudEndpoint);
-  const s3 = new aws.S3({
-    endpoint,
-    accessKeyId: cloudKey,
-    secretAccessKey: cloudSecret,
+    s3.putObject(
+      Object.assign(
+        {},
+        {
+          Bucket: cloudBucket,
+          ACL: "public-read",
+        },
+        params
+      ),
+      (err, result) => {
+        if (err) reject(err);
+        resolve(result);
+      }
+    );
   });
-
-  s3.putObject(Object.assign({}, {
-    Bucket: cloudBucket,
-    ACL: "public-read"
-  }, params), (err, result) => {
-    if (err) reject(err)
-    resolve(result)
-  })
-})
 
 const generateAndUploadThumbnail = async ({
   workingDirectory,
   cloudDirectory,
   mimetype,
-  originalFilePath
+  originalFilePath,
 }) => {
   const imagePattern = /image/;
   const videoPattern = /video/;
@@ -64,12 +78,12 @@ const generateAndUploadThumbnail = async ({
     await putObjectPromise({
       Key: `${cloudDirectory}/thumb.webp`,
       Body: createReadStream(thumbPath),
-      ContentType: "image/webp"
+      ContentType: "image/webp",
     });
   }
 
   return isThumbGenerated;
-}
+};
 
 exports.upload = async (req, res) => {
   const data = req.body;
@@ -90,17 +104,17 @@ exports.upload = async (req, res) => {
     await putObjectPromise({
       Key: fileNameWithDomainInfo,
       Body: file.data,
-      ContentType: file.mimetype
+      ContentType: file.mimetype,
     });
 
     const isThumbGenerated = await generateAndUploadThumbnail({
       workingDirectory: temporaryFolderForWork,
       cloudDirectory: cloudFolder,
       mimetype: file.mimetype,
-      originalFilePath: mainFilePath
-    })
-    
-    rmdirSync(temporaryFolderForWork, { recursive: true});
+      originalFilePath: mainFilePath,
+    });
+
+    rmdirSync(temporaryFolderForWork, { recursive: true });
 
     const mediaObject = {
       domain: req.subdomain._id,
@@ -110,7 +124,7 @@ exports.upload = async (req, res) => {
       size: req.files.file.size,
       creatorId: req.user._id,
       thumbnail: isThumbGenerated ? `${cloudFolder}/thumb.webp` : "",
-      altText: data.altText
+      altText: data.altText,
     };
 
     const media = await Media.create(mediaObject);
@@ -135,15 +149,28 @@ exports.generateSignedUrl = async ({ name, mimetype }) => {
     credentials: {
       accessKeyId: cloudKey,
       secretAccessKey: cloudSecret,
-    }
+    },
   });
 
   const command = new PutObjectCommand({
-    ACL: 'public-read',
+    ACL: "public-read",
     Bucket: cloudBucket,
     Key: name,
-    ContentType: mimetype
-  })
+    ContentType: mimetype,
+  });
 
   return await getSignedUrl(client, command);
-}
+};
+
+exports.serve = async ({ media, res }) => {
+  res.status(200).json({
+    media: {
+      id: media.id,
+      file: `${cloudCdnEndpoint}/${media.file}`,
+      thumbnail: media.thumbnail
+        ? `${cloudCdnEndpoint}/${media.thumbnail}`
+        : "",
+      altText: media.altText,
+    },
+  });
+};

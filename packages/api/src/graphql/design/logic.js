@@ -11,7 +11,10 @@ const Layout = require("../../models/Layout.js");
 const { permissions } = require("../../config/constants.js");
 
 exports.getTheme = async (ctx) => {
-  const theme = await Theme.findOne({ active: true, domain: ctx.subdomain._id });
+  const theme = await Theme.findOne({
+    active: true,
+    domain: ctx.subdomain._id,
+  });
   return transformThemeForOutput(theme);
 };
 

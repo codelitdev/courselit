@@ -1,9 +1,5 @@
 import { connect } from "react-redux";
-import {
-  formulateMediaUrl,
-  formulateCourseUrl,
-  getBackendAddress,
-} from "../../../lib/utils.js";
+import { formulateCourseUrl, getBackendAddress } from "../../../lib/utils.js";
 import { makeStyles, Grid } from "@material-ui/core";
 import Head from "next/head";
 import FetchBuilder from "../../../lib/fetch.js";
@@ -46,13 +42,7 @@ const Post = (props) => {
             /> */}
             <meta property="og:author" content={props.post.creatorName} />
             {props.post.featuredImage && (
-              <meta
-                property="og:image"
-                content={formulateMediaUrl(
-                  props.address.backend,
-                  props.post.featuredImage
-                )}
-              />
+              <meta property="og:image" content={props.post.featuredImage} />
             )}
           </Head>
           <Article course={props.post} options={articleOptions} />
