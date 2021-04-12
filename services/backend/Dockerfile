@@ -1,4 +1,4 @@
-FROM node:15.14.0-buster
+FROM node:15
 
 # install required softwares
 RUN apt-get update \
