@@ -1,4 +1,4 @@
-FROM node:12.9.0-alpine
+FROM node:15.14.0-buster
 
 # install required softwares
 RUN apk add --no-cache ffmpeg imagemagick libwebp libwebp-tools
