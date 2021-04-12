@@ -15,9 +15,6 @@ pip3 install setuptools docker docker-compose
 # Add the current user to the docker group
 sudo usermod -a -G docker $USER
 
-# Activate changes to the docker group
-newgrp docker
-
 # Unmask docker
 sudo systemctl unmask docker
 
