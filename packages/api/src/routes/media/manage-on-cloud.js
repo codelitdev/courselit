@@ -47,6 +47,30 @@ const putObjectPromise = (params) =>
     );
   });
 
+const deleteObjectPromise = (params) =>
+  new Promise((resolve, reject) => {
+    const endpoint = new aws.Endpoint(cloudEndpoint);
+    const s3 = new aws.S3({
+      endpoint,
+      accessKeyId: cloudKey,
+      secretAccessKey: cloudSecret,
+    });
+
+    s3.deleteObject(
+      Object.assign(
+        {},
+        {
+          Bucket: cloudBucket,
+        },
+        params
+      ),
+      (err, result) => {
+        if (err) reject(err);
+        resolve(result);
+      }
+    );
+  });
+
 const generateAndUploadThumbnail = async ({
   workingDirectory,
   cloudDirectory,
@@ -171,4 +195,18 @@ exports.serve = async ({ media, res }) => {
       altText: media.altText,
     },
   });
+};
+
+exports.delete = async (media, res) => {
+  try {
+    await deleteObjectPromise({ Key: media.file });
+    if (media.thumbnail) {
+      await deleteObjectPromise({ Key: media.thumbnail });
+    }
+    await media.delete();
+
+    return res.status(200).json({ message: responses.success });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
 };

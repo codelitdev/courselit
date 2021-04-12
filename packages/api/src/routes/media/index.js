@@ -94,7 +94,7 @@ const deleteHandler = async (req, res) => {
   }
 
   if (useCloudStorage) {
-    await manageOnCloud.delete(media, req, res);
+    await manageOnCloud.delete(media, res);
   } else {
     await manageOnDisk.delete(media, res);
   }

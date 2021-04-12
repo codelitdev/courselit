@@ -2,20 +2,34 @@
 
 require("dotenv").config();
 const internalResponse = require("./config/strings.js").internal;
-const {
-  uploadFolder,
-  cloudEndpoint,
-  cloudKey,
-  cloudSecret,
-  useCloudStorage,
-  cdnEndpoint,
-  cloudRegion,
-  cloudBucket,
-} = require("./config/constants.js");
+const { uploadFolder, useCloudStorage } = require("./config/constants.js");
 const { createFolders } = require("./lib/utils.js");
 
 const validateEnvironmentVars = () => {
-  for (const field of ["USER_CONTENT_DIRECTORY", "JWT_SECRET"]) {
+  const commonVars = ["JWT_SECRET"];
+
+  const environmentVarsForLocalStorage = [
+    "USER_CONTENT_DIRECTORY",
+    "CDN_ENDPOINT",
+  ];
+
+  const environmentVarsForCloudStorage = [
+    "CLOUD_ENDPOINT",
+    "CLOUD_REGION",
+    "CLOUD_KEY",
+    "CLOUD_SECRET",
+    "CLOUD_BUCKET_NAME",
+    "CDN_ENDPOINT",
+  ];
+
+  const environmentVarsToCheck = [
+    ...commonVars,
+    ...(useCloudStorage
+      ? environmentVarsForCloudStorage
+      : environmentVarsForLocalStorage),
+  ];
+
+  for (const field of environmentVarsToCheck) {
     if (!process.env[field]) {
       console.error(`${internalResponse.error_env_var_undefined}: ${field}`);
       process.exit(1);
@@ -23,24 +37,8 @@ const validateEnvironmentVars = () => {
   }
 };
 
-const validateCloudSettings = () => {
-  if (
-    !cloudEndpoint ||
-    !cloudKey ||
-    !cloudSecret ||
-    !cdnEndpoint ||
-    !cloudRegion ||
-    !cloudBucket
-  ) {
-    console.error(internalResponse.invalid_cloud_storage_settings);
-    process.exit(1);
-  }
-};
-
 validateEnvironmentVars();
-if (useCloudStorage) {
-  validateCloudSettings();
-} else {
+if (!useCloudStorage) {
   createFolders([uploadFolder]);
 }
 
