@@ -5,6 +5,7 @@ const constants = require("../config/constants.js");
 const ObjectId = require("mongoose").Types.ObjectId;
 const Media = require("../models/Media.js");
 const HttpError = require("./HttpError.js");
+const { cdnEndpoint } = require("../config/constants.js");
 
 exports.checkIfAuthenticated = (ctx) => {
   if (!ctx.user) throw new Error(strings.responses.request_not_authenticated);
@@ -18,7 +19,7 @@ exports.checkIfAuthenticated = (ctx) => {
  * @param {Object} ctx context received from the GraphQL resolver
  */
 exports.checkOwnership = (Model) => async (id, ctx) => {
-  const item = await Model.findOne({ _id: id, domain: ctx.domain._id });
+  const item = await Model.findOne({ _id: id, domain: ctx.subdomain._id });
   if (
     !item ||
     (ObjectId.isValid(item.creatorId)
@@ -136,7 +137,7 @@ exports.checkPermission = (actualPermissions, desiredPermissions) =>
 exports.getMediaOrThrow = async (id, ctx) => {
   this.checkIfAuthenticated(ctx);
 
-  const media = await Media.findOne({ _id: id, domain: ctx.domain._id });
+  const media = await Media.findOne({ _id: id, domain: ctx.subdomain._id });
 
   if (!media) {
     throw new HttpError(strings.responses.item_not_found, 404);
@@ -161,4 +162,20 @@ exports.getMediaOrThrow = async (id, ctx) => {
   }
 
   return media;
+};
+
+exports.mapFileNamesToCompleteURLs = (mediaItems) => {
+  const mediaWithCompleteUrls = [];
+  for (const media of mediaItems) {
+    mediaWithCompleteUrls.push({
+      id: media.id,
+      file: `${cdnEndpoint}/${media.file}`,
+      thumbnail: media.thumbnail ? `${cdnEndpoint}/${media.thumbnail}` : "",
+      originalFileName: media.originalFileName,
+      mimeType: media.mimeType,
+      size: media.size,
+      altText: media.altText,
+    });
+  }
+  return mediaWithCompleteUrls;
 };

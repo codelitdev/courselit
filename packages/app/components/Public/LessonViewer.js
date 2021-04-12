@@ -8,7 +8,6 @@ import { Typography, Grid } from "@material-ui/core";
 import { ENROLL_IN_THE_COURSE, USER_ERROR_HEADER } from "../../config/strings";
 import { makeStyles } from "@material-ui/styles";
 import { lesson, authProps, profileProps, addressProps } from "../../types";
-import { formulateMediaUrl } from "../../lib/utils.js";
 import { Section, RichText as TextEditor } from "@courselit/components-library";
 
 const useStyles = makeStyles((theme) => ({
@@ -101,14 +100,7 @@ const LessonViewer = (props) => {
                 controlsList="nodownload"
                 className={`${classes.videoPlayer} ${classes.section}`}
               >
-                <source
-                  src={`${formulateMediaUrl(
-                    props.address.backend,
-                    lesson.contentURL,
-                    false
-                  )}`}
-                  type="video/mp4"
-                />
+                <source src={lesson.contentURL} type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
             </Grid>
@@ -121,14 +113,7 @@ const LessonViewer = (props) => {
                 controlsList="nodownload"
                 className={classes.section}
               >
-                <source
-                  src={`${formulateMediaUrl(
-                    props.address.backend,
-                    lesson.contentURL,
-                    false
-                  )}`}
-                  type="audio/mpeg"
-                />
+                <source src={lesson.contentURL} type="audio/mpeg" />
                 Your browser does not support the video tag.
               </audio>
             </Grid>

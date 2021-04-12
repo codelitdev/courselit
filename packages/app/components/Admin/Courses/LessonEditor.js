@@ -38,6 +38,9 @@ import {
   LESSON_TYPE_VIDEO,
   LESSON_TYPE_PDF,
   LESSON_TYPE_QUIZ,
+  MIMETYPE_VIDEO,
+  MIMETYPE_AUDIO,
+  MIMETYPE_PDF,
 } from "../../../config/constants.js";
 import { makeStyles } from "@material-ui/styles";
 import FetchBuilder from "../../../lib/fetch";
@@ -46,6 +49,7 @@ import { connect } from "react-redux";
 import AppMessage from "../../../models/app-message.js";
 import { Section, RichText as TextEditor } from "@courselit/components-library";
 import dynamic from "next/dynamic";
+import { constructThumbnailUrlFromFileUrl } from "../../../lib/utils";
 
 const AppDialog = dynamic(() => import("../../Public/AppDialog"));
 const MediaSelector = dynamic(() => import("../Media/MediaSelector"));
@@ -275,6 +279,18 @@ const LessonEditor = (props) => {
 
   const closeDeleteLessonPopup = () => setDeleteLessonPopupOpened(false);
 
+  const getMimeTypesToShow = () => {
+    if (lesson.type === String.prototype.toUpperCase.call(LESSON_TYPE_VIDEO)) {
+      return MIMETYPE_VIDEO;
+    }
+    if (lesson.type === String.prototype.toUpperCase.call(LESSON_TYPE_AUDIO)) {
+      return MIMETYPE_AUDIO;
+    }
+    if (lesson.type === String.prototype.toUpperCase.call(LESSON_TYPE_PDF)) {
+      return MIMETYPE_PDF;
+    }
+  };
+
   return (
     <>
       <Section>
@@ -338,12 +354,14 @@ const LessonEditor = (props) => {
               <div className={classes.formControl}>
                 <MediaSelector
                   title={CONTENT_URL_LABEL}
-                  src={lesson.contentURL}
-                  onSelection={(mediaId) =>
+                  src={constructThumbnailUrlFromFileUrl(lesson.contentURL)}
+                  onSelection={(media) =>
+                    media &&
                     setLesson(
-                      Object.assign({}, lesson, { contentURL: mediaId })
+                      Object.assign({}, lesson, { contentURL: media.file })
                     )
                   }
+                  mimeTypesToShow={[...getMimeTypesToShow()]}
                 />
               </div>
             )}

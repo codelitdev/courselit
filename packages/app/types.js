@@ -86,7 +86,7 @@ export const lesson = PropTypes.shape({
   title: PropTypes.string.isRequired,
   type: PropTypes.string,
   downloadable: PropTypes.bool,
-  content: PropTypes.string,
+  content: PropTypes.object,
   contentURL: PropTypes.string,
 });
 
@@ -106,3 +106,12 @@ export const addressProps = PropTypes.shape({
 export const networkActionProps = PropTypes.bool;
 
 export const dispatchProps = PropTypes.func;
+
+export const mediaProps = PropTypes.shape({
+  id: PropTypes.string.isRequired,
+  originalFileName: PropTypes.string.isRequired,
+  file: PropTypes.string.isRequired,
+  mimeType: PropTypes.string.isRequired,
+  thumbnail: PropTypes.string,
+  altText: PropTypes.string,
+});

@@ -4,7 +4,8 @@ const creatorMediaType = new graphql.GraphQLObjectType({
   name: "CreatorMedia",
   fields: {
     id: { type: graphql.GraphQLID },
-    title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+    file: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+    thumbnail: { type: graphql.GraphQLString },
     originalFileName: {
       type: new graphql.GraphQLNonNull(graphql.GraphQLString),
     },
@@ -18,7 +19,6 @@ const mediaUpdateType = new graphql.GraphQLInputObjectType({
   name: "MediaUpdateInput",
   fields: {
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
-    title: { type: graphql.GraphQLString },
     altText: { type: graphql.GraphQLString },
   },
 });

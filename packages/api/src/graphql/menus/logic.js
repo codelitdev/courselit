@@ -13,7 +13,7 @@ const { permissions } = require("../../config/constants.js");
 exports.getMenu = async (ctx) => {
   return await Link.find(
     {
-      domain: ctx.domain._id,
+      domain: ctx.subdomain._id,
     },
     "text destination category newTab"
   );
@@ -26,7 +26,7 @@ exports.getMenuAsAdmin = async (ctx) => {
     throw new Error(responses.action_not_allowed);
   }
 
-  return await Link.find({ domain: ctx.domain._id });
+  return await Link.find({ domain: ctx.subdomain._id });
 };
 
 exports.saveLink = async (linkData, ctx) => {
@@ -39,7 +39,7 @@ exports.saveLink = async (linkData, ctx) => {
   let link;
   if (linkData.id) {
     // update the existing record
-    link = await Link.findOne({ _id: linkData.id, domain: ctx.domain._id });
+    link = await Link.findOne({ _id: linkData.id, domain: ctx.subdomain._id });
 
     if (!link) {
       throw new Error(strings.responses.item_not_found);
@@ -54,7 +54,7 @@ exports.saveLink = async (linkData, ctx) => {
   } else {
     // create a new record
     link = Link.create({
-      domain: ctx.domain._id,
+      domain: ctx.subdomain._id,
       text: linkData.text,
       destination: linkData.destination,
       category: linkData.category,
@@ -72,7 +72,7 @@ exports.deleteLink = async (id, ctx) => {
     throw new Error(responses.action_not_allowed);
   }
 
-  const link = await Link.findOne({ _id: id, domain: ctx.domain._id });
+  const link = await Link.findOne({ _id: id, domain: ctx.subdomain._id });
   if (link) {
     await link.remove();
   }

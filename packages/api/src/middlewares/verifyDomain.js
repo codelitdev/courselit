@@ -45,7 +45,7 @@ module.exports = async (req, res, next) => {
       res.status(400).json({ message: responses.domain_doesnt_exist });
       return next(responses.domain_doesnt_exist);
     } else {
-      req.domain = domain;
+      req.subdomain = domain;
       next();
     }
   } else {
@@ -55,7 +55,7 @@ module.exports = async (req, res, next) => {
       domain = await Domain.create({ name: domainNameForSingleTenancy });
     }
 
-    req.domain = domain;
+    req.subdomain = domain;
     next();
   }
 };

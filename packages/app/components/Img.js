@@ -1,36 +1,25 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { formulateMediaUrl } from "../lib/utils.js";
 import { connect } from "react-redux";
 import { addressProps } from "../types.js";
 
 const Img = (props) => {
-  const {
-    src,
-    isThumbnail,
-    classes,
-    alt,
-    defaultImage,
-    address,
-    isExternal = false,
-  } = props;
+  const { src, classes, alt, defaultImage } = props;
 
-  const source = src
-    ? isExternal
-      ? src
-      : formulateMediaUrl(address.backend, src, isThumbnail)
-    : defaultImage || "/courselit_backdrop.webp";
+  const source = src || defaultImage || "/courselit_backdrop.webp";
 
   return (
     <>
       <img className={classes} src={source} alt={alt} />
-      <style jsx>{`
-        img {
-          object-fit: "cover";
-          width: 100%;
-          height: 100%;
-        }
-      `}</style>
+      <style jsx>
+        {`
+          img {
+            object-fit: "cover";
+            width: 100%;
+            height: 100%;
+          }
+        `}
+      </style>
     </>
   );
 };

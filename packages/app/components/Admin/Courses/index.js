@@ -14,7 +14,10 @@ import { addressProps, authProps, profileProps } from "../../../types";
 import { OverviewAndDetail } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 import { networkAction } from "../../../redux/actions";
-import { checkPermission } from "../../../lib/utils";
+import {
+  checkPermission,
+  constructThumbnailUrlFromFileUrl,
+} from "../../../lib/utils";
 import { permissions } from "../../../config/constants";
 import { makeStyles } from "@material-ui/styles";
 import { Add } from "@material-ui/icons";
@@ -81,7 +84,7 @@ const Index = (props) => {
     subtitle: NEW_COURSE_PAGE_HEADING,
     Overview: (
       <>
-        <Img src={course.featuredImage} isThumbnail={true} />
+        <Img src={constructThumbnailUrlFromFileUrl(course.featuredImage)} />
         <GridListTileBar
           title={course.title}
           subtitle={course.isBlog ? COURSE_TYPE_BLOG : COURSE_TYPE_COURSE}

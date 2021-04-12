@@ -12,7 +12,7 @@ const {
 const Widget = require("../../models/Widget.js");
 
 exports.getWidgetSettings = async (name, ctx) => {
-  const widget = await Widget.findOne({ name, domain: ctx.domain._id });
+  const widget = await Widget.findOne({ name, domain: ctx.subdomain._id });
 
   if (!widget) {
     return {};
@@ -29,7 +29,7 @@ exports.getWidgetData = async (name, ctx) => {
     throw new Error(strings.responses.action_not_allowed);
   }
 
-  const widget = await Widget.findOne({ name, domain: ctx.domain._id });
+  const widget = await Widget.findOne({ name, domain: ctx.subdomain._id });
 
   if (!widget) {
     return {};
@@ -56,14 +56,14 @@ exports.saveWidgetSettings = async (widgetSettingsData, ctx) => {
 
   let widgetSettings = await Widget.findOne({
     name: widgetSettingsData.name,
-    domain: ctx.domain._id,
+    domain: ctx.subdomain._id,
   });
 
   let shouldCreate = false;
   if (!widgetSettings) {
     shouldCreate = true;
     widgetSettings = {
-      domain: ctx.domain._id,
+      domain: ctx.subdomain._id,
     };
   }
 
@@ -97,7 +97,7 @@ exports.saveWidgetData = async (widgetData, ctx) => {
 
   const widget = await Widget.findOne({
     name: widgetData.name,
-    domain: ctx.domain._id,
+    domain: ctx.subdomain._id,
   });
 
   if (!widget) {
@@ -119,7 +119,7 @@ exports.clearWidgetData = async (name, ctx) => {
     throw new Error(strings.responses.action_not_allowed);
   }
 
-  const widget = await Widget.findOne({ name, domain: ctx.domain._id });
+  const widget = await Widget.findOne({ name, domain: ctx.subdomain._id });
 
   if (!widget) {
     throw new Error(strings.responses.item_not_found);

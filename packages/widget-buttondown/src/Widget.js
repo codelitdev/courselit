@@ -34,7 +34,7 @@ const Widget = (props) => {
 
   return (
     <div>
-      {settings.url && (
+      {settings.username && (
         <Section>
           <Grid container direction="column" spacing={2}>
             <Grid item>
@@ -72,7 +72,9 @@ const Widget = (props) => {
                   </Grid>
                   <Grid item xs={12}>
                     <input type="hidden" value="1" name="embed" />
-                    <Button type="submit">{settings.buttonLabel}</Button>
+                    <Button type="submit">
+                      {settings.buttonLabel || "Sign up"}
+                    </Button>
                   </Grid>
                 </Grid>
               </form>

@@ -51,9 +51,11 @@ const Index = (props) => {
         reset ? 1 : mediaPaginationOffset
       }, searchText: "${searchText}") {
         id,
-        title,
+        originalFileName,
         mimeType,
-        altText
+        altText,
+        file,
+        thumbnail
       }
     }
     `;
@@ -116,8 +118,11 @@ const Index = (props) => {
     const componentConfig = {
       Overview: (
         <>
-          <Img src={media.id} isThumbnail={true} />
-          <GridListTileBar title={media.title} subtitle={media.mimeType} />
+          <Img src={media.thumbnail} />
+          <GridListTileBar
+            title={media.originalFileName}
+            subtitle={media.mimeType}
+          />
         </>
       ),
     };
@@ -173,7 +178,7 @@ const Index = (props) => {
 
   const onSelect = (index) => {
     if (Object.prototype.hasOwnProperty.call(props, "onSelect")) {
-      props.onSelect(creatorMedia[index] && creatorMedia[index].id);
+      props.onSelect(creatorMedia[index]);
     }
   };
 

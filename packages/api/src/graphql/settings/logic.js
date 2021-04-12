@@ -16,7 +16,7 @@ const {
 
 exports.getSiteInfo = async (ctx) => {
   const siteinfo = await SiteInfo.findOne(
-    { domain: ctx.domain._id },
+    { domain: ctx.subdomain._id },
     "title subtitle logopath currencyUnit currencyISOCode paymentMethod stripePublishableKey themePrimaryColor themeSecondaryColor codeInjectionHead"
   );
 
@@ -30,7 +30,7 @@ exports.getSiteInfoAsAdmin = async (ctx) => {
     throw new Error(responses.action_not_allowed);
   }
 
-  const siteinfo = await SiteInfo.findOne({ domain: ctx.domain._id });
+  const siteinfo = await SiteInfo.findOne({ domain: ctx.subdomain._id });
   return siteinfo;
 };
 
@@ -48,14 +48,14 @@ exports.updateSiteInfo = async (siteData, ctx) => {
     throw new Error(responses.unrecognised_currency_code);
   }
 
-  let siteInfo = await SiteInfo.findOne({ domain: ctx.domain._id });
+  let siteInfo = await SiteInfo.findOne({ domain: ctx.subdomain._id });
 
   // create a new entry if not existing
   let shouldCreate = false;
   if (siteInfo === null) {
     shouldCreate = true;
     siteInfo = {
-      domain: ctx.domain._id,
+      domain: ctx.subdomain._id,
     };
   }
 

@@ -16,7 +16,7 @@ const { permissions } = require("../../config/constants.js");
 const getLessonOrThrow = async (id, ctx) => {
   checkIfAuthenticated(ctx);
 
-  const lesson = await Lesson.findOne({ _id: id, domain: ctx.domain._id });
+  const lesson = await Lesson.findOne({ _id: id, domain: ctx.subdomain._id });
 
   if (!lesson) {
     throw new Error(strings.responses.item_not_found);
@@ -40,7 +40,7 @@ exports.getLesson = async (id, ctx) => {
 };
 
 exports.getLessonDetails = async (id, ctx) => {
-  const lesson = await Lesson.findOne({ _id: id, domain: ctx.domain._id });
+  const lesson = await Lesson.findOne({ _id: id, domain: ctx.subdomain._id });
 
   if (!lesson) {
     throw new Error(strings.responses.item_not_found);
@@ -67,13 +67,13 @@ exports.createLesson = async (lessonData, ctx) => {
   try {
     const course = await Course.findOne({
       _id: lessonData.courseId,
-      domain: ctx.domain._id,
+      domain: ctx.subdomain._id,
     });
     if (!course) throw new Error(strings.responses.item_not_found);
     if (course.isBlog) throw new Error(strings.responses.cannot_add_to_blogs);
 
     const lesson = await Lesson.create({
-      domain: ctx.domain._id,
+      domain: ctx.subdomain._id,
       title: lessonData.title,
       type: lessonData.type,
       content: lessonData.content,
@@ -111,7 +111,7 @@ exports.deleteLesson = async (id, ctx) => {
   try {
     // remove from the parent Course's lessons array
     let course = await Course.find({
-      domain: ctx.domain._id,
+      domain: ctx.subdomain._id,
     }).elemMatch("lessons", { $eq: lesson.id });
     course = course[0];
     if (~course.lessons.indexOf(lesson.id)) {
@@ -163,7 +163,7 @@ exports.getAllLessons = async (course, ctx) => {
     _id: {
       $in: [...course.lessons],
     },
-    domain: ctx.domain._id,
+    domain: ctx.subdomain._id,
   });
 
   const lessonMetaOnly = (lesson) => ({

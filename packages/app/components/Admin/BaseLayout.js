@@ -14,11 +14,7 @@ import {
 import { CREATOR_AREA_PAGE_TITLE } from "../../config/strings.js";
 import AppLoader from "../../components/AppLoader.js";
 import Head from "next/head";
-import {
-  canAccessDashboard,
-  checkPermission,
-  formulateMediaUrl,
-} from "../../lib/utils.js";
+import { canAccessDashboard, checkPermission } from "../../lib/utils.js";
 import { Grid } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import RouteBasedComponentScaffold from "../Public/BaseLayout/RouteBasedComponentScaffold.js";
@@ -148,10 +144,7 @@ const BaseLayoutAdmin = ({
           {siteInfo && siteInfo.title && `| ${siteInfo.title}`}
         </title>
         {siteInfo && siteInfo.logopath && (
-          <link
-            rel="icon"
-            href={formulateMediaUrl(address.backend, siteInfo.logopath, true)}
-          />
+          <link rel="icon" href={siteInfo.logopath} />
         )}
         <meta
           name="viewport"

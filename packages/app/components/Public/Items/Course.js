@@ -8,26 +8,25 @@ import { PriceTag } from "@courselit/components-library";
 import { FREE_COST } from "../../../config/strings.js";
 import Img from "../../Img.js";
 
-const useStyles = (featuredImage) =>
-  makeStyles((theme) => ({
-    link: {
-      textDecoration: "none",
-      color: "inherit",
-      marginBottom: theme.spacing(4),
-      display: "block",
-    },
-    featuredImage: {
-      height: "auto",
-      width: "100%",
-    },
-    title: {
-      marginTop: theme.spacing(2),
-      marginBottom: theme.spacing(0.5),
-    },
-  }));
+const useStyles = makeStyles((theme) => ({
+  link: {
+    textDecoration: "none",
+    color: "inherit",
+    marginBottom: theme.spacing(2),
+    display: "block",
+  },
+  featuredImage: {
+    height: "auto",
+    width: "100%",
+  },
+  title: {
+    marginTop: theme.spacing(2),
+    marginBottom: theme.spacing(0.5),
+  },
+}));
 
 const Course = (props) => {
-  const classes = useStyles(props.featuredImage)();
+  const classes = useStyles();
 
   return (
     <Grid item xs={12} md={6}>

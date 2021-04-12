@@ -11,7 +11,10 @@ const Layout = require("../../models/Layout.js");
 const { permissions } = require("../../config/constants.js");
 
 exports.getTheme = async (ctx) => {
-  const theme = await Theme.findOne({ active: true, domain: ctx.domain._id });
+  const theme = await Theme.findOne({
+    active: true,
+    domain: ctx.subdomain._id,
+  });
   return transformThemeForOutput(theme);
 };
 
@@ -22,11 +25,11 @@ exports.setTheme = async (id, ctx) => {
   }
 
   await Theme.updateMany(
-    { domain: ctx.domain._id },
+    { domain: ctx.subdomain._id },
     { $set: { active: "false" } }
   );
 
-  const theme = await Theme.findOne({ id, domain: ctx.domain._id });
+  const theme = await Theme.findOne({ id, domain: ctx.subdomain._id });
   if (!theme) {
     throw new Error(strings.responses.theme_not_installed);
   }
@@ -43,7 +46,7 @@ exports.removeTheme = async (id, ctx) => {
     throw new Error(strings.responses.action_not_allowed);
   }
 
-  await Theme.deleteOne({ id, domain: ctx.domain._id });
+  await Theme.deleteOne({ id, domain: ctx.subdomain._id });
 
   return true;
 };
@@ -54,7 +57,7 @@ exports.getAllThemes = async (ctx) => {
     throw new Error(strings.responses.action_not_allowed);
   }
 
-  const themes = await Theme.find({ domain: ctx.domain._id });
+  const themes = await Theme.find({ domain: ctx.subdomain._id });
   return themes.map(transformThemeForOutput);
 };
 
@@ -78,7 +81,7 @@ exports.addTheme = async (themeData, ctx) => {
   }
 
   const theme = await Theme.create({
-    domain: ctx.domain._id,
+    domain: ctx.subdomain._id,
     id: themeData.id,
     name: themeData.name,
     styles,
@@ -90,7 +93,7 @@ exports.addTheme = async (themeData, ctx) => {
 };
 
 exports.getLayout = async (ctx) => {
-  const layout = await Layout.findOne({ domain: ctx.domain._id });
+  const layout = await Layout.findOne({ domain: ctx.subdomain._id });
   return layout
     ? {
         layout: JSON.stringify(layout.layout),
@@ -111,13 +114,13 @@ exports.setLayout = async (layoutData, ctx) => {
     throw new Error(strings.responses.invalid_layout);
   }
 
-  let layout = await Layout.findOne({ domain: ctx.domain._id });
+  let layout = await Layout.findOne({ domain: ctx.subdomain._id });
   if (layout) {
     layout.layout = layoutObject;
     layout = await layout.save();
   } else {
     layout = await Layout.create({
-      domain: ctx.domain._id,
+      domain: ctx.subdomain._id,
       layout: layoutObject,
     });
   }

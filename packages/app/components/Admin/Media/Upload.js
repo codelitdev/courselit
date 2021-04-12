@@ -39,9 +39,7 @@ function Upload({ auth, address, dispatch, resetOverview }) {
       })
     );
 
-  const onUpload = async (e) => {
-    e.preventDefault();
-
+  const uploadToLocalDisk = async () => {
     const fD = new window.FormData();
     fD.append("title", uploadData.title);
     fD.append("altText", uploadData.altText);
@@ -73,9 +71,51 @@ function Upload({ auth, address, dispatch, resetOverview }) {
         dispatch(setAppMessage(new AppMessage(res.message)));
       }
     } catch (err) {
-      dispatch(setAppMessage(new AppMessage(e.message)));
+      dispatch(setAppMessage(new AppMessage(err.message)));
     } finally {
       setUploading(false);
+    }
+  };
+
+  const uploadToCloud = async () => {
+    const fD = new window.FormData();
+    fD.append("title", uploadData.title);
+    fD.append("altText", uploadData.altText);
+    fD.append("file", fileInput.current.files[0]);
+
+    setUploadData(
+      Object.assign({}, uploadData, {
+        uploading: true,
+      })
+    );
+
+    try {
+      setUploading(true);
+
+      let res = await fetch(`${address.backend}/media`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+        },
+        body: fD,
+      });
+      res = await res.json();
+
+      dispatch(setAppMessage(new AppMessage(res.message)));
+    } catch (err) {
+      dispatch(setAppMessage(new AppMessage(err.message)));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const onUpload = async (e) => {
+    e.preventDefault();
+
+    if (process.env.NEXT_PUBLIC_USE_CLOUD_STORAGE) {
+      await uploadToCloud();
+    } else {
+      await uploadToLocalDisk();
     }
   };
 
@@ -92,17 +132,6 @@ function Upload({ auth, address, dispatch, resetOverview }) {
           />
         </Button>
         <TextField
-          required
-          variant="outlined"
-          label="Title"
-          fullWidth
-          margin="normal"
-          name="title"
-          value={uploadData.title}
-          onChange={onUploadDataChanged}
-        />
-        <TextField
-          required
           variant="outlined"
           label="Alt text"
           fullWidth

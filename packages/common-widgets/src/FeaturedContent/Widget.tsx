@@ -110,15 +110,17 @@ const Widget = (props: FeaturedWidgetProps) => {
               </Typography>
             </Grid>
           </Grid>
-          <Grid item container xs={12}>
-            {posts.map((post, index) => (
-              <Item
-                key={index}
-                appUtilities={utilities}
-                appConfig={config}
-                course={post}
-              />
-            ))}
+          <Grid item xs={12}>
+            <Grid container spacing={2}>
+              {posts.map((post, index) => (
+                <Item
+                  key={index}
+                  appUtilities={utilities}
+                  appConfig={config}
+                  course={post}
+                />
+              ))}
+            </Grid>
           </Grid>
           {posts.length > 0 && (
             <Grid item xs={12}>

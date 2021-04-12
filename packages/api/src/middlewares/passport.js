@@ -31,7 +31,7 @@ module.exports = (passport) => {
         }
 
         try {
-          let user = await User.findOne({ email, domain: req.domain._id });
+          let user = await User.findOne({ email, domain: req.subdomain._id });
           if (user) {
             return next(null, false, {
               message: responses.email_already_registered,
@@ -39,14 +39,14 @@ module.exports = (passport) => {
           }
 
           const newUser = {
-            domain: req.domain._id,
+            domain: req.subdomain._id,
             email,
             password,
             name: req.body.name,
             active: true,
           };
           const notTheFirstUserOfDomain = await User.countDocuments({
-            domain: req.domain._id,
+            domain: req.subdomain._id,
           });
           if (notTheFirstUserOfDomain) {
             newUser.permissions = [permissions.enrollInCourse];
@@ -86,7 +86,7 @@ module.exports = (passport) => {
       },
       async (req, email, password, next) => {
         try {
-          const user = await User.findOne({ email, domain: req.domain._id });
+          const user = await User.findOne({ email, domain: req.subdomain._id });
 
           if (!user) {
             return next(null, false, {
@@ -123,7 +123,7 @@ module.exports = (passport) => {
     new JwtStrategy(jwtStrategyOptions, function (req, jwtToken, done) {
       const { email, domain } = jwtToken;
 
-      if (domain !== req.domain._id.toString()) {
+      if (domain !== req.subdomain._id.toString()) {
         return done(null, false);
       }
 

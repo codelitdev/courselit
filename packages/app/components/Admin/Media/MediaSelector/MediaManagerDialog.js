@@ -14,10 +14,10 @@ import {
 } from "../../../../config/strings";
 
 const MediaManagerDialog = (props) => {
-  const { onClose, onOpen } = props;
-  const [selectedMediaId, setSelectedMediaId] = useState("");
+  const { onClose, onOpen, mimeTypesToShow } = props;
+  const [selectedMedia, setSelectedMedia] = useState({});
 
-  const handleSelection = () => onClose(selectedMediaId);
+  const handleSelection = () => onClose(selectedMedia);
 
   return (
     <Dialog onClose={onClose} open={onOpen}>
@@ -25,12 +25,13 @@ const MediaManagerDialog = (props) => {
       <DialogContent>
         <MediaGallery
           selectionMode={true}
-          onSelect={(mediaId) => setSelectedMediaId(mediaId)}
+          onSelect={(media) => setSelectedMedia(media)}
+          mimeTypesToShow={mimeTypesToShow}
         />
       </DialogContent>
       <DialogActions>
         <Button onClick={() => onClose()}>{BUTTON_CANCEL_TEXT}</Button>
-        <Button onClick={handleSelection} disabled={!selectedMediaId}>
+        <Button onClick={handleSelection} disabled={!selectedMedia}>
           {DIALOG_SELECT_BUTTON}
         </Button>
       </DialogActions>

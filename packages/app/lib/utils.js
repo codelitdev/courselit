@@ -56,15 +56,6 @@ export const formattedLocaleDate = (epochString) =>
 export const makeGraphQLQueryStringFromJSObject = (obj) =>
   JSON.stringify(obj).replace(/"([^(")"]+)":/g, "$1:");
 
-export const formulateMediaUrl = (
-  backend,
-  mediaID,
-  generateThumbnailUrl = false
-) =>
-  mediaID
-    ? `${backend}/media/${mediaID}${generateThumbnailUrl ? "?thumb=1" : ""}`
-    : "";
-
 export const formulateCourseUrl = (course, backend = "") =>
   `${backend}/${course.isBlog ? URL_EXTENTION_POSTS : URL_EXTENTION_COURSES}/${
     course.courseId
@@ -155,3 +146,6 @@ export const canAccessDashboard = (profile) => {
     permissions.viewAnyMedia,
   ]);
 };
+
+export const constructThumbnailUrlFromFileUrl = (url) =>
+  url ? url.replace(url.split("/").pop(), "thumb.webp") : null;

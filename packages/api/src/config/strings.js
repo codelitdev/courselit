@@ -32,7 +32,6 @@ exports.responses = {
   cost_not_provided: "Cost field is required",
   invalid_cost: "Invalid cost",
   cannot_add_to_blogs: "Cannot add lessons to a blog post",
-  title_is_required: "A title is required",
   file_is_required: "A file is required",
   error_in_moving_file: "Error in moving file",
   success: "Success",
@@ -61,6 +60,9 @@ exports.responses = {
   destination_dont_exist: "Destination does not exist",
   invalid_format: "Invalid format",
   no_thumbnail: "No thumbnail available",
+  file_size_exceeded: "File size exceeded",
+  name_is_required: "Name is required",
+  mimetype_is_required: "Mimetype is required",
 };
 
 exports.internal = {
@@ -70,4 +72,5 @@ exports.internal = {
     "Unable to establish a connection to the database.",
   error_env_var_undefined: "A required environment variable is not defined",
   app_running: "CourseLit server is running on",
+  invalid_cloud_storage_settings: "Cloud storage settings are invalid",
 };

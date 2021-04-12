@@ -21,6 +21,7 @@ import PrismDecorator from "draft-js-prism";
 import Prism from "prismjs";
 import "draft-js/dist/Draft.css";
 import "prismjs/themes/prism-tomorrow.css";
+import "./styles.css";
 
 // TODO: Remove props.theme
 const Editor = (props) => {

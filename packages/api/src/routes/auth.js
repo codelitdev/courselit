@@ -38,7 +38,7 @@ module.exports = (passport) => {
           }
 
           const token = jwt.sign(
-            { email: user.email, domain: req.domain._id },
+            { email: user.email, domain: req.subdomain._id },
             constants.jwtSecret,
             {
               expiresIn: constants.jwtExpire,
