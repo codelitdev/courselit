@@ -94,3 +94,9 @@ exports.convertToWebp = (path, quality = 75) =>
  */
 exports.asyncHandler = (fn) => (req, res, next) =>
   Promise.resolve(fn(req, res, next)).catch(next);
+
+exports.getParentDirectory = (path) => {
+  const filePathSplit = path.split("/");
+  filePathSplit.pop();
+  return filePathSplit.join("/");
+};

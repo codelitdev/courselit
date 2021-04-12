@@ -59,11 +59,13 @@ USE_CLOUD_STORAGE=false
 
 # If USE_CLOUD_STORAGE is set to true, replace the following placeholder values with their appropriate values.
 CLOUD_ENDPOINT=https://cloud.endpoint
-CLOUD_CDN_ENDPOINT=https://cdn.endpoint
 CLOUD_REGION=region
 CLOUD_KEY=key
 CLOUD_SECRET=secret
 CLOUD_BUCKET_NAME=bucket
+
+# Set the following to serve media files correctly
+CDN_ENDPOINT=https://$DOMAIN/api/assets
 EOF
 
 # Download necessary files

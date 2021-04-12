@@ -9,7 +9,7 @@ const {
   cloudSecret,
   cloudBucket,
   cloudRegion,
-  cloudCdnEndpoint,
+  cdnEndpoint,
 } = require("../../config/constants");
 const { responses } = require("../../config/strings");
 const {
@@ -166,10 +166,8 @@ exports.serve = async ({ media, res }) => {
   res.status(200).json({
     media: {
       id: media.id,
-      file: `${cloudCdnEndpoint}/${media.file}`,
-      thumbnail: media.thumbnail
-        ? `${cloudCdnEndpoint}/${media.thumbnail}`
-        : "",
+      file: `${cdnEndpoint}/${media.file}`,
+      thumbnail: media.thumbnail ? `${cdnEndpoint}/${media.thumbnail}` : "",
       altText: media.altText,
     },
   });

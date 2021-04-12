@@ -32,7 +32,7 @@ module.exports = {
   cloudKey: process.env.CLOUD_KEY || "",
   cloudSecret: process.env.CLOUD_SECRET || "",
   cloudBucket: process.env.CLOUD_BUCKET_NAME || "",
-  cloudCdnEndpoint: process.env.CLOUD_CDN_ENDPOINT || "",
+  cdnEndpoint: process.env.CDN_ENDPOINT || "",
   maxFileUploadSize: process.env.MAX_UPLOAD_SIZE || 2147483648,
 
   // Content types

@@ -4,16 +4,13 @@
  * An end point for managing file uploads.
  */
 const express = require("express");
-const fs = require("fs");
 const Media = require("../../models/Media.js");
 const responses = require("../../config/strings").responses;
 const constants = require("../../config/constants.js");
 const manageOnDisk = require("./manage-on-disk");
 const manageOnCloud = require("./manage-on-cloud");
-const { generateFolderPaths } = require("./utils");
 
 const {
-  uploadFolder,
   useCloudStorage,
   maxFileUploadSize,
 } = require("../../config/constants.js");
@@ -96,21 +93,10 @@ const deleteHandler = async (req, res) => {
     return res.status(err.statusCode).json({ message: err.message });
   }
 
-  const { uploadFolderForDomain, thumbFolderForDomain } = generateFolderPaths({
-    uploadFolder,
-    domainName: req.subdomain.name,
-  });
-
-  try {
-    if (media.thumbnail) {
-      fs.unlinkSync(`${thumbFolderForDomain}/${media.thumbnail}`);
-    }
-    fs.unlinkSync(`${uploadFolderForDomain}/${media.fileName}`);
-    await Media.deleteOne({ _id: media.id });
-
-    return res.status(200).json({ message: responses.success });
-  } catch (err) {
-    return res.status(500).json({ message: err.message });
+  if (useCloudStorage) {
+    await manageOnCloud.delete(media, req, res);
+  } else {
+    await manageOnDisk.delete(media, res);
   }
 };
 

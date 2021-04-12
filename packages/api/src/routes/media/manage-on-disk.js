@@ -1,120 +1,94 @@
 const thumbnail = require("@courselit/thumbnail");
-const path = require("path");
 const {
   foldersExist,
   uniqueFileNameGenerator,
   moveFile,
   convertToWebp,
   createFolders,
+  getParentDirectory,
 } = require("../../lib/utils.js");
-const {
-  uploadFolder,
-  webpOutputQuality,
-  useWebp,
-} = require("../../config/constants.js");
+const { uploadFolder, useWebp } = require("../../config/constants.js");
 const responses = require("../../config/strings").responses;
 const constants = require("../../config/constants.js");
 const Media = require("../../models/Media.js");
 const { generateFolderPaths } = require("./utils");
+const { rmdirSync } = require("fs");
+
+const generateAndUploadThumbnail = async ({
+  workingDirectory,
+  mimetype,
+  originalFilePath,
+}) => {
+  const imagePattern = /image/;
+  const videoPattern = /video/;
+  const thumbPath = `${workingDirectory}/thumb.webp`;
+
+  let isThumbGenerated = false; // to indicate if the thumbnail name is to be saved to the DB
+  if (imagePattern.test(mimetype)) {
+    await thumbnail.forImage(originalFilePath, thumbPath, {
+      width: constants.thumbnailWidth,
+    });
+    await convertToWebp(thumbPath);
+    isThumbGenerated = true;
+  }
+  if (videoPattern.test(mimetype)) {
+    await thumbnail.forVideo(originalFilePath, thumbPath, {
+      width: constants.thumbnailWidth,
+      height: constants.thumbnailHeight,
+    });
+    await convertToWebp(thumbPath);
+    isThumbGenerated = true;
+  }
+
+  return isThumbGenerated;
+};
 
 exports.upload = async (req, res) => {
   const data = req.body;
-  const thumbnailExtension = useWebp ? "webp" : "jpg";
+  const { file } = req.files;
+  const fileName = uniqueFileNameGenerator(file.name);
 
-  const { uploadFolderForDomain, thumbFolderForDomain } = generateFolderPaths({
-    uploadFolder,
-    domainName: req.subdomain.name,
-  });
-  if (!foldersExist([uploadFolderForDomain])) {
-    createFolders([uploadFolderForDomain]);
-  }
-  if (!foldersExist([thumbFolderForDomain])) {
-    createFolders([thumbFolderForDomain]);
+  const directory = `${req.subdomain.name}/${req.user.userId}/${fileName.name}`;
+  const absoluteDirectory = `${uploadFolder}/${directory}`;
+  if (!foldersExist([absoluteDirectory])) {
+    createFolders([absoluteDirectory]);
   }
 
-  const imagePattern = /image/;
-  const videoPattern = /video/;
+  const mainFilePath = `${absoluteDirectory}/main.${fileName.ext}`;
 
-  // create unique file name for the uploaded file
-  const fileName = uniqueFileNameGenerator(req.files.file.name);
-  const filePath = path.join(
-    uploadFolderForDomain,
-    `${fileName.name}.${
-      useWebp && imagePattern.test(req.files.file.mimetype)
-        ? "webp"
-        : fileName.ext
-    }`
-  );
-
-  // move the uploaded file to the upload folder
+  const fileNameWithDomainInfo = `${directory}/main.${fileName.ext}`;
   try {
-    await moveFile(req.files.file, filePath);
-    if (useWebp && imagePattern.test(req.files.file.mimetype)) {
-      await convertToWebp(filePath, webpOutputQuality);
-    }
-  } catch (err) {
-    return res.status(500).json({ message: responses.error_in_moving_file });
-  }
+    await moveFile(req.files.file, mainFilePath);
 
-  // generate thumbnails for videos and images
-  const thumbPath = `${thumbFolderForDomain}/${fileName.name}.${thumbnailExtension}`;
-  let isThumbGenerated = false; // to indicate if the thumbnail name is to be saved to the DB
-  try {
-    if (imagePattern.test(req.files.file.mimetype)) {
-      await thumbnail.forImage(filePath, thumbPath, {
-        width: constants.thumbnailWidth,
-      });
-      if (useWebp) {
-        await convertToWebp(thumbPath);
-      }
-      isThumbGenerated = true;
-    }
-    if (videoPattern.test(req.files.file.mimetype)) {
-      await thumbnail.forVideo(filePath, thumbPath, {
-        width: constants.thumbnailWidth,
-        height: constants.thumbnailHeight,
-      });
-      if (useWebp) {
-        await convertToWebp(thumbPath);
-      }
-      isThumbGenerated = true;
-    }
-  } catch (err) {
-    return res.status(500).json({ message: err.message });
-  }
+    const isThumbGenerated = await generateAndUploadThumbnail({
+      workingDirectory: absoluteDirectory,
+      mimetype: file.mimetype,
+      originalFilePath: mainFilePath,
+    });
 
-  const mediaObject = {
-    domain: req.subdomain._id,
-    title: req.files.file.name,
-    fileName: `${fileName.name}.${
-      useWebp && imagePattern.test(req.files.file.mimetype)
-        ? "webp"
-        : fileName.ext
-    }`,
-    creatorId: req.user._id,
-    mimeType:
-      useWebp && imagePattern.test(req.files.file.mimetype)
-        ? "image/webp"
-        : req.files.file.mimetype,
-    size: req.files.file.size,
-  };
-  if (isThumbGenerated) {
-    mediaObject.thumbnail = `${fileName.name}.${thumbnailExtension}`;
-  }
-  if (data.altText) mediaObject.altText = data.altText;
+    const mediaObject = {
+      domain: req.subdomain._id,
+      originalFileName: file.name,
+      file: fileNameWithDomainInfo,
+      mimeType: req.files.file.mimetype,
+      size: req.files.file.size,
+      creatorId: req.user._id,
+      thumbnail: isThumbGenerated ? `${directory}/thumb.webp` : "",
+      altText: data.altText,
+    };
 
-  try {
     const media = await Media.create(mediaObject);
+
     return res.status(200).json({
       message: responses.success,
       media: {
         id: media.id,
-        title: mediaObject.title,
+        originalFileName: mediaObject.originalFileName,
         mimeType: mediaObject.mimeType,
       },
     });
   } catch (err) {
-    return res.status(500).json({ message: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -135,5 +109,19 @@ exports.serve = async ({ media, req, res }) => {
   } else {
     res.contentType(media.mimeType);
     res.sendFile(`${uploadFolderForDomain}/${media.fileName}`);
+  }
+};
+
+exports.delete = async (media, res) => {
+  try {
+    const directory = getParentDirectory(media.file);
+    const absoluteDirectory = `${uploadFolder}/${directory}`;
+
+    rmdirSync(absoluteDirectory, { recursive: true });
+    await media.delete();
+
+    return res.status(200).json({ message: responses.success });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
   }
 };

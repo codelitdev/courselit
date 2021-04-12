@@ -5,7 +5,7 @@ const constants = require("../config/constants.js");
 const ObjectId = require("mongoose").Types.ObjectId;
 const Media = require("../models/Media.js");
 const HttpError = require("./HttpError.js");
-const { cloudCdnEndpoint } = require("../config/constants.js");
+const { cdnEndpoint } = require("../config/constants.js");
 
 exports.checkIfAuthenticated = (ctx) => {
   if (!ctx.user) throw new Error(strings.responses.request_not_authenticated);
@@ -169,10 +169,8 @@ exports.mapFileNamesToCompleteURLs = (mediaItems) => {
   for (const media of mediaItems) {
     mediaWithCompleteUrls.push({
       id: media.id,
-      file: `${cloudCdnEndpoint}/${media.file}`,
-      thumbnail: media.thumbnail
-        ? `${cloudCdnEndpoint}/${media.thumbnail}`
-        : "",
+      file: `${cdnEndpoint}/${media.file}`,
+      thumbnail: media.thumbnail ? `${cdnEndpoint}/${media.thumbnail}` : "",
       originalFileName: media.originalFileName,
       mimeType: media.mimeType,
       size: media.size,

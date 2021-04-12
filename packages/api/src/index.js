@@ -8,7 +8,7 @@ const {
   cloudKey,
   cloudSecret,
   useCloudStorage,
-  cloudCdnEndpoint,
+  cdnEndpoint,
   cloudRegion,
   cloudBucket,
 } = require("./config/constants.js");
@@ -28,7 +28,7 @@ const validateCloudSettings = () => {
     !cloudEndpoint ||
     !cloudKey ||
     !cloudSecret ||
-    !cloudCdnEndpoint ||
+    !cdnEndpoint ||
     !cloudRegion ||
     !cloudBucket
   ) {
