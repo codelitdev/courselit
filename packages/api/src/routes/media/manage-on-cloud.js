@@ -96,11 +96,11 @@ exports.upload = async (req, res) => {
   }
 
   const mainFilePath = `${temporaryFolderForWork}/${file.name}.${fileName.ext}`;
-  const cloudFolder = `${req.subdomain.name}/${req.user.userId}/${fileName.name}`;
+  const directory = `${req.subdomain.name}/${req.user.userId}/${fileName.name}`;
   try {
     await moveFile(req.files.file, mainFilePath);
 
-    const fileNameWithDomainInfo = `${cloudFolder}/main.${fileName.ext}`;
+    const fileNameWithDomainInfo = `${directory}/main.${fileName.ext}`;
     await putObjectPromise({
       Key: fileNameWithDomainInfo,
       Body: file.data,
@@ -109,7 +109,7 @@ exports.upload = async (req, res) => {
 
     const isThumbGenerated = await generateAndUploadThumbnail({
       workingDirectory: temporaryFolderForWork,
-      cloudDirectory: cloudFolder,
+      cloudDirectory: directory,
       mimetype: file.mimetype,
       originalFilePath: mainFilePath,
     });
@@ -123,7 +123,7 @@ exports.upload = async (req, res) => {
       mimeType: req.files.file.mimetype,
       size: req.files.file.size,
       creatorId: req.user._id,
-      thumbnail: isThumbGenerated ? `${cloudFolder}/thumb.webp` : "",
+      thumbnail: isThumbGenerated ? `${directory}/thumb.webp` : "",
       altText: data.altText,
     };
 
