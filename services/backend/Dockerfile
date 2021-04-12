@@ -1,8 +1,7 @@
-FROM node:15.14.0-buster
+FROM node:12.9.0-alpine
 
 # install required softwares
-RUN apt-get update \
-    && apt-get -y install ffmpeg imagemagick webp
+RUN apk add --no-cache ffmpeg imagemagick libwebp libwebp-tools
 
 # create app directory
 RUN mkdir -p /usr/src/app
