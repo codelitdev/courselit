@@ -65,7 +65,7 @@ CLOUD_SECRET=secret
 CLOUD_BUCKET_NAME=bucket
 
 # Set the following to serve media files correctly
-CDN_ENDPOINT=https://$DOMAIN/api/assets
+CDN_ENDPOINT=/api/assets
 EOF
 
 # Download necessary files
