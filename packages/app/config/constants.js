@@ -1,26 +1,6 @@
 /**
  * This file provides application wide constants.
  */
-// import getConfig from "next/config";
-// const { serverRuntimeConfig, publicRuntimeConfig } = getConfig();
-
-// const LOCAL_BACKEND = "http://localhost:8000";
-// const LOCAL_FRONTEND = "http://localhost:3000";
-// const API_PREFIX = publicRuntimeConfig.apiPrefix || "/api";
-
-// const resolveProductionBackend = () => process.env.BACKEND
-//   ? `http://backend:8000${API_PREFIX}` // Server-side API path (SSR)
-//   :  API_PREFIX // Client-side API path
-// export const BACKEND =
-//   process.env.NODE_ENV === "production"
-//     ? serverRuntimeConfig.ssrUrl
-//       ? serverRuntimeConfig.ssrUrl + API_PREFIX
-//       : API_PREFIX
-//     : LOCAL_BACKEND;
-// export const FRONTEND = publicRuntimeConfig.mainUrl || LOCAL_FRONTEND;
-// export const MEDIA_BACKEND = publicRuntimeConfig.mainUrl
-//   ? publicRuntimeConfig.mainUrl + API_PREFIX
-//   : LOCAL_BACKEND;
 
 // Constants for auth related functionalities
 export const JWT_COOKIE_NAME = "access_token";
@@ -60,6 +40,7 @@ export const CONSECUTIVE_PAYMENT_VERIFICATION_REQUEST_GAP = 2000;
 export const MIMETYPE_VIDEO = ["video/mp4"];
 export const MIMETYPE_AUDIO = ["audio/mp3"];
 export const MIMETYPE_IMAGE = ["image/png", "image/jpeg", "image/webp"];
+export const MIMETYPE_PDF = ["application/pdf"];
 
 export const THEMES_REPO = "https://github.com/codelitdev/courselit-themes";
 

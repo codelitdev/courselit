@@ -2,7 +2,6 @@ import React from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import Head from "next/head";
-import { formulateMediaUrl } from "../../../lib/utils.js";
 import { addressProps, siteInfoProps } from "../../../types.js";
 import Template from "./Template.js";
 import Scaffold from "./Scaffold";
@@ -14,25 +13,11 @@ const MasterLayout = (props) => {
         <title>
           {props.title} | {props.siteInfo.title}
         </title>
-        {props.siteInfo.logopath && (
-          <link
-            rel="icon"
-            href={formulateMediaUrl(
-              props.address.backend,
-              props.siteInfo.logopath,
-              true
-            )}
-          />
-        )}
         <link
           rel="icon"
           href={
             props.siteInfo.logopath
-              ? formulateMediaUrl(
-                  props.address.backend,
-                  props.siteInfo.logopath,
-                  true
-                )
+              ? props.siteInfo.logopath
               : "/courselit_backdrop_square.webp"
           }
         />

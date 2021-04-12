@@ -3,12 +3,8 @@ import { Typography, Grid, Divider } from "@material-ui/core";
 import Link from "next/link";
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/styles";
-import {
-  formulateMediaUrl,
-  formattedLocaleDate,
-  checkPermission,
-} from "../../lib/utils";
-import { publicCourse, profileProps, addressProps } from "../../types";
+import { formattedLocaleDate, checkPermission } from "../../lib/utils";
+import { publicCourse, profileProps } from "../../types";
 import { connect } from "react-redux";
 import {
   PriceTag,
@@ -20,60 +16,38 @@ import dynamic from "next/dynamic";
 import { permissions } from "../../config/constants";
 
 const BuyButton = dynamic(() => import("../CheckoutExternal"));
+const Img = dynamic(() => import("../Img"));
 
-const useStyles = ({ featuredImage, backendUrl }) =>
-  makeStyles((theme) => ({
-    header: {},
-    creatoravatarcontainer: {
-      display: "flex",
-      alignItems: "center",
-    },
-    creatorcard: {
-      marginTop: theme.spacing(1),
-    },
-    creatoravatar: {
-      borderRadius: "1.5em",
-      width: "3em",
-      marginRight: "1em",
-    },
-    creatorName: {
-      color: "inherit",
-    },
-    featuredimagecontainer: {
-      width: "100%",
-      height: 240,
-      marginTop: theme.spacing(2),
-      marginBottom: theme.spacing(4),
-      [theme.breakpoints.up("sm")]: {
-        height: 480,
-        backgroundSize: "cover",
-      },
-      overflow: "hidden",
-      background: `url('${formulateMediaUrl(
-        backendUrl,
-        featuredImage
-      )}') no-repeat center center`,
-      backgroundSize: "contain",
-    },
-    enrollmentArea: {
-      marginTop: theme.spacing(3),
-      marginBottom: theme.spacing(4),
-    },
-    enrollmentAreaPriceTag: {
-      // marginRight: theme.spacing(2),
-      // marginBottom: theme.spacing(2),
-    },
-    content: {
-      marginTop: theme.spacing(4),
-    },
-  }));
+const useStyles = makeStyles((theme) => ({
+  header: {},
+  creatoravatarcontainer: {
+    display: "flex",
+    alignItems: "center",
+  },
+  creatorcard: {
+    marginTop: theme.spacing(1),
+  },
+  creatoravatar: {
+    borderRadius: "1.5em",
+    width: "3em",
+    marginRight: "1em",
+  },
+  creatorName: {
+    color: "inherit",
+  },
+  enrollmentArea: {
+    marginTop: theme.spacing(3),
+    marginBottom: theme.spacing(4),
+  },
+  enrollmentAreaPriceTag: {},
+  content: {
+    marginTop: theme.spacing(4),
+  },
+}));
 
 const Article = (props) => {
-  const { course, options, profile, address } = props;
-  const classes = useStyles({
-    featuredImage: course.featuredImage,
-    backendUrl: address.backend,
-  })();
+  const { course, options, profile } = props;
+  const classes = useStyles();
   let courseDescriptionHydrated;
   try {
     courseDescriptionHydrated = TextEditor.hydrate({
@@ -114,9 +88,7 @@ const Article = (props) => {
             </Grid>
           </Grid>
         )}
-        {course.featuredImage && (
-          <div className={classes.featuredimagecontainer} />
-        )}
+        {course.featuredImage && <Img src={course.featuredImage} />}
         {options.showEnrollmentArea &&
           (profile.fetched
             ? !profile.purchases.includes(course.id) &&
@@ -158,12 +130,10 @@ Article.propTypes = {
     showEnrollmentArea: PropTypes.bool,
   }).isRequired,
   profile: profileProps,
-  address: addressProps,
 };
 
 const mapStateToProps = (state) => ({
   profile: state.profile,
-  address: state.address,
 });
 
 export default connect(mapStateToProps)(Article);

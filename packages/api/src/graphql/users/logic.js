@@ -29,13 +29,13 @@ exports.getUser = async (email = null, userId = null, ctx) => {
 
   let user;
   if (email) {
-    user = await User.findOne({ email, domain: ctx.domain._id });
+    user = await User.findOne({ email, domain: ctx.subdomain._id });
   } else {
     // userId can be either a Mongodb ObjectID or userId from User schema
     if (ObjectId.isValid(userId)) {
-      user = await User.findOne({ _id: userId, domain: ctx.domain._id });
+      user = await User.findOne({ _id: userId, domain: ctx.subdomain._id });
     } else {
-      user = await User.findOne({ userId, domain: ctx.domain._id });
+      user = await User.findOne({ userId, domain: ctx.subdomain._id });
     }
   }
 
@@ -82,7 +82,7 @@ exports.updateUser = async (userData, ctx) => {
     }
   }
 
-  let user = await User.findOne({ _id: id, domain: ctx.domain._id });
+  let user = await User.findOne({ _id: id, domain: ctx.subdomain._id });
   if (!user) throw new Error(strings.responses.item_not_found);
 
   for (const key of Object.keys(userData)) {
@@ -125,7 +125,7 @@ exports.getSiteUsers = async (searchData = {}, ctx) => {
     throw new Error(strings.responses.action_not_allowed);
   }
 
-  const query = { domain: ctx.domain._id };
+  const query = { domain: ctx.subdomain._id };
   if (searchData.searchText) query.$text = { $search: searchData.searchText };
 
   const searchUsers = makeModelTextSearchable(User);

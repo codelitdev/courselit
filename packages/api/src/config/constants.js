@@ -3,8 +3,6 @@
  */
 const path = require("path");
 
-const USER_CONTENT_DIRECTORY = process.env.USER_CONTENT_DIRECTORY;
-
 module.exports = {
   domainNameForSingleTenancy: "main",
   dbConnectionString:
@@ -22,12 +20,22 @@ module.exports = {
   jwtExpire: process.env.JWT_EXPIRES_IN || "1d",
 
   // Media uploads config
-  uploadFolder: path.join(USER_CONTENT_DIRECTORY, "uploads"),
   useWebp: process.env.USE_WEBP === "true",
   webpOutputQuality: parseInt(process.env.WEBP_QUALITY) || 75,
   // the following constants are as per the 16:9 aspect ratio
   thumbnailWidth: 120,
   thumbnailHeight: 68,
+  useCloudStorage: process.env.USE_CLOUD_STORAGE === "true",
+  cloudEndpoint: process.env.CLOUD_ENDPOINT || "",
+  cloudRegion: process.env.CLOUD_REGION || "",
+  cloudKey: process.env.CLOUD_KEY || "",
+  cloudSecret: process.env.CLOUD_SECRET || "",
+  cloudBucket: process.env.CLOUD_BUCKET_NAME || "",
+  cdnEndpoint: process.env.CDN_ENDPOINT || "",
+  maxFileUploadSize: process.env.MAX_UPLOAD_SIZE || 2147483648,
+  uploadFolder: this.useCloudStorage
+    ? ""
+    : path.join(process.env.USER_CONTENT_DIRECTORY || "", "uploads"),
 
   // Content types
   text: "text",

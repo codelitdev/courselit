@@ -7,6 +7,7 @@ const {
   checkPermission,
   validateOffset,
   getMediaOrThrow,
+  mapFileNamesToCompleteURLs,
 } = require("../../lib/graphql.js");
 const { itemsPerPage, permissions } = require("../../config/constants.js");
 const { checkIfAuthenticated } = require("../../lib/graphql.js");
@@ -28,7 +29,7 @@ exports.getCreatorMedia = async (offset, ctx, text) => {
   }
 
   const query = {
-    domain: ctx.domain._id,
+    domain: ctx.subdomain._id,
   };
   if (
     !checkPermission(user.permissions, [
@@ -42,7 +43,7 @@ exports.getCreatorMedia = async (offset, ctx, text) => {
   if (text) query.$text = { $search: text };
   const searchMedia = makeModelTextSearchable(Media);
 
-  return searchMedia(
+  const resultSet = await searchMedia(
     { offset, query, graphQLContext: ctx },
     {
       itemsPerPage,
@@ -50,6 +51,8 @@ exports.getCreatorMedia = async (offset, ctx, text) => {
       sortOrder: -1,
     }
   );
+
+  return mapFileNamesToCompleteURLs(resultSet);
 };
 
 exports.updateMedia = async (mediaData, ctx) => {
@@ -57,10 +60,6 @@ exports.updateMedia = async (mediaData, ctx) => {
 
   for (const key of Object.keys(mediaData)) {
     media[key] = mediaData[key];
-  }
-
-  if (!media.title) {
-    throw new Error(strings.responses.title_is_required);
   }
 
   return await media.save();

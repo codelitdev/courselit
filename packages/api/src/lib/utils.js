@@ -3,6 +3,7 @@
  */
 const fs = require("fs");
 const { spawn } = require("child_process");
+const { v4: uuidv4 } = require("uuid");
 
 exports.capitalize = (s) => {
   if (typeof s !== "string") return "";
@@ -35,13 +36,13 @@ exports.createFolders = (folders) => {
  */
 exports.uniqueFileNameGenerator = (filename) => {
   const extention = filename.split(".");
-  const uniqueNameWithoutExtention = `${extention.slice(
-    0,
-    extention.length - 1
-  )}_${Date.now()}`;
+  // const uniqueNameWithoutExtention = `${extention.slice(
+  //   0,
+  //   extention.length - 1
+  // )}_${Date.now()}`;
 
   return {
-    name: uniqueNameWithoutExtention,
+    name: uuidv4(),
     ext: extention[extention.length - 1],
   };
 };
@@ -93,3 +94,9 @@ exports.convertToWebp = (path, quality = 75) =>
  */
 exports.asyncHandler = (fn) => (req, res, next) =>
   Promise.resolve(fn(req, res, next)).catch(next);
+
+exports.getParentDirectory = (path) => {
+  const filePathSplit = path.split("/");
+  filePathSplit.pop();
+  return filePathSplit.join("/");
+};

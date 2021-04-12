@@ -342,8 +342,8 @@ const CourseEditor = (props) => {
     }
   };
 
-  const onFeaturedImageSelection = (url) =>
-    changeCourseDetails("featuredImage", url);
+  const onFeaturedImageSelection = (media) =>
+    changeCourseDetails("featuredImage", media.file);
 
   const closeDeleteCoursePopup = () => setDeleteCoursePopupOpened(false);
 

@@ -1,13 +1,35 @@
 "use strict";
 
+require("dotenv").config();
 const internalResponse = require("./config/strings.js").internal;
-const { uploadFolder } = require("./config/constants.js");
+const { uploadFolder, useCloudStorage } = require("./config/constants.js");
 const { createFolders } = require("./lib/utils.js");
 
-process.env.NODE_ENV = process.env.NODE_ENV || "production";
+const validateEnvironmentVars = () => {
+  const commonVars = ["JWT_SECRET"];
 
-const checkForNecessaryEnvironmentVars = () => {
-  for (const field of ["USER_CONTENT_DIRECTORY", "JWT_SECRET"]) {
+  const environmentVarsForLocalStorage = [
+    "USER_CONTENT_DIRECTORY",
+    "CDN_ENDPOINT",
+  ];
+
+  const environmentVarsForCloudStorage = [
+    "CLOUD_ENDPOINT",
+    "CLOUD_REGION",
+    "CLOUD_KEY",
+    "CLOUD_SECRET",
+    "CLOUD_BUCKET_NAME",
+    "CDN_ENDPOINT",
+  ];
+
+  const environmentVarsToCheck = [
+    ...commonVars,
+    ...(useCloudStorage
+      ? environmentVarsForCloudStorage
+      : environmentVarsForLocalStorage),
+  ];
+
+  for (const field of environmentVarsToCheck) {
     if (!process.env[field]) {
       console.error(`${internalResponse.error_env_var_undefined}: ${field}`);
       process.exit(1);
@@ -15,8 +37,10 @@ const checkForNecessaryEnvironmentVars = () => {
   }
 };
 
-checkForNecessaryEnvironmentVars();
-createFolders([uploadFolder]);
+validateEnvironmentVars();
+if (!useCloudStorage) {
+  createFolders([uploadFolder]);
+}
 
 const app = require("./app.js");
 

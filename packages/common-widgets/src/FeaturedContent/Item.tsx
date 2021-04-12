@@ -38,7 +38,7 @@ interface ItemProps {
 }
 
 const Item = (props: ItemProps) => {
-  const { appUtilities, appConfig } = props;
+  const { appConfig } = props;
   const classes = useStyles()();
 
   return (
@@ -52,10 +52,7 @@ const Item = (props: ItemProps) => {
             {props.course.featuredImage && (
               <Grid item>
                 <img
-                  src={appUtilities.formulateMediaUrl(
-                    appConfig.BACKEND,
-                    props.course.featuredImage
-                  )}
+                  src={props.course.featuredImage}
                   className={classes.featuredImage}
                 />
               </Grid>

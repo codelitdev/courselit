@@ -53,6 +53,19 @@ API_PREFIX=/api
 JWT_EXPIRES_IN=14d
 TAG=latest
 USE_WEBP=true
+
+# If you want to use AWS S3 compatible cloud storage, set the following variable to true.
+USE_CLOUD_STORAGE=false
+
+# If USE_CLOUD_STORAGE is set to true, replace the following placeholder values with their appropriate values.
+CLOUD_ENDPOINT=https://cloud.endpoint
+CLOUD_REGION=region
+CLOUD_KEY=key
+CLOUD_SECRET=secret
+CLOUD_BUCKET_NAME=bucket
+
+# Set the following to serve media files correctly
+CDN_ENDPOINT=https://$DOMAIN/api/assets
 EOF
 
 # Download necessary files
