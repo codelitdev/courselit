@@ -1,7 +1,7 @@
 FROM node:15.14.0-buster
 
 # install required softwares
-RUN apk add --no-cache ffmpeg imagemagick libwebp libwebp-tools
+RUN apt get ffmpeg imagemagick libwebp libwebp-tools
 
 # create app directory
 RUN mkdir -p /usr/src/app
