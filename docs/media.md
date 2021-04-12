@@ -22,7 +22,7 @@ If you want to keep user media on a cloud storage, you need to specify the follo
 ```bash
 USE_CLOUD_STORAGE=true
 CLOUD_ENDPOINT=https://cloud.endpoint
-CLOUD_CDN_ENDPOINT=https://cdn.endpoint
+CDN_ENDPOINT=https://cdn.endpoint
 CLOUD_REGION=region
 CLOUD_KEY=key
 CLOUD_SECRET=secret
@@ -34,7 +34,9 @@ CLOUD_BUCKET_NAME=bucket
 Specify the following environment variable to use local storage.
 
 ```bash
+USE_CLOUD_STORAGE=false
 USER_CONTENT_DIRECTORY=~/courselit-local
+CDN_ENDPOINT=https://your-website-address/api/assets
 ```
 
 ## Flow diagram
