@@ -131,12 +131,18 @@ exports.upload = async (req, res) => {
       ContentType: file.mimetype,
     });
 
-    const isThumbGenerated = await generateAndUploadThumbnail({
-      workingDirectory: temporaryFolderForWork,
-      cloudDirectory: directory,
-      mimetype: file.mimetype,
-      originalFilePath: mainFilePath,
-    });
+    let isThumbGenerated;
+    try {
+      isThumbGenerated = await generateAndUploadThumbnail({
+        workingDirectory: temporaryFolderForWork,
+        cloudDirectory: directory,
+        mimetype: file.mimetype,
+        originalFilePath: mainFilePath,
+      });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.log(`Error in generating a thumbnail`, err);
+    }
 
     rmdirSync(temporaryFolderForWork, { recursive: true });
 

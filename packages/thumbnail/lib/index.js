@@ -46,6 +46,7 @@ const thumbGenerator = (source, destination, options, type) =>
       convert = spawn(
         "ffmpeg",
         [
+          "-ss 00:00:01.000",
           `-i "${source}"`,
           `-vf "thumbnail,scale=${options.width}:${options.height}" -vframes 1`,
           "-nostdin -y",
@@ -56,7 +57,8 @@ const thumbGenerator = (source, destination, options, type) =>
     }
 
     // convert.stdout.on('data', data => console.log(data.toString()))
-    // convert.stderr.on('data', data => console.error(data.toString()))
+    // eslint-disable-next-line no-console
+    convert.stderr.on("data", (data) => console.error(data.toString()));
 
     convert.on("exit", (code) => {
       if (code !== 0) {

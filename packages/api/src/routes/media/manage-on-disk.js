@@ -60,11 +60,17 @@ exports.upload = async (req, res) => {
   try {
     await moveFile(req.files.file, mainFilePath);
 
-    const isThumbGenerated = await generateAndUploadThumbnail({
-      workingDirectory: absoluteDirectory,
-      mimetype: file.mimetype,
-      originalFilePath: mainFilePath,
-    });
+    let isThumbGenerated;
+    try {
+      isThumbGenerated = await generateAndUploadThumbnail({
+        workingDirectory: absoluteDirectory,
+        mimetype: file.mimetype,
+        originalFilePath: mainFilePath,
+      });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.log(`Error in generating a thumbnail`, err);
+    }
 
     const mediaObject = {
       domain: req.subdomain._id,
