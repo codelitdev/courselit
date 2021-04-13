@@ -46,10 +46,10 @@ const thumbGenerator = (source, destination, options, type) =>
       convert = spawn(
         "ffmpeg",
         [
-          "-ss 00:00:01.000",
+          "-itsoffset -1",
           `-i "${source}"`,
-          `-vf "thumbnail,scale=${options.width}:${options.height}" -vframes 1`,
-          "-nostdin -y",
+          "-vframes 1",
+          `-filter:v scale="${options.width}:${options.height}"`,
           `"${destination}"`,
         ],
         { shell: true }

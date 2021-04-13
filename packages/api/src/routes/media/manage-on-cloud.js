@@ -14,7 +14,6 @@ const {
 const { responses } = require("../../config/strings");
 const {
   uniqueFileNameGenerator,
-  convertToWebp,
   foldersExist,
   createFolders,
   moveFile,
@@ -86,7 +85,6 @@ const generateAndUploadThumbnail = async ({
     await thumbnail.forImage(originalFilePath, thumbPath, {
       width: constants.thumbnailWidth,
     });
-    await convertToWebp(thumbPath);
     isThumbGenerated = true;
   }
   if (videoPattern.test(mimetype)) {
@@ -94,7 +92,6 @@ const generateAndUploadThumbnail = async ({
       width: constants.thumbnailWidth,
       height: constants.thumbnailHeight,
     });
-    await convertToWebp(thumbPath);
     isThumbGenerated = true;
   }
 
