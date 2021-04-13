@@ -3,7 +3,6 @@ const {
   foldersExist,
   uniqueFileNameGenerator,
   moveFile,
-  convertToWebp,
   createFolders,
   getParentDirectory,
 } = require("../../lib/utils.js");
@@ -28,7 +27,6 @@ const generateAndUploadThumbnail = async ({
     await thumbnail.forImage(originalFilePath, thumbPath, {
       width: constants.thumbnailWidth,
     });
-    await convertToWebp(thumbPath);
     isThumbGenerated = true;
   }
   if (videoPattern.test(mimetype)) {
@@ -36,7 +34,6 @@ const generateAndUploadThumbnail = async ({
       width: constants.thumbnailWidth,
       height: constants.thumbnailHeight,
     });
-    await convertToWebp(thumbPath);
     isThumbGenerated = true;
   }
 
