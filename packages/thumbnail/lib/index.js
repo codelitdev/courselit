@@ -60,7 +60,7 @@ const thumbGenerator = (source, destination, options, type) =>
 
     convert.on("exit", (code) => {
       if (code !== 0) {
-        reject(new Error("Non-zero exit code"));
+        reject(new Error(`Child process exited with code ${code}`));
       }
 
       resolve();

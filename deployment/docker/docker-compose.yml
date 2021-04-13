@@ -42,6 +42,7 @@ services:
     depends_on:
       - db
     container_name: backend
+    restart: on-failure
 
   frontend:
     image: codelit/courselit-frontend:${TAG?'TAG environment variable is not defined'}
@@ -54,6 +55,7 @@ services:
     depends_on:
       - backend
     container_name: frontend
+    restart: on-failure
 
   proxy:
     image: codelit/courselit-proxy:${TAG?'TAG environment variable is not defined'}
@@ -70,3 +72,4 @@ services:
       - backend
       - frontend
     container_name: proxy
+    restart: on-failure
