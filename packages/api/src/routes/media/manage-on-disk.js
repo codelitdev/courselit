@@ -11,15 +11,14 @@ const {
   uploadFolder,
   useWebp,
   webpOutputQuality,
+  imagePattern,
+  videoPattern,
 } = require("../../config/constants.js");
 const responses = require("../../config/strings").responses;
 const constants = require("../../config/constants.js");
 const Media = require("../../models/Media.js");
 const { generateFolderPaths } = require("./utils");
 const { rmdirSync } = require("fs");
-
-const imagePattern = /image/;
-const videoPattern = /video/;
 
 const generateThumbnail = async ({
   workingDirectory,
