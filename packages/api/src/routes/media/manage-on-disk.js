@@ -5,21 +5,26 @@ const {
   moveFile,
   createFolders,
   getParentDirectory,
+  convertToWebp,
 } = require("../../lib/utils.js");
-const { uploadFolder, useWebp } = require("../../config/constants.js");
+const {
+  uploadFolder,
+  useWebp,
+  webpOutputQuality,
+  imagePattern,
+  videoPattern,
+} = require("../../config/constants.js");
 const responses = require("../../config/strings").responses;
 const constants = require("../../config/constants.js");
 const Media = require("../../models/Media.js");
 const { generateFolderPaths } = require("./utils");
 const { rmdirSync } = require("fs");
 
-const generateAndUploadThumbnail = async ({
+const generateThumbnail = async ({
   workingDirectory,
   mimetype,
   originalFilePath,
 }) => {
-  const imagePattern = /image/;
-  const videoPattern = /video/;
   const thumbPath = `${workingDirectory}/thumb.webp`;
 
   let isThumbGenerated = false; // to indicate if the thumbnail name is to be saved to the DB
@@ -51,15 +56,22 @@ exports.upload = async (req, res) => {
     createFolders([absoluteDirectory]);
   }
 
-  const mainFilePath = `${absoluteDirectory}/main.${fileName.ext}`;
+  const fileExtension =
+    useWebp && imagePattern.test(req.files.file.mimetype)
+      ? "webp"
+      : fileName.ext;
+  const mainFilePath = `${absoluteDirectory}/main.${fileExtension}`;
 
-  const fileNameWithDomainInfo = `${directory}/main.${fileName.ext}`;
+  const fileNameWithDomainInfo = `${directory}/main.${fileExtension}`;
   try {
     await moveFile(req.files.file, mainFilePath);
+    if (useWebp && imagePattern.test(req.files.file.mimetype)) {
+      await convertToWebp(mainFilePath, webpOutputQuality);
+    }
 
     let isThumbGenerated;
     try {
-      isThumbGenerated = await generateAndUploadThumbnail({
+      isThumbGenerated = await generateThumbnail({
         workingDirectory: absoluteDirectory,
         mimetype: file.mimetype,
         originalFilePath: mainFilePath,

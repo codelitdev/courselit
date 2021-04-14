@@ -43,7 +43,7 @@ services:
     depends_on:
       - db
     container_name: backend
-    restart: on-failure
+    restart: always
 
   frontend:
     image: codelit/courselit-frontend:${TAG?'TAG environment variable is not defined'}

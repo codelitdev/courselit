@@ -38,6 +38,8 @@ module.exports = {
   uploadFolder: this.useCloudStorage
     ? ""
     : path.join(process.env.USER_CONTENT_DIRECTORY || "", "uploads"),
+  imagePattern: /image/,
+  videoPattern: /video/,
 
   // Content types
   text: "text",
