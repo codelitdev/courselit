@@ -54,6 +54,9 @@ JWT_EXPIRES_IN=14d
 TAG=latest
 USE_WEBP=true
 
+# The following directory is used to create thumbnails for videos and images.
+TEMP_DIR_FOR_UPLOADS=/home/$USER/$DOMAIN/tmp
+
 # If you want to use AWS S3 compatible cloud storage, set the following variable to true.
 USE_CLOUD_STORAGE=false
 

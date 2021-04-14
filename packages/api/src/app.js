@@ -1,7 +1,6 @@
 "use strict";
 
 const express = require("express");
-const bodyParser = require("body-parser");
 const passport = require("passport");
 const { graphqlHTTP } = require("express-graphql");
 const fileUpload = require("express-fileupload");
@@ -10,6 +9,7 @@ const {
   routePrefix,
   uploadFolder,
   useCloudStorage,
+  tempFileDirForUploads,
 } = require("./config/constants.js");
 const verifyDomain = require("./middlewares/verifyDomain.js");
 const asyncHandler = require("./lib/utils.js").asyncHandler;
@@ -25,9 +25,14 @@ if (process.env.NODE_ENV !== "production") {
   app.use(require("cors")());
 }
 app.use(passport.initialize());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.use(fileUpload());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(
+  fileUpload({
+    useTempFiles: true,
+    tempFileDir: tempFileDirForUploads,
+  })
+);
 app.use(asyncHandler(verifyDomain));
 
 // Routes
