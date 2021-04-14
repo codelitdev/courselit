@@ -1,16 +1,12 @@
-const aws = require("aws-sdk");
 const thumbnail = require("@courselit/thumbnail");
-const { createReadStream, rmdirSync, readFileSync } = require("fs");
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
-const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const { createReadStream, rmdirSync } = require("fs");
 const {
-  cloudEndpoint,
-  cloudKey,
-  cloudSecret,
-  cloudBucket,
-  cloudRegion,
   cdnEndpoint,
   tempFileDirForUploads,
+  imagePattern,
+  videoPattern,
+  useWebp,
+  webpOutputQuality,
 } = require("../../config/constants");
 const { responses } = require("../../config/strings");
 const {
@@ -18,59 +14,12 @@ const {
   foldersExist,
   createFolders,
   moveFile,
+  convertToWebp,
 } = require("../../lib/utils");
 const constants = require("../../config/constants.js");
 const Media = require("../../models/Media.js");
 const logger = require("../../lib/logger");
-
-const putObjectPromise = (params) =>
-  new Promise((resolve, reject) => {
-    const endpoint = new aws.Endpoint(cloudEndpoint);
-    const s3 = new aws.S3({
-      endpoint,
-      accessKeyId: cloudKey,
-      secretAccessKey: cloudSecret,
-    });
-
-    s3.putObject(
-      Object.assign(
-        {},
-        {
-          Bucket: cloudBucket,
-          ACL: "public-read",
-        },
-        params
-      ),
-      (err, result) => {
-        if (err) reject(err);
-        resolve(result);
-      }
-    );
-  });
-
-const deleteObjectPromise = (params) =>
-  new Promise((resolve, reject) => {
-    const endpoint = new aws.Endpoint(cloudEndpoint);
-    const s3 = new aws.S3({
-      endpoint,
-      accessKeyId: cloudKey,
-      secretAccessKey: cloudSecret,
-    });
-
-    s3.deleteObject(
-      Object.assign(
-        {},
-        {
-          Bucket: cloudBucket,
-        },
-        params
-      ),
-      (err, result) => {
-        if (err) reject(err);
-        resolve(result);
-      }
-    );
-  });
+const { putObjectPromise, deleteObjectPromise } = require("./utils");
 
 const generateAndUploadThumbnail = async ({
   workingDirectory,
@@ -78,8 +27,6 @@ const generateAndUploadThumbnail = async ({
   mimetype,
   originalFilePath,
 }) => {
-  const imagePattern = /image/;
-  const videoPattern = /video/;
   const thumbPath = `${workingDirectory}/thumb.webp`;
 
   let isThumbGenerated = false; // to indicate if the thumbnail name is to be saved to the DB
@@ -118,16 +65,23 @@ exports.upload = async (req, res) => {
     createFolders([temporaryFolderForWork]);
   }
 
-  const mainFilePath = `${temporaryFolderForWork}/${file.name}`;
+  const fileExtension =
+    useWebp && imagePattern.test(req.files.file.mimetype)
+      ? "webp"
+      : fileName.ext;
+  const mainFilePath = `${temporaryFolderForWork}/main.${fileExtension}`;
   const directory = `${req.subdomain.name}/${req.user.userId}/${fileName.name}`;
   try {
     await moveFile(file, mainFilePath);
+    if (useWebp && imagePattern.test(req.files.file.mimetype)) {
+      await convertToWebp(mainFilePath, webpOutputQuality);
+    }
 
     logger.debug(`Starting upload at ${Date.now()}`);
-    const fileNameWithDomainInfo = `${directory}/main.${fileName.ext}`;
+    const fileNameWithDomainInfo = `${directory}/main.${fileExtension}`;
     await putObjectPromise({
       Key: fileNameWithDomainInfo,
-      Body: readFileSync(mainFilePath),
+      Body: createReadStream(mainFilePath),
       ContentType: file.mimetype,
     });
     logger.debug(`Finished upload at ${Date.now()}`);
@@ -170,26 +124,6 @@ exports.upload = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
-};
-
-exports.generateSignedUrl = async ({ name, mimetype }) => {
-  const client = new S3Client({
-    region: cloudRegion,
-    endpoint: cloudEndpoint,
-    credentials: {
-      accessKeyId: cloudKey,
-      secretAccessKey: cloudSecret,
-    },
-  });
-
-  const command = new PutObjectCommand({
-    ACL: "public-read",
-    Bucket: cloudBucket,
-    Key: name,
-    ContentType: mimetype,
-  });
-
-  return await getSignedUrl(client, command);
 };
 
 exports.serve = async ({ media, res }) => {
