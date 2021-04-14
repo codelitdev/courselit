@@ -77,7 +77,7 @@ const generateAndUploadThumbnail = async ({
   originalFilePath,
 }) => {
   const imagePattern = /image/;
-  const videoPattern = /video/;
+  // const videoPattern = /video/;
   const thumbPath = `${workingDirectory}/thumb.webp`;
 
   let isThumbGenerated = false; // to indicate if the thumbnail name is to be saved to the DB
@@ -87,13 +87,13 @@ const generateAndUploadThumbnail = async ({
     });
     isThumbGenerated = true;
   }
-  if (videoPattern.test(mimetype)) {
-    await thumbnail.forVideo(originalFilePath, thumbPath, {
-      width: constants.thumbnailWidth,
-      height: constants.thumbnailHeight,
-    });
-    isThumbGenerated = true;
-  }
+  // if (videoPattern.test(mimetype)) {
+  //   await thumbnail.forVideo(originalFilePath, thumbPath, {
+  //     width: constants.thumbnailWidth,
+  //     height: constants.thumbnailHeight,
+  //   });
+  //   isThumbGenerated = true;
+  // }
 
   if (isThumbGenerated) {
     await putObjectPromise({

@@ -40,6 +40,8 @@ const getHandler = async (req, res) => {
 };
 
 const postHandler = async (req, res) => {
+  req.socket.setTimeout(10 * 60 * 1000);
+
   if (
     !checkPermission(req.user.permissions, [constants.permissions.uploadMedia])
   ) {
