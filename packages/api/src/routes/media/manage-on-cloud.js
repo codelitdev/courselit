@@ -121,12 +121,16 @@ exports.upload = async (req, res) => {
   try {
     await moveFile(req.files.file, mainFilePath);
 
+    // eslint-disable-next-line no-console
+    console.log(`Starting upload at ${Date.now()}`);
     const fileNameWithDomainInfo = `${directory}/main.${fileName.ext}`;
     await putObjectPromise({
       Key: fileNameWithDomainInfo,
       Body: file.data,
       ContentType: file.mimetype,
     });
+    // eslint-disable-next-line no-console
+    console.log(`Finished upload at ${Date.now()}`);
 
     let isThumbGenerated;
     try {
