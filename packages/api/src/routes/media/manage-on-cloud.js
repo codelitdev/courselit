@@ -1,6 +1,6 @@
 const aws = require("aws-sdk");
 const thumbnail = require("@courselit/thumbnail");
-const { createReadStream, rmdirSync } = require("fs");
+const { createReadStream, rmdirSync, readFileSync } = require("fs");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const {
@@ -10,6 +10,7 @@ const {
   cloudBucket,
   cloudRegion,
   cdnEndpoint,
+  tempFileDirForUploads,
 } = require("../../config/constants");
 const { responses } = require("../../config/strings");
 const {
@@ -20,6 +21,7 @@ const {
 } = require("../../lib/utils");
 const constants = require("../../config/constants.js");
 const Media = require("../../models/Media.js");
+const logger = require("../../lib/logger");
 
 const putObjectPromise = (params) =>
   new Promise((resolve, reject) => {
@@ -111,26 +113,24 @@ exports.upload = async (req, res) => {
   const { file } = req.files;
   const fileName = uniqueFileNameGenerator(file.name);
 
-  const temporaryFolderForWork = `/tmp/${fileName.name}`;
+  const temporaryFolderForWork = `${tempFileDirForUploads}/${fileName.name}`;
   if (!foldersExist([temporaryFolderForWork])) {
     createFolders([temporaryFolderForWork]);
   }
 
-  const mainFilePath = `${temporaryFolderForWork}/${file.name}.${fileName.ext}`;
+  const mainFilePath = `${temporaryFolderForWork}/${file.name}`;
   const directory = `${req.subdomain.name}/${req.user.userId}/${fileName.name}`;
   try {
-    await moveFile(req.files.file, mainFilePath);
+    await moveFile(file, mainFilePath);
 
-    // eslint-disable-next-line no-console
-    console.log(`Starting upload at ${Date.now()}`);
+    logger.debug(`Starting upload at ${Date.now()}`);
     const fileNameWithDomainInfo = `${directory}/main.${fileName.ext}`;
     await putObjectPromise({
       Key: fileNameWithDomainInfo,
-      Body: file.data,
+      Body: readFileSync(mainFilePath),
       ContentType: file.mimetype,
     });
-    // eslint-disable-next-line no-console
-    console.log(`Finished upload at ${Date.now()}`);
+    logger.debug(`Finished upload at ${Date.now()}`);
 
     let isThumbGenerated;
     try {
@@ -141,8 +141,7 @@ exports.upload = async (req, res) => {
         originalFilePath: mainFilePath,
       });
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.log(`Error in generating a thumbnail`, err);
+      logger.error(`Error in generating a thumbnail`, err);
     }
 
     rmdirSync(temporaryFolderForWork, { recursive: true });

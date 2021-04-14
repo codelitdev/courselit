@@ -22,6 +22,7 @@ services:
       - API_PREFIX=${API_PREFIX}
       - DB_CONNECTION_STRING=${DB_CONNECTION_STRING?'DB_CONNECTION_STRING environment variable is is not defined'}
       - JWT_SECRET=${JWT_SECRET?'JWT_SECRET environment variable is not defined'}
+      - TEMP_DIR_FOR_UPLOADS=${TEMP_DIR_FOR_UPLOADS?'TEMP_DIR_FOR_UPLOADS environment variable is not defined'}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
       - USE_WEBP=${USE_WEBP}
       - USER_CONTENT_DIRECTORY=/data
