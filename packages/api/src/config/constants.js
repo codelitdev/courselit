@@ -4,6 +4,7 @@
 const path = require("path");
 
 module.exports = {
+  debuggingEnabled: process.env.DEBUG === "true",
   domainNameForSingleTenancy: "main",
   dbConnectionString:
     process.env.DB_CONNECTION_STRING ||
@@ -20,6 +21,7 @@ module.exports = {
   jwtExpire: process.env.JWT_EXPIRES_IN || "1d",
 
   // Media uploads config
+  tempFileDirForUploads: process.env.TEMP_DIR_FOR_UPLOADS,
   useWebp: process.env.USE_WEBP === "true",
   webpOutputQuality: parseInt(process.env.WEBP_QUALITY) || 75,
   // the following constants are as per the 16:9 aspect ratio

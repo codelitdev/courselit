@@ -57,8 +57,10 @@ const thumbGenerator = (source, destination, options, type) =>
     }
 
     // convert.stdout.on('data', data => console.log(data.toString()))
-    // eslint-disable-next-line no-console
-    convert.stderr.on("data", (data) => console.error(data.toString()));
+    if (process.env.DEBUG === "true") {
+      // eslint-disable-next-line no-console
+      convert.stderr.on("data", (data) => console.error(data.toString()));
+    }
 
     convert.on("exit", (code) => {
       if (code !== 0) {
