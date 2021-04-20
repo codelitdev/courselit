@@ -19,6 +19,7 @@ const {
 } = require("../../config/constants.js");
 const { validateBlogPosts, validateCost } = require("./helpers.js");
 const permissions = require("../../config/constants.js").permissions;
+const Lesson = require("../../models/Lesson.js");
 
 const getCourseOrThrow = async (id, ctx) => {
   checkIfAuthenticated(ctx);
@@ -265,3 +266,125 @@ exports.getEnrolledCourses = async (userId, ctx) => {
     "id title"
   );
 };
+
+exports.addGroup = async ({ id, name, collapsed, ctx }) => {
+  const course = await getCourseOrThrow(id, ctx);
+  const existingName = (group) => group.name === name;
+
+  if (course.groups.some(existingName)) {
+    throw new Error(strings.responses.existing_group);
+  }
+
+  const maximumRank = course.groups.reduce(
+    (acc, value) => (value.rank > acc ? value.rank : acc),
+    0
+  );
+
+  await course.groups.push({
+    rank: maximumRank + 1000,
+    name,
+  });
+
+  await course.save();
+
+  return course;
+};
+
+exports.removeGroup = async (id, courseId, ctx) => {
+  const course = await getCourseOrThrow(courseId, ctx);
+  const group = course.groups.filter((group) => group._id.toString() === id);
+
+  if (!group[0]) {
+    return course;
+  }
+
+  const countOfAssociatedLessons = await Lesson.countDocuments({
+    courseId,
+    groupName: group.name,
+  });
+
+  if (countOfAssociatedLessons > 0) {
+    throw new Error(strings.responses.group_not_empty);
+  }
+
+  await course.groups.pull({ _id: id });
+  await course.save();
+
+  return course;
+};
+
+exports.updateGroup = async ({ id, courseId, name, rank, collapsed, ctx }) => {
+  const course = await getCourseOrThrow(courseId, ctx);
+
+  const $set = {};
+  if (name) {
+    const existingName = (group) =>
+      group.name === name && group._id.toString() !== id;
+
+    if (course.groups.some(existingName)) {
+      throw new Error(strings.responses.existing_group);
+    }
+
+    $set["groups.$.name"] = name;
+  }
+
+  if (rank) {
+    $set["groups.$.rank"] = rank;
+  }
+
+  if (typeof collapsed === "boolean") {
+    $set["groups.$.collapsed"] = collapsed;
+  }
+
+  return await Course.findOneAndUpdate(
+    {
+      _id: course._id.toString(),
+      "groups._id": id,
+    },
+    { $set },
+    { new: true }
+  );
+};
+
+// exports.updateGroupName = async (id, courseId, name, ctx) => {
+//   const course = await getCourseOrThrow(courseId, ctx);
+//   const existingName = (group) => group.name === name;
+
+//   if (course.groups.some(existingName)) {
+//     throw new Error(strings.responses.existing_group);
+//   }
+
+//   return await Course.findOneAndUpdate(
+//     {
+//       _id: course._id.toString(),
+//       "groups._id": id,
+//     },
+//     {
+//       $set: {
+//         "groups.$.name": name,
+//       },
+//     },
+//     {
+//       new: true,
+//     }
+//   );
+// };
+
+// exports.updateGroupRank = async (id, courseId, rank, ctx) => {
+//   const course = await getCourseOrThrow(courseId, ctx);
+
+//   return await Course.findOneAndUpdate(
+//     {
+//       _id: course._id.toString(),
+//       "groups._id": id,
+//     },
+//     {
+//       $set: {
+//         "groups.$.rank": rank,
+//       },
+//     },
+//     {
+//       new: true,
+//     }
+//   );
+// };

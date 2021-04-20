@@ -171,6 +171,8 @@ exports.getAllLessons = async (course, ctx) => {
     title: lesson.title,
     requiresEnrollment: lesson.requiresEnrollment,
     courseId: lesson.courseId,
+    group: lesson.group,
+    groupRank: lesson.groupRank,
   });
 
   return lessons.map(lessonMetaOnly);

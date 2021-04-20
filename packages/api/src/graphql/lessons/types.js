@@ -53,6 +53,8 @@ const lessonMetaType = new graphql.GraphQLObjectType({
       type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean),
     },
     courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+    group: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+    groupRank: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
   },
 });
 

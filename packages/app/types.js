@@ -83,7 +83,8 @@ export const appMessage = PropTypes.shape({
 });
 
 export const lesson = PropTypes.shape({
-  title: PropTypes.string.isRequired,
+  id: PropTypes.string,
+  title: PropTypes.string,
   type: PropTypes.string,
   downloadable: PropTypes.bool,
   content: PropTypes.object,

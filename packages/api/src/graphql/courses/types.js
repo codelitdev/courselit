@@ -11,6 +11,16 @@ const courseStatusType = new graphql.GraphQLEnumType({
   },
 });
 
+const courseGroupType = new graphql.GraphQLObjectType({
+  name: "GroupType",
+  fields: {
+    id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+    rank: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
+    name: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+    collapsed: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
+  },
+});
+
 const courseType = new graphql.GraphQLObjectType({
   name: "Course",
   fields: {
@@ -33,6 +43,7 @@ const courseType = new graphql.GraphQLObjectType({
     courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
     description: { type: graphql.GraphQLString },
     featuredImage: { type: graphql.GraphQLString },
+    groups: { type: new graphql.GraphQLList(courseGroupType) },
   },
 });
 
@@ -101,6 +112,7 @@ const publicCoursesType = new graphql.GraphQLObjectType({
     description: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     isFeatured: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
     courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
+    groups: { type: new graphql.GraphQLList(courseGroupType) },
   },
 });
 

@@ -28,7 +28,7 @@ const MediaSelector = (props) => {
   };
 
   return (
-    <Grid container direction="row" alignItems="center">
+    <Grid container direction="row" alignItems="center" spacing={2}>
       <Grid item>
         <Typography variant="body1">{props.title}</Typography>
       </Grid>
