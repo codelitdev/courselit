@@ -11,11 +11,7 @@ import {
   InputLabel,
   MenuItem,
   capitalize,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
 } from "@material-ui/core";
-import { ExpandMore } from "@material-ui/icons";
 import {
   BUTTON_SAVE,
   BUTTON_DELETE_LESSON_TEXT,
@@ -50,12 +46,13 @@ import FetchBuilder from "../../../lib/fetch";
 import { networkAction, setAppMessage } from "../../../redux/actions";
 import { connect } from "react-redux";
 import AppMessage from "../../../models/app-message.js";
-import { RichText as TextEditor } from "@courselit/components-library";
+import { Section, RichText as TextEditor } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 import { constructThumbnailUrlFromFileUrl } from "../../../lib/utils";
 
 const AppDialog = dynamic(() => import("../../Public/AppDialog"));
 const MediaSelector = dynamic(() => import("../Media/MediaSelector"));
+const AppLoader = dynamic(() => import("../../AppLoader"));
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -90,21 +87,8 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const LessonEditor = (props) => {
-  const [lesson, setLesson] = useState(
-    Object.assign(
-      {},
-      {
-        title: "",
-        type: String.prototype.toUpperCase.call(LESSON_TYPE_TEXT),
-        content: TextEditor.emptyState(),
-        contentURL: "",
-        downloadable: false,
-        requiresEnrollment: false,
-        id: "",
-      },
-      props.lesson
-    )
-  );
+  console.log(props.lesson);
+  const [lesson, setLesson] = useState(props.lesson);
   const classes = useStyles();
   const inputLabel = React.useRef(null);
   const [labelWidth, setLabelWidth] = React.useState(0);
@@ -117,6 +101,10 @@ const LessonEditor = (props) => {
   useEffect(() => {
     props.lesson.id && loadLesson(props.lesson.id);
   }, [props.lesson.id]);
+
+  useEffect(() => {
+    setLesson(props.lesson);
+  }, [props.lesson]);
 
   const loadLesson = async (id) => {
     const query = `
@@ -221,7 +209,8 @@ const LessonEditor = (props) => {
           lesson.contentURL !== "" ? '"' + lesson.contentURL + '"' : null
         },
         courseId: "${lesson.courseId}",
-        requiresEnrollment: ${lesson.requiresEnrollment}
+        requiresEnrollment: ${lesson.requiresEnrollment},
+        groupId: "${lesson.groupId}"
       }) {
         id
       }
@@ -313,138 +302,101 @@ const LessonEditor = (props) => {
   };
 
   return (
-    <>
-      <Accordion>
-        <AccordionSummary
-          expandIcon={<ExpandMore />}
-          aria-controls="edit-lesson"
-          id="edit-lesson"
-        >
-          <Typography variant="body1">{lesson.title}</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Grid container direction="column" spacing={2}>
-            <Grid item>
-              <form>
-                <TextField
-                  required
-                  variant="outlined"
-                  label="Title"
-                  fullWidth
-                  margin="normal"
-                  name="title"
-                  value={lesson.title}
+    <Section>
+      {lesson.type && (
+        <Grid container direction="column" spacing={2}>
+          <Grid item>
+            <form>
+              <TextField
+                required
+                variant="outlined"
+                label="Title"
+                fullWidth
+                margin="normal"
+                name="title"
+                value={lesson.title}
+                onChange={onLessonDetailsChange}
+                className={classes.formControl}
+              />
+              <FormControl variant="outlined" className={classes.formControl}>
+                <InputLabel ref={inputLabel} id="select-type">
+                  {TYPE_DROPDOWN}
+                </InputLabel>
+                <Select
+                  labelId="select-type"
+                  value={lesson.type}
                   onChange={onLessonDetailsChange}
-                  className={classes.formControl}
-                />
-                <FormControl variant="outlined" className={classes.formControl}>
-                  <InputLabel ref={inputLabel} id="select-type">
-                    {TYPE_DROPDOWN}
-                  </InputLabel>
-                  <Select
-                    labelId="select-type"
-                    value={lesson.type}
-                    onChange={onLessonDetailsChange}
-                    labelWidth={labelWidth}
-                    inputProps={{
-                      name: "type",
-                    }}
+                  labelWidth={labelWidth}
+                  inputProps={{
+                    name: "type",
+                  }}
+                >
+                  {/* <MenuItem value="TEXT">Text</MenuItem> */}
+                  <MenuItem
+                    value={String.prototype.toUpperCase.call(LESSON_TYPE_TEXT)}
                   >
-                    {/* <MenuItem value="TEXT">Text</MenuItem> */}
-                    <MenuItem
-                      value={String.prototype.toUpperCase.call(
-                        LESSON_TYPE_TEXT
-                      )}
-                    >
-                      {capitalize(LESSON_TYPE_TEXT)}
-                    </MenuItem>
-                    <MenuItem
-                      value={String.prototype.toUpperCase.call(
-                        LESSON_TYPE_VIDEO
-                      )}
-                    >
-                      {capitalize(LESSON_TYPE_VIDEO)}
-                    </MenuItem>
-                    <MenuItem
-                      value={String.prototype.toUpperCase.call(
-                        LESSON_TYPE_AUDIO
-                      )}
-                    >
-                      {capitalize(LESSON_TYPE_AUDIO)}
-                    </MenuItem>
-                    <MenuItem
-                      value={String.prototype.toUpperCase.call(LESSON_TYPE_PDF)}
-                    >
-                      {capitalize(LESSON_TYPE_PDF)}
-                    </MenuItem>
-                    {/* <MenuItem value={LESSON_TYPE_QUIZ}>
+                    {capitalize(LESSON_TYPE_TEXT)}
+                  </MenuItem>
+                  <MenuItem
+                    value={String.prototype.toUpperCase.call(LESSON_TYPE_VIDEO)}
+                  >
+                    {capitalize(LESSON_TYPE_VIDEO)}
+                  </MenuItem>
+                  <MenuItem
+                    value={String.prototype.toUpperCase.call(LESSON_TYPE_AUDIO)}
+                  >
+                    {capitalize(LESSON_TYPE_AUDIO)}
+                  </MenuItem>
+                  <MenuItem
+                    value={String.prototype.toUpperCase.call(LESSON_TYPE_PDF)}
+                  >
+                    {capitalize(LESSON_TYPE_PDF)}
+                  </MenuItem>
+                  {/* <MenuItem value={LESSON_TYPE_QUIZ}>
                 {capitalize(LESSON_TYPE_QUIZ)}
               </MenuItem> */}
-                  </Select>
-                </FormControl>
-                {![
-                  String.prototype.toUpperCase.call(LESSON_TYPE_TEXT),
-                  String.prototype.toUpperCase.call(LESSON_TYPE_QUIZ),
-                ].includes(lesson.type) && (
-                  <div className={classes.formControl}>
-                    <MediaSelector
-                      title={CONTENT_URL_LABEL}
-                      src={constructThumbnailUrlFromFileUrl(lesson.contentURL)}
-                      onSelection={(media) =>
-                        media &&
-                        setLesson(
-                          Object.assign({}, lesson, { contentURL: media.file })
-                        )
-                      }
-                      mimeTypesToShow={[...getMimeTypesToShow()]}
+                </Select>
+              </FormControl>
+              {![
+                String.prototype.toUpperCase.call(LESSON_TYPE_TEXT),
+                String.prototype.toUpperCase.call(LESSON_TYPE_QUIZ),
+              ].includes(lesson.type) && (
+                <div className={classes.formControl}>
+                  <MediaSelector
+                    title={CONTENT_URL_LABEL}
+                    src={constructThumbnailUrlFromFileUrl(lesson.contentURL)}
+                    onSelection={(media) =>
+                      media &&
+                      setLesson(
+                        Object.assign({}, lesson, { contentURL: media.file })
+                      )
+                    }
+                    mimeTypesToShow={[getMimeTypesToShow()]}
+                  />
+                </div>
+              )}
+              {lesson.type.toLowerCase() === LESSON_TYPE_TEXT && (
+                <Grid
+                  container
+                  className={classes.formControl}
+                  direction="column"
+                >
+                  <Grid item>
+                    <Typography variant="body1">
+                      {LESSON_CONTENT_HEADER}
+                    </Typography>
+                  </Grid>
+                  <Grid item>
+                    <TextEditor
+                      initialContentState={lesson.content}
+                      onChange={changeTextContent}
                     />
-                  </div>
-                )}
-                {lesson.type.toLowerCase() === LESSON_TYPE_TEXT && (
-                  <Grid
-                    container
-                    className={classes.formControl}
-                    direction="column"
-                  >
-                    <Grid item>
-                      <Typography variant="body1">
-                        {LESSON_CONTENT_HEADER}
-                      </Typography>
-                    </Grid>
-                    <Grid item>
-                      <TextEditor
-                        initialContentState={lesson.content}
-                        onChange={changeTextContent}
-                      />
-                    </Grid>
                   </Grid>
-                )}
-                {[
-                  LESSON_TYPE_VIDEO,
-                  LESSON_TYPE_AUDIO,
-                  LESSON_TYPE_PDF,
-                ].includes(lesson.type) && (
-                  <Grid
-                    container
-                    justify="space-between"
-                    alignItems="center"
-                    className={classes.formControl}
-                  >
-                    <Grid item>
-                      <Typography variant="body1">
-                        {DOWNLOADABLE_SWITCH}
-                      </Typography>
-                    </Grid>
-                    <Grid item>
-                      <Switch
-                        type="checkbox"
-                        name="downloadable"
-                        checked={lesson.downloadable}
-                        onChange={onLessonDetailsChange}
-                      />
-                    </Grid>
-                  </Grid>
-                )}
+                </Grid>
+              )}
+              {[LESSON_TYPE_VIDEO, LESSON_TYPE_AUDIO, LESSON_TYPE_PDF].includes(
+                lesson.type
+              ) && (
                 <Grid
                   container
                   justify="space-between"
@@ -452,36 +404,57 @@ const LessonEditor = (props) => {
                   className={classes.formControl}
                 >
                   <Grid item>
-                    <Typography variant="body1" color="textSecondary">
-                      {LESSON_REQUIRES_ENROLLMENT}
+                    <Typography variant="body1">
+                      {DOWNLOADABLE_SWITCH}
                     </Typography>
                   </Grid>
                   <Grid item>
                     <Switch
                       type="checkbox"
-                      name="requiresEnrollment"
-                      checked={lesson.requiresEnrollment}
+                      name="downloadable"
+                      checked={lesson.downloadable}
                       onChange={onLessonDetailsChange}
                     />
                   </Grid>
                 </Grid>
-              </form>
-            </Grid>
-            <Grid item>
-              <Grid container direction="row" spacing={2}>
+              )}
+              <Grid
+                container
+                justify="space-between"
+                alignItems="center"
+                className={classes.formControl}
+              >
                 <Grid item>
-                  <Button onClick={onLessonCreate}>{BUTTON_SAVE}</Button>
+                  <Typography variant="body1" color="textSecondary">
+                    {LESSON_REQUIRES_ENROLLMENT}
+                  </Typography>
                 </Grid>
                 <Grid item>
-                  <Button onClick={() => setDeleteLessonPopupOpened(true)}>
-                    {BUTTON_DELETE_LESSON_TEXT}
-                  </Button>
+                  <Switch
+                    type="checkbox"
+                    name="requiresEnrollment"
+                    checked={lesson.requiresEnrollment}
+                    onChange={onLessonDetailsChange}
+                  />
                 </Grid>
+              </Grid>
+            </form>
+          </Grid>
+          <Grid item>
+            <Grid container direction="row" spacing={2}>
+              <Grid item>
+                <Button onClick={onLessonCreate}>{BUTTON_SAVE}</Button>
+              </Grid>
+              <Grid item>
+                <Button onClick={() => setDeleteLessonPopupOpened(true)}>
+                  {BUTTON_DELETE_LESSON_TEXT}
+                </Button>
               </Grid>
             </Grid>
           </Grid>
-        </AccordionDetails>
-      </Accordion>
+        </Grid>
+      )}
+      {!lesson.type && <AppLoader />}
       <AppDialog
         onOpen={deleteLessonPopupOpened}
         onClose={closeDeleteLessonPopup}
@@ -491,7 +464,7 @@ const LessonEditor = (props) => {
           { name: POPUP_OK_ACTION, callback: onLessonDelete },
         ]}
       ></AppDialog>
-    </>
+    </Section>
   );
 };
 
@@ -502,7 +475,6 @@ LessonEditor.propTypes = {
   lesson: lessonType,
   address: addressProps,
   onLessonCreated: PropTypes.func.isRequired,
-  lessonIndex: PropTypes.number.isRequired,
 };
 
 const mapStateToProps = (state) => ({

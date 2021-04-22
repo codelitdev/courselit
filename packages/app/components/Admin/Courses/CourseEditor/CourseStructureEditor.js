@@ -7,15 +7,24 @@ import {
   BUTTON_LESSON_VIEW_GO_BACK,
   BUTTON_NEW_GROUP_TEXT,
 } from "../../../../config/strings";
-import { Section } from "@courselit/components-library";
+import { Section, RichText as TextEditor } from "@courselit/components-library";
 import { addressProps, authProps } from "../../../../types";
 import { connect } from "react-redux";
 import FetchBuilder from "../../../../lib/fetch";
 import { networkAction, setAppMessage } from "../../../../redux/actions";
 import AppMessage from "../../../../models/app-message";
+import { LESSON_TYPE_TEXT } from "../../../../config/constants";
+import { withStyles } from "@material-ui/styles";
 
 const LessonEditor = dynamic(() => import("../LessonEditor"));
 const Group = dynamic(() => import("./Group"));
+
+const styles = {
+  groupsContainer: {
+    maxHeight: 720,
+    overflowY: "scroll",
+  },
+};
 
 const CourseStructureEditor = ({
   courseId,
@@ -23,9 +32,11 @@ const CourseStructureEditor = ({
   auth,
   address,
   dispatch,
+  classes,
 }) => {
   const [lessons, setLessons] = useState([]);
   const [groups, setGroups] = useState([]);
+  const [selectedLesson, setSelectedLesson] = useState({});
 
   useEffect(() => {
     if (courseId) {
@@ -39,7 +50,9 @@ const CourseStructureEditor = ({
       course: getCourse(id: "${courseId}") {
         lessons {
           id,
-          title
+          title,
+          groupId,
+          groupRank
         },
         groups {
           id,
@@ -121,13 +134,19 @@ const CourseStructureEditor = ({
     }
   };
 
-  const onAddLesson = () => {
+  const onAddLesson = (groupId) => {
     const emptyLessonWithLocalIndexKey = Object.assign(
       {},
       {
-        courseId: courseData.course.id,
         id: "",
         title: "",
+        type: String.prototype.toUpperCase.call(LESSON_TYPE_TEXT),
+        content: TextEditor.emptyState(),
+        contentURL: "",
+        downloadable: false,
+        requiresEnrollment: false,
+        courseId,
+        groupId,
       }
     );
     setLessons([...lessons, emptyLessonWithLocalIndexKey]);
@@ -201,49 +220,76 @@ const CourseStructureEditor = ({
   const onUpdateGroupName = () => {};
   const onUpdateGroupRank = () => {};
 
+  const onSelectLesson = (groupId, index) => {
+    const lesson = lessons.filter((lesson) => lesson.groupId === groupId)[
+      index
+    ];
+    console.log(groupId, index, lesson);
+    setSelectedLesson(Object.assign({}, lesson, { index }));
+  };
+
   return (
     <Grid item container direction="column" spacing={2}>
       <Grid item>
         <Grid container spacing={2}>
           <Grid item xs={12} md={8}>
-            <Section>
-              <Grid container alignItems="center" spacing={2}>
-                <Grid item>
-                  <Button onClick={onCloseView} startIcon={<ArrowBack />}>
-                    {BUTTON_LESSON_VIEW_GO_BACK}
-                  </Button>
-                </Grid>
-                <Grid item>
-                  <Typography variant="h6">
-                    |
-                  </Typography>
-                </Grid>
-                <Grid item>
-                  <Typography variant="body1" color="textSecondary">
-                    Select a lesson to begin with
-                  </Typography>
-                </Grid>
+            <Grid container direction="column" spacing={2}>
+              <Grid item>
+                <Section>
+                  <Grid container alignItems="center" spacing={2}>
+                    <Grid item>
+                      <Button onClick={onCloseView} startIcon={<ArrowBack />}>
+                        {BUTTON_LESSON_VIEW_GO_BACK}
+                      </Button>
+                    </Grid>
+                    <Grid item>
+                      <Typography variant="h6">|</Typography>
+                    </Grid>
+                    <Grid item>
+                      <Typography variant="body1" color="textSecondary">
+                        Select a lesson to begin with
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Section>
               </Grid>
-            </Section>
+              {selectedLesson.groupId && (
+                <Grid item>
+                  <LessonEditor
+                    lesson={selectedLesson}
+                    onLessonDeleted={onDeleteLesson}
+                    onLessonCreated={onLessonCreated}
+                  />
+                </Grid>
+              )}
+            </Grid>
           </Grid>
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={4} className={classes.groupsContainer}>
             <Grid container direction="column" spacing={2}>
               <Grid item>
                 {groups
                   .sort((a, b) => a.rank - b.rank)
                   .map((group) => (
                     <Group
+                      key={group.id}
                       group={group}
                       lessons={lessons}
                       onAddLesson={onAddLesson}
                       onRemoveGroup={onRemoveGroup}
                       updateGroup={updateGroup}
-                      key={group.id}
+                      onSelectLesson={onSelectLesson}
+                      selectedLesson={selectedLesson}
                     />
                   ))}
               </Grid>
               <Grid item>
-                <Button onClick={onAddGroup} startIcon={<Add />}>
+                <Button
+                  onClick={onAddGroup}
+                  startIcon={<Add />}
+                  fullWidth
+                  variant="contained"
+                  color="primary"
+                >
                   {BUTTON_NEW_GROUP_TEXT}
                 </Button>
               </Grid>
@@ -285,6 +331,7 @@ CourseStructureEditor.propTypes = {
   auth: authProps,
   address: addressProps,
   dispatch: PropTypes.func.isRequired,
+  classes: PropTypes.object.isRequired,
 };
 
 const mapStateToProps = (state) => ({
@@ -299,4 +346,4 @@ const mapDispatchToProps = (dispatch) => ({
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(CourseStructureEditor);
+)(withStyles(styles)(CourseStructureEditor));

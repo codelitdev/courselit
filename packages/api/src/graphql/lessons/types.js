@@ -53,7 +53,7 @@ const lessonMetaType = new graphql.GraphQLObjectType({
       type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean),
     },
     courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
-    group: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+    groupId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     groupRank: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
   },
 });
@@ -74,6 +74,7 @@ const lessonInputType = new graphql.GraphQLInputObjectType({
     content: { type: graphql.GraphQLString },
     contentURL: { type: graphql.GraphQLString },
     downloadable: { type: graphql.GraphQLBoolean },
+    groupId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
   },
 });
 

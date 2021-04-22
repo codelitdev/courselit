@@ -258,3 +258,4 @@ export const PERM_WIDGETS = "Manage widgets";
 export const PERM_SETTINGS = "Manage settings";
 export const PERM_USERS = "Manage users";
 export const MEDIA_EDITOR_ORIGINAL_FILE_NAME_HEADER = "Original File Name";
+export const GROUP_LESSON_ITEM_UNTITLED = "Untitled";

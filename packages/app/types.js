@@ -116,3 +116,8 @@ export const mediaProps = PropTypes.shape({
   thumbnail: PropTypes.string,
   altText: PropTypes.string,
 });
+
+export const selectedLessonMetaProps = PropTypes.shape({
+  groupId: PropTypes.string,
+  index: PropTypes.number,
+});

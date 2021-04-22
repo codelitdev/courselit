@@ -9,8 +9,9 @@ import {
   AccordionSummary,
   AccordionDetails,
   Typography,
+  Divider,
 } from "@material-ui/core";
-import { lesson } from "../../../../types";
+import { lesson, selectedLessonMetaProps } from "../../../../types";
 import {
   BUTTON_SAVE,
   GROUP_SETTINGS_HEADER,
@@ -18,10 +19,32 @@ import {
   GROUP_LESSONS_HEADER,
   BUTTON_NEW_LESSON_TEXT,
   BUTTON_DELETE_GROUP,
+  GROUP_LESSON_ITEM_UNTITLED,
 } from "../../../../config/strings";
 import { ExpandMore, Add } from "@material-ui/icons";
+import { withStyles } from "@material-ui/styles";
 
-const Group = ({ lessons, group, onAddLesson, onRemoveGroup, updateGroup }) => {
+const styles = (theme) => ({
+  lesson: {
+    cursor: "pointer",
+  },
+  selected: {
+    background: "#eee",
+    borderRadius: 4,
+    margin: theme.spacing(1),
+  },
+});
+
+const Group = ({
+  lessons,
+  group,
+  onAddLesson,
+  onRemoveGroup,
+  updateGroup,
+  onSelectLesson,
+  selectedLesson,
+  classes,
+}) => {
   const [name, setName] = useState(group.name);
   const [rank, setRank] = useState(group.rank);
   const [collapsed, setCollapsed] = useState(group.collapsed);
@@ -30,9 +53,9 @@ const Group = ({ lessons, group, onAddLesson, onRemoveGroup, updateGroup }) => {
     setName(group.name);
     setRank(group.rank);
     setCollapsed(group.collapsed);
-  }, [group])
+  }, [group]);
 
-  const groupLessons = lessons.filter((lesson) => lesson.group === group.id);
+  const groupLessons = lessons.filter((lesson) => lesson.groupId === group.id);
 
   const isDirty =
     group.name !== name || group.rank !== rank || group.collapsed !== collapsed;
@@ -53,7 +76,7 @@ const Group = ({ lessons, group, onAddLesson, onRemoveGroup, updateGroup }) => {
         {name}
       </AccordionSummary>
       <AccordionDetails>
-        <Grid container direction="column" spacing={4}>
+        <Grid container direction="column" spacing={2}>
           <Grid item>
             <form onSubmit={onSubmit}>
               <Grid container direction="column" spacing={1}>
@@ -100,23 +123,55 @@ const Group = ({ lessons, group, onAddLesson, onRemoveGroup, updateGroup }) => {
             </form>
           </Grid>
           <Grid item>
+            <Divider />
+          </Grid>
+          <Grid item>
             <Grid container direction="column" spacing={1}>
               <Grid item>
                 <Typography variant="h6">{GROUP_LESSONS_HEADER}</Typography>
               </Grid>
               <Grid item>
-                {groupLessons.map((item, index) => (
-                  <LessonEditor
-                    lesson={item}
-                    onLessonDeleted={onDeleteLesson}
-                    key={index}
-                    onLessonCreated={onLessonCreated}
-                    lessonIndex={index}
-                  />
-                ))}
+                <Grid container direction="column" spacing={2}>
+                  {groupLessons.map((item, index) => (
+                    <>
+                      {index === selectedLesson.index &&
+                        group.id === selectedLesson.groupId && (
+                          <Grid item className={classes.selected}>
+                            {item.title && (
+                              <Typography>{item.title}</Typography>
+                            )}
+                            {!item.title && (
+                              <Typography>
+                                {GROUP_LESSON_ITEM_UNTITLED}
+                              </Typography>
+                            )}
+                          </Grid>
+                        )}
+
+                      {(index !== selectedLesson.index ||
+                        group.id !== selectedLesson.groupId) && (
+                        <Grid
+                          item
+                          className={classes.lesson}
+                          onClick={() => onSelectLesson(group.id, index)}
+                        >
+                          {item.title && <Typography>{item.title}</Typography>}
+                          {!item.title && (
+                            <Typography>
+                              {GROUP_LESSON_ITEM_UNTITLED}
+                            </Typography>
+                          )}
+                        </Grid>
+                      )}
+                    </>
+                  ))}
+                </Grid>
               </Grid>
               <Grid item>
-                <Button onClick={onAddLesson} startIcon={<Add />}>
+                <Button
+                  onClick={() => onAddLesson(group.id)}
+                  startIcon={<Add />}
+                >
                   {BUTTON_NEW_LESSON_TEXT}
                 </Button>
               </Grid>
@@ -139,6 +194,8 @@ Group.propTypes = {
   onAddLesson: PropTypes.func.isRequired,
   onRemoveGroup: PropTypes.func.isRequired,
   updateGroup: PropTypes.func.isRequired,
+  onSelectLesson: PropTypes.func.isRequired,
+  selectedLesson: selectedLessonMetaProps,
 };
 
-export default Group;
+export default withStyles(styles)(Group);
