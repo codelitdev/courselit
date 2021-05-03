@@ -5,7 +5,10 @@ import { LESSON_TYPE_VIDEO, LESSON_TYPE_AUDIO } from "../../config/constants";
 import { connect } from "react-redux";
 import { networkAction } from "../../redux/actions";
 import { Typography, Grid } from "@material-ui/core";
-import { ENROLL_IN_THE_COURSE, USER_ERROR_HEADER } from "../../config/strings";
+import {
+  ENROLL_IN_THE_COURSE,
+  NOT_ENROLLED_HEADER,
+} from "../../config/strings";
 import { makeStyles } from "@material-ui/styles";
 import { lesson, authProps, profileProps, addressProps } from "../../types";
 import { Section, RichText as TextEditor } from "@courselit/components-library";
@@ -78,12 +81,16 @@ const LessonViewer = (props) => {
   return (
     <Section>
       {!isEnrolled && (
-        <>
-          <Typography variant="h2" className={classes.notEnrolledHeader}>
-            {USER_ERROR_HEADER}
-          </Typography>
-          <Typography variant="body1">{ENROLL_IN_THE_COURSE}</Typography>
-        </>
+        <Grid container direction="column" spacing={2}>
+          <Grid item>
+            <Typography variant="h2" className={classes.notEnrolledHeader}>
+              {NOT_ENROLLED_HEADER}
+            </Typography>
+          </Grid>
+          <Grid item>
+            <Typography variant="body1">{ENROLL_IN_THE_COURSE}</Typography>
+          </Grid>
+        </Grid>
       )}
       {isEnrolled && (
         <Grid container direction="column" component="article">

@@ -12,6 +12,7 @@ const {
 const Course = require("../../models/Course.js");
 const { lessonValidator } = require("./helpers.js");
 const { permissions } = require("../../config/constants.js");
+const mongoose = require("mongoose");
 
 const getLessonOrThrow = async (id, ctx) => {
   checkIfAuthenticated(ctx);
@@ -81,6 +82,8 @@ exports.createLesson = async (lessonData, ctx) => {
       downloadable: lessonData.downloadable,
       creatorId: ctx.user._id,
       courseId: course._id,
+      groupId: new mongoose.Types.ObjectId(lessonData.groupId),
+      groupRank: -1,
     });
 
     course.lessons.push(lesson.id);
@@ -171,6 +174,8 @@ exports.getAllLessons = async (course, ctx) => {
     title: lesson.title,
     requiresEnrollment: lesson.requiresEnrollment,
     courseId: lesson.courseId,
+    groupId: lesson.groupId,
+    groupRank: lesson.groupRank,
   });
 
   return lessons.map(lessonMetaOnly);

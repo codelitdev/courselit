@@ -6,9 +6,8 @@ import Hidden from "@material-ui/core/Hidden";
 import IconButton from "@material-ui/core/IconButton";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
-import ListItemText from "@material-ui/core/ListItemText";
 import { Menu } from "@material-ui/icons";
-import { Toolbar, Grid, LinearProgress } from "@material-ui/core";
+import { Toolbar, Grid, LinearProgress, Typography } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
 import AppToast from "../../AppToast";
@@ -148,7 +147,8 @@ const ComponentScaffold = (props) => {
                 <DrawerListItemIcon icon={item.icon} />
               )}
               <Grid item>
-                <ListItemText primary={item.name} />
+                <Typography variant="subtitle2">{item.name}</Typography>
+                {/* <ListItemText primary={item.name} /> */}
               </Grid>
               {item.icon && item.iconPlacementRight && (
                 <DrawerListItemIcon icon={item.icon} right={true} />

@@ -21,6 +21,7 @@ import {
 import { permissions } from "../../../config/constants";
 import { makeStyles } from "@material-ui/styles";
 import { Add } from "@material-ui/icons";
+
 const CourseEditor = dynamic(() => import("./CourseEditor"));
 const Img = dynamic(() => import("../../Img.js"));
 

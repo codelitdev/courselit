@@ -58,4 +58,62 @@ module.exports = {
     resolve: async (root, { courseId, lessonId }, context) =>
       logic.removeLesson(courseId, lessonId, context),
   },
+  addGroup: {
+    type: types.courseType,
+    args: {
+      id: {
+        type: new graphql.GraphQLNonNull(graphql.GraphQLID),
+      },
+      name: {
+        type: new graphql.GraphQLNonNull(graphql.GraphQLString),
+      },
+      collapsed: {
+        type: graphql.GraphQLBoolean,
+      },
+    },
+    resolve: async (root, { id, name, collapsed }, context) =>
+      logic.addGroup({ id, name, collapsed, ctx: context }),
+  },
+  removeGroup: {
+    type: types.courseType,
+    args: {
+      id: {
+        type: new graphql.GraphQLNonNull(graphql.GraphQLID),
+      },
+      courseId: {
+        type: new graphql.GraphQLNonNull(graphql.GraphQLID),
+      },
+    },
+    resolve: async (root, { id, courseId }, context) =>
+      logic.removeGroup(id, courseId, context),
+  },
+  updateGroup: {
+    type: types.courseType,
+    args: {
+      id: {
+        type: new graphql.GraphQLNonNull(graphql.GraphQLID),
+      },
+      courseId: {
+        type: new graphql.GraphQLNonNull(graphql.GraphQLID),
+      },
+      name: {
+        type: graphql.GraphQLString,
+      },
+      rank: {
+        type: graphql.GraphQLInt,
+      },
+      collapsed: {
+        type: graphql.GraphQLBoolean,
+      },
+    },
+    resolve: async (root, { id, courseId, name, rank, collapsed }, context) =>
+      logic.updateGroup({
+        id,
+        courseId,
+        name,
+        rank,
+        collapsed,
+        ctx: context,
+      }),
+  },
 };

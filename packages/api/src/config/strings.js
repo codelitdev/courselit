@@ -63,6 +63,8 @@ exports.responses = {
   file_size_exceeded: "File size exceeded",
   name_is_required: "Name is required",
   mimetype_is_required: "Mimetype is required",
+  existing_group: "A group with that name exists",
+  group_not_empty: "The group has associated lessons",
 };
 
 exports.internal = {
