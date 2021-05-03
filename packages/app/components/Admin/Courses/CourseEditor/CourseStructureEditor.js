@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import {
   BUTTON_LESSON_VIEW_GO_BACK,
   BUTTON_NEW_GROUP_TEXT,
+  SECTION_GROUP_HEADER,
 } from "../../../../config/strings";
 import { Section, RichText as TextEditor } from "@courselit/components-library";
 import { addressProps, authProps } from "../../../../types";
@@ -114,7 +115,6 @@ const CourseStructureEditor = ({
       }
     }
     `;
-    console.log(mutation);
     const fetch = new FetchBuilder()
       .setUrl(`${address.backend}/graph`)
       .setPayload(mutation)
@@ -152,24 +152,22 @@ const CourseStructureEditor = ({
     setLessons([...lessons, emptyLessonWithLocalIndexKey]);
   };
 
-  const onDeleteLesson = (lessonIndex) => {
-    const indexOfDeletedLesson = lessons
-      .map((lesson) => lesson.lessonIndex)
-      .indexOf(lessonIndex);
-    setLessons([
-      ...lessons.slice(0, indexOfDeletedLesson),
-      ...lessons.slice(indexOfDeletedLesson + 1),
-    ]);
-  };
+  // const onDeleteLesson = (lessonIndex) => {
+  //   const indexOfDeletedLesson = lessons
+  //     .map((lesson) => lesson.lessonIndex)
+  //     .indexOf(lessonIndex);
+  //   setLessons([
+  //     ...lessons.slice(0, indexOfDeletedLesson),
+  //     ...lessons.slice(indexOfDeletedLesson + 1),
+  //   ]);
+  // };
 
-  const onLessonCreated = ({ id, title, index }) => {
-    setLessons(
-      lessons.map((lesson, ind) => {
-        return index === ind
-          ? Object.assign({}, lessons[index], { id, title })
-          : lesson;
-      })
-    );
+  const onLessonUpdated = async (lessonDeleted = false) => {
+    if (lessonDeleted) {
+      setSelectedLesson({});
+    }
+
+    await loadLessonsAndGroups();
   };
 
   const onAddGroup = () => {
@@ -217,14 +215,13 @@ const CourseStructureEditor = ({
     }
   };
 
-  const onUpdateGroupName = () => {};
-  const onUpdateGroupRank = () => {};
+  // const onUpdateGroupName = () => {};
+  // const onUpdateGroupRank = () => {};
 
   const onSelectLesson = (groupId, index) => {
     const lesson = lessons.filter((lesson) => lesson.groupId === groupId)[
       index
     ];
-    console.log(groupId, index, lesson);
     setSelectedLesson(Object.assign({}, lesson, { index }));
   };
 
@@ -257,43 +254,47 @@ const CourseStructureEditor = ({
                 <Grid item>
                   <LessonEditor
                     lesson={selectedLesson}
-                    onLessonDeleted={onDeleteLesson}
-                    onLessonCreated={onLessonCreated}
+                    onLessonUpdated={onLessonUpdated}
                   />
                 </Grid>
               )}
             </Grid>
           </Grid>
           <Grid item xs={12} md={4} className={classes.groupsContainer}>
-            <Grid container direction="column" spacing={2}>
-              <Grid item>
-                {groups
-                  .sort((a, b) => a.rank - b.rank)
-                  .map((group) => (
-                    <Group
-                      key={group.id}
-                      group={group}
-                      lessons={lessons}
-                      onAddLesson={onAddLesson}
-                      onRemoveGroup={onRemoveGroup}
-                      updateGroup={updateGroup}
-                      onSelectLesson={onSelectLesson}
-                      selectedLesson={selectedLesson}
-                    />
-                  ))}
+            <Section>
+              <Grid container direction="column" spacing={2}>
+                <Grid item>
+                  <Typography variant="h4">{SECTION_GROUP_HEADER}</Typography>
+                </Grid>
+                <Grid item>
+                  {groups
+                    .sort((a, b) => a.rank - b.rank)
+                    .map((group) => (
+                      <Group
+                        key={group.id}
+                        group={group}
+                        lessons={lessons}
+                        onAddLesson={onAddLesson}
+                        onRemoveGroup={onRemoveGroup}
+                        updateGroup={updateGroup}
+                        onSelectLesson={onSelectLesson}
+                        selectedLesson={selectedLesson}
+                      />
+                    ))}
+                </Grid>
+                <Grid item>
+                  <Button
+                    onClick={onAddGroup}
+                    startIcon={<Add />}
+                    fullWidth
+                    variant="contained"
+                    color="primary"
+                  >
+                    {BUTTON_NEW_GROUP_TEXT}
+                  </Button>
+                </Grid>
               </Grid>
-              <Grid item>
-                <Button
-                  onClick={onAddGroup}
-                  startIcon={<Add />}
-                  fullWidth
-                  variant="contained"
-                  color="primary"
-                >
-                  {BUTTON_NEW_GROUP_TEXT}
-                </Button>
-              </Grid>
-            </Grid>
+            </Section>
           </Grid>
         </Grid>
       </Grid>

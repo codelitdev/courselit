@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/styles";
-import { ListItem, ListItemText, ListItemIcon } from "@material-ui/core";
+import { ListItem, ListItemIcon, Typography } from "@material-ui/core";
 import { OpenInNew } from "@material-ui/icons";
 import Link from "next/link";
 import { link } from "../../../../types";
@@ -28,7 +28,7 @@ const MenuItem = (props) => {
       onClick={props.closeDrawer ? props.closeDrawer : () => {}}
     >
       <ListItem button>
-        <ListItemText primary={link.text}></ListItemText>
+        <Typography variant="subtitle2">{link.text}</Typography>
         {link.newTab && (
           <ListItemIcon>
             <OpenInNew />
@@ -43,7 +43,7 @@ const MenuItem = (props) => {
         component="a"
         onClick={props.closeDrawer ? props.closeDrawer : () => {}}
       >
-        <ListItemText primary={link.text}></ListItemText>
+        <Typography variant="subtitle2">{link.text}</Typography>
       </ListItem>
     </Link>
   );

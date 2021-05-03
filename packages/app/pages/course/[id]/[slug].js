@@ -31,17 +31,23 @@ const Course = (props) => {
       name: SIDEBAR_TEXT_COURSE_ABOUT,
       element: <CourseIntroduction key={key++} course={course} />,
     });
-    for (const lesson of course.lessons) {
+    for (const group of Object.keys(course.groupOfLessons)) {
       lessons.push({
-        name: lesson.title,
-        element: <LessonViewer key={key++} lesson={lesson} />,
-        icon:
-          lesson.requiresEnrollment &&
-          !profile.purchases.includes(course.id) ? (
-            <Lock />
-          ) : null,
-        iconPlacementRight: true,
+        name: group,
+        element: null,
       });
+      for (const lesson of course.groupOfLessons[group]) {
+        lessons.push({
+          name: lesson.title,
+          element: <LessonViewer key={key++} lesson={lesson} />,
+          icon:
+            lesson.requiresEnrollment &&
+            !profile.purchases.includes(course.id) ? (
+              <Lock />
+            ) : null,
+          iconPlacementRight: true,
+        });
+      }
     }
   }
 
@@ -95,11 +101,18 @@ export async function getServerSideProps({ query, req }) {
         isBlog,
         cost,
         courseId,
+        groups {
+          id,
+          name,
+          rank
+        },
         lessons {
           id,
           title,
           requiresEnrollment,
-          courseId
+          courseId,
+          groupId,
+          groupRank
         }
       }
     }
@@ -112,12 +125,43 @@ export async function getServerSideProps({ query, req }) {
 
   try {
     const response = await fetch.exec();
-    return {
-      props: {
-        course: response.post,
-        error: null,
-      },
-    };
+    const { post } = response;
+    if (post) {
+      const lessonsOrderedByGroups = {};
+      for (const group of response.post.groups) {
+        lessonsOrderedByGroups[group.name] = response.post.lessons.filter(
+          (lesson) => lesson.groupId === group.id
+        );
+      }
+
+      const courseGroupedByLessons = {
+        id: post.id,
+        title: post.title,
+        description: post.description,
+        featuredImage: post.featuredImage,
+        updated: post.updated,
+        creatorName: post.creatorName,
+        creatorId: post.creatorId,
+        slug: post.slug,
+        isBlog: post.isBlog,
+        cost: post.cost,
+        courseId: post.courseId,
+        groupOfLessons: lessonsOrderedByGroups,
+      };
+      return {
+        props: {
+          course: courseGroupedByLessons,
+          error: null,
+        },
+      };
+    } else {
+      return {
+        props: {
+          course: null,
+          error: "Invalid response",
+        },
+      };
+    }
   } catch (err) {
     return {
       props: {

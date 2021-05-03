@@ -73,7 +73,7 @@ const Group = ({
         aria-controls="edit-lesson"
         id="edit-lesson"
       >
-        {name}
+        <Typography variant="subtitle1">{name}</Typography>
       </AccordionSummary>
       <AccordionDetails>
         <Grid container direction="column" spacing={2}>
@@ -196,6 +196,7 @@ Group.propTypes = {
   updateGroup: PropTypes.func.isRequired,
   onSelectLesson: PropTypes.func.isRequired,
   selectedLesson: selectedLessonMetaProps,
+  classes: PropTypes.object.isRequired,
 };
 
 export default withStyles(styles)(Group);

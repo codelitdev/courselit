@@ -62,27 +62,18 @@ const ThemeItem = (props) => {
         <Grid container spacing={2}>
           {!props.theme.active && (
             <Grid item>
-              <Button
-                variant="contained"
-                onClick={() => setApplyConfirmationPopupOpened(true)}
-              >
+              <Button onClick={() => setApplyConfirmationPopupOpened(true)}>
                 {BUTTON_THEME_APPLY}
               </Button>
             </Grid>
           )}
           <Grid item>
-            <Button
-              variant="contained"
-              onClick={() => props.onRemix(props.theme.id)}
-            >
+            <Button onClick={() => props.onRemix(props.theme.id)}>
               {BUTTON_THEME_REMIX}
             </Button>
           </Grid>
           <Grid item>
-            <Button
-              variant="contained"
-              onClick={() => setUninstallConfirmationPopupOpened(true)}
-            >
+            <Button onClick={() => setUninstallConfirmationPopupOpened(true)}>
               {BUTTON_THEME_UNINSTALL}
             </Button>
           </Grid>

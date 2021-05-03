@@ -87,7 +87,6 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const LessonEditor = (props) => {
-  console.log(props.lesson);
   const [lesson, setLesson] = useState(props.lesson);
   const classes = useStyles();
   const inputLabel = React.useRef(null);
@@ -189,6 +188,7 @@ const LessonEditor = (props) => {
     try {
       props.dispatch(networkAction(true));
       await fetch.exec();
+      props.onLessonUpdated();
     } catch (err) {
       props.dispatch(setAppMessage(new AppMessage(err.message)));
     } finally {
@@ -229,11 +229,7 @@ const LessonEditor = (props) => {
 
       if (response.lesson) {
         setLesson(Object.assign({}, lesson, { id: response.lesson.id }));
-        props.onLessonCreated({
-          id: response.lesson.id,
-          title: lesson.title,
-          index: props.lessonIndex,
-        });
+        props.onLessonUpdated();
         props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_LESSON_SAVED)));
       }
     } catch (err) {
@@ -267,13 +263,12 @@ const LessonEditor = (props) => {
           props.dispatch(
             setAppMessage(new AppMessage(APP_MESSAGE_LESSON_DELETED))
           );
+          props.onLessonUpdated(true);
         }
       } catch (err) {
         props.dispatch(setAppMessage(new AppMessage(err.message)));
       }
     }
-
-    props.onLessonDeleted(lesson.lessonIndex);
   };
 
   const onLessonDetailsChange = (e) =>
@@ -469,12 +464,11 @@ const LessonEditor = (props) => {
 };
 
 LessonEditor.propTypes = {
-  onLessonDeleted: PropTypes.func.isRequired,
   auth: authProps,
   dispatch: PropTypes.func.isRequired,
   lesson: lessonType,
   address: addressProps,
-  onLessonCreated: PropTypes.func.isRequired,
+  onLessonUpdated: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({
