@@ -16,5 +16,5 @@ export default {
   mainContentWidth: 8,
   asideWidth: 4,
   singleColumnLayout: false,
-  hideLoginButton: true,
+  hideLoginButton: false,
 };

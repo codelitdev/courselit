@@ -6,9 +6,14 @@ import Hidden from "@material-ui/core/Hidden";
 import IconButton from "@material-ui/core/IconButton";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
-import ListItemText from "@material-ui/core/ListItemText";
 import { Menu } from "@material-ui/icons";
-import { Toolbar, Grid, LinearProgress } from "@material-ui/core";
+import {
+  Toolbar,
+  Grid,
+  LinearProgress,
+  ListSubheader,
+  Typography,
+} from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
 import AppToast from "../../AppToast";
@@ -89,6 +94,9 @@ const useStyles = makeStyles((theme) => ({
     paddingLeft: theme.spacing(2),
     paddingRight: theme.spacing(2),
   },
+  subheader: {
+    marginTop: theme.spacing(3),
+  },
 }));
 
 const ComponentScaffold = (props) => {
@@ -127,35 +135,41 @@ const ComponentScaffold = (props) => {
       </div>
 
       <List>
-        {props.items.map((item, index) => (
-          <ListItem
-            button
-            key={index}
-            onClick={() => showComponent(item.element, index)}
-            className={activeItemIndex === index ? classes.activeItem : null}
-          >
-            <Grid
-              container
-              direction="row"
-              alignItems="center"
-              justify={
-                item.icon && item.iconPlacementRight
-                  ? "space-between"
-                  : "flex-start"
-              }
+        {props.items.map((item, index) =>
+          item.element ? (
+            <ListItem
+              button
+              key={index}
+              onClick={() => showComponent(item.element, index)}
+              className={activeItemIndex === index ? classes.activeItem : null}
             >
-              {item.icon && !item.iconPlacementRight && (
-                <DrawerListItemIcon icon={item.icon} />
-              )}
-              <Grid item>
-                <ListItemText primary={item.name} />
+              <Grid
+                container
+                direction="row"
+                alignItems="center"
+                justify={
+                  item.icon && item.iconPlacementRight
+                    ? "space-between"
+                    : "flex-start"
+                }
+              >
+                {item.icon && !item.iconPlacementRight && (
+                  <DrawerListItemIcon icon={item.icon} />
+                )}
+                <Grid item>
+                  <Typography variant="subtitle2">{item.name}</Typography>
+                </Grid>
+                {item.icon && item.iconPlacementRight && (
+                  <DrawerListItemIcon icon={item.icon} right={true} />
+                )}
               </Grid>
-              {item.icon && item.iconPlacementRight && (
-                <DrawerListItemIcon icon={item.icon} right={true} />
-              )}
-            </Grid>
-          </ListItem>
-        ))}
+            </ListItem>
+          ) : (
+            <ListSubheader className={classes.subheader}>
+              {item.name}
+            </ListSubheader>
+          )
+        )}
       </List>
     </>
   );

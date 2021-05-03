@@ -83,7 +83,8 @@ export const appMessage = PropTypes.shape({
 });
 
 export const lesson = PropTypes.shape({
-  title: PropTypes.string.isRequired,
+  id: PropTypes.string,
+  title: PropTypes.string,
   type: PropTypes.string,
   downloadable: PropTypes.bool,
   content: PropTypes.object,
@@ -114,4 +115,9 @@ export const mediaProps = PropTypes.shape({
   mimeType: PropTypes.string.isRequired,
   thumbnail: PropTypes.string,
   altText: PropTypes.string,
+});
+
+export const selectedLessonMetaProps = PropTypes.shape({
+  groupId: PropTypes.string,
+  index: PropTypes.number,
 });

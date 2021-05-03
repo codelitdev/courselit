@@ -17,6 +17,15 @@ const CourseSchema = new mongoose.Schema({
   lessons: [String],
   description: String,
   featuredImage: String,
+  groups: [
+    {
+      name: { type: String, required: true },
+      // order of the group on the UI
+      rank: { type: Number, required: true },
+      // to not show associated lessons as top members on the UI
+      collapsed: { type: Boolean, required: true, default: true },
+    },
+  ],
 });
 
 CourseSchema.plugin(AutoIncrement, { inc_field: "courseId" });

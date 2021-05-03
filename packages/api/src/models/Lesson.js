@@ -12,6 +12,9 @@ const LessonSchema = new mongoose.Schema({
   creatorId: mongoose.Schema.Types.ObjectId,
   courseId: mongoose.Schema.Types.ObjectId,
   requiresEnrollment: { type: Boolean, default: false },
+  groupId: { type: mongoose.Schema.Types.ObjectId, required: true },
+  // order of the lesson in the group it is associated to
+  groupRank: { type: Number, required: true },
 });
 
 LessonSchema.plugin(AutoIncrement, { inc_field: "lessonId" });
