@@ -15,6 +15,7 @@ exports.responses = {
   domain_doesnt_exist: "Domain does not exist",
   cross_domain_access_prohibited: "Invalid credentials",
   locked: "Account locked",
+  not_valid_subscription: "No valid subscription found",
 
   // graphql responses
   invalid_permission: "Invalid permission",

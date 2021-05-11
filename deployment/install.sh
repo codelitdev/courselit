@@ -103,7 +103,7 @@ cat > $CONFIGHOME/Caddyfile <<EOF
         }
 }
 
-:443 {
+*.${DOMAIN}:443 {
         tls {
                 on_demand
         }
