@@ -6,6 +6,7 @@ const path = require("path");
 module.exports = {
   debuggingEnabled: process.env.DEBUG === "true",
   domainNameForSingleTenancy: "main",
+  placeholderEmailForSingleTenancy: "fake@email.com",
   dbConnectionString:
     process.env.DB_CONNECTION_STRING ||
     `mongodb://localhost/${process.env.NODE_ENV === "test" ? "test" : "app"}`,

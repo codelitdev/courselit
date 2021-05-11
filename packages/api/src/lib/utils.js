@@ -100,3 +100,7 @@ exports.getParentDirectory = (path) => {
   filePathSplit.pop();
   return filePathSplit.join("/");
 };
+
+exports.isSubscriptionValid = (dateStr) => {
+  return new Date(dateStr).getTime() > new Date().getTime();
+};
