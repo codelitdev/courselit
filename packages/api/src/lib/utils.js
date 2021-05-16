@@ -4,6 +4,7 @@
 const fs = require("fs");
 const { spawn } = require("child_process");
 const { v4: uuidv4 } = require("uuid");
+const { useHTTP, domain, routePrefix } = require("../config/constants");
 
 exports.capitalize = (s) => {
   if (typeof s !== "string") return "";
@@ -104,3 +105,8 @@ exports.getParentDirectory = (path) => {
 exports.isSubscriptionValid = (dateStr) => {
   return new Date(dateStr).getTime() > new Date().getTime();
 };
+
+exports.generateMagicLink = (token) => {
+  // return `${useHTTP ? "http" : "https"}://${domain}${routePrefix ? "/" + routePrefix : ""}/auth/magiclink/callback?token=${token}`
+  return `${useHTTP ? "http" : "https"}://${domain}/login?token=${token}`
+}

@@ -16,6 +16,8 @@ exports.responses = {
   cross_domain_access_prohibited: "Invalid credentials",
   locked: "Account locked",
   not_valid_subscription: "No valid subscription found",
+  sign_in_mail_prefix: "Sign into ",
+  sign_in_mail_body: "Click the following link to sign in.",
 
   // graphql responses
   invalid_permission: "Invalid permission",
