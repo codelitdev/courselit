@@ -99,27 +99,25 @@ const Login = ({ address, auth, dispatch, progress }) => {
                 <Grid item xs={12}>
                     <Grid container direction="row">
                         <Grid item xs={12}>
-                            {token && progress && <p>Sign you in...</p>}
-                            {!token || (token && !progress) && (
-                                <form onSubmit={requestMagicLink}>
-                                    <TextField
-                                        type="email"
-                                        value={email}
-                                        variant="outlined"
-                                        label="Email"
-                                        fullWidth
-                                        margin="normal"
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        required />
-                                    <Button
-                                        variant="contained"
-                                        type="submit"
-                                        color="primary"
-                                        disabled={progress || !email}>
-                                        {BTN_LOGIN}
-                                    </Button>
-                                </form>
-                            )}
+                            <form onSubmit={requestMagicLink}>
+                                <Typography variant="h4">{LOGIN_SECTION_HEADER}</Typography>
+                                <TextField
+                                    type="email"
+                                    value={email}
+                                    variant="outlined"
+                                    label="Email"
+                                    fullWidth
+                                    margin="normal"
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required />
+                                <Button
+                                    variant="contained"
+                                    type="submit"
+                                    color="primary"
+                                    disabled={progress || !email}>
+                                    {BTN_LOGIN}
+                                </Button>
+                            </form>
                         </Grid>
                     </Grid>
                 </Grid>

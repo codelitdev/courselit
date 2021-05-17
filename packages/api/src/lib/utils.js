@@ -106,7 +106,7 @@ exports.isSubscriptionValid = (dateStr) => {
   return new Date(dateStr).getTime() > new Date().getTime();
 };
 
-exports.generateMagicLink = (token) => {
+exports.generateMagicLink = ({ token, hostname }) => {
   // return `${useHTTP ? "http" : "https"}://${domain}${routePrefix ? "/" + routePrefix : ""}/auth/magiclink/callback?token=${token}`
-  return `${useHTTP ? "http" : "https"}://${domain}/login?token=${token}`
+  return `${useHTTP ? "http" : "https"}://${hostname}/login?token=${token}`
 }

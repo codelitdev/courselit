@@ -126,7 +126,7 @@ module.exports = (passport) => {
       body: `
         <p>${responses.sign_in_mail_body}</p>
         <p>
-          <a href="${generateMagicLink(token)}">Sign in</a>
+          <a href="${generateMagicLink({token, hostname: req.hostname})}">Sign in</a>
         </p>
       `
     })

@@ -12,8 +12,7 @@ const validateEnvironmentVars = () => {
     "EMAIL_HOST",
     "EMAIL_USER",
     "EMAIL_PASS",
-    "EMAIL_FROM",
-    "DOMAIN"
+    "EMAIL_FROM"
   ];
 
   const environmentVarsForLocalStorage = [
