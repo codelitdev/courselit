@@ -5,11 +5,10 @@ const userType = new graphql.GraphQLObjectType({
   fields: {
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     email: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-    name: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+    name: { type: graphql.GraphQLString },
     purchases: { type: new graphql.GraphQLList(graphql.GraphQLID) },
     active: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
     userId: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
-    verified: { type: graphql.GraphQLBoolean },
     avatar: { type: graphql.GraphQLString },
     bio: { type: graphql.GraphQLString },
     permissions: { type: new graphql.GraphQLList(graphql.GraphQLString) },
@@ -41,7 +40,6 @@ const usersSummaryType = new graphql.GraphQLObjectType({
   name: "UsersSummary",
   fields: {
     count: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
-    verified: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
     admins: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
     creators: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
   },

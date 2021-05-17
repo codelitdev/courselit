@@ -1,7 +1,7 @@
-const { 
+const {
   severityError,
   severityInfo,
-  severityWarn
+  severityWarn,
 } = require("../config/constants.js");
 const Log = require("../models/Log.js");
 
@@ -9,7 +9,7 @@ exports.error = async (message, metadata) => {
   await Log.create({
     severity: severityError,
     message,
-    metadata
+    metadata,
   });
 };
 
@@ -17,7 +17,7 @@ exports.info = async (message, metadata) => {
   await Log.info({
     severity: severityInfo,
     message,
-    metadata
+    metadata,
   });
 };
 
@@ -25,6 +25,6 @@ exports.warn = async (message, metadata) => {
   await Log.info({
     severity: severityWarn,
     message,
-    metadata
+    metadata,
   });
 };

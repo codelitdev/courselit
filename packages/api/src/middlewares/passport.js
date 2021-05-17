@@ -7,7 +7,6 @@
 // The code is taken from https://www.npmjs.com/package/passport-jwt
 const JwtStrategy = require("passport-jwt").Strategy;
 const MagicLinkStrategy = require("passport-magic-link").Strategy;
-const LocalStrategy = require("passport-local").Strategy;
 const extractJwt = require("passport-jwt").ExtractJwt;
 const constants = require("../config/constants.js");
 const responses = require("../config/strings.js").responses;
@@ -18,155 +17,71 @@ const { generateMagicLink } = require("../lib/utils.js");
 const { permissions } = constants;
 
 module.exports = (passport) => {
-  // passport.use(
-  //   "signup",
-  //   new LocalStrategy(
-  //     {
-  //       usernameField: "email",
-  //       passReqToCallback: true,
-  //     },
-  //     async (req, email, password, next) => {
-  //       // validate input
-  //       if (!req.body.name) {
-  //         // Refer https://github.com/jaredhanson/passport-local/issues/4#issuecomment-4521526
-  //         // for this syntax.
-  //         return next(null, false, { message: responses.name_required });
-  //       }
-
-  //       try {
-  //         let user = await User.findOne({ email, domain: req.subdomain._id });
-  //         if (user) {
-  //           return next(null, false, {
-  //             message: responses.email_already_registered,
-  //           });
-  //         }
-
-  //         const newUser = {
-  //           domain: req.subdomain._id,
-  //           email,
-  //           password,
-  //           name: req.body.name,
-  //           active: true,
-  //         };
-  //         const notTheFirstUserOfDomain = await User.countDocuments({
-  //           domain: req.subdomain._id,
-  //         });
-  //         if (notTheFirstUserOfDomain) {
-  //           newUser.permissions = [permissions.enrollInCourse];
-  //         } else {
-  //           newUser.permissions = [
-  //             permissions.manageCourse,
-  //             permissions.manageAnyCourse,
-  //             permissions.publishCourse,
-  //             permissions.manageMedia,
-  //             permissions.manageAnyMedia,
-  //             permissions.uploadMedia,
-  //             permissions.viewAnyMedia,
-  //             permissions.manageLayout,
-  //             permissions.manageThemes,
-  //             permissions.manageMenus,
-  //             permissions.manageWidgets,
-  //             permissions.manageSettings,
-  //             permissions.manageUsers,
-  //           ];
-  //         }
-  //         user = await User.create(newUser);
-  //         return next(null, user);
-  //       } catch (err) {
-  //         return next(err, false);
-  //       }
-  //     }
-  //   )
-  // );
-
-  // passport.use(
-  //   "login",
-  //   new LocalStrategy(
-  //     {
-  //       usernameField: "email",
-  //       passwordField: "password",
-  //       passReqToCallback: true,
-  //     },
-  //     async (req, email, password, next) => {
-  //       try {
-  //         const user = await User.findOne({ email, domain: req.subdomain._id });
-
-  //         if (!user) {
-  //           return next(null, false, {
-  //             message: responses.auth_user_not_found,
-  //           });
-  //         }
-
-  //         const validate = await user.isPasswordValid(password);
-
-  //         if (!validate) {
-  //           return next(null, false, {
-  //             message: responses.email_or_passwd_invalid,
-  //           });
-  //         }
-
-  //         return next(null, user);
-  //       } catch (err) {
-  //         return next(err, false);
-  //       }
-  //     }
-  //   )
-  // );
-
-  passport.use(new MagicLinkStrategy({
-    secret: constants.jwtSecret,
-    userFields: ['email'],
-    tokenField: 'token',
-    passReqToCallbacks: true
-  }, async (req, user, token) => {
-    console.log(`Magic link`, user, token)
-    return await send({
-      to: user.email,
-      subject: `${responses.sign_in_mail_prefix} ${req.hostname}`,
-      body: `
+  passport.use(
+    new MagicLinkStrategy(
+      {
+        secret: constants.jwtSecret,
+        userFields: ["email"],
+        tokenField: "token",
+        passReqToCallbacks: true,
+      },
+      async (req, user, token) => {
+        return await send({
+          to: user.email,
+          subject: `${responses.sign_in_mail_prefix} ${req.hostname}`,
+          body: `
         <p>${responses.sign_in_mail_body}</p>
         <p>
-          <a href="${generateMagicLink({token, hostname: req.hostname})}">Sign in</a>
+          <a href="${generateMagicLink({
+            token,
+            hostname: req.hostname,
+            loginPath: constants.frontendLoginPath,
+            secure: req.secure,
+          })}">
+            ${responses.sign_in_link_text}
+          </a>
         </p>
-      `
-    })
-  }, async (req, user) => {
-    let dbUser = await User.findOne({ email: user.email });
+      `,
+        });
+      },
+      async (req, user) => {
+        let dbUser = await User.findOne({ email: user.email });
 
-    if (!dbUser) {
-      const newUser = {
-        domain: req.subdomain._id,
-        email: user.email,
-        active: true,
-      };
-      const notTheFirstUserOfDomain = await User.countDocuments({
-        domain: req.subdomain._id,
-      });
-      if (notTheFirstUserOfDomain) {
-        newUser.permissions = [permissions.enrollInCourse];
-      } else {
-        newUser.permissions = [
-          permissions.manageCourse,
-          permissions.manageAnyCourse,
-          permissions.publishCourse,
-          permissions.manageMedia,
-          permissions.manageAnyMedia,
-          permissions.uploadMedia,
-          permissions.viewAnyMedia,
-          permissions.manageLayout,
-          permissions.manageThemes,
-          permissions.manageMenus,
-          permissions.manageWidgets,
-          permissions.manageSettings,
-          permissions.manageUsers,
-        ];
+        if (!dbUser) {
+          const newUser = {
+            domain: req.subdomain._id,
+            email: user.email,
+            active: true,
+          };
+          const notTheFirstUserOfDomain = await User.countDocuments({
+            domain: req.subdomain._id,
+          });
+          if (notTheFirstUserOfDomain) {
+            newUser.permissions = [permissions.enrollInCourse];
+          } else {
+            newUser.permissions = [
+              permissions.manageCourse,
+              permissions.manageAnyCourse,
+              permissions.publishCourse,
+              permissions.manageMedia,
+              permissions.manageAnyMedia,
+              permissions.uploadMedia,
+              permissions.viewAnyMedia,
+              permissions.manageLayout,
+              permissions.manageThemes,
+              permissions.manageMenus,
+              permissions.manageWidgets,
+              permissions.manageSettings,
+              permissions.manageUsers,
+            ];
+          }
+          dbUser = await User.create(newUser);
+        }
+
+        return dbUser.active ? dbUser : null;
       }
-      dbUser = await User.create(newUser);
-    }
-
-    console.log(dbUser);
-    return dbUser.active ? dbUser : null;
-  }))
+    )
+  );
 
   const jwtStrategyOptions = {
     jwtFromRequest: extractJwt.fromAuthHeaderAsBearerToken(),

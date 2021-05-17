@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Grid, Typography, TextField, Button, Switch } from "@material-ui/core";
-import { AccountCircle } from "@material-ui/icons";
 import { connect } from "react-redux";
 import {
-  CAPTION_VERIFIED,
-  CAPTION_UNVERIFIED,
   LABEL_NEW_PASSWORD,
   LABEL_CONF_PASSWORD,
   SWITCH_ACCOUNT_ACTIVE,
@@ -229,16 +226,6 @@ const Details = ({ userId, auth, address, dispatch }) => {
                   spacing={1}
                   justify="center"
                 >
-                  <Grid item>
-                    <Grid container direction="column" alignItems="center">
-                      <AccountCircle className={classes.avatar} />
-                      <Typography variant="caption" color="textSecondary">
-                        {userData.verified
-                          ? CAPTION_VERIFIED
-                          : CAPTION_UNVERIFIED}
-                      </Typography>
-                    </Grid>
-                  </Grid>
                   <Grid item>
                     <Grid
                       item

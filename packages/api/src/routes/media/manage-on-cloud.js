@@ -91,8 +91,7 @@ exports.upload = async (req, res) => {
         mimetype: file.mimetype,
         originalFilePath: mainFilePath,
       });
-    } catch (err) {
-    }
+    } catch (err) {}
 
     rmdirSync(temporaryFolderForWork, { recursive: true });
 

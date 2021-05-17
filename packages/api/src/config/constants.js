@@ -15,8 +15,7 @@ module.exports = {
       ? process.env.API_PREFIX || "/api"
       : "",
 
-  domain: process.env.DOMAIN,
-  useHTTP: process.env.INSECURE === "true",
+  frontendLoginPath: process.env.FRONTEND_LOGIN_PATH || "/login",
 
   // mail settings
   mailHost: process.env.EMAIL_HOST,
@@ -97,9 +96,9 @@ module.exports = {
   },
 
   // log levels
-  severityError: 'error',
-  severityInfo: 'info',
-  severityWarn: 'warn',
+  severityError: "error",
+  severityInfo: "info",
+  severityWarn: "warn",
 
   // acceptable currency codes for payments
   currencyISOCodes: [
