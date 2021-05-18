@@ -32,6 +32,24 @@ echo "Enter your domain name (FQDN)."
 read DOMAIN
 [[ -z "$DOMAIN" ]] && { echo "Domain name is necessary to continue. Please try again."; exit 1; }
 
+echo -e "\nEmail setup (required for the login feature).\n"
+
+echo "Email host:"
+read EMAILHOST
+[[ -z "$EMAILHOST" ]] && { echo "An email host is necessary to continue . Please try again."; exit 1; }
+
+echo "Email user:"
+read EMAILUSER
+[[ -z "$EMAILUSER" ]] && { echo "An email user is necessary to continue . Please try again."; exit 1; }
+
+echo "Email password:"
+read EMAILPASS
+[[ -z "$EMAILPASS" ]] && { echo "The email's password is necessary to continue . Please try again."; exit 1; }
+
+echo "Email address to set as a 'from' field in the outgoing emails:"
+read EMAILFROM
+[[ -z "$EMAILFROM" ]] && { echo "A 'from' email is necessary to continue . Please try again."; exit 1; }
+
 CONFIGHOME=/home/$USER/.config/${DOMAIN}
 
 function generate_config () {
@@ -69,6 +87,12 @@ CLOUD_BUCKET_NAME=bucket
 
 # Set the following to serve media files correctly
 CDN_ENDPOINT=/api/assets
+
+# Email
+EMAIL_HOST=$EMAILHOST
+EMAIL_USER=$EMAILUSER
+EMAIL_PASS=$EMAILPASS
+EMAIL_FROM=$EMAILFROM
 EOF
 
 # Download necessary files

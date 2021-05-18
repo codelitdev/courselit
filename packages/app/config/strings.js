@@ -50,8 +50,6 @@ export const FORM_FIELD_FEATURED_IMAGE = "Promotional media";
 export const BTN_DELETE_COURSE = "Delete course";
 export const BTN_ADD_VIDEO = "Add";
 export const ADD_VIDEO_DIALOG_TITLE = "Embed an online video";
-export const CAPTION_VERIFIED = "Verified";
-export const CAPTION_UNVERIFIED = "Not verified";
 export const LABEL_NEW_PASSWORD = "New password";
 export const BUTTON_SAVE = "Save";
 export const GROUP_SETTINGS_HEADER = "Settings";
@@ -110,7 +108,7 @@ export const POPUP_CANCEL_ACTION = "Cancel";
 export const LOGIN_SECTION_HEADER = "Sign In";
 export const LOGIN_SECTION_BUTTON = "Sign in";
 export const LABEL_GROUP_NAME = "Title";
-export const LOGIN_INSTEAD_BUTTON = "Already have an account?";
+export const BTN_LOGIN = "Email me a sign in link";
 export const SIGNUP_SECTION_HEADER = "Create an account";
 export const SIGNUP_SECTION_BUTTON = "Join";
 export const MEDIA_MANAGER_PAGE_HEADING = "Media";
@@ -261,3 +259,8 @@ export const PERM_USERS = "Manage users";
 export const MEDIA_EDITOR_ORIGINAL_FILE_NAME_HEADER = "Original File Name";
 export const GROUP_LESSON_ITEM_UNTITLED = "Untitled";
 export const SECTION_GROUP_HEADER = "Groups";
+export const ERROR_SIGNIN_GENERATING_LINK =
+  "Error generating sign in link. Try again.";
+export const SIGNIN_SUCCESS_PREFIX = "A sign in link has been sent to";
+export const ERROR_SIGNIN_VERIFYING_LINK =
+  "We were unable to sign you in. Please try again.";

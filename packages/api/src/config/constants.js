@@ -4,7 +4,6 @@
 const path = require("path");
 
 module.exports = {
-  debuggingEnabled: process.env.DEBUG === "true",
   domainNameForSingleTenancy: "main",
   placeholderEmailForSingleTenancy: "fake@email.com",
   dbConnectionString:
@@ -15,6 +14,15 @@ module.exports = {
     process.env.NODE_ENV === "production"
       ? process.env.API_PREFIX || "/api"
       : "",
+
+  frontendLoginPath: process.env.FRONTEND_LOGIN_PATH || "/login",
+
+  // mail settings
+  mailHost: process.env.EMAIL_HOST,
+  mailUser: process.env.EMAIL_USER,
+  mailPass: process.env.EMAIL_PASS,
+  mailFrom: process.env.EMAIL_FROM,
+  mailPort: parseInt(process.env.EMAIL_PORT) || 587,
 
   // password related config
   saltRounds: 10, // for bcrypting the plain text passwords
@@ -86,6 +94,11 @@ module.exports = {
     manageSettings: "setting:manage",
     manageUsers: "user:manage",
   },
+
+  // log levels
+  severityError: "error",
+  severityInfo: "info",
+  severityWarn: "warn",
 
   // acceptable currency codes for payments
   currencyISOCodes: [

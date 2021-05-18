@@ -36,6 +36,11 @@ services:
       - CLOUD_KEY=${CLOUD_KEY}
       - CLOUD_SECRET=${CLOUD_SECRET}
       - CLOUD_BUCKET_NAME=${CLOUD_BUCKET_NAME}
+      - EMAIL_HOST=${EMAIL_HOST?'EMAIL_HOST environment variable is not defined'}
+      - EMAIL_USER=${EMAIL_USER?'EMAIL_USER environment variable is not defined'}
+      - EMAIL_PASS=${EMAIL_PASS?'EMAIL_PASS environment variable is not defined'}
+      - EMAIL_FROM=${EMAIL_FROM?'EMAIL_FROM environment variable is not defined'}
+      - EMAIL_PORT=${EMAIL_PORT}
     volumes:
       - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}:/data
     expose:
