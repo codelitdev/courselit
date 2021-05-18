@@ -6,9 +6,7 @@ const AutoIncrement = require("mongoose-sequence")(mongoose);
 const UserSchema = new mongoose.Schema({
   domain: { type: mongoose.Schema.Types.ObjectId, required: true },
   email: { type: String, required: true },
-  // verified: { type: Boolean, required: true, default: false },
   active: { type: Boolean, required: true, default: true },
-  // password: { type: String, required: true },
   name: { type: String, required: false },
   purchases: [mongoose.Schema.Types.ObjectId],
   bio: { type: String },
