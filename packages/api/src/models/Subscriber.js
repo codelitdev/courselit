@@ -6,7 +6,6 @@ const SubscriberSchema = new mongoose.Schema(
     stripeCustomerId: { type: String, unique: true, sparse: true },
     stripeSubscriptionId: { type: String, unique: true, sparse: true },
     subscriptionEndsAfter: { type: Date, required: true },
-    emailVerified: { type: Date },
   },
   {
     timestamps: true,

@@ -1,44 +1,28 @@
-import { useState, useEffect } from "react";
-import { connect } from "react-redux";
-import { useRouter } from "next/router";
-import {
-  ERR_ALL_FIELDS_REQUIRED,
-  ERR_PASSWORDS_DONT_MATCH,
-  RESP_API_USER_CREATED,
-  SIGNUP_SUCCESS,
-  LOGIN_SECTION_HEADER,
-  LOGIN_SECTION_BUTTON,
-  SIGNUP_SECTION_HEADER,
-  SIGNUP_SECTION_BUTTON,
-  LOGIN_INSTEAD_BUTTON,
-} from "../config/strings.js";
-import { JWT_COOKIE_NAME, USERID_COOKIE_NAME } from "../config/constants.js";
-import { signedIn, networkAction, setAppMessage } from "../redux/actions.js";
-import { setCookie } from "../lib/session.js";
-import { Grid, TextField, Button, Typography } from "@material-ui/core";
-import FetchBuilder from "../lib/fetch.js";
-import { Section } from "@courselit/components-library";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import {
+  BTN_LOGIN,
+  ERROR_SIGNIN_VERIFYING_LINK,
+  LOGIN_SECTION_HEADER,
+  ERROR_SIGNIN_GENERATING_LINK,
+  SIGNIN_SUCCESS_PREFIX,
+} from "../config/strings";
+import { Section } from "@courselit/components-library";
+import { Grid, TextField, Button, Typography } from "@material-ui/core";
+import { useRouter } from "next/router";
+import { connect } from "react-redux";
+import fetch from "isomorphic-unfetch";
+import { signedIn, networkAction, setAppMessage } from "../redux/actions.js";
 import AppMessage from "../models/app-message.js";
+import { JWT_COOKIE_NAME, USERID_COOKIE_NAME } from "../config/constants";
+import { setCookie } from "../lib/session";
 
 const BaseLayout = dynamic(() => import("../components/Public/BaseLayout"));
 
-const Login = (props) => {
-  const emptyStringPat = /^\s*$/;
-  const defaultSignupData = {
-    email: "",
-    pass: "",
-    conf: "",
-    name: "",
-    err: "",
-    msg: "",
-  };
-  const defaultLoginData = { email: "", pass: "" };
-  const [loginData, setLoginData] = useState(defaultLoginData);
-  const [signupData, setSignupData] = useState(defaultSignupData);
-  const [showSignupForm, setShowSignupForm] = useState(false);
+const Login = ({ address, auth, dispatch, progress }) => {
+  const [email, setEmail] = useState("");
   const router = useRouter();
-  const { address, dispatch, auth } = props;
+  const { token } = router.query;
 
   useEffect(() => {
     if (!auth.guest) {
@@ -47,280 +31,111 @@ const Login = (props) => {
     }
   });
 
-  async function handleLogin(event) {
-    event.preventDefault();
-
-    // validating the data
-    if (!loginData.email || emptyStringPat.test(loginData.pass)) {
-      // return setLoginData(
-      //   Object.assign({}, loginData, { err: ERR_ALL_FIELDS_REQUIRED })
-      // );
-      return dispatch(setAppMessage(new AppMessage(ERR_ALL_FIELDS_REQUIRED)));
+  useEffect(() => {
+    if (token) {
+      signIn();
     }
+  }, []);
 
-    clearLoginErrors();
+  const signIn = async () => {
+    try {
+      dispatch(networkAction(true));
+      let response = await fetch(
+        `${address.backend}/auth/magiclink/callback?token=${token}`
+      );
 
-    const formData = new window.FormData();
-    formData.append("email", loginData.email);
-    formData.append("password", loginData.pass);
+      if (response.status === 200) {
+        response = await response.json();
+        const { email, token, message } = response;
 
-    const fetch = new FetchBuilder()
-      .setUrl(`${address.backend}/auth/login`)
-      .setPayload(formData)
-      .build();
+        if (token) {
+          setCookie({
+            key: JWT_COOKIE_NAME,
+            value: token,
+            domain: address.domain,
+          });
+          setCookie({
+            key: USERID_COOKIE_NAME,
+            value: email,
+            domain: address.domain,
+          });
+          dispatch(signedIn(email, token));
+        } else {
+          dispatch(setAppMessage(new AppMessage(message)));
+        }
+      } else {
+        dispatch(setAppMessage(new AppMessage(ERROR_SIGNIN_VERIFYING_LINK)));
+      }
+    } catch (err) {
+      dispatch(setAppMessage(new AppMessage(err.message)));
+    } finally {
+      dispatch(networkAction(false));
+    }
+  };
+
+  const requestMagicLink = async (e) => {
+    e.preventDefault();
 
     try {
       dispatch(networkAction(true));
-      const response = await fetch.exec();
-      const { token, message } = response;
+      const response = await fetch(`${address.backend}/auth/magiclink`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
 
-      if (token) {
-        setCookie({
-          key: JWT_COOKIE_NAME,
-          value: token,
-          domain: address.domain,
-        });
-        setCookie({
-          key: USERID_COOKIE_NAME,
-          value: loginData.email,
-          domain: address.domain,
-        });
-        props.dispatch(signedIn(loginData.email, token));
+      if (response.status === 200) {
+        dispatch(
+          setAppMessage(new AppMessage(`${SIGNIN_SUCCESS_PREFIX} ${email}`))
+        );
+        setEmail("");
       } else {
-        // setLoginData(Object.assign({}, loginData, { err: message }));
-        dispatch(setAppMessage(new AppMessage(message)));
+        dispatch(setAppMessage(new AppMessage(ERROR_SIGNIN_GENERATING_LINK)));
       }
     } catch (err) {
-      // setLoginData(Object.assign({}, loginData, { err: err.message }));
       dispatch(setAppMessage(new AppMessage(err.message)));
     } finally {
-      props.dispatch(networkAction(false));
+      dispatch(networkAction(false));
     }
-  }
-
-  function clearLoginErrors() {
-    setLoginData(Object.assign({}, loginData, { err: "", msg: "" }));
-  }
-
-  async function handleSignup(event) {
-    event.preventDefault();
-
-    // validate the data
-    if (
-      !signupData.email ||
-      emptyStringPat.test(signupData.pass) ||
-      emptyStringPat.test(signupData.conf) ||
-      !signupData.name
-    ) {
-      return setSignupData(
-        Object.assign({}, signupData, { err: ERR_ALL_FIELDS_REQUIRED, msg: "" })
-      );
-    }
-
-    if (signupData.pass !== signupData.conf) {
-      return setSignupData(
-        Object.assign({}, signupData, {
-          err: ERR_PASSWORDS_DONT_MATCH,
-          msg: "",
-        })
-      );
-    }
-
-    clearSignUpErrors();
-
-    try {
-      props.dispatch(networkAction(true));
-
-      const formData = new window.FormData();
-      formData.append("email", signupData.email);
-      formData.append("password", signupData.pass);
-      formData.append("name", signupData.name);
-
-      const fetch = new FetchBuilder()
-        .setUrl(`${address.backend}/auth/signup`)
-        .setPayload(formData)
-        .build();
-      const response = await fetch.exec();
-      const { message } = response;
-
-      if (message === RESP_API_USER_CREATED) {
-        setSignupData(
-          Object.assign({}, defaultSignupData, {
-            err: "",
-            msg: SIGNUP_SUCCESS,
-          })
-        );
-      } else {
-        setSignupData(
-          Object.assign({}, signupData, {
-            err: message,
-            msg: "",
-          })
-        );
-      }
-    } catch (err) {
-      setSignupData(
-        Object.assign({}, signupData, {
-          err: err.message,
-          msg: "",
-        })
-      );
-    } finally {
-      props.dispatch(networkAction(false));
-    }
-  }
-
-  function clearSignUpErrors() {
-    setSignupData(Object.assign({}, signupData, { err: "", msg: "" }));
-  }
+  };
 
   return (
-    <BaseLayout
-      title={showSignupForm ? SIGNUP_SECTION_HEADER : LOGIN_SECTION_HEADER}
-    >
+    <BaseLayout title={LOGIN_SECTION_HEADER}>
       <Section>
         <Grid item xs={12}>
           <Grid container direction="row">
             <Grid item xs={12}>
-              {!showSignupForm && (
-                <>
-                  <Typography variant="h4">{LOGIN_SECTION_HEADER}</Typography>
-                  <form onSubmit={handleLogin}>
-                    {loginData.err && <div>{loginData.err}</div>}
+              <form onSubmit={requestMagicLink}>
+                <Grid container direction="column" spacing={1}>
+                  <Grid item>
+                    <Typography variant="h4">{LOGIN_SECTION_HEADER}</Typography>
+                  </Grid>
+                  <Grid item>
                     <TextField
                       type="email"
-                      value={loginData.email}
+                      value={email}
                       variant="outlined"
                       label="Email"
                       fullWidth
                       margin="normal"
-                      onChange={(e) =>
-                        setLoginData(
-                          Object.assign({}, loginData, {
-                            email: e.target.value,
-                          })
-                        )
-                      }
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
                     />
-                    <TextField
-                      type="password"
-                      value={loginData.pass}
-                      variant="outlined"
-                      label="Password"
-                      fullWidth
-                      margin="normal"
-                      onChange={(e) =>
-                        setLoginData(
-                          Object.assign({}, loginData, {
-                            pass: e.target.value,
-                          })
-                        )
-                      }
-                    />
-                    <Grid container direction="row" justify="space-between">
-                      <Grid item>
-                        <Button
-                          variant="contained"
-                          type="submit"
-                          color="primary"
-                        >
-                          {LOGIN_SECTION_BUTTON}
-                        </Button>
-                      </Grid>
-                      <Grid item>
-                        <Button onClick={() => setShowSignupForm(true)}>
-                          {SIGNUP_SECTION_HEADER}
-                        </Button>
-                      </Grid>
-                    </Grid>
-                  </form>
-                </>
-              )}
-              {showSignupForm && (
-                <>
-                  <Typography variant="h4">{SIGNUP_SECTION_HEADER}</Typography>
-                  <form onSubmit={handleSignup}>
-                    {signupData.msg && <div>{signupData.msg}</div>}
-                    {signupData.err && <div>{signupData.err}</div>}
-                    <TextField
-                      type="email"
-                      value={signupData.email}
-                      variant="outlined"
-                      label="Email"
-                      fullWidth
-                      margin="normal"
-                      onChange={(e) =>
-                        setSignupData(
-                          Object.assign({}, signupData, {
-                            email: e.target.value,
-                          })
-                        )
-                      }
-                    />
-                    <TextField
-                      type="password"
-                      value={signupData.pass}
-                      variant="outlined"
-                      label="Password"
-                      fullWidth
-                      margin="normal"
-                      onChange={(e) =>
-                        setSignupData(
-                          Object.assign({}, signupData, {
-                            pass: e.target.value,
-                          })
-                        )
-                      }
-                    />
-                    <TextField
-                      type="password"
-                      value={signupData.conf}
-                      variant="outlined"
-                      label="Confirm password"
-                      fullWidth
-                      margin="normal"
-                      onChange={(e) =>
-                        setSignupData(
-                          Object.assign({}, signupData, {
-                            conf: e.target.value,
-                          })
-                        )
-                      }
-                    />
-                    <TextField
-                      type="name"
-                      value={signupData.name}
-                      variant="outlined"
-                      label="Name"
-                      fullWidth
-                      margin="normal"
-                      onChange={(e) =>
-                        setSignupData(
-                          Object.assign({}, signupData, {
-                            name: e.target.value,
-                          })
-                        )
-                      }
-                    />
-                    <Grid container direction="row" justify="space-between">
-                      <Grid item>
-                        <Button
-                          variant="contained"
-                          type="submit"
-                          color="primary"
-                        >
-                          {SIGNUP_SECTION_BUTTON}
-                        </Button>
-                      </Grid>
-                      <Grid item>
-                        <Button onClick={() => setShowSignupForm(false)}>
-                          {LOGIN_INSTEAD_BUTTON}
-                        </Button>
-                      </Grid>
-                    </Grid>
-                  </form>
-                </>
-              )}
+                  </Grid>
+                  <Grid item>
+                    <Button
+                      variant="contained"
+                      type="submit"
+                      color="primary"
+                      disabled={progress || !email}
+                    >
+                      {BTN_LOGIN}
+                    </Button>
+                  </Grid>
+                </Grid>
+              </form>
             </Grid>
           </Grid>
         </Grid>
@@ -332,6 +147,11 @@ const Login = (props) => {
 const mapStateToProps = (state) => ({
   auth: state.auth,
   address: state.address,
+  progress: state.networkAction,
 });
 
-export default connect(mapStateToProps)(Login);
+const mapDispatchToProps = (dispatch) => ({
+  dispatch: dispatch,
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(Login);

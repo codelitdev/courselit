@@ -6,7 +6,14 @@ const { uploadFolder, useCloudStorage } = require("./config/constants.js");
 const { createFolders } = require("./lib/utils.js");
 
 const validateEnvironmentVars = () => {
-  const commonVars = ["JWT_SECRET", "TEMP_DIR_FOR_UPLOADS"];
+  const commonVars = [
+    "JWT_SECRET",
+    "TEMP_DIR_FOR_UPLOADS",
+    "EMAIL_HOST",
+    "EMAIL_USER",
+    "EMAIL_PASS",
+    "EMAIL_FROM",
+  ];
 
   const environmentVarsForLocalStorage = [
     "USER_CONTENT_DIRECTORY",

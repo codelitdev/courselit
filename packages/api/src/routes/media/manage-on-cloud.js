@@ -18,7 +18,6 @@ const {
 } = require("../../lib/utils");
 const constants = require("../../config/constants.js");
 const Media = require("../../models/Media.js");
-const logger = require("../../lib/logger");
 const { putObjectPromise, deleteObjectPromise } = require("./utils");
 
 const generateAndUploadThumbnail = async ({
@@ -77,14 +76,12 @@ exports.upload = async (req, res) => {
       await convertToWebp(mainFilePath, webpOutputQuality);
     }
 
-    logger.debug(`Starting upload at ${Date.now()}`);
     const fileNameWithDomainInfo = `${directory}/main.${fileExtension}`;
     await putObjectPromise({
       Key: fileNameWithDomainInfo,
       Body: createReadStream(mainFilePath),
       ContentType: file.mimetype,
     });
-    logger.debug(`Finished upload at ${Date.now()}`);
 
     let isThumbGenerated;
     try {
@@ -94,9 +91,7 @@ exports.upload = async (req, res) => {
         mimetype: file.mimetype,
         originalFilePath: mainFilePath,
       });
-    } catch (err) {
-      logger.error(`Error in generating a thumbnail`, err);
-    }
+    } catch (err) {}
 
     rmdirSync(temporaryFolderForWork, { recursive: true });
 

@@ -6,43 +6,51 @@
 
 // The code is taken from https://www.npmjs.com/package/passport-jwt
 const JwtStrategy = require("passport-jwt").Strategy;
-const LocalStrategy = require("passport-local").Strategy;
+const MagicLinkStrategy = require("passport-magic-link").Strategy;
 const extractJwt = require("passport-jwt").ExtractJwt;
 const constants = require("../config/constants.js");
 const responses = require("../config/strings.js").responses;
 const User = require("../models/User.js");
+const { send } = require("../lib/mailer.js");
+const { generateMagicLink } = require("../lib/utils.js");
 
 const { permissions } = constants;
 
 module.exports = (passport) => {
   passport.use(
-    "signup",
-    new LocalStrategy(
+    new MagicLinkStrategy(
       {
-        usernameField: "email",
-        passReqToCallback: true,
+        secret: constants.jwtSecret,
+        userFields: ["email"],
+        tokenField: "token",
+        passReqToCallbacks: true,
       },
-      async (req, email, password, next) => {
-        // validate input
-        if (!req.body.name) {
-          // Refer https://github.com/jaredhanson/passport-local/issues/4#issuecomment-4521526
-          // for this syntax.
-          return next(null, false, { message: responses.name_required });
-        }
+      async (req, user, token) => {
+        return await send({
+          to: user.email,
+          subject: `${responses.sign_in_mail_prefix} ${req.hostname}`,
+          body: `
+        <p>${responses.sign_in_mail_body}</p>
+        <p>
+          <a href="${generateMagicLink({
+            token,
+            hostname: req.hostname,
+            loginPath: constants.frontendLoginPath,
+            secure: req.secure,
+          })}">
+            ${responses.sign_in_link_text}
+          </a>
+        </p>
+      `,
+        });
+      },
+      async (req, user) => {
+        let dbUser = await User.findOne({ email: user.email });
 
-        try {
-          let user = await User.findOne({ email, domain: req.subdomain._id });
-          if (user) {
-            return next(null, false, {
-              message: responses.email_already_registered,
-            });
-          }
-
+        if (!dbUser) {
           const newUser = {
             domain: req.subdomain._id,
-            email,
-            password,
-            name: req.body.name,
+            email: user.email,
             active: true,
           };
           const notTheFirstUserOfDomain = await User.countDocuments({
@@ -67,45 +75,10 @@ module.exports = (passport) => {
               permissions.manageUsers,
             ];
           }
-          user = await User.create(newUser);
-          return next(null, user);
-        } catch (err) {
-          return next(err, false);
+          dbUser = await User.create(newUser);
         }
-      }
-    )
-  );
 
-  passport.use(
-    "login",
-    new LocalStrategy(
-      {
-        usernameField: "email",
-        passwordField: "password",
-        passReqToCallback: true,
-      },
-      async (req, email, password, next) => {
-        try {
-          const user = await User.findOne({ email, domain: req.subdomain._id });
-
-          if (!user) {
-            return next(null, false, {
-              message: responses.auth_user_not_found,
-            });
-          }
-
-          const validate = await user.isPasswordValid(password);
-
-          if (!validate) {
-            return next(null, false, {
-              message: responses.email_or_passwd_invalid,
-            });
-          }
-
-          return next(null, user);
-        } catch (err) {
-          return next(err, false);
-        }
+        return dbUser.active ? dbUser : null;
       }
     )
   );
