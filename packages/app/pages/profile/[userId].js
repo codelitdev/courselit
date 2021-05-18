@@ -77,7 +77,7 @@ function Profile({ user, profile, auth, dispatch, address }) {
   };
 
   return (
-    <BaseLayout title={user.name}>
+    <BaseLayout title={user.name || PROFILE_PAGE_HEADER}>
       <Grid item xs={12} className={classes.content}>
         <Grid container direction="column" spacing={2}>
           <Grid item xs={12}>
@@ -158,14 +158,16 @@ function Profile({ user, profile, auth, dispatch, address }) {
                     </Grid>
                   </Grid>
 
-                  <Grid item>
-                    <Button
-                      onClick={saveDetails}
-                      disabled={bio === user.bio && name === user.name}
-                    >
-                      {BUTTON_SAVE}
-                    </Button>
-                  </Grid>
+                  {isMyProfile && (
+                    <Grid item>
+                      <Button
+                        onClick={saveDetails}
+                        disabled={bio === user.bio && name === user.name}
+                      >
+                        {BUTTON_SAVE}
+                      </Button>
+                    </Grid>
+                  )}
                 </Grid>
               </Section>
             </Grid>

@@ -84,7 +84,8 @@ const UsersManager = ({ auth, address, dispatch }) => {
       }) {
         id,
         name,
-        userId
+        userId,
+        email
       }
     }
     `;
@@ -128,7 +129,7 @@ const UsersManager = ({ auth, address, dispatch }) => {
       <>
         <Img src={""} isThumbnail={true} />
         <GridListTileBar
-          title={user.name}
+          title={user.name ? user.name : user.email}
           subtitle={
             user.isAdmin
               ? SWITCH_IS_ADMIN

@@ -104,3 +104,9 @@ exports.getParentDirectory = (path) => {
 exports.isSubscriptionValid = (dateStr) => {
   return new Date(dateStr).getTime() > new Date().getTime();
 };
+
+exports.generateMagicLink = ({ token, hostname, loginPath, secure = true }) => {
+  return `${
+    secure ? "https" : "http"
+  }://${hostname}${loginPath}?token=${token}`;
+};

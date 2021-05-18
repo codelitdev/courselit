@@ -1,15 +1,30 @@
-const { debuggingEnabled } = require("../config/constants");
+const {
+  severityError,
+  severityInfo,
+  severityWarn,
+} = require("../config/constants.js");
+const Log = require("../models/Log.js");
 
-exports.info = (message, metadata = {}) => {
-  console.info(message, metadata);
+exports.error = async (message, metadata) => {
+  await Log.create({
+    severity: severityError,
+    message,
+    metadata,
+  });
 };
 
-exports.error = (message, metadata = {}) => {
-  console.error(message, metadata);
+exports.info = async (message, metadata) => {
+  await Log.info({
+    severity: severityInfo,
+    message,
+    metadata,
+  });
 };
 
-exports.debug = (message, metadata = {}) => {
-  if (debuggingEnabled) {
-    console.info(message, metadata);
-  }
+exports.warn = async (message, metadata) => {
+  await Log.info({
+    severity: severityWarn,
+    message,
+    metadata,
+  });
 };
