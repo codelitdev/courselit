@@ -115,9 +115,8 @@ function setup_ssl_multitenant () {
     read CLOUDFLARE_API_TOKEN
     [[ -z "$CLOUDFLARE_API_TOKEN" ]] && { echo "A Cloudflare key is necessary to continue. Please try again."; exit 1; }
 
-    echo "Enter the URL of an API to verify the custom domains against. It is required by Caddy."
-    read CUSTOM_DOMAINS_VERIFY_URL
-    [[ -z "$CUSTOM_DOMAINS_VERIFY_URL" ]] && { echo "The API URL is necessary to continue. Please try again."; exit 1; }
+    # Caddy uses the following endpoint to know whether to issues a SSL certificate for a domain or not
+    CUSTOM_DOMAINS_VERIFY_URL=https://${DOMAIN}/api/domain/verify
 
 cat > $CONFIGHOME/Caddyfile <<EOF
 {
