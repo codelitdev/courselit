@@ -5,6 +5,7 @@ import { connect } from "react-redux";
 import {
   MANAGE_COURSES_PAGE_HEADING,
   NEW_COURSE_PAGE_HEADING,
+  EDIT_COURSE_PAGE_HEADING,
   COURSE_TYPE_BLOG,
   COURSE_TYPE_COURSE,
   LOAD_MORE_TEXT,
@@ -75,14 +76,14 @@ const Index = (props) => {
             </Button>
           </>
         ),
-        Detail: <CourseEditor markDirty={() => {}} closeEditor={() => {}} />,
+        Detail: <CourseEditor closeEditor={() => {}} />,
       });
     }
     setComponentsMap(map);
   }, [coursesPaginationOffset]);
 
   const getComponent = (course) => ({
-    subtitle: NEW_COURSE_PAGE_HEADING,
+    subtitle: EDIT_COURSE_PAGE_HEADING,
     Overview: (
       <>
         <Img src={constructThumbnailUrlFromFileUrl(course.featuredImage)} />

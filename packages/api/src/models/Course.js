@@ -9,7 +9,7 @@ const CourseSchema = new mongoose.Schema({
   cost: { type: Number, required: true },
   privacy: { type: String, required: true, enum: [unlisted, open] },
   creatorId: { type: String, required: true },
-  creatorName: { type: String, required: true },
+  creatorName: { type: String },
   updated: { type: Date, required: true, default: Date.now },
   published: { type: Boolean, required: true, default: false },
   isBlog: { type: Boolean, required: true, default: false },

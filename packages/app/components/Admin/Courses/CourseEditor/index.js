@@ -9,7 +9,6 @@ import {
   BUTTON_SAVE,
   FORM_FIELD_FEATURED_IMAGE,
   BUTTON_MANAGE_LESSONS_TEXT,
-  COURSE_DETAILS_CARD_HEADER,
   DANGER_ZONE_HEADER,
   DANGER_ZONE_DESCRIPTION,
   DELETE_COURSE_POPUP_HEADER,
@@ -17,7 +16,6 @@ import {
   POPUP_OK_ACTION,
   BLOG_POST_SWITCH,
   APP_MESSAGE_COURSE_SAVED,
-  COURSE_EDITOR_DESCRIPTION,
   VISIT_POST_BUTTON,
   VISIT_COURSE_BUTTON,
   BTN_PUBLISH,
@@ -61,11 +59,11 @@ const styles = {
   },
 };
 
-// TODO: Refactor away closeEditor() and markDirty()
+// TODO: Refactor away closeEditor()
 const CourseEditor = (props) => {
   const initCourseMetaData = {
     title: "",
-    cost: "",
+    cost: undefined,
     published: false,
     privacy: "UNLISTED",
     isBlog: false,
@@ -199,7 +197,6 @@ const CourseEditor = (props) => {
       const response = await fetch.exec();
       if (response.course) {
         setCourseDataWithDescription(response.course);
-        props.markDirty(false);
         props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_COURSE_SAVED)));
       }
     } catch (err) {
@@ -244,7 +241,6 @@ const CourseEditor = (props) => {
       const response = await fetch.exec();
       if (response.course) {
         setCourseDataWithDescription(response.course);
-        props.markDirty(false);
         props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_COURSE_SAVED)));
       }
     } catch (err) {
@@ -262,8 +258,6 @@ const CourseEditor = (props) => {
   };
 
   const changeCourseDetails = (key, value) => {
-    props.markDirty(true);
-
     setCourseData(
       Object.assign({}, courseData, {
         course: Object.assign({}, courseData.course, {
@@ -274,8 +268,6 @@ const CourseEditor = (props) => {
   };
 
   const onDescriptionChange = (editorState) => {
-    props.markDirty(true);
-
     setCourseData(
       Object.assign({}, courseData, {
         course: Object.assign({}, courseData.course, {
@@ -376,7 +368,7 @@ const CourseEditor = (props) => {
   };
 
   const onFeaturedImageSelection = (media) =>
-    changeCourseDetails("featuredImage", media.file);
+    media && changeCourseDetails("featuredImage", media.file);
 
   const closeDeleteCoursePopup = () => setDeleteCoursePopupOpened(false);
 
@@ -388,9 +380,6 @@ const CourseEditor = (props) => {
             <Grid container spacing={2}>
               <Grid item sm={12} md={8}>
                 <Section>
-                  <Typography variant="h4">
-                    {COURSE_DETAILS_CARD_HEADER}
-                  </Typography>
                   {userError && <div>{userError}</div>}
                   <TextField
                     required
@@ -402,9 +391,6 @@ const CourseEditor = (props) => {
                     value={courseData.course.title}
                     onChange={onCourseDetailsChange}
                   />
-                  <Typography variant="body1">
-                    {COURSE_EDITOR_DESCRIPTION}
-                  </Typography>
                   <TextEditor
                     initialContentState={courseData.course.description}
                     onChange={onDescriptionChange}
@@ -494,20 +480,22 @@ const CourseEditor = (props) => {
                             </Grid>
                           </Grid>
                         </Grid>
-                        <Grid item>
-                          <TextField
-                            required
-                            type="number"
-                            variant="outlined"
-                            label="Cost"
-                            fullWidth
-                            margin="normal"
-                            name="cost"
-                            step="0.1"
-                            value={courseData.course.cost}
-                            onChange={onCourseDetailsChange}
-                          />
-                        </Grid>
+                        {!courseData.course.isBlog && (
+                          <Grid item>
+                            <TextField
+                              required
+                              type="number"
+                              variant="outlined"
+                              label="Cost"
+                              fullWidth
+                              margin="normal"
+                              name="cost"
+                              step="0.1"
+                              value={courseData.course.cost}
+                              onChange={onCourseDetailsChange}
+                            />
+                          </Grid>
+                        )}
                         <Grid item>
                           <FormControl
                             variant="outlined"
@@ -625,9 +613,8 @@ CourseEditor.propTypes = {
   courseId: PropTypes.string,
   dispatch: PropTypes.func.isRequired,
 
-  // TODO: Refactor away the following two properties.
+  // TODO: Refactor away the following properties.
   closeEditor: PropTypes.func.isRequired,
-  markDirty: PropTypes.func.isRequired,
 
   address: addressProps,
   classes: PropTypes.object.isRequired,
