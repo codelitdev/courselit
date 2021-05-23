@@ -45,7 +45,10 @@ module.exports = (passport) => {
         });
       },
       async (req, user) => {
-        let dbUser = await User.findOne({ email: user.email });
+        let dbUser = await User.findOne({
+          email: user.email,
+          domain: req.subdomain._id,
+        });
 
         if (!dbUser) {
           const newUser = {
