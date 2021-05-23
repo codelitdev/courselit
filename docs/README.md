@@ -41,7 +41,7 @@ Check out this live example to see what you can build with CourseLit. [Click her
 
 ## Screenshot
 
-![courselit cms screenshot](./assets/screenshot.png)
+![courselit cms screenshot](./assets/screenshot2.png)
 
 ## Getting Started
 
@@ -87,38 +87,8 @@ This will enable the invidual sites listed in step `1`.
 
 ## Writing Your Own Widget
 
-You can add additional functionality to your application via building your own widgets. Look at [this](widgets.md) document.
+You can add additional functionality to your application via building your own widgets. Have a look at [this](widgets.md) document.
 
 ## Environment variables.
 
-**SITE_URL**
-
-The public address of the site. Required parameter. No default value.
-
-**MEDIA_FOLDER**
-
-A folder on your host machine while will be mounted as a volume to all the containers. It is required for storing database files, user uploaded files, ssl certificates and everything else. Required parameter. No default value.
-
-**MONGO_ROOT_USERNAME, MONGO_ROOT_PASSWORD**
-
-These are required for correctly initializing an admin user in the mongo db instance running inside the container named `db`. Read more about these [here](https://hub.docker.com/_/mongo).
-
-**DB_CONNECTION_STRING**
-
-The connection string to a mongodb instance running in the `db` container. Required parameter. The value should be `mongodb://<MONGO_ROOT_USERNAME>:<MONGO_ROOT_PASSWORD>@db` where `MONGO_ROOT_USERNAME` and `MONGO_ROOT_PASSWORD` are the same variables defined above.
-
-**JWT_SECRET**
-
-A random string to use as a secret to sign the JWT tokens the API generates. Required parameter. No default value.
-
-**JWT_EXPIRES_IN**
-
-The duration after while the generated JWT expires. For more information [check out here](https://www.npmjs.com/package/jsonwebtoken). Optional parameter. Defaults to `1d`.
-
-**DOMAIN**
-
-The domain name for which the ssl certificate is issued. Optional parameter, only required if using a SSL certificate. No default value.
-
-**TAG**
-
-The Docker tag. To see what all tags are available, visit [CourseLit on Docker Hub](https://hub.docker.com/repository/registry-1.docker.io/codelit/courselit-proxy/tags).
+Have a look at the [docker-compose.yml](../deployment/docker/docker-compose.yml) file to know what all environment variables are available for you to tweak.

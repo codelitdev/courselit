@@ -10,6 +10,7 @@ import {
   AccordionSummary,
   AccordionDetails,
   Typography,
+  FormControlLabel,
 } from "@material-ui/core";
 import { lesson, selectedLessonMetaProps } from "../../../../types";
 import {
@@ -21,6 +22,7 @@ import {
   BUTTON_DELETE_GROUP,
   GROUP_LESSON_ITEM_UNTITLED,
   ERROR_GROUP_NEW_LESSON_WITHOUT_SAVE,
+  LABEL_GROUP_COLLAPSE,
 } from "../../../../config/strings";
 import { ExpandMore, Add } from "@material-ui/icons";
 import { withStyles } from "@material-ui/styles";
@@ -128,11 +130,17 @@ const Group = ({
                   />
                 </Grid>
                 <Grid item>
-                  <Switch
-                    type="checkbox"
-                    name="collapsed"
-                    checked={collapsed}
-                    onChange={(e) => setCollapsed(e.target.checked)}
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        type="checkbox"
+                        name="collapsed"
+                        checked={collapsed}
+                        onChange={(e) => setCollapsed(e.target.checked)}
+                      />
+                    }
+                    label={LABEL_GROUP_COLLAPSE}
+                    labelPlacement="start"
                   />
                 </Grid>
                 <Grid item>

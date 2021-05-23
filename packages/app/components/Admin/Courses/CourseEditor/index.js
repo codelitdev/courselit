@@ -201,6 +201,7 @@ const CourseEditor = (props) => {
       }
     } catch (err) {
       props.dispatch(setAppMessage(new AppMessage(err.message)));
+      props.courseId && loadCourse(props.courseId);
     }
   };
 
