@@ -115,7 +115,7 @@ const MediaManager = (props) => {
           </Grid>
           <Grid item>
             <Button
-              variant="contained"
+              variant="outlined"
               color={uploadFormVisible ? "secondary" : "primary"}
               className={classes.fab}
               onClick={showUploadForm}
@@ -131,7 +131,7 @@ const MediaManager = (props) => {
                 <Typography variant="h6" className={classes.cardHeader}>
                   {MEDIA_MANAGER_DIALOG_TITLE}
                 </Typography>
-                <Button variant="contained" component="label" color="primary">
+                <Button variant="outlined" component="label" color="primary">
                   {BUTTON_ADD_FILE}
                   <input
                     type="file"

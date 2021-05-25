@@ -22,6 +22,8 @@ import {
   BTN_UNPUBLISH,
   APP_MESSAGE_COURSE_DELETED,
   COURSE_SETTINGS_CARD_HEADER,
+  NEW_COURSE_PAGE_HEADING,
+  EDIT_COURSE_PAGE_HEADING,
 } from "../../../../config/strings.js";
 import { networkAction, setAppMessage } from "../../../../redux/actions.js";
 import {
@@ -40,8 +42,9 @@ import {
   InputLabel,
   Switch,
   Button,
+  IconButton,
 } from "@material-ui/core";
-import { Delete } from "@material-ui/icons";
+import { ArrowBack, Delete } from "@material-ui/icons";
 import AppMessage from "../../../../models/app-message.js";
 import { MIMETYPE_IMAGE, permissions } from "../../../../config/constants.js";
 import FetchBuilder from "../../../../lib/fetch";
@@ -325,7 +328,7 @@ const CourseEditor = (props) => {
   const loadCourse = async (courseId) => {
     const query = `
     query {
-      course: getCourse(id: "${courseId}") {
+      course: getCourse(courseId: ${courseId}) {
         title,
         cost,
         published,
@@ -375,235 +378,277 @@ const CourseEditor = (props) => {
 
   return (
     <Grid container direction="column" spacing={2}>
-      {!courseStructureEditorActive && (
-        <Grid item xs>
-          <form onSubmit={onCourseCreate}>
-            <Grid container spacing={2}>
-              <Grid item sm={12} md={8}>
-                <Section>
-                  {userError && <div>{userError}</div>}
-                  <TextField
-                    required
-                    variant="outlined"
-                    label="Title"
-                    fullWidth
-                    margin="normal"
-                    name="title"
-                    value={courseData.course.title}
-                    onChange={onCourseDetailsChange}
-                  />
-                  <TextEditor
-                    initialContentState={courseData.course.description}
-                    onChange={onDescriptionChange}
-                  />
-                </Section>
+      <Grid item xs={12}>
+        <Section>
+          <Grid item xs>
+            <Grid container alignItems="center">
+              <Grid item>
+                <IconButton>
+                  <Link href="/dashboard/courses">
+                    <ArrowBack />
+                  </Link>
+                </IconButton>
               </Grid>
-
-              <Grid item sm={12} md={4}>
+              <Grid item>
+                <Typography variant="h1">
+                  {props.courseId
+                    ? EDIT_COURSE_PAGE_HEADING
+                    : NEW_COURSE_PAGE_HEADING}
+                </Typography>
+              </Grid>
+            </Grid>
+          </Grid>
+        </Section>
+      </Grid>
+      <Grid item>
+        <Grid container direction="column">
+          {!courseStructureEditorActive && (
+            <Grid item xs={12}>
+              <form onSubmit={onCourseCreate}>
                 <Grid container spacing={2}>
-                  <Grid item xs={12}>
+                  <Grid item sm={12} md={8}>
                     <Section>
-                      <Grid container direction="row" justify="space-between">
-                        <Grid item>
-                          <Button type="submit">{BUTTON_SAVE}</Button>
-                        </Grid>
-                        {!courseData.course.isBlog && courseData.course.id && (
-                          <Grid item>
-                            <Button
-                              onClick={() =>
-                                setCourseStructureEditorActive(true)
-                              }
-                            >
-                              {BUTTON_MANAGE_LESSONS_TEXT}
-                            </Button>
-                          </Grid>
-                        )}
-                        {courseData.course.id && (
-                          <>
-                            {checkPermission(props.profile.permissions, [
-                              permissions.publishCourse,
-                            ]) && (
-                              <Grid item>
-                                <Button onClick={togglePublishedStatus}>
-                                  {courseData.course.published
-                                    ? BTN_UNPUBLISH
-                                    : BTN_PUBLISH}
-                                </Button>
-                              </Grid>
-                            )}
-                            {courseData.course.published && (
-                              <Grid item>
-                                <Button>
-                                  <Link
-                                    href={formulateCourseUrl(courseData.course)}
-                                  >
-                                    <a target="_blank">
-                                      {courseData.course.isBlog
-                                        ? VISIT_POST_BUTTON
-                                        : VISIT_COURSE_BUTTON}
-                                    </a>
-                                  </Link>
-                                </Button>
-                              </Grid>
-                            )}
-                          </>
-                        )}
-                      </Grid>
+                      {userError && <div>{userError}</div>}
+                      <TextField
+                        required
+                        variant="outlined"
+                        label="Title"
+                        fullWidth
+                        margin="normal"
+                        name="title"
+                        value={courseData.course.title}
+                        onChange={onCourseDetailsChange}
+                      />
+                      <TextEditor
+                        initialContentState={courseData.course.description}
+                        onChange={onDescriptionChange}
+                      />
                     </Section>
                   </Grid>
 
-                  <Grid item xs={12}>
-                    <Section>
-                      <Grid container spacing={2} direction="column">
-                        <Grid item>
-                          <Typography variant="h4">
-                            {COURSE_SETTINGS_CARD_HEADER}
-                          </Typography>
-                        </Grid>
-                        <Grid item>
+                  <Grid item sm={12} md={4}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12}>
+                        <Section>
                           <Grid
                             container
+                            direction="row"
                             justify="space-between"
-                            alignItems="center"
                           >
                             <Grid item>
-                              <Typography variant="body1">
-                                {BLOG_POST_SWITCH}
+                              <Button
+                                type="submit"
+                                variant="outlined"
+                                color="primary"
+                              >
+                                {BUTTON_SAVE}
+                              </Button>
+                            </Grid>
+                            {!courseData.course.isBlog && courseData.course.id && (
+                              <Grid item>
+                                <Button
+                                  variant="outlined"
+                                  onClick={() =>
+                                    setCourseStructureEditorActive(true)
+                                  }
+                                >
+                                  {BUTTON_MANAGE_LESSONS_TEXT}
+                                </Button>
+                              </Grid>
+                            )}
+                            {courseData.course.id && (
+                              <>
+                                {checkPermission(props.profile.permissions, [
+                                  permissions.publishCourse,
+                                ]) && (
+                                  <Grid item>
+                                    <Button
+                                      onClick={togglePublishedStatus}
+                                      variant="outlined"
+                                    >
+                                      {courseData.course.published
+                                        ? BTN_UNPUBLISH
+                                        : BTN_PUBLISH}
+                                    </Button>
+                                  </Grid>
+                                )}
+                                {courseData.course.published && (
+                                  <Grid item>
+                                    <Button>
+                                      <Link
+                                        href={formulateCourseUrl(
+                                          courseData.course
+                                        )}
+                                      >
+                                        <a target="_blank">
+                                          {courseData.course.isBlog
+                                            ? VISIT_POST_BUTTON
+                                            : VISIT_COURSE_BUTTON}
+                                        </a>
+                                      </Link>
+                                    </Button>
+                                  </Grid>
+                                )}
+                              </>
+                            )}
+                          </Grid>
+                        </Section>
+                      </Grid>
+
+                      <Grid item xs={12}>
+                        <Section>
+                          <Grid container spacing={2} direction="column">
+                            <Grid item>
+                              <Typography variant="h4">
+                                {COURSE_SETTINGS_CARD_HEADER}
                               </Typography>
                             </Grid>
                             <Grid item>
-                              <Switch
-                                type="checkbox"
-                                name="isBlog"
-                                checked={courseData.course.isBlog}
-                                onChange={onCourseDetailsChange}
-                              />
-                            </Grid>
-                          </Grid>
-                        </Grid>
-                        {!courseData.course.isBlog && (
-                          <Grid item>
-                            <TextField
-                              required
-                              type="number"
-                              variant="outlined"
-                              label="Cost"
-                              fullWidth
-                              margin="normal"
-                              name="cost"
-                              step="0.1"
-                              value={courseData.course.cost}
-                              onChange={onCourseDetailsChange}
-                            />
-                          </Grid>
-                        )}
-                        <Grid item>
-                          <FormControl
-                            variant="outlined"
-                            className={props.classes.formControl}
-                          >
-                            <InputLabel
-                              ref={inputLabel}
-                              htmlFor="outlined-privacy-simple"
-                            >
-                              Privacy
-                            </InputLabel>
-                            <Select
-                              value={courseData.course.privacy}
-                              onChange={onCourseDetailsChange}
-                              labelwidth={labelWidth}
-                              inputProps={{
-                                name: "privacy",
-                                id: "outlined-privacy-simple",
-                              }}
-                            >
-                              <MenuItem value="PUBLIC">Public</MenuItem>
-                              <MenuItem value="UNLISTED">Unlisted</MenuItem>
-                            </Select>
-                          </FormControl>
-                        </Grid>
-                        <Grid item>
-                          <MediaSelector
-                            title={FORM_FIELD_FEATURED_IMAGE}
-                            src={courseData.course.featuredImage}
-                            onSelection={onFeaturedImageSelection}
-                            mimeTypesToShow={[...MIMETYPE_IMAGE]}
-                          />
-                        </Grid>
-                        {!courseData.course.isBlog && (
-                          <Grid item>
-                            <Grid
-                              container
-                              justify="space-between"
-                              alignItems="center"
-                            >
-                              <Grid item>
-                                <Typography variant="body1">
-                                  Featured course
-                                </Typography>
+                              <Grid
+                                container
+                                justify="space-between"
+                                alignItems="center"
+                              >
+                                <Grid item>
+                                  <Typography variant="body1">
+                                    {BLOG_POST_SWITCH}
+                                  </Typography>
+                                </Grid>
+                                <Grid item>
+                                  <Switch
+                                    type="checkbox"
+                                    name="isBlog"
+                                    checked={courseData.course.isBlog}
+                                    onChange={onCourseDetailsChange}
+                                  />
+                                </Grid>
                               </Grid>
+                            </Grid>
+                            {!courseData.course.isBlog && (
                               <Grid item>
-                                <Switch
-                                  type="checkbox"
-                                  name="isFeatured"
-                                  checked={courseData.course.isFeatured}
+                                <TextField
+                                  required
+                                  type="number"
+                                  variant="outlined"
+                                  label="Cost"
+                                  fullWidth
+                                  margin="normal"
+                                  name="cost"
+                                  step="0.1"
+                                  value={courseData.course.cost}
                                   onChange={onCourseDetailsChange}
                                 />
                               </Grid>
+                            )}
+                            <Grid item>
+                              <FormControl
+                                variant="outlined"
+                                className={props.classes.formControl}
+                              >
+                                <InputLabel
+                                  ref={inputLabel}
+                                  htmlFor="outlined-privacy-simple"
+                                >
+                                  Privacy
+                                </InputLabel>
+                                <Select
+                                  value={courseData.course.privacy}
+                                  onChange={onCourseDetailsChange}
+                                  labelwidth={labelWidth}
+                                  inputProps={{
+                                    name: "privacy",
+                                    id: "outlined-privacy-simple",
+                                  }}
+                                >
+                                  <MenuItem value="PUBLIC">Public</MenuItem>
+                                  <MenuItem value="UNLISTED">Unlisted</MenuItem>
+                                </Select>
+                              </FormControl>
+                            </Grid>
+                            <Grid item>
+                              <MediaSelector
+                                title={FORM_FIELD_FEATURED_IMAGE}
+                                src={courseData.course.featuredImage}
+                                onSelection={onFeaturedImageSelection}
+                                mimeTypesToShow={[...MIMETYPE_IMAGE]}
+                              />
+                            </Grid>
+                            {!courseData.course.isBlog && (
+                              <Grid item>
+                                <Grid
+                                  container
+                                  justify="space-between"
+                                  alignItems="center"
+                                >
+                                  <Grid item>
+                                    <Typography variant="body1">
+                                      Featured course
+                                    </Typography>
+                                  </Grid>
+                                  <Grid item>
+                                    <Switch
+                                      type="checkbox"
+                                      name="isFeatured"
+                                      checked={courseData.course.isFeatured}
+                                      onChange={onCourseDetailsChange}
+                                    />
+                                  </Grid>
+                                </Grid>
+                              </Grid>
+                            )}
+                          </Grid>
+                        </Section>
+                      </Grid>
+
+                      <Grid item xs={12}>
+                        <Section>
+                          <Grid container direction="column" spacing={2}>
+                            <Grid item>
+                              <Typography variant="h4">
+                                {DANGER_ZONE_HEADER}
+                              </Typography>
+                            </Grid>
+                            <Grid item>
+                              <Typography variant="body1">
+                                {DANGER_ZONE_DESCRIPTION}
+                              </Typography>
+                            </Grid>
+                            <Grid item>
+                              <Button
+                                variant="outlined"
+                                color="secondary"
+                                onClick={() => setDeleteCoursePopupOpened(true)}
+                                startIcon={<Delete />}
+                              >
+                                {BTN_DELETE_COURSE}
+                              </Button>
                             </Grid>
                           </Grid>
-                        )}
+                        </Section>
                       </Grid>
-                    </Section>
-                  </Grid>
-
-                  <Grid item xs={12}>
-                    <Section>
-                      <Grid container direction="column" spacing={2}>
-                        <Grid item>
-                          <Typography variant="h4">
-                            {DANGER_ZONE_HEADER}
-                          </Typography>
-                        </Grid>
-                        <Grid item>
-                          <Typography variant="body1">
-                            {DANGER_ZONE_DESCRIPTION}
-                          </Typography>
-                        </Grid>
-                        <Grid item>
-                          <Button
-                            variant="contained"
-                            color="secondary"
-                            onClick={() => setDeleteCoursePopupOpened(true)}
-                            startIcon={<Delete />}
-                          >
-                            {BTN_DELETE_COURSE}
-                          </Button>
-                        </Grid>
-                      </Grid>
-                    </Section>
+                    </Grid>
                   </Grid>
                 </Grid>
-              </Grid>
+              </form>
             </Grid>
-          </form>
+          )}
+          {courseStructureEditorActive && (
+            <CourseStructureEditor
+              courseId={courseData.course.id}
+              onCloseView={() => setCourseStructureEditorActive(false)}
+            />
+          )}
+          <AppDialog
+            onOpen={deleteCoursePopupOpened}
+            onClose={closeDeleteCoursePopup}
+            title={DELETE_COURSE_POPUP_HEADER}
+            actions={[
+              { name: POPUP_CANCEL_ACTION, callback: closeDeleteCoursePopup },
+              { name: POPUP_OK_ACTION, callback: onCourseDelete },
+            ]}
+          />
         </Grid>
-      )}
-      {courseStructureEditorActive && (
-        <CourseStructureEditor
-          courseId={courseData.course.id}
-          onCloseView={() => setCourseStructureEditorActive(false)}
-        />
-      )}
-      <AppDialog
-        onOpen={deleteCoursePopupOpened}
-        onClose={closeDeleteCoursePopup}
-        title={DELETE_COURSE_POPUP_HEADER}
-        actions={[
-          { name: POPUP_CANCEL_ACTION, callback: closeDeleteCoursePopup },
-          { name: POPUP_OK_ACTION, callback: onCourseDelete },
-        ]}
-      />
+      </Grid>
     </Grid>
   );
 };
@@ -615,7 +660,7 @@ CourseEditor.propTypes = {
   dispatch: PropTypes.func.isRequired,
 
   // TODO: Refactor away the following properties.
-  closeEditor: PropTypes.func.isRequired,
+  closeEditor: PropTypes.func,
 
   address: addressProps,
   classes: PropTypes.object.isRequired,

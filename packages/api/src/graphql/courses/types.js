@@ -82,6 +82,7 @@ const creatorOrAdminCoursesItemType = new graphql.GraphQLObjectType({
     title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     featuredImage: { type: graphql.GraphQLString },
     isBlog: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
+    courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
   },
 });
 

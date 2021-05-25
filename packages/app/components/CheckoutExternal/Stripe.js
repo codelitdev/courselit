@@ -79,7 +79,7 @@ const Stripe = (props) => {
   };
 
   return (
-    <Button onClick={handleClick} variant="contained" color="primary">
+    <Button onClick={handleClick} variant="outlined" color="primary">
       {ENROLL_BUTTON_TEXT}
     </Button>
   );

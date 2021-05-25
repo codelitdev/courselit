@@ -268,3 +268,4 @@ export const COURSE_STRUCTURE_SELECT_LESSON =
 export const ERROR_GROUP_NEW_LESSON_WITHOUT_SAVE =
   "Save section settings first";
 export const LABEL_GROUP_COLLAPSE = "Show as expanded";
+export const SEARCH_TEXTBOX_PLACEHOLDER = "Search";

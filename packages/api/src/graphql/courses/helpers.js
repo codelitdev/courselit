@@ -13,7 +13,7 @@ exports.validateBlogPosts = (courseData) => {
       throw new Error(strings.responses.blog_description_empty);
     }
 
-    if (courseData.lessons.length) {
+    if (courseData.lessons && courseData.lessons.length) {
       throw new Error(strings.responses.cannot_convert_to_blog);
     }
 

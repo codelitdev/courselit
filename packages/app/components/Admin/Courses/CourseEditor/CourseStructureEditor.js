@@ -221,9 +221,6 @@ const CourseStructureEditor = ({
     }
   };
 
-  // const onUpdateGroupName = () => {};
-  // const onUpdateGroupRank = () => {};
-
   const onSelectLesson = (groupId, index) => {
     const lesson = lessons.filter((lesson) => lesson.groupId === groupId)[
       index
@@ -262,7 +259,7 @@ const CourseStructureEditor = ({
                 <Section>
                   <Grid container direction="column" spacing={2}>
                     <Grid item>
-                      <Button onClick={onCloseView}>
+                      <Button onClick={onCloseView} variant="outlined">
                         {BUTTON_LESSON_VIEW_GO_BACK}
                       </Button>
                     </Grid>
@@ -298,7 +295,7 @@ const CourseStructureEditor = ({
                     onClick={onAddGroup}
                     startIcon={<Add />}
                     fullWidth
-                    variant="contained"
+                    variant="outlined"
                     color="primary"
                   >
                     {BUTTON_NEW_GROUP_TEXT}

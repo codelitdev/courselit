@@ -111,7 +111,7 @@ const PurchaseStatus = (props) => {
             </Grid>
             <Grid item>
               <Link href={courseLink}>
-                <Button variant="contained" color="primary">
+                <Button variant="outlined" color="primary">
                   {VISIT_COURSE_BUTTON}
                 </Button>
               </Link>
@@ -138,7 +138,7 @@ const PurchaseStatus = (props) => {
                 </Grid>
                 <Grid item>
                   <Button
-                    variant="contained"
+                    variant="outlined"
                     color="primary"
                     onClick={getPaymentStatus}
                   >
@@ -166,7 +166,7 @@ const PurchaseStatus = (props) => {
             </Grid>
             <Grid item>
               <Link href={courseLink}>
-                <Button variant="contained" color="primary">
+                <Button variant="outlined" color="primary">
                   {VISIT_COURSE_BUTTON}
                 </Button>
               </Link>

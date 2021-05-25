@@ -77,11 +77,17 @@ Once you have this setup, follow these steps.
 ```
 mongo
 use app
-db.domains.insert({ name: "domain1" })
-db.domains.insert({ name: "domain2" })
+var subscriptionExpiresAt = new Date()
+subscriptionExpiresAt.setDate(subscriptionExpiresAt.getDate() + 90)
+
+db.domains.insert({ name: "domain1", deleted: false, email: "domain1@email.com" })
+db.subscribers.insert({ email: "domain1@email.com", subscriptionEndsAfter: subscriptionExpiresAt})
+
+db.domains.insert({ name: "domain2", deleted: false, email: "domain2@email.com" })
+db.subscribers.insert({ email: "domain2@email.com", subscriptionEndsAfter: subscriptionExpiresAt})
 ```
 
-This will enable the invidual sites listed in step `1`.
+This will enable the invidual sites listed in step `1` with subscriptions valid for `90 days`.
 
 5. Visit `domain1.localsite.com` to see CourseLit in action.
 

@@ -62,7 +62,7 @@ const Free = ({ course, auth, dispatch, address }) => {
   return (
     <Button
       onClick={handleClick}
-      variant="contained"
+      variant="outlined"
       color="primary"
       disabled={disabled}
     >

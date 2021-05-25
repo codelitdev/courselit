@@ -122,7 +122,7 @@ function Upload({ auth, address, dispatch, resetOverview }) {
   return (
     <Section>
       <form onSubmit={onUpload}>
-        <Button variant="contained" component="label" color="primary">
+        <Button variant="outlined" component="label" color="primary">
           {BUTTON_ADD_FILE}
           <input
             type="file"
@@ -140,7 +140,7 @@ function Upload({ auth, address, dispatch, resetOverview }) {
           value={uploadData.altText}
           onChange={onUploadDataChanged}
         />
-        <Button type="submit" disabled={uploading}>
+        <Button type="submit" disabled={uploading} variant="outlined">
           {uploading ? MEDIA_UPLOADING : MEDIA_UPLOAD_BUTTON_TEXT}
         </Button>
       </form>

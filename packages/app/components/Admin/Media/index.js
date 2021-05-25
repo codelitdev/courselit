@@ -97,7 +97,7 @@ const Index = (props) => {
     map.push({
       Overview: (
         <Button
-          variant="contained"
+          variant="outlined"
           className={classes.btn}
           onClick={() => loadMedia()}
         >
@@ -146,7 +146,7 @@ const Index = (props) => {
     Overview: (
       <>
         <Button
-          variant="contained"
+          variant="outlined"
           color="primary"
           startIcon={<Add />}
           className={classes.btn}

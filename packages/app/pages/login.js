@@ -126,7 +126,7 @@ const Login = ({ address, auth, dispatch, progress }) => {
                   </Grid>
                   <Grid item>
                     <Button
-                      variant="contained"
+                      variant="outlined"
                       type="submit"
                       color="primary"
                       disabled={progress || !email}
