@@ -50,6 +50,9 @@ const useStyles = makeStyles((theme) => ({
   listItem: {
     cursor: "pointer",
   },
+  listItemText: {
+    paddingLeft: theme.spacing(1),
+  },
 }));
 
 const Index = (props) => {
@@ -206,6 +209,7 @@ const Index = (props) => {
                         secondary={
                           course.isBlog ? COURSE_TYPE_BLOG : COURSE_TYPE_COURSE
                         }
+                        className={classes.listItemText}
                       />
                     </ListItem>
                   </Link>
