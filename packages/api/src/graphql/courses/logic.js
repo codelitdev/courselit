@@ -11,6 +11,7 @@ const {
   extractPlainTextFromDraftJS,
   checkPermission,
   checkOwnershipWithoutModel,
+  makeModelTextSearchable,
 } = require("../../lib/graphql.js");
 const {
   open,
@@ -166,7 +167,7 @@ exports.removeLesson = async (courseId, lessonId, ctx) => {
   return true;
 };
 
-exports.getCoursesAsAdmin = async (offset, ctx) => {
+exports.getCoursesAsAdmin = async (offset, ctx, text) => {
   checkIfAuthenticated(ctx);
   validateOffset(offset);
   const user = ctx.user;
@@ -187,10 +188,23 @@ exports.getCoursesAsAdmin = async (offset, ctx) => {
     query.creatorId = `${user.userId || user.id}`;
   }
 
-  return await Course.find(query)
-    .sort({ updated: -1 })
-    .skip((offset - 1) * itemsPerPage)
-    .limit(itemsPerPage);
+  if (text) query.$text = { $search: text };
+  const SearchableCourse = makeModelTextSearchable(Course);
+
+  const resultSet = await SearchableCourse(
+    { offset, query, graphQLContext: ctx },
+    {
+      itemsPerPage,
+      sortByColumn: "updated",
+      sortOrder: -1,
+    }
+  );
+
+  return resultSet;
+  // return await Course.find(query)
+  //   .sort({ updated: -1 })
+  //   .skip((offset - 1) * itemsPerPage)
+  //   .limit(itemsPerPage);
 };
 
 exports.getPosts = async (offset, ctx) => {

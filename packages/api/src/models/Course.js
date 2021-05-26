@@ -28,6 +28,15 @@ const CourseSchema = new mongoose.Schema({
   ],
 });
 
+CourseSchema.index({
+  title: "text",
+});
+
+CourseSchema.pre("save", function (next) {
+  this.updated = Date.now();
+  return next();
+});
+
 CourseSchema.plugin(AutoIncrement, { inc_field: "courseId" });
 
 module.exports = mongoose.model("Course", CourseSchema);

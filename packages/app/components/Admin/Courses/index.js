@@ -56,73 +56,34 @@ const Index = (props) => {
   const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1);
   const [creatorCourses, setCreatorCourses] = useState([]);
   const [searchText, setSearchText] = useState("");
+  const [searchState, setSearchState] = useState(0);
   const classes = useStyles();
 
   useEffect(() => {
     loadCreatorCourses();
   }, []);
 
-  // useEffect(() => {
-  //   const map = [];
-  //   creatorCourses.map((course) => {
-  //     map.push(getComponent(course));
-  //   });
-  //   map.push({
-  //     Overview: (
-  //       <Button
-  //         variant="outlined"
-  //         className={classes.btn}
-  //         onClick={loadCreatorCourses}
-  //       >
-  //         {LOAD_MORE_TEXT}
-  //       </Button>
-  //     ),
-  //   });
-  //   if (
-  //     checkPermission(props.profile.permissions, [permissions.manageCourse])
-  //   ) {
-  //     map.unshift({
-  //       subtitle: NEW_COURSE_PAGE_HEADING,
-  //       Overview: (
-  //         <>
-  //           <Button
-  //             variant="outlined"
-  //             color="primary"
-  //             startIcon={<Add />}
-  //             className={classes.btn}
-  //           >
-  //             Add new
-  //           </Button>
-  //         </>
-  //       ),
-  //       Detail: <CourseEditor closeEditor={() => {}} />,
-  //     });
-  //   }
-  //   setComponentsMap(map);
-  // }, [coursesPaginationOffset]);
-
-  // const getComponent = (course) => ({
-  //   subtitle: EDIT_COURSE_PAGE_HEADING,
-  //   Overview: (
-  //     <>
-  //       <Img src={constructThumbnailUrlFromFileUrl(course.featuredImage)} />
-  //       <GridListTileBar
-  //         title={course.title}
-  //         subtitle={course.isBlog ? COURSE_TYPE_BLOG : COURSE_TYPE_COURSE}
-  //       />
-  //     </>
-  //   ),
-  //   Detail: (
-  //     <CourseEditor
-  //       courseId={course.id}
-  //       markDirty={() => {}}
-  //       closeEditor={() => {}}
-  //     />
-  //   ),
-  // });
+  useEffect(() => {
+    loadCreatorCourses();
+  }, [searchState]);
 
   const loadCreatorCourses = async () => {
-    const query = `
+    const query = searchText
+      ? `
+    query {
+      courses: getCoursesAsAdmin(
+        offset: ${coursesPaginationOffset},
+        searchText: "${searchText}"
+      ) {
+        id,
+        title,
+        featuredImage,
+        isBlog,
+        courseId
+      }
+    }
+    `
+      : `
     query {
       courses: getCoursesAsAdmin(
         offset: ${coursesPaginationOffset}
@@ -156,13 +117,22 @@ const Index = (props) => {
 
   const searchCourses = async (e) => {
     e.preventDefault();
+
+    setCoursesPaginationOffset(1);
+    setCreatorCourses([]);
+    setSearchState(searchState + 1);
   };
 
   return (
     <Grid container direction="column" spacing={2}>
       <Grid item xs={12}>
         <Section>
-          <Grid container justify="space-between" alignItems="center">
+          <Grid
+            container
+            justify="space-between"
+            alignItems="center"
+            spacing={1}
+          >
             <Grid item>
               <Typography variant="h1">
                 {MANAGE_COURSES_PAGE_HEADING}
