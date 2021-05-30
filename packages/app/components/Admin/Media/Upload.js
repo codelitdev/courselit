@@ -8,7 +8,6 @@ import {
   BUTTON_ADD_FILE,
   MEDIA_UPLOAD_BUTTON_TEXT,
   MEDIA_UPLOADING,
-  FILE_UPLOAD_SUCCESS,
 } from "../../../config/strings";
 import { addressProps, authProps } from "../../../types";
 import fetch from "isomorphic-unfetch";
@@ -39,45 +38,45 @@ function Upload({ auth, address, dispatch, resetOverview }) {
       })
     );
 
-  const uploadToLocalDisk = async () => {
-    const fD = new window.FormData();
-    fD.append("title", uploadData.title);
-    fD.append("altText", uploadData.altText);
-    fD.append("file", fileInput.current.files[0]);
+  // const uploadToLocalDisk = async () => {
+  //   const fD = new window.FormData();
+  //   fD.append("title", uploadData.title);
+  //   fD.append("altText", uploadData.altText);
+  //   fD.append("file", fileInput.current.files[0]);
 
-    setUploadData(
-      Object.assign({}, uploadData, {
-        uploading: true,
-      })
-    );
+  //   setUploadData(
+  //     Object.assign({}, uploadData, {
+  //       uploading: true,
+  //     })
+  //   );
 
-    try {
-      setUploading(true);
+  //   try {
+  //     setUploading(true);
 
-      let res = await fetch(`${address.backend}/media`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${auth.token}`,
-        },
-        body: fD,
-      });
-      res = await res.json();
+  //     let res = await fetch(`${address.backend}/media`, {
+  //       method: "POST",
+  //       headers: {
+  //         Authorization: `Bearer ${auth.token}`,
+  //       },
+  //       body: fD,
+  //     });
+  //     res = await res.json();
 
-      if (res.media) {
-        setUploadData(defaultUploadData);
-        dispatch(setAppMessage(new AppMessage(FILE_UPLOAD_SUCCESS)));
-        await resetOverview();
-      } else {
-        dispatch(setAppMessage(new AppMessage(res.message)));
-      }
-    } catch (err) {
-      dispatch(setAppMessage(new AppMessage(err.message)));
-    } finally {
-      setUploading(false);
-    }
-  };
+  //     if (res.media) {
+  //       setUploadData(defaultUploadData);
+  //       dispatch(setAppMessage(new AppMessage(FILE_UPLOAD_SUCCESS)));
+  //       resetOverview();
+  //     } else {
+  //       dispatch(setAppMessage(new AppMessage(res.message)));
+  //     }
+  //   } catch (err) {
+  //     dispatch(setAppMessage(new AppMessage(err.message)));
+  //   } finally {
+  //     setUploading(false);
+  //   }
+  // };
 
-  const uploadToCloud = async () => {
+  const uploadToServer = async () => {
     const fD = new window.FormData();
     fD.append("title", uploadData.title);
     fD.append("altText", uploadData.altText);
@@ -102,6 +101,7 @@ function Upload({ auth, address, dispatch, resetOverview }) {
       res = await res.json();
 
       dispatch(setAppMessage(new AppMessage(res.message)));
+      resetOverview();
     } catch (err) {
       dispatch(setAppMessage(new AppMessage(err.message)));
     } finally {
@@ -112,11 +112,7 @@ function Upload({ auth, address, dispatch, resetOverview }) {
   const onUpload = async (e) => {
     e.preventDefault();
 
-    if (process.env.NEXT_PUBLIC_USE_CLOUD_STORAGE) {
-      await uploadToCloud();
-    } else {
-      await uploadToLocalDisk();
-    }
+    await uploadToServer();
   };
 
   return (

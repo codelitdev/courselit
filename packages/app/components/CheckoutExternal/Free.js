@@ -65,6 +65,7 @@ const Free = ({ course, auth, dispatch, address }) => {
       variant="outlined"
       color="primary"
       disabled={disabled}
+      size="large"
     >
       {ENROLL_BUTTON_TEXT}
     </Button>

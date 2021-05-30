@@ -33,6 +33,7 @@ const Index = (props) => {
   const [mediaPaginationOffset, setMediaPaginationOffset] = useState(1);
   const [creatorMedia, setCreatorMedia] = useState([]);
   const [componentsMap, setComponentsMap] = useState([]);
+  const [refreshMedia, setRefreshMedia] = useState(0);
   const [searchText] = useState("");
   const classes = useStyles();
 
@@ -41,15 +42,20 @@ const Index = (props) => {
   }, []);
 
   useEffect(() => {
+    loadMedia();
+  }, [refreshMedia]);
+
+  useEffect(() => {
     composeOverView(creatorMedia);
   }, [mediaPaginationOffset, creatorMedia]);
 
-  const loadMedia = async (reset = false) => {
+  const loadMedia = async () => {
     const query = `
     query {
-      media: getCreatorMedia(offset: ${
-        reset ? 1 : mediaPaginationOffset
-      }, searchText: "${searchText}") {
+      media: getCreatorMedia(
+        offset: ${mediaPaginationOffset},
+        searchText: "${searchText}"
+      ) {
         id,
         originalFileName,
         mimeType,
@@ -76,11 +82,8 @@ const Index = (props) => {
                 props.mimeTypesToShow.includes(item.mimeType)
               )
             : response.media;
-        setCreatorMedia(
-          reset ? filteredMedia : [...creatorMedia, ...filteredMedia]
-        );
-        const newOffset = reset ? 2 : mediaPaginationOffset + 1;
-        setMediaPaginationOffset(newOffset);
+        setCreatorMedia([...creatorMedia, ...filteredMedia]);
+        setMediaPaginationOffset(mediaPaginationOffset + 1);
       }
     } catch (err) {
       props.dispatch(setAppMessage(new AppMessage(err.message)));
@@ -105,10 +108,7 @@ const Index = (props) => {
         </Button>
       ),
     });
-    if (
-      !props.selectionMode &&
-      checkPermission(props.profile.permissions, [permissions.uploadMedia])
-    ) {
+    if (checkPermission(props.profile.permissions, [permissions.uploadMedia])) {
       map.unshift(getAddMediaComponentConfig());
     }
     setComponentsMap(map);
@@ -127,8 +127,9 @@ const Index = (props) => {
       ),
     };
 
+    componentConfig.subtitle = HEADER_EDITING_MEDIA;
+
     if (!props.selectionMode) {
-      componentConfig.subtitle = HEADER_EDITING_MEDIA;
       componentConfig.Detail = (
         <Editor
           media={media}
@@ -158,8 +159,10 @@ const Index = (props) => {
     Detail: <Upload resetOverview={resetOverview} />,
   });
 
-  const resetOverview = async () => {
-    await loadMedia(true);
+  const resetOverview = () => {
+    setMediaPaginationOffset(1);
+    setCreatorMedia([]);
+    setRefreshMedia(refreshMedia + 1);
   };
 
   const onMediaEdited = (editedMedia) => {
@@ -177,14 +180,17 @@ const Index = (props) => {
   };
 
   const onSelect = (index) => {
-    if (Object.prototype.hasOwnProperty.call(props, "onSelect")) {
-      props.onSelect(creatorMedia[index]);
+    if (
+      Object.prototype.hasOwnProperty.call(props, "onSelect") &&
+      creatorMedia[index - 1]
+    ) {
+      props.onSelect(creatorMedia[index - 1]);
     }
   };
 
   return (
     <OverviewAndDetail
-      title={props.selectionMode ? "" : MEDIA_MANAGER_PAGE_HEADING}
+      title={MEDIA_MANAGER_PAGE_HEADING}
       componentsMap={componentsMap}
       onSelect={onSelect}
     />

@@ -71,6 +71,8 @@ exports.responses = {
   mimetype_is_required: "Mimetype is required",
   existing_group: "A group with that name exists",
   group_not_empty: "The group has associated lessons",
+  update_payment_method:
+    "You need to set up a payment method to create paid courses.",
 };
 
 exports.internal = {

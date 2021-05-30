@@ -4,7 +4,16 @@ const strings = require("../../config/strings.js");
 
 const validatePaymentMethod = async () => {
   const siteinfo = (await SiteInfo.find())[0];
-  await getPaymentMethod(siteinfo && siteinfo.paymentMethod);
+
+  try {
+    await getPaymentMethod(siteinfo && siteinfo.paymentMethod);
+  } catch (err) {
+    if (err.message === strings.internal.error_unrecognised_payment_method) {
+      throw new Error(strings.responses.update_payment_method);
+    } else {
+      throw err;
+    }
+  }
 };
 
 exports.validateBlogPosts = (courseData) => {
