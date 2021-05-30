@@ -83,9 +83,9 @@ const Login = ({ address, auth, dispatch, progress }) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           email,
-          redirect
+          redirect,
         }),
       });
 
