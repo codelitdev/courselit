@@ -37,6 +37,7 @@ module.exports = (passport) => {
             hostname: req.hostname,
             loginPath: constants.frontendLoginPath,
             secure: req.secure,
+            redirect: req.body.redirect,
           })}">
             ${responses.sign_in_link_text}
           </a>
@@ -45,7 +46,10 @@ module.exports = (passport) => {
         });
       },
       async (req, user) => {
-        let dbUser = await User.findOne({ email: user.email });
+        let dbUser = await User.findOne({
+          email: user.email,
+          domain: req.subdomain._id,
+        });
 
         if (!dbUser) {
           const newUser = {

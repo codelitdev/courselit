@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
+import { connect } from "react-redux";
 import {
   Grid,
   TextField,
@@ -9,7 +10,7 @@ import {
   AccordionSummary,
   AccordionDetails,
   Typography,
-  Divider,
+  FormControlLabel,
 } from "@material-ui/core";
 import { lesson, selectedLessonMetaProps } from "../../../../types";
 import {
@@ -20,9 +21,13 @@ import {
   BUTTON_NEW_LESSON_TEXT,
   BUTTON_DELETE_GROUP,
   GROUP_LESSON_ITEM_UNTITLED,
+  ERROR_GROUP_NEW_LESSON_WITHOUT_SAVE,
+  LABEL_GROUP_COLLAPSE,
 } from "../../../../config/strings";
 import { ExpandMore, Add } from "@material-ui/icons";
 import { withStyles } from "@material-ui/styles";
+import { setAppMessage } from "../../../../redux/actions";
+import AppMessage from "../../../../models/app-message";
 
 const styles = (theme) => ({
   lesson: {
@@ -32,6 +37,13 @@ const styles = (theme) => ({
     background: "#eee",
     borderRadius: 4,
     margin: theme.spacing(1),
+  },
+  section: {
+    border: "1px solid #eee",
+    background: "#f7f7f7",
+    borderRadius: 4,
+    padding: theme.spacing(1),
+    marginBottom: theme.spacing(2),
   },
 });
 
@@ -44,6 +56,7 @@ const Group = ({
   onSelectLesson,
   selectedLesson,
   classes,
+  dispatch,
 }) => {
   const [name, setName] = useState(group.name);
   const [rank, setRank] = useState(group.rank);
@@ -66,6 +79,16 @@ const Group = ({
     updateGroup({ id: group.id, name, rank, collapsed });
   };
 
+  const handleAddLesson = (groupId) => {
+    if (!groupId) {
+      return dispatch(
+        setAppMessage(new AppMessage(ERROR_GROUP_NEW_LESSON_WITHOUT_SAVE))
+      );
+    }
+
+    onAddLesson(groupId);
+  };
+
   return (
     <Accordion>
       <AccordionSummary
@@ -76,8 +99,8 @@ const Group = ({
         <Typography variant="subtitle1">{name}</Typography>
       </AccordionSummary>
       <AccordionDetails>
-        <Grid container direction="column" spacing={2}>
-          <Grid item>
+        <Grid container direction="column">
+          <Grid item className={classes.section}>
             <form onSubmit={onSubmit}>
               <Grid container direction="column" spacing={1}>
                 <Grid item>
@@ -107,11 +130,17 @@ const Group = ({
                   />
                 </Grid>
                 <Grid item>
-                  <Switch
-                    type="checkbox"
-                    name="collapsed"
-                    checked={collapsed}
-                    onChange={(e) => setCollapsed(e.target.checked)}
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        type="checkbox"
+                        name="collapsed"
+                        checked={collapsed}
+                        onChange={(e) => setCollapsed(e.target.checked)}
+                      />
+                    }
+                    label={LABEL_GROUP_COLLAPSE}
+                    labelPlacement="start"
                   />
                 </Grid>
                 <Grid item>
@@ -122,10 +151,7 @@ const Group = ({
               </Grid>
             </form>
           </Grid>
-          <Grid item>
-            <Divider />
-          </Grid>
-          <Grid item>
+          <Grid item className={classes.section}>
             <Grid container direction="column" spacing={1}>
               <Grid item>
                 <Typography variant="h6">{GROUP_LESSONS_HEADER}</Typography>
@@ -136,7 +162,7 @@ const Group = ({
                     <>
                       {index === selectedLesson.index &&
                         group.id === selectedLesson.groupId && (
-                          <Grid item className={classes.selected}>
+                          <Grid item className={classes.selected} key={index}>
                             {item.title && (
                               <Typography>{item.title}</Typography>
                             )}
@@ -154,6 +180,7 @@ const Group = ({
                           item
                           className={classes.lesson}
                           onClick={() => onSelectLesson(group.id, index)}
+                          key={index}
                         >
                           {item.title && <Typography>{item.title}</Typography>}
                           {!item.title && (
@@ -169,7 +196,7 @@ const Group = ({
               </Grid>
               <Grid item>
                 <Button
-                  onClick={() => onAddLesson(group.id)}
+                  onClick={() => handleAddLesson(group.id)}
                   startIcon={<Add />}
                 >
                   {BUTTON_NEW_LESSON_TEXT}
@@ -197,6 +224,14 @@ Group.propTypes = {
   onSelectLesson: PropTypes.func.isRequired,
   selectedLesson: selectedLessonMetaProps,
   classes: PropTypes.object.isRequired,
+  dispatch: PropTypes.func.isRequired,
 };
 
-export default withStyles(styles)(Group);
+const mapDispatchToProps = (dispatch) => ({
+  dispatch: dispatch,
+});
+
+export default connect(
+  () => ({}),
+  mapDispatchToProps
+)(withStyles(styles)(Group));

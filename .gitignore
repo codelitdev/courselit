@@ -23,3 +23,6 @@ report*.json
 
 # yarn
 .yarn
+
+# uploads folder
+~

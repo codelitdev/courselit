@@ -115,7 +115,7 @@ const UsersManager = ({ auth, address, dispatch }) => {
     });
     map.push({
       Overview: (
-        <Button variant="contained" className={classes.btn} onClick={loadUsers}>
+        <Button variant="outlined" className={classes.btn} onClick={loadUsers}>
           {LOAD_MORE_TEXT}
         </Button>
       ),

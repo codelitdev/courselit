@@ -55,7 +55,7 @@ const List = (props) => {
       {shouldShowLoadMoreButton && courses.length > 0 && (
         <Grid item xs={12}>
           <Button
-            variant="contained"
+            variant="outlined"
             disableElevation
             onClick={() => setOffset(offset + 1)}
           >

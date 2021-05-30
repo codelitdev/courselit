@@ -26,6 +26,7 @@ UserSchema.index(
   { unique: true }
 );
 
+// TODO: remove the following
 // This pre-hook hashes the plain text password before saving it to the db
 UserSchema.pre("save", async function (next) {
   if (this.isModified("password")) {

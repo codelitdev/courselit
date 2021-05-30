@@ -105,8 +105,16 @@ exports.isSubscriptionValid = (dateStr) => {
   return new Date(dateStr).getTime() > new Date().getTime();
 };
 
-exports.generateMagicLink = ({ token, hostname, loginPath, secure = true }) => {
+exports.generateMagicLink = ({
+  token,
+  hostname,
+  loginPath,
+  secure = true,
+  redirect,
+}) => {
   return `${
     secure ? "https" : "http"
-  }://${hostname}${loginPath}?token=${token}`;
+  }://${hostname}${loginPath}?token=${token}${
+    redirect ? `&redirect=${redirect}` : ""
+  }`;
 };

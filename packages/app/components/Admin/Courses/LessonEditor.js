@@ -366,7 +366,7 @@ const LessonEditor = (props) => {
                         Object.assign({}, lesson, { contentURL: media.file })
                       )
                     }
-                    mimeTypesToShow={[getMimeTypesToShow()]}
+                    mimeTypesToShow={getMimeTypesToShow()}
                   />
                 </div>
               )}

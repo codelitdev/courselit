@@ -20,7 +20,7 @@ const MediaManagerDialog = (props) => {
   const handleSelection = () => onClose(selectedMedia);
 
   return (
-    <Dialog onClose={onClose} open={onOpen}>
+    <Dialog onClose={onClose} open={onOpen} fullWidth={true} maxWidth="lg">
       <DialogTitle>{props.title}</DialogTitle>
       <DialogContent>
         <MediaGallery

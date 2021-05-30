@@ -21,7 +21,7 @@ export const latestPostsProps = PropTypes.shape({
   id: PropTypes.string.isRequired,
   title: PropTypes.string.isRequired,
   description: PropTypes.string.isRequired,
-  creatorName: PropTypes.string.isRequired,
+  creatorName: PropTypes.string,
   updated: PropTypes.number.isRequired,
   slug: PropTypes.string.isRequired,
 });

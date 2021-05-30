@@ -9,7 +9,6 @@ const userType = new graphql.GraphQLObjectType({
     purchases: { type: new graphql.GraphQLList(graphql.GraphQLID) },
     active: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
     userId: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
-    avatar: { type: graphql.GraphQLString },
     bio: { type: graphql.GraphQLString },
     permissions: { type: new graphql.GraphQLList(graphql.GraphQLString) },
   },
@@ -20,9 +19,7 @@ const userUpdateInput = new graphql.GraphQLInputObjectType({
   fields: {
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     name: { type: graphql.GraphQLString },
-    avatar: { type: graphql.GraphQLString },
     active: { type: graphql.GraphQLBoolean },
-    password: { type: graphql.GraphQLString },
     bio: { type: graphql.GraphQLString },
     permissions: { type: new graphql.GraphQLList(graphql.GraphQLString) },
   },

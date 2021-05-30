@@ -36,7 +36,10 @@ const MediaSelector = (props) => {
         <Img src={constructThumbnailUrlFromFileUrl(props.src)} />
       </Grid>
       <Grid item>
-        <Button onClick={() => setDialogOpened(!dialogOpened)}>
+        <Button
+          variant="outlined"
+          onClick={() => setDialogOpened(!dialogOpened)}
+        >
           {BUTTON_SELECT_MEDIA}
         </Button>
       </Grid>
