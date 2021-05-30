@@ -37,6 +37,7 @@ module.exports = (passport) => {
             hostname: req.hostname,
             loginPath: constants.frontendLoginPath,
             secure: req.secure,
+            redirect: req.body.redirect,
           })}">
             ${responses.sign_in_link_text}
           </a>

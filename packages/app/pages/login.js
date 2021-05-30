@@ -22,7 +22,7 @@ const BaseLayout = dynamic(() => import("../components/Public/BaseLayout"));
 const Login = ({ address, auth, dispatch, progress }) => {
   const [email, setEmail] = useState("");
   const router = useRouter();
-  const { token } = router.query;
+  const { token, redirect } = router.query;
 
   useEffect(() => {
     if (!auth.guest) {
@@ -83,7 +83,10 @@ const Login = ({ address, auth, dispatch, progress }) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ 
+          email,
+          redirect
+        }),
       });
 
       if (response.status === 200) {
