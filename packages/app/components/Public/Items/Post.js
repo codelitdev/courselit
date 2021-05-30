@@ -70,7 +70,7 @@ Post.propTypes = {
   title: PropTypes.string.isRequired,
   description: PropTypes.string.isRequired,
   updated: PropTypes.string.isRequired,
-  creatorName: PropTypes.string.isRequired,
+  creatorName: PropTypes.string,
   slug: PropTypes.string.isRequired,
   featuredImage: PropTypes.string,
   courseId: PropTypes.number.isRequired,

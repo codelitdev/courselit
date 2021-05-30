@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { Grid, Button, Typography } from "@material-ui/core";
-import { Add, ArrowBack } from "@material-ui/icons";
+import { Add } from "@material-ui/icons";
 import dynamic from "next/dynamic";
 import {
   BUTTON_LESSON_VIEW_GO_BACK,
   BUTTON_NEW_GROUP_TEXT,
+  COURSE_STRUCTURE_SELECT_LESSON,
   SECTION_GROUP_HEADER,
 } from "../../../../config/strings";
 import { Section, RichText as TextEditor } from "@courselit/components-library";
@@ -20,12 +21,17 @@ import { withStyles } from "@material-ui/styles";
 const LessonEditor = dynamic(() => import("../LessonEditor"));
 const Group = dynamic(() => import("./Group"));
 
-const styles = {
+const styles = (theme) => ({
   groupsContainer: {
     maxHeight: 720,
     overflowY: "scroll",
   },
-};
+  placeholder: {
+    padding: theme.spacing(4),
+    border: "2px dashed #eee",
+    textAlign: "center",
+  },
+});
 
 const CourseStructureEditor = ({
   courseId,
@@ -215,9 +221,6 @@ const CourseStructureEditor = ({
     }
   };
 
-  // const onUpdateGroupName = () => {};
-  // const onUpdateGroupRank = () => {};
-
   const onSelectLesson = (groupId, index) => {
     const lesson = lessons.filter((lesson) => lesson.groupId === groupId)[
       index
@@ -231,25 +234,6 @@ const CourseStructureEditor = ({
         <Grid container spacing={2}>
           <Grid item xs={12} md={8}>
             <Grid container direction="column" spacing={2}>
-              <Grid item>
-                <Section>
-                  <Grid container alignItems="center" spacing={2}>
-                    <Grid item>
-                      <Button onClick={onCloseView} startIcon={<ArrowBack />}>
-                        {BUTTON_LESSON_VIEW_GO_BACK}
-                      </Button>
-                    </Grid>
-                    <Grid item>
-                      <Typography variant="h6">|</Typography>
-                    </Grid>
-                    <Grid item>
-                      <Typography variant="body1" color="textSecondary">
-                        Select a lesson to begin with
-                      </Typography>
-                    </Grid>
-                  </Grid>
-                </Section>
-              </Grid>
               {selectedLesson.groupId && (
                 <Grid item>
                   <LessonEditor
@@ -258,6 +242,30 @@ const CourseStructureEditor = ({
                   />
                 </Grid>
               )}
+              {!selectedLesson.groupId && (
+                <Grid item>
+                  <Section>
+                    <Typography
+                      variant="h5"
+                      color="textSecondary"
+                      className={classes.placeholder}
+                    >
+                      {COURSE_STRUCTURE_SELECT_LESSON}
+                    </Typography>
+                  </Section>
+                </Grid>
+              )}
+              <Grid item>
+                <Section>
+                  <Grid container direction="column" spacing={2}>
+                    <Grid item>
+                      <Button onClick={onCloseView} variant="outlined">
+                        {BUTTON_LESSON_VIEW_GO_BACK}
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </Section>
+              </Grid>
             </Grid>
           </Grid>
           <Grid item xs={12} md={4} className={classes.groupsContainer}>
@@ -269,9 +277,9 @@ const CourseStructureEditor = ({
                 <Grid item>
                   {groups
                     .sort((a, b) => a.rank - b.rank)
-                    .map((group) => (
+                    .map((group, index) => (
                       <Group
-                        key={group.id}
+                        key={index}
                         group={group}
                         lessons={lessons}
                         onAddLesson={onAddLesson}
@@ -287,7 +295,7 @@ const CourseStructureEditor = ({
                     onClick={onAddGroup}
                     startIcon={<Add />}
                     fullWidth
-                    variant="contained"
+                    variant="outlined"
                     color="primary"
                   >
                     {BUTTON_NEW_GROUP_TEXT}
@@ -298,30 +306,6 @@ const CourseStructureEditor = ({
           </Grid>
         </Grid>
       </Grid>
-
-      {/* <Grid item>
-        {lessons.map((item, index) => (
-          <LessonEditor
-            lesson={item}
-            onLessonDeleted={onDeleteLesson}
-            key={index}
-            onLessonCreated={onLessonCreated}
-            lessonIndex={index}
-          />
-        ))}
-      </Grid> */}
-      {/* <Grid item>
-        <Section>
-          <Grid container justify="space-between">
-            <Grid item>
-              <Button onClick={onCloseView} startIcon={<ArrowBack />}>
-                {BUTTON_LESSON_VIEW_GO_BACK}
-              </Button>
-            </Grid>
-            <Grid item></Grid>
-          </Grid>
-        </Section>
-      </Grid> */}
     </Grid>
   );
 };

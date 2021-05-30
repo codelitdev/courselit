@@ -22,9 +22,12 @@ module.exports = {
       offset: {
         type: new graphql.GraphQLNonNull(graphql.GraphQLInt),
       },
+      searchText: {
+        type: graphql.GraphQLString,
+      },
     },
-    resolve: (root, { offset }, context) =>
-      logic.getCoursesAsAdmin(offset, context),
+    resolve: (root, { offset, searchText }, context) =>
+      logic.getCoursesAsAdmin(offset, context, searchText),
   },
   getPosts: {
     type: new graphql.GraphQLList(types.postType),

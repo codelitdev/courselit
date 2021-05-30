@@ -259,7 +259,6 @@ const Settings = (props) => {
                 />
               </Grid>
             </Grid>
-
             <Grid container direction="column" spacing={1}>
               <Grid item>
                 <Typography variant="h4">

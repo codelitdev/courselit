@@ -33,6 +33,8 @@ exports.responses = {
   is_not_admin: "Insufficient privileges",
   is_not_admin_or_creator: "Insufficient privileges",
   blog_description_empty: "Description field is required",
+  cannot_convert_to_blog:
+    "The course has lessons hence cannot be converted to a post",
   cost_not_provided: "Cost field is required",
   invalid_cost: "Invalid cost",
   cannot_add_to_blogs: "Cannot add lessons to a blog post",
@@ -69,6 +71,8 @@ exports.responses = {
   mimetype_is_required: "Mimetype is required",
   existing_group: "A group with that name exists",
   group_not_empty: "The group has associated lessons",
+  update_payment_method:
+    "You need to set up a payment method to create paid courses.",
 };
 
 exports.internal = {

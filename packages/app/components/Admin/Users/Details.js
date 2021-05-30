@@ -1,14 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Grid, Typography, TextField, Button, Switch } from "@material-ui/core";
+import { Grid, Typography, Switch } from "@material-ui/core";
 import { connect } from "react-redux";
 import {
-  LABEL_NEW_PASSWORD,
-  LABEL_CONF_PASSWORD,
   SWITCH_ACCOUNT_ACTIVE,
   ENROLLED_COURSES_HEADER,
-  HEADER_RESET_PASSWORD,
-  BTN_RESET,
-  APP_MESSAGE_CHANGES_SAVED,
 } from "../../../config/strings";
 import { makeStyles } from "@material-ui/styles";
 import FetchBuilder from "../../../lib/fetch";
@@ -21,10 +16,6 @@ import PermissionsEditor from "./PermissionsEditor";
 
 const useStyles = makeStyles((theme) => ({
   container: {},
-  avatar: {
-    height: "1.6em",
-    width: "auto",
-  },
   enrolledCourseItem: {
     marginTop: theme.spacing(1),
   },
@@ -38,14 +29,11 @@ const Details = ({ userId, auth, address, dispatch }) => {
     id: "",
     email: "",
     name: "",
-    avatar: "",
     purchases: [],
     active: false,
     permissions: [],
     userId: "",
   });
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [enrolledCourses, setEnrolledCourses] = useState([]);
 
   const classes = useStyles();
@@ -65,7 +53,6 @@ const Details = ({ userId, auth, address, dispatch }) => {
             id,
             email,
             name,
-            avatar,
             purchases,
             active,
             permissions,
@@ -118,54 +105,6 @@ const Details = ({ userId, auth, address, dispatch }) => {
     }
   };
 
-  const savePassword = async (e) => {
-    e.preventDefault();
-
-    const mutation = `
-    mutation {
-        user: updateUser(userData: {
-            id: "${userData.id}"
-            password: "${password}"
-        }) { 
-          id
-        }
-    }
-    `;
-
-    const fetch = new FetchBuilder()
-      .setUrl(`${address.backend}/graph`)
-      .setPayload(mutation)
-      .setIsGraphQLEndpoint(true)
-      .setAuthToken(auth.token)
-      .build();
-
-    try {
-      dispatch(networkAction(true));
-      const response = await fetch.exec();
-      if (response.user) {
-        dispatch(setAppMessage(new AppMessage(APP_MESSAGE_CHANGES_SAVED)));
-        setPassword("");
-        setConfirmPassword("");
-      }
-    } catch (err) {
-      dispatch(setAppMessage(new AppMessage(err.message)));
-    } finally {
-      dispatch(networkAction(false));
-    }
-  };
-
-  const isPasswordValid = () => {
-    if ((password || confirmPassword) && password !== confirmPassword) {
-      return false;
-    }
-
-    if (password && password === confirmPassword) {
-      return true;
-    }
-
-    return false;
-  };
-
   const toggleActiveState = async (value) => {
     const mutation = `
     mutation {
@@ -176,7 +115,6 @@ const Details = ({ userId, auth, address, dispatch }) => {
           id,
           email,
           name,
-          avatar,
           purchases,
           active,
           permissions,
@@ -266,53 +204,10 @@ const Details = ({ userId, auth, address, dispatch }) => {
                       onChange={(e) => toggleActiveState(e.target.checked)}
                     />
                   </Grid>
-                  <Grid item>
-                    <Typography variant="h6">
-                      {HEADER_RESET_PASSWORD}
-                    </Typography>
-                  </Grid>
-                  <form onSubmit={savePassword}>
-                    <Grid item>
-                      <TextField
-                        variant="outlined"
-                        label={LABEL_NEW_PASSWORD}
-                        fullWidth
-                        margin="normal"
-                        name="password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                      />
-                      <TextField
-                        variant="outlined"
-                        label={LABEL_CONF_PASSWORD}
-                        fullWidth
-                        margin="normal"
-                        name="confirmPassword"
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                      />
-                    </Grid>
-                    <Grid container item justify="flex-end" alignItems="center">
-                      <Grid item>
-                        <Button
-                          color="primary"
-                          onClick={savePassword}
-                          disabled={!isPasswordValid()}
-                        >
-                          {BTN_RESET}
-                        </Button>
-                      </Grid>
-                    </Grid>
-                  </form>
                 </Grid>
               </Section>
             </Grid>
           </Grid>
-
-          <Grid item></Grid>
-
           <Grid item>
             <Section>
               <PermissionsEditor user={userData} />

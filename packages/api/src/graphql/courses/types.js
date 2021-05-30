@@ -32,7 +32,7 @@ const courseType = new graphql.GraphQLObjectType({
     isBlog: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
     isFeatured: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
     creatorId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
-    creatorName: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+    creatorName: { type: graphql.GraphQLString },
     lessons: {
       type: new graphql.GraphQLList(lessonMetaType),
       resolve: (course, args, context, info) =>
@@ -82,6 +82,7 @@ const creatorOrAdminCoursesItemType = new graphql.GraphQLObjectType({
     title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     featuredImage: { type: graphql.GraphQLString },
     isBlog: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
+    courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
   },
 });
 
@@ -91,7 +92,7 @@ const postType = new graphql.GraphQLObjectType({
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     description: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-    creatorName: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+    creatorName: { type: graphql.GraphQLString },
     updated: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     slug: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
@@ -108,7 +109,7 @@ const publicCoursesType = new graphql.GraphQLObjectType({
     cost: { type: new graphql.GraphQLNonNull(graphql.GraphQLFloat) },
     slug: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     updated: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-    creatorName: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+    creatorName: { type: graphql.GraphQLString },
     description: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     isFeatured: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
     courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },

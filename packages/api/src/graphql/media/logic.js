@@ -47,7 +47,7 @@ exports.getCreatorMedia = async (offset, ctx, text) => {
     { offset, query, graphQLContext: ctx },
     {
       itemsPerPage,
-      sortByColumn: "_id",
+      sortByColumn: "updatedAt",
       sortOrder: -1,
     }
   );
