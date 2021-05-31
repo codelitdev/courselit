@@ -7,6 +7,22 @@ exports.checkForInvalidPaymentMethod = (siteInfo) => {
     return;
   }
 
+  if (!siteInfo.currencyUnit) {
+    return new Error(responses.currency_unit_required)
+  }
+
+  if (!siteInfo.currencyISOCode) {
+    return new Error(responses.currency_iso_code_required)
+  }
+
+  if (!siteInfo.currencyISOCode) {
+    return new Error(responses.currency_iso_code_required)
+  }
+
+  if (!currencyISOCodes.includes(siteInfo.currencyISOCode.toLowerCase())) {
+    throw new Error(responses.unrecognised_currency_code);
+  }
+
   if (![paypal, stripe, paytm, none].includes(siteInfo.paymentMethod)) {
     return new Error(responses.invalid_payment_method);
   }

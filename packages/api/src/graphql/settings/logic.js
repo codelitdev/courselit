@@ -41,40 +41,14 @@ exports.updateSiteInfo = async (siteData, ctx) => {
     throw new Error(responses.action_not_allowed);
   }
 
-  if (
-    siteData.currencyISOCode &&
-    !currencyISOCodes.includes(siteData.currencyISOCode.toLowerCase())
-  ) {
-    throw new Error(responses.unrecognised_currency_code);
-  }
-
   let siteInfo = await SiteInfo.findOne({ domain: ctx.subdomain._id });
 
-  // create a new entry if not existing
   let shouldCreate = false;
   if (siteInfo === null) {
     shouldCreate = true;
     siteInfo = {
       domain: ctx.subdomain._id,
     };
-  }
-
-  // populate changed data
-  for (const key of Object.keys(siteData)) {
-    siteInfo[key] = siteData[key];
-  }
-  if (siteData.currencyISOCode) {
-    siteInfo.currencyISOCode = siteData.currencyISOCode.toLowerCase();
-  }
-
-  const invalidPaymentMethod = checkForInvalidPaymentMethod(siteInfo);
-  if (invalidPaymentMethod) {
-    throw invalidPaymentMethod;
-  }
-
-  const failedPaymentMethod = checkForInvalidPaymentSettings(siteInfo);
-  if (failedPaymentMethod) {
-    throw getPaymentInvalidException(failedPaymentMethod);
   }
 
   if (shouldCreate) {
@@ -85,3 +59,32 @@ exports.updateSiteInfo = async (siteData, ctx) => {
 
   return siteInfo;
 };
+
+exports.updatePaymentInfo = async (siteData, ctx) => {
+  checkIfAuthenticated(ctx);
+
+  if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
+    throw new Error(responses.action_not_allowed);
+  }
+
+  let siteInfo = await SiteInfo.findOne({ domain: ctx.subdomain._id });
+
+  if (!siteInfo) {
+    throw new Error(responses.branding_info_not_set)
+  }
+
+  for (const key of Object.keys(siteData)) {
+    siteInfo[key] = siteData[key];
+  }
+  siteInfo.currencyISOCode = siteData.currencyISOCode.toLowerCase();
+
+  const invalidPaymentMethod = checkForInvalidPaymentMethod(siteInfo);
+  if (invalidPaymentMethod) {
+    throw invalidPaymentMethod;
+  }
+
+  const failedPaymentMethod = checkForInvalidPaymentSettings(siteInfo);
+  if (failedPaymentMethod) {
+    throw getPaymentInvalidException(failedPaymentMethod);
+  }
+}
