@@ -18,8 +18,6 @@ const SiteInfoSchema = new mongoose.Schema({
   currencyISOCode: { type: String, maxlength: 3 },
   paymentMethod: { type: String },
   stripePublishableKey: { type: String },
-  themePrimaryColor: { type: String },
-  themeSecondaryColor: { type: String },
   codeInjectionHead: { type: String },
   stripeSecret: { type: String },
   paytmSecret: { type: String },

@@ -22,5 +22,5 @@ module.exports = {
     },
     resolve: async (root, { siteData }, context) =>
       logic.updatePaymentInfo(siteData, context),
-  }
+  },
 };

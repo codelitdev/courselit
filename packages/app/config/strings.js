@@ -24,8 +24,6 @@ export const GENERIC_CURRENCY_UNIT = "";
 export const GENERIC_STRIPE_PUBLISHABLE_KEY_TEXT = "";
 export const GENERIC_CURRENCY_ISO_CODE = "";
 export const GENERIC_PAYMENT_METHOD = "";
-export const GENERIC_THEME_COLOR_PRIMARY = "";
-export const GENERIC_THEME_COLOR_SECONDARY = "";
 export const GENERIC_CODE_INJECTION_HEAD = "";
 
 // UI texts

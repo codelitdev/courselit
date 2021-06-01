@@ -82,8 +82,6 @@ const Settings = (props) => {
     currencyISOCode: "",
     paymentMethod: "",
     stripePublishableKey: "",
-    themePrimaryColor: "",
-    themeSecondaryColor: "",
     codeInjectionHead: "",
     stripeSecret: "",
     paypalSecret: "",
@@ -114,8 +112,6 @@ const Settings = (props) => {
         currencyISOCode,
         paymentMethod,
         stripePublishableKey,
-        themePrimaryColor,
-        themeSecondaryColor,
         codeInjectionHead
       }
     }`;
@@ -160,8 +156,6 @@ const Settings = (props) => {
         currencyISOCode,
         paymentMethod,
         stripePublishableKey,
-        themePrimaryColor,
-        themeSecondaryColor,
         codeInjectionHead
       }
     }`;
@@ -180,8 +174,6 @@ const Settings = (props) => {
             currencyISOCode: settings.currencyISOCode,
             paymentMethod: settings.paymentMethod,
             stripePublishableKey: settings.stripePublishableKey,
-            themePrimaryColor: settings.themePrimaryColor,
-            themeSecondaryColor: settings.themeSecondaryColor,
             codeInjectionHead: encode(settings.codeInjectionHead),
           })
         );
@@ -205,6 +197,10 @@ const Settings = (props) => {
     setNewSettings(Object.assign({}, newSettings, change));
   };
 
+  const handlePaymentSettingsSubmit = async (event) => {
+    event.preventDefault();
+  };
+
   return (
     <Grid container spacing={2}>
       <Grid item xs={12}>
@@ -215,10 +211,10 @@ const Settings = (props) => {
         </Section>
       </Grid>
       <Grid item xs={12}>
-        <form onSubmit={handleSettingsSubmit}>
-          <Grid container direction="column" spacing={4}>
-            <Grid item>
-              <Section>
+        <Grid container direction="column" spacing={4}>
+          <Grid item>
+            <Section>
+              <form onSubmit={handleSettingsSubmit}>
                 <Grid container direction="column" spacing={1}>
                   <Grid item>
                     <Typography variant="h4">
@@ -246,7 +242,6 @@ const Settings = (props) => {
                       name="subtitle"
                       value={newSettings.subtitle || ""}
                       onChange={onChangeData}
-                      required
                     />
                   </Grid>
                   <Grid item>
@@ -257,11 +252,35 @@ const Settings = (props) => {
                       mimeTypesToShow={[...MIMETYPE_IMAGE]}
                     />
                   </Grid>
+                  <Grid item>
+                    <Button
+                      type="submit"
+                      value={BUTTON_SAVE}
+                      color="primary"
+                      variant="outlined"
+                      disabled={
+                        JSON.stringify({
+                          title: settings.title,
+                          subtitle: settings.subtitle,
+                          logo: settings.logopath,
+                        }) ===
+                          JSON.stringify({
+                            title: newSettings.title,
+                            subtitle: newSettings.subtitle,
+                            logo: newSettings.logopath,
+                          }) || !newSettings.title
+                      }
+                    >
+                      {BUTTON_SAVE}
+                    </Button>
+                  </Grid>
                 </Grid>
-              </Section>
-            </Grid>
-            <Grid item>
-              <Section>
+              </form>
+            </Section>
+          </Grid>
+          <Grid item>
+            <Section>
+              <form onSubmit={handlePaymentSettingsSubmit}>
                 <Grid container direction="column" spacing={1}>
                   <Grid item>
                     <Typography variant="h4">
@@ -313,11 +332,11 @@ const Settings = (props) => {
                           {capitalize(PAYMENT_METHOD_STRIPE.toLowerCase())}
                         </MenuItem>
                         {/* <MenuItem value={PAYMENT_METHOD_PAYPAL} disabled={true}>
-                      {capitalize(PAYMENT_METHOD_PAYPAL.toLowerCase())}
-                    </MenuItem> */}
+                          {capitalize(PAYMENT_METHOD_PAYPAL.toLowerCase())}
+                        </MenuItem> */}
                         {/* <MenuItem value={PAYMENT_METHOD_PAYTM} disabled={true}>
-                      {capitalize(PAYMENT_METHOD_PAYTM.toLowerCase())}
-                    </MenuItem> */}
+                          {capitalize(PAYMENT_METHOD_PAYTM.toLowerCase())}
+                        </MenuItem> */}
                       </Select>
                     </FormControl>
                   </Grid>
@@ -396,11 +415,24 @@ const Settings = (props) => {
                       />
                     </Grid>
                   )}
+                  <Grid item>
+                    <Button
+                      type="submit"
+                      value={BUTTON_SAVE}
+                      color="primary"
+                      variant="outlined"
+                      disabled={JSON.stringify({}) === JSON.stringify({})}
+                    >
+                      {BUTTON_SAVE}
+                    </Button>
+                  </Grid>
                 </Grid>
-              </Section>
-            </Grid>
-            <Grid item>
-              <Section>
+              </form>
+            </Section>
+          </Grid>
+          <Grid item>
+            <Section>
+              <form onSubmit={handleSettingsSubmit}>
                 <Grid container direction="column">
                   <Grid item>
                     <Typography variant="h4">
@@ -420,28 +452,26 @@ const Settings = (props) => {
                       rows={10}
                     />
                   </Grid>
+                  <Grid item>
+                    <Button
+                      type="submit"
+                      value={BUTTON_SAVE}
+                      color="primary"
+                      variant="outlined"
+                      disabled={
+                        !areObjectsDifferent(settings, newSettings) ||
+                        !newSettings.title ||
+                        !newSettings.subtitle
+                      }
+                    >
+                      {BUTTON_SAVE}
+                    </Button>
+                  </Grid>
                 </Grid>
-              </Section>
-            </Grid>
-            <Grid item>
-              <Section>
-                <Button
-                  type="submit"
-                  value={BUTTON_SAVE}
-                  color="primary"
-                  variant="outlined"
-                  disabled={
-                    !areObjectsDifferent(settings, newSettings) ||
-                    !newSettings.title ||
-                    !newSettings.subtitle
-                  }
-                >
-                  {BUTTON_SAVE}
-                </Button>
-              </Section>
-            </Grid>
+              </form>
+            </Section>
           </Grid>
-        </form>
+        </Grid>
       </Grid>
     </Grid>
   );

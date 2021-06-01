@@ -73,9 +73,11 @@ exports.responses = {
   group_not_empty: "The group has associated lessons",
   update_payment_method:
     "You need to set up a payment method to create paid courses",
-  currency_iso_code_required: "Currency ISO code is required. Examples: usd, inr, gbp etc.",
-  currency_unit_required: "A currency symbol is required. Examples: $, ₹, £ etc.",
-  branding_info_not_set: "Set a school title before setting up payments."
+  currency_iso_code_required:
+    "Currency ISO code is required. Examples: usd, inr, gbp etc.",
+  currency_unit_required:
+    "A currency symbol is required. Examples: $, ₹, £ etc.",
+  branding_info_not_set: "Set a school title before setting up payments.",
 };
 
 exports.internal = {

@@ -1,5 +1,11 @@
 const { capitalize } = require("../../lib/utils.js");
-const { paypal, stripe, paytm, none } = require("../../config/constants.js");
+const {
+  paypal,
+  stripe,
+  paytm,
+  none,
+  currencyISOCodes,
+} = require("../../config/constants.js");
 const { responses } = require("../../config/strings.js");
 
 exports.checkForInvalidPaymentMethod = (siteInfo) => {
@@ -8,15 +14,15 @@ exports.checkForInvalidPaymentMethod = (siteInfo) => {
   }
 
   if (!siteInfo.currencyUnit) {
-    return new Error(responses.currency_unit_required)
+    return new Error(responses.currency_unit_required);
   }
 
   if (!siteInfo.currencyISOCode) {
-    return new Error(responses.currency_iso_code_required)
+    return new Error(responses.currency_iso_code_required);
   }
 
   if (!siteInfo.currencyISOCode) {
-    return new Error(responses.currency_iso_code_required)
+    return new Error(responses.currency_iso_code_required);
   }
 
   if (!currencyISOCodes.includes(siteInfo.currencyISOCode.toLowerCase())) {

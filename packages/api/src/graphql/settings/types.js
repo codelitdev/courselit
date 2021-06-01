@@ -10,8 +10,6 @@ const siteType = new graphql.GraphQLObjectType({
     currencyISOCode: { type: graphql.GraphQLString },
     paymentMethod: { type: graphql.GraphQLString },
     stripePublishableKey: { type: graphql.GraphQLString },
-    themePrimaryColor: { type: graphql.GraphQLString },
-    themeSecondaryColor: { type: graphql.GraphQLString },
     codeInjectionHead: { type: graphql.GraphQLString },
   },
 });
@@ -26,8 +24,6 @@ const siteAdminType = new graphql.GraphQLObjectType({
     currencyISOCode: { type: graphql.GraphQLString },
     paymentMethod: { type: graphql.GraphQLString },
     stripePublishableKey: { type: graphql.GraphQLString },
-    themePrimaryColor: { type: graphql.GraphQLString },
-    themeSecondaryColor: { type: graphql.GraphQLString },
     codeInjectionHead: { type: graphql.GraphQLString },
   },
 });
@@ -49,17 +45,15 @@ const sitePaymentUpdateType = new graphql.GraphQLInputObjectType({
     currencyISOCode: { type: graphql.GraphQLString },
     paymentMethod: { type: graphql.GraphQLString },
     stripePublishableKey: { type: graphql.GraphQLString },
-    themePrimaryColor: { type: graphql.GraphQLString },
-    themeSecondaryColor: { type: graphql.GraphQLString },
     stripeSecret: { type: graphql.GraphQLString },
     paytmSecret: { type: graphql.GraphQLString },
     paypalSecret: { type: graphql.GraphQLString },
-  }
+  },
 });
 
 module.exports = {
   siteType,
   siteAdminType,
   siteUpdateType,
-  sitePaymentUpdateType
+  sitePaymentUpdateType,
 };

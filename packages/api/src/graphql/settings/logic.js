@@ -7,7 +7,7 @@ const {
   checkPermission,
 } = require("../../lib/graphql.js");
 const { responses } = require("../../config/strings.js");
-const { currencyISOCodes, permissions } = require("../../config/constants.js");
+const { permissions } = require("../../config/constants.js");
 const {
   checkForInvalidPaymentMethod,
   checkForInvalidPaymentSettings,
@@ -17,7 +17,7 @@ const {
 exports.getSiteInfo = async (ctx) => {
   const siteinfo = await SiteInfo.findOne(
     { domain: ctx.subdomain._id },
-    "title subtitle logopath currencyUnit currencyISOCode paymentMethod stripePublishableKey themePrimaryColor themeSecondaryColor codeInjectionHead"
+    "title subtitle logopath currencyUnit currencyISOCode paymentMethod stripePublishableKey codeInjectionHead"
   );
 
   return siteinfo;
@@ -70,7 +70,7 @@ exports.updatePaymentInfo = async (siteData, ctx) => {
   let siteInfo = await SiteInfo.findOne({ domain: ctx.subdomain._id });
 
   if (!siteInfo) {
-    throw new Error(responses.branding_info_not_set)
+    throw new Error(responses.branding_info_not_set);
   }
 
   for (const key of Object.keys(siteData)) {
@@ -87,4 +87,8 @@ exports.updatePaymentInfo = async (siteData, ctx) => {
   if (failedPaymentMethod) {
     throw getPaymentInvalidException(failedPaymentMethod);
   }
-}
+
+  siteInfo = await siteInfo.save();
+
+  return siteInfo;
+};

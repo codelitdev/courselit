@@ -102,8 +102,6 @@ export function updateSiteInfo() {
           currencyISOCode,
           paymentMethod,
           stripePublishableKey,
-          themePrimaryColor,
-          themeSecondaryColor,
           codeInjectionHead
         }
       }
