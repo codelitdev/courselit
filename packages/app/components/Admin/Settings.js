@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
-import { siteInfoProps, authProps, addressProps } from "../../types";
+import {
+  siteInfoProps,
+  authProps,
+  addressProps,
+  networkActionProps,
+} from "../../types";
 import {
   getGraphQLQueryFields,
   getObjectContainingOnlyChangedFields,
-  areObjectsDifferent,
 } from "../../lib/utils.js";
 import {
   PAYMENT_METHOD_PAYPAL,
@@ -14,7 +18,11 @@ import {
   PAYMENT_METHOD_NONE,
   MIMETYPE_IMAGE,
 } from "../../config/constants.js";
-import { newSiteInfoAvailable, setAppMessage } from "../../redux/actions.js";
+import {
+  networkAction,
+  newSiteInfoAvailable,
+  setAppMessage,
+} from "../../redux/actions.js";
 import {
   TextField,
   Button,
@@ -47,6 +55,7 @@ import {
   HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK,
   SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK,
   BUTTON_SAVE,
+  PAYMENT_METHOD_NAME_NONE,
 } from "../../config/strings.js";
 import FetchBuilder from "../../lib/fetch";
 import { decode, encode } from "base-64";
@@ -130,25 +139,31 @@ const Settings = (props) => {
         settingsResponse.codeInjectionHead
       );
     }
-    setSettings(Object.assign({}, settings, settingsResponse));
-    setNewSettings(Object.assign({}, newSettings, settingsResponse));
+    const settingsResponseWithNullsRemoved = {
+      title: settingsResponse.title || "",
+      subtitle: settingsResponse.subtitle || "",
+      logopath: settingsResponse.logopath || "",
+      currencyUnit: settingsResponse.currencyUnit || "",
+      currencyISOCode: settingsResponse.currencyISOCode || "",
+      paymentMethod: settingsResponse.paymentMethod || "",
+      stripePublishableKey: settingsResponse.stripePublishableKey || "",
+      codeInjectionHea: settingsResponse.codeInjectionHea || "",
+    };
+    setSettings(Object.assign({}, settings, settingsResponseWithNullsRemoved));
+    setNewSettings(
+      Object.assign({}, newSettings, settingsResponseWithNullsRemoved)
+    );
   };
 
   const handleSettingsSubmit = async (event) => {
     event.preventDefault();
-    const onlyChangedSettings = getObjectContainingOnlyChangedFields(
-      settings,
-      newSettings
-    );
-    if (onlyChangedSettings.codeInjectionHead) {
-      onlyChangedSettings.codeInjectionHead = encode(
-        onlyChangedSettings.codeInjectionHead
-      );
-    }
-    const formattedQuery = getGraphQLQueryFields(onlyChangedSettings);
     const query = `
     mutation {
-      settings: updateSiteInfo(siteData: ${formattedQuery}) {
+      settings: updateSiteInfo(siteData: {
+        title: "${newSettings.title}",
+        subtitle: "${newSettings.subtitle}",
+        logopath: "${newSettings.logopath}"
+      }) {
         title,
         subtitle,
         logopath,
@@ -162,6 +177,7 @@ const Settings = (props) => {
 
     try {
       const fetchRequest = fetch.setPayload(query).build();
+      props.dispatch(networkAction(true));
       const response = await fetchRequest.exec();
       if (response.settings) {
         setSettingsState(response.settings);
@@ -183,6 +199,55 @@ const Settings = (props) => {
       }
     } catch (e) {
       props.dispatch(setAppMessage(new AppMessage(e.message)));
+    } finally {
+      props.dispatch(networkAction(false));
+    }
+  };
+
+  const handleCodeInjectionSettingsSubmit = async (event) => {
+    event.preventDefault();
+    const query = `
+    mutation {
+      settings: updateSiteInfo(siteData: {
+        codeInjectionHead: "${encode(newSettings.codeInjectionHead)}"
+      }) {
+        title,
+        subtitle,
+        logopath,
+        currencyUnit,
+        currencyISOCode,
+        paymentMethod,
+        stripePublishableKey,
+        codeInjectionHead
+      }
+    }`;
+
+    try {
+      const fetchRequest = fetch.setPayload(query).build();
+      props.dispatch(networkAction(true));
+      const response = await fetchRequest.exec();
+      if (response.settings) {
+        setSettingsState(response.settings);
+        props.dispatch(
+          newSiteInfoAvailable({
+            title: settings.title,
+            subtitle: settings.subtitle,
+            logopath: settings.logopath,
+            currencyUnit: settings.currencyUnit,
+            currencyISOCode: settings.currencyISOCode,
+            paymentMethod: settings.paymentMethod,
+            stripePublishableKey: settings.stripePublishableKey,
+            codeInjectionHead: encode(settings.codeInjectionHead),
+          })
+        );
+        props.dispatch(
+          setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED))
+        );
+      }
+    } catch (e) {
+      props.dispatch(setAppMessage(new AppMessage(e.message)));
+    } finally {
+      props.dispatch(networkAction(false));
     }
   };
 
@@ -199,7 +264,77 @@ const Settings = (props) => {
 
   const handlePaymentSettingsSubmit = async (event) => {
     event.preventDefault();
+    const onlyChangedSettings = getObjectContainingOnlyChangedFields(
+      settings,
+      newSettings
+    );
+    const formattedQuery = getGraphQLQueryFields(onlyChangedSettings);
+    const query = `
+    mutation {
+      settings: updatePaymentInfo(siteData: ${formattedQuery}) {
+        title,
+        subtitle,
+        logopath,
+        currencyUnit,
+        currencyISOCode,
+        paymentMethod,
+        stripePublishableKey,
+        codeInjectionHead
+      }
+    }`;
+
+    try {
+      const fetchRequest = fetch.setPayload(query).build();
+      props.dispatch(networkAction(true));
+      const response = await fetchRequest.exec();
+      if (response.settings) {
+        setSettingsState(response.settings);
+        props.dispatch(
+          newSiteInfoAvailable({
+            title: settings.title,
+            subtitle: settings.subtitle,
+            logopath: settings.logopath,
+            currencyUnit: settings.currencyUnit,
+            currencyISOCode: settings.currencyISOCode,
+            paymentMethod: settings.paymentMethod,
+            stripePublishableKey: settings.stripePublishableKey,
+            codeInjectionHead: encode(settings.codeInjectionHead),
+          })
+        );
+        props.dispatch(
+          setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED))
+        );
+      }
+    } catch (e) {
+      props.dispatch(setAppMessage(new AppMessage(e.message)));
+    } finally {
+      props.dispatch(networkAction(false));
+    }
   };
+
+  const getPaymentSettings = (getNewSettings = false) => ({
+    currencyUnit: getNewSettings
+      ? newSettings.currencyUnit
+      : settings.currencyUnit,
+    currencyISOCode: getNewSettings
+      ? newSettings.currencyISOCode
+      : settings.currencyISOCode,
+    paymentMethod: getNewSettings
+      ? newSettings.paymentMethod
+      : settings.paymentMethod,
+    stripePublishableKey: getNewSettings
+      ? newSettings.stripePublishableKey
+      : settings.stripePublishableKey,
+    stripeSecret: getNewSettings
+      ? newSettings.stripeSecret
+      : settings.stripeSecret,
+    paypalSecret: getNewSettings
+      ? newSettings.paypalSecret
+      : settings.paypalSecret,
+    paytmSecret: getNewSettings
+      ? newSettings.paytmSecret
+      : settings.paytmSecret,
+  });
 
   return (
     <Grid container spacing={2}>
@@ -262,13 +397,15 @@ const Settings = (props) => {
                         JSON.stringify({
                           title: settings.title,
                           subtitle: settings.subtitle,
-                          logo: settings.logopath,
+                          logopath: settings.logopath,
                         }) ===
                           JSON.stringify({
                             title: newSettings.title,
                             subtitle: newSettings.subtitle,
-                            logo: newSettings.logopath,
-                          }) || !newSettings.title
+                            logopath: newSettings.logopath,
+                          }) ||
+                        !newSettings.title ||
+                        props.networkAction
                       }
                     >
                       {BUTTON_SAVE}
@@ -327,7 +464,11 @@ const Settings = (props) => {
                           id: "outlined-paymentmethod-simple",
                         }}
                       >
-                        <MenuItem value={PAYMENT_METHOD_NONE}>&nbsp;</MenuItem>
+                        <MenuItem value={PAYMENT_METHOD_NONE}>
+                          <Typography color="textSecondary">
+                            {capitalize(PAYMENT_METHOD_NAME_NONE.toLowerCase())}
+                          </Typography>
+                        </MenuItem>
                         <MenuItem value={PAYMENT_METHOD_STRIPE}>
                           {capitalize(PAYMENT_METHOD_STRIPE.toLowerCase())}
                         </MenuItem>
@@ -421,7 +562,10 @@ const Settings = (props) => {
                       value={BUTTON_SAVE}
                       color="primary"
                       variant="outlined"
-                      disabled={JSON.stringify({}) === JSON.stringify({})}
+                      disabled={
+                        JSON.stringify(getPaymentSettings()) ===
+                        JSON.stringify(getPaymentSettings(true))
+                      }
                     >
                       {BUTTON_SAVE}
                     </Button>
@@ -432,7 +576,7 @@ const Settings = (props) => {
           </Grid>
           <Grid item>
             <Section>
-              <form onSubmit={handleSettingsSubmit}>
+              <form onSubmit={handleCodeInjectionSettingsSubmit}>
                 <Grid container direction="column">
                   <Grid item>
                     <Typography variant="h4">
@@ -459,9 +603,8 @@ const Settings = (props) => {
                       color="primary"
                       variant="outlined"
                       disabled={
-                        !areObjectsDifferent(settings, newSettings) ||
-                        !newSettings.title ||
-                        !newSettings.subtitle
+                        settings.codeInjectionHead ===
+                          newSettings.codeInjectionHead || props.networkAction
                       }
                     >
                       {BUTTON_SAVE}
@@ -482,12 +625,14 @@ Settings.propTypes = {
   auth: authProps,
   dispatch: PropTypes.func.isRequired,
   address: addressProps,
+  networkAction: networkActionProps,
 };
 
 const mapStateToProps = (state) => ({
   siteinfo: state.siteinfo,
   auth: state.auth,
   address: state.address,
+  networkAction: state.networkAction,
 });
 
 const mapDispatchToProps = (dispatch) => ({

@@ -45,9 +45,7 @@ const usersSummaryType = new graphql.GraphQLObjectType({
 const userPurchaseInput = new graphql.GraphQLObjectType({
   name: "UserPurchaseInput",
   fields: {
-    courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
-    discountCode: { type: graphql.GraphQLString },
-    purchasingFor: { type: graphql.GraphQLID },
+    courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
   },
 });
 

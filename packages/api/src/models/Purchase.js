@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const { transactionInitiated } = require("../config/constants.js");
 
 const PurchaseSchema = new mongoose.Schema({
+  domain: { type: mongoose.Schema.Types.ObjectId, required: true },
   courseId: { type: mongoose.Schema.Types.ObjectId, required: true },
   purchasedOn: { type: Date, required: true, default: Date.now },
   purchasedBy: { type: mongoose.Schema.Types.ObjectId, required: true },

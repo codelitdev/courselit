@@ -1,12 +1,9 @@
-const SiteInfo = require("../../models/SiteInfo.js");
 const { getPaymentMethod } = require("../../payments/index.js");
 const strings = require("../../config/strings.js");
 
-const validatePaymentMethod = async () => {
-  const siteinfo = (await SiteInfo.find())[0];
-
+const validatePaymentMethod = async (domain) => {
   try {
-    await getPaymentMethod(siteinfo && siteinfo.paymentMethod);
+    await getPaymentMethod(domain);
   } catch (err) {
     if (err.message === strings.internal.error_unrecognised_payment_method) {
       throw new Error(strings.responses.update_payment_method);
@@ -32,13 +29,13 @@ exports.validateBlogPosts = (courseData) => {
   return courseData;
 };
 
-exports.validateCost = async (courseData) => {
+exports.validateCost = async (courseData, domain) => {
   if (courseData.cost < 0) {
     throw new Error(strings.responses.invalid_cost);
   }
 
   if (courseData.cost > 0) {
-    await validatePaymentMethod();
+    await validatePaymentMethod(domain);
   }
 
   return courseData;

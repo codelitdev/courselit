@@ -9,8 +9,8 @@ const {
 const { responses } = require("../../config/strings.js");
 const { permissions } = require("../../config/constants.js");
 const {
-  checkForInvalidPaymentMethod,
   checkForInvalidPaymentSettings,
+  checkForInvalidPaymentMethodSettings,
   getPaymentInvalidException,
 } = require("./helpers.js");
 
@@ -51,6 +51,14 @@ exports.updateSiteInfo = async (siteData, ctx) => {
     };
   }
 
+  for (const key of Object.keys(siteData)) {
+    siteInfo[key] = siteData[key];
+  }
+
+  if (!siteInfo.title.trim()) {
+    throw new Error(responses.school_title_not_set);
+  }
+
   if (shouldCreate) {
     siteInfo = await SiteInfo.create(siteInfo);
   } else {
@@ -70,24 +78,26 @@ exports.updatePaymentInfo = async (siteData, ctx) => {
   let siteInfo = await SiteInfo.findOne({ domain: ctx.subdomain._id });
 
   if (!siteInfo) {
-    throw new Error(responses.branding_info_not_set);
+    throw new Error(responses.school_title_not_set);
   }
 
   for (const key of Object.keys(siteData)) {
     siteInfo[key] = siteData[key];
   }
-  siteInfo.currencyISOCode = siteData.currencyISOCode.toLowerCase();
 
-  const invalidPaymentMethod = checkForInvalidPaymentMethod(siteInfo);
+  const invalidPaymentMethod = checkForInvalidPaymentSettings(siteInfo);
   if (invalidPaymentMethod) {
     throw invalidPaymentMethod;
   }
 
-  const failedPaymentMethod = checkForInvalidPaymentSettings(siteInfo);
+  const failedPaymentMethod = checkForInvalidPaymentMethodSettings(siteInfo);
   if (failedPaymentMethod) {
     throw getPaymentInvalidException(failedPaymentMethod);
   }
 
+  if (siteInfo.paymentMethod) {
+    siteInfo.currencyISOCode = siteInfo.currencyISOCode.toLowerCase();
+  }
   siteInfo = await siteInfo.save();
 
   return siteInfo;

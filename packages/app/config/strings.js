@@ -268,3 +268,4 @@ export const ERROR_GROUP_NEW_LESSON_WITHOUT_SAVE =
 export const LABEL_GROUP_COLLAPSE = "Show as expanded";
 export const SEARCH_TEXTBOX_PLACEHOLDER = "Search";
 export const PAGE_TITLE_404 = "Page not found";
+export const PAYMENT_METHOD_NAME_NONE = "No payment method";

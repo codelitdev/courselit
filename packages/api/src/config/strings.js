@@ -77,7 +77,7 @@ exports.responses = {
     "Currency ISO code is required. Examples: usd, inr, gbp etc.",
   currency_unit_required:
     "A currency symbol is required. Examples: $, ₹, £ etc.",
-  branding_info_not_set: "Set a school title before setting up payments.",
+  school_title_not_set: "School title is not set",
 };
 
 exports.internal = {
@@ -88,4 +88,5 @@ exports.internal = {
   error_env_var_undefined: "A required environment variable is not defined",
   app_running: "CourseLit server is running on",
   invalid_cloud_storage_settings: "Cloud storage settings are invalid",
+  domain_not_specified: "Domain is not specified",
 };

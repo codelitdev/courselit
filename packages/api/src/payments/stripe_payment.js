@@ -4,32 +4,36 @@ const {
   currency_iso_not_set: currencyISONotSet,
 } = require("../config/strings.js").responses;
 const stripeSDK = require("stripe");
-const SiteInfo = require("../models/SiteInfo.js");
+const { stripe } = require("../config/constants.js");
 
 class StripePayment extends Payment {
-  async setup() {
-    const siteinfo = (await SiteInfo.find())[0];
+  constructor(siteinfo) {
+    super();
+    this.siteinfo = siteinfo;
+    this.name = stripe;
+  }
 
-    if (!siteinfo.currencyISOCode) {
+  async setup() {
+    if (!this.siteinfo.currencyISOCode) {
       throw new Error(currencyISONotSet);
     }
 
-    if (!siteinfo.stripePublishableKey || !siteinfo.stripeSecret) {
+    if (!this.siteinfo.stripePublishableKey || !this.siteinfo.stripeSecret) {
       throw new Error(stripeInvalidSettings);
     }
 
-    this.stripe = stripeSDK(siteinfo.stripeSecret);
+    this.stripe = stripeSDK(this.siteinfo.stripeSecret);
 
     return this;
   }
 
-  async initiate({ course, currency, metadata, purchaseId }) {
+  async initiate({ course, metadata, purchaseId }) {
     const session = await this.stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
         {
           price_data: {
-            currency,
+            currency: this.siteinfo.currencyISOCode,
             product_data: {
               name: course.title,
             },
@@ -61,6 +65,10 @@ class StripePayment extends Payment {
 
   getPaymentIdentifier(event) {
     return event.data.object.metadata.purchaseId;
+  }
+
+  getName() {
+    return this.name;
   }
 }
 
