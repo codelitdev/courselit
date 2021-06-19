@@ -7,17 +7,17 @@ const {
   checkPermission,
 } = require("../../lib/graphql.js");
 const { responses } = require("../../config/strings.js");
-const { currencyISOCodes, permissions } = require("../../config/constants.js");
+const { permissions } = require("../../config/constants.js");
 const {
-  checkForInvalidPaymentMethod,
   checkForInvalidPaymentSettings,
+  checkForInvalidPaymentMethodSettings,
   getPaymentInvalidException,
 } = require("./helpers.js");
 
 exports.getSiteInfo = async (ctx) => {
   const siteinfo = await SiteInfo.findOne(
     { domain: ctx.subdomain._id },
-    "title subtitle logopath currencyUnit currencyISOCode paymentMethod stripePublishableKey themePrimaryColor themeSecondaryColor codeInjectionHead"
+    "title subtitle logopath currencyUnit currencyISOCode paymentMethod stripePublishableKey codeInjectionHead"
   );
 
   return siteinfo;
@@ -41,16 +41,8 @@ exports.updateSiteInfo = async (siteData, ctx) => {
     throw new Error(responses.action_not_allowed);
   }
 
-  if (
-    siteData.currencyISOCode &&
-    !currencyISOCodes.includes(siteData.currencyISOCode.toLowerCase())
-  ) {
-    throw new Error(responses.unrecognised_currency_code);
-  }
-
   let siteInfo = await SiteInfo.findOne({ domain: ctx.subdomain._id });
 
-  // create a new entry if not existing
   let shouldCreate = false;
   if (siteInfo === null) {
     shouldCreate = true;
@@ -59,22 +51,12 @@ exports.updateSiteInfo = async (siteData, ctx) => {
     };
   }
 
-  // populate changed data
   for (const key of Object.keys(siteData)) {
     siteInfo[key] = siteData[key];
   }
-  if (siteData.currencyISOCode) {
-    siteInfo.currencyISOCode = siteData.currencyISOCode.toLowerCase();
-  }
 
-  const invalidPaymentMethod = checkForInvalidPaymentMethod(siteInfo);
-  if (invalidPaymentMethod) {
-    throw invalidPaymentMethod;
-  }
-
-  const failedPaymentMethod = checkForInvalidPaymentSettings(siteInfo);
-  if (failedPaymentMethod) {
-    throw getPaymentInvalidException(failedPaymentMethod);
+  if (!siteInfo.title.trim()) {
+    throw new Error(responses.school_title_not_set);
   }
 
   if (shouldCreate) {
@@ -82,6 +64,41 @@ exports.updateSiteInfo = async (siteData, ctx) => {
   } else {
     siteInfo = await siteInfo.save();
   }
+
+  return siteInfo;
+};
+
+exports.updatePaymentInfo = async (siteData, ctx) => {
+  checkIfAuthenticated(ctx);
+
+  if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
+    throw new Error(responses.action_not_allowed);
+  }
+
+  let siteInfo = await SiteInfo.findOne({ domain: ctx.subdomain._id });
+
+  if (!siteInfo) {
+    throw new Error(responses.school_title_not_set);
+  }
+
+  for (const key of Object.keys(siteData)) {
+    siteInfo[key] = siteData[key];
+  }
+
+  const invalidPaymentMethod = checkForInvalidPaymentSettings(siteInfo);
+  if (invalidPaymentMethod) {
+    throw invalidPaymentMethod;
+  }
+
+  const failedPaymentMethod = checkForInvalidPaymentMethodSettings(siteInfo);
+  if (failedPaymentMethod) {
+    throw getPaymentInvalidException(failedPaymentMethod);
+  }
+
+  if (siteInfo.paymentMethod) {
+    siteInfo.currencyISOCode = siteInfo.currencyISOCode.toLowerCase();
+  }
+  siteInfo = await siteInfo.save();
 
   return siteInfo;
 };

@@ -14,7 +14,7 @@ exports.error = async (message, metadata) => {
 };
 
 exports.info = async (message, metadata) => {
-  await Log.info({
+  await Log.create({
     severity: severityInfo,
     message,
     metadata,
@@ -22,7 +22,7 @@ exports.info = async (message, metadata) => {
 };
 
 exports.warn = async (message, metadata) => {
-  await Log.info({
+  await Log.create({
     severity: severityWarn,
     message,
     metadata,

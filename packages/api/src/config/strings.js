@@ -72,7 +72,13 @@ exports.responses = {
   existing_group: "A group with that name exists",
   group_not_empty: "The group has associated lessons",
   update_payment_method:
-    "You need to set up a payment method to create paid courses.",
+    "You need to set up a payment method to create paid courses",
+  currency_iso_code_required:
+    "Currency ISO code is required. Examples: usd, inr, gbp etc.",
+  currency_unit_required:
+    "A currency symbol is required. Examples: $, ₹, £ etc.",
+  school_title_not_set: "School title is not set",
+  internal_error: "An internal error occurred. Please try again",
 };
 
 exports.internal = {
@@ -83,4 +89,5 @@ exports.internal = {
   error_env_var_undefined: "A required environment variable is not defined",
   app_running: "CourseLit server is running on",
   invalid_cloud_storage_settings: "Cloud storage settings are invalid",
+  domain_not_specified: "Domain is not specified",
 };

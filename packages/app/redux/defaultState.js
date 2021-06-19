@@ -6,8 +6,6 @@ import {
   GENERIC_STRIPE_PUBLISHABLE_KEY_TEXT,
   GENERIC_CURRENCY_ISO_CODE,
   GENERIC_PAYMENT_METHOD,
-  GENERIC_THEME_COLOR_PRIMARY,
-  GENERIC_THEME_COLOR_SECONDARY,
   GENERIC_CODE_INJECTION_HEAD,
 } from "../config/strings.js";
 
@@ -26,8 +24,6 @@ export default {
     currencyISOCode: GENERIC_CURRENCY_ISO_CODE,
     paymentMethod: GENERIC_PAYMENT_METHOD,
     stripePublishableKey: GENERIC_STRIPE_PUBLISHABLE_KEY_TEXT,
-    themePrimaryColor: GENERIC_THEME_COLOR_PRIMARY,
-    themeSecondaryColor: GENERIC_THEME_COLOR_SECONDARY,
     codeInjectionHead: GENERIC_CODE_INJECTION_HEAD,
   },
   networkAction: false,

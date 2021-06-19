@@ -19,26 +19,16 @@ import {
   VISIT_COURSE_BUTTON,
   PURCHASE_ID_HEADER,
 } from "../../config/strings";
-import { makeStyles } from "@material-ui/styles";
 import Link from "next/link";
 import { Section } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 
 const AppLoader = dynamic(() => import("../AppLoader"));
 
-const useStyles = makeStyles((theme) => ({
-  content: {
-    margin: theme.spacing(2),
-    marginTop: theme.spacing(8),
-    marginBottom: theme.spacing(8),
-  },
-}));
-
 const PurchaseStatus = (props) => {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const classes = useStyles();
   const { id, source } = router.query;
   const courseLink = source || "";
 
@@ -98,11 +88,11 @@ const PurchaseStatus = (props) => {
 
   return (
     <Section>
-      <Grid container className={classes.content}>
+      <Grid container>
         {status === TRANSACTION_SUCCESS && (
           <Grid item container direction="column" spacing={4}>
             <Grid item>
-              <Typography variant="h1">{TRANSACTION_STATUS_SUCCESS}</Typography>
+              <Typography variant="h2">{TRANSACTION_STATUS_SUCCESS}</Typography>
             </Grid>
             <Grid item>
               <Typography variant="body1" color="textSecondary">
@@ -127,7 +117,7 @@ const PurchaseStatus = (props) => {
             ) : (
               <Grid item container direction="column" spacing={4}>
                 <Grid item>
-                  <Typography variant="h1">
+                  <Typography variant="h2">
                     {TRANSACTION_STATUS_INITIATED}
                   </Typography>
                 </Grid>
@@ -152,7 +142,7 @@ const PurchaseStatus = (props) => {
         {status === TRANSACTION_FAILED && (
           <Grid item container direction="column" spacing={4}>
             <Grid item>
-              <Typography variant="h1">{TRANSACTION_STATUS_FAILED}</Typography>
+              <Typography variant="h2">{TRANSACTION_STATUS_FAILED}</Typography>
             </Grid>
             <Grid item>
               <Typography variant="body1" color="textSecondary">

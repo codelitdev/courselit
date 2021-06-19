@@ -13,8 +13,6 @@ interface SiteInfo {
   currencyISOCode: string;
   paymentMethod: string;
   stripePublishableKey: string;
-  themePrimaryColor: string;
-  themeSecondaryColor: string;
   codeInjectionHead: string;
 }
 

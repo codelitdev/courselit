@@ -82,7 +82,10 @@ exports.createCourse = async (courseData, ctx) => {
     throw new Error(strings.responses.action_not_allowed);
   }
 
-  courseData = await validateCost(validateBlogPosts(courseData));
+  courseData = await validateCost(
+    validateBlogPosts(courseData),
+    ctx.subdomain._id
+  );
 
   const course = await Course.create({
     domain: ctx.subdomain._id,
@@ -115,7 +118,7 @@ exports.updateCourse = async (courseData, ctx) => {
     course[key] = courseData[key];
   }
 
-  course = await validateCost(validateBlogPosts(course));
+  course = await validateCost(validateBlogPosts(course), ctx.subdomain._id);
   course = await course.save();
   return course;
 };

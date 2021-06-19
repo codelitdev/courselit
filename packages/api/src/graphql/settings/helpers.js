@@ -1,10 +1,42 @@
 const { capitalize } = require("../../lib/utils.js");
-const { paypal, stripe, paytm, none } = require("../../config/constants.js");
+const {
+  paypal,
+  stripe,
+  paytm,
+  none,
+  currencyISOCodes,
+} = require("../../config/constants.js");
 const { responses } = require("../../config/strings.js");
 
-exports.checkForInvalidPaymentMethod = (siteInfo) => {
+const verifyCurrencyISOCode = (isoCode) => {
+  if (!currencyISOCodes.includes(isoCode.toLowerCase())) {
+    throw new Error(responses.unrecognised_currency_code);
+  }
+};
+
+const verifyCurrencyISOCodeBasedOnSiteInfo = (siteInfo) => {
+  if (!siteInfo.paymentMethod) {
+    if (siteInfo.currencyISOCode) {
+      verifyCurrencyISOCode(siteInfo.currencyISOCode);
+    }
+  } else {
+    if (!siteInfo.currencyISOCode) {
+      throw new Error(responses.currency_iso_code_required);
+    }
+
+    verifyCurrencyISOCode(siteInfo.currencyISOCode);
+  }
+};
+
+exports.checkForInvalidPaymentSettings = (siteInfo) => {
+  verifyCurrencyISOCodeBasedOnSiteInfo(siteInfo);
+
   if (!siteInfo.paymentMethod) {
     return;
+  }
+
+  if (!siteInfo.currencyUnit) {
+    return new Error(responses.currency_unit_required);
   }
 
   if (![paypal, stripe, paytm, none].includes(siteInfo.paymentMethod)) {
@@ -12,7 +44,7 @@ exports.checkForInvalidPaymentMethod = (siteInfo) => {
   }
 };
 
-exports.checkForInvalidPaymentSettings = (siteInfo) => {
+exports.checkForInvalidPaymentMethodSettings = (siteInfo) => {
   if (!siteInfo.paymentMethod) {
     return;
   }
