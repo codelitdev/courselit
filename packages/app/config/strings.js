@@ -24,8 +24,6 @@ export const GENERIC_CURRENCY_UNIT = "";
 export const GENERIC_STRIPE_PUBLISHABLE_KEY_TEXT = "";
 export const GENERIC_CURRENCY_ISO_CODE = "";
 export const GENERIC_PAYMENT_METHOD = "";
-export const GENERIC_THEME_COLOR_PRIMARY = "";
-export const GENERIC_THEME_COLOR_SECONDARY = "";
 export const GENERIC_CODE_INJECTION_HEAD = "";
 
 // UI texts
@@ -270,3 +268,4 @@ export const ERROR_GROUP_NEW_LESSON_WITHOUT_SAVE =
 export const LABEL_GROUP_COLLAPSE = "Show as expanded";
 export const SEARCH_TEXTBOX_PLACEHOLDER = "Search";
 export const PAGE_TITLE_404 = "Page not found";
+export const PAYMENT_METHOD_NAME_NONE = "No payment method";

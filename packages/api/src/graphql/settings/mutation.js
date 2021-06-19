@@ -13,4 +13,14 @@ module.exports = {
     resolve: async (root, { siteData }, context) =>
       logic.updateSiteInfo(siteData, context),
   },
+  updatePaymentInfo: {
+    type: types.siteAdminType,
+    args: {
+      siteData: {
+        type: new graphql.GraphQLNonNull(types.sitePaymentUpdateType),
+      },
+    },
+    resolve: async (root, { siteData }, context) =>
+      logic.updatePaymentInfo(siteData, context),
+  },
 };

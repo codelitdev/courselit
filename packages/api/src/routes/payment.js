@@ -15,42 +15,31 @@ const {
   transactionInitiated,
   transactionFailed,
 } = require("../config/constants.js");
+const Logger = require("../lib/logger");
 
 const initiateHandler = async (req, res) => {
   const { user, body } = req;
-  const { courseid, metadata, purchasingfor } = body;
+  const { courseid, metadata } = body;
 
   if (!courseid) {
     return res.status(400).json({ error: responses.invalid_course_id });
   }
 
   try {
-    const course = await Course.findById(courseid);
+    const course = await Course.findOne({
+      courseId: courseid,
+      domain: req.subdomain._id,
+    });
     if (!course) {
       return res.status(404).json({ error: responses.item_not_found });
     }
 
-    let buyer = user;
-    if (purchasingfor) {
-      if (!user.isAdmin) {
-        return res
-          .status(400)
-          .json({ error: responses.only_admins_can_purchase });
-      }
-
-      buyer = await user.findById(purchasingfor);
-      if (!buyer) {
-        return res.status(404).json({ error: responses.item_not_found });
-      }
-    }
-
+    const buyer = user;
     if (buyer.purchases.includes(course.id)) {
       return res.status(200).json({
         status: transactionSuccess,
       });
     }
-
-    // TODO: implement the validation for discount coupons
 
     if (course.cost === 0) {
       try {
@@ -63,23 +52,21 @@ const initiateHandler = async (req, res) => {
       }
     }
 
-    const siteinfo = (await SiteInfo.find())[0];
-    const paymentMethod = await Payment.getPaymentMethod(
-      siteinfo && siteinfo.paymentMethod
-    );
+    const siteinfo = await SiteInfo.findOne({ domain: req.subdomain._id });
+    const paymentMethod = await Payment.getPaymentMethod(req.subdomain._id);
 
     const purchase = await Purchase.create({
+      domain: req.subdomain._id,
       courseId: course.id,
       purchasedOn: new Date(),
       purchasedBy: user.id,
-      paymentMethod: siteinfo.paymentMethod,
+      paymentMethod: paymentMethod.getName(),
       amount: course.cost * 100,
       currencyISOCode: siteinfo.currencyISOCode,
     });
 
     const paymentTracker = await paymentMethod.initiate({
       course,
-      currency: siteinfo.currencyISOCode,
       metadata: JSON.parse(metadata),
       purchaseId: purchase.id,
     });
@@ -92,6 +79,7 @@ const initiateHandler = async (req, res) => {
       paymentTracker,
     });
   } catch (err) {
+    Logger.err(transactionFailed, err);
     res.status(500).json({
       status: transactionFailed,
       error: err.message,
@@ -131,6 +119,7 @@ const verifyHandler = async (req, res) => {
       status: purchaseRecord.status,
     });
   } catch (err) {
+    Logger.error(err.message, err);
     res.status(500).json({
       message: err.message,
     });
@@ -142,15 +131,13 @@ const adminOrSelf = ({ loggedInUser, buyerId }) =>
 
 const webhookHandler = async (req, res) => {
   const { body } = req;
-  const siteinfo = (await SiteInfo.find())[0];
-  const paymentMethod = await Payment.getPaymentMethod(siteinfo.paymentMethod);
+  const paymentMethod = await Payment.getPaymentMethod(req.subdomain._id);
 
   const paymentVerified = paymentMethod.verify(body);
 
   if (paymentVerified) {
-    const purchaseRecord = await Purchase.findById(
-      paymentMethod.getPaymentIdentifier(body)
-    );
+    const purchaseId = paymentMethod.getPaymentIdentifier(body);
+    const purchaseRecord = await Purchase.findById(purchaseId);
 
     if (purchaseRecord) {
       purchaseRecord.status = transactionSuccess;

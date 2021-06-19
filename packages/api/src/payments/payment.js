@@ -3,6 +3,7 @@ class Payment {
   initiate() {}
   verify() {}
   getPaymentIdentifier() {}
+  getName() {}
 }
 
 module.exports = Payment;

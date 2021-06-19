@@ -19,7 +19,7 @@ const Stripe = (props) => {
 
   const handleClick = async () => {
     let initiatePaymentResponse = await makePaymentRequest({
-      courseId: course.id,
+      courseId: course.courseId,
       backend: address.backend,
       token: auth.token,
       frontend: address.frontend,
@@ -74,7 +74,6 @@ const Stripe = (props) => {
       sessionId,
     });
     if (result.error) {
-      // console.log(result.error);
     }
   };
 

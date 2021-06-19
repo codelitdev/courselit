@@ -55,12 +55,6 @@ function siteinfoReducer(state = initialState.siteinfo, action) {
           stripePublishableKey:
             action.siteinfo.stripePublishableKey ||
             initialState.siteinfo.stripePublishableKey,
-          themePrimaryColor:
-            action.siteinfo.themePrimaryColor ||
-            initialState.siteinfo.themePrimaryColor,
-          themeSecondaryColor:
-            action.siteinfo.themeSecondaryColor ||
-            initialState.siteinfo.themeSecondaryColor,
           codeInjectionHead:
             decode(action.siteinfo.codeInjectionHead) ||
             initialState.siteinfo.codeInjectionHead,
