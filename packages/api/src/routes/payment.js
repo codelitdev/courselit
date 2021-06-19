@@ -131,15 +131,13 @@ const adminOrSelf = ({ loggedInUser, buyerId }) =>
 
 const webhookHandler = async (req, res) => {
   const { body } = req;
-  const siteinfo = (await SiteInfo.find())[0];
-  const paymentMethod = await Payment.getPaymentMethod(siteinfo.paymentMethod);
+  const paymentMethod = await Payment.getPaymentMethod(req.subdomain._id);
 
   const paymentVerified = paymentMethod.verify(body);
 
   if (paymentVerified) {
-    const purchaseRecord = await Purchase.findById(
-      paymentMethod.getPaymentIdentifier(body)
-    );
+    const purchaseId = paymentMethod.getPaymentIdentifier(body);
+    const purchaseRecord = await Purchase.findById(purchaseId);
 
     if (purchaseRecord) {
       purchaseRecord.status = transactionSuccess;

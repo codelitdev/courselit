@@ -56,9 +56,7 @@ class StripePayment extends Payment {
   verify(event) {
     return (
       event &&
-      event.data &&
-      event.data.object &&
-      event.data.object.object === "checkout.session" &&
+      event.type === "checkout.session.completed" &&
       event.data.object.payment_status === "paid"
     );
   }

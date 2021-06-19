@@ -78,6 +78,7 @@ exports.responses = {
   currency_unit_required:
     "A currency symbol is required. Examples: $, ₹, £ etc.",
   school_title_not_set: "School title is not set",
+  internal_error: "An internal error occurred. Please try again",
 };
 
 exports.internal = {

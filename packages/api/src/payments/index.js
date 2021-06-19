@@ -2,8 +2,10 @@ const { paypal, stripe, paytm } = require("../config/constants.js");
 const {
   error_unrecognised_payment_method: unrecognisedPaymentMethod,
   error_payment_method_not_implemented: notYetSupported,
-  update_payment_method: updatePaymentMethod,
 } = require("../config/strings.js").internal;
+const {
+  update_payment_method: updatePaymentMethod,
+} = require("../config/strings.js").responses;
 const StripePayment = require("./stripe_payment.js");
 const SiteInfo = require("../models/SiteInfo.js");
 
