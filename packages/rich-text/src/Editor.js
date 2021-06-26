@@ -72,6 +72,9 @@ const Editor = (props) => {
           element: "pre",
           wrapper: <Code style={props.theme.code} />,
         },
+        atomic: {
+          element: "div",
+        },
       },
       props.blockRenderMap
     )

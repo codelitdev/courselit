@@ -46,7 +46,7 @@ const Index = (props) => {
       <Grid item xs={12}>
         {props.courses.length > 0 && (
           <Section>
-            <Grid item container className={classes.header}>
+            <Grid item container>
               <Grid item xs={12} className={classes.headerTop}>
                 <Typography variant="h2">
                   {HEADER_BLOG_POSTS_SECTION}
