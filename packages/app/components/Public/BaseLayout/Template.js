@@ -4,12 +4,12 @@ import { Grid, useTheme } from "@material-ui/core";
 import { useRouter } from "next/router";
 import Section from "./Section";
 import { makeStyles } from "@material-ui/styles";
+import { connect } from "react-redux";
 
 const useStyles = makeStyles((theme) => ({
   mainContent: Object.assign(
     {},
     {
-      // maxWidth: 1240,
       minHeight: "80vh",
       margin: "0 auto",
     },
@@ -37,6 +37,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const Template = (props) => {
+  const { layout } = props;
   const classes = useStyles(props);
   const router = useRouter();
   const theme = useTheme();
@@ -50,7 +51,7 @@ const Template = (props) => {
         spacing={0}
       >
         {/** Top */}
-        {router.pathname === "/" && (
+        {router.pathname === "/" && layout.top.length > 0 && (
           <Grid item className={classes.padding}>
             <Section name="top" />
           </Grid>
@@ -75,14 +76,16 @@ const Template = (props) => {
                   )}
 
                 {/** Bottom */}
-                <Grid item className={classes.padding}>
-                  <Section name="bottom" />
-                </Grid>
+                {layout.bottom.length > 0 && (
+                  <Grid item className={classes.padding}>
+                    <Section name="bottom" />
+                  </Grid>
+                )}
               </Grid>
             </Grid>
 
             {/** Aside */}
-            {!theme.singleColumnLayout && (
+            {!theme.singleColumnLayout && layout.aside.length > 0 && (
               <Grid
                 item
                 md={theme.asideWidth || 4}
@@ -106,12 +109,16 @@ const Template = (props) => {
               className={classes.footer}
               spacing={0}
             >
-              <Grid container item direction="column" xs={12} md={6}>
-                <Section name="footerLeft" />
-              </Grid>
-              <Grid container item direction="column" xs={12} md={6}>
-                <Section name="footerRight" />
-              </Grid>
+              {layout.footerLeft.length > 0 && (
+                <Grid container item direction="column" xs={12} md={6}>
+                  <Section name="footerLeft" />
+                </Grid>
+              )}
+              {layout.footerRight.length > 0 && (
+                <Grid container item direction="column" xs={12} md={6}>
+                  <Section name="footerRight" />
+                </Grid>
+              )}
             </Grid>
           </Grid>
         </Grid>
@@ -122,6 +129,11 @@ const Template = (props) => {
 
 Template.propTypes = {
   children: PropTypes.oneOfType([PropTypes.object, PropTypes.string]),
+  layout: PropTypes.object.isRequired,
 };
 
-export default Template;
+const mapStateToProps = (state) => ({
+  layout: state.layout,
+});
+
+export default connect(mapStateToProps)(Template);

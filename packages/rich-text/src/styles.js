@@ -43,6 +43,8 @@ export default {
     },
     img: {
       maxWidth: "100%",
+      borderRadius: "8px",
+      boxShadow: "0px 12px 11px -11px rgba(0, 0, 0, 0.57)",
     },
   },
   code: {
