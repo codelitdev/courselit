@@ -68,17 +68,19 @@ const DrawerContent = ({
           </>
         )}
         {navigation &&
-          navigation.map((link) =>
-            forMobile ? (
-              <MenuItem
-                link={link}
-                key={link.destination}
-                closeDrawer={handleDrawerToggle}
-              />
-            ) : (
-              <MenuItem link={link} key={link.destination} />
-            )
-          )}
+          navigation
+            .filter((link) => link.category === NAVIGATION_CATEGORY_MAIN)
+            .map((link) =>
+              forMobile ? (
+                <MenuItem
+                  link={link}
+                  key={link.destination}
+                  closeDrawer={handleDrawerToggle}
+                />
+              ) : (
+                <MenuItem link={link} key={link.destination} />
+              )
+            )}
       </List>
     </>
   );

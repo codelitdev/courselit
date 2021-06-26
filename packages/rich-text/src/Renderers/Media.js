@@ -1,7 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-// TODO: Refactor this if not used
 const Media = (props) => {
   const entity = props.contentState.getEntity(props.block.getEntityAt(0));
   const type = entity.getType();

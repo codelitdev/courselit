@@ -12,7 +12,7 @@ const Section = (props) => {
   const router = useRouter();
 
   return sectionLayout && sectionLayout.length ? (
-    <Grid container direction="column">
+    <Grid container direction="column" spacing={2}>
       {sectionLayout.map((item, index) =>
         widgets[item].metadata.excludeFromPaths &&
         widgets[item].metadata.excludeFromPaths.includes(router.pathname) ? (
