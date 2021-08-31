@@ -17,9 +17,7 @@
   "scripts": {
     "lint": "eslint packages",
     "prettier": "prettier --write packages docs *.md",
-    "lerna": "lerna",
-    "build-common-widgets": "lerna run build --scope=@courselit/common-widgets",
-    "build-components-library": "lerna run build --scope=@courselit/components-library"
+    "lerna": "lerna"
   },
   "devDependencies": {
     "lerna": "^4.0.0"
