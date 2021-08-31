@@ -33,7 +33,7 @@
     "fbjs": "^3.0.0",
     "graphql": "^15.5.0",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^5.7.11",
+    "mongoose": "^6.0.3",
     "mongoose-sequence": "^5.2.2",
     "nodemailer": "^6.6.0",
     "passport": "^0.4.0",
