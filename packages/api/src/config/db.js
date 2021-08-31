@@ -10,7 +10,6 @@ module.exports = async () => {
   try {
     await mongoose.connect(constants.dbConnectionString, {
       useNewUrlParser: true,
-      useCreateIndex: true,
       useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000,
     });
