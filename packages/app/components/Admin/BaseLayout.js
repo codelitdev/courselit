@@ -143,9 +143,14 @@ const BaseLayoutAdmin = ({
           {CREATOR_AREA_PAGE_TITLE} {">"} {title}{" "}
           {siteInfo && siteInfo.title && `| ${siteInfo.title}`}
         </title>
-        {siteInfo && siteInfo.logopath && (
-          <link rel="icon" href={siteInfo.logopath} />
-        )}
+        <link
+          rel="icon"
+          href={
+            siteInfo.logopath
+              ? siteInfo.logopath
+              : "/courselit_backdrop_square.webp"
+          }
+        />
         <meta
           name="viewport"
           content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
