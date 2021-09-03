@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import FetchBuilder from "../../lib/fetch";
-import { LESSON_TYPE_VIDEO, LESSON_TYPE_AUDIO } from "../../config/constants";
+import {
+  LESSON_TYPE_VIDEO,
+  LESSON_TYPE_AUDIO,
+  LESSON_TYPE_PDF,
+} from "../../config/constants";
 import { connect } from "react-redux";
 import { networkAction } from "../../redux/actions";
 import { Typography, Grid } from "@material-ui/core";
@@ -123,6 +127,17 @@ const LessonViewer = (props) => {
                 <source src={lesson.contentURL} type="audio/mpeg" />
                 Your browser does not support the video tag.
               </audio>
+            </Grid>
+          )}
+          {String.prototype.toUpperCase.call(LESSON_TYPE_PDF) ===
+            lesson.type && (
+            <Grid item>
+              <iframe
+                frameBorder="0"
+                width="100%"
+                height="500"
+                src={`${lesson.contentURL}#view=fit`}
+              ></iframe>
             </Grid>
           )}
           {lesson.content && (
