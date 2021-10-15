@@ -58,9 +58,9 @@ exports.getUser = async (email = null, userId = null, ctx) => {
 };
 
 const validateUserProperties = (user) => {
-  if (!user.name) {
-    throw new Error(strings.responses.user_name_cant_be_null);
-  }
+  // if (!user.name) {
+  //   throw new Error(strings.responses.user_name_cant_be_null);
+  // }
 
   for (const permission of user.permissions) {
     if (!Object.values(permissions).includes(permission)) {

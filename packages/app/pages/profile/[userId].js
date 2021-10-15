@@ -11,32 +11,24 @@ import {
   PROFILE_PAGE_NOT_ENROLLED,
   PROFILE_PAGE_BROWSE_COURSES_TEXT,
   BUTTON_SAVE,
+  APP_MESSAGE_CHANGES_SAVED,
 } from "../../config/strings";
 import { connect } from "react-redux";
 import Link from "next/link";
 import { useState } from "react";
-import { networkAction, refreshUserProfile } from "../../redux/actions";
+import {
+  networkAction,
+  refreshUserProfile,
+  setAppMessage,
+} from "../../redux/actions";
 import { getBackendAddress } from "../../lib/utils";
 import { Section } from "@courselit/components-library";
 import dynamic from "next/dynamic";
+import AppMessage from "../../models/app-message";
 
 const BaseLayout = dynamic(() => import("../../components/Public/BaseLayout"));
 
-const useStyles = makeStyles((theme) => ({
-  content: {
-    [theme.breakpoints.down("sm")]: {
-      padding: theme.spacing(2),
-    },
-  },
-  // leftMargin: {
-  //   [theme.breakpoints.up("md")]: {
-  //     paddingLeft: theme.spacing(2),
-  //   },
-  // },
-  // headerTop: {
-  //   marginBottom: theme.spacing(2),
-  // },
-}));
+const useStyles = makeStyles((theme) => ({}));
 
 function Profile({ user, profile, auth, dispatch, address }) {
   const classes = useStyles();
@@ -45,6 +37,10 @@ function Profile({ user, profile, auth, dispatch, address }) {
   const [name, setName] = useState(user.name || "");
 
   const saveDetails = async () => {
+    if (!isMyProfile) {
+      return;
+    }
+
     const graphQuery = `
       mutation {
         user: updateUser(userData: {
@@ -67,9 +63,8 @@ function Profile({ user, profile, auth, dispatch, address }) {
     try {
       dispatch(networkAction(true));
       await fetch.exec();
-      if (isMyProfile) {
-        dispatch(refreshUserProfile());
-      }
+      dispatch(refreshUserProfile());
+      dispatch(setAppMessage(new AppMessage(APP_MESSAGE_CHANGES_SAVED)));
     } catch (err) {
     } finally {
       dispatch(networkAction(false));
@@ -78,7 +73,7 @@ function Profile({ user, profile, auth, dispatch, address }) {
 
   return (
     <BaseLayout title={user.name || PROFILE_PAGE_HEADER}>
-      <Grid item xs={12} className={classes.content}>
+      <Grid item xs={12}>
         <Grid container direction="column" spacing={2}>
           <Grid item xs={12}>
             <Section>
