@@ -13,6 +13,8 @@ const responses = require("../config/strings.js").responses;
 const User = require("../models/User.js");
 const { send } = require("../lib/mailer.js");
 const { generateMagicLink } = require("../lib/utils.js");
+const pug = require("pug");
+const path = require("path");
 
 const { permissions } = constants;
 
@@ -26,23 +28,22 @@ module.exports = (passport) => {
         passReqToCallbacks: true,
       },
       async (req, user, token) => {
+        const magiclink = generateMagicLink({
+          token,
+          hostname: req.hostname,
+          loginPath: constants.frontendLoginPath,
+          secure: req.secure,
+          redirect: req.body.redirect,
+        });
+        const signInTemplate = path.resolve(
+          __dirname,
+          "../templates/signin.pug"
+        );
+        const emailBody = pug.renderFile(signInTemplate, { magiclink });
         return await send({
           to: user.email,
           subject: `${responses.sign_in_mail_prefix} ${req.hostname}`,
-          body: `
-        <p>${responses.sign_in_mail_body}</p>
-        <p>
-          <a href="${generateMagicLink({
-            token,
-            hostname: req.hostname,
-            loginPath: constants.frontendLoginPath,
-            secure: req.secure,
-            redirect: req.body.redirect,
-          })}">
-            ${responses.sign_in_link_text}
-          </a>
-        </p>
-      `,
+          body: emailBody,
         });
       },
       async (req, user) => {
@@ -104,7 +105,7 @@ module.exports = (passport) => {
         return done(null, false);
       }
 
-      User.findOne({ email, domain }, function (err, user) {
+      User.findOne({ email, domain, active: true }, function (err, user) {
         if (err) {
           return done(err, false);
         }
