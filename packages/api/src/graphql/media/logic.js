@@ -7,11 +7,12 @@ const {
   checkPermission,
   validateOffset,
   getMediaOrThrow,
-  mapFileNamesToCompleteURLs,
+  mapRelativeURLsToFullURLs,
 } = require("../../lib/graphql.js");
 const { itemsPerPage, permissions } = require("../../config/constants.js");
 const { checkIfAuthenticated } = require("../../lib/graphql.js");
 const strings = require("../../config/strings.js");
+const { putObjectAclPromise } = require("../../routes/media/utils.js");
 
 exports.getCreatorMedia = async (offset, ctx, text) => {
   checkIfAuthenticated(ctx);
@@ -52,15 +53,23 @@ exports.getCreatorMedia = async (offset, ctx, text) => {
     }
   );
 
-  return mapFileNamesToCompleteURLs(resultSet);
+  return resultSet.map(mapRelativeURLsToFullURLs);
 };
 
 exports.updateMedia = async (mediaData, ctx) => {
-  const media = await getMediaOrThrow(mediaData.id, ctx);
+  let media = await getMediaOrThrow(mediaData.id, ctx);
+
+  if (mediaData.public !== media.public) {
+    await putObjectAclPromise({
+      Key: media.file,
+      ACL: mediaData.public === "true" ? "public-read" : "private",
+    });
+  }
 
   for (const key of Object.keys(mediaData)) {
     media[key] = mediaData[key];
   }
 
-  return await media.save();
+  media = await media.save();
+  return mapRelativeURLsToFullURLs(media);
 };

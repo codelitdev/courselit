@@ -12,6 +12,7 @@ const creatorMediaType = new graphql.GraphQLObjectType({
     mimeType: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     size: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
     altText: { type: graphql.GraphQLString },
+    public: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
   },
 });
 
@@ -20,6 +21,7 @@ const mediaUpdateType = new graphql.GraphQLInputObjectType({
   fields: {
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     altText: { type: graphql.GraphQLString },
+    public: { type: graphql.GraphQLString },
   },
 });
 

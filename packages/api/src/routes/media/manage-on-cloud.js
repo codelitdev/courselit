@@ -48,6 +48,7 @@ const generateAndUploadThumbnail = async ({
       Key: `${cloudDirectory}/thumb.webp`,
       Body: createReadStream(thumbPath),
       ContentType: "image/webp",
+      ACL: "public-read",
     });
   }
 
@@ -81,6 +82,7 @@ exports.upload = async (req, res) => {
       Key: fileNameWithDomainInfo,
       Body: createReadStream(mainFilePath),
       ContentType: file.mimetype,
+      ACL: data.public === "true" ? "public-read" : "private",
     });
 
     let isThumbGenerated;
@@ -104,6 +106,7 @@ exports.upload = async (req, res) => {
       creatorId: req.user._id,
       thumbnail: isThumbGenerated ? `${directory}/thumb.webp` : "",
       altText: data.altText,
+      public: data.public === "true",
     };
 
     const media = await Media.create(mediaObject);

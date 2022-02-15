@@ -1,6 +1,12 @@
 import React, { useState, createRef } from "react";
 import PropTypes from "prop-types";
-import { Button, TextField } from "@material-ui/core";
+import {
+  Button,
+  Grid,
+  TextField,
+  Typography,
+  Checkbox,
+} from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import { connect } from "react-redux";
 import { Section } from "@courselit/components-library";
@@ -8,6 +14,7 @@ import {
   BUTTON_ADD_FILE,
   MEDIA_UPLOAD_BUTTON_TEXT,
   MEDIA_UPLOADING,
+  MEDIA_PUBLIC,
 } from "../../../config/strings";
 import { addressProps, authProps } from "../../../types";
 import fetch from "isomorphic-unfetch";
@@ -25,6 +32,7 @@ function Upload({ auth, address, dispatch, resetOverview }) {
     title: "",
     altText: "",
     uploading: false,
+    public: false,
   };
   const [uploadData, setUploadData] = useState(defaultUploadData);
   const fileInput = createRef();
@@ -34,7 +42,8 @@ function Upload({ auth, address, dispatch, resetOverview }) {
   const onUploadDataChanged = (e) =>
     setUploadData(
       Object.assign({}, uploadData, {
-        [e.target.name]: e.target.value,
+        [e.target.name]:
+          e.target.type === "checkbox" ? e.target.checked : e.target.value,
       })
     );
 
@@ -81,6 +90,7 @@ function Upload({ auth, address, dispatch, resetOverview }) {
     fD.append("title", uploadData.title);
     fD.append("altText", uploadData.altText);
     fD.append("file", fileInput.current.files[0]);
+    fD.append("public", uploadData.public);
 
     setUploadData(
       Object.assign({}, uploadData, {
@@ -136,6 +146,14 @@ function Upload({ auth, address, dispatch, resetOverview }) {
           value={uploadData.altText}
           onChange={onUploadDataChanged}
         />
+        <Grid container alignItems="center">
+          <Grid item>
+            <Typography variant="body1">{MEDIA_PUBLIC}</Typography>
+          </Grid>
+          <Grid item>
+            <Checkbox name="public" onChange={onUploadDataChanged} />
+          </Grid>
+        </Grid>
         <Button type="submit" disabled={uploading} variant="outlined">
           {uploading ? MEDIA_UPLOADING : MEDIA_UPLOAD_BUTTON_TEXT}
         </Button>

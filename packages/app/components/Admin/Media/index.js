@@ -61,7 +61,8 @@ const Index = (props) => {
         mimeType,
         altText,
         file,
-        thumbnail
+        thumbnail,
+        public
       }
     }
     `;

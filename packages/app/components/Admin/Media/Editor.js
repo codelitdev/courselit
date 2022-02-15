@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import { Button, TextField, Grid, Typography } from "@material-ui/core";
+import {
+  Button,
+  TextField,
+  Grid,
+  Typography,
+  Checkbox,
+} from "@material-ui/core";
 import {
   APP_MESSAGE_CHANGES_SAVED,
   DELETE_MEDIA_POPUP_HEADER,
@@ -9,12 +15,10 @@ import {
   BUTTON_DELETE_MEDIA,
   BUTTON_SAVE,
   MEDIA_EDITOR_HEADER_EDIT_DETAILS,
+  MEDIA_PUBLIC,
 } from "../../../config/strings";
 import dynamic from "next/dynamic";
-import {
-  getGraphQLQueryFields,
-  getObjectContainingOnlyChangedFields,
-} from "../../../lib/utils";
+import { getGraphQLQueryFields } from "../../../lib/utils";
 import FetchBuilder from "../../../lib/fetch";
 import AppMessage from "../../../models/app-message";
 import { addressProps, authProps } from "../../../types";
@@ -38,15 +42,12 @@ function Editor({
   const [mediaBeingEdited, setMediaBeingEdited] = useState(media);
   const [deleteMediaPopupOpened, setDeleteMediaPopupOpened] = useState(false);
   const Router = useRouter();
-  const onlyChangedFields = getObjectContainingOnlyChangedFields(
-    media,
-    mediaBeingEdited
-  );
 
   const onMediaBeingEditedChanged = (e) =>
     setMediaBeingEdited(
       Object.assign({}, mediaBeingEdited, {
-        [e.target.name]: e.target.value,
+        [e.target.name]:
+          e.target.type === "checkbox" ? e.target.checked : e.target.value,
       })
     );
 
@@ -85,17 +86,28 @@ function Editor({
   };
 
   const updateMedia = async () => {
-    if (Object.keys(onlyChangedFields).length === 0) {
+    if (
+      media.altText === mediaBeingEdited.altText &&
+      media.public === mediaBeingEdited.public
+    ) {
       return;
     }
-    onlyChangedFields.id = mediaBeingEdited.id;
-    const formattedGraphQLQuery = getGraphQLQueryFields(onlyChangedFields);
+
+    const formattedGraphQLQuery = getGraphQLQueryFields({
+      id: mediaBeingEdited.id,
+      altText: mediaBeingEdited.altText,
+      public: mediaBeingEdited.public,
+    });
     const query = `
     mutation {
       media: updateMedia(mediaData: ${formattedGraphQLQuery}) {
         id,
+        originalFileName,
         mimeType,
-        altText
+        altText,
+        file,
+        thumbnail,
+        public
       }
     }
     `;
@@ -144,9 +156,24 @@ function Editor({
                   value={mediaBeingEdited.altText}
                   onChange={onMediaBeingEditedChanged}
                 />
+                <Grid container alignItems="center">
+                  <Grid item>
+                    <Typography variant="body1">{MEDIA_PUBLIC}</Typography>
+                  </Grid>
+                  <Grid item>
+                    <Checkbox
+                      name="public"
+                      checked={mediaBeingEdited.public}
+                      onChange={onMediaBeingEditedChanged}
+                    />
+                  </Grid>
+                </Grid>
                 <Button
                   onClick={updateMedia}
-                  disabled={Object.keys(onlyChangedFields).length === 0}
+                  disabled={
+                    media.altText === mediaBeingEdited.altText &&
+                    media.public === mediaBeingEdited.public
+                  }
                 >
                   {BUTTON_SAVE}
                 </Button>

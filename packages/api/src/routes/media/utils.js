@@ -1,5 +1,5 @@
 const aws = require("aws-sdk");
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const { S3Client, GetObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const {
   cloudEndpoint,
@@ -25,20 +25,17 @@ exports.putObjectPromise = (params) =>
       secretAccessKey: cloudSecret,
     });
 
-    s3.putObject(
-      Object.assign(
-        {},
-        {
-          Bucket: cloudBucket,
-          ACL: "public-read",
-        },
-        params
-      ),
-      (err, result) => {
-        if (err) reject(err);
-        resolve(result);
-      }
+    const settings = Object.assign(
+      {},
+      {
+        Bucket: cloudBucket,
+      },
+      params
     );
+    s3.putObject(settings, (err, result) => {
+      if (err) reject(err);
+      resolve(result);
+    });
   });
 
 exports.deleteObjectPromise = (params) =>
@@ -75,12 +72,35 @@ exports.generateSignedUrl = async ({ name, mimetype }) => {
     },
   });
 
-  const command = new PutObjectCommand({
-    ACL: "public-read",
+  const command = new GetObjectCommand({
+    // ACL: "public-read",
     Bucket: cloudBucket,
     Key: name,
-    ContentType: mimetype,
+    // ContentType: mimetype,
   });
 
-  return await getSignedUrl(client, command);
+  const url = await getSignedUrl(client, command);
+  return url;
 };
+
+exports.putObjectAclPromise = (params) =>
+  new Promise((resolve, reject) => {
+    const endpoint = new aws.Endpoint(cloudEndpoint);
+    const s3 = new aws.S3({
+      endpoint,
+      accessKeyId: cloudKey,
+      secretAccessKey: cloudSecret,
+    });
+
+    const settings = Object.assign(
+      {},
+      {
+        Bucket: cloudBucket,
+      },
+      params
+    );
+    s3.putObjectAcl(settings, (err, result) => {
+      if (err) reject(err);
+      resolve(result);
+    });
+  });

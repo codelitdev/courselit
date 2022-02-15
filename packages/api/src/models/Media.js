@@ -9,6 +9,7 @@ const MediaSchema = new mongoose.Schema(
     mimeType: { type: String, required: true },
     size: { type: Number, required: true },
     creatorId: { type: mongoose.Schema.Types.ObjectId, required: true },
+    public: { type: Boolean, required: true, default: false },
     altText: { type: String },
     thumbnail: { type: String },
   },

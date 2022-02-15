@@ -81,7 +81,8 @@ const MediaGallery = (props) => {
         id,
         title,
         mimeType,
-        altText
+        altText,
+        public
       }
     }
     `;

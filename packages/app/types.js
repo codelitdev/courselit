@@ -114,6 +114,7 @@ export const mediaProps = PropTypes.shape({
   mimeType: PropTypes.string.isRequired,
   thumbnail: PropTypes.string,
   altText: PropTypes.string,
+  public: PropTypes.bool,
 });
 
 export const selectedLessonMetaProps = PropTypes.shape({
