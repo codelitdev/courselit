@@ -54,7 +54,11 @@ exports.getLessonDetails = async (id, ctx) => {
     throw new Error(strings.responses.not_enrolled);
   }
 
-  return lesson;
+  const lessonWithSignedContentURL =  Object.assign({}, lesson, {
+    contentURL: lesson.contentURL ? generateSignedUrl(lesson.contentURL) : ""
+  });
+
+  return lessonWithSignedContentURL;
 };
 
 exports.createLesson = async (lessonData, ctx) => {
@@ -128,38 +132,6 @@ exports.deleteLesson = async (id, ctx) => {
     throw new Error(err.message);
   }
 };
-
-// exports.changeTitle = async (id, newTitle, ctx) => {
-//   checkIfAuthenticated(ctx);
-//   let lesson = await checkLessonOwnership(id, ctx);
-//   lesson.title = newTitle;
-//   lesson = await lesson.save();
-//   return lesson;
-// };
-
-// exports.changeContent = async (id, content, ctx) => {
-//   checkIfAuthenticated(ctx);
-//   let lesson = await checkLessonOwnership(id, ctx);
-//   lesson.content = content;
-//   lesson = await lesson.save();
-//   return lesson;
-// };
-
-// exports.changeContentURL = async (id, url, ctx) => {
-//   checkIfAuthenticated(ctx);
-//   let lesson = await checkLessonOwnership(id, ctx);
-//   lesson.contentURL = url;
-//   lesson = await lesson.save();
-//   return lesson;
-// };
-
-// exports.changeDownloadable = async (id, flag, ctx) => {
-//   checkIfAuthenticated(ctx);
-//   let lesson = await checkLessonOwnership(id, ctx);
-//   lesson.downloadable = flag;
-//   lesson = await lesson.save();
-//   return lesson;
-// };
 
 exports.getAllLessons = async (course, ctx) => {
   const lessons = await Lesson.find({
