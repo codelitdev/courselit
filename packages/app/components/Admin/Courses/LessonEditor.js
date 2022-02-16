@@ -363,7 +363,7 @@ const LessonEditor = (props) => {
                     onSelection={(media) =>
                       media &&
                       setLesson(
-                        Object.assign({}, lesson, { contentURL: media.file })
+                        Object.assign({}, lesson, { contentURL: media.key })
                       )
                     }
                     mimeTypesToShow={getMimeTypesToShow()}

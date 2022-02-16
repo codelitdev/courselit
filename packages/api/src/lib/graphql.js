@@ -194,5 +194,6 @@ exports.mapRelativeURLsToFullURLs = (media) => {
     size: media.size,
     altText: media.altText,
     public: media.public,
+    key: media.file
   };
 };

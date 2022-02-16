@@ -13,6 +13,7 @@ const creatorMediaType = new graphql.GraphQLObjectType({
     size: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
     altText: { type: graphql.GraphQLString },
     public: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
+    key: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) }
   },
 });
 
