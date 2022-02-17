@@ -1,7 +1,7 @@
 const graphql = require("graphql");
 
-const creatorMediaType = new graphql.GraphQLObjectType({
-  name: "CreatorMedia",
+const mediaType = new graphql.GraphQLObjectType({
+  name: "Media",
   fields: {
     id: { type: graphql.GraphQLID },
     file: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
@@ -11,9 +11,9 @@ const creatorMediaType = new graphql.GraphQLObjectType({
     },
     mimeType: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     size: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
-    altText: { type: graphql.GraphQLString },
+    caption: { type: graphql.GraphQLString },
     public: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
-    key: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) }
+    key: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
   },
 });
 
@@ -21,12 +21,12 @@ const mediaUpdateType = new graphql.GraphQLInputObjectType({
   name: "MediaUpdateInput",
   fields: {
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
-    altText: { type: graphql.GraphQLString },
+    caption: { type: graphql.GraphQLString },
     public: { type: graphql.GraphQLString },
   },
 });
 
 module.exports = {
-  creatorMediaType,
+  mediaType,
   mediaUpdateType,
 };

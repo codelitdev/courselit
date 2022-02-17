@@ -20,33 +20,33 @@ module.exports = {
     },
     resolve: async (root, { id }, context) => logic.deleteLesson(id, context),
   },
-  changeTitle: {
-    type: types.lessonType,
-    args: {
-      id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
-      newTitle: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-    },
-    resolve: async (root, { id, newTitle }, context) =>
-      logic.changeTitle(id, newTitle, context),
-  },
-  changeContent: {
-    type: types.lessonType,
-    args: {
-      id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
-      content: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-    },
-    resolve: async (root, { id, content }, context) =>
-      logic.changeContent(id, content, context),
-  },
-  changeContentURL: {
-    type: types.lessonType,
-    args: {
-      id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
-      url: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-    },
-    resolve: async (root, { id, url }, context) =>
-      logic.changeContentURL(id, url, context),
-  },
+  // changeTitle: {
+  //   type: types.lessonType,
+  //   args: {
+  //     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+  //     newTitle: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+  //   },
+  //   resolve: async (root, { id, newTitle }, context) =>
+  //     logic.changeTitle(id, newTitle, context),
+  // },
+  // changeContent: {
+  //   type: types.lessonType,
+  //   args: {
+  //     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+  //     content: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+  //   },
+  //   resolve: async (root, { id, content }, context) =>
+  //     logic.changeContent(id, content, context),
+  // },
+  // changemedia: {
+  //   type: types.lessonType,
+  //   args: {
+  //     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
+  //     url: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+  //   },
+  //   resolve: async (root, { id, url }, context) =>
+  //     logic.changemedia(id, url, context),
+  // },
   // changeDownloadable: {
   //   type: types.lessonType,
   //   args: {

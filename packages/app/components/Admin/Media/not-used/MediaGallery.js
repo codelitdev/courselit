@@ -81,7 +81,7 @@ const MediaGallery = (props) => {
         id,
         title,
         mimeType,
-        altText,
+        caption,
         public
       }
     }
@@ -199,7 +199,7 @@ const MediaGallery = (props) => {
       media: updateMedia(mediaData: ${formattedGraphQLQuery}) {
         id,
         title,
-        altText
+        caption
       }
     }
     `;
@@ -218,7 +218,7 @@ const MediaGallery = (props) => {
           setAppMessage(new AppMessage(APP_MESSAGE_MEDIA_UPDATED))
         );
         userMedia[indexOfUpdatedMedia].title = response.media.title;
-        userMedia[indexOfUpdatedMedia].altText = response.media.altText;
+        userMedia[indexOfUpdatedMedia].caption = response.media.caption;
         toggleMediaEditForm();
       }
     } catch (err) {
@@ -303,8 +303,8 @@ const MediaGallery = (props) => {
               label="Alt text"
               fullWidth
               margin="normal"
-              name="altText"
-              value={mediaBeingEdited.altText}
+              name="caption"
+              value={mediaBeingEdited.caption}
               onChange={onMediaBeingEditedChanged}
             />
           </form>

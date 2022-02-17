@@ -59,7 +59,7 @@ const Index = (props) => {
         id,
         originalFileName,
         mimeType,
-        altText,
+        caption,
         file,
         thumbnail,
         public,
@@ -86,7 +86,6 @@ const Index = (props) => {
             : response.media;
         setCreatorMedia([...creatorMedia, ...filteredMedia]);
         setMediaPaginationOffset(mediaPaginationOffset + 1);
-        console.log(response.media);
       }
     } catch (err) {
       props.dispatch(setAppMessage(new AppMessage(err.message)));

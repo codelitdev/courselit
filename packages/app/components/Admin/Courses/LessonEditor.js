@@ -48,7 +48,6 @@ import { connect } from "react-redux";
 import AppMessage from "../../../models/app-message.js";
 import { Section, RichText as TextEditor } from "@courselit/components-library";
 import dynamic from "next/dynamic";
-import { constructThumbnailUrlFromFileUrl } from "../../../lib/utils";
 
 const AppDialog = dynamic(() => import("../../Public/AppDialog"));
 const MediaSelector = dynamic(() => import("../Media/MediaSelector"));
@@ -114,7 +113,12 @@ const LessonEditor = (props) => {
         downloadable,
         type,
         content,
-        contentURL,
+        media {
+          file,
+          originalFileName,
+          caption,
+          thumbnail
+        },
         requiresEnrollment
       }
     }
@@ -164,9 +168,7 @@ const LessonEditor = (props) => {
         downloadable: ${lesson.downloadable},
         type: ${lesson.type.toUpperCase()},
         content: "${TextEditor.stringify(lesson.content)}",
-        contentURL: ${
-          lesson.contentURL !== "" ? '"' + lesson.contentURL + '"' : null
-        },
+        mediaId: ${lesson.media !== "" ? '"' + lesson.media + '"' : null},
         requiresEnrollment: ${lesson.requiresEnrollment}
       }) {
         id,
@@ -174,7 +176,13 @@ const LessonEditor = (props) => {
         downloadable,
         type,
         content,
-        contentURL
+        media {
+          file,
+          originalFileName,
+          caption,
+          thumbnail
+        },
+        requiresEnrollment
       }
     }
     `;
@@ -188,12 +196,12 @@ const LessonEditor = (props) => {
     try {
       props.dispatch(networkAction(true));
       await fetch.exec();
+      props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_LESSON_SAVED)));
       props.onLessonUpdated();
     } catch (err) {
       props.dispatch(setAppMessage(new AppMessage(err.message)));
     } finally {
       props.dispatch(networkAction(false));
-      props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_LESSON_SAVED)));
     }
   };
 
@@ -205,9 +213,7 @@ const LessonEditor = (props) => {
         downloadable: ${lesson.downloadable},
         type: ${lesson.type.toUpperCase()},
         content: "${TextEditor.stringify(lesson.content)}",
-        contentURL: ${
-          lesson.contentURL !== "" ? '"' + lesson.contentURL + '"' : null
-        },
+        mediaId: ${lesson.media !== "" ? '"' + lesson.media + '"' : null},
         courseId: "${lesson.courseId}",
         requiresEnrollment: ${lesson.requiresEnrollment},
         groupId: "${lesson.groupId}"
@@ -359,12 +365,10 @@ const LessonEditor = (props) => {
                 <div className={classes.formControl}>
                   <MediaSelector
                     title={CONTENT_URL_LABEL}
-                    src={constructThumbnailUrlFromFileUrl(lesson.contentURL)}
+                    src={lesson.media.thumbnail}
                     onSelection={(media) =>
                       media &&
-                      setLesson(
-                        Object.assign({}, lesson, { contentURL: media.key })
-                      )
+                      setLesson(Object.assign({}, lesson, { media: media.id }))
                     }
                     mimeTypesToShow={getMimeTypesToShow()}
                   />

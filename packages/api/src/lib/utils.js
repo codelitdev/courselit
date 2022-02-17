@@ -20,13 +20,13 @@ exports.foldersExist = (folders) => {
   return true;
 };
 
-// exports.createFolders = (folders) => {
-//   for (const folder of folders) {
-//     if (!fs.existsSync(folder)) {
-//       fs.mkdirSync(folder, { recursive: true });
-//     }
-//   }
-// };
+exports.createFolders = (folders) => {
+  for (const folder of folders) {
+    if (!fs.existsSync(folder)) {
+      fs.mkdirSync(folder, { recursive: true });
+    }
+  }
+};
 
 /**
  * A pure function to generate a string by appending current epoch

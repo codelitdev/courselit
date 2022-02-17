@@ -43,7 +43,7 @@ const useStyles = makeStyles({
 
 const MediaPreview = (props) => {
   const { item } = props;
-  const { file, originalFileName, mimeType, altText } = item;
+  const { file, originalFileName, mimeType, caption } = item;
   const classes = useStyles();
 
   const copyUrl = async (e) => {
@@ -113,7 +113,7 @@ const MediaPreview = (props) => {
             mimeType === "image/jpeg" ||
             mimeType === "image/webp") && (
             <div className={classes.img}>
-              <Img src={file} alt={altText} />
+              <Img src={file} alt={caption} />
             </div>
           )}
           {mimeType === "video/mp4" && (

@@ -87,7 +87,7 @@ function Editor({
 
   const updateMedia = async () => {
     if (
-      media.altText === mediaBeingEdited.altText &&
+      media.caption === mediaBeingEdited.caption &&
       media.public === mediaBeingEdited.public
     ) {
       return;
@@ -95,7 +95,7 @@ function Editor({
 
     const formattedGraphQLQuery = getGraphQLQueryFields({
       id: mediaBeingEdited.id,
-      altText: mediaBeingEdited.altText,
+      caption: mediaBeingEdited.caption,
       public: mediaBeingEdited.public,
     });
     const query = `
@@ -104,7 +104,7 @@ function Editor({
         id,
         originalFileName,
         mimeType,
-        altText,
+        caption,
         file,
         thumbnail,
         public
@@ -152,8 +152,8 @@ function Editor({
                   label="Alt text"
                   fullWidth
                   margin="normal"
-                  name="altText"
-                  value={mediaBeingEdited.altText}
+                  name="caption"
+                  value={mediaBeingEdited.caption}
                   onChange={onMediaBeingEditedChanged}
                 />
                 <Grid container alignItems="center">
@@ -171,7 +171,7 @@ function Editor({
                 <Button
                   onClick={updateMedia}
                   disabled={
-                    media.altText === mediaBeingEdited.altText &&
+                    media.caption === mediaBeingEdited.caption &&
                     media.public === mediaBeingEdited.public
                   }
                 >

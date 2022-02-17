@@ -105,7 +105,7 @@ exports.upload = async (req, res) => {
       size: req.files.file.size,
       creatorId: req.user._id,
       thumbnail: isThumbGenerated ? `${directory}/thumb.webp` : "",
-      altText: data.altText,
+      caption: data.caption,
       public: data.public === "true",
     };
 
@@ -130,7 +130,7 @@ exports.serve = async ({ media, res }) => {
       id: media.id,
       file: `${cdnEndpoint}/${media.file}`,
       thumbnail: media.thumbnail ? `${cdnEndpoint}/${media.thumbnail}` : "",
-      altText: media.altText,
+      caption: media.caption,
     },
   });
 };

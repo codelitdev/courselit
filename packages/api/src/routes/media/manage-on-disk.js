@@ -89,7 +89,7 @@ exports.upload = async (req, res) => {
       size: req.files.file.size,
       creatorId: req.user._id,
       thumbnail: isThumbGenerated ? `${directory}/thumb.webp` : "",
-      altText: data.altText,
+      caption: data.caption,
     };
 
     const media = await Media.create(mediaObject);

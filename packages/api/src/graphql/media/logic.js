@@ -14,6 +14,20 @@ const { checkIfAuthenticated } = require("../../lib/graphql.js");
 const strings = require("../../config/strings.js");
 const { putObjectAclPromise } = require("../../routes/media/utils.js");
 
+exports.getLessonMedia = async (lesson, ctx) => {
+  let media = null;
+
+  if (lesson.mediaId) {
+    media = await Media.findOne({
+      _id: lesson.mediaId,
+      domain: ctx.subdomain._id,
+    });
+    media = mapRelativeURLsToFullURLs(media);
+  }
+
+  return media;
+};
+
 exports.getCreatorMedia = async (offset, ctx, text) => {
   checkIfAuthenticated(ctx);
   validateOffset(offset);

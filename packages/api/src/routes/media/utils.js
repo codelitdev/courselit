@@ -76,7 +76,6 @@ exports.generateSignedUrl = async ({ name, mimetype }) => {
     // ACL: "public-read",
     Bucket: cloudBucket,
     Key: name,
-    // ContentType: mimetype,
   });
 
   const url = await getSignedUrl(client, command);

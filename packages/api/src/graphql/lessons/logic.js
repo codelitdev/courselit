@@ -13,6 +13,7 @@ const Course = require("../../models/Course.js");
 const { lessonValidator } = require("./helpers.js");
 const { permissions } = require("../../config/constants.js");
 const mongoose = require("mongoose");
+const { generateSignedUrl } = require("../../routes/media/utils.js");
 
 const getLessonOrThrow = async (id, ctx) => {
   checkIfAuthenticated(ctx);
@@ -54,11 +55,11 @@ exports.getLessonDetails = async (id, ctx) => {
     throw new Error(strings.responses.not_enrolled);
   }
 
-  const lessonWithSignedContentURL =  Object.assign({}, lesson, {
-    contentURL: lesson.contentURL ? generateSignedUrl(lesson.contentURL) : ""
-  });
+  if (lesson.media) {
+    lesson.media = await generateSignedUrl({ name: lesson.media });
+  }
 
-  return lessonWithSignedContentURL;
+  return lesson;
 };
 
 exports.createLesson = async (lessonData, ctx) => {
@@ -82,7 +83,7 @@ exports.createLesson = async (lessonData, ctx) => {
       title: lessonData.title,
       type: lessonData.type,
       content: lessonData.content,
-      contentURL: lessonData.contentURL,
+      media: lessonData.media,
       downloadable: lessonData.downloadable,
       creatorId: ctx.user._id,
       courseId: course._id,

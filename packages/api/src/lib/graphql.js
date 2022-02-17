@@ -175,7 +175,7 @@ exports.getMediaOrThrow = async (id, ctx) => {
 //       originalFileName: media.originalFileName,
 //       mimeType: media.mimeType,
 //       size: media.size,
-//       altText: media.altText,
+//       caption: media.caption,
 //       public: media.public
 //     });
 //   }
@@ -192,8 +192,8 @@ exports.mapRelativeURLsToFullURLs = (media) => {
     originalFileName: media.originalFileName,
     mimeType: media.mimeType,
     size: media.size,
-    altText: media.altText,
+    caption: media.caption,
     public: media.public,
-    key: media.file
+    key: media.file,
   };
 };

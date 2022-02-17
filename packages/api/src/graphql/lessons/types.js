@@ -1,5 +1,7 @@
 const graphql = require("graphql");
 const { text, audio, video, pdf, quiz } = require("../../config/constants.js");
+const { mediaType } = require("../media/types.js");
+const mediaLogic = require("../media/logic.js");
 
 const DESCRIPTION_REQUIRES_ENROLLMENT =
   "Should the content of this lesson be visible to only enrolled customers.";
@@ -26,7 +28,6 @@ const lessonType = new graphql.GraphQLObjectType({
   fields: {
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-    // slug: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     type: { type: new graphql.GraphQLNonNull(lessontypeType) },
     downloadable: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
     creatorId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
@@ -36,7 +37,11 @@ const lessonType = new graphql.GraphQLObjectType({
     },
     courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     content: { type: graphql.GraphQLString },
-    contentURL: { type: graphql.GraphQLString },
+    media: {
+      type: mediaType,
+      resolve: (lesson, args, context, info) =>
+        mediaLogic.getLessonMedia(lesson, context),
+    },
   },
 });
 
@@ -72,7 +77,7 @@ const lessonInputType = new graphql.GraphQLInputObjectType({
       type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean),
     },
     content: { type: graphql.GraphQLString },
-    contentURL: { type: graphql.GraphQLString },
+    mediaId: { type: graphql.GraphQLID },
     downloadable: { type: graphql.GraphQLBoolean },
     groupId: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
   },
@@ -88,7 +93,7 @@ const lessonUpdateType = new graphql.GraphQLInputObjectType({
     title: { type: graphql.GraphQLString },
     type: { type: lessontypeType },
     content: { type: graphql.GraphQLString },
-    contentURL: { type: graphql.GraphQLString },
+    mediaId: { type: graphql.GraphQLID },
     downloadable: { type: graphql.GraphQLBoolean },
     requiresEnrollment: {
       description: DESCRIPTION_REQUIRES_ENROLLMENT,
