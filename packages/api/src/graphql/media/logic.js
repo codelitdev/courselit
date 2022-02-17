@@ -28,7 +28,7 @@ exports.getLessonMedia = async (lesson, ctx) => {
   return media;
 };
 
-exports.getCreatorMedia = async (offset, ctx, text) => {
+exports.getCreatorMedia = async (offset, ctx, text, mimeType, privacy) => {
   checkIfAuthenticated(ctx);
   validateOffset(offset);
   const user = ctx.user;
@@ -56,6 +56,8 @@ exports.getCreatorMedia = async (offset, ctx, text) => {
   }
 
   if (text) query.$text = { $search: text };
+  if (mimeType) query.mimeType = { $in: mimeType };
+  if (privacy) query.public = privacy;
   const searchMedia = makeModelTextSearchable(Media);
 
   const resultSet = await searchMedia(

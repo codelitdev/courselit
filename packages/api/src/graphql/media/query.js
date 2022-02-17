@@ -12,9 +12,11 @@ module.exports = {
       searchText: {
         type: graphql.GraphQLString,
       },
+      mimeType: { type: new graphql.GraphQLList(graphql.GraphQLString) },
+      privacy: { type: graphql.GraphQLString },
     },
-    resolve: (root, { offset, searchText }, context) =>
-      logic.getCreatorMedia(offset, context, searchText),
+    resolve: (root, { offset, searchText, mimeType, privacy }, context) =>
+      logic.getCreatorMedia(offset, context, searchText, mimeType, privacy),
   },
   getLessonMedia: {
     type: new graphql.GraphQLList(types.mediaType),

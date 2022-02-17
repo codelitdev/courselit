@@ -49,6 +49,7 @@ const MediaSelector = (props) => {
         title={DIALOG_TITLE_FEATURED_IMAGE}
         mediaAdditionAllowed={false}
         mimeTypesToShow={props.mimeTypesToShow}
+        public={props.public}
       />
     </Grid>
   );
@@ -59,6 +60,7 @@ MediaSelector.propTypes = {
   src: PropTypes.string,
   onSelection: PropTypes.func.isRequired,
   mimeTypesToShow: PropTypes.arrayOf(PropTypes.string),
+  public: PropTypes.string,
 };
 
 export default MediaSelector;

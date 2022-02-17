@@ -14,7 +14,7 @@ import {
 } from "../../../../config/strings";
 
 const MediaManagerDialog = (props) => {
-  const { onClose, onOpen, mimeTypesToShow } = props;
+  const { onClose, onOpen, mimeTypesToShow, public: privacy } = props;
   const [selectedMedia, setSelectedMedia] = useState({});
 
   const handleSelection = () => onClose(selectedMedia);
@@ -27,6 +27,7 @@ const MediaManagerDialog = (props) => {
           selectionMode={true}
           onSelect={(media) => setSelectedMedia(media)}
           mimeTypesToShow={mimeTypesToShow}
+          public={privacy}
         />
       </DialogContent>
       <DialogActions>
@@ -45,6 +46,7 @@ MediaManagerDialog.propTypes = {
   title: PropTypes.string.isRequired,
   mediaAdditionAllowed: PropTypes.bool,
   mimeTypesToShow: PropTypes.arrayOf(PropTypes.string),
+  public: PropTypes.string,
 };
 
 export default MediaManagerDialog;

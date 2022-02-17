@@ -385,6 +385,7 @@ const Settings = (props) => {
                       src={newSettings.logopath || props.siteinfo.logopath}
                       onSelection={onChangeData}
                       mimeTypesToShow={[...MIMETYPE_IMAGE]}
+                      public="true"
                     />
                   </Grid>
                   <Grid item>
