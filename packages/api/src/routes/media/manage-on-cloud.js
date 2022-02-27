@@ -48,6 +48,7 @@ const generateAndUploadThumbnail = async ({
       Key: `${cloudDirectory}/thumb.webp`,
       Body: createReadStream(thumbPath),
       ContentType: "image/webp",
+      ACL: "public-read",
     });
   }
 
@@ -81,6 +82,7 @@ exports.upload = async (req, res) => {
       Key: fileNameWithDomainInfo,
       Body: createReadStream(mainFilePath),
       ContentType: file.mimetype,
+      ACL: data.public === "true" ? "public-read" : "private",
     });
 
     let isThumbGenerated;
@@ -103,7 +105,8 @@ exports.upload = async (req, res) => {
       size: req.files.file.size,
       creatorId: req.user._id,
       thumbnail: isThumbGenerated ? `${directory}/thumb.webp` : "",
-      altText: data.altText,
+      caption: data.caption,
+      public: data.public === "true",
     };
 
     const media = await Media.create(mediaObject);
@@ -127,7 +130,7 @@ exports.serve = async ({ media, res }) => {
       id: media.id,
       file: `${cdnEndpoint}/${media.file}`,
       thumbnail: media.thumbnail ? `${cdnEndpoint}/${media.thumbnail}` : "",
-      altText: media.altText,
+      caption: media.caption,
     },
   });
 };

@@ -6,6 +6,7 @@ const ObjectId = require("mongoose").Types.ObjectId;
 const Media = require("../models/Media.js");
 const HttpError = require("./HttpError.js");
 const { cdnEndpoint } = require("../config/constants.js");
+const { generateSignedUrl } = require("../routes/media/utils.js");
 
 exports.checkIfAuthenticated = (ctx) => {
   if (!ctx.user) throw new Error(strings.responses.request_not_authenticated);
@@ -164,18 +165,18 @@ exports.getMediaOrThrow = async (id, ctx) => {
   return media;
 };
 
-exports.mapFileNamesToCompleteURLs = (mediaItems) => {
-  const mediaWithCompleteUrls = [];
-  for (const media of mediaItems) {
-    mediaWithCompleteUrls.push({
-      id: media.id,
-      file: `${cdnEndpoint}/${media.file}`,
-      thumbnail: media.thumbnail ? `${cdnEndpoint}/${media.thumbnail}` : "",
-      originalFileName: media.originalFileName,
-      mimeType: media.mimeType,
-      size: media.size,
-      altText: media.altText,
-    });
-  }
-  return mediaWithCompleteUrls;
+exports.mapRelativeURLsToFullURLs = (media) => {
+  return {
+    id: media.id,
+    file: media.public
+      ? `${cdnEndpoint}/${media.file}`
+      : generateSignedUrl({ name: media.file }),
+    thumbnail: media.thumbnail ? `${cdnEndpoint}/${media.thumbnail}` : "",
+    originalFileName: media.originalFileName,
+    mimeType: media.mimeType,
+    size: media.size,
+    caption: media.caption,
+    public: media.public,
+    key: media.file,
+  };
 };

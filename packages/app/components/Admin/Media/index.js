@@ -54,14 +54,24 @@ const Index = (props) => {
     query {
       media: getCreatorMedia(
         offset: ${mediaPaginationOffset},
-        searchText: "${searchText}"
+        searchText: "${searchText}",
+        mimeType: ${
+          props.mimeTypesToShow
+            ? "[" +
+              props.mimeTypesToShow.map((mimeType) => '"' + mimeType + '"') +
+              "]"
+            : null
+        },
+        privacy: ${props.public ? '"' + props.public + '"' : null}
       ) {
         id,
         originalFileName,
         mimeType,
-        altText,
+        caption,
         file,
-        thumbnail
+        thumbnail,
+        public,
+        key
       }
     }
     `;
@@ -205,6 +215,7 @@ Index.propTypes = {
   mimeTypesToShow: PropTypes.arrayOf(PropTypes.string),
   selectionMode: PropTypes.bool,
   onSelect: PropTypes.func,
+  public: PropTypes.string,
 };
 
 const mapStateToProps = (state) => ({

@@ -13,6 +13,7 @@ const {
   checkForInvalidPaymentMethodSettings,
   getPaymentInvalidException,
 } = require("./helpers.js");
+const { checkMediaForPublicAccess } = require("../media/logic.js");
 
 exports.getSiteInfo = async (ctx) => {
   const siteinfo = await SiteInfo.findOne(
@@ -57,6 +58,14 @@ exports.updateSiteInfo = async (siteData, ctx) => {
 
   if (!siteInfo.title.trim()) {
     throw new Error(responses.school_title_not_set);
+  }
+
+  const isLogoPubliclyAvailable = await checkMediaForPublicAccess(
+    siteInfo.logopath,
+    ctx
+  );
+  if (!isLogoPubliclyAvailable) {
+    throw new Error(responses.publicly_inaccessible);
   }
 
   if (shouldCreate) {

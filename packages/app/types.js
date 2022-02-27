@@ -29,7 +29,7 @@ export const latestPostsProps = PropTypes.shape({
 export const siteInfoProps = PropTypes.shape({
   title: PropTypes.string,
   subtitle: PropTypes.string,
-  logopath: PropTypes.string,
+  logopath: PropTypes.object,
   currencyUnit: PropTypes.string,
   currencyISOCode: PropTypes.string,
 });
@@ -87,7 +87,7 @@ export const lesson = PropTypes.shape({
   type: PropTypes.string,
   downloadable: PropTypes.bool,
   content: PropTypes.object,
-  contentURL: PropTypes.string,
+  media: PropTypes.string,
 });
 
 export const link = PropTypes.shape({
@@ -113,7 +113,8 @@ export const mediaProps = PropTypes.shape({
   file: PropTypes.string.isRequired,
   mimeType: PropTypes.string.isRequired,
   thumbnail: PropTypes.string,
-  altText: PropTypes.string,
+  caption: PropTypes.string,
+  public: PropTypes.bool,
 });
 
 export const selectedLessonMetaProps = PropTypes.shape({

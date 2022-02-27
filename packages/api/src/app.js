@@ -7,8 +7,8 @@ const fileUpload = require("express-fileupload");
 const optionalAuthMiddlewareCreator = require("./middlewares/optionalAuth.js");
 const {
   routePrefix,
-  uploadFolder,
-  useCloudStorage,
+  // uploadFolder,
+  // useCloudStorage,
   tempFileDirForUploads,
 } = require("./config/constants.js");
 const verifyDomain = require("./middlewares/verifyDomain.js");
@@ -36,9 +36,9 @@ app.use(
 app.use(asyncHandler(verifyDomain));
 
 // Routes
-if (!useCloudStorage) {
-  app.use(`${routePrefix}/assets`, express.static(uploadFolder));
-}
+// if (!useCloudStorage) {
+//   app.use(`${routePrefix}/assets`, express.static(uploadFolder));
+// }
 app.use(`${routePrefix}/auth`, require("./routes/auth.js")(passport));
 app.use(
   `${routePrefix}/graph`,

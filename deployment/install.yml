@@ -1,9 +1,0 @@
----
-    - hosts: all
-
-      tasks:
-        - include_role:
-            name: install_softwares
-
-        - include_role:
-            name: setup_docker

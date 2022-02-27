@@ -7,7 +7,6 @@ import {
 import { Grid, Button, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
 import dynamic from "next/dynamic";
-import { constructThumbnailUrlFromFileUrl } from "../../../../lib/utils";
 
 const Img = dynamic(() => import("../../../Img.js"));
 const MediaManagerDialog = dynamic(() => import("./MediaManagerDialog.js"));
@@ -33,7 +32,7 @@ const MediaSelector = (props) => {
         <Typography variant="body1">{props.title}</Typography>
       </Grid>
       <Grid item className={classes.preview}>
-        <Img src={constructThumbnailUrlFromFileUrl(props.src)} />
+        <Img src={props.src} />
       </Grid>
       <Grid item>
         <Button
@@ -49,6 +48,7 @@ const MediaSelector = (props) => {
         title={DIALOG_TITLE_FEATURED_IMAGE}
         mediaAdditionAllowed={false}
         mimeTypesToShow={props.mimeTypesToShow}
+        public={props.public}
       />
     </Grid>
   );
@@ -59,6 +59,7 @@ MediaSelector.propTypes = {
   src: PropTypes.string,
   onSelection: PropTypes.func.isRequired,
   mimeTypesToShow: PropTypes.arrayOf(PropTypes.string),
+  public: PropTypes.string,
 };
 
 export default MediaSelector;

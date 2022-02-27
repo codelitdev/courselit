@@ -16,7 +16,9 @@ const generateQuery = (pageOffset = 1) => `
       id
       title,
       description,
-      featuredImage,
+      featuredImage {
+        file
+      },
       updated,
       creatorName,
       cost,

@@ -97,7 +97,9 @@ export function updateSiteInfo() {
       { site: getSiteInfo {
           title,
           subtitle,
-          logopath,
+          logopath {
+            file
+          },
           currencyUnit,
           currencyISOCode,
           paymentMethod,

@@ -30,6 +30,26 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+const Caption = (props) => {
+  if (!props.text) {
+    return null;
+  }
+
+  return (
+    <Grid container justify="center">
+      <Grid item>
+        <Typography variant="caption" color="textSecondary">
+          {props.text}
+        </Typography>
+      </Grid>
+    </Grid>
+  );
+};
+
+Caption.propTypes = {
+  text: PropTypes.string,
+};
+
 const LessonViewer = (props) => {
   const [lesson, setLesson] = useState(props.lesson);
   const [isEnrolled] = useState(
@@ -51,7 +71,11 @@ const LessonViewer = (props) => {
         downloadable,
         type,
         content,
-        contentURL,
+        media {
+          id,
+          file,
+          caption
+        },
         requiresEnrollment,
         courseId
       }
@@ -111,9 +135,13 @@ const LessonViewer = (props) => {
                 controlsList="nodownload"
                 className={`${classes.videoPlayer} ${classes.section}`}
               >
-                <source src={lesson.contentURL} type="video/mp4" />
+                <source
+                  src={lesson.media && lesson.media.file}
+                  type="video/mp4"
+                />
                 Your browser does not support the video tag.
               </video>
+              <Caption text={lesson.media && lesson.media.caption} />
             </Grid>
           )}
           {String.prototype.toUpperCase.call(LESSON_TYPE_AUDIO) ===
@@ -124,9 +152,13 @@ const LessonViewer = (props) => {
                 controlsList="nodownload"
                 className={classes.section}
               >
-                <source src={lesson.contentURL} type="audio/mpeg" />
+                <source
+                  src={lesson.media && lesson.media.file}
+                  type="audio/mpeg"
+                />
                 Your browser does not support the video tag.
               </audio>
+              <Caption text={lesson.media && lesson.media.caption} />
             </Grid>
           )}
           {String.prototype.toUpperCase.call(LESSON_TYPE_PDF) ===
@@ -136,8 +168,9 @@ const LessonViewer = (props) => {
                 frameBorder="0"
                 width="100%"
                 height="500"
-                src={`${lesson.contentURL}#view=fit`}
+                src={`${lesson.media && lesson.media.file}#view=fit`}
               ></iframe>
+              <Caption text={lesson.media && lesson.media.caption} />
             </Grid>
           )}
           {lesson.content && (

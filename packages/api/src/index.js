@@ -2,8 +2,8 @@
 
 require("dotenv").config();
 const internalResponse = require("./config/strings.js").internal;
-const { uploadFolder, useCloudStorage } = require("./config/constants.js");
-const { createFolders } = require("./lib/utils.js");
+// const { uploadFolder, useCloudStorage } = require("./config/constants.js");
+// const { createFolders } = require("./lib/utils.js");
 
 const validateEnvironmentVars = () => {
   const commonVars = [
@@ -15,12 +15,12 @@ const validateEnvironmentVars = () => {
     "EMAIL_FROM",
   ];
 
-  const environmentVarsForLocalStorage = [
-    "USER_CONTENT_DIRECTORY",
-    "CDN_ENDPOINT",
-  ];
+  // const environmentVarsForLocalStorage = [
+  //   "USER_CONTENT_DIRECTORY",
+  //   "CDN_ENDPOINT",
+  // ];
 
-  const environmentVarsForCloudStorage = [
+  const environmentVarsForMediaStorage = [
     "CLOUD_ENDPOINT",
     "CLOUD_REGION",
     "CLOUD_KEY",
@@ -31,9 +31,7 @@ const validateEnvironmentVars = () => {
 
   const environmentVarsToCheck = [
     ...commonVars,
-    ...(useCloudStorage
-      ? environmentVarsForCloudStorage
-      : environmentVarsForLocalStorage),
+    ...environmentVarsForMediaStorage,
   ];
 
   for (const field of environmentVarsToCheck) {
@@ -45,9 +43,6 @@ const validateEnvironmentVars = () => {
 };
 
 validateEnvironmentVars();
-if (!useCloudStorage) {
-  createFolders([uploadFolder]);
-}
 
 const app = require("./app.js");
 

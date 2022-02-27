@@ -42,7 +42,12 @@ const Post = (props) => {
             /> */}
             <meta property="og:author" content={props.post.creatorName} />
             {props.post.featuredImage && (
-              <meta property="og:image" content={props.post.featuredImage} />
+              <meta
+                property="og:image"
+                content={
+                  props.post.featuredImage && props.post.featuredImage.file
+                }
+              />
             )}
           </Head>
           <Article course={props.post} options={articleOptions} />
@@ -59,7 +64,10 @@ export async function getServerSideProps({ query, req }) {
           id,
           title,
           description,
-          featuredImage,
+          featuredImage {
+            file,
+            caption
+          },
           updated,
           creatorName,
           creatorId,

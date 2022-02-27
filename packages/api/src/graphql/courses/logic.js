@@ -18,7 +18,7 @@ const {
   itemsPerPage,
   blogPostSnippetLength,
 } = require("../../config/constants.js");
-const { validateBlogPosts, validateCost } = require("./helpers.js");
+const { validateBlogPosts } = require("./helpers.js");
 const permissions = require("../../config/constants.js").permissions;
 const Lesson = require("../../models/Lesson.js");
 
@@ -82,10 +82,7 @@ exports.createCourse = async (courseData, ctx) => {
     throw new Error(strings.responses.action_not_allowed);
   }
 
-  courseData = await validateCost(
-    validateBlogPosts(courseData),
-    ctx.subdomain._id
-  );
+  courseData = await validateBlogPosts(courseData, ctx);
 
   const course = await Course.create({
     domain: ctx.subdomain._id,
@@ -118,7 +115,7 @@ exports.updateCourse = async (courseData, ctx) => {
     course[key] = courseData[key];
   }
 
-  course = await validateCost(validateBlogPosts(course), ctx.subdomain._id);
+  course = await validateBlogPosts(course, ctx);
   course = await course.save();
   return course;
 };
@@ -204,10 +201,6 @@ exports.getCoursesAsAdmin = async (offset, ctx, text) => {
   );
 
   return resultSet;
-  // return await Course.find(query)
-  //   .sort({ updated: -1 })
-  //   .skip((offset - 1) * itemsPerPage)
-  //   .limit(itemsPerPage);
 };
 
 exports.getPosts = async (offset, ctx) => {

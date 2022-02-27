@@ -147,7 +147,7 @@ const BaseLayoutAdmin = ({
           rel="icon"
           href={
             siteInfo.logopath
-              ? siteInfo.logopath
+              ? siteInfo.logopath.file
               : "/courselit_backdrop_square.webp"
           }
         />

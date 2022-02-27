@@ -2,6 +2,8 @@ const graphql = require("graphql");
 const { unlisted, open } = require("../../config/constants.js");
 const { lessonMetaType } = require("../lessons/types.js");
 const lessonLogic = require("../lessons/logic.js");
+const { mediaType } = require("../media/types.js");
+const mediaLogic = require("../media/logic.js");
 
 const courseStatusType = new graphql.GraphQLEnumType({
   name: "CoursePrivacyType",
@@ -42,7 +44,11 @@ const courseType = new graphql.GraphQLObjectType({
     slug: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
     description: { type: graphql.GraphQLString },
-    featuredImage: { type: graphql.GraphQLString },
+    featuredImage: {
+      type: mediaType,
+      resolve: (course, args, context, info) =>
+        mediaLogic.getMedia(course.featuredImage, context),
+    },
     groups: { type: new graphql.GraphQLList(courseGroupType) },
   },
 });
@@ -56,7 +62,7 @@ const courseInputType = new graphql.GraphQLInputObjectType({
     isFeatured: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
     cost: { type: graphql.GraphQLFloat },
     description: { type: graphql.GraphQLString },
-    featuredImage: { type: graphql.GraphQLString },
+    featuredImage: { type: graphql.GraphQLID },
   },
 });
 
@@ -71,7 +77,7 @@ const courseUpdateInput = new graphql.GraphQLInputObjectType({
     isBlog: { type: graphql.GraphQLBoolean },
     isFeatured: { type: graphql.GraphQLBoolean },
     description: { type: graphql.GraphQLString },
-    featuredImage: { type: graphql.GraphQLString },
+    featuredImage: { type: graphql.GraphQLID },
   },
 });
 
@@ -80,7 +86,11 @@ const creatorOrAdminCoursesItemType = new graphql.GraphQLObjectType({
   fields: {
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-    featuredImage: { type: graphql.GraphQLString },
+    featuredImage: {
+      type: mediaType,
+      resolve: (course, args, context, info) =>
+        mediaLogic.getMedia(course.featuredImage, context),
+    },
     isBlog: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
     courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
   },
@@ -96,7 +106,11 @@ const postType = new graphql.GraphQLObjectType({
     updated: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     slug: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     courseId: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
-    featuredImage: { type: graphql.GraphQLString },
+    featuredImage: {
+      type: mediaType,
+      resolve: (course, args, context, info) =>
+        mediaLogic.getMedia(course.featuredImage, context),
+    },
   },
 });
 
@@ -105,7 +119,11 @@ const publicCoursesType = new graphql.GraphQLObjectType({
   fields: {
     id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
     title: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-    featuredImage: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+    featuredImage: {
+      type: mediaType,
+      resolve: (course, args, context, info) =>
+        mediaLogic.getMedia(course.featuredImage, context),
+    },
     cost: { type: new graphql.GraphQLNonNull(graphql.GraphQLFloat) },
     slug: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
     updated: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },

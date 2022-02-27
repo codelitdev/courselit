@@ -71,7 +71,7 @@ const CourseEditor = (props) => {
     privacy: "UNLISTED",
     isBlog: false,
     description: TextEditor.emptyState(),
-    featuredImage: "",
+    featuredImage: null,
     id: null,
     isFeatured: false,
     slug: "",
@@ -125,7 +125,6 @@ const CourseEditor = (props) => {
 
     let query = "";
     if (courseData.course.id) {
-      // update the existing record
       query = `
       mutation {
         course: updateCourse(courseData: {
@@ -135,7 +134,11 @@ const CourseEditor = (props) => {
           privacy: ${courseData.course.privacy.toUpperCase()},
           isBlog: ${courseData.course.isBlog},
           description: "${TextEditor.stringify(courseData.course.description)}",
-          featuredImage: "${courseData.course.featuredImage}",
+          featuredImage: ${
+            courseData.course.featuredImage
+              ? '"' + courseData.course.featuredImage.id + '"'
+              : null
+          },
           isFeatured: ${courseData.course.isFeatured}
         }) {
           id,
@@ -145,7 +148,10 @@ const CourseEditor = (props) => {
           privacy,
           isBlog,
           description,
-          featuredImage,
+          featuredImage {
+            id,
+            thumbnail
+          },
           isFeatured,
           slug,
           courseId,
@@ -158,7 +164,6 @@ const CourseEditor = (props) => {
       }
       `;
     } else {
-      // make a new record
       query = `
       mutation {
         course: createCourse(courseData: {
@@ -167,7 +172,11 @@ const CourseEditor = (props) => {
           privacy: ${courseData.course.privacy.toUpperCase()},
           isBlog: ${courseData.course.isBlog},
           description: "${TextEditor.stringify(courseData.course.description)}",
-          featuredImage: "${courseData.course.featuredImage}",
+          featuredImage: ${
+            courseData.course.featuredImage
+              ? '"' + courseData.course.featuredImage.id + '"'
+              : null
+          },
           isFeatured: ${courseData.course.isFeatured}
         }) {
           id,
@@ -177,7 +186,10 @@ const CourseEditor = (props) => {
           privacy,
           isBlog,
           description,
-          featuredImage,
+          featuredImage {
+            id,
+            thumbnail
+          },
           isFeatured,
           slug,
           courseId,
@@ -222,7 +234,10 @@ const CourseEditor = (props) => {
           privacy,
           isBlog,
           description,
-          featuredImage,
+          featuredImage {
+            id,
+            thumbnail
+          },
           isFeatured,
           slug,
           courseId,
@@ -335,7 +350,10 @@ const CourseEditor = (props) => {
         privacy,
         isBlog,
         description,
-        featuredImage,
+        featuredImage {
+          id,
+          thumbnail
+        },
         id,
         lessons {
           id,
@@ -372,7 +390,7 @@ const CourseEditor = (props) => {
   };
 
   const onFeaturedImageSelection = (media) =>
-    media && changeCourseDetails("featuredImage", media.file);
+    media && changeCourseDetails("featuredImage", media);
 
   const closeDeleteCoursePopup = () => setDeleteCoursePopupOpened(false);
 
@@ -568,9 +586,13 @@ const CourseEditor = (props) => {
                             <Grid item>
                               <MediaSelector
                                 title={FORM_FIELD_FEATURED_IMAGE}
-                                src={courseData.course.featuredImage}
+                                src={
+                                  courseData.course.featuredImage &&
+                                  courseData.course.featuredImage.thumbnail
+                                }
                                 onSelection={onFeaturedImageSelection}
                                 mimeTypesToShow={[...MIMETYPE_IMAGE]}
+                                public="true"
                               />
                             </Grid>
                             {!courseData.course.isBlog && (

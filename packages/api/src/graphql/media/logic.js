@@ -7,13 +7,28 @@ const {
   checkPermission,
   validateOffset,
   getMediaOrThrow,
-  mapFileNamesToCompleteURLs,
+  mapRelativeURLsToFullURLs,
 } = require("../../lib/graphql.js");
 const { itemsPerPage, permissions } = require("../../config/constants.js");
 const { checkIfAuthenticated } = require("../../lib/graphql.js");
 const strings = require("../../config/strings.js");
+const { putObjectAclPromise } = require("../../routes/media/utils.js");
 
-exports.getCreatorMedia = async (offset, ctx, text) => {
+exports.getMedia = async (mediaId, ctx) => {
+  let media = null;
+
+  if (mediaId) {
+    media = await Media.findOne({
+      _id: mediaId,
+      domain: ctx.subdomain._id,
+    });
+    media = mapRelativeURLsToFullURLs(media);
+  }
+
+  return media;
+};
+
+exports.getCreatorMedia = async (offset, ctx, text, mimeType, privacy) => {
   checkIfAuthenticated(ctx);
   validateOffset(offset);
   const user = ctx.user;
@@ -41,6 +56,8 @@ exports.getCreatorMedia = async (offset, ctx, text) => {
   }
 
   if (text) query.$text = { $search: text };
+  if (mimeType) query.mimeType = { $in: mimeType };
+  if (privacy) query.public = privacy;
   const searchMedia = makeModelTextSearchable(Media);
 
   const resultSet = await searchMedia(
@@ -52,15 +69,33 @@ exports.getCreatorMedia = async (offset, ctx, text) => {
     }
   );
 
-  return mapFileNamesToCompleteURLs(resultSet);
+  return resultSet.map(mapRelativeURLsToFullURLs);
 };
 
 exports.updateMedia = async (mediaData, ctx) => {
-  const media = await getMediaOrThrow(mediaData.id, ctx);
+  let media = await getMediaOrThrow(mediaData.id, ctx);
+
+  if (mediaData.public !== media.public) {
+    await putObjectAclPromise({
+      Key: media.file,
+      ACL: mediaData.public === "true" ? "public-read" : "private",
+    });
+  }
 
   for (const key of Object.keys(mediaData)) {
     media[key] = mediaData[key];
   }
 
-  return await media.save();
+  media = await media.save();
+  return mapRelativeURLsToFullURLs(media);
+};
+
+exports.checkMediaForPublicAccess = async (mediaId, ctx) => {
+  const media = await this.getMedia(mediaId, ctx);
+
+  if (media && media.public) {
+    return true;
+  }
+
+  return false;
 };

@@ -25,7 +25,7 @@ exports.responses = {
   user_not_found: "User not found.",
   request_not_authenticated: "Request not authenticated",
   content_cannot_be_null: "Content cannot be empty",
-  content_url_cannot_be_null: "Content URL cannot be empty",
+  media_id_cannot_be_null: "Media Id cannot be empty",
   item_not_found: "Item not found",
   not_a_creator: "You do not have rights to perform this action",
   course_not_empty: "Delete all lessons before trying deleting the course",
@@ -79,6 +79,7 @@ exports.responses = {
     "A currency symbol is required. Examples: $, ₹, £ etc.",
   school_title_not_set: "School title is not set",
   internal_error: "An internal error occurred. Please try again",
+  publicly_inaccessible: "Image should be publicly accessible",
 };
 
 exports.internal = {
