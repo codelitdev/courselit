@@ -83,7 +83,7 @@ exports.createLesson = async (lessonData, ctx) => {
       title: lessonData.title,
       type: lessonData.type,
       content: lessonData.content,
-      media: lessonData.media,
+      mediaId: lessonData.mediaId,
       downloadable: lessonData.downloadable,
       creatorId: ctx.user._id,
       courseId: course._id,

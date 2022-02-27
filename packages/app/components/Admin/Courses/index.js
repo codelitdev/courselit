@@ -27,10 +27,7 @@ import { addressProps, authProps, profileProps } from "../../../types";
 import { Section } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 import { networkAction } from "../../../redux/actions";
-import {
-  checkPermission,
-  constructThumbnailUrlFromFileUrl,
-} from "../../../lib/utils";
+import { checkPermission } from "../../../lib/utils";
 import { permissions } from "../../../config/constants";
 import { makeStyles } from "@material-ui/styles";
 import { Add, Search } from "@material-ui/icons";
@@ -80,7 +77,9 @@ const Index = (props) => {
       ) {
         id,
         title,
-        featuredImage,
+        featuredImage {
+          thumbnail
+        },,
         isBlog,
         courseId
       }
@@ -93,7 +92,9 @@ const Index = (props) => {
       ) {
         id,
         title,
-        featuredImage,
+        featuredImage {
+          thumbnail
+        },,
         isBlog,
         courseId
       }
@@ -198,9 +199,10 @@ const Index = (props) => {
                     <ListItem className={classes.listItem}>
                       <ListItemAvatar>
                         <Img
-                          src={constructThumbnailUrlFromFileUrl(
-                            course.featuredImage
-                          )}
+                          src={
+                            course.featuredImage &&
+                            course.featuredImage.thumbnail
+                          }
                           classes={classes.avatar}
                         />
                       </ListItemAvatar>

@@ -14,12 +14,12 @@ const { checkIfAuthenticated } = require("../../lib/graphql.js");
 const strings = require("../../config/strings.js");
 const { putObjectAclPromise } = require("../../routes/media/utils.js");
 
-exports.getLessonMedia = async (lesson, ctx) => {
+exports.getMedia = async (mediaId, ctx) => {
   let media = null;
 
-  if (lesson.mediaId) {
+  if (mediaId) {
     media = await Media.findOne({
-      _id: lesson.mediaId,
+      _id: mediaId,
       domain: ctx.subdomain._id,
     });
     media = mapRelativeURLsToFullURLs(media);
@@ -88,4 +88,14 @@ exports.updateMedia = async (mediaData, ctx) => {
 
   media = await media.save();
   return mapRelativeURLsToFullURLs(media);
+};
+
+exports.checkMediaForPublicAccess = async (mediaId, ctx) => {
+  const media = await this.getMedia(mediaId, ctx);
+
+  if (media && media.public) {
+    return true;
+  }
+
+  return false;
 };

@@ -32,7 +32,9 @@ const generateQuery = (pageOffset = 1) => `
       updated,
       creatorName,
       slug,
-      featuredImage,
+      featuredImage {
+        file
+      },
       courseId
     }
   }

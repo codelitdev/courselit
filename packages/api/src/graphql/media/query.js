@@ -18,17 +18,4 @@ module.exports = {
     resolve: (root, { offset, searchText, mimeType, privacy }, context) =>
       logic.getCreatorMedia(offset, context, searchText, mimeType, privacy),
   },
-  getLessonMedia: {
-    type: new graphql.GraphQLList(types.mediaType),
-    args: {
-      offset: {
-        type: new graphql.GraphQLNonNull(graphql.GraphQLInt),
-      },
-      searchText: {
-        type: graphql.GraphQLString,
-      },
-    },
-    resolve: (root, { offset, searchText }, context) =>
-      logic.getCreatorMedia(offset, context, searchText),
-  },
 };

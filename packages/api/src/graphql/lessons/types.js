@@ -40,7 +40,7 @@ const lessonType = new graphql.GraphQLObjectType({
     media: {
       type: mediaType,
       resolve: (lesson, args, context, info) =>
-        mediaLogic.getLessonMedia(lesson, context),
+        mediaLogic.getMedia(lesson.mediaId, context),
     },
   },
 });

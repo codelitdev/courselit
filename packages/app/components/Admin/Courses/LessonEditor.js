@@ -114,6 +114,7 @@ const LessonEditor = (props) => {
         type,
         content,
         media {
+          id,
           file,
           originalFileName,
           caption,
@@ -134,7 +135,6 @@ const LessonEditor = (props) => {
     try {
       props.dispatch(networkAction(true));
       const response = await fetch.exec();
-
       if (response.lesson) {
         setLesson(
           Object.assign({}, response.lesson, {
@@ -168,7 +168,7 @@ const LessonEditor = (props) => {
         downloadable: ${lesson.downloadable},
         type: ${lesson.type.toUpperCase()},
         content: "${TextEditor.stringify(lesson.content)}",
-        mediaId: ${lesson.media !== "" ? '"' + lesson.media + '"' : null},
+        mediaId: ${lesson.media ? '"' + lesson.media.id + '"' : null},
         requiresEnrollment: ${lesson.requiresEnrollment}
       }) {
         id,
@@ -177,6 +177,7 @@ const LessonEditor = (props) => {
         type,
         content,
         media {
+          id,
           file,
           originalFileName,
           caption,
@@ -213,7 +214,7 @@ const LessonEditor = (props) => {
         downloadable: ${lesson.downloadable},
         type: ${lesson.type.toUpperCase()},
         content: "${TextEditor.stringify(lesson.content)}",
-        mediaId: ${lesson.media !== "" ? '"' + lesson.media + '"' : null},
+        mediaId: ${lesson.media ? '"' + lesson.media.id + '"' : null},
         courseId: "${lesson.courseId}",
         requiresEnrollment: ${lesson.requiresEnrollment},
         groupId: "${lesson.groupId}"
@@ -365,10 +366,9 @@ const LessonEditor = (props) => {
                 <div className={classes.formControl}>
                   <MediaSelector
                     title={CONTENT_URL_LABEL}
-                    src={lesson.media.thumbnail}
+                    src={lesson.media && lesson.media.thumbnail}
                     onSelection={(media) =>
-                      media &&
-                      setLesson(Object.assign({}, lesson, { media: media.id }))
+                      media && setLesson(Object.assign({}, lesson, { media }))
                     }
                     mimeTypesToShow={getMimeTypesToShow()}
                   />

@@ -79,6 +79,7 @@ exports.responses = {
     "A currency symbol is required. Examples: $, ₹, £ etc.",
   school_title_not_set: "School title is not set",
   internal_error: "An internal error occurred. Please try again",
+  publicly_inaccessible: "Image should be publicly accessible",
 };
 
 exports.internal = {

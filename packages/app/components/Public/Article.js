@@ -88,7 +88,12 @@ const Article = (props) => {
             </Grid>
           </Grid>
         )}
-        {course.featuredImage && <Img src={course.featuredImage} />}
+        {course.featuredImage && (
+          <Img
+            alt={course.featuredImage.caption}
+            src={course.featuredImage.file}
+          />
+        )}
         {options.showEnrollmentArea &&
           (profile.fetched
             ? !profile.purchases.includes(course.id) &&

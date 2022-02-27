@@ -35,7 +35,6 @@ module.exports = {
   // the following constants are as per the 16:9 aspect ratio
   thumbnailWidth: 120,
   thumbnailHeight: 68,
-  // useCloudStorage: process.env.USE_CLOUD_STORAGE === "true",
   cloudEndpoint: process.env.CLOUD_ENDPOINT || "",
   cloudRegion: process.env.CLOUD_REGION || "",
   cloudKey: process.env.CLOUD_KEY || "",

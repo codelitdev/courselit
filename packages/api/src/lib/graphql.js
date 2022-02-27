@@ -165,23 +165,6 @@ exports.getMediaOrThrow = async (id, ctx) => {
   return media;
 };
 
-// exports.mapFileNamesToCompleteURLs = (mediaItems) => {
-//   const mediaWithCompleteUrls = [];
-//   for (const media of mediaItems) {
-//     mediaWithCompleteUrls.push({
-//       id: media.id,
-//       file: media.public ? `${cdnEndpoint}/${media.file}` : generateSignedUrl({ name: media.file }),
-//       thumbnail: media.thumbnail ? `${cdnEndpoint}/${media.thumbnail}` : "",
-//       originalFileName: media.originalFileName,
-//       mimeType: media.mimeType,
-//       size: media.size,
-//       caption: media.caption,
-//       public: media.public
-//     });
-//   }
-//   return mediaWithCompleteUrls;
-// };
-
 exports.mapRelativeURLsToFullURLs = (media) => {
   return {
     id: media.id,

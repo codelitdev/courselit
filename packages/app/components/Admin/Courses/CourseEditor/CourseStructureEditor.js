@@ -148,7 +148,7 @@ const CourseStructureEditor = ({
         title: "",
         type: String.prototype.toUpperCase.call(LESSON_TYPE_TEXT),
         content: TextEditor.emptyState(),
-        media: "",
+        media: {},
         downloadable: false,
         requiresEnrollment: false,
         courseId,

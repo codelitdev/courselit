@@ -135,10 +135,13 @@ const LessonViewer = (props) => {
                 controlsList="nodownload"
                 className={`${classes.videoPlayer} ${classes.section}`}
               >
-                <source src={lesson.media.file} type="video/mp4" />
+                <source
+                  src={lesson.media && lesson.media.file}
+                  type="video/mp4"
+                />
                 Your browser does not support the video tag.
               </video>
-              <Caption text={lesson.media.caption} />
+              <Caption text={lesson.media && lesson.media.caption} />
             </Grid>
           )}
           {String.prototype.toUpperCase.call(LESSON_TYPE_AUDIO) ===
@@ -149,10 +152,13 @@ const LessonViewer = (props) => {
                 controlsList="nodownload"
                 className={classes.section}
               >
-                <source src={lesson.media.file} type="audio/mpeg" />
+                <source
+                  src={lesson.media && lesson.media.file}
+                  type="audio/mpeg"
+                />
                 Your browser does not support the video tag.
               </audio>
-              <Caption text={lesson.media.caption} />
+              <Caption text={lesson.media && lesson.media.caption} />
             </Grid>
           )}
           {String.prototype.toUpperCase.call(LESSON_TYPE_PDF) ===
@@ -162,9 +168,9 @@ const LessonViewer = (props) => {
                 frameBorder="0"
                 width="100%"
                 height="500"
-                src={`${lesson.media.file}#view=fit`}
+                src={`${lesson.media && lesson.media.file}#view=fit`}
               ></iframe>
-              <Caption text={lesson.media.caption} />
+              <Caption text={lesson.media && lesson.media.caption} />
             </Grid>
           )}
           {lesson.content && (

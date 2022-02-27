@@ -43,9 +43,6 @@ const validateEnvironmentVars = () => {
 };
 
 validateEnvironmentVars();
-// if (!useCloudStorage) {
-//   createFolders([uploadFolder]);
-// }
 
 const app = require("./app.js");
 

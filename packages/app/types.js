@@ -29,7 +29,7 @@ export const latestPostsProps = PropTypes.shape({
 export const siteInfoProps = PropTypes.shape({
   title: PropTypes.string,
   subtitle: PropTypes.string,
-  logopath: PropTypes.string,
+  logopath: PropTypes.object,
   currencyUnit: PropTypes.string,
   currencyISOCode: PropTypes.string,
 });
