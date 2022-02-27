@@ -47,7 +47,7 @@ const Post = (props) => {
             {props.featuredImage && (
               <Grid item>
                 <Img
-                  src={props.featuredImage}
+                  src={props.featuredImage.file}
                   classes={classes.featuredImage}
                 />
               </Grid>

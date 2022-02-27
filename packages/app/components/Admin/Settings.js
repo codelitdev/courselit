@@ -86,7 +86,7 @@ const Settings = (props) => {
   const defaultSettingsState = {
     title: "",
     subtitle: "",
-    logopath: "",
+    logopath: {},
     currencyUnit: "",
     currencyISOCode: "",
     paymentMethod: "",
@@ -116,7 +116,9 @@ const Settings = (props) => {
       settings: getSiteInfoAsAdmin {
         title,
         subtitle,
-        logopath,
+        logopath {
+          thumbnail
+        },
         currencyUnit,
         currencyISOCode,
         paymentMethod,
@@ -142,7 +144,7 @@ const Settings = (props) => {
     const settingsResponseWithNullsRemoved = {
       title: settingsResponse.title || "",
       subtitle: settingsResponse.subtitle || "",
-      logopath: settingsResponse.logopath || "",
+      logopath: settingsResponse.logopath,
       currencyUnit: settingsResponse.currencyUnit || "",
       currencyISOCode: settingsResponse.currencyISOCode || "",
       paymentMethod: settingsResponse.paymentMethod || "",
@@ -162,11 +164,15 @@ const Settings = (props) => {
       settings: updateSiteInfo(siteData: {
         title: "${newSettings.title}",
         subtitle: "${newSettings.subtitle}",
-        logopath: "${newSettings.logopath}"
+        logopath: ${
+          newSettings.logopath ? '"' + newSettings.logopath.id + '"' : null
+        },
       }) {
         title,
         subtitle,
-        logopath,
+        logopath {
+          thumbnail
+        },
         currencyUnit,
         currencyISOCode,
         paymentMethod,
@@ -257,7 +263,7 @@ const Settings = (props) => {
     }
 
     const change = Object.prototype.hasOwnProperty.call(e, "file")
-      ? { logopath: e.file }
+      ? { logopath: e }
       : { [e.target.name]: e.target.value };
     setNewSettings(Object.assign({}, newSettings, change));
   };
@@ -382,9 +388,13 @@ const Settings = (props) => {
                   <Grid item>
                     <MediaSelector
                       title={SITE_SETTINGS_LOGO}
-                      src={newSettings.logopath || props.siteinfo.logopath}
+                      src={
+                        newSettings.logopath.thumbnail ||
+                        props.siteinfo.logopath.thumbnail
+                      }
                       onSelection={onChangeData}
                       mimeTypesToShow={[...MIMETYPE_IMAGE]}
+                      public="true"
                     />
                   </Grid>
                   <Grid item>

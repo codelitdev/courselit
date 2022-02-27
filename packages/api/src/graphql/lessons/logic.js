@@ -13,6 +13,7 @@ const Course = require("../../models/Course.js");
 const { lessonValidator } = require("./helpers.js");
 const { permissions } = require("../../config/constants.js");
 const mongoose = require("mongoose");
+const { generateSignedUrl } = require("../../routes/media/utils.js");
 
 const getLessonOrThrow = async (id, ctx) => {
   checkIfAuthenticated(ctx);
@@ -54,6 +55,10 @@ exports.getLessonDetails = async (id, ctx) => {
     throw new Error(strings.responses.not_enrolled);
   }
 
+  if (lesson.media) {
+    lesson.media = await generateSignedUrl({ name: lesson.media });
+  }
+
   return lesson;
 };
 
@@ -78,7 +83,7 @@ exports.createLesson = async (lessonData, ctx) => {
       title: lessonData.title,
       type: lessonData.type,
       content: lessonData.content,
-      contentURL: lessonData.contentURL,
+      mediaId: lessonData.mediaId,
       downloadable: lessonData.downloadable,
       creatorId: ctx.user._id,
       courseId: course._id,
@@ -128,38 +133,6 @@ exports.deleteLesson = async (id, ctx) => {
     throw new Error(err.message);
   }
 };
-
-// exports.changeTitle = async (id, newTitle, ctx) => {
-//   checkIfAuthenticated(ctx);
-//   let lesson = await checkLessonOwnership(id, ctx);
-//   lesson.title = newTitle;
-//   lesson = await lesson.save();
-//   return lesson;
-// };
-
-// exports.changeContent = async (id, content, ctx) => {
-//   checkIfAuthenticated(ctx);
-//   let lesson = await checkLessonOwnership(id, ctx);
-//   lesson.content = content;
-//   lesson = await lesson.save();
-//   return lesson;
-// };
-
-// exports.changeContentURL = async (id, url, ctx) => {
-//   checkIfAuthenticated(ctx);
-//   let lesson = await checkLessonOwnership(id, ctx);
-//   lesson.contentURL = url;
-//   lesson = await lesson.save();
-//   return lesson;
-// };
-
-// exports.changeDownloadable = async (id, flag, ctx) => {
-//   checkIfAuthenticated(ctx);
-//   let lesson = await checkLessonOwnership(id, ctx);
-//   lesson.downloadable = flag;
-//   lesson = await lesson.save();
-//   return lesson;
-// };
 
 exports.getAllLessons = async (course, ctx) => {
   const lessons = await Lesson.find({

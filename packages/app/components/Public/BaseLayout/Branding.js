@@ -9,7 +9,6 @@ import dynamic from "next/dynamic";
 import { connect } from "react-redux";
 import { withStyles } from "@material-ui/styles";
 import { siteInfoProps } from "../../../types";
-import { constructThumbnailUrlFromFileUrl } from "../../../lib/utils";
 
 const Img = dynamic(() => import("../../Img"));
 
@@ -47,7 +46,7 @@ const Branding = ({ classes, siteinfo }) => {
         className={`${classes.toolbar} ${classes.logoAdjustment}`}
       >
         <Grid item className={classes.logocontainer}>
-          <Img src={constructThumbnailUrlFromFileUrl(siteinfo.logopath)} />
+          <Img src={siteinfo.logopath.file} />
         </Grid>
         <Grid item className={classes.siteName}>
           <Typography variant="h5">{siteinfo.title}</Typography>

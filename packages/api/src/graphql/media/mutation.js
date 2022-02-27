@@ -4,7 +4,7 @@ const logic = require("./logic.js");
 
 module.exports = {
   updateMedia: {
-    type: types.creatorMediaType,
+    type: types.mediaType,
     args: {
       mediaData: {
         type: new graphql.GraphQLNonNull(types.mediaUpdateType),

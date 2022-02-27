@@ -1340,9 +1340,7 @@ describe("GraphQL API tests", () => {
         user: { email: user },
       });
       expect(result).toHaveProperty("errors");
-      expect(result.errors[0].message).toBe(
-        responses.content_url_cannot_be_null
-      );
+      expect(result.errors[0].message).toBe(responses.media_id_cannot_be_null);
     });
 
     // Note: A similar test for "PDF" content has been skipped because the
@@ -1365,14 +1363,12 @@ describe("GraphQL API tests", () => {
         user: { email: user },
       });
       expect(result).toHaveProperty("errors");
-      expect(result.errors[0].message).toBe(
-        responses.content_url_cannot_be_null
-      );
+      expect(result.errors[0].message).toBe(responses.media_id_cannot_be_null);
     });
 
     it("creating a valid (video) lesson but courseId belongs a non-existing course", async () => {
       const title = "faky faky";
-      const contentUrlString = "http://fakeurl";
+      const mediaString = "http://fakeurl";
       const mongoId = "000000000000000000000000";
       const userID = mongoose.Types.ObjectId(mongoId);
       const mutation = `
@@ -1380,7 +1376,7 @@ describe("GraphQL API tests", () => {
         lesson: createLesson(lessonData: {
           title: "${title}", 
           type: VIDEO,
-          contentURL: "${contentUrlString}",
+          media: "${mediaString}",
           downloadable: true,
           courseId: "100000000000000000000000",
           requiresEnrollment: true
@@ -1391,7 +1387,7 @@ describe("GraphQL API tests", () => {
           content,
           downloadable,
           creatorId,
-          contentURL
+          media
         }
       }
       `;
@@ -1405,7 +1401,7 @@ describe("GraphQL API tests", () => {
 
     it("creating a valid (video) lesson", async () => {
       const title = "faky faky";
-      const contentUrlString = "http://fakeurl";
+      const mediaString = "http://fakeurl";
       const mongoId = "000000000000000000000000";
       const userID = mongoose.Types.ObjectId(mongoId);
       const mutation = `
@@ -1413,7 +1409,7 @@ describe("GraphQL API tests", () => {
         lesson: createLesson(lessonData: {
           title: "${title}", 
           type: VIDEO,
-          contentURL: "${contentUrlString}",
+          media: "${mediaString}",
           downloadable: true,
           courseId: "${createdCourseId}",
           requiresEnrollment: true
@@ -1424,7 +1420,7 @@ describe("GraphQL API tests", () => {
           content,
           downloadable,
           creatorId,
-          contentURL
+          media
         }
       }
       `;
@@ -1439,13 +1435,13 @@ describe("GraphQL API tests", () => {
       expect(lesson.title).toBe(title);
       expect(lesson.downloadable).toBe(true);
       expect(lesson.content).toBe(null);
-      expect(lesson.contentURL).toBe(contentUrlString);
+      expect(lesson.media).toBe(mediaString);
       createdLessonId = lesson.id;
     });
 
     it("creating a valid (video) lesson but adding it to a blog post", async () => {
       const title = "faky faky";
-      const contentUrlString = "http://fakeurl";
+      const mediaString = "http://fakeurl";
       const mongoId = "000000000000000000000000";
       const userID = mongoose.Types.ObjectId(mongoId);
       const mutation = `
@@ -1453,7 +1449,7 @@ describe("GraphQL API tests", () => {
         lesson: createLesson(lessonData: {
           title: "${title}", 
           type: VIDEO,
-          contentURL: "${contentUrlString}",
+          media: "${mediaString}",
           downloadable: true,
           courseId: "${createdCourseId3}",
           requiresEnrollment: true
@@ -1504,7 +1500,7 @@ describe("GraphQL API tests", () => {
 
     it("deleting an existing but not-owned lesson", async () => {
       const title = "faky faky";
-      const contentUrlString = "http://fakeurl";
+      const mediaString = "http://fakeurl";
       const mongoId = "000000000000000000000000";
       const mongoId2 = "000000000000000000000001";
       const userID = mongoose.Types.ObjectId(mongoId);
@@ -1514,7 +1510,7 @@ describe("GraphQL API tests", () => {
         lesson: createLesson(lessonData: {
           title: "${title}", 
           type: VIDEO,
-          contentURL: "${contentUrlString}",
+          media: "${mediaString}",
           downloadable: true,
           courseId: "${createdCourseId}",
           requiresEnrollment: true
@@ -1525,7 +1521,7 @@ describe("GraphQL API tests", () => {
           content,
           downloadable,
           creatorId,
-          contentURL
+          media
         }
       }
       `;
@@ -1586,18 +1582,18 @@ describe("GraphQL API tests", () => {
     it("Change content url", async () => {
       const mongoId = "000000000000000000000000";
       const userID = mongoose.Types.ObjectId(mongoId);
-      const newContentURL = "http://fakyfaky";
+      const newmedia = "http://fakyfaky";
       const mutation = `
       mutation  {
-        changeContentURL(id: "${createdLessonId}", url: "${newContentURL}") {
-          contentURL
+        changemedia(id: "${createdLessonId}", url: "${newmedia}") {
+          media
         }
       }`;
       const result = await graphql(schema, mutation, null, {
         user: { _id: userID },
       });
       expect(result).not.toHaveProperty("errors");
-      expect(result.data.changeContentURL.contentURL).toBe(newContentURL);
+      expect(result.data.changemedia.media).toBe(newmedia);
     });
 
     it("Change downloadable status via update function", async () => {
@@ -1624,15 +1620,15 @@ describe("GraphQL API tests", () => {
     it("Change content url via update function", async () => {
       const mongoId = "000000000000000000000000";
       const userID = mongoose.Types.ObjectId(mongoId);
-      const newContentURL = "http://fakyfaky";
+      const newmedia = "http://fakyfaky";
       const mutation = `
       mutation  {
         lesson: updateLesson(lessonData: {
           id: "${createdLessonId}"
-          contentURL: "${newContentURL}"
+          media: "${newmedia}"
         }) {
           id
-          contentURL
+          media
         }
       }`;
       const result = await graphql(schema, mutation, null, {
@@ -1640,7 +1636,7 @@ describe("GraphQL API tests", () => {
       });
       expect(result).not.toHaveProperty("errors");
       expect(result.data.lesson.id).toBe(createdLessonId);
-      expect(result.data.lesson.contentURL).toBe(newContentURL);
+      expect(result.data.lesson.media).toBe(newmedia);
     });
 
     it("adding a lesson to a course as a third party", async () => {
@@ -1935,7 +1931,7 @@ describe("GraphQL API tests", () => {
         getCreatorMedia(offset: 1) {
           id,
           title,
-          altText
+          caption
         }
       }
       
@@ -1958,7 +1954,7 @@ describe("GraphQL API tests", () => {
         getCreatorMedia(offset: 0) {
           id,
           title,
-          altText
+          caption
         }
       }
       
@@ -1979,7 +1975,7 @@ describe("GraphQL API tests", () => {
         getCreatorMedia(offset: 1) {
           id,
           title,
-          altText
+          caption
         }
       }
       
@@ -2001,7 +1997,7 @@ describe("GraphQL API tests", () => {
         getCreatorMedia(offset: 1, searchText: "test") {
           id,
           title,
-          altText
+          caption
         }
       }
       
@@ -2073,17 +2069,17 @@ describe("GraphQL API tests", () => {
     it("update media", async () => {
       const loggedInUser = await User.findOne({ email: user });
       const newTitle = "A new title";
-      const newAltText = "A new alt text";
+      const newcaption = "A new alt text";
 
       const mutation = `
       mutation {
         media: updateMedia(mediaData: {
           id: "${mediaId.id}",
           title: "${newTitle}",
-          altText: "${newAltText}"
+          caption: "${newcaption}"
         }) {
           title,
-          altText
+          caption
         }
       }
       `;
@@ -2094,8 +2090,8 @@ describe("GraphQL API tests", () => {
       expect(result).toHaveProperty("data");
       expect(result.data).toHaveProperty("media");
       expect(result.data.media.title).toBe(newTitle);
-      expect(result.data.media.altText).toBe(newAltText);
-      // console.log(result.data.media.title, result.data.media.altText);
+      expect(result.data.media.caption).toBe(newcaption);
+      // console.log(result.data.media.title, result.data.media.caption);
     });
   });
 

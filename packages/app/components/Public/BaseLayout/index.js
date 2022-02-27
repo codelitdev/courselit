@@ -17,7 +17,7 @@ const MasterLayout = (props) => {
           rel="icon"
           href={
             props.siteInfo.logopath
-              ? props.siteInfo.logopath
+              ? props.siteInfo.logopath.file
               : "/courselit_backdrop_square.webp"
           }
         />

@@ -1,11 +1,17 @@
 const graphql = require("graphql");
+const { mediaType } = require("../media/types");
+const mediaLogic = require("../media/logic.js");
 
 const siteType = new graphql.GraphQLObjectType({
   name: "SiteInfo",
   fields: {
     title: { type: graphql.GraphQLString },
     subtitle: { type: graphql.GraphQLString },
-    logopath: { type: graphql.GraphQLString },
+    logopath: {
+      type: mediaType,
+      resolve: (settings, _, context, __) =>
+        mediaLogic.getMedia(settings.logopath, context),
+    },
     currencyUnit: { type: graphql.GraphQLString },
     currencyISOCode: { type: graphql.GraphQLString },
     paymentMethod: { type: graphql.GraphQLString },
@@ -19,7 +25,11 @@ const siteAdminType = new graphql.GraphQLObjectType({
   fields: {
     title: { type: graphql.GraphQLString },
     subtitle: { type: graphql.GraphQLString },
-    logopath: { type: graphql.GraphQLString },
+    logopath: {
+      type: mediaType,
+      resolve: (settings, _, context, __) =>
+        mediaLogic.getMedia(settings.logopath, context),
+    },
     currencyUnit: { type: graphql.GraphQLString },
     currencyISOCode: { type: graphql.GraphQLString },
     paymentMethod: { type: graphql.GraphQLString },
@@ -33,7 +43,7 @@ const siteUpdateType = new graphql.GraphQLInputObjectType({
   fields: {
     title: { type: graphql.GraphQLString },
     subtitle: { type: graphql.GraphQLString },
-    logopath: { type: graphql.GraphQLString },
+    logopath: { type: graphql.GraphQLID },
     codeInjectionHead: { type: graphql.GraphQLString },
   },
 });

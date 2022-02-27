@@ -1,6 +1,7 @@
 const { getPaymentMethod } = require("../../payments/index.js");
 const strings = require("../../config/strings.js");
 const Logger = require("../../lib/logger.js");
+const mediaLogic = require("../media/logic.js");
 
 const validatePaymentMethod = async (domain) => {
   try {
@@ -15,7 +16,7 @@ const validatePaymentMethod = async (domain) => {
   }
 };
 
-exports.validateBlogPosts = (courseData) => {
+exports.validateBlogPosts = async (courseData, ctx) => {
   if (courseData.isBlog) {
     if (!courseData.description) {
       throw new Error(strings.responses.blog_description_empty);
@@ -28,17 +29,35 @@ exports.validateBlogPosts = (courseData) => {
     courseData.cost = 0;
   }
 
-  return courseData;
-};
+  if (courseData.featuredImage) {
+    const featuredImageHasPublicAccess = await mediaLogic.checkMediaForPublicAccess(
+      courseData.featuredImage,
+      ctx
+    );
+    if (!featuredImageHasPublicAccess) {
+      throw new Error(strings.responses.publicly_inaccessible);
+    }
+  }
 
-exports.validateCost = async (courseData, domain) => {
   if (courseData.cost < 0) {
     throw new Error(strings.responses.invalid_cost);
   }
 
   if (courseData.cost > 0) {
-    await validatePaymentMethod(domain);
+    await validatePaymentMethod(ctx.subdomain._id);
   }
 
   return courseData;
 };
+
+// exports.validateCost = async (courseData, domain) => {
+//   if (courseData.cost < 0) {
+//     throw new Error(strings.responses.invalid_cost);
+//   }
+
+//   if (courseData.cost > 0) {
+//     await validatePaymentMethod(domain);
+//   }
+
+//   return courseData;
+// };

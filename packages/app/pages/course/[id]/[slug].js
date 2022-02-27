@@ -76,7 +76,10 @@ const Course = (props) => {
             />
             <meta property="og:author" content={course.creatorName} />
             {course.featuredImage && (
-              <meta property="og:image" content={course.featuredImage} />
+              <meta
+                property="og:image"
+                content={course.featuredImage && course.featuredImage.file}
+              />
             )}
           </Head>
           <ComponentScaffold items={lessons} />
@@ -93,7 +96,10 @@ export async function getServerSideProps({ query, req }) {
         id,
         title,
         description,
-        featuredImage,
+        featuredImage {
+          file,
+          caption
+        },
         updated,
         creatorName,
         creatorId,

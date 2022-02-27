@@ -40,7 +40,7 @@ const MediaManager = (props) => {
   const defaults = {
     uploadData: {
       title: "",
-      altText: "",
+      caption: "",
       uploading: false,
     },
     uploadFormVisibility:
@@ -67,7 +67,7 @@ const MediaManager = (props) => {
 
     const fD = new window.FormData();
     fD.append("title", uploadData.title);
-    fD.append("altText", uploadData.altText);
+    fD.append("caption", uploadData.caption);
     fD.append("file", fileInput.current.files[0]);
 
     setUploadData(
@@ -156,8 +156,8 @@ const MediaManager = (props) => {
                   label="Alt text"
                   fullWidth
                   margin="normal"
-                  name="altText"
-                  value={uploadData.altText}
+                  name="caption"
+                  value={uploadData.caption}
                   onChange={onUploadDataChanged}
                 />
               </CardContent>

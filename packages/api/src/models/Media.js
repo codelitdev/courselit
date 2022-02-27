@@ -9,7 +9,8 @@ const MediaSchema = new mongoose.Schema(
     mimeType: { type: String, required: true },
     size: { type: Number, required: true },
     creatorId: { type: mongoose.Schema.Types.ObjectId, required: true },
-    altText: { type: String },
+    public: { type: Boolean, required: true, default: false },
+    caption: { type: String },
     thumbnail: { type: String },
   },
   {
@@ -19,7 +20,7 @@ const MediaSchema = new mongoose.Schema(
 
 MediaSchema.index({
   originalFileName: "text",
-  altText: "text",
+  caption: "text",
 });
 
 MediaSchema.plugin(AutoIncrement, { inc_field: "mediaId" });

@@ -26,3 +26,6 @@ report*.json
 
 # uploads folder
 ~
+
+# OS specific files
+.DS_Store

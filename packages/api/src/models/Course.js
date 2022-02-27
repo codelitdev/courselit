@@ -16,7 +16,7 @@ const CourseSchema = new mongoose.Schema({
   isFeatured: { type: Boolean, required: true, default: false },
   lessons: [String],
   description: String,
-  featuredImage: String,
+  featuredImage: mongoose.Schema.Types.ObjectId,
   groups: [
     {
       name: { type: String, required: true },

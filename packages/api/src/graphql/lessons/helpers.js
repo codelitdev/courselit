@@ -10,8 +10,8 @@ exports.lessonValidator = (lessonData) => {
     (lessonData.type === audio ||
       lessonData.type === video ||
       lessonData.type === pdf) &&
-    !lessonData.contentURL
+    !lessonData.mediaId
   ) {
-    throw new Error(strings.responses.content_url_cannot_be_null);
+    throw new Error(strings.responses.media_id_cannot_be_null);
   }
 };

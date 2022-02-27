@@ -4,7 +4,7 @@ const logic = require("./logic.js");
 
 module.exports = {
   getCreatorMedia: {
-    type: new graphql.GraphQLList(types.creatorMediaType),
+    type: new graphql.GraphQLList(types.mediaType),
     args: {
       offset: {
         type: new graphql.GraphQLNonNull(graphql.GraphQLInt),
@@ -12,8 +12,10 @@ module.exports = {
       searchText: {
         type: graphql.GraphQLString,
       },
+      mimeType: { type: new graphql.GraphQLList(graphql.GraphQLString) },
+      privacy: { type: graphql.GraphQLString },
     },
-    resolve: (root, { offset, searchText }, context) =>
-      logic.getCreatorMedia(offset, context, searchText),
+    resolve: (root, { offset, searchText, mimeType, privacy }, context) =>
+      logic.getCreatorMedia(offset, context, searchText, mimeType, privacy),
   },
 };
