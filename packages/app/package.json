@@ -24,7 +24,7 @@
     "@material-ui/core": "^4.11.1",
     "@material-ui/icons": "^4.4.1",
     "@material-ui/styles": "^4.11.1",
-    "@stripe/stripe-js": "^1.15.0",
+    "@stripe/stripe-js": "^1.23.0",
     "base-64": "^0.1.0",
     "draft-js": "^0.11.3",
     "immutable": "^4.0.0-rc.12",
@@ -35,7 +35,6 @@
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-redux": "^7.2.0",
-    "react-stripe-elements": "^6.0.1",
     "redux": "^4.0.5",
     "redux-thunk": "^2.3.0"
   },
@@ -61,7 +60,7 @@
     "now": "^17.0.3",
     "preact": "^10.1.1",
     "prettier": "1.19.1",
-    "react-test-renderer": "^16.12.0",
+    "react-test-renderer": "^17.0.2",
     "webpack": "^4.41.5"
   },
   "jest": {
