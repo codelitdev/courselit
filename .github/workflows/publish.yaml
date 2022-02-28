@@ -36,7 +36,7 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM }}
 
       - name: Publish package
-        run: yarn lerna publish patch --yes
+        run: yarn lerna publish minor --yes
         env:
           GH_TOKEN: ${{ secrets.PAT }}
           GITHUB_TOKEN: ${{ secrets.PAT }}
