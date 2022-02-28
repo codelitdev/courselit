@@ -1,4 +1,4 @@
-FROM node:15.14.0-buster
+FROM node:17.6.0-buster
 
 # install required softwares
 RUN apt-get update && apt-get -y install ffmpeg imagemagick webp
