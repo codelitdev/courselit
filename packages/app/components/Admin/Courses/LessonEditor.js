@@ -168,7 +168,9 @@ const LessonEditor = (props) => {
         downloadable: ${lesson.downloadable},
         type: ${lesson.type.toUpperCase()},
         content: "${TextEditor.stringify(lesson.content)}",
-        mediaId: ${lesson.media ? '"' + lesson.media.id + '"' : null},
+        mediaId: ${
+          lesson.media && lesson.media.id ? '"' + lesson.media.id + '"' : null
+        },
         requiresEnrollment: ${lesson.requiresEnrollment}
       }) {
         id,
@@ -214,7 +216,9 @@ const LessonEditor = (props) => {
         downloadable: ${lesson.downloadable},
         type: ${lesson.type.toUpperCase()},
         content: "${TextEditor.stringify(lesson.content)}",
-        mediaId: ${lesson.media ? '"' + lesson.media.id + '"' : null},
+        mediaId: ${
+          lesson.media && lesson.media.id ? '"' + lesson.media.id + '"' : null
+        },
         courseId: "${lesson.courseId}",
         requiresEnrollment: ${lesson.requiresEnrollment},
         groupId: "${lesson.groupId}"
