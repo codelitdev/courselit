@@ -1,6 +1,6 @@
 {
   "name": "@courselit/app",
-  "version": "0.17.0",
+  "version": "0.17.1",
   "private": true,
   "main": "index.js",
   "license": "MIT",
