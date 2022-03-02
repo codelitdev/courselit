@@ -1,0 +1,45 @@
+name: Publish
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  publish-packages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v1
+
+      - name: Configure CI Git User
+        run: |
+          git config --global user.name 'Rajat Saxena'
+          git config --global user.email 'hi@sub.rajatsaxena.dev'
+          git remote set-url origin https://$GITHUB_ACTOR:$GITHUB_PAT@github.com/codelitdev/courselit
+        env:
+          GITHUB_PAT: ${{ secrets.PAT }}
+
+      - name: Checkout and pull branch
+        run: git checkout "${GITHUB_REF:11}" && git pull
+
+      - name: Install Packages
+        run: yarn install
+
+      - name: Authenticate with Registry
+        run: |
+          yarn logout
+          echo "registry=http://registry.npmjs.org/" >> .npmrc
+          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> .npmrc
+          npm whoami
+        env:
+          NPM_TOKEN: ${{ secrets.NPM }}
+
+      - name: Publish package
+        run: |
+          yarn lerna version --conventional-graduate --yes
+          yarn lerna publish from-git --yes
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+          NPM_TOKEN: ${{ secrets.NPM }}
