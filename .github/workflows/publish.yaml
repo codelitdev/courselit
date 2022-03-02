@@ -58,27 +58,18 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: codelit/courselit-backend
-          tags: |
-            type=ref,event=tag
-            type=semver,pattern={{version}}
 
       - name: Docker meta for the frontend
         id: metafrontend
         uses: docker/metadata-action@v3
         with:
           images: codelit/courselit-frontend
-          tags: |
-            type=ref,event=tag
-            type=semver,pattern={{version}}
 
       - name: Docker meta for the proxy
         id: metaproxy
         uses: docker/metadata-action@v3
         with:
           images: codelit/courselit-proxy
-          tags: |
-            type=ref,event=tag
-            type=semver,pattern={{version}}
 
       - name: Build and push backend
         id: docker_build_backend
