@@ -2,12 +2,11 @@ name: Publish
 
 on:
   push:
-    branches:
-      - master
+    tags:
+      - '*'
 
 jobs:
   publish-docker-images:
-    needs: publish-packages
     runs-on: ubuntu-latest
     steps:
       - name: Setup buildx
