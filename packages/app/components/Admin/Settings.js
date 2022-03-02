@@ -389,8 +389,10 @@ const Settings = (props) => {
                     <MediaSelector
                       title={SITE_SETTINGS_LOGO}
                       src={
-                        newSettings.logopath.thumbnail ||
-                        props.siteinfo.logopath.thumbnail
+                        (newSettings.logopath &&
+                          newSettings.logopath.thumbnail) ||
+                        (props.siteinfo.logopath &&
+                          props.siteinfo.logopath.thumbnail)
                       }
                       onSelection={onChangeData}
                       mimeTypesToShow={[...MIMETYPE_IMAGE]}
