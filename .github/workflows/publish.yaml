@@ -59,7 +59,6 @@ jobs:
         with:
           images: codelit/courselit-backend
           tags: |
-            type=raw
             type=ref,event=tag
             type=semver,pattern={{version}}
 
@@ -69,7 +68,6 @@ jobs:
         with:
           images: codelit/courselit-frontend
           tags: |
-            type=raw
             type=ref,event=tag
             type=semver,pattern={{version}}
 
@@ -79,7 +77,6 @@ jobs:
         with:
           images: codelit/courselit-proxy
           tags: |
-            type=raw
             type=ref,event=tag
             type=semver,pattern={{version}}
 
