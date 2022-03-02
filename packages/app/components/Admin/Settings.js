@@ -117,7 +117,6 @@ const Settings = (props) => {
         title,
         subtitle,
         logopath {
-          id,
           thumbnail
         },
         currencyUnit,
