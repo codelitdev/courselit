@@ -13,7 +13,9 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Checkout and pull branch
-        run: git checkout "${GITHUB_REF:11}" && git pull
+        run: |
+          LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+          git checkout $LATEST_TAG
 
       - name: Setup buildx
         uses: docker/setup-buildx-action@v1
