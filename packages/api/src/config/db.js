@@ -13,7 +13,7 @@ module.exports = async () => {
       useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000,
     });
-    console.info(`Database connected.`);
+    console.info(`Database connected`);
   } catch (err) {
     console.error(internalResponses.error_db_connection_failed);
     console.error(`Additional info: ${err.message}`);
