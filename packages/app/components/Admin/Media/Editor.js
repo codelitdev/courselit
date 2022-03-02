@@ -165,7 +165,6 @@ function Editor({
                       name="public"
                       checked={mediaBeingEdited.public}
                       onChange={onMediaBeingEditedChanged}
-                      disabled={true}
                     />
                   </Grid>
                 </Grid>
