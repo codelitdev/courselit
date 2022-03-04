@@ -52,7 +52,7 @@ const Item = (props: ItemProps) => {
             {props.course.featuredImage && (
               <Grid item>
                 <img
-                  src={props.course.featuredImage}
+                  src={props.course.featuredImage.file}
                   className={classes.featuredImage}
                 />
               </Grid>

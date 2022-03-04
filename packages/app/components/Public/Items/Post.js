@@ -72,7 +72,7 @@ Post.propTypes = {
   updated: PropTypes.string.isRequired,
   creatorName: PropTypes.string,
   slug: PropTypes.string.isRequired,
-  featuredImage: PropTypes.string,
+  featuredImage: PropTypes.object,
   courseId: PropTypes.number.isRequired,
 };
 
