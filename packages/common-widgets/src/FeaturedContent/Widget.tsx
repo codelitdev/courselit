@@ -16,12 +16,7 @@ const useStyles = ({ backgroundColor }: Settings) =>
     content: {
       background: backgroundColor || "inherit",
     },
-    header: {
-      // [theme.breakpoints.up("md")]: {
-      //   marginLeft: theme.spacing(2),
-      // },
-      // marginBottom: theme.spacing(2),
-    },
+    header: {},
     headerTop: {
       marginBottom: theme.spacing(1),
     },
@@ -29,12 +24,7 @@ const useStyles = ({ backgroundColor }: Settings) =>
       textDecoration: "none",
       color: "inherit",
     },
-    callToAction: {
-      // [theme.breakpoints.up("md")]: {
-      //   marginLeft: theme.spacing(2),
-      // },
-      // marginBottom: theme.spacing(2),
-    },
+    callToAction: {},
   }));
 
 export interface FeaturedWidgetProps extends WidgetProps {
@@ -64,7 +54,9 @@ const Widget = (props: FeaturedWidgetProps) => {
         id,
         title,
         cost,
-        featuredImage,
+        featuredImage {
+          file
+        },
         slug,
         courseId
       }
