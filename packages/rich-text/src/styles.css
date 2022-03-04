@@ -1,3 +1,7 @@
 .DraftEditor-root {
   word-break: break-word;
 }
+
+div {
+  display: block;
+}
