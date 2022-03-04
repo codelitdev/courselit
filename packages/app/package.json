@@ -1,6 +1,6 @@
 {
   "name": "@courselit/app",
-  "version": "0.17.10",
+  "version": "0.17.11",
   "private": true,
   "main": "index.js",
   "license": "MIT",
@@ -18,9 +18,9 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.8.3",
-    "@courselit/common-widgets": "^0.17.10",
-    "@courselit/components-library": "^0.17.10",
-    "@courselit/widget-buttondown": "^0.17.10",
+    "@courselit/common-widgets": "^0.17.11",
+    "@courselit/components-library": "^0.17.11",
+    "@courselit/widget-buttondown": "^0.17.11",
     "@material-ui/core": "^4.11.1",
     "@material-ui/icons": "^4.4.1",
     "@material-ui/styles": "^4.11.1",
