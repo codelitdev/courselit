@@ -1,6 +1,16 @@
 import mongoose from 'mongoose'
 
-const DomainSchema = new mongoose.Schema(
+export interface Domain {
+  _id: mongoose.Types.ObjectId;
+  name: string;
+  customDomain: string;
+  email: string;
+  deleted: boolean
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const DomainSchema = new mongoose.Schema<Domain>(
   {
     name: { type: String, required: true, unique: true },
     customDomain: { type: String, unique: true, sparse: true },

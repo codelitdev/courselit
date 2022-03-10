@@ -8,6 +8,8 @@ import pug from 'pug';
 import { send } from '../services/mail';
 import { responses } from '../config/strings';
 import LoginEmailTemplate from '../templates/login-email';
+import ApiRequest from '../models/ApiRequest';
+import { createUser } from './user';
 
 export default new Strategy(
     {
@@ -31,46 +33,18 @@ export default new Strategy(
             body: emailBody,
         });
     },
-    async (req: NextApiRequest, user: User) => {
-        console.log('Verify user', user, req.headers.subdomain)
-        // TODO: Type domain
-        const subdomain: Record<string, any> = JSON.parse(req.headers.subdomain);
-        let dbUser = await UserModel.findOne({
+    async (req: ApiRequest, user: User) => {
+        console.log('Verify user', user, req.subdomain)
+        let dbUser: User | null = await UserModel.findOne({
             email: user.email,
-            domain: subdomain._id,
+            domain: req.subdomain!._id,
         });
 
         if (!dbUser) {
-            const newUser: User = {
-                domain: subdomain._id,
-                email: user.email,
-                active: true,
-                purchases: [],
-                permissions: []
-            };
-            const notTheFirstUserOfDomain = await UserModel.countDocuments({
-                domain: subdomain._id,
-            });
-            if (notTheFirstUserOfDomain) {
-                newUser.permissions = [constants.permissions.enrollInCourse];
-            } else {
-            newUser.permissions = [
-                constants.permissions.manageCourse,
-                constants.permissions.manageAnyCourse,
-                constants.permissions.publishCourse,
-                constants.permissions.manageMedia,
-                constants.permissions.manageAnyMedia,
-                constants.permissions.uploadMedia,
-                constants.permissions.viewAnyMedia,
-                constants.permissions.manageLayout,
-                constants.permissions.manageThemes,
-                constants.permissions.manageMenus,
-                constants.permissions.manageWidgets,
-                constants.permissions.manageSettings,
-                constants.permissions.manageUsers,
-            ];
-            }
-            dbUser = await UserModel.create(newUser);
+            dbUser = await createUser({
+                domain: req.subdomain!._id,
+                email: user.email
+            })
         }
 
         return dbUser.active ? dbUser : null;

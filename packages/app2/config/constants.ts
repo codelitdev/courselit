@@ -24,6 +24,7 @@ export default {
   // password related config
   jwtSecret: process.env.JWT_SECRET,
   jwtExpire: process.env.JWT_EXPIRES_IN || "1d",
+  jwtTokenCookieName: process.env.JWT_COOKIE_NAME || "token",
 
   // Media uploads config
   tempFileDirForUploads: process.env.TEMP_DIR_FOR_UPLOADS,

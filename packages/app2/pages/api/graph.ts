@@ -1,7 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getSession } from "next-auth/react";
 import schema from "../../graphql";
 import verifyDomain from '../../middlewares/verify-domain';
+import nc from 'next-connect';
+import passport from 'passport';
 
 import {
     graphql,
@@ -9,24 +10,37 @@ import {
     GraphQLObjectType,
     GraphQLString,
   } from 'graphql';
-import { NextResponse } from "next/server";
 import User from "../../models/User";
-  
-// const schema = new GraphQLSchema({
-//     query: new GraphQLObjectType({
-//       name: 'RootQueryType',
-//       fields: {
-//         hello: {
-//           type: GraphQLString,
-//           resolve() {
-//             return 'world';
-//           },
-//         },
-//       },
-//     }),
-// });
+import connectToDatabase from "../../services/db";
+import jwtStrategy from '../../lib/jwt';
+import ApiRequest from "../../models/ApiRequest";
 
-export default async function handler(
+passport.use(jwtStrategy);
+
+export default nc<NextApiRequest, NextApiResponse>({
+    onError: (err, req, res, next) => {
+      console.error(err.stack);
+      res.status(500).json({ error: err.message });
+    },
+    onNoMatch: (req, res) => {
+      res.status(404).end("Page is not found");
+    },
+})
+    .use(passport.initialize())
+    .use(async (req: NextApiRequest, res: NextApiResponse, next) => {
+        await connectToDatabase();
+        await verifyDomain(req, res)
+        next()
+    })
+    .get(
+        passport.authenticate('jwt', { session: false }),
+        (req: ApiRequest, res: NextApiResponse) => {
+            console.log(req.user, req.subdomain);
+            res.status(200).json({ message: 'success' });
+        }
+    )
+
+export async function handler(
     req: NextApiRequest, 
     res: NextApiResponse
 ) {
@@ -35,11 +49,6 @@ export default async function handler(
 
     if (req.method !== 'POST') {
         res.status(403).json({ message: 'Forbidden' });
-    }
-
-    const session = await getSession({ req });
-    if (!session) {
-        res.status(401).json({ message: 'Unauthorized' })
     }
 
     const user = await User.findOne({ email: session!.user?.email });

@@ -1,9 +1,13 @@
 import passport from 'passport';
 import nc from 'next-connect';
 import { NextApiRequest, NextApiResponse } from 'next';
+import jwt, { Secret } from 'jsonwebtoken';
 import magicLinkStrategy from '../../../lib/passport-magic-link';
 import verifyDomain from '../../../middlewares/verify-domain';
 import connectToDatabase from '../../../services/db';
+import constants from '../../../config/constants';
+import ApiRequest from '../../../models/ApiRequest';
+import { setLoginSession } from '../../../lib/auth';
 
 passport.use(magicLinkStrategy);
 
@@ -24,13 +28,22 @@ export default nc<NextApiRequest, NextApiResponse>({
     })
     .get(
         passport.authenticate("magiclink", { action: "acceptToken", session: false }),
-        (_, res: NextApiResponse) => {
-            res.json({ message: "Will set cookies" });
+        async (req: ApiRequest, res: NextApiResponse) => {
+            console.log(req.user, req.subdomain);
+            const token = jwt.sign(
+                { email: req.user!.email, domain: req.subdomain!._id },
+                <Secret>constants.jwtSecret, 
+                { expiresIn: constants.jwtExpire }
+            );
+
+            await setLoginSession(res, token);
+
+            res.redirect("/");
         }
     )
     .post(
         passport.authenticate("magiclink", { action: "requestToken" }),
         (_, res: NextApiResponse) => {
-            res.json({ message: "Success" });
+            res.json({ message: "success" });
         }
     );
