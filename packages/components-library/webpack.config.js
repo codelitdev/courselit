@@ -27,6 +27,6 @@ module.exports = {
   externals: {
     react: "react",
     "react-redux": "react-redux",
-    "@material-ui/styles": "@material-ui/styles",
+    "@mui/styles": "@mui/styles",
   },
 };

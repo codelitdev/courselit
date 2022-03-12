@@ -1,12 +1,6 @@
-import nodemailer from 'nodemailer';
-import constants from '../config/constants';
-const {
-  mailHost,
-  mailUser,
-  mailPass,
-  mailFrom,
-  mailPort,
-} = constants;
+import nodemailer from "nodemailer";
+import constants from "../config/constants";
+const { mailHost, mailUser, mailPass, mailFrom, mailPort } = constants;
 
 interface MailProps {
   to: string;

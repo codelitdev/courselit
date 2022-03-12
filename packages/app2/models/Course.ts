@@ -1,14 +1,18 @@
-import mongoose from 'mongoose';
-import AutoIncrementFactory from 'mongoose-sequence';
+import mongoose from "mongoose";
+import AutoIncrementFactory from "mongoose-sequence";
 const AutoIncrement = AutoIncrementFactory(mongoose);
-import Constants from '../config/constants';
+import Constants from "../config/constants";
 
 const CourseSchema = new mongoose.Schema({
   domain: { type: mongoose.Schema.Types.ObjectId, required: true },
   title: { type: String, required: true },
   slug: { type: String, required: true },
   cost: { type: Number, required: true },
-  privacy: { type: String, required: true, enum: [Constants.unlisted, Constants.open] },
+  privacy: {
+    type: String,
+    required: true,
+    enum: [Constants.unlisted, Constants.open],
+  },
   creatorId: { type: String, required: true },
   creatorName: { type: String },
   updated: { type: Date, required: true, default: Date.now },

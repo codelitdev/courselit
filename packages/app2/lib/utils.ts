@@ -1,22 +1,22 @@
 // const fs = require("fs");
 // const { spawn } = require("child_process");
 // const { v4: uuidv4 } = require("uuid");
-// 
+//
 // exports.capitalize = (s) => {
 //   if (typeof s !== "string") return "";
 //   return s.charAt(0).toUpperCase() + s.slice(1);
 // };
-// 
+//
 // exports.foldersExist = (folders) => {
 //   for (const folder of folders) {
 //     if (!fs.existsSync(folder)) {
 //       return false;
 //     }
 //   }
-// 
+//
 //   return true;
 // };
-// 
+//
 // exports.createFolders = (folders) => {
 //   for (const folder of folders) {
 //     if (!fs.existsSync(folder)) {
@@ -24,7 +24,7 @@
 //     }
 //   }
 // };
-// 
+//
 // /**
 //  * A pure function to generate a string by appending current epoch
 //  * to the provided filename.
@@ -37,13 +37,13 @@
 //   //   0,
 //   //   extention.length - 1
 //   // )}_${Date.now()}`;
-// 
+//
 //   return {
 //     name: uuidv4(),
 //     ext: extention[extention.length - 1],
 //   };
 // };
-// 
+//
 // /**
 //  * A wrapper to promisify the move function of express-upload.
 //  *
@@ -54,11 +54,11 @@
 //   new Promise((resolve, reject) => {
 //     file.mv(path, (err) => {
 //       if (err) reject(err.message);
-// 
+//
 //       resolve();
 //     });
 //   });
-// 
+//
 // /**
 //  * Promisifies command line utility cwebp.
 //  *
@@ -74,16 +74,16 @@
 //         shell: true,
 //       }
 //     );
-// 
+//
 //     process.on("exit", (code) => {
 //       if (code !== 0) {
 //         reject(new Error("Error in converting the file to Webp format."));
 //       }
-// 
+//
 //       resolve();
 //     });
 //   });
-// 
+//
 // /**
 //  * Async handler for async middlewares.
 //  *
@@ -91,17 +91,17 @@
 //  */
 // exports.asyncHandler = (fn) => (req, res, next) =>
 //   Promise.resolve(fn(req, res, next)).catch(next);
-// 
+//
 // exports.getParentDirectory = (path) => {
 //   const filePathSplit = path.split("/");
 //   filePathSplit.pop();
 //   return filePathSplit.join("/");
 // };
-// 
+//
 export const isSubscriptionValid = (dateStr: Date): boolean => {
   return new Date(dateStr).getTime() > new Date().getTime();
 };
-// 
+//
 interface MagicLinkProps {
   token: string;
   hostname: string;
@@ -114,5 +114,7 @@ export const generateMagicLink = ({
   secure = true,
   redirect,
 }: MagicLinkProps) => {
-  return `http${secure ? "s" : ""}://${hostname}/api/auth/login?token=${token}${redirect ? `&redirect=${redirect}` : ""}`;
+  return `http${secure ? "s" : ""}://${hostname}/api/auth/login?token=${token}${
+    redirect ? `&redirect=${redirect}` : ""
+  }`;
 };

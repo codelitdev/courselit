@@ -22,9 +22,9 @@
  */
 
 import * as React from "react";
-import { Grid, IconButton, Typography } from "@material-ui/core";
-import { makeStyles } from "@material-ui/styles";
-import { ArrowBack } from "@material-ui/icons";
+import { Grid, IconButton, Typography } from "@mui/material";
+import { makeStyles } from "@mui/styles";
+import { ArrowBack } from "@mui/icons-material";
 import ComponentProps, { isComponentWithDetailProps } from "./ComponentProps";
 import OverviewList from "./OverviewList";
 import Section from "../Section";
@@ -73,7 +73,7 @@ const OverviewAndDetail = ({
             <Grid item xs>
               <Grid container alignItems="center">
                 <Grid item>
-                  <IconButton onClick={() => setSelectedComponentIndex(-1)}>
+                  <IconButton onClick={() => setSelectedComponentIndex(-1)} size="large">
                     <ArrowBack />
                   </IconButton>
                 </Grid>

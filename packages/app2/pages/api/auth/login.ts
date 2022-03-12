@@ -13,7 +13,6 @@ passport.use(magicLinkStrategy);
 
 export default nc<NextApiRequest, NextApiResponse>({
     onError: (err, req, res, next) => {
-      console.error(err.stack);
       res.status(500).json({ error: err.message });
     },
     onNoMatch: (req, res) => {
@@ -29,7 +28,6 @@ export default nc<NextApiRequest, NextApiResponse>({
     .get(
         passport.authenticate("magiclink", { action: "acceptToken", session: false }),
         async (req: ApiRequest, res: NextApiResponse) => {
-            console.log(req.user, req.subdomain);
             const token = jwt.sign(
                 { email: req.user!.email, domain: req.subdomain!._id },
                 <Secret>constants.jwtSecret, 

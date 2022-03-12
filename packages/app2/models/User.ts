@@ -1,15 +1,16 @@
 import mongoose from "mongoose";
-import AutoIncrementFactory from 'mongoose-sequence';
+import AutoIncrementFactory from "mongoose-sequence";
 const AutoIncrement = AutoIncrementFactory(mongoose);
 
 export interface User {
+  _id: mongoose.Types.ObjectId;
   domain: mongoose.Types.ObjectId;
   email: string;
   active: boolean;
   name?: string;
-  purchases: mongoose.Types.ObjectId[],
+  purchases: mongoose.Types.ObjectId[];
   bio?: string;
-  permissions: string[]
+  permissions: string[];
 }
 
 const UserSchema = new mongoose.Schema<User>({

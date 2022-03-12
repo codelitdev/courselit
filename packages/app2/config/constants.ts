@@ -29,7 +29,9 @@ export default {
   // Media uploads config
   tempFileDirForUploads: process.env.TEMP_DIR_FOR_UPLOADS,
   useWebp: process.env.USE_WEBP === "true",
-  webpOutputQuality: process.env.WEBP_QUALITY ? parseInt(process.env.WEBP_QUALITY) : 75,
+  webpOutputQuality: process.env.WEBP_QUALITY
+    ? parseInt(process.env.WEBP_QUALITY)
+    : 75,
   // the following constants are as per the 16:9 aspect ratio
   thumbnailWidth: 120,
   thumbnailHeight: 68,

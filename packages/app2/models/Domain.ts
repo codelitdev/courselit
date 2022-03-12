@@ -1,11 +1,11 @@
-import mongoose from 'mongoose'
+import mongoose from "mongoose";
 
 export interface Domain {
   _id: mongoose.Types.ObjectId;
   name: string;
   customDomain: string;
   email: string;
-  deleted: boolean
+  deleted: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

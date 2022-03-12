@@ -30,4 +30,4 @@ html
             strong IMPORTANT:
             |   Do not share this email with anyone as anyone can log in to your
             |   account using the link in this email.
-`
+`;
