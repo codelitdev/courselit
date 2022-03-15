@@ -24,8 +24,6 @@ function authReducer(state = initialState.auth, action: Action) {
     case SIGN_IN:
       return {
         guest: false,
-        token: action.token,
-        userid: action.userid,
         checked: true,
       };
     case SIGN_OUT:

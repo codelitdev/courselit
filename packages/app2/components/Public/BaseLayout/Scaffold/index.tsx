@@ -28,11 +28,14 @@ const classes = {
   toolbar: `${PREFIX}-toolbar`,
   drawerPaper: `${PREFIX}-drawerPaper`,
   content: `${PREFIX}-content`,
-  showProgressBar: `${PREFIX}-showProgressBar`,
+  showprogress: `${PREFIX}-showprogress`,
+  hideprogress: `${PREFIX}-hideprogress`,
   menuTitle: `${PREFIX}-menuTitle`
 };
 
-const Root = styled('div')(({ theme }) => ({
+const Root = styled('div')(({ theme }: {
+  theme: any;
+}) => ({
   [`&.${classes.root}`]: {
     display: "flex",
   },
@@ -81,9 +84,13 @@ const Root = styled('div')(({ theme }) => ({
     },
   },
 
-  // [`& .${classes.showProgressBar}`]: (props: any) => ({
-  //   visibility: props.networkAction ? "visible" : "hidden",
-  // }),
+  [`& .${classes.hideprogress}`]: {
+    visibility: "hidden",
+  },
+
+  [`& .${classes.showprogress}`]: {
+    visibility: "visible",
+  },
 
   [`& .${classes.menuTitle}`]: {
     marginLeft: theme.spacing(2),
@@ -110,7 +117,7 @@ const Scaffold = (props: ScaffoldProps) => {
   }
 
   return (
-    <Root>
+    <Root> 
       <CssBaseline />
       <AppBar position="fixed" className={classes.appBar}>
         <Toolbar>
@@ -164,7 +171,7 @@ const Scaffold = (props: ScaffoldProps) => {
 
       <main className={classes.content}>
         <div className={classes.toolbar} />
-        <LinearProgress className={classes.showProgressBar} />
+        <LinearProgress className={props.networkAction ? classes.showprogress : classes.hideprogress} />
         {props.children}
       </main>
       <AppToast />

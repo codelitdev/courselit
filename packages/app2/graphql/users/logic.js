@@ -24,21 +24,24 @@ const removeAdminFieldsFromUserObject = ({ id, name, userId, bio, email }) => ({
 });
 
 export const getUser = async (email = null, userId = null, ctx) => {
-  console.log(`Context`, ctx, responses.invalid_user_id);
-  if (!email && !userId) {
+  const { user: loggedInUser } = ctx;
+  const loggedUserEmail = loggedInUser && loggedInUser.email;
+  const loggedUserId = loggedInUser && loggedInUser.userId;
+  console.log(ctx);
+
+  if (!email && !userId && !loggedInUser) {
     throw new Error(responses.invalid_user_id);
+  }
+
+  if (!email && !userId && loggedInUser) {
+    email = loggedUserEmail 
   }
 
   let user;
   if (email) {
     user = await User.findOne({ email, domain: ctx.subdomain._id });
   } else {
-    // userId can be either a Mongodb ObjectID or userId from User schema
-    if (ObjectId.isValid(userId)) {
-      user = await User.findOne({ _id: userId, domain: ctx.subdomain._id });
-    } else {
-      user = await User.findOne({ userId, domain: ctx.subdomain._id });
-    }
+    user = await User.findOne({ userId, domain: ctx.subdomain._id });
   }
 
   if (!user) {
@@ -46,10 +49,6 @@ export const getUser = async (email = null, userId = null, ctx) => {
   }
 
   user.userId = user.userId || -1; // Set -1 for empty userIds; Backward compatibility;
-
-  const { user: loggedInUser } = ctx;
-  const loggedUserEmail = loggedInUser && loggedInUser.email;
-  const loggedUserId = loggedInUser && loggedInUser.userId;
 
   return loggedInUser &&
     (loggedUserEmail === email ||

@@ -120,7 +120,7 @@ export const areObjectsDifferent = (
 export const getAddress = (host: string) => {
   return {
     domain: extractDomainFromURL(host),
-    backend: getBackendAddress(host),
+    backend: host,
     frontend: `http://${host}`,
   };
 };

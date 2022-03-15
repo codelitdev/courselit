@@ -12,8 +12,6 @@ import {
 export default {
   auth: {
     guest: true,
-    token: "",
-    userid: null,
     checked: false,
   },
   siteinfo: {

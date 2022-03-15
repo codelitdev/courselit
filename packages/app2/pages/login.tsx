@@ -14,8 +14,8 @@ import Address from "../ui-models/address";
 import Auth from "../ui-models/auth";
 import State from "../ui-models/state";
 import { connect } from "react-redux";
-// import { signedIn, networkAction, setAppMessage } from "../redux/actions.js";
-// import AppMessage from "../models/app-message.js";
+import { signedIn, networkAction, setAppMessage } from "../state/actions";
+import AppMessage from "../ui-models/app-message";
 // import { JWT_COOKIE_NAME, USERID_COOKIE_NAME } from "../config/constants";
 // import { setCookie } from "../lib/session";
 
@@ -41,53 +41,35 @@ const Login = ({ address, auth, dispatch, progress }: LoginProps) => {
   });
 
   useEffect(() => {
+    if (!router.isReady) return;
     if (token) {
       signIn();
     }
-  }, []);
+  }, [router.isReady]);
 
   const signIn = async () => {
-    // try {
-    //   dispatch(networkAction(true));
-    //   let response = await fetch(
-    //     `${address.backend}/auth/magiclink/callback?token=${token}`
-    //   );
+    try {
+      dispatch(networkAction(true));
+      const response = await fetch(`/api/auth/login?token=${token}`);
 
-    //   if (response.status === 200) {
-    //     response = await response.json();
-    //     const { email, token, message } = response;
-
-    //     if (token) {
-    //       setCookie({
-    //         key: JWT_COOKIE_NAME,
-    //         value: token,
-    //         domain: address.domain,
-    //       });
-    //       setCookie({
-    //         key: USERID_COOKIE_NAME,
-    //         value: email,
-    //         domain: address.domain,
-    //       });
-    //       dispatch(signedIn(email, token));
-    //     } else {
-    //       dispatch(setAppMessage(new AppMessage(message)));
-    //     }
-    //   } else {
-    //     dispatch(setAppMessage(new AppMessage(ERROR_SIGNIN_VERIFYING_LINK)));
-    //   }
-    // } catch (err) {
-    //   dispatch(setAppMessage(new AppMessage(err.message)));
-    // } finally {
-    //   dispatch(networkAction(false));
-    // }
+      if (response.status === 200) {
+        router.replace("/");
+      } else {
+        dispatch(setAppMessage(new AppMessage(ERROR_SIGNIN_VERIFYING_LINK)));
+      }
+    } catch (err: any) {
+      dispatch(setAppMessage(new AppMessage(err.message)));
+    } finally {
+      dispatch(networkAction(false));
+    }
   };
 
-  const requestMagicLink = async (e) => {
+  const requestMagicLink = async (e: Event) => {
     e.preventDefault();
 
     try {
-      // dispatch(networkAction(true));
-      const response = await fetch(`${address.backend}/auth/magiclink`, {
+      dispatch(networkAction(true));
+      let response = await fetch('/api/auth/login', {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -99,17 +81,18 @@ const Login = ({ address, auth, dispatch, progress }: LoginProps) => {
       });
 
       if (response.status === 200) {
-        // dispatch(
-        //   setAppMessage(new AppMessage(`${SIGNIN_SUCCESS_PREFIX} ${email}`))
-        // );
+        response = await response.json();
+        dispatch(
+          setAppMessage(new AppMessage(`${SIGNIN_SUCCESS_PREFIX} ${email}`))
+        );
         setEmail("");
       } else {
-        // dispatch(setAppMessage(new AppMessage(ERROR_SIGNIN_GENERATING_LINK)));
+        dispatch(setAppMessage(new AppMessage(ERROR_SIGNIN_GENERATING_LINK)));
       }
-    } catch (err) {
-      // dispatch(setAppMessage(new AppMessage(err.message)));
+    } catch (err: any) {
+      dispatch(setAppMessage(new AppMessage(err.message)));
     } finally {
-      // dispatch(networkAction(false));
+      dispatch(networkAction(false));
     }
   };
 

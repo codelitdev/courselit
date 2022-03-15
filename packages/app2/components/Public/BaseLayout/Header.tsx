@@ -1,6 +1,5 @@
 import React from "react";
-import { styled } from '@mui/material/styles';
-import PropTypes from "prop-types";
+import { styled, Theme } from '@mui/material/styles';
 import { Grid } from "@mui/material";
 import SessionButton from "../SessionButton";
 import { useTheme } from "@mui/styles";
@@ -15,6 +14,8 @@ const classes = {
 const StyledGrid = styled(Grid)((
   {
     theme
+  } : {
+    theme: any
   }
 ) => ({
   [`& .${classes.branding}`]: {
@@ -29,12 +30,12 @@ const Branding = dynamic(() => import("./Branding"));
 interface HeaderProps {}
 
 const Header = ({}: HeaderProps) => {
-  const theme = useTheme();
+  const theme: Theme = useTheme();
 
   return (
     <StyledGrid container justifyContent="space-between" direction="row" alignItems="center">
       <Grid item>
-        <div>
+        <div className={classes.branding}>
           <Branding />
         </div>
       </Grid>

@@ -2,10 +2,10 @@
 // const { spawn } = require("child_process");
 // const { v4: uuidv4 } = require("uuid");
 //
-// exports.capitalize = (s) => {
-//   if (typeof s !== "string") return "";
-//   return s.charAt(0).toUpperCase() + s.slice(1);
-// };
+export const capitalize = (s: string) => {
+  if (typeof s !== "string") return "";
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
 //
 // exports.foldersExist = (folders) => {
 //   for (const folder of folders) {
@@ -114,7 +114,7 @@ export const generateMagicLink = ({
   secure = true,
   redirect,
 }: MagicLinkProps) => {
-  return `http${secure ? "s" : ""}://${hostname}/api/auth/login?token=${token}${
+  return `http${secure ? "s" : ""}://${hostname}/login?token=${token}${
     redirect ? `&redirect=${redirect}` : ""
   }`;
 };

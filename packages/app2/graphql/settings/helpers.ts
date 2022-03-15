@@ -1,20 +1,22 @@
-const { capitalize } = require("../../lib/utils.js");
+import { capitalize } from '../../lib/utils';
+import constants from '../../config/constants';
+import { responses } from '../../config/strings';
+import { SiteInfo } from '../../models/SiteInfo';
 const {
   paypal,
   stripe,
   paytm,
   none,
   currencyISOCodes,
-} = require("../../config/constants.js");
-const { responses } = require("../../config/strings.js");
+} = constants;
 
-const verifyCurrencyISOCode = (isoCode) => {
+const verifyCurrencyISOCode = (isoCode: string) => {
   if (!currencyISOCodes.includes(isoCode.toLowerCase())) {
     throw new Error(responses.unrecognised_currency_code);
   }
 };
 
-const verifyCurrencyISOCodeBasedOnSiteInfo = (siteInfo) => {
+const verifyCurrencyISOCodeBasedOnSiteInfo = (siteInfo: SiteInfo) => {
   if (!siteInfo.paymentMethod) {
     if (siteInfo.currencyISOCode) {
       verifyCurrencyISOCode(siteInfo.currencyISOCode);
@@ -28,7 +30,7 @@ const verifyCurrencyISOCodeBasedOnSiteInfo = (siteInfo) => {
   }
 };
 
-exports.checkForInvalidPaymentSettings = (siteInfo) => {
+export const checkForInvalidPaymentSettings = (siteInfo: SiteInfo): undefined | Error => {
   verifyCurrencyISOCodeBasedOnSiteInfo(siteInfo);
 
   if (!siteInfo.paymentMethod) {
@@ -44,12 +46,12 @@ exports.checkForInvalidPaymentSettings = (siteInfo) => {
   }
 };
 
-exports.checkForInvalidPaymentMethodSettings = (siteInfo) => {
+export const checkForInvalidPaymentMethodSettings = (siteInfo: SiteInfo): string | undefined => {
   if (!siteInfo.paymentMethod) {
     return;
   }
 
-  let failedPaymentMethod = null;
+  let failedPaymentMethod = undefined;
 
   if (siteInfo.paymentMethod === paytm && !siteInfo.paytmSecret) {
     failedPaymentMethod = paytm;
@@ -69,7 +71,7 @@ exports.checkForInvalidPaymentMethodSettings = (siteInfo) => {
   return failedPaymentMethod;
 };
 
-exports.getPaymentInvalidException = (paymentMethod) =>
+export const getPaymentInvalidException = (paymentMethod: string) =>
   new Error(
     `${capitalize(paymentMethod)} ${responses.payment_settings_invalid_suffix}`
   );

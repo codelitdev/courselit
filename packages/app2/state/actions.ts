@@ -21,22 +21,29 @@ import FetchBuilder from "../ui-lib/fetch";
 import defaultState from "./default-state";
 import { getAddress } from "../ui-lib/utils";
 import State from "../ui-models/state";
+import AppMessage from "../ui-models/app-message";
+import { ThunkAction } from "redux-thunk";
+import { AnyAction } from "redux";
 
-export function signedIn(userid: string, token: string) {
+export function signedIn() {
   return async (dispatch: any) => {
-    dispatch({ type: SIGN_IN, token, userid });
-    dispatch(refreshUserProfile(userid));
+    dispatch({ type: SIGN_IN });
+    dispatch(refreshUserProfile());
   };
 }
 
-export function refreshUserProfile(userId: string) {
+export function refreshUserProfile(): ThunkAction<
+  void,
+  State,
+  unknown,
+  AnyAction
+> {
   return async (dispatch: any, getState: () => State) => {
     try {
       dispatch(networkAction(true));
-      const userID = userId || getState().profile.email;
 
       const query = `
-      { profile: getUser(email: "${userID}") {
+      { profile: getUser {
           name,
           id,
           email,
@@ -48,10 +55,9 @@ export function refreshUserProfile(userId: string) {
       }
       `;
       const fetch = new FetchBuilder()
-        .setUrl(`${getState().address.backend}/graph`)
+        .setUrl(`${getState().address.backend}/api/graph`)
         .setPayload(query)
         .setIsGraphQLEndpoint(true)
-        .setAuthToken(getState().auth.token)
         .build();
       const response = await fetch.exec();
       dispatch(networkAction(false));
@@ -62,10 +68,8 @@ export function refreshUserProfile(userId: string) {
   };
 }
 
-export function signedOut(domain: string) {
+export function signedOut() {
   return (dispatch: any) => {
-    // removeCookie({ key: JWT_COOKIE_NAME, domain });
-    // removeCookie({ key: USERID_COOKIE_NAME, domain });
     dispatch(clearProfile());
     dispatch({ type: SIGN_OUT });
   };
@@ -89,7 +93,7 @@ export function clearProfile() {
   return { type: PROFILE_CLEAR };
 }
 
-export function updateSiteInfo() {
+export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
   return async (dispatch: any, getState: () => State) => {
     try {
       dispatch(networkAction(true));
@@ -110,7 +114,7 @@ export function updateSiteInfo() {
       }
       `;
       const fetch = new FetchBuilder()
-        .setUrl(`${getState().address.backend}/graph`)
+        .setUrl(`${getState().address.backend}/api/graph`)
         .setPayload(query)
         .setIsGraphQLEndpoint(true)
         .build();
@@ -128,7 +132,7 @@ export function newSiteInfoAvailable(info: typeof defaultState.siteinfo) {
   return { type: SITEINFO_AVAILABLE, siteinfo: info };
 }
 
-export function setAppMessage(message: string) {
+export function setAppMessage(message: AppMessage) {
   return (dispatch: any) => dispatch({ type: SET_MESSAGE, message });
 }
 
@@ -233,6 +237,6 @@ export function navigationAvailable(links: typeof defaultState.navigation) {
   return { type: NAVIGATION_AVAILABLE, links };
 }
 
-export function updateBackend(host: string) {
+export function updateBackend(host: string): AnyAction {
   return { type: SET_ADDRESS, address: getAddress(host) };
 }

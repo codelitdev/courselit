@@ -1,18 +1,18 @@
 /**
  * Bussiness logic for managing media.
  */
-const Media = require("../../models/Media.js");
+const Media = require("../../models/Media");
 const {
   makeModelTextSearchable,
   checkPermission,
   validateOffset,
   getMediaOrThrow,
   mapRelativeURLsToFullURLs,
-} = require("../../lib/graphql.js");
-const { itemsPerPage, permissions } = require("../../config/constants.js");
-const { checkIfAuthenticated } = require("../../lib/graphql.js");
-const strings = require("../../config/strings.js");
-const { putObjectAclPromise } = require("../../routes/media/utils.js");
+  checkIfAuthenticated
+} = require("../../lib/graphql");
+const { itemsPerPage, permissions } = require("../../config/constants");
+const strings = require("../../config/strings");
+// const { putObjectAclPromise } = require("../../routes/media/utils.js");
 
 exports.getMedia = async (mediaId, ctx) => {
   let media = null;
@@ -73,21 +73,21 @@ exports.getCreatorMedia = async (offset, ctx, text, mimeType, privacy) => {
 };
 
 exports.updateMedia = async (mediaData, ctx) => {
-  let media = await getMediaOrThrow(mediaData.id, ctx);
+  // let media = await getMediaOrThrow(mediaData.id, ctx);
 
-  if (mediaData.public !== media.public) {
-    await putObjectAclPromise({
-      Key: media.file,
-      ACL: mediaData.public === "true" ? "public-read" : "private",
-    });
-  }
+  // if (mediaData.public !== media.public) {
+  //   await putObjectAclPromise({
+  //     Key: media.file,
+  //     ACL: mediaData.public === "true" ? "public-read" : "private",
+  //   });
+  // }
 
-  for (const key of Object.keys(mediaData)) {
-    media[key] = mediaData[key];
-  }
+  // for (const key of Object.keys(mediaData)) {
+  //   media[key] = mediaData[key];
+  // }
 
-  media = await media.save();
-  return mapRelativeURLsToFullURLs(media);
+  // media = await media.save();
+  // return mapRelativeURLsToFullURLs(media);
 };
 
 exports.checkMediaForPublicAccess = async (mediaId, ctx) => {

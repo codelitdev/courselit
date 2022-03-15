@@ -8,6 +8,7 @@ import connectToDatabase from '../../../services/db';
 import constants from '../../../config/constants';
 import ApiRequest from '../../../models/ApiRequest';
 import { setLoginSession } from '../../../lib/auth';
+import { responses } from '../../../config/strings';
 
 passport.use(magicLinkStrategy);
 
@@ -36,12 +37,14 @@ export default nc<NextApiRequest, NextApiResponse>({
 
             await setLoginSession(res, token);
 
-            res.redirect("/");
+            res.status(200).json({ 
+                message: responses.success, 
+            });
         }
     )
     .post(
         passport.authenticate("magiclink", { action: "requestToken" }),
         (_, res: NextApiResponse) => {
-            res.json({ message: "success" });
+            res.json({ message: responses.success });
         }
     );

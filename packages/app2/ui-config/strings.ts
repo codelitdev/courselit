@@ -271,3 +271,4 @@ export const MEDIA_PUBLIC = "Publicly available";
 export const MEDIA_DIRECT_URL = "Direct URL";
 export const MEDIA_URL_COPIED = "Copied to clipboard";
 export const MEDIA_FILE_TYPE = "File type";
+export const UNABLE_TO_LOGOUT = "Logout failed. Try again.";

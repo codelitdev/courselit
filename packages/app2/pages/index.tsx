@@ -1,13 +1,26 @@
 import type { NextPage } from 'next'
 import { Button } from '@mui/material'
+import { connect } from 'react-redux';
+import State from '../ui-models/state';
+import Auth from '../ui-models/auth';
 
-const Home: NextPage = () => {
+interface HomeProps {
+  auth: Auth;
+}
+
+const Home = ({ auth }: HomeProps) => {
   return (
     <>
       <p>Welcome</p>
       <Button>Click Me!</Button>
+      <p>Guest: {auth.guest}</p>
+      <p>Checked: {auth.checked}</p>
     </>
   )
 }
 
-export default Home
+const mapStateToProps = (state: State) => ({
+  auth: state.auth
+});
+
+export default connect(mapStateToProps)(Home)

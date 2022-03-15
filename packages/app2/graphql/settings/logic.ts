@@ -1,22 +1,23 @@
-/**
- * Business logic for managing site information.
- */
-const SiteInfo = require("../../models/SiteInfo.js");
-const {
+import SiteInfoModel from '../../models/SiteInfo'
+import {
   checkIfAuthenticated,
   checkPermission,
-} = require("../../lib/graphql.js");
-const { responses } = require("../../config/strings.js");
-const { permissions } = require("../../config/constants.js");
-const {
+} from "../../lib/graphql";
+import { responses } from "../../config/strings";
+import constants from "../../config/constants";
+import {
   checkForInvalidPaymentSettings,
   checkForInvalidPaymentMethodSettings,
   getPaymentInvalidException,
-} = require("./helpers.js");
-const { checkMediaForPublicAccess } = require("../media/logic.js");
+} from "./helpers";
+import { checkMediaForPublicAccess } from "../media/logic.js";
+import type GQLContext from '../../models/GQLContext';
+import type SiteInfo from '../../ui-models/site-info';
 
-exports.getSiteInfo = async (ctx) => {
-  const siteinfo = await SiteInfo.findOne(
+const { permissions } = constants
+
+export const getSiteInfo = async (ctx: GQLContext) => {
+  const siteinfo: SiteInfo = await SiteInfoModel.findOne(
     { domain: ctx.subdomain._id },
     "title subtitle logopath currencyUnit currencyISOCode paymentMethod stripePublishableKey codeInjectionHead"
   );
@@ -24,25 +25,25 @@ exports.getSiteInfo = async (ctx) => {
   return siteinfo;
 };
 
-exports.getSiteInfoAsAdmin = async (ctx) => {
+export const getSiteInfoAsAdmin = async (ctx: GQLContext) => {
   checkIfAuthenticated(ctx);
 
   if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
     throw new Error(responses.action_not_allowed);
   }
 
-  const siteinfo = await SiteInfo.findOne({ domain: ctx.subdomain._id });
+  const siteinfo = await SiteInfoModel.findOne({ domain: ctx.subdomain._id });
   return siteinfo;
 };
 
-exports.updateSiteInfo = async (siteData, ctx) => {
+export const updateSiteInfo = async (siteData: Record<string, unknown>, ctx: GQLContext) => {
   checkIfAuthenticated(ctx);
 
   if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
     throw new Error(responses.action_not_allowed);
   }
 
-  let siteInfo = await SiteInfo.findOne({ domain: ctx.subdomain._id });
+  let siteInfo = await SiteInfoModel.findOne({ domain: ctx.subdomain._id });
 
   let shouldCreate = false;
   if (siteInfo === null) {
@@ -69,7 +70,7 @@ exports.updateSiteInfo = async (siteData, ctx) => {
   }
 
   if (shouldCreate) {
-    siteInfo = await SiteInfo.create(siteInfo);
+    siteInfo = await SiteInfoModel.create(siteInfo);
   } else {
     siteInfo = await siteInfo.save();
   }
@@ -77,14 +78,14 @@ exports.updateSiteInfo = async (siteData, ctx) => {
   return siteInfo;
 };
 
-exports.updatePaymentInfo = async (siteData, ctx) => {
+export const updatePaymentInfo = async (siteData: Record<string, unknown>, ctx: GQLContext) => {
   checkIfAuthenticated(ctx);
 
   if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
     throw new Error(responses.action_not_allowed);
   }
 
-  let siteInfo = await SiteInfo.findOne({ domain: ctx.subdomain._id });
+  let siteInfo = await SiteInfoModel.findOne({ domain: ctx.subdomain._id });
 
   if (!siteInfo) {
     throw new Error(responses.school_title_not_set);

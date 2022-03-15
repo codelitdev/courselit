@@ -4,19 +4,20 @@ import { responses } from "../config/strings";
 import constants from "../config/constants";
 // const constants = require("../config/constants.js");
 import mongoose from "mongoose";
-// const Media = require("../models/Media.js");
-// const HttpError = require("./HttpError.js");
+import type GQLContext from "../models/GQLContext";
+import MediaModel, { Media } from "../models/Media";
+import HttpError from "../models/HttpError";
 // const { cdnEndpoint } = require("../config/constants.js");
 // const { generateSignedUrl } = require("../routes/media/utils.js");
 
-export const checkIfAuthenticated = (ctx: Record<string, unknown>) => {
+export const checkIfAuthenticated = (ctx: GQLContext) => {
   if (!ctx.user) throw new Error(responses.request_not_authenticated);
 };
 
 const ObjectId = mongoose.Types.ObjectId;
 
 export const checkOwnership =
-  (Model: any) => async (id: string, ctx: Record<string, unknown>) => {
+  (Model: any) => async (id: string, ctx: GQLContext) => {
     const item = await Model.findOne({ _id: id, domain: ctx.subdomain._id });
     if (
       !item ||
@@ -30,18 +31,18 @@ export const checkOwnership =
     return item;
   };
 
-// export const checkOwnershipWithoutModel = (item, ctx) => {
-//   if (
-//     !item ||
-//     (ObjectId.isValid(item.creatorId)
-//       ? item.creatorId.toString() !== ctx.user._id.toString()
-//       : item.creatorId.toString() !== ctx.user.userId.toString())
-//   ) {
-//     return false;
-//   }
+export const checkOwnershipWithoutModel = (item: any, ctx: GQLContext) => {
+  if (
+    !item ||
+    (ObjectId.isValid(item.creatorId)
+      ? item.creatorId.toString() !== ctx.user._id.toString()
+      : item.creatorId.toString() !== ctx.user.userId.toString())
+  ) {
+    return false;
+  }
 
-//   return true;
-// };
+  return true;
+};
 
 export const validateOffset = (offset: number) => {
   if (offset < 1) throw new Error(responses.invalid_offset);
@@ -128,40 +129,49 @@ const validateSearchInput = (
   }
 };
 
-// export const checkPermission = (actualPermissions, desiredPermissions) =>
-//   actualPermissions.some((permission) =>
-//     desiredPermissions.includes(permission)
-//   );
+export const checkPermission = (
+  actualPermissions: string[],
+  desiredPermissions: string[]
+) =>
+  actualPermissions.some((permission) =>
+    desiredPermissions.includes(permission)
+  );
 
-// export const getMediaOrThrow = async (id, ctx) => {
-//   this.checkIfAuthenticated(ctx);
+export const getMediaOrThrow = async (
+  id: mongoose.Types.ObjectId,
+  ctx: GQLContext
+) => {
+  checkIfAuthenticated(ctx);
 
-//   const media = await Media.findOne({ _id: id, domain: ctx.subdomain._id });
+  const media: Media = await MediaModel.findOne({
+    _id: id,
+    domain: ctx.subdomain._id,
+  });
 
-//   if (!media) {
-//     throw new HttpError(strings.responses.item_not_found, 404);
-//   }
+  if (!media) {
+    throw new HttpError(responses.item_not_found, 404);
+  }
 
-//   if (
-//     !this.checkPermission(ctx.user.permissions, [
-//       constants.permissions.manageAnyMedia,
-//     ])
-//   ) {
-//     if (!this.checkOwnershipWithoutModel(media, ctx)) {
-//       throw new HttpError(strings.responses.item_not_found, 403);
-//     } else {
-//       if (
-//         !this.checkPermission(ctx.user.permissions, [
-//           constants.permissions.manageMedia,
-//         ])
-//       ) {
-//         throw new HttpError(strings.responses.action_not_allowed, 403);
-//       }
-//     }
-//   }
+  if (
+    !checkPermission(ctx.user.permissions, [
+      constants.permissions.manageAnyMedia,
+    ])
+  ) {
+    if (!checkOwnershipWithoutModel(media, ctx)) {
+      throw new HttpError(responses.item_not_found, 403);
+    } else {
+      if (
+        !checkPermission(ctx.user.permissions, [
+          constants.permissions.manageMedia,
+        ])
+      ) {
+        throw new HttpError(responses.action_not_allowed, 403);
+      }
+    }
+  }
 
-//   return media;
-// };
+  return media;
+};
 
 // export const mapRelativeURLsToFullURLs = (media) => {
 //   return {

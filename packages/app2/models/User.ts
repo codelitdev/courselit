@@ -7,6 +7,7 @@ export interface User {
   domain: mongoose.Types.ObjectId;
   email: string;
   active: boolean;
+  userId: number;
   name?: string;
   purchases: mongoose.Types.ObjectId[];
   bio?: string;

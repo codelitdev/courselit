@@ -10,6 +10,7 @@ const graphql = require("graphql");
 // const widgets = require("./widgets");
 
 import users from "./users";
+import settings from "./settings";
 
 export default new graphql.GraphQLSchema({
   query: new graphql.GraphQLObjectType({
@@ -18,7 +19,7 @@ export default new graphql.GraphQLSchema({
       ...users.queries,
       // ...lessons.queries,
       // ...courses.queries,
-      // ...settings.queries,
+      ...settings.queries,
       // ...media.queries,
       // ...design.queries,
       // ...menus.queries,
@@ -31,7 +32,7 @@ export default new graphql.GraphQLSchema({
       ...users.mutations,
       // ...lessons.mutations,
       // ...courses.mutations,
-      // ...settings.mutations,
+      ...settings.mutations,
       // ...media.mutations,
       // ...design.mutations,
       // ...menus.mutations,

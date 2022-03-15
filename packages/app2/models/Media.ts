@@ -1,7 +1,21 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
+
 const AutoIncrement = require("mongoose-sequence")(mongoose);
 
-const MediaSchema = new mongoose.Schema(
+export interface Media {
+  _id: mongoose.Types.ObjectId;
+  mediaId: number;
+  domain: mongoose.Types.ObjectId;
+  originalFileName: string;
+  file: string;
+  mimeType: string;
+  creatorId: mongoose.Types.ObjectId;
+  public: boolean;
+  caption?: string;
+  thumbnail?: string;
+}
+
+const MediaSchema = new mongoose.Schema<Media>(
   {
     domain: { type: mongoose.Schema.Types.ObjectId, required: true },
     originalFileName: { type: String, required: true },
@@ -23,6 +37,8 @@ MediaSchema.index({
   caption: "text",
 });
 
-MediaSchema.plugin(AutoIncrement, { inc_field: "mediaId" });
+if (!mongoose.models.Media) {
+  MediaSchema.plugin(AutoIncrement, { inc_field: "mediaId" });
+}
 
-module.exports = mongoose.model("Media", MediaSchema);
+export default mongoose.models.Media || mongoose.model("Media", MediaSchema);
