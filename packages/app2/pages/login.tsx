@@ -16,8 +16,8 @@ import State from "../ui-models/state";
 import { connect } from "react-redux";
 import { signedIn, networkAction, setAppMessage } from "../state/actions";
 import AppMessage from "../ui-models/app-message";
-// import { JWT_COOKIE_NAME, USERID_COOKIE_NAME } from "../config/constants";
-// import { setCookie } from "../lib/session";
+import { ThunkDispatch } from "redux-thunk";
+import { AnyAction } from 'redux';
 
 const BaseLayout = dynamic(() => import("../components/Public/BaseLayout"));
 
@@ -36,6 +36,7 @@ const Login = ({ address, auth, dispatch, progress }: LoginProps) => {
   useEffect(() => {
     if (!auth.guest) {
       const { query } = router;
+      console.log(query);
       query.redirect ? router.push(`${query.redirect}`) : router.push("/");
     }
   });
@@ -53,7 +54,7 @@ const Login = ({ address, auth, dispatch, progress }: LoginProps) => {
       const response = await fetch(`/api/auth/login?token=${token}`);
 
       if (response.status === 200) {
-        router.replace("/");
+        (dispatch as ThunkDispatch<State, {}, AnyAction>)(signedIn());
       } else {
         dispatch(setAppMessage(new AppMessage(ERROR_SIGNIN_VERIFYING_LINK)));
       }

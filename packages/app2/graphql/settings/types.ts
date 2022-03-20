@@ -8,8 +8,9 @@ import {
   // GraphQLList,
   GraphQLInputObjectType
 } from "graphql";
-const { mediaType } = require("../media/types");
-const mediaLogic = require("../media/logic.js");
+import mediaTypes from '../media/types';
+import { getMedia } from '../media/logic'
+const { mediaType } = mediaTypes;
 
 const siteType = new GraphQLObjectType({
   name: "SiteInfo",
@@ -19,7 +20,7 @@ const siteType = new GraphQLObjectType({
     logopath: {
       type: mediaType,
       resolve: (settings, _, context, __) =>
-        mediaLogic.getMedia(settings.logopath, context),
+        getMedia(settings.logopath, context),
     },
     currencyUnit: { type: GraphQLString },
     currencyISOCode: { type: GraphQLString },
@@ -37,7 +38,7 @@ const siteAdminType = new GraphQLObjectType({
     logopath: {
       type: mediaType,
       resolve: (settings, _, context, __) =>
-        mediaLogic.getMedia(settings.logopath, context),
+        getMedia(settings.logopath, context),
     },
     currencyUnit: { type: GraphQLString },
     currencyISOCode: { type: GraphQLString },

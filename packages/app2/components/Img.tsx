@@ -4,10 +4,10 @@ import defaultState from "../state/default-state.js";
 
 interface ImgProps {
   src: string;
-  isThumbnail: boolean;
-  classes: string;
-  alt: string;
-  defaultImage: string;
+  isThumbnail?: boolean;
+  classes?: string;
+  alt?: string;
+  defaultImage?: string;
 };
 
 const Img = (props: ImgProps) => {

@@ -1,8 +1,10 @@
 import {
-  GraphQLString
+  GraphQLString,
+  GraphQLList
 } from "graphql";
 import types from './types';
-import { getUser } from './logic';
+import { getUser, getSiteUsers } from './logic';
+import GQLContext from "../../models/GQLContext";
 
 export default {
   getUser: {
@@ -11,15 +13,15 @@ export default {
       email: { type: GraphQLString },
       userId: { type: GraphQLString },
     },
-    resolve: (_: any, { email, userId }: any, context: any) =>
+    resolve: (_: any, { email, userId }: any, context: GQLContext) =>
       getUser(email, userId, context),
   },
-  // getSiteUsers: {
-  //   type: new GraphQLList(types.userType),
-  //   args: {
-  //     searchData: { type: types.userSearchInput },
-  //   },
-  //   resolve: (root, { searchData }, context) =>
-  //     logic.getSiteUsers(searchData, context),
-  // },
+  getSiteUsers: {
+    type: new GraphQLList(types.userType),
+    args: {
+      searchData: { type: types.userSearchInput },
+    },
+    resolve: (_: any, { searchData }: any, context: GQLContext) =>
+      getSiteUsers(searchData, context),
+  },
 };

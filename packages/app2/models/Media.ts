@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const AutoIncrement = require("mongoose-sequence")(mongoose);
 
 export interface Media {
-  _id: mongoose.Types.ObjectId;
+  id: mongoose.Types.ObjectId;
   mediaId: number;
   domain: mongoose.Types.ObjectId;
   originalFileName: string;
@@ -11,6 +11,7 @@ export interface Media {
   mimeType: string;
   creatorId: mongoose.Types.ObjectId;
   public: boolean;
+  size: number;
   caption?: string;
   thumbnail?: string;
 }

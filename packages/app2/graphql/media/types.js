@@ -1,32 +1,40 @@
-const graphql = require("graphql");
+import {
+  GraphQLID,
+  GraphQLNonNull,
+  GraphQLString,
+  GraphQLInt,
+  GraphQLObjectType, 
+  GraphQLBoolean,
+  GraphQLInputObjectType
+} from 'graphql'
 
-const mediaType = new graphql.GraphQLObjectType({
+const mediaType = new GraphQLObjectType({
   name: "Media",
   fields: {
-    id: { type: graphql.GraphQLID },
-    file: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-    thumbnail: { type: graphql.GraphQLString },
+    id: { type: GraphQLID },
+    file: { type: new GraphQLNonNull(GraphQLString) },
+    thumbnail: { type: GraphQLString },
     originalFileName: {
-      type: new graphql.GraphQLNonNull(graphql.GraphQLString),
+      type: new GraphQLNonNull(GraphQLString),
     },
-    mimeType: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
-    size: { type: new graphql.GraphQLNonNull(graphql.GraphQLInt) },
-    caption: { type: graphql.GraphQLString },
-    public: { type: new graphql.GraphQLNonNull(graphql.GraphQLBoolean) },
-    key: { type: new graphql.GraphQLNonNull(graphql.GraphQLString) },
+    mimeType: { type: new GraphQLNonNull(GraphQLString) },
+    size: { type: new GraphQLNonNull(GraphQLInt) },
+    caption: { type: GraphQLString },
+    public: { type: new GraphQLNonNull(GraphQLBoolean) },
+    key: { type: new GraphQLNonNull(GraphQLString) },
   },
 });
 
-const mediaUpdateType = new graphql.GraphQLInputObjectType({
+const mediaUpdateType = new GraphQLInputObjectType({
   name: "MediaUpdateInput",
   fields: {
-    id: { type: new graphql.GraphQLNonNull(graphql.GraphQLID) },
-    caption: { type: graphql.GraphQLString },
-    public: { type: graphql.GraphQLString },
+    id: { type: new GraphQLNonNull(GraphQLID) },
+    caption: { type: GraphQLString },
+    public: { type: GraphQLString },
   },
 });
 
-module.exports = {
+export default {
   mediaType,
   mediaUpdateType,
 };

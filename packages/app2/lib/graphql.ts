@@ -1,14 +1,13 @@
-// const { EditorState, convertFromRaw } = require("draft-js");
-// const { decode } = require("base-64");
+import { EditorState, convertFromRaw } from 'draft-js';
+import { decode } from 'base-64';
 import { responses } from "../config/strings";
 import constants from "../config/constants";
-// const constants = require("../config/constants.js");
 import mongoose from "mongoose";
 import type GQLContext from "../models/GQLContext";
 import MediaModel, { Media } from "../models/Media";
 import HttpError from "../models/HttpError";
-// const { cdnEndpoint } = require("../config/constants.js");
-// const { generateSignedUrl } = require("../routes/media/utils.js");
+import { generateSignedUrl } from '../lib/s3-utils';
+const { cdnEndpoint } = constants;
 
 export const checkIfAuthenticated = (ctx: GQLContext) => {
   if (!ctx.user) throw new Error(responses.request_not_authenticated);
@@ -90,7 +89,7 @@ const validateMongooseTextSearchQuery = (query: any) => {
 interface SearchData {
   offset: number;
   query: Record<string, unknown>;
-  graphQLContext: Record<string, unknown>;
+  graphQLContext: GQLContext;
 }
 interface SearchOptions {
   checkIfRequestIsAuthenticated?: boolean;
@@ -143,7 +142,7 @@ export const getMediaOrThrow = async (
 ) => {
   checkIfAuthenticated(ctx);
 
-  const media: Media = await MediaModel.findOne({
+  const media: Media | null = await MediaModel.findOne({
     _id: id,
     domain: ctx.subdomain._id,
   });
@@ -173,18 +172,18 @@ export const getMediaOrThrow = async (
   return media;
 };
 
-// export const mapRelativeURLsToFullURLs = (media) => {
-//   return {
-//     id: media.id,
-//     file: media.public
-//       ? `${cdnEndpoint}/${media.file}`
-//       : generateSignedUrl({ name: media.file }),
-//     thumbnail: media.thumbnail ? `${cdnEndpoint}/${media.thumbnail}` : "",
-//     originalFileName: media.originalFileName,
-//     mimeType: media.mimeType,
-//     size: media.size,
-//     caption: media.caption,
-//     public: media.public,
-//     key: media.file,
-//   };
-// };
+export const mapRelativeURLsToFullURLs = (media: Media) => {
+  return {
+    id: media.id,
+    file: media.public
+      ? `${cdnEndpoint}/${media.file}`
+      : generateSignedUrl({ name: media.file }),
+    thumbnail: media.thumbnail ? `${cdnEndpoint}/${media.thumbnail}` : "",
+    originalFileName: media.originalFileName,
+    mimeType: media.mimeType,
+    size: media.size,
+    caption: media.caption,
+    public: media.public,
+    key: media.file,
+  };
+};

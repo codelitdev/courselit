@@ -45,8 +45,6 @@ const DrawerContent = ({
   handleDrawerToggle,
   forMobile = false,
 }: DrawerContentProps) => {
-
-
   return (
     (<Root>
       <div className={classes.branding}>

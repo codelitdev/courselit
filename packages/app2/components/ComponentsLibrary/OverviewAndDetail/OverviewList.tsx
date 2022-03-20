@@ -2,6 +2,7 @@ import * as React from "react";
 import { ImageList, ImageListItem, useMediaQuery } from "@mui/material";
 import ComponentProps from "./ComponentProps";
 import Section from "../Section";
+import { useTheme } from '@mui/material/styles';
 
 interface OverviewProps {
   componentsMap: ComponentProps[];
@@ -14,8 +15,9 @@ const OverviewList = ({
   onSelectComponentWithDetail,
   onSelectComponentWithoutDetail,
 }: OverviewProps) => {
-  const tablet = useMediaQuery((theme: any) => theme.breakpoints.down('md'));
-  const mobile = useMediaQuery((theme: any) => theme.breakpoints.down('sm'));
+  const theme = useTheme();
+  const tablet = useMediaQuery(theme.breakpoints.down('md'));
+  const mobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
     <Section>

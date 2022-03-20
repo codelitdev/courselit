@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@courselit/common-widgets": "^0.17.11",
+    "@courselit/thumbnail": "^0.17.0",
     "@courselit/widget-buttondown": "^0.17.11",
     "@emotion/cache": "^11.7.1",
     "@emotion/react": "^11.8.2",
@@ -21,8 +22,10 @@
     "@mui/styles": "^5.5.0",
     "@mui/utils": "^5.4.4",
     "@types/base-64": "^1.0.0",
+    "aws-sdk": "^2.1096.0",
     "base-64": "^1.0.0",
     "cookie": "^0.4.2",
+    "draft-js": "^0.11.7",
     "jsonwebtoken": "^8.5.1",
     "mongodb": "^4.4.1",
     "mongoose": "^6.2.4",
@@ -44,6 +47,7 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",
     "@types/cookie": "^0.4.1",
+    "@types/draft-js": "^0.11.9",
     "@types/node": "17.0.21",
     "@types/nodemailer": "^6.4.4",
     "@types/passport": "^1.0.7",

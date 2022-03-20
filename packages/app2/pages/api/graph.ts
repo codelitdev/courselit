@@ -3,7 +3,6 @@ import schema from "../../graphql";
 import verifyDomain from '../../middlewares/verify-domain';
 import nc from 'next-connect';
 import passport from 'passport';
-
 import { graphql } from 'graphql';
 import connectToDatabase from "../../services/db";
 import jwtStrategy from '../../lib/jwt';

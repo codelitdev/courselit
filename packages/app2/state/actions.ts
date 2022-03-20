@@ -75,7 +75,7 @@ export function signedOut() {
   };
 }
 
-export function authHasBeenChecked() {
+export function authChecked() {
   return (dispatch: any) => {
     dispatch({ type: AUTH_CHECKED });
   };

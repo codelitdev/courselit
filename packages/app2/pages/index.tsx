@@ -9,6 +9,7 @@ interface HomeProps {
 }
 
 const Home = ({ auth }: HomeProps) => {
+  console.log(auth)
   return (
     <>
       <p>Welcome</p>

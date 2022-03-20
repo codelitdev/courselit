@@ -15,7 +15,7 @@ import App from 'next/app';
 import State from '../ui-models/state';
 import { AnyAction } from 'redux';
 import { ThunkDispatch } from 'redux-thunk';
-import { signedIn, updateBackend, updateSiteInfo, updateSiteLayout, updateSiteNavigation, updateSiteTheme } from '../state/actions';
+import { authChecked, signedIn, updateBackend, updateSiteInfo, updateSiteLayout, updateSiteNavigation, updateSiteTheme } from '../state/actions';
 import FetchBuilder from '../ui-lib/fetch';
 
 type CourseLitProps = AppProps & {
@@ -49,6 +49,7 @@ function MyApp({ Component, pageProps, emotionCache = clientSideEmotionCache }: 
     if (response.status === 200) {
       (store.dispatch as ThunkDispatch<State, null, AnyAction>)(signedIn());
     }
+    (store.dispatch as ThunkDispatch<State, null, AnyAction>)(authChecked());
   }
 
   const removeServerSideInjectedCSS = () => {

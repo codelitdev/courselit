@@ -10,14 +10,14 @@ import {
   checkForInvalidPaymentMethodSettings,
   getPaymentInvalidException,
 } from "./helpers";
-import { checkMediaForPublicAccess } from "../media/logic.js";
+import { checkMediaForPublicAccess } from "../media/logic";
 import type GQLContext from '../../models/GQLContext';
 import type SiteInfo from '../../ui-models/site-info';
 
 const { permissions } = constants
 
 export const getSiteInfo = async (ctx: GQLContext) => {
-  const siteinfo: SiteInfo = await SiteInfoModel.findOne(
+  const siteinfo: SiteInfo | null = await SiteInfoModel.findOne(
     { domain: ctx.subdomain._id },
     "title subtitle logopath currencyUnit currencyISOCode paymentMethod stripePublishableKey codeInjectionHead"
   );
@@ -32,7 +32,7 @@ export const getSiteInfoAsAdmin = async (ctx: GQLContext) => {
     throw new Error(responses.action_not_allowed);
   }
 
-  const siteinfo = await SiteInfoModel.findOne({ domain: ctx.subdomain._id });
+  const siteinfo: SiteInfo | null = await SiteInfoModel.findOne({ domain: ctx.subdomain._id });
   return siteinfo;
 };
 
