@@ -1,7 +1,7 @@
 /**
  * A model for the front-end layout.
  */
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 export interface Layout {
   domain: string;

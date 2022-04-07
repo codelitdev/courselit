@@ -7,24 +7,20 @@ import {
   validateOffset,
   getMediaOrThrow,
   mapRelativeURLsToFullURLs,
-  checkIfAuthenticated
+  checkIfAuthenticated,
 } from "../../lib/graphql";
-import { responses } from '../../config/strings';
-import constants from '../../config/constants';
-import GQLContext from '../../models/GQLContext';
-import { putObjectAclPromise } from '../../lib/s3-utils';
-import Media from '../../models/Media';
+import { responses } from "../../config/strings";
+import constants from "../../config/constants";
+import GQLContext from "../../models/GQLContext";
+import { putObjectAclPromise } from "../../lib/s3-utils";
+import * as medialitService from "../../services/medialit";
 const { itemsPerPage, permissions } = constants;
 
-export const getMedia = async (mediaId: string, ctx: GQLContext) => {
+export const getMedia = async (mediaId: string) => {
   let media = null;
 
   if (mediaId) {
-    media = await Media.findOne({
-      _id: mediaId,
-      domain: ctx.subdomain._id,
-    });
-    media = mapRelativeURLsToFullURLs(media);
+    media = await medialitService.getMedia(mediaId);
   }
 
   return media;
@@ -98,7 +94,10 @@ export const updateMedia = async (mediaData: any, ctx: GQLContext) => {
   return mapRelativeURLsToFullURLs(media);
 };
 
-export const checkMediaForPublicAccess = async (mediaId: string, ctx: GQLContext) => {
+export const checkMediaForPublicAccess = async (
+  mediaId: string,
+  ctx: GQLContext
+) => {
   const media = await getMedia(mediaId, ctx);
 
   if (media && media.public) {

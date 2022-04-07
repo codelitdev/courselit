@@ -1,5 +1,5 @@
 import React from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import { Typography, Grid, Divider } from "@mui/material";
 import Link from "next/link";
 import PropTypes from "prop-types";
@@ -15,7 +15,7 @@ import { FREE_COST } from "../../config/strings.js";
 import dynamic from "next/dynamic";
 import { permissions } from "../../config/constants";
 
-const PREFIX = 'Article';
+const PREFIX = "Article";
 
 const classes = {
   header: `${PREFIX}-header`,
@@ -25,14 +25,10 @@ const classes = {
   creatorName: `${PREFIX}-creatorName`,
   enrollmentArea: `${PREFIX}-enrollmentArea`,
   enrollmentAreaPriceTag: `${PREFIX}-enrollmentAreaPriceTag`,
-  content: `${PREFIX}-content`
+  content: `${PREFIX}-content`,
 };
 
-const StyledSection = styled(Section)((
-  {
-    theme
-  }
-) => ({
+const StyledSection = styled(Section)(({ theme }) => ({
   [`& .${classes.header}`]: {},
 
   [`& .${classes.creatoravatarcontainer}`]: {
@@ -63,7 +59,7 @@ const StyledSection = styled(Section)((
 
   [`& .${classes.content}`]: {
     marginTop: theme.spacing(4),
-  }
+  },
 }));
 
 const BuyButton = dynamic(() => import("../CheckoutExternal"));

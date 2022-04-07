@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import PropTypes from "prop-types";
 import FetchBuilder from "../../lib/fetch";
 import {
@@ -17,19 +17,15 @@ import {
 import { lesson, authProps, profileProps, addressProps } from "../../types";
 import { Section, RichText as TextEditor } from "../ComponentsLibrary";
 
-const PREFIX = 'LessonViewer';
+const PREFIX = "LessonViewer";
 
 const classes = {
   notEnrolledHeader: `${PREFIX}-notEnrolledHeader`,
   videoPlayer: `${PREFIX}-videoPlayer`,
-  section: `${PREFIX}-section`
+  section: `${PREFIX}-section`,
 };
 
-const StyledSection = styled(Section)((
-  {
-    theme
-  }
-) => ({
+const StyledSection = styled(Section)(({ theme }) => ({
   [`& .${classes.notEnrolledHeader}`]: {
     marginBottom: theme.spacing(1),
   },
@@ -41,7 +37,7 @@ const StyledSection = styled(Section)((
 
   [`& .${classes.section}`]: {
     marginTop: "1.6em",
-  }
+  },
 }));
 
 const Caption = (props) => {
@@ -70,7 +66,6 @@ const LessonViewer = (props) => {
     !lesson.requiresEnrollment ||
       (props.profile && props.profile.purchases.includes(props.lesson.courseId))
   );
-
 
   useEffect(() => {
     props.lesson.id && isEnrolled && loadLesson(props.lesson.id);

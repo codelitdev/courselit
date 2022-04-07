@@ -1,33 +1,27 @@
 import React from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import { Grid, Typography, IconButton } from "@mui/material";
 import { Remove } from "@mui/icons-material";
 
-const PREFIX = 'AddedComponent';
+const PREFIX = "AddedComponent";
 
 const classes = {
-  container: `${PREFIX}-container`
+  container: `${PREFIX}-container`,
 };
 
-const StyledGrid = styled(Grid)((
-  {
-    theme
-  } : {
-    theme: any;
-  }
-) => ({
+const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
   [`&.${classes.container}`]: {
     padding: theme.spacing(1),
     border: "1px solid #eee",
-  }
+  },
 }));
 
 interface AddedComponentProps {
   section: string;
-  title: string; 
+  title: string;
   index: number;
   removeComponent: (...args: any[]) => void;
-};
+}
 
 const AddedComponent = (props: AddedComponentProps) => {
   return (
@@ -47,7 +41,8 @@ const AddedComponent = (props: AddedComponentProps) => {
           color="default"
           aria-label="remove component"
           onClick={() => props.removeComponent(props.section, props.index)}
-          size="large">
+          size="large"
+        >
           <Remove />
         </IconButton>
       </Grid>

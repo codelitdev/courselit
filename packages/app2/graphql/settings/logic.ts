@@ -1,8 +1,5 @@
-import SiteInfoModel from '../../models/SiteInfo'
-import {
-  checkIfAuthenticated,
-  checkPermission,
-} from "../../lib/graphql";
+import SiteInfoModel from "../../models/SiteInfo";
+import { checkIfAuthenticated, checkPermission } from "../../lib/graphql";
 import { responses } from "../../config/strings";
 import constants from "../../config/constants";
 import {
@@ -10,11 +7,11 @@ import {
   checkForInvalidPaymentMethodSettings,
   getPaymentInvalidException,
 } from "./helpers";
-import { checkMediaForPublicAccess } from "../media/logic";
-import type GQLContext from '../../models/GQLContext';
-import type SiteInfo from '../../ui-models/site-info';
+import type GQLContext from "../../models/GQLContext";
+import type SiteInfo from "../../ui-models/site-info";
+import * as medialitService from "../../services/medialit";
 
-const { permissions } = constants
+const { permissions } = constants;
 
 export const getSiteInfo = async (ctx: GQLContext) => {
   const siteinfo: SiteInfo | null = await SiteInfoModel.findOne(
@@ -32,11 +29,16 @@ export const getSiteInfoAsAdmin = async (ctx: GQLContext) => {
     throw new Error(responses.action_not_allowed);
   }
 
-  const siteinfo: SiteInfo | null = await SiteInfoModel.findOne({ domain: ctx.subdomain._id });
+  const siteinfo: SiteInfo | null = await SiteInfoModel.findOne({
+    domain: ctx.subdomain._id,
+  });
   return siteinfo;
 };
 
-export const updateSiteInfo = async (siteData: Record<string, unknown>, ctx: GQLContext) => {
+export const updateSiteInfo = async (
+  siteData: Record<string, unknown>,
+  ctx: GQLContext
+) => {
   checkIfAuthenticated(ctx);
 
   if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
@@ -61,13 +63,7 @@ export const updateSiteInfo = async (siteData: Record<string, unknown>, ctx: GQL
     throw new Error(responses.school_title_not_set);
   }
 
-  const isLogoPubliclyAvailable = await checkMediaForPublicAccess(
-    siteInfo.logopath,
-    ctx
-  );
-  if (!isLogoPubliclyAvailable) {
-    throw new Error(responses.publicly_inaccessible);
-  }
+  await throwErrorIfLogoMediaIsNotPublic(siteInfo.logopath);
 
   if (shouldCreate) {
     siteInfo = await SiteInfoModel.create(siteInfo);
@@ -78,7 +74,26 @@ export const updateSiteInfo = async (siteData: Record<string, unknown>, ctx: GQL
   return siteInfo;
 };
 
-export const updatePaymentInfo = async (siteData: Record<string, unknown>, ctx: GQLContext) => {
+async function throwErrorIfLogoMediaIsNotPublic(src?: string) {
+  if (!src) {
+    return;
+  }
+
+  let media = null;
+  try {
+    media = await medialitService.getMedia(src);
+  } catch (e: any) {}
+
+  const isLogoPubliclyAvailable = media && media.access === "public";
+  if (!isLogoPubliclyAvailable) {
+    throw new Error(responses.publicly_inaccessible);
+  }
+}
+
+export const updatePaymentInfo = async (
+  siteData: Record<string, unknown>,
+  ctx: GQLContext
+) => {
   checkIfAuthenticated(ctx);
 
   if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {

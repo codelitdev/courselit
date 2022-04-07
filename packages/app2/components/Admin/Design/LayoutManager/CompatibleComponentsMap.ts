@@ -2,7 +2,7 @@ import widgets from "../../../../ui-config/widgets";
 import CompatibleComponentsMap from "../../../../ui-models/compatible-components-map";
 import Widget from "../../../../ui-models/widget";
 
-const ComponentsMap: CompatibleComponentsMap  = {
+const ComponentsMap: CompatibleComponentsMap = {
   top: [],
   bottom: [],
   aside: [],

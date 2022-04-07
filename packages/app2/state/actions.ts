@@ -16,7 +16,6 @@ import {
   NAVIGATION_AVAILABLE,
   SET_ADDRESS,
 } from "./action-types";
-// import { JWT_COOKIE_NAME, USERID_COOKIE_NAME } from "../config/constants.js";
 import FetchBuilder from "../ui-lib/fetch";
 import defaultState from "./default-state";
 import { getAddress } from "../ui-lib/utils";
@@ -24,6 +23,7 @@ import State from "../ui-models/state";
 import AppMessage from "../ui-models/app-message";
 import { ThunkAction } from "redux-thunk";
 import { AnyAction } from "redux";
+import SiteInfo from "../ui-models/site-info";
 
 export function signedIn() {
   return async (dispatch: any) => {
@@ -128,7 +128,7 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
   };
 }
 
-export function newSiteInfoAvailable(info: typeof defaultState.siteinfo) {
+export function newSiteInfoAvailable(info: SiteInfo) {
   return { type: SITEINFO_AVAILABLE, siteinfo: info };
 }
 

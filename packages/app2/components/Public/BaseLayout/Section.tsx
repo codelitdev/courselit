@@ -9,7 +9,7 @@ import State from "../../../ui-models/state";
 
 interface SectionProps {
   name: string;
-  layout: any
+  layout: any;
 }
 
 const Section = (props: SectionProps) => {

@@ -1,5 +1,5 @@
 import React, { ReactChildren, useState } from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import AppBar from "@mui/material/AppBar";
 import CssBaseline from "@mui/material/CssBaseline";
 import Drawer from "@mui/material/Drawer";
@@ -17,7 +17,7 @@ import Link from "../../../../ui-models/link";
 import Profile from "../../../../ui-models/profile";
 import State from "../../../../ui-models/state";
 
-const PREFIX = 'index';
+const PREFIX = "index";
 const drawerWidth = 240;
 
 const classes = {
@@ -30,12 +30,10 @@ const classes = {
   content: `${PREFIX}-content`,
   showprogress: `${PREFIX}-showprogress`,
   hideprogress: `${PREFIX}-hideprogress`,
-  menuTitle: `${PREFIX}-menuTitle`
+  menuTitle: `${PREFIX}-menuTitle`,
 };
 
-const Root = styled('div')(({ theme }: {
-  theme: any;
-}) => ({
+const Root = styled("div")(({ theme }: { theme: any }) => ({
   [`&.${classes.root}`]: {
     display: "flex",
   },
@@ -80,7 +78,7 @@ const Root = styled('div')(({ theme }: {
     flexGrow: 1,
     [theme.breakpoints.up("sm")]: {
       width: `calc(100% - ${drawerWidth}px)`,
-      marginLeft: drawerWidth
+      marginLeft: drawerWidth,
     },
   },
 
@@ -94,7 +92,7 @@ const Root = styled('div')(({ theme }: {
 
   [`& .${classes.menuTitle}`]: {
     marginLeft: theme.spacing(2),
-  }
+  },
 }));
 
 const DrawerContent = dynamic(() => import("./DrawerContent"));
@@ -104,7 +102,7 @@ interface ScaffoldProps {
   siteinfo: SiteInfo;
   navigation: Link[];
   networkAction: boolean;
-  profile: Profile; 
+  profile: Profile;
 }
 
 const Scaffold = (props: ScaffoldProps) => {
@@ -117,7 +115,7 @@ const Scaffold = (props: ScaffoldProps) => {
   }
 
   return (
-    <Root> 
+    <Root>
       <CssBaseline />
       <AppBar position="fixed" className={classes.appBar}>
         <Toolbar>
@@ -127,15 +125,14 @@ const Scaffold = (props: ScaffoldProps) => {
             edge="start"
             onClick={handleDrawerToggle}
             className={classes.menuButton}
-            size="large">
+            size="large"
+          >
             <Menu />
           </IconButton>
           <Header />
         </Toolbar>
       </AppBar>
-      <nav 
-        className={classes.drawer} 
-        aria-label="menu">
+      <nav className={classes.drawer} aria-label="menu">
         {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
         <Hidden smUp implementation="css">
           <Drawer
@@ -164,14 +161,21 @@ const Scaffold = (props: ScaffoldProps) => {
             variant="permanent"
             open
           >
-            <DrawerContent handleDrawerToggle={handleDrawerToggle} forMobile={false} />
+            <DrawerContent
+              handleDrawerToggle={handleDrawerToggle}
+              forMobile={false}
+            />
           </Drawer>
         </Hidden>
       </nav>
 
       <main className={classes.content}>
         <div className={classes.toolbar} />
-        <LinearProgress className={props.networkAction ? classes.showprogress : classes.hideprogress} />
+        <LinearProgress
+          className={
+            props.networkAction ? classes.showprogress : classes.hideprogress
+          }
+        />
         {props.children}
       </main>
       <AppToast />

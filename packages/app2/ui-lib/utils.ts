@@ -4,8 +4,7 @@ import {
   URL_EXTENTION_COURSES,
   permissions,
 } from "../ui-config/constants.js";
-import { RichText as TextEditor } from "../components/ComponentsLibrary";
-import defaultState from "../state/default-state.js";
+import { RichText as TextEditor } from "@courselit/components-library";
 import Profile from "../ui-models/profile.js";
 
 export const queryGraphQL = async (
@@ -35,23 +34,21 @@ export const queryGraphQL = async (
 
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-export const queryGraphQLWithUIEffects =
-  (
-    backend: string,
-    dispatch: any,
-    networkAction: (status: boolean) => void,
-    token: string
-  ) =>
-  async (query: Record<string, unknown>) => {
-    try {
-      dispatch(networkAction(false));
-      const response = await queryGraphQL(`${backend}/graph`, query, token);
+export const queryGraphQLWithUIEffects = (
+  backend: string,
+  dispatch: any,
+  networkAction: (status: boolean) => void,
+  token: string
+) => async (query: Record<string, unknown>) => {
+  try {
+    dispatch(networkAction(false));
+    const response = await queryGraphQL(`${backend}/graph`, query, token);
 
-      return response;
-    } finally {
-      dispatch(networkAction(false));
-    }
-  };
+    return response;
+  } finally {
+    dispatch(networkAction(false));
+  }
+};
 
 export const formattedLocaleDate = (epochString: string) =>
   new Date(Number(epochString)).toLocaleString("en-US", {
@@ -97,8 +94,8 @@ export const getGraphQLQueryFields = (
 };
 
 export const getObjectContainingOnlyChangedFields = (
-  baseline: Record<string, unknown>,
-  obj: Record<string, unknown>
+  baseline: Record<string, any>,
+  obj: Record<string, any>
 ) => {
   const result: Record<string, unknown> = {};
   for (const i of Object.keys(baseline)) {

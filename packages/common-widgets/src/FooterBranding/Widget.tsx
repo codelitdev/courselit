@@ -1,5 +1,4 @@
 import * as React from "react";
-import { connect } from "react-redux";
 import { WidgetProps, AppState } from "@courselit/components-library";
 import { Grid, Theme, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
@@ -30,8 +29,4 @@ const Widget = (props: FooterBrandingWidgetProps) => {
   );
 };
 
-const mapStateToProps = (state: AppState) => ({
-  siteInfo: state.siteinfo,
-});
-
-export default connect(mapStateToProps)(Widget);
+export default Widget;

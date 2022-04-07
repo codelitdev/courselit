@@ -26,6 +26,6 @@ export const send = async ({ to, subject, body }: MailProps) => {
       html: body,
     });
   } catch (err) {
-    console.error(err);
+    console.error(err); // eslint-disable-line no-console
   }
 };

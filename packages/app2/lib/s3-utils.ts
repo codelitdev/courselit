@@ -1,7 +1,7 @@
-import aws from 'aws-sdk';
+import aws from "aws-sdk";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import constants from '../config/constants';
+import constants from "../config/constants";
 const {
   cloudEndpoint,
   cloudKey,
@@ -10,7 +10,10 @@ const {
   cloudRegion,
 } = constants;
 
-export const generateFolderPaths = ({ uploadFolder, domainName }: {
+export const generateFolderPaths = ({
+  uploadFolder,
+  domainName,
+}: {
   uploadFolder: string;
   domainName: string;
 }) => {
@@ -66,7 +69,13 @@ export const deleteObjectPromise = (params: any) =>
     );
   });
 
-export const generateSignedUrl = async ({ name, mimetype }: {name: string; mimetype?: string}) => {
+export const generateSignedUrl = async ({
+  name,
+  mimetype,
+}: {
+  name: string;
+  mimetype?: string;
+}) => {
   const client = new S3Client({
     region: cloudRegion,
     endpoint: cloudEndpoint,

@@ -1,16 +1,7 @@
-import {
-  GraphQLNonNull,
-  GraphQLString,
-  GraphQLBoolean
-} from 'graphql';
-import GQLContext from '../../models/GQLContext';
-import types from './types';
-import {
-  addTheme,
-  setTheme,
-  removeTheme,
-  setLayout  
-} from './logic';
+import { GraphQLNonNull, GraphQLString, GraphQLBoolean } from "graphql";
+import GQLContext from "../../models/GQLContext";
+import types from "./types";
+import { addTheme, setTheme, removeTheme, setLayout } from "./logic";
 
 export default {
   addTheme: {
@@ -20,7 +11,8 @@ export default {
         type: new GraphQLNonNull(types.themeInputType),
       },
     },
-    resolve: async (_: any, { theme }: any, context: GQLContext) => addTheme(theme, context),
+    resolve: async (_: any, { theme }: any, context: GQLContext) =>
+      addTheme(theme, context),
   },
   setTheme: {
     type: types.themeType,
@@ -29,7 +21,8 @@ export default {
         type: new GraphQLNonNull(GraphQLString),
       },
     },
-    resolve: async (_: any, { id }: any, context: GQLContext) => setTheme(id, context),
+    resolve: async (_: any, { id }: any, context: GQLContext) =>
+      setTheme(id, context),
   },
   removeTheme: {
     type: new GraphQLNonNull(GraphQLBoolean),
@@ -38,7 +31,8 @@ export default {
         type: new GraphQLNonNull(GraphQLString),
       },
     },
-    resolve: async (_: any, { id }: any, context: GQLContext) => removeTheme(id, context),
+    resolve: async (_: any, { id }: any, context: GQLContext) =>
+      removeTheme(id, context),
   },
   setLayout: {
     type: types.layoutType,

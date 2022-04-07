@@ -3,7 +3,7 @@
  * Visit: https://material-ui.com/customization/theming/.
  *
  */
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 export interface Theme {
   domain: string;

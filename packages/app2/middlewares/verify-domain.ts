@@ -6,8 +6,10 @@ import { isSubscriptionValid } from "../lib/utils";
 import { NextApiRequest, NextApiResponse } from "next";
 import ApiRequest from "../models/ApiRequest";
 
-const { domainNameForSingleTenancy, placeholderEmailForSingleTenancy } =
-  constants;
+const {
+  domainNameForSingleTenancy,
+  placeholderEmailForSingleTenancy,
+} = constants;
 
 const getDomainBasedOnSubdomain = async (
   subdomain: string
@@ -56,7 +58,8 @@ const hasValidSubscription = async (email: string): Promise<boolean> => {
 
 export default async function verifyDomain(
   req: ApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
+  next: any
 ): Promise<void> {
   if (process.env.MULTITENANT === "true") {
     const domainName = req.headers.host?.split(".")[0];
@@ -93,5 +96,6 @@ export default async function verifyDomain(
     }
 
     req.subdomain = domain;
+    next();
   }
 }

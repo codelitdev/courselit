@@ -81,6 +81,10 @@ export const responses = {
   school_title_not_set: "School title is not set",
   internal_error: "An internal error occurred. Please try again",
   publicly_inaccessible: "Image should be publicly accessible",
+  presigned_url_failed: "That did not work! Please go back and try again.",
+  file_uploaded: "The file is uploaded. Go back to see your media.",
+  media_deleted: "The media is deleted. Go back to see your media.",
+  invalid_access_type: "The access type can either be public or private.",
 };
 
 export const internal = {

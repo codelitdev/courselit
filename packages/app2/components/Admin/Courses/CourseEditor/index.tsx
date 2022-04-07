@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import { connect } from "react-redux";
 import {
   BTN_DELETE_COURSE,
@@ -47,17 +47,17 @@ import { ArrowBack, Delete } from "@mui/icons-material";
 import AppMessage from "../../../../ui-models/app-message";
 import { MIMETYPE_IMAGE, permissions } from "../../../../ui-config/constants";
 import FetchBuilder from "../../../../ui-lib/fetch";
-import { Section, RichText as TextEditor } from "../../../ComponentsLibrary";
+import { Section, RichText as TextEditor } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 import { AppDispatch } from "../../../../state/store";
 import State from "../../../../ui-models/state";
 import Profile from "../../../../ui-models/profile";
 import Auth from "../../../../ui-models/auth";
 import Address from "../../../../ui-models/address";
-const PREFIX = 'index';
+const PREFIX = "index";
 
 const classes = {
-  formControl: `${PREFIX}-formControl`
+  formControl: `${PREFIX}-formControl`,
 };
 
 const StyledGrid = styled(Grid)({
@@ -701,7 +701,4 @@ const mapDispatchToProps = (dispatch: AppDispatch) => ({
   dispatch: dispatch,
 });
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)((CourseEditor));
+export default connect(mapStateToProps, mapDispatchToProps)(CourseEditor);

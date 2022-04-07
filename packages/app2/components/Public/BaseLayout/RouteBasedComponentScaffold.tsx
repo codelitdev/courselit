@@ -1,5 +1,5 @@
 import React, { useState /* useEffect */ } from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import AppBar from "@mui/material/AppBar";
 import CssBaseline from "@mui/material/CssBaseline";
 import Drawer from "@mui/material/Drawer";
@@ -19,7 +19,7 @@ import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
 import State from "../../../ui-models/state";
 
-const PREFIX = 'RouteBasedComponentScaffold';
+const PREFIX = "RouteBasedComponentScaffold";
 const drawerWidth = 240;
 
 const classes = {
@@ -37,16 +37,10 @@ const classes = {
   showprogress: `${PREFIX}-showprogress`,
   hideprogress: `${PREFIX}-hideprogress`,
   menuTitle: `${PREFIX}-menuTitle`,
-  branding: `${PREFIX}-branding`
+  branding: `${PREFIX}-branding`,
 };
 
-const Root = styled('div')((
-  {
-    theme
-  } : {
-    theme: any;
-  }
-) => ({
+const Root = styled("div")(({ theme }: { theme: any }) => ({
   [`& .${classes.root}`]: {
     display: "flex",
   },
@@ -91,7 +85,7 @@ const Root = styled('div')((
     flexGrow: 1,
     [theme.breakpoints.up("sm")]: {
       width: `calc(100% - ${drawerWidth}px)`,
-      marginLeft: drawerWidth
+      marginLeft: drawerWidth,
     },
   },
 
@@ -132,7 +126,7 @@ const Root = styled('div')((
   [`&.${classes.branding}`]: {
     paddingLeft: theme.spacing(2),
     paddingRight: theme.spacing(2),
-  }
+  },
 }));
 
 const Branding = dynamic(() => import("./Branding"));
@@ -214,7 +208,8 @@ const ComponentScaffold = (props: any) => {
             edge="start"
             onClick={handleDrawerToggle}
             className={classes.menuButton}
-            size="large">
+            size="large"
+          >
             <Menu />
           </IconButton>
           <Header />
@@ -252,7 +247,11 @@ const ComponentScaffold = (props: any) => {
       </nav>
       <main className={classes.content}>
         <div className={classes.toolbar} />
-        <LinearProgress className={props.networkAction ? classes.showprogress : classes.hideprogress} />
+        <LinearProgress
+          className={
+            props.networkAction ? classes.showprogress : classes.hideprogress
+          }
+        />
         <Grid container className={classes.contentPadding}>
           <Grid item xs={12} className={classes.contentMain}>
             {props.children}

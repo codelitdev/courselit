@@ -1,26 +1,22 @@
 import React from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import PropTypes from "prop-types";
 import { Grid, useTheme } from "@mui/material";
 import { useRouter } from "next/router";
 import Section from "./Section";
 import { connect } from "react-redux";
 
-const PREFIX = 'Template';
+const PREFIX = "Template";
 
 const classes = {
   mainContent: `${PREFIX}-mainContent`,
   footerContainer: `${PREFIX}-footerContainer`,
   footer: `${PREFIX}-footer`,
-  padding: `${PREFIX}-padding`
+  padding: `${PREFIX}-padding`,
 };
 
 // TODO jss-to-styled codemod: The Fragment root was replaced by div. Change the tag if needed.
-const Root = styled('div')((
-  {
-    theme
-  }
-) => ({
+const Root = styled("div")(({ theme }) => ({
   [`& .${classes.mainContent}`]: Object.assign(
     {},
     {
@@ -50,7 +46,7 @@ const Root = styled('div')((
 
   [`& .${classes.padding}`]: {
     padding: theme.spacing(2),
-  }
+  },
 }));
 
 const Template = (props) => {
@@ -60,7 +56,7 @@ const Template = (props) => {
   const theme = useTheme();
 
   return (
-    (<Root>
+    <Root>
       <Grid
         container
         className={classes.mainContent}
@@ -139,7 +135,7 @@ const Template = (props) => {
           </Grid>
         </Grid>
       </div>
-    </Root>)
+    </Root>
   );
 };
 

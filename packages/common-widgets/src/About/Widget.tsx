@@ -5,7 +5,6 @@ import {
   RichText as TextEditor,
   Section,
 } from "@courselit/components-library";
-import { connect } from "react-redux";
 import Settings from "./Settings";
 import { makeStyles } from "@material-ui/styles";
 import { Grid, Theme } from "@material-ui/core";
@@ -63,8 +62,4 @@ const Widget = (props: AboutWidgetProps) => {
   );
 };
 
-const mapDispatchToProps = (dispatch: any) => ({
-  dispatch: dispatch,
-});
-
-export default connect(() => ({}), mapDispatchToProps)(Widget);
+export default Widget;

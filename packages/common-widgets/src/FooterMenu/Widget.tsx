@@ -1,5 +1,4 @@
 import * as React from "react";
-import { connect } from "react-redux";
 import { WidgetProps, AppState } from "@courselit/components-library";
 import { Grid, Theme, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
@@ -64,8 +63,4 @@ const Widget = (props: FooterMenuWidgetProps) => {
   );
 };
 
-const mapStateToProps = (state: AppState) => ({
-  navigation: state.navigation.filter((link) => link.category === "footer"),
-});
-
-export default connect(mapStateToProps)(Widget);
+export default Widget;

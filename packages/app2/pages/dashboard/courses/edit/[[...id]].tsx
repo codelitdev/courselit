@@ -2,11 +2,11 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import { MANAGE_COURSES_PAGE_HEADING } from "../../../../ui-config/strings";
 
-const BaseLayout = dynamic(() =>
-  import("../../../../components/Admin/BaseLayout")
+const BaseLayout = dynamic(
+  () => import("../../../../components/Admin/BaseLayout")
 );
-const CourseEditor = dynamic(() =>
-  import("../../../../components/Admin/Courses/CourseEditor")
+const CourseEditor = dynamic(
+  () => import("../../../../components/Admin/Courses/CourseEditor")
 );
 
 export default function CreatorCourses() {

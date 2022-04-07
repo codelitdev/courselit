@@ -1,8 +1,5 @@
-import types from './types';
-import {
-  getSiteInfo,
-  getSiteInfoAsAdmin
-} from './logic';
+import types from "./types";
+import { getSiteInfo, getSiteInfoAsAdmin } from "./logic";
 
 export default {
   getSiteInfo: {

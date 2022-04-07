@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import {
   Button,
   TextField,
@@ -40,7 +40,7 @@ import FetchBuilder from "../../../ui-lib/fetch";
 import { networkAction, setAppMessage } from "../../../state/actions";
 import { connect } from "react-redux";
 import AppMessage from "../../../ui-models/app-message";
-import { Section, RichText as TextEditor } from "../../ComponentsLibrary";
+import { Section, RichText as TextEditor } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 import { AppDispatch } from "../../../state/store";
 import State from "../../../ui-models/state";
@@ -48,25 +48,19 @@ import Auth from "../../../ui-models/auth";
 import Lesson from "../../../ui-models/lesson";
 import Address from "../../../ui-models/address";
 import { ThunkDispatch } from "redux-thunk";
-import { AnyAction } from 'redux';
+import { AnyAction } from "redux";
 
-const PREFIX = 'LessonEditor';
+const PREFIX = "LessonEditor";
 
 const classes = {
   formControl: `${PREFIX}-formControl`,
   controlRow: `${PREFIX}-controlRow`,
   editor: `${PREFIX}-editor`,
   editorLabel: `${PREFIX}-editorLabel`,
-  section: `${PREFIX}-section`
+  section: `${PREFIX}-section`,
 };
 
-const StyledSection = styled(Section)((
-  {
-    theme
-  } : {
-    theme: any;
-  }
-) => ({
+const StyledSection = styled(Section)(({ theme }: { theme: any }) => ({
   [`& .${classes.formControl}`]: {
     marginBottom: theme.spacing(2),
     minWidth: "100%",
@@ -99,7 +93,7 @@ const StyledSection = styled(Section)((
     paddingBottom: theme.spacing(2),
     paddingLeft: theme.spacing(1),
     paddingRight: theme.spacing(1),
-  }
+  },
 }));
 
 const AppDialog = dynamic(() => import("../../Public/AppDialog"));
@@ -227,10 +221,14 @@ const LessonEditor = (props: LessonEditorProps) => {
     try {
       (dispatch as ThunkDispatch<State, null, AnyAction>)(networkAction(true));
       await fetch.exec();
-      (dispatch as ThunkDispatch<State, null, AnyAction>)(setAppMessage(new AppMessage(APP_MESSAGE_LESSON_SAVED)));
+      (dispatch as ThunkDispatch<State, null, AnyAction>)(
+        setAppMessage(new AppMessage(APP_MESSAGE_LESSON_SAVED))
+      );
       props.onLessonUpdated();
     } catch (err: any) {
-      (dispatch as ThunkDispatch<State, null, AnyAction>)(setAppMessage(new AppMessage(err.message)));
+      (dispatch as ThunkDispatch<State, null, AnyAction>)(
+        setAppMessage(new AppMessage(err.message))
+      );
     } finally {
       (dispatch as ThunkDispatch<State, null, AnyAction>)(networkAction(false));
     }
@@ -268,10 +266,14 @@ const LessonEditor = (props: LessonEditorProps) => {
       if (response.lesson) {
         setLesson(Object.assign({}, lesson, { id: response.lesson.id }));
         props.onLessonUpdated();
-        (dispatch as ThunkDispatch<State, null, AnyAction>)(setAppMessage(new AppMessage(APP_MESSAGE_LESSON_SAVED)));
+        (dispatch as ThunkDispatch<State, null, AnyAction>)(
+          setAppMessage(new AppMessage(APP_MESSAGE_LESSON_SAVED))
+        );
       }
     } catch (err: any) {
-      (dispatch as ThunkDispatch<State, null, AnyAction>)(setAppMessage(new AppMessage(err.message)));
+      (dispatch as ThunkDispatch<State, null, AnyAction>)(
+        setAppMessage(new AppMessage(err.message))
+      );
     } finally {
       (dispatch as ThunkDispatch<State, null, AnyAction>)(networkAction(false));
     }
@@ -293,7 +295,9 @@ const LessonEditor = (props: LessonEditorProps) => {
         .build();
 
       try {
-        (dispatch as ThunkDispatch<State, null, AnyAction>)(networkAction(true));
+        (dispatch as ThunkDispatch<State, null, AnyAction>)(
+          networkAction(true)
+        );
         const response = await fetch.exec();
 
         if (response.result) {
@@ -303,7 +307,9 @@ const LessonEditor = (props: LessonEditorProps) => {
           props.onLessonUpdated(true);
         }
       } catch (err: any) {
-        (dispatch as ThunkDispatch<State, null, AnyAction>)(setAppMessage(new AppMessage(err.message)));
+        (dispatch as ThunkDispatch<State, null, AnyAction>)(
+          setAppMessage(new AppMessage(err.message))
+        );
       }
     }
   };

@@ -1,18 +1,11 @@
 const graphql = require("graphql");
 
-// const users = require("./users");
-// const lessons = require("./lessons");
-// const courses = require("./courses");
-// const settings = require("./settings");
-// const media = require("./media");
-// const design = require("./design");
-// const menus = require("./menus");
-// const widgets = require("./widgets");
-
 import users from "./users";
 import settings from "./settings";
-import media from './media';
-import design from './design';
+import media from "./media";
+import design from "./design";
+import menus from "./menus";
+import widgets from "./widgets";
 
 export default new graphql.GraphQLSchema({
   query: new graphql.GraphQLObjectType({
@@ -24,8 +17,8 @@ export default new graphql.GraphQLSchema({
       ...settings.queries,
       ...media.queries,
       ...design.queries,
-      // ...menus.queries,
-      // ...widgets.queries,
+      ...menus.queries,
+      ...widgets.queries,
     },
   }),
   mutation: new graphql.GraphQLObjectType({
@@ -37,8 +30,8 @@ export default new graphql.GraphQLSchema({
       ...settings.mutations,
       ...media.mutations,
       ...design.mutations,
-      // ...menus.mutations,
-      // ...widgets.mutations,
+      ...menus.mutations,
+      ...widgets.mutations,
     },
   }),
 });

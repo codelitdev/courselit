@@ -1,18 +1,18 @@
-import User from '../../models/User';
-import Course from '../../models/Course';
-import { responses} from '../../config/strings';
+import User from "../../models/User";
+import Course from "../../models/Course";
+import { responses } from "../../config/strings";
 // const {
 //   checkIfAuthenticated,
 //   makeModelTextSearchable,
 //   checkPermission,
 // } = require("../../lib/graphql");
-import { 
+import {
   makeModelTextSearchable,
   checkIfAuthenticated,
-  checkPermission 
-} from '../../lib/graphql';
-import mongoose from 'mongoose';
-import constants from '../../config/constants';
+  checkPermission,
+} from "../../lib/graphql";
+import mongoose from "mongoose";
+import constants from "../../config/constants";
 const { permissions } = constants;
 
 const ObjectId = mongoose.Types.ObjectId;
@@ -36,7 +36,7 @@ export const getUser = async (email = null, userId = null, ctx) => {
   }
 
   if (!email && !userId && loggedInUser) {
-    email = loggedUserEmail 
+    email = loggedUserEmail;
   }
 
   let user;

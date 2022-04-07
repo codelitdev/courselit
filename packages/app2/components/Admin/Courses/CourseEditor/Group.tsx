@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import { connect } from "react-redux";
 import {
   Grid,
@@ -31,23 +31,17 @@ import Group from "../../../../ui-models/group";
 import Lesson from "../../../../ui-models/lesson";
 import { ThunkDispatch } from "redux-thunk";
 import State from "../../../../ui-models/state";
-import { AnyAction } from 'redux';
+import { AnyAction } from "redux";
 
-const PREFIX = 'Group';
+const PREFIX = "Group";
 
 const classes = {
   lesson: `${PREFIX}-lesson`,
   selected: `${PREFIX}-selected`,
-  section: `${PREFIX}-section`
+  section: `${PREFIX}-section`,
 };
 
-const StyledAccordion = styled(Accordion)((
-  {
-    theme
-  } : {
-    theme: any;
-  }
-) => ({
+const StyledAccordion = styled(Accordion)(({ theme }: { theme: any }) => ({
   [`& .${classes.lesson}`]: {
     cursor: "pointer",
   },
@@ -64,18 +58,18 @@ const StyledAccordion = styled(Accordion)((
     borderRadius: 4,
     padding: theme.spacing(1),
     marginBottom: theme.spacing(2),
-  }
+  },
 }));
 
 interface GroupProps {
-  group: Group; 
+  group: Group;
   lessons: Lesson[];
   onAddLesson: (...args: any[]) => void;
   onRemoveGroup: (...args: any[]) => void;
   updateGroup: (...args: any[]) => void;
   onSelectLesson: (...args: any[]) => void;
   selectedLesson: {
-    groupId: string; 
+    groupId: string;
     index: number;
   };
   dispatch: AppDispatch;
@@ -90,7 +84,7 @@ const Group = ({
   onSelectLesson,
   selectedLesson,
   dispatch,
-} : GroupProps) => {
+}: GroupProps) => {
   const [name, setName] = useState(group.name);
   const [rank, setRank] = useState(group.rank);
   const [collapsed, setCollapsed] = useState(group.collapsed);
@@ -101,7 +95,9 @@ const Group = ({
     setCollapsed(group.collapsed);
   }, [group]);
 
-  const groupLessons = lessons.filter((lesson: Lesson) => lesson.groupId === group.id);
+  const groupLessons = lessons.filter(
+    (lesson: Lesson) => lesson.groupId === group.id
+  );
 
   const isDirty =
     group.name !== name || group.rank !== rank || group.collapsed !== collapsed;
@@ -247,7 +243,4 @@ const mapDispatchToProps = (dispatch: AppDispatch) => ({
   dispatch: dispatch,
 });
 
-export default connect(
-  () => ({}),
-  mapDispatchToProps
-)((Group));
+export default connect(() => ({}), mapDispatchToProps)(Group);

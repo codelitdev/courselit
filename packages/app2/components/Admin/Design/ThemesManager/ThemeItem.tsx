@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import { Grid, Button } from "@mui/material";
 import {
   BUTTON_THEME_APPLY,
@@ -13,25 +13,19 @@ import {
 import AppDialog from "../../../Public/AppDialog";
 import Theme from "../../../../ui-models/theme";
 
-const PREFIX = 'ThemeItem';
+const PREFIX = "ThemeItem";
 
 const classes = {
-  container: `${PREFIX}-container`
+  container: `${PREFIX}-container`,
 };
 
-const StyledGrid = styled(Grid)((
-  {
-    theme
-  } : {
-    theme: any;
-  }
-) => ({
+const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
   [`&.${classes.container}`]: {
     border: "1px solid transparent",
     "&:hover": {
       border: "1px solid #ccc",
     },
-  }
+  },
 }));
 
 interface ThemeItemProps {
@@ -39,7 +33,7 @@ interface ThemeItemProps {
   onApply: (...args: any[]) => void;
   onRemix: (...args: any[]) => void;
   onUninstall: (...args: any[]) => void;
-};
+}
 
 const ThemeItem = (props: ThemeItemProps) => {
   const [
@@ -121,6 +115,5 @@ const ThemeItem = (props: ThemeItemProps) => {
     </StyledGrid>
   );
 };
-
 
 export default ThemeItem;

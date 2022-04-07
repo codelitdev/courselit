@@ -1,8 +1,8 @@
-import Media from './media';
+import Media from "./media";
 
 export default interface Lesson {
   id: string;
-  title: string; 
+  title: string;
   type: string;
   content: string;
   media: Media;

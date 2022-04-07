@@ -10,12 +10,13 @@ class Fetch {
   constructor(
     private url: string,
     private payload: any,
+    private httpMethod: string,
     private isGraphQLEndpoint?: boolean
   ) {}
 
   async exec() {
     const fetchOptions: Record<string, any> = {
-      method: "POST",
+      method: this.httpMethod,
       credentials: "same-origin",
       headers: {},
     };
@@ -30,11 +31,15 @@ class Fetch {
     let response: Record<string, any> = await fetch(this.url, fetchOptions);
 
     if (response.status === 401) {
-      typeof window !== "undefined" && Router.push("/logout");
+      typeof window !== "undefined" && Router.replace("/logout");
       return;
     }
 
     response = await response.json();
+
+    if (response.error) {
+      throw new Error(response.error);
+    }
 
     if (response.errors && response.errors.length > 0) {
       throw new Error(response.errors[0].message);
@@ -49,6 +54,7 @@ class FetchBuilder {
   private payload: any;
   private token: string = "";
   private isGraphQLEndpoint: boolean = false;
+  private httpMethod: string = "POST";
 
   setUrl(url: string) {
     this.url = url;
@@ -70,8 +76,18 @@ class FetchBuilder {
     return this;
   }
 
+  setHttpMethod(httpMethod: string) {
+    this.httpMethod = httpMethod;
+    return this;
+  }
+
   build() {
-    return new Fetch(this.url, this.payload, this.isGraphQLEndpoint);
+    return new Fetch(
+      this.url,
+      this.payload,
+      this.httpMethod,
+      this.isGraphQLEndpoint
+    );
   }
 }
 

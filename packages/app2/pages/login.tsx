@@ -6,8 +6,8 @@ import {
   LOGIN_SECTION_HEADER,
   ERROR_SIGNIN_GENERATING_LINK,
   SIGNIN_SUCCESS_PREFIX,
-} from "../ui-config/strings"
-import { Section } from "../components/ComponentsLibrary";
+} from "../ui-config/strings";
+import { Section } from "@courselit/components-library";
 import { Grid, TextField, Button, Typography } from "@mui/material";
 import { useRouter } from "next/router";
 import Address from "../ui-models/address";
@@ -17,7 +17,7 @@ import { connect } from "react-redux";
 import { signedIn, networkAction, setAppMessage } from "../state/actions";
 import AppMessage from "../ui-models/app-message";
 import { ThunkDispatch } from "redux-thunk";
-import { AnyAction } from 'redux';
+import { AnyAction } from "redux";
 
 const BaseLayout = dynamic(() => import("../components/Public/BaseLayout"));
 
@@ -36,7 +36,6 @@ const Login = ({ address, auth, dispatch, progress }: LoginProps) => {
   useEffect(() => {
     if (!auth.guest) {
       const { query } = router;
-      console.log(query);
       query.redirect ? router.push(`${query.redirect}`) : router.push("/");
     }
   });
@@ -70,7 +69,7 @@ const Login = ({ address, auth, dispatch, progress }: LoginProps) => {
 
     try {
       dispatch(networkAction(true));
-      let response = await fetch('/api/auth/login', {
+      let response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

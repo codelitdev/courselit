@@ -1,5 +1,5 @@
 import React, { ReactChildren, useEffect } from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
 import {
@@ -25,10 +25,10 @@ import SiteInfo from "../../ui-models/site-info";
 import Address from "../../ui-models/address";
 const { permissions } = constants;
 
-const PREFIX = 'BaseLayout';
+const PREFIX = "BaseLayout";
 
 const classes = {
-  loaderContainer: `${PREFIX}-loaderContainer`
+  loaderContainer: `${PREFIX}-loaderContainer`,
 };
 
 const StyledGrid = styled(Grid)({
@@ -119,8 +119,8 @@ const getSidebarMenuItems = (profile: Profile) => {
 interface BaseLayoutProps {
   auth: Auth;
   profile: Profile;
-  siteInfo: SiteInfo,
-  children: ReactChildren,
+  siteInfo: SiteInfo;
+  children: ReactChildren;
   title: string;
   address: Address;
 }

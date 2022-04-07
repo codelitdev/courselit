@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import AppBar from "@mui/material/AppBar";
 import CssBaseline from "@mui/material/CssBaseline";
 import Drawer from "@mui/material/Drawer";
@@ -25,7 +25,7 @@ import { siteInfoProps } from "../../../types";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import dynamic from "next/dynamic";
 
-const PREFIX = 'ComponentScaffold';
+const PREFIX = "ComponentScaffold";
 
 const classes = {
   root: `${PREFIX}-root`,
@@ -42,14 +42,10 @@ const classes = {
   showProgressBar: `${PREFIX}-showProgressBar`,
   menuTitle: `${PREFIX}-menuTitle`,
   branding: `${PREFIX}-branding`,
-  subheader: `${PREFIX}-subheader`
+  subheader: `${PREFIX}-subheader`,
 };
 
-const Root = styled('div')((
-  {
-    theme
-  }
-) => ({
+const Root = styled("div")(({ theme }) => ({
   [`& .${classes.root}`]: {
     display: "flex",
   },
@@ -131,7 +127,7 @@ const Root = styled('div')((
 
   [`& .${classes.subheader}`]: {
     marginTop: theme.spacing(3),
-  }
+  },
 }));
 
 const Branding = dynamic(() => import("./Branding"));
@@ -139,12 +135,11 @@ const Branding = dynamic(() => import("./Branding"));
 const drawerWidth = 240;
 
 const ComponentScaffold = (props) => {
-
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [visibleComponent, setVisibleComponent] = useState();
   const [activeItemIndex, setActiveItemIndex] = useState(0);
-  const matches = useMediaQuery((theme) => theme.breakpoints.down('sm'));
+  const matches = useMediaQuery((theme) => theme.breakpoints.down("sm"));
   const [firstLoad, setFirstLoad] = useState(false);
 
   useEffect(() => {
@@ -224,7 +219,8 @@ const ComponentScaffold = (props) => {
             edge="start"
             onClick={handleDrawerToggle}
             className={classes.menuButton}
-            size="large">
+            size="large"
+          >
             <Menu />
           </IconButton>
           <Header />

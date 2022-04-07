@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import { Button, ImageListItemBar } from "@mui/material";
 import {
   USERS_MANAGER_PAGE_HEADING,
@@ -9,7 +9,7 @@ import {
 import FetchBuilder from "../../../ui-lib/fetch";
 import { connect } from "react-redux";
 import { networkAction } from "../../../state/actions";
-import { OverviewAndDetail } from "../../ComponentsLibrary";
+import { OverviewAndDetail } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 import Auth from "../../../ui-models/auth";
 import Address from "../../../ui-models/address";
@@ -17,22 +17,20 @@ import { AppDispatch } from "../../../state/store";
 import Profile from "../../../ui-models/profile";
 import { ThunkDispatch } from "redux-thunk";
 import State from "../../../ui-models/state";
-import { AnyAction } from 'redux';
+import { AnyAction } from "redux";
 import User from "../../../ui-models/user";
 
-const PREFIX = 'index';
+const PREFIX = "index";
 
 const classes = {
-  btn: `${PREFIX}-btn`
+  btn: `${PREFIX}-btn`,
 };
 
-const StyledOverviewAndDetail
- = styled(OverviewAndDetail
-)(() => ({
+const StyledOverviewAndDetail = styled(OverviewAndDetail)(() => ({
   [`& .${classes.btn}`]: {
     width: "100%",
     height: "100%",
-  }
+  },
 }));
 
 const Img = dynamic(() => import("../../Img"));
@@ -45,7 +43,12 @@ interface UserManagerProps {
   profile: Profile;
 }
 
-const UsersManager = ({ auth, address, dispatch, profile } : UserManagerProps) => {
+const UsersManager = ({
+  auth,
+  address,
+  dispatch,
+  profile,
+}: UserManagerProps) => {
   const [usersPaginationOffset, setUsersPaginationOffset] = useState(1);
   const [users, setUsers] = useState<User[]>([]);
   const [componentsMap, setComponentsMap] = useState<any[]>([]);
@@ -75,7 +78,6 @@ const UsersManager = ({ auth, address, dispatch, profile } : UserManagerProps) =
     try {
       (dispatch as ThunkDispatch<State, null, AnyAction>)(networkAction(true));
       const response = await fetch.exec();
-      console.log(response);
       if (response.users && response.users.length > 0) {
         setUsers([...users, ...response.users]);
         setUsersPaginationOffset(usersPaginationOffset + 1);

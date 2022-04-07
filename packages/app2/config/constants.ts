@@ -95,6 +95,9 @@ export default {
   severityInfo: "info",
   severityWarn: "warn",
 
+  // limits
+  mediaRecordsPerPage: 10,
+
   // acceptable currency codes for payments
   currencyISOCodes: [
     "afn",

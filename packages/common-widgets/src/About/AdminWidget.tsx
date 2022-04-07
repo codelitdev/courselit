@@ -5,7 +5,6 @@ import {
   RichText as TextEditor,
   Section,
 } from "@courselit/components-library";
-import { connect } from "react-redux";
 import { Button, Grid, Typography } from "@material-ui/core";
 import Settings from "./Settings";
 
@@ -24,6 +23,10 @@ const AdminWidget = (props: AboutWidgetProps) => {
   React.useEffect(() => {
     getSettings();
   }, []);
+
+  React.useEffect(() => {
+    console.log(props);
+  });
 
   const getSettings = async () => {
     const settings = await WidgetHelpers.getWidgetSettings({
@@ -104,12 +107,4 @@ const AdminWidget = (props: AboutWidgetProps) => {
   );
 };
 
-const mapStateToProps = (state: any) => ({
-  auth: state.auth,
-});
-
-const mapDispatchToProps = (dispatch: any) => ({
-  dispatch: dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(AdminWidget);
+export default AdminWidget;

@@ -14,8 +14,8 @@ const OverviewList = ({
   onSelectComponentWithDetail,
   onSelectComponentWithoutDetail,
 }: OverviewProps) => {
-  const tablet = useMediaQuery((theme: any) => theme.breakpoints.down('md'));
-  const mobile = useMediaQuery((theme: any) => theme.breakpoints.down('sm'));
+  const tablet = useMediaQuery((theme: any) => theme.breakpoints.down("md"));
+  const mobile = useMediaQuery((theme: any) => theme.breakpoints.down("sm"));
 
   return (
     <Section>

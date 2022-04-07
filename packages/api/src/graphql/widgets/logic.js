@@ -1,15 +1,10 @@
-/**
- * Business logic for managing widgets information.
- */
-
-// TODO: Write tests for this file.
 const { permissions } = require("../../config/constants.js");
 const strings = require("../../config/strings.js");
 const {
   checkIfAuthenticated,
   checkPermission,
 } = require("../../lib/graphql.js");
-const Widget = require("../../models/Widget.js");
+const Widget = require("../../models/Widget");
 
 exports.getWidgetSettings = async (name, ctx) => {
   const widget = await Widget.findOne({ name, domain: ctx.subdomain._id });

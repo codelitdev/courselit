@@ -8,7 +8,7 @@ interface ImgProps {
   classes?: string;
   alt?: string;
   defaultImage?: string;
-};
+}
 
 const Img = (props: ImgProps) => {
   const { src, classes, alt, defaultImage } = props;
@@ -30,7 +30,6 @@ const Img = (props: ImgProps) => {
     </>
   );
 };
-
 
 const mapStateToProps = (state: typeof defaultState) => ({
   address: state.address,

@@ -1,19 +1,11 @@
 import React, { useState } from "react";
-import {
-  Button,
-  TextField,
-  Grid,
-  Typography,
-  Checkbox,
-} from "@mui/material";
+import { Button, Grid, Typography, Checkbox } from "@mui/material";
 import {
   APP_MESSAGE_CHANGES_SAVED,
   DELETE_MEDIA_POPUP_HEADER,
   POPUP_CANCEL_ACTION,
   POPUP_OK_ACTION,
   BUTTON_DELETE_MEDIA,
-  BUTTON_SAVE,
-  MEDIA_EDITOR_HEADER_EDIT_DETAILS,
   MEDIA_PUBLIC,
 } from "../../../ui-config/strings";
 import dynamic from "next/dynamic";
@@ -24,13 +16,14 @@ import { connect } from "react-redux";
 import { networkAction, setAppMessage } from "../../../state/actions";
 import { useRouter } from "next/router";
 import fetch from "isomorphic-unfetch";
-import { Section } from "../../ComponentsLibrary";
+import { Section } from "@courselit/components-library";
 import Auth from "../../../ui-models/auth";
 import Address from "../../../ui-models/address";
 import State from "../../../ui-models/state";
-import { AnyAction } from 'redux';
-import { ThunkDispatch } from 'redux-thunk';
+import { AnyAction } from "redux";
+import { ThunkDispatch } from "redux-thunk";
 import { AppDispatch, RootState } from "../../../state/store";
+import { responses } from "../../../config/strings";
 
 const AppDialog = dynamic(() => import("../../Public/AppDialog"));
 const MediaPreview = dynamic(() => import("./MediaPreview"));
@@ -41,7 +34,7 @@ interface EditorProps {
   address: Address;
   dispatch: AppDispatch;
   onMediaEdited: () => void;
-  onMediaDeleted: () => void;
+  onMediaDeleted: (id: string) => void;
 }
 
 function Editor({
@@ -69,32 +62,22 @@ function Editor({
 
     try {
       (dispatch as ThunkDispatch<State, null, AnyAction>)(networkAction(true));
-      const res = await fetch(
-        `${address.backend}/media/${mediaBeingEdited.id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${auth.token}`,
-          },
-        }
+      const fetch = new FetchBuilder()
+        .setUrl(`${address.backend}/api/media/${mediaBeingEdited.mediaId}`)
+        .setHttpMethod("delete")
+        .build();
+
+      const response = await fetch.exec();
+      (dispatch as ThunkDispatch<State, null, AnyAction>)(
+        setAppMessage(new AppMessage(responses.media_deleted))
       );
-
-      if (res.status === 401) {
-        Router.push("/login");
-        return;
-      }
-
-      const { message } = await res.json();
-      if (res.status === 200) {
-        dispatch(setAppMessage(new AppMessage(message)));
-        onMediaDeleted(mediaBeingEdited.id);
-      } else {
-        throw new Error(message);
-      }
-    } catch (err) {
-      dispatch(setAppMessage(new AppMessage(err.message)));
+      onMediaDeleted(mediaBeingEdited.id);
+    } catch (err: any) {
+      (dispatch as ThunkDispatch<State, null, AnyAction>)(
+        setAppMessage(new AppMessage(err.message))
+      );
     } finally {
-      dispatch(networkAction(false));
+      (dispatch as ThunkDispatch<State, null, AnyAction>)(networkAction(false));
     }
   };
 
@@ -149,8 +132,30 @@ function Editor({
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12} md={6}>
+      <Grid item xs={12}>
         <Section>
+          <Grid container alignItems="center" justifyContent="space-between">
+            <Grid item>
+              <Typography variant="body1">{MEDIA_PUBLIC}</Typography>
+            </Grid>
+            <Grid item>
+              <Checkbox
+                name="public"
+                checked={mediaBeingEdited.public}
+                onChange={onMediaBeingEditedChanged}
+                disabled={true}
+              />
+            </Grid>
+          </Grid>
+          <Button
+            onClick={() => setDeleteMediaPopupOpened(true)}
+            variant="outlined"
+            color="error"
+          >
+            {BUTTON_DELETE_MEDIA}
+          </Button>
+        </Section>
+        {/* <Section>
           <Grid container direction="column" spacing={1}>
             <Grid item>
               <Typography variant="h4">
@@ -196,11 +201,11 @@ function Editor({
               </form>
             </Grid>
           </Grid>
-        </Section>
+        </Section> */}
       </Grid>
-      <Grid item xs={12} md={6}>
+      {/* <Grid item xs={12} md={6}>
         <MediaPreview item={media} />
-      </Grid>
+      </Grid> */}
       <AppDialog
         onOpen={deleteMediaPopupOpened}
         onClose={closeDeleteMediaPopup}

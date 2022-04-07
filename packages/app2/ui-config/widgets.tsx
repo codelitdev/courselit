@@ -16,4 +16,3 @@ const getAllWidgets = (): Record<string, any> => {
 };
 
 export default getAllWidgets();
-

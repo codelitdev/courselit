@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import { Grid, Typography, Switch } from "@mui/material";
 import { connect } from "react-redux";
 import {
@@ -9,31 +9,25 @@ import {
 import FetchBuilder from "../../../ui-lib/fetch";
 import { networkAction, setAppMessage } from "../../../state/actions";
 import AppMessage from "../../../ui-models/app-message";
-import { Section } from "../../ComponentsLibrary";
+import { Section } from "@courselit/components-library";
 import PermissionsEditor from "./PermissionsEditor";
 import Address from "../../../ui-models/address";
 import Auth from "../../../ui-models/auth";
 import { AppDispatch } from "../../../state/store";
 import State from "../../../ui-models/state";
 import { ThunkDispatch } from "redux-thunk";
-import { AnyAction } from 'redux';
+import { AnyAction } from "redux";
 
-const PREFIX = 'Details';
+const PREFIX = "Details";
 
 const classes = {
   container: `${PREFIX}-container`,
   enrolledCourseItem: `${PREFIX}-enrolledCourseItem`,
-  fullHeight: `${PREFIX}-fullHeight`
+  fullHeight: `${PREFIX}-fullHeight`,
 };
 
 // TODO jss-to-styled codemod: The Fragment root was replaced by div. Change the tag if needed.
-const Root = styled('div')((
-  {
-    theme
-  } : {
-    theme: any
-  }
-) => ({
+const Root = styled("div")(({ theme }: { theme: any }) => ({
   [`& .${classes.container}`]: {},
 
   [`& .${classes.enrolledCourseItem}`]: {
@@ -42,14 +36,14 @@ const Root = styled('div')((
 
   [`& .${classes.fullHeight}`]: {
     height: "100%",
-  }
+  },
 }));
 
 interface DetailsProps {
   userId: string;
   auth: Auth;
   address: Address;
-  dispatch: ThunkDispatch<State, null, AnyAction> 
+  dispatch: ThunkDispatch<State, null, AnyAction>;
 }
 
 const Details = ({ userId, auth, address, dispatch }: DetailsProps) => {

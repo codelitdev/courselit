@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import { Grid, Typography, IconButton, Button } from "@mui/material";
 import {
   CARD_HEADER_PAGE_LAYOUT,
@@ -24,7 +24,7 @@ import {
 } from "../../../../state/actions";
 import AppMessage from "../../../../ui-models/app-message";
 import widgets from "../../../../ui-config/widgets";
-import { Section } from "../../../ComponentsLibrary";
+import { Section } from "@courselit/components-library";
 import FetchBuilder from "../../../../ui-lib/fetch";
 import dynamic from "next/dynamic";
 import State from "../../../../ui-models/state";
@@ -32,11 +32,11 @@ import Auth from "../../../../ui-models/auth";
 import Address from "../../../../ui-models/address";
 import Profile from "../../../../ui-models/profile";
 import { ThunkDispatch } from "redux-thunk";
-import { AnyAction } from 'redux';
+import { AnyAction } from "redux";
 import { AppDispatch } from "../../../../state/store";
 import Layout from "../../../../ui-models/layout";
 
-const PREFIX = 'index';
+const PREFIX = "index";
 
 const classes = {
   container: `${PREFIX}-container`,
@@ -51,16 +51,10 @@ const classes = {
   section: `${PREFIX}-section`,
   sectionHeader: `${PREFIX}-sectionHeader`,
   footerContainer: `${PREFIX}-footerContainer`,
-  footer: `${PREFIX}-footer`
+  footer: `${PREFIX}-footer`,
 };
 
-const StyledGrid = styled(Grid)((
-  {
-    theme
-  } : {
-    theme: any;
-  }
-) => ({
+const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
   [`& .${classes.container}`]: {
     borderRadius: theme.spacing(1),
     overflow: "hidden",
@@ -113,19 +107,19 @@ const StyledGrid = styled(Grid)((
   },
 
   [`& .${classes.footerContainer}`]: Object.assign({}, theme.footerContainer),
-  [`& .${classes.footer}`]: Object.assign({}, theme.footer)
+  [`& .${classes.footer}`]: Object.assign({}, theme.footer),
 }));
 
 const AddComponentDialog = dynamic(() => import("./AddComponentDialog"));
 const AddedComponent = dynamic(() => import("./AddedComponent"));
 
 interface PageDesignerProps {
-  layout: Layout; 
+  layout: Layout;
   auth: Auth;
   dispatch: ThunkDispatch<State, null, AnyAction>;
   address: Address;
   profile: Profile;
-};
+}
 
 const PageDesigner = (props: PageDesignerProps) => {
   const [
@@ -275,7 +269,8 @@ const PageDesigner = (props: PageDesignerProps) => {
                         color="primary"
                         aria-label="add component to the top section"
                         onClick={() => openAddComponentDialog("top")}
-                        size="large">
+                        size="large"
+                      >
                         <Add />
                       </IconButton>
                     </Grid>
@@ -329,7 +324,8 @@ const PageDesigner = (props: PageDesignerProps) => {
                                 color="primary"
                                 aria-label="add component to main section"
                                 onClick={() => openAddComponentDialog("bottom")}
-                                size="large">
+                                size="large"
+                              >
                                 <Add />
                               </IconButton>
                             </Grid>
@@ -369,7 +365,8 @@ const PageDesigner = (props: PageDesignerProps) => {
                               color="primary"
                               aria-label="add component to main section"
                               onClick={() => openAddComponentDialog("aside")}
-                              size="large">
+                              size="large"
+                            >
                               <Add />
                             </IconButton>
                           </Grid>
@@ -415,7 +412,8 @@ const PageDesigner = (props: PageDesignerProps) => {
                           color="primary"
                           aria-label="add component to the footer's left section"
                           onClick={() => openAddComponentDialog("footerLeft")}
-                          size="large">
+                          size="large"
+                        >
                           <Add />
                         </IconButton>
                       </Grid>
@@ -441,7 +439,8 @@ const PageDesigner = (props: PageDesignerProps) => {
                           color="primary"
                           aria-label="add component to the footer section"
                           onClick={() => openAddComponentDialog("footerRight")}
-                          size="large">
+                          size="large"
+                        >
                           <Add />
                         </IconButton>
                       </Grid>
@@ -471,7 +470,6 @@ const PageDesigner = (props: PageDesignerProps) => {
     </StyledGrid>
   );
 };
-
 
 const mapStateToProps = (state: State) => ({
   layout: state.layout,

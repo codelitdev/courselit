@@ -1,30 +1,25 @@
 import React from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import PropTypes from "prop-types";
 import { Typography, Grid } from "@mui/material";
 import { USER_ERROR_HEADER } from "../config/strings";
 import { Section } from "@courselit/components-library";
 import BaseLayout from "./Public/BaseLayout";
 
-const PREFIX = 'AppError';
+const PREFIX = "AppError";
 
 const classes = {
-  header: `${PREFIX}-header`
+  header: `${PREFIX}-header`,
 };
 
-const StyledBaseLayout = styled(BaseLayout)((
-  {
-    theme
-  }
-) => ({
+const StyledBaseLayout = styled(BaseLayout)(({ theme }) => ({
   [`& .${classes.header}`]: {
     marginBottom: theme.spacing(1),
-  }
+  },
 }));
 
 const AppError = (props) => {
   const { error } = props;
-
 
   return (
     <StyledBaseLayout>

@@ -8,7 +8,7 @@ import defaultState from "../../../state/default-state.js";
 interface MasterLayoutProps {
   title: string;
   siteInfo: any;
-  children: ReactChildren
+  children: ReactChildren;
 }
 
 const MasterLayout = (props: MasterLayoutProps) => {

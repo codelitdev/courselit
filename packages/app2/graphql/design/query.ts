@@ -1,13 +1,7 @@
-import {
-  GraphQLList
-} from 'graphql'
-import GQLContext from '../../models/GQLContext';
-import types from './types';
-import {
-  getTheme,
-  getAllThemes,
-  getLayout
-} from './logic';
+import { GraphQLList } from "graphql";
+import GQLContext from "../../models/GQLContext";
+import types from "./types";
+import { getTheme, getAllThemes, getLayout } from "./logic";
 
 export default {
   getTheme: {
@@ -16,7 +10,8 @@ export default {
   },
   getAllThemes: {
     type: new GraphQLList(types.themeType),
-    resolve: (_: any, { a = {} }: any, context: GQLContext) => getAllThemes(context),
+    resolve: (_: any, { a = {} }: any, context: GQLContext) =>
+      getAllThemes(context),
   },
   getLayout: {
     type: types.layoutType,

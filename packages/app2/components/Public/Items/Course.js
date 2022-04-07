@@ -1,26 +1,22 @@
 import React from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import PropTypes from "prop-types";
 import Link from "next/link";
 import { URL_EXTENTION_COURSES } from "../../../config/constants.js";
 import { Grid, Typography } from "@mui/material";
-import { PriceTag } from "../../ComponentsLibrary";
+import { PriceTag } from "@courselit/components-library";
 import { FREE_COST } from "../../../config/strings.js";
 import Img from "../../Img.js";
 
-const PREFIX = 'Course';
+const PREFIX = "Course";
 
 const classes = {
   link: `${PREFIX}-link`,
   featuredImage: `${PREFIX}-featuredImage`,
-  title: `${PREFIX}-title`
+  title: `${PREFIX}-title`,
 };
 
-const StyledGrid = styled(Grid)((
-  {
-    theme
-  }
-) => ({
+const StyledGrid = styled(Grid)(({ theme }) => ({
   [`& .${classes.link}`]: {
     textDecoration: "none",
     color: "inherit",
@@ -36,12 +32,10 @@ const StyledGrid = styled(Grid)((
   [`& .${classes.title}`]: {
     marginTop: theme.spacing(2),
     marginBottom: theme.spacing(0.5),
-  }
+  },
 }));
 
 const Course = (props) => {
-
-
   return (
     <StyledGrid item xs={12} md={6}>
       <Link

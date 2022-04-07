@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import PropTypes from "prop-types";
 import { Grid, Button, Typography } from "@mui/material";
 import { Add } from "@mui/icons-material";
@@ -10,7 +10,7 @@ import {
   COURSE_STRUCTURE_SELECT_LESSON,
   SECTION_GROUP_HEADER,
 } from "../../../../ui-config/strings";
-import { Section, RichText as TextEditor } from "../../../ComponentsLibrary";
+import { Section, RichText as TextEditor } from "@courselit/components-library";
 import { connect } from "react-redux";
 import FetchBuilder from "../../../../ui-lib/fetch";
 import { networkAction, setAppMessage } from "../../../../state/actions";
@@ -22,20 +22,14 @@ import Lesson from "../../../../ui-models/lesson";
 import State from "../../../../ui-models/state";
 import { AppDispatch } from "../../../../state/store";
 
-const PREFIX = 'CourseStructureEditor';
+const PREFIX = "CourseStructureEditor";
 
 const classes = {
   groupsContainer: `${PREFIX}-groupsContainer`,
-  placeholder: `${PREFIX}-placeholder`
+  placeholder: `${PREFIX}-placeholder`,
 };
 
-const StyledGrid = styled(Grid)((
-  {
-    theme
-  } : {
-    theme: any;
-  }
-) => ({
+const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
   [`& .${classes.groupsContainer}`]: {
     maxHeight: 720,
     overflowY: "scroll",
@@ -45,7 +39,7 @@ const StyledGrid = styled(Grid)((
     padding: theme.spacing(4),
     border: "2px dashed #eee",
     textAlign: "center",
-  }
+  },
 }));
 
 const LessonEditor = dynamic(() => import("../LessonEditor"));
@@ -67,7 +61,7 @@ const CourseStructureEditor = ({
   address,
   dispatch,
   classes,
-} : CourseStructureEditorProps) => {
+}: CourseStructureEditorProps) => {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [groups, setGroups] = useState<any>([]);
   const [selectedLesson, setSelectedLesson] = useState<Lesson>({});
@@ -116,7 +110,12 @@ const CourseStructureEditor = ({
     }
   };
 
-  const updateGroup = async ({ id, name, rank, collapsed } : {
+  const updateGroup = async ({
+    id,
+    name,
+    rank,
+    collapsed,
+  }: {
     id: string;
     name: string;
     rank: number;
@@ -183,8 +182,8 @@ const CourseStructureEditor = ({
           originalFileName: "",
           file: "",
           mimeType: "",
-          public: false
-        }, 
+          public: false,
+        },
         downloadable: false,
         requiresEnrollment: false,
         courseId,
@@ -347,4 +346,4 @@ const mapDispatchToProps = (dispatch: AppDispatch) => ({
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)((CourseStructureEditor));
+)(CourseStructureEditor);

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import PropTypes from "prop-types";
 import {
   Button,
@@ -24,7 +24,7 @@ import {
   SEARCH_TEXTBOX_PLACEHOLDER,
 } from "../../../ui-config/strings";
 import FetchBuilder from "../../../ui-lib/fetch";
-import { Section } from "../../ComponentsLibrary";
+import { Section } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 import { networkAction } from "../../../state/actions";
 import { checkPermission } from "../../../ui-lib/utils";
@@ -37,19 +37,15 @@ import Auth from "../../../ui-models/auth";
 import Profile from "../../../ui-models/profile";
 import Address from "../../../ui-models/address";
 
-const PREFIX = 'index';
+const PREFIX = "index";
 
 const classes = {
   avatar: `${PREFIX}-avatar`,
   listItem: `${PREFIX}-listItem`,
-  listItemText: `${PREFIX}-listItemText`
+  listItemText: `${PREFIX}-listItemText`,
 };
 
-const StyledGrid = styled(Grid)((
-  {
-    theme
-  }
-) => ({
+const StyledGrid = styled(Grid)(({ theme }) => ({
   [`& .${classes.avatar}`]: {
     height: "50px !important",
     [theme.breakpoints.up("md")]: {
@@ -65,7 +61,7 @@ const StyledGrid = styled(Grid)((
 
   [`& .${classes.listItemText}`]: {
     paddingLeft: theme.spacing(1),
-  }
+  },
 }));
 
 const Img = dynamic(() => import("../../Img"));
@@ -82,7 +78,6 @@ const Index = (props: IndexProps) => {
   const [creatorCourses, setCreatorCourses] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [searchState, setSearchState] = useState(0);
-
 
   useEffect(() => {
     loadCreatorCourses();
@@ -180,7 +175,12 @@ const Index = (props: IndexProps) => {
                     onChange={(e) => setSearchText(e.target.value)}
                     endAdornment={
                       <InputAdornment position="end">
-                        <IconButton aria-label="search" edge="end" type="submit" size="large">
+                        <IconButton
+                          aria-label="search"
+                          edge="end"
+                          type="submit"
+                          size="large"
+                        >
                           <Search />
                         </IconButton>
                       </InputAdornment>

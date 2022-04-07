@@ -19,9 +19,9 @@ import CompatibleComponentsMapModel from "../../../../ui-models/compatible-compo
 interface AddComponentDialogProps {
   onOpen: boolean;
   onClose: (...args: any[]) => void;
-  title: string; 
+  title: string;
   showComponentsCompatibleWith: keyof CompatibleComponentsMapModel;
-};
+}
 
 const AddComponentDialog = (props: AddComponentDialogProps) => {
   const { onClose, onOpen, showComponentsCompatibleWith } = props;

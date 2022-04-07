@@ -1,14 +1,14 @@
 import React from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import { ListItem, ListItemIcon, Typography } from "@mui/material";
 import { OpenInNew } from "@mui/icons-material";
 import Link from "next/link";
 import LinkModel from "../../../../ui-models/link";
 
-const PREFIX = 'MenuItem';
+const PREFIX = "MenuItem";
 
 const classes = {
-  externalLink: `${PREFIX}-externalLink`
+  externalLink: `${PREFIX}-externalLink`,
 };
 
 const StyledLink = styled(Link)({
@@ -21,12 +21,11 @@ const StyledLink = styled(Link)({
 
 interface MenuItemProps {
   link: LinkModel;
-  closeDrawer: (...args: any[]) => void
+  closeDrawer: (...args: any[]) => void;
 }
 
 const MenuItem = (props: MenuItemProps) => {
   const { link } = props;
-
 
   return link.destination.indexOf("http") !== -1 || link.newTab ? (
     <a

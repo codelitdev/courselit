@@ -3,27 +3,23 @@
  */
 
 import React from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import { Link, Grid, Typography } from "@mui/material";
 import dynamic from "next/dynamic";
 import { connect } from "react-redux";
 import defaultState from "../../../state/default-state";
 
-const PREFIX = 'Branding';
+const PREFIX = "Branding";
 
 const classes = {
   toolbar: `${PREFIX}-toolbar`,
   logoAdjustment: `${PREFIX}-logoAdjustment`,
   logocontainer: `${PREFIX}-logocontainer`,
   logoimg: `${PREFIX}-logoimg`,
-  siteName: `${PREFIX}-siteName`
+  siteName: `${PREFIX}-siteName`,
 };
 
-const StyledLink = styled(Link)((
-  {
-    theme 
-  }
-) => ({
+const StyledLink = styled(Link)(({ theme }) => ({
   [`& .${classes.toolbar}`]: theme.mixins.toolbar,
   [`& .${classes.logoAdjustment}`]: {},
 
@@ -48,22 +44,23 @@ const StyledLink = styled(Link)((
       display: "none",
     },
     theme.siteName
-  )
+  ),
 }));
 
 const Img = dynamic(() => import("../../Img"));
 
 interface BrandingProps {
-  siteinfo: typeof defaultState.siteinfo,
+  siteinfo: typeof defaultState.siteinfo;
 }
 
-const Branding = ({  siteinfo }: BrandingProps) => {
+const Branding = ({ siteinfo }: BrandingProps) => {
   return (
     <StyledLink
       href="/"
       color="inherit"
       style={{ textDecoration: "none" }}
-      underline="hover">
+      underline="hover"
+    >
       <Grid
         container
         alignItems="center"
@@ -80,9 +77,8 @@ const Branding = ({  siteinfo }: BrandingProps) => {
   );
 };
 
-
 const mapStateToProps = (state: typeof defaultState) => ({
   siteinfo: state.siteinfo,
 });
 
-export default connect(mapStateToProps)((Branding));
+export default connect(mapStateToProps)(Branding);

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { styled } from '@mui/material/styles';
-import PropTypes from "prop-types";
+import { styled } from "@mui/material/styles";
 import {
   BUTTON_SELECT_MEDIA,
   DIALOG_TITLE_FEATURED_IMAGE,
@@ -8,27 +7,27 @@ import {
 import { Grid, Button, Typography } from "@mui/material";
 import dynamic from "next/dynamic";
 
-const PREFIX = 'MediaSelector';
+const PREFIX = "MediaSelector";
 
 const classes = {
-  preview: `${PREFIX}-preview`
+  preview: `${PREFIX}-preview`,
 };
 
 const StyledGrid = styled(Grid)(() => ({
   [`& .${classes.preview}`]: {
     width: 100,
-  }
+  },
 }));
 
 const Img = dynamic(() => import("../../../Img"));
-const MediaManagerDialog = dynamic(() => import("./MediaManagerDialog.js"));
+const MediaManagerDialog = dynamic(() => import("./MediaManagerDialog"));
 
 interface MediaSelectorProps {
   title: string;
   src: string;
   onSelection: (...args: any[]) => void;
-  mimeTypesToShow: string[]; 
-  public: boolean;
+  mimeTypesToShow: string[];
+  access: "public" | "private";
 }
 
 const MediaSelector = (props: MediaSelectorProps) => {
@@ -61,7 +60,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
         title={DIALOG_TITLE_FEATURED_IMAGE}
         mediaAdditionAllowed={false}
         mimeTypesToShow={props.mimeTypesToShow}
-        public={props.public}
+        access={props.access}
       />
     </StyledGrid>
   );

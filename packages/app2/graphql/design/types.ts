@@ -4,7 +4,7 @@ import {
   GraphQLBoolean,
   GraphQLObjectType,
   GraphQLInputObjectType,
-} from 'graphql';
+} from "graphql";
 
 const themeType = new GraphQLObjectType({
   name: "Theme",

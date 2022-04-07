@@ -1,5 +1,5 @@
 import React from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import { connect } from "react-redux";
 import { List } from "@mui/material";
 import dynamic from "next/dynamic";
@@ -14,18 +14,18 @@ import Profile from "../../../../ui-models/profile";
 import SiteInfo from "../../../../ui-models/site-info";
 import State from "../../../../ui-models/state";
 
-const PREFIX = 'DrawerContent';
+const PREFIX = "DrawerContent";
 
 const classes = {
-  branding: `${PREFIX}-branding`
+  branding: `${PREFIX}-branding`,
 };
 
 // TODO jss-to-styled codemod: The Fragment root was replaced by div. Change the tag if needed.
-const Root = styled('div')(({ theme }) => ({
+const Root = styled("div")(({ theme }) => ({
   [`& .${classes.branding}`]: {
     paddingLeft: theme.spacing(2),
     paddingRight: theme.spacing(2),
-  }
+  },
 }));
 
 const MenuItem = dynamic(() => import("./MenuItem"));
@@ -46,7 +46,7 @@ const DrawerContent = ({
   forMobile = false,
 }: DrawerContentProps) => {
   return (
-    (<Root>
+    <Root>
       <div className={classes.branding}>
         <Branding />
       </div>
@@ -96,7 +96,7 @@ const DrawerContent = ({
               )
             )}
       </List>
-    </Root>)
+    </Root>
   );
 };
 

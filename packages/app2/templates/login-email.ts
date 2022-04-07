@@ -1,4 +1,4 @@
-export default `
+const loginEmail = `
 doctype html
 html
     head
@@ -31,3 +31,5 @@ html
             |   Do not share this email with anyone as anyone can log in to your
             |   account using the link in this email.
 `;
+
+export default loginEmail;

@@ -1,9 +1,7 @@
-import {
-  GraphQLNonNull
-} from 'graphql';
-import types from './types';
-import { updateMedia } from './logic';
-import GQLContext from '../../models/GQLContext';
+import { GraphQLNonNull } from "graphql";
+import types from "./types";
+import { updateMedia } from "./logic";
+import GQLContext from "../../models/GQLContext";
 
 export default {
   updateMedia: {

@@ -1,12 +1,12 @@
-import { EditorState, convertFromRaw } from 'draft-js';
-import { decode } from 'base-64';
+import { EditorState, convertFromRaw } from "draft-js";
+import { decode } from "base-64";
 import { responses } from "../config/strings";
 import constants from "../config/constants";
 import mongoose from "mongoose";
 import type GQLContext from "../models/GQLContext";
 import MediaModel, { Media } from "../models/Media";
 import HttpError from "../models/HttpError";
-import { generateSignedUrl } from '../lib/s3-utils';
+import { generateSignedUrl } from "../lib/s3-utils";
 const { cdnEndpoint } = constants;
 
 export const checkIfAuthenticated = (ctx: GQLContext) => {
@@ -15,20 +15,22 @@ export const checkIfAuthenticated = (ctx: GQLContext) => {
 
 const ObjectId = mongoose.Types.ObjectId;
 
-export const checkOwnership =
-  (Model: any) => async (id: string, ctx: GQLContext) => {
-    const item = await Model.findOne({ _id: id, domain: ctx.subdomain._id });
-    if (
-      !item ||
-      (ObjectId.isValid(item.creatorId)
-        ? item.creatorId.toString() !== ctx.user._id.toString()
-        : item.creatorId.toString() !== ctx.user.userId.toString())
-    ) {
-      throw new Error(responses.item_not_found);
-    }
+export const checkOwnership = (Model: any) => async (
+  id: string,
+  ctx: GQLContext
+) => {
+  const item = await Model.findOne({ _id: id, domain: ctx.subdomain._id });
+  if (
+    !item ||
+    (ObjectId.isValid(item.creatorId)
+      ? item.creatorId.toString() !== ctx.user._id.toString()
+      : item.creatorId.toString() !== ctx.user.userId.toString())
+  ) {
+    throw new Error(responses.item_not_found);
+  }
 
-    return item;
-  };
+  return item;
+};
 
 export const checkOwnershipWithoutModel = (item: any, ctx: GQLContext) => {
   if (
@@ -97,25 +99,26 @@ interface SearchOptions {
   sortByColumn?: string;
   sortOrder?: 1 | -1;
 }
-export const makeModelTextSearchable =
-  (Model: any) =>
-  async (searchData: SearchData, options: SearchOptions = {}) => {
-    const itemsPerPage = options.itemsPerPage || constants.itemsPerPage;
-    const checkIfRequestIsAuthenticated =
-      options.checkIfRequestIsAuthenticated || true;
-    const offset = (searchData.offset || constants.defaultOffset) - 1;
+export const makeModelTextSearchable = (Model: any) => async (
+  searchData: SearchData,
+  options: SearchOptions = {}
+) => {
+  const itemsPerPage = options.itemsPerPage || constants.itemsPerPage;
+  const checkIfRequestIsAuthenticated =
+    options.checkIfRequestIsAuthenticated || true;
+  const offset = (searchData.offset || constants.defaultOffset) - 1;
 
-    validateSearchInput(searchData, checkIfRequestIsAuthenticated);
+  validateSearchInput(searchData, checkIfRequestIsAuthenticated);
 
-    const query = Model.find(searchData.query)
-      .skip(offset * itemsPerPage)
-      .limit(itemsPerPage);
-    if (options.sortByColumn && options.sortOrder) {
-      query.sort({ [options.sortByColumn]: options.sortOrder });
-    }
+  const query = Model.find(searchData.query)
+    .skip(offset * itemsPerPage)
+    .limit(itemsPerPage);
+  if (options.sortByColumn && options.sortOrder) {
+    query.sort({ [options.sortByColumn]: options.sortOrder });
+  }
 
-    return query;
-  };
+  return query;
+};
 
 const validateSearchInput = (
   searchData: SearchData,

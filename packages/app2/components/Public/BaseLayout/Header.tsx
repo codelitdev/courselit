@@ -1,28 +1,22 @@
 import React from "react";
-import { styled, Theme } from '@mui/material/styles';
+import { styled, Theme } from "@mui/material/styles";
 import { Grid } from "@mui/material";
 import SessionButton from "../SessionButton";
 import { useTheme } from "@mui/styles";
 import dynamic from "next/dynamic";
 
-const PREFIX = 'Header';
+const PREFIX = "Header";
 
 const classes = {
-  branding: `${PREFIX}-branding`
+  branding: `${PREFIX}-branding`,
 };
 
-const StyledGrid = styled(Grid)((
-  {
-    theme
-  } : {
-    theme: any
-  }
-) => ({
+const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
   [`& .${classes.branding}`]: {
     [theme.breakpoints.up("sm")]: {
       display: "none",
     },
-  }
+  },
 }));
 
 const Branding = dynamic(() => import("./Branding"));
@@ -33,7 +27,12 @@ const Header = ({}: HeaderProps) => {
   const theme: Theme = useTheme();
 
   return (
-    <StyledGrid container justifyContent="space-between" direction="row" alignItems="center">
+    <StyledGrid
+      container
+      justifyContent="space-between"
+      direction="row"
+      alignItems="center"
+    >
       <Grid item>
         <div className={classes.branding}>
           <Branding />
@@ -48,4 +47,4 @@ const Header = ({}: HeaderProps) => {
   );
 };
 
-export default (Header);
+export default Header;

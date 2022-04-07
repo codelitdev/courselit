@@ -6,10 +6,10 @@ import {
   // GraphQLBoolean,
   // GraphQLInt,
   // GraphQLList,
-  GraphQLInputObjectType
+  GraphQLInputObjectType,
 } from "graphql";
-import mediaTypes from '../media/types';
-import { getMedia } from '../media/logic'
+import mediaTypes from "../media/types";
+import { getMedia } from "../media/logic";
 const { mediaType } = mediaTypes;
 
 const siteType = new GraphQLObjectType({
@@ -19,8 +19,7 @@ const siteType = new GraphQLObjectType({
     subtitle: { type: GraphQLString },
     logopath: {
       type: mediaType,
-      resolve: (settings, _, context, __) =>
-        getMedia(settings.logopath, context),
+      resolve: (settings, _, context, __) => getMedia(settings.logopath),
     },
     currencyUnit: { type: GraphQLString },
     currencyISOCode: { type: GraphQLString },
@@ -37,8 +36,7 @@ const siteAdminType = new GraphQLObjectType({
     subtitle: { type: GraphQLString },
     logopath: {
       type: mediaType,
-      resolve: (settings, _, context, __) =>
-        getMedia(settings.logopath, context),
+      resolve: (settings, _, __, ___) => getMedia(settings.logopath),
     },
     currencyUnit: { type: GraphQLString },
     currencyISOCode: { type: GraphQLString },

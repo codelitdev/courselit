@@ -9,7 +9,7 @@ import { UNABLE_TO_LOGOUT } from "../ui-config/strings";
 
 interface LogoutProps {
   dispatch: any;
-  address: Address; 
+  address: Address;
 }
 
 const Logout = ({ dispatch, address }: LogoutProps) => {
@@ -18,14 +18,14 @@ const Logout = ({ dispatch, address }: LogoutProps) => {
   });
 
   const logout = async () => {
-    const response = await fetch('/api/auth/logout');
+    const response = await fetch("/api/auth/logout");
     if (response.status === 200) {
       dispatch(signedOut());
       Router.replace("/");
     } else {
-      dispatch(setAppMessage(new AppMessage(UNABLE_TO_LOGOUT)))
+      dispatch(setAppMessage(new AppMessage(UNABLE_TO_LOGOUT)));
     }
-  }
+  };
 
   return <div></div>;
 };

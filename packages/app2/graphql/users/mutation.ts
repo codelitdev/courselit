@@ -1,8 +1,6 @@
-import {
-  GraphQLNonNull,
-} from 'graphql';
-import types from './types';
-import { updateUser } from './logic';
+import { GraphQLNonNull } from "graphql";
+import types from "./types";
+import { updateUser } from "./logic";
 
 export default {
   updateUser: {

@@ -73,7 +73,10 @@ const OverviewAndDetail = ({
             <Grid item xs>
               <Grid container alignItems="center">
                 <Grid item>
-                  <IconButton onClick={() => setSelectedComponentIndex(-1)} size="large">
+                  <IconButton
+                    onClick={() => setSelectedComponentIndex(-1)}
+                    size="large"
+                  >
                     <ArrowBack />
                   </IconButton>
                 </Grid>

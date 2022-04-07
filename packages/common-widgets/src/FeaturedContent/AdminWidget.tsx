@@ -4,7 +4,6 @@ import {
   WidgetHelpers,
   Section,
 } from "@courselit/components-library";
-import { connect } from "react-redux";
 import { Button, Grid, TextField, Typography } from "@material-ui/core";
 import Settings from "./Settings";
 
@@ -118,12 +117,4 @@ const AdminWidget = (props: AdminWidgetProps) => {
   );
 };
 
-const mapStateToProps = (state: any) => ({
-  auth: state.auth,
-});
-
-const mapDispatchToProps = (dispatch: any) => ({
-  dispatch: dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(AdminWidget);
+export default AdminWidget;

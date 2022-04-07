@@ -1,4 +1,4 @@
-import thumbnail from '@courselit/thumbnail';
+import thumbnail from "@courselit/thumbnail";
 const { createReadStream, rmdirSync } = require("fs");
 const {
   cdnEndpoint,

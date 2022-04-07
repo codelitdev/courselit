@@ -1,9 +1,6 @@
-import {
-  GraphQLString,
-  GraphQLList
-} from "graphql";
-import types from './types';
-import { getUser, getSiteUsers } from './logic';
+import { GraphQLString, GraphQLList } from "graphql";
+import types from "./types";
+import { getUser, getSiteUsers } from "./logic";
 import GQLContext from "../../models/GQLContext";
 
 export default {

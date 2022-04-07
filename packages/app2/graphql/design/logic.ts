@@ -1,12 +1,9 @@
-import ThemeModel, { Theme } from '../../models/Theme';
-import {
-  checkIfAuthenticated,
-  checkPermission,
-} from "../../lib/graphql";
+import ThemeModel, { Theme } from "../../models/Theme";
+import { checkIfAuthenticated, checkPermission } from "../../lib/graphql";
 import { responses } from "../../config/strings";
 import Layout from "../../models/Layout";
 import constants from "../../config/constants";
-import GQLContext from '../../models/GQLContext';
+import GQLContext from "../../models/GQLContext";
 const { permissions } = constants;
 
 export const getTheme = async (ctx: GQLContext) => {

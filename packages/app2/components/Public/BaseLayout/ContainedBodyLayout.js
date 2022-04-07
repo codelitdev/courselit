@@ -1,11 +1,11 @@
 import React from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import PropTypes from "prop-types";
 import { Container } from "@mui/material";
-const PREFIX = 'ContainedBodyLayout';
+const PREFIX = "ContainedBodyLayout";
 
 const classes = {
-  root: `${PREFIX}-root`
+  root: `${PREFIX}-root`,
 };
 
 const StyledContainer = styled(Container)({
@@ -15,8 +15,6 @@ const StyledContainer = styled(Container)({
 });
 
 const ContainedBodyLayout = (props) => {
-
-
   return (
     <StyledContainer maxWidth="xl" className={classes.root}>
       {props.children}

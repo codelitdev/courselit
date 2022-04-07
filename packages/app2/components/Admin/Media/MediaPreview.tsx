@@ -1,6 +1,5 @@
-import React from "react";
-import { styled } from '@mui/material/styles';
-import PropTypes from "prop-types";
+import React, { useEffect, useState } from "react";
+import { styled } from "@mui/material/styles";
 import {
   Grid,
   Typography,
@@ -18,28 +17,30 @@ import {
 } from "../../../ui-config/strings";
 import { connect } from "react-redux";
 import dynamic from "next/dynamic";
-import { Section } from "../../ComponentsLibrary";
+import { Section } from "@courselit/components-library";
 import { FileCopy } from "@mui/icons-material";
-import { setAppMessage } from "../../../state/actions";
+import { networkAction, setAppMessage } from "../../../state/actions";
 import AppMessage from "../../../ui-models/app-message";
-import Media from "../../../ui-models/media";
 import { AppDispatch, RootState } from "../../../state/store";
 import Address from "../../../ui-models/address";
-import { AnyAction } from 'redux';
-import { ThunkDispatch } from 'redux-thunk';
+import { AnyAction } from "redux";
+import { ThunkDispatch } from "redux-thunk";
+import FetchBuilder from "../../../ui-lib/fetch";
+import Media from "../../../models/Media";
 
-const PREFIX = 'MediaPreview';
+const PREFIX = "MediaPreview";
 
 const classes = {
   video: `${PREFIX}-video`,
   img: `${PREFIX}-img`,
-  link: `${PREFIX}-link`
+  link: `${PREFIX}-link`,
 };
 
 const StyledSection = styled(Section)({
   [`& .${classes.video}`]: {
     minWidth: 200,
     maxWidth: "100%",
+    width: 400,
     height: "auto",
   },
   [`& .${classes.img}`]: {
@@ -54,13 +55,50 @@ const Img = dynamic(() => import("../../Img"));
 
 interface MediaPreviewProps {
   item: Media;
-  address: Address; 
+  address: Address;
   dispatch: AppDispatch;
 }
 
 const MediaPreview = (props: MediaPreviewProps) => {
-  const { item, dispatch } = props;
-  const { file, originalFileName, mimeType, caption } = item;
+  const [item, setItem] = useState(props.item);
+  const { dispatch, address } = props;
+  const {
+    mediaId,
+    originalFileName,
+    mimeType,
+    caption,
+    file,
+    size,
+    access,
+  } = item;
+
+  useEffect(() => {
+    getMediaDetails();
+  }, []);
+
+  const getMediaDetails = async () => {
+    const fetch = new FetchBuilder()
+      .setUrl(`${address.backend}/api/media/${mediaId}`)
+      .setHttpMethod("get")
+      .build();
+
+    try {
+      (dispatch as ThunkDispatch<RootState, null, AnyAction>)(
+        networkAction(true)
+      );
+      const media = await fetch.exec();
+      setItem(media);
+    } catch (err: any) {
+      console.log(err);
+      (dispatch as ThunkDispatch<RootState, null, AnyAction>)(
+        setAppMessage(new AppMessage(err.message))
+      );
+    } finally {
+      (dispatch as ThunkDispatch<RootState, null, AnyAction>)(
+        networkAction(false)
+      );
+    }
+  };
 
   const copyUrl = async () => {
     if (!navigator.clipboard) {
@@ -68,8 +106,10 @@ const MediaPreview = (props: MediaPreviewProps) => {
     }
 
     try {
-      await navigator.clipboard.writeText(file);
-      (dispatch as ThunkDispatch<RootState, null, AnyAction>)(setAppMessage(new AppMessage(MEDIA_URL_COPIED)));
+      await navigator.clipboard.writeText(file!);
+      (dispatch as ThunkDispatch<RootState, null, AnyAction>)(
+        setAppMessage(new AppMessage(MEDIA_URL_COPIED))
+      );
     } catch (e) {}
   };
 
@@ -101,29 +141,32 @@ const MediaPreview = (props: MediaPreviewProps) => {
             disabled={true}
           />
         </Grid>
-        <Grid item>
-          <TextField
-            variant="outlined"
-            label={MEDIA_DIRECT_URL}
-            fullWidth
-            margin="normal"
-            name={MEDIA_DIRECT_URL}
-            value={file}
-            disabled={true}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={copyUrl} size="large">
-                    <FileCopy />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Grid>
+        {item.access === "public" && (
+          <Grid item>
+            <TextField
+              variant="outlined"
+              label={MEDIA_DIRECT_URL}
+              fullWidth
+              margin="normal"
+              name={MEDIA_DIRECT_URL}
+              value={file}
+              disabled={true}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={copyUrl} size="large">
+                      <FileCopy />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Grid>
+        )}
         <Grid item>
           {(mimeType === "image/png" ||
             mimeType === "image/jpeg" ||
+            mimeType === "image/gif" ||
             mimeType === "image/webp") && (
             <div className={classes.img}>
               <Img src={file} alt={caption} />

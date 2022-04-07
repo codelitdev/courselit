@@ -29,7 +29,7 @@ import Address from "../../../ui-models/address";
 import { AppDispatch } from "../../../state/store";
 import State from "../../../ui-models/state";
 import { ThunkDispatch } from "redux-thunk";
-import { AnyAction } from 'redux';
+import { AnyAction } from "redux";
 
 interface PermissionsEditorProps {
   user: User;
@@ -74,7 +74,10 @@ function PermissionsEditor({
     setExpanded(!expanded);
   };
 
-  const savePermissions = async (permission: string, event: React.ChangeEvent<HTMLInputElement>) => {
+  const savePermissions = async (
+    permission: string,
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     event.preventDefault();
     const state = event.target.checked;
 
@@ -109,7 +112,9 @@ function PermissionsEditor({
         setActivePermissions(response.user.permissions);
       }
     } catch (err: any) {
-      (dispatch as ThunkDispatch<State, null, AnyAction>)(setAppMessage(new AppMessage(err.message)));
+      (dispatch as ThunkDispatch<State, null, AnyAction>)(
+        setAppMessage(new AppMessage(err.message))
+      );
     } finally {
       (dispatch as ThunkDispatch<State, null, AnyAction>)(networkAction(false));
     }

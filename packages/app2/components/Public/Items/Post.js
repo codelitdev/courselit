@@ -1,25 +1,21 @@
 import React from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import PropTypes from "prop-types";
 import Link from "next/link";
 import { URL_EXTENTION_POSTS } from "../../../config/constants.js";
 import { Grid, Typography } from "@mui/material";
 import Img from "../../Img.js";
 
-const PREFIX = 'Post';
+const PREFIX = "Post";
 
 const classes = {
   container: `${PREFIX}-container`,
   link: `${PREFIX}-link`,
   featuredImage: `${PREFIX}-featuredImage`,
-  title: `${PREFIX}-title`
+  title: `${PREFIX}-title`,
 };
 
-const StyledGrid = styled(Grid)((
-  {
-    theme
-  }
-) => ({
+const StyledGrid = styled(Grid)(({ theme }) => ({
   [`& .${classes.container}`]: {
     overflow: "hidden",
   },
@@ -39,12 +35,10 @@ const StyledGrid = styled(Grid)((
   [`& .${classes.title}`]: {
     marginTop: theme.spacing(2),
     marginBottom: theme.spacing(0.5),
-  }
+  },
 }));
 
 const Post = (props) => {
-
-
   return (
     <StyledGrid item xs={12} md={6}>
       <Link

@@ -1,8 +1,8 @@
 import dynamic from "next/dynamic";
 import { MANAGE_COURSES_PAGE_HEADING } from "../../../ui-config/strings";
 
-const BaseLayout = dynamic(() =>
-  import("../../../components/Admin/BaseLayout")
+const BaseLayout = dynamic(
+  () => import("../../../components/Admin/BaseLayout")
 );
 const Courses = dynamic(() => import("../../../components/Admin/Courses"));
 

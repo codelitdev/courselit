@@ -2,7 +2,6 @@ import * as React from "react";
 import { Grid, Typography, Button, Theme } from "@material-ui/core";
 import Item from "./Item";
 import { makeStyles } from "@material-ui/styles";
-import { connect } from "react-redux";
 import {
   WidgetProps,
   WidgetHelpers,
@@ -131,8 +130,4 @@ const Widget = (props: FeaturedWidgetProps) => {
   );
 };
 
-const mapDispatchToProps = (dispatch: any) => ({
-  dispatch: dispatch,
-});
-
-export default connect(() => ({}), mapDispatchToProps)(Widget);
+export default Widget;

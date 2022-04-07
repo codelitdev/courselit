@@ -1,11 +1,11 @@
 import React from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import { CircularProgress, Grid, Typography } from "@mui/material";
 import { LOADING } from "../config/strings";
-const PREFIX = 'AppLoader';
+const PREFIX = "AppLoader";
 
 const classes = {
-  loader: `${PREFIX}-loader`
+  loader: `${PREFIX}-loader`,
 };
 
 const StyledGrid = styled(Grid)({
@@ -16,8 +16,6 @@ const StyledGrid = styled(Grid)({
 });
 
 const AppLoader = (props) => {
-
-
   return (
     <StyledGrid
       container

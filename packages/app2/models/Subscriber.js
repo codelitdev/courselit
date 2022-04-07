@@ -1,4 +1,4 @@
-import mongoose from 'mongoose'
+import mongoose from "mongoose";
 
 const SubscriberSchema = new mongoose.Schema(
   {
@@ -12,4 +12,5 @@ const SubscriberSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.models.Subscriber || mongoose.model("Subscriber", SubscriberSchema);
+export default mongoose.models.Subscriber ||
+  mongoose.model("Subscriber", SubscriberSchema);

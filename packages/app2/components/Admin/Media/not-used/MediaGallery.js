@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import {
@@ -41,22 +41,18 @@ import {
 } from "../../../lib/utils.js";
 import Router from "next/router";
 
-const PREFIX = 'MediaGallery';
+const PREFIX = "MediaGallery";
 
 const classes = {
   searchField: `${PREFIX}-searchField`,
   cardHeader: `${PREFIX}-cardHeader`,
   mediaGrid: `${PREFIX}-mediaGrid`,
   mediaGridHeader: `${PREFIX}-mediaGridHeader`,
-  gridListItemIcon: `${PREFIX}-gridListItemIcon`
+  gridListItemIcon: `${PREFIX}-gridListItemIcon`,
 };
 
 // TODO jss-to-styled codemod: The Fragment root was replaced by div. Change the tag if needed.
-const Root = styled('div')((
-  {
-    theme
-  }
-) => ({
+const Root = styled("div")(({ theme }) => ({
   [`& .${classes.searchField}`]: {
     flexGrow: 1,
     marginRight: theme.spacing(2),
@@ -76,7 +72,7 @@ const Root = styled('div')((
 
   [`& .${classes.gridListItemIcon}`]: {
     color: "#fff",
-  }
+  },
 }));
 
 const MediaGallery = (props) => {
@@ -87,7 +83,6 @@ const MediaGallery = (props) => {
   const [userMedia, setUserMedia] = useState(defaultUserMedia);
   const [mediaBeingEdited, setMediaBeingEdited] = useState(null);
   const [deleteMediaPopupOpened, setDeleteMediaPopupOpened] = useState(false);
-
 
   useEffect(() => {
     loadMedia();
@@ -248,7 +243,7 @@ const MediaGallery = (props) => {
   };
 
   return (
-    (<Root>
+    <Root>
       {!mediaBeingEdited && (
         <div>
           <form onSubmit={searchMedia}>
@@ -345,7 +340,7 @@ const MediaGallery = (props) => {
           { name: POPUP_OK_ACTION, callback: onMediaDelete },
         ]}
       ></AppDialog>
-    </Root>)
+    </Root>
   );
 };
 

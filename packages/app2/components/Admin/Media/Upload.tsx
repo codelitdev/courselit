@@ -1,32 +1,29 @@
-import React, { useState, createRef } from "react";
-import { styled } from '@mui/material/styles';
-import {
-  Button,
-  Grid,
-  TextField,
-  Typography,
-  Checkbox,
-} from "@mui/material";
+import React, { useState, createRef, useEffect } from "react";
+import { styled } from "@mui/material/styles";
+import { Button, Grid, TextField, Typography, Checkbox } from "@mui/material";
 import { connect } from "react-redux";
-import { Section } from "../../ComponentsLibrary";
+import { Section } from "@courselit/components-library";
 import {
   BUTTON_ADD_FILE,
   MEDIA_UPLOAD_BUTTON_TEXT,
   MEDIA_UPLOADING,
   MEDIA_PUBLIC,
 } from "../../../ui-config/strings";
-import { setAppMessage } from "../../../state/actions";
+import { networkAction, setAppMessage } from "../../../state/actions";
 import AppMessage from "../../../ui-models/app-message";
 import Auth from "../../../ui-models/auth";
 import Address from "../../../ui-models/address";
 import State from "../../../ui-models/state";
-import { AnyAction } from 'redux';
-import { ThunkDispatch } from 'redux-thunk';
+import { AnyAction } from "redux";
+import { ThunkDispatch } from "redux-thunk";
+import FetchBuilder from "../../../ui-lib/fetch";
+import { AppDispatch, RootState } from "../../../state/store";
+import { responses } from "../../../config/strings";
 
-const PREFIX = 'Upload';
+const PREFIX = "Upload";
 
 const classes = {
-  fileUploadInput: `${PREFIX}-fileUploadInput`
+  fileUploadInput: `${PREFIX}-fileUploadInput`,
 };
 
 const StyledSection = styled(Section)({
@@ -38,13 +35,12 @@ const StyledSection = styled(Section)({
 interface UploadProps {
   auth: Auth;
   address: Address;
-  dispatch: () => void;
+  dispatch: AppDispatch;
   resetOverview: any;
 }
 
 function Upload({ auth, address, dispatch, resetOverview }: UploadProps) {
   const defaultUploadData = {
-    title: "",
     caption: "",
     uploading: false,
     public: false,
@@ -52,6 +48,7 @@ function Upload({ auth, address, dispatch, resetOverview }: UploadProps) {
   const [uploadData, setUploadData] = useState(defaultUploadData);
   const fileInput = createRef();
   const [uploading, setUploading] = useState(false);
+  const [presignedUrl, setPresignedUrl] = useState("");
 
   const onUploadDataChanged = (e: any) =>
     setUploadData(
@@ -98,13 +95,42 @@ function Upload({ auth, address, dispatch, resetOverview }: UploadProps) {
   //     setUploading(false);
   //   }
   // };
+  useEffect(() => {
+    getPresignedUrl();
+  }, []);
+
+  const getPresignedUrl = async () => {
+    const fetch = new FetchBuilder()
+      .setUrl(`${address.backend}/api/media/presigned`)
+      .setIsGraphQLEndpoint(false)
+      .build();
+    try {
+      (dispatch as ThunkDispatch<RootState, null, AnyAction>)(
+        networkAction(true)
+      );
+      const response = await fetch.exec();
+      setPresignedUrl(response.url);
+    } catch (err: any) {
+      (dispatch as ThunkDispatch<RootState, null, AnyAction>)(
+        setAppMessage(new AppMessage(responses.presigned_url_failed))
+      );
+    } finally {
+      (dispatch as ThunkDispatch<RootState, null, AnyAction>)(
+        networkAction(false)
+      );
+    }
+  };
+
+  const onUpload = async (e) => {
+    e.preventDefault();
+    await uploadToServer();
+  };
 
   const uploadToServer = async () => {
-    const fD = new window.FormData();
-    fD.append("title", uploadData.title);
+    const fD = new FormData();
     fD.append("caption", uploadData.caption);
+    fD.append("access", uploadData.public ? "public" : "private");
     fD.append("file", (fileInput as any).current.files[0]);
-    fD.append("public", uploadData.public.toString());
 
     setUploadData(
       Object.assign({}, uploadData, {
@@ -115,31 +141,36 @@ function Upload({ auth, address, dispatch, resetOverview }: UploadProps) {
     try {
       setUploading(true);
 
-      let res = await fetch(`${address.backend}/media`, {
+      let res: any = await fetch(presignedUrl, {
         method: "POST",
-        credentials: 'same-origin',
         body: fD,
       });
-      res = await res.json();
-
-      (dispatch as ThunkDispatch<State, null, AnyAction>)(setAppMessage(new AppMessage(res.message)));
-      resetOverview();
+      if (res.status === 200) {
+        (dispatch as ThunkDispatch<State, null, AnyAction>)(
+          setAppMessage(new AppMessage(responses.file_uploaded))
+        );
+        resetForm();
+        resetOverview();
+      } else {
+        res = await res.json();
+        throw new Error(res.error);
+      }
     } catch (err) {
-      (dispatch as ThunkDispatch<State, null, AnyAction>)(setAppMessage(new AppMessage(err.message)));
+      (dispatch as ThunkDispatch<State, null, AnyAction>)(
+        setAppMessage(new AppMessage(err.message))
+      );
     } finally {
       setUploading(false);
     }
   };
 
-  const onUpload = async (e) => {
-    e.preventDefault();
-
-    await uploadToServer();
+  const resetForm = () => {
+    setPresignedUrl("");
   };
 
   return (
     <StyledSection>
-      <form onSubmit={onUpload}>
+      <form onSubmit={onUpload} enctype="multipart/form-data">
         <Button variant="outlined" component="label" color="primary">
           {BUTTON_ADD_FILE}
           <input
@@ -166,7 +197,11 @@ function Upload({ auth, address, dispatch, resetOverview }: UploadProps) {
             <Checkbox name="public" onChange={onUploadDataChanged} />
           </Grid>
         </Grid>
-        <Button type="submit" disabled={uploading} variant="outlined">
+        <Button
+          type="submit"
+          disabled={uploading || !presignedUrl}
+          variant="outlined"
+        >
           {uploading ? MEDIA_UPLOADING : MEDIA_UPLOAD_BUTTON_TEXT}
         </Button>
       </form>
@@ -179,8 +214,6 @@ const mapStateToProps = (state: State) => ({
   auth: state.auth,
 });
 
-const mapDispatchToProps = (dispatch: () => void) => ({
-  dispatch: dispatch,
-});
+const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Upload);

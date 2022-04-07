@@ -1,5 +1,5 @@
 import React, { useState, createRef } from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import { connect } from "react-redux";
 import fetch from "isomorphic-unfetch";
 import PropTypes from "prop-types";
@@ -27,26 +27,22 @@ import AppMessage from "../../../models/app-message.js";
 
 import MediaGallery from "./MediaGallery.js";
 
-const PREFIX = 'MediaManager';
+const PREFIX = "MediaManager";
 
 const classes = {
   header: `${PREFIX}-header`,
-  fileUploadInput: `${PREFIX}-fileUploadInput`
+  fileUploadInput: `${PREFIX}-fileUploadInput`,
 };
 
 // TODO jss-to-styled codemod: The Fragment root was replaced by div. Change the tag if needed.
-const Root = styled('div')((
-  {
-    theme
-  }
-) => ({
+const Root = styled("div")(({ theme }) => ({
   [`& .${classes.header}`]: {
     marginBottom: theme.spacing(1),
   },
 
   [`& .${classes.fileUploadInput}`]: {
     display: "none",
-  }
+  },
 }));
 
 const MediaManager = (props) => {

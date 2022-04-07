@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import { connect } from "react-redux";
 import { Grid, Typography, Link, TextField, Button } from "@mui/material";
 import FetchBuilder from "../../../../ui-lib/fetch";
@@ -22,40 +22,34 @@ import {
   SUBHEADER_THEME_INSTALLED_THEMES,
 } from "../../../../ui-config/strings";
 import { THEMES_REPO } from "../../../../ui-config/constants";
-import { Section } from "../../../ComponentsLibrary";
+import { Section } from "@courselit/components-library";
 import ThemeItem from "./ThemeItem";
 import Address from "../../../../ui-models/address";
 import { ThunkDispatch } from "redux-thunk";
 import State from "../../../../ui-models/state";
-import { AnyAction } from 'redux';
+import { AnyAction } from "redux";
 import { AppDispatch } from "../../../../state/store";
 
-const PREFIX = 'index';
+const PREFIX = "index";
 
 const classes = {
   section: `${PREFIX}-section`,
-  sectionHeader: `${PREFIX}-sectionHeader`
+  sectionHeader: `${PREFIX}-sectionHeader`,
 };
 
-const StyledGrid = styled(Grid)((
-  {
-    theme
-  } : {
-    theme: any;
-  }
-) => ({
+const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
   [`& .${classes.section}`]: {
     marginBottom: theme.spacing(2),
   },
 
   [`& .${classes.sectionHeader}`]: {
     marginBottom: theme.spacing(2),
-  }
+  },
 }));
 
 interface ThemesManagerProps {
   address: Address;
-  dispatch: ThunkDispatch<State, null, AnyAction>
+  dispatch: ThunkDispatch<State, null, AnyAction>;
 }
 
 const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
@@ -66,7 +60,7 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
 
   const fetch = new FetchBuilder()
     .setUrl(`${address.backend}/api/graph`)
-    .setIsGraphQLEndpoint(true)
+    .setIsGraphQLEndpoint(true);
 
   useEffect(() => {
     loadInstalledThemes();
@@ -261,12 +255,22 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
               </Grid>
             )}
             <Grid item>
-              <Link href={THEMES_REPO} target="_blank" rel="noopener" underline="hover">
+              <Link
+                href={THEMES_REPO}
+                target="_blank"
+                rel="noopener"
+                underline="hover"
+              >
                 {BUTTON_GET_THEMES}
               </Link>
             </Grid>
             <Grid item container direction="column" spacing={2}>
-              <Grid item container justifyContent="space-between" alignItems="center">
+              <Grid
+                item
+                container
+                justifyContent="space-between"
+                alignItems="center"
+              >
                 <Typography variant="h5">
                   {SUBHEADER_THEME_ADD_THEME}
                 </Typography>

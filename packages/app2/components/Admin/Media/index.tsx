@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import { ImageListItemBar, Button } from "@mui/material";
 import { connect } from "react-redux";
 import {
@@ -8,9 +8,8 @@ import {
   HEADER_EDITING_MEDIA,
   MEDIA_MANAGER_DIALOG_TITLE,
 } from "../../../ui-config/strings";
-import FetchBuilder from "../../../ui-lib/fetch";
 import { Add } from "@mui/icons-material";
-import { OverviewAndDetail } from "../../ComponentsLibrary";
+import { OverviewAndDetail } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 import { networkAction, setAppMessage } from "../../../state/actions";
 import { checkPermission } from "../../../ui-lib/utils";
@@ -23,48 +22,44 @@ import Address from "../../../ui-models/address";
 import Media from "../../../ui-models/media";
 const { permissions } = constants;
 
-const PREFIX = 'index';
+const PREFIX = "index";
 
 const classes = {
-  btn: `${PREFIX}-btn`
+  btn: `${PREFIX}-btn`,
 };
 
-const StyledOverviewAndDetail
- = styled(OverviewAndDetail
-)((
-  {
-    theme
-  } : {
-    theme: any;
-  }
-) => ({
-  [`& .${classes.btn}`]: {
-    width: "100%",
-    height: "100%",
-  }
-}));
+const StyledOverviewAndDetail = styled(OverviewAndDetail)(
+  ({ theme }: { theme: any }) => ({
+    [`& .${classes.btn}`]: {
+      width: "100%",
+      height: "100%",
+    },
+  })
+);
 
 const Upload = dynamic(() => import("./Upload"));
 const Editor = dynamic(() => import("./Editor"));
+const MediaPreview = dynamic(() => import("./MediaPreview"));
 const Img = dynamic(() => import("../../Img"));
 
 interface IndexProps {
   auth: Auth;
-  profile: Profile; 
-  dispatch: (...args: any[]) => void; 
+  profile: Profile;
+  dispatch: (...args: any[]) => void;
   address: Address;
-  mimeTypesToShow: string[]; 
+  mimeTypesToShow: string[];
   selectionMode: boolean;
   onSelect: (...args: any[]) => void;
-  public: string;
+  access: "public" | "private";
 }
+
 const Index = (props: IndexProps) => {
   const [mediaPaginationOffset, setMediaPaginationOffset] = useState(1);
   const [creatorMedia, setCreatorMedia] = useState<Media[]>([]);
   const [componentsMap, setComponentsMap] = useState([]);
   const [refreshMedia, setRefreshMedia] = useState(0);
   const [searchText] = useState("");
-
+  const { address } = props;
 
   useEffect(() => {
     loadMedia();
@@ -79,47 +74,24 @@ const Index = (props: IndexProps) => {
   }, [mediaPaginationOffset, creatorMedia]);
 
   const loadMedia = async () => {
-    const query = `
-    query {
-      media: getCreatorMedia(
-        offset: ${mediaPaginationOffset},
-        searchText: "${searchText}",
-        mimeType: ${
-          props.mimeTypesToShow
-            ? "[" +
-              props.mimeTypesToShow.map((mimeType) => '"' + mimeType + '"') +
-              "]"
-            : null
-        },
-        privacy: ${props.public ? '"' + props.public + '"' : null}
-      ) {
-        id,
-        originalFileName,
-        mimeType,
-        caption,
-        file,
-        thumbnail,
-        public,
-        key
-      }
-    }
-    `;
-    const fetch = new FetchBuilder()
-      .setUrl(`${props.address.backend}/api/graph`)
-      .setPayload(query)
-      .setIsGraphQLEndpoint(true)
-      .build();
     try {
       props.dispatch(networkAction(true));
-      const response = await fetch.exec();
+      const response: any = await fetch(
+        `${address.backend}/api/media?${getUrlSearchParamQuery()}`
+      );
+      const mediaItems = await response.json();
 
-      if (response.media && response.media.length > 0) {
+      if (response.status !== 200) {
+        throw new Error(mediaItems.error);
+      }
+
+      if (mediaItems.length > 0) {
         const filteredMedia =
           props.mimeTypesToShow && props.mimeTypesToShow.length
-            ? response.media.filter((item: Media) =>
+            ? mediaItems.filter((item: Media) =>
                 props.mimeTypesToShow.includes(item.mimeType)
               )
-            : response.media;
+            : mediaItems;
         setCreatorMedia([...creatorMedia, ...filteredMedia]);
         setMediaPaginationOffset(mediaPaginationOffset + 1);
       }
@@ -128,6 +100,16 @@ const Index = (props: IndexProps) => {
     } finally {
       props.dispatch(networkAction(false));
     }
+  };
+
+  const getUrlSearchParamQuery = () => {
+    const urlSearchParams = new URLSearchParams();
+    urlSearchParams.append("page", mediaPaginationOffset.toString());
+    if (props.access) {
+      urlSearchParams.append("access", props.access);
+    }
+
+    return urlSearchParams.toString();
   };
 
   const composeOverView = (mediaArr: Media[]) => {
@@ -169,11 +151,14 @@ const Index = (props: IndexProps) => {
 
     if (!props.selectionMode) {
       componentConfig.Detail = (
-        <Editor
-          media={media}
-          onMediaEdited={onMediaEdited}
-          onMediaDeleted={onMediaDeleted}
-        />
+        <div>
+          <MediaPreview item={media} />
+          <Editor
+            media={media}
+            onMediaEdited={onMediaEdited}
+            onMediaDeleted={onMediaDeleted}
+          />
+        </div>
       );
     }
 
@@ -205,14 +190,16 @@ const Index = (props: IndexProps) => {
 
   const onMediaEdited = (editedMedia: Media) => {
     const mediaAfterEdit = creatorMedia.map((item) =>
-      item.id === editedMedia.id ? editedMedia : item
+      item.mediaId === editedMedia.mediaId ? editedMedia : item
     );
     composeOverView(mediaAfterEdit);
     setCreatorMedia(mediaAfterEdit);
   };
 
   const onMediaDeleted = (id: string) => {
-    const mediaAfterDelete = creatorMedia.filter((item) => item.id !== id);
+    const mediaAfterDelete = creatorMedia.filter(
+      (item: Media) => item.mediaId !== id
+    );
     composeOverView(mediaAfterDelete);
     setCreatorMedia(mediaAfterDelete);
   };

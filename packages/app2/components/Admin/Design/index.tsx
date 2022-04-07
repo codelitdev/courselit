@@ -4,7 +4,7 @@ import { HEADER_DESIGN } from "../../../ui-config/strings";
 import { connect } from "react-redux";
 import constants from "../../../config/constants";
 import { checkPermission } from "../../../ui-lib/utils";
-import { Section } from "../../ComponentsLibrary";
+import { Section } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 import State from "../../../ui-models/state";
 import Profile from "../../../ui-models/profile";

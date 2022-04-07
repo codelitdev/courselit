@@ -1,11 +1,11 @@
 import React from "react";
-import { styled } from '@mui/material/styles';
+import { styled } from "@mui/material/styles";
 import PropTypes from "prop-types";
 import { Grid, ListItemIcon } from "@mui/material";
-const PREFIX = 'DrawerListItemIcon';
+const PREFIX = "DrawerListItemIcon";
 
 const classes = {
-  rightIcon: `${PREFIX}-rightIcon`
+  rightIcon: `${PREFIX}-rightIcon`,
 };
 
 const StyledGrid = styled(Grid)({
@@ -15,8 +15,6 @@ const StyledGrid = styled(Grid)({
 });
 
 const DrawerListItemIcon = ({ icon, right = false }) => {
-
-
   return (
     <StyledGrid item>
       <ListItemIcon className={right ? classes.rightIcon : ""}>
