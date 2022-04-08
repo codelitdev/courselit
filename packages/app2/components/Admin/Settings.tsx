@@ -54,7 +54,7 @@ import FetchBuilder from "../../ui-lib/fetch";
 import { decode, encode } from "base-64";
 import dynamic from "next/dynamic";
 import AppMessage from "../../ui-models/app-message";
-import { Section } from "../ComponentsLibrary";
+import { Section } from "@courselit/components-library";
 import SiteInfo from "../../ui-models/site-info";
 import Address from "../../ui-models/address";
 import State from "../../ui-models/state";

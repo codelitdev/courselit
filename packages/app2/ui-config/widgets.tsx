@@ -1,4 +1,4 @@
-import buttondown from "@courselit/widget-buttondown";
+// import buttondown from "@courselit/widget-buttondown";
 import CommonWidgets from "@courselit/common-widgets";
 
 const getAllWidgets = (): Record<string, any> => {
@@ -10,7 +10,7 @@ const getAllWidgets = (): Record<string, any> => {
   }
 
   // Additional widgets are added here
-  widgets[buttondown.metadata.name] = buttondown;
+//   widgets[buttondown.metadata.name] = buttondown;
 
   return widgets;
 };
