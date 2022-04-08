@@ -1,26 +1,107 @@
-import type { NextPage } from "next";
-import { Button } from "@mui/material";
 import { connect } from "react-redux";
+import PropTypes from "prop-types";
+import { HEADER_BLOG_POSTS_SECTION, BTN_VIEW_ALL } from "../ui-config/strings";
+import { Button, Grid, Typography } from "@mui/material";
+import { makeStyles } from "@mui/styles";
+import Link from "next/link";
+import FetchBuilder from "../ui-lib/fetch";
+import { getBackendAddress } from "../ui-lib/utils";
+import dynamic from "next/dynamic";
+import { Section } from "@courselit/components-library";
+import SiteInfo from "../ui-models/site-info";
 import State from "../ui-models/state";
-import Auth from "../ui-models/auth";
 
-interface HomeProps {
-  auth: Auth;
+const BaseLayout = dynamic(() => import("../components/Public/BaseLayout"));
+const Items = dynamic(() => import("../components/Public/Items"));
+
+const useStyles = makeStyles((theme) => ({
+  headerTop: {
+    marginBottom: theme.spacing(2),
+  },
+  link: {
+    textDecoration: "none",
+    color: "inherit",
+  },
+}));
+
+const generateQuery = (pageOffset = 1) => `
+  query {
+    courses: getPosts(offset: ${pageOffset}) {
+      id,
+      title,
+      description,
+      updated,
+      creatorName,
+      slug,
+      featuredImage {
+        file
+      },
+      courseId
+    }
+  }
+`;
+
+interface IndexProps {
+    siteinfo: SiteInfo;
+    courses: any;
 }
 
-const Home = ({ auth }: HomeProps) => {
+const Index = (props: IndexProps) => {
+  const classes = useStyles();
+
   return (
-    <>
-      <p>Welcome</p>
-      <Button>Click Me!</Button>
-      <p>Guest: {auth.guest}</p>
-      <p>Checked: {auth.checked}</p>
-    </>
+    <BaseLayout title={props.siteinfo.subtitle}>
+      <Grid item xs={12}>
+        {props.courses.length > 0 && (
+          <Section>
+            <Grid item container>
+              <Grid item xs={12} className={classes.headerTop}>
+                <Typography variant="h2">
+                  {HEADER_BLOG_POSTS_SECTION}
+                </Typography>
+              </Grid>
+            </Grid>
+            <Items
+              generateQuery={generateQuery}
+              initialItems={props.courses}
+              posts={true}
+            />
+            <Grid item xs={12}>
+              <Button>
+                <Link href="/posts">
+                  <a className={classes.link}>{BTN_VIEW_ALL}</a>
+                </Link>
+              </Button>
+            </Grid>
+          </Section>
+        )}
+      </Grid>
+    </BaseLayout>
   );
 };
 
+const getCourses = async (backend: string) => {
+  let courses = [];
+  try {
+    const fetch = new FetchBuilder()
+      .setUrl(`${backend}/api/graph`)
+      .setPayload(generateQuery())
+      .setIsGraphQLEndpoint(true)
+      .build();
+    const response = await fetch.exec();
+    courses = response.courses;
+  } catch (e) {}
+  return courses;
+};
+
+export async function getServerSideProps(context: any) {
+  const { req } = context;
+  const courses = await getCourses(getBackendAddress(req.headers.host));
+  return { props: { courses } };
+}
+
 const mapStateToProps = (state: State) => ({
-  auth: state.auth,
+  siteinfo: state.siteinfo,
 });
 
-export default connect(mapStateToProps)(Home);
+export default connect(mapStateToProps)(Index);

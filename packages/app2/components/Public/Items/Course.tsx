@@ -2,11 +2,11 @@ import React from "react";
 import { styled } from "@mui/material/styles";
 import PropTypes from "prop-types";
 import Link from "next/link";
-import { URL_EXTENTION_COURSES } from "../../../config/constants.js";
+import { URL_EXTENTION_COURSES } from "../../../ui-config/constants";
 import { Grid, Typography } from "@mui/material";
 import { PriceTag } from "@courselit/components-library";
-import { FREE_COST } from "../../../config/strings.js";
-import Img from "../../Img.js";
+import { FREE_COST } from "../../../ui-config/strings";
+import Img from "../../Img";
 
 const PREFIX = "Course";
 
@@ -16,7 +16,7 @@ const classes = {
   title: `${PREFIX}-title`,
 };
 
-const StyledGrid = styled(Grid)(({ theme }) => ({
+const StyledGrid = styled(Grid)(({ theme } : { theme: any; }) => ({
   [`& .${classes.link}`]: {
     textDecoration: "none",
     color: "inherit",

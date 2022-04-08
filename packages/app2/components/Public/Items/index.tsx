@@ -1,15 +1,25 @@
 import React, { useState, useEffect } from "react";
-import PropTypes from "prop-types";
 import { connect } from "react-redux";
-import { networkAction } from "../../../redux/actions";
-import FetchBuilder from "../../../lib/fetch";
+import { networkAction } from "../../../state/actions";
+import FetchBuilder from "../../../ui-lib/fetch";
 import { Grid, Button } from "@mui/material";
-import { BTN_LOAD_MORE } from "../../../config/strings";
+import { BTN_LOAD_MORE } from "../../../ui-config/strings";
 import Post from "./Post";
-import { addressProps, publicCourse } from "../../../types";
 import Course from "./Course";
+import { AppDispatch } from "../../../state/store";
+import State from "../../../ui-models/state";
+import Address from "../../../ui-models/address";
 
-const List = (props) => {
+interface ListProps {
+  generateQuery: (...args: any[]) => void;
+  initialItems: any[];
+  showLoadMoreButton: boolean;
+  dispatch: AppDispatch;
+  posts: boolean;
+  address: Address;
+};
+
+const List = (props: ListProps) => {
   const [courses, setCourses] = useState(props.initialItems || []);
   const [offset, setOffset] = useState(2);
   const [shouldShowLoadMoreButton, setShouldShowLoadMoreButton] = useState(
@@ -69,20 +79,11 @@ const List = (props) => {
   );
 };
 
-List.propTypes = {
-  generateQuery: PropTypes.func.isRequired,
-  initialItems: PropTypes.arrayOf(publicCourse),
-  showLoadMoreButton: PropTypes.bool,
-  dispatch: PropTypes.func.isRequired,
-  posts: PropTypes.bool,
-  address: addressProps,
-};
-
-const mapStateToProps = (state) => ({
+const mapStateToProps = (state: State) => ({
   address: state.address,
 });
 
-const mapDispatchToProps = (dispatch) => ({
+const mapDispatchToProps = (dispatch: AppDispatch) => ({
   dispatch: dispatch,
 });
 

@@ -34,21 +34,23 @@ export const queryGraphQL = async (
 
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-export const queryGraphQLWithUIEffects = (
-  backend: string,
-  dispatch: any,
-  networkAction: (status: boolean) => void,
-  token: string
-) => async (query: Record<string, unknown>) => {
-  try {
-    dispatch(networkAction(false));
-    const response = await queryGraphQL(`${backend}/graph`, query, token);
+export const queryGraphQLWithUIEffects =
+  (
+    backend: string,
+    dispatch: any,
+    networkAction: (status: boolean) => void,
+    token: string
+  ) =>
+  async (query: Record<string, unknown>) => {
+    try {
+      dispatch(networkAction(false));
+      const response = await queryGraphQL(`${backend}/graph`, query, token);
 
-    return response;
-  } finally {
-    dispatch(networkAction(false));
-  }
-};
+      return response;
+    } finally {
+      dispatch(networkAction(false));
+    }
+  };
 
 export const formattedLocaleDate = (epochString: string) =>
   new Date(Number(epochString)).toLocaleString("en-US", {
@@ -123,15 +125,8 @@ export const getAddress = (host: string) => {
 };
 
 export const getBackendAddress = (host: string) => {
-  const domain = extractDomainFromURL(host);
-
-  if (process.env.NODE_ENV === "production") {
-    return `${
-      process.env.INSECURE === "true" ? "http" : "https"
-    }://${domain}/api`;
-  } else {
-    return `http://${domain}:8000`;
-  }
+  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+  return `${protocol}://${host}`;
 };
 
 export const checkPermission = (

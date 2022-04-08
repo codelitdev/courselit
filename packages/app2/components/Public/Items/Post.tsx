@@ -2,9 +2,9 @@ import React from "react";
 import { styled } from "@mui/material/styles";
 import PropTypes from "prop-types";
 import Link from "next/link";
-import { URL_EXTENTION_POSTS } from "../../../config/constants.js";
+import { URL_EXTENTION_POSTS } from "../../../ui-config/constants";
 import { Grid, Typography } from "@mui/material";
-import Img from "../../Img.js";
+import Img from "../../Img";
 
 const PREFIX = "Post";
 
@@ -15,7 +15,7 @@ const classes = {
   title: `${PREFIX}-title`,
 };
 
-const StyledGrid = styled(Grid)(({ theme }) => ({
+const StyledGrid = styled(Grid)(({ theme } : { theme: any; }) => ({
   [`& .${classes.container}`]: {
     overflow: "hidden",
   },
@@ -38,7 +38,18 @@ const StyledGrid = styled(Grid)(({ theme }) => ({
   },
 }));
 
-const Post = (props) => {
+interface PostProps {
+  id: string; 
+  title: string; 
+  description: string;
+  updated: string; 
+  creatorName?: string; 
+  slug: string;
+  featuredImage: string;
+  courseId: number;
+};
+
+const Post = (props: PostProps) => {
   return (
     <StyledGrid item xs={12} md={6}>
       <Link
@@ -72,17 +83,6 @@ const Post = (props) => {
       </Link>
     </StyledGrid>
   );
-};
-
-Post.propTypes = {
-  id: PropTypes.string.isRequired,
-  title: PropTypes.string.isRequired,
-  description: PropTypes.string.isRequired,
-  updated: PropTypes.string.isRequired,
-  creatorName: PropTypes.string,
-  slug: PropTypes.string.isRequired,
-  featuredImage: PropTypes.object,
-  courseId: PropTypes.number.isRequired,
 };
 
 export default Post;

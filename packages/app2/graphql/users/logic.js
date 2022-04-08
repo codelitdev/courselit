@@ -29,7 +29,6 @@ export const getUser = async (email = null, userId = null, ctx) => {
   const { user: loggedInUser } = ctx;
   const loggedUserEmail = loggedInUser && loggedInUser.email;
   const loggedUserId = loggedInUser && loggedInUser.userId;
-  console.log(ctx);
 
   if (!email && !userId && !loggedInUser) {
     throw new Error(responses.invalid_user_id);

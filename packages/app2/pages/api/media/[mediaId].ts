@@ -48,7 +48,6 @@ async function getMediaDetailsHandler(
     let response = await medialitService.getMedia(<string>mediaId);
     return res.status(200).json(response);
   } catch (err: any) {
-    console.error(err);
     return res.status(500).json({ error: responses.internal_error });
   }
 }
@@ -71,7 +70,6 @@ async function deleteMediaHandler(
     let response = await medialitService.deleteMedia(<string>mediaId);
     return res.status(200).json({ message: responses.success });
   } catch (err: any) {
-    console.error(err);
     return res.status(500).json({ error: responses.internal_error });
   }
 }

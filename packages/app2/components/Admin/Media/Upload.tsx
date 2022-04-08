@@ -170,7 +170,7 @@ function Upload({ auth, address, dispatch, resetOverview }: UploadProps) {
 
   return (
     <StyledSection>
-      <form onSubmit={onUpload} enctype="multipart/form-data">
+      <form onSubmit={onUpload} encType="multipart/form-data">
         <Button variant="outlined" component="label" color="primary">
           {BUTTON_ADD_FILE}
           <input

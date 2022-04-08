@@ -89,7 +89,6 @@ const MediaPreview = (props: MediaPreviewProps) => {
       const media = await fetch.exec();
       setItem(media);
     } catch (err: any) {
-      console.log(err);
       (dispatch as ThunkDispatch<RootState, null, AnyAction>)(
         setAppMessage(new AppMessage(err.message))
       );
