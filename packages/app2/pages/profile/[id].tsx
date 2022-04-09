@@ -1,4 +1,4 @@
-import FetchBuilder from "../../ui-lib/fetch";
+import { FetchBuilder } from "@courselit/utils";
 import { Button, Grid, TextField, Typography } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import {
@@ -16,17 +16,13 @@ import {
 import { connect } from "react-redux";
 import Link from "next/link";
 import { useState } from "react";
-import {
-  networkAction,
-  refreshUserProfile,
-  setAppMessage,
-} from "../../state/actions";
+import { actionCreators } from "@courselit/state-management";
 import { getBackendAddress } from "../../ui-lib/utils";
 import { Section } from "@courselit/components-library";
 import dynamic from "next/dynamic";
-import AppMessage from "../../ui-models/app-message";
-import { AppDispatch } from "../../state/store";
-import State from "../../ui-models/state";
+import { AppMessage } from "@courselit/common-models";
+import type { State } from "@courselit/common-models";
+import { AppDispatch } from "@courselit/state-management";
 
 const BaseLayout = dynamic(() => import("../../components/Public/BaseLayout"));
 
@@ -37,6 +33,7 @@ function Profile({ user, profile, auth, dispatch, address }: any) {
   const isMyProfile = profile && profile.id === user.id;
   const [bio, setBio] = useState(user.bio || "");
   const [name, setName] = useState(user.name || "");
+  const { networkAction, refreshUserProfile, setAppMessage } = actionCreators;
 
   const saveDetails = async () => {
     if (!isMyProfile) {

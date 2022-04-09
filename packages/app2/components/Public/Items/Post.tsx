@@ -15,7 +15,7 @@ const classes = {
   title: `${PREFIX}-title`,
 };
 
-const StyledGrid = styled(Grid)(({ theme } : { theme: any; }) => ({
+const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
   [`& .${classes.container}`]: {
     overflow: "hidden",
   },
@@ -39,15 +39,15 @@ const StyledGrid = styled(Grid)(({ theme } : { theme: any; }) => ({
 }));
 
 interface PostProps {
-  id: string; 
-  title: string; 
+  id: string;
+  title: string;
   description: string;
-  updated: string; 
-  creatorName?: string; 
+  updated: string;
+  creatorName?: string;
   slug: string;
   featuredImage: string;
   courseId: number;
-};
+}
 
 const Post = (props: PostProps) => {
   return (

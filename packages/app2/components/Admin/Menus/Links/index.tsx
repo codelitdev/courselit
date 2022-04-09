@@ -1,27 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { Grid, Button } from "@mui/material";
 import { ADD_NEW_LINK_BUTTON } from "../../../../ui-config/strings";
-import FetchBuilder from "../../../../ui-lib/fetch";
+import { FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";
-import { networkAction } from "../../../../state/actions";
+import { actionCreators } from "@courselit/state-management";
 import dynamic from "next/dynamic";
-import { RootState } from "../../../../state/store";
-import type Auth from "../../../../ui-models/auth";
-import type { ThunkDispatch } from "redux-thunk";
-import type Address from "../../../../ui-models/address";
-import type { AnyAction } from "redux";
-import type UILink from "../../../../ui-models/link";
+import type { AppDispatch, AppState } from "@courselit/state-management";
+import type { Auth, Address, Link } from "@courselit/common-models";
+
+const { networkAction } = actionCreators;
 
 const NavigationLinkItem = dynamic(() => import("./NavigationLinkItem"));
 
 interface NavigationLinksProps {
   auth: Auth;
-  dispatch: ThunkDispatch<RootState, null, AnyAction>;
+  dispatch: AppDispatch;
   address: Address;
 }
 
 const NavigationLinks = (props: NavigationLinksProps) => {
-  const [links, setLinks] = useState<UILink[]>([]);
+  const [links, setLinks] = useState<Link[]>([]);
   const { dispatch, address, auth } = props;
 
   useEffect(() => {
@@ -92,12 +90,12 @@ const NavigationLinks = (props: NavigationLinksProps) => {
   );
 };
 
-const mapStateToProps = (state: RootState) => ({
+const mapStateToProps = (state: AppState) => ({
   auth: state.auth,
   address: state.address,
 });
 
-const mapDispatchToProps = (dispatch: any) => ({
+const mapDispatchToProps = (dispatch: AppDispatch) => ({
   dispatch: dispatch,
 });
 

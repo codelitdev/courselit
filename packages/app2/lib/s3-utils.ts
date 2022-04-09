@@ -2,8 +2,13 @@ import aws from "aws-sdk";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import constants from "../config/constants";
-const { cloudEndpoint, cloudKey, cloudSecret, cloudBucket, cloudRegion } =
-  constants;
+const {
+  cloudEndpoint,
+  cloudKey,
+  cloudSecret,
+  cloudBucket,
+  cloudRegion,
+} = constants;
 
 export const generateFolderPaths = ({
   uploadFolder,

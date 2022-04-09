@@ -24,7 +24,7 @@ import {
   NEW_COURSE_PAGE_HEADING,
   EDIT_COURSE_PAGE_HEADING,
 } from "../../../../ui-config/strings";
-import { networkAction, setAppMessage } from "../../../../state/actions";
+import { actionCreators } from "@courselit/state-management";
 import {
   queryGraphQL,
   formulateCourseUrl,
@@ -44,16 +44,16 @@ import {
   IconButton,
 } from "@mui/material";
 import { ArrowBack, Delete } from "@mui/icons-material";
-import AppMessage from "../../../../ui-models/app-message";
+import { AppMessage } from "@courselit/common-models";
 import { MIMETYPE_IMAGE, permissions } from "../../../../ui-config/constants";
-import FetchBuilder from "../../../../ui-lib/fetch";
+import { FetchBuilder } from "@courselit/utils";
 import { Section, RichText as TextEditor } from "@courselit/components-library";
 import dynamic from "next/dynamic";
-import { AppDispatch } from "../../../../state/store";
-import State from "../../../../ui-models/state";
-import Profile from "../../../../ui-models/profile";
-import Auth from "../../../../ui-models/auth";
-import Address from "../../../../ui-models/address";
+import type { AppDispatch, AppState } from "@courselit/state-management";
+import type { Profile, Auth, Address } from "@courselit/common-models";
+
+const { networkAction, setAppMessage } = actionCreators;
+
 const PREFIX = "index";
 
 const classes = {
@@ -219,10 +219,9 @@ const CourseEditor = (props: CourseEditorProps) => {
       `;
     }
     const fetch = new FetchBuilder()
-      .setUrl(`${props.address.backend}/graph`)
+      .setUrl(`${props.address.backend}/api/graph`)
       .setPayload(query)
       .setIsGraphQLEndpoint(true)
-      .setAuthToken(props.auth.token)
       .build();
     try {
       const response = await fetch.exec();
@@ -266,10 +265,9 @@ const CourseEditor = (props: CourseEditorProps) => {
       }
     `;
     const fetch = new FetchBuilder()
-      .setUrl(`${props.address.backend}/graph`)
+      .setUrl(`${props.address.backend}/api/graph`)
       .setPayload(query)
       .setIsGraphQLEndpoint(true)
-      .setAuthToken(props.auth.token)
       .build();
     try {
       props.dispatch(networkAction(true));
@@ -278,7 +276,7 @@ const CourseEditor = (props: CourseEditorProps) => {
         setCourseDataWithDescription(response.course);
         props.dispatch(setAppMessage(new AppMessage(APP_MESSAGE_COURSE_SAVED)));
       }
-    } catch (err) {
+    } catch (err: any) {
       props.dispatch(setAppMessage(new AppMessage(err.message)));
     } finally {
       props.dispatch(networkAction(false));
@@ -691,7 +689,7 @@ const CourseEditor = (props: CourseEditorProps) => {
   );
 };
 
-const mapStateToProps = (state: State) => ({
+const mapStateToProps = (state: AppState) => ({
   auth: state.auth,
   profile: state.profile,
   address: state.address,

@@ -15,7 +15,7 @@ interface WidgetByNameProps {
 const WidgetByName = ({ name, section, address }: WidgetByNameProps) => {
   const Widget = widgets[name].widget;
   const fetch = new FetchBuilder()
-    .setUrl(`${address.backend}/graph`)
+    .setUrl(`${address.backend}/api/graph`)
     .setIsGraphQLEndpoint(true);
 
   return (

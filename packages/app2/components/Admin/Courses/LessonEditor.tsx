@@ -36,19 +36,16 @@ import {
   MIMETYPE_AUDIO,
   MIMETYPE_PDF,
 } from "../../../ui-config/constants.js";
-import FetchBuilder from "../../../ui-lib/fetch";
-import { networkAction, setAppMessage } from "../../../state/actions";
+import { FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";
-import AppMessage from "../../../ui-models/app-message";
+import { AppMessage } from "@courselit/common-models";
 import { Section, RichText as TextEditor } from "@courselit/components-library";
 import dynamic from "next/dynamic";
-import { AppDispatch } from "../../../state/store";
-import State from "../../../ui-models/state";
-import Auth from "../../../ui-models/auth";
-import Lesson from "../../../ui-models/lesson";
-import Address from "../../../ui-models/address";
-import { ThunkDispatch } from "redux-thunk";
-import { AnyAction } from "redux";
+import type { AppDispatch, AppState } from "@courselit/state-management";
+import type { Auth, Lesson, Address } from "@courselit/common-models";
+import { actionCreators } from "@courselit/state-management";
+
+const { networkAction, setAppMessage } = actionCreators;
 
 const PREFIX = "LessonEditor";
 
@@ -156,7 +153,7 @@ const LessonEditor = (props: LessonEditorProps) => {
       .build();
 
     try {
-      (dispatch as ThunkDispatch<State, null, AnyAction>)(networkAction(true));
+      dispatch(networkAction(true));
       const response = await fetch.exec();
       if (response.lesson) {
         setLesson(
@@ -168,7 +165,7 @@ const LessonEditor = (props: LessonEditorProps) => {
     } catch (err) {
       // setError(err.message)
     } finally {
-      (dispatch as ThunkDispatch<State, null, AnyAction>)(networkAction(false));
+      dispatch(networkAction(false));
     }
   };
 
@@ -219,18 +216,14 @@ const LessonEditor = (props: LessonEditorProps) => {
       .build();
 
     try {
-      (dispatch as ThunkDispatch<State, null, AnyAction>)(networkAction(true));
+      dispatch(networkAction(true));
       await fetch.exec();
-      (dispatch as ThunkDispatch<State, null, AnyAction>)(
-        setAppMessage(new AppMessage(APP_MESSAGE_LESSON_SAVED))
-      );
+      dispatch(setAppMessage(new AppMessage(APP_MESSAGE_LESSON_SAVED)));
       props.onLessonUpdated();
     } catch (err: any) {
-      (dispatch as ThunkDispatch<State, null, AnyAction>)(
-        setAppMessage(new AppMessage(err.message))
-      );
+      dispatch(setAppMessage(new AppMessage(err.message)));
     } finally {
-      (dispatch as ThunkDispatch<State, null, AnyAction>)(networkAction(false));
+      dispatch(networkAction(false));
     }
   };
 
@@ -260,22 +253,18 @@ const LessonEditor = (props: LessonEditorProps) => {
       .build();
 
     try {
-      (dispatch as ThunkDispatch<State, null, AnyAction>)(networkAction(true));
+      dispatch(networkAction(true));
       const response = await fetch.exec();
 
       if (response.lesson) {
         setLesson(Object.assign({}, lesson, { id: response.lesson.id }));
         props.onLessonUpdated();
-        (dispatch as ThunkDispatch<State, null, AnyAction>)(
-          setAppMessage(new AppMessage(APP_MESSAGE_LESSON_SAVED))
-        );
+        dispatch(setAppMessage(new AppMessage(APP_MESSAGE_LESSON_SAVED)));
       }
     } catch (err: any) {
-      (dispatch as ThunkDispatch<State, null, AnyAction>)(
-        setAppMessage(new AppMessage(err.message))
-      );
+      dispatch(setAppMessage(new AppMessage(err.message)));
     } finally {
-      (dispatch as ThunkDispatch<State, null, AnyAction>)(networkAction(false));
+      dispatch(networkAction(false));
     }
   };
 
@@ -295,21 +284,15 @@ const LessonEditor = (props: LessonEditorProps) => {
         .build();
 
       try {
-        (dispatch as ThunkDispatch<State, null, AnyAction>)(
-          networkAction(true)
-        );
+        dispatch(networkAction(true));
         const response = await fetch.exec();
 
         if (response.result) {
-          (dispatch as ThunkDispatch<State, null, AnyAction>)(
-            setAppMessage(new AppMessage(APP_MESSAGE_LESSON_DELETED))
-          );
+          dispatch(setAppMessage(new AppMessage(APP_MESSAGE_LESSON_DELETED)));
           props.onLessonUpdated(true);
         }
       } catch (err: any) {
-        (dispatch as ThunkDispatch<State, null, AnyAction>)(
-          setAppMessage(new AppMessage(err.message))
-        );
+        dispatch(setAppMessage(new AppMessage(err.message)));
       }
     }
   };
@@ -503,7 +486,7 @@ const LessonEditor = (props: LessonEditorProps) => {
   );
 };
 
-const mapStateToProps = (state: State) => ({
+const mapStateToProps = (state: AppState) => ({
   auth: state.auth,
   address: state.address,
 });

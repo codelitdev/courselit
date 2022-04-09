@@ -6,5 +6,5 @@ export default interface Profile {
   email: string;
   bio: string;
   permissions: unknown[];
-  userId: number;
+  userId: string;
 }

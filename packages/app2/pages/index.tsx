@@ -1,20 +1,18 @@
 import { connect } from "react-redux";
-import PropTypes from "prop-types";
 import { HEADER_BLOG_POSTS_SECTION, BTN_VIEW_ALL } from "../ui-config/strings";
 import { Button, Grid, Typography } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import Link from "next/link";
-import FetchBuilder from "../ui-lib/fetch";
 import { getBackendAddress } from "../ui-lib/utils";
 import dynamic from "next/dynamic";
 import { Section } from "@courselit/components-library";
-import SiteInfo from "../ui-models/site-info";
-import State from "../ui-models/state";
+import type { SiteInfo, State } from "@courselit/common-models";
+import { FetchBuilder } from "@courselit/utils";
 
 const BaseLayout = dynamic(() => import("../components/Public/BaseLayout"));
 const Items = dynamic(() => import("../components/Public/Items"));
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles((theme: any) => ({
   headerTop: {
     marginBottom: theme.spacing(2),
   },
@@ -42,8 +40,8 @@ const generateQuery = (pageOffset = 1) => `
 `;
 
 interface IndexProps {
-    siteinfo: SiteInfo;
-    courses: any;
+  siteinfo: SiteInfo;
+  courses: any;
 }
 
 const Index = (props: IndexProps) => {

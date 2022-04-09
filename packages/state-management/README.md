@@ -1,11 +1,3 @@
 # `@courselit/state-management`
 
-> TODO: description
-
-## Usage
-
-```
-const stateManagement = require('@courselit/state-management');
-
-// TODO: DEMONSTRATE API
-```
+State management for CourseLit LMS. It is powered by Redux.

@@ -20,16 +20,13 @@ import {
   PERM_WIDGETS,
 } from "../../../ui-config/strings";
 import { connect } from "react-redux";
-import FetchBuilder from "../../../ui-lib/fetch";
-import { networkAction, setAppMessage } from "../../../state/actions";
-import AppMessage from "../../../ui-models/app-message";
-import User from "../../../ui-models/user";
-import Auth from "../../../ui-models/auth";
-import Address from "../../../ui-models/address";
-import { AppDispatch } from "../../../state/store";
-import State from "../../../ui-models/state";
-import { ThunkDispatch } from "redux-thunk";
-import { AnyAction } from "redux";
+import { FetchBuilder } from "@courselit/utils";
+import type { AppDispatch, AppState } from "@courselit/state-management";
+import { actionCreators } from "@courselit/state-management";
+import { AppMessage } from "@courselit/common-models";
+import type { User, Auth, Address } from "@courselit/common-models";
+
+const { networkAction, setAppMessage } = actionCreators;
 
 interface PermissionsEditorProps {
   user: User;
@@ -165,7 +162,7 @@ function PermissionsEditor({
   );
 }
 
-const mapStateToProps = (state: State) => ({
+const mapStateToProps = (state: AppState) => ({
   auth: state.auth,
   address: state.address,
   networkAction: state.networkAction,

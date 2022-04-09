@@ -19,14 +19,13 @@ import { connect } from "react-redux";
 import dynamic from "next/dynamic";
 import { Section } from "@courselit/components-library";
 import { FileCopy } from "@mui/icons-material";
-import { networkAction, setAppMessage } from "../../../state/actions";
-import AppMessage from "../../../ui-models/app-message";
-import { AppDispatch, RootState } from "../../../state/store";
-import Address from "../../../ui-models/address";
-import { AnyAction } from "redux";
-import { ThunkDispatch } from "redux-thunk";
-import FetchBuilder from "../../../ui-lib/fetch";
-import Media from "../../../models/Media";
+import { AppMessage } from "@courselit/common-models";
+import type { AppDispatch, AppState } from "@courselit/state-management";
+import type { Address, Media } from "@courselit/common-models";
+import { FetchBuilder } from "@courselit/utils";
+import { actionCreators } from "@courselit/state-management";
+
+const { networkAction, setAppMessage } = actionCreators;
 
 const PREFIX = "MediaPreview";
 
@@ -83,17 +82,17 @@ const MediaPreview = (props: MediaPreviewProps) => {
       .build();
 
     try {
-      (dispatch as ThunkDispatch<RootState, null, AnyAction>)(
+      (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
         networkAction(true)
       );
       const media = await fetch.exec();
       setItem(media);
     } catch (err: any) {
-      (dispatch as ThunkDispatch<RootState, null, AnyAction>)(
+      (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
         setAppMessage(new AppMessage(err.message))
       );
     } finally {
-      (dispatch as ThunkDispatch<RootState, null, AnyAction>)(
+      (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
         networkAction(false)
       );
     }
@@ -106,7 +105,7 @@ const MediaPreview = (props: MediaPreviewProps) => {
 
     try {
       await navigator.clipboard.writeText(file!);
-      (dispatch as ThunkDispatch<RootState, null, AnyAction>)(
+      (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
         setAppMessage(new AppMessage(MEDIA_URL_COPIED))
       );
     } catch (e) {}
@@ -196,7 +195,7 @@ const MediaPreview = (props: MediaPreviewProps) => {
   );
 };
 
-const mapStateToProps = (state: RootState) => ({
+const mapStateToProps = (state: AppState) => ({
   address: state.address,
 });
 

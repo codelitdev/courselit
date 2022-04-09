@@ -2,9 +2,9 @@ import React, { useRef, useState, useEffect } from "react";
 import { styled } from "@mui/material/styles";
 import { connect } from "react-redux";
 import { Grid, Typography, Link, TextField, Button } from "@mui/material";
-import FetchBuilder from "../../../../ui-lib/fetch";
-import { networkAction, setAppMessage } from "../../../../state/actions";
-import AppMessage from "../../../../ui-models/app-message";
+import { FetchBuilder } from "@courselit/utils";
+import { actionCreators } from "@courselit/state-management";
+import { AppMessage } from "@courselit/common-models";
 import {
   APP_MESSAGE_THEME_APPLIED,
   APP_MESSAGE_THEME_COPIED,
@@ -24,11 +24,10 @@ import {
 import { THEMES_REPO } from "../../../../ui-config/constants";
 import { Section } from "@courselit/components-library";
 import ThemeItem from "./ThemeItem";
-import Address from "../../../../ui-models/address";
-import { ThunkDispatch } from "redux-thunk";
-import State from "../../../../ui-models/state";
-import { AnyAction } from "redux";
-import { AppDispatch } from "../../../../state/store";
+import type { Address } from "@courselit/common-models";
+import type { AppDispatch, AppState } from "@courselit/state-management";
+
+const { setAppMessage, networkAction } = actionCreators;
 
 const PREFIX = "index";
 
@@ -49,7 +48,7 @@ const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
 
 interface ThemesManagerProps {
   address: Address;
-  dispatch: ThunkDispatch<State, null, AnyAction>;
+  dispatch: AppDispatch;
 }
 
 const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
@@ -147,7 +146,7 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
     return true;
   };
 
-  const onNewThemeTextChanged = (e) => {
+  const onNewThemeTextChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNewThemeText(e.target.value);
 
     if (validateNewThemeText(e.target.value)) {
@@ -304,7 +303,7 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
   );
 };
 
-const mapStateToProps = (state: State) => ({
+const mapStateToProps = (state: AppState) => ({
   auth: state.auth,
   address: state.address,
 });

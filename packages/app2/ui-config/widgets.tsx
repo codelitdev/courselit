@@ -10,7 +10,7 @@ const getAllWidgets = (): Record<string, any> => {
   }
 
   // Additional widgets are added here
-//   widgets[buttondown.metadata.name] = buttondown;
+  //   widgets[buttondown.metadata.name] = buttondown;
 
   return widgets;
 };

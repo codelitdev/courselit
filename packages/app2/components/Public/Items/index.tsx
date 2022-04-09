@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
-import { networkAction } from "../../../state/actions";
-import FetchBuilder from "../../../ui-lib/fetch";
+import { FetchBuilder } from "@courselit/utils";
 import { Grid, Button } from "@mui/material";
 import { BTN_LOAD_MORE } from "../../../ui-config/strings";
 import Post from "./Post";
 import Course from "./Course";
-import { AppDispatch } from "../../../state/store";
-import State from "../../../ui-models/state";
-import Address from "../../../ui-models/address";
+import type { AppDispatch, AppState } from "@courselit/state-management";
+import { actionCreators } from "@courselit/state-management";
+import type { Address } from "@courselit/common-models";
+
+const { networkAction } = actionCreators;
 
 interface ListProps {
   generateQuery: (...args: any[]) => void;
@@ -17,7 +18,7 @@ interface ListProps {
   dispatch: AppDispatch;
   posts: boolean;
   address: Address;
-};
+}
 
 const List = (props: ListProps) => {
   const [courses, setCourses] = useState(props.initialItems || []);
@@ -79,7 +80,7 @@ const List = (props: ListProps) => {
   );
 };
 
-const mapStateToProps = (state: State) => ({
+const mapStateToProps = (state: AppState) => ({
   address: state.address,
 });
 

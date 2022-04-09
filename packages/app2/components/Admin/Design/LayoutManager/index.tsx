@@ -17,24 +17,16 @@ import {
 import { useTheme } from "@mui/styles";
 import { Add } from "@mui/icons-material";
 import { connect } from "react-redux";
-import {
-  networkAction,
-  layoutAvailable,
-  setAppMessage,
-} from "../../../../state/actions";
-import AppMessage from "../../../../ui-models/app-message";
+import { actionCreators } from "@courselit/state-management";
 import widgets from "../../../../ui-config/widgets";
 import { Section } from "@courselit/components-library";
-import FetchBuilder from "../../../../ui-lib/fetch";
+import { FetchBuilder } from "@courselit/utils";
 import dynamic from "next/dynamic";
-import State from "../../../../ui-models/state";
-import Auth from "../../../../ui-models/auth";
-import Address from "../../../../ui-models/address";
-import Profile from "../../../../ui-models/profile";
-import { ThunkDispatch } from "redux-thunk";
-import { AnyAction } from "redux";
-import { AppDispatch } from "../../../../state/store";
-import Layout from "../../../../ui-models/layout";
+import type { Auth, Address, Profile, Layout } from "@courselit/common-models";
+import { AppMessage } from "@courselit/common-models";
+import type { AppDispatch, AppState } from "@courselit/state-management";
+
+const { networkAction, layoutAvailable, setAppMessage } = actionCreators;
 
 const PREFIX = "index";
 
@@ -116,7 +108,7 @@ const AddedComponent = dynamic(() => import("./AddedComponent"));
 interface PageDesignerProps {
   layout: Layout;
   auth: Auth;
-  dispatch: ThunkDispatch<State, null, AnyAction>;
+  dispatch: AppDispatch;
   address: Address;
   profile: Profile;
 }
@@ -222,7 +214,7 @@ const PageDesigner = (props: PageDesignerProps) => {
       } else {
         props.dispatch(setAppMessage(new AppMessage(response.message)));
       }
-    } catch (err) {
+    } catch (err: any) {
       props.dispatch(setAppMessage(new AppMessage(err.message)));
     } finally {
       props.dispatch(networkAction(false));
@@ -471,7 +463,7 @@ const PageDesigner = (props: PageDesignerProps) => {
   );
 };
 
-const mapStateToProps = (state: State) => ({
+const mapStateToProps = (state: AppState) => ({
   layout: state.layout,
   auth: state.auth,
   address: state.address,

@@ -10,9 +10,12 @@
     "prettier": "prettier --write **/*.ts"
   },
   "dependencies": {
+    "@courselit/common-models": "^0.17.11",
     "@courselit/common-widgets": "^0.17.11",
     "@courselit/components-library": "^0.17.11",
+    "@courselit/state-management": "^0.17.11",
     "@courselit/thumbnail": "^0.17.0",
+    "@courselit/utils": "^0.17.11",
     "@courselit/widget-buttondown": "^0.17.11",
     "@emotion/cache": "^11.7.1",
     "@emotion/react": "^11.8.2",
@@ -33,7 +36,6 @@
     "mongoose-sequence": "^5.3.1",
     "next": "12.1.0",
     "next-connect": "^0.12.2",
-    "next-redux-wrapper": "^7.0.5",
     "nodemailer": "^6.7.2",
     "passport": "^0.5.2",
     "passport-jwt": "^4.0.0",
@@ -41,9 +43,7 @@
     "pug": "^3.0.2",
     "react": "17.0.2",
     "react-dom": "17.0.2",
-    "react-redux": "^7.2.8",
-    "redux": "^4.1.2",
-    "redux-thunk": "^2.4.1"
+    "react-redux": "^7.2.8"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",

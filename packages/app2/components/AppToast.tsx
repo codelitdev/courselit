@@ -1,9 +1,11 @@
 import React, { SyntheticEvent } from "react";
 import { connect } from "react-redux";
 import { Snackbar, IconButton, Button } from "@mui/material";
-import { clearAppMessage } from "../state/actions";
+import { actionCreators } from "@courselit/state-management";
 import { Close } from "@mui/icons-material";
-import defaultState from "../state/default-state";
+import type { AppDispatch, AppState } from "@courselit/state-management";
+
+const { clearAppMessage } = actionCreators;
 
 interface Action {
   text: string;
@@ -79,11 +81,11 @@ const AppToast = (props: AppToastProps) => {
   );
 };
 
-const mapStateToProps = (state: typeof defaultState) => ({
+const mapStateToProps = (state: AppState) => ({
   message: state.message,
 });
 
-const mapDispatchToProps = (dispatch: any) => ({
+const mapDispatchToProps = (dispatch: AppDispatch) => ({
   dispatch: dispatch,
 });
 

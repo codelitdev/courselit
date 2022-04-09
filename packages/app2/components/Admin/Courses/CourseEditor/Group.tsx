@@ -24,14 +24,10 @@ import {
   LABEL_GROUP_COLLAPSE,
 } from "../../../../ui-config/strings";
 import { ExpandMore, Add } from "@mui/icons-material";
-import { setAppMessage } from "../../../../state/actions";
-import AppMessage from "../../../../ui-models/app-message";
-import { AppDispatch } from "../../../../state/store";
-import Group from "../../../../ui-models/group";
-import Lesson from "../../../../ui-models/lesson";
-import { ThunkDispatch } from "redux-thunk";
-import State from "../../../../ui-models/state";
-import { AnyAction } from "redux";
+import { AppMessage } from "@courselit/common-models";
+import type { Group, Lesson } from "@courselit/common-models";
+import type { AppDispatch } from "@courselit/state-management";
+import { actionCreators } from "@courselit/state-management";
 
 const PREFIX = "Group";
 
@@ -110,8 +106,10 @@ const Group = ({
 
   const handleAddLesson = (groupId: string) => {
     if (!groupId) {
-      return (dispatch as ThunkDispatch<State, null, AnyAction>)(
-        setAppMessage(new AppMessage(ERROR_GROUP_NEW_LESSON_WITHOUT_SAVE))
+      return dispatch(
+        actionCreators.setAppMessage(
+          new AppMessage(ERROR_GROUP_NEW_LESSON_WITHOUT_SAVE)
+        )
       );
     }
 

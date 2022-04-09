@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import Head from "next/head";
 import Template from "./Template.js";
 import Scaffold from "./Scaffold";
-import defaultState from "../../../state/default-state.js";
+import type { AppState } from "@courselit/state-management";
 
 interface MasterLayoutProps {
   title: string;
@@ -38,7 +38,7 @@ const MasterLayout = (props: MasterLayoutProps) => {
   );
 };
 
-const mapStateToProps = (state: typeof defaultState) => ({
+const mapStateToProps = (state: AppState) => ({
   networkAction: state.networkAction,
   siteInfo: state.siteinfo,
   layout: state.layout,

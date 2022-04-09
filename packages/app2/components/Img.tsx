@@ -1,6 +1,6 @@
+import type { AppState } from "@courselit/state-management";
 import React from "react";
 import { connect } from "react-redux";
-import defaultState from "../state/default-state.js";
 
 interface ImgProps {
   src: string;
@@ -31,7 +31,7 @@ const Img = (props: ImgProps) => {
   );
 };
 
-const mapStateToProps = (state: typeof defaultState) => ({
+const mapStateToProps = (state: AppState) => ({
   address: state.address,
 });
 

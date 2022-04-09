@@ -6,8 +6,10 @@ import { isSubscriptionValid } from "../lib/utils";
 import { NextApiRequest, NextApiResponse } from "next";
 import ApiRequest from "../models/ApiRequest";
 
-const { domainNameForSingleTenancy, placeholderEmailForSingleTenancy } =
-  constants;
+const {
+  domainNameForSingleTenancy,
+  placeholderEmailForSingleTenancy,
+} = constants;
 
 const getDomainBasedOnSubdomain = async (
   subdomain: string

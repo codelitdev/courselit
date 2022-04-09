@@ -11,16 +11,15 @@ import {
 import { Add } from "@mui/icons-material";
 import { OverviewAndDetail } from "@courselit/components-library";
 import dynamic from "next/dynamic";
-import { networkAction, setAppMessage } from "../../../state/actions";
+import { actionCreators } from "@courselit/state-management";
+import type { AppDispatch, AppState } from "@courselit/state-management";
 import { checkPermission } from "../../../ui-lib/utils";
-import AppMessage from "../../../ui-models/app-message";
+import { AppMessage } from "@courselit/common-models";
 import constants from "../../../config/constants";
-import State from "../../../ui-models/state";
-import Auth from "../../../ui-models/auth";
-import Profile from "../../../ui-models/profile";
-import Address from "../../../ui-models/address";
-import Media from "../../../ui-models/media";
+import type { Auth, Profile, Address, Media } from "@courselit/common-models";
 const { permissions } = constants;
+
+const { networkAction, setAppMessage } = actionCreators;
 
 const PREFIX = "index";
 
@@ -45,7 +44,7 @@ const Img = dynamic(() => import("../../Img"));
 interface IndexProps {
   auth: Auth;
   profile: Profile;
-  dispatch: (...args: any[]) => void;
+  dispatch: AppDispatch;
   address: Address;
   mimeTypesToShow: string[];
   selectionMode: boolean;
@@ -222,7 +221,7 @@ const Index = (props: IndexProps) => {
   );
 };
 
-const mapStateToProps = (state: State) => ({
+const mapStateToProps = (state: AppState) => ({
   auth: state.auth,
   profile: state.profile,
   address: state.address,

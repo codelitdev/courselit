@@ -10,14 +10,12 @@ import {
 import { Section } from "@courselit/components-library";
 import { Grid, TextField, Button, Typography } from "@mui/material";
 import { useRouter } from "next/router";
-import Address from "../ui-models/address";
-import Auth from "../ui-models/auth";
-import State from "../ui-models/state";
+import type { Address, Auth, State } from "@courselit/common-models";
+import { AppMessage } from "@courselit/common-models";
 import { connect } from "react-redux";
-import { signedIn, networkAction, setAppMessage } from "../state/actions";
-import AppMessage from "../ui-models/app-message";
-import { ThunkDispatch } from "redux-thunk";
-import { AnyAction } from "redux";
+import { actionCreators } from "@courselit/state-management";
+import type { ThunkDispatch } from "redux-thunk";
+import type { AnyAction } from "redux";
 
 const BaseLayout = dynamic(() => import("../components/Public/BaseLayout"));
 
@@ -32,6 +30,7 @@ const Login = ({ address, auth, dispatch, progress }: LoginProps) => {
   const [email, setEmail] = useState("");
   const router = useRouter();
   const { token, redirect } = router.query;
+  const { signedIn, networkAction, setAppMessage } = actionCreators;
 
   useEffect(() => {
     if (!auth.guest) {

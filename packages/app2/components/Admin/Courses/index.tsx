@@ -26,16 +26,16 @@ import {
 import FetchBuilder from "../../../ui-lib/fetch";
 import { Section } from "@courselit/components-library";
 import dynamic from "next/dynamic";
-import { networkAction } from "../../../state/actions";
 import { checkPermission } from "../../../ui-lib/utils";
 import { Add, Search } from "@mui/icons-material";
 import constants from "../../../config/constants";
 const { permissions } = constants;
 import Link from "next/link";
-import State from "../../../ui-models/state";
-import Auth from "../../../ui-models/auth";
-import Profile from "../../../ui-models/profile";
-import Address from "../../../ui-models/address";
+import type { Auth, Profile, Address } from "@courselit/common-models";
+import type { AppDispatch, AppState } from "@courselit/state-management";
+import { actionCreators } from "@courselit/state-management";
+
+const { networkAction } = actionCreators;
 
 const PREFIX = "index";
 
@@ -69,7 +69,7 @@ const Img = dynamic(() => import("../../Img"));
 interface IndexProps {
   auth: Auth;
   profile: Profile;
-  dispatch: () => void;
+  dispatch: AppDispatch;
   address: Address;
 }
 
@@ -251,10 +251,14 @@ const Index = (props: IndexProps) => {
   );
 };
 
-const mapStateToProps = (state: State) => ({
+const mapStateToProps = (state: AppState) => ({
   auth: state.auth,
   profile: state.profile,
   address: state.address,
 });
 
-export default connect(mapStateToProps)(Index);
+const mapDispatchToProps = (dispatch: AppDispatch) => ({
+  dispatch,
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(Index);

@@ -13,11 +13,6 @@ import {
   MIMETYPE_IMAGE,
 } from "../../ui-config/constants";
 import {
-  networkAction,
-  newSiteInfoAvailable,
-  setAppMessage,
-} from "../../state/actions";
-import {
   TextField,
   Button,
   Typography,
@@ -50,16 +45,16 @@ import {
   BUTTON_SAVE,
   PAYMENT_METHOD_NAME_NONE,
 } from "../../ui-config/strings";
-import FetchBuilder from "../../ui-lib/fetch";
+import { FetchBuilder } from "@courselit/utils";
 import { decode, encode } from "base-64";
 import dynamic from "next/dynamic";
-import AppMessage from "../../ui-models/app-message";
+import { AppMessage } from "@courselit/common-models";
 import { Section } from "@courselit/components-library";
-import SiteInfo from "../../ui-models/site-info";
-import Address from "../../ui-models/address";
-import State from "../../ui-models/state";
-import Auth from "../../ui-models/auth";
-import Media from "../../models/Media";
+import type { SiteInfo, Address, Auth } from "@courselit/common-models";
+import type { AppDispatch, AppState } from "@courselit/state-management";
+import { actionCreators } from "@courselit/state-management";
+
+const { networkAction, newSiteInfoAvailable, setAppMessage } = actionCreators;
 
 const PREFIX = "Settings";
 
@@ -676,14 +671,14 @@ const Settings = (props: SettingsProps) => {
   );
 };
 
-const mapStateToProps = (state: State) => ({
+const mapStateToProps = (state: AppState) => ({
   siteinfo: state.siteinfo,
   auth: state.auth,
   address: state.address,
   networkAction: state.networkAction,
 });
 
-const mapDispatchToProps = (dispatch: any) => ({
+const mapDispatchToProps = (dispatch: AppDispatch) => ({
   dispatch: dispatch,
 });
 

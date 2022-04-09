@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { styled } from "@mui/material/styles";
-import PropTypes from "prop-types";
 import { Grid, Button, Typography } from "@mui/material";
 import { Add } from "@mui/icons-material";
 import dynamic from "next/dynamic";
@@ -12,15 +11,12 @@ import {
 } from "../../../../ui-config/strings";
 import { Section, RichText as TextEditor } from "@courselit/components-library";
 import { connect } from "react-redux";
-import FetchBuilder from "../../../../ui-lib/fetch";
-import { networkAction, setAppMessage } from "../../../../state/actions";
-import AppMessage from "../../../../ui-models/app-message";
+import { FetchBuilder } from "@courselit/utils";
 import { LESSON_TYPE_TEXT } from "../../../../ui-config/constants";
-import Auth from "../../../../ui-models/auth";
-import Address from "../../../../ui-models/address";
-import Lesson from "../../../../ui-models/lesson";
-import State from "../../../../ui-models/state";
-import { AppDispatch } from "../../../../state/store";
+import type { Auth, Address, Lesson } from "@courselit/common-models";
+import { AppMessage } from "@courselit/common-models";
+import type { AppDispatch, AppState } from "@courselit/state-management";
+import { actionCreators } from "@courselit/state-management";
 
 const PREFIX = "CourseStructureEditor";
 
@@ -97,16 +93,16 @@ const CourseStructureEditor = ({
       .setIsGraphQLEndpoint(true)
       .build();
     try {
-      dispatch(networkAction(true));
+      dispatch(actionCreators.networkAction(true));
       const response = await fetch.exec();
       if (response.course) {
         setLessons([...response.course.lessons]);
         setGroups([...response.course.groups]);
       }
     } catch (err: any) {
-      dispatch(setAppMessage(new AppMessage(err.message)));
+      dispatch(actionCreators.setAppMessage(new AppMessage(err.message)));
     } finally {
-      dispatch(networkAction(false));
+      dispatch(actionCreators.networkAction(false));
     }
   };
 
@@ -157,15 +153,15 @@ const CourseStructureEditor = ({
       .setIsGraphQLEndpoint(true)
       .build();
     try {
-      dispatch(networkAction(true));
+      dispatch(actionCreators.networkAction(true));
       const response = await fetch.exec();
       if (response.course) {
         setGroups([...response.course.groups]);
       }
     } catch (err: any) {
-      dispatch(setAppMessage(new AppMessage(err.message)));
+      dispatch(actionCreators.setAppMessage(new AppMessage(err.message)));
     } finally {
-      dispatch(networkAction(false));
+      dispatch(actionCreators.networkAction(false));
     }
   };
 
@@ -233,15 +229,15 @@ const CourseStructureEditor = ({
       .setIsGraphQLEndpoint(true)
       .build();
     try {
-      dispatch(networkAction(true));
+      dispatch(actionCreators.networkAction(true));
       const response = await fetch.exec();
       if (response.course) {
         setGroups([...response.course.groups]);
       }
-    } catch (err) {
-      dispatch(setAppMessage(new AppMessage(err.message)));
+    } catch (err: any) {
+      dispatch(actionCreators.setAppMessage(new AppMessage(err.message)));
     } finally {
-      dispatch(networkAction(false));
+      dispatch(actionCreators.networkAction(false));
     }
   };
 
@@ -334,7 +330,7 @@ const CourseStructureEditor = ({
   );
 };
 
-const mapStateToProps = (state: State) => ({
+const mapStateToProps = (state: AppState) => ({
   auth: state.auth,
   address: state.address,
 });

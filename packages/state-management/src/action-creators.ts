@@ -19,7 +19,7 @@ import {
 import { FetchBuilder } from "@courselit/utils";
 import defaultState from "./default-state";
 import getAddress from "./utils/get-address";
-import type { State } from '@courselit/common-models';
+import type { State } from "@courselit/common-models";
 import { AppMessage } from "@courselit/common-models";
 import { ThunkAction } from "redux-thunk";
 import { AnyAction } from "redux";
@@ -153,7 +153,7 @@ export function updateSiteTheme() {
       }
       `;
       const fetch = new FetchBuilder()
-        .setUrl(`${getState().address.backend}/graph`)
+        .setUrl(`${getState().address.backend}/api/graph`)
         .setPayload(query)
         .setIsGraphQLEndpoint(true)
         .build();
@@ -185,7 +185,7 @@ export function updateSiteLayout() {
       `;
 
       const fetch = new FetchBuilder()
-        .setUrl(`${getState().address.backend}/graph`)
+        .setUrl(`${getState().address.backend}/api/graph`)
         .setPayload(query)
         .setIsGraphQLEndpoint(true)
         .build();
@@ -219,7 +219,7 @@ export function updateSiteNavigation() {
       }
       `;
       const fetch = new FetchBuilder()
-        .setUrl(`${getState().address.backend}/graph`)
+        .setUrl(`${getState().address.backend}/api/graph`)
         .setPayload(query)
         .setIsGraphQLEndpoint(true)
         .build();

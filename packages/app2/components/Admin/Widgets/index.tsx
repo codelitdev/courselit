@@ -5,11 +5,10 @@ import widgets from "../../../ui-config/widgets";
 import { connect } from "react-redux";
 import { ImageListItemBar } from "@mui/material";
 import { useTheme } from "@mui/styles";
-import FetchBuilder from "../../../ui-lib/fetch";
+import { FetchBuilder } from "@courselit/utils";
 import dynamic from "next/dynamic";
-import type Address from "../../../ui-models/address";
-import type Widget from "../../../ui-models/widget";
-import type { AppDispatch, RootState } from "../../../state/store";
+import type { Address, Widget } from "@courselit/common-models";
+import type { AppDispatch, AppState } from "@courselit/state-management";
 
 const Img = dynamic(() => import("../../Img"));
 
@@ -65,7 +64,7 @@ function Widgets({ address }: WidgetProps) {
   );
 }
 
-const mapStateToProps = (state: RootState) => ({
+const mapStateToProps = (state: AppState) => ({
   address: state.address,
 });
 

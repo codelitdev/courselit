@@ -7,7 +7,7 @@ import { styled } from "@mui/material/styles";
 import { Link, Grid, Typography } from "@mui/material";
 import dynamic from "next/dynamic";
 import { connect } from "react-redux";
-import defaultState from "../../../state/default-state";
+import type { AppState } from "@courselit/state-management";
 
 const PREFIX = "Branding";
 
@@ -77,7 +77,7 @@ const Branding = ({ siteinfo }: BrandingProps) => {
   );
 };
 
-const mapStateToProps = (state: typeof defaultState) => ({
+const mapStateToProps = (state: AppState) => ({
   siteinfo: state.siteinfo,
 });
 

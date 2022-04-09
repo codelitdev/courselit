@@ -5,25 +5,17 @@ import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import createEmotionCache from "../ui-lib/create-emotion-cache";
 import { Provider, useStore } from "react-redux";
-import wrapper from "../state/store";
+import { store as wrapper } from "@courselit/state-management";
 import { StyledEngineProvider } from "@mui/material/styles";
 import { CONSOLE_MESSAGE_THEME_INVALID } from "../ui-config/strings";
 import { createTheme, responsiveFontSizes } from "@mui/material/styles";
 import defaultTheme from "../ui-config/default-theme";
 import { deepmerge } from "@mui/utils";
 import App from "next/app";
-import State from "../ui-models/state";
+import type { State } from "@courselit/common-models";
 import { AnyAction } from "redux";
 import { ThunkDispatch } from "redux-thunk";
-import {
-  authChecked,
-  signedIn,
-  updateBackend,
-  updateSiteInfo,
-  updateSiteLayout,
-  updateSiteNavigation,
-  updateSiteTheme,
-} from "../state/actions";
+import { actionCreators } from "@courselit/state-management";
 
 type CourseLitProps = AppProps & {
   emotionCache: EmotionCache;
@@ -60,9 +52,13 @@ function MyApp({
       credentials: "same-origin",
     });
     if (response.status === 200) {
-      (store.dispatch as ThunkDispatch<State, null, AnyAction>)(signedIn());
+      (store.dispatch as ThunkDispatch<State, null, AnyAction>)(
+        actionCreators.signedIn()
+      );
     }
-    (store.dispatch as ThunkDispatch<State, null, AnyAction>)(authChecked());
+    (store.dispatch as ThunkDispatch<State, null, AnyAction>)(
+      actionCreators.authChecked()
+    );
   };
 
   const removeServerSideInjectedCSS = () => {
@@ -91,13 +87,21 @@ MyApp.getInitialProps = wrapper.getInitialAppProps(
     const { ctx } = context;
     if (ctx.req && ctx.req.headers && ctx.req.headers.host) {
       const protocol = ctx.req.headers["x-forwarded-proto"] || "http";
-      store.dispatch(updateBackend(`${protocol}://${ctx.req.headers.host}`));
-      await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
-        updateSiteInfo()
+      store.dispatch(
+        actionCreators.updateBackend(`${protocol}://${ctx.req.headers.host}`)
       );
-      // await store.dispatch(updateSiteLayout());
-      // await store.dispatch(updateSiteTheme());
-      // await store.dispatch(updateSiteNavigation());
+      await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
+        actionCreators.updateSiteInfo()
+      );
+      await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
+        actionCreators.updateSiteLayout()
+      );
+      await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
+        actionCreators.updateSiteTheme()
+      );
+      await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
+        actionCreators.updateSiteNavigation()
+      );
     }
 
     return {

@@ -6,17 +6,15 @@ import {
   SWITCH_ACCOUNT_ACTIVE,
   ENROLLED_COURSES_HEADER,
 } from "../../../ui-config/strings";
-import FetchBuilder from "../../../ui-lib/fetch";
-import { networkAction, setAppMessage } from "../../../state/actions";
-import AppMessage from "../../../ui-models/app-message";
+import { FetchBuilder } from "@courselit/utils";
+import { AppMessage } from "@courselit/common-models";
 import { Section } from "@courselit/components-library";
 import PermissionsEditor from "./PermissionsEditor";
-import Address from "../../../ui-models/address";
-import Auth from "../../../ui-models/auth";
-import { AppDispatch } from "../../../state/store";
-import State from "../../../ui-models/state";
-import { ThunkDispatch } from "redux-thunk";
-import { AnyAction } from "redux";
+import type { Address, Auth } from "@courselit/common-models";
+import type { AppDispatch, AppState } from "@courselit/state-management";
+import { actionCreators } from "@courselit/state-management";
+
+const { networkAction, setAppMessage } = actionCreators;
 
 const PREFIX = "Details";
 
@@ -43,7 +41,7 @@ interface DetailsProps {
   userId: string;
   auth: Auth;
   address: Address;
-  dispatch: ThunkDispatch<State, null, AnyAction>;
+  dispatch: AppDispatch;
 }
 
 const Details = ({ userId, auth, address, dispatch }: DetailsProps) => {
@@ -257,7 +255,7 @@ const Details = ({ userId, auth, address, dispatch }: DetailsProps) => {
   );
 };
 
-const mapStateToProps = (state: State) => ({
+const mapStateToProps = (state: AppState) => ({
   auth: state.auth,
   address: state.address,
   profile: state.profile,

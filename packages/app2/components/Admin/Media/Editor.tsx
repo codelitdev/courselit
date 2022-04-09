@@ -10,20 +10,17 @@ import {
 } from "../../../ui-config/strings";
 import dynamic from "next/dynamic";
 import { getGraphQLQueryFields } from "../../../ui-lib/utils";
-import FetchBuilder from "../../../ui-lib/fetch";
-import AppMessage from "../../../ui-models/app-message";
+import { FetchBuilder } from "@courselit/utils";
+import { AppMessage } from "@courselit/common-models";
 import { connect } from "react-redux";
-import { networkAction, setAppMessage } from "../../../state/actions";
 import { useRouter } from "next/router";
-import fetch from "isomorphic-unfetch";
 import { Section } from "@courselit/components-library";
-import Auth from "../../../ui-models/auth";
-import Address from "../../../ui-models/address";
-import State from "../../../ui-models/state";
-import { AnyAction } from "redux";
-import { ThunkDispatch } from "redux-thunk";
-import { AppDispatch, RootState } from "../../../state/store";
+import type { Auth, Address } from "@courselit/common-models";
+import type { AppDispatch, AppState } from "@courselit/state-management";
+import { actionCreators } from "@courselit/state-management";
 import { responses } from "../../../config/strings";
+
+const { networkAction, setAppMessage } = actionCreators;
 
 const AppDialog = dynamic(() => import("../../Public/AppDialog"));
 const MediaPreview = dynamic(() => import("./MediaPreview"));
@@ -61,23 +58,19 @@ function Editor({
     setDeleteMediaPopupOpened(false);
 
     try {
-      (dispatch as ThunkDispatch<State, null, AnyAction>)(networkAction(true));
+      dispatch(networkAction(true));
       const fetch = new FetchBuilder()
         .setUrl(`${address.backend}/api/media/${mediaBeingEdited.mediaId}`)
         .setHttpMethod("delete")
         .build();
 
       const response = await fetch.exec();
-      (dispatch as ThunkDispatch<State, null, AnyAction>)(
-        setAppMessage(new AppMessage(responses.media_deleted))
-      );
+      dispatch(setAppMessage(new AppMessage(responses.media_deleted)));
       onMediaDeleted(mediaBeingEdited.id);
     } catch (err: any) {
-      (dispatch as ThunkDispatch<State, null, AnyAction>)(
-        setAppMessage(new AppMessage(err.message))
-      );
+      dispatch(setAppMessage(new AppMessage(err.message)));
     } finally {
-      (dispatch as ThunkDispatch<State, null, AnyAction>)(networkAction(false));
+      dispatch(networkAction(false));
     }
   };
 
@@ -108,10 +101,9 @@ function Editor({
     }
     `;
     const fetch = new FetchBuilder()
-      .setUrl(`${address.backend}/graph`)
+      .setUrl(`${address.backend}/api/graph`)
       .setPayload(query)
       .setIsGraphQLEndpoint(true)
-      .setAuthToken(auth.token)
       .build();
     try {
       dispatch(networkAction(true));
@@ -219,7 +211,7 @@ function Editor({
   );
 }
 
-const mapStateToProps = (state: RootState) => ({
+const mapStateToProps = (state: AppState) => ({
   address: state.address,
   auth: state.auth,
 });

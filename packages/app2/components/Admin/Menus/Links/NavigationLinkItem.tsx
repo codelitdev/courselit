@@ -25,15 +25,13 @@ import {
 } from "../../../../ui-config/constants";
 import { Done, Delete } from "@mui/icons-material";
 import { connect } from "react-redux";
-import FetchBuilder from "../../../../ui-lib/fetch";
-import { networkAction, setAppMessage } from "../../../../state/actions";
-import AppMessage from "../../../../ui-models/app-message";
-import type { RootState } from "../../../../state/store";
-import type { ThunkDispatch } from "redux-thunk";
-import type Address from "../../../../ui-models/address";
-import type { AnyAction } from "redux";
-import type Auth from "../../../../ui-models/auth";
-import type UILink from "../../../../ui-models/link";
+import { FetchBuilder } from "@courselit/utils";
+import { AppMessage } from "@courselit/common-models";
+import type { Address, Auth, Link } from "@courselit/common-models";
+import type { AppDispatch, AppState } from "@courselit/state-management";
+import { actionCreators } from "@courselit/state-management";
+
+const { networkAction, setAppMessage } = actionCreators;
 
 const PREFIX = "NavigationLinkItem";
 
@@ -49,16 +47,16 @@ const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
 }));
 
 interface NavigationLinkItemProps {
-  link: UILink;
+  link: Link;
   auth: Auth;
-  dispatch: ThunkDispatch<RootState, null, AnyAction>;
+  dispatch: AppDispatch;
   index: number;
   removeItem: (...args: any[]) => void;
   address: Address;
 }
 
 const NavigationLinkItem = (props: NavigationLinkItemProps) => {
-  const [link, setLink] = useState<UILink>(props.link);
+  const [link, setLink] = useState<Link>(props.link);
   const inputLabel = useRef(null);
   const [labelWidth, setLabelWidth] = React.useState<number>(0);
 
@@ -257,7 +255,7 @@ const NavigationLinkItem = (props: NavigationLinkItemProps) => {
   );
 };
 
-const mapStateToProps = (state: RootState) => ({
+const mapStateToProps = (state: AppState) => ({
   auth: state.auth,
   networkAction: state.networkAction,
   address: state.address,

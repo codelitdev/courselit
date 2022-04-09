@@ -16,7 +16,7 @@ const classes = {
   title: `${PREFIX}-title`,
 };
 
-const StyledGrid = styled(Grid)(({ theme } : { theme: any; }) => ({
+const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
   [`& .${classes.link}`]: {
     textDecoration: "none",
     color: "inherit",

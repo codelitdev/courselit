@@ -8,17 +8,13 @@ import {
 } from "../../../ui-config/strings";
 import FetchBuilder from "../../../ui-lib/fetch";
 import { connect } from "react-redux";
-import { networkAction } from "../../../state/actions";
 import { OverviewAndDetail } from "@courselit/components-library";
 import dynamic from "next/dynamic";
-import Auth from "../../../ui-models/auth";
-import Address from "../../../ui-models/address";
-import { AppDispatch } from "../../../state/store";
-import Profile from "../../../ui-models/profile";
-import { ThunkDispatch } from "redux-thunk";
-import State from "../../../ui-models/state";
-import { AnyAction } from "redux";
-import User from "../../../ui-models/user";
+import type { AppDispatch, AppState } from "@courselit/state-management";
+import { actionCreators } from "@courselit/state-management";
+import type { Profile, User, Auth, Address } from "@courselit/common-models";
+
+const { networkAction } = actionCreators;
 
 const PREFIX = "index";
 
@@ -126,7 +122,7 @@ const UsersManager = ({
   );
 };
 
-const mapStateToProps = (state: State) => ({
+const mapStateToProps = (state: AppState) => ({
   auth: state.auth,
   address: state.address,
   profile: state.profile,

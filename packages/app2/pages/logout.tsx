@@ -1,10 +1,9 @@
 import { useEffect } from "react";
 import { connect } from "react-redux";
 import Router from "next/router";
-import { setAppMessage, signedOut } from "../state/actions";
-import State from "../ui-models/state";
-import Address from "../ui-models/address";
-import AppMessage from "../ui-models/app-message";
+import { actionCreators } from "@courselit/state-management";
+import type { State, Address } from "@courselit/common-models";
+import { AppMessage } from "@courselit/common-models";
 import { UNABLE_TO_LOGOUT } from "../ui-config/strings";
 
 interface LogoutProps {
@@ -13,6 +12,7 @@ interface LogoutProps {
 }
 
 const Logout = ({ dispatch, address }: LogoutProps) => {
+  const { setAppMessage, signedOut } = actionCreators;
   useEffect(() => {
     logout();
   });

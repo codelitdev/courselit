@@ -1,9 +1,9 @@
 import React from "react";
-import FetchBuilder from "../../../ui-lib/fetch";
+import { FetchBuilder } from "@courselit/utils";
 import { useTheme } from "@mui/styles";
 import { connect } from "react-redux";
-import type Address from "../../../ui-models/address";
-import { RootState } from "../../../state/store";
+import type { Address } from "@courselit/common-models";
+import type { AppState } from "@courselit/state-management";
 
 interface Component {
   caption: string;
@@ -27,7 +27,7 @@ const Details = ({ name, component, address }: DetailsProps) => {
   return <Component name={name} fetchBuilder={fetch} theme={theme} />;
 };
 
-const mapStateToProps = (state: RootState) => ({
+const mapStateToProps = (state: AppState) => ({
   address: state.address,
 });
 
