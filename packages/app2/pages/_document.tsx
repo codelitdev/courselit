@@ -33,10 +33,10 @@ MyDocument.getInitialProps = async (ctx) => {
 
   ctx.renderPage = () =>
     originalRenderPage({
-      enhanceApp: (App: any) => (
-        // eslint-disable-line react/display-name
-        props // eslint-disable-line react/display-name
-      ) => <App emotionCache={cache} {...props} />,
+      // eslint-disable-next-line react/display-name
+      enhanceApp: (App: any) => (props) => (
+        <App emotionCache={cache} {...props} />
+      ),
     });
 
   const initialProps = await Document.getInitialProps(ctx);
