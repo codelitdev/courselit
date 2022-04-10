@@ -24,10 +24,6 @@ const AdminWidget = (props: AboutWidgetProps) => {
     getSettings();
   }, []);
 
-  React.useEffect(() => {
-    console.log(props);
-  });
-
   const getSettings = async () => {
     const settings = await WidgetHelpers.getWidgetSettings({
       widgetName: name,

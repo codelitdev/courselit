@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const AutoIncrement = require("mongoose-sequence")(mongoose);
-const { text, video, audio, pdf, quiz } = require("../config/constants.js");
+const { text, video, audio, pdf, quiz } = require("../config/constants");
 
 const LessonSchema = new mongoose.Schema({
   domain: { type: mongoose.Schema.Types.ObjectId, required: true },
@@ -17,6 +17,9 @@ const LessonSchema = new mongoose.Schema({
   groupRank: { type: Number, required: true },
 });
 
-LessonSchema.plugin(AutoIncrement, { inc_field: "lessonId" });
+if (!mongoose.models.Lesson) {
+  LessonSchema.plugin(AutoIncrement, { inc_field: "lessonId" });
+}
 
-module.exports = mongoose.model("Lesson", LessonSchema);
+module.exports =
+  mongoose.models.Lesson || mongoose.model("Lesson", LessonSchema);

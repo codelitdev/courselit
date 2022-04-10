@@ -1,7 +1,6 @@
-const { getPaymentMethod } = require("../../payments/index.js");
-const strings = require("../../config/strings.js");
-const Logger = require("../../lib/logger.js");
-const mediaLogic = require("../media/logic.js");
+const { getPaymentMethod } = require("../../payments/index");
+const strings = require("../../config/strings");
+const mediaLogic = require("../media/logic");
 
 const validatePaymentMethod = async (domain) => {
   try {
@@ -10,7 +9,6 @@ const validatePaymentMethod = async (domain) => {
     if (err.message === strings.responses.update_payment_method) {
       throw err;
     } else {
-      Logger.error(err.message, err);
       throw new Error(strings.responses.internal_error);
     }
   }

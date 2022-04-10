@@ -5,7 +5,6 @@ import {
   GraphQLInt,
   GraphQLObjectType,
   GraphQLBoolean,
-  GraphQLInputObjectType,
 } from "graphql";
 
 const mediaType = new GraphQLObjectType({
@@ -25,16 +24,6 @@ const mediaType = new GraphQLObjectType({
   },
 });
 
-const mediaUpdateType = new GraphQLInputObjectType({
-  name: "MediaUpdateInput",
-  fields: {
-    id: { type: new GraphQLNonNull(GraphQLID) },
-    caption: { type: GraphQLString },
-    public: { type: GraphQLString },
-  },
-});
-
 export default {
   mediaType,
-  mediaUpdateType,
 };

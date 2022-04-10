@@ -39,7 +39,7 @@ const List = (props: ListProps) => {
     try {
       props.dispatch && props.dispatch(networkAction(true));
       const fetch = new FetchBuilder()
-        .setUrl(`${props.address.backend}/graph`)
+        .setUrl(`${props.address.backend}/api/graph`)
         .setPayload(generateQuery(offset))
         .setIsGraphQLEndpoint(true)
         .build();

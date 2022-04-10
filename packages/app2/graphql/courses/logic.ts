@@ -1,26 +1,24 @@
 /**
  * Business logic for managing courses.
  */
-const slugify = require("slugify");
-const Course = require("../../models/Course.js");
-const User = require("../../models/User.js");
-const strings = require("../../config/strings.js");
-const {
+import slugify from "slugify";
+import Course from "../../models/Course";
+import User from "../../models/User";
+import { responses } from "../../config/strings";
+import {
   checkIfAuthenticated,
   validateOffset,
   extractPlainTextFromDraftJS,
   checkPermission,
   checkOwnershipWithoutModel,
   makeModelTextSearchable,
-} = require("../../lib/graphql.js");
-const {
-  open,
-  itemsPerPage,
-  blogPostSnippetLength,
-} = require("../../config/constants.js");
-const { validateBlogPosts } = require("./helpers.js");
-const permissions = require("../../config/constants.js").permissions;
-const Lesson = require("../../models/Lesson.js");
+} from "../../lib/graphql";
+import constants from "../../config/constants";
+import { validateBlogPosts } from "./helpers";
+import Lesson from "../../models/Lesson";
+import GQLContext from "../../models/GQLContext";
+
+const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
 const getCourseOrThrow = async (id, ctx) => {
   checkIfAuthenticated(ctx);
@@ -28,15 +26,15 @@ const getCourseOrThrow = async (id, ctx) => {
   const course = await Course.findOne({ _id: id, domain: ctx.subdomain._id });
 
   if (!course) {
-    throw new Error(strings.responses.item_not_found);
+    throw new Error(responses.item_not_found);
   }
 
   if (!checkPermission(ctx.user.permissions, [permissions.manageAnyCourse])) {
     if (!checkOwnershipWithoutModel(course, ctx)) {
-      throw new Error(strings.responses.item_not_found);
+      throw new Error(responses.item_not_found);
     } else {
       if (!checkPermission(ctx.user.permissions, [permissions.manageCourse])) {
-        throw new Error(strings.responses.action_not_allowed);
+        throw new Error(responses.action_not_allowed);
       }
     }
   }
@@ -44,9 +42,13 @@ const getCourseOrThrow = async (id, ctx) => {
   return course;
 };
 
-exports.getCourse = async (id = null, courseId = null, ctx) => {
+export const getCourse = async (
+  id: string | null = null,
+  courseId: string | null = null,
+  ctx: GQLContext
+) => {
   if (!id && !courseId) {
-    throw new Error(strings.responses.invalid_course_id);
+    throw new Error(responses.invalid_course_id);
   }
 
   let course;
@@ -57,7 +59,7 @@ exports.getCourse = async (id = null, courseId = null, ctx) => {
   }
 
   if (!course) {
-    throw new Error(strings.responses.item_not_found);
+    throw new Error(responses.item_not_found);
   }
 
   if (ctx.user) {
@@ -72,14 +74,14 @@ exports.getCourse = async (id = null, courseId = null, ctx) => {
   if (course.published) {
     return course;
   } else {
-    throw new Error(strings.responses.item_not_found);
+    throw new Error(responses.item_not_found);
   }
 };
 
-exports.createCourse = async (courseData, ctx) => {
+export const createCourse = async (courseData, ctx) => {
   checkIfAuthenticated(ctx);
   if (!checkPermission(ctx.user.permissions, [permissions.manageCourse])) {
-    throw new Error(strings.responses.action_not_allowed);
+    throw new Error(responses.action_not_allowed);
   }
 
   courseData = await validateBlogPosts(courseData, ctx);
@@ -101,7 +103,7 @@ exports.createCourse = async (courseData, ctx) => {
   return course;
 };
 
-exports.updateCourse = async (courseData, ctx) => {
+export const updateCourse = async (courseData, ctx) => {
   let course = await getCourseOrThrow(courseData.id, ctx);
 
   for (const key of Object.keys(courseData)) {
@@ -109,7 +111,7 @@ exports.updateCourse = async (courseData, ctx) => {
       key === "published" &&
       !checkPermission(ctx.user.permissions, [permissions.publishCourse])
     ) {
-      throw new Error(strings.responses.action_not_allowed);
+      throw new Error(responses.action_not_allowed);
     }
 
     course[key] = courseData[key];
@@ -120,11 +122,11 @@ exports.updateCourse = async (courseData, ctx) => {
   return course;
 };
 
-exports.deleteCourse = async (id, ctx) => {
+export const deleteCourse = async (id, ctx) => {
   const course = await getCourseOrThrow(id, ctx);
 
   if (course.lessons.length > 0) {
-    throw new Error(strings.responses.course_not_empty);
+    throw new Error(responses.course_not_empty);
   }
 
   try {
@@ -135,7 +137,7 @@ exports.deleteCourse = async (id, ctx) => {
   }
 };
 
-exports.addLesson = async (courseId, lessonId, ctx) => {
+export const addLesson = async (courseId, lessonId, ctx) => {
   const course = await getCourseOrThrow(courseId, ctx);
 
   if (course.lessons.indexOf(lessonId) === -1) {
@@ -151,7 +153,7 @@ exports.addLesson = async (courseId, lessonId, ctx) => {
   return true;
 };
 
-exports.removeLesson = async (courseId, lessonId, ctx) => {
+export const removeLesson = async (courseId, lessonId, ctx) => {
   const course = await getCourseOrThrow(courseId, ctx);
 
   if (~course.lessons.indexOf(lessonId)) {
@@ -167,7 +169,7 @@ exports.removeLesson = async (courseId, lessonId, ctx) => {
   return true;
 };
 
-exports.getCoursesAsAdmin = async (offset, ctx, text) => {
+export const getCoursesAsAdmin = async (offset, ctx, text) => {
   checkIfAuthenticated(ctx);
   validateOffset(offset);
   const user = ctx.user;
@@ -178,7 +180,7 @@ exports.getCoursesAsAdmin = async (offset, ctx, text) => {
       permissions.manageAnyCourse,
     ])
   ) {
-    throw new Error(strings.responses.action_not_allowed);
+    throw new Error(responses.action_not_allowed);
   }
 
   const query = {
@@ -203,7 +205,7 @@ exports.getCoursesAsAdmin = async (offset, ctx, text) => {
   return resultSet;
 };
 
-exports.getPosts = async (offset, ctx) => {
+export const getPosts = async (offset, ctx) => {
   validateOffset(offset);
   const query = {
     isBlog: true,
@@ -234,7 +236,7 @@ exports.getPosts = async (offset, ctx) => {
   }));
 };
 
-exports.getCourses = async (offset, onlyShowFeatured = false, ctx) => {
+export const getCourses = async (offset, onlyShowFeatured = false, ctx) => {
   const query = {
     isBlog: false,
     published: true,
@@ -254,16 +256,16 @@ exports.getCourses = async (offset, onlyShowFeatured = false, ctx) => {
   return dbQuery;
 };
 
-exports.getEnrolledCourses = async (userId, ctx) => {
+export const getEnrolledCourses = async (userId, ctx) => {
   checkIfAuthenticated(ctx);
 
   if (!checkPermission(ctx.user.permissions, [permissions.manageAnyCourse])) {
-    throw new Error(strings.responses.action_not_allowed);
+    throw new Error(responses.action_not_allowed);
   }
 
   const user = await User.findOne({ _id: userId, domain: ctx.subdomain._id });
   if (!user) {
-    throw new Error(strings.responses.user_not_found);
+    throw new Error(responses.user_not_found);
   }
 
   return Course.find(
@@ -277,12 +279,12 @@ exports.getEnrolledCourses = async (userId, ctx) => {
   );
 };
 
-exports.addGroup = async ({ id, name, collapsed, ctx }) => {
+export const addGroup = async ({ id, name, collapsed, ctx }) => {
   const course = await getCourseOrThrow(id, ctx);
   const existingName = (group) => group.name === name;
 
   if (course.groups.some(existingName)) {
-    throw new Error(strings.responses.existing_group);
+    throw new Error(responses.existing_group);
   }
 
   const maximumRank = course.groups.reduce(
@@ -300,7 +302,7 @@ exports.addGroup = async ({ id, name, collapsed, ctx }) => {
   return course;
 };
 
-exports.removeGroup = async (id, courseId, ctx) => {
+export const removeGroup = async (id, courseId, ctx) => {
   const course = await getCourseOrThrow(courseId, ctx);
   const group = course.groups.filter((group) => group._id.toString() === id);
 
@@ -314,7 +316,7 @@ exports.removeGroup = async (id, courseId, ctx) => {
   });
 
   if (countOfAssociatedLessons > 0) {
-    throw new Error(strings.responses.group_not_empty);
+    throw new Error(responses.group_not_empty);
   }
 
   await course.groups.pull({ _id: id });
@@ -323,7 +325,14 @@ exports.removeGroup = async (id, courseId, ctx) => {
   return course;
 };
 
-exports.updateGroup = async ({ id, courseId, name, rank, collapsed, ctx }) => {
+export const updateGroup = async ({
+  id,
+  courseId,
+  name,
+  rank,
+  collapsed,
+  ctx,
+}) => {
   const course = await getCourseOrThrow(courseId, ctx);
 
   const $set = {};
@@ -332,7 +341,7 @@ exports.updateGroup = async ({ id, courseId, name, rank, collapsed, ctx }) => {
       group.name === name && group._id.toString() !== id;
 
     if (course.groups.some(existingName)) {
-      throw new Error(strings.responses.existing_group);
+      throw new Error(responses.existing_group);
     }
 
     $set["groups.$.name"] = name;
@@ -356,12 +365,12 @@ exports.updateGroup = async ({ id, courseId, name, rank, collapsed, ctx }) => {
   );
 };
 
-// exports.updateGroupName = async (id, courseId, name, ctx) => {
+// export const updateGroupName = async (id, courseId, name, ctx) => {
 //   const course = await getCourseOrThrow(courseId, ctx);
 //   const existingName = (group) => group.name === name;
 
 //   if (course.groups.some(existingName)) {
-//     throw new Error(strings.responses.existing_group);
+//     throw new Error(responses.existing_group);
 //   }
 
 //   return await Course.findOneAndUpdate(
@@ -380,7 +389,7 @@ exports.updateGroup = async ({ id, courseId, name, rank, collapsed, ctx }) => {
 //   );
 // };
 
-// exports.updateGroupRank = async (id, courseId, rank, ctx) => {
+// export const updateGroupRank = async (id, courseId, rank, ctx) => {
 //   const course = await getCourseOrThrow(courseId, ctx);
 
 //   return await Course.findOneAndUpdate(

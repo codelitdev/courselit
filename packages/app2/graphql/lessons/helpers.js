@@ -1,5 +1,5 @@
-const strings = require("../../config/strings.js");
-const { text, audio, video, pdf } = require("../../config/constants.js");
+const strings = require("../../config/strings");
+const { text, audio, video, pdf } = require("../../config/constants");
 
 exports.lessonValidator = (lessonData) => {
   if (lessonData.type === text && !lessonData.content) {

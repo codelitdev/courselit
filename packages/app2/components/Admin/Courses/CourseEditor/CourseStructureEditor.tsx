@@ -88,7 +88,7 @@ const CourseStructureEditor = ({
     }
     `;
     const fetch = new FetchBuilder()
-      .setUrl(`${address.backend}/graph`)
+      .setUrl(`${address.backend}/api/graph`)
       .setPayload(query)
       .setIsGraphQLEndpoint(true)
       .build();
@@ -148,7 +148,7 @@ const CourseStructureEditor = ({
     }
     `;
     const fetch = new FetchBuilder()
-      .setUrl(`${address.backend}/graph`)
+      .setUrl(`${address.backend}/api/graph`)
       .setPayload(mutation)
       .setIsGraphQLEndpoint(true)
       .build();
@@ -165,7 +165,7 @@ const CourseStructureEditor = ({
     }
   };
 
-  const onAddLesson = (groupId: number) => {
+  const onAddLesson = (groupId: string) => {
     const emptyLessonWithLocalIndexKey: Lesson = Object.assign(
       {},
       {
@@ -224,7 +224,7 @@ const CourseStructureEditor = ({
       }
     `;
     const fetch = new FetchBuilder()
-      .setUrl(`${address.backend}/graph`)
+      .setUrl(`${address.backend}/api/graph`)
       .setPayload(mutation)
       .setIsGraphQLEndpoint(true)
       .build();

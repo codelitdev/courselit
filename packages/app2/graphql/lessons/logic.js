@@ -2,18 +2,17 @@
  * Business logic for managing lessons
  */
 // const slugify = require('slugify')
-const Lesson = require("../../models/Lesson.js");
-const strings = require("../../config/strings.js");
+const Lesson = require("../../models/Lesson");
+const strings = require("../../config/strings");
 const {
   checkIfAuthenticated,
   checkPermission,
   checkOwnershipWithoutModel,
-} = require("../../lib/graphql.js");
-const Course = require("../../models/Course.js");
-const { lessonValidator } = require("./helpers.js");
-const { permissions } = require("../../config/constants.js");
+} = require("../../lib/graphql");
+const Course = require("../../models/Course");
+const { lessonValidator } = require("./helpers");
+const { permissions } = require("../../config/constants");
 const mongoose = require("mongoose");
-const { generateSignedUrl } = require("../../routes/media/utils.js");
 
 const getLessonOrThrow = async (id, ctx) => {
   checkIfAuthenticated(ctx);
@@ -55,9 +54,9 @@ exports.getLessonDetails = async (id, ctx) => {
     throw new Error(strings.responses.not_enrolled);
   }
 
-  if (lesson.media) {
-    lesson.media = await generateSignedUrl({ name: lesson.media });
-  }
+  //   if (lesson.media) {
+  //     lesson.media = await generateSignedUrl({ name: lesson.media });
+  //   }
 
   return lesson;
 };

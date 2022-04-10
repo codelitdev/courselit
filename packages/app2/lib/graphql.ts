@@ -4,7 +4,7 @@ import { responses } from "../config/strings";
 import constants from "../config/constants";
 import mongoose from "mongoose";
 import type GQLContext from "../models/GQLContext";
-import MediaModel, { Media } from "../models/Media";
+import type Media from "../models/Media";
 import HttpError from "../models/HttpError";
 import { generateSignedUrl } from "../lib/s3-utils";
 const { cdnEndpoint } = constants;
@@ -49,22 +49,22 @@ export const validateOffset = (offset: number) => {
   if (offset < 1) throw new Error(responses.invalid_offset);
 };
 
-// export const extractPlainTextFromDraftJS = (
-//   encodedEditorStateString,
-//   characters
-// ) => {
-//   try {
-//     const editorState = EditorState.createWithContent(
-//       convertFromRaw(JSON.parse(decode(encodedEditorStateString)))
-//     );
-//     const descriptInPlainText = editorState.getCurrentContent().getPlainText();
-//     return descriptInPlainText.length > characters
-//       ? descriptInPlainText.substring(0, characters) + "..."
-//       : descriptInPlainText;
-//   } catch (err) {
-//     return "";
-//   }
-// };
+export const extractPlainTextFromDraftJS = (
+  encodedEditorStateString: string,
+  characters: number
+) => {
+  try {
+    const editorState = EditorState.createWithContent(
+      convertFromRaw(JSON.parse(decode(encodedEditorStateString)))
+    );
+    const descriptInPlainText = editorState.getCurrentContent().getPlainText();
+    return descriptInPlainText.length > characters
+      ? descriptInPlainText.substring(0, characters) + "..."
+      : descriptInPlainText;
+  } catch (err) {
+    return "";
+  }
+};
 
 // export const checkAdminOrSelf = (userID, GraphQLContext) => {
 //   const isSelf = userID === GraphQLContext.user.id;
@@ -145,32 +145,32 @@ export const getMediaOrThrow = async (
 ) => {
   checkIfAuthenticated(ctx);
 
-  const media: Media | null = await MediaModel.findOne({
-    _id: id,
-    domain: ctx.subdomain._id,
-  });
+  //   const media: Media | null = await MediaModel.findOne({
+  //     _id: id,
+  //     domain: ctx.subdomain._id,
+  //   });
 
-  if (!media) {
-    throw new HttpError(responses.item_not_found, 404);
-  }
+  //   if (!media) {
+  //     throw new HttpError(responses.item_not_found, 404);
+  //   }
 
-  if (
-    !checkPermission(ctx.user.permissions, [
-      constants.permissions.manageAnyMedia,
-    ])
-  ) {
-    if (!checkOwnershipWithoutModel(media, ctx)) {
-      throw new HttpError(responses.item_not_found, 403);
-    } else {
-      if (
-        !checkPermission(ctx.user.permissions, [
-          constants.permissions.manageMedia,
-        ])
-      ) {
-        throw new HttpError(responses.action_not_allowed, 403);
-      }
-    }
-  }
+  //   if (
+  //     !checkPermission(ctx.user.permissions, [
+  //       constants.permissions.manageAnyMedia,
+  //     ])
+  //   ) {
+  //     if (!checkOwnershipWithoutModel(media, ctx)) {
+  //       throw new HttpError(responses.item_not_found, 403);
+  //     } else {
+  //       if (
+  //         !checkPermission(ctx.user.permissions, [
+  //           constants.permissions.manageMedia,
+  //         ])
+  //       ) {
+  //         throw new HttpError(responses.action_not_allowed, 403);
+  //       }
+  //     }
+  //   }
 
   return media;
 };

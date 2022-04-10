@@ -51,6 +51,7 @@ import { Section, RichText as TextEditor } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import type { Profile, Auth, Address } from "@courselit/common-models";
+import { EditorState } from "draft-js";
 
 const { networkAction, setAppMessage } = actionCreators;
 
@@ -152,7 +153,7 @@ const CourseEditor = (props: CourseEditorProps) => {
           description: "${TextEditor.stringify(courseData.course.description)}",
           featuredImage: ${
             courseData.course.featuredImage
-              ? '"' + courseData.course.featuredImage.id + '"'
+              ? '"' + courseData.course.featuredImage.mediaId + '"'
               : null
           },
           isFeatured: ${courseData.course.isFeatured}
@@ -283,14 +284,14 @@ const CourseEditor = (props: CourseEditorProps) => {
     }
   };
 
-  const onCourseDetailsChange = (e) => {
+  const onCourseDetailsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     changeCourseDetails(
       e.target.name,
       e.target.type === "checkbox" ? e.target.checked : e.target.value
     );
   };
 
-  const changeCourseDetails = (key, value) => {
+  const changeCourseDetails = (key: string, value: any) => {
     setCourseData(
       Object.assign({}, courseData, {
         course: Object.assign({}, courseData.course, {
@@ -300,7 +301,7 @@ const CourseEditor = (props: CourseEditorProps) => {
     );
   };
 
-  const onDescriptionChange = (editorState) => {
+  const onDescriptionChange = (editorState: EditorState) => {
     setCourseData(
       Object.assign({}, courseData, {
         course: Object.assign({}, courseData.course, {
@@ -317,13 +318,15 @@ const CourseEditor = (props: CourseEditorProps) => {
     }
     `;
 
+    const fetch = new FetchBuilder()
+      .setUrl(`${props.address.backend}/api/graph`)
+      .setPayload(query)
+      .setIsGraphQLEndpoint(true)
+      .build();
+
     try {
       props.dispatch(networkAction(true));
-      const response = await queryGraphQL(
-        `${props.address.backend}/graph`,
-        query,
-        props.auth.token
-      );
+      const response = await fetch.exec();
 
       if (response.result) {
         setCourseData(
@@ -334,7 +337,7 @@ const CourseEditor = (props: CourseEditorProps) => {
         closeDeleteCoursePopup();
         props.closeEditor();
       }
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message);
     } finally {
       props.dispatch(networkAction(false));
@@ -357,7 +360,7 @@ const CourseEditor = (props: CourseEditorProps) => {
   const loadCourse = async (courseId) => {
     const query = `
     query {
-      course: getCourse(courseId: ${courseId}) {
+      course: getCourse(courseId: "${courseId}") {
         title,
         cost,
         published,
@@ -385,7 +388,7 @@ const CourseEditor = (props: CourseEditorProps) => {
     }
     `;
     const fetch = new FetchBuilder()
-      .setUrl(`${props.address.backend}/graph`)
+      .setUrl(`${props.address.backend}/api/graph`)
       .setPayload(query)
       .setIsGraphQLEndpoint(true)
       .setAuthToken(props.auth.token)
@@ -403,8 +406,9 @@ const CourseEditor = (props: CourseEditorProps) => {
     }
   };
 
-  const onFeaturedImageSelection = (media) =>
-    media && changeCourseDetails("featuredImage", media);
+  const onFeaturedImageSelection = (media) => {
+    return media && changeCourseDetails("featuredImage", media);
+  };
 
   const closeDeleteCoursePopup = () => setDeleteCoursePopupOpened(false);
 

@@ -1,7 +1,7 @@
 const graphql = require("graphql");
-const { text, audio, video, pdf, quiz } = require("../../config/constants.js");
-const { mediaType } = require("../media/types.js");
-const mediaLogic = require("../media/logic.js");
+const { text, audio, video, pdf, quiz } = require("../../config/constants");
+const { mediaType } = require("../media/types");
+const mediaLogic = require("../media/logic");
 
 const DESCRIPTION_REQUIRES_ENROLLMENT =
   "Should the content of this lesson be visible to only enrolled customers.";
