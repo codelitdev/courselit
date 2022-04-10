@@ -166,7 +166,7 @@ const CourseEditor = (props: CourseEditorProps) => {
           isBlog,
           description,
           featuredImage {
-            id,
+            mediaId,
             thumbnail
           },
           isFeatured,
@@ -204,7 +204,7 @@ const CourseEditor = (props: CourseEditorProps) => {
           isBlog,
           description,
           featuredImage {
-            id,
+            mediaId,
             thumbnail
           },
           isFeatured,
@@ -251,7 +251,7 @@ const CourseEditor = (props: CourseEditorProps) => {
           isBlog,
           description,
           featuredImage {
-            id,
+            mediaId,
             thumbnail
           },
           isFeatured,
@@ -368,7 +368,7 @@ const CourseEditor = (props: CourseEditorProps) => {
         isBlog,
         description,
         featuredImage {
-          id,
+          mediaId,
           thumbnail
         },
         id,
@@ -391,7 +391,6 @@ const CourseEditor = (props: CourseEditorProps) => {
       .setUrl(`${props.address.backend}/api/graph`)
       .setPayload(query)
       .setIsGraphQLEndpoint(true)
-      .setAuthToken(props.auth.token)
       .build();
     try {
       props.dispatch(networkAction(true));

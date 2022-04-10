@@ -12,8 +12,7 @@ export const getMedia = async (mediaId?: string) => {
 };
 
 export const checkMediaForPublicAccess = async (
-  mediaId: string,
-  ctx: GQLContext
+  mediaId: string
 ): Promise<boolean> => {
   const media = await getMedia(mediaId);
   if (!media) {

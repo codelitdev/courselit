@@ -10,7 +10,7 @@ import {
 const mediaType = new GraphQLObjectType({
   name: "Media",
   fields: {
-    id: { type: GraphQLID },
+    mediaId: { type: new GraphQLNonNull(GraphQLString) },
     file: { type: new GraphQLNonNull(GraphQLString) },
     thumbnail: { type: GraphQLString },
     originalFileName: {

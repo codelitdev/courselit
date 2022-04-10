@@ -16,7 +16,10 @@ const validatePaymentMethod = async (domain: string) => {
   }
 };
 
-export const validateBlogPosts = async (courseData: Course, ctx: GQLContext) => {
+export const validateBlogPosts = async (
+  courseData: Course,
+  ctx: GQLContext
+) => {
   if (courseData.isBlog) {
     if (!courseData.description) {
       throw new Error(responses.blog_description_empty);
@@ -31,8 +34,7 @@ export const validateBlogPosts = async (courseData: Course, ctx: GQLContext) => 
 
   if (courseData.featuredImage) {
     const featuredImageHasPublicAccess = await checkMediaForPublicAccess(
-      courseData.featuredImage,
-      ctx
+      courseData.featuredImage
     );
     if (!featuredImageHasPublicAccess) {
       throw new Error(responses.publicly_inaccessible);

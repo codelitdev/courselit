@@ -11,11 +11,12 @@ import {
   GraphQLInputObjectType,
 } from "graphql";
 import constants from "../../config/constants";
-import { lessonMetaType } from "../lessons/types";
-import lessonLogic from "../lessons/logic";
+import lessonTypes from "../lessons/types";
+import { getAllLessons } from "../lessons/logic";
 import { getMedia } from "../media/logic";
 import mediaTypes from "../media/types";
 
+const { lessonMetaType } = lessonTypes;
 const { unlisted, open } = constants;
 
 const courseStatusType = new GraphQLEnumType({
@@ -50,8 +51,7 @@ const courseType = new GraphQLObjectType({
     creatorName: { type: GraphQLString },
     lessons: {
       type: new GraphQLList(lessonMetaType),
-      resolve: (course, args, context, info) =>
-        lessonLogic.getAllLessons(course, context),
+      resolve: (course, args, context, info) => getAllLessons(course, context),
     },
     updated: { type: new GraphQLNonNull(GraphQLString) },
     slug: { type: new GraphQLNonNull(GraphQLString) },
