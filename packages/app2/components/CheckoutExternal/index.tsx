@@ -13,8 +13,8 @@ const Stripe = dynamic(() => import("./Stripe"));
 const Free = dynamic(() => import("./Free"));
 
 interface CheckoutExternalProps {
-    course: Course;
-    siteInfo: SiteInfo;
+  course: Course;
+  siteInfo: SiteInfo;
 }
 
 const CheckoutExternal = (props: CheckoutExternalProps) => {

@@ -1,8 +1,4 @@
-import { 
-    GraphQLNonNull,
-    GraphQLBoolean,
-    GraphQLID
-} from "graphql";
+import { GraphQLNonNull, GraphQLBoolean, GraphQLID } from "graphql";
 import types from "./types";
 import { createLesson, deleteLesson, updateLesson } from "./logic";
 import { Lesson } from "../../models/Lesson";
@@ -16,15 +12,19 @@ export default {
         type: new GraphQLNonNull(types.lessonInputType),
       },
     },
-    resolve: async (_: any, { lessonData }: { lessonData: Lesson }, context: GQLContext) =>
-      createLesson(lessonData, context),
+    resolve: async (
+      _: any,
+      { lessonData }: { lessonData: Lesson },
+      context: GQLContext
+    ) => createLesson(lessonData, context),
   },
   deleteLesson: {
     type: GraphQLBoolean,
     args: {
       id: { type: new GraphQLNonNull(GraphQLID) },
     },
-    resolve: async (_: any, { id }: { id: string }, context: GQLContext) => deleteLesson(id, context),
+    resolve: async (_: any, { id }: { id: string }, context: GQLContext) =>
+      deleteLesson(id, context),
   },
   // changeTitle: {
   //   type: types.lessonType,
@@ -68,7 +68,10 @@ export default {
         type: new GraphQLNonNull(types.lessonUpdateType),
       },
     },
-    resolve: async (_: any, { lessonData }: { lessonData: Lesson }, context: GQLContext) =>
-      updateLesson(lessonData, context),
+    resolve: async (
+      _: any,
+      { lessonData }: { lessonData: Lesson },
+      context: GQLContext
+    ) => updateLesson(lessonData, context),
   },
 };

@@ -18,7 +18,7 @@ const StyledBaseLayout = styled(BaseLayout)(({ theme }: { theme: any }) => ({
 }));
 
 interface AppErrorProps {
-    error: string;
+  error: string;
 }
 
 const AppError = (props: AppErrorProps) => {

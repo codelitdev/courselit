@@ -54,7 +54,7 @@ const CourseStructureEditor = ({
   onCloseView,
   auth,
   address,
-  dispatch
+  dispatch,
 }: CourseStructureEditorProps) => {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [groups, setGroups] = useState<any>([]);
@@ -263,10 +263,7 @@ const CourseStructureEditor = ({
               {!selectedLesson.groupId && (
                 <Grid item>
                   <Section>
-                    <Typography
-                      variant="h5"
-                      color="textSecondary"
-                    >
+                    <Typography variant="h5" color="textSecondary">
                       {COURSE_STRUCTURE_SELECT_LESSON}
                     </Typography>
                   </Section>

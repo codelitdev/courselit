@@ -13,7 +13,7 @@ interface StripeProps {
   siteInfo: SiteInfo;
   auth: Auth;
   address: Address;
-};
+}
 
 const Stripe = (props: StripeProps) => {
   const { course, siteInfo, auth, address } = props;
@@ -21,17 +21,17 @@ const Stripe = (props: StripeProps) => {
   const router = useRouter();
 
   const handleClick = async () => {
-      const fetch = new FetchBuilder()
-        .setUrl(`${address.backend}/payment/initiate`)
-        .setPayload(getFormData())
-        .build();
+    const fetch = new FetchBuilder()
+      .setUrl(`${address.backend}/payment/initiate`)
+      .setPayload(getFormData())
+      .build();
 
     try {
-        const response = await fetch.exec();
-        await redirectToStripeCheckout({
-            stripe: await stripePromise,
-            sessionId: response.paymentTracker,
-        });
+      const response = await fetch.exec();
+      await redirectToStripeCheckout({
+        stripe: await stripePromise,
+        sessionId: response.paymentTracker,
+      });
     } catch (err) {}
   };
 
@@ -47,9 +47,15 @@ const Stripe = (props: StripeProps) => {
       })
     );
     return formData;
-  }
+  };
 
-  const redirectToStripeCheckout = async ({ stripe, sessionId }: { stripe: any, sessionId: string }) => {
+  const redirectToStripeCheckout = async ({
+    stripe,
+    sessionId,
+  }: {
+    stripe: any;
+    sessionId: string;
+  }) => {
     const result = await stripe.redirectToCheckout({
       sessionId,
     });

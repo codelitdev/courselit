@@ -184,7 +184,9 @@ const ComponentScaffold = (props: any) => {
                 <DrawerListItemIcon icon={item.icon as object} />
               )}
               <Grid item>
-                <Typography variant="subtitle2">{item.name as string}</Typography>
+                <Typography variant="subtitle2">
+                  {item.name as string}
+                </Typography>
                 {/* <ListItemText primary={item.name} /> */}
               </Grid>
               {item.icon && item.iconPlacementRight && (

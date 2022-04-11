@@ -6,7 +6,7 @@ import design from "./design";
 import menus from "./menus";
 import widgets from "./widgets";
 import courses from "./courses";
-import lessons from './lessons';
+import lessons from "./lessons";
 
 export default new graphql.GraphQLSchema({
   query: new graphql.GraphQLObjectType({

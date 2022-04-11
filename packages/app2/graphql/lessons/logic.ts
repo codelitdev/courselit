@@ -126,7 +126,9 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
     let course: Course | null = await CourseModel.findOne({
       domain: ctx.subdomain._id,
     }).elemMatch("lessons", { $eq: lesson.id });
-    if (!course) { return null; }
+    if (!course) {
+      return null;
+    }
 
     if (~course.lessons.indexOf(lesson.id)) {
       course.lessons.splice(course.lessons.indexOf(lesson.id), 1);

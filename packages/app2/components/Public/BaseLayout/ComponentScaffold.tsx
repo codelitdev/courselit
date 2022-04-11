@@ -134,21 +134,21 @@ const Branding = dynamic(() => import("./Branding"));
 const drawerWidth = 240;
 
 interface ComponentScaffoldProps {
-    items: ComponentScaffoldItemProps[];
-    networkAction: boolean;
-    siteinfo: SiteInfo;
+  items: ComponentScaffoldItemProps[];
+  networkAction: boolean;
+  siteinfo: SiteInfo;
 }
 
 interface ComponentScaffoldItemProps {
-    name: string;
-    element: Record<string, unknown>;
-    icon: Record<string, unknown>;
-    props: Record<string, unknown>;
-    progress: ProgressProps
+  name: string;
+  element: Record<string, unknown>;
+  icon: Record<string, unknown>;
+  props: Record<string, unknown>;
+  progress: ProgressProps;
 }
 
 interface ProgressProps {
-    status: boolean;
+  status: boolean;
 }
 
 const ComponentScaffold = (props: ComponentScaffoldItemProps) => {
@@ -208,7 +208,9 @@ const ComponentScaffold = (props: ComponentScaffoldItemProps) => {
                   <DrawerListItemIcon icon={item.icon as object} />
                 )}
                 <Grid item>
-                  <Typography variant="subtitle2">{item.name as string}</Typography>
+                  <Typography variant="subtitle2">
+                    {item.name as string}
+                  </Typography>
                 </Grid>
                 {item.icon && item.iconPlacementRight && (
                   <DrawerListItemIcon icon={item.icon as object} right={true} />

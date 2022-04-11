@@ -5,7 +5,7 @@ import { Course } from "@courselit/common-models";
 const Article = dynamic(() => import("./Public/Article"));
 
 interface CourseIntroductionProps {
-    course: Course;
+  course: Course;
 }
 
 const CourseIntroduction = (props: CourseIntroductionProps) => {

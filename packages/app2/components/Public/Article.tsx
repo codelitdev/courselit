@@ -68,14 +68,14 @@ const BuyButton = dynamic(() => import("../CheckoutExternal"));
 const Img = dynamic(() => import("../Img"));
 
 interface ArticleProps {
-    course: Course;
-    options: ArticleOptionsProps; 
-    profile: Profile;
+  course: Course;
+  options: ArticleOptionsProps;
+  profile: Profile;
 }
 
 interface ArticleOptionsProps {
-    showAttribution: boolean;
-    showEnrollmentArea: boolean;
+  showAttribution: boolean;
+  showEnrollmentArea: boolean;
 }
 
 const Article = (props: ArticleProps) => {
@@ -160,7 +160,6 @@ const Article = (props: ArticleProps) => {
     </StyledSection>
   );
 };
-
 
 const mapStateToProps = (state: AppState) => ({
   profile: state.profile,

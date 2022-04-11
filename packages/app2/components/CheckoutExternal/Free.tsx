@@ -12,10 +12,10 @@ import { FetchBuilder } from "@courselit/utils";
 const { networkAction, setAppMessage } = actionCreators;
 
 interface FreeProps {
-    course: Course;
-    auth: Auth;
-    dispatch: AppDispatch;
-    address: Address;
+  course: Course;
+  auth: Auth;
+  dispatch: AppDispatch;
+  address: Address;
 }
 
 const Free = ({ course, auth, dispatch, address }: FreeProps) => {
@@ -23,12 +23,12 @@ const Free = ({ course, auth, dispatch, address }: FreeProps) => {
   const [disabled, setDisabled] = useState(false);
 
   const handleClick = async () => {
-      const formData = new window.FormData();
-      formData.append("courseid", course.id);
-      const fetch = new FetchBuilder()
-        .setUrl(`${address.backend}/api/payment/initiate`)
-        .setPayload(formData)
-        .build();
+    const formData = new window.FormData();
+    formData.append("courseid", course.id);
+    const fetch = new FetchBuilder()
+      .setUrl(`${address.backend}/api/payment/initiate`)
+      .setPayload(formData)
+      .build();
     try {
       setDisabled(true);
       dispatch(networkAction(true));

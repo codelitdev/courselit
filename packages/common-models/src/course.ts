@@ -1,4 +1,4 @@
-import Media from './media';
+import Media from "./media";
 
 export default interface Course {
   id: string;
@@ -8,8 +8,8 @@ export default interface Course {
   creatorName: string;
   slug: string;
   isFeatured: boolean;
-  cost: number; 
+  cost: number;
   creatorId: string;
   updatedAt: Date;
-  featuredImage: Media
+  featuredImage: Media;
 }

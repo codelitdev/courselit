@@ -12,23 +12,23 @@ import dynamic from "next/dynamic";
 import type { AppState } from "@courselit/state-management";
 import { Address, Lesson, Profile, SiteInfo } from "@courselit/common-models";
 
-const CourseIntroduction = dynamic(() =>
-  import("../../../components/CourseIntroduction")
+const CourseIntroduction = dynamic(
+  () => import("../../../components/CourseIntroduction")
 );
-const LessonViewer = dynamic(() =>
-  import("../../../components/Public/LessonViewer")
+const LessonViewer = dynamic(
+  () => import("../../../components/Public/LessonViewer")
 );
 const AppError = dynamic(() => import("../../../components/AppError"));
-const ComponentScaffold = dynamic(() =>
-  import("../../../components/Public/BaseLayout/ComponentScaffold")
+const ComponentScaffold = dynamic(
+  () => import("../../../components/Public/BaseLayout/ComponentScaffold")
 );
 
 interface CourseProps {
-    course: any;
-    profile: Profile;
-    siteInfo: SiteInfo;
-    address: Address;
-    error: string;
+  course: any;
+  profile: Profile;
+  siteInfo: SiteInfo;
+  address: Address;
+  error: string;
 }
 
 const Course = (props: CourseProps) => {
