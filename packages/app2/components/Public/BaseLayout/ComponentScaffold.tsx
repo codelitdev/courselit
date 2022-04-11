@@ -38,7 +38,8 @@ const classes = {
   visitSiteLink: `${PREFIX}-visitSiteLink`,
   contentMain: `${PREFIX}-contentMain`,
   contentPadding: `${PREFIX}-contentPadding`,
-  showProgressBar: `${PREFIX}-showProgressBar`,
+  showprogress: `${PREFIX}-showprogress`,
+  hideprogress: `${PREFIX}-hideprogress`,
   menuTitle: `${PREFIX}-menuTitle`,
   branding: `${PREFIX}-branding`,
   subheader: `${PREFIX}-subheader`,
@@ -87,6 +88,10 @@ const Root = styled("div")(({ theme }: { theme: any }) => ({
 
   [`& .${classes.content}`]: {
     flexGrow: 1,
+    [theme.breakpoints.up("sm")]: {
+      width: `calc(100% - ${drawerWidth}px)`,
+      marginLeft: drawerWidth,
+    },
   },
 
   [`& .${classes.activeItem}`]: {
@@ -111,9 +116,13 @@ const Root = styled("div")(({ theme }: { theme: any }) => ({
     padding: theme.spacing(2),
   },
 
-  [`& .${classes.showProgressBar}`]: (props) => ({
-    visibility: props.networkAction ? "visible" : "hidden",
-  }),
+  [`& .${classes.hideprogress}`]: {
+    visibility: "hidden",
+  },
+
+  [`& .${classes.showprogress}`]: {
+    visibility: "visible",
+  },
 
   [`& .${classes.menuTitle}`]: {
     marginLeft: theme.spacing(2),
@@ -151,12 +160,12 @@ interface ProgressProps {
   status: boolean;
 }
 
-const ComponentScaffold = (props: ComponentScaffoldItemProps) => {
+const ComponentScaffold = (props: ComponentScaffoldProps) => {
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [visibleComponent, setVisibleComponent] = useState();
   const [activeItemIndex, setActiveItemIndex] = useState(0);
-  const matches = useMediaQuery((theme) => theme.breakpoints.down("sm"));
+  const matches = useMediaQuery((theme: any) => theme.breakpoints.down("sm"));
   const [firstLoad, setFirstLoad] = useState(false);
 
   useEffect(() => {
@@ -174,16 +183,16 @@ const ComponentScaffold = (props: ComponentScaffoldItemProps) => {
     setMobileOpen(!mobileOpen);
   }
 
-  function showComponent(item: any, index: number) {
-    setActiveItemIndex(index);
+  function showComponent(item: any, index?: number) {
+    if (index) {
+      setActiveItemIndex(index);
+    }
     setVisibleComponent(item);
   }
 
   const drawer = (
     <>
-      <Root className={classes.branding}>
-        <Branding />
-      </Root>
+      <Branding />
 
       <List>
         {props.items.map((item: Record<string, unknown>, index: number) =>
@@ -228,7 +237,7 @@ const ComponentScaffold = (props: ComponentScaffoldItemProps) => {
   );
 
   return (
-    <div className={classes.root}>
+    <Root>
       <CssBaseline />
       <AppBar position="fixed" className={classes.appBar}>
         <Toolbar>
@@ -277,7 +286,11 @@ const ComponentScaffold = (props: ComponentScaffoldItemProps) => {
       </nav>
       <main className={classes.content}>
         <div className={classes.toolbar} />
-        <LinearProgress className={classes.showProgressBar} />
+        <LinearProgress
+          className={
+            props.networkAction ? classes.showprogress : classes.hideprogress
+          }
+        />
         <Grid container className={classes.contentPadding}>
           <Grid item xs={12} className={classes.contentMain}>
             {visibleComponent}
@@ -285,7 +298,7 @@ const ComponentScaffold = (props: ComponentScaffoldItemProps) => {
         </Grid>
       </main>
       <AppToast />
-    </div>
+    </Root>
   );
 };
 
