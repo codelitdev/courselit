@@ -1,8 +1,7 @@
 import React from "react";
-import { styled } from "@mui/material/styles";
-import PropTypes from "prop-types";
+import { styled } from "@mui/styles";
 import { Typography, Grid } from "@mui/material";
-import { USER_ERROR_HEADER } from "../config/strings";
+import { USER_ERROR_HEADER } from "../ui-config/strings";
 import { Section } from "@courselit/components-library";
 import BaseLayout from "./Public/BaseLayout";
 
@@ -12,13 +11,17 @@ const classes = {
   header: `${PREFIX}-header`,
 };
 
-const StyledBaseLayout = styled(BaseLayout)(({ theme }) => ({
+const StyledBaseLayout = styled(BaseLayout)(({ theme }: { theme: any }) => ({
   [`& .${classes.header}`]: {
     marginBottom: theme.spacing(1),
   },
 }));
 
-const AppError = (props) => {
+interface AppErrorProps {
+    error: string;
+}
+
+const AppError = (props: AppErrorProps) => {
   const { error } = props;
 
   return (
@@ -39,10 +42,6 @@ const AppError = (props) => {
       </Grid>
     </StyledBaseLayout>
   );
-};
-
-AppError.propTypes = {
-  error: PropTypes.string.isRequired,
 };
 
 export default AppError;

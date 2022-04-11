@@ -197,7 +197,7 @@ export const getCoursesAsAdmin = async (offset, ctx, text) => {
     { offset, query, graphQLContext: ctx },
     {
       itemsPerPage,
-      sortByColumn: "updated",
+      sortByColumn: "updatedAt",
       sortOrder: -1,
     }
   );
@@ -217,7 +217,7 @@ export const getPosts = async (offset, ctx) => {
     query,
     "id title description creatorName updated slug featuredImage courseId"
   )
-    .sort({ updated: -1 })
+    .sort({ updatedAt: -1 })
     .skip((offset - 1) * itemsPerPage)
     .limit(itemsPerPage);
 
@@ -229,7 +229,7 @@ export const getPosts = async (offset, ctx) => {
       blogPostSnippetLength
     ),
     creatorName: x.creatorName,
-    updated: x.updated,
+    updatedAt: x.updatedAt,
     slug: x.slug,
     featuredImage: x.featuredImage,
     courseId: x.courseId,
@@ -250,7 +250,7 @@ export const getCourses = async (offset, onlyShowFeatured = false, ctx) => {
   let dbQuery = Course.find(
     query,
     "id title featuredImage cost creatorName slug description updated isFeatured courseId"
-  ).sort({ updated: -1 });
+  ).sort({ updatedAt: -1 });
   dbQuery = dbQuery.skip((offset - 1) * itemsPerPage).limit(itemsPerPage);
 
   return dbQuery;

@@ -357,7 +357,7 @@ const CourseEditor = (props: CourseEditorProps) => {
     );
   };
 
-  const loadCourse = async (courseId) => {
+  const loadCourse = async (courseId: string) => {
     const query = `
     query {
       course: getCourse(courseId: "${courseId}") {

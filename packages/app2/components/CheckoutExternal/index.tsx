@@ -4,14 +4,20 @@ import {
   PAYMENT_METHOD_PAYPAL,
   PAYMENT_METHOD_PAYTM,
   PAYMENT_METHOD_STRIPE,
-} from "../../config/constants";
-import { publicCourse, siteInfoProps } from "../../types";
+} from "../../ui-config/constants";
 import dynamic from "next/dynamic";
+import { Course, SiteInfo } from "@courselit/common-models";
+import { AppState } from "@courselit/state-management";
 
-const Stripe = dynamic(() => import("./Stripe.js"));
-const Free = dynamic(() => import("./Free.js"));
+const Stripe = dynamic(() => import("./Stripe"));
+const Free = dynamic(() => import("./Free"));
 
-const CheckoutExternal = (props) => {
+interface CheckoutExternalProps {
+    course: Course;
+    siteInfo: SiteInfo;
+}
+
+const CheckoutExternal = (props: CheckoutExternalProps) => {
   const { course } = props;
   const { paymentMethod } = props.siteInfo;
 
@@ -31,12 +37,7 @@ const CheckoutExternal = (props) => {
   );
 };
 
-CheckoutExternal.propTypes = {
-  course: publicCourse.isRequired,
-  siteInfo: siteInfoProps.isRequired,
-};
-
-const mapStateToProps = (state) => ({
+const mapStateToProps = (state: AppState) => ({
   auth: state.auth,
   siteInfo: state.siteinfo,
 });

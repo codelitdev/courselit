@@ -47,7 +47,6 @@ interface CourseStructureEditorProps {
   auth: Auth;
   address: Address;
   dispatch: AppDispatch;
-  classes: any;
 }
 
 const CourseStructureEditor = ({
@@ -55,8 +54,7 @@ const CourseStructureEditor = ({
   onCloseView,
   auth,
   address,
-  dispatch,
-  classes,
+  dispatch
 }: CourseStructureEditorProps) => {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [groups, setGroups] = useState<any>([]);
@@ -268,7 +266,6 @@ const CourseStructureEditor = ({
                     <Typography
                       variant="h5"
                       color="textSecondary"
-                      className={classes.placeholder}
                     >
                       {COURSE_STRUCTURE_SELECT_LESSON}
                     </Typography>

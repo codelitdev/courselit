@@ -161,11 +161,11 @@ const ComponentScaffold = (props: any) => {
       <Branding />
 
       <List>
-        {props.items.map((item, index) => (
+        {props.items.map((item: Record<string, unknown>, index: number) => (
           <ListItem
             button
             key={index}
-            onClick={() => navigateTo(item.route)}
+            onClick={() => navigateTo(item.route as string)}
             className={
               router.pathname === item.route ? classes.activeItem : null
             }
@@ -181,14 +181,14 @@ const ComponentScaffold = (props: any) => {
               }
             >
               {item.icon && !item.iconPlacementRight && (
-                <DrawerListItemIcon icon={item.icon} />
+                <DrawerListItemIcon icon={item.icon as object} />
               )}
               <Grid item>
-                <Typography variant="subtitle2">{item.name}</Typography>
+                <Typography variant="subtitle2">{item.name as string}</Typography>
                 {/* <ListItemText primary={item.name} /> */}
               </Grid>
               {item.icon && item.iconPlacementRight && (
-                <DrawerListItemIcon icon={item.icon} right={true} />
+                <DrawerListItemIcon icon={item.icon as object} right={true} />
               )}
             </Grid>
           </ListItem>

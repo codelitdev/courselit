@@ -1,5 +1,6 @@
 import React from "react";
-import { styled, Theme } from "@mui/material/styles";
+import { styled } from "@mui/styles";
+import { Theme } from "@mui/material/styles";
 import { Grid } from "@mui/material";
 import SessionButton from "../SessionButton";
 import { useTheme } from "@mui/styles";

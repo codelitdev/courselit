@@ -1,21 +1,24 @@
 import React, { useEffect, useState } from "react";
-import { styled } from "@mui/material/styles";
+import { styled } from "@mui/styles";
 import PropTypes from "prop-types";
-import FetchBuilder from "../../lib/fetch";
+import { FetchBuilder } from "@courselit/utils";
 import {
   LESSON_TYPE_VIDEO,
   LESSON_TYPE_AUDIO,
   LESSON_TYPE_PDF,
-} from "../../config/constants";
+} from "../../ui-config/constants";
 import { connect } from "react-redux";
-import { networkAction } from "../../redux/actions";
+import { actionCreators } from "@courselit/state-management";
 import { Typography, Grid } from "@mui/material";
 import {
   ENROLL_IN_THE_COURSE,
   NOT_ENROLLED_HEADER,
-} from "../../config/strings";
-import { lesson, authProps, profileProps, addressProps } from "../../types";
-import { Section, RichText as TextEditor } from "../ComponentsLibrary";
+} from "../../ui-config/strings";
+import { Section, RichText as TextEditor } from "@courselit/components-library";
+import type { Lesson, Auth, Profile, Address } from "@courselit/common-models";
+import type { AppDispatch, AppState } from "@courselit/state-management";
+
+const { networkAction } = actionCreators;
 
 const PREFIX = "LessonViewer";
 
@@ -25,7 +28,7 @@ const classes = {
   section: `${PREFIX}-section`,
 };
 
-const StyledSection = styled(Section)(({ theme }) => ({
+const StyledSection = styled(Section)(({ theme }: { theme: any }) => ({
   [`& .${classes.notEnrolledHeader}`]: {
     marginBottom: theme.spacing(1),
   },
@@ -40,7 +43,11 @@ const StyledSection = styled(Section)(({ theme }) => ({
   },
 }));
 
-const Caption = (props) => {
+interface CaptionProps {
+    text: string;
+}
+
+const Caption = (props: CaptionProps) => {
   if (!props.text) {
     return null;
   }
@@ -60,7 +67,15 @@ Caption.propTypes = {
   text: PropTypes.string,
 };
 
-const LessonViewer = (props) => {
+interface LessonViewerProps {
+    lesson: Lesson;
+    auth: Auth;
+    profile: Profile;
+    dispatch: AppDispatch;
+    address: Address;
+}
+
+const LessonViewer = (props: LessonViewerProps) => {
   const [lesson, setLesson] = useState(props.lesson);
   const [isEnrolled] = useState(
     !lesson.requiresEnrollment ||
@@ -71,7 +86,7 @@ const LessonViewer = (props) => {
     props.lesson.id && isEnrolled && loadLesson(props.lesson.id);
   }, [props.lesson]);
 
-  const loadLesson = async (id) => {
+  const loadLesson = async (id: string) => {
     const query = `
     query {
       lesson: getLessonDetails(id: "${id}") {
@@ -95,7 +110,6 @@ const LessonViewer = (props) => {
       .setUrl(`${props.address.backend}/api/graph`)
       .setPayload(query)
       .setIsGraphQLEndpoint(true)
-      .setAuthToken(props.auth.token)
       .build();
 
     try {
@@ -145,12 +159,12 @@ const LessonViewer = (props) => {
                 className={`${classes.videoPlayer} ${classes.section}`}
               >
                 <source
-                  src={lesson.media && lesson.media.file}
+                  src={lesson.media && lesson.media.file as string}
                   type="video/mp4"
                 />
                 Your browser does not support the video tag.
               </video>
-              <Caption text={lesson.media && lesson.media.caption} />
+              <Caption text={lesson.media && lesson.media.caption as string} />
             </Grid>
           )}
           {String.prototype.toUpperCase.call(LESSON_TYPE_AUDIO) ===
@@ -162,12 +176,12 @@ const LessonViewer = (props) => {
                 className={classes.section}
               >
                 <source
-                  src={lesson.media && lesson.media.file}
+                  src={lesson.media && lesson.media.file as string}
                   type="audio/mpeg"
                 />
                 Your browser does not support the video tag.
               </audio>
-              <Caption text={lesson.media && lesson.media.caption} />
+              <Caption text={lesson.media && lesson.media.caption as string} />
             </Grid>
           )}
           {String.prototype.toUpperCase.call(LESSON_TYPE_PDF) ===
@@ -179,7 +193,7 @@ const LessonViewer = (props) => {
                 height="500"
                 src={`${lesson.media && lesson.media.file}#view=fit`}
               ></iframe>
-              <Caption text={lesson.media && lesson.media.caption} />
+              <Caption text={lesson.media && lesson.media.caption as string} />
             </Grid>
           )}
           {lesson.content && (
@@ -196,21 +210,13 @@ const LessonViewer = (props) => {
   );
 };
 
-LessonViewer.propTypes = {
-  lesson: lesson,
-  auth: authProps,
-  profile: profileProps,
-  dispatch: PropTypes.func.isRequired,
-  address: addressProps,
-};
-
-const mapStateToProps = (state) => ({
+const mapStateToProps = (state: AppState) => ({
   auth: state.auth,
   profile: state.profile,
   address: state.address,
 });
 
-const mapDispatchToProps = (dispatch) => ({
+const mapDispatchToProps = (dispatch: AppDispatch) => ({
   dispatch: dispatch,
 });
 

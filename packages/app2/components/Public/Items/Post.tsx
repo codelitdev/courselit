@@ -42,7 +42,7 @@ interface PostProps {
   id: string;
   title: string;
   description: string;
-  updated: string;
+  updatedAt: string;
   creatorName?: string;
   slug: string;
   featuredImage: string;

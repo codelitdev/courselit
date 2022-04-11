@@ -13,3 +13,4 @@ export type { default as Theme } from "./theme";
 export type { default as User } from "./user";
 export type { default as WidgetMetadata } from "./widget-metadata";
 export type { default as Widget } from "./widget";
+export type { default as Course } from "./course";

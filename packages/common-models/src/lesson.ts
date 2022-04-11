@@ -3,7 +3,7 @@ export default interface Lesson {
   title: string;
   type: string;
   content: string;
-  media: unknown;
+  media: Record<string, unknown>;
   requiresEnrollment: boolean;
   courseId: string;
   groupId: string;

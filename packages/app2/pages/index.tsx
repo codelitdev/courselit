@@ -28,7 +28,7 @@ const generateQuery = (pageOffset = 1) => `
       id,
       title,
       description,
-      updated,
+      updatedAt,
       creatorName,
       slug,
       featuredImage {

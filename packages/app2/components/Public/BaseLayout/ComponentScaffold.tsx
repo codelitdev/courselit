@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { styled } from "@mui/material/styles";
+import { styled, useTheme } from "@mui/styles";
 import AppBar from "@mui/material/AppBar";
 import CssBaseline from "@mui/material/CssBaseline";
 import Drawer from "@mui/material/Drawer";
@@ -15,15 +15,14 @@ import {
   ListSubheader,
   Typography,
 } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
-import PropTypes from "prop-types";
 import AppToast from "../../AppToast";
-import DrawerListItemIcon from "./DrawerListItemIcon.js";
-import Header from "./Header.js";
+import DrawerListItemIcon from "./DrawerListItemIcon";
+import Header from "./Header";
 import { connect } from "react-redux";
-import { siteInfoProps } from "../../../types";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import dynamic from "next/dynamic";
+import type { AppState } from "@courselit/state-management";
+import type { SiteInfo } from "@courselit/common-models";
 
 const PREFIX = "ComponentScaffold";
 
@@ -45,7 +44,7 @@ const classes = {
   subheader: `${PREFIX}-subheader`,
 };
 
-const Root = styled("div")(({ theme }) => ({
+const Root = styled("div")(({ theme }: { theme: any }) => ({
   [`& .${classes.root}`]: {
     display: "flex",
   },
@@ -134,7 +133,25 @@ const Branding = dynamic(() => import("./Branding"));
 
 const drawerWidth = 240;
 
-const ComponentScaffold = (props) => {
+interface ComponentScaffoldProps {
+    items: ComponentScaffoldItemProps[];
+    networkAction: boolean;
+    siteinfo: SiteInfo;
+}
+
+interface ComponentScaffoldItemProps {
+    name: string;
+    element: Record<string, unknown>;
+    icon: Record<string, unknown>;
+    props: Record<string, unknown>;
+    progress: ProgressProps
+}
+
+interface ProgressProps {
+    status: boolean;
+}
+
+const ComponentScaffold = (props: ComponentScaffoldItemProps) => {
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [visibleComponent, setVisibleComponent] = useState();
@@ -157,7 +174,7 @@ const ComponentScaffold = (props) => {
     setMobileOpen(!mobileOpen);
   }
 
-  function showComponent(item, index) {
+  function showComponent(item: any, index: number) {
     setActiveItemIndex(index);
     setVisibleComponent(item);
   }
@@ -169,7 +186,7 @@ const ComponentScaffold = (props) => {
       </Root>
 
       <List>
-        {props.items.map((item, index) =>
+        {props.items.map((item: Record<string, unknown>, index: number) =>
           item.element ? (
             <ListItem
               button
@@ -188,19 +205,19 @@ const ComponentScaffold = (props) => {
                 }
               >
                 {item.icon && !item.iconPlacementRight && (
-                  <DrawerListItemIcon icon={item.icon} />
+                  <DrawerListItemIcon icon={item.icon as object} />
                 )}
                 <Grid item>
-                  <Typography variant="subtitle2">{item.name}</Typography>
+                  <Typography variant="subtitle2">{item.name as string}</Typography>
                 </Grid>
                 {item.icon && item.iconPlacementRight && (
-                  <DrawerListItemIcon icon={item.icon} right={true} />
+                  <DrawerListItemIcon icon={item.icon as object} right={true} />
                 )}
               </Grid>
             </ListItem>
           ) : (
             <ListSubheader className={classes.subheader}>
-              {item.name}
+              {item.name as string}
             </ListSubheader>
           )
         )}
@@ -270,23 +287,7 @@ const ComponentScaffold = (props) => {
   );
 };
 
-ComponentScaffold.propTypes = {
-  items: PropTypes.arrayOf(
-    PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      element: PropTypes.object.isRequired,
-      icon: PropTypes.object,
-      props: PropTypes.object,
-      progress: PropTypes.shape({
-        status: PropTypes.bool.isRequired,
-      }),
-    })
-  ),
-  networkAction: PropTypes.bool.isRequired,
-  siteinfo: siteInfoProps,
-};
-
-const mapStateToProps = (state) => ({
+const mapStateToProps = (state: AppState) => ({
   networkAction: state.networkAction,
   siteinfo: state.siteinfo,
 });

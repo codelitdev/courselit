@@ -1,34 +1,40 @@
 /**
  * Business logic for managing lessons
  */
-// const slugify = require('slugify')
-const Lesson = require("../../models/Lesson");
-const strings = require("../../config/strings");
-const {
+import mongoose from "mongoose";
+import LessonModel, { Lesson } from "../../models/Lesson";
+import { responses } from "../../config/strings";
+import {
   checkIfAuthenticated,
   checkPermission,
   checkOwnershipWithoutModel,
-} = require("../../lib/graphql");
-const Course = require("../../models/Course");
-const { lessonValidator } = require("./helpers");
-const { permissions } = require("../../config/constants");
-const mongoose = require("mongoose");
+} from "../../lib/graphql";
+import CourseModel from "../../models/Course";
+import { lessonValidator } from "./helpers";
+import constants from "../../config/constants";
+import GQLContext from "../../models/GQLContext";
+import { Course } from "../../models/Course";
 
-const getLessonOrThrow = async (id, ctx) => {
+const { permissions } = constants;
+
+const getLessonOrThrow = async (id: string, ctx: GQLContext) => {
   checkIfAuthenticated(ctx);
 
-  const lesson = await Lesson.findOne({ _id: id, domain: ctx.subdomain._id });
+  const lesson = await LessonModel.findOne({
+    _id: id,
+    domain: ctx.subdomain._id,
+  });
 
   if (!lesson) {
-    throw new Error(strings.responses.item_not_found);
+    throw new Error(responses.item_not_found);
   }
 
   if (!checkPermission(ctx.user.permissions, [permissions.manageAnyCourse])) {
     if (!checkOwnershipWithoutModel(lesson, ctx)) {
-      throw new Error(strings.responses.item_not_found);
+      throw new Error(responses.item_not_found);
     } else {
       if (!checkPermission(ctx.user.permissions, [permissions.manageCourse])) {
-        throw new Error(strings.responses.action_not_allowed);
+        throw new Error(responses.action_not_allowed);
       }
     }
   }
@@ -36,48 +42,47 @@ const getLessonOrThrow = async (id, ctx) => {
   return lesson;
 };
 
-exports.getLesson = async (id, ctx) => {
+export const getLesson = async (id: string, ctx: GQLContext) => {
   return await getLessonOrThrow(id, ctx);
 };
 
-exports.getLessonDetails = async (id, ctx) => {
-  const lesson = await Lesson.findOne({ _id: id, domain: ctx.subdomain._id });
+export const getLessonDetails = async (id: string, ctx: GQLContext) => {
+  const lesson = await LessonModel.findOne({
+    _id: id,
+    domain: ctx.subdomain._id,
+  });
 
   if (!lesson) {
-    throw new Error(strings.responses.item_not_found);
+    throw new Error(responses.item_not_found);
   }
 
   if (
     lesson.requiresEnrollment &&
     (!ctx.user || !ctx.user.purchases.includes(lesson.courseId))
   ) {
-    throw new Error(strings.responses.not_enrolled);
+    throw new Error(responses.not_enrolled);
   }
-
-  //   if (lesson.media) {
-  //     lesson.media = await generateSignedUrl({ name: lesson.media });
-  //   }
 
   return lesson;
 };
 
-exports.createLesson = async (lessonData, ctx) => {
+export const createLesson = async (lessonData: Lesson, ctx: GQLContext) => {
   checkIfAuthenticated(ctx);
   if (!checkPermission(ctx.user.permissions, [permissions.manageCourse])) {
-    throw new Error(strings.responses.action_not_allowed);
+    throw new Error(responses.action_not_allowed);
   }
 
   lessonValidator(lessonData);
 
   try {
-    const course = await Course.findOne({
+    const course: Course | null = await CourseModel.findOne({
       _id: lessonData.courseId,
       domain: ctx.subdomain._id,
     });
-    if (!course) throw new Error(strings.responses.item_not_found);
-    if (course.isBlog) throw new Error(strings.responses.cannot_add_to_blogs);
+    if (!course) throw new Error(responses.item_not_found);
+    if (course.isBlog) throw new Error(responses.cannot_add_to_blogs);
 
-    const lesson = await Lesson.create({
+    const lesson = await LessonModel.create({
       domain: ctx.subdomain._id,
       title: lessonData.title,
       type: lessonData.type,
@@ -91,15 +96,16 @@ exports.createLesson = async (lessonData, ctx) => {
     });
 
     course.lessons.push(lesson.id);
-    await course.save();
+    await (course as any).save();
 
     return lesson;
-  } catch (err) {
+  } catch (err: any) {
     throw new Error(err.message);
   }
 };
 
-exports.updateLesson = async (lessonData, ctx) => {
+export const updateLesson = async (lessonData: any, ctx: GQLContext) => {
+  // TODO: work out a better way to save things
   let lesson = await getLessonOrThrow(lessonData.id, ctx);
 
   lessonValidator(lessonData);
@@ -112,36 +118,37 @@ exports.updateLesson = async (lessonData, ctx) => {
   return lesson;
 };
 
-exports.deleteLesson = async (id, ctx) => {
+export const deleteLesson = async (id: string, ctx: GQLContext) => {
   const lesson = await getLessonOrThrow(id, ctx);
 
   try {
     // remove from the parent Course's lessons array
-    let course = await Course.find({
+    let course: Course | null = await CourseModel.findOne({
       domain: ctx.subdomain._id,
     }).elemMatch("lessons", { $eq: lesson.id });
-    course = course[0];
+    if (!course) { return null; }
+
     if (~course.lessons.indexOf(lesson.id)) {
       course.lessons.splice(course.lessons.indexOf(lesson.id), 1);
     }
-    await course.save();
+    await (course as any).save();
 
     await lesson.remove();
     return true;
-  } catch (err) {
+  } catch (err: any) {
     throw new Error(err.message);
   }
 };
 
-exports.getAllLessons = async (course, ctx) => {
-  const lessons = await Lesson.find({
+export const getAllLessons = async (course: Course, ctx: GQLContext) => {
+  const lessons = await LessonModel.find({
     _id: {
       $in: [...course.lessons],
     },
     domain: ctx.subdomain._id,
   });
 
-  const lessonMetaOnly = (lesson) => ({
+  const lessonMetaOnly = (lesson: Lesson) => ({
     id: lesson.id,
     title: lesson.title,
     requiresEnrollment: lesson.requiresEnrollment,

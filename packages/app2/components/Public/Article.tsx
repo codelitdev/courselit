@@ -1,19 +1,21 @@
 import React from "react";
-import { styled } from "@mui/material/styles";
+import { styled } from "@mui/styles";
 import { Typography, Grid, Divider } from "@mui/material";
 import Link from "next/link";
 import PropTypes from "prop-types";
-import { formattedLocaleDate, checkPermission } from "../../lib/utils";
-import { publicCourse, profileProps } from "../../types";
+import { formattedLocaleDate, checkPermission } from "../../ui-lib/utils";
 import { connect } from "react-redux";
 import {
   PriceTag,
   RichText as TextEditor,
   Section,
-} from "../ComponentsLibrary";
-import { FREE_COST } from "../../config/strings.js";
+} from "@courselit/components-library";
+import { FREE_COST } from "../../ui-config/strings";
 import dynamic from "next/dynamic";
-import { permissions } from "../../config/constants";
+import constants from "../../config/constants";
+import { AppState } from "@courselit/state-management";
+import { Course, Profile } from "@courselit/common-models";
+const { permissions } = constants;
 
 const PREFIX = "Article";
 
@@ -28,7 +30,7 @@ const classes = {
   content: `${PREFIX}-content`,
 };
 
-const StyledSection = styled(Section)(({ theme }) => ({
+const StyledSection = styled(Section)(({ theme }: { theme: any }) => ({
   [`& .${classes.header}`]: {},
 
   [`& .${classes.creatoravatarcontainer}`]: {
@@ -65,7 +67,18 @@ const StyledSection = styled(Section)(({ theme }) => ({
 const BuyButton = dynamic(() => import("../CheckoutExternal"));
 const Img = dynamic(() => import("../Img"));
 
-const Article = (props) => {
+interface ArticleProps {
+    course: Course;
+    options: ArticleOptionsProps; 
+    profile: Profile;
+}
+
+interface ArticleOptionsProps {
+    showAttribution: boolean;
+    showEnrollmentArea: boolean;
+}
+
+const Article = (props: ArticleProps) => {
   const { course, options, profile } = props;
 
   let courseDescriptionHydrated;
@@ -100,7 +113,7 @@ const Article = (props) => {
                 </Link>
               </Typography>
               <Typography variant="overline" className={classes.updatedtime}>
-                {formattedLocaleDate(course.updated)}
+                {formattedLocaleDate(course.updatedAt)}
               </Typography>
             </Grid>
             <Grid item>
@@ -148,16 +161,8 @@ const Article = (props) => {
   );
 };
 
-Article.propTypes = {
-  course: publicCourse.isRequired,
-  options: PropTypes.shape({
-    showAttribution: PropTypes.bool,
-    showEnrollmentArea: PropTypes.bool,
-  }).isRequired,
-  profile: profileProps,
-};
 
-const mapStateToProps = (state) => ({
+const mapStateToProps = (state: AppState) => ({
   profile: state.profile,
 });
 

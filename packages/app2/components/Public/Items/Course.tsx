@@ -77,7 +77,7 @@ Course.propTypes = {
   id: PropTypes.string.isRequired,
   title: PropTypes.string.isRequired,
   description: PropTypes.string.isRequired,
-  updated: PropTypes.string.isRequired,
+  updatedAt: PropTypes.string.isRequired,
   creatorName: PropTypes.string,
   slug: PropTypes.string.isRequired,
   featuredImage: PropTypes.string,

@@ -11,7 +11,7 @@ export default interface Course {
   creatorName: string;
   slug: string;
   description: string;
-  updated: Date;
+  updatedAt: Date;
   isFeatured: boolean;
   courseId: string;
 }
