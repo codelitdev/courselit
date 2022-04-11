@@ -1,6 +1,6 @@
 import React from "react";
 import widgets from "../../../ui-config/widgets";
-import FetchBuilder from "../../../ui-lib/fetch";
+import { FetchBuilder } from "@courselit/utils";
 import * as config from "../../../ui-config/constants";
 import * as utilities from "../../../ui-lib/utils";
 import { connect } from "react-redux";

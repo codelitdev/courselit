@@ -23,7 +23,7 @@ import {
   LOAD_MORE_TEXT,
   SEARCH_TEXTBOX_PLACEHOLDER,
 } from "../../../ui-config/strings";
-import FetchBuilder from "../../../ui-lib/fetch";
+import { FetchBuilder } from "@courselit/utils";
 import { Section } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 import { checkPermission } from "../../../ui-lib/utils";

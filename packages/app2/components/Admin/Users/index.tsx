@@ -6,7 +6,7 @@ import {
   LOAD_MORE_TEXT,
   HEADER_EDITING_USER,
 } from "../../../ui-config/strings";
-import FetchBuilder from "../../../ui-lib/fetch";
+import { FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";
 import { OverviewAndDetail } from "@courselit/components-library";
 import dynamic from "next/dynamic";
