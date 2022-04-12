@@ -1,7 +1,7 @@
 import * as React from "react";
 import Link from "next/link";
-import { Grid, Typography } from "@material-ui/core";
-import { makeStyles } from "@material-ui/styles";
+import { Grid, Typography } from "@mui/material";
+import { makeStyles } from "@mui/styles";
 import { PriceTag, Course } from "@courselit/components-library";
 
 const useStyles = () =>
@@ -61,7 +61,7 @@ const Item = (props: ItemProps) => {
               item
               container
               className={classes.title}
-              justify="space-between"
+              justifyContent="space-between"
               alignItems="center"
             >
               <Grid item>

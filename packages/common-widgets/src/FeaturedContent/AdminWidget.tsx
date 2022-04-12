@@ -1,11 +1,8 @@
 import * as React from "react";
-import {
-  WidgetProps,
-  WidgetHelpers,
-  Section,
-} from "@courselit/components-library";
-import { Button, Grid, TextField, Typography } from "@material-ui/core";
+import { WidgetHelpers, Section } from "@courselit/components-library";
+import { Button, Grid, TextField, Typography } from "@mui/material";
 import Settings from "./Settings";
+import type { WidgetProps } from "@courselit/common-models";
 
 export interface AdminWidgetProps extends WidgetProps {
   auth: any;

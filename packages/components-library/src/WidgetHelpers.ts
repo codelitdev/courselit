@@ -1,4 +1,4 @@
-import { FetchBuilder } from "./Widget";
+import { FetchBuilder } from "@courselit/common-models";
 
 interface Auth {
   token: string;
@@ -66,10 +66,7 @@ const saveWidgetSettings = async ({
     }
     `;
 
-  const fetch = fetchBuilder
-    .setPayload(mutation)
-    .setAuthToken(auth.token)
-    .build();
+  const fetch = fetchBuilder.setPayload(mutation).build();
   let result;
   try {
     dispatch({ type: "NETWORK_ACTION", flag: true });

@@ -1,7 +1,7 @@
 import * as React from "react";
-import { WidgetProps, AppState } from "@courselit/components-library";
-import { Grid, Theme, Typography } from "@material-ui/core";
-import { makeStyles } from "@material-ui/styles";
+import { WidgetProps } from "@courselit/common-models";
+import { Grid, Theme, Typography } from "@mui/material";
+import { makeStyles } from "@mui/styles";
 import Link from "next/link";
 
 const useStyles = (sectionName: string) =>
@@ -13,7 +13,7 @@ const useStyles = (sectionName: string) =>
     },
     linkContainer: {
       textAlign: sectionName === "footerRight" ? "end" : "start",
-      [theme.breakpoints.down("sm")]: {
+      [theme.breakpoints.down("md")]: {
         marginBottom: theme.spacing(1),
         textAlign: "start",
       },
@@ -37,7 +37,7 @@ const Widget = (props: FooterMenuWidgetProps) => {
         <Grid
           container
           direction="row"
-          justify="space-between"
+          justifyContent="space-between"
           component="ul"
           className={classes.list}
         >

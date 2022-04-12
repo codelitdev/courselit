@@ -1,13 +1,13 @@
 import * as React from "react";
-import { WidgetProps, AppState } from "@courselit/components-library";
-import { Grid, Theme, Typography } from "@material-ui/core";
-import { makeStyles } from "@material-ui/styles";
+import { WidgetProps } from "@courselit/common-models";
+import { Grid, Theme, Typography } from "@mui/material";
+import { makeStyles } from "@mui/styles";
 
 const useStyles = (sectionName: string) =>
   makeStyles((theme: Theme) => ({
     container: {
       textAlign: sectionName === "footerRight" ? "end" : "start",
-      [theme.breakpoints.down("sm")]: {
+      [theme.breakpoints.down("md")]: {
         textAlign: "start",
       },
     },

@@ -88,13 +88,16 @@ const getCourses = async (backend: string) => {
       .build();
     const response = await fetch.exec();
     courses = response.courses;
-  } catch (e) {}
+  } catch (e: any) {
+    console.log(e.message); // eslint-disable-line no-console
+  }
   return courses;
 };
 
 export async function getServerSideProps(context: any) {
   const { req } = context;
-  const courses = await getCourses(getBackendAddress(req.headers.host));
+  const address = getBackendAddress(req.headers.host);
+  const courses = await getCourses(address);
   return { props: { courses } };
 }
 

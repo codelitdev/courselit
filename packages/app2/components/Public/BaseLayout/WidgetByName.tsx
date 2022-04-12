@@ -4,18 +4,26 @@ import { FetchBuilder } from "@courselit/utils";
 import * as config from "../../../ui-config/constants";
 import * as utilities from "../../../ui-lib/utils";
 import { connect } from "react-redux";
-import State from "../../../ui-models/state";
+import type { AppState, AppDispatch } from "@courselit/state-management";
 
 interface WidgetByNameProps {
   name: string;
   section: string;
   address: any;
+  state: AppState;
+  dispatch: AppDispatch;
 }
 
-const WidgetByName = ({ name, section, address }: WidgetByNameProps) => {
+const WidgetByName = ({
+  name,
+  section,
+  address,
+  state,
+  dispatch,
+}: WidgetByNameProps) => {
   const Widget = widgets[name].widget;
   const fetch = new FetchBuilder()
-    .setUrl(`${address.backend}/api/graph`)
+    .setUrl(`${state.address.backend}/api/graph`)
     .setIsGraphQLEndpoint(true);
 
   return (
@@ -25,16 +33,17 @@ const WidgetByName = ({ name, section, address }: WidgetByNameProps) => {
         fetchBuilder={fetch}
         section={section}
         config={Object.assign({}, config, {
-          BACKEND: address.backend,
+          BACKEND: state.address.backend,
         })}
         utilities={utilities}
+        state={state}
+        dispatch={dispatch}
       />
     </div>
   );
 };
 
-const mapStateToProps = (state: State) => ({
-  address: state.address,
-});
+const mapStateToProps = (state: AppState) => ({ state });
+const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
 
-export default connect(mapStateToProps)(WidgetByName);
+export default connect(mapStateToProps, mapDispatchToProps)(WidgetByName);

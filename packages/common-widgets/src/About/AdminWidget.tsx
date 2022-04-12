@@ -1,12 +1,12 @@
 import * as React from "react";
 import {
-  WidgetProps,
   WidgetHelpers,
   RichText as TextEditor,
   Section,
 } from "@courselit/components-library";
-import { Button, Grid, Typography } from "@material-ui/core";
+import { Button, Grid, Typography } from "@mui/material";
 import Settings from "./Settings";
+import type { WidgetProps } from "@courselit/common-models";
 
 export interface AboutWidgetProps extends WidgetProps {
   auth: any;

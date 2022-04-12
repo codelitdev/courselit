@@ -1,13 +1,13 @@
 import * as React from "react";
 import {
-  WidgetProps,
   WidgetHelpers,
   RichText as TextEditor,
   Section,
 } from "@courselit/components-library";
 import Settings from "./Settings";
-import { makeStyles } from "@material-ui/styles";
-import { Grid, Theme } from "@material-ui/core";
+import { makeStyles } from "@mui/styles";
+import { Grid, Theme } from "@mui/material";
+import type { WidgetProps } from "@courselit/common-models";
 
 const useStyles = makeStyles((theme: Theme) => ({
   container: {
@@ -15,11 +15,7 @@ const useStyles = makeStyles((theme: Theme) => ({
   },
 }));
 
-export interface AboutWidgetProps extends WidgetProps {
-  dispatch: any;
-}
-
-const Widget = (props: AboutWidgetProps) => {
+const Widget = (props: WidgetProps) => {
   const { fetchBuilder, dispatch, name } = props;
   const [settings, setSettings] = React.useState<Settings>({
     text: TextEditor.emptyState(),
@@ -31,6 +27,7 @@ const Widget = (props: AboutWidgetProps) => {
   }, []);
 
   const getSettings = async () => {
+    console.log("From about widget", props);
     const settings: any = await WidgetHelpers.getWidgetSettings({
       widgetName: name,
       fetchBuilder,

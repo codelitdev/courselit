@@ -1,14 +1,11 @@
 import * as React from "react";
-import { Grid, Typography, Button, Theme } from "@material-ui/core";
+import { Grid, Typography, Button, Theme } from "@mui/material";
 import Item from "./Item";
-import { makeStyles } from "@material-ui/styles";
-import {
-  WidgetProps,
-  WidgetHelpers,
-  Section,
-} from "@courselit/components-library";
+import { makeStyles } from "@mui/styles";
+import { WidgetHelpers, Section } from "@courselit/components-library";
 import Link from "next/link";
 import Settings from "./Settings";
+import type { WidgetProps } from "@courselit/common-models";
 
 const useStyles = ({ backgroundColor }: Settings) =>
   makeStyles((theme: Theme) => ({

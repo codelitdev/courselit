@@ -215,7 +215,7 @@ export const getPosts = async (offset, ctx) => {
   };
   const posts = await Course.find(
     query,
-    "id title description creatorName updated slug featuredImage courseId"
+    "id title description creatorName updatedAt slug featuredImage courseId"
   )
     .sort({ updatedAt: -1 })
     .skip((offset - 1) * itemsPerPage)
