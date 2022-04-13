@@ -47,6 +47,7 @@ const courseType = new GraphQLObjectType({
     privacy: { type: new GraphQLNonNull(courseStatusType) },
     isBlog: { type: new GraphQLNonNull(GraphQLBoolean) },
     isFeatured: { type: new GraphQLNonNull(GraphQLBoolean) },
+    tags: { type: new GraphQLList(GraphQLString) },
     creatorId: { type: new GraphQLNonNull(GraphQLID) },
     creatorName: { type: GraphQLString },
     lessons: {
@@ -72,6 +73,7 @@ const courseInputType = new GraphQLInputObjectType({
     privacy: { type: new GraphQLNonNull(courseStatusType) },
     isBlog: { type: new GraphQLNonNull(GraphQLBoolean) },
     isFeatured: { type: new GraphQLNonNull(GraphQLBoolean) },
+    tags: { type: new GraphQLList(GraphQLString) },
     cost: { type: GraphQLFloat },
     description: { type: GraphQLString },
     featuredImage: { type: GraphQLString },
@@ -88,6 +90,7 @@ const courseUpdateInput = new GraphQLInputObjectType({
     privacy: { type: courseStatusType },
     isBlog: { type: GraphQLBoolean },
     isFeatured: { type: GraphQLBoolean },
+    tags: { type: new GraphQLList(GraphQLString) },
     description: { type: GraphQLString },
     featuredImage: { type: GraphQLString },
   },
@@ -121,6 +124,7 @@ const postType = new GraphQLObjectType({
       type: mediaTypes.mediaType,
       resolve: (course, args, context, info) => getMedia(course.featuredImage),
     },
+    tags: { type: new GraphQLList(GraphQLString) },
   },
 });
 
@@ -129,17 +133,19 @@ const publicCoursesType = new GraphQLObjectType({
   fields: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     title: { type: new GraphQLNonNull(GraphQLString) },
+    cost: { type: new GraphQLNonNull(GraphQLFloat) },
+    isBlog: { type: new GraphQLNonNull(GraphQLBoolean) },
+    description: { type: new GraphQLNonNull(GraphQLString) },
+    creatorName: { type: GraphQLString },
+    updatedAt: { type: new GraphQLNonNull(GraphQLString) },
+    slug: { type: new GraphQLNonNull(GraphQLString) },
     featuredImage: {
       type: mediaTypes.mediaType,
       resolve: (course, args, context, info) => getMedia(course.featuredImage),
     },
-    cost: { type: new GraphQLNonNull(GraphQLFloat) },
-    slug: { type: new GraphQLNonNull(GraphQLString) },
-    updatedAt: { type: new GraphQLNonNull(GraphQLString) },
-    creatorName: { type: GraphQLString },
-    description: { type: new GraphQLNonNull(GraphQLString) },
-    isFeatured: { type: new GraphQLNonNull(GraphQLBoolean) },
     courseId: { type: new GraphQLNonNull(GraphQLString) },
+    isFeatured: { type: new GraphQLNonNull(GraphQLBoolean) },
+    tags: { type: new GraphQLList(GraphQLString) },
     groups: { type: new GraphQLList(courseGroupType) },
   },
 });

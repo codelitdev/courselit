@@ -15,6 +15,7 @@ export interface Course {
   published: boolean;
   isBlog: boolean;
   isFeatured: boolean;
+  tags: string[];
   lessons: any[];
   description?: string;
   featuredImage?: string;
@@ -38,6 +39,7 @@ const CourseSchema = new mongoose.Schema<Course>(
     published: { type: Boolean, required: true, default: false },
     isBlog: { type: Boolean, required: true, default: false },
     isFeatured: { type: Boolean, required: true, default: false },
+    tags: [{ type: String }],
     lessons: [String],
     description: String,
     featuredImage: String,

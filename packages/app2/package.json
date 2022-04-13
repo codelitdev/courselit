@@ -33,7 +33,6 @@
     "jsonwebtoken": "^8.5.1",
     "mongodb": "^4.4.1",
     "mongoose": "^6.2.4",
-    "mongoose-sequence": "^5.3.1",
     "next": "12.1.0",
     "next-connect": "^0.12.2",
     "nodemailer": "^6.7.2",

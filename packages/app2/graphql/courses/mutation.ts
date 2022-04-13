@@ -39,7 +39,7 @@ export default {
         type: new GraphQLNonNull(types.courseUpdateInput),
       },
     },
-    resolve: async (root, { courseData }, context) =>
+    resolve: async (_: unknown, { courseData }, context) =>
       updateCourse(courseData, context),
   },
   deleteCourse: {
@@ -49,7 +49,7 @@ export default {
         type: new GraphQLNonNull(GraphQLID),
       },
     },
-    resolve: async (root, { id }, context) => deleteCourse(id, context),
+    resolve: async (_: unknown, { id }, context) => deleteCourse(id, context),
   },
   addLesson: {
     type: new GraphQLNonNull(GraphQLBoolean),
@@ -61,7 +61,7 @@ export default {
         type: new GraphQLNonNull(GraphQLID),
       },
     },
-    resolve: async (root, { courseId, lessonId }, context) =>
+    resolve: async (_: unknown, { courseId, lessonId }, context) =>
       addLesson(courseId, lessonId, context),
   },
   removeLesson: {
@@ -74,7 +74,7 @@ export default {
         type: new GraphQLNonNull(GraphQLID),
       },
     },
-    resolve: async (root, { courseId, lessonId }, context) =>
+    resolve: async (_: unknown, { courseId, lessonId }, context) =>
       removeLesson(courseId, lessonId, context),
   },
   addGroup: {
@@ -90,7 +90,7 @@ export default {
         type: GraphQLBoolean,
       },
     },
-    resolve: async (root, { id, name, collapsed }, context) =>
+    resolve: async (_: unknown, { id, name, collapsed }, context) =>
       addGroup({ id, name, collapsed, ctx: context }),
   },
   removeGroup: {
@@ -103,7 +103,7 @@ export default {
         type: new GraphQLNonNull(GraphQLID),
       },
     },
-    resolve: async (root, { id, courseId }, context) =>
+    resolve: async (_: unknown, { id, courseId }, context) =>
       removeGroup(id, courseId, context),
   },
   updateGroup: {
@@ -125,7 +125,11 @@ export default {
         type: GraphQLBoolean,
       },
     },
-    resolve: async (root, { id, courseId, name, rank, collapsed }, context) =>
+    resolve: async (
+      _: unknown,
+      { id, courseId, name, rank, collapsed },
+      context
+    ) =>
       updateGroup({
         id,
         courseId,

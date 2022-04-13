@@ -11187,14 +11187,6 @@ mongoose-sequence@^5.2.2:
     async "^2.5.0"
     lodash "^4.17.20"
 
-mongoose-sequence@^5.3.1:
-  version "5.3.1"
-  resolved "https://registry.yarnpkg.com/mongoose-sequence/-/mongoose-sequence-5.3.1.tgz#b1acc6f860550692a73cdc948578c9974a8e3630"
-  integrity sha512-kQB1ctCdAQT8YdQzoHV0CpBRsO4RNVy03SOkzM6TQKBbGBs1ZgVS4UlKsuvBPaiPt9q5tKgQZvorGJ1awbHDqA==
-  dependencies:
-    async "^2.5.0"
-    lodash "^4.17.20"
-
 mongoose@^6.0.3:
   version "6.0.3"
   resolved "https://registry.yarnpkg.com/mongoose/-/mongoose-6.0.3.tgz#81e8cc1b17d6787f95bddf37390b644895bc1daa"

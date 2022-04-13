@@ -1,6 +1,6 @@
 import BaseLayout from "../components/Public/BaseLayout";
 import { Section } from "@courselit/components-library";
-import { Typography } from "@material-ui/core";
+import { Typography } from "@mui/material";
 import { PAGE_TITLE_404 } from "../ui-config/strings";
 
 export default function Custom404() {

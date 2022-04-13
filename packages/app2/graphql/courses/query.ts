@@ -5,6 +5,7 @@ import {
   GraphQLList,
   GraphQLID,
   GraphQLBoolean,
+  GraphQLEnumType,
 } from "graphql";
 import types from "./types";
 import {
@@ -15,6 +16,15 @@ import {
   getEnrolledCourses,
 } from "./logic";
 import GQLContext from "../../models/GQLContext";
+import Filter from "./models/filter";
+
+const courseFilters = new GraphQLEnumType({
+  name: "CourseFilters",
+  values: {
+    COURSE: { value: "course" },
+    POST: { value: "post" },
+  },
+});
 
 export default {
   getCourse: {
@@ -49,34 +59,41 @@ export default {
       context: GQLContext
     ) => getCoursesAsAdmin(offset, context, searchText),
   },
-  getPosts: {
-    type: new GraphQLList(types.postType),
-    args: {
-      offset: {
-        type: new GraphQLNonNull(GraphQLInt),
-      },
-    },
-    resolve: (_: any, { offset }: { offset: number }, context: GQLContext) =>
-      getPosts(offset, context),
-  },
+  //   getPosts: {
+  //     type: new GraphQLList(types.postType),
+  //     args: {
+  //       offset: {
+  //         type: new GraphQLNonNull(GraphQLInt),
+  //       },
+  //       tag: {
+  //         type: GraphQLString
+  //       },
+  //     },
+  //     resolve: (_: any, { offset, tag }: { offset: number, tag?: string }, ctx: GQLContext) =>
+  //       getPosts({ offset, tag, ctx }),
+  //   },
   getCourses: {
     type: new GraphQLList(types.publicCoursesType),
     args: {
       offset: {
         type: new GraphQLNonNull(GraphQLInt),
       },
-      onlyShowFeatured: {
-        type: GraphQLBoolean,
+      tag: {
+        type: GraphQLString,
+      },
+      filterBy: {
+        type: courseFilters,
       },
     },
     resolve: (
       _: any,
       {
         offset,
-        onlyShowFeatured,
-      }: { offset: number; onlyShowFeatured: boolean },
-      context: GQLContext
-    ) => getCourses(offset, onlyShowFeatured, context),
+        tag,
+        filterBy,
+      }: { offset: number; tag?: string; filterBy?: Filter },
+      ctx: GQLContext
+    ) => getCourses({ offset, tag, filterBy, ctx }),
   },
   getEnrolledCourses: {
     type: new GraphQLList(types.creatorOrAdminCoursesItemType),

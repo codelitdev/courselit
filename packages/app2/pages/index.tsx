@@ -24,7 +24,7 @@ const useStyles = makeStyles((theme: any) => ({
 
 const generateQuery = (pageOffset = 1) => `
   query {
-    courses: getPosts(offset: ${pageOffset}) {
+    courses: getCourses(offset: ${pageOffset}, filterBy: POST) {
       id,
       title,
       description,

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { styled } from "@mui/material/styles";
-import PropTypes from "prop-types";
 import {
   Button,
   Grid,
@@ -32,10 +31,11 @@ import constants from "../../../config/constants";
 const { permissions } = constants;
 import Link from "next/link";
 import type { Auth, Profile, Address } from "@courselit/common-models";
+import { AppMessage } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
 
-const { networkAction } = actionCreators;
+const { networkAction, setAppMessage } = actionCreators;
 
 const PREFIX = "index";
 
@@ -132,7 +132,8 @@ const Index = (props: IndexProps) => {
         setCreatorCourses([...creatorCourses, ...response.courses]);
         setCoursesPaginationOffset(coursesPaginationOffset + 1);
       }
-    } catch (err) {
+    } catch (err: any) {
+      props.dispatch(setAppMessage(new AppMessage(err.message)));
     } finally {
       props.dispatch(networkAction(false));
     }

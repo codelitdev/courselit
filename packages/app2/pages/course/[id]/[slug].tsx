@@ -5,7 +5,7 @@ import {
   getBackendAddress,
   getPostDescriptionSnippet,
 } from "../../../ui-lib/utils";
-import { Lock } from "@material-ui/icons";
+import { Lock } from "@mui/icons-material";
 import { SIDEBAR_TEXT_COURSE_ABOUT } from "../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
 import dynamic from "next/dynamic";

@@ -2,7 +2,7 @@
  * Business logic for managing courses.
  */
 import slugify from "slugify";
-import Course from "../../models/Course";
+import CourseModel, { Course } from "../../models/Course";
 import User from "../../models/User";
 import { responses } from "../../config/strings";
 import {
@@ -17,13 +17,17 @@ import constants from "../../config/constants";
 import { validateBlogPosts } from "./helpers";
 import Lesson from "../../models/Lesson";
 import GQLContext from "../../models/GQLContext";
+import Filter from "./models/filter";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
-const getCourseOrThrow = async (id, ctx) => {
+const getCourseOrThrow = async (id: string, ctx: GQLContext) => {
   checkIfAuthenticated(ctx);
 
-  const course = await Course.findOne({ _id: id, domain: ctx.subdomain._id });
+  const course = await CourseModel.findOne({
+    _id: id,
+    domain: ctx.subdomain._id,
+  });
 
   if (!course) {
     throw new Error(responses.item_not_found);
@@ -53,9 +57,9 @@ export const getCourse = async (
 
   let course;
   if (id) {
-    course = await Course.findOne({ _id: id, domain: ctx.subdomain._id });
+    course = await CourseModel.findOne({ _id: id, domain: ctx.subdomain._id });
   } else {
-    course = await Course.findOne({ courseId, domain: ctx.subdomain._id });
+    course = await CourseModel.findOne({ courseId, domain: ctx.subdomain._id });
   }
 
   if (!course) {
@@ -78,7 +82,7 @@ export const getCourse = async (
   }
 };
 
-export const createCourse = async (courseData, ctx) => {
+export const createCourse = async (courseData: Course, ctx: GQLContext) => {
   checkIfAuthenticated(ctx);
   if (!checkPermission(ctx.user.permissions, [permissions.manageCourse])) {
     throw new Error(responses.action_not_allowed);
@@ -86,7 +90,7 @@ export const createCourse = async (courseData, ctx) => {
 
   courseData = await validateBlogPosts(courseData, ctx);
 
-  const course = await Course.create({
+  const course = await CourseModel.create({
     domain: ctx.subdomain._id,
     title: courseData.title,
     cost: courseData.cost,
@@ -98,6 +102,7 @@ export const createCourse = async (courseData, ctx) => {
     creatorId: ctx.user.userId || ctx.user._id,
     creatorName: ctx.user.name,
     slug: slugify(courseData.title.toLowerCase()),
+    tags: courseData.tags,
   });
 
   return course;
@@ -191,7 +196,7 @@ export const getCoursesAsAdmin = async (offset, ctx, text) => {
   }
 
   if (text) query.$text = { $search: text };
-  const SearchableCourse = makeModelTextSearchable(Course);
+  const SearchableCourse = makeModelTextSearchable(CourseModel);
 
   const resultSet = await SearchableCourse(
     { offset, query, graphQLContext: ctx },
@@ -205,25 +210,43 @@ export const getCoursesAsAdmin = async (offset, ctx, text) => {
   return resultSet;
 };
 
-export const getPosts = async (offset, ctx) => {
+export const getCourses = async ({
+  offset,
+  ctx,
+  tag,
+  filterBy,
+}: {
+  offset: number;
+  ctx: GQLContext;
+  tag?: string;
+  filterBy?: Filter;
+}) => {
   validateOffset(offset);
-  const query = {
-    isBlog: true,
+  const query: Record<string, unknown> = {
     published: true,
     privacy: open.toLowerCase(),
     domain: ctx.subdomain._id,
   };
-  const posts = await Course.find(
+  if (tag) {
+    query.tags = tag;
+  }
+  if (filterBy && filterBy === "post") {
+    query.isBlog = true;
+  }
+
+  const courses = await CourseModel.find(
     query,
-    "id title description creatorName updatedAt slug featuredImage courseId"
+    "id title cost isBlog description creatorName updatedAt slug featuredImage courseId isFeatured tags groups"
   )
     .sort({ updatedAt: -1 })
     .skip((offset - 1) * itemsPerPage)
     .limit(itemsPerPage);
 
-  return posts.map((x) => ({
+  return courses.map((x) => ({
     id: x.id,
     title: x.title,
+    cost: x.cost,
+    isBlog: x.isBlog,
     description: extractPlainTextFromDraftJS(
       x.description,
       blogPostSnippetLength
@@ -233,28 +256,35 @@ export const getPosts = async (offset, ctx) => {
     slug: x.slug,
     featuredImage: x.featuredImage,
     courseId: x.courseId,
+    tags: x.tags,
+    isFeatured: x.isFeatured,
+    groups: x.isBlog ? null : x.groups,
   }));
 };
 
-export const getCourses = async (offset, onlyShowFeatured = false, ctx) => {
-  const query = {
-    isBlog: false,
-    published: true,
-    privacy: open.toLowerCase(),
-    domain: ctx.subdomain._id,
-  };
-  if (onlyShowFeatured) {
-    query.isFeatured = true;
-  }
+// export const getCourses = async ({ offset, tag, ctx }: {
+//     offset: number;
+//     tag?: string;
+//     ctx: GQLContext;
+// }) => {
+//   const query: Record<string, unknown> = {
+//     isBlog: false,
+//     published: true,
+//     privacy: open.toLowerCase(),
+//     domain: ctx.subdomain._id,
+//   };
+//   if (tag) {
+//     query.tags = tag;
+//   }
 
-  let dbQuery = Course.find(
-    query,
-    "id title featuredImage cost creatorName slug description updated isFeatured courseId"
-  ).sort({ updatedAt: -1 });
-  dbQuery = dbQuery.skip((offset - 1) * itemsPerPage).limit(itemsPerPage);
+//   let dbQuery = CourseModel.find(
+//     query,
+//     "id title featuredImage cost creatorName slug description updatedAt isFeatured courseId tags"
+//   ).sort({ updatedAt: -1 });
+//   dbQuery = dbQuery.skip((offset - 1) * itemsPerPage).limit(itemsPerPage);
 
-  return dbQuery;
-};
+//   return dbQuery;
+// };
 
 export const getEnrolledCourses = async (userId, ctx) => {
   checkIfAuthenticated(ctx);
@@ -268,7 +298,7 @@ export const getEnrolledCourses = async (userId, ctx) => {
     throw new Error(responses.user_not_found);
   }
 
-  return Course.find(
+  return CourseModel.find(
     {
       _id: {
         $in: [...user.purchases],
@@ -355,7 +385,7 @@ export const updateGroup = async ({
     $set["groups.$.collapsed"] = collapsed;
   }
 
-  return await Course.findOneAndUpdate(
+  return await CourseModel.findOneAndUpdate(
     {
       _id: course._id.toString(),
       "groups._id": id,
@@ -373,7 +403,7 @@ export const updateGroup = async ({
 //     throw new Error(responses.existing_group);
 //   }
 
-//   return await Course.findOneAndUpdate(
+//   return await CourseModel.findOneAndUpdate(
 //     {
 //       _id: course._id.toString(),
 //       "groups._id": id,
@@ -392,7 +422,7 @@ export const updateGroup = async ({
 // export const updateGroupRank = async (id, courseId, rank, ctx) => {
 //   const course = await getCourseOrThrow(courseId, ctx);
 
-//   return await Course.findOneAndUpdate(
+//   return await CourseModel.findOneAndUpdate(
 //     {
 //       _id: course._id.toString(),
 //       "groups._id": id,

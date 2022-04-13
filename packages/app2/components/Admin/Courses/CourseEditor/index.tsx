@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { styled } from "@mui/material/styles";
+import { styled } from "@mui/styles";
 import { connect } from "react-redux";
 import {
   BTN_DELETE_COURSE,
@@ -25,11 +25,7 @@ import {
   EDIT_COURSE_PAGE_HEADING,
 } from "../../../../ui-config/strings";
 import { actionCreators } from "@courselit/state-management";
-import {
-  queryGraphQL,
-  formulateCourseUrl,
-  checkPermission,
-} from "../../../../ui-lib/utils";
+import { formulateCourseUrl, checkPermission } from "../../../../ui-lib/utils";
 import Link from "next/link";
 import {
   Grid,
@@ -93,6 +89,7 @@ const CourseEditor = (props: CourseEditorProps) => {
     isFeatured: false,
     slug: "",
     courseId: -1,
+    tags: [],
   };
   const initCourseData = {
     course: initCourseMetaData,
@@ -156,7 +153,8 @@ const CourseEditor = (props: CourseEditorProps) => {
               ? '"' + courseData.course.featuredImage.mediaId + '"'
               : null
           },
-          isFeatured: ${courseData.course.isFeatured}
+          isFeatured: ${courseData.course.isFeatured},
+          tags: [${courseData.course.tags.map((tag) => '"' + tag + '"')}]
         }) {
           id,
           title,
@@ -170,6 +168,7 @@ const CourseEditor = (props: CourseEditorProps) => {
             thumbnail
           },
           isFeatured,
+          tags,
           slug,
           courseId,
           groups {
@@ -194,7 +193,8 @@ const CourseEditor = (props: CourseEditorProps) => {
               ? '"' + courseData.course.featuredImage.id + '"'
               : null
           },
-          isFeatured: ${courseData.course.isFeatured}
+          isFeatured: ${courseData.course.isFeatured},
+          tags: [${courseData.course.tags.map((tag) => '"' + tag + '"')}]
         }) {
           id,
           title,
@@ -208,6 +208,7 @@ const CourseEditor = (props: CourseEditorProps) => {
             thumbnail
           },
           isFeatured,
+          tags,
           slug,
           courseId,
           groups {
@@ -255,6 +256,7 @@ const CourseEditor = (props: CourseEditorProps) => {
             thumbnail
           },
           isFeatured,
+          tags,
           slug,
           courseId,
           groups {
@@ -288,6 +290,15 @@ const CourseEditor = (props: CourseEditorProps) => {
     changeCourseDetails(
       e.target.name,
       e.target.type === "checkbox" ? e.target.checked : e.target.value
+    );
+  };
+
+  const onCourseTagsChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const tags = e.target.value.split(/,\s*/);
+    setCourseData(
+      Object.assign({}, courseData, {
+        course: Object.assign({}, courseData.course, { tags }),
+      })
     );
   };
 
@@ -377,6 +388,7 @@ const CourseEditor = (props: CourseEditorProps) => {
           title
         },
         isFeatured,
+        tags,
         slug,
         courseId,
         groups {
@@ -614,6 +626,19 @@ const CourseEditor = (props: CourseEditorProps) => {
                             </Grid>
                             {!courseData.course.isBlog && (
                               <Grid item>
+                                <TextField
+                                  type="text"
+                                  variant="outlined"
+                                  label="Tags"
+                                  fullWidth
+                                  margin="normal"
+                                  name="tags"
+                                  value={
+                                    courseData.course.tags &&
+                                    courseData.course.tags.join(",")
+                                  }
+                                  onChange={onCourseTagsChanged}
+                                />
                                 <Grid
                                   container
                                   justifyContent="space-between"

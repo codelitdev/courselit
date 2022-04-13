@@ -1,17 +1,18 @@
-import { HEADER_BLOG_POSTS_SECTION } from "../ui-config/strings";
+import { HEADER_BLOG_POSTS_SECTION } from "../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
 import { Grid, Typography } from "@mui/material";
-import { getBackendAddress } from "../ui-lib/utils";
+import { getBackendAddress } from "../../ui-lib/utils";
 import { Section } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 import { Course } from "@courselit/common-models";
+import { useRouter } from "next/router";
 
-const BaseLayout = dynamic(() => import("../components/Public/BaseLayout"));
-const Items = dynamic(() => import("../components/Public/Items"));
+const BaseLayout = dynamic(() => import("../../components/Public/BaseLayout"));
+const Items = dynamic(() => import("../../components/Public/Items"));
 
-const generateQuery = (pageOffset = 1) => `
+const generateQuery = (tag: string) => (pageOffset = 1) => `
   query {
-    courses: getCourses(offset: ${pageOffset}, filterBy: POST) {
+    courses: getCourses(offset: ${pageOffset}, tag: "${tag}") {
       id,
       title,
       description,
@@ -31,6 +32,10 @@ interface PostsProps {
 }
 
 function Posts(props: PostsProps) {
+  const router = useRouter();
+  const { tag } = router.query;
+  const generateQueryWithTag = generateQuery(tag as string);
+
   return (
     <BaseLayout title={HEADER_BLOG_POSTS_SECTION}>
       <Grid item xs={12}>
@@ -46,7 +51,7 @@ function Posts(props: PostsProps) {
             <Grid item>
               <Items
                 showLoadMoreButton={true}
-                generateQuery={generateQuery}
+                generateQuery={generateQueryWithTag}
                 initialItems={props.courses}
                 posts={true}
               />
@@ -58,12 +63,12 @@ function Posts(props: PostsProps) {
   );
 }
 
-const getCourses = async (backend: string) => {
+const getCourses = async (backend: string, tag: string) => {
   let courses = [];
   try {
     const fetch = new FetchBuilder()
       .setUrl(`${backend}/api/graph`)
-      .setPayload(generateQuery())
+      .setPayload(generateQuery(tag)())
       .setIsGraphQLEndpoint(true)
       .build();
     const response = await fetch.exec();
@@ -72,8 +77,11 @@ const getCourses = async (backend: string) => {
   return courses;
 };
 
-export async function getServerSideProps({ req }: any) {
-  const courses = await getCourses(getBackendAddress(req.headers.host));
+export async function getServerSideProps({ query, req }: any) {
+  const courses = await getCourses(
+    getBackendAddress(req.headers.host),
+    query.tag
+  );
   return { props: { courses } };
 }
 

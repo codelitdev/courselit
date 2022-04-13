@@ -1,4 +1,3 @@
-declare module "mongoose-sequence";
 declare module "passport-magic-link";
 declare module "@courselit/widget-buttondown";
 declare module "@mui/material/styles" {
