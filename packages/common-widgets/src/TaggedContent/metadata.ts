@@ -1,6 +1,6 @@
 export default {
-  name: "featured-content",
-  displayName: "Featured Content",
+  name: "tagged-content",
+  displayName: "Tagged Content",
   compatibleWith: ["top"],
   icon: "",
   excludeFromPaths: ["/post/[id]/[slug]", "/login", "/course/[id]/[slug]"],

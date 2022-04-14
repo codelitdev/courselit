@@ -7,6 +7,7 @@ import { Grid, Typography } from "@mui/material";
 import { PriceTag } from "@courselit/components-library";
 import { FREE_COST } from "../../../ui-config/strings";
 import Img from "../../Img";
+import type { Course as CourseModel } from "@courselit/common-models";
 
 const PREFIX = "Course";
 
@@ -35,7 +36,7 @@ const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
   },
 }));
 
-const Course = (props) => {
+const Course = (props: CourseModel) => {
   return (
     <StyledGrid item xs={12} md={6}>
       <Link
@@ -71,18 +72,6 @@ const Course = (props) => {
       </Link>
     </StyledGrid>
   );
-};
-
-Course.propTypes = {
-  id: PropTypes.string.isRequired,
-  title: PropTypes.string.isRequired,
-  description: PropTypes.string.isRequired,
-  updatedAt: PropTypes.string.isRequired,
-  creatorName: PropTypes.string,
-  slug: PropTypes.string.isRequired,
-  featuredImage: PropTypes.string,
-  cost: PropTypes.number.isRequired,
-  courseId: PropTypes.number.isRequired,
 };
 
 export default Course;

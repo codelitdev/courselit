@@ -12,4 +12,5 @@ export default interface Course {
   creatorId: string;
   updatedAt: Date;
   featuredImage: Media;
+  isBlog: boolean;
 }

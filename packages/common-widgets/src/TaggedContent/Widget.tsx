@@ -33,8 +33,9 @@ const Widget = (props: FeaturedWidgetProps) => {
   const [postsOffset] = React.useState(1);
   const BTN_LOAD_MORE = "View all";
   const [settings, setSettings] = React.useState<Settings>({
-    title: "",
-    subtitle: "",
+      tag: "",
+      title: "",
+      subtitle: "",
   });
   const classes = useStyles(settings)();
 
@@ -46,7 +47,7 @@ const Widget = (props: FeaturedWidgetProps) => {
   const getPosts = async () => {
     const query = `
     query {
-      courses: getCourses(offset: 1, onlyShowFeatured: true) {
+      courses: getCourses(offset: 1, tag: "${settings.tag}") {
         id,
         title,
         cost,
@@ -54,7 +55,8 @@ const Widget = (props: FeaturedWidgetProps) => {
           file
         },
         slug,
-        courseId
+        courseId,
+        isBlog
       }
     }
     `;

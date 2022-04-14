@@ -1,10 +1,10 @@
 import React from "react";
-import { styled } from "@mui/material/styles";
-import PropTypes from "prop-types";
+import { styled } from "@mui/styles";
 import Link from "next/link";
 import { URL_EXTENTION_POSTS } from "../../../ui-config/constants";
 import { Grid, Typography } from "@mui/material";
 import Img from "../../Img";
+import { Course } from "@courselit/common-models";
 
 const PREFIX = "Post";
 
@@ -38,18 +38,7 @@ const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
   },
 }));
 
-interface PostProps {
-  id: string;
-  title: string;
-  description: string;
-  updatedAt: string;
-  creatorName?: string;
-  slug: string;
-  featuredImage: string;
-  courseId: number;
-}
-
-const Post = (props: PostProps) => {
+const Post = (props: Course) => {
   return (
     <StyledGrid item xs={12} md={6}>
       <Link

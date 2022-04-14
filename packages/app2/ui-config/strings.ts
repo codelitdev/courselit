@@ -59,6 +59,7 @@ export const SWITCH_ACCOUNT_ACTIVE = "Account active";
 export const LABEL_CONF_PASSWORD = "Confirm password";
 export const HEADER_BLOG_POSTS_SECTION = "Articles";
 export const HEADER_COURSES_SECTION = "Courses";
+export const HEADER_TAG_SECTION = "Content tagged with";
 export const SITE_SETTINGS_TITLE = "Title";
 export const SITE_SETTINGS_SUBTITLE = "Subtitle";
 export const SITE_SETTINGS_CURRENCY_UNIT = "Currency Unit";

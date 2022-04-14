@@ -12,8 +12,9 @@ export interface AdminWidgetProps extends WidgetProps {
 const AdminWidget = (props: AdminWidgetProps) => {
   const { name, fetchBuilder, auth, dispatch } = props;
   const [settings, setSettings] = React.useState<Settings>({
-    title: "",
-    subtitle: "",
+      tag: "",
+      title: "",
+      subtitle: "",
   });
   const [newSettings, setNewSettings] = React.useState<Settings>(settings);
 
@@ -67,7 +68,7 @@ const AdminWidget = (props: AdminWidgetProps) => {
       <Grid container direction="column" spacing={2}>
         <Grid item xs>
           <Typography variant="body1">
-            Display featured items on the top section of the landing page.
+            Display content tagged with a specific term on the top section of the landing page.
           </Typography>
         </Grid>
         <Grid item xs>
@@ -75,6 +76,16 @@ const AdminWidget = (props: AdminWidgetProps) => {
         </Grid>
         <Grid item>
           <form onSubmit={saveSettings}>
+            <TextField
+              variant="outlined"
+              label="Tag"
+              fullWidth
+              margin="normal"
+              name="tag"
+              value={newSettings.tag || ""}
+              onChange={onChangeData}
+              required
+            />
             <TextField
               variant="outlined"
               label="Section Title"

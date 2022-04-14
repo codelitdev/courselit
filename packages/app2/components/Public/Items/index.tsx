@@ -7,7 +7,7 @@ import Post from "./Post";
 import Course from "./Course";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
-import type { Address } from "@courselit/common-models";
+import type { Address, Course as CourseModel } from "@courselit/common-models";
 
 const { networkAction } = actionCreators;
 
@@ -21,7 +21,7 @@ interface ListProps {
 }
 
 const List = (props: ListProps) => {
-  const [courses, setCourses] = useState(props.initialItems || []);
+  const [courses, setCourses] = useState<CourseModel[]>(props.initialItems || []);
   const [offset, setOffset] = useState(2);
   const [shouldShowLoadMoreButton, setShouldShowLoadMoreButton] = useState(
     typeof props.showLoadMoreButton === "boolean"
@@ -47,6 +47,7 @@ const List = (props: ListProps) => {
       if (response.courses) {
         if (response.courses.length > 0) {
           setCourses([...courses, ...response.courses]);
+          console.log(courses);
         } else {
           setShouldShowLoadMoreButton(false);
         }
@@ -59,8 +60,8 @@ const List = (props: ListProps) => {
   return courses.length > 0 ? (
     <>
       <Grid container justifyContent="space-between" spacing={2}>
-        {courses.map((x, index) =>
-          posts ? <Post key={index} {...x} /> : <Course key={index} {...x} />
+        {courses.map((course: CourseModel, index: number) =>
+          course.isBlog ? <Post key={index} {...course} /> : <Course key={index} {...course} />
         )}
       </Grid>
       {shouldShowLoadMoreButton && courses.length > 0 && (

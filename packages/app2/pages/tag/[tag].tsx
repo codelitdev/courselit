@@ -1,4 +1,4 @@
-import { HEADER_BLOG_POSTS_SECTION } from "../../ui-config/strings";
+import { HEADER_BLOG_POSTS_SECTION, HEADER_TAG_SECTION } from "../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
 import { Grid, Typography } from "@mui/material";
 import { getBackendAddress } from "../../ui-lib/utils";
@@ -22,7 +22,8 @@ const generateQuery = (tag: string) => (pageOffset = 1) => `
       featuredImage {
         file
       },
-      courseId
+      courseId,
+      isBlog
     }
   }
 `;
@@ -44,7 +45,7 @@ function Posts(props: PostsProps) {
             <Grid item container>
               <Grid item xs={12}>
                 <Typography variant="h2">
-                  {HEADER_BLOG_POSTS_SECTION}
+                  {`${HEADER_TAG_SECTION} '${tag}'`}
                 </Typography>
               </Grid>
             </Grid>
@@ -53,7 +54,6 @@ function Posts(props: PostsProps) {
                 showLoadMoreButton={true}
                 generateQuery={generateQueryWithTag}
                 initialItems={props.courses}
-                posts={true}
               />
             </Grid>
           </Grid>
