@@ -1,5 +1,5 @@
 import React, { useState, useEffect, FormEvent } from "react";
-import { styled } from "@mui/material/styles";
+import { styled } from "@mui/styles";
 import { connect } from "react-redux";
 import {
   getGraphQLQueryFields,
@@ -185,7 +185,9 @@ const Settings = (props: SettingsProps) => {
         title: "${newSettings.title}",
         subtitle: "${newSettings.subtitle}",
         logopath: ${
-          newSettings.logopath ? '"' + newSettings.logopath.mediaId + '"' : null
+          newSettings.logopath.mediaId
+            ? '"' + newSettings.logopath.mediaId + '"'
+            : null
         },
       }) {
         title,
@@ -225,7 +227,7 @@ const Settings = (props: SettingsProps) => {
           setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED))
         );
       }
-    } catch (e) {
+    } catch (e: any) {
       props.dispatch(setAppMessage(new AppMessage(e.message)));
     } finally {
       props.dispatch(networkAction(false));
@@ -248,7 +250,9 @@ const Settings = (props: SettingsProps) => {
       }) {
         title,
         subtitle,
-        logopath,
+        logopath {
+            thumbnail
+        },
         currencyUnit,
         currencyISOCode,
         paymentMethod,
@@ -317,7 +321,9 @@ const Settings = (props: SettingsProps) => {
       settings: updatePaymentInfo(siteData: ${formattedQuery}) {
         title,
         subtitle,
-        logopath,
+        logopath {
+            thumbnail
+        },
         currencyUnit,
         currencyISOCode,
         paymentMethod,

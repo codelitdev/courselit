@@ -33,9 +33,9 @@ const Widget = (props: FeaturedWidgetProps) => {
   const [postsOffset] = React.useState(1);
   const BTN_LOAD_MORE = "View all";
   const [settings, setSettings] = React.useState<Settings>({
-      tag: "",
-      title: "",
-      subtitle: "",
+    tag: "",
+    title: "",
+    subtitle: "",
   });
   const classes = useStyles(settings)();
 

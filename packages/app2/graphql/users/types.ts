@@ -17,7 +17,7 @@ const userType = new GraphQLObjectType({
     name: { type: GraphQLString },
     purchases: { type: new GraphQLList(GraphQLID) },
     active: { type: new GraphQLNonNull(GraphQLBoolean) },
-    userId: { type: new GraphQLNonNull(GraphQLInt) },
+    userId: { type: new GraphQLNonNull(GraphQLString) },
     bio: { type: GraphQLString },
     permissions: { type: new GraphQLList(GraphQLString) },
   },

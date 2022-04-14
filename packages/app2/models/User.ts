@@ -2,7 +2,7 @@ import { generateUniqueId } from "@courselit/utils";
 import mongoose from "mongoose";
 
 export interface User {
-  _id: mongoose.Types.ObjectId;
+  id: mongoose.Types.ObjectId;
   domain: mongoose.Types.ObjectId;
   userId: string;
   email: string;

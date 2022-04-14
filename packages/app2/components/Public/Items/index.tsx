@@ -21,7 +21,9 @@ interface ListProps {
 }
 
 const List = (props: ListProps) => {
-  const [courses, setCourses] = useState<CourseModel[]>(props.initialItems || []);
+  const [courses, setCourses] = useState<CourseModel[]>(
+    props.initialItems || []
+  );
   const [offset, setOffset] = useState(2);
   const [shouldShowLoadMoreButton, setShouldShowLoadMoreButton] = useState(
     typeof props.showLoadMoreButton === "boolean"
@@ -47,7 +49,6 @@ const List = (props: ListProps) => {
       if (response.courses) {
         if (response.courses.length > 0) {
           setCourses([...courses, ...response.courses]);
-          console.log(courses);
         } else {
           setShouldShowLoadMoreButton(false);
         }
@@ -61,7 +62,11 @@ const List = (props: ListProps) => {
     <>
       <Grid container justifyContent="space-between" spacing={2}>
         {courses.map((course: CourseModel, index: number) =>
-          course.isBlog ? <Post key={index} {...course} /> : <Course key={index} {...course} />
+          course.isBlog ? (
+            <Post key={index} {...course} />
+          ) : (
+            <Course key={index} {...course} />
+          )
         )}
       </Grid>
       {shouldShowLoadMoreButton && courses.length > 0 && (

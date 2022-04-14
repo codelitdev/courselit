@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "@mui/material";
-import { ENROLL_BUTTON_TEXT } from "../../ui-config/strings";
+import { ENROLL_BUTTON_TEXT } from "../../../ui-config/strings";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
 import { actionCreators } from "@courselit/state-management";
@@ -33,7 +33,7 @@ const Free = ({ course, auth, dispatch, address }: FreeProps) => {
       setDisabled(true);
       dispatch(networkAction(true));
 
-      const response = await fetch.exec();
+      const response = await fetch.exec({ redirectToOnUnAuth: router.asPath });
 
       if (response.status === "success") {
         router.reload();

@@ -63,7 +63,7 @@ const StyledSection = styled(Section)(({ theme }: { theme: any }) => ({
   },
 }));
 
-const BuyButton = dynamic(() => import("../CheckoutExternal"));
+const BuyButton = dynamic(() => import("./Checkout"));
 const Img = dynamic(() => import("../Img"));
 
 interface ArticleProps {

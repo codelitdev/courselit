@@ -44,6 +44,5 @@ export default {
   address: {
     backend: "",
     frontend: "",
-    domain: "",
   },
 };

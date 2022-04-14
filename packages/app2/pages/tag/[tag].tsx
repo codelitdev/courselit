@@ -1,4 +1,7 @@
-import { HEADER_BLOG_POSTS_SECTION, HEADER_TAG_SECTION } from "../../ui-config/strings";
+import {
+  HEADER_BLOG_POSTS_SECTION,
+  HEADER_TAG_SECTION,
+} from "../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
 import { Grid, Typography } from "@mui/material";
 import { getBackendAddress } from "../../ui-lib/utils";

@@ -1,13 +1,11 @@
-import { connect } from "react-redux";
 import React, { useState, useEffect } from "react";
+import { connect } from "react-redux";
 import { useRouter } from "next/router";
-import fetch from "isomorphic-unfetch";
 import {
   TRANSACTION_FAILED,
   TRANSACTION_INITIATED,
   TRANSACTION_SUCCESS,
-} from "../../config/constants";
-import { addressProps, authProps } from "../../types";
+} from "../../ui-config/constants";
 import { Button, Grid, Typography } from "@mui/material";
 import {
   TRANSACTION_STATUS_FAILED,
@@ -18,19 +16,33 @@ import {
   VERIFY_PAYMENT_BUTTON,
   VISIT_COURSE_BUTTON,
   PURCHASE_ID_HEADER,
-} from "../../config/strings";
+} from "../../ui-config/strings";
 import Link from "next/link";
-import { Section } from "../ComponentsLibrary";
+import { Section } from "@courselit/components-library";
 import dynamic from "next/dynamic";
+import type { AppDispatch, AppState } from "@courselit/state-management";
+import { Address, AppMessage, Auth } from "@courselit/common-models";
+import { FetchBuilder } from "@courselit/utils";
+import { actionCreators } from "@courselit/state-management";
+import { setAppMessage } from "@courselit/state-management/dist/action-creators";
+
+const { networkAction } = actionCreators;
 
 const AppLoader = dynamic(() => import("../AppLoader"));
 
-const PurchaseStatus = (props) => {
+interface PurchaseStatusProps {
+  auth: Auth;
+  address: Address;
+  dispatch: AppDispatch;
+}
+
+const PurchaseStatus = (props: PurchaseStatusProps) => {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { id, source } = router.query;
   const courseLink = source || "";
+  const { dispatch, address } = props;
 
   useEffect(() => {
     if (props.auth.checked && props.auth.guest) {
@@ -39,51 +51,29 @@ const PurchaseStatus = (props) => {
   }, [props.auth.checked]);
 
   useEffect(() => {
-    if (props.auth && props.auth.token) {
+    if (props.auth && !props.auth.guest) {
       getPaymentStatus();
     }
-  }, [props.auth.token]);
+  }, [props.auth.guest]);
 
   const getPaymentStatus = async () => {
-    let paymentStatus = await makePaymentStatusRequest({
-      purchaseId: id,
-      backend: props.address.backend,
-      token: props.auth.token,
-    });
-
-    if (paymentStatus.status === 401) {
-      router.push("/login");
-      return;
-    }
-
-    if (paymentStatus.status === 404) {
-      router.push("/");
-      return;
-    }
+    const fetch = new FetchBuilder()
+      .setUrl(`${address.backend}/api/payment/verify`)
+      .setHeaders({
+        "Content-Type": "application/json",
+      })
+      .setPayload(JSON.stringify({ purchaseId: id as string }))
+      .build();
 
     try {
-      paymentStatus = await paymentStatus.json();
-      setStatus(paymentStatus.status);
-    } catch (err) {}
-  };
-
-  const makePaymentStatusRequest = async ({ purchaseId, backend, token }) => {
-    setLoading(true);
-
-    const formData = new window.FormData();
-    formData.append("purchaseid", purchaseId);
-
-    const res = await fetch(`${backend}/payment/verify`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-
-    setLoading(false);
-
-    return res;
+      dispatch(networkAction(true));
+      const response = await fetch.exec();
+      setStatus(response.status);
+    } catch (err: any) {
+      dispatch(setAppMessage(new AppMessage(err.message)));
+    } finally {
+      dispatch(networkAction(false));
+    }
   };
 
   return (
@@ -168,14 +158,11 @@ const PurchaseStatus = (props) => {
   );
 };
 
-PurchaseStatus.propTypes = {
-  auth: authProps,
-  address: addressProps,
-};
-
-const mapStateToProps = (state) => ({
+const mapStateToProps = (state: AppState) => ({
   auth: state.auth,
   address: state.address,
 });
 
-export default connect(mapStateToProps)(PurchaseStatus);
+const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
+
+export default connect(mapStateToProps, mapDispatchToProps)(PurchaseStatus);

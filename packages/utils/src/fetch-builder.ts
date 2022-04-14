@@ -6,15 +6,20 @@
 
 import Router from "next/router";
 
+interface ExecOptions {
+  redirectToOnUnAuth?: string;
+}
+
 class Fetch {
   constructor(
     private url: string,
     private payload: unknown,
     private httpMethod: string,
-    private isGraphQLEndpoint?: boolean
+    private isGraphQLEndpoint?: boolean,
+    private headers?: Record<string, string>
   ) {}
 
-  async exec() {
+  async exec(options?: ExecOptions) {
     const fetchOptions: any = {
       method: this.httpMethod,
       credentials: "same-origin",
@@ -28,10 +33,19 @@ class Fetch {
       fetchOptions.body = this.payload;
     }
 
+    if (this.headers) {
+      fetchOptions.headers = Object.assign(fetchOptions.headers, this.headers);
+    }
+
     let response: Record<string, any> = await fetch(this.url, fetchOptions);
 
     if (response.status === 401) {
-      typeof window !== "undefined" && Router.replace("/logout");
+      typeof window !== "undefined" &&
+        Router.replace(
+          options && options.redirectToOnUnAuth
+            ? `/login?redirect=${options.redirectToOnUnAuth}`
+            : "/logout"
+        );
       return;
     }
 
@@ -55,6 +69,7 @@ class FetchBuilder {
   private token = "";
   private isGraphQLEndpoint = false;
   private httpMethod = "POST";
+  private headers = {};
 
   setUrl(url: string) {
     this.url = url;
@@ -81,12 +96,18 @@ class FetchBuilder {
     return this;
   }
 
+  setHeaders(headers: Record<string, string>) {
+    this.headers = headers;
+    return this;
+  }
+
   build() {
     return new Fetch(
       this.url,
       this.payload,
       this.httpMethod,
-      this.isGraphQLEndpoint
+      this.isGraphQLEndpoint,
+      this.headers
     );
   }
 }

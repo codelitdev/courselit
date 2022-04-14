@@ -648,19 +648,19 @@ const CourseEditor = (props: CourseEditorProps) => {
                               </Grid>
                             )}
                             <Grid item>
-                                <TextField
-                                  type="text"
-                                  variant="outlined"
-                                  label="Tags"
-                                  fullWidth
-                                  margin="normal"
-                                  name="tags"
-                                  value={
-                                    courseData.course.tags &&
-                                    courseData.course.tags.join(",")
-                                  }
-                                  onChange={onCourseTagsChanged}
-                                />
+                              <TextField
+                                type="text"
+                                variant="outlined"
+                                label="Tags"
+                                fullWidth
+                                margin="normal"
+                                name="tags"
+                                value={
+                                  courseData.course.tags &&
+                                  courseData.course.tags.join(",")
+                                }
+                                onChange={onCourseTagsChanged}
+                              />
                             </Grid>
                           </Grid>
                         </Section>

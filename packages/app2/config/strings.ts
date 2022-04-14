@@ -73,7 +73,7 @@ export const responses = {
   existing_group: "A group with that name exists",
   group_not_empty: "The group has associated lessons",
   update_payment_method:
-    "You need to set up a payment method to create paid courses",
+    "You need to set up a payment method to create paid content.",
   currency_iso_code_required:
     "Currency ISO code is required. Examples: usd, inr, gbp etc.",
   currency_unit_required:

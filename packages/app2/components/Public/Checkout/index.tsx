@@ -4,7 +4,7 @@ import {
   PAYMENT_METHOD_PAYPAL,
   PAYMENT_METHOD_PAYTM,
   PAYMENT_METHOD_STRIPE,
-} from "../../ui-config/constants";
+} from "../../../ui-config/constants";
 import dynamic from "next/dynamic";
 import { Course, SiteInfo } from "@courselit/common-models";
 import { AppState } from "@courselit/state-management";

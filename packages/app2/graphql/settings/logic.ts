@@ -9,7 +9,7 @@ import {
 } from "./helpers";
 import type GQLContext from "../../models/GQLContext";
 import type SiteInfo from "../../ui-models/site-info";
-import * as medialitService from "../../services/medialit";
+import { checkMediaForPublicAccess } from "../media/logic";
 
 const { permissions } = constants;
 
@@ -63,7 +63,14 @@ export const updateSiteInfo = async (
     throw new Error(responses.school_title_not_set);
   }
 
-  await throwErrorIfLogoMediaIsNotPublic(siteInfo.logopath);
+  if (siteInfo.logopath) {
+    const logoIsPubliclyAccessible = await checkMediaForPublicAccess(
+      siteInfo.logopath
+    );
+    if (!logoIsPubliclyAccessible) {
+      throw new Error(responses.publicly_inaccessible);
+    }
+  }
 
   if (shouldCreate) {
     siteInfo = await SiteInfoModel.create(siteInfo);

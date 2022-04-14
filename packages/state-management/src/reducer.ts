@@ -164,7 +164,6 @@ function addressReducer(state = initialState.address, action: Action) {
       return {
         backend: action.address.backend,
         frontend: action.address.frontend,
-        domain: action.address.domain,
       };
     default:
       return state;

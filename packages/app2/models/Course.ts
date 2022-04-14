@@ -5,6 +5,7 @@ import type { Group } from "@courselit/common-models";
 
 export interface Course {
   domain: mongoose.Types.ObjectId;
+  id: mongoose.Types.ObjectId;
   courseId: string;
   title: string;
   slug: string;

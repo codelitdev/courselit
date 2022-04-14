@@ -5,7 +5,6 @@ import { responses } from "../../../config/strings";
 import jwtStrategy from "../../../lib/jwt";
 import connectDb from "../../../middlewares/connect-db";
 import verifyDomain from "../../../middlewares/verify-domain";
-import connectToDatabase from "../../../services/db";
 
 passport.use(jwtStrategy);
 
