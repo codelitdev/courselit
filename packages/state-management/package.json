@@ -33,7 +33,7 @@
     "@courselit/utils": "^0.17.11",
     "base-64": "^1.0.0",
     "next-redux-wrapper": "^7.0.5",
-    "redux": "^4.1.2",
+    "redux": "^4.2.0",
     "redux-thunk": "^2.4.1"
   },
   "devDependencies": {
