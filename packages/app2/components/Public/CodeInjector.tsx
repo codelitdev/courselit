@@ -1,8 +1,12 @@
 import React from "react";
-import PropTypes from "prop-types";
 import { connect } from "react-redux";
+import { AppState } from "@courselit/state-management";
 
-class CodeInjector extends React.Component {
+interface CodeInjectorProps {
+    codeForHead?: string;
+}
+
+class CodeInjector extends React.Component<CodeInjectorProps> {
   componentDidMount() {
     const targetTagsForInjection = ["head"];
     for (const target of targetTagsForInjection) {
@@ -10,9 +14,9 @@ class CodeInjector extends React.Component {
     }
   }
 
-  injectCodeIn(targetHTMLTag) {
+  injectCodeIn(targetHTMLTag: string) {
     const tempContainer = document.createElement("div");
-    tempContainer.innerHTML = this.props.codeForHead;
+    tempContainer.innerHTML = this.props.codeForHead || "";
     const children = tempContainer.children;
     for (let i = 0; i < children.length; i++) {
       let elem = children[i];
@@ -22,15 +26,15 @@ class CodeInjector extends React.Component {
         this.copyAttributes(elem, script);
         elem = script;
       }
-      document[targetHTMLTag].appendChild(elem);
+      (document as Record<string, any>)[targetHTMLTag].appendChild(elem);
     }
   }
 
-  copyAttributes(source, target) {
+  copyAttributes(source: Element, target: HTMLScriptElement) {
     let attr;
     const attributes = Array.prototype.slice.call(source.attributes);
     while ((attr = attributes.pop())) {
-      target.setAttribute(attr.nodeName, attr.nodeValue);
+      (target.setAttribute as (name: string, value: string) => void)(attr.nodeName, attr.nodeValue);
     }
   }
 
@@ -39,11 +43,7 @@ class CodeInjector extends React.Component {
   }
 }
 
-CodeInjector.propTypes = {
-  codeForHead: PropTypes.string,
-};
-
-const mapStateToProps = (state) => ({
+const mapStateToProps = (state: AppState) => ({
   codeForHead: state.siteinfo.codeInjectionHead,
 });
 

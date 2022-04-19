@@ -16,6 +16,7 @@ import type { State } from "@courselit/common-models";
 import { AnyAction } from "redux";
 import { ThunkDispatch } from "redux-thunk";
 import { actionCreators } from "@courselit/state-management";
+import CodeInjector from "../components/Public/CodeInjector";
 
 type CourseLitProps = AppProps & {
   emotionCache: EmotionCache;
@@ -75,6 +76,7 @@ function MyApp({
           <ThemeProvider theme={muiTheme}>
             <CssBaseline />
             <Component {...pageProps} />
+            <CodeInjector />
           </ThemeProvider>
         </CacheProvider>
       </StyledEngineProvider>
