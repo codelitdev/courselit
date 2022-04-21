@@ -34,7 +34,8 @@ const generateQuery = (pageOffset = 1) => `
       featuredImage {
         file
       },
-      courseId
+      courseId,
+      isBlog
     }
   }
 `;
