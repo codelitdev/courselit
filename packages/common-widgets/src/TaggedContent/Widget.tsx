@@ -1,27 +1,11 @@
 import * as React from "react";
 import { Grid, Typography, Button, Theme } from "@mui/material";
 import Item from "./Item";
-import { makeStyles } from "@mui/styles";
 import { WidgetHelpers, Section } from "@courselit/components-library";
 import Link from "next/link";
 import Settings from "./Settings";
 import type { WidgetProps } from "@courselit/common-models";
-
-const useStyles = ({ backgroundColor }: Settings) =>
-  makeStyles((theme: Theme) => ({
-    content: {
-      background: backgroundColor || "inherit",
-    },
-    header: {},
-    headerTop: {
-      marginBottom: theme.spacing(1),
-    },
-    link: {
-      textDecoration: "none",
-      color: "inherit",
-    },
-    callToAction: {},
-  }));
+import MuiLink from "@mui/material/Link";
 
 export interface FeaturedWidgetProps extends WidgetProps {
   dispatch: any;
@@ -37,7 +21,6 @@ const Widget = (props: FeaturedWidgetProps) => {
     title: "",
     subtitle: "",
   });
-  const classes = useStyles(settings)();
 
   React.useEffect(() => {
     getSettings();
@@ -88,10 +71,14 @@ const Widget = (props: FeaturedWidgetProps) => {
 
   return posts.length > 0 ? (
     <Section>
-      <Grid item xs={12} className={classes.content}>
+      <Grid item xs={12} sx={{
+        background: settings.backgroundColor || "inherit",
+      }}>
         <Grid container spacing={2}>
-          <Grid item container className={classes.header} spacing={1}>
-            <Grid item xs={12} className={classes.headerTop}>
+          <Grid item container spacing={1}>
+            <Grid item xs={12} sx={{
+                marginBottom: 1,
+            }}>
               <Typography variant="h2">{settings.title}</Typography>
             </Grid>
             <Grid item xs={12}>
@@ -114,9 +101,12 @@ const Widget = (props: FeaturedWidgetProps) => {
           </Grid>
           {posts.length > 0 && (
             <Grid item xs={12}>
-              <Button disableElevation className={classes.callToAction}>
+              <Button disableElevation> 
                 <Link href="/featured">
-                  <a className={classes.link}>{BTN_LOAD_MORE}</a>
+                  <MuiLink sx={{
+                    textDecoration: "none",
+                    color: "inherit",
+                  }}>{BTN_LOAD_MORE}</MuiLink>
                 </Link>
               </Button>
             </Grid>

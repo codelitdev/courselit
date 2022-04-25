@@ -41,7 +41,6 @@
   },
   "peerDependencies": {
     "@mui/material": "^5.5.0",
-    "@mui/styles": "^5.5.0",
     "react": "^17.0.2",
     "react-redux": "^7.2.1"
   },

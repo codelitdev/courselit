@@ -1,26 +1,26 @@
 import * as React from "react";
-import { makeStyles } from "@mui/styles";
+import { styled } from "@mui/system";
 
-const useStyles = makeStyles((theme: any) => ({
-  card: Object.assign(
-    {},
-    {
-      backgroundColor: theme.palette.background.paper,
-      padding: theme.spacing(2),
-      borderRadius: theme.spacing(1),
-      boxShadow: theme.shadows[12],
-    },
-    theme.section
-  ),
-}));
+const StyledSection = styled('section')({});
 
 interface SectionProps {
   children: any;
 }
 
 const Section = (props: SectionProps) => {
-  const classes = useStyles();
-  return <section className={classes.card}>{props.children}</section>;
+  return <StyledSection 
+        sx={(theme: any) => Object.assign(
+            {},
+            {
+                backgroundColor: theme.palette.background.paper,
+                padding: theme.spacing(2),
+                borderRadius: theme.spacing(1),
+                boxShadow: theme.shadows[12],
+            },
+            theme.section
+        )}>
+            {props.children}
+    </StyledSection>;
 };
 
 export default Section;

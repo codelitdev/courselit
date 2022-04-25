@@ -1,35 +1,16 @@
 import * as React from "react";
 import { WidgetProps } from "@courselit/common-models";
 import { Grid, Theme, Typography } from "@mui/material";
-import { makeStyles } from "@mui/styles";
 import Link from "next/link";
-
-const useStyles = (sectionName: string) =>
-  makeStyles((theme: Theme) => ({
-    list: {
-      listStyle: "none",
-      margin: 0,
-      paddingInlineStart: 0,
-    },
-    linkContainer: {
-      textAlign: sectionName === "footerRight" ? "end" : "start",
-      [theme.breakpoints.down("md")]: {
-        marginBottom: theme.spacing(1),
-        textAlign: "start",
-      },
-    },
-    link: {
-      color: theme.palette.text.primary,
-    },
-  }));
+import MuiLink from "@mui/material/Link";
 
 export interface FooterMenuWidgetProps extends WidgetProps {
   navigation: any[];
 }
 
 const Widget = (props: FooterMenuWidgetProps) => {
-  const { section } = props;
-  const classes = useStyles(section)();
+  const { section, state } = props;
+  const navigation = state.navigation.filter((link) => link.category === "footer");
 
   return (
     <Grid item>
@@ -39,21 +20,32 @@ const Widget = (props: FooterMenuWidgetProps) => {
           direction="row"
           justifyContent="space-between"
           component="ul"
-          className={classes.list}
+          sx={{
+            listStyle: "none",
+            margin: 0,
+            paddingInlineStart: 0,
+          }}
         >
-          {props.navigation.map((link: any) => (
+          {navigation.map((link: any) => (
             <Grid
               item
               component="li"
               xs={12}
               sm={2}
               key={link.text}
-              className={classes.linkContainer}
+              sx={{
+                  textAlign: {
+                    xs: "start",
+                    md: section === "footerRight" ? "end" : "start"
+                  }
+              }}
             >
               <Link href={link.destination} key={link.text}>
-                <a className={classes.link}>
+                <MuiLink sx={{
+                    color: 'text.primary',
+                }}>
                   <Typography variant="body2">{link.text}</Typography>
-                </a>
+                </MuiLink>
               </Link>
             </Grid>
           ))}

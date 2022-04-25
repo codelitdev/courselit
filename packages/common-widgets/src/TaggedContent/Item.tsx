@@ -1,35 +1,11 @@
 import * as React from "react";
 import Link from "next/link";
 import { Grid, Typography } from "@mui/material";
-import { makeStyles } from "@mui/styles";
 import { PriceTag, Course } from "@courselit/components-library";
+import { styled } from "@mui/system";
+import MuiLink from "@mui/material/Link";
 
-const useStyles = () =>
-  makeStyles((theme: any) => ({
-    link: {
-      textDecoration: "none",
-      color: "inherit",
-      marginBottom: theme.spacing(4),
-      display: "block",
-    },
-    featuredImage: {
-      height: "auto",
-      width: "100%",
-    },
-    title: {
-      marginTop: theme.spacing(2),
-      marginBottom: theme.spacing(0.5),
-    },
-    card: {
-      padding: theme.spacing(2),
-      border: "1px solid transparent",
-      borderRadius: 1,
-      "&:hover": {
-        border: "1px solid #cccccc",
-        cursor: "pointer",
-      },
-    },
-  }));
+const StyledImg = styled('img')({});
 
 interface ItemProps {
   course: Course;
@@ -39,7 +15,6 @@ interface ItemProps {
 
 const Item = (props: ItemProps) => {
   const { appConfig } = props;
-  const classes = useStyles()();
 
   return (
     <Grid item xs={12} md={4}>
@@ -47,20 +22,31 @@ const Item = (props: ItemProps) => {
         href={`/${appConfig.URL_EXTENTION_COURSES}/[id]/[slug]`}
         as={`/${appConfig.URL_EXTENTION_COURSES}/${props.course.courseId}/${props.course.slug}`}
       >
-        <a className={classes.link}>
+        <MuiLink sx={{
+            textDecoration: "none",
+            color: "inherit",
+            mb: 4,
+            display: "block",
+        }}>
           <Grid item container direction="column" component="article">
             {props.course.featuredImage && (
               <Grid item>
-                <img
+                <StyledImg
                   src={props.course.featuredImage.file}
-                  className={classes.featuredImage}
+                  sx={{
+                    height: "auto",
+                    width: "100%",
+                  }}
                 />
               </Grid>
             )}
             <Grid
               item
               container
-              className={classes.title}
+              sx={{
+                marginTop: 2,
+                marginBottom: 0.5,
+              }}
               justifyContent="space-between"
               alignItems="center"
             >
@@ -72,7 +58,7 @@ const Item = (props: ItemProps) => {
               </Grid>
             </Grid>
           </Grid>
-        </a>
+        </MuiLink>
       </Link>
     </Grid>
   );

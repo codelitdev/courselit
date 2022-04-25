@@ -5,22 +5,14 @@ import {
   Section,
 } from "@courselit/components-library";
 import Settings from "./Settings";
-import { makeStyles } from "@mui/styles";
 import { Grid, Theme } from "@mui/material";
 import type { WidgetProps } from "@courselit/common-models";
-
-const useStyles = makeStyles((theme: Theme) => ({
-  container: {
-    // padding: theme.spacing(2),
-  },
-}));
 
 const Widget = (props: WidgetProps) => {
   const { fetchBuilder, dispatch, name } = props;
   const [settings, setSettings] = React.useState<Settings>({
     text: TextEditor.emptyState(),
   });
-  const classes = useStyles();
 
   React.useEffect(() => {
     getSettings();
@@ -51,7 +43,7 @@ const Widget = (props: WidgetProps) => {
   };
 
   return (
-    <Grid item xs className={classes.container}>
+    <Grid item xs>
       <Section>
         <TextEditor initialContentState={settings.text} readOnly={true} />
       </Section>

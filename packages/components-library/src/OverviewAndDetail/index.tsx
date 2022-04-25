@@ -23,17 +23,10 @@
 
 import * as React from "react";
 import { Grid, IconButton, Typography } from "@mui/material";
-import { makeStyles } from "@mui/styles";
 import { ArrowBack } from "@mui/icons-material";
 import ComponentProps, { isComponentWithDetailProps } from "./ComponentProps";
 import OverviewList from "./OverviewList";
 import Section from "../Section";
-
-const useStyles = makeStyles((theme: any) => ({
-  main: {
-    marginTop: theme.spacing(2),
-  },
-}));
 
 interface OverviewAndDetailProps {
   title: string;
@@ -49,7 +42,6 @@ const OverviewAndDetail = ({
   const [selectedComponentIndex, setSelectedComponentIndex] = React.useState(
     -1
   );
-  const classes = useStyles();
   const selectedComponent = componentsMap[selectedComponentIndex];
 
   const onSelectComponentWithDetail = (index: number) => {
@@ -94,7 +86,9 @@ const OverviewAndDetail = ({
           )}
         </Section>
       </Grid>
-      <Grid item className={classes.main} xs={12}>
+      <Grid item xs={12} sx={{
+        marginTop: 2,
+      }}>
         {componentsMap.length && (
           <>
             {selectedComponentIndex > -1 &&
