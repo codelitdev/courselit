@@ -71,14 +71,22 @@ const Widget = (props: FeaturedWidgetProps) => {
 
   return posts.length > 0 ? (
     <Section>
-      <Grid item xs={12} sx={{
-        background: settings.backgroundColor || "inherit",
-      }}>
+      <Grid
+        item
+        xs={12}
+        sx={{
+          background: settings.backgroundColor || "inherit",
+        }}
+      >
         <Grid container spacing={2}>
           <Grid item container spacing={1}>
-            <Grid item xs={12} sx={{
+            <Grid
+              item
+              xs={12}
+              sx={{
                 marginBottom: 1,
-            }}>
+              }}
+            >
               <Typography variant="h2">{settings.title}</Typography>
             </Grid>
             <Grid item xs={12}>
@@ -101,12 +109,16 @@ const Widget = (props: FeaturedWidgetProps) => {
           </Grid>
           {posts.length > 0 && (
             <Grid item xs={12}>
-              <Button disableElevation> 
+              <Button disableElevation>
                 <Link href="/featured">
-                  <MuiLink sx={{
-                    textDecoration: "none",
-                    color: "inherit",
-                  }}>{BTN_LOAD_MORE}</MuiLink>
+                  <MuiLink
+                    sx={{
+                      textDecoration: "none",
+                      color: "inherit",
+                    }}
+                  >
+                    {BTN_LOAD_MORE}
+                  </MuiLink>
                 </Link>
               </Button>
             </Grid>

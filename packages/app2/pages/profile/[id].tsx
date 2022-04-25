@@ -1,6 +1,5 @@
 import { FetchBuilder } from "@courselit/utils";
 import { Button, Grid, TextField, Typography } from "@mui/material";
-import { makeStyles } from "@mui/styles";
 import {
   PROFILE_PAGE_HEADER,
   PROFILE_SECTION_DETAILS_NAME,
@@ -26,10 +25,7 @@ import { AppDispatch } from "@courselit/state-management";
 
 const BaseLayout = dynamic(() => import("../../components/Public/BaseLayout"));
 
-const useStyles = makeStyles((theme) => ({}));
-
 function Profile({ user, profile, auth, dispatch, address }: any) {
-  const classes = useStyles();
   const isMyProfile = profile && profile.id === user.id;
   const [bio, setBio] = useState(user.bio || "");
   const [name, setName] = useState(user.name || "");

@@ -1,7 +1,6 @@
 import { connect } from "react-redux";
 import { formulateCourseUrl, getBackendAddress } from "../../../ui-lib/utils";
 import { Grid } from "@mui/material";
-import makeStyles from "@mui/styles/makeStyles";
 import Head from "next/head";
 import { FetchBuilder } from "@courselit/utils";
 import type { SiteInfo, Address, Course } from "@courselit/common-models";
@@ -13,13 +12,6 @@ const BaseLayout = dynamic(
 );
 const Article = dynamic(() => import("../../../components/Public/Article"));
 
-const useStyles = makeStyles((theme) => ({
-  content: {
-    // padding: theme.spacing(2),
-    // marginBottom: theme.spacing(4),
-  },
-}));
-
 interface PostProps {
   siteInfo: SiteInfo;
   address: Address;
@@ -27,7 +19,6 @@ interface PostProps {
 }
 
 const Post = (props: PostProps) => {
-  const classes = useStyles();
   const articleOptions = {
     showAttribution: true,
   };
@@ -35,7 +26,7 @@ const Post = (props: PostProps) => {
   return (
     <BaseLayout title={props.post.title}>
       {props.post && (
-        <Grid item xs={12} className={classes.content}>
+        <Grid item xs={12}>
           <Head>
             <meta
               property="og:url"

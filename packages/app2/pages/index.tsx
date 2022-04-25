@@ -1,26 +1,16 @@
 import { connect } from "react-redux";
 import { HEADER_BLOG_POSTS_SECTION, BTN_VIEW_ALL } from "../ui-config/strings";
 import { Button, Grid, Typography } from "@mui/material";
-import { makeStyles } from "@mui/styles";
 import Link from "next/link";
 import { getBackendAddress } from "../ui-lib/utils";
 import dynamic from "next/dynamic";
 import { Section } from "@courselit/components-library";
 import type { SiteInfo, State } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
+import MuiLink from "@mui/material/Link";
 
 const BaseLayout = dynamic(() => import("../components/Public/BaseLayout"));
 const Items = dynamic(() => import("../components/Public/Items"));
-
-const useStyles = makeStyles((theme: any) => ({
-  headerTop: {
-    marginBottom: theme.spacing(2),
-  },
-  link: {
-    textDecoration: "none",
-    color: "inherit",
-  },
-}));
 
 const generateQuery = (pageOffset = 1) => `
   query {
@@ -46,15 +36,19 @@ interface IndexProps {
 }
 
 const Index = (props: IndexProps) => {
-  const classes = useStyles();
-
   return (
     <BaseLayout title={props.siteinfo.subtitle}>
       <Grid item xs={12}>
         {props.courses.length > 0 && (
           <Section>
             <Grid item container>
-              <Grid item xs={12} className={classes.headerTop}>
+              <Grid
+                item
+                xs={12}
+                sx={{
+                  mb: 2,
+                }}
+              >
                 <Typography variant="h2">
                   {HEADER_BLOG_POSTS_SECTION}
                 </Typography>
@@ -68,7 +62,14 @@ const Index = (props: IndexProps) => {
             <Grid item xs={12}>
               <Button>
                 <Link href="/posts">
-                  <a className={classes.link}>{BTN_VIEW_ALL}</a>
+                  <MuiLink
+                    sx={{
+                      textDecoration: "none",
+                      color: "inherit",
+                    }}
+                  >
+                    {BTN_VIEW_ALL}
+                  </MuiLink>
                 </Link>
               </Button>
             </Grid>

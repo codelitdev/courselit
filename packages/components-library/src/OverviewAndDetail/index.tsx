@@ -86,9 +86,13 @@ const OverviewAndDetail = ({
           )}
         </Section>
       </Grid>
-      <Grid item xs={12} sx={{
-        marginTop: 2,
-      }}>
+      <Grid
+        item
+        xs={12}
+        sx={{
+          marginTop: 2,
+        }}
+      >
         {componentsMap.length && (
           <>
             {selectedComponentIndex > -1 &&

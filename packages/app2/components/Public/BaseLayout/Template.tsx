@@ -1,10 +1,11 @@
-import React from "react";
-import { styled } from "@mui/material/styles";
-import PropTypes from "prop-types";
+import React, { ReactChildren } from "react";
+import { styled } from "@mui/system";
 import { Grid, useTheme } from "@mui/material";
 import { useRouter } from "next/router";
 import Section from "./Section";
 import { connect } from "react-redux";
+import { AppState } from "@courselit/state-management";
+import { Layout } from "@courselit/common-models";
 
 const PREFIX = "Template";
 
@@ -16,7 +17,7 @@ const classes = {
 };
 
 // TODO jss-to-styled codemod: The Fragment root was replaced by div. Change the tag if needed.
-const Root = styled("div")(({ theme }) => ({
+const Root = styled("div")(({ theme }: { theme: any }) => ({
   [`& .${classes.mainContent}`]: Object.assign(
     {},
     {
@@ -49,11 +50,16 @@ const Root = styled("div")(({ theme }) => ({
   },
 }));
 
-const Template = (props) => {
+interface TemplateProps {
+  children: ReactChildren;
+  layout: Layout;
+}
+
+const Template = (props: TemplateProps) => {
   const { layout } = props;
 
   const router = useRouter();
-  const theme = useTheme();
+  const theme: any = useTheme();
 
   return (
     <Root>
@@ -139,12 +145,7 @@ const Template = (props) => {
   );
 };
 
-Template.propTypes = {
-  children: PropTypes.oneOfType([PropTypes.object, PropTypes.string]),
-  layout: PropTypes.object.isRequired,
-};
-
-const mapStateToProps = (state) => ({
+const mapStateToProps = (state: AppState) => ({
   layout: state.layout,
 });
 

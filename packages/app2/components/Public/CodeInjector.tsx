@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import { AppState } from "@courselit/state-management";
 
 interface CodeInjectorProps {
-    codeForHead?: string;
+  codeForHead?: string;
 }
 
 class CodeInjector extends React.Component<CodeInjectorProps> {
@@ -34,7 +34,10 @@ class CodeInjector extends React.Component<CodeInjectorProps> {
     let attr;
     const attributes = Array.prototype.slice.call(source.attributes);
     while ((attr = attributes.pop())) {
-      (target.setAttribute as (name: string, value: string) => void)(attr.nodeName, attr.nodeValue);
+      (target.setAttribute as (name: string, value: string) => void)(
+        attr.nodeName,
+        attr.nodeValue
+      );
     }
   }
 

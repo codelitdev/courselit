@@ -5,7 +5,7 @@ import { PriceTag, Course } from "@courselit/components-library";
 import { styled } from "@mui/system";
 import MuiLink from "@mui/material/Link";
 
-const StyledImg = styled('img')({});
+const StyledImg = styled("img")({});
 
 interface ItemProps {
   course: Course;
@@ -22,12 +22,14 @@ const Item = (props: ItemProps) => {
         href={`/${appConfig.URL_EXTENTION_COURSES}/[id]/[slug]`}
         as={`/${appConfig.URL_EXTENTION_COURSES}/${props.course.courseId}/${props.course.slug}`}
       >
-        <MuiLink sx={{
+        <MuiLink
+          sx={{
             textDecoration: "none",
             color: "inherit",
             mb: 4,
             display: "block",
-        }}>
+          }}
+        >
           <Grid item container direction="column" component="article">
             {props.course.featuredImage && (
               <Grid item>

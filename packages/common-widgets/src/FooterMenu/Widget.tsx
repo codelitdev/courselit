@@ -10,7 +10,9 @@ export interface FooterMenuWidgetProps extends WidgetProps {
 
 const Widget = (props: FooterMenuWidgetProps) => {
   const { section, state } = props;
-  const navigation = state.navigation.filter((link) => link.category === "footer");
+  const navigation = state.navigation.filter(
+    (link) => link.category === "footer"
+  );
 
   return (
     <Grid item>
@@ -34,16 +36,18 @@ const Widget = (props: FooterMenuWidgetProps) => {
               sm={2}
               key={link.text}
               sx={{
-                  textAlign: {
-                    xs: "start",
-                    md: section === "footerRight" ? "end" : "start"
-                  }
+                textAlign: {
+                  xs: "start",
+                  md: section === "footerRight" ? "end" : "start",
+                },
               }}
             >
               <Link href={link.destination} key={link.text}>
-                <MuiLink sx={{
-                    color: 'text.primary',
-                }}>
+                <MuiLink
+                  sx={{
+                    color: "text.primary",
+                  }}
+                >
                   <Typography variant="body2">{link.text}</Typography>
                 </MuiLink>
               </Link>
