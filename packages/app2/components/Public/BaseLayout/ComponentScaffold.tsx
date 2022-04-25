@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { styled, useTheme } from "@mui/styles";
+import { useTheme } from "@mui/material";
+import { styled } from "@mui/system";
 import AppBar from "@mui/material/AppBar";
 import CssBaseline from "@mui/material/CssBaseline";
 import Drawer from "@mui/material/Drawer";

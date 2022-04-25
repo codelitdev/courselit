@@ -1,5 +1,5 @@
 import React, { useState, useEffect, FormEvent } from "react";
-import { styled } from "@mui/styles";
+import { styled } from "@mui/system";
 import { connect } from "react-redux";
 import {
   getGraphQLQueryFields,

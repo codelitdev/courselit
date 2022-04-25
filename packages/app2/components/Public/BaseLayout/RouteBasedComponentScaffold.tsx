@@ -9,7 +9,7 @@ import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import { Menu } from "@mui/icons-material";
 import { Toolbar, Grid, LinearProgress, Typography } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
+import { useTheme } from "@mui/material";
 import AppToast from "../../AppToast";
 import DrawerListItemIcon from "./DrawerListItemIcon.js";
 import Header from "./Header";

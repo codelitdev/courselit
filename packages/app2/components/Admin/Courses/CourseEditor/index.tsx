@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { styled } from "@mui/styles";
+import { styled } from "@mui/system";
 import { connect } from "react-redux";
 import {
   BTN_DELETE_COURSE,

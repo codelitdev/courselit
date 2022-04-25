@@ -1,5 +1,5 @@
 import React from "react";
-import { styled } from "@mui/styles";
+import { styled } from "@mui/system";
 import { Typography, Grid } from "@mui/material";
 import { USER_ERROR_HEADER } from "../ui-config/strings";
 import { Section } from "@courselit/components-library";

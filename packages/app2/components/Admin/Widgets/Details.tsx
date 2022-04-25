@@ -1,6 +1,6 @@
 import React from "react";
 import { FetchBuilder } from "@courselit/utils";
-import { useTheme } from "@mui/styles";
+import { useTheme } from "@mui/material";
 import { connect } from "react-redux";
 import type { Address } from "@courselit/common-models";
 import type { AppState } from "@courselit/state-management";

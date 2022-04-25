@@ -1,5 +1,5 @@
 import React from "react";
-import { styled } from "@mui/styles";
+import { styled } from "@mui/system";
 import { Typography, Grid, Divider } from "@mui/material";
 import Link from "next/link";
 import { formattedLocaleDate, checkPermission } from "../../ui-lib/utils";

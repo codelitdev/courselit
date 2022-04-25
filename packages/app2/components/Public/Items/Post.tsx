@@ -1,5 +1,5 @@
 import React from "react";
-import { styled } from "@mui/styles";
+import { styled } from "@mui/system";
 import Link from "next/link";
 import { URL_EXTENTION_POSTS } from "../../../ui-config/constants";
 import { Grid, Typography } from "@mui/material";

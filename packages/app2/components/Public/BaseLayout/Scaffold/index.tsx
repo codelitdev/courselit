@@ -7,7 +7,7 @@ import Hidden from "@mui/material/Hidden";
 import IconButton from "@mui/material/IconButton";
 import { Menu } from "@mui/icons-material";
 import { LinearProgress, Toolbar } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
+import { useTheme } from "@mui/material";
 import AppToast from "../../../AppToast";
 import { connect } from "react-redux";
 import Header from "../Header";

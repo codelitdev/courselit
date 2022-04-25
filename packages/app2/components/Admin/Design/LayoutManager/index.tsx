@@ -14,7 +14,7 @@ import {
   LAYOUT_SECTION_BOTTOM,
   LAYOUT_SECTION_ASIDE,
 } from "../../../../ui-config/strings";
-import { useTheme } from "@mui/styles";
+import { useTheme } from "@mui/material";
 import { Add } from "@mui/icons-material";
 import { connect } from "react-redux";
 import { actionCreators } from "@courselit/state-management";
