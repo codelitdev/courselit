@@ -5,6 +5,9 @@
  */
 
 import Router from "next/router";
+import { debuglog } from "util";
+
+const debugLog = debuglog("fetch-builder");
 
 interface ExecOptions {
   redirectToOnUnAuth?: string;
@@ -38,6 +41,13 @@ class Fetch {
     }
 
     let response: Record<string, any> = await fetch(this.url, fetchOptions);
+
+    debugLog(
+      `${this.url}`,
+      fetchOptions,
+      response.status,
+      options ? options.redirectToOnUnAuth : ""
+    );
 
     if (response.status === 401) {
       typeof window !== "undefined" &&

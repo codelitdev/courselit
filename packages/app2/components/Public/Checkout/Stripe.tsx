@@ -50,10 +50,12 @@ const Stripe = (props: StripeProps) => {
       dispatch(networkAction(true));
       const response = await fetch.exec({ redirectToOnUnAuth: router.asPath });
       dispatch(networkAction(false));
-      await redirectToStripeCheckout({
-        stripe: await stripePromise,
-        sessionId: response.paymentTracker,
-      });
+      response &&
+        response.paymentTracker &&
+        (await redirectToStripeCheckout({
+          stripe: await stripePromise,
+          sessionId: response.paymentTracker,
+        }));
     } catch (err: any) {
       dispatch(setAppMessage(new AppMessage(err.message)));
     } finally {

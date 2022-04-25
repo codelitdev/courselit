@@ -1,3 +1,4 @@
+import { generateUniqueId } from "@courselit/utils";
 import mongoose from "mongoose";
 import constants from "../config/constants";
 const {
@@ -8,6 +9,7 @@ const {
 
 export interface Purchase {
   domain: mongoose.Types.ObjectId;
+  orderId: string;
   courseId: mongoose.Types.ObjectId;
   purchasedOn: Date;
   purchasedBy: mongoose.Types.ObjectId;
@@ -25,8 +27,9 @@ export interface Purchase {
 
 const PurchaseSchema = new mongoose.Schema<Purchase>({
   domain: { type: mongoose.Schema.Types.ObjectId, required: true },
+  orderId: { type: String, required: true, default: generateUniqueId },
   courseId: { type: mongoose.Schema.Types.ObjectId, required: true },
-  purchasedOn: { type: Date, required: true, default: Date.now },
+  purchasedOn: { type: Date, required: true, default: () => new Date() },
   purchasedBy: { type: mongoose.Schema.Types.ObjectId, required: true },
   paymentMethod: { type: String, required: true },
   paymentId: { type: String },

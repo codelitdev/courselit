@@ -81,7 +81,6 @@ async function initiateHandler(req: ApiRequest, res: NextApiResponse) {
     const purchase = await PurchaseModel.create({
       domain: req.subdomain!._id.toString(),
       courseId: course.id,
-      purchasedOn: new Date(),
       purchasedBy: user!.id,
       paymentMethod: paymentMethod.getName(),
       amount: course.cost * 100,
@@ -91,7 +90,7 @@ async function initiateHandler(req: ApiRequest, res: NextApiResponse) {
     const paymentTracker = await paymentMethod.initiate({
       course,
       metadata: JSON.parse(metadata),
-      purchaseId: purchase.id,
+      purchaseId: purchase.orderId,
     });
 
     purchase.paymentId = paymentTracker;

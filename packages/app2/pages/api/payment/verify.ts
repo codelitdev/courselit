@@ -37,9 +37,9 @@ async function verifyHandler(req: ApiRequest, res: NextApiResponse) {
   }
 
   try {
-    const purchaseRecord: Purchase | null = await PurchaseModel.findById(
-      purchaseId
-    );
+    const purchaseRecord: Purchase | null = await PurchaseModel.findOne({
+      orderId: purchaseId,
+    });
 
     if (
       !purchaseRecord ||

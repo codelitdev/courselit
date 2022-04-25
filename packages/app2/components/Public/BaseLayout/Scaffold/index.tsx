@@ -1,5 +1,5 @@
 import React, { ReactChildren, useState } from "react";
-import { styled } from "@mui/material/styles";
+import { styled } from "@mui/system";
 import AppBar from "@mui/material/AppBar";
 import CssBaseline from "@mui/material/CssBaseline";
 import Drawer from "@mui/material/Drawer";
