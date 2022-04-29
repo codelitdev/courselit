@@ -56,7 +56,7 @@ class Fetch {
             ? `/login?redirect=${options.redirectToOnUnAuth}`
             : "/logout"
         );
-      return;
+      return {};
     }
 
     response = await response.json();

@@ -100,7 +100,7 @@ const ThemeItem = (props: ThemeItemProps) => {
             name: POPUP_CANCEL_ACTION,
             callback: closeUninstallConfirmationPopup,
           },
-          { name: POPUP_OK_ACTION, callback: uninstallTheme },
+          { name: BUTTON_THEME_UNINSTALL, callback: uninstallTheme },
         ]}
       />
       <AppDialog
@@ -109,7 +109,7 @@ const ThemeItem = (props: ThemeItemProps) => {
         title={`${APPLY_THEME_POPUP_HEADER} ${props.theme.name}?`}
         actions={[
           { name: POPUP_CANCEL_ACTION, callback: closeApplyConfirmationPopup },
-          { name: POPUP_OK_ACTION, callback: applyTheme },
+          { name: BUTTON_THEME_APPLY, callback: applyTheme },
         ]}
       />
     </StyledGrid>

@@ -23,12 +23,17 @@ const Free = ({ course, auth, dispatch, address }: FreeProps) => {
   const [disabled, setDisabled] = useState(false);
 
   const handleClick = async () => {
-    const formData = new window.FormData();
-    formData.append("courseid", course.id);
+    const payload = {
+      courseid: course.courseId,
+    };
     const fetch = new FetchBuilder()
       .setUrl(`${address.backend}/api/payment/initiate`)
-      .setPayload(formData)
+      .setHeaders({
+        "Content-Type": "application/json",
+      })
+      .setPayload(JSON.stringify(payload))
       .build();
+
     try {
       setDisabled(true);
       dispatch(networkAction(true));
