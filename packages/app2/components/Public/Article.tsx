@@ -155,17 +155,17 @@ const Article = (props: ArticleProps) => {
             />
           </div>
         )}
-        <Grid container>
-          <Grid item>
-            <Typography variant="h6">Tags </Typography>
-            <Typography variant="body2">
+        <Grid container alignItems="center" spacing={1}>
+            <Grid item>
+                <Typography variant="h6">Tags </Typography>
+            </Grid>
+            <Grid item>
               {course.tags.map((tag: string) => (
                 <Link href={`/tag/${tag}`} key={tag}>
-                  <a>{tag}</a>
+                    <Chip label={tag} component="a" clickable/>
                 </Link>
               ))}
-            </Typography>
-          </Grid>
+            </Grid>
         </Grid>
       </article>
     </StyledSection>
