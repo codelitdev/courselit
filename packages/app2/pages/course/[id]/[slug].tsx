@@ -129,7 +129,8 @@ export async function getServerSideProps({ query, req }: any) {
           courseId,
           groupId,
           groupRank
-        }
+        },
+        tags
       }
     }
   `;
@@ -163,6 +164,7 @@ export async function getServerSideProps({ query, req }: any) {
         cost: post.cost,
         courseId: post.courseId,
         groupOfLessons: lessonsOrderedByGroups,
+        tags: post.tags,
       };
       return {
         props: {

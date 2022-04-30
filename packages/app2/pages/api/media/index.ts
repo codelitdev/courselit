@@ -48,6 +48,7 @@ async function getMediaHandler(req: ApiRequest, res: NextApiResponse) {
     });
     return res.status(200).json(response);
   } catch (err: any) {
+    console.error(err); // eslint-disable-line no-console
     return res.status(500).json({ error: responses.internal_error });
   }
 }

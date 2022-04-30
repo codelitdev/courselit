@@ -1,5 +1,5 @@
 import About from "./About";
-import TaggedContent from "./TaggedContent";
+import TaggedContent from "./tagged-content";
 import FooterBranding from "./FooterBranding";
 import FooterMenu from "./FooterMenu";
 

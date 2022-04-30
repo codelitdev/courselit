@@ -9,20 +9,7 @@ interface SectionProps {
 
 const Section = (props: SectionProps) => {
   return (
-    <StyledSection
-      sx={(theme: any) =>
-        Object.assign(
-          {},
-          {
-            backgroundColor: theme.palette.background.paper,
-            padding: theme.spacing(2),
-            borderRadius: theme.spacing(1),
-            boxShadow: theme.shadows[12],
-          },
-          theme.section
-        )
-      }
-    >
+    <StyledSection sx={(theme: any) => Object.assign({}, theme.section)}>
       {props.children}
     </StyledSection>
   );

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { WidgetHelpers, Section } from "@courselit/components-library";
 import { Button, Grid, TextField, Typography } from "@mui/material";
-import Settings from "./Settings";
+import Settings from "./settings";
 import type { WidgetProps } from "@courselit/common-models";
 
 export interface AdminWidgetProps extends WidgetProps {

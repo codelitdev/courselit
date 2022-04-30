@@ -6,7 +6,7 @@ import {
   CourseItem,
 } from "@courselit/components-library";
 import Link from "next/link";
-import Settings from "./Settings";
+import Settings from "./settings";
 import type { WidgetProps } from "@courselit/common-models";
 import MuiLink from "@mui/material/Link";
 
