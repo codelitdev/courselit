@@ -80,6 +80,7 @@ const Widget = (props: FeaturedWidgetProps) => {
         xs={12}
         sx={{
           background: settings.backgroundColor || "inherit",
+          padding: 2
         }}
       >
         <Grid container spacing={2}>
@@ -107,6 +108,7 @@ const Widget = (props: FeaturedWidgetProps) => {
                   freeCostCaption={config.FREE_COST_CAPTION as string}
                   siteInfo={state.siteinfo}
                   course={post}
+                  fullWidth={true}
                 />
               ))}
             </Grid>

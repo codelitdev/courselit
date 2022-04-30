@@ -32,13 +32,14 @@ interface CourseItemProps {
   course: Course;
   siteInfo: SiteInfo;
   freeCostCaption?: string;
+  fullWidth: boolean;
 }
 
 const CourseItem = (props: CourseItemProps) => {
-  const { course, siteInfo, freeCostCaption } = props;
+  const { course, siteInfo, freeCostCaption, fullWidth = false } = props;
 
   return (
-    <StyledGrid item xs={12} md={6}>
+    <StyledGrid item xs={12} md={fullWidth ? 4 : 6}>
       <Link
         href={`/${course.isBlog ? "post" : "course"}/[id]/[slug]`}
         as={`/${course.isBlog ? "post" : "course"}/${course.courseId}/${

@@ -71,7 +71,7 @@ const Template = (props: TemplateProps) => {
       >
         {/** Top */}
         {router.pathname === "/" && layout.top.length > 0 && (
-          <Grid item className={classes.padding}>
+          <Grid item>
             <Section name="top" />
           </Grid>
         )}
@@ -89,14 +89,14 @@ const Template = (props: TemplateProps) => {
                 {props.children &&
                   props.children.props &&
                   props.children.props.children && (
-                    <Grid item className={classes.padding}>
+                    <Grid item>
                       {props.children}
                     </Grid>
                   )}
 
                 {/** Bottom */}
                 {layout.bottom.length > 0 && (
-                  <Grid item className={classes.padding}>
+                  <Grid item>
                     <Section name="bottom" />
                   </Grid>
                 )}
@@ -108,9 +108,7 @@ const Template = (props: TemplateProps) => {
               <Grid
                 item
                 md={theme.asideWidth || 4}
-                xs={12}
-                className={classes.padding}
-              >
+                xs={12}>
                 <Section name="aside" />
               </Grid>
             )}
@@ -120,7 +118,7 @@ const Template = (props: TemplateProps) => {
       {/** Footer */}
       <div className={classes.footerContainer}>
         <Grid container spacing={0}>
-          <Grid item xs={12} className={classes.padding}>
+          <Grid item xs={12}>
             <Grid
               container
               direction="row"
