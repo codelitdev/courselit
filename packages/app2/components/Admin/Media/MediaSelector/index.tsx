@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { styled } from "@mui/material/styles";
+import { styled } from "@mui/system";
 import {
   BUTTON_SELECT_MEDIA,
   DIALOG_TITLE_FEATURED_IMAGE,
 } from "../../../../ui-config/strings";
 import { Grid, Button, Typography } from "@mui/material";
 import dynamic from "next/dynamic";
+import { Image } from "@courselit/components-library";
 
 const PREFIX = "MediaSelector";
 
@@ -19,7 +20,6 @@ const StyledGrid = styled(Grid)(() => ({
   },
 }));
 
-const Img = dynamic(() => import("../../../Img"));
 const MediaManagerDialog = dynamic(() => import("./MediaManagerDialog"));
 
 interface MediaSelectorProps {
@@ -44,7 +44,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
         <Typography variant="body1">{props.title}</Typography>
       </Grid>
       <Grid item className={classes.preview}>
-        <Img src={props.src} />
+        <Image src={props.src} />
       </Grid>
       <Grid item>
         <Button

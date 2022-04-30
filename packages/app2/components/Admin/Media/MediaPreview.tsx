@@ -16,7 +16,6 @@ import {
   MEDIA_FILE_TYPE,
 } from "../../../ui-config/strings";
 import { connect } from "react-redux";
-import dynamic from "next/dynamic";
 import { Section } from "@courselit/components-library";
 import { FileCopy } from "@mui/icons-material";
 import { AppMessage } from "@courselit/common-models";
@@ -24,6 +23,7 @@ import type { AppDispatch, AppState } from "@courselit/state-management";
 import type { Address, Media } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
 import { actionCreators } from "@courselit/state-management";
+import { Image } from "@courselit/components-library";
 
 const { networkAction, setAppMessage } = actionCreators;
 
@@ -49,8 +49,6 @@ const StyledSection = styled(Section)({
     wordBreak: "break-all",
   },
 });
-
-const Img = dynamic(() => import("../../Img"));
 
 interface MediaPreviewProps {
   item: Media;
@@ -167,7 +165,7 @@ const MediaPreview = (props: MediaPreviewProps) => {
             mimeType === "image/gif" ||
             mimeType === "image/webp") && (
             <div className={classes.img}>
-              <Img src={file} alt={caption} />
+              <Image src={file} alt={caption} />
             </div>
           )}
           {mimeType === "video/mp4" && (

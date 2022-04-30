@@ -1,8 +1,20 @@
-import React from "react";
-import PropTypes from "prop-types";
+import React, { ReactChildren } from "react";
 import { Dialog, DialogTitle, DialogActions, Button } from "@mui/material";
 
-const AppDialog = (props) => {
+interface Action {
+  name: string;
+  callback: (...args: any[]) => void;
+}
+
+interface AppDialogProps {
+  onOpen: boolean;
+  onClose: (...args: any[]) => void;
+  title: string;
+  children: ReactChildren;
+  actions: Action[];
+}
+
+const AppDialog = (props: AppDialogProps) => {
   const { onClose, onOpen } = props;
   const dialogActions = [];
 
@@ -23,19 +35,6 @@ const AppDialog = (props) => {
       {props.actions && <DialogActions>{dialogActions}</DialogActions>}
     </Dialog>
   );
-};
-
-AppDialog.propTypes = {
-  onOpen: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired,
-  title: PropTypes.string.isRequired,
-  children: PropTypes.object,
-  actions: PropTypes.arrayOf(
-    PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      callback: PropTypes.func.isRequired,
-    })
-  ),
 };
 
 export default AppDialog;

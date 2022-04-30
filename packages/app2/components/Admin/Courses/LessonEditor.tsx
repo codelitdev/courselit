@@ -35,7 +35,7 @@ import {
   MIMETYPE_VIDEO,
   MIMETYPE_AUDIO,
   MIMETYPE_PDF,
-} from "../../../ui-config/constants.js";
+} from "../../../ui-config/constants";
 import { FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";
 import { AppMessage } from "@courselit/common-models";

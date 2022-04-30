@@ -73,6 +73,7 @@ export async function getServerSideProps({ query, req }: any) {
           slug,
           isBlog,
           courseId,
+          tags
       }
     }
   `;

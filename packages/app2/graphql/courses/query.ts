@@ -11,7 +11,6 @@ import types from "./types";
 import {
   getCourse,
   getCoursesAsAdmin,
-  getPosts,
   getCourses,
   getEnrolledCourses,
 } from "./logic";

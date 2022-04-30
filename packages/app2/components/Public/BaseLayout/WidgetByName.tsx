@@ -5,6 +5,7 @@ import * as config from "../../../ui-config/constants";
 import * as utilities from "../../../ui-lib/utils";
 import { connect } from "react-redux";
 import type { AppState, AppDispatch } from "@courselit/state-management";
+import { FREE_COST } from "../../../ui-config/strings";
 
 interface WidgetByNameProps {
   name: string;
@@ -34,6 +35,7 @@ const WidgetByName = ({
         section={section}
         config={Object.assign({}, config, {
           BACKEND: state.address.backend,
+          FREE_COST_CAPTION: FREE_COST,
         })}
         utilities={utilities}
         state={state}

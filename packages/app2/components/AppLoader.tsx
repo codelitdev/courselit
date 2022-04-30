@@ -1,7 +1,7 @@
 import React from "react";
-import { styled } from "@mui/material/styles";
+import { styled } from "@mui/system";
 import { CircularProgress, Grid, Typography } from "@mui/material";
-import { LOADING } from "../config/strings";
+import { LOADING } from "../ui-config/strings";
 const PREFIX = "AppLoader";
 
 const classes = {
@@ -15,7 +15,7 @@ const StyledGrid = styled(Grid)({
   },
 });
 
-const AppLoader = (props) => {
+const AppLoader = (props: unknown) => {
   return (
     <StyledGrid
       container

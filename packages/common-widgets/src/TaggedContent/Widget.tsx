@@ -1,7 +1,10 @@
 import * as React from "react";
 import { Grid, Typography, Button, Theme } from "@mui/material";
-import Item from "./Item";
-import { WidgetHelpers, Section } from "@courselit/components-library";
+import {
+  WidgetHelpers,
+  Section,
+  CourseItem,
+} from "@courselit/components-library";
 import Link from "next/link";
 import Settings from "./Settings";
 import type { WidgetProps } from "@courselit/common-models";
@@ -12,7 +15,7 @@ export interface FeaturedWidgetProps extends WidgetProps {
 }
 
 const Widget = (props: FeaturedWidgetProps) => {
-  const { fetchBuilder, utilities, config, dispatch, name } = props;
+  const { fetchBuilder, config, dispatch, name, state } = props;
   const [posts, setPosts] = React.useState([]);
   const [postsOffset] = React.useState(1);
   const BTN_LOAD_MORE = "View all";
@@ -39,7 +42,8 @@ const Widget = (props: FeaturedWidgetProps) => {
         },
         slug,
         courseId,
-        isBlog
+        isBlog,
+        description
       }
     }
     `;
@@ -98,10 +102,10 @@ const Widget = (props: FeaturedWidgetProps) => {
           <Grid item xs={12}>
             <Grid container spacing={2}>
               {posts.map((post, index) => (
-                <Item
+                <CourseItem
                   key={index}
-                  appUtilities={utilities}
-                  appConfig={config}
+                  freeCostCaption={config.FREE_COST_CAPTION as string}
+                  siteInfo={state.siteinfo}
                   course={post}
                 />
               ))}
@@ -110,7 +114,7 @@ const Widget = (props: FeaturedWidgetProps) => {
           {posts.length > 0 && (
             <Grid item xs={12}>
               <Button disableElevation>
-                <Link href="/featured">
+                <Link href={`/tag/${settings.tag}`}>
                   <MuiLink
                     sx={{
                       textDecoration: "none",

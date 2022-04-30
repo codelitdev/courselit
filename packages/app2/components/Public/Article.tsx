@@ -1,6 +1,6 @@
 import React from "react";
 import { styled } from "@mui/system";
-import { Typography, Grid, Divider } from "@mui/material";
+import { Typography, Grid, Divider, Chip } from "@mui/material";
 import Link from "next/link";
 import { formattedLocaleDate, checkPermission } from "../../ui-lib/utils";
 import { connect } from "react-redux";
@@ -8,12 +8,14 @@ import {
   PriceTag,
   RichText as TextEditor,
   Section,
+  Image,
 } from "@courselit/components-library";
 import { FREE_COST } from "../../ui-config/strings";
 import dynamic from "next/dynamic";
 import constants from "../../config/constants";
 import { AppState } from "@courselit/state-management";
-import { Course, Profile } from "@courselit/common-models";
+import { Course, Profile, SiteInfo } from "@courselit/common-models";
+
 const { permissions } = constants;
 
 const PREFIX = "Article";
@@ -64,12 +66,12 @@ const StyledSection = styled(Section)(({ theme }: { theme: any }) => ({
 }));
 
 const BuyButton = dynamic(() => import("./Checkout"));
-const Img = dynamic(() => import("../Img"));
 
 interface ArticleProps {
   course: Course;
   options: ArticleOptionsProps;
   profile: Profile;
+  siteInfo: SiteInfo;
 }
 
 interface ArticleOptionsProps {
@@ -103,9 +105,6 @@ const Article = (props: ArticleProps) => {
             spacing={2}
           >
             <Grid item>
-              <Divider />
-            </Grid>
-            <Grid item>
               <Typography variant="overline" component="p">
                 <Link href="/profile/[id]" as={`/profile/${course.creatorId}`}>
                   <a className={classes.creatorName}>{course.creatorName}</a>
@@ -115,13 +114,10 @@ const Article = (props: ArticleProps) => {
                 {formattedLocaleDate(course.updatedAt)}
               </Typography>
             </Grid>
-            <Grid item>
-              <Divider />
-            </Grid>
           </Grid>
         )}
         {course.featuredImage && (
-          <Img
+          <Image
             alt={course.featuredImage.caption}
             src={course.featuredImage.file}
           />
@@ -139,7 +135,11 @@ const Article = (props: ArticleProps) => {
                 alignItems="center"
               >
                 <Grid item className={classes.enrollmentAreaPriceTag}>
-                  <PriceTag cost={course.cost} freeCostCaption={FREE_COST} />
+                  <PriceTag
+                    cost={course.cost}
+                    freeCostCaption={FREE_COST}
+                    siteInfo={props.siteInfo}
+                  />
                 </Grid>
                 <Grid>
                   <BuyButton course={course} />
@@ -155,6 +155,18 @@ const Article = (props: ArticleProps) => {
             />
           </div>
         )}
+        <Grid container>
+          <Grid item>
+            <Typography variant="h6">Tags </Typography>
+            <Typography variant="body2">
+              {course.tags.map((tag: string) => (
+                <Link href={`/tag/${tag}`} key={tag}>
+                  <a>{tag}</a>
+                </Link>
+              ))}
+            </Typography>
+          </Grid>
+        </Grid>
       </article>
     </StyledSection>
   );
@@ -162,6 +174,7 @@ const Article = (props: ArticleProps) => {
 
 const mapStateToProps = (state: AppState) => ({
   profile: state.profile,
+  siteInfo: state.siteinfo,
 });
 
 export default connect(mapStateToProps)(Article);

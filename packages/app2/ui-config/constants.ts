@@ -13,9 +13,6 @@ export const LESSON_TYPE_VIDEO = "video";
 export const LESSON_TYPE_PDF = "pdf";
 export const LESSON_TYPE_QUIZ = "quiz";
 
-export const URL_EXTENTION_POSTS = "post";
-export const URL_EXTENTION_COURSES = "course";
-
 export const FREE_COURSES_TEXT = "FREE";
 
 // Constant for representing Draftjs' entities

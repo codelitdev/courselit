@@ -13,4 +13,5 @@ export default interface Course {
   updatedAt: Date;
   featuredImage: Media;
   isBlog: boolean;
+  tags: string[];
 }

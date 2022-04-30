@@ -24,9 +24,9 @@
 import * as React from "react";
 import { Grid, IconButton, Typography } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
-import ComponentProps, { isComponentWithDetailProps } from "./ComponentProps";
-import OverviewList from "./OverviewList";
-import Section from "../Section";
+import ComponentProps, { isComponentWithDetailProps } from "./component-props";
+import OverviewList from "./overview-list";
+import Section from "../section";
 
 interface OverviewAndDetailProps {
   title: string;

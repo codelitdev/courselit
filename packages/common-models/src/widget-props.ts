@@ -7,7 +7,7 @@ export default interface WidgetProps {
   name: string;
   fetchBuilder: FetchBuilder;
   section: string;
-  config: unknown;
+  config: Record<string, unknown>;
   utilities: unknown;
   state: State;
   dispatch: ThunkDispatch<State, null, AnyAction>;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { styled } from "@mui/material/styles";
+import { styled } from "@mui/system";
 import {
   Button,
   Grid,
@@ -23,8 +23,7 @@ import {
   SEARCH_TEXTBOX_PLACEHOLDER,
 } from "../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
-import { Section } from "@courselit/components-library";
-import dynamic from "next/dynamic";
+import { Section, Image } from "@courselit/components-library";
 import { checkPermission } from "../../../ui-lib/utils";
 import { Add, Search } from "@mui/icons-material";
 import constants from "../../../config/constants";
@@ -45,7 +44,7 @@ const classes = {
   listItemText: `${PREFIX}-listItemText`,
 };
 
-const StyledGrid = styled(Grid)(({ theme }) => ({
+const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
   [`& .${classes.avatar}`]: {
     height: "50px !important",
     [theme.breakpoints.up("md")]: {
@@ -63,8 +62,6 @@ const StyledGrid = styled(Grid)(({ theme }) => ({
     paddingLeft: theme.spacing(1),
   },
 }));
-
-const Img = dynamic(() => import("../../Img"));
 
 interface IndexProps {
   auth: Auth;
@@ -219,7 +216,7 @@ const Index = (props: IndexProps) => {
                   >
                     <ListItem className={classes.listItem}>
                       <ListItemAvatar>
-                        <Img
+                        <Image
                           src={
                             course.featuredImage &&
                             course.featuredImage.thumbnail

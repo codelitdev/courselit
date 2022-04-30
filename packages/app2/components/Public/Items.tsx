@@ -2,12 +2,15 @@ import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
 import { FetchBuilder } from "@courselit/utils";
 import { Grid, Button } from "@mui/material";
-import { BTN_LOAD_MORE } from "../../../ui-config/strings";
-import Post from "./Post";
-import Course from "./Course";
+import { BTN_LOAD_MORE, FREE_COST } from "../../ui-config/strings";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
-import type { Address, Course as CourseModel } from "@courselit/common-models";
+import type {
+  Address,
+  Course as CourseModel,
+  SiteInfo,
+} from "@courselit/common-models";
+import { CourseItem } from "@courselit/components-library";
 
 const { networkAction } = actionCreators;
 
@@ -18,6 +21,7 @@ interface ListProps {
   dispatch: AppDispatch;
   posts: boolean;
   address: Address;
+  siteInfo: SiteInfo;
 }
 
 const List = (props: ListProps) => {
@@ -30,7 +34,7 @@ const List = (props: ListProps) => {
       ? props.showLoadMoreButton
       : false
   );
-  const { generateQuery } = props;
+  const { generateQuery, siteInfo } = props;
   const posts = typeof props.posts === "boolean" ? props.posts : false;
 
   useEffect(() => {
@@ -61,13 +65,14 @@ const List = (props: ListProps) => {
   return courses.length > 0 ? (
     <>
       <Grid container justifyContent="space-between" spacing={2}>
-        {courses.map((course: CourseModel, index: number) =>
-          course.isBlog ? (
-            <Post key={index} {...course} />
-          ) : (
-            <Course key={index} {...course} />
-          )
-        )}
+        {courses.map((course: CourseModel, index: number) => (
+          <CourseItem
+            course={course}
+            siteInfo={siteInfo}
+            freeCostCaption={FREE_COST}
+            key={index}
+          />
+        ))}
       </Grid>
       {shouldShowLoadMoreButton && courses.length > 0 && (
         <Grid item xs={12}>
@@ -87,6 +92,7 @@ const List = (props: ListProps) => {
 };
 
 const mapStateToProps = (state: AppState) => ({
+  siteInfo: state.siteinfo,
   address: state.address,
 });
 

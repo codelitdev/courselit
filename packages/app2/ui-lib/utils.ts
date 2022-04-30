@@ -1,18 +1,14 @@
 import fetch from "isomorphic-unfetch";
-import {
-  URL_EXTENTION_POSTS,
-  URL_EXTENTION_COURSES,
-  permissions,
-} from "../ui-config/constants.js";
+import { permissions } from "../ui-config/constants";
 import { RichText as TextEditor } from "@courselit/components-library";
-import Profile from "../ui-models/profile.js";
+import type { Profile } from "@courselit/common-models";
 
 export const queryGraphQL = async (
   url: string,
   query: Record<string, unknown>,
   token: string
 ) => {
-  const options = {
+  const options: Record<string, unknown> = {
     method: "POST",
     headers: token
       ? {
@@ -47,9 +43,9 @@ export const makeGraphQLQueryStringFromJSObject = (
 ) => JSON.stringify(obj).replace(/"([^(")"]+)":/g, "$1:");
 
 export const formulateCourseUrl = (course: any, backend = "") =>
-  `${backend}/${course.isBlog ? URL_EXTENTION_POSTS : URL_EXTENTION_COURSES}/${
-    course.courseId
-  }/${course.slug}`;
+  `${backend}/${course.isBlog ? "post" : "course"}/${course.courseId}/${
+    course.slug
+  }`;
 
 export const getPostDescriptionSnippet = (rawDraftJSContentState: any) => {
   const firstSentence = TextEditor.hydrate({ data: rawDraftJSContentState })
