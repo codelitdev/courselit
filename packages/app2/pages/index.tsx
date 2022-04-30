@@ -41,7 +41,12 @@ const Index = (props: IndexProps) => {
       <Grid item xs={12}>
         {props.courses.length > 0 && (
           <Section>
-            <Grid item container>
+            <Grid
+              container
+              sx={{
+                padding: 2,
+              }}
+            >
               <Grid
                 item
                 xs={12}
@@ -53,25 +58,25 @@ const Index = (props: IndexProps) => {
                   {HEADER_BLOG_POSTS_SECTION}
                 </Typography>
               </Grid>
-            </Grid>
-            <Items
-              generateQuery={generateQuery}
-              initialItems={props.courses}
-              posts={true}
-            />
-            <Grid item xs={12}>
-              <Button>
-                <Link href="/posts">
-                  <MuiLink
-                    sx={{
-                      textDecoration: "none",
-                      color: "inherit",
-                    }}
-                  >
-                    {BTN_VIEW_ALL}
-                  </MuiLink>
-                </Link>
-              </Button>
+              <Items
+                generateQuery={generateQuery}
+                initialItems={props.courses}
+                posts={true}
+              />
+              <Grid item xs={12}>
+                <Button>
+                  <Link href="/posts">
+                    <MuiLink
+                      sx={{
+                        textDecoration: "none",
+                        color: "inherit",
+                      }}
+                    >
+                      {BTN_VIEW_ALL}
+                    </MuiLink>
+                  </Link>
+                </Button>
+              </Grid>
             </Grid>
           </Section>
         )}

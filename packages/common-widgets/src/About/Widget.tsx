@@ -5,7 +5,7 @@ import {
   Section,
 } from "@courselit/components-library";
 import Settings from "./Settings";
-import { Grid, Theme } from "@mui/material";
+import { Box, Grid } from "@mui/material";
 import type { WidgetProps } from "@courselit/common-models";
 
 const Widget = (props: WidgetProps) => {
@@ -19,7 +19,6 @@ const Widget = (props: WidgetProps) => {
   }, []);
 
   const getSettings = async () => {
-    console.log("From about widget", props);
     const settings: any = await WidgetHelpers.getWidgetSettings({
       widgetName: name,
       fetchBuilder,
@@ -43,9 +42,16 @@ const Widget = (props: WidgetProps) => {
   };
 
   return (
-    <Grid item xs>
+    <Grid item xs={12}>
       <Section>
-        <TextEditor initialContentState={settings.text} readOnly={true} />
+        <Box
+          sx={{
+            pl: 2,
+            pr: 2,
+          }}
+        >
+          <TextEditor initialContentState={settings.text} readOnly={true} />
+        </Box>
       </Section>
     </Grid>
   );

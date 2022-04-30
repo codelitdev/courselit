@@ -12,6 +12,7 @@ const Theme = {
   footer: {},
   section: {
     // boxShadow: "0px 2px 5px #cecece",
+    border: "2px solid #eee",
   },
   mainContentWidth: 8,
   asideWidth: 4,

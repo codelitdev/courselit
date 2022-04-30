@@ -44,7 +44,13 @@ function Posts(props: PostsProps) {
     <BaseLayout title={HEADER_BLOG_POSTS_SECTION}>
       <Grid item xs={12}>
         <Section>
-          <Grid container spacing={2}>
+          <Grid
+            container
+            spacing={2}
+            sx={{
+              padding: 2,
+            }}
+          >
             <Grid item container>
               <Grid item xs={12}>
                 <Typography variant="h2">

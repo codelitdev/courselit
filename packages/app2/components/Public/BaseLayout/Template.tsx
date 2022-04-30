@@ -69,13 +69,6 @@ const Template = (props: TemplateProps) => {
         direction="column"
         spacing={0}
       >
-        {/** Top */}
-        {router.pathname === "/" && layout.top.length > 0 && (
-          <Grid item>
-            <Section name="top" />
-          </Grid>
-        )}
-
         <Grid item>
           <Grid container direction="row" spacing={0}>
             {/** Main */}
@@ -85,13 +78,18 @@ const Template = (props: TemplateProps) => {
               xs={12}
             >
               <Grid container direction="column" spacing={0}>
+                {/** Top */}
+                {router.pathname === "/" && layout.top.length > 0 && (
+                  <Grid item>
+                    <Section name="top" />
+                  </Grid>
+                )}
+
                 {/** Main Content */}
                 {props.children &&
                   props.children.props &&
                   props.children.props.children && (
-                    <Grid item>
-                      {props.children}
-                    </Grid>
+                    <Grid item>{props.children}</Grid>
                   )}
 
                 {/** Bottom */}
@@ -105,10 +103,7 @@ const Template = (props: TemplateProps) => {
 
             {/** Aside */}
             {!theme.singleColumnLayout && layout.aside.length > 0 && (
-              <Grid
-                item
-                md={theme.asideWidth || 4}
-                xs={12}>
+              <Grid item md={theme.asideWidth || 4} xs={12}>
                 <Section name="aside" />
               </Grid>
             )}

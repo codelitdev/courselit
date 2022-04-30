@@ -33,7 +33,13 @@ interface PostsProps {
 function Posts(props: PostsProps) {
   return (
     <BaseLayout title={HEADER_BLOG_POSTS_SECTION}>
-      <Grid item xs={12}>
+      <Grid
+        item
+        xs={12}
+        sx={{
+          padding: 2,
+        }}
+      >
         <Section>
           <Grid container spacing={2}>
             <Grid item container>
