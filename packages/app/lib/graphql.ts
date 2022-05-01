@@ -4,10 +4,6 @@ import { responses } from "../config/strings";
 import constants from "../config/constants";
 import mongoose from "mongoose";
 import type GQLContext from "../models/GQLContext";
-import type Media from "../models/Media";
-import HttpError from "../models/HttpError";
-import { generateSignedUrl } from "../lib/s3-utils";
-const { cdnEndpoint } = constants;
 
 export const checkIfAuthenticated = (ctx: GQLContext) => {
   if (!ctx.user) throw new Error(responses.request_not_authenticated);
@@ -134,55 +130,3 @@ export const checkPermission = (
   actualPermissions.some((permission) =>
     desiredPermissions.includes(permission)
   );
-
-export const getMediaOrThrow = async (
-  id: mongoose.Types.ObjectId,
-  ctx: GQLContext
-) => {
-  checkIfAuthenticated(ctx);
-
-  //   const media: Media | null = await MediaModel.findOne({
-  //     _id: id,
-  //     domain: ctx.subdomain._id,
-  //   });
-
-  //   if (!media) {
-  //     throw new HttpError(responses.item_not_found, 404);
-  //   }
-
-  //   if (
-  //     !checkPermission(ctx.user.permissions, [
-  //       constants.permissions.manageAnyMedia,
-  //     ])
-  //   ) {
-  //     if (!checkOwnershipWithoutModel(media, ctx)) {
-  //       throw new HttpError(responses.item_not_found, 403);
-  //     } else {
-  //       if (
-  //         !checkPermission(ctx.user.permissions, [
-  //           constants.permissions.manageMedia,
-  //         ])
-  //       ) {
-  //         throw new HttpError(responses.action_not_allowed, 403);
-  //       }
-  //     }
-  //   }
-
-  return media;
-};
-
-export const mapRelativeURLsToFullURLs = (media: Media) => {
-  return {
-    id: media.id,
-    file: media.public
-      ? `${cdnEndpoint}/${media.file}`
-      : generateSignedUrl({ name: media.file }),
-    thumbnail: media.thumbnail ? `${cdnEndpoint}/${media.thumbnail}` : "",
-    originalFileName: media.originalFileName,
-    mimeType: media.mimeType,
-    size: media.size,
-    caption: media.caption,
-    public: media.public,
-    key: media.file,
-  };
-};
