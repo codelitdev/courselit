@@ -1,5 +1,5 @@
-import PriceTag from "./pricetag2";
-import Section from "./section2";
+import PriceTag from "./pricetag";
+import Section from "./section";
 import WidgetHelpers from "./widget-helpers";
 import RichText from "./rich-text";
 import OverviewAndDetail from "./overview-and-detail";
