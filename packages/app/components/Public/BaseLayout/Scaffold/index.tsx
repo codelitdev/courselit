@@ -10,7 +10,7 @@ import { LinearProgress, Toolbar } from "@mui/material";
 import { useTheme } from "@mui/material";
 import AppToast from "../../../AppToast";
 import { connect } from "react-redux";
-import Header from "../header";
+import Header from "../header2";
 import dynamic from "next/dynamic";
 import SiteInfo from "../../../../ui-models/site-info";
 import Link from "../../../../ui-models/link";
