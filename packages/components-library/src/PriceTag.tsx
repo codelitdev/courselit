@@ -20,3 +20,4 @@ const PriceTag = (props: PriceTagProps) => {
 };
 
 export default PriceTag;
+
