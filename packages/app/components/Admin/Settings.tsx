@@ -116,9 +116,8 @@ const Settings = (props: SettingsProps) => {
   };
 
   const [settings, setSettings] = useState<SiteInfo>(defaultSettingsState);
-  const [newSettings, setNewSettings] = useState<SiteInfo>(
-    defaultSettingsState
-  );
+  const [newSettings, setNewSettings] =
+    useState<SiteInfo>(defaultSettingsState);
 
   const fetch = new FetchBuilder()
     .setUrl(`${props.address.backend}/api/graph`)

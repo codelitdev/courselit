@@ -39,9 +39,8 @@ const OverviewAndDetail = ({
   componentsMap,
   onSelect: onSelectFromParent,
 }: OverviewAndDetailProps) => {
-  const [selectedComponentIndex, setSelectedComponentIndex] = React.useState(
-    -1
-  );
+  const [selectedComponentIndex, setSelectedComponentIndex] =
+    React.useState(-1);
   const selectedComponent = componentsMap[selectedComponentIndex];
 
   const onSelectComponentWithDetail = (index: number) => {

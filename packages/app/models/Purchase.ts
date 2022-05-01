@@ -1,11 +1,8 @@
 import { generateUniqueId } from "@courselit/utils";
 import mongoose from "mongoose";
 import constants from "../config/constants";
-const {
-  transactionInitiated,
-  transactionSuccess,
-  transactionFailed,
-} = constants;
+const { transactionInitiated, transactionSuccess, transactionFailed } =
+  constants;
 
 export interface Purchase {
   domain: mongoose.Types.ObjectId;

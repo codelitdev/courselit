@@ -97,10 +97,8 @@ const CourseEditor = (props: CourseEditorProps) => {
   const [courseData, setCourseData] = useState(initCourseData);
   const [userError, setUserError] = useState("");
   const [deleteCoursePopupOpened, setDeleteCoursePopupOpened] = useState(false);
-  const [
-    courseStructureEditorActive,
-    setCourseStructureEditorActive,
-  ] = useState(false);
+  const [courseStructureEditorActive, setCourseStructureEditorActive] =
+    useState(false);
 
   useEffect(() => {
     if (props.courseId) {

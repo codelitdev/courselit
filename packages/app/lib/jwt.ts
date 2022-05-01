@@ -15,28 +15,29 @@ const jwtStrategyOptions: StrategyOptions = {
   passReqToCallback: true,
 };
 
-export default new Strategy(
-  jwtStrategyOptions,
-  function (req: any, jwtToken: { email: string; domain: string }, done: any) {
-    const { email, domain } = jwtToken;
+export default new Strategy(jwtStrategyOptions, function (
+  req: any,
+  jwtToken: { email: string; domain: string },
+  done: any
+) {
+  const { email, domain } = jwtToken;
 
-    if (domain !== req.subdomain._id.toString()) {
-      return done(null, false);
-    }
-
-    UserModel.findOne(
-      { email, domain, active: true },
-      function (err: Error, user: User) {
-        if (err) {
-          return done(err, false);
-        }
-
-        if (user) {
-          return done(null, user);
-        } else {
-          return done(null, false);
-        }
-      }
-    );
+  if (domain !== req.subdomain._id.toString()) {
+    return done(null, false);
   }
-);
+
+  UserModel.findOne(
+    { email, domain, active: true },
+    function (err: Error, user: User) {
+      if (err) {
+        return done(err, false);
+      }
+
+      if (user) {
+        return done(null, user);
+      } else {
+        return done(null, false);
+      }
+    }
+  );
+});

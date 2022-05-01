@@ -13,7 +13,10 @@ import { useRouter } from "next/router";
 const BaseLayout = dynamic(() => import("../../components/Public/BaseLayout"));
 const Items = dynamic(() => import("../../components/Public/Items"));
 
-const generateQuery = (tag: string) => (pageOffset = 1) => `
+const generateQuery =
+  (tag: string) =>
+  (pageOffset = 1) =>
+    `
   query {
     courses: getCourses(offset: ${pageOffset}, tag: "${tag}") {
       id,

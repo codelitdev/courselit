@@ -80,9 +80,8 @@ const Editor = (props) => {
     )
   );
 
-  const extendedBlockRenderMap = DefaultDraftBlockRenderMap.merge(
-    blockRenderMap
-  );
+  const extendedBlockRenderMap =
+    DefaultDraftBlockRenderMap.merge(blockRenderMap);
 
   return (
     <DraftJSEditor
@@ -159,18 +158,21 @@ Editor.getDecorators = ({ prismDefaultLanguage = "javascript" }) => {
   };
 
   const videoStrategy = (contentBlock, callback, contentState) => {
-    const YOUTUBE_REGEX = /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?‌​[\w\?‌​=]*)?/g; // eslint-disable-line
+    const YOUTUBE_REGEX =
+      /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?‌​[\w\?‌​=]*)?/g; // eslint-disable-line
     findWithRegex(YOUTUBE_REGEX, contentBlock, callback);
   };
 
   const linkStrategy = (contentBlock, callback, contentState) => {
     // Regex from Stackoverflow: https://stackoverflow.com/a/3809435/942589
-    const LINK_REGEX = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)?/gi;
+    const LINK_REGEX =
+      /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)?/gi;
     findWithRegex(LINK_REGEX, contentBlock, callback);
   };
 
   const twitterStrategy = (contentBlock, callback, contentState) => {
-    const TWITTER_REGEX = /https?:\/\/twitter\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)/g;
+    const TWITTER_REGEX =
+      /https?:\/\/twitter\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)/g;
     findWithRegex(TWITTER_REGEX, contentBlock, callback);
   };
 

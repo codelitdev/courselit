@@ -14,11 +14,8 @@ import UserModel, { User } from "../../../models/User";
 import { getPaymentMethod } from "../../../payments";
 import PurchaseModel, { Purchase } from "../../../models/Purchase";
 
-const {
-  transactionSuccess,
-  transactionFailed,
-  transactionInitiated,
-} = constants;
+const { transactionSuccess, transactionFailed, transactionInitiated } =
+  constants;
 
 passport.use(jwtStrategy);
 

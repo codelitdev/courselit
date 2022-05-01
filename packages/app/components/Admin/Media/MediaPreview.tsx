@@ -59,15 +59,8 @@ interface MediaPreviewProps {
 const MediaPreview = (props: MediaPreviewProps) => {
   const [item, setItem] = useState(props.item);
   const { dispatch, address } = props;
-  const {
-    mediaId,
-    originalFileName,
-    mimeType,
-    caption,
-    file,
-    size,
-    access,
-  } = item;
+  const { mediaId, originalFileName, mimeType, caption, file, size, access } =
+    item;
 
   useEffect(() => {
     getMediaDetails();

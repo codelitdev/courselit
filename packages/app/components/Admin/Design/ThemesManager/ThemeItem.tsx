@@ -40,10 +40,8 @@ const ThemeItem = (props: ThemeItemProps) => {
     uninstallConfirmationPopupOpened,
     setUninstallConfirmationPopupOpened,
   ] = useState(false);
-  const [
-    applyConfirmationPopupOpened,
-    setApplyConfirmationPopupOpened,
-  ] = useState(false);
+  const [applyConfirmationPopupOpened, setApplyConfirmationPopupOpened] =
+    useState(false);
 
   const closeUninstallConfirmationPopup = () =>
     setUninstallConfirmationPopupOpened(false);

@@ -114,14 +114,10 @@ interface PageDesignerProps {
 }
 
 const PageDesigner = (props: PageDesignerProps) => {
-  const [
-    componentSelectionDialogOpened,
-    setComponentSelectionDialogOpened,
-  ] = useState(false);
-  const [
-    showComponentsCompatibleWith,
-    setShowComponentsCompatibleWith,
-  ] = useState("");
+  const [componentSelectionDialogOpened, setComponentSelectionDialogOpened] =
+    useState(false);
+  const [showComponentsCompatibleWith, setShowComponentsCompatibleWith] =
+    useState("");
 
   const [layout, setLayout] = useState(props.layout);
   const theme = useTheme();
