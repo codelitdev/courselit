@@ -1,6 +1,6 @@
 {
   "name": "@courselit/app",
-  "version": "0.17.17",
+  "version": "0.17.18",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@courselit/common-models": "^0.17.17",
-    "@courselit/common-widgets": "^0.17.17",
+    "@courselit/common-widgets": "^0.17.18",
     "@courselit/components-library": "^0.17.17",
     "@courselit/state-management": "^0.17.17",
     "@courselit/thumbnail": "^0.17.0",
