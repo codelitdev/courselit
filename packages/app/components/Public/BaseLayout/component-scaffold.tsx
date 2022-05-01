@@ -18,7 +18,7 @@ import {
 } from "@mui/material";
 import AppToast from "../../AppToast";
 import DrawerListItemIcon from "./drawer-list-item-icon";
-import Header from "./header";
+import Header from "./header2";
 import { connect } from "react-redux";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import dynamic from "next/dynamic";
@@ -134,7 +134,7 @@ const Root = styled("div")(({ theme }: { theme: any }) => ({
   },
 }));
 
-const Branding = dynamic(() => import("./branding"));
+const Branding = dynamic(() => import("./branding2"));
 
 const drawerWidth = 240;
 

@@ -12,7 +12,7 @@ import { Toolbar, Grid, LinearProgress, Typography } from "@mui/material";
 import { useTheme } from "@mui/material";
 import AppToast from "../../AppToast";
 import DrawerListItemIcon from "./drawer-list-item-icon";
-import Header from "./header";
+import Header from "./header2";
 import { connect } from "react-redux";
 // import useMediaQuery from "@mui/material/useMediaQuery";
 import { useRouter } from "next/router";
@@ -129,7 +129,7 @@ const Root = styled("div")(({ theme }: { theme: any }) => ({
   },
 }));
 
-const Branding = dynamic(() => import("./branding"));
+const Branding = dynamic(() => import("./branding2"));
 
 const ComponentScaffold = (props: any) => {
   const theme = useTheme();
