@@ -6,7 +6,11 @@ import createEmotionCache from "../ui-lib/create-emotion-cache";
 import { Provider, useStore } from "react-redux";
 import { store as wrapper } from "@courselit/state-management";
 import { CONSOLE_MESSAGE_THEME_INVALID } from "../ui-config/strings";
-import { createTheme, responsiveFontSizes, ThemeProvider } from "@mui/material/styles";
+import {
+  createTheme,
+  responsiveFontSizes,
+  ThemeProvider,
+} from "@mui/material/styles";
 import defaultTheme from "../ui-config/default-theme";
 import { deepmerge } from "@mui/utils";
 import App from "next/app";
@@ -62,13 +66,13 @@ function MyApp({
 
   return (
     <Provider store={store}>
-        <CacheProvider value={emotionCache}>
-          <ThemeProvider theme={muiTheme}>
-            <CssBaseline />
-            <Component {...pageProps} />
-            <CodeInjector />
-          </ThemeProvider>
-        </CacheProvider>
+      <CacheProvider value={emotionCache}>
+        <ThemeProvider theme={muiTheme}>
+          <CssBaseline />
+          <Component {...pageProps} />
+          <CodeInjector />
+        </ThemeProvider>
+      </CacheProvider>
     </Provider>
   );
 }

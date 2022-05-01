@@ -38,9 +38,14 @@ const CourseItem = (props: CourseItemProps) => {
   const { course, siteInfo, freeCostCaption } = props;
 
   return (
-    <StyledGrid item xs={12} md={6} sx={{
-        mb: 3
-    }}>
+    <StyledGrid
+      item
+      xs={12}
+      md={6}
+      sx={{
+        mb: 3,
+      }}
+    >
       <Link
         href={`/${course.isBlog ? "post" : "course"}/[id]/[slug]`}
         as={`/${course.isBlog ? "post" : "course"}/${course.courseId}/${
