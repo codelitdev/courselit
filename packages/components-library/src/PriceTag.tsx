@@ -1,6 +1,5 @@
-import { Typography } from "@material-ui/core";
+import { Typography } from "@mui/material";
 import * as React from "react";
-import { connect } from "react-redux";
 
 interface PriceTagProps {
   cost: number;
@@ -17,11 +16,7 @@ const PriceTag = (props: PriceTagProps) => {
       ? `${props.siteInfo.currencyUnit}${cost}`
       : `${cost} ${props.siteInfo.currencyISOCode}`;
 
-  return <Typography variant="h6">{costText}</Typography>;
+  return <Typography variant="h5">{costText}</Typography>;
 };
 
-const mapStateToProps = (state: any) => ({
-  siteInfo: state.siteinfo,
-});
-
-export default connect(mapStateToProps)(PriceTag);
+export default PriceTag;

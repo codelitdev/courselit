@@ -1,0 +1,112 @@
+import Media from "../models/Media";
+
+interface GetPaginatedMediaProps {
+  group: string;
+  page?: number;
+  limit?: number;
+  access?: "public" | "private";
+}
+
+export async function getPaginatedMedia({
+  group,
+  page,
+  limit,
+  access,
+}: GetPaginatedMediaProps): Promise<Media[]> {
+  const urlParams = new URLSearchParams();
+  urlParams.append("group", group);
+  urlParams.append("page", page ? page.toString() : "1");
+  urlParams.append("limit", limit ? limit.toString() : "20");
+  if (access) {
+    urlParams.append("access", access);
+  }
+
+  const response: any = await fetch(
+    `${process.env.MEDIALIT_SERVER}/media/get?` + urlParams.toString(),
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        apikey: process.env.MEDIALIT_APIKEY,
+      }),
+      credentials: "same-origin",
+    }
+  );
+  const jsonResponse = await response.json();
+
+  if (response.status === 200) {
+    return jsonResponse;
+  } else {
+    throw new Error(jsonResponse.error);
+  }
+}
+
+export async function getMedia(mediaId: string): Promise<Media> {
+  let response: any = await fetch(
+    `${process.env.MEDIALIT_SERVER}/media/get/${mediaId}`,
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        apikey: process.env.MEDIALIT_APIKEY,
+      }),
+    }
+  );
+  response = await response.json();
+  return response;
+}
+
+export async function getPresignedUrlForUpload(
+  domain: string
+): Promise<string> {
+  let response: any = await fetch(
+    `${process.env.MEDIALIT_SERVER}/media/presigned/create`,
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        apikey: process.env.MEDIALIT_APIKEY,
+        group: domain,
+      }),
+    }
+  );
+  response = await response.json();
+
+  if (response.error) {
+    throw new Error(response.error);
+  }
+
+  return response.message;
+}
+
+export async function deleteMedia(mediaId: string): Promise<boolean> {
+  let response: any = await fetch(
+    `${process.env.MEDIALIT_SERVER}/media/delete/${mediaId}`,
+    {
+      method: "DELETE",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        apikey: process.env.MEDIALIT_APIKEY,
+      }),
+    }
+  );
+  response = await response.json();
+
+  if (response.error) {
+    throw new Error(response.error);
+  }
+
+  if (response.message === "success") {
+    return true;
+  } else {
+    throw new Error(response.message);
+  }
+}

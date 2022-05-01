@@ -1,6 +1,6 @@
-import AdminWidget from "./AdminWidget";
+import AdminWidget from "./admin-widget";
 import metadata from "./metadata";
-import Widget from "./Widget";
+import Widget from "./widget";
 
 export default {
   metadata,

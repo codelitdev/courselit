@@ -1,6 +1,4 @@
-import About from "./About";
-import FeaturedContent from "./FeaturedContent";
-import FooterBranding from "./FooterBranding";
-import FooterMenu from "./FooterMenu";
-
-export default [FeaturedContent, FooterMenu, FooterBranding, About];
+export { default as About } from "./about";
+export { default as TaggedContent } from "./tagged-content";
+export { default as Branding } from "./branding";
+export { default as FooterMenu } from "./footer-menu";

@@ -1,20 +1,17 @@
-import PriceTag from "./PriceTag";
-import Section from "./Section";
-import Course from "./Course";
-import { FetchBuilder, WidgetProps } from "./Widget";
-import AppState from "./AppState";
-import WidgetHelpers from "./WidgetHelpers";
-import RichText from "./RichText";
-import OverviewAndDetail from "./OverviewAndDetail";
+import PriceTag from "./pricetag";
+import Section from "./section";
+import WidgetHelpers from "./widget-helpers";
+import RichText from "./rich-text";
+import OverviewAndDetail from "./overview-and-detail";
+import CourseItem from "./course-item";
+import Image from "./image";
 
 export {
   PriceTag,
   Section,
-  Course,
-  WidgetProps,
-  FetchBuilder,
-  AppState,
   WidgetHelpers,
   RichText,
   OverviewAndDetail,
+  CourseItem,
+  Image,
 };
