@@ -26,7 +26,7 @@ import { Grid, IconButton, Typography } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
 import ComponentProps, { isComponentWithDetailProps } from "./component-props";
 import OverviewList from "./overview-list";
-import Section from "../section";
+import Section from "../section2";
 
 interface OverviewAndDetailProps {
   title: string;
