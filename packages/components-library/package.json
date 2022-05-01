@@ -1,6 +1,6 @@
 {
   "name": "@courselit/components-library",
-  "version": "0.17.13",
+  "version": "0.17.14",
   "description": "A library of React components for CourseLit LMS.",
   "keywords": [
     "react",

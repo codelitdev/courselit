@@ -1,6 +1,6 @@
 {
   "name": "@courselit/widget-buttondown",
-  "version": "0.17.13",
+  "version": "0.17.14",
   "description": "Buttondown widget for CourseLit",
   "keywords": [
     "courselit",
@@ -52,6 +52,6 @@
   },
   "gitHead": "fca7d2f8455c835f1c185a1ebc8513c6269ebe5b",
   "dependencies": {
-    "@courselit/components-library": "^0.17.13"
+    "@courselit/components-library": "^0.17.14"
   }
 }
