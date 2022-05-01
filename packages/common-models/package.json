@@ -1,6 +1,6 @@
 {
   "name": "@courselit/common-models",
-  "version": "0.17.23",
+  "version": "0.17.24",
   "description": "Models shared between the main app and other packages of CourseLit.",
   "author": "Rajat Saxena <hi@rajatsaxena.dev>",
   "homepage": "https://github.com/codelitdev/courselit#readme",
