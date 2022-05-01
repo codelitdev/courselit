@@ -38,7 +38,9 @@ const CourseItem = (props: CourseItemProps) => {
   const { course, siteInfo, freeCostCaption } = props;
 
   return (
-    <StyledGrid item xs={12} md={6}>
+    <StyledGrid item xs={12} md={6} sx={{
+        mb: 3
+    }}>
       <Link
         href={`/${course.isBlog ? "post" : "course"}/[id]/[slug]`}
         as={`/${course.isBlog ? "post" : "course"}/${course.courseId}/${
@@ -67,7 +69,7 @@ const CourseItem = (props: CourseItemProps) => {
               </Typography>
             </Grid>
             <Grid item>
-              <Typography variant="h4">{course.title}</Typography>
+              <Typography variant="h5">{course.title}</Typography>
             </Grid>
             <Grid item>
               <Typography variant="body1">{course.description}</Typography>

@@ -1,14 +1,12 @@
 import React, { useEffect } from "react";
 import type { AppProps } from "next/app";
 import { CacheProvider, EmotionCache } from "@emotion/react";
-import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import createEmotionCache from "../ui-lib/create-emotion-cache";
 import { Provider, useStore } from "react-redux";
 import { store as wrapper } from "@courselit/state-management";
-import { StyledEngineProvider } from "@mui/material/styles";
 import { CONSOLE_MESSAGE_THEME_INVALID } from "../ui-config/strings";
-import { createTheme, responsiveFontSizes } from "@mui/material/styles";
+import { createTheme, responsiveFontSizes, ThemeProvider } from "@mui/material/styles";
 import defaultTheme from "../ui-config/default-theme";
 import { deepmerge } from "@mui/utils";
 import App from "next/app";
@@ -17,6 +15,7 @@ import { AnyAction } from "redux";
 import { ThunkDispatch } from "redux-thunk";
 import { actionCreators } from "@courselit/state-management";
 import CodeInjector from "../components/Public/CodeInjector";
+import { DefaultTheme } from "@mui/private-theming";
 
 type CourseLitProps = AppProps & {
   emotionCache: EmotionCache;
@@ -35,7 +34,7 @@ function MyApp({
   let muiTheme;
   if (theme.styles) {
     muiTheme = responsiveFontSizes(
-      createTheme(deepmerge(defaultTheme, theme.styles))
+      createTheme(deepmerge<DefaultTheme>(defaultTheme, theme.styles))
     );
   } else {
     console.warn(CONSOLE_MESSAGE_THEME_INVALID);
@@ -43,7 +42,6 @@ function MyApp({
   }
 
   useEffect(() => {
-    removeServerSideInjectedCSS();
     checkForSession();
   }, []);
 
@@ -62,16 +60,8 @@ function MyApp({
     );
   };
 
-  const removeServerSideInjectedCSS = () => {
-    const jssStyles = document.querySelector("#jss-server-side");
-    if (jssStyles) {
-      jssStyles.parentNode!.removeChild(jssStyles);
-    }
-  };
-
   return (
     <Provider store={store}>
-      <StyledEngineProvider injectFirst>
         <CacheProvider value={emotionCache}>
           <ThemeProvider theme={muiTheme}>
             <CssBaseline />
@@ -79,7 +69,6 @@ function MyApp({
             <CodeInjector />
           </ThemeProvider>
         </CacheProvider>
-      </StyledEngineProvider>
     </Provider>
   );
 }

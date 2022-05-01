@@ -58,9 +58,8 @@ export const extractPlainTextFromDraftJS = (
       convertFromRaw(JSON.parse(decode(encodedEditorStateString)))
     );
     const descriptInPlainText = editorState.getCurrentContent().getPlainText();
-    return descriptInPlainText.length > characters
-      ? descriptInPlainText.substring(0, characters) + "..."
-      : descriptInPlainText;
+    const firstSentence = descriptInPlainText.split(/\./);
+    return `${firstSentence[0]}.`;
   } catch (err) {
     return "";
   }
