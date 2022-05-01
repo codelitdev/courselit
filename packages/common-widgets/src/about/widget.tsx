@@ -4,7 +4,7 @@ import {
   RichText as TextEditor,
   Section,
 } from "@courselit/components-library";
-import Settings from "./settings2";
+import Settings from "./settings";
 import { Box, Grid } from "@mui/material";
 import type { WidgetProps } from "@courselit/common-models";
 
