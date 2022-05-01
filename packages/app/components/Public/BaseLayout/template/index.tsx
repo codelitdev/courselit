@@ -101,12 +101,12 @@ const Template = (props: TemplateProps) => {
       <div className={classes.footerContainer}>
         <Grid container direction="row" className={classes.footer} spacing={0}>
           {layout.footerLeft.length > 0 && (
-            <Grid item direction="column" xs={12} md={6}>
+            <Grid item xs={12} md={6}>
               <Section name="footerLeft" />
             </Grid>
           )}
           {layout.footerRight.length > 0 && (
-            <Grid item direction="column" xs={12} md={6}>
+            <Grid item xs={12} md={6}>
               <Section name="footerRight" />
             </Grid>
           )}
