@@ -95,7 +95,7 @@ const Root = styled("div")(({ theme }: { theme: any }) => ({
   },
 }));
 
-const DrawerContent = dynamic(() => import("./drawer-content2"));
+const DrawerContent = dynamic(() => import("./drawer-content"));
 
 interface ScaffoldProps {
   children: ReactChildren;
