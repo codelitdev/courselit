@@ -2,7 +2,7 @@ import React, { ReactChildren } from "react";
 import { connect } from "react-redux";
 import Head from "next/head";
 import Template from "./template";
-import Scaffold from "./Scaffold";
+import Scaffold from "./scaffold2";
 import type { AppState } from "@courselit/state-management";
 
 interface MasterLayoutProps {
