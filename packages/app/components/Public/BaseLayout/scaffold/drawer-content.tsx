@@ -28,7 +28,7 @@ const Root = styled("div")(({ theme }: { theme: any }) => ({
   },
 }));
 
-const MenuItem = dynamic(() => import("./menu-item2"));
+const MenuItem = dynamic(() => import("./menu-item"));
 const Branding = dynamic(() => import("../branding"));
 
 interface DrawerContentProps {
