@@ -5,7 +5,7 @@ import {
   Section,
 } from "@courselit/components-library";
 import { Button, Grid, Typography } from "@mui/material";
-import Settings from "./settings";
+import Settings from "./settings2";
 import type { WidgetProps } from "@courselit/common-models";
 
 export interface AboutWidgetProps extends WidgetProps {
