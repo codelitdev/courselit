@@ -1,6 +1,6 @@
 {
   "name": "@courselit/app",
-  "version": "0.17.13",
+  "version": "0.17.14",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -11,12 +11,12 @@
   },
   "dependencies": {
     "@courselit/common-models": "^0.17.12",
-    "@courselit/common-widgets": "^0.17.13",
-    "@courselit/components-library": "^0.17.13",
+    "@courselit/common-widgets": "^0.17.14",
+    "@courselit/components-library": "^0.17.14",
     "@courselit/state-management": "^0.17.12",
     "@courselit/thumbnail": "^0.17.0",
     "@courselit/utils": "^0.17.12",
-    "@courselit/widget-buttondown": "^0.17.13",
+    "@courselit/widget-buttondown": "^0.17.14",
     "@emotion/cache": "^11.7.1",
     "@emotion/react": "^11.8.2",
     "@emotion/server": "^11.4.0",
