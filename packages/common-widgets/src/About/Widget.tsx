@@ -1,31 +1,18 @@
 import * as React from "react";
 import {
-  WidgetProps,
   WidgetHelpers,
   RichText as TextEditor,
   Section,
 } from "@courselit/components-library";
-import { connect } from "react-redux";
 import Settings from "./Settings";
-import { makeStyles } from "@material-ui/styles";
-import { Grid, Theme } from "@material-ui/core";
+import { Box, Grid } from "@mui/material";
+import type { WidgetProps } from "@courselit/common-models";
 
-const useStyles = makeStyles((theme: Theme) => ({
-  container: {
-    // padding: theme.spacing(2),
-  },
-}));
-
-export interface AboutWidgetProps extends WidgetProps {
-  dispatch: any;
-}
-
-const Widget = (props: AboutWidgetProps) => {
+const Widget = (props: WidgetProps) => {
   const { fetchBuilder, dispatch, name } = props;
   const [settings, setSettings] = React.useState<Settings>({
     text: TextEditor.emptyState(),
   });
-  const classes = useStyles();
 
   React.useEffect(() => {
     getSettings();
@@ -55,16 +42,19 @@ const Widget = (props: AboutWidgetProps) => {
   };
 
   return (
-    <Grid item xs className={classes.container}>
+    <Grid item xs={12}>
       <Section>
-        <TextEditor initialContentState={settings.text} readOnly={true} />
+        <Box
+          sx={{
+            pl: 2,
+            pr: 2,
+          }}
+        >
+          <TextEditor initialContentState={settings.text} readOnly={true} />
+        </Box>
       </Section>
     </Grid>
   );
 };
 
-const mapDispatchToProps = (dispatch: any) => ({
-  dispatch: dispatch,
-});
-
-export default connect(() => ({}), mapDispatchToProps)(Widget);
+export default Widget;

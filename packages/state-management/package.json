@@ -1,0 +1,46 @@
+{
+  "name": "@courselit/state-management",
+  "version": "0.17.11",
+  "description": "Redux based state management for CourseLit",
+  "author": "Rajat Saxena <hi@rajatsaxena.dev>",
+  "homepage": "https://github.com/codelitdev/courselit#readme",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "directories": {
+    "lib": "src"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.yarnpkg.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codelitdev/courselit.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1",
+    "build": "tsc",
+    "prepublishOnly": "yarn run build"
+  },
+  "bugs": {
+    "url": "https://github.com/codelitdev/courselit/issues"
+  },
+  "dependencies": {
+    "@courselit/common-models": "^0.17.11",
+    "@courselit/utils": "^0.17.11",
+    "base-64": "^1.0.0",
+    "next-redux-wrapper": "^7.0.5",
+    "react-redux": "^8.0.1",
+    "redux": "^4.2.0",
+    "redux-thunk": "^2.4.1"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.18.0",
+    "@typescript-eslint/parser": "^5.18.0",
+    "eslint": "^8.12.0",
+    "typescript": "^4.6.3"
+  }
+}

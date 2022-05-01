@@ -46,6 +46,8 @@ The `widget` and `adminWidget` components receive the following props from the s
 3. **config**: An object containing various configuration settings. Check [this](../packages/app/config/constants.js) file to see what all configurations are available.
 4. **utilities**: An object containing utility functions from the core app. Check [this](../packages/app/lib/utils.js) file to see what all functions are available.
 5. **section**: A name of the section where the widget is being displayed. As a widget can be displayed in multiple sections (if it supports), you can use this value to adapt the styling of the widget.
+6. **state**: The app's state powered by Redux. Equivalent for Redux's `store.getState()`.
+7. **dispatch**: The Redux dispatcher.
 
 ## Metadata
 
@@ -96,26 +98,6 @@ saveWidgetData(widgetData: {
     data: "${JSON.stringify(dataObject).replace(/"/g, '\\"')}"
 }) {}
 ```
-
-## Accessing The Redux Store
-
-Widgets can access app's Redux store. Use something like `react-redux` to interact with the store. Nothing fancy here.
-
-There might be one bit which a widget might be most interested in i.e. the auth JWT (JSON Web Token) which is required to save the widget's data into the system database. To access the token, you can use something like the following.
-
-```js
-import { connect } from "react-redux";
-
-// other code
-
-const mapStateToProps = (state) => ({
-  auth: state.auth,
-});
-
-connect(mapStateToProps)(MyComponent);
-```
-
-Then the auth JWT will become available to your React component at `props.auth.token`.
 
 ## Making Requests To The GraphQL End-points
 

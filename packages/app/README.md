@@ -1,29 +1,34 @@
-# Introduction
+This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-A Material UI based front-end app for [CourseLit Headless CMS](https://www.npmjs.com/package/@courselit/api).
+## Getting Started
 
-## Getting started
+First, run the development server:
 
-Since the app is based on Next.js framework there is no straight forward way to run it. Please follow the below commands.
-
-```
-mv node_modules/@courselit/app/* .
-rm -rf node_modules
-npm install
-npm run build
-npm run start
+```bash
+npm run dev
+# or
+yarn dev
 ```
 
-### Environment variables
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-**API_PREFIX**
+You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
 
-The path where the API is located on the server. Defaults to `/api`.
+[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
 
-**INSECURE**
+The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
 
-If you want to serve the app over HTTP, instead of HTTPS, set this to `true`. Defaults to `false`.
+## Learn More
 
-## Support
+To learn more about Next.js, take a look at the following resources:
 
-Come chat with us in our official [Spectrum chat](https://spectrum.chat/courselit/general).
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
