@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Grid, Typography } from "@mui/material";
 import Image from "./image";
 import type { Course, SiteInfo } from "@courselit/common-models";
-import PriceTag from "./pricetag2";
+import PriceTag from "./pricetag";
 
 const PREFIX = "Course";
 
