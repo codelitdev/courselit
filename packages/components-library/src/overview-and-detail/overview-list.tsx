@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ImageList, ImageListItem, useMediaQuery } from "@mui/material";
 import ComponentProps from "./component-props";
-import Section from "../section";
+import Section from "../section2";
 
 interface OverviewProps {
   componentsMap: ComponentProps[];
