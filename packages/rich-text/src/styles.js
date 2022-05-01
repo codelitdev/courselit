@@ -55,6 +55,7 @@ export default {
     marginBottom: 16,
     fontSize: "1.2em",
     overflowWrap: "anywhere",
+    wordBreak: "break-word",
   },
   blockquote: {
     fontStyle: "italic",

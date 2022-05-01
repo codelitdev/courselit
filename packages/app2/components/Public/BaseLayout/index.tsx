@@ -1,7 +1,7 @@
 import React, { ReactChildren } from "react";
 import { connect } from "react-redux";
 import Head from "next/head";
-import Template from "./Template";
+import Template from "./template";
 import Scaffold from "./Scaffold";
 import type { AppState } from "@courselit/state-management";
 

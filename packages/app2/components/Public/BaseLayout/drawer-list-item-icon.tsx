@@ -1,7 +1,7 @@
 import React from "react";
-import { styled } from "@mui/material/styles";
-import PropTypes from "prop-types";
+import { styled } from "@mui/system";
 import { Grid, ListItemIcon } from "@mui/material";
+
 const PREFIX = "DrawerListItemIcon";
 
 const classes = {
@@ -14,7 +14,15 @@ const StyledGrid = styled(Grid)({
   },
 });
 
-const DrawerListItemIcon = ({ icon, right = false }) => {
+interface DrawerListItemIconProps {
+  icon: React.Component;
+  right: boolean;
+}
+
+const DrawerListItemIcon = ({
+  icon,
+  right = false,
+}: DrawerListItemIconProps) => {
   return (
     <StyledGrid item>
       <ListItemIcon className={right ? classes.rightIcon : ""}>
@@ -22,11 +30,6 @@ const DrawerListItemIcon = ({ icon, right = false }) => {
       </ListItemIcon>
     </StyledGrid>
   );
-};
-
-DrawerListItemIcon.propTypes = {
-  icon: PropTypes.object.isRequired,
-  right: PropTypes.bool,
 };
 
 export default DrawerListItemIcon;

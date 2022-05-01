@@ -28,7 +28,6 @@ const classes = {
   creatorName: `${PREFIX}-creatorName`,
   enrollmentArea: `${PREFIX}-enrollmentArea`,
   enrollmentAreaPriceTag: `${PREFIX}-enrollmentAreaPriceTag`,
-  content: `${PREFIX}-content`,
 };
 
 const StyledSection = styled(Section)(({ theme }: { theme: any }) => ({
@@ -59,10 +58,6 @@ const StyledSection = styled(Section)(({ theme }: { theme: any }) => ({
   },
 
   [`& .${classes.enrollmentAreaPriceTag}`]: {},
-
-  [`& .${classes.content}`]: {
-    marginTop: theme.spacing(4),
-  },
 }));
 
 const BuyButton = dynamic(() => import("./Checkout"));
@@ -75,8 +70,8 @@ interface ArticleProps {
 }
 
 interface ArticleOptionsProps {
-  showAttribution: boolean;
-  showEnrollmentArea: boolean;
+  showAttribution?: boolean;
+  showEnrollmentArea?: boolean;
 }
 
 const Article = (props: ArticleProps) => {
@@ -91,14 +86,23 @@ const Article = (props: ArticleProps) => {
 
   return (
     <StyledSection>
-      <article>
-        <header>
-          <Typography variant="h2" className={classes.header}>
+      <Grid
+        container
+        component="article"
+        direction="column"
+        spacing={2}
+        sx={{
+          padding: 2,
+        }}
+      >
+        <Grid item component="header">
+          <Typography variant="h4" className={classes.header}>
             {course.title}
           </Typography>
-        </header>
+        </Grid>
         {options.showAttribution && (
           <Grid
+            item
             container
             className={classes.creatorcard}
             direction="column"
@@ -117,17 +121,19 @@ const Article = (props: ArticleProps) => {
           </Grid>
         )}
         {course.featuredImage && (
-          <Image
-            alt={course.featuredImage.caption}
-            src={course.featuredImage.file}
-          />
+          <Grid item>
+            <Image
+              alt={course.featuredImage.caption}
+              src={course.featuredImage.file!}
+            />
+          </Grid>
         )}
         {options.showEnrollmentArea &&
           (profile.fetched
             ? !profile.purchases.includes(course.id) &&
               checkPermission(profile.permissions, [permissions.enrollInCourse])
             : true) && (
-            <div className={classes.enrollmentArea}>
+            <Grid item className={classes.enrollmentArea}>
               <Grid
                 container
                 direction="row"
@@ -145,17 +151,17 @@ const Article = (props: ArticleProps) => {
                   <BuyButton course={course} />
                 </Grid>
               </Grid>
-            </div>
+            </Grid>
           )}
         {courseDescriptionHydrated && process.browser && (
-          <div className={classes.content}>
+          <Grid item>
             <TextEditor
               initialContentState={courseDescriptionHydrated}
               readOnly={true}
             />
-          </div>
+          </Grid>
         )}
-        <Grid container alignItems="center" spacing={1}>
+        <Grid item container alignItems="center" spacing={1}>
           <Grid item>
             <Typography variant="h6">Tags </Typography>
           </Grid>
@@ -167,7 +173,7 @@ const Article = (props: ArticleProps) => {
             ))}
           </Grid>
         </Grid>
-      </article>
+      </Grid>
     </StyledSection>
   );
 };

@@ -3,7 +3,7 @@
  */
 
 import React from "react";
-import { styled } from "@mui/material/styles";
+import { styled } from "@mui/system";
 import { Link, Grid, Typography } from "@mui/material";
 import dynamic from "next/dynamic";
 import { connect } from "react-redux";

@@ -1,5 +1,5 @@
 import React from "react";
-import { styled } from "@mui/material/styles";
+import { styled } from "@mui/system";
 import { connect } from "react-redux";
 import { List } from "@mui/material";
 import dynamic from "next/dynamic";
@@ -21,7 +21,7 @@ const classes = {
 };
 
 // TODO jss-to-styled codemod: The Fragment root was replaced by div. Change the tag if needed.
-const Root = styled("div")(({ theme }) => ({
+const Root = styled("div")(({ theme }: { theme: any }) => ({
   [`& .${classes.branding}`]: {
     paddingLeft: theme.spacing(2),
     paddingRight: theme.spacing(2),
@@ -29,7 +29,7 @@ const Root = styled("div")(({ theme }) => ({
 }));
 
 const MenuItem = dynamic(() => import("./MenuItem"));
-const Branding = dynamic(() => import("../Branding"));
+const Branding = dynamic(() => import("../branding"));
 
 interface DrawerContentProps {
   navigation: Link[];

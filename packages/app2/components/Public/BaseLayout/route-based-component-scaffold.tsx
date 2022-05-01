@@ -1,5 +1,5 @@
 import React, { useState /* useEffect */ } from "react";
-import { styled } from "@mui/material/styles";
+import { styled } from "@mui/system";
 import AppBar from "@mui/material/AppBar";
 import CssBaseline from "@mui/material/CssBaseline";
 import Drawer from "@mui/material/Drawer";
@@ -11,8 +11,8 @@ import { Menu } from "@mui/icons-material";
 import { Toolbar, Grid, LinearProgress, Typography } from "@mui/material";
 import { useTheme } from "@mui/material";
 import AppToast from "../../AppToast";
-import DrawerListItemIcon from "./DrawerListItemIcon.js";
-import Header from "./Header";
+import DrawerListItemIcon from "./drawer-list-item-icon";
+import Header from "./header";
 import { connect } from "react-redux";
 // import useMediaQuery from "@mui/material/useMediaQuery";
 import { useRouter } from "next/router";
@@ -129,7 +129,7 @@ const Root = styled("div")(({ theme }: { theme: any }) => ({
   },
 }));
 
-const Branding = dynamic(() => import("./Branding"));
+const Branding = dynamic(() => import("./branding"));
 
 const ComponentScaffold = (props: any) => {
   const theme = useTheme();

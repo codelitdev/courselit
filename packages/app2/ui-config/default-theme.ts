@@ -7,7 +7,7 @@ const Theme = {
   },
   drawer: {},
   footerContainer: {
-    marginTop: 16,
+    // marginTop: 16,
   },
   footer: {},
   section: {

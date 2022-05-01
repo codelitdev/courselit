@@ -17,8 +17,8 @@ import {
   Typography,
 } from "@mui/material";
 import AppToast from "../../AppToast";
-import DrawerListItemIcon from "./DrawerListItemIcon";
-import Header from "./Header";
+import DrawerListItemIcon from "./drawer-list-item-icon";
+import Header from "./header";
 import { connect } from "react-redux";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import dynamic from "next/dynamic";
@@ -38,7 +38,6 @@ const classes = {
   activeItem: `${PREFIX}-activeItem`,
   visitSiteLink: `${PREFIX}-visitSiteLink`,
   contentMain: `${PREFIX}-contentMain`,
-  contentPadding: `${PREFIX}-contentPadding`,
   showprogress: `${PREFIX}-showprogress`,
   hideprogress: `${PREFIX}-hideprogress`,
   menuTitle: `${PREFIX}-menuTitle`,
@@ -113,10 +112,6 @@ const Root = styled("div")(({ theme }: { theme: any }) => ({
     theme.body
   ),
 
-  [`& .${classes.contentPadding}`]: {
-    padding: theme.spacing(2),
-  },
-
   [`& .${classes.hideprogress}`]: {
     visibility: "hidden",
   },
@@ -139,7 +134,7 @@ const Root = styled("div")(({ theme }: { theme: any }) => ({
   },
 }));
 
-const Branding = dynamic(() => import("./Branding"));
+const Branding = dynamic(() => import("./branding"));
 
 const drawerWidth = 240;
 
@@ -292,7 +287,7 @@ const ComponentScaffold = (props: ComponentScaffoldProps) => {
             props.networkAction ? classes.showprogress : classes.hideprogress
           }
         />
-        <Grid container className={classes.contentPadding}>
+        <Grid container>
           <Grid item xs={12} className={classes.contentMain}>
             {visibleComponent}
           </Grid>

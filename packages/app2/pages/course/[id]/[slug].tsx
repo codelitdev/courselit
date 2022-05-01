@@ -20,7 +20,7 @@ const LessonViewer = dynamic(
 );
 const AppError = dynamic(() => import("../../../components/AppError"));
 const ComponentScaffold = dynamic(
-  () => import("../../../components/Public/BaseLayout/ComponentScaffold")
+  () => import("../../../components/Public/BaseLayout/component-scaffold")
 );
 
 interface CourseProps {

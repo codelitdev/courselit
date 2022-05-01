@@ -69,7 +69,7 @@ const Editor = (props) => {
           wrapper: <Blockquote style={props.theme.blockquote} />,
         },
         "code-block": {
-          element: "pre",
+          element: "p",
           wrapper: <Code style={props.theme.code} />,
         },
         atomic: {

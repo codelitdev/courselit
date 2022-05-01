@@ -20,7 +20,7 @@ const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
   },
 }));
 
-const Branding = dynamic(() => import("./Branding"));
+const Branding = dynamic(() => import("./branding"));
 
 interface HeaderProps {}
 

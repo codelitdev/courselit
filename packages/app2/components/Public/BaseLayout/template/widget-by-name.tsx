@@ -1,16 +1,15 @@
 import React from "react";
-import widgets from "../../../ui-config/widgets";
+import widgets from "../../../../ui-config/widgets";
 import { FetchBuilder } from "@courselit/utils";
-import * as config from "../../../ui-config/constants";
-import * as utilities from "../../../ui-lib/utils";
+import * as config from "../../../../ui-config/constants";
+import * as utilities from "../../../../ui-lib/utils";
 import { connect } from "react-redux";
 import type { AppState, AppDispatch } from "@courselit/state-management";
-import { FREE_COST } from "../../../ui-config/strings";
+import { FREE_COST } from "../../../../ui-config/strings";
 
 interface WidgetByNameProps {
   name: string;
   section: string;
-  address: any;
   state: AppState;
   dispatch: AppDispatch;
 }
@@ -18,7 +17,6 @@ interface WidgetByNameProps {
 const WidgetByName = ({
   name,
   section,
-  address,
   state,
   dispatch,
 }: WidgetByNameProps) => {

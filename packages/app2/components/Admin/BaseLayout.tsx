@@ -16,7 +16,7 @@ import AppLoader from "../../components/AppLoader";
 import Head from "next/head";
 import { canAccessDashboard, checkPermission } from "../../ui-lib/utils";
 import { Grid } from "@mui/material";
-import RouteBasedComponentScaffold from "../Public/BaseLayout/RouteBasedComponentScaffold";
+import RouteBasedComponentScaffold from "../Public/BaseLayout/route-based-component-scaffold";
 import constants from "../../config/constants";
 import type Profile from "../../ui-models/profile";
 import State from "../../ui-models/state";

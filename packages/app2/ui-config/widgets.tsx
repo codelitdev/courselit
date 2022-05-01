@@ -1,18 +1,25 @@
 // import buttondown from "@courselit/widget-buttondown";
-import CommonWidgets from "@courselit/common-widgets";
+import {
+  About,
+  TaggedContent,
+  Branding,
+  FooterMenu,
+} from "@courselit/common-widgets";
 
-const getAllWidgets = (): Record<string, any> => {
+function loadWidgets(): Record<string, any> {
   const widgets: Record<string, any> = {};
 
   // Add common widgets to CourseLit
-  for (const widget of CommonWidgets) {
-    widgets[widget.metadata.name] = widget;
-  }
+  widgets[About.metadata.name] = About;
+  widgets[TaggedContent.metadata.name] = TaggedContent;
+  widgets[Branding.metadata.name] = Branding;
+  widgets[FooterMenu.metadata.name] = FooterMenu;
 
   // Additional widgets are added here
-  //   widgets[buttondown.metadata.name] = buttondown;
+  // widgets[buttondown.metadata.name] = buttondown;
 
   return widgets;
-};
+}
 
-export default getAllWidgets();
+const widgets = loadWidgets();
+export default widgets;

@@ -2,7 +2,7 @@ import React, { ReactChildren } from "react";
 import { styled } from "@mui/system";
 import { Grid, useTheme } from "@mui/material";
 import { useRouter } from "next/router";
-import Section from "./Section";
+import Section from "./section";
 import { connect } from "react-redux";
 import { AppState } from "@courselit/state-management";
 import { Layout } from "@courselit/common-models";
@@ -27,23 +27,9 @@ const Root = styled("div")(({ theme }: { theme: any }) => ({
     theme.body
   ),
 
-  [`& .${classes.footerContainer}`]: Object.assign(
-    {},
-    {
-      marginTop: theme.spacing(4),
-    },
-    theme.footerContainer
-  ),
+  [`& .${classes.footerContainer}`]: Object.assign({}, theme.footerContainer),
 
-  [`& .${classes.footer}`]: Object.assign(
-    {},
-    {
-      margin: "0 auto",
-      paddingTop: theme.spacing(4),
-      paddingBottom: theme.spacing(4),
-    },
-    theme.footer
-  ),
+  [`& .${classes.footer}`]: Object.assign({}, theme.footer),
 
   [`& .${classes.padding}`]: {
     padding: theme.spacing(2),
@@ -110,28 +96,20 @@ const Template = (props: TemplateProps) => {
           </Grid>
         </Grid>
       </Grid>
+
       {/** Footer */}
       <div className={classes.footerContainer}>
-        <Grid container spacing={0}>
-          <Grid item xs={12}>
-            <Grid
-              container
-              direction="row"
-              className={classes.footer}
-              spacing={0}
-            >
-              {layout.footerLeft.length > 0 && (
-                <Grid container item direction="column" xs={12} md={6}>
-                  <Section name="footerLeft" />
-                </Grid>
-              )}
-              {layout.footerRight.length > 0 && (
-                <Grid container item direction="column" xs={12} md={6}>
-                  <Section name="footerRight" />
-                </Grid>
-              )}
+        <Grid container direction="row" className={classes.footer} spacing={0}>
+          {layout.footerLeft.length > 0 && (
+            <Grid item direction="column" xs={12} md={6}>
+              <Section name="footerLeft" />
             </Grid>
-          </Grid>
+          )}
+          {layout.footerRight.length > 0 && (
+            <Grid item direction="column" xs={12} md={6}>
+              <Section name="footerRight" />
+            </Grid>
+          )}
         </Grid>
       </div>
     </Root>
