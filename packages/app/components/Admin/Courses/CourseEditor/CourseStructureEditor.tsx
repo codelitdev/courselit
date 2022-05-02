@@ -58,7 +58,7 @@ const CourseStructureEditor = ({
 }: CourseStructureEditorProps) => {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [groups, setGroups] = useState<any>([]);
-  const [selectedLesson, setSelectedLesson] = useState<Lesson>({});
+  const [selectedLesson, setSelectedLesson] = useState<Lesson>({} as Lesson);
 
   useEffect(() => {
     if (courseId) {
@@ -189,7 +189,7 @@ const CourseStructureEditor = ({
 
   const onLessonUpdated = async (lessonDeleted = false) => {
     if (lessonDeleted) {
-      setSelectedLesson({});
+      setSelectedLesson({} as Lesson);
     }
 
     await loadLessonsAndGroups();
@@ -240,9 +240,9 @@ const CourseStructureEditor = ({
   };
 
   const onSelectLesson = (groupId: number, index: number) => {
-    const lesson = lessons.filter((lesson) => lesson.groupId === groupId)[
-      index
-    ];
+    const lesson = lessons.filter(
+      (lesson) => parseInt(lesson.groupId) === groupId
+    )[index];
     setSelectedLesson(Object.assign({}, lesson, { index }));
   };
 
@@ -300,7 +300,9 @@ const CourseStructureEditor = ({
                         onRemoveGroup={onRemoveGroup}
                         updateGroup={updateGroup}
                         onSelectLesson={onSelectLesson}
-                        selectedLesson={selectedLesson}
+                        selectedLesson={Object.assign(selectedLesson, {
+                          index,
+                        })}
                       />
                     ))}
                 </Grid>
