@@ -1,8 +1,8 @@
 import dynamic from "next/dynamic";
 import { USERS_MANAGER_PAGE_HEADING } from "../../ui-config/strings";
 
-const BaseLayout = dynamic(() => import("../../components/Admin/BaseLayout"));
-const Users = dynamic(() => import("../../components/Admin/Users"));
+const BaseLayout = dynamic(() => import("../../components/Admin/base-layout"));
+const Users = dynamic(() => import("../../components/Admin/users"));
 
 export default function SiteUsers() {
   return (

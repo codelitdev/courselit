@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { MANAGE_COURSES_PAGE_HEADING } from "../../../../ui-config/strings";
 
 const BaseLayout = dynamic(
-  () => import("../../../../components/Admin/BaseLayout")
+  () => import("../../../../components/Admin/base-layout")
 );
 const CourseEditor = dynamic(
   () => import("../../../../components/Admin/courses/course-editor")
