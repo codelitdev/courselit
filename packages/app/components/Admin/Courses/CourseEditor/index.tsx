@@ -107,16 +107,16 @@ const CourseEditor = (props: CourseEditorProps) => {
   }, [props.courseId]);
 
   // For privacy dropdown
-  const inputLabel = React.useRef(null);
+  const inputLabel: React.RefObject<HTMLInputElement> = React.useRef(null);
   const [labelWidth, setLabelWidth] = React.useState(0);
   useEffect(() => {
-    setLabelWidth(inputLabel.current.offsetWidth);
+    setLabelWidth(inputLabel.current!.offsetWidth);
   }, []);
 
   // To clear the error, call setError().
   const setError = (msg = "") => setUserError(msg);
 
-  const onCourseCreate = async (e) => {
+  const onCourseCreate = async (e: any) => {
     e.preventDefault();
     setError();
 
