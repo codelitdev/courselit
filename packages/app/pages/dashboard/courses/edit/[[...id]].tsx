@@ -3,10 +3,10 @@ import { useRouter } from "next/router";
 import { MANAGE_COURSES_PAGE_HEADING } from "../../../../ui-config/strings";
 
 const BaseLayout = dynamic(
-  () => import("../../../../components/Admin/base-layout")
+  () => import("../../../../components/admin2/base-layout")
 );
 const CourseEditor = dynamic(
-  () => import("../../../../components/Admin/courses/course-editor")
+  () => import("../../../../components/admin2/courses/course-editor")
 );
 
 export default function CreatorCourses() {
