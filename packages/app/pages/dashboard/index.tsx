@@ -1,4 +1,4 @@
-import BaseLayout from "../../components/admin2/base-layout";
+import BaseLayout from "../../components/admin/base-layout";
 
 export default function Dashboard() {
   return <BaseLayout />;
