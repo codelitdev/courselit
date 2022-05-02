@@ -12,7 +12,7 @@ import {
   List,
 } from "@mui/icons-material";
 import { CREATOR_AREA_PAGE_TITLE } from "../../ui-config/strings";
-import AppLoader from "../../components/AppLoader";
+import AppLoader from "../AppLoader";
 import Head from "next/head";
 import { canAccessDashboard, checkPermission } from "../../ui-lib/utils";
 import { Grid } from "@mui/material";

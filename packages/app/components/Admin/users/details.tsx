@@ -9,7 +9,7 @@ import {
 import { FetchBuilder } from "@courselit/utils";
 import { AppMessage } from "@courselit/common-models";
 import { Section } from "@courselit/components-library";
-import PermissionsEditor from "./PermissionsEditor";
+import PermissionsEditor from "./permissions-editor";
 import type { Address, Auth } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";

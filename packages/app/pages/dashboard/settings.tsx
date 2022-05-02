@@ -1,8 +1,8 @@
 import dynamic from "next/dynamic";
 import { SITE_SETTINGS_PAGE_HEADING } from "../../ui-config/strings";
 
-const BaseLayout = dynamic(() => import("../../components/Admin/BaseLayout"));
-const Settings = dynamic(() => import("../../components/Admin/Settings"));
+const BaseLayout = dynamic(() => import("../../components/Admin/base-layout"));
+const Settings = dynamic(() => import("../../components/Admin/settings"));
 
 export default function SiteUsers() {
   return (

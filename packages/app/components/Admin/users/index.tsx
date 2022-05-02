@@ -30,7 +30,7 @@ const StyledOverviewAndDetail = styled(OverviewAndDetail)(() => ({
 }));
 
 const Img = dynamic(() => import("../../Img"));
-const Details = dynamic(() => import("./Details"));
+const Details = dynamic(() => import("./details"));
 
 interface UserManagerProps {
   auth: Auth;
