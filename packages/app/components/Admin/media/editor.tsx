@@ -23,7 +23,7 @@ import { responses } from "../../../config/strings";
 const { networkAction, setAppMessage } = actionCreators;
 
 const AppDialog = dynamic(() => import("../../Public/AppDialog"));
-const MediaPreview = dynamic(() => import("./MediaPreview"));
+const MediaPreview = dynamic(() => import("./media-preview"));
 
 interface EditorProps {
   auth: Auth;

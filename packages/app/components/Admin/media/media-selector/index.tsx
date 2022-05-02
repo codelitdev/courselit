@@ -20,7 +20,7 @@ const StyledGrid = styled(Grid)(() => ({
   },
 }));
 
-const MediaManagerDialog = dynamic(() => import("./MediaManagerDialog"));
+const MediaManagerDialog = dynamic(() => import("./media-manager-dialog"));
 
 interface MediaSelectorProps {
   title: string;

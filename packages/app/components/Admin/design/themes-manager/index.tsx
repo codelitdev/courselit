@@ -23,7 +23,7 @@ import {
 } from "../../../../ui-config/strings";
 import { THEMES_REPO } from "../../../../ui-config/constants";
 import { Section } from "@courselit/components-library";
-import ThemeItem from "./ThemeItem";
+import ThemeItem from "./theme-item";
 import type { Address } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 
