@@ -8,8 +8,8 @@ import { Section } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 import State from "../../../ui-models/state";
 import Profile from "../../../ui-models/profile";
-const ThemesManager = dynamic(() => import("./ThemesManager"));
-const LayoutManager = dynamic(() => import("./LayoutManager"));
+const ThemesManager = dynamic(() => import("./themes-manager"));
+const LayoutManager = dynamic(() => import("./layout-manager"));
 
 const { permissions } = constants;
 

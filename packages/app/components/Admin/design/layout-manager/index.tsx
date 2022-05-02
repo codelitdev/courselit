@@ -102,8 +102,8 @@ const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
   [`& .${classes.footer}`]: Object.assign({}, theme.footer),
 }));
 
-const AddComponentDialog = dynamic(() => import("./AddComponentDialog"));
-const AddedComponent = dynamic(() => import("./AddedComponent"));
+const AddComponentDialog = dynamic(() => import("./add-component-dialog"));
+const AddedComponent = dynamic(() => import("./added-component"));
 
 interface PageDesignerProps {
   layout: Layout;

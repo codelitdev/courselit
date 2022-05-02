@@ -87,7 +87,7 @@ const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
   },
 }));
 
-const MediaSelector = dynamic(() => import("./Media/MediaSelector"));
+const MediaSelector = dynamic(() => import("./media/media-selector"));
 
 interface SettingsProps {
   siteinfo: SiteInfo;

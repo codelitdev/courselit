@@ -94,7 +94,7 @@ const StyledSection = styled(Section)(({ theme }: { theme: any }) => ({
 }));
 
 const AppDialog = dynamic(() => import("../../Public/AppDialog"));
-const MediaSelector = dynamic(() => import("../Media/MediaSelector"));
+const MediaSelector = dynamic(() => import("../media/media-selector"));
 const AppLoader = dynamic(() => import("../../AppLoader"));
 
 interface LessonEditorProps {

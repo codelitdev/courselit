@@ -13,7 +13,7 @@ import {
   DIALOG_SELECT_BUTTON,
   BUTTON_CANCEL_TEXT,
 } from "../../../../ui-config/strings";
-import CompatibleComponentsMap from "./CompatibleComponentsMap";
+import CompatibleComponentsMap from "./compatible-components-map";
 import CompatibleComponentsMapModel from "../../../../ui-models/compatible-components-map";
 
 interface AddComponentDialogProps {

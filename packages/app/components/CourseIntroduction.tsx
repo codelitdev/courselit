@@ -2,7 +2,7 @@ import React from "react";
 import dynamic from "next/dynamic";
 import { Course } from "@courselit/common-models";
 
-const Article = dynamic(() => import("./Public/article"));
+const Article = dynamic(() => import("./Public/article2"));
 
 interface CourseIntroductionProps {
   course: Course;
