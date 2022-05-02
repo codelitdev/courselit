@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.17.27](https://github.com/codelitdev/courselit/compare/v0.17.26...v0.17.27) (2022-05-02)
+
+**Note:** Version bump only for package @courselit/state-management
+
+
+
+
+
 ## [0.17.25](https://github.com/codelitdev/courselit/compare/v0.17.24...v0.17.25) (2022-05-01)
 
 **Note:** Version bump only for package @courselit/state-management
