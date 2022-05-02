@@ -6,7 +6,7 @@ const BaseLayout = dynamic(
   () => import("../../../../components/Admin/BaseLayout")
 );
 const CourseEditor = dynamic(
-  () => import("../../../../components/Admin/Courses/CourseEditor")
+  () => import("../../../../components/Admin/Courses/course-editor2")
 );
 
 export default function CreatorCourses() {
