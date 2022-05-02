@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.17.30](https://github.com/codelitdev/courselit/compare/v0.17.29...v0.17.30) (2022-05-02)
+
+**Note:** Version bump only for package @courselit/components-library
+
+
+
+
+
 ## [0.17.29](https://github.com/codelitdev/courselit/compare/v0.17.28...v0.17.29) (2022-05-02)
 
 **Note:** Version bump only for package @courselit/components-library
