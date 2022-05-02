@@ -38,7 +38,7 @@ const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
   },
 }));
 
-const LessonEditor = dynamic(() => import("../LessonEditor"));
+const LessonEditor = dynamic(() => import("../lesson-editor"));
 const Group = dynamic(() => import("./group"));
 
 interface CourseStructureEditorProps {
