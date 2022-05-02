@@ -39,7 +39,7 @@ jobs:
 
       - name: Publish package
         run: |
-          yarn lerna version --force-publish --yes
+          yarn lerna version --conventional-graduate --yes
           yarn lerna publish from-git --yes
         env:
           GH_TOKEN: ${{ secrets.PAT }}
