@@ -10,7 +10,7 @@ import dynamic from "next/dynamic";
 import type { Address, Widget } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 
-const Img = dynamic(() => import("../../Img"));
+const Img = dynamic(() => import("../../img"));
 
 interface WidgetProps {
   address: Address;

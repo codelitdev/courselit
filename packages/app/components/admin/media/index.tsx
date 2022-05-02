@@ -39,7 +39,7 @@ const StyledOverviewAndDetail = styled(OverviewAndDetail)(
 const Upload = dynamic(() => import("./upload"));
 const Editor = dynamic(() => import("./editor"));
 const MediaPreview = dynamic(() => import("./media-preview"));
-const Img = dynamic(() => import("../../Img"));
+const Img = dynamic(() => import("../../img"));
 
 interface IndexProps {
   auth: Auth;

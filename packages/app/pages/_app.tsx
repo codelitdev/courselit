@@ -18,7 +18,7 @@ import type { State } from "@courselit/common-models";
 import { AnyAction } from "redux";
 import { ThunkDispatch } from "redux-thunk";
 import { actionCreators } from "@courselit/state-management";
-import CodeInjector from "../components/Public/CodeInjector";
+import CodeInjector from "../components/public/code-injector";
 import { DefaultTheme } from "@mui/private-theming";
 
 type CourseLitProps = AppProps & {

@@ -8,9 +8,9 @@ import type { AppState } from "@courselit/state-management";
 import dynamic from "next/dynamic";
 
 const BaseLayout = dynamic(
-  () => import("../../../components/Public/BaseLayout")
+  () => import("../../../components/public/base-layout")
 );
-const Article = dynamic(() => import("../../../components/Public/article"));
+const Article = dynamic(() => import("../../../components/public/article"));
 
 interface PostProps {
   siteInfo: SiteInfo;

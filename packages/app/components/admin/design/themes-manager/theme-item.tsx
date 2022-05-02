@@ -10,7 +10,7 @@ import {
   DELETE_THEME_POPUP_HEADER,
   APPLY_THEME_POPUP_HEADER,
 } from "../../../../ui-config/strings";
-import AppDialog from "../../../Public/AppDialog";
+import AppDialog from "../../../public/app-dialog";
 import Theme from "../../../../ui-models/theme";
 
 const PREFIX = "ThemeItem";

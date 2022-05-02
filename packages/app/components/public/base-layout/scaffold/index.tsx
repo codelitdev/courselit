@@ -8,7 +8,7 @@ import IconButton from "@mui/material/IconButton";
 import { Menu } from "@mui/icons-material";
 import { LinearProgress, Toolbar } from "@mui/material";
 import { useTheme } from "@mui/material";
-import AppToast from "../../../AppToast";
+import AppToast from "../../../app-toast";
 import { connect } from "react-redux";
 import Header from "../header";
 import dynamic from "next/dynamic";

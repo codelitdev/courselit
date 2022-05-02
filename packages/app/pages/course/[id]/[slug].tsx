@@ -13,14 +13,14 @@ import type { AppState } from "@courselit/state-management";
 import { Address, Lesson, Profile, SiteInfo } from "@courselit/common-models";
 
 const CourseIntroduction = dynamic(
-  () => import("../../../components/CourseIntroduction")
+  () => import("../../../components/course-introduction")
 );
 const LessonViewer = dynamic(
-  () => import("../../../components/Public/LessonViewer")
+  () => import("../../../components/public/lesson-viewer")
 );
-const AppError = dynamic(() => import("../../../components/AppError"));
+const AppError = dynamic(() => import("../../../components/app-error"));
 const ComponentScaffold = dynamic(
-  () => import("../../../components/Public/BaseLayout/component-scaffold")
+  () => import("../../../components/public/base-layout/component-scaffold")
 );
 
 interface CourseProps {
