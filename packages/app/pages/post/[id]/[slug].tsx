@@ -10,7 +10,7 @@ import dynamic from "next/dynamic";
 const BaseLayout = dynamic(
   () => import("../../../components/Public/BaseLayout")
 );
-const Article = dynamic(() => import("../../../components/Public/article2"));
+const Article = dynamic(() => import("../../../components/Public/article"));
 
 interface PostProps {
   siteInfo: SiteInfo;
