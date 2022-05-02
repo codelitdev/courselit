@@ -39,11 +39,7 @@ const Courses = (props: CoursesProps) => {
     <BaseLayout title={path}>
       <Grid
         item
-        xs={12}
-        sx={{
-          padding: 2,
-        }}
-      >
+        xs={12}>
         <Section>
           <Grid container spacing={2}>
             <Grid item container>
