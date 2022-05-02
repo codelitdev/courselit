@@ -4,7 +4,7 @@ import { HEADER_NAVIGATION } from "../../../ui-config/strings";
 import { Section } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 
-const NavigationLinks = dynamic(() => import("./Links"));
+const NavigationLinks = dynamic(() => import("./links"));
 
 const Navigation = (props: Record<string, unknown>) => {
   return (
