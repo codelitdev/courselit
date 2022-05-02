@@ -10,7 +10,7 @@ import ListItem from "@mui/material/ListItem";
 import { Menu } from "@mui/icons-material";
 import { Toolbar, Grid, LinearProgress, Typography } from "@mui/material";
 import { useTheme } from "@mui/material";
-import AppToast from "../../AppToast";
+import AppToast from "../../app-toast";
 import DrawerListItemIcon from "./drawer-list-item-icon";
 import Header from "./header";
 import { connect } from "react-redux";

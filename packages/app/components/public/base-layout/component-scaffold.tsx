@@ -16,7 +16,7 @@ import {
   ListSubheader,
   Typography,
 } from "@mui/material";
-import AppToast from "../../AppToast";
+import AppToast from "../../app-toast";
 import DrawerListItemIcon from "./drawer-list-item-icon";
 import Header from "./header";
 import { connect } from "react-redux";

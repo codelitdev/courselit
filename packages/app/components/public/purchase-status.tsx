@@ -28,7 +28,7 @@ import { setAppMessage } from "@courselit/state-management/dist/action-creators"
 
 const { networkAction } = actionCreators;
 
-const AppLoader = dynamic(() => import("../AppLoader"));
+const AppLoader = dynamic(() => import("../app-loader"));
 
 interface PurchaseStatusProps {
   auth: Auth;

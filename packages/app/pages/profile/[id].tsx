@@ -23,7 +23,7 @@ import { AppMessage } from "@courselit/common-models";
 import type { State } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
 
-const BaseLayout = dynamic(() => import("../../components/Public/BaseLayout"));
+const BaseLayout = dynamic(() => import("../../components/public/base-layout"));
 
 function Profile({ user, profile, auth, dispatch, address }: any) {
   const isMyProfile = profile && profile.id === user.id;

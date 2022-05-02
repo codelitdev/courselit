@@ -3,7 +3,7 @@ import { styled } from "@mui/system";
 import { Typography, Grid } from "@mui/material";
 import { USER_ERROR_HEADER } from "../ui-config/strings";
 import { Section } from "@courselit/components-library";
-import BaseLayout from "./Public/BaseLayout";
+import BaseLayout from "./public/base-layout";
 
 const PREFIX = "AppError";
 

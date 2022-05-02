@@ -60,7 +60,7 @@ const StyledSection = styled(Section)(({ theme }: { theme: any }) => ({
   [`& .${classes.enrollmentAreaPriceTag}`]: {},
 }));
 
-const BuyButton = dynamic(() => import("./Checkout"));
+const BuyButton = dynamic(() => import("./checkout"));
 
 interface ArticleProps {
   course: Course;

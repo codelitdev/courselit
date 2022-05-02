@@ -17,7 +17,7 @@ import { actionCreators } from "@courselit/state-management";
 import type { ThunkDispatch } from "redux-thunk";
 import type { AnyAction } from "redux";
 
-const BaseLayout = dynamic(() => import("../components/Public/BaseLayout"));
+const BaseLayout = dynamic(() => import("../components/public/base-layout"));
 
 interface LoginProps {
   address: Address;

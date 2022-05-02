@@ -63,7 +63,7 @@ const StyledGrid = styled(Grid)({
   },
 });
 
-const AppDialog = dynamic(() => import("../../../Public/AppDialog"));
+const AppDialog = dynamic(() => import("../../../public/app-dialog"));
 const MediaSelector = dynamic(() => import("../../media/media-selector"));
 const CourseStructureEditor = dynamic(() => import("./course-structure-editor"));
 

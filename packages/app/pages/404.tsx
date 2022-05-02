@@ -1,4 +1,4 @@
-import BaseLayout from "../components/Public/BaseLayout";
+import BaseLayout from "../components/public/base-layout";
 import { Section } from "@courselit/components-library";
 import { Typography } from "@mui/material";
 import { PAGE_TITLE_404 } from "../ui-config/strings";

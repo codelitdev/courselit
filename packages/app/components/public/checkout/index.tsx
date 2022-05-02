@@ -9,8 +9,8 @@ import dynamic from "next/dynamic";
 import { Course, SiteInfo } from "@courselit/common-models";
 import { AppState } from "@courselit/state-management";
 
-const Stripe = dynamic(() => import("./Stripe"));
-const Free = dynamic(() => import("./Free"));
+const Stripe = dynamic(() => import("./stripe"));
+const Free = dynamic(() => import("./free"));
 
 interface CheckoutExternalProps {
   course: Course;

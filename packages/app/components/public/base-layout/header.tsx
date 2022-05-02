@@ -2,7 +2,7 @@ import React from "react";
 import { styled } from "@mui/system";
 import { Theme } from "@mui/material/styles";
 import { Grid } from "@mui/material";
-import SessionButton from "../SessionButton";
+import SessionButton from "../session-button";
 import { useTheme } from "@mui/material";
 import dynamic from "next/dynamic";
 

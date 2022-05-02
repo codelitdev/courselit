@@ -47,7 +47,7 @@ const StyledLink = styled(Link)(({ theme }) => ({
   ),
 }));
 
-const Img = dynamic(() => import("../../Img"));
+const Img = dynamic(() => import("../../img"));
 
 interface BrandingProps {
   siteinfo: typeof defaultState.siteinfo;
