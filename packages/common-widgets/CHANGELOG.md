@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.17.47](https://github.com/codelitdev/courselit/compare/v0.17.46...v0.17.47) (2022-05-03)
+
+**Note:** Version bump only for package @courselit/common-widgets
+
+
+
+
+
 ## [0.17.46](https://github.com/codelitdev/courselit/compare/v0.17.45...v0.17.46) (2022-05-03)
 
 **Note:** Version bump only for package @courselit/common-widgets
