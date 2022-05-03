@@ -1,6 +1,6 @@
 {
   "name": "@courselit/state-management",
-  "version": "0.17.30",
+  "version": "0.17.42",
   "description": "Redux based state management for CourseLit",
   "author": "Rajat Saxena <hi@rajatsaxena.dev>",
   "homepage": "https://github.com/codelitdev/courselit#readme",
@@ -29,7 +29,7 @@
     "url": "https://github.com/codelitdev/courselit/issues"
   },
   "dependencies": {
-    "@courselit/common-models": "^0.17.30",
+    "@courselit/common-models": "^0.17.42",
     "@courselit/utils": "^0.17.30",
     "base-64": "^1.0.0",
     "next-redux-wrapper": "^7.0.5",
