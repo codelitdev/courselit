@@ -26,17 +26,11 @@ jobs:
           username: ${{ secrets.DOCKERNAME }}
           password: ${{ secrets.DOCKERTOKEN }}
 
-      - name: Docker meta for the backend
-        id: metabackend
+      - name: Docker meta for the app
+        id: metaapp
         uses: docker/metadata-action@v3
         with:
-          images: codelit/courselit-backend
-
-      - name: Docker meta for the frontend
-        id: metafrontend
-        uses: docker/metadata-action@v3
-        with:
-          images: codelit/courselit-frontend
+          images: codelit/courselit-app
 
       - name: Docker meta for the proxy
         id: metaproxy
@@ -44,29 +38,17 @@ jobs:
         with:
           images: codelit/courselit-proxy
 
-      - name: Build and push backend
-        id: docker_build_backend
+      - name: Build and push app 
+        id: docker_build_app
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./services/backend/Dockerfile
+          file: ./services/app/Dockerfile
           push: true
-          tags: ${{ steps.metabackend.outputs.tags }}
+          tags: ${{ steps.metaapp.outputs.tags }}
 
       - name: Image digest
-        run: echo ${{ steps.docker_build_backend.outputs.digest }}
-
-      - name: Build and push frontend
-        id: docker_build_frontend
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./services/frontend/Dockerfile
-          push: true
-          tags: ${{ steps.metafrontend.outputs.tags }}
-
-      - name: Image digest
-        run: echo ${{ steps.docker_build_frontend.outputs.digest }}
+        run: echo ${{ steps.docker_build_app.outputs.digest }}
 
       - name: Build and push proxy
         id: docker_build_proxy

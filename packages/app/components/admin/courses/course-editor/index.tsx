@@ -65,7 +65,9 @@ const StyledGrid = styled(Grid)({
 
 const AppDialog = dynamic(() => import("../../../public/app-dialog"));
 const MediaSelector = dynamic(() => import("../../media/media-selector"));
-const CourseStructureEditor = dynamic(() => import("./course-structure-editor"));
+const CourseStructureEditor = dynamic(
+  () => import("./course-structure-editor")
+);
 
 interface CourseEditorProps {
   auth: Auth;
