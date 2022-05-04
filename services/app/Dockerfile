@@ -5,7 +5,7 @@ RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
 # copy files
-COPY packages/app .
+COPY apps/web .
 
 # build the app
 RUN npm install
