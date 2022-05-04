@@ -3,7 +3,7 @@
     "outDir": "./dist",
     "lib": ["ES2015"],
     "noImplicitAny": true,
-    "module": "ES2015",
+    "module": "CommonJS",
     "target": "es5",
     "jsx": "react",
     "moduleResolution": "node",

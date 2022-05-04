@@ -5,7 +5,6 @@
   "author": "Rajat Saxena <hi@rajatsaxena.dev>",
   "homepage": "https://github.com/codelitdev/courselit#readme",
   "license": "MIT",
-  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "directories": {
