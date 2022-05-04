@@ -34,5 +34,3 @@ report*.json
 
 # OS specific files
 .DS_Store
-
-dist
