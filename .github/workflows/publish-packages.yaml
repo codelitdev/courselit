@@ -38,7 +38,13 @@ jobs:
 
       - name: Build packages
         run: |
-          yarn build
+          yarn workspace @courselit/common-models build
+          yarn workspace @courselit/rich-text build
+          yarn workspace @courselit/components-library build
+          yarn workspace @courselit/common-widgets build
+          yarn workspace @courselit/state-management build
+          yarn workspace @courselit/utils build
+          yarn workspace @courselit/widget-buttondown build
 
       - name: Publish package
         run: |
