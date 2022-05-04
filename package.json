@@ -19,7 +19,7 @@
     "lint": "eslint packages",
     "prettier": "prettier --write packages docs *.md",
     "build": "yarn workspaces foreach --exclude @courselit/web run build",
-    "publish": "yarn workspaces foreach --exclude @courselit/web npm publish"
+    "publish": "yarn workspaces foreach --no-private npm publish"
   },
   "packageManager": "yarn@3.2.0"
 }
