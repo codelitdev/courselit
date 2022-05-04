@@ -2,7 +2,8 @@
   "name": "courselit",
   "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "author": {
     "name": "The CodeLit Team",
@@ -17,11 +18,8 @@
   "scripts": {
     "lint": "eslint packages",
     "prettier": "prettier --write packages docs *.md",
-    "lerna": "lerna",
-    "api": "lerna run dev --scope=@courselit/api --stream",
-    "app": "lerna run dev --scope=@courselit/app --stream"
+    "build": "yarn workspaces foreach --exclude @courselit/web run build",
+    "publish": "yarn workspaces foreach --exclude @courselit/web npm publish"
   },
-  "devDependencies": {
-    "lerna": "^4.0.0"
-  }
+  "packageManager": "yarn@3.2.0"
 }
