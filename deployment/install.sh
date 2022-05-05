@@ -60,6 +60,7 @@ EOF
 wget \
     https://raw.githubusercontent.com/codelitdev/courselit/master/deployment/docker/docker-compose.yml \
     -P $CONFIGHOME
+}
 
 function setup_ssl_multitenant () {
     echo "Enter an email to be used for issuing SSL certificates."
@@ -104,22 +105,6 @@ EOF
 }
 
 function setup_ssl () {
-    # Turn off HTTPS by prepending http:// to Caddyfile
-    read -p "Do you want to turn off HTTPS?" -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]
-    then
-    # Activate insecure mode in the config
-    echo "INSECURE=true" >> $CONFIGHOME/.env
-
-cat > $CONFIGHOME/Caddyfile <<EOF
-http://${DOMAIN} {
-	reverse_proxy app:3000
-
-	encode gzip
-}
-EOF
-    else
 cat > $CONFIGHOME/Caddyfile <<EOF
 ${DOMAIN} {
 	reverse_proxy app:3000
@@ -127,7 +112,6 @@ ${DOMAIN} {
 	encode gzip
 }
 EOF
-    fi
 }
 
 # Check if configuration exists
@@ -140,8 +124,7 @@ fi
 # Setup Multitenancy
 rm $CONFIGHOME/Caddyfile
 if [[ -z "$MULTITENANT" ]]; then
-	# setup_ssl
-    echo "Working..."
+    setup_ssl
 else
     # Activate multitenancy in the config
     echo "MULTITENANT=true" >> $CONFIGHOME/.env
@@ -151,4 +134,4 @@ fi
 # Pull the Docker containers 
 (cd $CONFIGHOME; docker-compose pull)
 
-tput setaf 2; echo "SUCCESS: Configuration file '.env' is stored in $CONFIGHOME. Replace the placeholder values with the actual values and start the app using 'docker compose up'."
+tput setaf 2; echo "SUCCESS: Configuration file '.env' is stored in $CONFIGHOME. Replace the placeholder values with the actual values and start the app using 'docker compose up'.";
