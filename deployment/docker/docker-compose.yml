@@ -1,65 +1,21 @@
 version: "3"
 
 services:
-  db:
-    image: mongo
-    ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME?'MONGO_ROOT_USERNAME environment variable is not defined'}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD?'MONGO_ROOT_PASSWORD environment variable is not defined'}
-    volumes:
-      - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}/mongo/data/db:/data/db
-    command: --quiet
-    container_name: db
-    logging:
-      driver: "none"
-  
-  backend:
-    image: codelit/courselit-backend:${TAG?'TAG environment variable is not defined'}
+  app:
+    image: codelit/courselit-app:${TAG?'TAG environment variable is not defined'}
     environment:
       - NODE_ENV=production
-      - API_PREFIX=${API_PREFIX}
-      - DB_CONNECTION_STRING=${DB_CONNECTION_STRING?'DB_CONNECTION_STRING environment variable is is not defined'}
-      - JWT_SECRET=${JWT_SECRET?'JWT_SECRET environment variable is not defined'}
-      - TEMP_DIR_FOR_UPLOADS=${TEMP_DIR_FOR_UPLOADS?'TEMP_DIR_FOR_UPLOADS environment variable is not defined'}
-      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
-      - USE_WEBP=${USE_WEBP}
-      - USER_CONTENT_DIRECTORY=/data
-      - PORT=8000
-      - DOMAIN=${DOMAIN}
-      - MULTITENANT=${MULTITENANT}
-      - CLOUD_ENDPOINT=${CLOUD_ENDPOINT}
-      - CDN_ENDPOINT=${CDN_ENDPOINT}
-      - CLOUD_REGION=${CLOUD_REGION}
-      - CLOUD_KEY=${CLOUD_KEY}
-      - CLOUD_SECRET=${CLOUD_SECRET}
-      - CLOUD_BUCKET_NAME=${CLOUD_BUCKET_NAME}
-      - EMAIL_HOST=${EMAIL_HOST?'EMAIL_HOST environment variable is not defined'}
-      - EMAIL_USER=${EMAIL_USER?'EMAIL_USER environment variable is not defined'}
-      - EMAIL_PASS=${EMAIL_PASS?'EMAIL_PASS environment variable is not defined'}
-      - EMAIL_FROM=${EMAIL_FROM?'EMAIL_FROM environment variable is not defined'}
-      - EMAIL_PORT=${EMAIL_PORT}
-    volumes:
-      - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}:/data
-    expose:
-      - "8000"
-    depends_on:
-      - db
-    container_name: backend
-    restart: always
-
-  frontend:
-    image: codelit/courselit-frontend:${TAG?'TAG environment variable is not defined'}
-    environment:
-      - NODE_ENV=production
-      - API_PREFIX=${API_PREFIX}
-      - INSECURE=${INSECURE}
+      - JWT_SECRET=${JWT_SECRET}
+      - DB_CONNECTION_STRING=${DB_CONNECTION_STRING}
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_FROM=${EMAIL_FROM}
+      - MEDIALIT_SERVER=${MEDIALIT_SERVER}
+      - MEDIALIT_APIKEY=${MEDIALIT_APIKEY}
     expose:
       - "3000"
-    depends_on:
-      - backend
-    container_name: frontend
+    container_name: app 
     restart: on-failure
 
   proxy:
@@ -67,14 +23,9 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    environment:
-      - API_PREFIX=${API_PREFIX}
     volumes:
       - "./Caddyfile:/etc/caddy/Caddyfile"
-      - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}/caddy/data:/data
-      - ${MEDIA_FOLDER?'MEDIA_FOLDER environment variable is not defined'}/caddy/config:/config
     depends_on:
-      - backend
-      - frontend
+      - app
     container_name: proxy
     restart: on-failure

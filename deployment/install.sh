@@ -36,50 +36,30 @@ CONFIGHOME=/home/$USER/.config/${DOMAIN}
 
 function generate_config () {
 # Generate random username and password for database
-DBUSER=$(tr -dc 'a-z' </dev/urandom | head -c 7)
-DBPASSWORD=$(tr -dc 'a-zA-Z0-9' </dev/urandom | head -c 20)
 JWTSECRET=$(tr -dc 'a-z' </dev/urandom | head -c 10)
 
 mkdir -p $CONFIGHOME
 
 cat > $CONFIGHOME/.env <<EOF
-MEDIA_FOLDER=/home/$USER/$DOMAIN
-MONGO_ROOT_USERNAME=$DBUSER
-MONGO_ROOT_PASSWORD=$DBPASSWORD
-DB_CONNECTION_STRING=mongodb://$DBUSER:$DBPASSWORD@db/courselit?authSource=admin
+DB_CONNECTION_STRING=replace-this-with-a-mongodb-connection-string
 JWT_SECRET=$JWTSECRET
-DOMAIN=$DOMAIN
-API_PREFIX=/api
-JWT_EXPIRES_IN=14d
 TAG=latest
-USE_WEBP=true
-
-# Media uploads
-CLOUD_ENDPOINT=https://cloud.endpoint
-CDN_ENDPOINT=/api/assets
-CLOUD_REGION=region
-CLOUD_KEY=key
-CLOUD_SECRET=secret
-CLOUD_BUCKET_NAME=bucket
-TEMP_DIR_FOR_UPLOADS=/home/$USER/$DOMAIN/tmp
 
 # Email
 EMAIL_HOST=host
 EMAIL_USER=user
 EMAIL_PASS=pass
 EMAIL_FROM=from
+
+# MediaLit
+MEDIALIT_SERVER=medialit-server-url
+MEDIALIT_APIKEY=apikey-to-access-the-medialit-server
 EOF
 
 # Download necessary files
 wget \
     https://raw.githubusercontent.com/codelitdev/courselit/master/deployment/docker/docker-compose.yml \
     -P $CONFIGHOME
-
-# Create a cronjob file to take backups
-cat > $CONFIGHOME/backup.sh <<EOF
-tar -cvz --exclude=**/diagnostic.data/* -f courselit-backup-\`date +'%d%m%y'\`.tar.gz /home/$USER/$DOMAIN >> courselit-backup-\`date +'%d%m%y'\`.log
-EOF
-}
 
 function setup_ssl_multitenant () {
     echo "Enter an email to be used for issuing SSL certificates."
@@ -106,8 +86,7 @@ cat > $CONFIGHOME/Caddyfile <<EOF
                 on_demand
         }
 
-        reverse_proxy {\$API_PREFIX}/* backend:8000
-        reverse_proxy frontend:3000
+        reverse_proxy app:3000
 
         encode gzip
 }
@@ -117,8 +96,7 @@ cat > $CONFIGHOME/Caddyfile <<EOF
                 dns cloudflare ${CLOUDFLARE_API_TOKEN}
         }
 
-        reverse_proxy {\$API_PREFIX}/* backend:8000
-        reverse_proxy frontend:3000
+        reverse_proxy app:3000
 
         encode gzip
 }
@@ -136,8 +114,7 @@ function setup_ssl () {
 
 cat > $CONFIGHOME/Caddyfile <<EOF
 http://${DOMAIN} {
-	reverse_proxy {\$API_PREFIX}/* backend:8000
-	reverse_proxy frontend:3000
+	reverse_proxy app:3000
 
 	encode gzip
 }
@@ -145,8 +122,7 @@ EOF
     else
 cat > $CONFIGHOME/Caddyfile <<EOF
 ${DOMAIN} {
-	reverse_proxy {\$API_PREFIX}/* backend:8000
-	reverse_proxy frontend:3000
+	reverse_proxy app:3000
 
 	encode gzip
 }
@@ -164,17 +140,14 @@ fi
 # Setup Multitenancy
 rm $CONFIGHOME/Caddyfile
 if [[ -z "$MULTITENANT" ]]; then
-	setup_ssl
+	# setup_ssl
 else
     # Activate multitenancy in the config
     echo "MULTITENANT=true" >> $CONFIGHOME/.env
 	setup_ssl_multitenant
 fi
 
-# Start the app
-(cd $CONFIGHOME; docker-compose pull && docker-compose up -d)
+# Pull the Docker containers 
+(cd $CONFIGHOME; docker-compose pull)
 
-tput setaf 2; echo "SUCCESS: Configuration file '.env' is stored in $CONFIGHOME. Make sure to back it up."
-
-# Schedule a cronjob to take regular backups at 12:00 am everyday
-# crontab -l | { cat; echo "0 0 * * * sh $CONFIGHOME/backup.sh"; } | crontab -
+tput setaf 2; echo "SUCCESS: Configuration file '.env' is stored in $CONFIGHOME. Replace the placeholder values with the actual values and start the app using 'docker compose up'."
