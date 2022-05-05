@@ -141,6 +141,7 @@ fi
 rm $CONFIGHOME/Caddyfile
 if [[ -z "$MULTITENANT" ]]; then
 	# setup_ssl
+    echo "Working..."
 else
     # Activate multitenancy in the config
     echo "MULTITENANT=true" >> $CONFIGHOME/.env
