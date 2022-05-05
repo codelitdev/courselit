@@ -1,17 +1,16 @@
 # Introduction
 
-A Material UI based front-end app for [CourseLit Headless CMS](https://www.npmjs.com/package/@courselit/api).
+A batteries-included open-source LMS for everyone. It is an alternative to Teachable, Thinkific, Podia and the likes.
 
 ## Getting started
 
-Easily spin up a new CourseLit headless server using the following command.
+Define and .env file containing the variables described in `Environment variables` section and run the following command
 
 ```sh
-docker run --env SITE_URL=http://localhost:3000 --env SSR_SITE_URL=http://localhost:3000 -p 3000:3000 codelit/courselit-frontend
-
-# the app will be available at http://localhost:3000
-
+docker run -p 3000:3000 codelit/courselit-app
 ```
+
+The app will be available at http://localhost:3000
 
 ### Environment variables
 
