@@ -44,6 +44,7 @@ cat > $CONFIGHOME/.env <<EOF
 DB_CONNECTION_STRING=replace-this-with-a-mongodb-connection-string
 JWT_SECRET=$JWTSECRET
 TAG=latest
+DOMAIN=$DOMAIN
 
 # Email
 EMAIL_HOST=host

@@ -72,7 +72,7 @@ export default async function verifyDomain(
     });
 
     if (!domain) {
-      throw new Error(responses.domain_doesnt_exist);
+      throw new Error(`${responses.domain_doesnt_exist}: ${domain}`);
     }
 
     const validSubscription = await hasValidSubscription(domain.email);
@@ -81,6 +81,7 @@ export default async function verifyDomain(
     }
 
     req.subdomain = domain;
+    next();
   } else {
     let domain = await DomainModel.findOne({
       name: domainNameForSingleTenancy,
