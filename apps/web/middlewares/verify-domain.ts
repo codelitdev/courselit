@@ -72,7 +72,7 @@ export default async function verifyDomain(
     });
 
     if (!domain) {
-      throw new Error(`${responses.domain_doesnt_exist}: ${domain}`);
+      throw new Error(`${responses.domain_doesnt_exist}: ${domainName}`);
     }
 
     const validSubscription = await hasValidSubscription(domain.email);
