@@ -621,7 +621,7 @@ const CourseEditor = (props: CourseEditorProps) => {
                                 }
                                 onSelection={onFeaturedImageSelection}
                                 mimeTypesToShow={[...MIMETYPE_IMAGE]}
-                                public="true"
+                                access="public"
                               />
                             </Grid>
                             {!courseData.course.isBlog && (
