@@ -184,7 +184,7 @@ const Settings = (props: SettingsProps) => {
         title: "${newSettings.title}",
         subtitle: "${newSettings.subtitle}",
         logopath: ${
-          newSettings.logopath.mediaId
+          newSettings.logopath && newSettings.logopath.mediaId
             ? '"' + newSettings.logopath.mediaId + '"'
             : null
         },
