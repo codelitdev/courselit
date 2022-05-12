@@ -160,7 +160,7 @@ const Index = (props: IndexProps) => {
               </Typography>
             </Grid>
             <Grid item>
-              <form onSubmit={searchCourses}>
+              {/* <form onSubmit={searchCourses}>
                 <FormControl variant="outlined">
                   <InputLabel htmlFor="searchtext">
                     {SEARCH_TEXTBOX_PLACEHOLDER}
@@ -184,14 +184,14 @@ const Index = (props: IndexProps) => {
                     }
                   />
                 </FormControl>
-              </form>
+              </form> */}
             </Grid>
           </Grid>
         </Section>
       </Grid>
       <Grid item xs={12}>
         <Section>
-          <Grid container direction="column" spacing={2}>
+          <Grid container direction="column">
             {checkPermission(props.profile.permissions, [
               permissions.manageCourse,
             ]) && (
@@ -214,7 +214,10 @@ const Index = (props: IndexProps) => {
                     href={`/dashboard/courses/edit/${course.courseId}`}
                     key={index}
                   >
-                    <ListItem className={classes.listItem}>
+                    <ListItem className={classes.listItem} sx={{
+                        pr: 0,
+                        pl: 0
+                    }}>
                       <ListItemAvatar>
                         <Image
                           src={

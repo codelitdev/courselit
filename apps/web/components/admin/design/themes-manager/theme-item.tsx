@@ -69,7 +69,7 @@ const ThemeItem = (props: ThemeItemProps) => {
     >
       <Grid item>{props.theme.name}</Grid>
       <Grid item>
-        <Grid container spacing={2}>
+        <Grid container>
           {!props.theme.active && (
             <Grid item>
               <Button onClick={() => setApplyConfirmationPopupOpened(true)}>
