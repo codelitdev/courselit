@@ -26,6 +26,7 @@ import { Section } from "@courselit/components-library";
 import ThemeItem from "./theme-item";
 import type { Address } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
+import { OpenInNew } from "@mui/icons-material";
 
 const { setAppMessage, networkAction } = actionCreators;
 
@@ -234,7 +235,7 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
               </Typography>
             </Grid>
             {installedThemes.length !== 0 && (
-              <Grid item container direction="column" spacing={2}>
+              <Grid item container direction="column">
                 {installedThemes.map((theme) => (
                   <ThemeItem
                     theme={theme}
