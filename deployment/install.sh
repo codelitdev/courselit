@@ -44,7 +44,6 @@ cat > $CONFIGHOME/.env <<EOF
 DB_CONNECTION_STRING=replace-this-with-a-mongodb-connection-string
 JWT_SECRET=$JWTSECRET
 TAG=latest
-DOMAIN=$DOMAIN
 
 # Email
 EMAIL_HOST=host
@@ -73,6 +72,9 @@ function setup_ssl_multitenant () {
 
     # Caddy uses the following endpoint to know whether to issues a SSL certificate for a domain or not
     CUSTOM_DOMAINS_VERIFY_URL=https://${DOMAIN}/api/domain/verify
+
+    # Pass DOMAIN to the environment
+    echo "DOMAIN=$DOMAIN" >> $CONFIGHOME/.env
 
 cat > $CONFIGHOME/Caddyfile <<EOF
 {
