@@ -23,22 +23,22 @@ A random string to use as a secret to sign the JWT tokens the API generates. Req
 The connection string to a remote mongodb instance. Defaults to `mongodb://localhost/app`.
 
 **EMAIL_USER**
-The username for your email server
+The username for your email server.
 
 **EMAIL_PASS**
-The password for your email server
+The password for your email server.
 
 **EMAIL_HOST**
-The address of your email server
+The address of your email server.
 
 **EMAIL_FROM**
-The name that appears in the from field of the email sent by CourseLit
+The name that appears in the from field of the email sent by CourseLit.
 
 **MEDIALIT_SERVER**
-The URL of the MediaLit server
+The URL of the MediaLit server. Defaults to `https://medialit.cloud`.
 
 **MEDIALIT_APIKEY**
-The API key to access MediaLit
+The API key to access MediaLit.
 
 ## Support
 Come chat with us in our official [Discord channel](https://discord.gg/GR4bQsN).

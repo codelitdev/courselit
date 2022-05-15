@@ -27,23 +27,7 @@ export default {
   jwtTokenCookieName: process.env.JWT_COOKIE_NAME || "access_token",
 
   // Media uploads config
-  tempFileDirForUploads: process.env.TEMP_DIR_FOR_UPLOADS,
-  useWebp: process.env.USE_WEBP === "true",
-  webpOutputQuality: process.env.WEBP_QUALITY
-    ? parseInt(process.env.WEBP_QUALITY)
-    : 75,
-  // the following constants are as per the 16:9 aspect ratio
-  thumbnailWidth: 120,
-  thumbnailHeight: 68,
-  cloudEndpoint: process.env.CLOUD_ENDPOINT || "",
-  cloudRegion: process.env.CLOUD_REGION || "",
-  cloudKey: process.env.CLOUD_KEY || "",
-  cloudSecret: process.env.CLOUD_SECRET || "",
-  cloudBucket: process.env.CLOUD_BUCKET_NAME || "",
-  cdnEndpoint: process.env.CDN_ENDPOINT || "",
-  maxFileUploadSize: process.env.MAX_UPLOAD_SIZE || 2147483648,
-  imagePattern: /^image\/(jpe?g|png)$/,
-  videoPattern: /video/,
+  medialitServer: process.env.MEDIALIT_SERVER || 'https://medialit.cloud',
 
   // Content types
   text: "text",

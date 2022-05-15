@@ -13,10 +13,10 @@ To install a widget follow these steps.
 1. Install the package
 
 ```
-yarn lerna add my-widget scope=@courselit/app
+yarn workspace @courselit/web add my-widget
 ```
 
-2. Now open `courselit.js` file from `packages/app` and add the widget to the `widgets` section as shown below.
+2. Now open `ui-config/widget.tsx` file located in `apps/web` and add the widget to the `widgets` section as shown below.
 
 ```js
 import mywidget from "my-widget";
@@ -43,8 +43,8 @@ The `widget` and `adminWidget` components receive the following props from the s
 
 1. **name**: The name of the widget. This can be used while interacting with the database via GraphQL endpoints (described in the following sections).
 2. **fetchBuilder**: A modified `fetch` object which includes the information like the backend URL. The widget can use this custom `fetch` object to make requests to the GraphQL endpoint.
-3. **config**: An object containing various configuration settings. Check [this](../packages/app/config/constants.js) file to see what all configurations are available.
-4. **utilities**: An object containing utility functions from the core app. Check [this](../packages/app/lib/utils.js) file to see what all functions are available.
+3. **config**: An object containing various configuration settings. Check [this](../apps/web/components/public/base-layout/template/widget-by-name.tsx) file to see what all configurations are available.
+4. **utilities**: An object containing utility functions from the core app. Check [this](../apps/web/ui-lib/utils.ts) file to see what all functions are available.
 5. **section**: A name of the section where the widget is being displayed. As a widget can be displayed in multiple sections (if it supports), you can use this value to adapt the styling of the widget.
 6. **state**: The app's state powered by Redux. Equivalent for Redux's `store.getState()`.
 7. **dispatch**: The Redux dispatcher.
@@ -117,16 +117,7 @@ try {
 }
 ```
 
-While saving user data and fetching settings requires no authentication, saving settings and fetching the saved user data requires admin level privileges hence we need to provide auth JWT in our GraphQL requests to make such requests work. See the preceeding section for how to access the auth JWT.
-
-To include the auth JWT in your GraphQL request, use `.setAuthToken()` on the `fetchBuilder` object. For example.
-
-```js
-const fetch = props.fetchBuilder
-  .setPayload(query)
-  .setAuthToken(props.auth.token)
-  .build();
-```
+While saving user data and fetching settings requires no authentication, saving settings and fetching the saved user data requires admin level privileges. The `fetchBuilder` will automatically send the the cookies to the backend if you are signed in.
 
 ## Theming
 
