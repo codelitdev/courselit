@@ -1,4 +1,7 @@
+import constants from "../config/constants";
 import Media from "../models/Media";
+
+const { medialitServer } = constants;
 
 interface GetPaginatedMediaProps {
   group: string;
@@ -22,7 +25,7 @@ export async function getPaginatedMedia({
   }
 
   const response: any = await fetch(
-    `${process.env.MEDIALIT_SERVER}/media/get?` + urlParams.toString(),
+    `${medialitServer}/media/get?` + urlParams.toString(),
     {
       method: "POST",
       headers: {
@@ -45,7 +48,7 @@ export async function getPaginatedMedia({
 
 export async function getMedia(mediaId: string): Promise<Media> {
   let response: any = await fetch(
-    `${process.env.MEDIALIT_SERVER}/media/get/${mediaId}`,
+    `${medialitServer}/media/get/${mediaId}`,
     {
       method: "POST",
       headers: {
@@ -64,7 +67,7 @@ export async function getPresignedUrlForUpload(
   domain: string
 ): Promise<string> {
   let response: any = await fetch(
-    `${process.env.MEDIALIT_SERVER}/media/presigned/create`,
+    `${medialitServer}/media/presigned/create`,
     {
       method: "POST",
       headers: {
@@ -87,7 +90,7 @@ export async function getPresignedUrlForUpload(
 
 export async function deleteMedia(mediaId: string): Promise<boolean> {
   let response: any = await fetch(
-    `${process.env.MEDIALIT_SERVER}/media/delete/${mediaId}`,
+    `${medialitServer}/media/delete/${mediaId}`,
     {
       method: "DELETE",
       headers: {

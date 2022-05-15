@@ -11,9 +11,7 @@ services:
       - EMAIL_PASS=${EMAIL_PASS}
       - EMAIL_HOST=${EMAIL_HOST}
       - EMAIL_FROM=${EMAIL_FROM}
-      - MEDIALIT_SERVER=${MEDIALIT_SERVER}
       - MEDIALIT_APIKEY=${MEDIALIT_APIKEY}
-      - DOMAIN=${DOMAIN}
     expose:
       - "3000"
     container_name: app 

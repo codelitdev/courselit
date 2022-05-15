@@ -6,7 +6,7 @@
   <b>
     <a href="https://courselit.codelit.dev">Website</a> |
     <a href="https://codelit.gitbook.io/courselit/getting-started">Getting started</a> |
-    <a href="https://codelit.gitbook.io/courselit">Documentation</a>
+    <a href="https://docs.courselit.app">Documentation</a>
   </b>
 </p>
 
@@ -33,7 +33,7 @@
 
 # Introduction
 
-CourseLit is a content management system (aka CMS) for starting your own online course website. It is designed keeping educators in mind. Consider it an open-source alternative to those paid tutoring sites.
+CourseLit is a [batteries included](https://en.wikipedia.org/wiki/Batteries_Included) learning management system (aka LMS) for everyone. It is an open source alternative to Techable, Thinkific, Podia and the likes.
 
 It comes pre-equipped with all the basic tools you'd require to efficiently run and administer your online teaching business. Features include course authoring, student management, payment processing (via Stripe), website customization and analytics (very limited as of now).
 
@@ -49,47 +49,36 @@ To install CourseLit on your cloud server, please follow [our official guide](ht
 
 ## Development
 
-The project is organised as a [mono-repo](https://en.wikipedia.org/wiki/Monorepo). It uses [Lerna](https://github.com/lerna/lerna) for managing the mono-repo. You need to run both backend and frontend servers, located in `packages/api` and `packages/app` respectively, in order to run the portal in its entirety.
+The project is organised as a [mono-repo](https://en.wikipedia.org/wiki/Monorepo). It uses [Yarn workspaces](https://yarnpkg.com/features/workspaces) for managing the mono-repo.
 
-We recommend using [Visual Studio Code](https://code.visualstudio.com/) for development as it allows you to develop your code in isolation inside a container using the [Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension. Install both the editor and the extension.
+To set up the development environment, first clone the project on your local machine and `cd` to its diretory.
 
-Once you have this setup, follow these steps.
+Then replace the values in `.env` file located inside the `apps/web` folder with your enviroment's configuration.
 
-1. Add the following entries to your operating system's host file. These are required for multitenancy.
+Now run the following commands from the root directory of the project.
 
-```
-127.0.0.1       domain1.localsite.com
-127.0.0.1       domain2.localsite.com
-127.0.0.1       localsite.com
-```
+```sh
+# Install dependencies
+yarn install
 
-2. Press `Ctrl + Shift + P` to open the command palette of Visual Studio Code, type in "Remote-Containers: Open Workspace in Container" and press enter after selecting it.
+# Build the packages
+yarn build
 
-3. Once the code opens up, open two terminal windows in your Visual Studio Code and type in the following commands to start the backend and frontend servers respectively.
-
-- `yarn lerna run dev --scope=@courselit/api --stream`
-- `yarn lerna run dev --scope=@courselit/app --stream`
-
-> The above commands are also exported as `bash` aliases, so you can simply type `api` and `app` in separate terminal windows to run backend and frontend servers respectively.
-
-4. Inside the development container, open up a terminal window and type the following commands in sequence.
-
-```
-mongo
-use app
-var subscriptionExpiresAt = new Date()
-subscriptionExpiresAt.setDate(subscriptionExpiresAt.getDate() + 90)
-
-db.domains.insert({ name: "domain1", deleted: false, email: "domain1@email.com" })
-db.subscribers.insert({ email: "domain1@email.com", subscriptionEndsAfter: subscriptionExpiresAt})
-
-db.domains.insert({ name: "domain2", deleted: false, email: "domain2@email.com" })
-db.subscribers.insert({ email: "domain2@email.com", subscriptionEndsAfter: subscriptionExpiresAt})
+# Start the app
+yarn dev
 ```
 
-This will enable the invidual sites listed in step `1` with subscriptions valid for `90 days`.
+That's it! Now you can dive into the code base.
 
-5. Visit `domain1.localsite.com` to see CourseLit in action.
+## Medialit
+
+CourseLit uses [MediaLit](https://medialit.cloud) as its backend for managing media assets. It is a paid service and you need to have an account on it to store your files in the cloud.
+
+If you do not want to use the cloud hosted version, you can roll your own instance. Add the following config to the `.env` file to use your own MediaLit instance.
+
+```sh
+MEDIALIT_SERVER=medialit_server_location
+```
 
 ## Writing Your Own Widget
 
