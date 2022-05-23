@@ -85,18 +85,24 @@ MyApp.getInitialProps = wrapper.getInitialAppProps(
       store.dispatch(
         actionCreators.updateBackend(`${protocol}://${ctx.req.headers.host}`)
       );
-      await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
-        actionCreators.updateSiteInfo()
-      );
-      await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
-        actionCreators.updateSiteLayout()
-      );
-      await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
-        actionCreators.updateSiteTheme()
-      );
-      await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
-        actionCreators.updateSiteNavigation()
-      );
+      try {
+        await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
+            actionCreators.updateSiteInfo()
+        );
+        await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
+            actionCreators.updateSiteLayout()
+        );
+        await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
+            actionCreators.updateSiteTheme()
+        );
+        await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
+            actionCreators.updateSiteNavigation()
+        );
+      } catch (error: any) {
+          ctx.res!.statusCode = 404;
+          ctx.res!.end('Not found');
+          return;
+      }
     }
 
     return {
