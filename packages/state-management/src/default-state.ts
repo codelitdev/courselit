@@ -45,4 +45,5 @@ export default {
     backend: "",
     frontend: "",
   },
+  widgetsData: {},
 };

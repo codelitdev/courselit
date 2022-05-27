@@ -119,6 +119,34 @@ try {
 
 While saving user data and fetching settings requires no authentication, saving settings and fetching the saved user data requires admin level privileges. The `fetchBuilder` will automatically send the the cookies to the backend if you are signed in.
 
+### Server side rendering
+
+You can fetch data on the server side from the user facing widget, if you want to render your widget on the server side.
+
+To do this, you can create a `.getData()` method on the component exported from the user widget file. The function receives `fetchBuilder` as the input. The data returned from this function gets populated in the app state property called `widgetsData` which is an object.
+
+Example
+
+```js
+function Widget(props) {
+  const { state, name } = props;
+  const data = state.widgetsData[name];
+
+  // use data here
+}
+
+Widget.getData = async function getData({
+  fetchBuilder,
+}: {
+  fetchBuilder: FetchBuilder,
+}) {
+  const data = await your_api_call();
+  return data;
+};
+
+export default Widget;
+```
+
 ## Theming
 
 CourseLit uses [Material-UI's Theming](https://material-ui.com/customization/theming/) system hence you can introduce additional [custom variables](https://material-ui.com/customization/theming/#custom-variables) to the app's theme which you can later consume in your widget.

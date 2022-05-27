@@ -6,40 +6,17 @@ import {
 } from "@courselit/components-library";
 import Settings from "./settings";
 import { Box, Grid } from "@mui/material";
-import type { WidgetProps } from "@courselit/common-models";
+import type { FetchBuilder, WidgetProps } from "@courselit/common-models";
+import Metadata from "./metadata";
 
 const Widget = (props: WidgetProps) => {
-  const { fetchBuilder, dispatch, name } = props;
-  const [settings, setSettings] = React.useState<Settings>({
-    text: TextEditor.emptyState(),
-  });
-
-  React.useEffect(() => {
-    getSettings();
-  }, []);
-
-  const getSettings = async () => {
-    const settings: any = await WidgetHelpers.getWidgetSettings({
-      widgetName: name,
-      fetchBuilder,
-      dispatch,
-    });
-
-    if (settings) {
-      hydrateAndSetSettings(settings);
-    }
-  };
-
-  const hydrateAndSetSettings = (settings: Settings) => {
-    const hydratedText = settings.text
-      ? TextEditor.hydrate({ data: settings.text })
-      : TextEditor.emptyState();
-    setSettings(
-      Object.assign({}, settings, {
-        text: hydratedText,
-      })
-    );
-  };
+  const { state } = props;
+  const widgetSettings: any = state.widgetsData.about.settings;
+  const [content, setContent] = React.useState(
+    widgetSettings
+      ? TextEditor.hydrate({ data: widgetSettings.text })
+      : TextEditor.emptyState()
+  );
 
   return (
     <Grid item xs={12}>
@@ -50,11 +27,39 @@ const Widget = (props: WidgetProps) => {
             pr: 2,
           }}
         >
-          <TextEditor initialContentState={settings.text} readOnly={true} />
+          <TextEditor initialContentState={content} readOnly={true} />
         </Box>
       </Section>
     </Grid>
   );
+};
+
+Widget.getData = async function getData({
+  fetchBuilder,
+}: {
+  fetchBuilder: FetchBuilder;
+}) {
+  const settingsQuery = `
+    query {
+        settings: getWidgetSettings(name: "${Metadata.name}") {
+            settings
+        }
+    }
+    `;
+
+  const fetch = fetchBuilder.setPayload(settingsQuery).build();
+  let result: Record<string, unknown> = {};
+  try {
+    const response = await fetch.exec();
+    if (!response.settings) {
+      return result;
+    }
+    result.settings = JSON.parse(response.settings.settings);
+  } catch (err) {
+    console.error(err);
+  }
+
+  return result;
 };
 
 export default Widget;
