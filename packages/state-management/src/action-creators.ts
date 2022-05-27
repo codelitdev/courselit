@@ -15,15 +15,15 @@ import {
   LAYOUT_AVAILABLE,
   NAVIGATION_AVAILABLE,
   SET_ADDRESS,
+  WIDGETS_DATA_AVAILABLE,
 } from "./action-types";
 import { FetchBuilder } from "@courselit/utils";
 import defaultState from "./default-state";
 import getAddress from "./utils/get-address";
-import type { State } from "@courselit/common-models";
+import type { State, SiteInfo, WidgetsData } from "@courselit/common-models";
 import { AppMessage } from "@courselit/common-models";
 import { ThunkAction } from "redux-thunk";
 import { AnyAction } from "redux";
-import type { SiteInfo } from "@courselit/common-models";
 
 export function signedIn() {
   return async (dispatch: any) => {
@@ -239,4 +239,33 @@ export function navigationAvailable(links: typeof defaultState.navigation) {
 
 export function updateBackend(host: string): AnyAction {
   return { type: SET_ADDRESS, address: getAddress(host) };
+}
+
+export function updateWidgetsData(widgets: Record<string, any>) {
+  return async (dispatch: any, getState: () => State) => {
+    try {
+      dispatch(networkAction(true));
+
+      const state = getState();
+      const widgetsUsedOnLiveSite = Object.values(state.layout).flat();
+      const fetchBuilder = new FetchBuilder()
+        .setUrl(`${state.address.backend}/api/graph`)
+        .setIsGraphQLEndpoint(true);
+      const widgetsData: WidgetsData = {};
+      for (const name of widgetsUsedOnLiveSite) {
+        const getData = widgets[name].widget.getData;
+        if (getData) {
+          const data = await getData({ fetchBuilder });
+          widgetsData[name] = data;
+        }
+      }
+      dispatch(widgetsDataAvailable(widgetsData));
+    } finally {
+      dispatch(networkAction(false));
+    }
+  };
+}
+
+export function widgetsDataAvailable(widgetsData: WidgetsData): AnyAction {
+  return { type: WIDGETS_DATA_AVAILABLE, widgetsData };
 }

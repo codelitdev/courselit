@@ -4,13 +4,15 @@ import Layout from "./layout";
 import Link from "./link";
 import Profile from "./profile";
 import SiteInfo from "./site-info";
+import WidgetsData from "./widgets-data";
 
 export default interface State {
+  auth: Auth;
   siteinfo: SiteInfo;
-  profile: Profile;
   networkAction: boolean;
+  profile: Profile;
   navigation: Link[];
   layout: Layout;
   address: Address;
-  auth: Auth;
+  widgetsData: WidgetsData;
 }

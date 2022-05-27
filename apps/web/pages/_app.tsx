@@ -20,6 +20,8 @@ import { ThunkDispatch } from "redux-thunk";
 import { actionCreators } from "@courselit/state-management";
 import CodeInjector from "../components/public/code-injector";
 import { DefaultTheme } from "@mui/private-theming";
+import widgets from "../ui-config/widgets";
+import { FetchBuilder } from "@courselit/utils";
 
 type CourseLitProps = AppProps & {
   emotionCache: EmotionCache;
@@ -82,8 +84,9 @@ MyApp.getInitialProps = wrapper.getInitialAppProps(
     const { ctx } = context;
     if (ctx.req && ctx.req.headers && ctx.req.headers.host) {
       const protocol = ctx.req.headers["x-forwarded-proto"] || "http";
+      const backend = `${protocol}://${ctx.req.headers.host}`;
       store.dispatch(
-        actionCreators.updateBackend(`${protocol}://${ctx.req.headers.host}`)
+        actionCreators.updateBackend(backend)
       );
       try {
         await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
@@ -97,6 +100,9 @@ MyApp.getInitialProps = wrapper.getInitialAppProps(
         );
         await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
             actionCreators.updateSiteNavigation()
+        );
+        await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
+            actionCreators.updateWidgetsData(widgets)
         );
       } catch (error: any) {
           ctx.res!.statusCode = 404;

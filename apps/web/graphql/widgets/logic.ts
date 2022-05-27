@@ -130,3 +130,9 @@ export const clearWidgetData = async (name: string, ctx: GQLContext) => {
 
   return true;
 };
+
+export const getSiteWidgets = async (ctx: GQLContext) => {
+    const widgets = await Widget.find({ domain: ctx.subdomain._id });
+
+    return widgets;
+}

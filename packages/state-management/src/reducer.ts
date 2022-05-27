@@ -14,6 +14,7 @@ import {
   LAYOUT_AVAILABLE,
   NAVIGATION_AVAILABLE,
   SET_ADDRESS,
+  WIDGETS_DATA_AVAILABLE,
 } from "./action-types";
 import { HYDRATE } from "next-redux-wrapper";
 import initialState from "./default-state";
@@ -170,6 +171,15 @@ function addressReducer(state = initialState.address, action: Action) {
   }
 }
 
+function widgetsDataReducer(state = initialState.widgetsData, action: Action) {
+  switch (action.type) {
+    case WIDGETS_DATA_AVAILABLE:
+      return action.widgetsData;
+    default:
+      return state;
+  }
+}
+
 const appReducers = combineReducers({
   auth: authReducer,
   siteinfo: siteinfoReducer,
@@ -180,6 +190,7 @@ const appReducers = combineReducers({
   layout: layoutReducer,
   navigation: navigationReducer,
   address: addressReducer,
+  widgetsData: widgetsDataReducer,
 });
 
 const reducer = (state = initialState, action: Action) => {

@@ -1,77 +1,25 @@
 import * as React from "react";
 import { Grid, Typography, Button, Theme } from "@mui/material";
-import {
-  WidgetHelpers,
-  Section,
-  CourseItem,
-} from "@courselit/components-library";
+import { Section, CourseItem } from "@courselit/components-library";
 import Link from "next/link";
 import Settings from "./settings";
-import type { WidgetProps } from "@courselit/common-models";
+import { Course, FetchBuilder, WidgetProps } from "@courselit/common-models";
 import MuiLink from "@mui/material/Link";
+import Metadata from "./metadata";
 
 export interface FeaturedWidgetProps extends WidgetProps {
   dispatch: any;
 }
 
 const Widget = (props: FeaturedWidgetProps) => {
-  const { fetchBuilder, config, dispatch, name, state } = props;
-  const [posts, setPosts] = React.useState([]);
-  const [postsOffset] = React.useState(1);
+  const { config, state, name } = props;
+  const [posts, setPosts] = React.useState<Course[]>(
+    state.widgetsData[name].courses as Course[]
+  );
   const BTN_LOAD_MORE = "View all";
-  const [settings, setSettings] = React.useState<Settings>({
-    tag: "",
-    title: "",
-    subtitle: "",
-  });
-
-  React.useEffect(() => {
-    getSettings();
-    getPosts();
-  }, [postsOffset]);
-
-  const getPosts = async () => {
-    const query = `
-    query {
-      courses: getCourses(offset: 1, tag: "${settings.tag}") {
-        id,
-        title,
-        cost,
-        featuredImage {
-          file
-        },
-        slug,
-        courseId,
-        isBlog,
-        description
-      }
-    }
-    `;
-
-    const fetch = fetchBuilder.setPayload(query).build();
-    try {
-      dispatch({ type: "NETWORK_ACTION", flag: true });
-      const response = await fetch.exec();
-      if (response.courses) {
-        setPosts([...posts, ...response.courses]);
-      }
-    } catch (err) {
-    } finally {
-      dispatch({ type: "NETWORK_ACTION", flag: false });
-    }
-  };
-
-  const getSettings = async () => {
-    const settings: any = await WidgetHelpers.getWidgetSettings({
-      widgetName: name,
-      fetchBuilder,
-      dispatch,
-    });
-
-    if (settings) {
-      setSettings(settings);
-    }
-  };
+  const [settings, setSettings] = React.useState<Settings>(
+    state.widgetsData[name].settings as Settings
+  );
 
   return posts.length > 0 ? (
     <Section>
@@ -134,6 +82,57 @@ const Widget = (props: FeaturedWidgetProps) => {
   ) : (
     <></>
   );
+};
+
+Widget.getData = async function getData({
+  fetchBuilder,
+}: {
+  fetchBuilder: FetchBuilder;
+}) {
+  const settingsQuery = `
+    query {
+      settings: getWidgetSettings(name: "${Metadata.name}") {
+        settings
+      }
+    }
+    `;
+
+  const fetch = fetchBuilder.setPayload(settingsQuery).build();
+  let result: Record<string, unknown> = {};
+  try {
+    const response = await fetch.exec();
+    if (!response.settings) {
+      return result;
+    }
+    result.settings = JSON.parse(response.settings.settings);
+
+    const query = `
+    query {
+        courses: getCourses(offset: 1, tag: "${(result.settings as any).tag}") {
+            id,
+            title,
+            cost,
+            featuredImage {
+                file
+            },
+            slug,
+            courseId,
+            isBlog,
+            description
+        }
+    }
+    `;
+
+    const fetchCourse = fetchBuilder.setPayload(query).build();
+    const responseCourse = await fetchCourse.exec();
+    if (responseCourse.courses) {
+      result.courses = responseCourse.courses;
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
+  return result;
 };
 
 export default Widget;
