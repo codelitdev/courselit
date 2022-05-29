@@ -47,18 +47,15 @@ export async function getPaginatedMedia({
 }
 
 export async function getMedia(mediaId: string): Promise<Media> {
-  let response: any = await fetch(
-    `${medialitServer}/media/get/${mediaId}`,
-    {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        apikey: process.env.MEDIALIT_APIKEY,
-      }),
-    }
-  );
+  let response: any = await fetch(`${medialitServer}/media/get/${mediaId}`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      apikey: process.env.MEDIALIT_APIKEY,
+    }),
+  });
   response = await response.json();
   return response;
 }
@@ -66,19 +63,16 @@ export async function getMedia(mediaId: string): Promise<Media> {
 export async function getPresignedUrlForUpload(
   domain: string
 ): Promise<string> {
-  let response: any = await fetch(
-    `${medialitServer}/media/presigned/create`,
-    {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        apikey: process.env.MEDIALIT_APIKEY,
-        group: domain,
-      }),
-    }
-  );
+  let response: any = await fetch(`${medialitServer}/media/presigned/create`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      apikey: process.env.MEDIALIT_APIKEY,
+      group: domain,
+    }),
+  });
   response = await response.json();
 
   if (response.error) {
@@ -89,18 +83,15 @@ export async function getPresignedUrlForUpload(
 }
 
 export async function deleteMedia(mediaId: string): Promise<boolean> {
-  let response: any = await fetch(
-    `${medialitServer}/media/delete/${mediaId}`,
-    {
-      method: "DELETE",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        apikey: process.env.MEDIALIT_APIKEY,
-      }),
-    }
-  );
+  let response: any = await fetch(`${medialitServer}/media/delete/${mediaId}`, {
+    method: "DELETE",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      apikey: process.env.MEDIALIT_APIKEY,
+    }),
+  });
   response = await response.json();
 
   if (response.error) {

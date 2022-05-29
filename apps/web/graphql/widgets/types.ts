@@ -7,11 +7,11 @@ import {
 } from "graphql";
 
 const widgetSettingsType = new GraphQLObjectType({
-    name: "WidgetSettings",
-    fields: {
-        name: { type: GraphQLString },
-        settings: { type: GraphQLString },
-    },
+  name: "WidgetSettings",
+  fields: {
+    name: { type: GraphQLString },
+    settings: { type: GraphQLString },
+  },
 });
 
 const siteWidgetsSettings = new GraphQLList(widgetSettingsType);
@@ -44,5 +44,5 @@ export default {
   widgetDataType,
   widgetSettingsInputType,
   widgetDataInputType,
-  siteWidgetsSettings
+  siteWidgetsSettings,
 };

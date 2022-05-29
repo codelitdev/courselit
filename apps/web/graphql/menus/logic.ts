@@ -22,7 +22,7 @@ export const getMenu = async (
 export const getMenuAsAdmin = async (ctx: GQLContext): Promise<Link[]> => {
   checkIfAuthenticated(ctx);
 
-  if (!checkPermission(ctx.user.permissions, [permissions.manageMenus])) {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
     throw new Error(responses.action_not_allowed);
   }
 
@@ -35,7 +35,7 @@ export const saveLink = async (
 ) => {
   checkIfAuthenticated(ctx);
 
-  if (!checkPermission(ctx.user.permissions, [permissions.manageMenus])) {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
     throw new Error(responses.action_not_allowed);
   }
 
@@ -77,7 +77,7 @@ export const deleteLink = async (
 ) => {
   checkIfAuthenticated(ctx);
 
-  if (!checkPermission(ctx.user.permissions, [permissions.manageMenus])) {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
     throw new Error(responses.action_not_allowed);
   }
 

@@ -55,10 +55,7 @@ export const permissions = {
   manageAnyMedia: "media:manage_any",
   uploadMedia: "media:upload",
   viewAnyMedia: "media:view_any",
-  manageLayout: "layout:manage",
-  manageThemes: "theme:manage",
-  manageMenus: "menu:manage",
-  manageWidgets: "widget:manage",
+  manageSite: "site:manage",
   manageSettings: "setting:manage",
   manageUsers: "user:manage",
 };

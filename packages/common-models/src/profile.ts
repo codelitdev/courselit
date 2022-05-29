@@ -5,6 +5,6 @@ export default interface Profile {
   purchases: unknown[];
   email: string;
   bio: string;
-  permissions: unknown[];
+  permissions: string[];
   userId: string;
 }

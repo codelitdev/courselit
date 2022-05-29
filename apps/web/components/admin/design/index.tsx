@@ -28,12 +28,15 @@ const Appearance = (props: AppearanceProps) => {
         </Section>
       </Grid>
       {checkPermission(props.profile.permissions, [
-        permissions.manageLayout,
-      ]) && <LayoutManager />}
+        permissions.manageSite,
+      ]) && 
+      (
+        <>
+            <LayoutManager />
+            <ThemesManager />
+        </>
+      )}
 
-      {checkPermission(props.profile.permissions, [
-        permissions.manageThemes,
-      ]) && <ThemesManager />}
     </Grid>
   );
 };

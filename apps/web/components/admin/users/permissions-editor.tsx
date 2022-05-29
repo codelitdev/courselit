@@ -7,17 +7,14 @@ import {
   PERM_COURSE_MANAGE_ANY,
   PERM_COURSE_PUBLISH,
   PERM_ENROLL_IN_COURSE,
-  PERM_LAYOUT,
   PERM_MEDIA_MANAGE,
   PERM_MEDIA_MANAGE_ANY,
   PERM_MEDIA_VIEW_ANY,
   PERM_MEDIA_UPLOAD,
-  PERM_MENUS,
   PERM_SECTION_HEADER,
   PERM_SETTINGS,
-  PERM_THEMES,
   PERM_USERS,
-  PERM_WIDGETS,
+  PERM_SITE,
 } from "../../../ui-config/strings";
 import { connect } from "react-redux";
 import { FetchBuilder } from "@courselit/utils";
@@ -55,10 +52,7 @@ function PermissionsEditor({
     [permissions.uploadMedia]: PERM_MEDIA_UPLOAD,
     [permissions.manageMedia]: PERM_MEDIA_MANAGE,
     [permissions.manageAnyMedia]: PERM_MEDIA_MANAGE_ANY,
-    [permissions.manageLayout]: PERM_LAYOUT,
-    [permissions.manageThemes]: PERM_THEMES,
-    [permissions.manageMenus]: PERM_MENUS,
-    [permissions.manageWidgets]: PERM_WIDGETS,
+    [permissions.manageSite]: PERM_SITE,
     [permissions.manageSettings]: PERM_SETTINGS,
     [permissions.manageUsers]: PERM_USERS,
   };
