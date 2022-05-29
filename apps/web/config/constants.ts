@@ -27,7 +27,7 @@ export default {
   jwtTokenCookieName: process.env.JWT_COOKIE_NAME || "access_token",
 
   // Media uploads config
-  medialitServer: process.env.MEDIALIT_SERVER || 'https://medialit.cloud',
+  medialitServer: process.env.MEDIALIT_SERVER || "https://medialit.cloud",
 
   // Content types
   text: "text",
@@ -66,10 +66,7 @@ export default {
     manageAnyMedia: "media:manage_any",
     uploadMedia: "media:upload",
     viewAnyMedia: "media:view_any",
-    manageLayout: "layout:manage",
-    manageThemes: "theme:manage",
-    manageMenus: "menu:manage",
-    manageWidgets: "widget:manage",
+    manageSite: "site:manage",
     manageSettings: "setting:manage",
     manageUsers: "user:manage",
   },

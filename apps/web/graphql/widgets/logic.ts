@@ -19,7 +19,7 @@ export const getWidgetSettings = async (name: string, ctx: GQLContext) => {
 
 export const getWidgetData = async (name: string, ctx: GQLContext) => {
   checkIfAuthenticated(ctx);
-  if (!checkPermission(ctx.user.permissions, [permissions.manageWidgets])) {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
     throw new Error(responses.action_not_allowed);
   }
 
@@ -39,7 +39,7 @@ export const saveWidgetSettings = async (
   ctx: GQLContext
 ) => {
   checkIfAuthenticated(ctx);
-  if (!checkPermission(ctx.user.permissions, [permissions.manageWidgets])) {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
     throw new Error(responses.action_not_allowed);
   }
 
@@ -115,7 +115,7 @@ export const saveWidgetData = async (
 
 export const clearWidgetData = async (name: string, ctx: GQLContext) => {
   checkIfAuthenticated(ctx);
-  if (!checkPermission(ctx.user.permissions, [permissions.manageWidgets])) {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
     throw new Error(responses.action_not_allowed);
   }
 
@@ -132,7 +132,7 @@ export const clearWidgetData = async (name: string, ctx: GQLContext) => {
 };
 
 export const getSiteWidgets = async (ctx: GQLContext) => {
-    const widgets = await Widget.find({ domain: ctx.subdomain._id });
+  const widgets = await Widget.find({ domain: ctx.subdomain._id });
 
-    return widgets;
-}
+  return widgets;
+};
