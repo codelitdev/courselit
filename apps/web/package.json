@@ -10,12 +10,12 @@
     "prettier": "prettier --write **/*.ts"
   },
   "dependencies": {
-    "@courselit/common-models": "^0.18.1",
-    "@courselit/common-widgets": "^0.18.1",
-    "@courselit/components-library": "^0.18.1",
-    "@courselit/state-management": "^0.18.1",
-    "@courselit/utils": "^0.18.1",
-    "@courselit/widget-buttondown": "^0.18.1",
+    "@courselit/common-models": "^0.18.2",
+    "@courselit/common-widgets": "^0.18.2",
+    "@courselit/components-library": "^0.18.2",
+    "@courselit/state-management": "^0.18.2",
+    "@courselit/utils": "^0.18.2",
+    "@courselit/widget-buttondown": "^0.18.2",
     "@emotion/cache": "^11.7.1",
     "@emotion/react": "^11.8.2",
     "@emotion/server": "^11.4.0",
