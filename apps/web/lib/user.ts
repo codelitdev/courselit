@@ -30,10 +30,7 @@ export async function createUser({
       constants.permissions.manageAnyMedia,
       constants.permissions.uploadMedia,
       constants.permissions.viewAnyMedia,
-      constants.permissions.manageLayout,
-      constants.permissions.manageThemes,
-      constants.permissions.manageMenus,
-      constants.permissions.manageWidgets,
+      constants.permissions.manageSite,
       constants.permissions.manageSettings,
       constants.permissions.manageUsers,
     ];

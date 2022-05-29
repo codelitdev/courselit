@@ -76,28 +76,18 @@ const getSidebarMenuItems = (profile: Profile) => {
     });
   }
 
-  if (
-    checkPermission(profile.permissions, [
-      permissions.manageLayout,
-      permissions.manageThemes,
-    ])
-  ) {
+
+  if (profile.permissions.includes(permissions.manageSite)) {
     items.push({
-      name: "Appearance",
+      name: "Site",
       route: "/dashboard/design",
       icon: <Palette />,
     });
-  }
-
-  if (profile.permissions.includes(permissions.manageMenus)) {
     items.push({
       name: "Menus",
       route: "/dashboard/menus",
       icon: <List />,
     });
-  }
-
-  if (profile.permissions.includes(permissions.manageWidgets)) {
     items.push({
       name: "Widgets",
       route: "/dashboard/widgets",

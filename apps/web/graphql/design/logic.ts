@@ -16,7 +16,7 @@ export const getTheme = async (ctx: GQLContext) => {
 
 export const setTheme = async (id: string, ctx: GQLContext) => {
   checkIfAuthenticated(ctx);
-  if (!checkPermission(ctx.user.permissions, [permissions.manageThemes])) {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
     throw new Error(responses.action_not_allowed);
   }
 
@@ -38,7 +38,7 @@ export const setTheme = async (id: string, ctx: GQLContext) => {
 
 export const removeTheme = async (id: string, ctx: GQLContext) => {
   checkIfAuthenticated(ctx);
-  if (!checkPermission(ctx.user.permissions, [permissions.manageThemes])) {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
     throw new Error(responses.action_not_allowed);
   }
 
@@ -49,7 +49,7 @@ export const removeTheme = async (id: string, ctx: GQLContext) => {
 
 export const getAllThemes = async (ctx: GQLContext) => {
   checkIfAuthenticated(ctx);
-  if (!checkPermission(ctx.user.permissions, [permissions.manageThemes])) {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
     throw new Error(responses.action_not_allowed);
   }
 
@@ -59,7 +59,7 @@ export const getAllThemes = async (ctx: GQLContext) => {
 
 export const addTheme = async (themeData: any, ctx: GQLContext) => {
   checkIfAuthenticated(ctx);
-  if (!checkPermission(ctx.user.permissions, [permissions.manageThemes])) {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
     throw new Error(responses.action_not_allowed);
   }
 
@@ -99,7 +99,7 @@ export const getLayout = async (ctx: GQLContext) => {
 
 export const setLayout = async (layoutData: any, ctx: GQLContext) => {
   checkIfAuthenticated(ctx);
-  if (!checkPermission(ctx.user.permissions, [permissions.manageLayout])) {
+  if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
     throw new Error(responses.action_not_allowed);
   }
 
