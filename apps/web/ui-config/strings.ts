@@ -272,7 +272,6 @@ export const UNABLE_TO_LOGOUT = "Logout failed. Try again.";
 export const USER_TABLE_HEADER_NAME = "Details";
 export const USER_TABLE_HEADER_JOINED = "Joined";
 export const USER_TABLE_HEADER_LAST_ACTIVE = "Last login";
-export const USER_TABLE_HEADER_TYPE = "Type";
 export const USER_TYPE_TEAM = "Team";
 export const USER_TYPE_AUDIENCE = "Audience";
 export const USER_TYPE_ALL = "All";

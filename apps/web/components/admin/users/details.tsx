@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { styled } from "@mui/material/styles";
 import { Grid, Typography, Switch, IconButton } from "@mui/material";
 import { connect } from "react-redux";
 import {
@@ -47,15 +46,6 @@ interface DetailsProps {
 }
 
 const Details = ({ userId, auth, address, dispatch }: DetailsProps) => {
-//   const [userData, setUserData] = useState({
-//     id: "",
-//     email: "",
-//     name: "",
-//     purchases: [],
-//     active: false,
-//     permissions: [],
-//     userId: "",
-//   });
   const [userData, setUserData] = useState(null);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
 

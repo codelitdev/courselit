@@ -6,12 +6,9 @@ import {
   checkIfAuthenticated,
   checkPermission,
 } from "../../lib/graphql";
-import mongoose from "mongoose";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
 const { permissions } = constants;
-
-const ObjectId = mongoose.Types.ObjectId;
 
 const removeAdminFieldsFromUserObject = ({ id, name, userId, bio, email } : {
     id: string,

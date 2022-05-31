@@ -22,7 +22,6 @@ import {
     USER_TABLE_HEADER_JOINED,
     USERS_MANAGER_PAGE_HEADING,
     USER_TABLE_HEADER_LAST_ACTIVE,
-    USER_TABLE_HEADER_TYPE,
     USER_TYPE_TEAM,
     USER_TYPE_AUDIENCE,
     USER_FILTER_PERMISSION,
@@ -43,9 +42,6 @@ import MuiLink from "@mui/material/Link";
 import { Help } from "@mui/icons-material";
 
 const { networkAction } = actionCreators;
-
-const Img = dynamic(() => import("../../img"));
-const Details = dynamic(() => import("./details"));
 
 interface UserManagerProps {
   auth: Auth;
