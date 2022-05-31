@@ -19,7 +19,7 @@ export default {
   mailUser: process.env.EMAIL_USER,
   mailPass: process.env.EMAIL_PASS,
   mailFrom: process.env.EMAIL_FROM,
-  mailPort: process.env.EMAIL_PORT ? parseInt(process.env.EMAIL_PORT) : 587,
+  mailPort: process.env.EMAIL_PORT ? +process.env.EMAIL_PORT : 587,
 
   // password related config
   jwtSecret: process.env.JWT_SECRET,
@@ -41,7 +41,7 @@ export default {
   open: "public",
 
   // Pagination config
-  itemsPerPage: 5,
+  itemsPerPage: process.env.ITEMS_PER_PAGE ? +process.env.ITEMS_PER_PAGE : 20,
   defaultOffset: 1,
   blogPostSnippetLength: 135,
 
@@ -78,6 +78,10 @@ export default {
 
   // limits
   mediaRecordsPerPage: 10,
+
+  // user type
+  userTypeTeam: "team",
+  userTypeAudience: "audience",
 
   // acceptable currency codes for payments
   currencyISOCodes: [

@@ -82,7 +82,7 @@ const validateMongooseTextSearchQuery = (query: any) => {
 };
 
 interface SearchData {
-  offset: number;
+  offset?: number;
   query: Record<string, unknown>;
   graphQLContext: GQLContext;
 }
