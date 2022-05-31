@@ -1,0 +1,18 @@
+import dynamic from "next/dynamic";
+import { useRouter } from "next/router";
+import UserDetails from "../../../components/admin/users/details";
+import { USERS_MANAGER_PAGE_HEADING } from "../../../ui-config/strings";
+
+const BaseLayout = dynamic(() => import("../../../components/admin/base-layout"));
+const Users = dynamic(() => import("../../../components/admin/users"));
+
+export default function SiteUsers() {
+  const router = useRouter();
+  const { id } = router.query;
+
+  return (
+    <BaseLayout title={USERS_MANAGER_PAGE_HEADING}>
+      <UserDetails userId={id} />
+    </BaseLayout>
+  );
+}

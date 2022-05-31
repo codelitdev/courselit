@@ -7,7 +7,11 @@ import {
   GraphQLInt,
   GraphQLList,
   GraphQLInputObjectType,
+  GraphQLEnumType,
 } from "graphql";
+import constants from "../../config/constants";
+
+const { userTypeTeam, userTypeAudience } = constants;
 
 const userType = new GraphQLObjectType({
   name: "User",
@@ -20,6 +24,8 @@ const userType = new GraphQLObjectType({
     userId: { type: new GraphQLNonNull(GraphQLString) },
     bio: { type: GraphQLString },
     permissions: { type: new GraphQLList(GraphQLString) },
+    createdAt: { type: GraphQLString },
+    updatedAt: { type: GraphQLString }
   },
 });
 
@@ -34,11 +40,20 @@ const userUpdateInput = new GraphQLInputObjectType({
   },
 });
 
+const userGroupType = new GraphQLEnumType({
+  name: "UserGroupType",
+  values: {
+    TEAM: { value: userTypeTeam },
+    AUDIENCE: { value: userTypeAudience },
+  },
+});
+
 const userSearchInput = new GraphQLInputObjectType({
   name: "UserSearchInput",
   fields: {
     offset: { type: GraphQLInt },
     searchText: { type: GraphQLString },
+    type: { type: userGroupType }
   },
 });
 

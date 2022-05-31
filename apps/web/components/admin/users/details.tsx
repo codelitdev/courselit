@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { styled } from "@mui/material/styles";
-import { Grid, Typography, Switch } from "@mui/material";
+import { Grid, Typography, Switch, IconButton } from "@mui/material";
 import { connect } from "react-redux";
 import {
   SWITCH_ACCOUNT_ACTIVE,
@@ -13,6 +13,8 @@ import PermissionsEditor from "./permissions-editor";
 import type { Address, Auth } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
+import Link from "next/link";
+import { ArrowBack } from "@mui/icons-material";
 
 const { networkAction, setAppMessage } = actionCreators;
 
@@ -25,17 +27,17 @@ const classes = {
 };
 
 // TODO jss-to-styled codemod: The Fragment root was replaced by div. Change the tag if needed.
-const Root = styled("div")(({ theme }: { theme: any }) => ({
-  [`& .${classes.container}`]: {},
+// const Root = styled("Section")(({ theme }: { theme: any }) => ({
+//   [`& .${classes.container}`]: {},
 
-  [`& .${classes.enrolledCourseItem}`]: {
-    marginTop: theme.spacing(1),
-  },
+//   [`& .${classes.enrolledCourseItem}`]: {
+//     marginTop: theme.spacing(1),
+//   },
 
-  [`& .${classes.fullHeight}`]: {
-    height: "100%",
-  },
-}));
+//   [`& .${classes.fullHeight}`]: {
+//     height: "100%",
+//   },
+// }));
 
 interface DetailsProps {
   userId: string;
@@ -45,15 +47,16 @@ interface DetailsProps {
 }
 
 const Details = ({ userId, auth, address, dispatch }: DetailsProps) => {
-  const [userData, setUserData] = useState({
-    id: "",
-    email: "",
-    name: "",
-    purchases: [],
-    active: false,
-    permissions: [],
-    userId: "",
-  });
+//   const [userData, setUserData] = useState({
+//     id: "",
+//     email: "",
+//     name: "",
+//     purchases: [],
+//     active: false,
+//     permissions: [],
+//     userId: "",
+//   });
+  const [userData, setUserData] = useState(null);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
 
   useEffect(() => {
@@ -61,7 +64,9 @@ const Details = ({ userId, auth, address, dispatch }: DetailsProps) => {
   }, [userId]);
 
   useEffect(() => {
-    getEnrolledCourses();
+      if (userData) {
+          getEnrolledCourses();
+      }
   }, []);
 
   const getUserDetails = async () => {
@@ -157,77 +162,64 @@ const Details = ({ userId, auth, address, dispatch }: DetailsProps) => {
   };
 
   return (
-    <Root>
+    <Section>
       {userData && (
+
         <Grid
           container
           direction="column"
           className={classes.container}
           spacing={2}
         >
-          <Grid item container spacing={2}>
-            <Grid item xs={12} sm={4} md={3}>
-              <Section className={classes.fullHeight}>
-                <Grid
-                  container
-                  item
-                  direction="row"
-                  alignItems="center"
-                  spacing={1}
-                  justifyContent="center"
-                >
-                  <Grid item>
-                    <Grid
-                      item
-                      container
-                      direction="row"
-                      alignItems="center"
-                      spacing={1}
-                    >
-                      <Grid item>
-                        <Typography variant="h6">{userData.name}</Typography>
-                      </Grid>
-                      <Grid item>
-                        <Typography variant="body2">
-                          <a href={`mailto:${userData.email}`}>
-                            {userData.email}
-                          </a>
-                        </Typography>
-                      </Grid>
-                    </Grid>
-                  </Grid>
-                </Grid>
-              </Section>
-            </Grid>
-            <Grid item xs={12} sm={8} md={9}>
-              <Section>
-                <Grid container direction="column">
-                  <Grid
-                    item
-                    container
-                    direction="row"
-                    justifyContent="space-between"
-                    xs
-                  >
-                    <Typography variant="subtitle1">
-                      {SWITCH_ACCOUNT_ACTIVE}
+          <Grid item xs>
+            <Grid container alignItems="center">
+              <Grid item>
+                <IconButton size="large">
+                  <Link href="/dashboard/users">
+                    <ArrowBack />
+                  </Link>
+                </IconButton>
+              </Grid>
+              <Grid item>
+                <Grid item>
+                    <Typography variant="h1">
+                        {userData.name ? userData.name : userData.email}
                     </Typography>
-                    <Switch
-                      type="checkbox"
-                      name="active"
-                      checked={userData.active}
-                      onChange={(e) => toggleActiveState(e.target.checked)}
-                    />
-                  </Grid>
+                    <Typography variant="body2">
+                        <a href={`mailto:${userData.email}`}>
+                        {userData.email}
+                        </a>
+                    </Typography>
                 </Grid>
-              </Section>
+              </Grid>
             </Grid>
           </Grid>
-          <Grid item>
-            <Section>
-              <PermissionsEditor user={userData} />
-            </Section>
-          </Grid>
+          {userData && 
+            <>
+                <Grid item container spacing={2}>
+                    <Grid
+                        item
+                        container
+                        direction="row"
+                        justifyContent="space-between"
+                        xs>
+                        <Typography variant="subtitle1">
+                            {SWITCH_ACCOUNT_ACTIVE}
+                        </Typography>
+                        <Switch
+                            type="checkbox"
+                            name="active"
+                            checked={userData.active}
+                            onChange={(e) => toggleActiveState(e.target.checked)} />
+                    </Grid>
+                </Grid>
+                <Grid item>
+                    <Section>
+                        <PermissionsEditor user={userData} />
+                    </Section>
+                </Grid>
+            </>
+          }
 
           {userData.purchases && userData.purchases.length > 0 && (
             <Grid item>
@@ -251,7 +243,7 @@ const Details = ({ userId, auth, address, dispatch }: DetailsProps) => {
           )}
         </Grid>
       )}
-    </Root>
+    </Section>
   );
 };
 

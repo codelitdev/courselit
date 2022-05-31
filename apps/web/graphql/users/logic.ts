@@ -1,11 +1,6 @@
 import User from "../../models/User";
 import Course from "../../models/Course";
 import { responses } from "../../config/strings";
-// const {
-//   checkIfAuthenticated,
-//   makeModelTextSearchable,
-//   checkPermission,
-// } = require("../../lib/graphql");
 import {
   makeModelTextSearchable,
   checkIfAuthenticated,
@@ -13,19 +8,26 @@ import {
 } from "../../lib/graphql";
 import mongoose from "mongoose";
 import constants from "../../config/constants";
+import GQLContext from "../../models/GQLContext";
 const { permissions } = constants;
 
 const ObjectId = mongoose.Types.ObjectId;
 
-const removeAdminFieldsFromUserObject = ({ id, name, userId, bio, email }) => ({
-  id,
-  name,
-  userId,
-  bio,
-  email,
+const removeAdminFieldsFromUserObject = ({ id, name, userId, bio, email } : {
+    id: string,
+    name: string,
+    userId: string,
+    bio: string,
+    email: string
+}) => ({
+    id,
+    name,
+    userId,
+    bio,
+    email,
 });
 
-export const getUser = async (email = null, userId = null, ctx) => {
+export const getUser = async (email = null, userId = null, ctx: GQLContext) => {
   const { user: loggedInUser } = ctx;
   const loggedUserEmail = loggedInUser && loggedInUser.email;
   const loggedUserId = loggedInUser && loggedInUser.userId;
@@ -121,14 +123,28 @@ const updateCoursesForCreatorName = async (creatorId, creatorName) => {
   );
 };
 
-export const getSiteUsers = async (searchData = {}, ctx) => {
+type UserGroupType = "team" | "audience";
+
+interface SearchData {
+    searchText?: string;
+    offset?: number;
+    type?: UserGroupType;
+}
+
+export const getUsers = async (
+    searchData: SearchData = {},
+    ctx: GQLContext
+) => {
   checkIfAuthenticated(ctx);
   if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
     throw new Error(responses.action_not_allowed);
   }
 
-  const query = { domain: ctx.subdomain._id };
+  const query: Record<string, unknown> = { domain: ctx.subdomain._id };
   if (searchData.searchText) query.$text = { $search: searchData.searchText };
+  if (searchData.type) {
+      query.permissions = getQueryForFilteringByPermissions(searchData.type);
+  }
 
   const searchUsers = makeModelTextSearchable(User);
 
@@ -139,3 +155,21 @@ export const getSiteUsers = async (searchData = {}, ctx) => {
 
   return users;
 };
+
+const getQueryForFilteringByPermissions = (type: UserGroupType): {
+    $in: string[]
+} => {
+    if (type === constants.userTypeTeam) {
+        const allPerms = Object.values(constants.permissions);
+        const indexOfEnrollCoursePermission = allPerms
+            .indexOf(constants.permissions.enrollInCourse); 
+        allPerms.splice(indexOfEnrollCoursePermission, 1);
+        return { 
+            $in: [...allPerms]
+        }
+    } else if (type === constants.userTypeAudience) {
+        return { $in: [constants.permissions.enrollInCourse] }
+    } else {
+        return { $in: Object.values(constants.permissions) }
+    }
+}
