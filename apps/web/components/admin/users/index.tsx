@@ -7,6 +7,7 @@ import {
     InputLabel,
     MenuItem,
     Select,
+    SelectChangeEvent,
     Table,
     TableBody,
     TableCell,
@@ -31,7 +32,6 @@ import {
 import { FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";
 import { Section } from "@courselit/components-library";
-import dynamic from "next/dynamic";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
 import type { Profile, User, Auth, Address } from "@courselit/common-models";
@@ -40,6 +40,7 @@ import { permissions } from "../../../ui-config/constants";
 import Link from "next/link";
 import MuiLink from "@mui/material/Link";
 import { Help } from "@mui/icons-material";
+import { ThunkDispatch } from "redux-thunk";
 
 const { networkAction } = actionCreators;
 
@@ -138,7 +139,7 @@ const UsersManager = ({
         return types.join(', ');
     }
 
-    const handleUserTypeChange = (e: FormEvent<HTMLInputElement>) => {
+    const handleUserTypeChange = (e: SelectChangeEvent) => {
         setType(e.target.value);
         setUsers([])
         setUsersPaginationOffset(1);

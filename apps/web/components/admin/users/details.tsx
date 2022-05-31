@@ -9,7 +9,7 @@ import { FetchBuilder } from "@courselit/utils";
 import { AppMessage } from "@courselit/common-models";
 import { Section } from "@courselit/components-library";
 import PermissionsEditor from "./permissions-editor";
-import type { Address, Auth } from "@courselit/common-models";
+import type { Address, Auth, Course, User } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
 import Link from "next/link";
@@ -25,19 +25,6 @@ const classes = {
   fullHeight: `${PREFIX}-fullHeight`,
 };
 
-// TODO jss-to-styled codemod: The Fragment root was replaced by div. Change the tag if needed.
-// const Root = styled("Section")(({ theme }: { theme: any }) => ({
-//   [`& .${classes.container}`]: {},
-
-//   [`& .${classes.enrolledCourseItem}`]: {
-//     marginTop: theme.spacing(1),
-//   },
-
-//   [`& .${classes.fullHeight}`]: {
-//     height: "100%",
-//   },
-// }));
-
 interface DetailsProps {
   userId: string;
   auth: Auth;
@@ -46,7 +33,7 @@ interface DetailsProps {
 }
 
 const Details = ({ userId, auth, address, dispatch }: DetailsProps) => {
-  const [userData, setUserData] = useState(null);
+  const [userData, setUserData] = useState<User>();
   const [enrolledCourses, setEnrolledCourses] = useState([]);
 
   useEffect(() => {
@@ -95,7 +82,7 @@ const Details = ({ userId, auth, address, dispatch }: DetailsProps) => {
   const getEnrolledCourses = async () => {
     const query = `
     query {
-      enrolledCourses: getEnrolledCourses(userId: "${userData.id}") {
+      enrolledCourses: getEnrolledCourses(userId: "${userData!.id}") {
         id,
         title
       }
@@ -120,7 +107,7 @@ const Details = ({ userId, auth, address, dispatch }: DetailsProps) => {
     const mutation = `
     mutation {
       user: updateUser(userData: {
-          id: "${userData.id}"
+          id: "${userData!.id}"
           active: ${value}
       }) { 
         id,
@@ -154,39 +141,37 @@ const Details = ({ userId, auth, address, dispatch }: DetailsProps) => {
   return (
     <Section>
       {userData && (
-
         <Grid
           container
           direction="column"
           className={classes.container}
           spacing={2}
         >
-          <Grid item xs>
-            <Grid container alignItems="center">
-              <Grid item>
-                <IconButton size="large">
-                  <Link href="/dashboard/users">
-                    <ArrowBack />
-                  </Link>
-                </IconButton>
-              </Grid>
-              <Grid item>
+            <Grid item xs>
+                <Grid container alignItems="center">
                 <Grid item>
-                    <Typography variant="h1">
-                        {userData.name ? userData.name : userData.email}
-                    </Typography>
-                    <Typography variant="body2">
-                        <a href={`mailto:${userData.email}`}>
-                        {userData.email}
-                        </a>
-                    </Typography>
+                    <IconButton size="large">
+                    <Link href="/dashboard/users">
+                        <ArrowBack />
+                    </Link>
+                    </IconButton>
                 </Grid>
-              </Grid>
+                <Grid item>
+                    <Grid item>
+                        <Typography variant="h1">
+                            {userData.name ? userData.name : userData.email}
+                        </Typography>
+                        <Typography variant="body2">
+                            <a href={`mailto:${userData.email}`}>
+                            {userData.email}
+                            </a>
+                        </Typography>
+                    </Grid>
+                </Grid>
+                </Grid>
             </Grid>
-          </Grid>
-          {userData && 
-            <>
-                <Grid item container spacing={2}>
+            <Grid item>
+                <Grid container spacing={2}>
                     <Grid
                         item
                         container
@@ -208,29 +193,28 @@ const Details = ({ userId, auth, address, dispatch }: DetailsProps) => {
                         <PermissionsEditor user={userData} />
                     </Section>
                 </Grid>
-            </>
-          }
-
-          {userData.purchases && userData.purchases.length > 0 && (
-            <Grid item>
-              <Section>
-                <Typography variant="h6">
-                  {ENROLLED_COURSES_HEADER} ({userData.purchases.length})
-                </Typography>
-                <Grid container direction="column">
-                  {enrolledCourses.map((course) => (
-                    <Grid
-                      item
-                      key={course.id}
-                      className={classes.enrolledCourseItem}
-                    >
-                      {course.title}
-                    </Grid>
-                  ))}
-                </Grid>
-              </Section>
             </Grid>
-          )}
+
+            {userData.purchases && userData.purchases.length > 0 && (
+                <Grid item>
+                <Section>
+                    <Typography variant="h6">
+                    {ENROLLED_COURSES_HEADER} ({userData.purchases.length})
+                    </Typography>
+                    <Grid container direction="column">
+                    {enrolledCourses.map((course: Course) => (
+                        <Grid
+                        item
+                        key={course.id}
+                        className={classes.enrolledCourseItem}
+                        >
+                        {course.title}
+                        </Grid>
+                    ))}
+                    </Grid>
+                </Section>
+                </Grid>
+            )}
         </Grid>
       )}
     </Section>
