@@ -1,4 +1,4 @@
-import React, { useState, useEffect, FormEvent } from "react";
+import React, { useState, useEffect } from "react";
 import { 
     Avatar,
     Button,
@@ -34,13 +34,14 @@ import { connect } from "react-redux";
 import { Section } from "@courselit/components-library";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
-import type { Profile, User, Auth, Address } from "@courselit/common-models";
+import type { Profile, User, Auth, Address, State } from "@courselit/common-models";
 import { checkPermission } from "../../../ui-lib/utils";
 import { permissions } from "../../../ui-config/constants";
 import Link from "next/link";
 import MuiLink from "@mui/material/Link";
 import { Help } from "@mui/icons-material";
 import { ThunkDispatch } from "redux-thunk";
+import { AnyAction } from "redux";
 
 const { networkAction } = actionCreators;
 
