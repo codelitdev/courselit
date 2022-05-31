@@ -12,41 +12,41 @@ import ApiRequest from "../models/ApiRequest";
 import { createUser } from "./user";
 
 export default new Strategy(
-  {
-    secret: constants.jwtSecret,
-    userFields: ["email"],
-    tokenField: "token",
-    passReqToCallbacks: true,
-  },
-  async (req: NextApiRequest, user: User, token: string) => {
-    const magiclink = generateMagicLink({
-      token,
-      hostname: req.headers["host"] || "",
-      secure: req.headers["x-forwarded-proto"] ? true : false,
-      redirect: req.body.redirect,
-    });
-    const emailBody = pug.render(LoginEmailTemplate, { magiclink });
-    return process.env.NODE_ENV === "production"
-      ? await send({
-          to: user.email,
-          subject: `${responses.sign_in_mail_prefix} ${req.headers["host"]}`,
-          body: emailBody,
-        })
-      : console.log(`Login link: ${magiclink}`); // eslint-disable-line no-console
-  },
-  async (req: ApiRequest, user: User) => {
-    let dbUser: User | null = await UserModel.findOne({
-      email: user.email,
-      domain: req.subdomain!._id,
-    });
+    {
+        secret: constants.jwtSecret,
+        userFields: ["email"],
+        tokenField: "token",
+        passReqToCallbacks: true,
+    },
+    async (req: NextApiRequest, user: User, token: string) => {
+        const magiclink = generateMagicLink({
+            token,
+            hostname: req.headers["host"] || "",
+            secure: req.headers["x-forwarded-proto"] ? true : false,
+            redirect: req.body.redirect,
+        });
+        const emailBody = pug.render(LoginEmailTemplate, { magiclink });
+        return process.env.NODE_ENV === "production"
+            ? await send({
+            to: user.email,
+            subject: `${responses.sign_in_mail_prefix} ${req.headers["host"]}`,
+            body: emailBody,
+            })
+        : console.log(`Login link: ${magiclink}`); // eslint-disable-line no-console
+    },
+    async (req: ApiRequest, user: User) => {
+        let dbUser: User | null = await UserModel.findOne({
+            email: user.email,
+            domain: req.subdomain!._id,
+        });
 
-    if (!dbUser) {
-      dbUser = await createUser({
-        domain: req.subdomain!._id,
-        email: user.email,
-      });
+        if (!dbUser) {
+            dbUser = await createUser({
+                domain: req.subdomain!._id,
+                email: user.email,
+            });
+        }
+
+        return dbUser.active ? dbUser : null;
     }
-
-    return dbUser.active ? dbUser : null;
-  }
 );
