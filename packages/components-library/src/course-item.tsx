@@ -32,10 +32,16 @@ interface CourseItemProps {
   course: Course;
   siteInfo: SiteInfo;
   freeCostCaption?: string;
+  thumbnailLoading?: "eager" | "lazy";
 }
 
 const CourseItem = (props: CourseItemProps) => {
-  const { course, siteInfo, freeCostCaption } = props;
+  const {
+    course,
+    siteInfo,
+    freeCostCaption,
+    thumbnailLoading = "lazy",
+  } = props;
 
   return (
     <StyledGrid
@@ -60,12 +66,11 @@ const CourseItem = (props: CourseItemProps) => {
             component="article"
             spacing={1}
           >
-            {/* {course.featuredImage && (
-                } */}
             <Grid item>
               <Image
                 src={course.featuredImage && course.featuredImage.file}
                 classes={classes.featuredImage}
+                loading={thumbnailLoading}
               />
             </Grid>
             <Grid item>

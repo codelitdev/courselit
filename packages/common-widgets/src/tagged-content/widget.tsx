@@ -56,6 +56,7 @@ const Widget = (props: FeaturedWidgetProps) => {
                   freeCostCaption={config.FREE_COST_CAPTION as string}
                   siteInfo={state.siteinfo}
                   course={post}
+                  thumbnailLoading="eager"
                 />
               ))}
             </Grid>

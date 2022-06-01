@@ -1,8 +1,8 @@
 import { PURCHASE_STATUS_PAGE_HEADER } from "../ui-config/strings";
 import dynamic from "next/dynamic";
 import { Grid } from "@mui/material";
+import BaseLayout from "../components/public/base-layout";
 
-const BaseLayout = dynamic(() => import("../components/public/base-layout"));
 const PurchaseStatus = dynamic(
   () => import("../components/public/purchase-status")
 );

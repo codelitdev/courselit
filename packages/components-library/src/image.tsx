@@ -9,10 +9,11 @@ interface ImgProps {
   classes?: string;
   alt?: string;
   defaultImage?: string;
+  loading?: "eager" | "lazy";
 }
 
 const Image = (props: ImgProps) => {
-  const { src, classes, alt, defaultImage } = props;
+  const { src, classes, alt, defaultImage, loading = "lazy" } = props;
   const source = src || defaultImage || "/courselit_backdrop.webp";
 
   return (
@@ -23,9 +24,10 @@ const Image = (props: ImgProps) => {
       sx={{
         objectFit: "cover",
         width: "100%",
-        height: "100%",
+        height: "auto",
         borderRadius: 2,
       }}
+      loading={loading}
     />
   );
 };

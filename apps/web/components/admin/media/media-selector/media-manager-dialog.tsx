@@ -22,7 +22,7 @@ interface MediaManagerDialogProps {
 }
 
 const MediaManagerDialog = (props: MediaManagerDialogProps) => {
-  const [selectedMedia, setSelectedMedia] = useState({});
+  const [selectedMedia, setSelectedMedia] = useState();
   const { onClose, onOpen, mimeTypesToShow, access, title } = props;
 
   const handleSelection = () => onClose(selectedMedia);
