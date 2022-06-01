@@ -10,17 +10,15 @@ import {
 const mediaType = new GraphQLObjectType({
   name: "Media",
   fields: {
-    mediaId: { type: new GraphQLNonNull(GraphQLString) },
-    file: { type: new GraphQLNonNull(GraphQLString) },
+    mediaId: { type: GraphQLString },
+    file: { type: GraphQLString },
     thumbnail: { type: GraphQLString },
-    originalFileName: {
-      type: new GraphQLNonNull(GraphQLString),
-    },
-    mimeType: { type: new GraphQLNonNull(GraphQLString) },
-    size: { type: new GraphQLNonNull(GraphQLInt) },
+    originalFileName: { type: GraphQLString },
+    mimeType: { type: GraphQLString },
+    size: { type: GraphQLInt },
     caption: { type: GraphQLString },
-    public: { type: new GraphQLNonNull(GraphQLBoolean) },
-    key: { type: new GraphQLNonNull(GraphQLString) },
+    public: { type: GraphQLBoolean },
+    key: { type: GraphQLString },
   },
 });
 
