@@ -11,6 +11,7 @@ import { FetchBuilder } from "@courselit/utils";
 import dynamic from "next/dynamic";
 import type { AppState } from "@courselit/state-management";
 import { Address, Lesson, Profile, SiteInfo } from "@courselit/common-models";
+import ComponentScaffold from "../../../components/public/base-layout/component-scaffold";
 
 const CourseIntroduction = dynamic(
   () => import("../../../components/course-introduction")
@@ -19,9 +20,6 @@ const LessonViewer = dynamic(
   () => import("../../../components/public/lesson-viewer")
 );
 const AppError = dynamic(() => import("../../../components/app-error"));
-const ComponentScaffold = dynamic(
-  () => import("../../../components/public/base-layout/component-scaffold")
-);
 
 interface CourseProps {
   course: any;

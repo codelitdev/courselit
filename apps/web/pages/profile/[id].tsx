@@ -18,12 +18,10 @@ import { useState } from "react";
 import { actionCreators } from "@courselit/state-management";
 import { getBackendAddress } from "../../ui-lib/utils";
 import { Section } from "@courselit/components-library";
-import dynamic from "next/dynamic";
 import { AppMessage } from "@courselit/common-models";
 import type { State } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
-
-const BaseLayout = dynamic(() => import("../../components/public/base-layout"));
+import BaseLayout from "../../components/public/base-layout";
 
 function Profile({ user, profile, auth, dispatch, address }: any) {
   const isMyProfile = profile && profile.id === user.id;

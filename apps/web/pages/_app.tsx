@@ -21,7 +21,6 @@ import { actionCreators } from "@courselit/state-management";
 import CodeInjector from "../components/public/code-injector";
 import { DefaultTheme } from "@mui/private-theming";
 import widgets from "../ui-config/widgets";
-import { FetchBuilder } from "@courselit/utils";
 
 type CourseLitProps = AppProps & {
   emotionCache: EmotionCache;
