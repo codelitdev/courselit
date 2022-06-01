@@ -8,8 +8,8 @@ import { Section } from "@courselit/components-library";
 import type { SiteInfo, State } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
 import MuiLink from "@mui/material/Link";
+import BaseLayout from "../components/public/base-layout";
 
-const BaseLayout = dynamic(() => import("../components/public/base-layout"));
 const Items = dynamic(() => import("../components/public/items"));
 
 const generateQuery = (pageOffset = 1) => `

@@ -125,6 +125,7 @@ const Article = (props: ArticleProps) => {
             <Image
               alt={course.featuredImage.caption}
               src={course.featuredImage.file!}
+              loading="eager"
             />
           </Grid>
         )}

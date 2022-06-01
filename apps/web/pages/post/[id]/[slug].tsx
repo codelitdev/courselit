@@ -6,10 +6,8 @@ import { FetchBuilder } from "@courselit/utils";
 import type { SiteInfo, Address, Course } from "@courselit/common-models";
 import type { AppState } from "@courselit/state-management";
 import dynamic from "next/dynamic";
+import BaseLayout from "../../../components/public/base-layout";
 
-const BaseLayout = dynamic(
-  () => import("../../../components/public/base-layout")
-);
 const Article = dynamic(() => import("../../../components/public/article"));
 
 interface PostProps {
