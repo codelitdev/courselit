@@ -9,8 +9,8 @@ import { Section } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 import { Course } from "@courselit/common-models";
 import { useRouter } from "next/router";
+import BaseLayout from "../../components/public/base-layout";
 
-const BaseLayout = dynamic(() => import("../../components/public/base-layout"));
 const Items = dynamic(() => import("../../components/public/items"));
 
 const generateQuery =

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
 import {
   BTN_LOGIN,
   ERROR_SIGNIN_VERIFYING_LINK,
@@ -16,8 +15,7 @@ import { connect } from "react-redux";
 import { actionCreators } from "@courselit/state-management";
 import type { ThunkDispatch } from "redux-thunk";
 import type { AnyAction } from "redux";
-
-const BaseLayout = dynamic(() => import("../components/public/base-layout"));
+import BaseLayout from "../components/public/base-layout";
 
 interface LoginProps {
   address: Address;
