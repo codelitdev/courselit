@@ -12,30 +12,27 @@ interface MasterLayoutProps {
 }
 
 const MasterLayout = (props: MasterLayoutProps) => {
-  return (
-    <>
-      <Head>
-        <title>
-          {props.title} | {props.siteInfo.title}
-        </title>
-        <link
-          rel="icon"
-          href={
-            props.siteInfo.logopath
-              ? props.siteInfo.logopath.file
-              : "/courselit_backdrop_square.webp"
-          }
-        />
-        <meta
-          name="viewport"
-          content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
-        />
-      </Head>
-      <Scaffold>
-        <Template>{props.children}</Template>
-      </Scaffold>
-    </>
-  );
+    return (
+        <>
+        <Head>
+            <title>
+                {props.title} | {props.siteInfo.title}
+            </title>
+            <link
+                rel="icon"
+                href={
+                    props.siteInfo.logopath && props.siteInfo.logopath.file
+                    ? props.siteInfo.logopath.file
+                    : "/favicon.ico"} />
+            <meta
+                name="viewport"
+                content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no" />
+        </Head>
+        <Scaffold>
+            <Template>{props.children}</Template>
+        </Scaffold>
+        </>
+    );
 };
 
 const mapStateToProps = (state: AppState) => ({
