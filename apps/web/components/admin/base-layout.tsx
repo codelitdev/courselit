@@ -149,9 +149,9 @@ const BaseLayoutAdmin = ({
         <link
           rel="icon"
           href={
-            siteInfo.logopath
+            siteInfo.logopath && siteInfo.logopath.file
               ? siteInfo.logopath.file
-              : "/courselit_backdrop_square.webp"
+              : "/favicon.ico"
           }
         />
         <meta
