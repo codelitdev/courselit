@@ -48,6 +48,7 @@ import dynamic from "next/dynamic";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import type { Profile, Auth, Address } from "@courselit/common-models";
 import { EditorState } from "draft-js";
+import Media from "@courselit/common-models/dist/media";
 
 const { networkAction, setAppMessage } = actionCreators;
 
@@ -417,8 +418,8 @@ const CourseEditor = (props: CourseEditorProps) => {
     }
   };
 
-  const onFeaturedImageSelection = (media) => {
-    return media && changeCourseDetails("featuredImage", media);
+  const onFeaturedImageSelection = (media?: Media) => {
+    return media && changeCourseDetails("featuredImage", media || null);
   };
 
   const closeDeleteCoursePopup = () => setDeleteCoursePopupOpened(false);
