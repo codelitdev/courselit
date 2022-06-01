@@ -190,7 +190,7 @@ const CourseEditor = (props: CourseEditorProps) => {
           description: "${TextEditor.stringify(courseData.course.description)}",
           featuredImage: ${
             courseData.course.featuredImage
-              ? '"' + courseData.course.featuredImage.id + '"'
+              ? '"' + courseData.course.featuredImage.mediaId + '"'
               : null
           },
           isFeatured: ${courseData.course.isFeatured},
