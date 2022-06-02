@@ -1,6 +1,6 @@
 {
   "name": "@courselit/components-library",
-  "version": "0.18.5",
+  "version": "0.18.6",
   "description": "A library of React components for CourseLit LMS.",
   "keywords": [
     "react",
@@ -41,13 +41,13 @@
   },
   "peerDependencies": {
     "@mui/material": "^5.5.0",
+    "next": "12.1.0",
     "react": "^17.0.2",
-    "react-redux": "^8.0.1",
-    "next": "12.1.0"
+    "react-redux": "^8.0.1"
   },
   "gitHead": "fca7d2f8455c835f1c185a1ebc8513c6269ebe5b",
   "dependencies": {
-    "@courselit/common-models": "^0.18.5",
-    "@courselit/rich-text": "^0.18.5"
+    "@courselit/common-models": "^0.18.6",
+    "@courselit/rich-text": "^0.18.6"
   }
 }
