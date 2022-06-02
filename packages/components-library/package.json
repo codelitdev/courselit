@@ -42,7 +42,8 @@
   "peerDependencies": {
     "@mui/material": "^5.5.0",
     "react": "^17.0.2",
-    "react-redux": "^8.0.1"
+    "react-redux": "^8.0.1",
+    "next": "12.1.0"
   },
   "gitHead": "fca7d2f8455c835f1c185a1ebc8513c6269ebe5b",
   "dependencies": {

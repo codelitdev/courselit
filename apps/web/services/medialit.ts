@@ -1,7 +1,6 @@
-import constants from "../config/constants";
 import Media from "../models/Media";
 
-const { medialitServer } = constants;
+const medialitServer = process.env.MEDIALIT_SERVER || "https://medialit.cloud";
 
 interface GetPaginatedMediaProps {
   group: string;

@@ -26,9 +26,6 @@ export default {
   jwtExpire: process.env.JWT_EXPIRES_IN || "1d",
   jwtTokenCookieName: process.env.JWT_COOKIE_NAME || "access_token",
 
-  // Media uploads config
-  medialitServer: process.env.MEDIALIT_SERVER || "https://medialit.cloud",
-
   // Content types
   text: "text",
   audio: "audio",
