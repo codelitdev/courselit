@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import type { AppProps } from "next/app";
 import { CacheProvider, EmotionCache } from "@emotion/react";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -33,89 +33,93 @@ function MyApp({
   pageProps,
   emotionCache = clientSideEmotionCache,
 }: CourseLitProps) {
-  const store = useStore();
-  const { theme } = store.getState();
+    const [mounted, setMounted] = useState(false) 
+    const store = useStore();
+    const { theme } = store.getState();
 
-  let muiTheme;
-  if (theme.styles) {
-    muiTheme = responsiveFontSizes(
-      createTheme(deepmerge<DefaultTheme>(defaultTheme, theme.styles))
-    );
-  } else {
-    console.warn(CONSOLE_MESSAGE_THEME_INVALID);
-    muiTheme = responsiveFontSizes(createTheme(defaultTheme));
-  }
-
-  useEffect(() => {
-    checkForSession();
-  }, []);
-
-  const checkForSession = async () => {
-    const response = await fetch("/api/auth/user", {
-      method: "POST",
-      credentials: "same-origin",
-    });
-    if (response.status === 200) {
-      (store.dispatch as ThunkDispatch<State, null, AnyAction>)(
-        actionCreators.signedIn()
-      );
+    let muiTheme;
+    if (theme.styles) {
+        muiTheme = responsiveFontSizes(
+        createTheme(deepmerge<DefaultTheme>(defaultTheme, theme.styles))
+        );
+    } else {
+        console.warn(CONSOLE_MESSAGE_THEME_INVALID);
+        muiTheme = responsiveFontSizes(createTheme(defaultTheme));
     }
-    (store.dispatch as ThunkDispatch<State, null, AnyAction>)(
-      actionCreators.authChecked()
-    );
-  };
 
-  return (
-    <Provider store={store}>
-      <CacheProvider value={emotionCache}>
-        <ThemeProvider theme={muiTheme}>
-          <CssBaseline />
-          <Component {...pageProps} />
-          <CodeInjector />
-        </ThemeProvider>
-      </CacheProvider>
-    </Provider>
-  );
+    useEffect(() => {
+        setMounted(true);
+        checkForSession();
+    }, []);
+
+    const checkForSession = async () => {
+        const response = await fetch("/api/auth/user", {
+            method: "POST",
+            credentials: "same-origin",
+        });
+        if (response.status === 200) {
+            (store.dispatch as ThunkDispatch<State, null, AnyAction>)(
+                actionCreators.signedIn()
+            );
+        }
+        (store.dispatch as ThunkDispatch<State, null, AnyAction>)(
+            actionCreators.authChecked()
+        );
+    };
+
+    return (
+        <Provider store={store}>
+        <CacheProvider value={emotionCache}>
+            <ThemeProvider theme={muiTheme}>
+            <CssBaseline />
+            <div style={{ visibility: !mounted ? 'hidden' : 'visible' }}>
+                <Component {...pageProps} />
+            </div>
+            <CodeInjector />
+            </ThemeProvider>
+        </CacheProvider>
+        </Provider>
+    );
 }
 
 MyApp.getInitialProps = wrapper.getInitialAppProps(
-  (store) => async (context) => {
-    const { ctx } = context;
-    if (ctx.req && ctx.req.headers && ctx.req.headers.host) {
-      const protocol = ctx.req.headers["x-forwarded-proto"] || "http";
-      const backend = `${protocol}://${ctx.req.headers.host}`;
-      store.dispatch(
-        actionCreators.updateBackend(backend)
-      );
-      try {
-        await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
-            actionCreators.updateSiteInfo()
+    (store) => async (context) => {
+        const { ctx } = context;
+        if (ctx.req && ctx.req.headers && ctx.req.headers.host) {
+        const protocol = ctx.req.headers["x-forwarded-proto"] || "http";
+        const backend = `${protocol}://${ctx.req.headers.host}`;
+        store.dispatch(
+            actionCreators.updateBackend(backend)
         );
-        await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
-            actionCreators.updateSiteLayout()
-        );
-        await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
-            actionCreators.updateSiteTheme()
-        );
-        await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
-            actionCreators.updateSiteNavigation()
-        );
-        await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
-            actionCreators.updateWidgetsData(widgets)
-        );
-      } catch (error: any) {
-          ctx.res!.statusCode = 404;
-          ctx.res!.end('Not found');
-          return;
-      }
-    }
+        try {
+            await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
+                actionCreators.updateSiteInfo()
+            );
+            await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
+                actionCreators.updateSiteLayout()
+            );
+            await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
+                actionCreators.updateSiteTheme()
+            );
+            await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
+                actionCreators.updateSiteNavigation()
+            );
+            await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
+                actionCreators.updateWidgetsData(widgets)
+            );
+        } catch (error: any) {
+            ctx.res!.statusCode = 404;
+            ctx.res!.end('Not found');
+            return;
+        }
+        }
 
-    return {
-      pageProps: {
-        ...(await App.getInitialProps(context)).pageProps,
-      },
-    };
-  }
+        return {
+            pageProps: {
+                ...(await App.getInitialProps(context)).pageProps,
+            },
+        };
+    }
 );
 
 export default wrapper.withRedux(MyApp);
