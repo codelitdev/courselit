@@ -1,6 +1,6 @@
 {
   "name": "@courselit/common-widgets",
-  "version": "0.18.4",
+  "version": "0.18.5",
   "description": "A collection of common widgets for CourseLit LMS",
   "keywords": [
     "widgets",
@@ -47,8 +47,8 @@
     "typescript": "^4.0.5"
   },
   "dependencies": {
-    "@courselit/common-models": "^0.18.4",
-    "@courselit/components-library": "^0.18.4"
+    "@courselit/common-models": "^0.18.5",
+    "@courselit/components-library": "^0.18.5"
   },
   "gitHead": "e91494470733b09bc3e772a9079162a844b40d97"
 }
