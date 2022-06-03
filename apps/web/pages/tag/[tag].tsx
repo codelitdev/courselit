@@ -26,7 +26,7 @@ const generateQuery =
       creatorName,
       slug,
       featuredImage {
-        file
+          thumbnail
       },
       courseId,
       isBlog

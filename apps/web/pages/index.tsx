@@ -22,7 +22,7 @@ const generateQuery = (pageOffset = 1) => `
       creatorName,
       slug,
       featuredImage {
-        file
+          thumbnail 
       },
       courseId,
       isBlog
@@ -64,7 +64,7 @@ const Index = (props: IndexProps) => {
                 posts={true}
               />
               <Grid item xs={12}>
-                <Button>
+                <Button variant="outlined">
                   <Link href="/posts">
                     <MuiLink
                       sx={{

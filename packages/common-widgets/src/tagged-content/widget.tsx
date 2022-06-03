@@ -63,7 +63,7 @@ const Widget = (props: FeaturedWidgetProps) => {
           </Grid>
           {posts.length > 0 && (
             <Grid item xs={12}>
-              <Button disableElevation>
+              <Button disableElevation variant="outlined">
                 <Link href={`/tag/${settings.tag}`}>
                   <MuiLink
                     sx={{
@@ -114,7 +114,7 @@ Widget.getData = async function getData({
             title,
             cost,
             featuredImage {
-                file
+                thumbnail 
             },
             slug,
             courseId,

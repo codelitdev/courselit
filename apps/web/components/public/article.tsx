@@ -126,6 +126,8 @@ const Article = (props: ArticleProps) => {
               alt={course.featuredImage.caption}
               src={course.featuredImage.file!}
               loading="eager"
+              sizes="80vw"
+              height={360}
             />
           </Grid>
         )}
@@ -162,18 +164,20 @@ const Article = (props: ArticleProps) => {
             />
           </Grid>
         )}
-        <Grid item container alignItems="center" spacing={1}>
-          <Grid item>
-            <Typography variant="h6">Tags </Typography>
-          </Grid>
-          <Grid item>
-            {course.tags.map((tag: string) => (
-              <Link href={`/tag/${tag}`} key={tag}>
-                <Chip label={tag} component="a" clickable />
-              </Link>
-            ))}
-          </Grid>
-        </Grid>
+        {course.tags.length > 0 && (
+            <Grid item container alignItems="center" spacing={1}>
+                <Grid item>
+                    <Typography variant="h6">Tags </Typography>
+                </Grid>
+                <Grid item>
+                    {course.tags.map((tag: string) => (
+                    <Link href={`/tag/${tag}`} key={tag}>
+                        <Chip label={tag} component="a" clickable />
+                    </Link>
+                    ))}
+                </Grid>
+            </Grid>
+        )}
       </Grid>
     </StyledSection>
   );
