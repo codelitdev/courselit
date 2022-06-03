@@ -4,8 +4,8 @@
 
 <p align="center">
   <b>
-    <a href="https://courselit.codelit.dev">Website</a> |
-    <a href="https://codelit.gitbook.io/courselit/getting-started">Getting started</a> |
+    <a href="https://courselit.app">Website</a> |
+    <a href="https://docs.courselit.app/post/KH9ERinOpM02OgBzA7_8O/hosting-courselit-on-your-own-server">Getting started</a> |
     <a href="https://docs.courselit.app">Documentation</a>
   </b>
 </p>
