@@ -33,7 +33,6 @@ function MyApp({
   pageProps,
   emotionCache = clientSideEmotionCache,
 }: CourseLitProps) {
-    const [mounted, setMounted] = useState(false) 
     const store = useStore();
     const { theme } = store.getState();
 
@@ -48,7 +47,6 @@ function MyApp({
     }
 
     useEffect(() => {
-        setMounted(true);
         checkForSession();
     }, []);
 
@@ -72,9 +70,7 @@ function MyApp({
         <CacheProvider value={emotionCache}>
             <ThemeProvider theme={muiTheme}>
             <CssBaseline />
-            <div style={{ visibility: !mounted ? 'hidden' : 'visible' }}>
-                <Component {...pageProps} />
-            </div>
+            <Component {...pageProps} />
             <CodeInjector />
             </ThemeProvider>
         </CacheProvider>

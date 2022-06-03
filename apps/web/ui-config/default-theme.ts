@@ -10,10 +10,7 @@ const Theme = {
     // marginTop: 16,
   },
   footer: {},
-  section: {
-    // boxShadow: "0px 2px 5px #cecece",
-    border: "2px solid #eee",
-  },
+  section: {},
   mainContentWidth: 8,
   asideWidth: 4,
   singleColumnLayout: false,
