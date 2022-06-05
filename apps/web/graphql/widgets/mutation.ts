@@ -4,34 +4,34 @@ import { saveWidgetSettings, saveWidgetData, clearWidgetData } from "./logic";
 import type GQLContext from "../../models/GQLContext";
 
 export default {
-  saveWidgetSettings: {
-    type: types.widgetSettingsType,
-    args: {
-      widgetSettingsData: {
-        type: new GraphQLNonNull(types.widgetSettingsInputType),
-      },
+    saveWidgetSettings: {
+        type: types.widgetSettingsType,
+        args: {
+            widgetSettingsData: {
+                type: new GraphQLNonNull(types.widgetSettingsInputType),
+            },
+        },
+        resolve: async (_: any, { widgetSettingsData }: any, ctx: GQLContext) =>
+            saveWidgetSettings(widgetSettingsData, ctx),
     },
-    resolve: async (_: any, { widgetSettingsData }: any, ctx: GQLContext) =>
-      saveWidgetSettings(widgetSettingsData, ctx),
-  },
-  saveWidgetData: {
-    type: GraphQLBoolean,
-    args: {
-      widgetData: {
-        type: new GraphQLNonNull(types.widgetDataInputType),
-      },
+    saveWidgetData: {
+        type: GraphQLBoolean,
+        args: {
+            widgetData: {
+                type: new GraphQLNonNull(types.widgetDataInputType),
+            },
+        },
+        resolve: async (_: any, { widgetData }: any, ctx: GQLContext) =>
+            saveWidgetData(widgetData, ctx),
     },
-    resolve: async (_: any, { widgetData }: any, ctx: GQLContext) =>
-      saveWidgetData(widgetData, ctx),
-  },
-  clearWidgetData: {
-    type: GraphQLBoolean,
-    args: {
-      name: {
-        type: new GraphQLNonNull(GraphQLString),
-      },
+    clearWidgetData: {
+        type: GraphQLBoolean,
+        args: {
+            name: {
+                type: new GraphQLNonNull(GraphQLString),
+            },
+        },
+        resolve: async (_: any, { name }: any, ctx: GQLContext) =>
+            clearWidgetData(name, ctx),
     },
-    resolve: async (_: any, { name }: any, ctx: GQLContext) =>
-      clearWidgetData(name, ctx),
-  },
 };

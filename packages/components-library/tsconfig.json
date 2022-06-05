@@ -1,15 +1,15 @@
 {
-  "compilerOptions": {
-    "outDir": "./dist",
-    "lib": ["dom"],
-    "noImplicitAny": true,
-    "module": "commonjs",
-    "target": "es5",
-    "jsx": "react",
-    "moduleResolution": "node",
-    "declaration": true,
-    "typeRoots": ["./types", "./node_modules/@types"],
-    "skipLibCheck": true
-  },
-  "exclude": ["node_modules", "dist"]
+    "compilerOptions": {
+        "outDir": "./dist",
+        "lib": ["dom"],
+        "noImplicitAny": true,
+        "module": "commonjs",
+        "target": "es5",
+        "jsx": "react",
+        "moduleResolution": "node",
+        "declaration": true,
+        "typeRoots": ["./types", "./node_modules/@types"],
+        "skipLibCheck": true
+    },
+    "exclude": ["node_modules", "dist"]
 }

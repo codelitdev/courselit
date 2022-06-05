@@ -3,10 +3,10 @@ import { styled } from "@mui/material/styles";
 import { ImageListItemBar, Button } from "@mui/material";
 import { connect } from "react-redux";
 import {
-  MEDIA_MANAGER_PAGE_HEADING,
-  LOAD_MORE_TEXT,
-  HEADER_EDITING_MEDIA,
-  MEDIA_MANAGER_DIALOG_TITLE,
+    MEDIA_MANAGER_PAGE_HEADING,
+    LOAD_MORE_TEXT,
+    HEADER_EDITING_MEDIA,
+    MEDIA_MANAGER_DIALOG_TITLE,
 } from "../../../ui-config/strings";
 import { Add } from "@mui/icons-material";
 import { OverviewAndDetail } from "@courselit/components-library";
@@ -24,16 +24,16 @@ const { networkAction, setAppMessage } = actionCreators;
 const PREFIX = "index";
 
 const classes = {
-  btn: `${PREFIX}-btn`,
+    btn: `${PREFIX}-btn`,
 };
 
 const StyledOverviewAndDetail = styled(OverviewAndDetail)(
-  ({ theme }: { theme: any }) => ({
-    [`& .${classes.btn}`]: {
-      width: "100%",
-      height: "100%",
-    },
-  })
+    ({ theme }: { theme: any }) => ({
+        [`& .${classes.btn}`]: {
+            width: "100%",
+            height: "100%",
+        },
+    })
 );
 
 const Upload = dynamic(() => import("./upload"));
@@ -42,189 +42,193 @@ const MediaPreview = dynamic(() => import("./media-preview"));
 const Img = dynamic(() => import("../../img"));
 
 interface IndexProps {
-  auth: Auth;
-  profile: Profile;
-  dispatch: AppDispatch;
-  address: Address;
-  mimeTypesToShow: string[];
-  selectionMode: boolean;
-  onSelect: (...args: any[]) => void;
-  access: "public" | "private";
+    auth: Auth;
+    profile: Profile;
+    dispatch: AppDispatch;
+    address: Address;
+    mimeTypesToShow: string[];
+    selectionMode: boolean;
+    onSelect: (...args: any[]) => void;
+    access: "public" | "private";
 }
 
 const Index = (props: IndexProps) => {
-  const [mediaPaginationOffset, setMediaPaginationOffset] = useState(1);
-  const [creatorMedia, setCreatorMedia] = useState<Media[]>([]);
-  const [componentsMap, setComponentsMap] = useState([]);
-  const [refreshMedia, setRefreshMedia] = useState(0);
-  const [searchText] = useState("");
-  const { address } = props;
+    const [mediaPaginationOffset, setMediaPaginationOffset] = useState(1);
+    const [creatorMedia, setCreatorMedia] = useState<Media[]>([]);
+    const [componentsMap, setComponentsMap] = useState([]);
+    const [refreshMedia, setRefreshMedia] = useState(0);
+    const [searchText] = useState("");
+    const { address } = props;
 
-  useEffect(() => {
-    loadMedia();
-  }, []);
+    useEffect(() => {
+        loadMedia();
+    }, []);
 
-  useEffect(() => {
-    loadMedia();
-  }, [refreshMedia]);
+    useEffect(() => {
+        loadMedia();
+    }, [refreshMedia]);
 
-  useEffect(() => {
-    composeOverView(creatorMedia);
-  }, [mediaPaginationOffset, creatorMedia]);
+    useEffect(() => {
+        composeOverView(creatorMedia);
+    }, [mediaPaginationOffset, creatorMedia]);
 
-  const loadMedia = async () => {
-    try {
-      props.dispatch(networkAction(true));
-      const response: any = await fetch(
-        `${address.backend}/api/media?${getUrlSearchParamQuery()}`
-      );
-      const mediaItems = await response.json();
+    const loadMedia = async () => {
+        try {
+            props.dispatch(networkAction(true));
+            const response: any = await fetch(
+                `${address.backend}/api/media?${getUrlSearchParamQuery()}`
+            );
+            const mediaItems = await response.json();
 
-      if (response.status !== 200) {
-        throw new Error(mediaItems.error);
-      }
+            if (response.status !== 200) {
+                throw new Error(mediaItems.error);
+            }
 
-      if (mediaItems.length > 0) {
-        const filteredMedia =
-          props.mimeTypesToShow && props.mimeTypesToShow.length
-            ? mediaItems.filter((item: Media) =>
-                props.mimeTypesToShow.includes(item.mimeType)
-              )
-            : mediaItems;
-        setCreatorMedia([...creatorMedia, ...filteredMedia]);
-        setMediaPaginationOffset(mediaPaginationOffset + 1);
-      }
-    } catch (err: any) {
-      props.dispatch(setAppMessage(new AppMessage(err.message)));
-    } finally {
-      props.dispatch(networkAction(false));
-    }
-  };
-
-  const getUrlSearchParamQuery = () => {
-    const urlSearchParams = new URLSearchParams();
-    urlSearchParams.append("page", mediaPaginationOffset.toString());
-    if (props.access) {
-      urlSearchParams.append("access", props.access);
-    }
-
-    return urlSearchParams.toString();
-  };
-
-  const composeOverView = (mediaArr: Media[]) => {
-    const map = [];
-    mediaArr.map((media: Media) => {
-      map.push(getComponentConfig(media));
-    });
-    map.push({
-      Overview: (
-        <Button
-          variant="outlined"
-          className={classes.btn}
-          onClick={() => loadMedia()}
-        >
-          {LOAD_MORE_TEXT}
-        </Button>
-      ),
-    });
-    if (checkPermission(props.profile.permissions, [permissions.uploadMedia])) {
-      map.unshift(getAddMediaComponentConfig());
-    }
-    setComponentsMap(map);
-  };
-
-  const getComponentConfig = (media: Media) => {
-    const componentConfig = {
-      Overview: (
-        <>
-          <Img src={media.thumbnail!} />
-          <ImageListItemBar
-            title={media.originalFileName}
-            subtitle={media.mimeType}
-          />
-        </>
-      ),
+            if (mediaItems.length > 0) {
+                const filteredMedia =
+                    props.mimeTypesToShow && props.mimeTypesToShow.length
+                        ? mediaItems.filter((item: Media) =>
+                              props.mimeTypesToShow.includes(item.mimeType)
+                          )
+                        : mediaItems;
+                setCreatorMedia([...creatorMedia, ...filteredMedia]);
+                setMediaPaginationOffset(mediaPaginationOffset + 1);
+            }
+        } catch (err: any) {
+            props.dispatch(setAppMessage(new AppMessage(err.message)));
+        } finally {
+            props.dispatch(networkAction(false));
+        }
     };
 
-    componentConfig.subtitle = HEADER_EDITING_MEDIA;
+    const getUrlSearchParamQuery = () => {
+        const urlSearchParams = new URLSearchParams();
+        urlSearchParams.append("page", mediaPaginationOffset.toString());
+        if (props.access) {
+            urlSearchParams.append("access", props.access);
+        }
 
-    if (!props.selectionMode) {
-      componentConfig.Detail = (
-        <div>
-          <MediaPreview item={media} />
-          <Editor
-            media={media}
-            onMediaEdited={onMediaEdited}
-            onMediaDeleted={onMediaDeleted}
-          />
-        </div>
-      );
-    }
+        return urlSearchParams.toString();
+    };
 
-    return componentConfig;
-  };
+    const composeOverView = (mediaArr: Media[]) => {
+        const map = [];
+        mediaArr.map((media: Media) => {
+            map.push(getComponentConfig(media));
+        });
+        map.push({
+            Overview: (
+                <Button
+                    variant="outlined"
+                    className={classes.btn}
+                    onClick={() => loadMedia()}
+                >
+                    {LOAD_MORE_TEXT}
+                </Button>
+            ),
+        });
+        if (
+            checkPermission(props.profile.permissions, [
+                permissions.uploadMedia,
+            ])
+        ) {
+            map.unshift(getAddMediaComponentConfig());
+        }
+        setComponentsMap(map);
+    };
 
-  const getAddMediaComponentConfig = () => ({
-    subtitle: MEDIA_MANAGER_DIALOG_TITLE,
-    Overview: (
-      <>
-        <Button
-          variant="outlined"
-          color="primary"
-          startIcon={<Add />}
-          className={classes.btn}
-        >
-          Add new
-        </Button>
-      </>
-    ),
-    Detail: <Upload resetOverview={resetOverview} />,
-  });
+    const getComponentConfig = (media: Media) => {
+        const componentConfig = {
+            Overview: (
+                <>
+                    <Img src={media.thumbnail!} />
+                    <ImageListItemBar
+                        title={media.originalFileName}
+                        subtitle={media.mimeType}
+                    />
+                </>
+            ),
+        };
 
-  const resetOverview = () => {
-    setMediaPaginationOffset(1);
-    setCreatorMedia([]);
-    setRefreshMedia(refreshMedia + 1);
-  };
+        componentConfig.subtitle = HEADER_EDITING_MEDIA;
 
-  const onMediaEdited = (editedMedia: Media) => {
-    const mediaAfterEdit = creatorMedia.map((item) =>
-      item.mediaId === editedMedia.mediaId ? editedMedia : item
+        if (!props.selectionMode) {
+            componentConfig.Detail = (
+                <div>
+                    <MediaPreview item={media} />
+                    <Editor
+                        media={media}
+                        onMediaEdited={onMediaEdited}
+                        onMediaDeleted={onMediaDeleted}
+                    />
+                </div>
+            );
+        }
+
+        return componentConfig;
+    };
+
+    const getAddMediaComponentConfig = () => ({
+        subtitle: MEDIA_MANAGER_DIALOG_TITLE,
+        Overview: (
+            <>
+                <Button
+                    variant="outlined"
+                    color="primary"
+                    startIcon={<Add />}
+                    className={classes.btn}
+                >
+                    Add new
+                </Button>
+            </>
+        ),
+        Detail: <Upload resetOverview={resetOverview} />,
+    });
+
+    const resetOverview = () => {
+        setMediaPaginationOffset(1);
+        setCreatorMedia([]);
+        setRefreshMedia(refreshMedia + 1);
+    };
+
+    const onMediaEdited = (editedMedia: Media) => {
+        const mediaAfterEdit = creatorMedia.map((item) =>
+            item.mediaId === editedMedia.mediaId ? editedMedia : item
+        );
+        composeOverView(mediaAfterEdit);
+        setCreatorMedia(mediaAfterEdit);
+    };
+
+    const onMediaDeleted = (id: string) => {
+        const mediaAfterDelete = creatorMedia.filter(
+            (item: Media) => item.mediaId !== id
+        );
+        composeOverView(mediaAfterDelete);
+        setCreatorMedia(mediaAfterDelete);
+    };
+
+    const onSelect = (index: number) => {
+        if (
+            Object.prototype.hasOwnProperty.call(props, "onSelect") &&
+            creatorMedia[index - 1]
+        ) {
+            props.onSelect(creatorMedia[index - 1]);
+        }
+    };
+
+    return (
+        <OverviewAndDetail
+            title={MEDIA_MANAGER_PAGE_HEADING}
+            componentsMap={componentsMap}
+            onSelect={onSelect}
+        />
     );
-    composeOverView(mediaAfterEdit);
-    setCreatorMedia(mediaAfterEdit);
-  };
-
-  const onMediaDeleted = (id: string) => {
-    const mediaAfterDelete = creatorMedia.filter(
-      (item: Media) => item.mediaId !== id
-    );
-    composeOverView(mediaAfterDelete);
-    setCreatorMedia(mediaAfterDelete);
-  };
-
-  const onSelect = (index: number) => {
-    if (
-      Object.prototype.hasOwnProperty.call(props, "onSelect") &&
-      creatorMedia[index - 1]
-    ) {
-      props.onSelect(creatorMedia[index - 1]);
-    }
-  };
-
-  return (
-    <OverviewAndDetail
-      title={MEDIA_MANAGER_PAGE_HEADING}
-      componentsMap={componentsMap}
-      onSelect={onSelect}
-    />
-  );
 };
 
 const mapStateToProps = (state: AppState) => ({
-  auth: state.auth,
-  profile: state.profile,
-  address: state.address,
+    auth: state.auth,
+    profile: state.profile,
+    address: state.address,
 });
 
 export default connect(mapStateToProps)(Index);

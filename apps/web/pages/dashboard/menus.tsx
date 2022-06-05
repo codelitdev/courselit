@@ -5,9 +5,9 @@ const BaseLayout = dynamic(() => import("../../components/admin/base-layout"));
 const Menus = dynamic(() => import("../../components/admin/menus"));
 
 export default function SiteUsers() {
-  return (
-    <BaseLayout title={USERS_MANAGER_PAGE_HEADING}>
-      <Menus />
-    </BaseLayout>
-  );
+    return (
+        <BaseLayout title={USERS_MANAGER_PAGE_HEADING}>
+            <Menus />
+        </BaseLayout>
+    );
 }

@@ -4,38 +4,38 @@ import ComponentProps from "./component-props";
 import Section from "../section";
 
 interface OverviewProps {
-  componentsMap: ComponentProps[];
-  onSelectComponentWithDetail: (index: number) => void;
-  onSelectComponentWithoutDetail: (index: number) => void;
+    componentsMap: ComponentProps[];
+    onSelectComponentWithDetail: (index: number) => void;
+    onSelectComponentWithoutDetail: (index: number) => void;
 }
 
 const OverviewList = ({
-  componentsMap,
-  onSelectComponentWithDetail,
-  onSelectComponentWithoutDetail,
+    componentsMap,
+    onSelectComponentWithDetail,
+    onSelectComponentWithoutDetail,
 }: OverviewProps) => {
-  const tablet = useMediaQuery((theme: any) => theme.breakpoints.down("md"));
-  const mobile = useMediaQuery((theme: any) => theme.breakpoints.down("sm"));
+    const tablet = useMediaQuery((theme: any) => theme.breakpoints.down("md"));
+    const mobile = useMediaQuery((theme: any) => theme.breakpoints.down("sm"));
 
-  return (
-    <Section>
-      <ImageList cols={mobile ? 1 : tablet ? 2 : 3}>
-        {componentsMap.map((component, index) => (
-          <ImageListItem
-            key={index}
-            onClick={() =>
-              "Detail" in component
-                ? onSelectComponentWithDetail(index)
-                : onSelectComponentWithoutDetail(index)
-            }
-            cols={1}
-          >
-            {component.Overview}
-          </ImageListItem>
-        ))}
-      </ImageList>
-    </Section>
-  );
+    return (
+        <Section>
+            <ImageList cols={mobile ? 1 : tablet ? 2 : 3}>
+                {componentsMap.map((component, index) => (
+                    <ImageListItem
+                        key={index}
+                        onClick={() =>
+                            "Detail" in component
+                                ? onSelectComponentWithDetail(index)
+                                : onSelectComponentWithoutDetail(index)
+                        }
+                        cols={1}
+                    >
+                        {component.Overview}
+                    </ImageListItem>
+                ))}
+            </ImageList>
+        </Section>
+    );
 };
 
 export default OverviewList;

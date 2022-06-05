@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { styled } from "@mui/system";
 import {
-  Button,
-  Grid,
-  Typography,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
+    Button,
+    Grid,
+    Typography,
+    List,
+    ListItem,
+    ListItemText,
+    ListItemAvatar,
 } from "@mui/material";
 import { connect } from "react-redux";
 import {
-  MANAGE_COURSES_PAGE_HEADING,
-  COURSE_TYPE_BLOG,
-  COURSE_TYPE_COURSE,
-  LOAD_MORE_TEXT,
-  SEARCH_TEXTBOX_PLACEHOLDER,
+    MANAGE_COURSES_PAGE_HEADING,
+    COURSE_TYPE_BLOG,
+    COURSE_TYPE_COURSE,
+    LOAD_MORE_TEXT,
+    SEARCH_TEXTBOX_PLACEHOLDER,
 } from "../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
 import { Section, Image } from "@courselit/components-library";
@@ -34,54 +34,54 @@ const { networkAction, setAppMessage } = actionCreators;
 const PREFIX = "index";
 
 const classes = {
-  avatar: `${PREFIX}-avatar`,
-  listItem: `${PREFIX}-listItem`,
-  listItemText: `${PREFIX}-listItemText`,
+    avatar: `${PREFIX}-avatar`,
+    listItem: `${PREFIX}-listItem`,
+    listItemText: `${PREFIX}-listItemText`,
 };
 
 const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
-  [`& .${classes.avatar}`]: {
-    height: "50px !important",
-    [theme.breakpoints.up("md")]: {
-      height: "100px !important",
+    [`& .${classes.avatar}`]: {
+        height: "50px !important",
+        [theme.breakpoints.up("md")]: {
+            height: "100px !important",
+        },
+        width: "auto !important",
+        background: "red",
     },
-    width: "auto !important",
-    background: "red",
-  },
 
-  [`& .${classes.listItem}`]: {
-    cursor: "pointer",
-  },
+    [`& .${classes.listItem}`]: {
+        cursor: "pointer",
+    },
 
-  [`& .${classes.listItemText}`]: {
-    paddingLeft: theme.spacing(1),
-  },
+    [`& .${classes.listItemText}`]: {
+        paddingLeft: theme.spacing(1),
+    },
 }));
 
 interface IndexProps {
-  auth: Auth;
-  profile: Profile;
-  dispatch: AppDispatch;
-  address: Address;
+    auth: Auth;
+    profile: Profile;
+    dispatch: AppDispatch;
+    address: Address;
 }
 
 const Index = (props: IndexProps) => {
-  const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1);
-  const [creatorCourses, setCreatorCourses] = useState([]);
-  const [searchText, setSearchText] = useState("");
-  const [searchState, setSearchState] = useState(0);
+    const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1);
+    const [creatorCourses, setCreatorCourses] = useState([]);
+    const [searchText, setSearchText] = useState("");
+    const [searchState, setSearchState] = useState(0);
 
-  useEffect(() => {
-    loadCreatorCourses();
-  }, []);
+    useEffect(() => {
+        loadCreatorCourses();
+    }, []);
 
-  useEffect(() => {
-    loadCreatorCourses();
-  }, [searchState]);
+    useEffect(() => {
+        loadCreatorCourses();
+    }, [searchState]);
 
-  const loadCreatorCourses = async () => {
-    const query = searchText
-      ? `
+    const loadCreatorCourses = async () => {
+        const query = searchText
+            ? `
     query {
       courses: getCoursesAsAdmin(
         offset: ${coursesPaginationOffset},
@@ -97,7 +97,7 @@ const Index = (props: IndexProps) => {
       }
     }
     `
-      : `
+            : `
     query {
       courses: getCoursesAsAdmin(
         offset: ${coursesPaginationOffset}
@@ -112,50 +112,50 @@ const Index = (props: IndexProps) => {
       }
     }
     `;
-    const fetch = new FetchBuilder()
-      .setUrl(`${props.address.backend}/api/graph`)
-      .setPayload(query)
-      .setIsGraphQLEndpoint(true)
-      .build();
-    try {
-      props.dispatch(networkAction(true));
-      const response = await fetch.exec();
-      if (response.courses && response.courses.length > 0) {
-        setCreatorCourses([...creatorCourses, ...response.courses]);
-        setCoursesPaginationOffset(coursesPaginationOffset + 1);
-      }
-    } catch (err: any) {
-      props.dispatch(setAppMessage(new AppMessage(err.message)));
-    } finally {
-      props.dispatch(networkAction(false));
-    }
-  };
+        const fetch = new FetchBuilder()
+            .setUrl(`${props.address.backend}/api/graph`)
+            .setPayload(query)
+            .setIsGraphQLEndpoint(true)
+            .build();
+        try {
+            props.dispatch(networkAction(true));
+            const response = await fetch.exec();
+            if (response.courses && response.courses.length > 0) {
+                setCreatorCourses([...creatorCourses, ...response.courses]);
+                setCoursesPaginationOffset(coursesPaginationOffset + 1);
+            }
+        } catch (err: any) {
+            props.dispatch(setAppMessage(new AppMessage(err.message)));
+        } finally {
+            props.dispatch(networkAction(false));
+        }
+    };
 
-  const searchCourses = async (e) => {
-    e.preventDefault();
+    const searchCourses = async (e) => {
+        e.preventDefault();
 
-    setCoursesPaginationOffset(1);
-    setCreatorCourses([]);
-    setSearchState(searchState + 1);
-  };
+        setCoursesPaginationOffset(1);
+        setCreatorCourses([]);
+        setSearchState(searchState + 1);
+    };
 
-  return (
-    <StyledGrid container direction="column" spacing={2}>
-      <Grid item xs={12}>
-        <Section>
-          <Grid
-            container
-            justifyContent="space-between"
-            alignItems="center"
-            spacing={1}
-          >
-            <Grid item>
-              <Typography variant="h1">
-                {MANAGE_COURSES_PAGE_HEADING}
-              </Typography>
-            </Grid>
-            <Grid item>
-              {/* <form onSubmit={searchCourses}>
+    return (
+        <StyledGrid container direction="column" spacing={2}>
+            <Grid item xs={12}>
+                <Section>
+                    <Grid
+                        container
+                        justifyContent="space-between"
+                        alignItems="center"
+                        spacing={1}
+                    >
+                        <Grid item>
+                            <Typography variant="h1">
+                                {MANAGE_COURSES_PAGE_HEADING}
+                            </Typography>
+                        </Grid>
+                        <Grid item>
+                            {/* <form onSubmit={searchCourses}>
                 <FormControl variant="outlined">
                   <InputLabel htmlFor="searchtext">
                     {SEARCH_TEXTBOX_PLACEHOLDER}
@@ -180,80 +180,89 @@ const Index = (props: IndexProps) => {
                   />
                 </FormControl>
               </form> */}
+                        </Grid>
+                    </Grid>
+                </Section>
             </Grid>
-          </Grid>
-        </Section>
-      </Grid>
-      <Grid item xs={12}>
-        <Section>
-          <Grid container direction="column">
-            {checkPermission(props.profile.permissions, [
-              permissions.manageCourse,
-            ]) && (
-              <Grid item>
-                <Link href="/dashboard/courses/edit">
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    startIcon={<Add />}
-                  >
-                    Add new
-                  </Button>
-                </Link>
-              </Grid>
-            )}
-            <Grid item>
-              <List>
-                {creatorCourses.map((course, index) => (
-                  <Link
-                    href={`/dashboard/courses/edit/${course.courseId}`}
-                    key={index}
-                  >
-                    <ListItem className={classes.listItem} sx={{
-                        pr: 0,
-                        pl: 0
-                    }}>
-                      <ListItemAvatar>
-                        <Image
-                          src={
-                            course.featuredImage &&
-                            course.featuredImage.thumbnail
-                          }
-                          classes={classes.avatar}
-                        />
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={course.title}
-                        secondary={
-                          course.isBlog ? COURSE_TYPE_BLOG : COURSE_TYPE_COURSE
-                        }
-                        className={classes.listItemText}
-                      />
-                    </ListItem>
-                  </Link>
-                ))}
-              </List>
+            <Grid item xs={12}>
+                <Section>
+                    <Grid container direction="column">
+                        {checkPermission(props.profile.permissions, [
+                            permissions.manageCourse,
+                        ]) && (
+                            <Grid item>
+                                <Link href="/dashboard/courses/edit">
+                                    <Button
+                                        variant="outlined"
+                                        color="primary"
+                                        startIcon={<Add />}
+                                    >
+                                        Add new
+                                    </Button>
+                                </Link>
+                            </Grid>
+                        )}
+                        <Grid item>
+                            <List>
+                                {creatorCourses.map((course, index) => (
+                                    <Link
+                                        href={`/dashboard/courses/edit/${course.courseId}`}
+                                        key={index}
+                                    >
+                                        <ListItem
+                                            className={classes.listItem}
+                                            sx={{
+                                                pr: 0,
+                                                pl: 0,
+                                            }}
+                                        >
+                                            <ListItemAvatar>
+                                                <Image
+                                                    src={
+                                                        course.featuredImage &&
+                                                        course.featuredImage
+                                                            .thumbnail
+                                                    }
+                                                    classes={classes.avatar}
+                                                />
+                                            </ListItemAvatar>
+                                            <ListItemText
+                                                primary={course.title}
+                                                secondary={
+                                                    course.isBlog
+                                                        ? COURSE_TYPE_BLOG
+                                                        : COURSE_TYPE_COURSE
+                                                }
+                                                className={classes.listItemText}
+                                            />
+                                        </ListItem>
+                                    </Link>
+                                ))}
+                            </List>
+                        </Grid>
+                        <Grid item>
+                            <Button
+                                variant="outlined"
+                                onClick={loadCreatorCourses}
+                            >
+                                {LOAD_MORE_TEXT}
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </Section>
             </Grid>
-            <Grid item>
-              <Button variant="outlined" onClick={loadCreatorCourses}>
-                {LOAD_MORE_TEXT}
-              </Button>
-            </Grid>
-          </Grid>
-        </Section>
-      </Grid>
-    </StyledGrid>
-  );
+        </StyledGrid>
+    );
 };
 
 const mapStateToProps = (state: AppState) => ({
-  auth: state.auth,
-  profile: state.profile,
-  address: state.address,
+    auth: state.auth,
+    profile: state.profile,
+    address: state.address,
 });
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({
-  dispatch,
+    dispatch,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Index);

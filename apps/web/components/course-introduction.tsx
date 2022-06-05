@@ -5,16 +5,16 @@ import { Course } from "@courselit/common-models";
 const Article = dynamic(() => import("./public/article"));
 
 interface CourseIntroductionProps {
-  course: Course;
+    course: Course;
 }
 
 const CourseIntroduction = (props: CourseIntroductionProps) => {
-  const { course } = props;
-  const options = {
-    showEnrollmentArea: true,
-  };
+    const { course } = props;
+    const options = {
+        showEnrollmentArea: true,
+    };
 
-  return <>{course && <Article course={course} options={options} />}</>;
+    return <>{course && <Article course={course} options={options} />}</>;
 };
 
 export default CourseIntroduction;

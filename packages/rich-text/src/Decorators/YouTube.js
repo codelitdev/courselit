@@ -10,65 +10,65 @@ import React from "react";
 import PropTypes from "prop-types";
 
 const getVideoID = (str) => {
-  let videoID;
+    let videoID;
 
-  if (str.indexOf("watch?v=") !== -1) {
-    videoID = str.substr(str.indexOf("?v=") + 3);
-  } else {
-    const tokenizedURL = str.split("/");
-    videoID = tokenizedURL[tokenizedURL.length - 1];
-  }
+    if (str.indexOf("watch?v=") !== -1) {
+        videoID = str.substr(str.indexOf("?v=") + 3);
+    } else {
+        const tokenizedURL = str.split("/");
+        videoID = tokenizedURL[tokenizedURL.length - 1];
+    }
 
-  return videoID;
+    return videoID;
 };
 
 const styles = {
-  container: {
-    textAlign: "center",
-  },
-  iframeContainer: {
-    height: 480,
-    overflow: "hidden",
-    borderRadius: "8px",
-    boxShadow: "0px 12px 11px -11px rgba(0, 0, 0, 0.57)",
-  },
-  iframe: {
-    height: "100%",
-    width: "100%",
-  },
-  link: {
-    display: "block",
-    marginTop: "1em",
-    color: "#676767",
-    fontSize: ".8em",
-    overflowWrap: "anywhere",
-  },
+    container: {
+        textAlign: "center",
+    },
+    iframeContainer: {
+        height: 480,
+        overflow: "hidden",
+        borderRadius: "8px",
+        boxShadow: "0px 12px 11px -11px rgba(0, 0, 0, 0.57)",
+    },
+    iframe: {
+        height: "100%",
+        width: "100%",
+    },
+    link: {
+        display: "block",
+        marginTop: "1em",
+        color: "#676767",
+        fontSize: ".8em",
+        overflowWrap: "anywhere",
+    },
 };
 
 const YouTube = (props) => {
-  return (
-    <div style={styles.container}>
-      <div style={styles.iframeContainer}>
-        <iframe
-          src={`https://www.youtube.com/embed/${getVideoID(
-            props.decoratedText
-          )}`}
-          frameBorder="0"
-          allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          style={styles.iframe}
-        />
-      </div>
-      <a href={props.decoratedText} style={styles.link}>
-        {props.children}
-      </a>
-    </div>
-  );
+    return (
+        <div style={styles.container}>
+            <div style={styles.iframeContainer}>
+                <iframe
+                    src={`https://www.youtube.com/embed/${getVideoID(
+                        props.decoratedText
+                    )}`}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    style={styles.iframe}
+                />
+            </div>
+            <a href={props.decoratedText} style={styles.link}>
+                {props.children}
+            </a>
+        </div>
+    );
 };
 
 YouTube.propTypes = {
-  decoratedText: PropTypes.string,
-  children: PropTypes.array,
+    decoratedText: PropTypes.string,
+    children: PropTypes.array,
 };
 
 export default YouTube;

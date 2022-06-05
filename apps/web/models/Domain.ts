@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import SettingsSchema, { Settings } from "./SiteInfo";
 
 export interface Domain {
     _id: mongoose.Types.ObjectId;
@@ -8,6 +9,7 @@ export interface Domain {
     deleted: boolean;
     createdAt: Date;
     updatedAt: Date;
+    settings: Settings;
 }
 
 const DomainSchema = new mongoose.Schema<Domain>(
@@ -16,6 +18,7 @@ const DomainSchema = new mongoose.Schema<Domain>(
         customDomain: { type: String, unique: true, sparse: true },
         email: { type: String, required: true },
         deleted: { type: Boolean, required: true, default: false },
+        settings: { type: SettingsSchema },
     },
     {
         timestamps: true,

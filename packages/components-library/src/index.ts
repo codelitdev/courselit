@@ -7,11 +7,11 @@ import CourseItem from "./course-item";
 import Image from "./image";
 
 export {
-  PriceTag,
-  Section,
-  WidgetHelpers,
-  RichText,
-  OverviewAndDetail,
-  CourseItem,
-  Image,
+    PriceTag,
+    Section,
+    WidgetHelpers,
+    RichText,
+    OverviewAndDetail,
+    CourseItem,
+    Image,
 };

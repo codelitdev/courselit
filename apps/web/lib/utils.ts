@@ -3,8 +3,8 @@
 // const { v4: uuidv4 } = require("uuid");
 //
 export const capitalize = (s: string) => {
-  if (typeof s !== "string") return "";
-  return s.charAt(0).toUpperCase() + s.slice(1);
+    if (typeof s !== "string") return "";
+    return s.charAt(0).toUpperCase() + s.slice(1);
 };
 //
 // exports.foldersExist = (folders) => {
@@ -99,22 +99,22 @@ export const capitalize = (s: string) => {
 // };
 //
 export const isSubscriptionValid = (dateStr: Date): boolean => {
-  return new Date(dateStr).getTime() > new Date().getTime();
+    return new Date(dateStr).getTime() > new Date().getTime();
 };
 //
 interface MagicLinkProps {
-  token: string;
-  hostname: string;
-  secure: boolean;
-  redirect?: string;
+    token: string;
+    hostname: string;
+    secure: boolean;
+    redirect?: string;
 }
 export const generateMagicLink = ({
-  token,
-  hostname,
-  secure = true,
-  redirect,
+    token,
+    hostname,
+    secure = true,
+    redirect,
 }: MagicLinkProps) => {
-  return `http${secure ? "s" : ""}://${hostname}/login?token=${token}${
-    redirect ? `&redirect=${redirect}` : ""
-  }`;
+    return `http${secure ? "s" : ""}://${hostname}/login?token=${token}${
+        redirect ? `&redirect=${redirect}` : ""
+    }`;
 };

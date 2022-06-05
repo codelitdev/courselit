@@ -1,54 +1,54 @@
 {
-  "name": "@courselit/common-widgets",
-  "version": "0.18.10",
-  "description": "A collection of common widgets for CourseLit LMS",
-  "keywords": [
-    "widgets",
-    "lms",
-    "courselit",
-    "course"
-  ],
-  "author": "Rajat Saxena <social@rajats.xyz>",
-  "homepage": "https://github.com/codelitdev/courselit#readme",
-  "license": "MIT",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "directories": {
-    "lib": "src",
-    "test": "__tests__"
-  },
-  "files": [
-    "dist"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/codelitdev/courselit.git"
-  },
-  "scripts": {
-    "test": "echo \"Error: run tests from root\" && exit 1",
-    "build": "tsc",
-    "prepublishOnly": "yarn run build"
-  },
-  "bugs": {
-    "url": "https://github.com/codelitdev/courselit/issues"
-  },
-  "peerDependencies": {
-    "@mui/material": "^5.5.0",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2"
-  },
-  "devDependencies": {
-    "eslint-config-standard": "^17.0.0",
-    "eslint-plugin-n": "^15.2.0",
-    "eslint-plugin-promise": "^6.0.0",
-    "typescript": "^4.0.5"
-  },
-  "dependencies": {
-    "@courselit/common-models": "^0.18.10",
-    "@courselit/components-library": "^0.18.10"
-  },
-  "gitHead": "e91494470733b09bc3e772a9079162a844b40d97"
+    "name": "@courselit/common-widgets",
+    "version": "0.18.10",
+    "description": "A collection of common widgets for CourseLit LMS",
+    "keywords": [
+        "widgets",
+        "lms",
+        "courselit",
+        "course"
+    ],
+    "author": "Rajat Saxena <social@rajats.xyz>",
+    "homepage": "https://github.com/codelitdev/courselit#readme",
+    "license": "MIT",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "directories": {
+        "lib": "src",
+        "test": "__tests__"
+    },
+    "files": [
+        "dist"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/codelitdev/courselit.git"
+    },
+    "scripts": {
+        "test": "echo \"Error: run tests from root\" && exit 1",
+        "build": "tsc",
+        "prepublishOnly": "yarn run build"
+    },
+    "bugs": {
+        "url": "https://github.com/codelitdev/courselit/issues"
+    },
+    "peerDependencies": {
+        "@mui/material": "^5.5.0",
+        "react": "^17.0.2",
+        "react-dom": "^17.0.2"
+    },
+    "devDependencies": {
+        "eslint-config-standard": "^17.0.0",
+        "eslint-plugin-n": "^15.2.0",
+        "eslint-plugin-promise": "^6.0.0",
+        "typescript": "^4.0.5"
+    },
+    "dependencies": {
+        "@courselit/common-models": "^0.18.10",
+        "@courselit/components-library": "^0.18.10"
+    },
+    "gitHead": "e91494470733b09bc3e772a9079162a844b40d97"
 }

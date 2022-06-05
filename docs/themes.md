@@ -39,8 +39,8 @@ It can be done in two easy steps.
 
 ```html
 <link
-  rel="stylesheet"
-  href="https://fonts.googleapis.com/css?family=Font+Name"
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css?family=Font+Name"
 />
 ```
 
@@ -48,9 +48,9 @@ It can be done in two easy steps.
 
 ```js
 {
-  // ... other styles
-  typography: {
-    fontFamily: "Font Name, Other Font Name Separated By Commas";
-  }
+    // ... other styles
+    typography: {
+        fontFamily: "Font Name, Other Font Name Separated By Commas";
+    }
 }
 ```
