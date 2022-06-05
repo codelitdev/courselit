@@ -58,11 +58,7 @@ const DrawerContent = ({
                 <MenuItem
                   link={{
                     text: MAIN_MENU_ITEM_PROFILE,
-                    destination: `/profile/${
-                      profile.userId && profile.userId !== -1
-                        ? profile.userId
-                        : profile.id
-                    }`,
+                    destination: `/profile/${profile.userId}`,
                     category: NAVIGATION_CATEGORY_MAIN,
                     newTab: false,
                   }}

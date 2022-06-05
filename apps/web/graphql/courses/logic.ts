@@ -230,8 +230,8 @@ export const getCourses = async ({
   if (tag) {
     query.tags = tag;
   }
-  if (filterBy && filterBy === "post") {
-    query.isBlog = true;
+  if (filterBy) {
+      query.isBlog = filterBy === "post" ? true : false;
   }
 
   const courses = await CourseModel.find(

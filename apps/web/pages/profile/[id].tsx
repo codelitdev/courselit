@@ -67,11 +67,11 @@ function Profile({ user, profile, auth, dispatch, address }: any) {
   return (
     <BaseLayout title={user.name || PROFILE_PAGE_HEADER}>
       <Grid item xs={12}>
-        <Grid container direction="column" spacing={2}>
+        <Grid container direction="column" sx={{
+            padding: 2
+        }}>
           <Grid item xs={12}>
-            <Section>
               <Typography variant="h2">{PROFILE_PAGE_HEADER}</Typography>
-            </Section>
           </Grid>
           {user.id && (
             <Grid item xs={12}>
