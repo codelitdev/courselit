@@ -49,7 +49,6 @@ function Posts(props: PostsProps) {
         <Section>
           <Grid
             container
-            spacing={2}
             sx={{
               padding: 2,
             }}
@@ -61,13 +60,10 @@ function Posts(props: PostsProps) {
                 </Typography>
               </Grid>
             </Grid>
-            <Grid item>
-              <Items
+            <Items
                 showLoadMoreButton={true}
                 generateQuery={generateQueryWithTag}
-                initialItems={props.courses}
-              />
-            </Grid>
+                initialItems={props.courses} />
           </Grid>
         </Section>
       </Grid>

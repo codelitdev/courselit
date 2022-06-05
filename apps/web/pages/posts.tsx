@@ -35,7 +35,9 @@ function Posts(props: PostsProps) {
     <BaseLayout title={HEADER_BLOG_POSTS_SECTION}>
       <Grid item xs={12}>
         <Section>
-          <Grid container spacing={2}>
+          <Grid container sx={{
+              padding: 2
+          }}>
             <Grid item container>
               <Grid item xs={12}>
                 <Typography variant="h2">
@@ -43,14 +45,11 @@ function Posts(props: PostsProps) {
                 </Typography>
               </Grid>
             </Grid>
-            <Grid item>
-              <Items
+            <Items
                 showLoadMoreButton={true}
                 generateQuery={generateQuery}
                 initialItems={props.courses}
-                posts={true}
-              />
-            </Grid>
+                posts={true} />
           </Grid>
         </Section>
       </Grid>

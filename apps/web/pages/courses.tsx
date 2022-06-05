@@ -11,7 +11,7 @@ const Items = dynamic(() => import("../components/public/items"));
 
 const generateQuery = (pageOffset = 1) => `
   query {
-    courses: getCourses(offset: ${pageOffset}) {
+    courses: getCourses(offset: ${pageOffset}, filterBy: COURSE) {
       id
       title,
       description,
@@ -39,19 +39,18 @@ const Courses = (props: CoursesProps) => {
     <BaseLayout title={path}>
       <Grid item xs={12}>
         <Section>
-          <Grid container spacing={2}>
+          <Grid container sx={{
+              padding: 2
+          }}>
             <Grid item container>
               <Grid item xs={12}>
                 <Typography variant="h2">{path}</Typography>
               </Grid>
             </Grid>
-            <Grid item>
-              <Items
+            <Items
                 showLoadMoreButton={true}
                 generateQuery={generateQuery}
-                initialItems={props.courses}
-              />
-            </Grid>
+                initialItems={props.courses} />
           </Grid>
         </Section>
       </Grid>
