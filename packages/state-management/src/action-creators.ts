@@ -20,7 +20,13 @@ import {
 import { FetchBuilder } from "@courselit/utils";
 import defaultState from "./default-state";
 import getAddress from "./utils/get-address";
-import type { State, SiteInfo, WidgetsData } from "@courselit/common-models";
+import type {
+    State,
+    SiteInfo,
+    WidgetsData,
+    Layout,
+    Theme,
+} from "@courselit/common-models";
 import { AppMessage } from "@courselit/common-models";
 import { ThunkAction } from "redux-thunk";
 import { AnyAction } from "redux";
@@ -99,23 +105,36 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
             dispatch(networkAction(true));
 
             const query = `
-      { site: getSiteInfo {
-          name,
-          settings {
-            title,
-            subtitle,
-            logopath {
-                file
-            },
-            currencyUnit,
-            currencyISOCode,
-            paymentMethod,
-            stripePublishableKey,
-            codeInjectionHead
-          }
-        }
-      }
-      `;
+            { site: getSiteInfo {
+                name,
+                settings {
+                    title,
+                    subtitle,
+                    logopath {
+                        file
+                    },
+                    currencyUnit,
+                    currencyISOCode,
+                    paymentMethod,
+                    stripePublishableKey,
+                    codeInjectionHead
+                },
+                layout {
+                    top,
+                    bottom,
+                    aside,
+                    footerLeft,
+                    footerRight
+                },
+                theme {
+                    name,
+                    active,
+                    styles,
+                    url
+                }
+                }
+            }
+            `;
             const fetch = new FetchBuilder()
                 .setUrl(`${getState().address.backend}/api/graph`)
                 .setPayload(query)
@@ -124,7 +143,9 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
             const response = await fetch.exec();
 
             dispatch(networkAction(false));
-            //   dispatch(newSiteInfoAvailable(response.site));
+            dispatch(newSiteInfoAvailable(response.site.settings));
+            dispatch(layoutAvailable(response.site.layout));
+            dispatch(themeAvailable(response.site.theme));
         } finally {
             dispatch(networkAction(false));
         }
@@ -149,12 +170,12 @@ export function updateSiteTheme() {
             dispatch(networkAction(true));
 
             const query = `
-      { 
-        theme: getTheme {
-          styles
-        }
-      }
-      `;
+            { 
+                theme: getTheme {
+                    styles
+                }
+            }
+            `;
             const fetch = new FetchBuilder()
                 .setUrl(`${getState().address.backend}/api/graph`)
                 .setPayload(query)
@@ -170,41 +191,11 @@ export function updateSiteTheme() {
     };
 }
 
-export function themeAvailable(theme: typeof defaultState.theme) {
+export function themeAvailable(theme: Theme) {
     return { type: THEME_AVAILABLE, theme };
 }
 
-export function updateSiteLayout() {
-    return async (dispatch: any, getState: () => State) => {
-        try {
-            dispatch(networkAction(true));
-
-            const query = `
-      {
-        layout: getLayout {
-          layout
-        }
-      }
-      `;
-
-            const fetch = new FetchBuilder()
-                .setUrl(`${getState().address.backend}/api/graph`)
-                .setPayload(query)
-                .setIsGraphQLEndpoint(true)
-                .build();
-            const response = await fetch.exec();
-
-            dispatch(networkAction(false));
-            dispatch(
-                layoutAvailable(response.layout && response.layout.layout)
-            );
-        } finally {
-            dispatch(networkAction(false));
-        }
-    };
-}
-
-export function layoutAvailable(layout: typeof defaultState.layout) {
+export function layoutAvailable(layout: Layout) {
     return { type: LAYOUT_AVAILABLE, layout };
 }
 

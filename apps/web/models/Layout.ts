@@ -1,20 +1,15 @@
 /**
  * A model for the front-end layout.
  */
+import { Layout } from "@courselit/common-models";
 import mongoose from "mongoose";
 
-export interface Layout {
-    domain: string;
-    layout: any;
-}
-
-const LayoutSchema = new mongoose.Schema({
-    domain: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        unique: true,
-    },
-    layout: { type: mongoose.Schema.Types.Mixed, required: true },
+const LayoutSchema = new mongoose.Schema<Layout>({
+    top: [{ type: String }],
+    bottom: [{ type: String }],
+    aside: [{ type: String }],
+    footerLeft: [{ type: String }],
+    footerRight: [{ type: String }],
 });
 
-export default mongoose.models.Layout || mongoose.model("Layout", LayoutSchema);
+export default LayoutSchema;

@@ -131,29 +131,7 @@ const PageDesigner = (props: PageDesignerProps) => {
     }, []);
 
     const loadLayout = async () => {
-        const query = `
-    {
-      layout: getLayout {
-        layout
-      }
-    }
-    `;
-
-        const fetcher = fetch.setPayload(query).build();
-
-        try {
-            props.dispatch(networkAction(true));
-            const response = await fetcher.exec();
-
-            if (response.layout && response.layout.layout) {
-                setLayout(JSON.parse(response.layout.layout));
-                props.dispatch(
-                    layoutAvailable(response.layout && response.layout.layout)
-                );
-            }
-        } finally {
-            props.dispatch(networkAction(false));
-        }
+        await props.dispatch(actionCreators.updateSiteInfo());
     };
 
     const onSelection = (forSection, componentName: string) => {
@@ -188,14 +166,20 @@ const PageDesigner = (props: PageDesignerProps) => {
 
     const saveLayout = async () => {
         const mutation = `
-      mutation {
-        layout: setLayout(layoutData: {
-          layout: "${JSON.stringify(layout).replace(/"/g, '\\"')}"
-        }) {
-          layout
+        mutation {
+            layout: setLayout(layoutData: {
+                layout: "${JSON.stringify(layout).replace(/"/g, '\\"')}"
+            }) {
+                layout {
+                    top,
+                    bottom,
+                    aside,
+                    footerLeft,
+                    footerRight
+                }
+            }
         }
-      }
-      `;
+        `;
         const fetcher = fetch.setPayload(mutation).build();
 
         try {

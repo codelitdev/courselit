@@ -51,12 +51,12 @@ const ThemeItem = (props: ThemeItemProps) => {
 
     const uninstallTheme = () => {
         setUninstallConfirmationPopupOpened(false);
-        props.onUninstall(props.theme.id);
+        props.onUninstall(props.theme.name);
     };
 
     const applyTheme = () => {
         setApplyConfirmationPopupOpened(false);
-        props.onApply(props.theme.id);
+        props.onApply(props.theme.name);
     };
 
     return (
@@ -82,7 +82,7 @@ const ThemeItem = (props: ThemeItemProps) => {
                         </Grid>
                     )}
                     <Grid item>
-                        <Button onClick={() => props.onRemix(props.theme.id)}>
+                        <Button onClick={() => props.onRemix(props.theme.name)}>
                             {BUTTON_THEME_REMIX}
                         </Button>
                     </Grid>

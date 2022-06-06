@@ -4,7 +4,7 @@ import { connect } from "react-redux";
 import { Grid, Typography, Link, TextField, Button } from "@mui/material";
 import { FetchBuilder } from "@courselit/utils";
 import { actionCreators } from "@courselit/state-management";
-import { AppMessage } from "@courselit/common-models";
+import { AppMessage, Theme } from "@courselit/common-models";
 import {
     APP_MESSAGE_THEME_APPLIED,
     APP_MESSAGE_THEME_COPIED,
@@ -26,9 +26,8 @@ import { Section } from "@courselit/components-library";
 import ThemeItem from "./theme-item";
 import type { Address } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
-import { OpenInNew } from "@mui/icons-material";
 
-const { setAppMessage, networkAction } = actionCreators;
+const { setAppMessage, networkAction, updateSiteInfo } = actionCreators;
 
 const PREFIX = "index";
 
@@ -68,15 +67,14 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
 
     const loadInstalledThemes = async () => {
         const query = `
-    query {
-      themes: getAllThemes {
-        id,
-        name,
-        active,
-        styles,
-        url
-      }
-    }`;
+            query {
+                themes: getThemes {
+                    name,
+                    active,
+                    styles,
+                    url
+                }
+            }`;
 
         const fetcher = fetch.setPayload(query).build();
 
@@ -96,17 +94,18 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
             const parsedTheme = JSON.parse(newThemeText);
 
             const mutation = `
-          mutation {
-            theme: addTheme(theme: {
-              id: "${parsedTheme.id}",
-              name: "${parsedTheme.name}",
-              styles: ${JSON.stringify(parsedTheme.styles)},
-              url: "${parsedTheme.url}"
-            }) {
-              id
+            mutation {
+                theme: addTheme(theme: {
+                    name: "${parsedTheme.name}",
+                    styles: ${JSON.stringify(
+                        JSON.stringify(parsedTheme.styles)
+                    )},
+                    url: "${parsedTheme.url}"
+                }) {
+                    name 
+                }
             }
-          }
-          `;
+            `;
             const fetcher = fetch.setPayload(mutation).build();
 
             const response = await fetcher.exec();
@@ -139,7 +138,7 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
         try {
             const parsedTheme = JSON.parse(text);
 
-            if (!parsedTheme.id || (!parsedTheme.name && !parsedTheme.styles)) {
+            if (!parsedTheme.name || !parsedTheme.styles) {
                 return false;
             }
         } catch {
@@ -159,11 +158,11 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
         }
     };
 
-    const onThemeApply = async (themeId: string) => {
+    const onThemeApply = async (themeName: string) => {
         const mutation = `
           mutation {
-            theme: setTheme(id: "${themeId}") {
-              id
+            theme: setTheme(name: "${themeName}") {
+                name 
             }
           }
         `;
@@ -179,6 +178,7 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
                     setAppMessage(new AppMessage(APP_MESSAGE_THEME_APPLIED))
                 );
                 loadInstalledThemes();
+                await dispatch(updateSiteInfo());
             }
         } catch (err: any) {
             dispatch(setAppMessage(new AppMessage(err.message)));
@@ -187,10 +187,10 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
         }
     };
 
-    const onThemeUninstall = async (themeId: string) => {
+    const onThemeUninstall = async (themeName: string) => {
         const mutation = `
           mutation c {
-            removeTheme(id: "${themeId}")
+            removeTheme(name: "${themeName}")
           }
         `;
 
@@ -206,19 +206,19 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
                 );
                 loadInstalledThemes();
             }
-        } catch (err) {
+        } catch (err: any) {
             dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
             dispatch(networkAction(false));
         }
     };
 
-    const onThemeRemix = (themeId: string) => {
-        const theme = installedThemes.find((theme) => theme.id === themeId);
+    const onThemeRemix = (themeName: string) => {
+        const theme = installedThemes.find(
+            (theme: Theme) => theme.name === themeName
+        );
         if (theme) {
-            const themeCopy = Object.assign({}, theme);
-            themeCopy.id =
-                themeCopy.id + `_${REMIXED_THEME_PREFIX.toLowerCase()}`;
+            const themeCopy: Theme = Object.assign({}, theme);
             themeCopy.name = themeCopy.name + ` ${REMIXED_THEME_PREFIX}`;
             setNewThemeText(JSON.stringify(themeCopy, null, 3));
 
@@ -243,10 +243,10 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
                         </Grid>
                         {installedThemes.length !== 0 && (
                             <Grid item container direction="column">
-                                {installedThemes.map((theme) => (
+                                {installedThemes.map((theme: Theme) => (
                                     <ThemeItem
                                         theme={theme}
-                                        key={theme.id}
+                                        key={theme.name}
                                         onApply={onThemeApply}
                                         onRemix={onThemeRemix}
                                         onUninstall={onThemeUninstall}

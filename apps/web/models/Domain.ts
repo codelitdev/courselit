@@ -1,5 +1,8 @@
+import { Layout } from "@courselit/common-models";
 import mongoose from "mongoose";
+import LayoutSchema from "./Layout";
 import SettingsSchema, { Settings } from "./SiteInfo";
+import { Theme, ThemeSchema } from "./Theme";
 
 export interface Domain {
     _id: mongoose.Types.ObjectId;
@@ -10,6 +13,8 @@ export interface Domain {
     createdAt: Date;
     updatedAt: Date;
     settings: Settings;
+    layout: Layout;
+    theme: Theme;
 }
 
 const DomainSchema = new mongoose.Schema<Domain>(
@@ -18,7 +23,9 @@ const DomainSchema = new mongoose.Schema<Domain>(
         customDomain: { type: String, unique: true, sparse: true },
         email: { type: String, required: true },
         deleted: { type: Boolean, required: true, default: false },
-        settings: { type: SettingsSchema },
+        settings: SettingsSchema,
+        layout: LayoutSchema,
+        theme: ThemeSchema,
     },
     {
         timestamps: true,

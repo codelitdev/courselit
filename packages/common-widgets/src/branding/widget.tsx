@@ -7,7 +7,8 @@ export interface FooterBrandingWidgetProps extends WidgetProps {
 }
 
 const Widget = (props: FooterBrandingWidgetProps) => {
-    const { siteInfo, section } = props;
+    const { state, section } = props;
+    const { title, subtitle } = state.siteinfo;
 
     return (
         <Grid
@@ -18,10 +19,11 @@ const Widget = (props: FooterBrandingWidgetProps) => {
                     xs: "start",
                     md: section === "footerRight" ? "end" : "start",
                 },
+                padding: 2,
             }}
         >
-            <Typography variant="h5">{siteInfo.title}</Typography>
-            <Typography variant="subtitle1">{siteInfo.subtitle}</Typography>
+            <Typography variant="h5">{title}</Typography>
+            <Typography variant="subtitle1">{subtitle}</Typography>
         </Grid>
     );
 };

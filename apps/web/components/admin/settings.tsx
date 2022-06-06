@@ -249,24 +249,24 @@ const Settings = (props: SettingsProps) => {
         }
 
         const query = `
-    mutation {
-      settings: updateSiteInfo(siteData: {
-        codeInjectionHead: "${encode(newSettings.codeInjectionHead)}"
-      }) {
-          settings {
-            title,
-            subtitle,
-            logopath {
-                thumbnail
-            },
-            currencyUnit,
-            currencyISOCode,
-            paymentMethod,
-            stripePublishableKey,
-            codeInjectionHead
-          }
-      }
-    }`;
+        mutation {
+            settings: updateSiteInfo(siteData: {
+                codeInjectionHead: "${encode(newSettings.codeInjectionHead)}"
+            }) {
+                settings {
+                    title,
+                    subtitle,
+                    logopath {
+                        thumbnail
+                    },
+                    currencyUnit,
+                    currencyISOCode,
+                    paymentMethod,
+                    stripePublishableKey,
+                    codeInjectionHead
+                }
+            }
+        }`;
 
         try {
             const fetchRequest = fetch.setPayload(query).build();
@@ -324,22 +324,22 @@ const Settings = (props: SettingsProps) => {
         );
         const formattedQuery = getGraphQLQueryFields(onlyChangedSettings);
         const query = `
-    mutation {
-      settings: updatePaymentInfo(siteData: ${formattedQuery}) {
-          settings {
-            title,
-            subtitle,
-            logopath {
-                thumbnail
-            },
-            currencyUnit,
-            currencyISOCode,
-            paymentMethod,
-            stripePublishableKey,
-            codeInjectionHead
-          }
-      }
-    }`;
+        mutation {
+            settings: updatePaymentInfo(siteData: ${formattedQuery}) {
+                settings {
+                    title,
+                    subtitle,
+                    logopath {
+                        thumbnail
+                    },
+                    currencyUnit,
+                    currencyISOCode,
+                    paymentMethod,
+                    stripePublishableKey,
+                    codeInjectionHead
+                }
+            }
+        }`;
 
         try {
             const fetchRequest = fetch.setPayload(query).build();

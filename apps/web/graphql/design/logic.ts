@@ -1,20 +1,12 @@
-import ThemeModel, { Theme } from "../../models/Theme";
+import ThemeModel from "../../models/Theme";
 import { checkIfAuthenticated, checkPermission } from "../../lib/graphql";
 import { responses } from "../../config/strings";
-import Layout from "../../models/Layout";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
+import DomainModel, { Domain } from "../../models/Domain";
 const { permissions } = constants;
 
-export const getTheme = async (ctx: GQLContext) => {
-    const theme = await ThemeModel.findOne({
-        active: true,
-        domain: ctx.subdomain._id,
-    });
-    return transformThemeForOutput(theme);
-};
-
-export const setTheme = async (id: string, ctx: GQLContext) => {
+export const setTheme = async (name: string, ctx: GQLContext) => {
     checkIfAuthenticated(ctx);
     if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
         throw new Error(responses.action_not_allowed);
@@ -25,36 +17,32 @@ export const setTheme = async (id: string, ctx: GQLContext) => {
         { $set: { active: "false" } }
     );
 
-    const theme = await ThemeModel.findOne({ id, domain: ctx.subdomain._id });
+    const theme = await ThemeModel.findOne({ name, domain: ctx.subdomain._id });
     if (!theme) {
         throw new Error(responses.theme_not_installed);
     }
 
     theme.active = true;
     await theme.save();
+    ctx.subdomain.theme = theme;
+    await ctx.subdomain.save();
 
-    return transformThemeForOutput(theme);
+    return theme;
 };
 
-export const removeTheme = async (id: string, ctx: GQLContext) => {
+export const removeTheme = async (name: string, ctx: GQLContext) => {
     checkIfAuthenticated(ctx);
     if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
         throw new Error(responses.action_not_allowed);
     }
 
-    await ThemeModel.deleteOne({ id, domain: ctx.subdomain._id });
+    await ThemeModel.deleteOne({ name, domain: ctx.subdomain._id });
+    if (name === ctx.subdomain.theme.name) {
+        ctx.subdomain.theme.remove();
+        await ctx.subdomain.save();
+    }
 
     return true;
-};
-
-export const getAllThemes = async (ctx: GQLContext) => {
-    checkIfAuthenticated(ctx);
-    if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
-        throw new Error(responses.action_not_allowed);
-    }
-
-    const themes = await ThemeModel.find({ domain: ctx.subdomain._id });
-    return themes.map(transformThemeForOutput);
 };
 
 export const addTheme = async (themeData: any, ctx: GQLContext) => {
@@ -78,26 +66,29 @@ export const addTheme = async (themeData: any, ctx: GQLContext) => {
 
     const theme = await ThemeModel.create({
         domain: ctx.subdomain._id,
-        id: themeData.id,
         name: themeData.name,
         styles,
         screenshot: themeData.screenshot,
         url: themeData.url,
     });
 
-    return transformThemeForOutput(theme);
+    return theme;
 };
 
-export const getLayout = async (ctx: GQLContext) => {
-    const layout = await Layout.findOne({ domain: ctx.subdomain._id });
-    return layout
-        ? {
-              layout: JSON.stringify(layout.layout),
-          }
-        : null;
+export const getThemes = async (ctx: GQLContext) => {
+    checkIfAuthenticated(ctx);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const themes = await ThemeModel.find({ domain: ctx.subdomain._id });
+    return themes;
 };
 
-export const setLayout = async (layoutData: any, ctx: GQLContext) => {
+export const setLayout = async (
+    layoutData: any,
+    ctx: GQLContext
+): Promise<Domain | null> => {
     checkIfAuthenticated(ctx);
     if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
         throw new Error(responses.action_not_allowed);
@@ -110,30 +101,13 @@ export const setLayout = async (layoutData: any, ctx: GQLContext) => {
         throw new Error(responses.invalid_layout);
     }
 
-    let layout = await Layout.findOne({ domain: ctx.subdomain._id });
-    if (layout) {
-        layout.layout = layoutObject;
-        layout = await layout.save();
-    } else {
-        layout = await Layout.create({
-            domain: ctx.subdomain._id,
-            layout: layoutObject,
-        });
+    const domain = await DomainModel.findById(ctx.subdomain._id);
+    if (!domain) {
+        return null;
     }
 
-    return {
-        layout: JSON.stringify(layout.layout),
-    };
-};
+    domain.layout = layoutObject;
+    await domain.save();
 
-const transformThemeForOutput = (theme: Theme) =>
-    theme
-        ? {
-              id: theme.id,
-              name: theme.name,
-              styles: theme.styles ? JSON.stringify(theme.styles) : "",
-              screenshot: theme.screenshot,
-              url: theme.url,
-              active: theme.active,
-          }
-        : null;
+    return domain;
+};

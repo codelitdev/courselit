@@ -4,10 +4,12 @@ import {
     GraphQLString,
     GraphQLInputObjectType,
     GraphQLNonNull,
+    GraphQLList,
 } from "graphql";
 import mediaTypes from "../media/types";
 import { getMedia } from "../media/logic";
 const { mediaType } = mediaTypes;
+import designTypes from "../design/types";
 
 const siteType = new GraphQLObjectType({
     name: "SiteInfo",
@@ -25,23 +27,6 @@ const siteType = new GraphQLObjectType({
         codeInjectionHead: { type: GraphQLString },
     },
 });
-
-// const siteAdminType = new GraphQLObjectType({
-//   name: "SiteInfoAdmin",
-//   fields: {
-//     title: { type: GraphQLString },
-//     subtitle: { type: GraphQLString },
-//     logopath: {
-//       type: mediaType,
-//       resolve: (settings, _, __, ___) => getMedia(settings.logopath),
-//     },
-//     currencyUnit: { type: GraphQLString },
-//     currencyISOCode: { type: GraphQLString },
-//     paymentMethod: { type: GraphQLString },
-//     stripePublishableKey: { type: GraphQLString },
-//     codeInjectionHead: { type: GraphQLString },
-//   },
-// });
 
 const siteUpdateType = new GraphQLInputObjectType({
     name: "SiteInfoUpdateInput",
@@ -71,12 +56,13 @@ const domain = new GraphQLObjectType({
     fields: {
         name: { type: new GraphQLNonNull(GraphQLString) },
         settings: { type: siteType },
+        layout: { type: designTypes.layoutType },
+        theme: { type: designTypes.themeType },
     },
 });
 
 export default {
     siteType,
-    //   siteAdminType,
     siteUpdateType,
     sitePaymentUpdateType,
     domain,

@@ -1,9 +1,7 @@
-const mongoose = require("mongoose");
-const {
-    severityError,
-    severityInfo,
-    severityWarn,
-} = require("../config/constants.js");
+import mongoose from "mongoose";
+import constants from "../config/constants";
+
+const { severityError, severityInfo, severityWarn } = constants;
 
 const LogSchema = new mongoose.Schema(
     {
@@ -20,4 +18,4 @@ const LogSchema = new mongoose.Schema(
     }
 );
 
-module.exports = mongoose.model("Log", LogSchema);
+export default mongoose.models.Log || mongoose.model("Log", LogSchema);

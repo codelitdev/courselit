@@ -6,7 +6,7 @@
 import mongoose from "mongoose";
 
 export interface Theme {
-    domain: string;
+    domain: mongoose.Types.ObjectId;
     id: string;
     name: string;
     active: boolean;
@@ -15,9 +15,11 @@ export interface Theme {
     url?: string;
 }
 
-const ThemeSchema = new mongoose.Schema({
-    domain: { type: mongoose.Schema.Types.ObjectId, required: true },
-    id: { type: String, required: true },
+export const ThemeSchema = new mongoose.Schema<Theme>({
+    domain: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+    },
     name: { type: String, required: true },
     active: { type: Boolean, required: true, default: false },
     styles: { type: mongoose.Schema.Types.Mixed, required: true },
@@ -28,10 +30,9 @@ const ThemeSchema = new mongoose.Schema({
 ThemeSchema.index(
     {
         domain: 1,
-        id: 1,
         name: 1,
     },
-    { unique: true }
+    { unique: true, sparse: true }
 );
 
 export default mongoose.models.Theme || mongoose.model("Theme", ThemeSchema);

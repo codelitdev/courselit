@@ -125,15 +125,7 @@ function themeReducer(state = initialState.theme, action: Action) {
 
     switch (action.type) {
         case THEME_AVAILABLE:
-            try {
-                styles = JSON.parse(action.theme.styles);
-            } catch (err) {
-                styles = state;
-            }
-
-            return Object.assign({}, action.theme, {
-                styles: styles,
-            });
+            return action.theme || state;
         default:
             return state;
     }
@@ -144,13 +136,7 @@ function layoutReducer(state = initialState.layout, action: Action) {
 
     switch (action.type) {
         case LAYOUT_AVAILABLE:
-            try {
-                layout = Object.assign({}, state, JSON.parse(action.layout));
-            } catch (err) {
-                layout = state;
-            }
-
-            return Object.assign({}, layout);
+            return action.layout || state;
         default:
             return state;
     }

@@ -21,6 +21,7 @@ import { actionCreators } from "@courselit/state-management";
 import CodeInjector from "../components/public/code-injector";
 import { DefaultTheme } from "@mui/private-theming";
 import widgets from "../ui-config/widgets";
+import * as Logger from "../services/logger";
 
 type CourseLitProps = AppProps & {
     emotionCache: EmotionCache;
@@ -94,12 +95,6 @@ MyApp.getInitialProps = wrapper.getInitialAppProps(
             try {
                 await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
                     actionCreators.updateSiteInfo()
-                );
-                await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
-                    actionCreators.updateSiteLayout()
-                );
-                await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
-                    actionCreators.updateSiteTheme()
                 );
                 await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
                     actionCreators.updateSiteNavigation()
