@@ -131,6 +131,13 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
                     active,
                     styles,
                     url
+                },
+                links {
+                    id,
+                    text,
+                    destination,
+                    category,
+                    newTab
                 }
                 }
             }
@@ -146,6 +153,7 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
             dispatch(newSiteInfoAvailable(response.site.settings));
             dispatch(layoutAvailable(response.site.layout));
             dispatch(themeAvailable(response.site.theme));
+            dispatch(navigationAvailable(response.site.links));
         } finally {
             dispatch(networkAction(false));
         }

@@ -31,7 +31,7 @@ import type { Address, Auth, Link } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
 
-const { networkAction, setAppMessage } = actionCreators;
+const { networkAction, setAppMessage, navigationAvailable } = actionCreators;
 
 const PREFIX = "NavigationLinkItem";
 
@@ -51,7 +51,7 @@ interface NavigationLinkItemProps {
     auth: Auth;
     dispatch: AppDispatch;
     index: number;
-    removeItem: (...args: any[]) => void;
+    // removeItem: (...args: any[]) => void;
     address: Address;
 }
 
@@ -93,6 +93,8 @@ const NavigationLinkItem = (props: NavigationLinkItemProps) => {
             const response = await fetch.exec();
             if (response.link) {
                 setDirty(false);
+                console.log(response.link.links);
+                props.dispatch(navigationAvailable(response.link.links))
             }
         } catch (e: any) {
             props.dispatch(setAppMessage(new AppMessage(e.message)));
@@ -103,55 +105,71 @@ const NavigationLinkItem = (props: NavigationLinkItemProps) => {
     };
 
     const getGraphQLMutationString = () => {
+        console.log(props.link);
         if (props.link.id) {
             return `
-        mutation {
-            link: saveLink(linkData: {
-                id: "${props.link.id}",
-                text: "${link.text}",
-                destination: "${link.destination}",
-                category: "${link.category}",
-                newTab: ${link.newTab}
-            }) {
-                text,
-                destination,
-                category,
-                newTab
-            }
-        }
-        `;
+                mutation {
+                    link: saveLink(linkData: {
+                        id: "${props.link.id}",
+                        text: "${link.text}",
+                        destination: "${link.destination}",
+                        category: "${link.category}",
+                        newTab: ${link.newTab}
+                    }) {
+                        links {
+                            id,
+                            text,
+                            destination,
+                            category,
+                            newTab
+                        }
+                    }
+                }
+            `;
         } else {
             return `
-        mutation a {
-            link: saveLink(linkData: {
-                text: "${link.text}",
-                destination: "${link.destination}",
-                category: "${link.category}",
-                newTab: ${link.newTab}
-            }) {
-                text,
-                destination,
-                category,
-                newTab
-            }
-        }
-        `;
+                mutation a {
+                    link: saveLink(linkData: {
+                        text: "${link.text}",
+                        destination: "${link.destination}",
+                        category: "${link.category}",
+                        newTab: ${link.newTab}
+                    }) {
+                        links {
+                            id,
+                            text,
+                            destination,
+                            category,
+                            newTab
+                        }
+                    }
+                }
+            `;
         }
     };
 
     const deleteLink = async () => {
+        console.log(link, props.link);
         if (link.id) {
             await deleteLinkFromServer();
         }
 
-        props.removeItem(props.index);
+        // props.removeItem(props.index);
     };
 
     const deleteLinkFromServer = async () => {
         const mutation = `
-        mutation d {
-            deleteLink(id: "${link.id}")
-        }
+            mutation d {
+                link: deleteLink(id: "${link.id}") {
+                    links {
+                        id,
+                        text,
+                        destination,
+                        category,
+                        newTab
+                    }
+                }
+            }
         `;
         const fetch = fetcher.setPayload(mutation).build();
 
@@ -159,7 +177,11 @@ const NavigationLinkItem = (props: NavigationLinkItemProps) => {
         setRequestInProgress(true);
 
         try {
-            await fetch.exec();
+            const response = await fetch.exec();
+            console.log(`Delete`, response.link);
+            if (response.link.links) {
+                props.dispatch(navigationAvailable(response.link.links))
+            } 
         } catch (e: any) {
             props.dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {

@@ -10,6 +10,7 @@ import mediaTypes from "../media/types";
 import { getMedia } from "../media/logic";
 const { mediaType } = mediaTypes;
 import designTypes from "../design/types";
+import menuTypes from '../menus/types';
 
 const siteType = new GraphQLObjectType({
     name: "SiteInfo",
@@ -58,6 +59,7 @@ const domain = new GraphQLObjectType({
         settings: { type: siteType },
         layout: { type: designTypes.layoutType },
         theme: { type: designTypes.themeType },
+        links: { type: new GraphQLList(menuTypes.linkType) }
     },
 });
 

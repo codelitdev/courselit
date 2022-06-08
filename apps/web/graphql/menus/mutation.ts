@@ -2,10 +2,11 @@ import { GraphQLNonNull, GraphQLID, GraphQLBoolean } from "graphql";
 import types from "./types";
 import { saveLink, deleteLink } from "./logic";
 import type GQLContext from "../../models/GQLContext";
+import settingsTypes from "../settings/types";
 
 export default {
     saveLink: {
-        type: types.linkType,
+        type: settingsTypes.domain,
         args: {
             linkData: {
                 type: new GraphQLNonNull(types.linkInputType),
@@ -15,7 +16,7 @@ export default {
             saveLink(linkData, context),
     },
     deleteLink: {
-        type: GraphQLBoolean,
+        type: settingsTypes.domain,
         args: {
             id: { type: new GraphQLNonNull(GraphQLID) },
         },

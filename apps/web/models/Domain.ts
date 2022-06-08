@@ -1,6 +1,7 @@
 import { Layout } from "@courselit/common-models";
 import mongoose from "mongoose";
 import LayoutSchema from "./Layout";
+import LinkSchema, { Link } from "./Link";
 import SettingsSchema, { Settings } from "./SiteInfo";
 import { Theme, ThemeSchema } from "./Theme";
 
@@ -15,6 +16,7 @@ export interface Domain {
     settings: Settings;
     layout: Layout;
     theme: Theme;
+    links: Link
 }
 
 const DomainSchema = new mongoose.Schema<Domain>(
@@ -26,6 +28,7 @@ const DomainSchema = new mongoose.Schema<Domain>(
         settings: SettingsSchema,
         layout: LayoutSchema,
         theme: ThemeSchema,
+        links: [LinkSchema]
     },
     {
         timestamps: true,
