@@ -47,8 +47,12 @@ const Widget = (props: FooterMenuWidgetProps) => {
                             key={link.text}
                             sx={{}}
                         >
-                            <Link href={link.destination} key={link.text}>
+                            {link.newTab && (
                                 <MuiLink
+                                    href={link.destination}
+                                    key={link.text}
+                                    target="_blank"
+                                    rel="noreferrer noopener"
                                     sx={{
                                         color: "text.primary",
                                     }}
@@ -57,7 +61,20 @@ const Widget = (props: FooterMenuWidgetProps) => {
                                         {link.text}
                                     </Typography>
                                 </MuiLink>
-                            </Link>
+                            )}
+                            {!link.newTab && (
+                                <MuiLink
+                                    href={link.destination}
+                                    key={link.text}
+                                    sx={{
+                                        color: "text.primary",
+                                    }}
+                                >
+                                    <Typography variant="body2">
+                                        {link.text}
+                                    </Typography>
+                                </MuiLink>
+                            )}
                         </Grid>
                     ))}
                 </Grid>
