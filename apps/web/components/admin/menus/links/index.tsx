@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid, Button } from "@mui/material";
 import { ADD_NEW_LINK_BUTTON } from "../../../../ui-config/strings";
-import { FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";
 import { actionCreators } from "@courselit/state-management";
 import dynamic from "next/dynamic";
@@ -16,45 +15,23 @@ interface NavigationLinksProps {
     auth: Auth;
     dispatch: AppDispatch;
     address: Address;
-    navigation: Link[]
+    navigation: Link[];
 }
 
 const NavigationLinks = (props: NavigationLinksProps) => {
-    const { dispatch, address, auth, navigation } = props;
+    const { dispatch, navigation } = props;
     const [links, setLinks] = useState<Link[]>(navigation);
 
     useEffect(() => {
         getMenu();
     }, []);
 
+    useEffect(() => {
+        setLinks(navigation);
+    }, [navigation]);
+
     const getMenu = async () => {
         await props.dispatch(actionCreators.updateSiteInfo());
-        // const query = `
-        // query {
-        //     links: getMenuAsAdmin {
-        //         id,
-        //         text,
-        //         destination,
-        //         newTab,
-        //         category
-        //     }
-        // }
-        // `;
-        // const fetch = new FetchBuilder()
-        //     .setUrl(`${address.backend}/api/graph`)
-        //     .setIsGraphQLEndpoint(true)
-        //     .setPayload(query)
-        //     .build();
-
-        // try {
-        //     dispatch(networkAction(true));
-        //     const response = await fetch.exec();
-        //     if (response.links) {
-        //         setLinks(response.links);
-        //     }
-        // } finally {
-        //     dispatch(networkAction(false));
-        // }
     };
 
     const addEmptyLinkItem = () =>
@@ -68,13 +45,6 @@ const NavigationLinks = (props: NavigationLinksProps) => {
             },
         ]);
 
-    // const removeItemAt = (index: number) => {
-    //     const arrayToRemoveComponentFrom = Array.from(links);
-    //     arrayToRemoveComponentFrom.splice(index, 1);
-
-    //     setLinks(arrayToRemoveComponentFrom);
-    // };
-
     return (
         <Grid item container xs spacing={1}>
             {links.map((link, index) => (
@@ -82,7 +52,6 @@ const NavigationLinks = (props: NavigationLinksProps) => {
                     key={link.destination}
                     index={index}
                     link={link}
-                    // removeItem={removeItemAt}
                 />
             ))}
             <Grid item>
@@ -95,9 +64,7 @@ const NavigationLinks = (props: NavigationLinksProps) => {
 };
 
 const mapStateToProps = (state: AppState) => ({
-    auth: state.auth,
-    address: state.address,
-    navigation: state.navigation
+    navigation: state.navigation,
 });
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({

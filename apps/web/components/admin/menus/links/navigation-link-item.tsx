@@ -27,7 +27,7 @@ import { Done, Delete } from "@mui/icons-material";
 import { connect } from "react-redux";
 import { FetchBuilder } from "@courselit/utils";
 import { AppMessage } from "@courselit/common-models";
-import type { Address, Auth, Link } from "@courselit/common-models";
+import type { Address, Link } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
 
@@ -48,10 +48,8 @@ const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
 
 interface NavigationLinkItemProps {
     link: Link;
-    auth: Auth;
     dispatch: AppDispatch;
     index: number;
-    // removeItem: (...args: any[]) => void;
     address: Address;
 }
 
@@ -91,10 +89,9 @@ const NavigationLinkItem = (props: NavigationLinkItemProps) => {
 
         try {
             const response = await fetch.exec();
-            if (response.link) {
+            if (response.link.links) {
                 setDirty(false);
-                console.log(response.link.links);
-                props.dispatch(navigationAvailable(response.link.links))
+                await props.dispatch(navigationAvailable(response.link.links));
             }
         } catch (e: any) {
             props.dispatch(setAppMessage(new AppMessage(e.message)));
@@ -105,7 +102,6 @@ const NavigationLinkItem = (props: NavigationLinkItemProps) => {
     };
 
     const getGraphQLMutationString = () => {
-        console.log(props.link);
         if (props.link.id) {
             return `
                 mutation {
@@ -149,12 +145,9 @@ const NavigationLinkItem = (props: NavigationLinkItemProps) => {
     };
 
     const deleteLink = async () => {
-        console.log(link, props.link);
         if (link.id) {
             await deleteLinkFromServer();
         }
-
-        // props.removeItem(props.index);
     };
 
     const deleteLinkFromServer = async () => {
@@ -178,10 +171,9 @@ const NavigationLinkItem = (props: NavigationLinkItemProps) => {
 
         try {
             const response = await fetch.exec();
-            console.log(`Delete`, response.link);
             if (response.link.links) {
-                props.dispatch(navigationAvailable(response.link.links))
-            } 
+                props.dispatch(navigationAvailable(response.link.links));
+            }
         } catch (e: any) {
             props.dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
@@ -293,7 +285,6 @@ const NavigationLinkItem = (props: NavigationLinkItemProps) => {
 };
 
 const mapStateToProps = (state: AppState) => ({
-    auth: state.auth,
     networkAction: state.networkAction,
     address: state.address,
 });

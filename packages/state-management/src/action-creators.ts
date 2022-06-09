@@ -172,69 +172,12 @@ export function clearAppMessage() {
     return (dispatch: any) => dispatch({ type: CLEAR_MESSAGE });
 }
 
-export function updateSiteTheme() {
-    return async (dispatch: any, getState: () => State) => {
-        try {
-            dispatch(networkAction(true));
-
-            const query = `
-            { 
-                theme: getTheme {
-                    styles
-                }
-            }
-            `;
-            const fetch = new FetchBuilder()
-                .setUrl(`${getState().address.backend}/api/graph`)
-                .setPayload(query)
-                .setIsGraphQLEndpoint(true)
-                .build();
-            const response = await fetch.exec();
-
-            dispatch(networkAction(false));
-            dispatch(themeAvailable(response.theme));
-        } finally {
-            dispatch(networkAction(false));
-        }
-    };
-}
-
 export function themeAvailable(theme: Theme) {
     return { type: THEME_AVAILABLE, theme };
 }
 
 export function layoutAvailable(layout: Layout) {
     return { type: LAYOUT_AVAILABLE, layout };
-}
-
-export function updateSiteNavigation() {
-    return async (dispatch: any, getState: () => State) => {
-        try {
-            dispatch(networkAction(true));
-
-            const query = `
-      query {
-        siteNavigation: getMenu {
-          text,
-          destination,
-          category,
-          newTab,
-        }
-      }
-      `;
-            const fetch = new FetchBuilder()
-                .setUrl(`${getState().address.backend}/api/graph`)
-                .setPayload(query)
-                .setIsGraphQLEndpoint(true)
-                .build();
-            const response = await fetch.exec();
-
-            dispatch(networkAction(false));
-            dispatch(navigationAvailable(response.siteNavigation));
-        } finally {
-            dispatch(networkAction(false));
-        }
-    };
 }
 
 export function navigationAvailable(links: typeof defaultState.navigation) {

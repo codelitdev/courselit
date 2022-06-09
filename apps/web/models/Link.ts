@@ -2,11 +2,11 @@ import mongoose from "mongoose";
 
 export interface Link {
     id: mongoose.Types.ObjectId;
-    // domain: mongoose.Types.ObjectId;
     text: string;
     destination: string;
     category: string;
     newTab: boolean;
+    rank: number;
 }
 
 const LinkSchema = new mongoose.Schema<Link>({
@@ -14,12 +14,9 @@ const LinkSchema = new mongoose.Schema<Link>({
     destination: { type: String, required: true },
     category: { type: String, required: true },
     newTab: { type: Boolean, required: true },
+    rank: { type: Number },
 });
 
-LinkSchema.index(
-    { text: 1, destination: 1 },
-    { unique: true }
-)
+LinkSchema.index({ text: 1, destination: 1 }, { unique: true });
 
-// export default mongoose.models.Link || mongoose.model("Link", LinkSchema);
 export default LinkSchema;

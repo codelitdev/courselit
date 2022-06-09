@@ -96,9 +96,6 @@ MyApp.getInitialProps = wrapper.getInitialAppProps(
                 await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
                     actionCreators.updateSiteInfo()
                 );
-                // await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
-                //     actionCreators.updateSiteNavigation()
-                // );
                 await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
                     actionCreators.updateWidgetsData(widgets)
                 );

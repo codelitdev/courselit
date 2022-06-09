@@ -145,7 +145,7 @@ function layoutReducer(state = initialState.layout, action: Action) {
 function navigationReducer(state = initialState.navigation, action: Action) {
     switch (action.type) {
         case NAVIGATION_AVAILABLE:
-            return action.links || state;
+            return action.links || [];
         default:
             return state;
     }

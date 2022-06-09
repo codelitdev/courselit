@@ -16,7 +16,7 @@ export interface Domain {
     settings: Settings;
     layout: Layout;
     theme: Theme;
-    links: Link
+    links: Link;
 }
 
 const DomainSchema = new mongoose.Schema<Domain>(
@@ -28,7 +28,7 @@ const DomainSchema = new mongoose.Schema<Domain>(
         settings: SettingsSchema,
         layout: LayoutSchema,
         theme: ThemeSchema,
-        links: [LinkSchema]
+        links: [LinkSchema],
     },
     {
         timestamps: true,
