@@ -7,8 +7,6 @@ import dynamic from "next/dynamic";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import type { Auth, Address, Link } from "@courselit/common-models";
 
-const { networkAction } = actionCreators;
-
 const NavigationLinkItem = dynamic(() => import("./navigation-link-item"));
 
 interface NavigationLinksProps {

@@ -121,8 +121,6 @@ function messageReducer(state = initialState.message, action: Action) {
 }
 
 function themeReducer(state = initialState.theme, action: Action) {
-    let styles;
-
     switch (action.type) {
         case THEME_AVAILABLE:
             return action.theme || state;
@@ -132,8 +130,6 @@ function themeReducer(state = initialState.theme, action: Action) {
 }
 
 function layoutReducer(state = initialState.layout, action: Action) {
-    let layout;
-
     switch (action.type) {
         case LAYOUT_AVAILABLE:
             return action.layout || state;

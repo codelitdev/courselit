@@ -1,7 +1,6 @@
 import * as React from "react";
 import { WidgetProps } from "@courselit/common-models";
 import { Grid, Typography } from "@mui/material";
-import Link from "next/link";
 import MuiLink from "@mui/material/Link";
 import { Section } from "@courselit/components-library";
 

@@ -1,4 +1,4 @@
-import { GraphQLNonNull, GraphQLID, GraphQLBoolean } from "graphql";
+import { GraphQLNonNull, GraphQLID } from "graphql";
 import types from "./types";
 import { saveLink, deleteLink } from "./logic";
 import type GQLContext from "../../models/GQLContext";
