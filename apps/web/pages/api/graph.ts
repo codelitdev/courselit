@@ -12,35 +12,35 @@ import constants from "../../config/constants";
 passport.use(jwtStrategy);
 
 export default nc<NextApiRequest, NextApiResponse>({
-  onError: (err, req, res, next) => {
-    res.status(500).json({ error: err.message });
-  },
-  onNoMatch: (req, res) => {
-    res.status(404).end("Not found");
-  },
+    onError: (err, req, res, next) => {
+        res.status(500).json({ error: err.message });
+    },
+    onNoMatch: (req, res) => {
+        res.status(404).end("Not found");
+    },
 })
-  .use(passport.initialize())
-  .use(connectDb)
-  .use(verifyDomain)
-  .use((req: NextApiRequest, res: NextApiResponse, next: any) => {
-    if (req.cookies[constants.jwtTokenCookieName]) {
-      passport.authenticate("jwt", { session: false })(req, res, next);
-    } else {
-      next();
-    }
-  })
-  .post(async (req: ApiRequest, res: NextApiResponse) => {
-    if (!req.body.hasOwnProperty("query")) {
-      res.status(400).json({ error: "Query is missing" });
-    }
+    .use(passport.initialize())
+    .use(connectDb)
+    .use(verifyDomain)
+    .use((req: NextApiRequest, res: NextApiResponse, next: any) => {
+        if (req.cookies[constants.jwtTokenCookieName]) {
+            passport.authenticate("jwt", { session: false })(req, res, next);
+        } else {
+            next();
+        }
+    })
+    .post(async (req: ApiRequest, res: NextApiResponse) => {
+        if (!req.body.hasOwnProperty("query")) {
+            res.status(400).json({ error: "Query is missing" });
+        }
 
-    const source = req.body.query;
-    const contextValue = { user: req.user, subdomain: req.subdomain };
-    const response = await graphql({
-      schema,
-      source,
-      rootValue: null,
-      contextValue,
+        const source = req.body.query;
+        const contextValue = { user: req.user, subdomain: req.subdomain };
+        const response = await graphql({
+            schema,
+            source,
+            rootValue: null,
+            contextValue,
+        });
+        return res.status(200).json(response);
     });
-    return res.status(200).json(response);
-  });

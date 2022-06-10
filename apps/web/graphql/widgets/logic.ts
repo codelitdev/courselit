@@ -6,133 +6,133 @@ import constants from "../../config/constants";
 const { permissions } = constants;
 
 export const getWidgetSettings = async (name: string, ctx: GQLContext) => {
-  const widget = await Widget.findOne({ name, domain: ctx.subdomain._id });
+    const widget = await Widget.findOne({ name, domain: ctx.subdomain._id });
 
-  if (!widget) {
-    return {};
-  }
+    if (!widget) {
+        return {};
+    }
 
-  return {
-    settings: widget.settings,
-  };
+    return {
+        settings: widget.settings,
+    };
 };
 
 export const getWidgetData = async (name: string, ctx: GQLContext) => {
-  checkIfAuthenticated(ctx);
-  if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
-    throw new Error(responses.action_not_allowed);
-  }
+    checkIfAuthenticated(ctx);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
+        throw new Error(responses.action_not_allowed);
+    }
 
-  const widget = await Widget.findOne({ name, domain: ctx.subdomain._id });
+    const widget = await Widget.findOne({ name, domain: ctx.subdomain._id });
 
-  if (!widget) {
-    return {};
-  }
+    if (!widget) {
+        return {};
+    }
 
-  return {
-    data: widget.data,
-  };
+    return {
+        data: widget.data,
+    };
 };
 
 export const saveWidgetSettings = async (
-  widgetSettingsData: Record<string, unknown>,
-  ctx: GQLContext
+    widgetSettingsData: Record<string, unknown>,
+    ctx: GQLContext
 ) => {
-  checkIfAuthenticated(ctx);
-  if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
-    throw new Error(responses.action_not_allowed);
-  }
-
-  if (widgetSettingsData.settings !== undefined) {
-    try {
-      JSON.parse(<string>widgetSettingsData.settings);
-    } catch (err) {
-      throw new Error(responses.invalid_format);
+    checkIfAuthenticated(ctx);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
+        throw new Error(responses.action_not_allowed);
     }
-  }
 
-  let widgetSettings = await Widget.findOne({
-    name: widgetSettingsData.name,
-    domain: ctx.subdomain._id,
-  });
+    if (widgetSettingsData.settings !== undefined) {
+        try {
+            JSON.parse(<string>widgetSettingsData.settings);
+        } catch (err) {
+            throw new Error(responses.invalid_format);
+        }
+    }
 
-  let shouldCreate = false;
-  if (!widgetSettings) {
-    shouldCreate = true;
-    widgetSettings = {
-      domain: ctx.subdomain._id,
-    };
-  }
+    let widgetSettings = await Widget.findOne({
+        name: widgetSettingsData.name,
+        domain: ctx.subdomain._id,
+    });
 
-  // populate changed data
-  for (const key of Object.keys(widgetSettingsData)) {
-    widgetSettings[key] = widgetSettingsData[key];
-  }
+    let shouldCreate = false;
+    if (!widgetSettings) {
+        shouldCreate = true;
+        widgetSettings = {
+            domain: ctx.subdomain._id,
+        };
+    }
 
-  if (!widgetSettings.data) {
-    widgetSettings.data = "[]";
-  }
+    // populate changed data
+    for (const key of Object.keys(widgetSettingsData)) {
+        widgetSettings[key] = widgetSettingsData[key];
+    }
 
-  if (shouldCreate) {
-    widgetSettings = await Widget.create(widgetSettings);
-  } else {
-    widgetSettings = await widgetSettings.save();
-  }
+    if (!widgetSettings.data) {
+        widgetSettings.data = "[]";
+    }
 
-  return widgetSettings;
+    if (shouldCreate) {
+        widgetSettings = await Widget.create(widgetSettings);
+    } else {
+        widgetSettings = await widgetSettings.save();
+    }
+
+    return widgetSettings;
 };
 
 export const saveWidgetData = async (
-  widgetData: Record<string, unknown>,
-  ctx: GQLContext
+    widgetData: Record<string, unknown>,
+    ctx: GQLContext
 ) => {
-  let data;
-  if (widgetData.data !== undefined) {
-    try {
-      data = JSON.parse(<string>widgetData.data);
-    } catch (err) {
-      throw new Error(responses.invalid_format);
+    let data;
+    if (widgetData.data !== undefined) {
+        try {
+            data = JSON.parse(<string>widgetData.data);
+        } catch (err) {
+            throw new Error(responses.invalid_format);
+        }
     }
-  }
 
-  const widget = await Widget.findOne({
-    name: widgetData.name,
-    domain: ctx.subdomain._id,
-  });
+    const widget = await Widget.findOne({
+        name: widgetData.name,
+        domain: ctx.subdomain._id,
+    });
 
-  if (!widget) {
-    throw new Error(responses.item_not_found);
-  }
+    if (!widget) {
+        throw new Error(responses.item_not_found);
+    }
 
-  const existingData = JSON.parse(widget.data);
-  existingData.push(data);
-  widget.data = JSON.stringify(existingData);
+    const existingData = JSON.parse(widget.data);
+    existingData.push(data);
+    widget.data = JSON.stringify(existingData);
 
-  await widget.save();
+    await widget.save();
 
-  return true;
+    return true;
 };
 
 export const clearWidgetData = async (name: string, ctx: GQLContext) => {
-  checkIfAuthenticated(ctx);
-  if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
-    throw new Error(responses.action_not_allowed);
-  }
+    checkIfAuthenticated(ctx);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
+        throw new Error(responses.action_not_allowed);
+    }
 
-  const widget = await Widget.findOne({ name, domain: ctx.subdomain._id });
+    const widget = await Widget.findOne({ name, domain: ctx.subdomain._id });
 
-  if (!widget) {
-    throw new Error(responses.item_not_found);
-  }
+    if (!widget) {
+        throw new Error(responses.item_not_found);
+    }
 
-  widget.data = "[]";
-  await widget.save();
+    widget.data = "[]";
+    await widget.save();
 
-  return true;
+    return true;
 };
 
 export const getSiteWidgets = async (ctx: GQLContext) => {
-  const widgets = await Widget.find({ domain: ctx.subdomain._id });
+    const widgets = await Widget.find({ domain: ctx.subdomain._id });
 
-  return widgets;
+    return widgets;
 };

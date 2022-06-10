@@ -1,14 +1,14 @@
 {
-  "compilerOptions": {
-    "outDir": "dist",
-    "noImplicitAny": true,
-    "module": "commonjs",
-    "target": "es5",
-    "jsx": "react",
-    "moduleResolution": "node",
-    "declaration": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true
-  },
-  "include": ["src/**/*"]
+    "compilerOptions": {
+        "outDir": "dist",
+        "noImplicitAny": true,
+        "module": "commonjs",
+        "target": "es5",
+        "jsx": "react",
+        "moduleResolution": "node",
+        "declaration": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true
+    },
+    "include": ["src/**/*"]
 }

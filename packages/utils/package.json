@@ -1,37 +1,37 @@
 {
-  "name": "@courselit/utils",
-  "version": "0.18.10",
-  "description": "Utilities for CourseLit",
-  "author": "Rajat Saxena <hi@rajatsaxena.dev>",
-  "homepage": "https://github.com/codelitdev/courselit#readme",
-  "license": "MIT",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "directories": {
-    "lib": "src"
-  },
-  "files": [
-    "dist"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/codelitdev/courselit.git"
-  },
-  "scripts": {
-    "test": "echo \"Error: run tests from root\" && exit 1",
-    "build": "tsc",
-    "prepublishOnly": "yarn run build"
-  },
-  "bugs": {
-    "url": "https://github.com/codelitdev/courselit/issues"
-  },
-  "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^5.18.0",
-    "@typescript-eslint/parser": "^5.18.0",
-    "eslint": "^8.12.0",
-    "typescript": "^4.6.3"
-  }
+    "name": "@courselit/utils",
+    "version": "0.18.10",
+    "description": "Utilities for CourseLit",
+    "author": "Rajat Saxena <hi@rajatsaxena.dev>",
+    "homepage": "https://github.com/codelitdev/courselit#readme",
+    "license": "MIT",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "directories": {
+        "lib": "src"
+    },
+    "files": [
+        "dist"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/codelitdev/courselit.git"
+    },
+    "scripts": {
+        "test": "echo \"Error: run tests from root\" && exit 1",
+        "build": "tsc",
+        "prepublishOnly": "yarn run build"
+    },
+    "bugs": {
+        "url": "https://github.com/codelitdev/courselit/issues"
+    },
+    "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "^5.18.0",
+        "@typescript-eslint/parser": "^5.18.0",
+        "eslint": "^8.12.0",
+        "typescript": "^4.6.3"
+    }
 }

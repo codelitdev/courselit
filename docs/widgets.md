@@ -22,10 +22,10 @@ yarn workspace @courselit/web add my-widget
 import mywidget from "my-widget";
 
 export default {
-  widgets: {
-    // other widgets
-    [mywidget.metadata.name]: mywidget,
-  },
+    widgets: {
+        // other widgets
+        [mywidget.metadata.name]: mywidget,
+    },
 };
 ```
 
@@ -110,10 +110,10 @@ const query = `graphql query text`;
 const fetch = props.fetchBuilder.setPayload(query).build();
 
 try {
-  const response = await fetch.exec();
-  // consume response here
+    const response = await fetch.exec();
+    // consume response here
 } catch (err) {
-  // error handling
+    // error handling
 }
 ```
 
@@ -129,19 +129,19 @@ Example
 
 ```js
 function Widget(props) {
-  const { state, name } = props;
-  const data = state.widgetsData[name];
+    const { state, name } = props;
+    const data = state.widgetsData[name];
 
-  // use data here
+    // use data here
 }
 
 Widget.getData = async function getData({
-  fetchBuilder,
+    fetchBuilder,
 }: {
-  fetchBuilder: FetchBuilder,
+    fetchBuilder: FetchBuilder,
 }) {
-  const data = await your_api_call();
-  return data;
+    const data = await your_api_call();
+    return data;
 };
 
 export default Widget;

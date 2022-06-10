@@ -5,9 +5,9 @@ const BaseLayout = dynamic(() => import("../../components/admin/base-layout"));
 const Design = dynamic(() => import("../../components/admin/design"));
 
 export default function Designer() {
-  return (
-    <BaseLayout title={HEADER_DESIGN}>
-      <Design />
-    </BaseLayout>
-  );
+    return (
+        <BaseLayout title={HEADER_DESIGN}>
+            <Design />
+        </BaseLayout>
+    );
 }

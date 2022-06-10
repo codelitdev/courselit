@@ -9,15 +9,15 @@ import dynamic from "next/dynamic";
 const PREFIX = "Header";
 
 const classes = {
-  branding: `${PREFIX}-branding`,
+    branding: `${PREFIX}-branding`,
 };
 
 const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
-  [`& .${classes.branding}`]: {
-    [theme.breakpoints.up("sm")]: {
-      display: "none",
+    [`& .${classes.branding}`]: {
+        [theme.breakpoints.up("sm")]: {
+            display: "none",
+        },
     },
-  },
 }));
 
 const Branding = dynamic(() => import("./branding"));
@@ -25,27 +25,27 @@ const Branding = dynamic(() => import("./branding"));
 interface HeaderProps {}
 
 const Header = ({}: HeaderProps) => {
-  const theme: Theme = useTheme();
+    const theme: Theme = useTheme();
 
-  return (
-    <StyledGrid
-      container
-      justifyContent="space-between"
-      direction="row"
-      alignItems="center"
-    >
-      <Grid item>
-        <div className={classes.branding}>
-          <Branding />
-        </div>
-      </Grid>
-      {!theme.hideLoginButton && (
-        <Grid item>
-          <SessionButton />
-        </Grid>
-      )}
-    </StyledGrid>
-  );
+    return (
+        <StyledGrid
+            container
+            justifyContent="space-between"
+            direction="row"
+            alignItems="center"
+        >
+            <Grid item>
+                <div className={classes.branding}>
+                    <Branding />
+                </div>
+            </Grid>
+            {!theme.hideLoginButton && (
+                <Grid item>
+                    <SessionButton />
+                </Grid>
+            )}
+        </StyledGrid>
+    );
 };
 
 export default Header;

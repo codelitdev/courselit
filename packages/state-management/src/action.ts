@@ -1,4 +1,4 @@
 export default interface Action {
-  type: string;
-  [x: string]: any;
+    type: string;
+    [x: string]: any;
 }

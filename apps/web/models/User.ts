@@ -15,18 +15,21 @@ export interface User {
     updatedAt: Date;
 }
 
-const UserSchema = new mongoose.Schema<User>({
-    domain: { type: mongoose.Schema.Types.ObjectId, required: true },
-    userId: { type: String, required: true, default: generateUniqueId },
-    email: { type: String, required: true },
-    active: { type: Boolean, required: true, default: true },
-    name: { type: String, required: false },
-    purchases: [mongoose.Schema.Types.ObjectId],
-    bio: { type: String },
-    permissions: [String],
-}, {
-    timestamps: true
-});
+const UserSchema = new mongoose.Schema<User>(
+    {
+        domain: { type: mongoose.Schema.Types.ObjectId, required: true },
+        userId: { type: String, required: true, default: generateUniqueId },
+        email: { type: String, required: true },
+        active: { type: Boolean, required: true, default: true },
+        name: { type: String, required: false },
+        purchases: [mongoose.Schema.Types.ObjectId],
+        bio: { type: String },
+        permissions: [String],
+    },
+    {
+        timestamps: true,
+    }
+);
 
 UserSchema.index({
     email: "text",

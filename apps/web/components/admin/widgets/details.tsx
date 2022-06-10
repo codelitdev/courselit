@@ -6,29 +6,29 @@ import type { Address } from "@courselit/common-models";
 import type { AppState } from "@courselit/state-management";
 
 interface Component {
-  caption: string;
-  component: any;
-  icon?: string;
+    caption: string;
+    component: any;
+    icon?: string;
 }
 
 interface DetailsProps {
-  name: string;
-  component: Component;
-  address: Address;
+    name: string;
+    component: Component;
+    address: Address;
 }
 
 const Details = ({ name, component, address }: DetailsProps) => {
-  const theme = useTheme();
-  const fetch = new FetchBuilder()
-    .setUrl(`${address.backend}/api/graph`)
-    .setIsGraphQLEndpoint(true);
-  const { component: Component } = component;
+    const theme = useTheme();
+    const fetch = new FetchBuilder()
+        .setUrl(`${address.backend}/api/graph`)
+        .setIsGraphQLEndpoint(true);
+    const { component: Component } = component;
 
-  return <Component name={name} fetchBuilder={fetch} theme={theme} />;
+    return <Component name={name} fetchBuilder={fetch} theme={theme} />;
 };
 
 const mapStateToProps = (state: AppState) => ({
-  address: state.address,
+    address: state.address,
 });
 
 export default connect(mapStateToProps)(Details);

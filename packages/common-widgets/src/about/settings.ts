@@ -1,3 +1,3 @@
 export default interface Settings {
-  text?: string;
+    text?: string;
 }
