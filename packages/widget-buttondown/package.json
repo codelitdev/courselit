@@ -1,57 +1,57 @@
 {
-  "name": "@courselit/widget-buttondown",
-  "version": "0.18.10",
-  "description": "Buttondown widget for CourseLit",
-  "keywords": [
-    "courselit",
-    "buttondown",
-    "widget",
-    "buttondown courselit widget"
-  ],
-  "author": "Rajat Saxena <social@rajats.xyz>",
-  "homepage": "https://github.com/codelitdev/courselit#readme",
-  "license": "MIT",
-  "main": "dist/index.js",
-  "directories": {
-    "lib": "lib",
-    "test": "__tests__"
-  },
-  "files": [
-    "dist"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/codelitdev/courselit.git"
-  },
-  "scripts": {
-    "test": "echo \"Error: run tests from root\" && exit 1",
-    "build": "webpack",
-    "prepublishOnly": "yarn run build"
-  },
-  "bugs": {
-    "url": "https://github.com/recurzery/courselit/issues"
-  },
-  "peerDependencies": {
-    "@material-ui/core": "^4.8.1",
-    "@material-ui/icons": "^4.4.1",
-    "@material-ui/styles": "^4.7.1",
-    "prop-types": "^15.7.2",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "react-redux": "^8.0.1"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.11.1",
-    "@babel/preset-react": "^7.10.4",
-    "babel-loader": "^8.1.0",
-    "webpack": "^4.44.1",
-    "webpack-cli": "^3.3.12"
-  },
-  "gitHead": "fca7d2f8455c835f1c185a1ebc8513c6269ebe5b",
-  "dependencies": {
-    "@courselit/components-library": "^0.18.10"
-  }
+    "name": "@courselit/widget-buttondown",
+    "version": "0.18.10",
+    "description": "Buttondown widget for CourseLit",
+    "keywords": [
+        "courselit",
+        "buttondown",
+        "widget",
+        "buttondown courselit widget"
+    ],
+    "author": "Rajat Saxena <social@rajats.xyz>",
+    "homepage": "https://github.com/codelitdev/courselit#readme",
+    "license": "MIT",
+    "main": "dist/index.js",
+    "directories": {
+        "lib": "lib",
+        "test": "__tests__"
+    },
+    "files": [
+        "dist"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/codelitdev/courselit.git"
+    },
+    "scripts": {
+        "test": "echo \"Error: run tests from root\" && exit 1",
+        "build": "webpack",
+        "prepublishOnly": "yarn run build"
+    },
+    "bugs": {
+        "url": "https://github.com/recurzery/courselit/issues"
+    },
+    "peerDependencies": {
+        "@material-ui/core": "^4.8.1",
+        "@material-ui/icons": "^4.4.1",
+        "@material-ui/styles": "^4.7.1",
+        "prop-types": "^15.7.2",
+        "react": "^17.0.2",
+        "react-dom": "^17.0.2",
+        "react-redux": "^8.0.1"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.11.1",
+        "@babel/preset-react": "^7.10.4",
+        "babel-loader": "^8.1.0",
+        "webpack": "^4.44.1",
+        "webpack-cli": "^3.3.12"
+    },
+    "gitHead": "fca7d2f8455c835f1c185a1ebc8513c6269ebe5b",
+    "dependencies": {
+        "@courselit/components-library": "^0.18.10"
+    }
 }

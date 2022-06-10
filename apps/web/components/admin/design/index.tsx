@@ -14,35 +14,36 @@ const LayoutManager = dynamic(() => import("./layout-manager"));
 const { permissions } = constants;
 
 interface AppearanceProps {
-  profile: Profile;
+    profile: Profile;
 }
 
 const Appearance = (props: AppearanceProps) => {
-  return (
-    <Grid container spacing={2}>
-      <Grid item xs>
-        <Section>
-          <Typography variant="h1" style={{ wordBreak: "break-word" }}>
-            {HEADER_DESIGN}
-          </Typography>
-        </Section>
-      </Grid>
-      {checkPermission(props.profile.permissions, [
-        permissions.manageSite,
-      ]) && 
-      (
-        <>
-            <LayoutManager />
-            <ThemesManager />
-        </>
-      )}
-
-    </Grid>
-  );
+    return (
+        <Grid container spacing={2}>
+            <Grid item xs>
+                <Section>
+                    <Typography
+                        variant="h1"
+                        style={{ wordBreak: "break-word" }}
+                    >
+                        {HEADER_DESIGN}
+                    </Typography>
+                </Section>
+            </Grid>
+            {checkPermission(props.profile.permissions, [
+                permissions.manageSite,
+            ]) && (
+                <>
+                    <LayoutManager />
+                    <ThemesManager />
+                </>
+            )}
+        </Grid>
+    );
 };
 
 const mapStateToProps = (state: State) => ({
-  profile: state.profile,
+    profile: state.profile,
 });
 
 export default connect(mapStateToProps)(Appearance);

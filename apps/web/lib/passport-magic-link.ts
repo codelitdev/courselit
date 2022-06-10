@@ -28,11 +28,11 @@ export default new Strategy(
         const emailBody = pug.render(LoginEmailTemplate, { magiclink });
         return process.env.NODE_ENV === "production"
             ? await send({
-            to: user.email,
-            subject: `${responses.sign_in_mail_prefix} ${req.headers["host"]}`,
-            body: emailBody,
-            })
-        : console.log(`Login link: ${magiclink}`); // eslint-disable-line no-console
+                  to: user.email,
+                  subject: `${responses.sign_in_mail_prefix} ${req.headers["host"]}`,
+                  body: emailBody,
+              })
+            : console.log(`Login link: ${magiclink}`); // eslint-disable-line no-console
     },
     async (req: ApiRequest, user: User) => {
         let dbUser: User | null = await UserModel.findOne({

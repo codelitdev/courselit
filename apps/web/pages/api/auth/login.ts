@@ -21,44 +21,44 @@ export default nc<NextApiRequest, NextApiResponse>({
         res.status(404).end("Page is not found");
     },
 })
-  .use(passport.initialize())
-  .use(connectDb)
-  .use(verifyDomain)
-  .get(
-    passport.authenticate("magiclink", {
-      action: "acceptToken",
-      session: false,
-    }),
-    async (req: ApiRequest, res: NextApiResponse) => {
-        await updateLastActive(req.user!._id.toString());
+    .use(passport.initialize())
+    .use(connectDb)
+    .use(verifyDomain)
+    .get(
+        passport.authenticate("magiclink", {
+            action: "acceptToken",
+            session: false,
+        }),
+        async (req: ApiRequest, res: NextApiResponse) => {
+            await updateLastActive(req.user!._id.toString());
 
-        const token = jwt.sign(
-            { email: req.user!.email, domain: req.subdomain!._id },
-            <Secret>constants.jwtSecret,
-            { expiresIn: constants.jwtExpire }
-        );
+            const token = jwt.sign(
+                { email: req.user!.email, domain: req.subdomain!._id },
+                <Secret>constants.jwtSecret,
+                { expiresIn: constants.jwtExpire }
+            );
 
-        await setLoginSession(res, token);
+            await setLoginSession(res, token);
 
-        res.status(200).json({
-            message: responses.success,
-        });
-    }
-  )
-  .post(
-    passport.authenticate("magiclink", { action: "requestToken" }),
-    (_, res: NextApiResponse) => {
-      res.json({ message: responses.success });
-    }
-  );
+            res.status(200).json({
+                message: responses.success,
+            });
+        }
+    )
+    .post(
+        passport.authenticate("magiclink", { action: "requestToken" }),
+        (_, res: NextApiResponse) => {
+            res.json({ message: responses.success });
+        }
+    );
 
-async function updateLastActive (id: string) {
+async function updateLastActive(id: string) {
     await User.updateOne(
         { _id: id },
         {
             $currentDate: {
-                updatedAt: true
-            }
+                updatedAt: true,
+            },
         }
     );
 }

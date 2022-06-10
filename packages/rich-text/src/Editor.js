@@ -1,11 +1,11 @@
 import React from "react";
 import {
-  Editor as DraftJSEditor,
-  EditorState,
-  RichUtils,
-  AtomicBlockUtils,
-  DefaultDraftBlockRenderMap,
-  CompositeDecorator,
+    Editor as DraftJSEditor,
+    EditorState,
+    RichUtils,
+    AtomicBlockUtils,
+    DefaultDraftBlockRenderMap,
+    CompositeDecorator,
 } from "draft-js";
 import PropTypes from "prop-types";
 import Media from "./Renderers/Media.js";
@@ -25,199 +25,203 @@ import "./styles.css";
 
 // TODO: Remove props.theme
 const Editor = (props) => {
-  const handleKeyCommand = (command, editorState) => {
-    const newState = RichUtils.handleKeyCommand(editorState, command);
+    const handleKeyCommand = (command, editorState) => {
+        const newState = RichUtils.handleKeyCommand(editorState, command);
 
-    if (newState) {
-      props.onChange(newState);
-      return "handled";
-    }
+        if (newState) {
+            props.onChange(newState);
+            return "handled";
+        }
 
-    return "not-handled";
-  };
+        return "not-handled";
+    };
 
-  const handleTab = (event) => {
-    event.preventDefault();
-    props.onChange(RichUtils.onTab(event, props.editorState, 4));
-  };
+    const handleTab = (event) => {
+        event.preventDefault();
+        props.onChange(RichUtils.onTab(event, props.editorState, 4));
+    };
 
-  const customBlockRenderer = (block) => {
-    const blockType = block.getType();
-    switch (blockType) {
-      case "atomic":
-        return {
-          component: Media,
-          editable: false,
-          props: {
-            styles: props.theme.media,
-          },
-        };
-      default:
-      // do nothing
-    }
-  };
+    const customBlockRenderer = (block) => {
+        const blockType = block.getType();
+        switch (blockType) {
+            case "atomic":
+                return {
+                    component: Media,
+                    editable: false,
+                    props: {
+                        styles: props.theme.media,
+                    },
+                };
+            default:
+            // do nothing
+        }
+    };
 
-  const blockRenderMap = Map(
-    Object.assign(
-      {},
-      {
-        unstyled: {
-          element: "p",
-        },
-        blockquote: {
-          element: "blockquote",
-          wrapper: <Blockquote style={props.theme.blockquote} />,
-        },
-        "code-block": {
-          element: "p",
-          wrapper: <Code style={props.theme.code} />,
-        },
-        atomic: {
-          element: "div",
-        },
-      },
-      props.blockRenderMap
-    )
-  );
+    const blockRenderMap = Map(
+        Object.assign(
+            {},
+            {
+                unstyled: {
+                    element: "p",
+                },
+                blockquote: {
+                    element: "blockquote",
+                    wrapper: <Blockquote style={props.theme.blockquote} />,
+                },
+                "code-block": {
+                    element: "p",
+                    wrapper: <Code style={props.theme.code} />,
+                },
+                atomic: {
+                    element: "div",
+                },
+            },
+            props.blockRenderMap
+        )
+    );
 
-  const extendedBlockRenderMap =
-    DefaultDraftBlockRenderMap.merge(blockRenderMap);
+    const extendedBlockRenderMap =
+        DefaultDraftBlockRenderMap.merge(blockRenderMap);
 
-  return (
-    <DraftJSEditor
-      editorKey="editor" // for data-editor invalid prop error
-      editorState={props.editorState}
-      onChange={props.onChange}
-      readOnly={props.readOnly}
-      handleKeyCommand={handleKeyCommand}
-      blockRendererFn={customBlockRenderer}
-      blockRenderMap={extendedBlockRenderMap}
-      spellCheck={true}
-      onTab={handleTab}
-    />
-  );
+    return (
+        <DraftJSEditor
+            editorKey="editor" // for data-editor invalid prop error
+            editorState={props.editorState}
+            onChange={props.onChange}
+            readOnly={props.readOnly}
+            handleKeyCommand={handleKeyCommand}
+            blockRendererFn={customBlockRenderer}
+            blockRenderMap={extendedBlockRenderMap}
+            spellCheck={true}
+            onTab={handleTab}
+        />
+    );
 };
 
 Editor.addImage = (editorState, url) => {
-  const contentState = editorState.getCurrentContent();
-  const contentStateWithEntity = contentState.createEntity(
-    Media.IMAGE_TYPE,
-    "IMMUTABLE",
-    { options: { url } }
-  );
-  const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
-  const newEditorState = EditorState.set(editorState, {
-    currentContent: contentStateWithEntity,
-  });
-  return AtomicBlockUtils.insertAtomicBlock(newEditorState, entityKey, " ");
+    const contentState = editorState.getCurrentContent();
+    const contentStateWithEntity = contentState.createEntity(
+        Media.IMAGE_TYPE,
+        "IMMUTABLE",
+        { options: { url } }
+    );
+    const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
+    const newEditorState = EditorState.set(editorState, {
+        currentContent: contentStateWithEntity,
+    });
+    return AtomicBlockUtils.insertAtomicBlock(newEditorState, entityKey, " ");
 };
 
 Editor.addLink = (editorState, url) => {
-  const contentState = editorState.getCurrentContent();
-  const contentStateWithEntity = contentState.createEntity("LINK", "MUTABLE", {
-    url,
-  });
-  const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
-  const newEditorState = EditorState.set(editorState, {
-    currentContent: contentStateWithEntity,
-  });
-  return RichUtils.toggleLink(
-    newEditorState,
-    newEditorState.getSelection(),
-    entityKey
-  );
+    const contentState = editorState.getCurrentContent();
+    const contentStateWithEntity = contentState.createEntity(
+        "LINK",
+        "MUTABLE",
+        {
+            url,
+        }
+    );
+    const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
+    const newEditorState = EditorState.set(editorState, {
+        currentContent: contentStateWithEntity,
+    });
+    return RichUtils.toggleLink(
+        newEditorState,
+        newEditorState.getSelection(),
+        entityKey
+    );
 };
 
 Editor.toggleCode = (editorState) => RichUtils.toggleCode(editorState);
 Editor.toggleLink = (editorState) =>
-  RichUtils.toggleLink(editorState, editorState.getSelection(), null);
+    RichUtils.toggleLink(editorState, editorState.getSelection(), null);
 Editor.toggleBlockquote = (editorState) =>
-  RichUtils.toggleBlockType(editorState, "blockquote");
+    RichUtils.toggleBlockType(editorState, "blockquote");
 Editor.toggleBold = (editorState) =>
-  RichUtils.toggleInlineStyle(editorState, "BOLD");
+    RichUtils.toggleInlineStyle(editorState, "BOLD");
 Editor.toggleItalic = (editorState) =>
-  RichUtils.toggleInlineStyle(editorState, "ITALIC");
+    RichUtils.toggleInlineStyle(editorState, "ITALIC");
 Editor.toggleHeading = (editorState) =>
-  RichUtils.toggleBlockType(editorState, "header-one");
+    RichUtils.toggleBlockType(editorState, "header-one");
 Editor.toggleSubHeading = (editorState) =>
-  RichUtils.toggleBlockType(editorState, "header-two");
+    RichUtils.toggleBlockType(editorState, "header-two");
 Editor.toggleUnorderedListItem = (editorState) =>
-  RichUtils.toggleBlockType(editorState, "unordered-list-item");
+    RichUtils.toggleBlockType(editorState, "unordered-list-item");
 Editor.toggleOrderedListItem = (editorState) =>
-  RichUtils.toggleBlockType(editorState, "ordered-list-item");
+    RichUtils.toggleBlockType(editorState, "ordered-list-item");
 
 Editor.getDecorators = ({ prismDefaultLanguage = "javascript" }) => {
-  // From https://draftjs.org/docs/advanced-topics-decorators
-  const findWithRegex = (regex, contentBlock, callback) => {
-    const text = contentBlock.getText();
-    let matchArr, start;
-    while ((matchArr = regex.exec(text)) !== null) {
-      start = matchArr.index;
-      callback(start, start + matchArr[0].length);
-    }
-  };
+    // From https://draftjs.org/docs/advanced-topics-decorators
+    const findWithRegex = (regex, contentBlock, callback) => {
+        const text = contentBlock.getText();
+        let matchArr, start;
+        while ((matchArr = regex.exec(text)) !== null) {
+            start = matchArr.index;
+            callback(start, start + matchArr[0].length);
+        }
+    };
 
-  const videoStrategy = (contentBlock, callback, contentState) => {
-    const YOUTUBE_REGEX =
-      /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?‌​[\w\?‌​=]*)?/g; // eslint-disable-line
-    findWithRegex(YOUTUBE_REGEX, contentBlock, callback);
-  };
+    const videoStrategy = (contentBlock, callback, contentState) => {
+        const YOUTUBE_REGEX =
+            /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?‌​[\w\?‌​=]*)?/g; // eslint-disable-line
+        findWithRegex(YOUTUBE_REGEX, contentBlock, callback);
+    };
 
-  const linkStrategy = (contentBlock, callback, contentState) => {
-    // Regex from Stackoverflow: https://stackoverflow.com/a/3809435/942589
-    const LINK_REGEX =
-      /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)?/gi;
-    findWithRegex(LINK_REGEX, contentBlock, callback);
-  };
+    const linkStrategy = (contentBlock, callback, contentState) => {
+        // Regex from Stackoverflow: https://stackoverflow.com/a/3809435/942589
+        const LINK_REGEX =
+            /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)?/gi;
+        findWithRegex(LINK_REGEX, contentBlock, callback);
+    };
 
-  const twitterStrategy = (contentBlock, callback, contentState) => {
-    const TWITTER_REGEX =
-      /https?:\/\/twitter\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)/g;
-    findWithRegex(TWITTER_REGEX, contentBlock, callback);
-  };
+    const twitterStrategy = (contentBlock, callback, contentState) => {
+        const TWITTER_REGEX =
+            /https?:\/\/twitter\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)/g;
+        findWithRegex(TWITTER_REGEX, contentBlock, callback);
+    };
 
-  const normalLinkStrategy = (contentBlock, callback, contentState) => {
-    contentBlock.findEntityRanges((character) => {
-      const entityKey = character.getEntity();
-      return (
-        entityKey !== null &&
-        contentState.getEntity(entityKey).getType() === "LINK"
-      );
-    }, callback);
-  };
+    const normalLinkStrategy = (contentBlock, callback, contentState) => {
+        contentBlock.findEntityRanges((character) => {
+            const entityKey = character.getEntity();
+            return (
+                entityKey !== null &&
+                contentState.getEntity(entityKey).getType() === "LINK"
+            );
+        }, callback);
+    };
 
-  return new MultiDecorator([
-    new PrismDecorator({
-      prism: Prism,
-      defaultSyntax: prismDefaultLanguage,
-    }),
-    new CompositeDecorator([
-      {
-        strategy: videoStrategy,
-        component: YouTube,
-      },
-      {
-        strategy: twitterStrategy,
-        component: Tweet,
-      },
-      {
-        strategy: linkStrategy,
-        component: Link,
-      },
-      {
-        strategy: normalLinkStrategy,
-        component: NormalLink,
-      },
-    ]),
-  ]);
+    return new MultiDecorator([
+        new PrismDecorator({
+            prism: Prism,
+            defaultSyntax: prismDefaultLanguage,
+        }),
+        new CompositeDecorator([
+            {
+                strategy: videoStrategy,
+                component: YouTube,
+            },
+            {
+                strategy: twitterStrategy,
+                component: Tweet,
+            },
+            {
+                strategy: linkStrategy,
+                component: Link,
+            },
+            {
+                strategy: normalLinkStrategy,
+                component: NormalLink,
+            },
+        ]),
+    ]);
 };
 
 Editor.propTypes = {
-  editorState: PropTypes.object,
-  onChange: PropTypes.func,
-  readOnly: PropTypes.bool,
-  theme: PropTypes.object,
-  blockRenderMap: PropTypes.object,
+    editorState: PropTypes.object,
+    onChange: PropTypes.func,
+    readOnly: PropTypes.bool,
+    theme: PropTypes.object,
+    blockRenderMap: PropTypes.object,
 };
 
 export default Editor;

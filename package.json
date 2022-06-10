@@ -17,7 +17,7 @@
   "license": "MIT",
   "scripts": {
     "lint": "eslint packages apps",
-    "prettier": "prettier --write packages docs *.md",
+    "prettier": "prettier --write packages apps docs *.md",
     "build": "yarn workspaces foreach --exclude @courselit/web run build",
     "publish": "yarn workspaces foreach --no-private npm publish",
     "dev": "yarn workspace @courselit/web dev"

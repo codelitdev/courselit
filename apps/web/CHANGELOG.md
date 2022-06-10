@@ -7,49 +7,25 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 **Note:** Version bump only for package @courselit/app
 
-
-
-
-
 ## [0.17.49](https://github.com/codelitdev/courselit/compare/v0.17.48...v0.17.49) (2022-05-03)
 
 **Note:** Version bump only for package @courselit/app
-
-
-
-
 
 ## [0.17.48](https://github.com/codelitdev/courselit/compare/v0.17.47...v0.17.48) (2022-05-03)
 
 **Note:** Version bump only for package @courselit/app
 
-
-
-
-
 ## [0.17.47](https://github.com/codelitdev/courselit/compare/v0.17.46...v0.17.47) (2022-05-03)
 
 **Note:** Version bump only for package @courselit/app
-
-
-
-
 
 ## [0.17.46](https://github.com/codelitdev/courselit/compare/v0.17.45...v0.17.46) (2022-05-03)
 
 **Note:** Version bump only for package @courselit/app
 
-
-
-
-
 ## [0.17.45](https://github.com/codelitdev/courselit/compare/v0.17.44...v0.17.45) (2022-05-03)
 
 **Note:** Version bump only for package @courselit/app
-
-
-
-
 
 ## [0.17.44](https://github.com/codelitdev/courselit/compare/v0.17.43...v0.17.44) (2022-05-03)
 

@@ -3,27 +3,29 @@ import { WidgetProps } from "@courselit/common-models";
 import { Grid, Theme, Typography } from "@mui/material";
 
 export interface FooterBrandingWidgetProps extends WidgetProps {
-  siteInfo: any;
+    siteInfo: any;
 }
 
 const Widget = (props: FooterBrandingWidgetProps) => {
-  const { siteInfo, section } = props;
+    const { state, section } = props;
+    const { title, subtitle } = state.siteinfo;
 
-  return (
-    <Grid
-      item
-      xs
-      sx={{
-        textAlign: {
-          xs: "start",
-          md: section === "footerRight" ? "end" : "start",
-        },
-      }}
-    >
-      <Typography variant="h5">{siteInfo.title}</Typography>
-      <Typography variant="subtitle1">{siteInfo.subtitle}</Typography>
-    </Grid>
-  );
+    return (
+        <Grid
+            item
+            xs
+            sx={{
+                textAlign: {
+                    xs: "start",
+                    md: section === "footerRight" ? "end" : "start",
+                },
+                padding: 2,
+            }}
+        >
+            <Typography variant="h5">{title}</Typography>
+            <Typography variant="subtitle1">{subtitle}</Typography>
+        </Grid>
+    );
 };
 
 export default Widget;

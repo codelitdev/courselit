@@ -5,10 +5,10 @@ import Link from "next/link";
 import { formattedLocaleDate, checkPermission } from "../../ui-lib/utils";
 import { connect } from "react-redux";
 import {
-  PriceTag,
-  RichText as TextEditor,
-  Section,
-  Image,
+    PriceTag,
+    RichText as TextEditor,
+    Section,
+    Image,
 } from "@courselit/components-library";
 import { FREE_COST } from "../../ui-config/strings";
 import dynamic from "next/dynamic";
@@ -21,171 +21,184 @@ const { permissions } = constants;
 const PREFIX = "Article";
 
 const classes = {
-  header: `${PREFIX}-header`,
-  creatoravatarcontainer: `${PREFIX}-creatoravatarcontainer`,
-  creatorcard: `${PREFIX}-creatorcard`,
-  creatoravatar: `${PREFIX}-creatoravatar`,
-  creatorName: `${PREFIX}-creatorName`,
-  enrollmentArea: `${PREFIX}-enrollmentArea`,
-  enrollmentAreaPriceTag: `${PREFIX}-enrollmentAreaPriceTag`,
+    header: `${PREFIX}-header`,
+    creatoravatarcontainer: `${PREFIX}-creatoravatarcontainer`,
+    creatorcard: `${PREFIX}-creatorcard`,
+    creatoravatar: `${PREFIX}-creatoravatar`,
+    creatorName: `${PREFIX}-creatorName`,
+    enrollmentArea: `${PREFIX}-enrollmentArea`,
+    enrollmentAreaPriceTag: `${PREFIX}-enrollmentAreaPriceTag`,
 };
 
 const StyledSection = styled(Section)(({ theme }: { theme: any }) => ({
-  [`& .${classes.header}`]: {},
+    [`& .${classes.header}`]: {},
 
-  [`& .${classes.creatoravatarcontainer}`]: {
-    display: "flex",
-    alignItems: "center",
-  },
+    [`& .${classes.creatoravatarcontainer}`]: {
+        display: "flex",
+        alignItems: "center",
+    },
 
-  [`& .${classes.creatorcard}`]: {
-    marginTop: theme.spacing(1),
-  },
+    [`& .${classes.creatorcard}`]: {
+        marginTop: theme.spacing(1),
+    },
 
-  [`& .${classes.creatoravatar}`]: {
-    borderRadius: "1.5em",
-    width: "3em",
-    marginRight: "1em",
-  },
+    [`& .${classes.creatoravatar}`]: {
+        borderRadius: "1.5em",
+        width: "3em",
+        marginRight: "1em",
+    },
 
-  [`& .${classes.creatorName}`]: {
-    color: "inherit",
-  },
+    [`& .${classes.creatorName}`]: {
+        color: "inherit",
+    },
 
-  [`& .${classes.enrollmentArea}`]: {
-    marginTop: theme.spacing(3),
-    marginBottom: theme.spacing(4),
-  },
+    [`& .${classes.enrollmentArea}`]: {
+        marginTop: theme.spacing(3),
+        marginBottom: theme.spacing(4),
+    },
 
-  [`& .${classes.enrollmentAreaPriceTag}`]: {},
+    [`& .${classes.enrollmentAreaPriceTag}`]: {},
 }));
 
 const BuyButton = dynamic(() => import("./checkout"));
 
 interface ArticleProps {
-  course: Course;
-  options: ArticleOptionsProps;
-  profile: Profile;
-  siteInfo: SiteInfo;
+    course: Course;
+    options: ArticleOptionsProps;
+    profile: Profile;
+    siteInfo: SiteInfo;
 }
 
 interface ArticleOptionsProps {
-  showAttribution?: boolean;
-  showEnrollmentArea?: boolean;
+    showAttribution?: boolean;
+    showEnrollmentArea?: boolean;
 }
 
 const Article = (props: ArticleProps) => {
-  const { course, options, profile } = props;
+    const { course, options, profile } = props;
 
-  let courseDescriptionHydrated;
-  try {
-    courseDescriptionHydrated = TextEditor.hydrate({
-      data: course.description,
-    });
-  } catch (err) {}
+    let courseDescriptionHydrated;
+    try {
+        courseDescriptionHydrated = TextEditor.hydrate({
+            data: course.description,
+        });
+    } catch (err) {}
 
-  return (
-    <StyledSection>
-      <Grid
-        container
-        component="article"
-        direction="column"
-        spacing={2}
-        sx={{
-          padding: 2,
-        }}
-      >
-        <Grid item component="header">
-          <Typography variant="h4" className={classes.header}>
-            {course.title}
-          </Typography>
-        </Grid>
-        {options.showAttribution && (
-          <Grid
-            item
-            container
-            className={classes.creatorcard}
-            direction="column"
-            spacing={2}
-          >
-            <Grid item>
-              <Typography variant="overline" component="p">
-                <Link href="/profile/[id]" as={`/profile/${course.creatorId}`}>
-                  <a className={classes.creatorName}>{course.creatorName}</a>
-                </Link>
-              </Typography>
-              <Typography variant="overline" className={classes.updatedtime}>
-                {formattedLocaleDate(course.updatedAt)}
-              </Typography>
-            </Grid>
-          </Grid>
-        )}
-        {course.featuredImage && (
-          <Grid item>
-            <Image
-              alt={course.featuredImage.caption}
-              src={course.featuredImage.file!}
-              loading="eager"
-              sizes="80vw"
-              height={360}
-            />
-          </Grid>
-        )}
-        {options.showEnrollmentArea &&
-          (profile.fetched
-            ? !profile.purchases.includes(course.id) &&
-              checkPermission(profile.permissions, [permissions.enrollInCourse])
-            : true) && (
-            <Grid item className={classes.enrollmentArea}>
-              <Grid
+    return (
+        <StyledSection>
+            <Grid
                 container
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-              >
-                <Grid item className={classes.enrollmentAreaPriceTag}>
-                  <PriceTag
-                    cost={course.cost}
-                    freeCostCaption={FREE_COST}
-                    siteInfo={props.siteInfo}
-                  />
+                component="article"
+                direction="column"
+                spacing={2}
+                sx={{
+                    padding: 2,
+                }}
+            >
+                <Grid item component="header">
+                    <Typography variant="h4" className={classes.header}>
+                        {course.title}
+                    </Typography>
                 </Grid>
-                <Grid>
-                  <BuyButton course={course} />
-                </Grid>
-              </Grid>
+                {options.showAttribution && (
+                    <Grid
+                        item
+                        container
+                        className={classes.creatorcard}
+                        direction="column"
+                        spacing={2}
+                    >
+                        <Grid item>
+                            <Typography variant="overline" component="p">
+                                <Link
+                                    href="/profile/[id]"
+                                    as={`/profile/${course.creatorId}`}
+                                >
+                                    <a className={classes.creatorName}>
+                                        {course.creatorName}
+                                    </a>
+                                </Link>
+                            </Typography>
+                            <Typography
+                                variant="overline"
+                                className={classes.updatedtime}
+                            >
+                                {formattedLocaleDate(course.updatedAt)}
+                            </Typography>
+                        </Grid>
+                    </Grid>
+                )}
+                {course.featuredImage && (
+                    <Grid item>
+                        <Image
+                            alt={course.featuredImage.caption}
+                            src={course.featuredImage.file!}
+                            loading="eager"
+                            sizes="80vw"
+                            height={360}
+                        />
+                    </Grid>
+                )}
+                {options.showEnrollmentArea &&
+                    (profile.fetched
+                        ? !profile.purchases.includes(course.id) &&
+                          checkPermission(profile.permissions, [
+                              permissions.enrollInCourse,
+                          ])
+                        : true) && (
+                        <Grid item className={classes.enrollmentArea}>
+                            <Grid
+                                container
+                                direction="row"
+                                justifyContent="space-between"
+                                alignItems="center"
+                            >
+                                <Grid
+                                    item
+                                    className={classes.enrollmentAreaPriceTag}
+                                >
+                                    <PriceTag
+                                        cost={course.cost}
+                                        freeCostCaption={FREE_COST}
+                                        siteInfo={props.siteInfo}
+                                    />
+                                </Grid>
+                                <Grid>
+                                    <BuyButton course={course} />
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    )}
+                {courseDescriptionHydrated && process.browser && (
+                    <Grid item>
+                        <TextEditor
+                            initialContentState={courseDescriptionHydrated}
+                            readOnly={true}
+                        />
+                    </Grid>
+                )}
+                {course.tags.length > 0 && (
+                    <Grid item container alignItems="center" spacing={1}>
+                        <Grid item>
+                            <Typography variant="h6">Tags </Typography>
+                        </Grid>
+                        <Grid item>
+                            {course.tags.map((tag: string) => (
+                                <Link href={`/tag/${tag}`} key={tag}>
+                                    <Chip label={tag} component="a" clickable />
+                                </Link>
+                            ))}
+                        </Grid>
+                    </Grid>
+                )}
             </Grid>
-          )}
-        {courseDescriptionHydrated && process.browser && (
-          <Grid item>
-            <TextEditor
-              initialContentState={courseDescriptionHydrated}
-              readOnly={true}
-            />
-          </Grid>
-        )}
-        {course.tags.length > 0 && (
-            <Grid item container alignItems="center" spacing={1}>
-                <Grid item>
-                    <Typography variant="h6">Tags </Typography>
-                </Grid>
-                <Grid item>
-                    {course.tags.map((tag: string) => (
-                    <Link href={`/tag/${tag}`} key={tag}>
-                        <Chip label={tag} component="a" clickable />
-                    </Link>
-                    ))}
-                </Grid>
-            </Grid>
-        )}
-      </Grid>
-    </StyledSection>
-  );
+        </StyledSection>
+    );
 };
 
 const mapStateToProps = (state: AppState) => ({
-  profile: state.profile,
-  siteInfo: state.siteinfo,
+    profile: state.profile,
+    siteInfo: state.siteinfo,
 });
 
 export default connect(mapStateToProps)(Article);

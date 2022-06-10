@@ -3,7 +3,7 @@ import metadata from "./metadata";
 import Widget from "./widget";
 
 export default {
-  metadata,
-  widget: Widget,
-  adminWidget: AdminWidget,
+    metadata,
+    widget: Widget,
+    adminWidget: AdminWidget,
 };

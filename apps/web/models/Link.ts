@@ -1,20 +1,22 @@
 import mongoose from "mongoose";
 
 export interface Link {
-  id: mongoose.Types.ObjectId;
-  domain: mongoose.Types.ObjectId;
-  text: string;
-  destination: string;
-  category: string;
-  newTab: boolean;
+    id: mongoose.Types.ObjectId;
+    text: string;
+    destination: string;
+    category: string;
+    newTab: boolean;
+    rank: number;
 }
 
 const LinkSchema = new mongoose.Schema<Link>({
-  domain: { type: mongoose.Schema.Types.ObjectId, required: true },
-  text: { type: String, required: true },
-  destination: { type: String, required: true },
-  category: { type: String, required: true },
-  newTab: { type: Boolean, required: true },
+    text: { type: String, required: true },
+    destination: { type: String, required: true },
+    category: { type: String, required: true },
+    newTab: { type: Boolean, required: true },
+    rank: { type: Number },
 });
 
-export default mongoose.models.Link || mongoose.model("Link", LinkSchema);
+LinkSchema.index({ text: 1, destination: 1 }, { unique: true });
+
+export default LinkSchema;

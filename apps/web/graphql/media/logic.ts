@@ -2,21 +2,21 @@ import GQLContext from "../../models/GQLContext";
 import * as medialitService from "../../services/medialit";
 
 export const getMedia = async (mediaId?: string) => {
-  let media;
+    let media;
 
-  if (mediaId) {
-    media = await medialitService.getMedia(mediaId);
-  }
+    if (mediaId) {
+        media = await medialitService.getMedia(mediaId);
+    }
 
-  return media;
+    return media;
 };
 
 export const checkMediaForPublicAccess = async (
-  mediaId: string
+    mediaId: string
 ): Promise<boolean> => {
-  const media = await getMedia(mediaId);
-  if (!media) {
-    return false;
-  }
-  return media.access === "public";
+    const media = await getMedia(mediaId);
+    if (!media) {
+        return false;
+    }
+    return media.access === "public";
 };

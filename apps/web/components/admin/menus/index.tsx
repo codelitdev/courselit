@@ -7,17 +7,17 @@ import dynamic from "next/dynamic";
 const NavigationLinks = dynamic(() => import("./links"));
 
 const Navigation = (props: Record<string, unknown>) => {
-  return (
-    <Section>
-      <Grid container direction="column" spacing={2}>
-        <Grid item xs>
-          <Typography variant="h1">{HEADER_NAVIGATION}</Typography>
-        </Grid>
+    return (
+        <Section>
+            <Grid container direction="column" spacing={2}>
+                <Grid item xs>
+                    <Typography variant="h1">{HEADER_NAVIGATION}</Typography>
+                </Grid>
 
-        <NavigationLinks />
-      </Grid>
-    </Section>
-  );
+                <NavigationLinks />
+            </Grid>
+        </Section>
+    );
 };
 
 export default Navigation;

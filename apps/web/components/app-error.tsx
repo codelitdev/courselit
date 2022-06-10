@@ -8,40 +8,40 @@ import BaseLayout from "./public/base-layout";
 const PREFIX = "AppError";
 
 const classes = {
-  header: `${PREFIX}-header`,
+    header: `${PREFIX}-header`,
 };
 
 const StyledBaseLayout = styled(BaseLayout)(({ theme }: { theme: any }) => ({
-  [`& .${classes.header}`]: {
-    marginBottom: theme.spacing(1),
-  },
+    [`& .${classes.header}`]: {
+        marginBottom: theme.spacing(1),
+    },
 }));
 
 interface AppErrorProps {
-  error: string;
+    error: string;
 }
 
 const AppError = (props: AppErrorProps) => {
-  const { error } = props;
+    const { error } = props;
 
-  return (
-    <StyledBaseLayout>
-      <Grid container>
-        <Grid item>
-          <Section>
-            <Typography
-              variant="body1"
-              color="textSecondary"
-              className={classes.header}
-            >
-              {USER_ERROR_HEADER}
-            </Typography>
-            <Typography variant="h5">{error}</Typography>
-          </Section>
-        </Grid>
-      </Grid>
-    </StyledBaseLayout>
-  );
+    return (
+        <StyledBaseLayout>
+            <Grid container>
+                <Grid item>
+                    <Section>
+                        <Typography
+                            variant="body1"
+                            color="textSecondary"
+                            className={classes.header}
+                        >
+                            {USER_ERROR_HEADER}
+                        </Typography>
+                        <Typography variant="h5">{error}</Typography>
+                    </Section>
+                </Grid>
+            </Grid>
+        </StyledBaseLayout>
+    );
 };
 
 export default AppError;

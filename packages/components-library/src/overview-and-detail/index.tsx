@@ -29,86 +29,93 @@ import OverviewList from "./overview-list";
 import Section from "../section";
 
 interface OverviewAndDetailProps {
-  title: string;
-  componentsMap: ComponentProps[];
-  onSelect?: (index: number) => void;
+    title: string;
+    componentsMap: ComponentProps[];
+    onSelect?: (index: number) => void;
 }
 
 const OverviewAndDetail = ({
-  title,
-  componentsMap,
-  onSelect: onSelectFromParent,
+    title,
+    componentsMap,
+    onSelect: onSelectFromParent,
 }: OverviewAndDetailProps) => {
-  const [selectedComponentIndex, setSelectedComponentIndex] =
-    React.useState(-1);
-  const selectedComponent = componentsMap[selectedComponentIndex];
+    const [selectedComponentIndex, setSelectedComponentIndex] =
+        React.useState(-1);
+    const selectedComponent = componentsMap[selectedComponentIndex];
 
-  const onSelectComponentWithDetail = (index: number) => {
-    setSelectedComponentIndex(index);
-    if (onSelectFromParent) {
-      onSelectFromParent(index);
-    }
-  };
+    const onSelectComponentWithDetail = (index: number) => {
+        setSelectedComponentIndex(index);
+        if (onSelectFromParent) {
+            onSelectFromParent(index);
+        }
+    };
 
-  const onSelectComponentWithoutDetail = (index: number) => {
-    if (onSelectFromParent) {
-      onSelectFromParent(index);
-    }
-  };
+    const onSelectComponentWithoutDetail = (index: number) => {
+        if (onSelectFromParent) {
+            onSelectFromParent(index);
+        }
+    };
 
-  return (
-    <Grid container direction="column">
-      <Grid item xs={12}>
-        <Section>
-          {selectedComponentIndex > -1 && (
-            <Grid item xs>
-              <Grid container alignItems="center">
-                <Grid item>
-                  <IconButton
-                    onClick={() => setSelectedComponentIndex(-1)}
-                    size="large"
-                  >
-                    <ArrowBack />
-                  </IconButton>
-                </Grid>
-                <Grid item>
-                  <Typography variant="h1">
-                    {isComponentWithDetailProps(selectedComponent) &&
-                      selectedComponent.subtitle}
-                  </Typography>
-                </Grid>
-              </Grid>
+    return (
+        <Grid container direction="column">
+            <Grid item xs={12}>
+                <Section>
+                    {selectedComponentIndex > -1 && (
+                        <Grid item xs>
+                            <Grid container alignItems="center">
+                                <Grid item>
+                                    <IconButton
+                                        onClick={() =>
+                                            setSelectedComponentIndex(-1)
+                                        }
+                                        size="large"
+                                    >
+                                        <ArrowBack />
+                                    </IconButton>
+                                </Grid>
+                                <Grid item>
+                                    <Typography variant="h1">
+                                        {isComponentWithDetailProps(
+                                            selectedComponent
+                                        ) && selectedComponent.subtitle}
+                                    </Typography>
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    )}
+                    {selectedComponentIndex === -1 && (
+                        <Typography variant="h1">{title}</Typography>
+                    )}
+                </Section>
             </Grid>
-          )}
-          {selectedComponentIndex === -1 && (
-            <Typography variant="h1">{title}</Typography>
-          )}
-        </Section>
-      </Grid>
-      <Grid
-        item
-        xs={12}
-        sx={{
-          marginTop: 2,
-        }}
-      >
-        {componentsMap.length && (
-          <>
-            {selectedComponentIndex > -1 &&
-              isComponentWithDetailProps(selectedComponent) &&
-              selectedComponent.Detail}
-            {selectedComponentIndex === -1 && (
-              <OverviewList
-                componentsMap={componentsMap}
-                onSelectComponentWithDetail={onSelectComponentWithDetail}
-                onSelectComponentWithoutDetail={onSelectComponentWithoutDetail}
-              />
-            )}
-          </>
-        )}
-      </Grid>
-    </Grid>
-  );
+            <Grid
+                item
+                xs={12}
+                sx={{
+                    marginTop: 2,
+                }}
+            >
+                {componentsMap.length && (
+                    <>
+                        {selectedComponentIndex > -1 &&
+                            isComponentWithDetailProps(selectedComponent) &&
+                            selectedComponent.Detail}
+                        {selectedComponentIndex === -1 && (
+                            <OverviewList
+                                componentsMap={componentsMap}
+                                onSelectComponentWithDetail={
+                                    onSelectComponentWithDetail
+                                }
+                                onSelectComponentWithoutDetail={
+                                    onSelectComponentWithoutDetail
+                                }
+                            />
+                        )}
+                    </>
+                )}
+            </Grid>
+        </Grid>
+    );
 };
 
 export default OverviewAndDetail;

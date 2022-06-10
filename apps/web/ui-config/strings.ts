@@ -73,21 +73,21 @@ export const SITE_SETTINGS_SECTION_GENERAL = "Branding";
 export const SITE_SETTINGS_SECTION_PAYMENT = "Payment";
 export const SITE_ADMIN_SETTINGS_PAYMENT_METHOD = "Payment Method";
 export const SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT =
-  "Stripe Publishable Key";
+    "Stripe Publishable Key";
 export const FREE_COST = "FREE";
 export const SIDEBAR_TEXT_COURSE_ABOUT = "About this course";
 export const REACT_COMPONENT_CRASHED =
-  "We've encountered a problem in showing the content";
+    "We've encountered a problem in showing the content";
 export const CHECKOUT_DIALOG_TITLE = "Checkout";
 export const PAYMENT_MODAL_PAYMENT_DETAILS_HEADER = "Payment details";
 export const PAYMENT_MODAL_COST_PREFIX = "Cost";
 export const PAYMENT_MODAL_PAY_NOW_BUTTON_CAPTION = "Pay now";
 export const PAYMENT_INITIATION_FAILED =
-  "Payment processing failed. Please close this popup and try again.";
+    "Payment processing failed. Please close this popup and try again.";
 export const PAYMENT_VERIFICATION_FAILED =
-  "We were not able to verify your payment. Please try again.";
+    "We were not able to verify your payment. Please try again.";
 export const STRIPE_PUBLISHABLE_KEY_EMPTY =
-  "Stripe configuration is invalid. Please contact site admin.";
+    "Stripe configuration is invalid. Please contact site admin.";
 export const CAPTION_TRY_AGAIN = "Try again";
 export const CAPTION_CLOSE = "Close";
 export const LOADING = "Loading";
@@ -127,7 +127,7 @@ export const APP_MESSAGE_LESSON_DELETED = "Lesson deleted";
 export const APP_MESSAGE_LESSON_SAVED = "Lesson details saved";
 export const APP_MESSAGE_COURSE_SAVED = "Course details saved";
 export const ENROLL_IN_THE_COURSE =
-  'Please enroll in the course to access this lesson. Go to the "About this course" page for enrolling.';
+    'Please enroll in the course to access this lesson. Go to the "About this course" page for enrolling.';
 export const NOT_ENROLLED_HEADER = "Content Locked";
 export const USER_ERROR_HEADER = "Yikes!";
 export const ENROLL_BUTTON_TEXT = "Enroll";
@@ -148,25 +148,25 @@ export const APP_MESSAGE_SETTINGS_SAVED = "Settings saved";
 export const ENROLLED_COURSES_HEADER = "Enrolled courses";
 export const SITE_CUSTOMISATIONS_SETTING_HEADER = "Customizations";
 export const SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD =
-  "Code Injection in <head>";
+    "Code Injection in <head>";
 export const DISCARD_COURSE_CHANGES_POPUP_HEADER =
-  "Discard changes made to the course?";
+    "Discard changes made to the course?";
 export const FEATURED_SECTION_HEADER = "Featured Resources";
 export const CARD_HEADER_PAGE_LAYOUT = "Layout";
 export const CARD_HEADER_THEME = "Theme";
 export const CARD_DESCRIPTION_PAGE_LAYOUT =
-  "Use the '+' buttons to add your favorite components to the desired sections of your page.";
+    "Use the '+' buttons to add your favorite components to the desired sections of your page.";
 export const ADD_COMPONENT_POPUP_HEADER = "Add widgets";
 export const APP_MESSAGE_CHANGES_SAVED = "Changes saved";
 export const SUBHEADER_COURSES_SECTION =
-  "Learn new skills with our carefully crafted courses.";
+    "Learn new skills with our carefully crafted courses.";
 export const SUBHEADER_FEATURED_SECTION =
-  "Hand picked resources by the editors.";
+    "Hand picked resources by the editors.";
 export const SUBHEADER_THEME_ADD_THEME = "Install new theme";
 export const SUBHEADER_THEME_ADDED_THEME = "Installed themes";
 export const SUBHEADER_THEME_ADD_THEME_INPUT_LABEL = "Theme Editor";
 export const SUBHEADER_THEME_ADD_THEME_INPUT_PLACEHOLDER =
-  "Paste valid JSON here";
+    "Paste valid JSON here";
 export const SUBHEADER_THEME_INSTALLED_THEMES = "Installed themes";
 export const BUTTON_GET_THEMES = "Get more themes";
 export const ERROR_SNACKBAR_PREFIX = "Error";
@@ -181,7 +181,7 @@ export const APP_MESSAGE_THEME_COPIED = "Theme ready to edit";
 export const NO_THEMES_INSTALLED = "No themes are installed";
 export const APP_MESSAGE_THEME_INSTALLED = "Theme installed";
 export const CONSOLE_MESSAGE_THEME_INVALID =
-  "The active MUI theme is invalid. Falling back to the default theme.";
+    "The active MUI theme is invalid. Falling back to the default theme.";
 export const APP_MESSAGE_THEME_APPLIED = "Theme applied";
 export const APP_MESSAGE_THEME_UNINSTALLED = "Theme uninstalled";
 export const HEADER_NAVIGATION = "Menus";
@@ -193,9 +193,9 @@ export const LABEL_NAVIGATION_LINK_NEWTAB = "New tab";
 export const WIDGETS_PAGE_HEADER = "Widgets";
 export const PAYMENTS_SHIPPING_ADDRESS_SECTION_HEADER = "Shipping Address";
 export const HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK =
-  "Payment Confirmation Webhook URL";
+    "Payment Confirmation Webhook URL";
 export const SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK =
-  "Your payment processor sends out notifications about purchases. CourseLit needs those notifications to correctly reflect user purchases. Right click the following link and copy the link address. Paste that into your payment processor's webhook settings.";
+    "Your payment processor sends out notifications about purchases. CourseLit needs those notifications to correctly reflect user purchases. Right click the following link and copy the link address. Paste that into your payment processor's webhook settings.";
 export const PURCHASE_STATUS_PAGE_HEADER = "Purchase Status";
 export const MAIN_MENU_ITEM_DASHBOARD = "Dashboard";
 export const MAIN_MENU_ITEM_PROFILE = "Profile";
@@ -208,11 +208,11 @@ export const LAYOUT_SECTION_BOTTOM = "Bottom";
 export const LAYOUT_SECTION_ASIDE = "Aside";
 export const TRANSACTION_STATUS_SUCCESS = "Payment Confirmed.";
 export const TRANSACTION_STATUS_SUCCESS_DETAILS =
-  "Thank you. You can now head over to your course and start learning.";
+    "Thank you. You can now head over to your course and start learning.";
 export const TRANSACTION_STATUS_INITIATED = "Payment Not Yet Confirmed.";
 export const TRANSACTION_STATUS_FAILED = "Payment Failed.";
 export const TRANSACTION_STATUS_FAILED_DETAILS =
-  "The payment service provider was unable to process your payment. Please go back and try again.";
+    "The payment service provider was unable to process your payment. Please go back and try again.";
 export const VISIT_COURSE_BUTTON = "Visit course";
 export const VISIT_POST_BUTTON = "Visit post";
 export const VERIFY_PAYMENT_BUTTON = "Re-check Payment Status";
@@ -220,7 +220,7 @@ export const PURCHASE_ID_HEADER = "Purchase ID";
 export const PAGE_HEADER_FEATURED = "Featured Content";
 export const BTN_VIEW_ALL = "View all";
 export const EMPTY_COURSES_LIST_ADMIN =
-  "Create your first course by clicking the + button on the top right.";
+    "Create your first course by clicking the + button on the top right.";
 export const HEADER_RESET_PASSWORD = "Reset password";
 export const HEADER_DESIGN = "Site";
 export const HEADER_YOUR_PROFILE = "Your Profile";
@@ -233,7 +233,7 @@ export const PROFILE_SECTION_DETAILS_NAME = "Name";
 export const PROFILE_SECTION_DETAILS_EMAIL = "Email";
 export const PROFILE_SECTION_DETAILS_BIO = "Bio";
 export const PROFILE_SECTION_DETAILS_BIO_EMPTY =
-  "The user has not filled the bio.";
+    "The user has not filled the bio.";
 export const BTN_PUBLISH = "Publish";
 export const BTN_UNPUBLISH = "Unpublish";
 export const PERM_SECTION_HEADER = "Permissions";
@@ -252,14 +252,14 @@ export const MEDIA_EDITOR_ORIGINAL_FILE_NAME_HEADER = "File Name";
 export const GROUP_LESSON_ITEM_UNTITLED = "Untitled";
 export const SECTION_GROUP_HEADER = "Sections";
 export const ERROR_SIGNIN_GENERATING_LINK =
-  "Error generating sign in link. Try again.";
+    "Error generating sign in link. Try again.";
 export const SIGNIN_SUCCESS_PREFIX = "A sign in link has been sent to";
 export const ERROR_SIGNIN_VERIFYING_LINK =
-  "We were unable to sign you in. Please try again.";
+    "We were unable to sign you in. Please try again.";
 export const COURSE_STRUCTURE_SELECT_LESSON =
-  "Select a lesson from the Sections area.";
+    "Select a lesson from the Sections area.";
 export const ERROR_GROUP_NEW_LESSON_WITHOUT_SAVE =
-  "Save section settings first";
+    "Save section settings first";
 export const LABEL_GROUP_COLLAPSE = "Show as expanded";
 export const SEARCH_TEXTBOX_PLACEHOLDER = "Search";
 export const PAGE_TITLE_404 = "Page not found";
@@ -276,4 +276,5 @@ export const USER_TYPE_TEAM = "Team";
 export const USER_TYPE_AUDIENCE = "Audience";
 export const USER_TYPE_ALL = "All";
 export const USER_FILTER_PERMISSION = "Type";
-export const USER_TYPE_TOOLTIP = "Segregate users based on their roles. Audience users are the ones who can enroll in courses. Team users are the ones who have admin rights."
+export const USER_TYPE_TOOLTIP =
+    "Segregate users based on their roles. Audience users are the ones who can enroll in courses. Team users are the ones who have admin rights.";
