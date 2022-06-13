@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { WidgetHelpers, Section } from "@courselit/components-library";
-import { Button, Grid, TextField, Typography } from "@mui/material";
+import React, { useEffect } from "react";
+import { Section } from "@courselit/components-library";
+import { Grid, TextField, Typography } from "@mui/material";
 import Settings from "./settings";
-import type { WidgetProps } from "@courselit/common-models";
 
 export interface AdminWidgetProps {
     onChange: (...args: any[]) => void;
