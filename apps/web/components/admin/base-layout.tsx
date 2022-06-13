@@ -82,16 +82,6 @@ const getSidebarMenuItems = (profile: Profile) => {
             route: "/dashboard/design",
             icon: <Palette />,
         });
-        items.push({
-            name: "Menus",
-            route: "/dashboard/menus",
-            icon: <List />,
-        });
-        items.push({
-            name: "Widgets",
-            route: "/dashboard/widgets",
-            icon: <Widgets />,
-        });
     }
 
     if (profile.permissions.includes(permissions.manageSettings)) {

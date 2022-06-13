@@ -188,29 +188,52 @@ export function updateBackend(host: string): AnyAction {
     return { type: SET_ADDRESS, address: getAddress(host) };
 }
 
-export function updateWidgetsData(widgets: Record<string, any>) {
+export function updateWidgetsData(
+    widgets: Record<string, any>,
+    widgetIDPrefix = "widget"
+) {
     return async (dispatch: any, getState: () => State) => {
         try {
             dispatch(networkAction(true));
-
             const state = getState();
-            const widgetsUsedOnLiveSite = Object.values(state.layout).flat();
+            const queryString = combineGraphQLQueries(
+                state.layout,
+                widgets,
+                widgetIDPrefix
+            );
             const fetchBuilder = new FetchBuilder()
                 .setUrl(`${state.address.backend}/api/graph`)
                 .setIsGraphQLEndpoint(true);
-            const widgetsData: WidgetsData = {};
-            for (const name of widgetsUsedOnLiveSite) {
-                const getData = widgets[name].widget.getData;
-                if (getData) {
-                    const data = await getData({ fetchBuilder });
-                    widgetsData[name] = data;
-                }
-            }
+            const fetch = await fetchBuilder.setPayload(queryString).build();
+            const widgetsData = await fetch.exec();
             dispatch(widgetsDataAvailable(widgetsData));
         } finally {
             dispatch(networkAction(false));
         }
     };
+}
+
+function combineGraphQLQueries(
+    layout: Layout,
+    widgets: Record<string, any>,
+    widgetIDPrefix: string
+) {
+    const widgetsUsedOnLiveSite = Object.values(layout).flat();
+    let queryString = "";
+    for (const widget of widgetsUsedOnLiveSite) {
+        const widgetGetData = widgets[widget.name].widget.getData;
+        if (widgetGetData) {
+            queryString += widgetGetData(
+                `${widgetIDPrefix}${widget._id}`,
+                widget.settings
+            );
+        }
+    }
+    return `
+        {
+            ${queryString}
+        }
+    `;
 }
 
 export function widgetsDataAvailable(widgetsData: WidgetsData): AnyAction {

@@ -10,6 +10,7 @@ import State from "../../../ui-models/state";
 import Profile from "../../../ui-models/profile";
 const ThemesManager = dynamic(() => import("./themes-manager"));
 const LayoutManager = dynamic(() => import("./layout-manager"));
+const MenuManager = dynamic(() => import("./menus"));
 
 const { permissions } = constants;
 
@@ -36,6 +37,7 @@ const Appearance = (props: AppearanceProps) => {
                 <>
                     <LayoutManager />
                     <ThemesManager />
+                    <MenuManager />
                 </>
             )}
         </Grid>

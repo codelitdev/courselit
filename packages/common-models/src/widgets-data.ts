@@ -1,3 +1,3 @@
-type WidgetsData = Record<string, Record<string, unknown>>;
+type WidgetsData = Record<string, any>;
 
 export default WidgetsData;

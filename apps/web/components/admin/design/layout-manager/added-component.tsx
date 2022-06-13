@@ -1,29 +1,30 @@
-import React from "react";
+import React, { useState } from "react";
 import { styled } from "@mui/material/styles";
 import { Grid, Typography, IconButton } from "@mui/material";
-import { Remove } from "@mui/icons-material";
-
-const PREFIX = "AddedComponent";
-
-const classes = {
-    container: `${PREFIX}-container`,
-};
+import { Delete, Settings } from "@mui/icons-material";
+import EditWidgeDialog from "./edit-widget-dialog";
+import widgets from "../../../../ui-config/widgets";
 
 const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
-    [`&.${classes.container}`]: {
-        padding: theme.spacing(1),
-        border: "1px solid #eee",
+    padding: theme.spacing(1),
+    border: "1px solid #eee",
+    borderRadius: 8,
+    ["&:hover"]: {
+        background: "#efefef",
     },
 }));
 
 interface AddedComponentProps {
     section: string;
-    title: string;
+    widget: Record<string, unknown>;
     index: number;
     removeComponent: (...args: any[]) => void;
 }
 
 const AddedComponent = (props: AddedComponentProps) => {
+    const { widget } = props;
+    const [editWidgetDialogOpened, setEditWidgetDialogOpened] = useState(false);
+
     return (
         <StyledGrid
             container
@@ -31,12 +32,19 @@ const AddedComponent = (props: AddedComponentProps) => {
             direction="row"
             alignItems="center"
             justifyContent="space-between"
-            className={classes.container}
         >
             <Grid item>
-                <Typography variant="caption">{props.title}</Typography>
+                <Typography variant="caption">{widget.name}</Typography>
             </Grid>
             <Grid item>
+                {widgets[widget.name as string].adminWidget && (
+                    <IconButton
+                        aria-label="Edit"
+                        onClick={() => setEditWidgetDialogOpened(true)}
+                    >
+                        <Settings />
+                    </IconButton>
+                )}
                 <IconButton
                     color="default"
                     aria-label="remove component"
@@ -45,9 +53,16 @@ const AddedComponent = (props: AddedComponentProps) => {
                     }
                     size="large"
                 >
-                    <Remove />
+                    <Delete />
                 </IconButton>
             </Grid>
+            {widgets[widget.name as string].adminWidget && (
+                <EditWidgeDialog
+                    onClose={() => setEditWidgetDialogOpened(false)}
+                    onOpen={editWidgetDialogOpened}
+                    widget={widget}
+                />
+            )}
         </StyledGrid>
     );
 };
