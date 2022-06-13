@@ -5,9 +5,9 @@
 import React from "react";
 import { styled } from "@mui/system";
 import { Link, Grid, Typography } from "@mui/material";
-import dynamic from "next/dynamic";
 import { connect } from "react-redux";
 import type { AppState } from "@courselit/state-management";
+import { Image } from "@courselit/components-library";
 
 const PREFIX = "Branding";
 
@@ -47,8 +47,6 @@ const StyledLink = styled(Link)(({ theme }) => ({
     ),
 }));
 
-const Img = dynamic(() => import("../../img"));
-
 interface BrandingProps {
     siteinfo: typeof defaultState.siteinfo;
 }
@@ -67,7 +65,7 @@ const Branding = ({ siteinfo }: BrandingProps) => {
                 className={`${classes.toolbar} ${classes.logoAdjustment}`}
             >
                 <Grid item className={classes.logocontainer}>
-                    <Img src={siteinfo.logopath.file} />
+                    <Image src={siteinfo.logopath.file} height={36} />
                 </Grid>
                 <Grid item className={classes.siteName}>
                     <Typography variant="h5">{siteinfo.title}</Typography>

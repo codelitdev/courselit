@@ -48,7 +48,9 @@
     },
     "dependencies": {
         "@courselit/common-models": "^0.18.11",
-        "@courselit/components-library": "^0.18.11"
+        "@courselit/components-library": "^0.18.11",
+        "@courselit/utils": "workspace:^",
+        "react-redux": "^8.0.2"
     },
     "gitHead": "e91494470733b09bc3e772a9079162a844b40d97"
 }

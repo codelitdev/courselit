@@ -7,19 +7,10 @@ import { Course, FetchBuilder, WidgetProps } from "@courselit/common-models";
 import MuiLink from "@mui/material/Link";
 import Metadata from "./metadata";
 
-export interface FeaturedWidgetProps extends WidgetProps {
-    dispatch: any;
-}
-
-const Widget = (props: FeaturedWidgetProps) => {
-    const { config, state, name } = props;
-    const [posts, setPosts] = React.useState<Course[]>(
-        state.widgetsData[name].courses as Course[]
-    );
+const Widget = (props: WidgetProps) => {
+    const { config, state, settings, id } = props;
+    const [posts, setPosts] = React.useState<Course[]>(state.widgetsData[id]);
     const BTN_LOAD_MORE = "View all";
-    const [settings, setSettings] = React.useState<Settings>(
-        state.widgetsData[name].settings as Settings
-    );
 
     return posts.length > 0 ? (
         <Section>
@@ -89,55 +80,70 @@ const Widget = (props: FeaturedWidgetProps) => {
     );
 };
 
-Widget.getData = async function getData({
-    fetchBuilder,
-}: {
-    fetchBuilder: FetchBuilder;
-}) {
-    const settingsQuery = `
-    query {
-      settings: getWidgetSettings(name: "${Metadata.name}") {
-        settings
-      }
+// Widget.getData = async function getData({
+//     fetchBuilder,
+// }: {
+//     fetchBuilder: FetchBuilder;
+// }) {
+//     const settingsQuery = `
+//     query {
+//       settings: getWidgetSettings(name: "${Metadata.name}") {
+//         settings
+//       }
+//     }
+//     `;
+
+//     const fetch = fetchBuilder.setPayload(settingsQuery).build();
+//     let result: Record<string, unknown> = {};
+//     try {
+//         const response = await fetch.exec();
+//         if (!response.settings) {
+//             return result;
+//         }
+//         result.settings = JSON.parse(response.settings.settings);
+
+//         const query = `
+//     query {
+//         courses: getCourses(offset: 1, tag: "${(result.settings as any).tag}") {
+//             id,
+//             title,
+//             cost,
+//             featuredImage {
+//                 thumbnail
+//             },
+//             slug,
+//             courseId,
+//             isBlog,
+//             description
+//         }
+//     }
+//     `;
+
+//         const fetchCourse = fetchBuilder.setPayload(query).build();
+//         const responseCourse = await fetchCourse.exec();
+//         if (responseCourse.courses) {
+//             result.courses = responseCourse.courses;
+//         }
+//     } catch (err) {
+//         console.error(err);
+//     }
+
+//     return result;
+// };
+
+Widget.getData = (id: string, settings: Record<string, unknown>) => `
+    ${id}: getCourses(offset: 1, tag: "${settings && settings.tag}") {
+        id,
+        title,
+        cost,
+        featuredImage {
+            thumbnail 
+        },
+        slug,
+        courseId,
+        isBlog,
+        description
     }
-    `;
-
-    const fetch = fetchBuilder.setPayload(settingsQuery).build();
-    let result: Record<string, unknown> = {};
-    try {
-        const response = await fetch.exec();
-        if (!response.settings) {
-            return result;
-        }
-        result.settings = JSON.parse(response.settings.settings);
-
-        const query = `
-    query {
-        courses: getCourses(offset: 1, tag: "${(result.settings as any).tag}") {
-            id,
-            title,
-            cost,
-            featuredImage {
-                thumbnail 
-            },
-            slug,
-            courseId,
-            isBlog,
-            description
-        }
-    }
-    `;
-
-        const fetchCourse = fetchBuilder.setPayload(query).build();
-        const responseCourse = await fetchCourse.exec();
-        if (responseCourse.courses) {
-            result.courses = responseCourse.courses;
-        }
-    } catch (err) {
-        console.error(err);
-    }
-
-    return result;
-};
+`;
 
 export default Widget;

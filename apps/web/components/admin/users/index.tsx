@@ -259,7 +259,7 @@ const UsersManager = ({
                                                 <Grid item>
                                                     <Avatar />
                                                 </Grid>
-                                                <Grid item direction="column">
+                                                <Grid item>
                                                     <Grid item>
                                                         <Link
                                                             href={`/dashboard/users/${user.userId}`}

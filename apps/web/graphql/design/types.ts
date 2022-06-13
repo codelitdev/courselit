@@ -30,11 +30,11 @@ const themeInputType = new GraphQLInputObjectType({
 const layoutType = new GraphQLObjectType({
     name: "Layout",
     fields: {
-        top: { type: new GraphQLList(GraphQLString) },
-        bottom: { type: new GraphQLList(GraphQLString) },
-        aside: { type: new GraphQLList(GraphQLString) },
-        footerLeft: { type: new GraphQLList(GraphQLString) },
-        footerRight: { type: new GraphQLList(GraphQLString) },
+        top: { type: new GraphQLList(GraphQLJSONObject) },
+        bottom: { type: new GraphQLList(GraphQLJSONObject) },
+        aside: { type: new GraphQLList(GraphQLJSONObject) },
+        footerLeft: { type: new GraphQLList(GraphQLJSONObject) },
+        footerRight: { type: new GraphQLList(GraphQLJSONObject) },
     },
 });
 

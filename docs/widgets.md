@@ -36,18 +36,19 @@ A CourseLit compatible widget exports an object called `metadata` which contains
 A widget needs to export the following objects in order for it to be detected by CourseLit. The names of the objects should be the same for every widget.
 
 1. **metadata**: This is a plain JSON object which specifies the configuration of the widget.
-2. **widget**: The actual React component which will be visible on the public facing site.
-3. **adminWidget**: This is an optional React component which will be visible in the admin area. This component is used to provide access to the settings and data of the widget to administrators of the app.
+2. **widget**: The actual `React` component which will be visible on the public facing site.
+3. **adminWidget**: This is an optional `React` component which will be visible in the admin area. This component is used to provide access to the settings and data of the widget to administrators of the app.
 
 The `widget` and `adminWidget` components receive the following props from the system.
 
 1. **name**: The name of the widget. This can be used while interacting with the database via GraphQL endpoints (described in the following sections).
-2. **fetchBuilder**: A modified `fetch` object which includes the information like the backend URL. The widget can use this custom `fetch` object to make requests to the GraphQL endpoint.
+2. **settings**: The widget's settings object.
 3. **config**: An object containing various configuration settings. Check [this](../apps/web/components/public/base-layout/template/widget-by-name.tsx) file to see what all configurations are available.
 4. **utilities**: An object containing utility functions from the core app. Check [this](../apps/web/ui-lib/utils.ts) file to see what all functions are available.
 5. **section**: A name of the section where the widget is being displayed. As a widget can be displayed in multiple sections (if it supports), you can use this value to adapt the styling of the widget.
-6. **state**: The app's state powered by Redux. Equivalent for Redux's `store.getState()`.
+6. **state**: The app's state powered by Redux. Equivalent to Redux's `store.getState()`.
 7. **dispatch**: The Redux dispatcher.
+8. **id**: An identifier to identify widget's data in the app state's `widgetsData` property.
 
 ## Metadata
 
@@ -71,80 +72,64 @@ export default {
 };
 ```
 
-## Saving Data
+## Saving settings
 
-A widget can save any arbitrary data in the system database. Remember to serialize the input in-order to save it. This data will be saved in a separate table designed to hold widgets' data.
+A widget can save its settings inside the `Domain` model under the `layout` property. In your `adminWiget` component you can access a prop called `onChange`. You can call this method with the complete settings object for your widget.
 
-There are two aspects to a widget's data. The first one is the widget settings which contain things like URLs, API keys etc. The other aspect is the actual data collected from the end-users.
-
-Both of these aspects have separate columns in the database to hold respective data. In order to manipulate data the widget can leverage the following GraphQL endpoints.
-
-### Saving Settings
+The settings object can be any arbitrary JavaScript object.
 
 ```js
-saveWidgetSettings(widgetSettingsData: {
-    name: "${name}",
-    settings: "${JSON.stringify(settingsObject).replace(/"/g, '\\"')}"
-}) {
-    settings
-}
-```
+const AdminWidget = (props) => {
+    const { onChange } = props;
+    const settings = {
+        propA: "value",
+        propB: 1,
+    };
 
-### Saving Data
-
-```js
-saveWidgetData(widgetData: {
-    name: "${name}",
-    data: "${JSON.stringify(dataObject).replace(/"/g, '\\"')}"
-}) {}
-```
-
-## Making Requests To The GraphQL End-points
-
-As specified under the `Structure` section, the widget's React components receive a prop called `fetchBuilder` which is just a custom [fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) object.
-
-Following is how you make requests to the GraphQL end-points.
-
-```js
-const query = `graphql query text`;
-const fetch = props.fetchBuilder.setPayload(query).build();
-
-try {
-    const response = await fetch.exec();
-    // consume response here
-} catch (err) {
-    // error handling
-}
-```
-
-While saving user data and fetching settings requires no authentication, saving settings and fetching the saved user data requires admin level privileges. The `fetchBuilder` will automatically send the the cookies to the backend if you are signed in.
-
-### Server side rendering
-
-You can fetch data on the server side from the user facing widget, if you want to render your widget on the server side.
-
-To do this, you can create a `.getData()` method on the component exported from the user widget file. The function receives `fetchBuilder` as the input. The data returned from this function gets populated in the app state property called `widgetsData` which is an object.
-
-Example
-
-```js
-function Widget(props) {
-    const { state, name } = props;
-    const data = state.widgetsData[name];
-
-    // use data here
-}
-
-Widget.getData = async function getData({
-    fetchBuilder,
-}: {
-    fetchBuilder: FetchBuilder,
-}) {
-    const data = await your_api_call();
-    return data;
+    return (
+        <div>
+            <button onClick={() => onChange(settings)}>Save settings</button>
+        </div>
+    );
 };
+```
 
-export default Widget;
+This will reflect your changes in the `Edit Widget` component.
+
+## Server Side Rendering (SSR)
+
+It is recommended to fetch the data required for showing the widget, on the server side. You can request data from CourseLit's GraphQL API by attaching a method called `getData` to your `widget` component.
+
+While loading the app, all such methods from all the used widgets across the app will be combined and executed as a single query to reduce the round trips to the server.
+
+The data fetched from the server will be stored in the `widgetsData` property of the app state. Every query will get a unique id in the combined query so that while displaying your widget you can pull out the right data from `widgetsData`.
+
+The `getData` method has the following signature.
+
+```js
+YourComponent.getData(widgetId: string, widgetSettings: Record<string, unknown>) => string;
+```
+
+You will get a unique `widgetId` from the framework. You have to use this as a key to your query. In your React components (widget and adminWidget) you will get this id in a prop called `id`.
+
+### Example
+
+```js
+// Fetches courses with a certain tag
+Widget.getData = (id: string, settings: Record<string, unknown>) => `
+    ${id}: getCourses(offset: 1, tag: "${settings && settings.tag}") {
+        id,
+        title,
+        cost,
+        featuredImage {
+            thumbnail 
+        },
+        slug,
+        courseId,
+        isBlog,
+        description
+    }
+`;
 ```
 
 ## Theming

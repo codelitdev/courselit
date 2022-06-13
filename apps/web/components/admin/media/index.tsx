@@ -9,7 +9,7 @@ import {
     MEDIA_MANAGER_DIALOG_TITLE,
 } from "../../../ui-config/strings";
 import { Add } from "@mui/icons-material";
-import { OverviewAndDetail } from "@courselit/components-library";
+import { OverviewAndDetail, Image } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 import { actionCreators } from "@courselit/state-management";
 import type { AppDispatch, AppState } from "@courselit/state-management";
@@ -39,7 +39,6 @@ const StyledOverviewAndDetail = styled(OverviewAndDetail)(
 const Upload = dynamic(() => import("./upload"));
 const Editor = dynamic(() => import("./editor"));
 const MediaPreview = dynamic(() => import("./media-preview"));
-const Img = dynamic(() => import("../../img"));
 
 interface IndexProps {
     auth: Auth;
@@ -141,7 +140,7 @@ const Index = (props: IndexProps) => {
         const componentConfig = {
             Overview: (
                 <>
-                    <Img src={media.thumbnail!} />
+                    <Image src={media.thumbnail!} />
                     <ImageListItemBar
                         title={media.originalFileName}
                         subtitle={media.mimeType}

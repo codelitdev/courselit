@@ -18,11 +18,11 @@ import {
     LABEL_NAVIGATION_LINK_DESTINATION,
     LINK_DROPDOWN,
     LABEL_NAVIGATION_LINK_NEWTAB,
-} from "../../../../ui-config/strings";
+} from "../../../../../ui-config/strings";
 import {
     NAVIGATION_CATEGORY_MAIN,
     NAVIGATION_CATEGORY_FOOTER,
-} from "../../../../ui-config/constants";
+} from "../../../../../ui-config/constants";
 import { Done, Delete } from "@mui/icons-material";
 import { connect } from "react-redux";
 import { FetchBuilder } from "@courselit/utils";
