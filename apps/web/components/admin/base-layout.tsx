@@ -8,8 +8,6 @@ import {
     PermMedia,
     SettingsApplications,
     Palette,
-    Widgets,
-    List,
 } from "@mui/icons-material";
 import { CREATOR_AREA_PAGE_TITLE } from "../../ui-config/strings";
 import AppLoader from "../app-loader";

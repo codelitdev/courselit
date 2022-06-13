@@ -18,7 +18,6 @@ import { useTheme } from "@mui/material";
 import { Add } from "@mui/icons-material";
 import { connect } from "react-redux";
 import { actionCreators } from "@courselit/state-management";
-import widgets from "../../../../ui-config/widgets";
 import { Section } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
 import dynamic from "next/dynamic";
