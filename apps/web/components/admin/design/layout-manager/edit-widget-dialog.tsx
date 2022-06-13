@@ -15,7 +15,7 @@ import {
 import widgets from "../../../../ui-config/widgets";
 import { FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";
-import { AppDispatch, AppState } from "@courselit/state-management";
+import { AppState } from "@courselit/state-management";
 import { Address } from "@courselit/common-models";
 
 interface EditWidgetDialogProps {
