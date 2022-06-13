@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid, Button } from "@mui/material";
-import { ADD_NEW_LINK_BUTTON } from "../../../../ui-config/strings";
+import { ADD_NEW_LINK_BUTTON } from "../../../../../ui-config/strings";
 import { connect } from "react-redux";
 import { actionCreators } from "@courselit/state-management";
 import dynamic from "next/dynamic";

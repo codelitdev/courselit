@@ -19,14 +19,19 @@ const Section = (props: SectionProps) => {
     return sectionLayout && sectionLayout.length ? (
         <Grid container direction="column">
             {sectionLayout.map((item: any, index: number) =>
-                widgets[item].metadata.excludeFromPaths &&
-                widgets[item].metadata.excludeFromPaths.includes(
+                widgets[item.name].metadata.excludeFromPaths &&
+                widgets[item.name].metadata.excludeFromPaths.includes(
                     router.pathname
                 ) ? (
                     <div key={index}></div>
                 ) : (
                     <Grid item key={index}>
-                        <WidgetByName name={item} section={name} />
+                        <WidgetByName
+                            name={item.name}
+                            section={name}
+                            settings={item.settings}
+                            id={`widget${item._id}`}
+                        />
                     </Grid>
                 )
             )}

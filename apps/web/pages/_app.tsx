@@ -99,6 +99,7 @@ MyApp.getInitialProps = wrapper.getInitialAppProps(
                     actionCreators.updateWidgetsData(widgets)
                 );
             } catch (error: any) {
+                console.error(error);
                 ctx.res!.statusCode = 404;
                 ctx.res!.end("Not found");
                 return;

@@ -4,6 +4,6 @@ module.exports = {
       "jest": true
     },
     "rules": {
-      "no-console": ["error", {"allow": ["warn"]}]
+      "no-console": ["error", {"allow": ["warn", "error"]}]
     }
   };

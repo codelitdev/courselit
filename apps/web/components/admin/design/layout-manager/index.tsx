@@ -136,11 +136,14 @@ const PageDesigner = (props: PageDesignerProps) => {
 
     const onSelection = (forSection, componentName: string) => {
         if (componentName) {
+            const component = {
+                name: componentName,
+            };
             setLayout(
                 Object.assign({}, layout, {
                     [forSection]: layout[forSection]
-                        ? [...layout[forSection], componentName]
-                        : [componentName],
+                        ? [...layout[forSection], component]
+                        : [component],
                 })
             );
         }
@@ -258,12 +261,7 @@ const PageDesigner = (props: PageDesignerProps) => {
                                                         (item, index) => (
                                                             <AddedComponent
                                                                 section="top"
-                                                                title={
-                                                                    widgets[
-                                                                        item
-                                                                    ].metadata
-                                                                        .displayName
-                                                                }
+                                                                widget={item}
                                                                 index={index}
                                                                 removeComponent={
                                                                     removeComponent
@@ -346,12 +344,8 @@ const PageDesigner = (props: PageDesignerProps) => {
                                                                     ) => (
                                                                         <AddedComponent
                                                                             section="bottom"
-                                                                            title={
-                                                                                widgets[
-                                                                                    item
-                                                                                ]
-                                                                                    .metadata
-                                                                                    .displayName
+                                                                            widget={
+                                                                                item
                                                                             }
                                                                             index={
                                                                                 index
@@ -415,12 +409,8 @@ const PageDesigner = (props: PageDesignerProps) => {
                                                                 ) => (
                                                                     <AddedComponent
                                                                         section="aside"
-                                                                        title={
-                                                                            widgets[
-                                                                                item
-                                                                            ]
-                                                                                .metadata
-                                                                                .displayName
+                                                                        widget={
+                                                                            item
                                                                         }
                                                                         index={
                                                                             index
@@ -496,12 +486,7 @@ const PageDesigner = (props: PageDesignerProps) => {
                                                         (item, index) => (
                                                             <AddedComponent
                                                                 section="footerLeft"
-                                                                title={
-                                                                    widgets[
-                                                                        item
-                                                                    ].metadata
-                                                                        .displayName
-                                                                }
+                                                                widget={item}
                                                                 index={index}
                                                                 removeComponent={
                                                                     removeComponent
@@ -544,12 +529,7 @@ const PageDesigner = (props: PageDesignerProps) => {
                                                         (item, index) => (
                                                             <AddedComponent
                                                                 section="footerRight"
-                                                                title={
-                                                                    widgets[
-                                                                        item
-                                                                    ].metadata
-                                                                        .displayName
-                                                                }
+                                                                widget={item}
                                                                 index={index}
                                                                 removeComponent={
                                                                     removeComponent

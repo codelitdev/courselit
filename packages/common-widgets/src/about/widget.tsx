@@ -1,20 +1,13 @@
 import * as React from "react";
-import {
-    WidgetHelpers,
-    RichText as TextEditor,
-    Section,
-} from "@courselit/components-library";
-import Settings from "./settings";
+import { RichText as TextEditor, Section } from "@courselit/components-library";
 import { Box, Grid } from "@mui/material";
-import type { FetchBuilder, WidgetProps } from "@courselit/common-models";
-import Metadata from "./metadata";
+import type { WidgetProps } from "@courselit/common-models";
 
 const Widget = (props: WidgetProps) => {
-    const { state } = props;
-    const widgetSettings: any = state.widgetsData.about.settings;
+    const { settings } = props;
     const [content, setContent] = React.useState(
-        widgetSettings
-            ? TextEditor.hydrate({ data: widgetSettings.text })
+        settings.text
+            ? TextEditor.hydrate({ data: settings.text })
             : TextEditor.emptyState()
     );
 
@@ -34,32 +27,32 @@ const Widget = (props: WidgetProps) => {
     );
 };
 
-Widget.getData = async function getData({
-    fetchBuilder,
-}: {
-    fetchBuilder: FetchBuilder;
-}) {
-    const settingsQuery = `
-    query {
-        settings: getWidgetSettings(name: "${Metadata.name}") {
-            settings
-        }
-    }
-    `;
+// Widget.getData = async function getData({
+//     fetchBuilder,
+// }: {
+//     fetchBuilder: FetchBuilder;
+// }) {
+//     const settingsQuery = `
+//     query {
+//         settings: getWidgetSettings(name: "${Metadata.name}") {
+//             settings
+//         }
+//     }
+//     `;
 
-    const fetch = fetchBuilder.setPayload(settingsQuery).build();
-    let result: Record<string, unknown> = {};
-    try {
-        const response = await fetch.exec();
-        if (!response.settings) {
-            return result;
-        }
-        result.settings = JSON.parse(response.settings.settings);
-    } catch (err) {
-        console.error(err);
-    }
+//     const fetch = fetchBuilder.setPayload(settingsQuery).build();
+//     let result: Record<string, unknown> = {};
+//     try {
+//         const response = await fetch.exec();
+//         if (!response.settings) {
+//             return result;
+//         }
+//         result.settings = JSON.parse(response.settings.settings);
+//     } catch (err) {
+//         console.error(err);
+//     }
 
-    return result;
-};
+//     return result;
+// };
 
 export default Widget;

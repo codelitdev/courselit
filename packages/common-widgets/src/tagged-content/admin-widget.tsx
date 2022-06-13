@@ -1,66 +1,34 @@
-import * as React from "react";
+import React, { useState, useEffect } from "react";
 import { WidgetHelpers, Section } from "@courselit/components-library";
 import { Button, Grid, TextField, Typography } from "@mui/material";
 import Settings from "./settings";
 import type { WidgetProps } from "@courselit/common-models";
 
-export interface AdminWidgetProps extends WidgetProps {
-    auth: any;
-    dispatch: any;
+export interface AdminWidgetProps {
+    onChange: (...args: any[]) => void;
+    settings: Settings;
 }
 
 const AdminWidget = (props: AdminWidgetProps) => {
-    const { name, fetchBuilder, auth, dispatch } = props;
+    const { onChange, settings: settingsProps } = props;
     const [settings, setSettings] = React.useState<Settings>({
-        tag: "",
-        title: "",
-        subtitle: "",
+        tag: settingsProps.tag || "",
+        title: settingsProps.title || "",
+        subtitle: settingsProps.subtitle || "",
+        backgroundColor: settingsProps.backgroundColor || "",
     });
-    const [newSettings, setNewSettings] = React.useState<Settings>(settings);
 
-    React.useEffect(() => {
-        getSettings();
-    }, [name]);
-
-    const getSettings = async () => {
-        const settings = await WidgetHelpers.getWidgetSettings({
-            widgetName: name,
-            fetchBuilder,
-            dispatch,
-        });
-
-        if (settings) {
-            onNewSettingsReceived(settings);
-        }
-    };
-
-    const onNewSettingsReceived = (settings: any) => {
-        setSettings(settings);
-        setNewSettings(settings);
-    };
-
-    const saveSettings = async (event: any) => {
-        event.preventDefault();
-        const result = await WidgetHelpers.saveWidgetSettings({
-            widgetName: name,
-            newSettings,
-            fetchBuilder,
-            auth,
-            dispatch,
-        });
-        onNewSettingsReceived(result);
-    };
+    useEffect(() => {
+        onChange(settings);
+    }, [settings]);
 
     const onChangeData = (e: any) => {
-        setNewSettings(
-            Object.assign({}, newSettings, {
+        setSettings(
+            Object.assign({}, settings, {
                 [e.target.name]: e.target.value,
             })
         );
-    };
-
-    const isDirty = (): boolean => {
-        return settings !== newSettings;
+        onChange(settings);
     };
 
     return (
@@ -76,54 +44,45 @@ const AdminWidget = (props: AdminWidgetProps) => {
                     <Typography variant="h6">Settings</Typography>
                 </Grid>
                 <Grid item>
-                    <form onSubmit={saveSettings}>
-                        <TextField
-                            variant="outlined"
-                            label="Tag"
-                            fullWidth
-                            margin="normal"
-                            name="tag"
-                            value={newSettings.tag || ""}
-                            onChange={onChangeData}
-                            required
-                        />
-                        <TextField
-                            variant="outlined"
-                            label="Section Title"
-                            fullWidth
-                            margin="normal"
-                            name="title"
-                            value={newSettings.title || ""}
-                            onChange={onChangeData}
-                            required
-                        />
-                        <TextField
-                            variant="outlined"
-                            label="Section subtitle"
-                            fullWidth
-                            margin="normal"
-                            name="subtitle"
-                            value={newSettings.subtitle || ""}
-                            onChange={onChangeData}
-                        />
-                        <TextField
-                            variant="outlined"
-                            label="Background color"
-                            placeholder="Enter the color's HEX code"
-                            fullWidth
-                            margin="normal"
-                            name="backgroundColor"
-                            value={newSettings.backgroundColor || ""}
-                            onChange={onChangeData}
-                        />
-                        <Button
-                            type="submit"
-                            value="Save"
-                            disabled={!isDirty()}
-                        >
-                            Save
-                        </Button>
-                    </form>
+                    <TextField
+                        variant="outlined"
+                        label="Tag"
+                        fullWidth
+                        margin="normal"
+                        name="tag"
+                        value={settings.tag || ""}
+                        onChange={onChangeData}
+                        required
+                    />
+                    <TextField
+                        variant="outlined"
+                        label="Section Title"
+                        fullWidth
+                        margin="normal"
+                        name="title"
+                        value={settings.title || ""}
+                        onChange={onChangeData}
+                        required
+                    />
+                    <TextField
+                        variant="outlined"
+                        label="Section subtitle"
+                        fullWidth
+                        margin="normal"
+                        name="subtitle"
+                        value={settings.subtitle || ""}
+                        onChange={onChangeData}
+                    />
+                    <TextField
+                        variant="outlined"
+                        label="Background color"
+                        placeholder="Enter the color's HEX code"
+                        fullWidth
+                        margin="normal"
+                        name="backgroundColor"
+                        value={settings.backgroundColor || ""}
+                        onChange={onChangeData}
+                    />
                 </Grid>
             </Grid>
         </Section>
