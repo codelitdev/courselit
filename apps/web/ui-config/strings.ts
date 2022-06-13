@@ -278,3 +278,5 @@ export const USER_TYPE_ALL = "All";
 export const USER_FILTER_PERMISSION = "Type";
 export const USER_TYPE_TOOLTIP =
     "Segregate users based on their roles. Audience users are the ones who can enroll in courses. Team users are the ones who have admin rights.";
+export const DIALOG_DONE_BUTTON = "Done";
+export const DIALOG_EDIT_WIDGET_PREFIX = "Edit";

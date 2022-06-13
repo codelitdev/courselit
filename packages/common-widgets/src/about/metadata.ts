@@ -1,6 +1,6 @@
 export default {
-    name: "about",
-    displayName: "About",
+    name: "rich-text",
+    displayName: "Rich text",
     compatibleWith: ["top", "aside", "bottom", "footerLeft", "footerRight"],
     excludeFromPaths: ["/login"],
 };

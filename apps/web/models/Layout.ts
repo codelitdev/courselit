@@ -3,13 +3,14 @@
  */
 import { Layout } from "@courselit/common-models";
 import mongoose from "mongoose";
+import WidgetSchema from "./Widget";
 
 const LayoutSchema = new mongoose.Schema<Layout>({
-    top: [{ type: String }],
-    bottom: [{ type: String }],
-    aside: [{ type: String }],
-    footerLeft: [{ type: String }],
-    footerRight: [{ type: String }],
+    top: [WidgetSchema],
+    bottom: [WidgetSchema],
+    aside: [WidgetSchema],
+    footerLeft: [WidgetSchema],
+    footerRight: [WidgetSchema],
 });
 
 export default LayoutSchema;
