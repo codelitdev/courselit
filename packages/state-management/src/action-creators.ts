@@ -201,12 +201,16 @@ export function updateWidgetsData(
                 widgets,
                 widgetIDPrefix
             );
-            const fetchBuilder = new FetchBuilder()
-                .setUrl(`${state.address.backend}/api/graph`)
-                .setIsGraphQLEndpoint(true);
-            const fetch = await fetchBuilder.setPayload(queryString).build();
-            const widgetsData = await fetch.exec();
-            dispatch(widgetsDataAvailable(widgetsData));
+            if (queryString) {
+                const fetchBuilder = new FetchBuilder()
+                    .setUrl(`${state.address.backend}/api/graph`)
+                    .setIsGraphQLEndpoint(true);
+                const fetch = await fetchBuilder
+                    .setPayload(queryString)
+                    .build();
+                const widgetsData = await fetch.exec();
+                dispatch(widgetsDataAvailable(widgetsData));
+            }
         } finally {
             dispatch(networkAction(false));
         }
@@ -229,11 +233,13 @@ function combineGraphQLQueries(
             );
         }
     }
-    return `
-        {
-            ${queryString}
-        }
-    `;
+    return queryString
+        ? `
+            {
+                ${queryString}
+            }
+        `
+        : "";
 }
 
 export function widgetsDataAvailable(widgetsData: WidgetsData): AnyAction {
