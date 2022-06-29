@@ -439,7 +439,7 @@ const CourseEditor = (props: CourseEditorProps) => {
                         <Grid container alignItems="center">
                             <Grid item>
                                 <IconButton size="large">
-                                    <Link href="/dashboard/courses">
+                                    <Link href="/dashboard/products">
                                         <ArrowBack />
                                     </Link>
                                 </IconButton>

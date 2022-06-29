@@ -46,8 +46,8 @@ const getSidebarMenuItems = (profile: Profile) => {
         ])
     ) {
         items.push({
-            name: "Courses",
-            route: "/dashboard/courses",
+            name: "Products",
+            route: "/dashboard/products",
             icon: <LibraryBooks />,
         });
     }

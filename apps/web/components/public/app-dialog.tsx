@@ -1,5 +1,11 @@
-import React, { ReactChildren } from "react";
-import { Dialog, DialogTitle, DialogActions, Button } from "@mui/material";
+import React, { ReactNode } from "react";
+import {
+    Dialog,
+    DialogTitle,
+    DialogActions,
+    Button,
+    DialogContent,
+} from "@mui/material";
 
 interface Action {
     name: string;
@@ -10,7 +16,7 @@ interface AppDialogProps {
     onOpen: boolean;
     onClose: (...args: any[]) => void;
     title: string;
-    children: ReactChildren;
+    children?: ReactNode;
     actions: Action[];
 }
 
@@ -31,7 +37,7 @@ const AppDialog = (props: AppDialogProps) => {
     return (
         <Dialog onClose={onClose} open={onOpen}>
             <DialogTitle>{props.title}</DialogTitle>
-            {props.children}
+            {props.children && <DialogContent>{props.children}</DialogContent>}
             {props.actions && <DialogActions>{dialogActions}</DialogActions>}
         </Dialog>
     );

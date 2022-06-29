@@ -14,7 +14,7 @@ import {
     makeModelTextSearchable,
 } from "../../lib/graphql";
 import constants from "../../config/constants";
-import { validateBlogPosts } from "./helpers";
+import { getPaginatedCoursesForAdmin, validateBlogPosts } from "./helpers";
 import Lesson from "../../models/Lesson";
 import GQLContext from "../../models/GQLContext";
 import Filter from "./models/filter";
@@ -94,27 +94,24 @@ export const getCourse = async (
     }
 };
 
-export const createCourse = async (courseData: Course, ctx: GQLContext) => {
+export const createCourse = async (
+    courseData: { title: string; type: Filter },
+    ctx: GQLContext
+) => {
     checkIfAuthenticated(ctx);
     if (!checkPermission(ctx.user.permissions, [permissions.manageCourse])) {
         throw new Error(responses.action_not_allowed);
     }
 
-    courseData = await validateBlogPosts(courseData, ctx);
-
     const course = await CourseModel.create({
         domain: ctx.subdomain._id,
         title: courseData.title,
-        cost: courseData.cost,
-        privacy: courseData.privacy,
-        isBlog: courseData.isBlog,
-        isFeatured: courseData.isFeatured,
-        description: courseData.description,
-        featuredImage: courseData.featuredImage,
-        creatorId: ctx.user.userId || ctx.user._id,
+        cost: 0,
+        privacy: constants.unlisted,
+        creatorId: ctx.user.userId,
         creatorName: ctx.user.name,
         slug: slugify(courseData.title.toLowerCase()),
-        tags: courseData.tags,
+        type: courseData.type,
     });
 
     return course;
@@ -186,10 +183,20 @@ export const removeLesson = async (courseId, lessonId, ctx) => {
     return true;
 };
 
-export const getCoursesAsAdmin = async (offset, ctx, text) => {
-    checkIfAuthenticated(ctx);
+export const getCoursesAsAdmin = async ({
+    offset,
+    context,
+    searchText,
+    filterBy,
+}: {
+    offset: number;
+    context: GQLContext;
+    searchText?: string;
+    filterBy?: Filter;
+}) => {
+    checkIfAuthenticated(context);
     validateOffset(offset);
-    const user = ctx.user;
+    const user = context.user;
 
     if (
         !checkPermission(user.permissions, [
@@ -200,26 +207,28 @@ export const getCoursesAsAdmin = async (offset, ctx, text) => {
         throw new Error(responses.action_not_allowed);
     }
 
-    const query = {
-        domain: ctx.subdomain._id,
+    const query: Partial<Omit<Course, "type">> & {
+        $text?: Record<string, unknown>;
+        type?: string | { $in: string[] };
+    } = {
+        domain: context.subdomain._id,
     };
     if (!checkPermission(user.permissions, [permissions.manageAnyCourse])) {
         query.creatorId = `${user.userId || user.id}`;
     }
 
-    if (text) query.$text = { $search: text };
-    const SearchableCourse = makeModelTextSearchable(CourseModel);
+    if (filterBy) {
+        query.type = filterBy;
+    } else {
+        query.type = { $in: [constants.download, constants.course] };
+    }
 
-    const resultSet = await SearchableCourse(
-        { offset, query, graphQLContext: ctx },
-        {
-            itemsPerPage,
-            sortByColumn: "updatedAt",
-            sortOrder: -1,
-        }
-    );
+    if (searchText) query.$text = { $search: searchText };
 
-    return resultSet;
+    return await getPaginatedCoursesForAdmin({
+        query,
+        page: offset,
+    });
 };
 
 export const getCourses = async ({

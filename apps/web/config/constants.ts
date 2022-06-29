@@ -28,6 +28,11 @@ export default {
     jwtExpire: process.env.JWT_EXPIRES_IN || "1d",
     jwtTokenCookieName: process.env.JWT_COOKIE_NAME || "access_token",
 
+    // product types
+    course: "course",
+    download: "download",
+    blog: "blog",
+
     // Content types
     text: "text",
     audio: "audio",

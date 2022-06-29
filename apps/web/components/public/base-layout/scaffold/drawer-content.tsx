@@ -69,7 +69,7 @@ const DrawerContent = ({
                             <MenuItem
                                 link={{
                                     text: MAIN_MENU_ITEM_DASHBOARD,
-                                    destination: "/dashboard/courses",
+                                    destination: "/dashboard/products",
                                     category: NAVIGATION_CATEGORY_MAIN,
                                     newTab: false,
                                 }}

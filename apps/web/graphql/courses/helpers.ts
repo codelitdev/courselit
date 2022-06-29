@@ -1,8 +1,9 @@
 import { getPaymentMethod } from "../../payments";
 import { responses } from "../../config/strings";
 import GQLContext from "../../models/GQLContext";
-import { Course } from "../../models/Course";
+import CourseModel, { Course } from "../../models/Course";
 import { checkMediaForPublicAccess } from "../media/logic";
+import constants from "../../config/constants";
 
 const validatePaymentMethod = async (domain: string) => {
     try {
@@ -63,3 +64,42 @@ export const validateBlogPosts = async (
 
 //   return courseData;
 // };
+
+export const getPaginatedCoursesForAdmin = async ({
+    query,
+    page,
+    limit,
+}: {
+    query: Record<string, unknown>;
+    page?: number;
+    limit?: number;
+}): Promise<Course[]> => {
+    const itemsPerPage = limit || constants.itemsPerPage;
+    const offset = (page || constants.defaultOffset) - 1;
+    return CourseModel.aggregate([
+        { $match: query },
+        { $sort: { updatedAt: -1 } },
+        { $skip: offset * itemsPerPage },
+        { $limit: itemsPerPage },
+        {
+            $project: {
+                id: "$_id",
+                title: 1,
+                slug: 1,
+                featuredImage: 1,
+                isBlog: 1,
+                courseId: 1,
+                type: 1,
+                published: 1,
+                sales: 1,
+                customers: {
+                    $cond: {
+                        if: { $isArray: "$customers" },
+                        then: { $size: "$customers" },
+                        else: 0,
+                    },
+                },
+            },
+        },
+    ]);
+};
