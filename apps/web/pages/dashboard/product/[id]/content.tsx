@@ -15,7 +15,7 @@ export default function CreatorCourses() {
 
     return (
         <BaseLayout title={MANAGE_COURSES_PAGE_HEADING}>
-            <CourseEditor courseId={id && id[0]} />
+            <CourseEditor courseId={id} />
         </BaseLayout>
     );
 }

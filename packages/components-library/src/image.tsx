@@ -11,6 +11,7 @@ interface ImgProps {
     loading?: "eager" | "lazy";
     height?: number;
     sizes?: `${string}vw`;
+    width?: number;
 }
 
 // Copied from: https://github.com/vercel/next.js/blob/canary/examples/image-component/pages/shimmer.js
@@ -41,6 +42,7 @@ const Image = (props: ImgProps) => {
         loading = "lazy",
         height = 200,
         sizes = "100vw",
+        width,
     } = props;
     const source = src || defaultImage || "/courselit_backdrop.webp";
 
@@ -48,7 +50,7 @@ const Image = (props: ImgProps) => {
         <Box
             sx={{
                 position: "relative",
-                width: "100%",
+                width: width || "100%",
                 height,
                 borderRadius: 2,
                 overflow: "hidden",

@@ -17,13 +17,22 @@ import { getMedia } from "../media/logic";
 import mediaTypes from "../media/types";
 
 const { lessonMetaType } = lessonTypes;
-const { unlisted, open } = constants;
+const { unlisted, open, course, download, blog } = constants;
 
 const courseStatusType = new GraphQLEnumType({
     name: "CoursePrivacyType",
     values: {
         UNLISTED: { value: unlisted },
         PUBLIC: { value: open },
+    },
+});
+
+const courseTypeFilters = new GraphQLEnumType({
+    name: "CourseType",
+    values: {
+        COURSE: { value: course },
+        BLOG: { value: blog },
+        DOWNLOAD: { value: download },
     },
 });
 
@@ -47,7 +56,8 @@ const courseType = new GraphQLObjectType({
         privacy: { type: new GraphQLNonNull(courseStatusType) },
         isBlog: { type: new GraphQLNonNull(GraphQLBoolean) },
         isFeatured: { type: new GraphQLNonNull(GraphQLBoolean) },
-        tags: { type: new GraphQLList(GraphQLString) },
+        type: { type: new GraphQLNonNull(courseTypeFilters) },
+        tags: { type: new GraphQLList(courseTypeFilters) },
         creatorId: { type: new GraphQLNonNull(GraphQLID) },
         creatorName: { type: GraphQLString },
         lessons: {
@@ -71,13 +81,7 @@ const courseInputType = new GraphQLInputObjectType({
     name: "CourseInput",
     fields: {
         title: { type: new GraphQLNonNull(GraphQLString) },
-        privacy: { type: new GraphQLNonNull(courseStatusType) },
-        isBlog: { type: new GraphQLNonNull(GraphQLBoolean) },
-        isFeatured: { type: new GraphQLNonNull(GraphQLBoolean) },
-        tags: { type: new GraphQLList(GraphQLString) },
-        cost: { type: GraphQLFloat },
-        description: { type: GraphQLString },
-        featuredImage: { type: GraphQLString },
+        type: { type: new GraphQLNonNull(courseTypeFilters) },
     },
 });
 
@@ -97,7 +101,7 @@ const courseUpdateInput = new GraphQLInputObjectType({
     },
 });
 
-const creatorOrAdminCoursesItemType = new GraphQLObjectType({
+const adminCourseItemType = new GraphQLObjectType({
     name: "CreatorOrAdminCoursesItem",
     fields: {
         id: { type: new GraphQLNonNull(GraphQLID) },
@@ -109,6 +113,10 @@ const creatorOrAdminCoursesItemType = new GraphQLObjectType({
         },
         isBlog: { type: new GraphQLNonNull(GraphQLBoolean) },
         courseId: { type: new GraphQLNonNull(GraphQLString) },
+        type: { type: new GraphQLNonNull(courseTypeFilters) },
+        published: { type: new GraphQLNonNull(GraphQLBoolean) },
+        sales: { type: new GraphQLNonNull(GraphQLInt) },
+        customers: { type: new GraphQLNonNull(GraphQLInt) },
     },
 });
 
@@ -159,7 +167,7 @@ export default {
     courseStatusType,
     courseInputType,
     courseUpdateInput,
-    creatorOrAdminCoursesItemType,
+    adminCourseItemType,
     postType,
     publicCoursesType,
 };

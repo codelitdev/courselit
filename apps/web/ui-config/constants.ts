@@ -59,3 +59,6 @@ export const permissions = {
     manageSettings: "setting:manage",
     manageUsers: "user:manage",
 };
+
+export const COURSE_TYPE_COURSE = "course";
+export const COURSE_TYPE_DOWNLOAD = "download";

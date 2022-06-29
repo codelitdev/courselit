@@ -1,21 +1,31 @@
 import React, { useEffect, useState } from "react";
 import { styled } from "@mui/system";
 import {
-    Button,
     Grid,
     Typography,
-    List,
     ListItem,
     ListItemText,
     ListItemAvatar,
+    TableContainer,
+    Table,
+    TableHead,
+    TableBody,
+    TableRow,
+    TableCell,
+    Link as MuiLink,
+    Chip,
+    Button,
 } from "@mui/material";
 import { connect } from "react-redux";
 import {
     MANAGE_COURSES_PAGE_HEADING,
-    COURSE_TYPE_BLOG,
-    COURSE_TYPE_COURSE,
     LOAD_MORE_TEXT,
-    SEARCH_TEXTBOX_PLACEHOLDER,
+    PRODUCTS_TABLE_HEADER_NAME,
+    PRODUCTS_TABLE_HEADER_STATUS,
+    PRODUCTS_TABLE_HEADER_STUDENTS,
+    PRODUCTS_TABLE_HEADER_SALES,
+    PRODUCTS_TABLE_HEADER_ACTIONS,
+    BTN_NEW_PRODUCT,
 } from "../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
 import { Section, Image } from "@courselit/components-library";
@@ -24,10 +34,11 @@ import { Add, Search } from "@mui/icons-material";
 import constants from "../../../config/constants";
 const { permissions } = constants;
 import Link from "next/link";
-import type { Auth, Profile, Address } from "@courselit/common-models";
+import type { Auth, Profile, Address, Course } from "@courselit/common-models";
 import { AppMessage } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
+import Product from "./product";
 
 const { networkAction, setAppMessage } = actionCreators;
 
@@ -93,7 +104,11 @@ const Index = (props: IndexProps) => {
           thumbnail
         },,
         isBlog,
-        courseId
+        courseId,
+        type,
+        published,
+        sales,
+        customers
       }
     }
     `
@@ -108,7 +123,11 @@ const Index = (props: IndexProps) => {
           thumbnail
         },,
         isBlog,
-        courseId
+        courseId,
+        type,
+        published,
+        sales,
+        customers
       }
     }
     `;
@@ -139,15 +158,19 @@ const Index = (props: IndexProps) => {
         setSearchState(searchState + 1);
     };
 
+    const onDelete = (index: number) => {
+        creatorCourses.splice(index, 1);
+        setCreatorCourses([...creatorCourses]);
+    };
+
     return (
-        <StyledGrid container direction="column" spacing={2}>
-            <Grid item xs={12}>
-                <Section>
+        <Section>
+            <Grid container direction="column" spacing={2}>
+                <Grid item>
                     <Grid
                         container
                         justifyContent="space-between"
                         alignItems="center"
-                        spacing={1}
                     >
                         <Grid item>
                             <Typography variant="h1">
@@ -155,103 +178,187 @@ const Index = (props: IndexProps) => {
                             </Typography>
                         </Grid>
                         <Grid item>
-                            {/* <form onSubmit={searchCourses}>
-                <FormControl variant="outlined">
-                  <InputLabel htmlFor="searchtext">
-                    {SEARCH_TEXTBOX_PLACEHOLDER}
-                  </InputLabel>
-                  <OutlinedInput
-                    id="searchtext"
-                    type="text"
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
-                    endAdornment={
-                      <InputAdornment position="end">
-                        <IconButton
-                          aria-label="search"
-                          edge="end"
-                          type="submit"
-                          size="large"
-                        >
-                          <Search />
-                        </IconButton>
-                      </InputAdornment>
-                    }
-                  />
-                </FormControl>
-              </form> */}
+                            <Link href="/dashboard/product/new">
+                                <Button variant="contained" component="a">
+                                    {BTN_NEW_PRODUCT}
+                                </Button>
+                            </Link>
                         </Grid>
                     </Grid>
-                </Section>
-            </Grid>
-            <Grid item xs={12}>
-                <Section>
-                    <Grid container direction="column">
-                        {checkPermission(props.profile.permissions, [
-                            permissions.manageCourse,
-                        ]) && (
-                            <Grid item>
-                                <Link href="/dashboard/courses/edit">
-                                    <Button
-                                        variant="outlined"
-                                        color="primary"
-                                        startIcon={<Add />}
-                                    >
-                                        Add new
-                                    </Button>
-                                </Link>
-                            </Grid>
-                        )}
-                        <Grid item>
-                            <List>
-                                {creatorCourses.map((course, index) => (
-                                    <Link
-                                        href={`/dashboard/courses/edit/${course.courseId}`}
-                                        key={index}
-                                    >
-                                        <ListItem
-                                            className={classes.listItem}
-                                            sx={{
-                                                pr: 0,
-                                                pl: 0,
-                                            }}
-                                        >
-                                            <ListItemAvatar>
-                                                <Image
-                                                    src={
-                                                        course.featuredImage &&
-                                                        course.featuredImage
-                                                            .thumbnail
-                                                    }
-                                                    classes={classes.avatar}
-                                                />
-                                            </ListItemAvatar>
-                                            <ListItemText
-                                                primary={course.title}
-                                                secondary={
-                                                    course.isBlog
-                                                        ? COURSE_TYPE_BLOG
-                                                        : COURSE_TYPE_COURSE
-                                                }
-                                                className={classes.listItemText}
-                                            />
-                                        </ListItem>
-                                    </Link>
-                                ))}
-                            </List>
-                        </Grid>
+                </Grid>
+                <Grid item>
+                    <TableContainer>
+                        <Table aria-label="Products">
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell>
+                                        {PRODUCTS_TABLE_HEADER_NAME}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        {PRODUCTS_TABLE_HEADER_STATUS}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        {PRODUCTS_TABLE_HEADER_STUDENTS}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        {PRODUCTS_TABLE_HEADER_SALES}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        {PRODUCTS_TABLE_HEADER_ACTIONS}
+                                    </TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {creatorCourses.map(
+                                    (
+                                        product: Course & {
+                                            published: boolean;
+                                            sales: number;
+                                            customers: number;
+                                        },
+                                        index: number
+                                    ) => (
+                                        <Product
+                                            details={product}
+                                            position={index}
+                                            onDelete={onDelete}
+                                        />
+                                    )
+                                )}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </Grid>
+                {creatorCourses.length > 0 && (
+                    <Grid item container justifyContent="center">
                         <Grid item>
                             <Button
                                 variant="outlined"
-                                onClick={loadCreatorCourses}
+                                onClick={() =>
+                                    setCoursesPaginationOffset(
+                                        coursesPaginationOffset + 1
+                                    )
+                                }
                             >
                                 {LOAD_MORE_TEXT}
                             </Button>
                         </Grid>
                     </Grid>
-                </Section>
+                )}
             </Grid>
-        </StyledGrid>
+        </Section>
+        // <StyledGrid container direction="column" spacing={2}>
+        //     <Grid item xs={12}>
+        //         <Section>
+        //             <Grid
+        //                 container
+        //                 justifyContent="space-between"
+        //                 alignItems="center"
+        //                 spacing={1}
+        //             >
+        //                 <Grid item>
+        //                     <Typography variant="h1">
+        //                         {MANAGE_COURSES_PAGE_HEADING}
+        //                     </Typography>
+        //                 </Grid>
+        //                 <Grid item>
+        //                     {/* <form onSubmit={searchCourses}>
+        //         <FormControl variant="outlined">
+        //           <InputLabel htmlFor="searchtext">
+        //             {SEARCH_TEXTBOX_PLACEHOLDER}
+        //           </InputLabel>
+        //           <OutlinedInput
+        //             id="searchtext"
+        //             type="text"
+        //             value={searchText}
+        //             onChange={(e) => setSearchText(e.target.value)}
+        //             endAdornment={
+        //               <InputAdornment position="end">
+        //                 <IconButton
+        //                   aria-label="search"
+        //                   edge="end"
+        //                   type="submit"
+        //                   size="large"
+        //                 >
+        //                   <Search />
+        //                 </IconButton>
+        //               </InputAdornment>
+        //             }
+        //           />
+        //         </FormControl>
+        //       </form> */}
+        //                 </Grid>
+        //             </Grid>
+        //         </Section>
+        //     </Grid>
+        //     <Grid item xs={12}>
+        //         <Section>
+        //             <Grid container direction="column">
+        //                 {checkPermission(props.profile.permissions, [
+        //                     permissions.manageCourse,
+        //                 ]) && (
+        //                     <Grid item>
+        //                         <Link href="/dashboard/courses/edit">
+        //                             <Button
+        //                                 variant="outlined"
+        //                                 color="primary"
+        //                                 startIcon={<Add />}
+        //                             >
+        //                                 Add new
+        //                             </Button>
+        //                         </Link>
+        //                     </Grid>
+        //                 )}
+        //                 <Grid item>
+        //                     <List>
+        //                         {creatorCourses.map((course, index) => (
+        //                             <Link
+        //                                 href={`/dashboard/courses/edit/${course.courseId}`}
+        //                                 key={index}
+        //                             >
+        //                                 <ListItem
+        //                                     className={classes.listItem}
+        //                                     sx={{
+        //                                         pr: 0,
+        //                                         pl: 0,
+        //                                     }}
+        //                                 >
+        //                                     <ListItemAvatar>
+        //                                         <Image
+        //                                             src={
+        //                                                 course.featuredImage &&
+        //                                                 course.featuredImage
+        //                                                     .thumbnail
+        //                                             }
+        //                                             classes={classes.avatar}
+        //                                         />
+        //                                     </ListItemAvatar>
+        //                                     <ListItemText
+        //                                         primary={course.title}
+        //                                         secondary={
+        //                                             course.isBlog
+        //                                                 ? COURSE_TYPE_BLOG
+        //                                                 : COURSE_TYPE_COURSE
+        //                                         }
+        //                                         className={classes.listItemText}
+        //                                     />
+        //                                 </ListItem>
+        //                             </Link>
+        //                         ))}
+        //                     </List>
+        //                 </Grid>
+        //                 <Grid item>
+        //                     <Button
+        //                         variant="outlined"
+        //                         onClick={loadCreatorCourses}
+        //                     >
+        //                         {LOAD_MORE_TEXT}
+        //                     </Button>
+        //                 </Grid>
+        //             </Grid>
+        //         </Section>
+        //     </Grid>
+        // </StyledGrid>
     );
 };
 
