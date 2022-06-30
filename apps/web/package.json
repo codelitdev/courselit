@@ -34,7 +34,7 @@
         "jsonwebtoken": "^8.5.1",
         "mongodb": "^4.4.1",
         "mongoose": "^6.2.4",
-        "next": "12.1.0",
+        "next": "latest",
         "next-connect": "^0.12.2",
         "nodemailer": "^6.7.2",
         "passport": "^0.5.2",

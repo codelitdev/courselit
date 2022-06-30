@@ -104,7 +104,7 @@ export const POPUP_OK_ACTION = "Delete";
 export const POPUP_CANCEL_ACTION = "Cancel";
 export const LOGIN_SECTION_HEADER = "Sign In";
 export const LOGIN_SECTION_BUTTON = "Sign in";
-export const LABEL_GROUP_NAME = "Title";
+export const LABEL_GROUP_NAME = "Name";
 export const BTN_LOGIN = "Email me a sign in link";
 export const SIGNUP_SECTION_HEADER = "Create an account";
 export const SIGNUP_SECTION_BUTTON = "Join";
@@ -298,3 +298,10 @@ export const BTN_CONTINUE = "Continue";
 export const DELETE_PRODUCT_POPUP_HEADER = "Delete product";
 export const DELETE_PRODUCT_POPUP_TEXT =
     "This is an irreversible action and all the data and analytics related to this product will be deleted.";
+export const FORM_NEW_PRODUCT_MENU_COURSE_SUBTITLE =
+    "An online course consisting of images, videos, text and more.";
+export const FORM_NEW_PRODUCT_MENU_DOWNLOADS_SUBTITLE =
+    "Allow users to download file(s).";
+export const NEW_SECTION_HEADER = "New section";
+export const EDIT_SECTION_HEADER = "Edit section";
+export const DELETE_SECTION_HEADER = "Delete section";

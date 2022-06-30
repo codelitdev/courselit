@@ -7,7 +7,7 @@ const BaseLayout = dynamic(
 );
 
 const NewProduct = dynamic(
-    () => import("../../../components/admin/courses/new-product")
+    () => import("../../../components/admin/products/new-product")
 );
 
 export default function New() {

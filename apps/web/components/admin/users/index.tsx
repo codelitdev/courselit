@@ -161,7 +161,7 @@ const UsersManager = ({
 
     return (
         <Section>
-            <Grid container direction="column" spacing={2}>
+            <Grid container direction="column">
                 <Grid item>
                     <Typography variant="h1">
                         {USERS_MANAGER_PAGE_HEADING}

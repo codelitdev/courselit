@@ -15,7 +15,8 @@ export interface Lesson {
     creatorId: mongoose.Types.ObjectId;
     courseId: mongoose.Types.ObjectId;
     requiresEnrollment: boolean;
-    groupId: mongoose.Types.ObjectId;
+    published: boolean;
+    groupId: string;
     groupRank: number;
 }
 
@@ -34,8 +35,8 @@ const LessonSchema = new mongoose.Schema<Lesson>({
     creatorId: mongoose.Schema.Types.ObjectId,
     courseId: mongoose.Schema.Types.ObjectId,
     requiresEnrollment: { type: Boolean, default: false },
-    groupId: { type: mongoose.Schema.Types.ObjectId, required: true },
-    // order of the lesson in the group it is associated to
+    published: { type: Boolean, required: true, default: false },
+    groupId: { type: String, required: true },
     groupRank: { type: Number, required: true },
 });
 

@@ -1,4 +1,4 @@
-import React, { ReactChildren, useEffect } from "react";
+import React, { ReactChildren, ReactNode, useEffect } from "react";
 import { styled } from "@mui/material/styles";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
@@ -97,7 +97,7 @@ interface BaseLayoutProps {
     auth: Auth;
     profile: Profile;
     siteInfo: SiteInfo;
-    children: ReactChildren;
+    children: ReactNode;
     title: string;
     address: Address;
 }

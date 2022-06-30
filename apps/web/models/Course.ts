@@ -2,7 +2,9 @@ import mongoose from "mongoose";
 import constants from "../config/constants";
 import { generateUniqueId } from "@courselit/utils";
 import type { Group } from "@courselit/common-models";
+import LessonSchema from "./Lesson";
 const { course, download, blog, unlisted, open } = constants;
+const { text, video, audio, pdf, quiz } = constants;
 
 export interface Course {
     domain: mongoose.Types.ObjectId;
@@ -54,9 +56,12 @@ const CourseSchema = new mongoose.Schema<Course>(
         groups: [
             {
                 name: { type: String, required: true },
-                // order of the group on the UI
+                _id: {
+                    type: String,
+                    required: true,
+                    default: generateUniqueId,
+                },
                 rank: { type: Number, required: true },
-                // to not show associated lessons as top members on the UI
                 collapsed: { type: Boolean, required: true, default: true },
             },
         ],
