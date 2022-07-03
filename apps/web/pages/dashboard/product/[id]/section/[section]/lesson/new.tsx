@@ -6,14 +6,24 @@ const BaseLayout = dynamic(
     () => import("../../../../../../../components/admin/base-layout")
 );
 const LessonEditor = dynamic(
-    () => import("../../../../../../../components/admin/products/lesson-editor")
+    () =>
+        import(
+            "../../../../../../../components/admin/products/editor/content/lesson"
+        )
 );
 
 function NewLesson({}) {
     const router = useRouter();
     const { id, section } = router.query;
 
-    return <BaseLayout title={BUTTON_NEW_LESSON_TEXT}>{id}</BaseLayout>;
+    return (
+        <BaseLayout title={BUTTON_NEW_LESSON_TEXT}>
+            <LessonEditor
+                courseId={id as string}
+                sectionId={section as string}
+            />
+        </BaseLayout>
+    );
 }
 
 export default NewLesson;

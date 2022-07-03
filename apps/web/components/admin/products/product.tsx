@@ -146,10 +146,10 @@ function Product({
                     color={product.published ? "primary" : "default"}
                 />
             </TableCell>
+            <TableCell align="right">{product.customers}</TableCell>
             <TableCell align="right">
                 {formatCurrency(product.sales, siteinfo.currencyISOCode)}
             </TableCell>
-            <TableCell align="right">{product.customers}</TableCell>
             <TableCell align="right">
                 <IconButton
                     onClick={handleClick}

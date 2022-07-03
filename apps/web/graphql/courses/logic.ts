@@ -4,7 +4,7 @@
 import slugify from "slugify";
 import CourseModel, { Course } from "../../models/Course";
 import User from "../../models/User";
-import { responses } from "../../config/strings";
+import { internal, responses } from "../../config/strings";
 import {
     checkIfAuthenticated,
     validateOffset,
@@ -14,14 +14,21 @@ import {
     makeModelTextSearchable,
 } from "../../lib/graphql";
 import constants from "../../config/constants";
-import { getPaginatedCoursesForAdmin, validateBlogPosts } from "./helpers";
+import { getPaginatedCoursesForAdmin, validateCourse } from "./helpers";
 import Lesson from "../../models/Lesson";
 import GQLContext from "../../models/GQLContext";
 import Filter from "./models/filter";
+import mongoose from "mongoose";
+import { Group } from "@courselit/common-models";
+import { deleteAllLessons } from "../lessons/logic";
+import { deleteMedia } from "../../services/medialit";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
-const getCourseOrThrow = async (id: string, ctx: GQLContext) => {
+const getCourseOrThrow = async (
+    id: mongoose.Types.ObjectId | undefined,
+    ctx: GQLContext
+) => {
     checkIfAuthenticated(ctx);
 
     const course = await CourseModel.findOne({
@@ -113,11 +120,20 @@ export const createCourse = async (
         slug: slugify(courseData.title.toLowerCase()),
         type: courseData.type,
     });
+    await addGroup({
+        id: course._id,
+        name: internal.default_group_name,
+        collapsed: false,
+        ctx,
+    });
 
     return course;
 };
 
-export const updateCourse = async (courseData, ctx) => {
+export const updateCourse = async (
+    courseData: Partial<Course>,
+    ctx: GQLContext
+) => {
     let course = await getCourseOrThrow(courseData.id, ctx);
 
     for (const key of Object.keys(courseData)) {
@@ -131,56 +147,27 @@ export const updateCourse = async (courseData, ctx) => {
         course[key] = courseData[key];
     }
 
-    course = await validateBlogPosts(course, ctx);
+    course = await validateCourse(course, ctx);
     course = await course.save();
     return course;
 };
 
-export const deleteCourse = async (id, ctx) => {
+export const deleteCourse = async (
+    id: mongoose.Types.ObjectId,
+    ctx: GQLContext
+) => {
     const course = await getCourseOrThrow(id, ctx);
 
-    if (course.lessons.length > 0) {
-        throw new Error(responses.course_not_empty);
-    }
-
     try {
+        await deleteAllLessons(course.courseId, ctx);
+        if (course.featuredImage) {
+            await deleteMedia(course.featuredImage);
+        }
         await course.remove();
         return true;
-    } catch (err) {
+    } catch (err: any) {
         throw new Error(err.message);
     }
-};
-
-export const addLesson = async (courseId, lessonId, ctx) => {
-    const course = await getCourseOrThrow(courseId, ctx);
-
-    if (course.lessons.indexOf(lessonId) === -1) {
-        course.lessons.push(lessonId);
-    }
-
-    try {
-        await course.save();
-    } catch (err) {
-        return false;
-    }
-
-    return true;
-};
-
-export const removeLesson = async (courseId, lessonId, ctx) => {
-    const course = await getCourseOrThrow(courseId, ctx);
-
-    if (~course.lessons.indexOf(lessonId)) {
-        course.lessons.splice(course.lessons.indexOf(lessonId), 1);
-    }
-
-    try {
-        await course.save();
-    } catch (err) {
-        return false;
-    }
-
-    return true;
 };
 
 export const getCoursesAsAdmin = async ({
@@ -330,16 +317,27 @@ export const getEnrolledCourses = async (userId, ctx) => {
     );
 };
 
-export const addGroup = async ({ id, name, collapsed, ctx }) => {
+export const addGroup = async ({
+    id,
+    name,
+    collapsed,
+    ctx,
+}: {
+    id: mongoose.Types.ObjectId;
+    name: string;
+    collapsed: boolean;
+    ctx: GQLContext;
+}) => {
     const course = await getCourseOrThrow(id, ctx);
-    const existingName = (group) => group.name === name;
+    const existingName = (group: Group) => group.name === name;
 
     if (course.groups.some(existingName)) {
         throw new Error(responses.existing_group);
     }
 
     const maximumRank = course.groups.reduce(
-        (acc, value) => (value.rank > acc ? value.rank : acc),
+        (acc: number, value: { rank: number }) =>
+            value.rank > acc ? value.rank : acc,
         0
     );
 

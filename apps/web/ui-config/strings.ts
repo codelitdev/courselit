@@ -92,6 +92,7 @@ export const CAPTION_TRY_AGAIN = "Try again";
 export const CAPTION_CLOSE = "Close";
 export const LOADING = "Loading";
 export const BUTTON_NEW_LESSON_TEXT = "New Lesson";
+export const EDIT_LESSON_TEXT = "Edit Lesson";
 export const BUTTON_NEW_GROUP_TEXT = "New section";
 export const BUTTON_MANAGE_LESSONS_TEXT = "Manage Lessons";
 export const BUTTON_LESSON_VIEW_GO_BACK = "Go back to Course details";
@@ -121,7 +122,7 @@ export const CONTENT_URL_LABEL = "Media content";
 export const MEDIA_MANAGER_YOUR_MEDIA_HEADER = "Your media";
 export const DIALOG_SELECT_BUTTON = "Select";
 export const LESSON_REQUIRES_ENROLLMENT = "Available to only enrolled students";
-export const DELETE_LESSON_POPUP_HEADER = "Delete lesson?";
+export const DELETE_LESSON_POPUP_HEADER = "Delete lesson";
 export const APP_MESSAGE_COURSE_DELETED = "Product deleted";
 export const APP_MESSAGE_LESSON_DELETED = "Lesson deleted";
 export const APP_MESSAGE_LESSON_SAVED = "Lesson details saved";
@@ -235,7 +236,7 @@ export const PROFILE_SECTION_DETAILS_BIO = "Bio";
 export const PROFILE_SECTION_DETAILS_BIO_EMPTY =
     "The user has not filled the bio.";
 export const BTN_PUBLISH = "Publish";
-export const BTN_UNPUBLISH = "Unpublish";
+export const BTN_UNPUBLISH = "Draft";
 export const PERM_SECTION_HEADER = "Permissions";
 export const PERM_COURSE_MANAGE = "Create content";
 export const PERM_COURSE_MANAGE_ANY = "Edit existing content";
@@ -305,3 +306,13 @@ export const FORM_NEW_PRODUCT_MENU_DOWNLOADS_SUBTITLE =
 export const NEW_SECTION_HEADER = "New section";
 export const EDIT_SECTION_HEADER = "Edit section";
 export const DELETE_SECTION_HEADER = "Delete section";
+export const PRICING_HEADER = "Pricing";
+export const PRICING_DROPDOWN = "Pick your pricing scheme";
+export const PRICING_PAID_NO_PAYMENT_METHOD =
+    "Set a payment method in Settings to enable this option.";
+export const PUBLISH_TAB_STATUS_TITLE = "Status";
+export const PUBLISH_TAB_STATUS_SUBTITLE =
+    "Take your course public or private.";
+export const PUBLISH_TAB_VISIBILITY_TITLE = "Visibility";
+export const PUBLISH_TAB_VISIBILITY_SUBTITLE =
+    "The product stays hidden and can only be accessed by a direct URL.";

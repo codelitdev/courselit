@@ -14,6 +14,7 @@ import { lessonValidator } from "./helpers";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
 import { Course } from "../../models/Course";
+import { deleteMedia } from "../../services/medialit";
 
 const { permissions } = constants;
 
@@ -21,7 +22,7 @@ const getLessonOrThrow = async (id: string, ctx: GQLContext) => {
     checkIfAuthenticated(ctx);
 
     const lesson = await LessonModel.findOne({
-        _id: id,
+        lessonId: id,
         domain: ctx.subdomain._id,
     });
 
@@ -80,7 +81,7 @@ export const createLesson = async (lessonData: Lesson, ctx: GQLContext) => {
 
     try {
         const course: Course | null = await CourseModel.findOne({
-            _id: lessonData.courseId,
+            courseId: lessonData.courseId,
             domain: ctx.subdomain._id,
         });
         if (!course) throw new Error(responses.item_not_found);
@@ -94,8 +95,8 @@ export const createLesson = async (lessonData: Lesson, ctx: GQLContext) => {
             mediaId: lessonData.mediaId,
             downloadable: lessonData.downloadable,
             creatorId: ctx.user._id,
-            courseId: course._id,
-            groupId: new mongoose.Types.ObjectId(lessonData.groupId),
+            courseId: course.courseId,
+            groupId: lessonData.groupId,
             groupRank: -1,
         });
 
@@ -139,6 +140,10 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
         }
         await (course as any).save();
 
+        if (lesson.mediaId) {
+            await deleteMedia(lesson.mediaId);
+        }
+
         await lesson.remove();
         return true;
     } catch (err: any) {
@@ -147,21 +152,44 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
 };
 
 export const getAllLessons = async (course: Course, ctx: GQLContext) => {
-    const lessons = await LessonModel.find({
-        _id: {
-            $in: [...course.lessons],
+    const lessons = await LessonModel.find(
+        {
+            _id: {
+                $in: [...course.lessons],
+            },
+            domain: ctx.subdomain._id,
         },
+        {
+            id: 1,
+            lessonId: 1,
+            type: 1,
+            title: 1,
+            requiresEnrollment: 1,
+            courseId: 1,
+            groupId: 1,
+            groupRank: 1,
+        }
+    );
+
+    return lessons;
+};
+
+export const deleteAllLessons = async (courseId: string, ctx: GQLContext) => {
+    const allLessonsWithMedia = await LessonModel.find(
+        {
+            courseId,
+            domain: ctx.subdomain._id,
+            mediaId: { $ne: null },
+        },
+        {
+            mediaId: 1,
+        }
+    );
+    for (let media of allLessonsWithMedia) {
+        await deleteMedia(media.mediaId);
+    }
+    await LessonModel.deleteMany({
+        courseId,
         domain: ctx.subdomain._id,
     });
-
-    const lessonMetaOnly = (lesson: Lesson) => ({
-        id: lesson.id,
-        title: lesson.title,
-        requiresEnrollment: lesson.requiresEnrollment,
-        courseId: lesson.courseId,
-        groupId: lesson.groupId,
-        groupRank: lesson.groupRank,
-    });
-
-    return lessons.map(lessonMetaOnly);
 };

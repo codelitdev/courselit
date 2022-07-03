@@ -1,5 +1,5 @@
 export default interface Lesson {
-    id: string;
+    lessonId: string;
     title: string;
     type: string;
     content: string;

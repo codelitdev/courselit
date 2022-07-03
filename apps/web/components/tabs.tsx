@@ -21,7 +21,6 @@ const StyledLi = styled("li")(({ theme }: { theme: any }) => ({
 
 function Tabs({ tabs }: TabsProps) {
     const router = useRouter();
-    console.log(router.pathname, router.asPath);
 
     return (
         <StyledUl>

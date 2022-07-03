@@ -13,7 +13,7 @@ export default new graphql.GraphQLSchema({
         name: "RootQuery",
         fields: {
             ...users.queries,
-            //   ...lessons.queries,
+            ...lessons.queries,
             ...courses.queries,
             ...settings.queries,
             ...design.queries,

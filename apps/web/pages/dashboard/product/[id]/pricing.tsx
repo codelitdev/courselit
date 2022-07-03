@@ -1,20 +1,20 @@
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
+
 const ProductEditorLayout = dynamic(
     () => import("../../../../components/admin/products/editor/layout")
 );
-
-const ContentEditor = dynamic(
-    () => import("../../../../components/admin/products/editor/content")
+const PricingEditor = dynamic(
+    () => import("../../../../components/admin/products/editor/pricing")
 );
 
-export default function Content() {
+export default function Pricing() {
     const router = useRouter();
     const { id } = router.query;
 
     return (
         <ProductEditorLayout>
-            <ContentEditor id={id as string} />
+            <PricingEditor id={id as string} />
         </ProductEditorLayout>
     );
 }

@@ -1,4 +1,4 @@
-import Tab from "../../../models/Tab";
+import Tab from "../../../../../models/Tab";
 
 export default function generateTabs(id: string): Tab[] {
     if (!id) return [];
@@ -7,6 +7,6 @@ export default function generateTabs(id: string): Tab[] {
         { text: "Content", url: `/dashboard/product/${id}/content` },
         { text: "Pricing", url: `/dashboard/product/${id}/pricing` },
         { text: "Details", url: `/dashboard/product/${id}/details` },
-        { text: "Publishing", url: `/dashboard/product/${id}/publishing` },
+        { text: "Publish", url: `/dashboard/product/${id}/publish` },
     ];
 }
