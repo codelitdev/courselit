@@ -22,6 +22,7 @@ import {
 import {
     BTN_CONTINUE,
     BTN_NEW_PRODUCT,
+    BUTTON_CANCEL_TEXT,
     FORM_NEW_PRODUCT_MENU_COURSE_SUBTITLE,
     FORM_NEW_PRODUCT_MENU_DOWNLOADS_SUBTITLE,
     FORM_NEW_PRODUCT_TITLE_PLC,
@@ -31,6 +32,7 @@ import {
     networkAction,
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
+import Link from "next/link";
 
 interface NewProductProps {
     address: Address;
@@ -165,9 +167,15 @@ function NewProduct({
                                         (!!title && !!type && loading)
                                     }
                                     onClick={createCourse}
+                                    sx={{ mr: 1 }}
                                 >
                                     {BTN_CONTINUE}
                                 </Button>
+                                <Link href={`/dashboard/products`}>
+                                    <Button component="a">
+                                        {BUTTON_CANCEL_TEXT}
+                                    </Button>
+                                </Link>
                             </Grid>
                         </Grid>
                     </form>

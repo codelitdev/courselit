@@ -97,4 +97,5 @@ export const internal = {
     app_running: "CourseLit server is running on",
     invalid_cloud_storage_settings: "Cloud storage settings are invalid",
     domain_not_specified: "Domain is not specified",
+    default_group_name: "First section",
 };

@@ -102,7 +102,7 @@ const courseUpdateInput = new GraphQLInputObjectType({
 });
 
 const adminCourseItemType = new GraphQLObjectType({
-    name: "CreatorOrAdminCoursesItem",
+    name: "adminCourseItem",
     fields: {
         id: { type: new GraphQLNonNull(GraphQLID) },
         title: { type: new GraphQLNonNull(GraphQLString) },
@@ -111,7 +111,6 @@ const adminCourseItemType = new GraphQLObjectType({
             resolve: (course, args, context, info) =>
                 getMedia(course.featuredImage),
         },
-        isBlog: { type: new GraphQLNonNull(GraphQLBoolean) },
         courseId: { type: new GraphQLNonNull(GraphQLString) },
         type: { type: new GraphQLNonNull(courseTypeFilters) },
         published: { type: new GraphQLNonNull(GraphQLBoolean) },

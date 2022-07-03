@@ -9,17 +9,10 @@ import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 
-export default function useCourse(id: string): Partial<Course> {
+export default function useCourse(id: string): Partial<Course> | undefined {
     const address = useSelector((state: AppState) => state.address);
     const dispatch: AppDispatch = useDispatch();
-    const [course, setCourse] = useState({
-        id: "",
-        title: "",
-        courseId: "",
-        lessons: [],
-        type: "",
-        groups: [],
-    });
+    const [course, setCourse] = useState();
 
     useEffect(() => {
         if (id) {
@@ -32,18 +25,29 @@ export default function useCourse(id: string): Partial<Course> {
             query {
                 course: getCourse(courseId: "${courseId}") {
                     title,
+                    description,
                     id,
                     type,
                     lessons {
-                    id,
-                    title
+                        id,
+                        title,
+                        groupId,
+                        lessonId,
+                        type
                     },
                     groups {
-                    id,
-                    name,
-                    rank
+                        id,
+                        name,
+                        rank
                     },
-                    courseId
+                    courseId,
+                    cost,
+                    featuredImage {
+                        mediaId,
+                        thumbnail
+                    },
+                    published,
+                    privacy
                 }
             }
         `;

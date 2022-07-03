@@ -13,7 +13,7 @@ export interface Lesson {
     mediaId?: string;
     downloadable: boolean;
     creatorId: mongoose.Types.ObjectId;
-    courseId: mongoose.Types.ObjectId;
+    courseId: string;
     requiresEnrollment: boolean;
     published: boolean;
     groupId: string;
@@ -32,8 +32,8 @@ const LessonSchema = new mongoose.Schema<Lesson>({
     content: String,
     mediaId: String,
     downloadable: { type: Boolean, default: false },
-    creatorId: mongoose.Schema.Types.ObjectId,
-    courseId: mongoose.Schema.Types.ObjectId,
+    creatorId: { type: mongoose.Schema.Types.ObjectId, required: true },
+    courseId: { type: String, required: true },
     requiresEnrollment: { type: Boolean, default: false },
     published: { type: Boolean, required: true, default: false },
     groupId: { type: String, required: true },

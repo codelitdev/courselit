@@ -1,4 +1,5 @@
 import { Address, AppMessage } from "@courselit/common-models";
+import { Section } from "@courselit/components-library";
 import {
     actionCreators,
     AppDispatch,
@@ -39,11 +40,10 @@ function SectionEditor({
     const course = useCourse(id);
 
     useEffect(() => {
-        if (section && course.groups) {
+        if (section && course && course.groups) {
             const group = course.groups.filter(
                 (group) => group.id === section
             )[0];
-            console.log(group);
             if (group) {
                 setName(group.name);
             }
@@ -60,6 +60,7 @@ function SectionEditor({
                 courseId: "${course.id}",
                 name: "${name}"
             ) {
+                courseId,
                 groups {
                     id,
                     name,
@@ -72,6 +73,7 @@ function SectionEditor({
             : `
         mutation {
             course: addGroup(id: "${course.id}", name: "${name}") {
+                courseId,
                 groups {
                     id,
                     name,
@@ -100,42 +102,50 @@ function SectionEditor({
         }
     };
 
+    if (!course) {
+        return <></>;
+    }
+
     return (
-        <Grid container direction="column">
-            <Grid item>
-                <Typography variant="h2">
-                    {section ? EDIT_SECTION_HEADER : NEW_SECTION_HEADER}
-                </Typography>
-            </Grid>
-            <Grid item>
-                <form onSubmit={updateGroup}>
-                    <TextField
-                        variant="outlined"
-                        label={LABEL_GROUP_NAME}
-                        fullWidth
-                        margin="normal"
-                        name="Section name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                    />
-                    <Button
-                        variant="contained"
-                        disabled={!name || loading}
-                        type="submit"
-                    >
-                        {BTN_CONTINUE}
-                    </Button>
-                    {course.courseId && (
-                        <Link
-                            href={`/dashboard/product/${course.courseId}/content`}
+        <Section>
+            <Grid container direction="column">
+                <Grid item>
+                    <Typography variant="h2">
+                        {section ? EDIT_SECTION_HEADER : NEW_SECTION_HEADER}
+                    </Typography>
+                </Grid>
+                <Grid item>
+                    <form onSubmit={updateGroup}>
+                        <TextField
+                            variant="outlined"
+                            label={LABEL_GROUP_NAME}
+                            fullWidth
+                            margin="normal"
+                            name="Section name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                        />
+                        <Button
+                            variant="contained"
+                            disabled={!name || loading}
+                            type="submit"
                         >
-                            <Button component="a">{POPUP_CANCEL_ACTION}</Button>
-                        </Link>
-                    )}
-                </form>
+                            {BTN_CONTINUE}
+                        </Button>
+                        {course.courseId && (
+                            <Link
+                                href={`/dashboard/product/${course.courseId}/content`}
+                            >
+                                <Button component="a">
+                                    {POPUP_CANCEL_ACTION}
+                                </Button>
+                            </Link>
+                        )}
+                    </form>
+                </Grid>
             </Grid>
-        </Grid>
+        </Section>
     );
 }
 

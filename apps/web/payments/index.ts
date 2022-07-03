@@ -2,6 +2,7 @@ import constants from "../config/constants";
 import { internal, responses } from "../config/strings";
 import StripePayment from "./stripe-payment";
 import SiteInfoModel, { SiteInfo } from "../models/SiteInfo";
+import DomainModel, { Domain } from "../models/Domain";
 
 const { paypal, stripe, paytm } = constants;
 const {
@@ -10,10 +11,13 @@ const {
 } = internal;
 const { update_payment_method: updatePaymentMethod } = responses;
 
-export const getPaymentMethod = async (domain: string) => {
-    const siteInfo: SiteInfo | null = await SiteInfoModel.findOne({ domain });
+export const getPaymentMethod = async (domainName: string) => {
+    const domain: Domain | null = await DomainModel.findOne({
+        _id: domainName,
+    });
+    const siteInfo: SiteInfo | null = domain && domain.settings;
 
-    if (!siteInfo) {
+    if (!siteInfo || !siteInfo.paymentMethod) {
         throw new Error(updatePaymentMethod);
     }
 

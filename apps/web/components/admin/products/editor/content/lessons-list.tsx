@@ -14,11 +14,12 @@ import {
     BUTTON_NEW_LESSON_TEXT,
     DELETE_SECTION_HEADER,
     EDIT_SECTION_HEADER,
-} from "../../../../ui-config/strings";
-import useCourse from "./course-hook";
+} from "../../../../../ui-config/strings";
+import useCourse from "../course-hook";
 import { Add, MoreVert } from "@mui/icons-material";
 import { Course, Lesson } from "@courselit/common-models";
 import { useRouter } from "next/router";
+import LessonIcon from "../../../../public/lesson-icon";
 
 interface LessonSectionProps {
     group: Record<string, unknown>;
@@ -40,6 +41,7 @@ function LessonSection({ group, course }: LessonSectionProps) {
         <Section>
             <Grid
                 container
+                direction="column"
                 sx={{
                     p: 1,
                 }}
@@ -57,9 +59,7 @@ function LessonSection({ group, course }: LessonSectionProps) {
                         alignItems="center"
                     >
                         <Grid item>
-                            <Typography sx={{ fontWeight: "bold" }}>
-                                {group.name}
-                            </Typography>
+                            <Typography variant="h6">{group.name}</Typography>
                         </Grid>
                         <Grid item>
                             <IconButton
@@ -103,11 +103,27 @@ function LessonSection({ group, course }: LessonSectionProps) {
                     .filter((lesson: Lesson) => lesson.groupId === group.id)
                     .sort((a: any, b: any) => a.groupRank - b.groupRank)
                     .map((lesson: Lesson) => (
-                        <Grid item>
-                            <Typography>{lesson.title}</Typography>
+                        <Grid item key={lesson.lessonId}>
+                            <Grid container>
+                                <Grid item sx={{ mr: 1 }}>
+                                    <LessonIcon type={lesson.type} />
+                                </Grid>
+                                <Grid item>
+                                    <Link
+                                        href={`/dashboard/product/${course.courseId}/section/${group.id}/lesson/${lesson.lessonId}`}
+                                    >
+                                        {lesson.title}
+                                    </Link>
+                                </Grid>
+                            </Grid>
                         </Grid>
                     ))}
-                <Grid item>
+                <Grid
+                    item
+                    sx={{
+                        mt: 2,
+                    }}
+                >
                     <Link
                         href={`/dashboard/product/${course.courseId}/section/${group.id}/lesson/new`}
                     >
@@ -127,6 +143,10 @@ interface LessonsProps {
 
 function LessonsList({ id }: LessonsProps) {
     const course = useCourse(id);
+
+    if (!course) {
+        return <></>;
+    }
 
     return (
         <Grid container direction="column">

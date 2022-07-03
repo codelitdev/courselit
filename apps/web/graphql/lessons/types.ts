@@ -36,7 +36,7 @@ const lessontypeType = new GraphQLEnumType({
 const lessonType = new GraphQLObjectType({
     name: "Lesson",
     fields: {
-        id: { type: new GraphQLNonNull(GraphQLID) },
+        lessonId: { type: new GraphQLNonNull(GraphQLString) },
         title: { type: new GraphQLNonNull(GraphQLString) },
         type: { type: new GraphQLNonNull(lessontypeType) },
         downloadable: { type: new GraphQLNonNull(GraphQLBoolean) },
@@ -49,7 +49,7 @@ const lessonType = new GraphQLObjectType({
         content: { type: GraphQLString },
         media: {
             type: mediaTypes.mediaType,
-            resolve: (lesson, args, context, info) => getMedia(lesson.mediaId),
+            resolve: (lesson, _, __, ___) => getMedia(lesson.mediaId),
         },
     },
 });
@@ -61,6 +61,8 @@ const lessonMetaType = new GraphQLObjectType({
     name: "LessonMeta",
     fields: {
         id: { type: new GraphQLNonNull(GraphQLID) },
+        lessonId: { type: new GraphQLNonNull(GraphQLString) },
+        type: { type: new GraphQLNonNull(lessontypeType) },
         title: { type: new GraphQLNonNull(GraphQLString) },
         requiresEnrollment: {
             description: DESCRIPTION_REQUIRES_ENROLLMENT,
