@@ -29,7 +29,12 @@ export const checkOwnership =
         return item;
     };
 
-export const checkOwnershipWithoutModel = (item: any, ctx: GQLContext) => {
+export const checkOwnershipWithoutModel = <
+    T extends { creatorId: mongoose.Types.ObjectId }
+>(
+    item: T | null,
+    ctx: GQLContext
+) => {
     if (
         !item ||
         (ObjectId.isValid(item.creatorId)

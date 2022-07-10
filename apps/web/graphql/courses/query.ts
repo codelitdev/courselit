@@ -4,7 +4,6 @@ import {
     GraphQLNonNull,
     GraphQLList,
     GraphQLID,
-    GraphQLBoolean,
     GraphQLEnumType,
 } from "graphql";
 import types from "./types";

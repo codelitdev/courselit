@@ -23,25 +23,35 @@ const WidgetByName = ({
     dispatch,
     settings,
 }: WidgetByNameProps) => {
-    const Widget = widgets[name].widget;
+    return React.createElement(widgets[name].widget, {
+        name,
+        settings,
+        config: Object.assign({}, config, {
+            BACKEND: state.address.backend,
+            FREE_COST_CAPTION: FREE_COST,
+        }),
+        utilities,
+        section,
+        state,
+        dispatch,
+        id,
+    });
 
-    return (
-        <div>
-            <Widget
-                name={name}
-                settings={settings}
-                config={Object.assign({}, config, {
-                    BACKEND: state.address.backend,
-                    FREE_COST_CAPTION: FREE_COST,
-                })}
-                utilities={utilities}
-                section={section}
-                state={state}
-                dispatch={dispatch}
-                id={id}
-            />
-        </div>
-    );
+    // return (
+    //         <Widget
+    //             name={name}
+    //             settings={settings}
+    //             config={Object.assign({}, config, {
+    //                 BACKEND: state.address.backend,
+    //                 FREE_COST_CAPTION: FREE_COST,
+    //             })}
+    //             utilities={utilities}
+    //             section={section}
+    //             state={state}
+    //             dispatch={dispatch}
+    //             id={id}
+    //         />
+    // );
 };
 
 const mapStateToProps = (state: AppState) => ({ state });

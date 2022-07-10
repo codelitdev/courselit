@@ -1,4 +1,4 @@
-import React, { ReactChildren } from "react";
+import React, { ReactChildren, ReactNode } from "react";
 import { connect } from "react-redux";
 import Head from "next/head";
 import Template from "./template";
@@ -8,7 +8,7 @@ import type { AppState } from "@courselit/state-management";
 interface MasterLayoutProps {
     title: string;
     siteInfo: any;
-    children: ReactChildren;
+    children: ReactNode;
 }
 
 const MasterLayout = (props: MasterLayoutProps) => {
@@ -32,7 +32,8 @@ const MasterLayout = (props: MasterLayoutProps) => {
                 />
             </Head>
             <Scaffold>
-                <Template>{props.children}</Template>
+                {props.children}
+                {/* <Template>{props.children}</Template> */}
             </Scaffold>
         </>
     );

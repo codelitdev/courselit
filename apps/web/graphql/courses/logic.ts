@@ -22,6 +22,7 @@ import mongoose from "mongoose";
 import { Group } from "@courselit/common-models";
 import { deleteAllLessons } from "../lessons/logic";
 import { deleteMedia } from "../../services/medialit";
+import PageModel, { Page } from "../../models/Page";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -110,6 +111,12 @@ export const createCourse = async (
         throw new Error(responses.action_not_allowed);
     }
 
+    const page = await PageModel.create({
+        domain: ctx.subdomain._id,
+        name: courseData.title,
+        creatorId: ctx.user.userId,
+    });
+
     const course = await CourseModel.create({
         domain: ctx.subdomain._id,
         title: courseData.title,
@@ -119,6 +126,7 @@ export const createCourse = async (
         creatorName: ctx.user.name,
         slug: slugify(courseData.title.toLowerCase()),
         type: courseData.type,
+        pageId: page.pageId,
     });
     await addGroup({
         id: course._id,
@@ -126,6 +134,8 @@ export const createCourse = async (
         collapsed: false,
         ctx,
     });
+    page.productId = course.courseId;
+    await page.save();
 
     return course;
 };

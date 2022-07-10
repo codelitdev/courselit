@@ -120,7 +120,7 @@ const BaseLayoutAdmin = ({
 
     useEffect(() => {
         if (auth.checked && auth.guest) {
-            router.push(`/login?redirect=${router.pathname}`);
+            router.push(`/login?redirect=${router.asPath}`);
         }
     }, [auth.checked]);
 

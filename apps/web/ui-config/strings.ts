@@ -121,7 +121,9 @@ export const LESSON_CONTENT_HEADER = "Text Content";
 export const CONTENT_URL_LABEL = "Media content";
 export const MEDIA_MANAGER_YOUR_MEDIA_HEADER = "Your media";
 export const DIALOG_SELECT_BUTTON = "Select";
-export const LESSON_REQUIRES_ENROLLMENT = "Available to only enrolled students";
+export const LESSON_PREVIEW = "Preview";
+export const LESSON_PREVIEW_TOOLTIP =
+    "This lesson will be freely available to the users.";
 export const DELETE_LESSON_POPUP_HEADER = "Delete lesson";
 export const APP_MESSAGE_COURSE_DELETED = "Product deleted";
 export const APP_MESSAGE_LESSON_DELETED = "Lesson deleted";
@@ -316,3 +318,7 @@ export const PUBLISH_TAB_STATUS_SUBTITLE =
 export const PUBLISH_TAB_VISIBILITY_TITLE = "Visibility";
 export const PUBLISH_TAB_VISIBILITY_SUBTITLE =
     "The product stays hidden and can only be accessed by a direct URL.";
+export const PAGE_HEADER_EDIT_PAGE = "Edit page";
+export const EDIT_PAGE_MENU_ITEM = "Edit page";
+export const EDIT_PAGE_BUTTON_UPDATE = "Update";
+export const EDIT_PAGE_BUTTON_DONE = "Done";
