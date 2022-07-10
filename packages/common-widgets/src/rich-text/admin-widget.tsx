@@ -8,10 +8,15 @@ export interface AboutWidgetProps {
     settings: Settings;
 }
 
-const AdminWidget = (props: AboutWidgetProps) => {
-    const { onChange, settings } = props;
+const AdminWidget = ({ settings, onChange }: AboutWidgetProps) => {
+    const [editorState, setEditorState] = React.useState(
+        settings.text
+            ? TextEditor.hydrate({ data: settings.text })
+            : TextEditor.emptyState()
+    );
 
     const onChangeData = (editorState: any) => {
+        setEditorState(editorState);
         onChange({
             text: TextEditor.stringify(editorState),
         });
@@ -21,11 +26,7 @@ const AdminWidget = (props: AboutWidgetProps) => {
         <Grid container direction="column" spacing={2}>
             <Grid item>
                 <TextEditor
-                    initialContentState={
-                        settings.text
-                            ? TextEditor.hydrate({ data: settings.text })
-                            : TextEditor.emptyState()
-                    }
+                    initialContentState={editorState}
                     onChange={onChangeData}
                 />
             </Grid>
