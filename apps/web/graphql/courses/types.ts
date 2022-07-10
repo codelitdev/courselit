@@ -74,6 +74,7 @@ const courseType = new GraphQLObjectType({
             resolve: (course, _, context, __) => getMedia(course.featuredImage),
         },
         groups: { type: new GraphQLList(courseGroupType) },
+        pageId: { type: new GraphQLNonNull(GraphQLString) },
     },
 });
 

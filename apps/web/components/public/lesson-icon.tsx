@@ -2,6 +2,7 @@ import React from "react";
 import {
     Article,
     Audiotrack,
+    InsertDriveFile,
     OndemandVideo,
     PictureAsPdf,
     Quiz,
@@ -9,6 +10,7 @@ import {
 } from "@mui/icons-material";
 import {
     LESSON_TYPE_AUDIO,
+    LESSON_TYPE_FILE,
     LESSON_TYPE_PDF,
     LESSON_TYPE_QUIZ,
     LESSON_TYPE_TEXT,
@@ -20,7 +22,8 @@ type Type =
     | typeof LESSON_TYPE_AUDIO
     | typeof LESSON_TYPE_TEXT
     | typeof LESSON_TYPE_PDF
-    | typeof LESSON_TYPE_QUIZ;
+    | typeof LESSON_TYPE_QUIZ
+    | typeof LESSON_TYPE_FILE;
 
 export default function LessonIcon({ type }: { type: Type }) {
     switch (type.toLowerCase()) {
@@ -34,6 +37,8 @@ export default function LessonIcon({ type }: { type: Type }) {
             return <PictureAsPdf />;
         case LESSON_TYPE_QUIZ:
             return <Quiz />;
+        case LESSON_TYPE_FILE:
+            return <InsertDriveFile />;
         default:
             return <TextSnippet />;
     }

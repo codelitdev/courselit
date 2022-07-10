@@ -47,7 +47,8 @@ export default function useCourse(id: string): Partial<Course> | undefined {
                         thumbnail
                     },
                     published,
-                    privacy
+                    privacy,
+                    pageId
                 }
             }
         `;

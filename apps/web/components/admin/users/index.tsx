@@ -227,7 +227,10 @@ const UsersManager = ({
                                                 <Tooltip
                                                     title={USER_TYPE_TOOLTIP}
                                                 >
-                                                    <Help />
+                                                    <Help
+                                                        fontSize="small"
+                                                        color="disabled"
+                                                    />
                                                 </Tooltip>
                                             </Grid>
                                         </Grid>

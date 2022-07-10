@@ -11,6 +11,7 @@ import {
     InputLabel,
     MenuItem,
     capitalize,
+    Tooltip,
 } from "@mui/material";
 import {
     BUTTON_SAVE,
@@ -18,7 +19,7 @@ import {
     TYPE_DROPDOWN,
     LESSON_CONTENT_HEADER,
     CONTENT_URL_LABEL,
-    LESSON_REQUIRES_ENROLLMENT,
+    LESSON_PREVIEW,
     DELETE_LESSON_POPUP_HEADER,
     POPUP_CANCEL_ACTION,
     POPUP_OK_ACTION,
@@ -27,6 +28,7 @@ import {
     BUTTON_NEW_LESSON_TEXT,
     EDIT_LESSON_TEXT,
     BUTTON_DELETE_LESSON_TEXT,
+    LESSON_PREVIEW_TOOLTIP,
 } from "../../../../../ui-config/strings";
 import {
     LESSON_TYPE_TEXT,
@@ -34,9 +36,12 @@ import {
     LESSON_TYPE_VIDEO,
     LESSON_TYPE_PDF,
     LESSON_TYPE_QUIZ,
+    LESSON_TYPE_FILE,
     MIMETYPE_VIDEO,
     MIMETYPE_AUDIO,
     MIMETYPE_PDF,
+    COURSE_TYPE_COURSE,
+    COURSE_TYPE_DOWNLOAD,
 } from "../../../../../ui-config/constants";
 import { FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";
@@ -52,6 +57,8 @@ import type { Auth, Lesson, Address } from "@courselit/common-models";
 import { actionCreators } from "@courselit/state-management";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import useCourse from "../course-hook";
+import { Help } from "@mui/icons-material";
 
 const { networkAction, setAppMessage } = actionCreators;
 
@@ -80,7 +87,7 @@ const LessonEditor = ({
         {
             id: "",
             title: "",
-            type: String.prototype.toUpperCase.call(LESSON_TYPE_TEXT),
+            type: "",
             content: RichText.emptyState(),
             media: {
                 id: "",
@@ -102,6 +109,8 @@ const LessonEditor = ({
     const [labelWidth, setLabelWidth] = React.useState<any>(0);
     const [deleteLessonPopupOpened, setDeleteLessonPopupOpened] =
         useState(false);
+    const course = useCourse(courseId);
+    console.log(course);
 
     useEffect(() => {
         setLabelWidth(inputLabel.current && inputLabel.current.offsetWidth);
@@ -110,6 +119,19 @@ const LessonEditor = ({
     useEffect(() => {
         lessonId && loadLesson(lessonId);
     }, [lessonId]);
+
+    useEffect(() => {
+        if (course && !lessonId) {
+            setLesson(
+                Object.assign({}, lesson, {
+                    type:
+                        course.type?.toUpperCase() === COURSE_TYPE_DOWNLOAD
+                            ? LESSON_TYPE_TEXT.toUpperCase()
+                            : LESSON_TYPE_FILE.toUpperCase(),
+                })
+            );
+        }
+    }, [course]);
 
     const loadLesson = async (id: string) => {
         const query = `
@@ -313,8 +335,6 @@ const LessonEditor = ({
     const goBackLessonList = () =>
         router.replace(`/dashboard/product/${courseId}/content`);
 
-    const deleteLesson = async () => {};
-
     return (
         <Section>
             {lesson.type && (
@@ -341,57 +361,73 @@ const LessonEditor = ({
                                         onChange={onLessonDetailsChange}
                                     />
                                 </Grid>
-                                <Grid item sx={{ mb: 2 }}>
-                                    <FormControl variant="outlined" fullWidth>
-                                        <InputLabel
-                                            ref={inputLabel}
-                                            id="select-type"
-                                        >
-                                            {TYPE_DROPDOWN}
-                                        </InputLabel>
-                                        <Select
-                                            labelId="select-type"
-                                            value={lesson.type}
-                                            onChange={onLessonDetailsChange}
-                                            labelWidth={labelWidth}
-                                            inputProps={{
-                                                name: "type",
-                                            }}
-                                        >
-                                            <MenuItem
-                                                value={String.prototype.toUpperCase.call(
-                                                    LESSON_TYPE_TEXT
-                                                )}
+                                {course?.type && (
+                                    <Grid item sx={{ mb: 2 }}>
+                                        <FormControl fullWidth>
+                                            <InputLabel id="select-type">
+                                                {TYPE_DROPDOWN}
+                                            </InputLabel>
+                                            <Select
+                                                labelId="select-type"
+                                                value={lesson.type}
+                                                onChange={onLessonDetailsChange}
+                                                label="Type"
                                             >
-                                                {capitalize(LESSON_TYPE_TEXT)}
-                                            </MenuItem>
-                                            <MenuItem
-                                                value={String.prototype.toUpperCase.call(
-                                                    LESSON_TYPE_VIDEO
+                                                {course?.type ===
+                                                    COURSE_TYPE_COURSE.toUpperCase() && (
+                                                    <MenuItem
+                                                        value={String.prototype.toUpperCase.call(
+                                                            LESSON_TYPE_TEXT
+                                                        )}
+                                                    >
+                                                        {capitalize(
+                                                            LESSON_TYPE_TEXT
+                                                        )}
+                                                    </MenuItem>
                                                 )}
-                                            >
-                                                {capitalize(LESSON_TYPE_VIDEO)}
-                                            </MenuItem>
-                                            <MenuItem
-                                                value={String.prototype.toUpperCase.call(
-                                                    LESSON_TYPE_AUDIO
+                                                <MenuItem
+                                                    value={String.prototype.toUpperCase.call(
+                                                        LESSON_TYPE_VIDEO
+                                                    )}
+                                                >
+                                                    {capitalize(
+                                                        LESSON_TYPE_VIDEO
+                                                    )}
+                                                </MenuItem>
+                                                <MenuItem
+                                                    value={String.prototype.toUpperCase.call(
+                                                        LESSON_TYPE_AUDIO
+                                                    )}
+                                                >
+                                                    {capitalize(
+                                                        LESSON_TYPE_AUDIO
+                                                    )}
+                                                </MenuItem>
+                                                <MenuItem
+                                                    value={String.prototype.toUpperCase.call(
+                                                        LESSON_TYPE_PDF
+                                                    )}
+                                                >
+                                                    {capitalize(
+                                                        LESSON_TYPE_PDF
+                                                    )}
+                                                </MenuItem>
+                                                {course?.type ===
+                                                    COURSE_TYPE_DOWNLOAD.toUpperCase() && (
+                                                    <MenuItem
+                                                        value={String.prototype.toUpperCase.call(
+                                                            LESSON_TYPE_FILE
+                                                        )}
+                                                    >
+                                                        {capitalize(
+                                                            LESSON_TYPE_FILE
+                                                        )}
+                                                    </MenuItem>
                                                 )}
-                                            >
-                                                {capitalize(LESSON_TYPE_AUDIO)}
-                                            </MenuItem>
-                                            <MenuItem
-                                                value={String.prototype.toUpperCase.call(
-                                                    LESSON_TYPE_PDF
-                                                )}
-                                            >
-                                                {capitalize(LESSON_TYPE_PDF)}
-                                            </MenuItem>
-                                            {/* <MenuItem value={LESSON_TYPE_QUIZ}>
-                                        {capitalize(LESSON_TYPE_QUIZ)}
-                                    </MenuItem> */}
-                                        </Select>
-                                    </FormControl>
-                                </Grid>
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
+                                )}
                                 <Grid item sx={{ mb: 2 }}>
                                     {![
                                         String.prototype.toUpperCase.call(
@@ -479,12 +515,28 @@ const LessonEditor = ({
                                         alignItems="center"
                                     >
                                         <Grid item>
-                                            <Typography
-                                                variant="body1"
-                                                color="textSecondary"
-                                            >
-                                                {LESSON_REQUIRES_ENROLLMENT}
-                                            </Typography>
+                                            <Grid container>
+                                                <Grid item sx={{ mr: 1 }}>
+                                                    <Typography
+                                                        variant="body1"
+                                                        color="textSecondary"
+                                                    >
+                                                        {LESSON_PREVIEW}
+                                                    </Typography>
+                                                </Grid>
+                                                <Grid item>
+                                                    <Tooltip
+                                                        title={
+                                                            LESSON_PREVIEW_TOOLTIP
+                                                        }
+                                                    >
+                                                        <Help
+                                                            color="disabled"
+                                                            fontSize="small"
+                                                        />
+                                                    </Tooltip>
+                                                </Grid>
+                                            </Grid>
                                         </Grid>
                                         <Grid item>
                                             <Switch
@@ -541,7 +593,6 @@ const LessonEditor = ({
                     </Grid>
                 </Grid>
             )}
-            {!lesson.type && <AppLoader />}
             <AppDialog
                 onOpen={deleteLessonPopupOpened}
                 onClose={closeDeleteLessonPopup}

@@ -2,7 +2,6 @@ import * as React from "react";
 import { RichText as TextEditor } from "@courselit/components-library";
 import { Grid } from "@mui/material";
 import Settings from "./settings";
-import type { Address, WidgetProps } from "@courselit/common-models";
 
 export interface AboutWidgetProps {
     onChange: (...args: any[]) => void;

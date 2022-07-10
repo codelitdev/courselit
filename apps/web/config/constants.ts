@@ -39,6 +39,7 @@ export default {
     video: "video",
     pdf: "pdf",
     quiz: "quiz",
+    file: "file",
 
     // Content privacy types
     unlisted: "unlisted",
@@ -86,6 +87,10 @@ export default {
     // user type
     userTypeTeam: "team",
     userTypeAudience: "audience",
+
+    // page type
+    product: "product",
+    site: "site",
 
     // acceptable currency codes for payments
     currencyISOCodes: [
