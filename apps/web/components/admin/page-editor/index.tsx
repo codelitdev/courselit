@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { AppMessage, Layout } from "@courselit/common-models";
+import { AppMessage, SiteInfo } from "@courselit/common-models";
 import type { Address, Auth, Profile } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import {
@@ -12,11 +12,13 @@ import { connect } from "react-redux";
 import {
     EDIT_PAGE_BUTTON_DONE,
     EDIT_PAGE_BUTTON_UPDATE,
+    PAGE_TITLE_EDIT_PAGE,
 } from "../../../ui-config/strings";
 import { useRouter } from "next/router";
 import { canAccessDashboard } from "../../../ui-lib/utils";
 import Template from "../../public/base-layout/template";
 import dynamic from "next/dynamic";
+import Head from "next/head";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
@@ -28,23 +30,33 @@ interface PageEditorProps {
     auth: Auth;
     profile: Profile;
     dispatch: AppDispatch;
+    loading: boolean;
+    siteInfo: SiteInfo;
 }
 
-function PageEditor({ id, address, auth, profile, dispatch }: PageEditorProps) {
+function PageEditor({
+    id,
+    address,
+    auth,
+    profile,
+    dispatch,
+    loading,
+    siteInfo
+}: PageEditorProps) {
     const [page, setPage] = useState({});
     const [layout, setLayout] = useState([]);
     const [selectedWidget, setSelectedWidget] = useState<string>("");
     const [showWidgetSelector, setShowWidgetSelector] =
         useState<boolean>(false);
     const router = useRouter();
-    // const debouncedSave = useCallback(
-    //     debounce(
-    //         async (pageId: string, layout: Record<string, unknown>[]) =>
-    //             await savePage(pageId, layout),
-    //         100
-    //     ),
-    //     []
-    // );
+    const debouncedSave = useCallback(
+        debounce(
+            async (pageId: string, layout: Record<string, unknown>[]) =>
+                await savePage(pageId, layout),
+            100
+        ),
+        []
+    );
 
     useEffect(() => {
         loadPage();
@@ -62,10 +74,13 @@ function PageEditor({ id, address, auth, profile, dispatch }: PageEditorProps) {
         }
     }, [auth.checked]);
 
-    // useEffect(() => {
-    //     console.log("Triggered");
-    //     debouncedSave(page.pageId, layout);
-    // }, [layout]);
+    useEffect(() => {
+        console.log("Triggered");
+        console.log(layout, page.draftLayout);
+        if (JSON.stringify(layout) !== JSON.stringify(page.draftLayout)) {
+            debouncedSave(page.pageId, layout);
+        }
+    }, [layout]);
 
     const onPublish = async () => {};
 
@@ -99,9 +114,13 @@ function PageEditor({ id, address, auth, profile, dispatch }: PageEditorProps) {
             if (response.page) {
                 const pageBeingEdited = response.page;
                 if (!pageBeingEdited.draftLayout.length) {
-                    setLayout(pageBeingEdited.layout);
+                    setLayout(
+                        JSON.parse(JSON.stringify(pageBeingEdited.layout))
+                    );
                 } else {
-                    setLayout(pageBeingEdited.draftLayout);
+                    setLayout(
+                        JSON.parse(JSON.stringify(pageBeingEdited.draftLayout))
+                    );
                 }
                 setPage(pageBeingEdited);
             } else {
@@ -146,6 +165,7 @@ function PageEditor({ id, address, auth, profile, dispatch }: PageEditorProps) {
         const widgetIndex = layout.findIndex(
             (widget) => widget.widgetId === widgetId
         );
+        console.log(settings);
         layout[widgetIndex].settings = settings;
         setLayout([...layout]);
     };
@@ -185,6 +205,9 @@ function PageEditor({ id, address, auth, profile, dispatch }: PageEditorProps) {
 
     return (
         <Grid container direction="column">
+            <Head>
+                <title>{PAGE_TITLE_EDIT_PAGE} {page.name} | {siteInfo.title}</title>
+            </Head>
             <Grid
                 item
                 xs={12}
@@ -201,15 +224,28 @@ function PageEditor({ id, address, auth, profile, dispatch }: PageEditorProps) {
                     <Typography>{page.name}</Typography>
                 </Grid>
                 <Grid item>
-                    <Button
-                        onClick={() => savePage(page.pageId, layout)}
-                        sx={{ mr: 1 }}
-                    >
-                        {EDIT_PAGE_BUTTON_DONE}
-                    </Button>
-                    <Button onClick={onPublish} variant="contained">
-                        {EDIT_PAGE_BUTTON_UPDATE}
-                    </Button>
+                    <Grid container alignItems="center">
+                        <Grid item sx={{ mr: 1 }}>
+                            <Typography variant="body2">
+                                {loading ? "Saving" : "Saved"}
+                            </Typography>
+                        </Grid>
+                        <Grid item sx={{ mr: 1 }}>
+                            <Button
+                                onClick={() =>
+                                    router.push(`/dashboard/products`)
+                                }
+                                sx={{ mr: 1 }}
+                            >
+                                {EDIT_PAGE_BUTTON_DONE}
+                            </Button>
+                        </Grid>
+                        <Grid>
+                            <Button onClick={onPublish} variant="contained">
+                                {EDIT_PAGE_BUTTON_UPDATE}
+                            </Button>
+                        </Grid>
+                    </Grid>
                 </Grid>
             </Grid>
             <Grid item>
@@ -252,6 +288,8 @@ const mapStateToProps = (state: AppState) => ({
     auth: state.auth,
     profile: state.profile,
     address: state.address,
+    loading: state.networkAction,
+    siteInfo: state.siteinfo
 });
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
