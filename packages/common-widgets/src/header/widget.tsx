@@ -1,18 +1,16 @@
 import React from "react";
-import { Section } from "@courselit/components-library";
-import { Grid, Typography } from "@mui/material";
-import Settings from "./settings";
+import { Box, Link as MuiLink, Typography } from "@mui/material";
+import { WidgetProps } from "@courselit/common-models";
+import { Link } from "./settings";
 
-export default function Widget({
-    settings = { text: "" },
-}: {
-    settings: Settings;
-}) {
+export default function Widget({ state, settings }: WidgetProps) {
     return (
-        <Grid item>
-            <Section>
-                <Typography>{settings.text}</Typography>
-            </Section>
-        </Grid>
+        <Box>
+            <Typography>{state.siteinfo.title}</Typography>
+            {settings.links &&
+                (settings.links as Link[]).map((link: Link) => (
+                    <MuiLink href={link.href}>{link.label}</MuiLink>
+                ))}
+        </Box>
     );
 }

@@ -7,6 +7,7 @@ import {
     ListItemButton,
     Typography,
 } from "@mui/material";
+import { EDIT_PAGE_ADD_WIDGET_TITLE } from "../../../ui-config/strings";
 import widgets from "../../../ui-config/widgets";
 
 interface WidgetsListProps {
@@ -16,19 +17,27 @@ interface WidgetsListProps {
 
 function AddWidget({ onSelection, onClose }: WidgetsListProps) {
     return (
-        <Grid container>
-            <Grid item>
-                <Grid container justifyItems="space-between">
-                    <Grid item>New block</Grid>
-                    <Grid item>
-                        <IconButton onClick={onClose}>
-                            <Close />
-                        </IconButton>
-                    </Grid>
-                </Grid>
-            </Grid>
+        <Grid container direction="column">
             <Grid item>
                 <List>
+                    <ListItem>
+                        <Grid
+                            container
+                            justifyContent="space-between"
+                            alignItems="center"
+                        >
+                            <Grid item>
+                                <Typography variant="h6">
+                                    {EDIT_PAGE_ADD_WIDGET_TITLE}
+                                </Typography>
+                            </Grid>
+                            <Grid item>
+                                <IconButton onClick={onClose}>
+                                    <Close fontSize="small" />
+                                </IconButton>
+                            </Grid>
+                        </Grid>
+                    </ListItem>
                     {Object.keys(widgets).map((item, index) => (
                         <ListItem disablePadding key={index}>
                             <ListItemButton onClick={(e) => onSelection(item)}>

@@ -23,6 +23,8 @@ const WidgetByName = ({
     dispatch,
     settings,
 }: WidgetByNameProps) => {
+    if (!widgets[name]) return <>{name} component is not found.</>;
+
     return React.createElement(widgets[name].widget, {
         name,
         settings,
@@ -36,22 +38,6 @@ const WidgetByName = ({
         dispatch,
         id,
     });
-
-    // return (
-    //         <Widget
-    //             name={name}
-    //             settings={settings}
-    //             config={Object.assign({}, config, {
-    //                 BACKEND: state.address.backend,
-    //                 FREE_COST_CAPTION: FREE_COST,
-    //             })}
-    //             utilities={utilities}
-    //             section={section}
-    //             state={state}
-    //             dispatch={dispatch}
-    //             id={id}
-    //         />
-    // );
 };
 
 const mapStateToProps = (state: AppState) => ({ state });

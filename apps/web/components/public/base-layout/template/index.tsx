@@ -2,15 +2,6 @@ import React from "react";
 import { Grid } from "@mui/material";
 import WidgetByName from "./widget-by-name";
 
-const PREFIX = "Template";
-
-const classes = {
-    mainContent: `${PREFIX}-mainContent`,
-    footerContainer: `${PREFIX}-footerContainer`,
-    footer: `${PREFIX}-footer`,
-    padding: `${PREFIX}-padding`,
-};
-
 interface TemplateProps {
     layout: Record<string, unknown>[];
     editing: boolean;
@@ -21,16 +12,11 @@ const Template = (props: TemplateProps) => {
     const { layout, editing, onEditClick } = props;
 
     return (
-        <Grid
-            container
-            className={classes.mainContent}
-            direction="column"
-            spacing={0}
-        >
+        <Grid container direction="column">
             {layout.map((item: any, index: number) => (
                 <Grid
                     item
-                    key={index}
+                    key={item.widgetId}
                     onClick={
                         editing
                             ? () => onEditClick && onEditClick(item.widgetId)
@@ -40,7 +26,7 @@ const Template = (props: TemplateProps) => {
                     <WidgetByName
                         name={item.name}
                         section=""
-                        settings={item.settings}
+                        settings={item.settings || {}}
                         id={`widget${item._id}`}
                     />
                 </Grid>

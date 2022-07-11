@@ -7,7 +7,16 @@ import {
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
 import { debounce, FetchBuilder } from "@courselit/utils";
-import { Button, Grid, Typography } from "@mui/material";
+import {
+    AppBar,
+    Box,
+    Button,
+    Grid,
+    List,
+    ListItem,
+    Toolbar,
+    Typography,
+} from "@mui/material";
 import { connect } from "react-redux";
 import {
     EDIT_PAGE_BUTTON_DONE,
@@ -19,6 +28,8 @@ import { canAccessDashboard } from "../../../ui-lib/utils";
 import Template from "../../public/base-layout/template";
 import dynamic from "next/dynamic";
 import Head from "next/head";
+import zIndex from "@mui/material/styles/zIndex";
+import Link from "next/link";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
@@ -41,7 +52,7 @@ function PageEditor({
     profile,
     dispatch,
     loading,
-    siteInfo
+    siteInfo,
 }: PageEditorProps) {
     const [page, setPage] = useState({});
     const [layout, setLayout] = useState([]);
@@ -75,8 +86,6 @@ function PageEditor({
     }, [auth.checked]);
 
     useEffect(() => {
-        console.log("Triggered");
-        console.log(layout, page.draftLayout);
         if (JSON.stringify(layout) !== JSON.stringify(page.draftLayout)) {
             debouncedSave(page.pageId, layout);
         }
@@ -206,18 +215,57 @@ function PageEditor({
     return (
         <Grid container direction="column">
             <Head>
-                <title>{PAGE_TITLE_EDIT_PAGE} {page.name} | {siteInfo.title}</title>
+                <title>
+                    {PAGE_TITLE_EDIT_PAGE} {page.name} | {siteInfo.title}
+                </title>
             </Head>
-            <Grid
+            <AppBar position="sticky">
+                <Toolbar>
+                    <Typography>{page.name}</Typography>
+                    <Grid item sx={{ flexGrow: 1 }}>
+                        <Grid
+                            container
+                            alignItems="center"
+                            justifyContent="flex-end"
+                        >
+                            <Grid item>
+                                <Typography variant="body2">
+                                    {loading ? "Saving" : "Saved"}
+                                </Typography>
+                            </Grid>
+                            <Grid item>
+                                <Link href="/dashboard/products">
+                                    <Button
+                                        component="a"
+                                        sx={{ color: "white" }}
+                                    >
+                                        {EDIT_PAGE_BUTTON_DONE}
+                                    </Button>
+                                </Link>
+                            </Grid>
+                            <Grid>
+                                <Button
+                                    onClick={onPublish}
+                                    sx={{ color: "white" }}
+                                >
+                                    {EDIT_PAGE_BUTTON_UPDATE}
+                                </Button>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                </Toolbar>
+            </AppBar>
+            {/* <Grid
                 item
                 xs={12}
                 container
                 justifyContent="space-between"
                 alignItems="center"
                 sx={(theme: any) => ({
-                    height: 48,
-                    p: 1,
+                    p: 2,
                     backgroundColor: "#eee",
+                    position: "fixed",
+                    zIndex: 2,
                 })}
             >
                 <Grid item>
@@ -247,10 +295,18 @@ function PageEditor({
                         </Grid>
                     </Grid>
                 </Grid>
-            </Grid>
+            </Grid> */}
             <Grid item>
                 <Grid container>
-                    <Grid item xs={3}>
+                    <Grid
+                        item
+                        xs={3}
+                        sx={{
+                            borderRight: "1px solid #eee",
+                            overflow: "scroll",
+                            height: "100vh",
+                        }}
+                    >
                         {selectedWidget && editWidget}
                         {!selectedWidget && !showWidgetSelector && (
                             <WidgetsList
@@ -271,7 +327,15 @@ function PageEditor({
                             />
                         )}
                     </Grid>
-                    <Grid item xs={9}>
+                    <Grid
+                        item
+                        xs={9}
+                        sx={{
+                            flexGrow: 1,
+                            overflow: "scroll",
+                            height: "100vh",
+                        }}
+                    >
                         <Template
                             layout={layout}
                             editing={true}
@@ -289,7 +353,7 @@ const mapStateToProps = (state: AppState) => ({
     profile: state.profile,
     address: state.address,
     loading: state.networkAction,
-    siteInfo: state.siteinfo
+    siteInfo: state.siteinfo,
 });
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
