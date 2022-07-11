@@ -135,6 +135,10 @@ export const createCourse = async (
         ctx,
     });
     page.productId = course.courseId;
+    page.layout = [
+        { name: "header", deleteable: false },
+        { name: "footer", deleteable: false },
+    ];
     await page.save();
 
     return course;

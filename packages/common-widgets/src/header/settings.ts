@@ -1,3 +1,8 @@
+export interface Link {
+    label: string;
+    href: string;
+}
+
 export default interface Settings {
-    text: string;
+    links: Link[];
 }

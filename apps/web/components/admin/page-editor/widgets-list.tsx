@@ -1,10 +1,14 @@
+import { Add, Warning } from "@mui/icons-material";
 import {
-    Button,
+    Grid,
+    IconButton,
     List,
     ListItem,
     ListItemButton,
     Typography,
 } from "@mui/material";
+import { EDIT_PAGE_WIDGET_LIST_HEADER } from "../../../ui-config/strings";
+import widgets from "../../../ui-config/widgets";
 
 interface WidgetListProps {
     layout: Record<string, unknown>[];
@@ -18,15 +22,32 @@ function WidgetList({ layout, onItemClick, onAddNewClick }: WidgetListProps) {
     return (
         <>
             <List>
-                {layout.map((item: any) => (
-                    <ListItemButton
-                        onClick={() => onItemClick(item.widgetId)}
-                        key={item.widgetId}
-                    >
-                        {item.name}
-                    </ListItemButton>
-                ))}
-                <ListItemButton onClick={onAddNewClick} key="add-new">
+                <ListItem>
+                    <Typography variant="h6">
+                        {EDIT_PAGE_WIDGET_LIST_HEADER}
+                    </Typography>
+                </ListItem>
+                {layout.map((item: any) =>
+                    widgets[item.name] ? (
+                        <ListItemButton
+                            onClick={() => onItemClick(item.widgetId)}
+                            key={item.widgetId}
+                        >
+                            {widgets[item.name].metadata.displayName}
+                        </ListItemButton>
+                    ) : (
+                        <ListItem sx={{ color: "red" }}>
+                            <Warning fontSize="small" sx={{ mr: 1 }} />{" "}
+                            {item.name} not found
+                        </ListItem>
+                    )
+                )}
+                <ListItemButton
+                    onClick={onAddNewClick}
+                    key="add-new"
+                    sx={(theme) => ({ color: theme.palette.primary.main })}
+                >
+                    <Add fontSize="small" sx={{ mr: 1 }} />
                     Add new
                 </ListItemButton>
             </List>

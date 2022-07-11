@@ -323,3 +323,5 @@ export const PAGE_HEADER_EDIT_PAGE = "Edit page";
 export const EDIT_PAGE_MENU_ITEM = "Edit page";
 export const EDIT_PAGE_BUTTON_UPDATE = "Publish";
 export const EDIT_PAGE_BUTTON_DONE = "Done";
+export const EDIT_PAGE_ADD_WIDGET_TITLE = "New block";
+export const EDIT_PAGE_WIDGET_LIST_HEADER = "Page blocks";

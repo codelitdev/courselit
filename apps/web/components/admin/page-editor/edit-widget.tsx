@@ -3,8 +3,8 @@ import { Address } from "@courselit/common-models";
 import widgets from "../../../ui-config/widgets";
 import { connect } from "react-redux";
 import { AppState } from "@courselit/state-management";
-import { Grid, IconButton, useTheme } from "@mui/material";
-import { Close, Delete } from "@mui/icons-material";
+import { Button, Grid, IconButton, Typography, useTheme } from "@mui/material";
+import { Close } from "@mui/icons-material";
 import AdminWidget from "./admin-widget";
 
 interface EditWidgetProps {
@@ -16,39 +16,43 @@ interface EditWidgetProps {
         name: string;
         settings?: Record<string, unknown>;
         widgetId: string;
+        deleteable: boolean;
     };
 }
 
-function EditWidget({
-    address,
-    onChange,
-    onClose,
-    onDelete,
-    widget,
-}: EditWidgetProps) {
+function EditWidget({ onChange, onClose, onDelete, widget }: EditWidgetProps) {
     const onDeleteWidget = () => {
         onDelete(widget.widgetId);
         onClose();
     };
 
     return (
-        <Grid container>
-            <Grid item>
-                <Grid container justifyItems="space-between">
+        <Grid
+            container
+            direction="column"
+            sx={{
+                p: 2,
+            }}
+        >
+            <Grid item sx={{ mb: 2 }}>
+                <Grid
+                    container
+                    justifyContent="space-between"
+                    alignItems="center"
+                >
                     <Grid item>
-                        {widgets[widget.name].metadata.displayName}
+                        <Typography variant="h6">
+                            {widgets[widget.name].metadata.displayName}
+                        </Typography>
                     </Grid>
                     <Grid item>
-                        <IconButton onClick={onDeleteWidget}>
-                            <Delete />
-                        </IconButton>
                         <IconButton onClick={onClose}>
-                            <Close />
+                            <Close fontSize="small" />
                         </IconButton>
                     </Grid>
                 </Grid>
             </Grid>
-            <Grid item>
+            <Grid item sx={{ mb: 4 }}>
                 <AdminWidget
                     id={widget.name}
                     settings={widget.settings || {}}
@@ -57,6 +61,13 @@ function EditWidget({
                     }}
                 />
             </Grid>
+            {widget.deleteable && (
+                <Grid item alignSelf="center">
+                    <Button color="error" onClick={onDeleteWidget}>
+                        Delete block
+                    </Button>
+                </Grid>
+            )}
         </Grid>
     );
 }

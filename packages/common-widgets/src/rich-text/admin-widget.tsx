@@ -1,6 +1,6 @@
-import * as React from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
 import { RichText as TextEditor } from "@courselit/components-library";
-import { Grid } from "@mui/material";
+import { Grid, InputAdornment, TextField } from "@mui/material";
 import Settings from "./settings";
 
 export interface AboutWidgetProps {
@@ -9,25 +9,40 @@ export interface AboutWidgetProps {
 }
 
 const AdminWidget = ({ settings, onChange }: AboutWidgetProps) => {
-    const [editorState, setEditorState] = React.useState(
+    const [editorState, setEditorState] = useState(
         settings.text
             ? TextEditor.hydrate({ data: settings.text })
             : TextEditor.emptyState()
     );
+    const [padding, setPadding] = useState(settings.padding || 0);
 
-    const onChangeData = (editorState: any) => {
-        setEditorState(editorState);
+    useEffect(() => {
         onChange({
             text: TextEditor.stringify(editorState),
+            padding,
         });
-    };
+    }, [editorState, padding]);
 
     return (
         <Grid container direction="column" spacing={2}>
             <Grid item>
                 <TextEditor
                     initialContentState={editorState}
-                    onChange={onChangeData}
+                    onChange={(editorState: any) => setEditorState(editorState)}
+                />
+            </Grid>
+            <Grid item>
+                <TextField
+                    type="number"
+                    value={padding}
+                    label="Padding"
+                    onChange={(e) => setPadding(+e.target.value)}
+                    InputProps={{
+                        endAdornment: (
+                            <InputAdornment position="end">px</InputAdornment>
+                        ),
+                    }}
+                    fullWidth
                 />
             </Grid>
         </Grid>
