@@ -48,6 +48,19 @@ TextEditor.stringify = (editorState) =>
     stringifyAndEncode.encode(convertToRaw(editorState.getCurrentContent()));
 
 TextEditor.emptyState = () => EditorState.createEmpty(Editor.getDecorators({}));
+TextEditor.getPlainText = (encodedEditorStateString) => {
+    try {
+        const editorState = EditorState.createWithContent(
+            convertFromRaw(JSON.parse(decode(encodedEditorStateString)))
+        );
+        const descriptInPlainText = editorState
+            .getCurrentContent()
+            .getPlainText();
+        return descriptInPlainText;
+    } catch (err) {
+        return "";
+    }
+};
 
 TextEditor.propTypes = {
     initialContentState: PropTypes.any,

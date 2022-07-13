@@ -15,12 +15,15 @@ import {
 } from "./logic";
 import GQLContext from "../../models/GQLContext";
 import Filter from "./models/filter";
+import constants from "../../config/constants";
+const { course, download, blog } = constants;
 
 const courseFilters = new GraphQLEnumType({
     name: "CourseFilters",
     values: {
-        COURSE: { value: "product" },
-        POST: { value: "blog" },
+        [course.toUpperCase()]: { value: course },
+        [download.toUpperCase()]: { value: download },
+        [blog.toUpperCase()]: { value: blog },
     },
 });
 
@@ -84,7 +87,7 @@ export default {
                 type: GraphQLString,
             },
             filterBy: {
-                type: courseFilters,
+                type: new GraphQLList(courseFilters),
             },
         },
         resolve: (

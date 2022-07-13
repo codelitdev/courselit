@@ -6,10 +6,11 @@ interface TemplateProps {
     layout: Record<string, unknown>[];
     editing: boolean;
     onEditClick?: (widgetId: string) => void;
+    selectedWidget?: string;
 }
 
 const Template = (props: TemplateProps) => {
-    const { layout, editing, onEditClick } = props;
+    const { layout, editing, onEditClick, selectedWidget } = props;
 
     return (
         <Grid container direction="column">
@@ -20,8 +21,16 @@ const Template = (props: TemplateProps) => {
                     onClick={
                         editing
                             ? () => onEditClick && onEditClick(item.widgetId)
-                            : () => {}
+                            : undefined
                     }
+                    sx={{
+                        "&:hover": {
+                            // boxShadow: editing
+                            //     ? "inset 0 0 0 2px #eee"
+                            //     : "none",
+                            cursor: editing ? "pointer" : "default",
+                        },
+                    }}
                 >
                     <WidgetByName
                         name={item.name}

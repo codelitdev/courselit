@@ -5,7 +5,6 @@ import { Box } from "@mui/material";
 
 const Widget = (props: WidgetProps) => {
     const { settings } = props;
-    console.log(settings);
 
     return (
         <Box

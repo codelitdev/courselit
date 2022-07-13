@@ -2,7 +2,7 @@ import { ThunkDispatch } from "redux-thunk";
 import { AnyAction } from "redux";
 import State from "./state";
 
-export default interface WidgetProps {
+export default interface WidgetProps<T = Record<string, unknown>> {
     id: string;
     name: string;
     section: string;
@@ -10,5 +10,5 @@ export default interface WidgetProps {
     utilities: unknown;
     state: State;
     dispatch: ThunkDispatch<State, null, AnyAction>;
-    settings: Record<string, unknown>;
+    settings: T;
 }

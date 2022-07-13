@@ -71,5 +71,6 @@ const RichText = (props: RichTextProps) => {
 RichText.hydrate = TextEditor.hydrate;
 RichText.stringify = TextEditor.stringify;
 RichText.emptyState = TextEditor.emptyState;
+RichText.getPlainText = TextEditor.getPlainText;
 
 export default RichText;
