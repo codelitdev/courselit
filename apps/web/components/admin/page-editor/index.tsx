@@ -174,7 +174,6 @@ function PageEditor({
         const widgetIndex = layout.findIndex(
             (widget) => widget.widgetId === widgetId
         );
-        console.log(settings);
         layout[widgetIndex].settings = settings;
         setLayout([...layout]);
     };
@@ -189,8 +188,8 @@ function PageEditor({
 
     const addWidget = async (name: string) => {
         setShowWidgetSelector(false);
-        layout.push({ name });
-        await savePage(page.pageId, layout);
+        layout.splice(layout.length - 1, 0, { name });
+        await savePage(page.pageId, [...layout]);
     };
 
     const onClose = () => {
@@ -340,6 +339,7 @@ function PageEditor({
                             layout={layout}
                             editing={true}
                             onEditClick={onWidgetClicked}
+                            selectedWidget={selectedWidget}
                         />
                     </Grid>
                 </Grid>

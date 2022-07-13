@@ -241,7 +241,7 @@ export const getCourses = async ({
     offset: number;
     ctx: GQLContext;
     tag?: string;
-    filterBy?: Filter;
+    filterBy?: Filter[];
 }) => {
     validateOffset(offset);
     const query: Record<string, unknown> = {
@@ -253,12 +253,13 @@ export const getCourses = async ({
         query.tags = tag;
     }
     if (filterBy) {
-        query.isBlog = filterBy === "post" ? true : false;
+        query.type = { $in: filterBy };
     }
+    console.log(query);
 
     const courses = await CourseModel.find(
         query,
-        "id title cost isBlog description creatorName updatedAt slug featuredImage courseId isFeatured tags groups"
+        "id title cost isBlog description type creatorName updatedAt slug featuredImage courseId isFeatured tags groups"
     )
         .sort({ updatedAt: -1 })
         .skip((offset - 1) * itemsPerPage)
@@ -273,6 +274,7 @@ export const getCourses = async ({
             x.description,
             blogPostSnippetLength
         ),
+        type: x.type,
         creatorName: x.creatorName,
         updatedAt: x.updatedAt,
         slug: x.slug,

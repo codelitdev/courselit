@@ -21,6 +21,7 @@ interface EditWidgetProps {
 }
 
 function EditWidget({ onChange, onClose, onDelete, widget }: EditWidgetProps) {
+    const actualWidget = widgets[widget.name];
     const onDeleteWidget = () => {
         onDelete(widget.widgetId);
         onClose();
@@ -42,7 +43,8 @@ function EditWidget({ onChange, onClose, onDelete, widget }: EditWidgetProps) {
                 >
                     <Grid item>
                         <Typography variant="h6">
-                            {widgets[widget.name].metadata.displayName}
+                            {actualWidget && actualWidget.metadata.displayName}
+                            {!actualWidget && widget.name}
                         </Typography>
                     </Grid>
                     <Grid item>
@@ -52,22 +54,27 @@ function EditWidget({ onChange, onClose, onDelete, widget }: EditWidgetProps) {
                     </Grid>
                 </Grid>
             </Grid>
-            <Grid item sx={{ mb: 4 }}>
-                <AdminWidget
-                    id={widget.name}
-                    settings={widget.settings || {}}
-                    onChange={(e: Record<string, unknown>) => {
-                        onChange(widget.widgetId, e);
-                    }}
-                />
-            </Grid>
-            {widget.deleteable && (
-                <Grid item alignSelf="center">
-                    <Button color="error" onClick={onDeleteWidget}>
-                        Delete block
-                    </Button>
-                </Grid>
+            {actualWidget && (
+                <>
+                    <Grid item sx={{ mb: 4 }}>
+                        <AdminWidget
+                            id={widget.name}
+                            settings={widget.settings || {}}
+                            onChange={(e: Record<string, unknown>) => {
+                                onChange(widget.widgetId, e);
+                            }}
+                        />
+                    </Grid>
+                    {widget.deleteable && (
+                        <Grid item alignSelf="center">
+                            <Button color="error" onClick={onDeleteWidget}>
+                                Delete block
+                            </Button>
+                        </Grid>
+                    )}
+                </>
             )}
+            {!actualWidget && <Typography>{widget.name} not found</Typography>}
         </Grid>
     );
 }
