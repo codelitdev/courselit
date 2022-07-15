@@ -38,13 +38,21 @@ function AddWidget({ onSelection, onClose }: WidgetsListProps) {
                             </Grid>
                         </Grid>
                     </ListItem>
-                    {Object.keys(widgets).map((item, index) => (
-                        <ListItem disablePadding key={index}>
-                            <ListItemButton onClick={(e) => onSelection(item)}>
-                                <Typography>{item}</Typography>
-                            </ListItemButton>
-                        </ListItem>
-                    ))}
+                    {Object.keys(widgets)
+                        .filter(
+                            (widget) => !["header", "footer"].includes(widget)
+                        )
+                        .map((item, index) => (
+                            <ListItem disablePadding key={index}>
+                                <ListItemButton
+                                    onClick={(e) => onSelection(item)}
+                                >
+                                    <Typography>
+                                        {widgets[item].metadata.displayName}
+                                    </Typography>
+                                </ListItemButton>
+                            </ListItem>
+                        ))}
                 </List>
             </Grid>
         </Grid>

@@ -9,9 +9,10 @@ interface ImgProps {
     alt?: string;
     defaultImage?: string;
     loading?: "eager" | "lazy";
-    height?: number;
+    height?: any;
     sizes?: `${string}vw`;
-    width?: `${number}%` | "auto"; // read: https://mui.com/system/sizing/
+    width?: any;
+    borderRadius?: number;
 }
 
 // Copied from: https://github.com/vercel/next.js/blob/canary/examples/image-component/pages/shimmer.js
@@ -42,23 +43,34 @@ const Image = (props: ImgProps) => {
         loading = "lazy",
         height = 200,
         sizes = "100vw",
-        width,
+        width = 1,
+        borderRadius,
     } = props;
     const source = src || defaultImage || "/courselit_backdrop.webp";
 
     return (
-        <NextImage
-            layout="fill"
-            objectFit="cover"
-            src={source}
-            placeholder="blur"
-            blurDataURL={`data:image/svg+xml;base64,${toBase64(
-                shimmer(700, 475)
-            )}`}
-            alt={alt}
-            priority={loading === "eager" ? true : false}
-            sizes={sizes}
-        />
+        <Box
+            sx={{
+                position: "relative",
+                width,
+                height,
+                borderRadius: borderRadius || 4,
+                overflow: "hidden",
+            }}
+        >
+            <NextImage
+                layout="fill"
+                objectFit="cover"
+                src={source}
+                placeholder="blur"
+                blurDataURL={`data:image/svg+xml;base64,${toBase64(
+                    shimmer(700, 475)
+                )}`}
+                alt={alt}
+                priority={loading === "eager" ? true : false}
+                sizes={sizes}
+            />
+        </Box>
     );
 };
 

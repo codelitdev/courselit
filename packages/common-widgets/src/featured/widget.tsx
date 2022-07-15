@@ -3,11 +3,9 @@ import { Image, PriceTag, RichText } from "@courselit/components-library";
 import { actionCreators } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import {
-    Box,
     Button,
     Grid,
     GridDirection,
-    styled,
     Typography,
     useMediaQuery,
     useTheme,
@@ -84,43 +82,44 @@ export default function Widget({
         default:
             direction = "row";
     }
+    const verticalLayout = ["top", "bottom"].includes(alignment);
 
     return (
         <Grid
             container
             justifyContent="space-between"
-            alignItems="center"
+            alignItems={verticalLayout ? "flex-start" : "center"}
             direction={direction}
         >
             {product.featuredImage && (
                 <Grid
                     item
                     xs={12}
-                    md={["top", "bottom"].includes(alignment) ? 12 : 6}
-                    sx={{ p: 2 }}
+                    md={verticalLayout ? 12 : 6}
+                    sx={{ p: 2, textAlign: "center", width: "100%" }}
                 >
-                    <Box
-                        sx={{
-                            position: "relative",
-                            width: 1,
-                            height: {
-                                xs: 224,
-                                sm: 352,
-                                md: 214,
-                                lg: 286,
-                            },
-                        }}
-                    >
-                        <Image src={product.featuredImage.file} />
-                    </Box>
+                    <Image
+                        src={product.featuredImage.file}
+                        width={verticalLayout ? "100%" : 1}
+                        height={
+                            verticalLayout
+                                ? {
+                                      xs: 224,
+                                      sm: 300,
+                                      md: 384,
+                                      lg: 590,
+                                  }
+                                : {
+                                      xs: 224,
+                                      sm: 352,
+                                      md: 214,
+                                      lg: 286,
+                                  }
+                        }
+                    />
                 </Grid>
             )}
-            <Grid
-                item
-                xs={12}
-                md={["top", "bottom"].includes(alignment) ? 12 : 6}
-                sx={{ p: 2 }}
-            >
+            <Grid item xs={12} md={verticalLayout ? 12 : 6} sx={{ p: 2 }}>
                 <Grid container direction="column">
                     <Grid item sx={{ mb: 1 }}>
                         <PriceTag

@@ -2,20 +2,19 @@ import React from "react";
 import { RichText as TextEditor, Section } from "@courselit/components-library";
 import type { WidgetProps } from "@courselit/common-models";
 import { Box } from "@mui/material";
+import Settings from "./settings";
 
-const Widget = (props: WidgetProps) => {
-    const { settings } = props;
-
+const Widget = ({ settings: { text, padding } }: WidgetProps<Settings>) => {
     return (
         <Box
             sx={{
-                p: `${settings.padding || 0}px`,
+                p: padding ? `${padding || 0}px` : 2,
             }}
         >
             <TextEditor
                 initialContentState={
-                    settings && settings.text
-                        ? TextEditor.hydrate({ data: settings.text })
+                    text
+                        ? TextEditor.hydrate({ data: text })
                         : TextEditor.emptyState()
                 }
                 readOnly={true}

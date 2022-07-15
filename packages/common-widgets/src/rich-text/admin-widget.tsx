@@ -14,7 +14,7 @@ const AdminWidget = ({ settings, onChange }: AboutWidgetProps) => {
             ? TextEditor.hydrate({ data: settings.text })
             : TextEditor.emptyState()
     );
-    const [padding, setPadding] = useState(settings.padding || 0);
+    const [padding, setPadding] = useState(settings.padding || 16);
 
     useEffect(() => {
         onChange({
