@@ -2,7 +2,6 @@
 import {
     RichText,
     TaggedContent,
-    Branding,
     Footer,
     Header,
     Featured,
