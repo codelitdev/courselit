@@ -3,7 +3,7 @@ import {
     RichText,
     TaggedContent,
     Branding,
-    FooterMenu,
+    Footer,
     Header,
     Featured,
 } from "@courselit/common-widgets";
@@ -15,7 +15,7 @@ function loadWidgets(): Record<string, any> {
     widgets[RichText.metadata.name] = RichText;
     // widgets[TaggedContent.metadata.name] = TaggedContent;
     // widgets[Branding.metadata.name] = Branding;
-    widgets[FooterMenu.metadata.name] = FooterMenu;
+    widgets[Footer.metadata.name] = Footer;
     widgets[Header.metadata.name] = Header;
     widgets[Featured.metadata.name] = Featured;
 

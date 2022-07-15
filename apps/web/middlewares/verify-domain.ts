@@ -3,7 +3,7 @@ import Subscriber from "../models/Subscriber";
 import { responses } from "../config/strings";
 import constants from "../config/constants";
 import { isSubscriptionValid } from "../lib/utils";
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiResponse } from "next";
 import ApiRequest from "../models/ApiRequest";
 
 const { domainNameForSingleTenancy, placeholderEmailForSingleTenancy } =
@@ -91,6 +91,8 @@ export default async function verifyDomain(
             domain = await DomainModel.create({
                 name: domainNameForSingleTenancy,
                 email: placeholderEmailForSingleTenancy,
+                header: { name: "header", deleteable: false },
+                footer: { name: "footer", deleteable: false },
             });
         }
 

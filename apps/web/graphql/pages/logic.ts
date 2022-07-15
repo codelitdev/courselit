@@ -5,8 +5,10 @@ import {
     checkOwnershipWithoutModel,
     checkPermission,
 } from "../../lib/graphql";
+import Domain from "../../models/Domain";
 import GQLContext from "../../models/GQLContext";
 import PageModel, { Page } from "../../models/Page";
+import { Widget } from "../../models/Widget";
 import { permissions } from "../../ui-config/constants";
 
 export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
@@ -27,7 +29,17 @@ export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
         }
     );
 
-    return page;
+    const pageWithTheme = {
+        pageId: page.pageId,
+        name: page.name,
+        layout: [ctx.subdomain.header, ...page.layout, ctx.subdomain.footer],
+        draftLayout: page.draftLayout
+            ? [ctx.subdomain.header, ...page.draftLayout, ctx.subdomain.footer]
+            : undefined,
+    };
+    console.log(pageWithTheme);
+
+    return pageWithTheme;
 }
 
 interface Draft {
@@ -43,7 +55,7 @@ interface Published {
 export const savePage = async (
     pageData: Draft | Published,
     ctx: GQLContext
-): Promise<Page | null> => {
+): Promise<Partial<Page> | null> => {
     const { pageId } = pageData;
     checkIfAuthenticated(ctx);
     if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
@@ -63,7 +75,29 @@ export const savePage = async (
         page!.draftLayout = [];
     } else if ("layout" in pageData) {
         try {
-            page!.draftLayout = JSON.parse(pageData.layout);
+            const layout = JSON.parse(pageData.layout);
+            const header = layout.filter(
+                (widget: Widget) => widget.name === "header"
+            )[0];
+            const footer = layout.filter(
+                (widget: Widget) => widget.name === "footer"
+            )[0];
+            console.log(header, footer);
+            let subdomainChanged = false;
+            if (header) {
+                ctx.subdomain.header = header;
+                subdomainChanged = true;
+            }
+            if (footer) {
+                ctx.subdomain.footer = footer;
+                subdomainChanged = true;
+            }
+            if (subdomainChanged) {
+                await (ctx.subdomain as any).save();
+            }
+            page!.draftLayout = layout.filter(
+                (widget: Widget) => !["header", "footer"].includes(widget.name)
+            );
         } catch (err) {
             throw new Error(responses.invalid_layout);
         }
@@ -71,5 +105,14 @@ export const savePage = async (
 
     await (page as any).save();
 
-    return page;
+    return {
+        pageId: page!.pageId,
+        name: page!.name,
+        layout: [ctx.subdomain.header, ...page!.layout, ctx.subdomain.footer],
+        draftLayout: [
+            ctx.subdomain.header,
+            ...page!.draftLayout,
+            ctx.subdomain.footer,
+        ],
+    };
 };
