@@ -83,7 +83,6 @@ function SectionEditor({
             }
         }
     `;
-        console.log(mutation);
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
             .setPayload(mutation)

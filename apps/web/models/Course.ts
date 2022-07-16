@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import constants from "../config/constants";
 import { generateUniqueId } from "@courselit/utils";
 import type { Group } from "@courselit/common-models";
-import LessonSchema from "./Lesson";
 const { course, download, blog, unlisted, open } = constants;
 const { text, video, audio, pdf, quiz } = constants;
 

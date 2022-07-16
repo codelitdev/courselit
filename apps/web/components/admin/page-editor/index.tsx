@@ -7,16 +7,7 @@ import {
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
 import { debounce, FetchBuilder } from "@courselit/utils";
-import {
-    AppBar,
-    Box,
-    Button,
-    Grid,
-    List,
-    ListItem,
-    Toolbar,
-    Typography,
-} from "@mui/material";
+import { AppBar, Button, Grid, Toolbar, Typography } from "@mui/material";
 import { connect } from "react-redux";
 import {
     EDIT_PAGE_BUTTON_DONE,
@@ -28,8 +19,8 @@ import { canAccessDashboard } from "../../../ui-lib/utils";
 import Template from "../../public/base-layout/template";
 import dynamic from "next/dynamic";
 import Head from "next/head";
-import zIndex from "@mui/material/styles/zIndex";
 import Link from "next/link";
+import { Menu } from "@courselit/components-library";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
@@ -54,6 +45,7 @@ function PageEditor({
     loading,
     siteInfo,
 }: PageEditorProps) {
+    const [pages, setPages] = useState([]);
     const [page, setPage] = useState({});
     const [layout, setLayout] = useState([]);
     const [selectedWidget, setSelectedWidget] = useState<string>("");
@@ -70,6 +62,7 @@ function PageEditor({
     );
 
     useEffect(() => {
+        loadPages();
         loadPage();
     }, []);
 
@@ -93,12 +86,42 @@ function PageEditor({
 
     const onPublish = async () => {};
 
+    const loadPages = async () => {
+        const query = `
+        query {
+            pages: getPages {
+                pageId,
+                name,
+                entityId
+            }
+        }
+        `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload(query)
+            .setIsGraphQLEndpoint(true)
+            .build();
+        try {
+            dispatch(networkAction(true));
+            const response = await fetch.exec();
+            if (response.pages) {
+                setPages(response.pages);
+            }
+        } catch (err: any) {
+            dispatch(setAppMessage(new AppMessage(err.message)));
+        } finally {
+            dispatch(networkAction(false));
+        }
+    };
+
     const loadPage = async () => {
         const query = `
         query {
             page: getPage(id: "${id}") {
                 pageId,
                 name,
+                type,
+                entityId,
                 layout,
                 draftLayout
             }
@@ -220,7 +243,15 @@ function PageEditor({
             </Head>
             <AppBar position="sticky">
                 <Toolbar>
-                    <Typography>{page.name}</Typography>
+                    <Menu
+                        options={pages.map((page: Record<string, unknown>) => ({
+                            label: page.name,
+                            type: "link",
+                            href: `/dashboard/page/${page.pageId}/edit`,
+                        }))}
+                        label={page.name}
+                        buttonColor="#fff"
+                    />
                     <Grid item sx={{ flexGrow: 1 }}>
                         <Grid
                             container
@@ -233,7 +264,13 @@ function PageEditor({
                                 </Typography>
                             </Grid>
                             <Grid item>
-                                <Link href="/dashboard/products">
+                                <Link
+                                    href={
+                                        page.type === "PRODUCT"
+                                            ? `/dashboard/product/${page.entityId}/content`
+                                            : "/dashboard/products"
+                                    }
+                                >
                                     <Button
                                         component="a"
                                         sx={{ color: "white" }}

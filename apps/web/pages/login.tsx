@@ -6,7 +6,6 @@ import {
     ERROR_SIGNIN_GENERATING_LINK,
     SIGNIN_SUCCESS_PREFIX,
 } from "../ui-config/strings";
-import { Section } from "@courselit/components-library";
 import { Grid, TextField, Button, Typography } from "@mui/material";
 import { useRouter } from "next/router";
 import type { Address, Auth, State } from "@courselit/common-models";
@@ -16,15 +15,19 @@ import { actionCreators } from "@courselit/state-management";
 import type { ThunkDispatch } from "redux-thunk";
 import type { AnyAction } from "redux";
 import BaseLayout from "../components/public/base-layout";
+import { getBackendAddress, getPage } from "../ui-lib/utils";
 
 interface LoginProps {
     address: Address;
     auth: Auth;
     dispatch: any;
     progress: boolean;
+    page: {
+        layout: Record<string, unknown>[];
+    };
 }
 
-const Login = ({ address, auth, dispatch, progress }: LoginProps) => {
+const Login = ({ address, auth, dispatch, progress, page }: LoginProps) => {
     const [email, setEmail] = useState("");
     const router = useRouter();
     const { token, redirect } = router.query;
@@ -102,48 +105,42 @@ const Login = ({ address, auth, dispatch, progress }: LoginProps) => {
     };
 
     return (
-        <BaseLayout title={LOGIN_SECTION_HEADER}>
-            <Section>
+        <BaseLayout title={LOGIN_SECTION_HEADER} layout={page.layout}>
+            <Grid container direction="row" sx={{ p: 2, minHeight: "80vh" }}>
                 <Grid item xs={12}>
-                    <Grid container direction="row">
-                        <Grid item xs={12}>
-                            <form onSubmit={requestMagicLink}>
-                                <Grid container direction="column" spacing={1}>
-                                    <Grid item>
-                                        <Typography variant="h4">
-                                            {LOGIN_SECTION_HEADER}
-                                        </Typography>
-                                    </Grid>
-                                    <Grid item>
-                                        <TextField
-                                            type="email"
-                                            value={email}
-                                            variant="outlined"
-                                            label="Email"
-                                            fullWidth
-                                            margin="normal"
-                                            onChange={(e) =>
-                                                setEmail(e.target.value)
-                                            }
-                                            required
-                                        />
-                                    </Grid>
-                                    <Grid item>
-                                        <Button
-                                            variant="outlined"
-                                            type="submit"
-                                            color="primary"
-                                            disabled={progress || !email}
-                                        >
-                                            {BTN_LOGIN}
-                                        </Button>
-                                    </Grid>
-                                </Grid>
-                            </form>
+                    <form onSubmit={requestMagicLink}>
+                        <Grid container direction="column" spacing={1}>
+                            <Grid item>
+                                <Typography variant="h4">
+                                    {LOGIN_SECTION_HEADER}
+                                </Typography>
+                            </Grid>
+                            <Grid item>
+                                <TextField
+                                    type="email"
+                                    value={email}
+                                    variant="outlined"
+                                    label="Email"
+                                    fullWidth
+                                    margin="normal"
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                />
+                            </Grid>
+                            <Grid item>
+                                <Button
+                                    variant="outlined"
+                                    type="submit"
+                                    color="primary"
+                                    disabled={progress || !email}
+                                >
+                                    {BTN_LOGIN}
+                                </Button>
+                            </Grid>
                         </Grid>
-                    </Grid>
+                    </form>
                 </Grid>
-            </Section>
+            </Grid>
         </BaseLayout>
     );
 };
@@ -159,3 +156,10 @@ const mapDispatchToProps = (dispatch: any) => ({
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Login);
+
+export async function getServerSideProps(context: any) {
+    const { req } = context;
+    const address = getBackendAddress(req.headers.host);
+    const page = await getPage(address);
+    return { props: { page } };
+}

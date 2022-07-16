@@ -2,6 +2,7 @@ import fetch from "isomorphic-unfetch";
 import { permissions } from "../ui-config/constants";
 import { RichText as TextEditor } from "@courselit/components-library";
 import type { Profile } from "@courselit/common-models";
+import { FetchBuilder } from "@courselit/utils";
 
 export const queryGraphQL = async (
     url: string,
@@ -137,3 +138,32 @@ export const canAccessDashboard = (profile: Profile) => {
 
 export const constructThumbnailUrlFromFileUrl = (url: string) =>
     url ? url.replace(url.split("/").pop(), "thumb.webp") : null;
+
+export const getPage = async (backend: string, id?: string) => {
+    const query = id
+        ? `
+    query {
+        page: getPage(id: "${id}") {
+            layout,
+        }
+    }
+    `
+        : `
+    query {
+        page: getPage {
+            layout,
+        }
+    }
+    `;
+    try {
+        const fetch = new FetchBuilder()
+            .setUrl(`${backend}/api/graph`)
+            .setPayload(query)
+            .setIsGraphQLEndpoint(true)
+            .build();
+        const response = await fetch.exec();
+        return response.page;
+    } catch (e: any) {
+        console.log(e.message); // eslint-disable-line no-console
+    }
+};

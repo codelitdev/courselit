@@ -1,6 +1,6 @@
-import { GraphQLNonNull, GraphQLString } from "graphql";
+import { GraphQLList, GraphQLNonNull, GraphQLString } from "graphql";
 import GQLContext from "../../models/GQLContext";
-import { getPage } from "./logic";
+import { getPage, getPages } from "./logic";
 import types from "./types";
 
 export default {
@@ -8,10 +8,14 @@ export default {
         type: types.page,
         args: {
             id: {
-                type: new GraphQLNonNull(GraphQLString),
+                type: GraphQLString,
             },
         },
         resolve: (_: any, { id }: { id: string }, ctx: GQLContext) =>
             getPage({ id, ctx }),
+    },
+    getPages: {
+        type: new GraphQLList(types.page),
+        resolve: (_: any, __: any, ctx: GQLContext) => getPages(ctx),
     },
 };

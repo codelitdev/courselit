@@ -6,9 +6,8 @@ import {
     Button,
     Grid,
     GridDirection,
+    Skeleton,
     Typography,
-    useMediaQuery,
-    useTheme,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import Settings from "./settings";
@@ -19,8 +18,6 @@ export default function Widget({
     dispatch,
 }: WidgetProps<Settings>) {
     const [product, setProduct] = useState<Partial<Course>>({});
-    const theme = useTheme();
-    const smallScreen = useMediaQuery(theme.breakpoints.down("md"));
 
     useEffect(() => {
         if (productId) {
@@ -83,6 +80,22 @@ export default function Widget({
             direction = "row";
     }
     const verticalLayout = ["top", "bottom"].includes(alignment);
+
+    if (!product.title) {
+        return (
+            <Grid container sx={{ p: 2 }} spacing={1}>
+                <Grid item xs={12}>
+                    <Skeleton variant="rectangular" height={200} />
+                </Grid>
+                <Grid item xs={12}>
+                    <Skeleton variant="text" />
+                </Grid>
+                <Grid item xs={12}>
+                    <Skeleton variant="text" />
+                </Grid>
+            </Grid>
+        );
+    }
 
     return (
         <Grid
@@ -150,12 +163,13 @@ export default function Widget({
                     )}
                     <Grid item>
                         <Button
-                            onClick={() => {}}
+                            component="a"
+                            href={`/checkout/${productId}`}
                             variant="contained"
                             size="large"
                             disableElevation
                         >
-                            {buyButtonCaption || "Enroll Now"}
+                            {buyButtonCaption || "Buy now"}
                         </Button>
                     </Grid>
                 </Grid>

@@ -110,7 +110,6 @@ const LessonEditor = ({
     const [deleteLessonPopupOpened, setDeleteLessonPopupOpened] =
         useState(false);
     const course = useCourse(courseId);
-    console.log(course);
 
     useEffect(() => {
         setLabelWidth(inputLabel.current && inputLabel.current.offsetWidth);
@@ -209,7 +208,6 @@ const LessonEditor = ({
       }
     }
     `;
-        console.log(query, lesson);
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
             .setPayload(query)
