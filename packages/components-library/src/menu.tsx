@@ -1,5 +1,5 @@
 import * as React from "react";
-import { IconButton, Menu as MuiMenu, MenuItem } from "@mui/material";
+import { Button, IconButton, Menu as MuiMenu, MenuItem } from "@mui/material";
 
 interface LinkOption {
     label: string;
@@ -15,13 +15,22 @@ interface ButtonOption {
 
 type Option = LinkOption | ButtonOption;
 
-interface MenuProps {
+interface MenuWithButton {
+    options: Option[];
+    label: string;
+    buttonColor?: string;
+}
+
+interface MenuWithIconButton {
     options: Option[];
     icon: any;
     openIcon?: any;
 }
 
-export default function Menu({ options, icon, openIcon }: MenuProps) {
+type MenuProps = MenuWithButton | MenuWithIconButton;
+
+export default function Menu(props: MenuProps) {
+    const { options } = props;
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -33,16 +42,32 @@ export default function Menu({ options, icon, openIcon }: MenuProps) {
 
     return (
         <div>
-            <IconButton
-                id="menu-button"
-                aria-controls={open ? "basic-menu" : undefined}
-                aria-haspopup="true"
-                aria-expanded={open ? "true" : undefined}
-                onClick={handleClick}
-            >
-                {open && (openIcon ? openIcon : icon)}
-                {!open && icon}
-            </IconButton>
+            {"label" in props && (
+                <Button
+                    id="menu-button"
+                    aria-controls={open ? "basic-menu" : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={open ? "true" : undefined}
+                    onClick={handleClick}
+                    sx={{
+                        color: props.buttonColor || "inherit",
+                    }}
+                >
+                    {props.label}
+                </Button>
+            )}
+            {"icon" in props && (
+                <IconButton
+                    id="menu-button"
+                    aria-controls={open ? "basic-menu" : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={open ? "true" : undefined}
+                    onClick={handleClick}
+                >
+                    {open && (props.openIcon ? props.openIcon : props.icon)}
+                    {!open && props.icon}
+                </IconButton>
+            )}
             <MuiMenu
                 id="basic-menu"
                 anchorEl={anchorEl}
@@ -52,17 +77,26 @@ export default function Menu({ options, icon, openIcon }: MenuProps) {
                     "aria-labelledby": "menu-button",
                 }}
             >
-                {options.map((option) =>
-                    option.type === "link" ? (
-                        <MenuItem component="a" href={option.href}>
-                            {option.label}
-                        </MenuItem>
-                    ) : (
-                        <MenuItem onClick={option.onClick}>
-                            {option.label}
-                        </MenuItem>
-                    )
-                )}
+                {options
+                    .filter((option) => !!option)
+                    .map((option) =>
+                        option.type === "link" ? (
+                            <MenuItem
+                                component="a"
+                                href={option.href}
+                                key={option.label}
+                            >
+                                {option.label}
+                            </MenuItem>
+                        ) : (
+                            <MenuItem
+                                onClick={option.onClick}
+                                key={option.label}
+                            >
+                                {option.label}
+                            </MenuItem>
+                        )
+                    )}
             </MuiMenu>
         </div>
     );

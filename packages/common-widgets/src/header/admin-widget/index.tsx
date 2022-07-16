@@ -61,7 +61,6 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
 
     const onLinkDeleted = (index: number) => {
         const a = links.splice(index, 1);
-        console.log(a, links);
         setLinks([...links]);
     };
 

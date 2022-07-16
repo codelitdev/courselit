@@ -1,17 +1,34 @@
-import mongoose from "mongoose";
 import { responses } from "../../config/strings";
 import {
     checkIfAuthenticated,
     checkOwnershipWithoutModel,
     checkPermission,
 } from "../../lib/graphql";
-import Domain from "../../models/Domain";
 import GQLContext from "../../models/GQLContext";
 import PageModel, { Page } from "../../models/Page";
 import { Widget } from "../../models/Widget";
 import { permissions } from "../../ui-config/constants";
 
 export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
+    let subdomainChanged = false;
+    if (!ctx.subdomain.header) {
+        ctx.subdomain.header = { name: "header", deleteable: false };
+        subdomainChanged = true;
+    }
+    if (!ctx.subdomain.footer) {
+        ctx.subdomain.footer = { name: "footer", deleteable: false };
+        subdomainChanged = true;
+    }
+    if (subdomainChanged) {
+        await (ctx.subdomain as any).save();
+    }
+
+    if (!id) {
+        return {
+            layout: [ctx.subdomain.header, ctx.subdomain.footer],
+        };
+    }
+
     const page = await PageModel.findOne(
         {
             pageId: id,
@@ -21,6 +38,8 @@ export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
             pageId: 1,
             layout: 1,
             name: 1,
+            type: 1,
+            entityId: 1,
             draftLayout: checkPermission(ctx.user.permissions, [
                 permissions.manageSite,
             ])
@@ -32,12 +51,13 @@ export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
     const pageWithTheme = {
         pageId: page.pageId,
         name: page.name,
+        type: page.type,
+        entityId: page.entityId,
         layout: [ctx.subdomain.header, ...page.layout, ctx.subdomain.footer],
         draftLayout: page.draftLayout
             ? [ctx.subdomain.header, ...page.draftLayout, ctx.subdomain.footer]
             : undefined,
     };
-    console.log(pageWithTheme);
 
     return pageWithTheme;
 }
@@ -82,7 +102,6 @@ export const savePage = async (
             const footer = layout.filter(
                 (widget: Widget) => widget.name === "footer"
             )[0];
-            console.log(header, footer);
             let subdomainChanged = false;
             if (header) {
                 ctx.subdomain.header = header;
@@ -108,6 +127,8 @@ export const savePage = async (
     return {
         pageId: page!.pageId,
         name: page!.name,
+        type: page!.type,
+        entityId: page!.entityId,
         layout: [ctx.subdomain.header, ...page!.layout, ctx.subdomain.footer],
         draftLayout: [
             ctx.subdomain.header,
@@ -115,4 +136,25 @@ export const savePage = async (
             ctx.subdomain.footer,
         ],
     };
+};
+
+export const getPages = async (ctx: GQLContext) => {
+    checkIfAuthenticated(ctx);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const pages: Page[] = await PageModel.find(
+        {
+            domain: ctx.subdomain._id,
+        },
+        {
+            pageId: 1,
+            name: 1,
+            type: 1,
+            entityId: 1,
+        }
+    );
+
+    return pages;
 };

@@ -115,6 +115,7 @@ export const createCourse = async (
         domain: ctx.subdomain._id,
         name: courseData.title,
         creatorId: ctx.user.userId,
+        pageId: slugify(courseData.title.toLowerCase()),
     });
 
     const course = await CourseModel.create({
@@ -134,11 +135,7 @@ export const createCourse = async (
         collapsed: false,
         ctx,
     });
-    page.productId = course.courseId;
-    page.layout = [
-        { name: "header", deleteable: false },
-        { name: "footer", deleteable: false },
-    ];
+    page.entityId = course.courseId;
     await page.save();
 
     return course;
@@ -255,7 +252,6 @@ export const getCourses = async ({
     if (filterBy) {
         query.type = { $in: filterBy };
     }
-    console.log(query);
 
     const courses = await CourseModel.find(
         query,

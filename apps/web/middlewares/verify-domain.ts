@@ -91,8 +91,6 @@ export default async function verifyDomain(
             domain = await DomainModel.create({
                 name: domainNameForSingleTenancy,
                 email: placeholderEmailForSingleTenancy,
-                header: { name: "header", deleteable: false },
-                footer: { name: "footer", deleteable: false },
             });
         }
 

@@ -84,13 +84,14 @@ export default {
     // limits
     mediaRecordsPerPage: 10,
 
-    // user type
+    // user types
     userTypeTeam: "team",
     userTypeAudience: "audience",
 
-    // page type
+    // page types
     product: "product",
     site: "site",
+    landing: "landing",
 
     // acceptable currency codes for payments
     currencyISOCodes: [
