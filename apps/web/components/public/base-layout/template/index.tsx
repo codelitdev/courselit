@@ -20,7 +20,6 @@ const EditableWidget = ({
     editing: boolean;
     onEditClick?: (widgetId: string) => void;
 }) => {
-    console.log(item);
     return (
         <Grid
             item
@@ -54,7 +53,6 @@ const Template = (props: TemplateProps) => {
         selectedWidget,
         children,
     } = props;
-    console.log(layout);
     const footer = layout.filter((widget) => widget.name === "footer")[0];
 
     return (

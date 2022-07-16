@@ -17,3 +17,5 @@ export type { default as Course } from "./course";
 export type { default as WidgetProps } from "./widget-props";
 export type { default as FetchBuilder } from "./fetch-builder";
 export type { default as WidgetsData } from "./widgets-data";
+export type { default as Page } from "./page";
+export type { default as WidgetInstance } from "./widget-instance";

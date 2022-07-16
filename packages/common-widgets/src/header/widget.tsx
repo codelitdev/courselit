@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import { WidgetProps } from "@courselit/common-models";
 import Settings, { Link } from "./settings";
-import { Menu } from "@courselit/components-library";
+import { Image, Menu, Link as NextLink } from "@courselit/components-library";
 import { Close, Menu as MenuIcon } from "@mui/icons-material";
 
 export default function Widget({ state, settings }: WidgetProps<Settings>) {
@@ -24,12 +24,36 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
             }}
         >
             <Grid item>
-                <Typography
-                    color={(settings.logoColor as string) || "inherit"}
-                    variant="h6"
-                >
-                    {state.siteinfo.title}
-                </Typography>
+                <Grid container alignItems="center">
+                    {state.siteinfo.logopath && (
+                        <Grid item sx={{ mr: 1 }}>
+                            <Image
+                                src={state.siteinfo.logopath.file}
+                                height={{ xs: 32, lg: 36 }}
+                                width={{ xs: 32, lg: 36 }}
+                                borderRadius={2}
+                            />
+                        </Grid>
+                    )}
+                    <Grid item>
+                        <NextLink
+                            href="/"
+                            sxProps={{
+                                textDecoration: "none",
+                                cursor: "pointer",
+                            }}
+                        >
+                            <Typography
+                                color={
+                                    (settings.logoColor as string) || "inherit"
+                                }
+                                variant="h6"
+                            >
+                                {state.siteinfo.title}
+                            </Typography>
+                        </NextLink>
+                    </Grid>
+                </Grid>
             </Grid>
             <Grid
                 item

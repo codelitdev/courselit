@@ -1,15 +1,15 @@
-import React, { ReactChildren, ReactNode } from "react";
+import React, { ReactNode } from "react";
 import { connect } from "react-redux";
 import Head from "next/head";
 import Template from "./template";
-import Scaffold from "./scaffold";
 import type { AppState } from "@courselit/state-management";
+import type { WidgetInstance } from "@courselit/common-models";
 
 interface MasterLayoutProps {
     title: string;
     siteInfo: any;
     children: ReactNode;
-    layout: Record<string, unknown>[];
+    layout: WidgetInstance[];
 }
 
 const MasterLayout = ({
