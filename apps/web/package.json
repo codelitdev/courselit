@@ -36,7 +36,7 @@
         "next": "latest",
         "next-connect": "^0.12.2",
         "nodemailer": "^6.7.2",
-        "passport": "^0.5.2",
+        "passport": "^0.6.0",
         "passport-jwt": "^4.0.0",
         "passport-magic-link": "^2.1.0",
         "pug": "^3.0.2",
