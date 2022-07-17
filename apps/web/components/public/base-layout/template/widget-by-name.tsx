@@ -9,7 +9,6 @@ import { FREE_COST } from "../../../../ui-config/strings";
 interface WidgetByNameProps {
     id: string;
     name: string;
-    section: string;
     state: AppState;
     dispatch: AppDispatch;
     settings: Record<string, unknown>;
@@ -18,7 +17,6 @@ interface WidgetByNameProps {
 const WidgetByName = ({
     id,
     name,
-    section,
     state,
     dispatch,
     settings,
@@ -33,7 +31,6 @@ const WidgetByName = ({
             FREE_COST_CAPTION: FREE_COST,
         }),
         utilities,
-        section,
         state,
         dispatch,
         id,

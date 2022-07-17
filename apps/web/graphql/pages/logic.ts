@@ -9,6 +9,9 @@ import PageModel, { Page } from "../../models/Page";
 import { Widget } from "../../models/Widget";
 import { permissions } from "../../ui-config/constants";
 import { getPageResponse } from "./helpers";
+import constants from "../../config/constants";
+import Course from "../../models/Course";
+const { product } = constants;
 
 export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
     let subdomainChanged = false;
@@ -29,41 +32,49 @@ export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
             layout: [ctx.subdomain.header, ctx.subdomain.footer],
         };
     }
-    const projection: Record<string, 1> = {
-        pageId: 1,
-        layout: 1,
-        name: 1,
-        type: 1,
-        entityId: 1,
-    };
+
     if (
         ctx.user &&
         checkPermission(ctx.user.permissions, [permissions.manageSite])
     ) {
-        projection.draftLayout = 1;
+        const page = await PageModel.findOne(
+            {
+                pageId: id,
+                domain: ctx.subdomain._id,
+            },
+            {
+                pageId: 1,
+                layout: 1,
+                name: 1,
+                type: 1,
+                entityId: 1,
+                draftLayout: 1,
+            }
+        );
+        return getPageResponse(page, ctx);
+    } else {
+        const page = await PageModel.findOne(
+            {
+                pageId: id,
+                domain: ctx.subdomain._id,
+            },
+            {
+                pageId: 1,
+                layout: 1,
+                name: 1,
+                type: 1,
+                entityId: 1,
+            }
+        );
+        if (page.type === product) {
+            const course = await Course.findOne({ courseId: page.entityId });
+            if (!course.published) {
+                return;
+            }
+        }
+
+        return getPageResponse(page, ctx);
     }
-    const page = await PageModel.findOne(
-        {
-            pageId: id,
-            domain: ctx.subdomain._id,
-        },
-        projection
-    );
-    console.log(page);
-    return getPageResponse(page!, ctx);
-
-    // const pageWithTheme = {
-    //     pageId: page.pageId,
-    //     name: page.name,
-    //     type: page.type,
-    //     entityId: page.entityId,
-    //     layout: [ctx.subdomain.header, ...page.layout, ctx.subdomain.footer],
-    //     draftLayout: page.draftLayout.length
-    //         ? [ctx.subdomain.header, ...page.draftLayout, ctx.subdomain.footer]
-    //         : [ctx.subdomain.header, ...page.layout, ctx.subdomain.footer]
-    // };
-
-    // return pageWithTheme;
 }
 
 interface Draft {
@@ -101,7 +112,12 @@ export const savePage = async (
         }
     } else if ("layout" in pageData) {
         try {
-            const layout = JSON.parse(pageData.layout);
+            let layout;
+            try {
+                layout = JSON.parse(pageData.layout);
+            } catch (err) {
+                throw new Error(responses.invalid_layout);
+            }
             const header = layout.filter(
                 (widget: Widget) => widget.name === "header"
             )[0];
@@ -124,29 +140,13 @@ export const savePage = async (
                 (widget: Widget) => !["header", "footer"].includes(widget.name)
             );
         } catch (err) {
-            throw new Error(responses.invalid_layout);
+            throw new Error(err.message);
         }
     }
 
     await (page as any).save();
 
     return getPageResponse(page!, ctx);
-    // return {
-    //     pageId: page!.pageId,
-    //     name: page!.name,
-    //     type: page!.type,
-    //     entityId: page!.entityId,
-    //     layout: [ctx.subdomain.header, ...page!.layout, ctx.subdomain.footer],
-    //     draftLayout: page!.draftLayout.length ? [
-    //         ctx.subdomain.header,
-    //         ...page!.draftLayout,
-    //         ctx.subdomain.footer,
-    //     ] : [
-    //         ctx.subdomain.header,
-    //         ...page!.layout,
-    //         ctx.subdomain.footer,
-    //     ],
-    // };
 };
 
 export const getPages = async (ctx: GQLContext) => {

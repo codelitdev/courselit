@@ -36,14 +36,6 @@ import Product from "./product";
 
 const { networkAction, setAppMessage } = actionCreators;
 
-const PREFIX = "index";
-
-const classes = {
-    avatar: `${PREFIX}-avatar`,
-    listItem: `${PREFIX}-listItem`,
-    listItemText: `${PREFIX}-listItemText`,
-};
-
 interface IndexProps {
     auth: Auth;
     profile: Profile;
@@ -82,7 +74,8 @@ const Index = (props: IndexProps) => {
         type,
         published,
         sales,
-        customers
+        customers,
+        pageId
       }
     }
     `
@@ -100,7 +93,8 @@ const Index = (props: IndexProps) => {
         type,
         published,
         sales,
-        customers
+        customers,
+        pageId
       }
     }
     `;

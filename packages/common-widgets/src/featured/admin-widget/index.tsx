@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Address, Course } from "@courselit/common-models";
+import { Address } from "@courselit/common-models";
 import Settings from "../settings";
-import { FormLabel, Grid, Skeleton, TextField } from "@mui/material";
+import { Grid, Skeleton } from "@mui/material";
 import { capitalize, FetchBuilder } from "@courselit/utils";
 import { actionCreators, AppDispatch } from "@courselit/state-management";
 import { RichText as TextEditor, Select } from "@courselit/components-library";
+import CustomSettings from "./custom-settings";
 
 interface AdminWidgetProps {
     settings: Settings;
@@ -22,67 +23,23 @@ export default function AdminWidget({
 }: AdminWidgetProps) {
     const [productId, setProductId] = useState(settings.productId || "");
     const [products, setProducts] = useState([]);
-    const [title, setTitle] = useState(settings.title);
-    const [description, setDescription] = useState(
-        settings.description
-            ? TextEditor.hydrate({ data: settings.description })
-            : TextEditor.emptyState()
-    );
-    const [buyButtonCaption, setBuyButtonCaption] = useState(
-        settings.buyButtonCaption
-    );
-    const [alignment, setAlignment] = useState(settings.alignment);
+    const customSettingsChanged = (customSettings: Settings) => {
+        onChange({
+            productId,
+            ...customSettings,
+        });
+    };
 
     useEffect(() => {
         onChange({
+            ...settings,
             productId,
-            title,
-            description: TextEditor.stringify(description),
-            buyButtonCaption,
-            alignment,
         });
-    }, [productId, title, description, buyButtonCaption, alignment]);
+    }, [productId]);
 
     useEffect(() => {
         loadPublishedProducts();
     }, []);
-
-    // const loadCourse = async () => {
-    //     const query = `
-    //         query {
-    //             product: getCourse(courseId: "${productId}") {
-    //                 title,
-    //                 description,
-    //                 featuredImage {
-    //                     file,
-    //                     thumbnail,
-    //                     caption
-    //                 },
-    //                 creatorName,
-    //                 creatorId,
-    //                 courseId,
-    //             }
-    //         }
-    //     `;
-    //     const fetch = new FetchBuilder()
-    //         .setUrl(`${address.backend}/api/graph`)
-    //         .setPayload(query)
-    //         .setIsGraphQLEndpoint(true)
-    //         .build();
-
-    //     try {
-    //         dispatch(actionCreators.networkAction(true));
-    //         const response = await fetch.exec();
-    //         console.log(response);
-    //         if (response.product) {
-    //             setProduct(response.product);
-    //         }
-    //     } catch (err) {
-    //         console.log("Error", err.message);
-    //     } finally {
-    //         dispatch(actionCreators.networkAction(false));
-    //     }
-    // };
 
     const loadPublishedProducts = async () => {
         const query = `
@@ -135,44 +92,12 @@ export default function AdminWidget({
                     onChange={(productId) => setProductId(productId)}
                 />
             </Grid>
-            <Grid item xs={12} sx={{ mb: 2 }}>
-                <TextField
-                    variant="outlined"
-                    fullWidth
-                    value={title}
-                    label="Custom title"
-                    onChange={(e) => setTitle(e.target.value)}
+            {productId && (
+                <CustomSettings
+                    settings={settings}
+                    onChange={customSettingsChanged}
                 />
-            </Grid>
-            <Grid item xs={12} sx={{ mb: 2 }}>
-                <FormLabel>Custom description</FormLabel>
-                <TextEditor
-                    initialContentState={description}
-                    onChange={(editorState: any) => setDescription(editorState)}
-                />
-            </Grid>
-            <Grid item xs={12} sx={{ mb: 2 }}>
-                <TextField
-                    variant="outlined"
-                    fullWidth
-                    value={buyButtonCaption}
-                    label="Buy button"
-                    onChange={(e) => setBuyButtonCaption(e.target.value)}
-                />
-            </Grid>
-            <Grid item xs={12}>
-                <Select
-                    title="Alignment"
-                    value={alignment}
-                    options={[
-                        { label: "Top", value: "top" },
-                        { label: "Bottom", value: "bottom" },
-                        { label: "Left", value: "left" },
-                        { label: "Right", value: "right" },
-                    ]}
-                    onChange={(value) => setAlignment(value)}
-                />
-            </Grid>
+            )}
         </Grid>
     );
 }

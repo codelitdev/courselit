@@ -13,22 +13,32 @@ import React, { useEffect, useState } from "react";
 import Settings from "./settings";
 
 export default function Widget({
-    settings: { productId, title, description, buyButtonCaption, alignment },
+    name,
+    settings: {
+        productId,
+        title,
+        description,
+        buyButtonCaption,
+        alignment,
+        entityId,
+    },
     state,
     dispatch,
 }: WidgetProps<Settings>) {
+    console.log("name", name);
+    const id = name === "featured" ? productId : entityId;
     const [product, setProduct] = useState<Partial<Course>>({});
 
     useEffect(() => {
-        if (productId) {
+        if (id) {
             loadCourse();
         }
-    }, [productId]);
+    }, [id]);
 
     const loadCourse = async () => {
         const query = `
             query {
-                product: getCourse(courseId: "${productId}") {
+                product: getCourse(courseId: "${id}") {
                     title,
                     description,
                     featuredImage {
@@ -146,8 +156,8 @@ export default function Widget({
                             {title || product.title}
                         </Typography>
                     </Grid>
-                    {(plainTextDescription || product.description) && (
-                        <Grid item sx={{ mb: 2 }}>
+                    <Grid item sx={{ mb: 2 }}>
+                        {(plainTextDescription || product.description) && (
                             <RichText
                                 initialContentState={RichText.hydrate({
                                     data: plainTextDescription
@@ -159,12 +169,12 @@ export default function Widget({
                                 })}
                                 readOnly={true}
                             />
-                        </Grid>
-                    )}
+                        )}
+                    </Grid>
                     <Grid item>
                         <Button
                             component="a"
-                            href={`/checkout/${productId}`}
+                            href={`/checkout/${id}`}
                             variant="contained"
                             size="large"
                             disableElevation

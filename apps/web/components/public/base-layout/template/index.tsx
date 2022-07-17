@@ -37,7 +37,6 @@ const EditableWidget = ({
         >
             <WidgetByName
                 name={item.name}
-                section=""
                 settings={item.settings || {}}
                 id={`widget${item._id}`}
             />
