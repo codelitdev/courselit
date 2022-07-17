@@ -26,7 +26,7 @@ const page = new GraphQLObjectType({
         pageId: { type: new GraphQLNonNull(GraphQLString) },
         name: { type: new GraphQLNonNull(GraphQLString) },
         type: { type: new GraphQLNonNull(pageType) },
-        entityId: { type: new GraphQLNonNull(GraphQLString) },
+        entityId: { type: GraphQLString },
         layout: { type: new GraphQLList(GraphQLJSONObject) },
         draftLayout: { type: new GraphQLList(GraphQLJSONObject) },
     },
@@ -37,7 +37,7 @@ const pageInputType = new GraphQLInputObjectType({
     fields: {
         pageId: { type: new GraphQLNonNull(GraphQLString) },
         layout: { type: GraphQLString },
-        published: { type: GraphQLBoolean },
+        publish: { type: GraphQLBoolean },
     },
 });
 

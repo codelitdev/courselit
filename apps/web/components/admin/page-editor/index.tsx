@@ -79,12 +79,28 @@ function PageEditor({
     }, [auth.checked]);
 
     useEffect(() => {
+        console.log(`useEffect layout`, layout.length);
         if (JSON.stringify(layout) !== JSON.stringify(page.draftLayout)) {
             debouncedSave(page.pageId, layout);
         }
     }, [layout]);
 
-    const onPublish = async () => {};
+    const onPublish = async () => {
+        const mutation = `
+            mutation {
+                page: savePage(pageData: {
+                    pageId: "${id}",
+                    publish: true
+                }) {
+                    pageId,
+                    name,
+                    layout,
+                    draftLayout
+                }
+            }
+        `;
+        await fetchPage(mutation);
+    };
 
     const loadPages = async () => {
         const query = `
@@ -134,7 +150,7 @@ function PageEditor({
         setSelectedWidget(widgetId);
     };
 
-    const fetchPage = async (query: string, noRefresh = false) => {
+    const fetchPage = async (query: string) => {
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
             .setPayload(query)
@@ -145,15 +161,9 @@ function PageEditor({
             const response = await fetch.exec();
             if (response.page) {
                 const pageBeingEdited = response.page;
-                if (!pageBeingEdited.draftLayout.length) {
-                    setLayout(
-                        JSON.parse(JSON.stringify(pageBeingEdited.layout))
-                    );
-                } else {
                     setLayout(
                         JSON.parse(JSON.stringify(pageBeingEdited.draftLayout))
                     );
-                }
                 setPage(pageBeingEdited);
             } else {
                 dispatch(
@@ -187,7 +197,7 @@ function PageEditor({
                 }
             }
         `;
-        await fetchPage(mutation, true);
+        await fetchPage(mutation);
     };
 
     const onWidgetSettingsChanged = (
@@ -291,47 +301,6 @@ function PageEditor({
                     </Grid>
                 </Toolbar>
             </AppBar>
-            {/* <Grid
-                item
-                xs={12}
-                container
-                justifyContent="space-between"
-                alignItems="center"
-                sx={(theme: any) => ({
-                    p: 2,
-                    backgroundColor: "#eee",
-                    position: "fixed",
-                    zIndex: 2,
-                })}
-            >
-                <Grid item>
-                    <Typography>{page.name}</Typography>
-                </Grid>
-                <Grid item>
-                    <Grid container alignItems="center">
-                        <Grid item sx={{ mr: 1 }}>
-                            <Typography variant="body2">
-                                {loading ? "Saving" : "Saved"}
-                            </Typography>
-                        </Grid>
-                        <Grid item sx={{ mr: 1 }}>
-                            <Button
-                                onClick={() =>
-                                    router.push(`/dashboard/products`)
-                                }
-                                sx={{ mr: 1 }}
-                            >
-                                {EDIT_PAGE_BUTTON_DONE}
-                            </Button>
-                        </Grid>
-                        <Grid>
-                            <Button onClick={onPublish} variant="contained">
-                                {EDIT_PAGE_BUTTON_UPDATE}
-                            </Button>
-                        </Grid>
-                    </Grid>
-                </Grid>
-            </Grid> */}
             <Grid item>
                 <Grid container>
                     <Grid

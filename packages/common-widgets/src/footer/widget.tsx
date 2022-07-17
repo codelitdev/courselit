@@ -30,12 +30,12 @@ const Widget = ({
             <Grid item xs={12} md={6}>
                 <Grid container direction="column" alignItems="flex-end">
                     <Grid item>
-                        <Link href="/terms" sxProps={linkProps}>
+                        <Link href="/p/terms" sxProps={linkProps}>
                             Terms of Use
                         </Link>
                     </Grid>
                     <Grid item>
-                        <Link href="/privacy" sxProps={linkProps}>
+                        <Link href="/p/privacy" sxProps={linkProps}>
                             Privacy Policy
                         </Link>
                     </Grid>

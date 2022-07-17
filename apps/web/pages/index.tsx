@@ -1,15 +1,8 @@
 import { connect } from "react-redux";
-import { HEADER_BLOG_POSTS_SECTION, BTN_VIEW_ALL } from "../ui-config/strings";
-import { Button, Grid, Typography } from "@mui/material";
-import Link from "next/link";
+import { Grid } from "@mui/material";
 import { getBackendAddress, getPage } from "../ui-lib/utils";
-import dynamic from "next/dynamic";
-import { Section } from "@courselit/components-library";
 import type { SiteInfo, State, Page } from "@courselit/common-models";
-import MuiLink from "@mui/material/Link";
 import BaseLayout from "../components/public/base-layout";
-
-const Items = dynamic(() => import("../components/public/items"));
 
 interface IndexProps {
     siteinfo: SiteInfo;
