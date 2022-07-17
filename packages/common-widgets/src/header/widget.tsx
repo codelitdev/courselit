@@ -75,7 +75,7 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
                 >
                     {settings.links &&
                         (settings.links as Link[]).map((link: Link, index) => (
-                            <Grid item sx={{ mr: 1 }}>
+                            <Grid item sx={{ mr: 1 }} key={index}>
                                 <MuiLink
                                     href={link.href}
                                     sx={{

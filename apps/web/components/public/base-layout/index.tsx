@@ -8,8 +8,8 @@ import type { WidgetInstance } from "@courselit/common-models";
 interface MasterLayoutProps {
     title: string;
     siteInfo: any;
-    children: ReactNode;
     layout: WidgetInstance[];
+    children?: ReactNode;
 }
 
 const MasterLayout = ({

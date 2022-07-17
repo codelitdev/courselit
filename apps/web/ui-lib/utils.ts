@@ -164,6 +164,6 @@ export const getPage = async (backend: string, id?: string) => {
         const response = await fetch.exec();
         return response.page;
     } catch (e: any) {
-        console.log(e.message); // eslint-disable-line no-console
+        console.log('getPage', e.message); // eslint-disable-line no-console
     }
 };

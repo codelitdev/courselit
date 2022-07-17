@@ -2,9 +2,10 @@ import React, { ReactNode } from "react";
 import { Grid } from "@mui/material";
 import WidgetByName from "./widget-by-name";
 import AppToast from "../../../app-toast";
+import { WidgetInstance } from "@courselit/common-models";
 
 interface TemplateProps {
-    layout: Record<string, any>[];
+    layout: WidgetInstance[];
     editing?: boolean;
     onEditClick?: (widgetId: string) => void;
     selectedWidget?: string;
@@ -23,7 +24,6 @@ const EditableWidget = ({
     return (
         <Grid
             item
-            key={item.widgetId}
             onClick={
                 editing
                     ? () => onEditClick && onEditClick(item.widgetId)
@@ -62,6 +62,7 @@ const Template = (props: TemplateProps) => {
                 .map((item: any, index: number) => (
                     <EditableWidget
                         item={item}
+                        key={item.widgetId}
                         editing={editing}
                         onEditClick={onEditClick}
                     />
