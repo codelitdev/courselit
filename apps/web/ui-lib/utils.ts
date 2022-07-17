@@ -1,33 +1,7 @@
-import fetch from "isomorphic-unfetch";
 import { permissions } from "../ui-config/constants";
 import { RichText as TextEditor } from "@courselit/components-library";
 import type { Profile } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
-
-export const queryGraphQL = async (
-    url: string,
-    query: Record<string, unknown>,
-    token: string
-) => {
-    const options: Record<string, unknown> = {
-        method: "POST",
-        headers: token
-            ? {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-              }
-            : { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
-    };
-    let response: any = await fetch(url, options);
-    response = await response.json();
-
-    if (response.errors && response.errors.length > 0) {
-        throw new Error(response.errors[0].message);
-    }
-
-    return response.data;
-};
 
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
