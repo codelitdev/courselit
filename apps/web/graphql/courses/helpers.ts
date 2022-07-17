@@ -96,6 +96,7 @@ export const getPaginatedCoursesForAdmin = async ({
                         else: 0,
                     },
                 },
+                pageId: 1,
             },
         },
     ]);

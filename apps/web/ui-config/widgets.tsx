@@ -5,6 +5,7 @@ import {
     Footer,
     Header,
     Featured,
+    Banner,
 } from "@courselit/common-widgets";
 
 function loadWidgets(): Record<string, any> {
@@ -17,6 +18,7 @@ function loadWidgets(): Record<string, any> {
     widgets[Footer.metadata.name] = Footer;
     widgets[Header.metadata.name] = Header;
     widgets[Featured.metadata.name] = Featured;
+    widgets[Banner.metadata.name] = Banner;
 
     // Additional widgets are added here
     // widgets[buttondown.metadata.name] = buttondown;

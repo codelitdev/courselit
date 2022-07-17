@@ -161,9 +161,9 @@ function PageEditor({
             const response = await fetch.exec();
             if (response.page) {
                 const pageBeingEdited = response.page;
-                    setLayout(
-                        JSON.parse(JSON.stringify(pageBeingEdited.draftLayout))
-                    );
+                setLayout(
+                    JSON.parse(JSON.stringify(pageBeingEdited.draftLayout))
+                );
                 setPage(pageBeingEdited);
             } else {
                 dispatch(
@@ -192,6 +192,8 @@ function PageEditor({
                 }) {
                     pageId,
                     name,
+                    type,
+                    entityId,
                     layout,
                     draftLayout
                 }
@@ -221,7 +223,14 @@ function PageEditor({
 
     const addWidget = async (name: string) => {
         setShowWidgetSelector(false);
-        layout.splice(layout.length - 1, 0, { name });
+        layout.splice(layout.length - 1, 0, {
+            name,
+            settings: {
+                pageId: page.pageId,
+                type: page.type,
+                entityId: page.entityId,
+            },
+        });
         await savePage(page.pageId, [...layout]);
     };
 

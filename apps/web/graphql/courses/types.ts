@@ -117,6 +117,7 @@ const adminCourseItemType = new GraphQLObjectType({
         published: { type: new GraphQLNonNull(GraphQLBoolean) },
         sales: { type: new GraphQLNonNull(GraphQLInt) },
         customers: { type: new GraphQLNonNull(GraphQLInt) },
+        pageId: { type: GraphQLString },
     },
 });
 

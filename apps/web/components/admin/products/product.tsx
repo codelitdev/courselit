@@ -7,9 +7,6 @@ import {
     Link as MuiLink,
     Typography,
     Chip,
-    IconButton,
-    MenuItem,
-    Menu,
 } from "@mui/material";
 import Link from "next/link";
 import {
@@ -21,13 +18,14 @@ import {
     PRODUCT_STATUS_DRAFT,
     PRODUCT_STATUS_PUBLISHED,
     PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
+    PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE,
 } from "../../../ui-config/strings";
 import { MoreVert } from "@mui/icons-material";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import type { SiteInfo, Address } from "@courselit/common-models";
 import { connect } from "react-redux";
 import { FetchBuilder, formatCurrency } from "@courselit/utils";
-import { Image } from "@courselit/components-library";
+import { Image, Menu } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 import {
     networkAction,
@@ -48,6 +46,7 @@ function Product({
         published: boolean;
         sales: number;
         customers: number;
+        pageId: string;
     };
     siteinfo: SiteInfo;
     address: Address;
@@ -55,18 +54,10 @@ function Product({
     position: number;
     onDelete: (position: number) => void;
 }) {
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const product = details;
+
     const [deleteProductPopupOpened, setDeleteProductPopupOpened] =
         useState(false);
-    const open = Boolean(anchorEl);
-    const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
-
-    const product = details;
 
     const closeDeletePopup = () => setDeleteProductPopupOpened(false);
 
@@ -151,31 +142,21 @@ function Product({
                 {formatCurrency(product.sales, siteinfo.currencyISOCode)}
             </TableCell>
             <TableCell align="right">
-                <IconButton
-                    onClick={handleClick}
-                    size="small"
-                    sx={{ ml: 2 }}
-                    aria-controls={open ? "account-menu" : undefined}
-                    aria-haspopup="true"
-                    aria-expanded={open ? "true" : undefined}
-                >
-                    <MoreVert />
-                </IconButton>
                 <Menu
-                    anchorEl={anchorEl}
-                    id="product-menu"
-                    open={open}
-                    onClose={handleClose}
-                    onClick={handleClose}
-                    transformOrigin={{ horizontal: "right", vertical: "top" }}
-                    anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-                >
-                    <MenuItem
-                        onClick={(e) => setDeleteProductPopupOpened(true)}
-                    >
-                        {PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT}
-                    </MenuItem>
-                </Menu>
+                    options={[
+                        {
+                            label: PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE,
+                            type: "link",
+                            href: `/dashboard/page/${product.pageId}/edit`,
+                        },
+                        {
+                            label: PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
+                            type: "button",
+                            onClick: () => setDeleteProductPopupOpened(true),
+                        },
+                    ]}
+                    icon={<MoreVert />}
+                />
             </TableCell>
             <AppDialog
                 onOpen={deleteProductPopupOpened}

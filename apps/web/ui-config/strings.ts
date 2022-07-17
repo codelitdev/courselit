@@ -291,6 +291,7 @@ export const PRODUCTS_TABLE_HEADER_ACTIONS = "Actions";
 export const PRODUCT_STATUS_DRAFT = "Draft";
 export const PRODUCT_STATUS_PUBLISHED = "Published";
 export const PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT = "Delete";
+export const PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE = "Edit page";
 export const PAGE_HEADER_NEW_PRODUCT = "New Product";
 export const BTN_NEW_PRODUCT = "New product";
 export const FORM_NEW_PRODUCT_TITLE = "Title";
