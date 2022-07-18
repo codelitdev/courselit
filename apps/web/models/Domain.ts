@@ -14,7 +14,6 @@ export interface Domain {
     updatedAt: Date;
     settings: Settings;
     theme: Theme;
-    links: Link;
     header: Widget;
     footer: Widget;
 }
@@ -27,7 +26,6 @@ const DomainSchema = new mongoose.Schema<Domain>(
         deleted: { type: Boolean, required: true, default: false },
         settings: SettingsSchema,
         theme: ThemeSchema,
-        links: [LinkSchema],
         header: WidgetSchema,
         footer: WidgetSchema,
     },

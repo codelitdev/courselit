@@ -53,7 +53,6 @@ const Details = ({ userId, auth, address, dispatch }: DetailsProps) => {
             id,
             email,
             name,
-            purchases,
             active,
             permissions,
             userId
@@ -113,7 +112,6 @@ const Details = ({ userId, auth, address, dispatch }: DetailsProps) => {
         id,
         email,
         name,
-        purchases,
         active,
         permissions,
         userId

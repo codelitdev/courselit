@@ -164,6 +164,16 @@ const publicCoursesType = new GraphQLObjectType({
     },
 });
 
+const enrolledCourses = new GraphQLObjectType({
+    name: "EnrolledCourses",
+    fields: {
+        courseId: { type: new GraphQLNonNull(GraphQLString) },
+        title: { type: new GraphQLNonNull(GraphQLString) },
+        type: { type: new GraphQLNonNull(courseTypeFilters) },
+        progress: { type: new GraphQLNonNull(GraphQLFloat) },
+    },
+});
+
 export default {
     courseType,
     courseStatusType,
@@ -172,4 +182,5 @@ export default {
     adminCourseItemType,
     postType,
     publicCoursesType,
+    enrolledCourses,
 };

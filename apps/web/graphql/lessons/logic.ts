@@ -100,7 +100,7 @@ export const createLesson = async (lessonData: Lesson, ctx: GQLContext) => {
             groupRank: -1,
         });
 
-        course.lessons.push(lesson.id);
+        course.lessons.push(lesson.lessonId);
         await (course as any).save();
 
         return lesson;
@@ -154,7 +154,7 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
 export const getAllLessons = async (course: Course, ctx: GQLContext) => {
     const lessons = await LessonModel.find(
         {
-            _id: {
+            lessonId: {
                 $in: [...course.lessons],
             },
             domain: ctx.subdomain._id,

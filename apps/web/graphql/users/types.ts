@@ -13,13 +13,21 @@ import constants from "../../config/constants";
 
 const { userTypeTeam, userTypeAudience } = constants;
 
+const progress = new GraphQLObjectType({
+    name: "Progress",
+    fields: {
+        courseId: { type: new GraphQLNonNull(GraphQLString) },
+        completedLessons: { type: new GraphQLList(GraphQLString) },
+    },
+});
+
 const userType = new GraphQLObjectType({
     name: "User",
     fields: {
         id: { type: new GraphQLNonNull(GraphQLID) },
         email: { type: new GraphQLNonNull(GraphQLString) },
         name: { type: GraphQLString },
-        purchases: { type: new GraphQLList(GraphQLID) },
+        purchases: { type: new GraphQLList(progress) },
         active: { type: new GraphQLNonNull(GraphQLBoolean) },
         userId: { type: new GraphQLNonNull(GraphQLString) },
         bio: { type: GraphQLString },

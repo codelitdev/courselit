@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { styled } from "@mui/material/styles";
-import { Grid, Button } from "@mui/material";
+import { Grid, Button, TableRow, TableCell } from "@mui/material";
 import {
     BUTTON_THEME_APPLY,
     BUTTON_THEME_REMIX,
@@ -12,21 +11,8 @@ import {
 } from "../../../../ui-config/strings";
 import AppDialog from "../../../public/app-dialog";
 import Theme from "../../../../ui-models/theme";
-
-const PREFIX = "ThemeItem";
-
-const classes = {
-    container: `${PREFIX}-container`,
-};
-
-const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
-    [`&.${classes.container}`]: {
-        border: "1px solid transparent",
-        "&:hover": {
-            border: "1px solid #ccc",
-        },
-    },
-}));
+import { Menu } from "@courselit/components-library";
+import { MoreVert } from "@mui/icons-material";
 
 interface ThemeItemProps {
     theme: Theme;
@@ -60,15 +46,33 @@ const ThemeItem = (props: ThemeItemProps) => {
     };
 
     return (
-        <StyledGrid
-            item
-            container
-            justifyContent="space-between"
-            alignItems="center"
-            className={classes.container}
-        >
-            <Grid item>{props.theme.name}</Grid>
-            <Grid item>
+        <TableRow>
+            <TableCell>{props.theme.name}</TableCell>
+            <TableCell align="right">
+                <Menu
+                    options={[
+                        {
+                            label: BUTTON_THEME_APPLY,
+                            type: "button",
+                            onClick: () =>
+                                setApplyConfirmationPopupOpened(true),
+                        },
+                        {
+                            label: BUTTON_THEME_REMIX,
+                            type: "button",
+                            onClick: () => props.onRemix(props.theme.name),
+                        },
+                        {
+                            label: BUTTON_THEME_UNINSTALL,
+                            type: "button",
+                            onClick: () =>
+                                setUninstallConfirmationPopupOpened(true),
+                        },
+                    ]}
+                    icon={<MoreVert />}
+                />
+            </TableCell>
+            {/* <Grid item>
                 <Grid container>
                     {!props.theme.active && (
                         <Grid item>
@@ -96,7 +100,7 @@ const ThemeItem = (props: ThemeItemProps) => {
                         </Button>
                     </Grid>
                 </Grid>
-            </Grid>
+            </Grid> */}
             <AppDialog
                 onOpen={uninstallConfirmationPopupOpened}
                 onClose={closeUninstallConfirmationPopup}
@@ -121,7 +125,7 @@ const ThemeItem = (props: ThemeItemProps) => {
                     { name: BUTTON_THEME_APPLY, callback: applyTheme },
                 ]}
             />
-        </StyledGrid>
+        </TableRow>
     );
 };
 

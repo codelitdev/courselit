@@ -101,10 +101,10 @@ export default {
         ) => getCourses({ offset, tag, filterBy, ctx }),
     },
     getEnrolledCourses: {
-        type: new GraphQLList(types.adminCourseItemType),
+        type: new GraphQLList(types.enrolledCourses),
         args: {
             userId: {
-                type: new GraphQLNonNull(GraphQLID),
+                type: new GraphQLNonNull(GraphQLString),
             },
         },
         resolve: (

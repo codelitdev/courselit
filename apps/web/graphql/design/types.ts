@@ -4,7 +4,6 @@ import {
     GraphQLBoolean,
     GraphQLObjectType,
     GraphQLInputObjectType,
-    GraphQLList,
 } from "graphql";
 import { GraphQLJSONObject } from "graphql-type-json";
 
@@ -27,27 +26,7 @@ const themeInputType = new GraphQLInputObjectType({
     },
 });
 
-const layoutType = new GraphQLObjectType({
-    name: "Layout",
-    fields: {
-        top: { type: new GraphQLList(GraphQLJSONObject) },
-        bottom: { type: new GraphQLList(GraphQLJSONObject) },
-        aside: { type: new GraphQLList(GraphQLJSONObject) },
-        footerLeft: { type: new GraphQLList(GraphQLJSONObject) },
-        footerRight: { type: new GraphQLList(GraphQLJSONObject) },
-    },
-});
-
-const layoutInputType = new GraphQLInputObjectType({
-    name: "LayoutInput",
-    fields: {
-        layout: { type: new GraphQLNonNull(GraphQLString) },
-    },
-});
-
 export default {
     themeType,
     themeInputType,
-    layoutType,
-    layoutInputType,
 };
