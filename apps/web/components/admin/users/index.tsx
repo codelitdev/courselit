@@ -160,176 +160,167 @@ const UsersManager = ({
     };
 
     return (
-        <Section>
-            <Grid container direction="column">
-                <Grid item>
-                    <Typography variant="h1">
-                        {USERS_MANAGER_PAGE_HEADING}
-                    </Typography>
-                </Grid>
-                <Grid item>
-                    <TableContainer>
-                        <Table aria-label="Users">
-                            <TableHead>
-                                <TableRow>
+        <Grid container direction="column">
+            <Grid item>
+                <Typography variant="h1">
+                    {USERS_MANAGER_PAGE_HEADING}
+                </Typography>
+            </Grid>
+            <Grid item>
+                <TableContainer>
+                    <Table aria-label="Users">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>{USER_TABLE_HEADER_NAME}</TableCell>
+                                <TableCell align="right">
+                                    <Grid
+                                        container
+                                        justifyContent="end"
+                                        alignItems="center"
+                                    >
+                                        <Grid item>
+                                            <FormControl sx={{ minWidth: 120 }}>
+                                                <InputLabel
+                                                    htmlFor="permissions-select"
+                                                    id="type-select"
+                                                    shrink
+                                                >
+                                                    {USER_FILTER_PERMISSION}
+                                                </InputLabel>
+                                                <Select
+                                                    onChange={
+                                                        handleUserTypeChange
+                                                    }
+                                                    displayEmpty
+                                                    value={type}
+                                                    id="permissions-select"
+                                                    label="Grouping"
+                                                    labelId="type-select"
+                                                    size="small"
+                                                >
+                                                    <MenuItem value="">
+                                                        {USER_TYPE_ALL}
+                                                    </MenuItem>
+                                                    <MenuItem
+                                                        value={
+                                                            USER_TYPE_AUDIENCE
+                                                        }
+                                                    >
+                                                        {USER_TYPE_AUDIENCE}
+                                                    </MenuItem>
+                                                    <MenuItem
+                                                        value={USER_TYPE_TEAM}
+                                                    >
+                                                        {USER_TYPE_TEAM}
+                                                    </MenuItem>
+                                                </Select>
+                                            </FormControl>
+                                        </Grid>
+                                        <Grid item>
+                                            <Tooltip title={USER_TYPE_TOOLTIP}>
+                                                <Help
+                                                    fontSize="small"
+                                                    color="disabled"
+                                                />
+                                            </Tooltip>
+                                        </Grid>
+                                    </Grid>
+                                </TableCell>
+                                <TableCell align="right">
+                                    {USER_TABLE_HEADER_JOINED}
+                                </TableCell>
+                                <TableCell align="right">
+                                    {USER_TABLE_HEADER_LAST_ACTIVE}
+                                </TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {users.map((user) => (
+                                <TableRow
+                                    key={user.email}
+                                    sx={{
+                                        "&:last-child td, &:last-child th": {
+                                            border: 0,
+                                        },
+                                    }}
+                                >
                                     <TableCell>
-                                        {USER_TABLE_HEADER_NAME}
-                                    </TableCell>
-                                    <TableCell align="right">
                                         <Grid
                                             container
-                                            justifyContent="end"
+                                            direction="row"
+                                            spacing={1}
                                             alignItems="center"
                                         >
                                             <Grid item>
-                                                <FormControl
-                                                    sx={{ minWidth: 120 }}
-                                                >
-                                                    <InputLabel
-                                                        htmlFor="permissions-select"
-                                                        id="type-select"
-                                                        shrink
-                                                    >
-                                                        {USER_FILTER_PERMISSION}
-                                                    </InputLabel>
-                                                    <Select
-                                                        onChange={
-                                                            handleUserTypeChange
-                                                        }
-                                                        displayEmpty
-                                                        value={type}
-                                                        id="permissions-select"
-                                                        label="Grouping"
-                                                        labelId="type-select"
-                                                        size="small"
-                                                    >
-                                                        <MenuItem value="">
-                                                            {USER_TYPE_ALL}
-                                                        </MenuItem>
-                                                        <MenuItem
-                                                            value={
-                                                                USER_TYPE_AUDIENCE
-                                                            }
-                                                        >
-                                                            {USER_TYPE_AUDIENCE}
-                                                        </MenuItem>
-                                                        <MenuItem
-                                                            value={
-                                                                USER_TYPE_TEAM
-                                                            }
-                                                        >
-                                                            {USER_TYPE_TEAM}
-                                                        </MenuItem>
-                                                    </Select>
-                                                </FormControl>
+                                                <Avatar />
                                             </Grid>
                                             <Grid item>
-                                                <Tooltip
-                                                    title={USER_TYPE_TOOLTIP}
-                                                >
-                                                    <Help
-                                                        fontSize="small"
-                                                        color="disabled"
-                                                    />
-                                                </Tooltip>
+                                                <Grid item>
+                                                    <Link
+                                                        href={`/dashboard/users/${user.userId}`}
+                                                    >
+                                                        <MuiLink
+                                                            color="inherit"
+                                                            variant="body1"
+                                                        >
+                                                            <b>
+                                                                {user.name
+                                                                    ? user.name
+                                                                    : user.email}
+                                                            </b>
+                                                        </MuiLink>
+                                                    </Link>
+                                                </Grid>
+                                                <Grid item>
+                                                    <Typography variant="body1">
+                                                        {user.email}
+                                                    </Typography>
+                                                </Grid>
                                             </Grid>
                                         </Grid>
                                     </TableCell>
                                     <TableCell align="right">
-                                        {USER_TABLE_HEADER_JOINED}
+                                        {getUserType(user)}
                                     </TableCell>
                                     <TableCell align="right">
-                                        {USER_TABLE_HEADER_LAST_ACTIVE}
+                                        {user.createdAt
+                                            ? new Date(
+                                                  +user.createdAt
+                                              ).toLocaleDateString()
+                                            : ""}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        {user.updatedAt !== user.createdAt
+                                            ? user.updatedAt
+                                                ? new Date(
+                                                      +user.updatedAt
+                                                  ).toLocaleDateString()
+                                                : ""
+                                            : ""}
                                     </TableCell>
                                 </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {users.map((user) => (
-                                    <TableRow
-                                        key={user.email}
-                                        sx={{
-                                            "&:last-child td, &:last-child th":
-                                                { border: 0 },
-                                        }}
-                                    >
-                                        <TableCell>
-                                            <Grid
-                                                container
-                                                direction="row"
-                                                spacing={1}
-                                                alignItems="center"
-                                            >
-                                                <Grid item>
-                                                    <Avatar />
-                                                </Grid>
-                                                <Grid item>
-                                                    <Grid item>
-                                                        <Link
-                                                            href={`/dashboard/users/${user.userId}`}
-                                                        >
-                                                            <MuiLink
-                                                                color="inherit"
-                                                                variant="body1"
-                                                            >
-                                                                <b>
-                                                                    {user.name
-                                                                        ? user.name
-                                                                        : user.email}
-                                                                </b>
-                                                            </MuiLink>
-                                                        </Link>
-                                                    </Grid>
-                                                    <Grid item>
-                                                        <Typography variant="body1">
-                                                            {user.email}
-                                                        </Typography>
-                                                    </Grid>
-                                                </Grid>
-                                            </Grid>
-                                        </TableCell>
-                                        <TableCell align="right">
-                                            {getUserType(user)}
-                                        </TableCell>
-                                        <TableCell align="right">
-                                            {user.createdAt
-                                                ? new Date(
-                                                      +user.createdAt
-                                                  ).toLocaleDateString()
-                                                : ""}
-                                        </TableCell>
-                                        <TableCell align="right">
-                                            {user.updatedAt !== user.createdAt
-                                                ? user.updatedAt
-                                                    ? new Date(
-                                                          +user.updatedAt
-                                                      ).toLocaleDateString()
-                                                    : ""
-                                                : ""}
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                </Grid>
-                {users.length > 0 && (
-                    <Grid item container justifyContent="center">
-                        <Grid item>
-                            <Button
-                                variant="outlined"
-                                onClick={() =>
-                                    setUsersPaginationOffset(
-                                        usersPaginationOffset + 1
-                                    )
-                                }
-                            >
-                                {LOAD_MORE_TEXT}
-                            </Button>
-                        </Grid>
-                    </Grid>
-                )}
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
             </Grid>
-        </Section>
+            {users.length > 0 && (
+                <Grid item container justifyContent="center">
+                    <Grid item>
+                        <Button
+                            variant="outlined"
+                            onClick={() =>
+                                setUsersPaginationOffset(
+                                    usersPaginationOffset + 1
+                                )
+                            }
+                        >
+                            {LOAD_MORE_TEXT}
+                        </Button>
+                    </Grid>
+                </Grid>
+            )}
+        </Grid>
     );
 };
 

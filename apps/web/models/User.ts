@@ -1,5 +1,6 @@
 import { generateUniqueId } from "@courselit/utils";
 import mongoose from "mongoose";
+import ProgressSchema, { Progress } from "./Progress";
 
 export interface User {
     _id: mongoose.Types.ObjectId;
@@ -8,7 +9,7 @@ export interface User {
     email: string;
     active: boolean;
     name?: string;
-    purchases: mongoose.Types.ObjectId[];
+    purchases: Progress[];
     bio?: string;
     permissions: string[];
     createdAt: Date;
@@ -22,7 +23,7 @@ const UserSchema = new mongoose.Schema<User>(
         email: { type: String, required: true },
         active: { type: Boolean, required: true, default: true },
         name: { type: String, required: false },
-        purchases: [mongoose.Schema.Types.ObjectId],
+        purchases: [ProgressSchema],
         bio: { type: String },
         permissions: [String],
     },

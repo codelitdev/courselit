@@ -156,7 +156,7 @@ export const DISCARD_COURSE_CHANGES_POPUP_HEADER =
     "Discard changes made to the course?";
 export const FEATURED_SECTION_HEADER = "Featured Resources";
 export const CARD_HEADER_PAGE_LAYOUT = "Layout";
-export const CARD_HEADER_THEME = "Theme";
+export const CARD_HEADER_THEME = "Themes";
 export const CARD_DESCRIPTION_PAGE_LAYOUT =
     "Use the '+' buttons to add your favorite components to the desired sections of your page.";
 export const ADD_COMPONENT_POPUP_HEADER = "Add widgets";
@@ -228,7 +228,7 @@ export const HEADER_RESET_PASSWORD = "Reset password";
 export const HEADER_DESIGN = "Site";
 export const HEADER_YOUR_PROFILE = "Your Profile";
 export const PROFILE_PAGE_MESSAGE_NOT_LOGGED_IN = "to see your profile.";
-export const PROFILE_PAGE_HEADER = "Profile";
+export const PROFILE_PAGE_HEADER = "Your courses";
 export const PROFILE_MY_COURSES = "My Courses";
 export const PROFILE_PAGE_NOT_ENROLLED = "You are not enrolled in any course.";
 export const PROFILE_PAGE_BROWSE_COURSES_TEXT = "Browse our courses";
@@ -326,3 +326,5 @@ export const EDIT_PAGE_BUTTON_UPDATE = "Publish";
 export const EDIT_PAGE_BUTTON_DONE = "Done";
 export const EDIT_PAGE_ADD_WIDGET_TITLE = "New block";
 export const EDIT_PAGE_WIDGET_LIST_HEADER = "Page blocks";
+export const BTN_EDIT_SITE = "Edit site";
+export const THEMES_TABLE_HEADER_NAME = "Name";

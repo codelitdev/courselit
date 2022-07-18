@@ -33,14 +33,6 @@ export default {
         action: null,
     },
     theme: {},
-    layout: {
-        top: [],
-        bottom: [],
-        aside: [],
-        footerLeft: [],
-        footerRight: [],
-    },
-    navigation: [],
     address: {
         backend: "",
         frontend: "",

@@ -3,7 +3,6 @@ export type { default as Address } from "./address";
 export type { default as Auth } from "./auth";
 export type { default as CompatibleComponentsMap } from "./compatible-components-map";
 export type { default as Group } from "./group";
-export type { default as Layout } from "./layout";
 export type { default as Lesson } from "./lesson";
 export type { default as Link } from "./link";
 export type { default as Profile } from "./profile";

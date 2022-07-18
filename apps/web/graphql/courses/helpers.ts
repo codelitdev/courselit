@@ -4,6 +4,8 @@ import GQLContext from "../../models/GQLContext";
 import CourseModel, { Course } from "../../models/Course";
 import { checkMediaForPublicAccess } from "../media/logic";
 import constants from "../../config/constants";
+import { Progress } from "../../models/Progress";
+import { User } from "../../models/User";
 
 const validatePaymentMethod = async (domain: string) => {
     try {
@@ -100,4 +102,11 @@ export const getPaginatedCoursesForAdmin = async ({
             },
         },
     ]);
+};
+
+export const calculatePercentageCompletion = (user: User, course: Course) => {
+    const purchasedCourse = user.purchases.filter(
+        (item: Progress) => item.courseId === course.courseId
+    )[0];
+    return purchasedCourse.completedLessons.length / course.lessons.length;
 };

@@ -35,14 +35,4 @@ export default {
         resolve: async (_: any, { name }: any, context: GQLContext) =>
             removeTheme(name, context),
     },
-    setLayout: {
-        type: settingsTypes.domain,
-        args: {
-            layoutData: {
-                type: new GraphQLNonNull(types.layoutInputType),
-            },
-        },
-        resolve: async (_: any, { layoutData }: any, context: GQLContext) =>
-            setLayout(layoutData, context),
-    },
 };

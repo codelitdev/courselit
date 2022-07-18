@@ -3,7 +3,7 @@
  */
 import slugify from "slugify";
 import CourseModel, { Course } from "../../models/Course";
-import User from "../../models/User";
+import UserModel, { User } from "../../models/User";
 import { internal, responses } from "../../config/strings";
 import {
     checkIfAuthenticated,
@@ -14,7 +14,11 @@ import {
     makeModelTextSearchable,
 } from "../../lib/graphql";
 import constants from "../../config/constants";
-import { getPaginatedCoursesForAdmin, validateCourse } from "./helpers";
+import {
+    calculatePercentageCompletion,
+    getPaginatedCoursesForAdmin,
+    validateCourse,
+} from "./helpers";
 import Lesson from "../../models/Lesson";
 import GQLContext from "../../models/GQLContext";
 import Filter from "./models/filter";
@@ -23,6 +27,7 @@ import { Group } from "@courselit/common-models";
 import { deleteAllLessons } from "../lessons/logic";
 import { deleteMedia } from "../../services/medialit";
 import PageModel, { Page } from "../../models/Page";
+import { Progress } from "../../models/Progress";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -306,27 +311,46 @@ export const getCourses = async ({
 //   return dbQuery;
 // };
 
-export const getEnrolledCourses = async (userId, ctx) => {
+export const getEnrolledCourses = async (userId: string, ctx: GQLContext) => {
     checkIfAuthenticated(ctx);
 
     if (!checkPermission(ctx.user.permissions, [permissions.manageAnyCourse])) {
-        throw new Error(responses.action_not_allowed);
+        if (userId !== ctx.user.userId) {
+            throw new Error(responses.action_not_allowed);
+        }
     }
 
-    const user = await User.findOne({ _id: userId, domain: ctx.subdomain._id });
+    const user = await UserModel.findOne({ userId, domain: ctx.subdomain._id });
     if (!user) {
         throw new Error(responses.user_not_found);
     }
 
-    return CourseModel.find(
+    const enrolledCourses = await CourseModel.find(
         {
-            _id: {
-                $in: [...user.purchases],
+            courseId: {
+                $in: [
+                    ...user.purchases.map(
+                        (course: Progress) => course.courseId
+                    ),
+                ],
             },
             domain: ctx.subdomain._id,
         },
-        "id title"
+        {
+            courseId: 1,
+            title: 1,
+            lessons: 1,
+            type: 1,
+        }
     );
+    console.log("Enrolled", enrolledCourses);
+
+    return enrolledCourses.map((course) => ({
+        courseId: course.courseId,
+        title: course.title,
+        type: course.type,
+        progress: calculatePercentageCompletion(user, course),
+    }));
 };
 
 export const addGroup = async ({

@@ -1,6 +1,5 @@
 import Address from "./address";
 import Auth from "./auth";
-import Layout from "./layout";
 import Link from "./link";
 import Profile from "./profile";
 import SiteInfo from "./site-info";
@@ -13,7 +12,6 @@ export default interface State {
     networkAction: boolean;
     profile: Profile;
     navigation: Link[];
-    layout: Layout;
     address: Address;
     widgetsData: WidgetsData;
     theme: Theme;
