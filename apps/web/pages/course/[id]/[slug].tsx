@@ -30,7 +30,8 @@ interface CourseProps {
 }
 
 const Course = (props: CourseProps) => {
-    const { course, profile, error } = props;
+    const { course, profile } = props;
+    console.log("Course", course, profile);
     const lessons = [];
     let key = 0;
 
@@ -47,7 +48,9 @@ const Course = (props: CourseProps) => {
             for (const lesson of course.groupOfLessons[group]) {
                 lessons.push({
                     name: lesson.title,
-                    element: <LessonViewer key={key++} lesson={lesson} />,
+                    element: (
+                        <LessonViewer key={lesson.lessonId} lesson={lesson} />
+                    ),
                     icon:
                         lesson.requiresEnrollment &&
                         !profile.purchases.includes(course.id) ? (
@@ -61,49 +64,35 @@ const Course = (props: CourseProps) => {
 
     return (
         <>
-            {error && <AppError error={error} />}
-            {!error && (
-                <>
-                    <Head>
-                        <title>
-                            {course.title} | {props.siteInfo.title}
-                        </title>
-                        <meta
-                            name="viewport"
-                            content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
-                        />
-                        <meta
-                            property="og:url"
-                            content={formulateCourseUrl(
-                                course,
-                                props.address.frontend
-                            )}
-                        />
-                        <meta property="og:type" content="article" />
-                        <meta property="og:title" content={course.title} />
-                        <meta
-                            property="og:description"
-                            content={getPostDescriptionSnippet(
-                                course.description
-                            )}
-                        />
-                        <meta
-                            property="og:author"
-                            content={course.creatorName}
-                        />
-                        {course.featuredImage && (
-                            <meta
-                                property="og:image"
-                                content={
-                                    course.featuredImage &&
-                                    course.featuredImage.file
-                                }
-                            />
-                        )}
-                    </Head>
-                    <ComponentScaffold items={lessons} />
-                </>
-            )}
+            <Head>
+                <title>
+                    {course.title} | {props.siteInfo.title}
+                </title>
+                <meta
+                    name="viewport"
+                    content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
+                />
+                <meta
+                    property="og:url"
+                    content={formulateCourseUrl(course, props.address.frontend)}
+                />
+                <meta property="og:type" content="article" />
+                <meta property="og:title" content={course.title} />
+                <meta
+                    property="og:description"
+                    content={getPostDescriptionSnippet(course.description)}
+                />
+                <meta property="og:author" content={course.creatorName} />
+                {course.featuredImage && (
+                    <meta
+                        property="og:image"
+                        content={
+                            course.featuredImage && course.featuredImage.file
+                        }
+                    />
+                )}
+            </Head>
+            <ComponentScaffold items={lessons} />
         </>
     );
 };
@@ -111,7 +100,7 @@ const Course = (props: CourseProps) => {
 export async function getServerSideProps({ query, req }: any) {
     const graphQuery = `
     query {
-      post: getCourse(courseId: "${query.id}") {
+      post: getCourse(id: "${query.id}") {
         id,
         title,
         description,
@@ -123,7 +112,6 @@ export async function getServerSideProps({ query, req }: any) {
         creatorName,
         creatorId,
         slug,
-        isBlog,
         cost,
         courseId,
         groups {
@@ -132,7 +120,7 @@ export async function getServerSideProps({ query, req }: any) {
           rank
         },
         lessons {
-          id,
+          lessonId,
           title,
           requiresEnrollment,
           courseId,
@@ -151,14 +139,14 @@ export async function getServerSideProps({ query, req }: any) {
 
     try {
         const response = await fetch.exec();
+        console.log(response);
         const { post } = response;
         if (post) {
             const lessonsOrderedByGroups: Record<string, unknown> = {};
-            for (const group of response.post.groups) {
-                lessonsOrderedByGroups[group.name] =
-                    response.post.lessons.filter(
-                        (lesson: Lesson) => lesson.groupId === group.id
-                    );
+            for (const group of post.groups) {
+                lessonsOrderedByGroups[group.name] = post.lessons.filter(
+                    (lesson: Lesson) => lesson.groupId === group.id
+                );
             }
 
             const courseGroupedByLessons = {
@@ -170,7 +158,6 @@ export async function getServerSideProps({ query, req }: any) {
                 creatorName: post.creatorName,
                 creatorId: post.creatorId,
                 slug: post.slug,
-                isBlog: post.isBlog,
                 cost: post.cost,
                 courseId: post.courseId,
                 groupOfLessons: lessonsOrderedByGroups,
@@ -179,23 +166,17 @@ export async function getServerSideProps({ query, req }: any) {
             return {
                 props: {
                     course: courseGroupedByLessons,
-                    error: null,
                 },
             };
         } else {
             return {
-                props: {
-                    course: null,
-                    error: "Invalid response",
-                },
+                notFound: true,
             };
         }
     } catch (err: any) {
+        console.log(err);
         return {
-            props: {
-                course: null,
-                error: err.message,
-            },
+            notFound: true,
         };
     }
 }

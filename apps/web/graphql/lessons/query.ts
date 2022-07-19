@@ -1,4 +1,4 @@
-import { GraphQLNonNull, GraphQLID } from "graphql";
+import { GraphQLNonNull, GraphQLID, GraphQLString } from "graphql";
 import types from "./types";
 import { getLesson, getLessonDetails } from "./logic";
 import GQLContext from "../../models/GQLContext";
@@ -18,7 +18,7 @@ export default {
         type: types.lessonType,
         args: {
             id: {
-                type: new GraphQLNonNull(GraphQLID),
+                type: new GraphQLNonNull(GraphQLString),
             },
         },
         resolve: (_: any, { id }: { id: string }, context: GQLContext) =>

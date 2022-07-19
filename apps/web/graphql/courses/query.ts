@@ -32,17 +32,11 @@ export default {
         type: types.courseType,
         args: {
             id: {
-                type: GraphQLString,
-            },
-            courseId: {
-                type: GraphQLString,
+                type: new GraphQLNonNull(GraphQLString),
             },
         },
-        resolve: (
-            _: any,
-            { id, courseId }: { id: string | null; courseId: string | null },
-            context: GQLContext
-        ) => getCourse(id, courseId, context),
+        resolve: (_: any, { id }: { id: string }, context: GQLContext) =>
+            getCourse(id, context),
     },
     getCoursesAsAdmin: {
         type: new GraphQLList(types.adminCourseItemType),

@@ -53,7 +53,7 @@ export const getLesson = async (id: string, ctx: GQLContext) => {
 
 export const getLessonDetails = async (id: string, ctx: GQLContext) => {
     const lesson = await LessonModel.findOne({
-        _id: id,
+        lessonId: id,
         domain: ctx.subdomain._id,
     });
 
@@ -98,6 +98,7 @@ export const createLesson = async (lessonData: Lesson, ctx: GQLContext) => {
             courseId: course.courseId,
             groupId: lessonData.groupId,
             groupRank: -1,
+            requiresEnrollment: lessonData.requiresEnrollment,
         });
 
         course.lessons.push(lesson.lessonId);

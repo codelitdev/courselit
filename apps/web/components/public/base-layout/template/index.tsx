@@ -52,6 +52,7 @@ const Template = (props: TemplateProps) => {
         selectedWidget,
         children,
     } = props;
+    if (!layout) return <></>;
     const footer = layout.filter((widget) => widget.name === "footer")[0];
 
     return (

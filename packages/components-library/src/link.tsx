@@ -5,7 +5,7 @@ import { Link as MuiLink } from "@mui/material";
 interface LinkProps {
     href: string;
     children?: React.ReactNode;
-    sxProps: Record<string, unknown>;
+    sxProps?: Record<string, unknown>;
 }
 
 export default function Link({ href, children, sxProps }: LinkProps) {

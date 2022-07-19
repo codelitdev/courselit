@@ -96,7 +96,7 @@ const Article = (props: ArticleProps) => {
                 }}
             >
                 <Grid item component="header">
-                    <Typography variant="h4" className={classes.header}>
+                    <Typography variant="h2" className={classes.header}>
                         {course.title}
                     </Typography>
                 </Grid>

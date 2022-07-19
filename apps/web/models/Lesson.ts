@@ -40,7 +40,7 @@ const LessonSchema = new mongoose.Schema<Lesson>({
     downloadable: { type: Boolean, default: false },
     creatorId: { type: mongoose.Schema.Types.ObjectId, required: true },
     courseId: { type: String, required: true },
-    requiresEnrollment: { type: Boolean, default: false },
+    requiresEnrollment: { type: Boolean, default: true },
     published: { type: Boolean, required: true, default: false },
     groupId: { type: String, required: true },
     groupRank: { type: Number, required: true },

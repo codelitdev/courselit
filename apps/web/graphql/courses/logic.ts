@@ -63,27 +63,11 @@ const getCourseOrThrow = async (
     return course;
 };
 
-export const getCourse = async (
-    id: string | null = null,
-    courseId: string | null = null,
-    ctx: GQLContext
-) => {
-    if (!id && !courseId) {
-        throw new Error(responses.invalid_course_id);
-    }
-
-    let course;
-    if (id) {
-        course = await CourseModel.findOne({
-            _id: id,
-            domain: ctx.subdomain._id,
-        });
-    } else {
-        course = await CourseModel.findOne({
-            courseId,
-            domain: ctx.subdomain._id,
-        });
-    }
+export const getCourse = async (id: string, ctx: GQLContext) => {
+    const course = await CourseModel.findOne({
+        courseId: id,
+        domain: ctx.subdomain._id,
+    });
 
     if (!course) {
         throw new Error(responses.item_not_found);
@@ -165,6 +149,10 @@ export const updateCourse = async (
 
     course = await validateCourse(course, ctx);
     course = await course.save();
+    await PageModel.updateOne(
+        { entityId: course.courseId, domain: ctx.subdomain._id },
+        { $set: { name: course.title } }
+    );
     return course;
 };
 
@@ -179,6 +167,10 @@ export const deleteCourse = async (
         if (course.featuredImage) {
             await deleteMedia(course.featuredImage);
         }
+        await PageModel.deleteOne({
+            entityId: course.courseId,
+            domain: ctx.subdomain._id,
+        });
         await course.remove();
         return true;
     } catch (err: any) {
@@ -341,14 +333,15 @@ export const getEnrolledCourses = async (userId: string, ctx: GQLContext) => {
             title: 1,
             lessons: 1,
             type: 1,
+            slug: 1,
         }
     );
-    console.log("Enrolled", enrolledCourses);
 
     return enrolledCourses.map((course) => ({
         courseId: course.courseId,
         title: course.title,
         type: course.type,
+        slug: course.slug,
         progress: calculatePercentageCompletion(user, course),
     }));
 };

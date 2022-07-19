@@ -23,6 +23,8 @@ export const formulateCourseUrl = (course: any, backend = "") =>
     }`;
 
 export const getPostDescriptionSnippet = (rawDraftJSContentState: any) => {
+    if (!rawDraftJSContentState) return "";
+
     const firstSentence = TextEditor.hydrate({ data: rawDraftJSContentState })
         .getCurrentContent()
         .getPlainText()
@@ -118,6 +120,7 @@ export const getPage = async (backend: string, id?: string) => {
         ? `
     query {
         page: getPage(id: "${id}") {
+            name,
             layout,
         }
     }
@@ -125,6 +128,7 @@ export const getPage = async (backend: string, id?: string) => {
         : `
     query {
         page: getPage {
+            name,
             layout,
         }
     }

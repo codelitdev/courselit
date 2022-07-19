@@ -25,7 +25,6 @@ export default function Widget({
     state,
     dispatch,
 }: WidgetProps<Settings>) {
-    console.log("name", name);
     const id = name === "featured" ? productId : entityId;
     const [product, setProduct] = useState<Partial<Course>>({});
 
@@ -38,7 +37,7 @@ export default function Widget({
     const loadCourse = async () => {
         const query = `
             query {
-                product: getCourse(courseId: "${id}") {
+                product: getCourse(id: "${id}") {
                     title,
                     description,
                     featuredImage {
@@ -177,7 +176,6 @@ export default function Widget({
                             href={`/checkout/${id}`}
                             variant="contained"
                             size="large"
-                            disableElevation
                         >
                             {buyButtonCaption || "Buy now"}
                         </Button>

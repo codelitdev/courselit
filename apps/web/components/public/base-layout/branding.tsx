@@ -4,7 +4,7 @@
 
 import React from "react";
 import { styled } from "@mui/system";
-import { Link, Grid, Typography } from "@mui/material";
+import { Link, Grid, Typography, ThemedProps, Theme } from "@mui/material";
 import { connect } from "react-redux";
 import type { AppState } from "@courselit/state-management";
 import { Image } from "@courselit/components-library";
@@ -19,7 +19,7 @@ const classes = {
     siteName: `${PREFIX}-siteName`,
 };
 
-const StyledLink = styled(Link)(({ theme }) => ({
+const StyledLink = styled(Link)(({ theme }: { theme: Theme }) => ({
     [`& .${classes.toolbar}`]: theme.mixins.toolbar,
     [`& .${classes.logoAdjustment}`]: {},
 
@@ -53,25 +53,38 @@ interface BrandingProps {
 
 const Branding = ({ siteinfo }: BrandingProps) => {
     return (
-        <StyledLink
-            href="/"
-            color="inherit"
-            style={{ textDecoration: "none" }}
-            underline="hover"
-        >
-            <Grid
-                container
-                alignItems="center"
-                className={`${classes.toolbar} ${classes.logoAdjustment}`}
-            >
-                <Grid item className={classes.logocontainer}>
-                    <Image src={siteinfo.logopath.file} height={36} />
-                </Grid>
-                <Grid item className={classes.siteName}>
-                    <Typography variant="h5">{siteinfo.title}</Typography>
-                </Grid>
+        <Grid container alignItems="center" sx={{ p: 2 }}>
+            <Grid item sx={{ mr: 1 }}>
+                <Image
+                    borderRadius={1}
+                    src={siteinfo.logopath.file}
+                    width={36}
+                    height={36}
+                />
             </Grid>
-        </StyledLink>
+            <Grid item>
+                <Typography variant="h5">{siteinfo.title}</Typography>
+            </Grid>
+        </Grid>
+        // <StyledLink
+        //     href="/"
+        //     color="inherit"
+        //     style={{ textDecoration: "none" }}
+        //     underline="hover"
+        // >
+        //     <Grid
+        //         container
+        //         alignItems="center"
+        //         className={`${classes.toolbar} ${classes.logoAdjustment}`}
+        //     >
+        //         <Grid item className={classes.logocontainer}>
+        //             <Image borderRadius={1} src={siteinfo.logopath.file} height={36} />
+        //         </Grid>
+        //         <Grid item className={classes.siteName}>
+        //             <Typography variant="h5">{siteinfo.title}</Typography>
+        //         </Grid>
+        //     </Grid>
+        // </StyledLink>
     );
 };
 

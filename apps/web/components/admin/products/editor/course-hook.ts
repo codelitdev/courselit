@@ -23,7 +23,7 @@ export default function useCourse(id: string): Partial<Course> | undefined {
     const loadCourse = async (courseId: string) => {
         const query = `
             query {
-                course: getCourse(courseId: "${courseId}") {
+                course: getCourse(id: "${courseId}") {
                     title,
                     description,
                     id,

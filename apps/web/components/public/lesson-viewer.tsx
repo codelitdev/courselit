@@ -9,12 +9,17 @@ import {
 } from "../../ui-config/constants";
 import { connect } from "react-redux";
 import { actionCreators } from "@courselit/state-management";
-import { Typography, Grid } from "@mui/material";
+import { Typography, Grid, Button } from "@mui/material";
 import {
+    ENROLL_BUTTON_TEXT,
     ENROLL_IN_THE_COURSE,
     NOT_ENROLLED_HEADER,
 } from "../../ui-config/strings";
-import { Section, RichText as TextEditor } from "@courselit/components-library";
+import {
+    Section,
+    RichText as TextEditor,
+    Link,
+} from "@courselit/components-library";
 import type { Lesson, Auth, Profile, Address } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 
@@ -84,20 +89,21 @@ const LessonViewer = (props: LessonViewerProps) => {
     );
 
     useEffect(() => {
-        props.lesson.id && isEnrolled && loadLesson(props.lesson.id);
+        props.lesson.lessonId &&
+            isEnrolled &&
+            loadLesson(props.lesson.lessonId);
     }, [props.lesson]);
 
     const loadLesson = async (id: string) => {
         const query = `
     query {
       lesson: getLessonDetails(id: "${id}") {
-        id,
+        lessonId,
         title,
         downloadable,
         type,
         content,
         media {
-          id,
           file,
           caption
         },
@@ -135,8 +141,8 @@ const LessonViewer = (props: LessonViewerProps) => {
     return (
         <StyledSection>
             {!isEnrolled && (
-                <Grid container direction="column" spacing={2}>
-                    <Grid item>
+                <Grid container direction="column" sx={{ p: 2 }}>
+                    <Grid item sx={{ mb: 1 }}>
                         <Typography
                             variant="h2"
                             className={classes.notEnrolledHeader}
@@ -144,15 +150,32 @@ const LessonViewer = (props: LessonViewerProps) => {
                             {NOT_ENROLLED_HEADER}
                         </Typography>
                     </Grid>
-                    <Grid item>
+                    <Grid item sx={{ mb: 2 }}>
                         <Typography variant="body1">
                             {ENROLL_IN_THE_COURSE}
                         </Typography>
                     </Grid>
+                    <Grid item>
+                        <Link
+                            href={`a`}
+                            sxProps={{
+                                textDecoration: "none",
+                            }}
+                        >
+                            <Button variant="contained" size="large">
+                                {ENROLL_BUTTON_TEXT}
+                            </Button>
+                        </Link>
+                    </Grid>
                 </Grid>
             )}
             {isEnrolled && (
-                <Grid container direction="column" component="article">
+                <Grid
+                    container
+                    direction="column"
+                    component="article"
+                    sx={{ p: 2 }}
+                >
                     <Grid item>
                         <header>
                             <Typography variant="h2">{lesson.title}</Typography>

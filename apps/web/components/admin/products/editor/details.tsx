@@ -50,7 +50,7 @@ function Details({ id, address, dispatch }: DetailsProps) {
         mutation {
             updateCourse(courseData: {
                 id: "${course.id}"
-                title: "${course!.title}",
+                title: "${title}",
           description: "${RichText.stringify(description)}",
           featuredImage: ${
               featuredImage ? '"' + featuredImage.mediaId + '"' : null

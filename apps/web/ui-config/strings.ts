@@ -130,10 +130,10 @@ export const APP_MESSAGE_LESSON_DELETED = "Lesson deleted";
 export const APP_MESSAGE_LESSON_SAVED = "Lesson details saved";
 export const APP_MESSAGE_COURSE_SAVED = "Course details saved";
 export const ENROLL_IN_THE_COURSE =
-    'Please enroll in the course to access this lesson. Go to the "About this course" page for enrolling.';
+    "You need to be enrolled in the course to view this lesson.";
 export const NOT_ENROLLED_HEADER = "Content Locked";
 export const USER_ERROR_HEADER = "Yikes!";
-export const ENROLL_BUTTON_TEXT = "Enroll";
+export const ENROLL_BUTTON_TEXT = "Buy now";
 export const BUTTON_DELETE_MEDIA = "Delete";
 export const DELETE_MEDIA_POPUP_HEADER = "Delete this file?";
 export const HEADER_EDITING_MEDIA = "Edit media";
@@ -328,3 +328,4 @@ export const EDIT_PAGE_ADD_WIDGET_TITLE = "New block";
 export const EDIT_PAGE_WIDGET_LIST_HEADER = "Page blocks";
 export const BTN_EDIT_SITE = "Edit site";
 export const THEMES_TABLE_HEADER_NAME = "Name";
+export const ACCOUNT_PROGRESS_SUFFIX = "% Complete";
