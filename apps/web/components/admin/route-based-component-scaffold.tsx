@@ -10,14 +10,13 @@ import ListItem from "@mui/material/ListItem";
 import { Menu } from "@mui/icons-material";
 import { Toolbar, Grid, LinearProgress, Typography } from "@mui/material";
 import { useTheme } from "@mui/material";
-import AppToast from "../../app-toast";
-import DrawerListItemIcon from "./drawer-list-item-icon";
-import Header from "./header";
+import AppToast from "../app-toast";
+import DrawerListItemIcon from "../public/base-layout/drawer-list-item-icon";
+import Header from "../public/base-layout/header";
 import { connect } from "react-redux";
-// import useMediaQuery from "@mui/material/useMediaQuery";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
-import State from "../../../ui-models/state";
+import State from "../../ui-models/state";
 
 const PREFIX = "RouteBasedComponentScaffold";
 const drawerWidth = 240;
@@ -129,7 +128,7 @@ const Root = styled("div")(({ theme }: { theme: any }) => ({
     },
 }));
 
-const Branding = dynamic(() => import("./branding"));
+const Branding = dynamic(() => import("../public/base-layout/branding"));
 
 const ComponentScaffold = (props: any) => {
     const theme = useTheme();

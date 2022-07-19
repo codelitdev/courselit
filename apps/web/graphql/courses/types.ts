@@ -171,6 +171,7 @@ const enrolledCourses = new GraphQLObjectType({
         title: { type: new GraphQLNonNull(GraphQLString) },
         type: { type: new GraphQLNonNull(courseTypeFilters) },
         progress: { type: new GraphQLNonNull(GraphQLFloat) },
+        slug: { type: new GraphQLNonNull(GraphQLString) },
     },
 });
 

@@ -14,7 +14,11 @@ const CourseIntroduction = (props: CourseIntroductionProps) => {
         showEnrollmentArea: true,
     };
 
-    return <>{course && <Article course={course} options={options} />}</>;
+    if (!course) {
+        return <></>;
+    }
+
+    return <Article course={course} options={options} />;
 };
 
 export default CourseIntroduction;

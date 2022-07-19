@@ -58,7 +58,7 @@ const Free = ({ course, auth, dispatch, address }: FreeProps) => {
     return (
         <Button
             onClick={handleClick}
-            variant="outlined"
+            variant="contained"
             color="primary"
             disabled={disabled}
             size="large"

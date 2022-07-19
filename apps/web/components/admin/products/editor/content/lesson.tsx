@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { styled } from "@mui/material/styles";
 import {
     Button,
     TextField,
@@ -50,6 +49,7 @@ import {
     Section,
     RichText as TextEditor,
     RichText,
+    Select as SingleSelect,
 } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 import type { AppDispatch, AppState } from "@courselit/state-management";
@@ -97,7 +97,7 @@ const LessonEditor = ({
                 public: false,
             },
             downloadable: false,
-            requiresEnrollment: false,
+            requiresEnrollment: true,
             courseId,
             groupId: sectionId,
             lessonId: "",
@@ -302,7 +302,7 @@ const LessonEditor = ({
             Object.assign({}, lesson, {
                 [e.target.name]:
                     e.target.type === "checkbox"
-                        ? e.target.checked
+                        ? !e.target.checked
                         : e.target.value,
             })
         );
@@ -333,6 +333,31 @@ const LessonEditor = ({
     const goBackLessonList = () =>
         router.replace(`/dashboard/product/${courseId}/content`);
 
+    const selectOptions = [
+        {
+            label: capitalize(LESSON_TYPE_FILE),
+            value: String.prototype.toUpperCase.call(LESSON_TYPE_FILE),
+        },
+        {
+            label: capitalize(LESSON_TYPE_VIDEO),
+            value: String.prototype.toUpperCase.call(LESSON_TYPE_VIDEO),
+        },
+        {
+            label: capitalize(LESSON_TYPE_AUDIO),
+            value: String.prototype.toUpperCase.call(LESSON_TYPE_AUDIO),
+        },
+        {
+            label: capitalize(LESSON_TYPE_PDF),
+            value: String.prototype.toUpperCase.call(LESSON_TYPE_PDF),
+        },
+    ];
+    if (course?.type === COURSE_TYPE_COURSE.toUpperCase()) {
+        selectOptions.unshift({
+            label: capitalize(LESSON_TYPE_TEXT),
+            value: String.prototype.toUpperCase.call(LESSON_TYPE_TEXT),
+        });
+    }
+
     return (
         <Section>
             {lesson.type && (
@@ -361,69 +386,18 @@ const LessonEditor = ({
                                 </Grid>
                                 {course?.type && (
                                     <Grid item sx={{ mb: 2 }}>
-                                        <FormControl fullWidth>
-                                            <InputLabel id="select-type">
-                                                {TYPE_DROPDOWN}
-                                            </InputLabel>
-                                            <Select
-                                                labelId="select-type"
-                                                value={lesson.type}
-                                                onChange={onLessonDetailsChange}
-                                                label="Type"
-                                            >
-                                                {course?.type ===
-                                                    COURSE_TYPE_COURSE.toUpperCase() && (
-                                                    <MenuItem
-                                                        value={String.prototype.toUpperCase.call(
-                                                            LESSON_TYPE_TEXT
-                                                        )}
-                                                    >
-                                                        {capitalize(
-                                                            LESSON_TYPE_TEXT
-                                                        )}
-                                                    </MenuItem>
-                                                )}
-                                                <MenuItem
-                                                    value={String.prototype.toUpperCase.call(
-                                                        LESSON_TYPE_VIDEO
-                                                    )}
-                                                >
-                                                    {capitalize(
-                                                        LESSON_TYPE_VIDEO
-                                                    )}
-                                                </MenuItem>
-                                                <MenuItem
-                                                    value={String.prototype.toUpperCase.call(
-                                                        LESSON_TYPE_AUDIO
-                                                    )}
-                                                >
-                                                    {capitalize(
-                                                        LESSON_TYPE_AUDIO
-                                                    )}
-                                                </MenuItem>
-                                                <MenuItem
-                                                    value={String.prototype.toUpperCase.call(
-                                                        LESSON_TYPE_PDF
-                                                    )}
-                                                >
-                                                    {capitalize(
-                                                        LESSON_TYPE_PDF
-                                                    )}
-                                                </MenuItem>
-                                                {course?.type ===
-                                                    COURSE_TYPE_DOWNLOAD.toUpperCase() && (
-                                                    <MenuItem
-                                                        value={String.prototype.toUpperCase.call(
-                                                            LESSON_TYPE_FILE
-                                                        )}
-                                                    >
-                                                        {capitalize(
-                                                            LESSON_TYPE_FILE
-                                                        )}
-                                                    </MenuItem>
-                                                )}
-                                            </Select>
-                                        </FormControl>
+                                        <SingleSelect
+                                            title={TYPE_DROPDOWN}
+                                            value={lesson.type}
+                                            options={selectOptions}
+                                            onChange={(value) => {
+                                                setLesson(
+                                                    Object.assign({}, lesson, {
+                                                        type: value,
+                                                    })
+                                                );
+                                            }}
+                                        />
                                     </Grid>
                                 )}
                                 <Grid item sx={{ mb: 2 }}>
@@ -541,7 +515,7 @@ const LessonEditor = ({
                                                 type="checkbox"
                                                 name="requiresEnrollment"
                                                 checked={
-                                                    lesson.requiresEnrollment
+                                                    !lesson.requiresEnrollment
                                                 }
                                                 onChange={onLessonDetailsChange}
                                             />

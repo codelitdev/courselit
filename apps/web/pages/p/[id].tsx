@@ -9,9 +9,7 @@ interface IndexProps {
 }
 
 const Index = ({ siteinfo, page }: IndexProps) => {
-    return (
-        <BaseLayout title={siteinfo.subtitle} layout={page.layout}></BaseLayout>
-    );
+    return <BaseLayout title={page.name} layout={page.layout}></BaseLayout>;
 };
 
 const mapStateToProps = (state: State) => ({
@@ -24,6 +22,7 @@ export async function getServerSideProps({ query, req }: any) {
     const { id } = query;
     const address = getBackendAddress(req.headers.host);
     const page = await getPage(address, id);
+    console.log(page);
     if (!page) {
         return {
             notFound: true,
