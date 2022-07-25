@@ -75,6 +75,7 @@ const courseType = new GraphQLObjectType({
         },
         groups: { type: new GraphQLList(courseGroupType) },
         pageId: { type: new GraphQLNonNull(GraphQLString) },
+        firstLesson: { type: GraphQLString },
     },
 });
 

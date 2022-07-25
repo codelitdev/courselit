@@ -4,22 +4,28 @@ import {
     formulateCourseUrl,
     getBackendAddress,
     getPostDescriptionSnippet,
-} from "../../../ui-lib/utils";
-import { Lock } from "@mui/icons-material";
-import { SIDEBAR_TEXT_COURSE_ABOUT } from "../../../ui-config/strings";
+    isEnrolled,
+} from "../../../../ui-lib/utils";
+import { ArrowBack, ArrowForward, Lock } from "@mui/icons-material";
+import {
+    COURSE_PROGRESS_START,
+    SIDEBAR_TEXT_COURSE_ABOUT,
+} from "../../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
-import dynamic from "next/dynamic";
 import type { AppState } from "@courselit/state-management";
-import { Address, Lesson, Profile, SiteInfo } from "@courselit/common-models";
-import ComponentScaffold from "../../../components/public/base-layout/component-scaffold";
-
-const CourseIntroduction = dynamic(
-    () => import("../../../components/course-introduction")
-);
-const LessonViewer = dynamic(
-    () => import("../../../components/public/lesson-viewer")
-);
-const AppError = dynamic(() => import("../../../components/app-error"));
+import {
+    Address,
+    Course,
+    Lesson,
+    Profile,
+    SiteInfo,
+} from "@courselit/common-models";
+import RouteBasedComponentScaffold, {
+    ComponentScaffoldMenuItem,
+} from "../../../../components/public/scaffold";
+import Article from "../../../../components/public/article";
+import { Button, Grid } from "@mui/material";
+import { Link } from "@courselit/components-library";
 
 interface CourseProps {
     course: any;
@@ -29,38 +35,44 @@ interface CourseProps {
     error: string;
 }
 
-const Course = (props: CourseProps) => {
-    const { course, profile } = props;
-    console.log("Course", course, profile);
-    const lessons = [];
-    let key = 0;
+export function generateSideBarItems(
+    course: Course & { groupOfLessons: string[] },
+    profile: Profile
+): ComponentScaffoldMenuItem[] {
+    if (!course) return [];
 
-    if (course) {
+    const lessons = [
+        {
+            label: SIDEBAR_TEXT_COURSE_ABOUT,
+            href: `/course/${course.slug}/${course.courseId}`,
+        },
+    ];
+    for (const group of Object.keys(course.groupOfLessons as string[])) {
         lessons.push({
-            name: SIDEBAR_TEXT_COURSE_ABOUT,
-            element: <CourseIntroduction key={key++} course={course} />,
+            label: group,
+            icon: undefined,
         });
-        for (const group of Object.keys(course.groupOfLessons)) {
+        for (const lesson of course.groupOfLessons[group]) {
             lessons.push({
-                name: group,
-                element: null,
+                label: lesson.title,
+                href: `/course/${course.slug}/${course.courseId}/${lesson.lessonId}`,
+                icon:
+                    lesson.requiresEnrollment &&
+                    !isEnrolled(course.courseId, profile) ? (
+                        <Lock />
+                    ) : undefined,
+                iconPlacementRight: true,
             });
-            for (const lesson of course.groupOfLessons[group]) {
-                lessons.push({
-                    name: lesson.title,
-                    element: (
-                        <LessonViewer key={lesson.lessonId} lesson={lesson} />
-                    ),
-                    icon:
-                        lesson.requiresEnrollment &&
-                        !profile.purchases.includes(course.id) ? (
-                            <Lock />
-                        ) : null,
-                    iconPlacementRight: true,
-                });
-            }
         }
     }
+
+    return lessons;
+}
+
+const CourseViewer = (props: CourseProps) => {
+    const { course, profile } = props;
+    console.log("Course", course, profile);
+    let key = 0;
 
     return (
         <>
@@ -92,7 +104,36 @@ const Course = (props: CourseProps) => {
                     />
                 )}
             </Head>
-            <ComponentScaffold items={lessons} />
+            <RouteBasedComponentScaffold
+                items={generateSideBarItems(course, profile)}
+                contentPadding={0}
+            >
+                <Grid container direction="column">
+                    <Grid item>
+                        <Article
+                            course={course}
+                            options={{ showEnrollmentArea: true }}
+                        />
+                    </Grid>
+                    <Grid item sx={{ p: 2 }} alignSelf="flex-end">
+                        <Link
+                            href={`/course/${course.slug}/${course.courseId}/${course.firstLesson}`}
+                            sxProps={{
+                                textDecoration: "none",
+                            }}
+                        >
+                            <Button
+                                component="a"
+                                size="large"
+                                variant="contained"
+                                endIcon={<ArrowForward />}
+                            >
+                                {COURSE_PROGRESS_START}
+                            </Button>
+                        </Link>
+                    </Grid>
+                </Grid>
+            </RouteBasedComponentScaffold>
         </>
     );
 };
@@ -101,7 +142,6 @@ export async function getServerSideProps({ query, req }: any) {
     const graphQuery = `
     query {
       post: getCourse(id: "${query.id}") {
-        id,
         title,
         description,
         featuredImage {
@@ -127,7 +167,8 @@ export async function getServerSideProps({ query, req }: any) {
           groupId,
           groupRank
         },
-        tags
+        tags,
+        firstLesson
       }
     }
   `;
@@ -139,7 +180,6 @@ export async function getServerSideProps({ query, req }: any) {
 
     try {
         const response = await fetch.exec();
-        console.log(response);
         const { post } = response;
         if (post) {
             const lessonsOrderedByGroups: Record<string, unknown> = {};
@@ -150,7 +190,6 @@ export async function getServerSideProps({ query, req }: any) {
             }
 
             const courseGroupedByLessons = {
-                id: post.id,
                 title: post.title,
                 description: post.description,
                 featuredImage: post.featuredImage,
@@ -162,6 +201,7 @@ export async function getServerSideProps({ query, req }: any) {
                 courseId: post.courseId,
                 groupOfLessons: lessonsOrderedByGroups,
                 tags: post.tags,
+                firstLesson: post.firstLesson,
             };
             return {
                 props: {
@@ -187,4 +227,4 @@ const mapStateToProps = (state: AppState) => ({
     address: state.address,
 });
 
-export default connect(mapStateToProps)(Course);
+export default connect(mapStateToProps)(CourseViewer);

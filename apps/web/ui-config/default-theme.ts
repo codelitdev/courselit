@@ -10,7 +10,11 @@ const Theme = {
         // marginTop: 16,
     },
     footer: {},
-    section: {},
+    section: {
+        border: "1px solid #eee",
+        borderRadius: 4,
+        p: 2,
+    },
     mainContentWidth: 8,
     asideWidth: 4,
     singleColumnLayout: false,

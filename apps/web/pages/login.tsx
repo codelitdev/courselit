@@ -161,5 +161,6 @@ export async function getServerSideProps(context: any) {
     const { req } = context;
     const address = getBackendAddress(req.headers.host);
     const page = await getPage(address);
+    console.log("page", page);
     return { props: { page } };
 }

@@ -8,4 +8,6 @@ export default interface Lesson {
     courseId: string;
     groupId: string;
     downloadable: boolean;
+    prevLesson?: string;
+    nextLesson?: string;
 }

@@ -14,7 +14,7 @@ import AppLoader from "../app-loader";
 import Head from "next/head";
 import { canAccessDashboard, checkPermission } from "../../ui-lib/utils";
 import { Grid } from "@mui/material";
-import RouteBasedComponentScaffold from "./route-based-component-scaffold";
+import RouteBasedComponentScaffold from "../public/scaffold";
 import constants from "../../config/constants";
 import type Profile from "../../ui-models/profile";
 import State from "../../ui-models/state";
@@ -46,8 +46,8 @@ const getSidebarMenuItems = (profile: Profile) => {
         ])
     ) {
         items.push({
-            name: "Products",
-            route: "/dashboard/products",
+            label: "Products",
+            href: "/dashboard/products",
             icon: <LibraryBooks />,
         });
     }
@@ -60,32 +60,32 @@ const getSidebarMenuItems = (profile: Profile) => {
         ])
     ) {
         items.push({
-            name: "Media",
-            route: "/dashboard/media",
+            label: "Media",
+            href: "/dashboard/media",
             icon: <PermMedia />,
         });
     }
 
     if (profile.permissions.includes(permissions.manageUsers)) {
         items.push({
-            name: "Users",
-            route: "/dashboard/users",
+            label: "Users",
+            href: "/dashboard/users",
             icon: <SupervisedUserCircle />,
         });
     }
 
     if (profile.permissions.includes(permissions.manageSite)) {
         items.push({
-            name: "Site",
-            route: "/dashboard/design",
+            label: "Site",
+            href: "/dashboard/design",
             icon: <Palette />,
         });
     }
 
     if (profile.permissions.includes(permissions.manageSettings)) {
         items.push({
-            name: "Settings",
-            route: "/dashboard/settings",
+            label: "Settings",
+            href: "/dashboard/settings",
             icon: <SettingsApplications />,
         });
     }

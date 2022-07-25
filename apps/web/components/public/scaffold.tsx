@@ -1,4 +1,4 @@
-import React, { useState /* useEffect */ } from "react";
+import React, { ReactNode, useState /* useEffect */ } from "react";
 import { styled } from "@mui/system";
 import AppBar from "@mui/material/AppBar";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -8,15 +8,22 @@ import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import { Menu } from "@mui/icons-material";
-import { Toolbar, Grid, LinearProgress, Typography } from "@mui/material";
+import {
+    Toolbar,
+    Grid,
+    LinearProgress,
+    Typography,
+    ListSubheader,
+} from "@mui/material";
 import { useTheme } from "@mui/material";
 import AppToast from "../app-toast";
-import DrawerListItemIcon from "../public/base-layout/drawer-list-item-icon";
-import Header from "../public/base-layout/header";
+import DrawerListItemIcon from "./base-layout/drawer-list-item-icon";
+import Header from "./base-layout/header";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
 import State from "../../ui-models/state";
+import { SiteInfo } from "@courselit/common-models";
 
 const PREFIX = "RouteBasedComponentScaffold";
 const drawerWidth = 240;
@@ -32,7 +39,6 @@ const classes = {
     activeItem: `${PREFIX}-activeItem`,
     visitSiteLink: `${PREFIX}-visitSiteLink`,
     contentMain: `${PREFIX}-contentMain`,
-    contentPadding: `${PREFIX}-contentPadding`,
     showprogress: `${PREFIX}-showprogress`,
     hideprogress: `${PREFIX}-hideprogress`,
     menuTitle: `${PREFIX}-menuTitle`,
@@ -106,10 +112,6 @@ const Root = styled("div")(({ theme }: { theme: any }) => ({
         theme.body
     ),
 
-    [`& .${classes.contentPadding}`]: {
-        padding: theme.spacing(2),
-    },
-
     [`& .${classes.hideprogress}`]: {
         visibility: "hidden",
     },
@@ -128,24 +130,26 @@ const Root = styled("div")(({ theme }: { theme: any }) => ({
     },
 }));
 
-const Branding = dynamic(() => import("../public/base-layout/branding"));
+const Branding = dynamic(() => import("./base-layout/branding"));
 
-const ComponentScaffold = (props: any) => {
+export interface ComponentScaffoldMenuItem {
+    label: string;
+    href?: string;
+    icon?: ReactNode;
+    iconPlacementRight?: boolean;
+}
+
+interface ComponentScaffoldProps {
+    siteinfo: SiteInfo;
+    networkAction: boolean;
+    items: ComponentScaffoldMenuItem[];
+    contentPadding?: number;
+}
+
+const ComponentScaffold = (props: ComponentScaffoldProps) => {
     const theme = useTheme();
     const [mobileOpen, setMobileOpen] = useState(false);
-    // const matches = useMediaQuery((theme) => theme.breakpoints.down("xs"));
-    // const [firstLoad, setFirstLoad] = useState(false);
     const router = useRouter();
-
-    // useEffect(() => {
-    //   setFirstLoad(true);
-    // }, []);
-
-    // useEffect(() => {
-    //   if (firstLoad && matches) {
-    //     setMobileOpen(true);
-    //   }
-    // }, [firstLoad]);
 
     function handleDrawerToggle() {
         setMobileOpen(!mobileOpen);
@@ -161,47 +165,53 @@ const ComponentScaffold = (props: any) => {
 
             <List>
                 {props.items.map(
-                    (item: Record<string, unknown>, index: number) => (
-                        <ListItem
-                            button
-                            key={index}
-                            onClick={() => navigateTo(item.route as string)}
-                            className={
-                                router.pathname === item.route
-                                    ? classes.activeItem
-                                    : null
-                            }
-                        >
-                            <Grid
-                                container
-                                direction="row"
-                                alignItems="center"
-                                justifyContent={
-                                    item.icon && item.iconPlacementRight
-                                        ? "space-between"
-                                        : "flex-start"
-                                }
+                    (item: ComponentScaffoldMenuItem, index: number) =>
+                        item.href ? (
+                            <ListItem
+                                button
+                                key={index}
+                                onClick={() => navigateTo(item.href as string)}
+                                sx={{
+                                    backgroundColor:
+                                        router.asPath === item.href
+                                            ? "#d6d6d6"
+                                            : "inherit",
+                                }}
                             >
-                                {item.icon && !item.iconPlacementRight && (
-                                    <DrawerListItemIcon
-                                        icon={item.icon as object}
-                                    />
-                                )}
-                                <Grid item>
-                                    <Typography variant="subtitle2">
-                                        {item.name as string}
-                                    </Typography>
-                                    {/* <ListItemText primary={item.name} /> */}
+                                <Grid
+                                    container
+                                    direction="row"
+                                    alignItems="center"
+                                    justifyContent={
+                                        item.icon && item.iconPlacementRight
+                                            ? "space-between"
+                                            : "flex-start"
+                                    }
+                                >
+                                    {item.icon && !item.iconPlacementRight && (
+                                        <DrawerListItemIcon
+                                            icon={item.icon as object}
+                                        />
+                                    )}
+                                    <Grid item>
+                                        <Typography variant="subtitle2">
+                                            {item.label as string}
+                                        </Typography>
+                                        {/* <ListItemText primary={item.name} /> */}
+                                    </Grid>
+                                    {item.icon && item.iconPlacementRight && (
+                                        <DrawerListItemIcon
+                                            icon={item.icon as object}
+                                            right={true}
+                                        />
+                                    )}
                                 </Grid>
-                                {item.icon && item.iconPlacementRight && (
-                                    <DrawerListItemIcon
-                                        icon={item.icon as object}
-                                        right={true}
-                                    />
-                                )}
-                            </Grid>
-                        </ListItem>
-                    )
+                            </ListItem>
+                        ) : (
+                            <ListSubheader key={index} sx={{ mt: 2 }}>
+                                {item.label as string}
+                            </ListSubheader>
+                        )
                 )}
             </List>
         </>
@@ -264,7 +274,14 @@ const ComponentScaffold = (props: any) => {
                             : classes.hideprogress
                     }
                 />
-                <Grid container className={classes.contentPadding}>
+                <Grid
+                    container
+                    sx={{
+                        p: props.hasOwnProperty("contentPadding")
+                            ? props.contentPadding
+                            : 2,
+                    }}
+                >
                     <Grid item xs={12} className={classes.contentMain}>
                         {props.children}
                     </Grid>
@@ -274,23 +291,6 @@ const ComponentScaffold = (props: any) => {
         </Root>
     );
 };
-
-// ComponentScaffold.propTypes = {
-//   items: PropTypes.arrayOf(
-//     PropTypes.shape({
-//       name: PropTypes.string.isRequired,
-//       route: PropTypes.string.isRequired,
-//       icon: PropTypes.object,
-//       props: PropTypes.object,
-//       progress: PropTypes.shape({
-//         status: PropTypes.bool.isRequired,
-//       }),
-//     })
-//   ),
-//   networkAction: PropTypes.bool.isRequired,
-//   siteinfo: siteInfoProps,
-//   children: PropTypes.object,
-// };
 
 const mapStateToProps = (state: State) => ({
     networkAction: state.networkAction,

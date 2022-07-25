@@ -95,7 +95,8 @@ const CourseItem = (props: CourseItemProps) => {
                                 <PriceTag
                                     cost={course.cost}
                                     freeCostCaption={freeCostCaption}
-                                    siteInfo={siteInfo}
+                                    currencyUnit={siteInfo.currencyUnit}
+                                    currencyISOCode={siteInfo.currencyISOCode}
                                 />
                             </Grid>
                         )}

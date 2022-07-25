@@ -24,7 +24,7 @@ const page = new GraphQLObjectType({
     name: "Page",
     fields: {
         pageId: { type: new GraphQLNonNull(GraphQLString) },
-        name: { type: new GraphQLNonNull(GraphQLString) },
+        name: { type: GraphQLString },
         type: { type: new GraphQLNonNull(pageType) },
         entityId: { type: GraphQLString },
         layout: { type: new GraphQLList(GraphQLJSONObject) },
