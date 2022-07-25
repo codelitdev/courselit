@@ -52,6 +52,8 @@ const lessonType = new GraphQLObjectType({
             type: mediaTypes.mediaType,
             resolve: (lesson, _, __, ___) => getMedia(lesson.mediaId),
         },
+        prevLesson: { type: GraphQLString },
+        nextLesson: { type: GraphQLString },
     },
 });
 

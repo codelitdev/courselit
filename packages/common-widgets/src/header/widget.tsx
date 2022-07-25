@@ -91,6 +91,7 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
                 </Grid>
             </Grid>
             <Grid item>
+                {/*
                 {state.auth.guest ? (
                     <Box
                         sx={{
@@ -134,46 +135,65 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
                     // >
                     //     Login
                     // </Button>
-                    <Box
-                        sx={{
-                            display: { xs: "none", lg: "flex" },
-                        }}
-                    >
-                        <Menu
-                            icon={
-                                <Avatar
-                                    sx={{
-                                        width: 32,
-                                        height: 32,
-                                        color:
-                                            settings.loginBtnColor || "inherit",
-                                        bgcolor:
-                                            settings.loginBtnBgColor ||
-                                            "inherit",
-                                    }}
-                                >
-                                    {state.profile.fetched
-                                        ? state.profile.email
-                                              .charAt(0)
-                                              .toUpperCase()
-                                        : ""}
-                                </Avatar>
-                            }
-                            options={[
-                                {
-                                    label: "Account",
-                                    type: "link",
-                                    href: "/account",
-                                },
-                                {
-                                    label: "Logout",
-                                    type: "link",
-                                    href: "/logout",
-                                },
-                            ]}
-                        />
-                    </Box>
-                )}
+                */}
+                <Box
+                    sx={{
+                        display: { xs: "none", lg: "flex" },
+                    }}
+                >
+                    <Menu
+                        icon={
+                            <Avatar
+                                sx={{
+                                    width: 32,
+                                    height: 32,
+                                    color: settings.loginBtnColor || "inherit",
+                                    bgcolor:
+                                        settings.loginBtnBgColor || "inherit",
+                                }}
+                            >
+                                {state.profile.fetched
+                                    ? state.profile.email
+                                          .charAt(0)
+                                          .toUpperCase()
+                                    : undefined}
+                            </Avatar>
+                        }
+                        options={[
+                            state.auth.guest
+                                ? undefined
+                                : {
+                                      label: "Account",
+                                      type: "link",
+                                      href: "/account",
+                                  },
+                            state.profile.fetched &&
+                            state.profile.permissions.length > 1
+                                ? {
+                                      label: "Dashboard",
+                                      type: "link",
+                                      href: "/dashboard/products",
+                                  }
+                                : undefined,
+                            {
+                                label: state.auth.guest ? "Login" : "Logout",
+                                type: "link",
+                                href: state.auth.guest ? "/login" : "/logout",
+                            },
+                            // {
+                            //     label: "Account",
+                            //     type: "link",
+                            //     href: "/account",
+                            // },
+                            // {
+                            //     label: "Logout",
+                            //     type: "link",
+                            //     href: "/logout",
+                            // },
+                        ]}
+                    />
+                </Box>
+                {/* )} */}
                 <Box
                     sx={{
                         display: { xs: "flex", lg: "none" },

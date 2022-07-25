@@ -28,6 +28,7 @@ import { deleteAllLessons } from "../lessons/logic";
 import { deleteMedia } from "../../services/medialit";
 import PageModel, { Page } from "../../models/Page";
 import { Progress } from "../../models/Progress";
+import { getPrevNextCursor } from "../lessons/helpers";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -85,6 +86,11 @@ export const getCourse = async (id: string, ctx: GQLContext) => {
     }
 
     if (course.published) {
+        const { nextLesson } = await getPrevNextCursor(
+            course.courseId,
+            ctx.subdomain._id
+        );
+        course.firstLesson = nextLesson;
         return course;
     } else {
         throw new Error(responses.item_not_found);

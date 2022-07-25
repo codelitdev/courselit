@@ -147,7 +147,8 @@ export default function Widget({
                         <PriceTag
                             cost={product.cost}
                             freeCostCaption="FREE"
-                            siteInfo={state.siteinfo}
+                            currencyISOCode={state.siteinfo.currencyISOCode}
+                            currencyUnit={state.siteinfo.currencyUnit}
                         />
                     </Grid>
                     <Grid item sx={{ mb: 1 }}>

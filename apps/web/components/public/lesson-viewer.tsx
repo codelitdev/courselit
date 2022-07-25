@@ -9,19 +9,28 @@ import {
 } from "../../ui-config/constants";
 import { connect } from "react-redux";
 import { actionCreators } from "@courselit/state-management";
-import { Typography, Grid, Button } from "@mui/material";
+import { Typography, Grid, Button, Skeleton } from "@mui/material";
 import {
+    COURSE_PROGRESS_INTRO,
+    COURSE_PROGRESS_NEXT,
+    COURSE_PROGRESS_PREV,
     ENROLL_BUTTON_TEXT,
     ENROLL_IN_THE_COURSE,
     NOT_ENROLLED_HEADER,
 } from "../../ui-config/strings";
+import { RichText as TextEditor, Link } from "@courselit/components-library";
 import {
-    Section,
-    RichText as TextEditor,
-    Link,
-} from "@courselit/components-library";
-import type { Lesson, Auth, Profile, Address } from "@courselit/common-models";
+    Address,
+    AppMessage,
+    Course,
+    Lesson,
+    Profile,
+} from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
+import { useRouter } from "next/router";
+import { setAppMessage } from "@courselit/state-management/dist/action-creators";
+import { ArrowBack, ArrowForward } from "@mui/icons-material";
+import { isEnrolled } from "../../ui-lib/utils";
 
 const { networkAction } = actionCreators;
 
@@ -33,7 +42,7 @@ const classes = {
     section: `${PREFIX}-section`,
 };
 
-const StyledSection = styled(Section)(({ theme }: { theme: any }) => ({
+const StyledSection = styled("div")(({ theme }: { theme: any }) => ({
     [`& .${classes.notEnrolledHeader}`]: {
         marginBottom: theme.spacing(1),
     },
@@ -73,26 +82,28 @@ Caption.propTypes = {
 };
 
 interface LessonViewerProps {
-    lesson: Lesson;
-    auth: Auth;
-    profile: Profile;
+    slug: string;
+    lessonId: string;
     dispatch: AppDispatch;
+    profile: Profile;
     address: Address;
 }
 
-const LessonViewer = (props: LessonViewerProps) => {
-    const [lesson, setLesson] = useState(props.lesson);
-    const [isEnrolled] = useState(
-        !lesson.requiresEnrollment ||
-            (props.profile &&
-                props.profile.purchases.includes(props.lesson.courseId))
-    );
+const LessonViewer = ({
+    slug,
+    lessonId,
+    dispatch,
+    profile,
+    address,
+}: LessonViewerProps) => {
+    const [lesson, setLesson] = useState<Lesson>();
+    const router = useRouter();
 
     useEffect(() => {
-        props.lesson.lessonId &&
-            isEnrolled &&
-            loadLesson(props.lesson.lessonId);
-    }, [props.lesson]);
+        if (lessonId) {
+            loadLesson(lessonId);
+        }
+    }, [lessonId]);
 
     const loadLesson = async (id: string) => {
         const query = `
@@ -108,22 +119,25 @@ const LessonViewer = (props: LessonViewerProps) => {
           caption
         },
         requiresEnrollment,
-        courseId
+        courseId,
+        prevLesson,
+        nextLesson
       }
     }
     `;
 
         const fetch = new FetchBuilder()
-            .setUrl(`${props.address.backend}/api/graph`)
+            .setUrl(`${address.backend}/api/graph`)
             .setPayload(query)
             .setIsGraphQLEndpoint(true)
             .build();
 
         try {
-            props.dispatch(networkAction(true));
+            dispatch(networkAction(true));
             const response = await fetch.exec();
 
             if (response.lesson) {
+                console.log(response.lesson);
                 setLesson(
                     Object.assign({}, response.lesson, {
                         content: TextEditor.hydrate({
@@ -132,44 +146,53 @@ const LessonViewer = (props: LessonViewerProps) => {
                     })
                 );
             }
-        } catch (err) {
+        } catch (err: any) {
+            if (err.message === "You are not enrolled in the course") {
+                setLesson(undefined);
+                return;
+            }
+
+            dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            props.dispatch(networkAction(false));
+            dispatch(networkAction(false));
         }
     };
 
+    if (!lesson) {
+        return (
+            <Grid container direction="column" sx={{ p: 2 }}>
+                <Grid item sx={{ mb: 1 }}>
+                    <Typography
+                        variant="h2"
+                        className={classes.notEnrolledHeader}
+                    >
+                        {NOT_ENROLLED_HEADER}
+                    </Typography>
+                </Grid>
+                <Grid item sx={{ mb: 2 }}>
+                    <Typography variant="body1">
+                        {ENROLL_IN_THE_COURSE}
+                    </Typography>
+                </Grid>
+                <Grid item>
+                    <Link
+                        href={`/checkout/${router.query.id}`}
+                        sxProps={{
+                            textDecoration: "none",
+                        }}
+                    >
+                        <Button variant="contained" size="large">
+                            {ENROLL_BUTTON_TEXT}
+                        </Button>
+                    </Link>
+                </Grid>
+            </Grid>
+        );
+    }
+
     return (
         <StyledSection>
-            {!isEnrolled && (
-                <Grid container direction="column" sx={{ p: 2 }}>
-                    <Grid item sx={{ mb: 1 }}>
-                        <Typography
-                            variant="h2"
-                            className={classes.notEnrolledHeader}
-                        >
-                            {NOT_ENROLLED_HEADER}
-                        </Typography>
-                    </Grid>
-                    <Grid item sx={{ mb: 2 }}>
-                        <Typography variant="body1">
-                            {ENROLL_IN_THE_COURSE}
-                        </Typography>
-                    </Grid>
-                    <Grid item>
-                        <Link
-                            href={`a`}
-                            sxProps={{
-                                textDecoration: "none",
-                            }}
-                        >
-                            <Button variant="contained" size="large">
-                                {ENROLL_BUTTON_TEXT}
-                            </Button>
-                        </Link>
-                    </Grid>
-                </Grid>
-            )}
-            {isEnrolled && (
+            {lesson && (
                 <Grid
                     container
                     direction="column"
@@ -258,6 +281,65 @@ const LessonViewer = (props: LessonViewerProps) => {
                             />
                         </Grid>
                     )}
+                    {isEnrolled(lesson.courseId, profile) && (
+                        <Grid item>
+                            <Grid container justifyContent="flex-end">
+                                <Grid item sx={{ mr: 2 }}>
+                                    {!lesson.prevLesson && (
+                                        <Link
+                                            href={`/course/${slug}/${lesson.courseId}`}
+                                            sxProps={{
+                                                textDecoration: "none",
+                                            }}
+                                        >
+                                            <Button
+                                                component="a"
+                                                size="large"
+                                                startIcon={<ArrowBack />}
+                                            >
+                                                {COURSE_PROGRESS_INTRO}
+                                            </Button>
+                                        </Link>
+                                    )}
+                                    {lesson.prevLesson && (
+                                        <Link
+                                            href={`/course/${slug}/${lesson.courseId}/${lesson.prevLesson}`}
+                                            sxProps={{
+                                                textDecoration: "none",
+                                            }}
+                                        >
+                                            <Button
+                                                component="a"
+                                                size="large"
+                                                startIcon={<ArrowBack />}
+                                            >
+                                                {COURSE_PROGRESS_PREV}
+                                            </Button>
+                                        </Link>
+                                    )}
+                                </Grid>
+                                {lesson.nextLesson && (
+                                    <Grid item>
+                                        <Link
+                                            href={`/course/${slug}/${lesson.courseId}/${lesson.nextLesson}`}
+                                            sxProps={{
+                                                textDecoration: "none",
+                                            }}
+                                        >
+                                            <Button
+                                                component="a"
+                                                size="large"
+                                                endIcon={<ArrowForward />}
+                                                variant="contained"
+                                            >
+                                                {COURSE_PROGRESS_NEXT}
+                                            </Button>
+                                        </Link>
+                                    </Grid>
+                                )}
+                            </Grid>
+                        </Grid>
+                    )}
                 </Grid>
             )}
         </StyledSection>
@@ -265,7 +347,6 @@ const LessonViewer = (props: LessonViewerProps) => {
 };
 
 const mapStateToProps = (state: AppState) => ({
-    auth: state.auth,
     profile: state.profile,
     address: state.address,
 });

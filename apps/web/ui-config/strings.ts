@@ -75,10 +75,10 @@ export const SITE_ADMIN_SETTINGS_PAYMENT_METHOD = "Payment Method";
 export const SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT =
     "Stripe Publishable Key";
 export const FREE_COST = "FREE";
-export const SIDEBAR_TEXT_COURSE_ABOUT = "About this course";
+export const SIDEBAR_TEXT_COURSE_ABOUT = "Introduction";
 export const REACT_COMPONENT_CRASHED =
     "We've encountered a problem in showing the content";
-export const CHECKOUT_DIALOG_TITLE = "Checkout";
+export const CHECKOUT_PAGE_TITLE = "Checkout";
 export const PAYMENT_MODAL_PAYMENT_DETAILS_HEADER = "Payment details";
 export const PAYMENT_MODAL_COST_PREFIX = "Cost";
 export const PAYMENT_MODAL_PAY_NOW_BUTTON_CAPTION = "Pay now";
@@ -216,7 +216,7 @@ export const TRANSACTION_STATUS_INITIATED = "Payment Not Yet Confirmed.";
 export const TRANSACTION_STATUS_FAILED = "Payment Failed.";
 export const TRANSACTION_STATUS_FAILED_DETAILS =
     "The payment service provider was unable to process your payment. Please go back and try again.";
-export const VISIT_COURSE_BUTTON = "Visit course";
+export const VISIT_COURSE_BUTTON = "Launch course";
 export const VISIT_POST_BUTTON = "Visit post";
 export const VERIFY_PAYMENT_BUTTON = "Re-check Payment Status";
 export const PURCHASE_ID_HEADER = "Purchase ID";
@@ -329,3 +329,8 @@ export const EDIT_PAGE_WIDGET_LIST_HEADER = "Page blocks";
 export const BTN_EDIT_SITE = "Edit site";
 export const THEMES_TABLE_HEADER_NAME = "Name";
 export const ACCOUNT_PROGRESS_SUFFIX = "% Complete";
+export const CHECKOUT_PAGE_TOTAL = "Total";
+export const COURSE_PROGRESS_PREV = "Previous";
+export const COURSE_PROGRESS_INTRO = "Course Introduction";
+export const COURSE_PROGRESS_NEXT = "Next";
+export const COURSE_PROGRESS_START = "Start";

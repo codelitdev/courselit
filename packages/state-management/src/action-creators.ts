@@ -52,7 +52,11 @@ export function refreshUserProfile(): ThunkAction<
           email,
           userId,
           bio,
-          permissions
+          permissions,
+          purchases {
+            courseId,
+            completedLessons
+          }
         }
       }
       `;

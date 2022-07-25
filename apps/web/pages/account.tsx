@@ -102,9 +102,9 @@ function Account({ auth, page, profile, address }: AccountProps) {
                                         </Grid>
                                     </Grid>
                                 </Grid>
-                                <Grid item>
+                                <Grid item alignSelf="flex-end">
                                     <Link
-                                        href={`/course/${course.courseId}/${course.slug}`}
+                                        href={`/course/${course.slug}/${course.courseId}`}
                                     >
                                         <Button variant="contained">
                                             {VISIT_COURSE_BUTTON}

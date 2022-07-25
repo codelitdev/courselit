@@ -5,7 +5,7 @@ import { FetchBuilder } from "@courselit/utils";
 
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-export const formattedLocaleDate = (epochString: string) =>
+export const formattedLocaleDate = (epochString: Date) =>
     new Date(Number(epochString)).toLocaleString("en-US", {
         year: "numeric",
         month: "long",
@@ -145,3 +145,7 @@ export const getPage = async (backend: string, id?: string) => {
         console.log("getPage", e.message); // eslint-disable-line no-console
     }
 };
+
+export const isEnrolled = (courseId: string, profile: Profile) =>
+    profile.fetched &&
+    profile.purchases.some((purchase: any) => purchase.courseId === courseId);

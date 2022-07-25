@@ -10,11 +10,13 @@ import {
     checkOwnershipWithoutModel,
 } from "../../lib/graphql";
 import CourseModel from "../../models/Course";
-import { lessonValidator } from "./helpers";
+import { getPrevNextCursor, lessonValidator } from "./helpers";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
 import { Course } from "../../models/Course";
 import { deleteMedia } from "../../services/medialit";
+import { Progress } from "../../models/Progress";
+import { Group } from "@courselit/common-models";
 
 const { permissions } = constants;
 
@@ -63,10 +65,21 @@ export const getLessonDetails = async (id: string, ctx: GQLContext) => {
 
     if (
         lesson.requiresEnrollment &&
-        (!ctx.user || !ctx.user.purchases.includes(lesson.courseId))
+        (!ctx.user ||
+            !ctx.user.purchases.some(
+                (purchase: Progress) => purchase.courseId === lesson.courseId
+            ))
     ) {
         throw new Error(responses.not_enrolled);
     }
+
+    const { prevLesson, nextLesson } = await getPrevNextCursor(
+        lesson.courseId,
+        ctx.subdomain._id,
+        lesson.lessonId
+    );
+    lesson.prevLesson = prevLesson;
+    lesson.nextLesson = nextLesson;
 
     return lesson;
 };
