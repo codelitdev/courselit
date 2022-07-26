@@ -29,6 +29,7 @@ import { deleteMedia } from "../../services/medialit";
 import PageModel, { Page } from "../../models/Page";
 import { Progress } from "../../models/Progress";
 import { getPrevNextCursor } from "../lessons/helpers";
+import { Banner } from "@courselit/common-widgets";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -131,6 +132,13 @@ export const createCourse = async (
         ctx,
     });
     page.entityId = course.courseId;
+    page.layout = [
+        Banner.init({
+            pageId: page.pageId,
+            type: "PRODUCT",
+            entityId: course.courseId,
+        }),
+    ];
     await page.save();
 
     return course;

@@ -91,7 +91,6 @@ export default {
     // page types
     product: "product",
     site: "site",
-    landing: "landing",
 
     // acceptable currency codes for payments
     currencyISOCodes: [

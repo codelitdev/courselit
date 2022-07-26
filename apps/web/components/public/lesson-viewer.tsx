@@ -36,7 +36,12 @@ import {
     refreshUserProfile,
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
-import { ArrowBack, ArrowForward, Download } from "@mui/icons-material";
+import {
+    ArrowBack,
+    ArrowForward,
+    Download,
+    OpenInNew,
+} from "@mui/icons-material";
 import { isEnrolled } from "../../ui-lib/utils";
 
 const { networkAction } = actionCreators;
@@ -341,7 +346,7 @@ const LessonViewer = ({
                                         rel="noopener noreferrer"
                                         href={lesson.media.file as string}
                                         download={lesson.media.originalFileName}
-                                        startIcon={<Download />}
+                                        startIcon={<OpenInNew />}
                                         size="large"
                                         variant="contained"
                                         disableElevation

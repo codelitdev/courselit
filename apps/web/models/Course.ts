@@ -25,7 +25,7 @@ export interface Course {
     featuredImage?: string;
     groups: Group[];
     sales: number;
-    customers: mongoose.Types.ObjectId[];
+    customers: string[];
     pageId: string;
 }
 
@@ -66,7 +66,7 @@ const CourseSchema = new mongoose.Schema<Course>(
             },
         ],
         sales: { type: Number, required: true, default: 0.0 },
-        customers: [mongoose.Schema.Types.ObjectId],
+        customers: [String],
         pageId: { type: String, required: true },
     },
     {

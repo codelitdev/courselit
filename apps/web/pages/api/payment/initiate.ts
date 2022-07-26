@@ -129,5 +129,10 @@ const finalizeCoursePurchase = async (userId: string, courseId: string) => {
             completedLessons: [],
         });
         await (user as any).save();
+        if (!course.customers.some((customer) => customer === user.userId)) {
+            course.customers.push(user.userId);
+            course.sales += course.cost;
+            await (course as any).save();
+        }
     }
 };
