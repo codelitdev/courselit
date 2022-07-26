@@ -95,8 +95,10 @@ function Account({ auth, page, profile, address }: AccountProps) {
                                         </Grid>
                                         <Grid item>
                                             <Typography>
-                                                {(course.progress as unknown) *
-                                                    100}
+                                                {(
+                                                    (course.progress as unknown) *
+                                                    100
+                                                ).toFixed(2)}
                                                 {ACCOUNT_PROGRESS_SUFFIX}
                                             </Typography>
                                         </Grid>

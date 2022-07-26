@@ -6,11 +6,15 @@ import {
     LESSON_TYPE_VIDEO,
     LESSON_TYPE_AUDIO,
     LESSON_TYPE_PDF,
+    LESSON_TYPE_FILE,
+    LESSON_TYPE_TEXT,
 } from "../../ui-config/constants";
 import { connect } from "react-redux";
 import { actionCreators } from "@courselit/state-management";
 import { Typography, Grid, Button, Skeleton } from "@mui/material";
 import {
+    BUTTON_LESSON_DOWNLOAD,
+    COURSE_PROGRESS_FINISH,
     COURSE_PROGRESS_INTRO,
     COURSE_PROGRESS_NEXT,
     COURSE_PROGRESS_PREV,
@@ -28,8 +32,11 @@ import {
 } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { useRouter } from "next/router";
-import { setAppMessage } from "@courselit/state-management/dist/action-creators";
-import { ArrowBack, ArrowForward } from "@mui/icons-material";
+import {
+    refreshUserProfile,
+    setAppMessage,
+} from "@courselit/state-management/dist/action-creators";
+import { ArrowBack, ArrowForward, Download } from "@mui/icons-material";
 import { isEnrolled } from "../../ui-lib/utils";
 
 const { networkAction } = actionCreators;
@@ -116,7 +123,8 @@ const LessonViewer = ({
         content,
         media {
           file,
-          caption
+          caption,
+          originalFileName
         },
         requiresEnrollment,
         courseId,
@@ -137,7 +145,6 @@ const LessonViewer = ({
             const response = await fetch.exec();
 
             if (response.lesson) {
-                console.log(response.lesson);
                 setLesson(
                     Object.assign({}, response.lesson, {
                         content: TextEditor.hydrate({
@@ -152,6 +159,41 @@ const LessonViewer = ({
                 return;
             }
 
+            dispatch(setAppMessage(new AppMessage(err.message)));
+        } finally {
+            dispatch(networkAction(false));
+        }
+    };
+
+    const markCompleteAndNext = async () => {
+        const query = `
+        mutation {
+            result: markLessonCompleted(id: "${lesson!.lessonId}")
+        }
+        `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload(query)
+            .setIsGraphQLEndpoint(true)
+            .build();
+
+        try {
+            dispatch(networkAction(true));
+            const response = await fetch.exec();
+
+            if (response.result) {
+                if (lesson!.nextLesson) {
+                    dispatch(refreshUserProfile());
+                    router.push(
+                        `/course/${slug}/${lesson!.courseId}/${
+                            lesson!.nextLesson
+                        }`
+                    );
+                } else {
+                    router.push(`/account`);
+                }
+            }
+        } catch (err: any) {
             dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
             dispatch(networkAction(false));
@@ -273,12 +315,39 @@ const LessonViewer = ({
                             />
                         </Grid>
                     )}
-                    {lesson.content && (
-                        <Grid item className={classes.section}>
-                            <TextEditor
-                                initialContentState={lesson.content}
-                                readOnly={true}
-                            />
+                    {String.prototype.toUpperCase.call(LESSON_TYPE_TEXT) ===
+                        lesson.type &&
+                        lesson.content && (
+                            <Grid item className={classes.section}>
+                                <TextEditor
+                                    initialContentState={lesson.content}
+                                    readOnly={true}
+                                />
+                            </Grid>
+                        )}
+                    {String.prototype.toUpperCase.call(LESSON_TYPE_FILE) ===
+                        lesson.type && (
+                        <Grid item>
+                            <Grid
+                                container
+                                justifyContent="center"
+                                alignItems="center"
+                                sx={{ minHeight: "50vh" }}
+                            >
+                                <Grid item>
+                                    <Button
+                                        component="a"
+                                        href={lesson.media.file as string}
+                                        download={lesson.media.originalFileName}
+                                        startIcon={<Download />}
+                                        size="large"
+                                        variant="contained"
+                                        disableElevation
+                                    >
+                                        {BUTTON_LESSON_DOWNLOAD}
+                                    </Button>
+                                </Grid>
+                            </Grid>
                         </Grid>
                     )}
                     {isEnrolled(lesson.courseId, profile) && (
@@ -318,25 +387,23 @@ const LessonViewer = ({
                                         </Link>
                                     )}
                                 </Grid>
-                                {lesson.nextLesson && (
-                                    <Grid item>
-                                        <Link
-                                            href={`/course/${slug}/${lesson.courseId}/${lesson.nextLesson}`}
-                                            sxProps={{
-                                                textDecoration: "none",
-                                            }}
-                                        >
-                                            <Button
-                                                component="a"
-                                                size="large"
-                                                endIcon={<ArrowForward />}
-                                                variant="contained"
-                                            >
-                                                {COURSE_PROGRESS_NEXT}
-                                            </Button>
-                                        </Link>
-                                    </Grid>
-                                )}
+                                <Grid item>
+                                    <Button
+                                        component="a"
+                                        size="large"
+                                        endIcon={
+                                            lesson.nextLesson ? (
+                                                <ArrowForward />
+                                            ) : undefined
+                                        }
+                                        variant="contained"
+                                        onClick={markCompleteAndNext}
+                                    >
+                                        {lesson.nextLesson
+                                            ? COURSE_PROGRESS_NEXT
+                                            : COURSE_PROGRESS_FINISH}
+                                    </Button>
+                                </Grid>
                             </Grid>
                         </Grid>
                     )}

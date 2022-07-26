@@ -16,10 +16,6 @@ const Lesson = ({ course, profile }: LessonProps) => {
     const router = useRouter();
     const { lesson } = router.query;
 
-    useEffect(() => {
-        console.log(lesson);
-    }, [lesson]);
-
     if (!router.isReady) {
         return <></>;
     }

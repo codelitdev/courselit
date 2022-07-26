@@ -149,3 +149,21 @@ export const getPage = async (backend: string, id?: string) => {
 export const isEnrolled = (courseId: string, profile: Profile) =>
     profile.fetched &&
     profile.purchases.some((purchase: any) => purchase.courseId === courseId);
+
+export const isLessonCompleted = ({
+    courseId,
+    lessonId,
+    profile,
+}: {
+    courseId: string;
+    lessonId: string;
+    profile: Profile;
+}) => {
+    const indexOfCurrentCourse = profile.purchases.findIndex(
+        (purchase) => purchase.courseId === courseId
+    );
+    if (indexOfCurrentCourse === -1) return false;
+    return profile.purchases[indexOfCurrentCourse].completedLessons.some(
+        (lesson) => lesson === lessonId
+    );
+};
