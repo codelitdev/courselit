@@ -337,6 +337,8 @@ const LessonViewer = ({
                                 <Grid item>
                                     <Button
                                         component="a"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                         href={lesson.media.file as string}
                                         download={lesson.media.originalFileName}
                                         startIcon={<Download />}
