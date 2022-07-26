@@ -19,14 +19,7 @@ const Header = ({}: HeaderProps) => {
             direction="row"
             alignItems="center"
         >
-            <Grid
-                item
-                sx={(theme) => ({
-                    [theme.breakpoints.up("sm")]: {
-                        display: "none",
-                    },
-                })}
-            >
+            <Grid item>
                 <Branding />
             </Grid>
             {!theme.hideLoginButton && (

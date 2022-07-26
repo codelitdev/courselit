@@ -17,6 +17,7 @@ import { Course } from "../../models/Course";
 import { deleteMedia } from "../../services/medialit";
 import { Progress } from "../../models/Progress";
 import { Group } from "@courselit/common-models";
+import { recordProgress } from "../users/logic";
 
 const { permissions } = constants;
 
@@ -206,4 +207,22 @@ export const deleteAllLessons = async (courseId: string, ctx: GQLContext) => {
         courseId,
         domain: ctx.subdomain._id,
     });
+};
+
+export const markLessonCompleted = async (
+    lessonId: string,
+    ctx: GQLContext
+) => {
+    const lesson = await LessonModel.findOne({ lessonId });
+    if (!lesson) {
+        throw new Error(responses.item_not_found);
+    }
+
+    await recordProgress({
+        lessonId,
+        courseId: lesson.courseId,
+        user: ctx.user,
+    });
+
+    return true;
 };

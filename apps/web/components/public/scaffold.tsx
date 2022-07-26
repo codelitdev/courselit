@@ -61,10 +61,10 @@ const Root = styled("div")(({ theme }: { theme: any }) => ({
         {},
         {
             zIndex: theme.zIndex.drawer + 1,
-            [theme.breakpoints.up("sm")]: {
-                width: `calc(100% - ${drawerWidth}px)`,
-                marginLeft: drawerWidth,
-            },
+            // [theme.breakpoints.up("sm")]: {
+            //     width: `calc(100% - ${drawerWidth}px)`,
+            //     marginLeft: drawerWidth,
+            // },
         },
         theme.appBar
     ),
@@ -74,8 +74,6 @@ const Root = styled("div")(({ theme }: { theme: any }) => ({
             display: "none",
         },
     },
-
-    [`& .${classes.toolbar}`]: theme.mixins.toolbar,
 
     [`& .${classes.drawerPaper}`]: Object.assign(
         {},
@@ -161,8 +159,7 @@ const ComponentScaffold = (props: ComponentScaffoldProps) => {
 
     const drawer = (
         <>
-            <Branding />
-
+            <Toolbar />
             <List>
                 {props.items.map(
                     (item: ComponentScaffoldMenuItem, index: number) =>
@@ -189,9 +186,11 @@ const ComponentScaffold = (props: ComponentScaffoldProps) => {
                                     }
                                 >
                                     {item.icon && !item.iconPlacementRight && (
-                                        <DrawerListItemIcon
-                                            icon={item.icon as object}
-                                        />
+                                        <Grid item>
+                                            <DrawerListItemIcon
+                                                icon={item.icon as object}
+                                            />
+                                        </Grid>
                                     )}
                                     <Grid item>
                                         <Typography variant="subtitle2">
@@ -200,10 +199,12 @@ const ComponentScaffold = (props: ComponentScaffoldProps) => {
                                         {/* <ListItemText primary={item.name} /> */}
                                     </Grid>
                                     {item.icon && item.iconPlacementRight && (
-                                        <DrawerListItemIcon
-                                            icon={item.icon as object}
-                                            right={true}
-                                        />
+                                        <Grid item>
+                                            <DrawerListItemIcon
+                                                icon={item.icon as object}
+                                                right={true}
+                                            />
+                                        </Grid>
                                     )}
                                 </Grid>
                             </ListItem>
@@ -266,7 +267,7 @@ const ComponentScaffold = (props: ComponentScaffoldProps) => {
                 </Hidden>
             </nav>
             <main className={classes.content}>
-                <div className={classes.toolbar} />
+                <Toolbar />
                 <LinearProgress
                     className={
                         props.networkAction

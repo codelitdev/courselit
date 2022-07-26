@@ -5,10 +5,6 @@ import {
     Typography,
     Grid,
     Switch,
-    Select,
-    FormControl,
-    InputLabel,
-    MenuItem,
     capitalize,
     Tooltip,
 } from "@mui/material";
@@ -23,7 +19,6 @@ import {
     POPUP_CANCEL_ACTION,
     POPUP_OK_ACTION,
     APP_MESSAGE_LESSON_DELETED,
-    APP_MESSAGE_LESSON_SAVED,
     BUTTON_NEW_LESSON_TEXT,
     EDIT_LESSON_TEXT,
     BUTTON_DELETE_LESSON_TEXT,
@@ -64,7 +59,6 @@ const { networkAction, setAppMessage } = actionCreators;
 
 const AppDialog = dynamic(() => import("../../../../public/app-dialog"));
 const MediaSelector = dynamic(() => import("../../../media/media-selector"));
-const AppLoader = dynamic(() => import("../../../../app-loader"));
 
 interface LessonEditorProps {
     courseId: string;
@@ -218,7 +212,6 @@ const LessonEditor = ({
             dispatch(networkAction(true));
             await fetch.exec();
             goBackLessonList();
-            // dispatch(setAppMessage(new AppMessage(APP_MESSAGE_LESSON_SAVED)));
         } catch (err: any) {
             dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
@@ -373,18 +366,20 @@ const LessonEditor = ({
                         <form onSubmit={onLessonCreate}>
                             <Grid container direction="column">
                                 <Grid item sx={{ mb: 2 }}>
-                                    <TextField
-                                        required
-                                        variant="outlined"
-                                        label="Title"
-                                        fullWidth
-                                        margin="normal"
-                                        name="title"
-                                        value={lesson.title}
-                                        onChange={onLessonDetailsChange}
-                                    />
+                                    {course?.type === COURSE_TYPE_COURSE && (
+                                        <TextField
+                                            required
+                                            variant="outlined"
+                                            label="Title"
+                                            fullWidth
+                                            margin="normal"
+                                            name="title"
+                                            value={lesson.title}
+                                            onChange={onLessonDetailsChange}
+                                        />
+                                    )}
                                 </Grid>
-                                {course?.type && (
+                                {course?.type === COURSE_TYPE_COURSE && (
                                     <Grid item sx={{ mb: 2 }}>
                                         <SingleSelect
                                             title={TYPE_DROPDOWN}
@@ -416,18 +411,22 @@ const LessonEditor = ({
                                                     lesson.media &&
                                                     lesson.media.thumbnail
                                                 }
-                                                onSelection={(media?: Media) =>
+                                                onSelection={(
+                                                    media?: Media
+                                                ) => {
+                                                    console.log(media);
                                                     media &&
-                                                    setLesson(
-                                                        Object.assign(
-                                                            {},
-                                                            lesson,
-                                                            {
-                                                                media,
-                                                            }
-                                                        )
-                                                    )
-                                                }
+                                                        setLesson(
+                                                            Object.assign(
+                                                                {},
+                                                                lesson,
+                                                                {
+                                                                    title: media.originalFileName,
+                                                                    media,
+                                                                }
+                                                            )
+                                                        );
+                                                }}
                                                 mimeTypesToShow={getMimeTypesToShow()}
                                             />
                                         </div>

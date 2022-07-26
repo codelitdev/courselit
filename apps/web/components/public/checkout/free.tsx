@@ -8,6 +8,7 @@ import type { Address, Auth, Course } from "@courselit/common-models";
 import { AppMessage } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
+import { refreshUserProfile } from "@courselit/state-management/dist/action-creators";
 
 const { networkAction, setAppMessage } = actionCreators;
 
@@ -43,6 +44,7 @@ const Free = ({ course, auth, dispatch, address }: FreeProps) => {
             });
 
             if (response.status === "success") {
+                dispatch(refreshUserProfile());
                 router.replace(`/account`);
             } else if (response.status === "failed") {
                 dispatch(setAppMessage(new AppMessage(response.error)));

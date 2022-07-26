@@ -21,21 +21,16 @@ export const lessonValidator = (lessonData: Lesson) => {
     }
 };
 
-interface LessonCursors {
-    prevLesson: string;
-    nextLesson: string;
-}
-
-export const getPrevNextCursor = async (
+type GroupLessonItem = Pick<Lesson, "lessonId" | "groupId" | "groupRank">;
+export const getGroupedLessons = async (
     courseId: string,
-    domainId: mongoose.Types.ObjectId,
-    lessonId?: string
-): Promise<LessonCursors> => {
+    domainId: mongoose.Types.ObjectId
+): Promise<GroupLessonItem[]> => {
     const course = await CourseModel.findOne({
         courseId: courseId,
         domain: domainId,
     });
-    const allLessons = await LessonModel.find(
+    const allLessons = await LessonModel.find<GroupLessonItem>(
         {
             lessonId: {
                 $in: [...course.lessons],
@@ -54,11 +49,27 @@ export const getPrevNextCursor = async (
     )) {
         lessonsInSequentialOrder.push(
             ...allLessons
-                .filter((lesson: Lesson) => lesson.groupId === group.id)
-                .sort((a: Lesson, b: Lesson) => a.groupRank - b.groupRank)
+                .filter(
+                    (lesson: GroupLessonItem) => lesson.groupId === group.id
+                )
+                .sort(
+                    (a: GroupLessonItem, b: GroupLessonItem) =>
+                        a.groupRank - b.groupRank
+                )
         );
     }
+    return lessonsInSequentialOrder;
+};
 
+export const getPrevNextCursor = async (
+    courseId: string,
+    domainId: mongoose.Types.ObjectId,
+    lessonId?: string
+) => {
+    const lessonsInSequentialOrder = await getGroupedLessons(
+        courseId,
+        domainId
+    );
     const indexOfCurrentLesson = lessonId
         ? lessonsInSequentialOrder.findIndex(
               (item) => item.lessonId === lessonId

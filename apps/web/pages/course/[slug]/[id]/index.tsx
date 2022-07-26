@@ -5,8 +5,16 @@ import {
     getBackendAddress,
     getPostDescriptionSnippet,
     isEnrolled,
+    isLessonCompleted,
 } from "../../../../ui-lib/utils";
-import { ArrowBack, ArrowForward, Lock } from "@mui/icons-material";
+import {
+    ArrowBack,
+    ArrowForward,
+    CheckCircle,
+    Circle,
+    CircleOutlined,
+    Lock,
+} from "@mui/icons-material";
 import {
     COURSE_PROGRESS_START,
     SIDEBAR_TEXT_COURSE_ABOUT,
@@ -41,7 +49,7 @@ export function generateSideBarItems(
 ): ComponentScaffoldMenuItem[] {
     if (!course) return [];
 
-    const lessons = [
+    const lessons: ComponentScaffoldMenuItem[] = [
         {
             label: SIDEBAR_TEXT_COURSE_ABOUT,
             href: `/course/${course.slug}/${course.courseId}`,
@@ -60,6 +68,16 @@ export function generateSideBarItems(
                     lesson.requiresEnrollment &&
                     !isEnrolled(course.courseId, profile) ? (
                         <Lock />
+                    ) : profile.userId ? (
+                        isLessonCompleted({
+                            courseId: course.courseId,
+                            lessonId: lesson.lessonId,
+                            profile,
+                        }) ? (
+                            <CheckCircle />
+                        ) : (
+                            <CircleOutlined />
+                        )
                     ) : undefined,
                 iconPlacementRight: true,
             });

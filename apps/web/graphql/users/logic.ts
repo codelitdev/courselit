@@ -1,4 +1,4 @@
-import User from "../../models/User";
+import UserModel, { User } from "../../models/User";
 import Course from "../../models/Course";
 import { responses } from "../../config/strings";
 import {
@@ -9,6 +9,7 @@ import {
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
 const { permissions } = constants;
+import { Progress } from "../../models/Progress";
 
 const removeAdminFieldsFromUserObject = ({
     id,
@@ -45,9 +46,9 @@ export const getUser = async (email = null, userId = null, ctx: GQLContext) => {
 
     let user;
     if (email) {
-        user = await User.findOne({ email, domain: ctx.subdomain._id });
+        user = await UserModel.findOne({ email, domain: ctx.subdomain._id });
     } else {
-        user = await User.findOne({ userId, domain: ctx.subdomain._id });
+        user = await UserModel.findOne({ userId, domain: ctx.subdomain._id });
     }
 
     if (!user) {
@@ -91,7 +92,7 @@ export const updateUser = async (userData, ctx) => {
         }
     }
 
-    let user = await User.findOne({ _id: id, domain: ctx.subdomain._id });
+    let user = await UserModel.findOne({ _id: id, domain: ctx.subdomain._id });
     if (!user) throw new Error(responses.item_not_found);
 
     for (const key of Object.keys(userData)) {
@@ -179,5 +180,31 @@ const getQueryForFilteringByPermissions = (
         return { $in: [constants.permissions.enrollInCourse] };
     } else {
         return { $in: Object.values(constants.permissions) };
+    }
+};
+
+export const recordProgress = async ({
+    lessonId,
+    courseId,
+    user,
+}: {
+    lessonId: string;
+    courseId: string;
+    user: User;
+}) => {
+    const enrolledItemIndex = user.purchases.findIndex(
+        (progress: Progress) => progress.courseId === courseId
+    );
+
+    if (enrolledItemIndex === -1) {
+        throw new Error(responses.not_enrolled);
+    }
+
+    if (
+        user.purchases[enrolledItemIndex].completedLessons.indexOf(lessonId) ===
+        -1
+    ) {
+        user.purchases[enrolledItemIndex].completedLessons.push(lessonId);
+        await (user as any).save();
     }
 };
