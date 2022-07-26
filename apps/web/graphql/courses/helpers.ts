@@ -108,5 +108,8 @@ export const calculatePercentageCompletion = (user: User, course: Course) => {
     const purchasedCourse = user.purchases.filter(
         (item: Progress) => item.courseId === course.courseId
     )[0];
+
+    if (!purchasedCourse.completedLessons.length) return 0;
+
     return purchasedCourse.completedLessons.length / course.lessons.length;
 };

@@ -152,7 +152,7 @@ export const getUsers = async (
         query.permissions = getQueryForFilteringByPermissions(searchData.type);
     }
 
-    const searchUsers = makeModelTextSearchable(User);
+    const searchUsers = makeModelTextSearchable(UserModel);
 
     const users = await searchUsers(
         { offset: searchData.offset, query, graphQLContext: ctx },

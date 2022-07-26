@@ -9,14 +9,13 @@ import {
 } from "graphql";
 import { GraphQLJSONObject } from "graphql-type-json";
 import constants from "../../config/constants";
-const { product, site, landing } = constants;
+const { product, site } = constants;
 
 const pageType = new GraphQLEnumType({
     name: "PageType",
     values: {
         PRODUCT: { value: product },
         SITE: { value: site },
-        LANDING: { value: landing },
     },
 });
 

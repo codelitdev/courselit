@@ -2,7 +2,7 @@ import { generateUniqueId } from "@courselit/utils";
 import mongoose from "mongoose";
 import WidgetSchema, { Widget } from "./Widget";
 import constants from "../config/constants";
-const { product, site, landing } = constants;
+const { product, site } = constants;
 
 export interface Page {
     id: mongoose.Types.ObjectId;
@@ -11,7 +11,7 @@ export interface Page {
     name: string;
     layout: Widget[];
     draftLayout: Widget[];
-    type: typeof product | typeof site | typeof landing;
+    type: typeof product | typeof site;
     creatorId: String;
     entityId?: string;
 }
@@ -22,7 +22,7 @@ const PageSchema = new mongoose.Schema<Page>({
     type: {
         type: String,
         required: true,
-        enum: [product, site, landing],
+        enum: [product, site],
         default: product,
     },
     creatorId: { type: String, required: true },
