@@ -1,4 +1,5 @@
 // import buttondown from "@courselit/widget-buttondown";
+import { Widget } from "@courselit/common-models";
 import {
     RichText,
     TaggedContent,
@@ -9,12 +10,11 @@ import {
 } from "@courselit/common-widgets";
 
 function loadWidgets(): Record<string, any> {
-    const widgets: Record<string, any> = {};
+    const widgets: Record<string, Widget> = {};
 
     // Add common widgets to CourseLit
     widgets[RichText.metadata.name] = RichText;
     // widgets[TaggedContent.metadata.name] = TaggedContent;
-    // widgets[Branding.metadata.name] = Branding;
     widgets[Footer.metadata.name] = Footer;
     widgets[Header.metadata.name] = Header;
     widgets[Featured.metadata.name] = Featured;

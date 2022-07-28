@@ -8,6 +8,7 @@ import { RichText as TextEditor, Select } from "@courselit/components-library";
 import CustomSettings from "./custom-settings";
 
 interface AdminWidgetProps {
+    name: string;
     settings: Settings;
     onChange: (...args: any[]) => void;
     address: Address;
@@ -16,6 +17,7 @@ interface AdminWidgetProps {
 }
 
 export default function AdminWidget({
+    name,
     settings,
     onChange,
     address,
@@ -24,10 +26,7 @@ export default function AdminWidget({
     const [productId, setProductId] = useState(settings.productId || "");
     const [products, setProducts] = useState([]);
     const customSettingsChanged = (customSettings: Settings) => {
-        onChange({
-            productId,
-            ...customSettings,
-        });
+        onChange(Object.assign({}, settings, customSettings));
     };
 
     useEffect(() => {
@@ -94,6 +93,7 @@ export default function AdminWidget({
             </Grid>
             {productId && (
                 <CustomSettings
+                    name={name}
                     settings={settings}
                     onChange={customSettingsChanged}
                 />

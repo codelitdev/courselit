@@ -5,33 +5,36 @@ import Settings from "../settings";
 import { RichText as TextEditor, Select } from "@courselit/components-library";
 
 interface CustomSettingsProps {
+    name: string;
     settings: Settings;
     onChange: (...args: any[]) => void;
 }
 
 export default function CustomSettings({
+    name,
     settings,
     onChange,
 }: CustomSettingsProps) {
+    console.log("custom settings", name, settings);
     const [title, setTitle] = useState(settings.title);
     const [description, setDescription] = useState(
         settings.description
             ? TextEditor.hydrate({ data: settings.description })
             : TextEditor.emptyState()
     );
-    const [buyButtonCaption, setBuyButtonCaption] = useState(
-        settings.buyButtonCaption
-    );
+    const [buttonCaption, setButtonCaption] = useState(settings.buttonCaption);
+    const [buttonAction, setButtonAction] = useState(settings.buttonAction);
     const [alignment, setAlignment] = useState(settings.alignment || "left");
 
     useEffect(() => {
         onChange({
             title,
             description: TextEditor.stringify(description),
-            buyButtonCaption,
+            buttonCaption,
             alignment,
+            buttonAction,
         });
-    }, [title, description, buyButtonCaption, alignment]);
+    }, [title, description, buttonCaption, alignment, buttonAction]);
 
     return (
         <>
@@ -55,11 +58,22 @@ export default function CustomSettings({
                 <TextField
                     variant="outlined"
                     fullWidth
-                    value={buyButtonCaption}
-                    label="Buy button"
-                    onChange={(e) => setBuyButtonCaption(e.target.value)}
+                    value={buttonCaption}
+                    label="Button caption"
+                    onChange={(e) => setButtonCaption(e.target.value)}
                 />
             </Grid>
+            {name === "banner" && settings.type === "site" && (
+                <Grid item xs={12} sx={{ mb: 2 }}>
+                    <TextField
+                        variant="outlined"
+                        fullWidth
+                        value={buttonAction}
+                        label="Button Action (URL)"
+                        onChange={(e) => setButtonAction(e.target.value)}
+                    />
+                </Grid>
+            )}
             <Grid item xs={12}>
                 <Select
                     title="Alignment"

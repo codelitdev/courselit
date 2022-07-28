@@ -1,5 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { AppMessage, SiteInfo } from "@courselit/common-models";
+import {
+    AppMessage,
+    Page,
+    PageTypeSite,
+    SiteInfo,
+    PageTypeProduct,
+    WidgetInstance,
+} from "@courselit/common-models";
 import type { Address, Auth, Profile } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import {
@@ -46,8 +53,8 @@ function PageEditor({
     siteInfo,
 }: PageEditorProps) {
     const [pages, setPages] = useState([]);
-    const [page, setPage] = useState({});
-    const [layout, setLayout] = useState([]);
+    const [page, setPage] = useState<Partial<Page>>({});
+    const [layout, setLayout] = useState<WidgetInstance[]>([]);
     const [selectedWidget, setSelectedWidget] = useState<string>("");
     const [showWidgetSelector, setShowWidgetSelector] =
         useState<boolean>(false);
@@ -336,6 +343,7 @@ function PageEditor({
                         )}
                         {!selectedWidget && showWidgetSelector && (
                             <AddWidget
+                                pageType={page.type?.toLowerCase()}
                                 onSelection={addWidget}
                                 onClose={(e) => setShowWidgetSelector(false)}
                             />
