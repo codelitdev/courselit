@@ -6,6 +6,7 @@ import { AppDispatch } from "@courselit/state-management";
 import CustomSettings from "../featured/admin-widget/custom-settings";
 
 interface AdminWidgetProps {
+    name: string;
     settings: Settings;
     onChange: (...args: any[]) => void;
     address: Address;
@@ -13,7 +14,12 @@ interface AdminWidgetProps {
     dispatch: AppDispatch;
 }
 
-export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
+export default function AdminWidget({
+    name,
+    settings,
+    onChange,
+}: AdminWidgetProps) {
+    console.log("Banner widget", name, settings);
     const [productId, setProductId] = useState(settings.entityId || "");
     const customSettingsChanged = (customSettings: Settings) => {
         onChange(Object.assign({}, settings, customSettings));
@@ -23,6 +29,7 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
         <Grid container>
             {productId && (
                 <CustomSettings
+                    name={name}
                     settings={settings}
                     onChange={customSettingsChanged}
                 />

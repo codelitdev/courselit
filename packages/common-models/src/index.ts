@@ -1,7 +1,6 @@
 export { default as AppMessage } from "./app-message";
 export type { default as Address } from "./address";
 export type { default as Auth } from "./auth";
-export type { default as CompatibleComponentsMap } from "./compatible-components-map";
 export type { default as Group } from "./group";
 export type { default as Lesson } from "./lesson";
 export type { default as Link } from "./link";
@@ -18,3 +17,5 @@ export type { default as FetchBuilder } from "./fetch-builder";
 export type { default as WidgetsData } from "./widgets-data";
 export type { default as Page } from "./page";
 export type { default as WidgetInstance } from "./widget-instance";
+export type { Product as PageTypeProduct } from "./page-type";
+export type { Site as PageTypeSite } from "./page-type";

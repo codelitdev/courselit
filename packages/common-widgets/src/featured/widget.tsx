@@ -18,9 +18,11 @@ export default function Widget({
         productId,
         title,
         description,
-        buyButtonCaption,
+        buttonCaption,
+        buttonAction,
         alignment,
         entityId,
+        type,
     },
     state,
     dispatch,
@@ -30,7 +32,13 @@ export default function Widget({
 
     useEffect(() => {
         if (id) {
-            loadCourse();
+            if (type === "site" && name !== "featured") {
+                setProduct({
+                    title: state.siteinfo.title,
+                });
+            } else {
+                loadCourse();
+            }
         }
     }, [id]);
 
@@ -143,14 +151,16 @@ export default function Widget({
             )}
             <Grid item xs={12} md={verticalLayout ? 12 : 6} sx={{ p: 2 }}>
                 <Grid container direction="column">
-                    <Grid item sx={{ mb: 1 }}>
-                        <PriceTag
-                            cost={product.cost}
-                            freeCostCaption="FREE"
-                            currencyISOCode={state.siteinfo.currencyISOCode}
-                            currencyUnit={state.siteinfo.currencyUnit}
-                        />
-                    </Grid>
+                    {!(type === "site" && name === "banner") && (
+                        <Grid item sx={{ mb: 1 }}>
+                            <PriceTag
+                                cost={product.cost}
+                                freeCostCaption="FREE"
+                                currencyISOCode={state.siteinfo.currencyISOCode}
+                                currencyUnit={state.siteinfo.currencyUnit}
+                            />
+                        </Grid>
+                    )}
                     <Grid item sx={{ mb: 1 }}>
                         <Typography variant="h2">
                             {title || product.title}
@@ -171,16 +181,31 @@ export default function Widget({
                             />
                         )}
                     </Grid>
-                    <Grid item>
-                        <Button
-                            component="a"
-                            href={`/checkout/${id}`}
-                            variant="contained"
-                            size="large"
-                        >
-                            {buyButtonCaption || "Buy now"}
-                        </Button>
-                    </Grid>
+                    {type === "site" && buttonAction && (
+                        <Grid item>
+                            <Button
+                                component="a"
+                                href={buttonAction}
+                                variant="contained"
+                                size="large"
+                            >
+                                {buttonCaption || "Set a URL"}
+                            </Button>
+                        </Grid>
+                    )}
+                    {((name === "banner" && type === "product") ||
+                        name === "featured") && (
+                        <Grid item>
+                            <Button
+                                component="a"
+                                href={`/checkout/${id}`}
+                                variant="contained"
+                                size="large"
+                            >
+                                {buttonCaption || "Buy now"}
+                            </Button>
+                        </Grid>
+                    )}
                 </Grid>
             </Grid>
         </Grid>

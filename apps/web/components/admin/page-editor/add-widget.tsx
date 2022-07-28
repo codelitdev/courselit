@@ -1,3 +1,4 @@
+import { PageTypeProduct, PageTypeSite } from "@courselit/common-models";
 import { Close } from "@mui/icons-material";
 import {
     Grid,
@@ -11,11 +12,12 @@ import { EDIT_PAGE_ADD_WIDGET_TITLE } from "../../../ui-config/strings";
 import widgets from "../../../ui-config/widgets";
 
 interface WidgetsListProps {
+    pageType: PageTypeProduct | PageTypeSite;
     onSelection: (...args: any[]) => void;
     onClose: (...args: any[]) => void;
 }
 
-function AddWidget({ onSelection, onClose }: WidgetsListProps) {
+function AddWidget({ pageType, onSelection, onClose }: WidgetsListProps) {
     return (
         <Grid container direction="column">
             <Grid item>
@@ -42,17 +44,23 @@ function AddWidget({ onSelection, onClose }: WidgetsListProps) {
                         .filter(
                             (widget) => !["header", "footer"].includes(widget)
                         )
-                        .map((item, index) => (
-                            <ListItem disablePadding key={index}>
-                                <ListItemButton
-                                    onClick={(e) => onSelection(item)}
-                                >
-                                    <Typography>
-                                        {widgets[item].metadata.displayName}
-                                    </Typography>
-                                </ListItemButton>
-                            </ListItem>
-                        ))}
+                        .map((item, index) =>
+                            widgets[item].metadata.compatibleWith.includes(
+                                pageType
+                            ) ? (
+                                <ListItem disablePadding key={index}>
+                                    <ListItemButton
+                                        onClick={(e) => onSelection(item)}
+                                    >
+                                        <Typography>
+                                            {widgets[item].metadata.displayName}
+                                        </Typography>
+                                    </ListItemButton>
+                                </ListItem>
+                            ) : (
+                                <></>
+                            )
+                        )}
                 </List>
             </Grid>
         </Grid>

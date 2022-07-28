@@ -21,6 +21,7 @@ interface EditWidgetProps {
 }
 
 function EditWidget({ onChange, onClose, onDelete, widget }: EditWidgetProps) {
+    console.log(widget);
     const actualWidget = widgets[widget.name];
     const onDeleteWidget = () => {
         onDelete(widget.widgetId);
@@ -58,7 +59,7 @@ function EditWidget({ onChange, onClose, onDelete, widget }: EditWidgetProps) {
                 <>
                     <Grid item sx={{ mb: 4 }}>
                         <AdminWidget
-                            id={widget.name}
+                            name={widget.name}
                             settings={widget.settings || {}}
                             onChange={(e: Record<string, unknown>) => {
                                 onChange(widget.widgetId, e);

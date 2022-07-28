@@ -11,20 +11,12 @@ import { GraphQLJSONObject } from "graphql-type-json";
 import constants from "../../config/constants";
 const { product, site } = constants;
 
-const pageType = new GraphQLEnumType({
-    name: "PageType",
-    values: {
-        PRODUCT: { value: product },
-        SITE: { value: site },
-    },
-});
-
 const page = new GraphQLObjectType({
     name: "Page",
     fields: {
         pageId: { type: new GraphQLNonNull(GraphQLString) },
         name: { type: GraphQLString },
-        type: { type: new GraphQLNonNull(pageType) },
+        type: { type: new GraphQLNonNull(GraphQLString) },
         entityId: { type: GraphQLString },
         layout: { type: new GraphQLList(GraphQLJSONObject) },
         draftLayout: { type: new GraphQLList(GraphQLJSONObject) },
