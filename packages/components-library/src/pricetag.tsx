@@ -17,7 +17,7 @@ const PriceTag = (props: PriceTagProps) => {
             ? `${props.currencyUnit}${cost}`
             : `${cost} ${props.currencyISOCode}`;
 
-    return <Typography variant="h5">{costText}</Typography>;
+    return <Typography variant="caption">{costText}</Typography>;
 };
 
 export default PriceTag;
