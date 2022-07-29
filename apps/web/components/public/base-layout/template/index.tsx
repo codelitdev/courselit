@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import { Grid } from "@mui/material";
+import { Box, Grid } from "@mui/material";
 import WidgetByName from "./widget-by-name";
 import AppToast from "../../../app-toast";
 import { WidgetInstance } from "@courselit/common-models";
@@ -21,26 +21,31 @@ const EditableWidget = ({
     editing: boolean;
     onEditClick?: (widgetId: string) => void;
 }) => {
+    if (editing) {
+        return (
+            <Box
+                onClick={() => onEditClick && onEditClick(item.widgetId)}
+                sx={{
+                    "&:hover": {
+                        cursor: editing ? "pointer" : "default",
+                    },
+                }}
+            >
+                <WidgetByName
+                    name={item.name}
+                    settings={item.settings || {}}
+                    id={`widget${item._id}`}
+                />
+            </Box>
+        );
+    }
+
     return (
-        <Grid
-            item
-            onClick={
-                editing
-                    ? () => onEditClick && onEditClick(item.widgetId)
-                    : undefined
-            }
-            sx={{
-                "&:hover": {
-                    cursor: editing ? "pointer" : "default",
-                },
-            }}
-        >
-            <WidgetByName
-                name={item.name}
-                settings={item.settings || {}}
-                id={`widget${item._id}`}
-            />
-        </Grid>
+        <WidgetByName
+            name={item.name}
+            settings={item.settings || {}}
+            id={`widget${item._id}`}
+        />
     );
 };
 

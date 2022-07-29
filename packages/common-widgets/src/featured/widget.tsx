@@ -23,6 +23,8 @@ export default function Widget({
         alignment,
         entityId,
         type,
+        backgroundColor,
+        color,
     },
     state,
     dispatch,
@@ -120,13 +122,16 @@ export default function Widget({
             justifyContent="space-between"
             alignItems={verticalLayout ? "flex-start" : "center"}
             direction={direction}
+            sx={{
+                backgroundColor: backgroundColor,
+            }}
         >
             {product.featuredImage && (
                 <Grid
                     item
                     xs={12}
                     md={verticalLayout ? 12 : 6}
-                    sx={{ p: 2, textAlign: "center", width: "100%" }}
+                    sx={{ p: 2, textAlign: "center", width: 1 }}
                 >
                     <Image
                         src={product.featuredImage.file}
@@ -149,10 +154,15 @@ export default function Widget({
                     />
                 </Grid>
             )}
-            <Grid item xs={12} md={verticalLayout ? 12 : 6} sx={{ p: 2 }}>
+            <Grid
+                item
+                xs={12}
+                md={verticalLayout ? 12 : 6}
+                sx={{ p: 2, color: color || "inherit" }}
+            >
                 <Grid container direction="column">
                     {!(type === "site" && name === "banner") && (
-                        <Grid item sx={{ mb: 1 }}>
+                        <Grid item sx={{ pb: 1 }}>
                             <PriceTag
                                 cost={product.cost}
                                 freeCostCaption="FREE"
@@ -161,13 +171,13 @@ export default function Widget({
                             />
                         </Grid>
                     )}
-                    <Grid item sx={{ mb: 1 }}>
+                    <Grid item sx={{ pb: 1 }}>
                         <Typography variant="h2">
                             {title || product.title}
                         </Typography>
                     </Grid>
-                    <Grid item sx={{ mb: 2 }}>
-                        {(plainTextDescription || product.description) && (
+                    {(plainTextDescription || product.description) && (
+                        <Grid item sx={{ pb: 2 }}>
                             <RichText
                                 initialContentState={RichText.hydrate({
                                     data: plainTextDescription
@@ -179,8 +189,8 @@ export default function Widget({
                                 })}
                                 readOnly={true}
                             />
-                        )}
-                    </Grid>
+                        </Grid>
+                    )}
                     {type === "site" && buttonAction && (
                         <Grid item>
                             <Button

@@ -9,4 +9,6 @@ export default interface Settings {
     buttonCaption?: string;
     buttonAction?: string;
     alignment?: "top" | "bottom" | "left" | "right";
+    backgroundColor?: string;
+    color?: string;
 }

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
-import { FormLabel, Grid, TextField } from "@mui/material";
+import { FormLabel, Grid, TextField, Typography } from "@mui/material";
 import Settings from "../settings";
 import { RichText as TextEditor, Select } from "@courselit/components-library";
 
@@ -25,6 +25,10 @@ export default function CustomSettings({
     const [buttonCaption, setButtonCaption] = useState(settings.buttonCaption);
     const [buttonAction, setButtonAction] = useState(settings.buttonAction);
     const [alignment, setAlignment] = useState(settings.alignment || "left");
+    const [backgroundColor, setBackgroundColor] = useState(
+        settings.backgroundColor || "inherit"
+    );
+    const [color, setColor] = useState(settings.color || "inherit");
 
     useEffect(() => {
         onChange({
@@ -33,8 +37,18 @@ export default function CustomSettings({
             buttonCaption,
             alignment,
             buttonAction,
+            backgroundColor,
+            color,
         });
-    }, [title, description, buttonCaption, alignment, buttonAction]);
+    }, [
+        title,
+        description,
+        buttonCaption,
+        alignment,
+        buttonAction,
+        backgroundColor,
+        color,
+    ]);
 
     return (
         <>
@@ -74,7 +88,7 @@ export default function CustomSettings({
                     />
                 </Grid>
             )}
-            <Grid item xs={12}>
+            <Grid item xs={12} sx={{ mb: 2 }}>
                 <Select
                     title="Alignment"
                     value={alignment}
@@ -86,6 +100,36 @@ export default function CustomSettings({
                     ]}
                     onChange={(value) => setAlignment(value)}
                 />
+            </Grid>
+            <Grid item xs={12} sx={{ mb: 2 }}>
+                <Grid container justifyContent="space-between">
+                    <Grid item>
+                        <Typography variant="subtitle1">
+                            Background color
+                        </Typography>
+                    </Grid>
+                    <Grid item>
+                        <input
+                            type="color"
+                            value={backgroundColor}
+                            onChange={(e) => setBackgroundColor(e.target.value)}
+                        />
+                    </Grid>
+                </Grid>
+            </Grid>
+            <Grid item xs={12} sx={{ mb: 2 }}>
+                <Grid container justifyContent="space-between">
+                    <Grid item>
+                        <Typography variant="subtitle1">Text color</Typography>
+                    </Grid>
+                    <Grid item>
+                        <input
+                            type="color"
+                            value={color}
+                            onChange={(e) => setColor(e.target.value)}
+                        />
+                    </Grid>
+                </Grid>
             </Grid>
         </>
     );
