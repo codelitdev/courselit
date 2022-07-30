@@ -472,8 +472,8 @@ __metadata:
   dependencies:
     "@courselit/common-models": ^0.19.1
     "@courselit/components-library": ^0.19.1
-    "@courselit/state-management": ^0.19.1
-    "@courselit/utils": ^0.19.1
+    "@courselit/state-management": "workspace:^"
+    "@courselit/utils": "workspace:^"
     eslint-config-standard: ^17.0.0
     eslint-plugin-n: ^15.2.0
     eslint-plugin-promise: ^6.0.0
@@ -528,7 +528,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@courselit/state-management@^0.19.1, @courselit/state-management@workspace:packages/state-management":
+"@courselit/state-management@^0.19.1, @courselit/state-management@workspace:^, @courselit/state-management@workspace:packages/state-management":
   version: 0.0.0-use.local
   resolution: "@courselit/state-management@workspace:packages/state-management"
   dependencies:
@@ -546,7 +546,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@courselit/utils@^0.19.1, @courselit/utils@workspace:packages/utils":
+"@courselit/utils@^0.19.1, @courselit/utils@workspace:^, @courselit/utils@workspace:packages/utils":
   version: 0.0.0-use.local
   resolution: "@courselit/utils@workspace:packages/utils"
   dependencies:
