@@ -414,7 +414,6 @@ const LessonEditor = ({
                                                 onSelection={(
                                                     media?: Media
                                                 ) => {
-                                                    console.log(media);
                                                     media &&
                                                         setLesson(
                                                             Object.assign(

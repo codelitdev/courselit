@@ -57,13 +57,12 @@ function Account({ auth, page, profile, address }: AccountProps) {
                 .setPayload(query)
                 .setIsGraphQLEndpoint(true)
                 .build();
-            console.log("Came here");
             const response = await fetch.exec();
             if (response.courses) {
                 setCourses(response.courses);
             }
         } catch (e: any) {
-            console.log("Accounts page", e.message); // eslint-disable-line no-console
+            console.error("Accounts page", e.message);
         }
     };
 

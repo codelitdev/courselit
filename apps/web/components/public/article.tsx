@@ -89,11 +89,7 @@ const Article = (props: ArticleProps) => {
 
     return (
         <StyledSection>
-            <Grid
-                container
-                component="article"
-                direction="column"
-            >
+            <Grid container component="article" direction="column">
                 <Grid item component="header">
                     <Typography variant="h2" className={classes.header}>
                         {course.title}

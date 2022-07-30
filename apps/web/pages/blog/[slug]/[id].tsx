@@ -34,7 +34,8 @@ const Post = ({ siteInfo, address, post, page }: PostProps) => {
                 <Grid
                     container
                     direction="column"
-                    sx={{ minHeight: "80vh", p: 2 }}>
+                    sx={{ minHeight: "80vh", p: 2 }}
+                >
                     <Head>
                         <meta
                             property="og:url"
@@ -92,7 +93,6 @@ export async function getServerSideProps({ query, req }: any) {
       }
     }
   `;
-  console.log(graphQuery);
     const fetch = new FetchBuilder()
         .setUrl(`${address}/api/graph`)
         .setPayload(graphQuery)
@@ -104,7 +104,7 @@ export async function getServerSideProps({ query, req }: any) {
         const response = await fetch.exec();
         post = response.post;
     } catch (err) {
-        console.log(err);
+        console.error(err);
         return {
             notFound: true,
         };

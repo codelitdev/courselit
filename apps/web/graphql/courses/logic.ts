@@ -89,7 +89,7 @@ export const getCourse = async (id: string, ctx: GQLContext) => {
     }
 
     if (course.published) {
-        if ([constants.course,constants.download].includes(course.type)) {
+        if ([constants.course, constants.download].includes(course.type)) {
             const { nextLesson } = await getPrevNextCursor(
                 course.courseId,
                 ctx.subdomain._id
@@ -214,7 +214,6 @@ export const getCoursesAsAdmin = async ({
     }
 
     if (searchText) query.$text = { $search: searchText };
-    console.log(query);
 
     return await getPaginatedCoursesForAdmin({
         query,
@@ -245,25 +244,21 @@ export const getCourses = async ({
     if (filterBy) {
         query.type = { $in: filterBy };
     }
-    console.log(query);
 
-    const courses = await CourseModel.find(
-        query,
-        {
-            id: 1,
-            title: 1,
-            cost: 1,
-            description: 1,
-            type: 1,
-            creatorName: 1,
-            updatedAt: 1,
-            slug: 1,
-            featuredImage: 1,
-            courseId: 1,
-            tags: 1,
-            groups: 1
-        }
-    )
+    const courses = await CourseModel.find(query, {
+        id: 1,
+        title: 1,
+        cost: 1,
+        description: 1,
+        type: 1,
+        creatorName: 1,
+        updatedAt: 1,
+        slug: 1,
+        featuredImage: 1,
+        courseId: 1,
+        tags: 1,
+        groups: 1,
+    })
         .sort({ updatedAt: -1 })
         .skip((offset - 1) * itemsPerPage)
         .limit(itemsPerPage);

@@ -36,7 +36,8 @@ const Appearance = (props: AppearanceProps) => {
                         <Button
                             component="a"
                             href={`/dashboard/page/homepage/edit`}
-                            variant="contained">
+                            variant="contained"
+                        >
                             {BTN_EDIT_SITE}
                         </Button>
                     </Grid>

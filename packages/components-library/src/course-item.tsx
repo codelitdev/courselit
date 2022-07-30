@@ -31,60 +31,62 @@ const CourseItem = (props: CourseItemProps) => {
             }}
         >
             <Link
-                href={`/${course.type === "BLOG" ? "blog" : "course"}/${course.slug}/${course.courseId}`}
+                href={`/${course.type === "BLOG" ? "blog" : "course"}/${
+                    course.slug
+                }/${course.courseId}`}
                 sxProps={{
                     textDecoration: "none",
                     color: "inherit",
                     mb: 2,
                     display: "block",
-                    '&:hover': {
-                        cursor: "pointer"
-                    }
+                    "&:hover": {
+                        cursor: "pointer",
+                    },
                 }}
             >
-                    <Grid
-                        item
-                        container
-                        direction="column"
-                        component="article"
-                        spacing={1}
-                    >
+                <Grid
+                    item
+                    container
+                    direction="column"
+                    component="article"
+                    spacing={1}
+                >
+                    <Grid item>
+                        <Image
+                            src={
+                                course.featuredImage &&
+                                course.featuredImage.thumbnail
+                            }
+                            loading={thumbnailLoading}
+                            sizes="40vw"
+                        />
+                    </Grid>
+                    {course.type !== "BLOG" && (
                         <Grid item>
-                            <Image
-                                src={
-                                    course.featuredImage &&
-                                    course.featuredImage.thumbnail
-                                }
-                                loading={thumbnailLoading}
-                                sizes="40vw"
-                            />
-                        </Grid>
-                        {course.type !== "BLOG" && (
-                            <Grid item>
-                                <Typography variant="overline">
-                                    {course.type.toUpperCase()}
-                                </Typography>
-                            </Grid>
-                        )}
-                        <Grid item>
-                            <Typography variant="h5">{course.title}</Typography>
-                        </Grid>
-                        <Grid item>
-                            <Typography variant="body1" color="textSecondary">
-                                {course.description}
+                            <Typography variant="overline">
+                                {course.type.toUpperCase()}
                             </Typography>
                         </Grid>
-                        {!(course.type === "BLOG") && (
-                            <Grid item>
-                                <PriceTag
-                                    cost={course.cost}
-                                    freeCostCaption={freeCostCaption}
-                                    currencyUnit={siteInfo.currencyUnit}
-                                    currencyISOCode={siteInfo.currencyISOCode}
-                                />
-                            </Grid>
-                        )}
+                    )}
+                    <Grid item>
+                        <Typography variant="h5">{course.title}</Typography>
                     </Grid>
+                    <Grid item>
+                        <Typography variant="body1" color="textSecondary">
+                            {course.description}
+                        </Typography>
+                    </Grid>
+                    {!(course.type === "BLOG") && (
+                        <Grid item>
+                            <PriceTag
+                                cost={course.cost}
+                                freeCostCaption={freeCostCaption}
+                                currencyUnit={siteInfo.currencyUnit}
+                                currencyISOCode={siteInfo.currencyISOCode}
+                            />
+                        </Grid>
+                    )}
+                </Grid>
             </Link>
         </Grid>
     );

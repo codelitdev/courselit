@@ -32,29 +32,32 @@ interface PostsProps {
 
 function Posts(props: PostsProps) {
     return (
-        <BaseLayout title={HEADER_BLOG_POSTS_SECTION} layout={props.page.layout}>
-                    <Grid
-                        container
-                        direction="column"
-                        sx={{
-                            padding: 2,
-                            minHeight: "80vh"
-                        }}
-                    >
-                        <Grid item sx={{ mb: 2 }}>
-                            <Typography variant="h2">
-                                {HEADER_BLOG_POSTS_SECTION}
-                            </Typography>
-                        </Grid>
-                        <Grid item>
-                            <Items
-                                showLoadMoreButton={true}
-                                generateQuery={generateQuery}
-                                initialItems={props.courses}
-                                posts={true}
-                            />
-                        </Grid>
-                    </Grid>
+        <BaseLayout
+            title={HEADER_BLOG_POSTS_SECTION}
+            layout={props.page.layout}
+        >
+            <Grid
+                container
+                direction="column"
+                sx={{
+                    padding: 2,
+                    minHeight: "80vh",
+                }}
+            >
+                <Grid item sx={{ mb: 2 }}>
+                    <Typography variant="h2">
+                        {HEADER_BLOG_POSTS_SECTION}
+                    </Typography>
+                </Grid>
+                <Grid item>
+                    <Items
+                        showLoadMoreButton={true}
+                        generateQuery={generateQuery}
+                        initialItems={props.courses}
+                        posts={true}
+                    />
+                </Grid>
+            </Grid>
         </BaseLayout>
     );
 }
@@ -70,7 +73,7 @@ const getCourses = async (backend: string) => {
         const response = await fetch.exec();
         courses = response.courses;
     } catch (e) {
-        console.log(e);
+        console.error(e);
     }
     return courses;
 };

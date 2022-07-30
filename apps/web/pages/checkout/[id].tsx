@@ -69,7 +69,7 @@ function CheckoutProduct({
                 setProduct(response.product);
             }
         } catch (err: any) {
-            console.log("Error", err.message);
+            console.error("Error", err.message);
         } finally {
             dispatch(actionCreators.networkAction(false));
         }

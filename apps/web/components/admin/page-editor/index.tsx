@@ -86,7 +86,6 @@ function PageEditor({
     }, [auth.checked]);
 
     useEffect(() => {
-        console.log(`useEffect layout`, layout.length);
         if (JSON.stringify(layout) !== JSON.stringify(page.draftLayout)) {
             debouncedSave(page.pageId, layout);
         }
