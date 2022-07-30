@@ -1,5 +1,5 @@
-import { Typography } from "@mui/material";
 import * as React from "react";
+import { Typography } from "@mui/material";
 
 interface PriceTagProps {
     cost: number;
