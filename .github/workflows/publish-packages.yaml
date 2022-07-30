@@ -44,7 +44,6 @@ jobs:
           yarn workspace @courselit/state-management build
           yarn workspace @courselit/components-library build
           yarn workspace @courselit/common-widgets build
-          yarn workspace @courselit/widget-buttondown build
 
       - name: Publish package
         run: |

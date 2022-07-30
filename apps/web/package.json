@@ -15,7 +15,6 @@
         "@courselit/components-library": "^0.19.6",
         "@courselit/state-management": "^0.19.6",
         "@courselit/utils": "^0.19.6",
-        "@courselit/widget-buttondown": "^0.19.6",
         "@emotion/cache": "^11.7.1",
         "@emotion/react": "^11.8.2",
         "@emotion/server": "^11.4.0",

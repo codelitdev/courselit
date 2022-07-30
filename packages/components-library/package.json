@@ -37,10 +37,10 @@
     "devDependencies": {
         "@types/react": "^17.0.43",
         "@types/react-redux": "^7.1.11",
-        "@types/react-transition-group": "^4.4.5",
         "typescript": "^4.6.3"
     },
     "peerDependencies": {
+        "@mui/material": "^5.9.2",
         "next": "12.1.0",
         "react": "^17.0.2",
         "react-redux": "^8.0.1"
@@ -48,8 +48,6 @@
     "gitHead": "fca7d2f8455c835f1c185a1ebc8513c6269ebe5b",
     "dependencies": {
         "@courselit/common-models": "^0.19.6",
-        "@courselit/rich-text": "^0.19.6",
-        "@mui/material": "^5.9.2",
-        "react-transition-group": "^4.4.3"
+        "@courselit/rich-text": "^0.19.6"
     }
 }

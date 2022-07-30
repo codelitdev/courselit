@@ -392,13 +392,11 @@ __metadata:
   dependencies:
     "@courselit/common-models": ^0.19.6
     "@courselit/rich-text": ^0.19.6
-    "@mui/material": ^5.9.2
     "@types/react": ^17.0.43
     "@types/react-redux": ^7.1.11
-    "@types/react-transition-group": ^4.4.5
-    react-transition-group: ^4.4.3
     typescript: ^4.6.3
   peerDependencies:
+    "@mui/material": ^5.9.2
     next: 12.1.0
     react: ^17.0.2
     react-redux: ^8.0.1
@@ -468,7 +466,6 @@ __metadata:
     "@courselit/components-library": ^0.19.6
     "@courselit/state-management": ^0.19.6
     "@courselit/utils": ^0.19.6
-    "@courselit/widget-buttondown": ^0.19.6
     "@emotion/cache": ^11.7.1
     "@emotion/react": ^11.8.2
     "@emotion/server": ^11.4.0
@@ -519,7 +516,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@courselit/widget-buttondown@^0.19.6, @courselit/widget-buttondown@workspace:packages/widget-buttondown":
+"@courselit/widget-buttondown@workspace:packages/widget-buttondown":
   version: 0.0.0-use.local
   resolution: "@courselit/widget-buttondown@workspace:packages/widget-buttondown"
   dependencies:
@@ -850,7 +847,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/material@npm:^5.5.0, @mui/material@npm:^5.9.2":
+"@mui/material@npm:^5.5.0":
   version: 5.9.2
   resolution: "@mui/material@npm:5.9.2"
   dependencies:
@@ -7708,7 +7705,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-transition-group@npm:^4.4.2, react-transition-group@npm:^4.4.3":
+"react-transition-group@npm:^4.4.2":
   version: 4.4.3
   resolution: "react-transition-group@npm:4.4.3"
   dependencies:
