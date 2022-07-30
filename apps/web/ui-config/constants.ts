@@ -12,6 +12,7 @@ export const LESSON_TYPE_AUDIO = "audio";
 export const LESSON_TYPE_VIDEO = "video";
 export const LESSON_TYPE_PDF = "pdf";
 export const LESSON_TYPE_QUIZ = "quiz";
+export const LESSON_TYPE_FILE = "file";
 
 export const FREE_COURSES_TEXT = "FREE";
 
@@ -59,3 +60,6 @@ export const permissions = {
     manageSettings: "setting:manage",
     manageUsers: "user:manage",
 };
+
+export const COURSE_TYPE_COURSE = "course";
+export const COURSE_TYPE_DOWNLOAD = "download";

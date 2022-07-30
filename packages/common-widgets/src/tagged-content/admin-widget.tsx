@@ -36,7 +36,7 @@ const AdminWidget = (props: AdminWidgetProps) => {
                 <Grid item xs>
                     <Typography variant="body1">
                         Display content tagged with a specific term on the top
-                        section of the landing page.
+                        section of the homepage page.
                     </Typography>
                 </Grid>
                 <Grid item xs>

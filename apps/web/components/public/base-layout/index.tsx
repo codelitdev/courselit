@@ -1,28 +1,34 @@
-import React, { ReactChildren } from "react";
+import React, { ReactNode } from "react";
 import { connect } from "react-redux";
 import Head from "next/head";
 import Template from "./template";
-import Scaffold from "./scaffold";
 import type { AppState } from "@courselit/state-management";
+import type { WidgetInstance } from "@courselit/common-models";
 
 interface MasterLayoutProps {
     title: string;
     siteInfo: any;
-    children: ReactChildren;
+    layout: WidgetInstance[];
+    children?: ReactNode;
 }
 
-const MasterLayout = (props: MasterLayoutProps) => {
+const MasterLayout = ({
+    title,
+    siteInfo,
+    children,
+    layout,
+}: MasterLayoutProps) => {
     return (
         <>
             <Head>
                 <title>
-                    {props.title} | {props.siteInfo.title}
+                    {title} | {siteInfo.title}
                 </title>
                 <link
                     rel="icon"
                     href={
-                        props.siteInfo.logopath && props.siteInfo.logopath.file
-                            ? props.siteInfo.logopath.file
+                        siteInfo.logopath && siteInfo.logopath.file
+                            ? siteInfo.logopath.file
                             : "/favicon.ico"
                     }
                 />
@@ -31,9 +37,7 @@ const MasterLayout = (props: MasterLayoutProps) => {
                     content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
                 />
             </Head>
-            <Scaffold>
-                <Template>{props.children}</Template>
-            </Scaffold>
+            <Template layout={layout}>{children}</Template>
         </>
     );
 };
@@ -41,7 +45,6 @@ const MasterLayout = (props: MasterLayoutProps) => {
 const mapStateToProps = (state: AppState) => ({
     networkAction: state.networkAction,
     siteInfo: state.siteinfo,
-    layout: state.layout,
     address: state.address,
 });
 

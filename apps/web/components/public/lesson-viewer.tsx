@@ -6,17 +6,43 @@ import {
     LESSON_TYPE_VIDEO,
     LESSON_TYPE_AUDIO,
     LESSON_TYPE_PDF,
+    LESSON_TYPE_FILE,
+    LESSON_TYPE_TEXT,
 } from "../../ui-config/constants";
 import { connect } from "react-redux";
 import { actionCreators } from "@courselit/state-management";
-import { Typography, Grid } from "@mui/material";
+import { Typography, Grid, Button, Skeleton } from "@mui/material";
 import {
+    BUTTON_LESSON_DOWNLOAD,
+    COURSE_PROGRESS_FINISH,
+    COURSE_PROGRESS_INTRO,
+    COURSE_PROGRESS_NEXT,
+    COURSE_PROGRESS_PREV,
+    ENROLL_BUTTON_TEXT,
     ENROLL_IN_THE_COURSE,
     NOT_ENROLLED_HEADER,
 } from "../../ui-config/strings";
-import { Section, RichText as TextEditor } from "@courselit/components-library";
-import type { Lesson, Auth, Profile, Address } from "@courselit/common-models";
+import { RichText as TextEditor, Link } from "@courselit/components-library";
+import {
+    Address,
+    AppMessage,
+    Course,
+    Lesson,
+    Profile,
+} from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
+import { useRouter } from "next/router";
+import {
+    refreshUserProfile,
+    setAppMessage,
+} from "@courselit/state-management/dist/action-creators";
+import {
+    ArrowBack,
+    ArrowForward,
+    Download,
+    OpenInNew,
+} from "@mui/icons-material";
+import { isEnrolled } from "../../ui-lib/utils";
 
 const { networkAction } = actionCreators;
 
@@ -28,7 +54,7 @@ const classes = {
     section: `${PREFIX}-section`,
 };
 
-const StyledSection = styled(Section)(({ theme }: { theme: any }) => ({
+const StyledSection = styled("div")(({ theme }: { theme: any }) => ({
     [`& .${classes.notEnrolledHeader}`]: {
         marginBottom: theme.spacing(1),
     },
@@ -68,53 +94,59 @@ Caption.propTypes = {
 };
 
 interface LessonViewerProps {
-    lesson: Lesson;
-    auth: Auth;
-    profile: Profile;
+    slug: string;
+    lessonId: string;
     dispatch: AppDispatch;
+    profile: Profile;
     address: Address;
 }
 
-const LessonViewer = (props: LessonViewerProps) => {
-    const [lesson, setLesson] = useState(props.lesson);
-    const [isEnrolled] = useState(
-        !lesson.requiresEnrollment ||
-            (props.profile &&
-                props.profile.purchases.includes(props.lesson.courseId))
-    );
+const LessonViewer = ({
+    slug,
+    lessonId,
+    dispatch,
+    profile,
+    address,
+}: LessonViewerProps) => {
+    const [lesson, setLesson] = useState<Lesson>();
+    const router = useRouter();
 
     useEffect(() => {
-        props.lesson.id && isEnrolled && loadLesson(props.lesson.id);
-    }, [props.lesson]);
+        if (lessonId) {
+            loadLesson(lessonId);
+        }
+    }, [lessonId]);
 
     const loadLesson = async (id: string) => {
         const query = `
     query {
       lesson: getLessonDetails(id: "${id}") {
-        id,
+        lessonId,
         title,
         downloadable,
         type,
         content,
         media {
-          id,
           file,
-          caption
+          caption,
+          originalFileName
         },
         requiresEnrollment,
-        courseId
+        courseId,
+        prevLesson,
+        nextLesson
       }
     }
     `;
 
         const fetch = new FetchBuilder()
-            .setUrl(`${props.address.backend}/api/graph`)
+            .setUrl(`${address.backend}/api/graph`)
             .setPayload(query)
             .setIsGraphQLEndpoint(true)
             .build();
 
         try {
-            props.dispatch(networkAction(true));
+            dispatch(networkAction(true));
             const response = await fetch.exec();
 
             if (response.lesson) {
@@ -126,33 +158,94 @@ const LessonViewer = (props: LessonViewerProps) => {
                     })
                 );
             }
-        } catch (err) {
+        } catch (err: any) {
+            if (err.message === "You are not enrolled in the course") {
+                setLesson(undefined);
+                return;
+            }
+
+            dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            props.dispatch(networkAction(false));
+            dispatch(networkAction(false));
         }
     };
 
+    const markCompleteAndNext = async () => {
+        const query = `
+        mutation {
+            result: markLessonCompleted(id: "${lesson!.lessonId}")
+        }
+        `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload(query)
+            .setIsGraphQLEndpoint(true)
+            .build();
+
+        try {
+            dispatch(networkAction(true));
+            const response = await fetch.exec();
+
+            if (response.result) {
+                if (lesson!.nextLesson) {
+                    dispatch(refreshUserProfile());
+                    router.push(
+                        `/course/${slug}/${lesson!.courseId}/${
+                            lesson!.nextLesson
+                        }`
+                    );
+                } else {
+                    router.push(`/account`);
+                }
+            }
+        } catch (err: any) {
+            dispatch(setAppMessage(new AppMessage(err.message)));
+        } finally {
+            dispatch(networkAction(false));
+        }
+    };
+
+    if (!lesson) {
+        return (
+            <Grid container direction="column" sx={{ p: 2 }}>
+                <Grid item sx={{ mb: 1 }}>
+                    <Typography
+                        variant="h2"
+                        className={classes.notEnrolledHeader}
+                    >
+                        {NOT_ENROLLED_HEADER}
+                    </Typography>
+                </Grid>
+                <Grid item sx={{ mb: 2 }}>
+                    <Typography variant="body1">
+                        {ENROLL_IN_THE_COURSE}
+                    </Typography>
+                </Grid>
+                <Grid item>
+                    <Link
+                        href={`/checkout/${router.query.id}`}
+                        sxProps={{
+                            textDecoration: "none",
+                        }}
+                    >
+                        <Button variant="contained" size="large">
+                            {ENROLL_BUTTON_TEXT}
+                        </Button>
+                    </Link>
+                </Grid>
+            </Grid>
+        );
+    }
+
     return (
         <StyledSection>
-            {!isEnrolled && (
-                <Grid container direction="column" spacing={2}>
-                    <Grid item>
-                        <Typography
-                            variant="h2"
-                            className={classes.notEnrolledHeader}
-                        >
-                            {NOT_ENROLLED_HEADER}
-                        </Typography>
-                    </Grid>
-                    <Grid item>
-                        <Typography variant="body1">
-                            {ENROLL_IN_THE_COURSE}
-                        </Typography>
-                    </Grid>
-                </Grid>
-            )}
-            {isEnrolled && (
-                <Grid container direction="column" component="article">
+            {lesson && (
+                <Grid
+                    container
+                    direction="column"
+                    component="article"
+                    sx={{ p: 2 }}
+                >
                     <Grid item>
                         <header>
                             <Typography variant="h2">{lesson.title}</Typography>
@@ -227,12 +320,98 @@ const LessonViewer = (props: LessonViewerProps) => {
                             />
                         </Grid>
                     )}
-                    {lesson.content && (
-                        <Grid item className={classes.section}>
-                            <TextEditor
-                                initialContentState={lesson.content}
-                                readOnly={true}
-                            />
+                    {String.prototype.toUpperCase.call(LESSON_TYPE_TEXT) ===
+                        lesson.type &&
+                        lesson.content && (
+                            <Grid item className={classes.section}>
+                                <TextEditor
+                                    initialContentState={lesson.content}
+                                    readOnly={true}
+                                />
+                            </Grid>
+                        )}
+                    {String.prototype.toUpperCase.call(LESSON_TYPE_FILE) ===
+                        lesson.type && (
+                        <Grid item>
+                            <Grid
+                                container
+                                justifyContent="center"
+                                alignItems="center"
+                                sx={{ minHeight: "50vh" }}
+                            >
+                                <Grid item>
+                                    <Button
+                                        component="a"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        href={lesson.media.file as string}
+                                        download={lesson.media.originalFileName}
+                                        startIcon={<OpenInNew />}
+                                        size="large"
+                                        variant="contained"
+                                        disableElevation
+                                    >
+                                        {BUTTON_LESSON_DOWNLOAD}
+                                    </Button>
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    )}
+                    {isEnrolled(lesson.courseId, profile) && (
+                        <Grid item>
+                            <Grid container justifyContent="flex-end">
+                                <Grid item sx={{ mr: 2 }}>
+                                    {!lesson.prevLesson && (
+                                        <Link
+                                            href={`/course/${slug}/${lesson.courseId}`}
+                                            sxProps={{
+                                                textDecoration: "none",
+                                            }}
+                                        >
+                                            <Button
+                                                component="a"
+                                                size="large"
+                                                startIcon={<ArrowBack />}
+                                            >
+                                                {COURSE_PROGRESS_INTRO}
+                                            </Button>
+                                        </Link>
+                                    )}
+                                    {lesson.prevLesson && (
+                                        <Link
+                                            href={`/course/${slug}/${lesson.courseId}/${lesson.prevLesson}`}
+                                            sxProps={{
+                                                textDecoration: "none",
+                                            }}
+                                        >
+                                            <Button
+                                                component="a"
+                                                size="large"
+                                                startIcon={<ArrowBack />}
+                                            >
+                                                {COURSE_PROGRESS_PREV}
+                                            </Button>
+                                        </Link>
+                                    )}
+                                </Grid>
+                                <Grid item>
+                                    <Button
+                                        component="a"
+                                        size="large"
+                                        endIcon={
+                                            lesson.nextLesson ? (
+                                                <ArrowForward />
+                                            ) : undefined
+                                        }
+                                        variant="contained"
+                                        onClick={markCompleteAndNext}
+                                    >
+                                        {lesson.nextLesson
+                                            ? COURSE_PROGRESS_NEXT
+                                            : COURSE_PROGRESS_FINISH}
+                                    </Button>
+                                </Grid>
+                            </Grid>
                         </Grid>
                     )}
                 </Grid>
@@ -242,7 +421,6 @@ const LessonViewer = (props: LessonViewerProps) => {
 };
 
 const mapStateToProps = (state: AppState) => ({
-    auth: state.auth,
     profile: state.profile,
     address: state.address,
 });

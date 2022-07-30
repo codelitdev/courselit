@@ -1,16 +1,19 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { styled } from "@mui/system";
-import { Typography, Grid, Divider, Chip } from "@mui/material";
-import Link from "next/link";
-import { formattedLocaleDate, checkPermission } from "../../ui-lib/utils";
+import { Typography, Grid, Chip, Button } from "@mui/material";
+import {
+    formattedLocaleDate,
+    checkPermission,
+    isEnrolled,
+} from "../../ui-lib/utils";
 import { connect } from "react-redux";
 import {
     PriceTag,
     RichText as TextEditor,
-    Section,
     Image,
+    Link,
 } from "@courselit/components-library";
-import { FREE_COST } from "../../ui-config/strings";
+import { ENROLL_BUTTON_TEXT, FREE_COST } from "../../ui-config/strings";
 import dynamic from "next/dynamic";
 import constants from "../../config/constants";
 import { AppState } from "@courselit/state-management";
@@ -30,7 +33,7 @@ const classes = {
     enrollmentAreaPriceTag: `${PREFIX}-enrollmentAreaPriceTag`,
 };
 
-const StyledSection = styled(Section)(({ theme }: { theme: any }) => ({
+const StyledSection = styled("div")(({ theme }: { theme: any }) => ({
     [`& .${classes.header}`]: {},
 
     [`& .${classes.creatoravatarcontainer}`]: {
@@ -86,17 +89,9 @@ const Article = (props: ArticleProps) => {
 
     return (
         <StyledSection>
-            <Grid
-                container
-                component="article"
-                direction="column"
-                spacing={2}
-                sx={{
-                    padding: 2,
-                }}
-            >
+            <Grid container component="article" direction="column">
                 <Grid item component="header">
-                    <Typography variant="h4" className={classes.header}>
+                    <Typography variant="h2" className={classes.header}>
                         {course.title}
                     </Typography>
                 </Grid>
@@ -110,19 +105,11 @@ const Article = (props: ArticleProps) => {
                     >
                         <Grid item>
                             <Typography variant="overline" component="p">
-                                <Link
-                                    href="/profile/[id]"
-                                    as={`/profile/${course.creatorId}`}
-                                >
-                                    <a className={classes.creatorName}>
-                                        {course.creatorName}
-                                    </a>
+                                <Link href={`/profile/${course.creatorId}`}>
+                                    {course.creatorName}
                                 </Link>
                             </Typography>
-                            <Typography
-                                variant="overline"
-                                className={classes.updatedtime}
-                            >
+                            <Typography variant="overline">
                                 {formattedLocaleDate(course.updatedAt)}
                             </Typography>
                         </Grid>
@@ -141,12 +128,13 @@ const Article = (props: ArticleProps) => {
                 )}
                 {options.showEnrollmentArea &&
                     (profile.fetched
-                        ? !profile.purchases.includes(course.id) &&
+                        ? !isEnrolled(course.courseId, profile) &&
                           checkPermission(profile.permissions, [
                               permissions.enrollInCourse,
                           ])
                         : true) && (
                         <Grid item className={classes.enrollmentArea}>
+                            <p>{profile.fetched}</p>
                             <Grid
                                 container
                                 direction="row"
@@ -164,7 +152,19 @@ const Article = (props: ArticleProps) => {
                                     />
                                 </Grid>
                                 <Grid>
-                                    <BuyButton course={course} />
+                                    <Link
+                                        href={`/checkout/${course.courseId}`}
+                                        sxProps={{
+                                            textDecoration: "none",
+                                        }}
+                                    >
+                                        <Button
+                                            variant="contained"
+                                            size="large"
+                                        >
+                                            {ENROLL_BUTTON_TEXT}
+                                        </Button>
+                                    </Link>
                                 </Grid>
                             </Grid>
                         </Grid>

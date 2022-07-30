@@ -11,8 +11,6 @@ import {
     updateCourse,
     deleteCourse,
     removeGroup,
-    addLesson,
-    removeLesson,
     addGroup,
     updateGroup,
 } from "./logic";
@@ -51,32 +49,6 @@ export default {
         },
         resolve: async (_: unknown, { id }, context) =>
             deleteCourse(id, context),
-    },
-    addLesson: {
-        type: new GraphQLNonNull(GraphQLBoolean),
-        args: {
-            courseId: {
-                type: new GraphQLNonNull(GraphQLID),
-            },
-            lessonId: {
-                type: new GraphQLNonNull(GraphQLID),
-            },
-        },
-        resolve: async (_: unknown, { courseId, lessonId }, context) =>
-            addLesson(courseId, lessonId, context),
-    },
-    removeLesson: {
-        type: new GraphQLNonNull(GraphQLBoolean),
-        args: {
-            courseId: {
-                type: new GraphQLNonNull(GraphQLID),
-            },
-            lessonId: {
-                type: new GraphQLNonNull(GraphQLID),
-            },
-        },
-        resolve: async (_: unknown, { courseId, lessonId }, context) =>
-            removeLesson(courseId, lessonId, context),
     },
     addGroup: {
         type: types.courseType,

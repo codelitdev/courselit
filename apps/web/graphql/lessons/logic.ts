@@ -10,10 +10,14 @@ import {
     checkOwnershipWithoutModel,
 } from "../../lib/graphql";
 import CourseModel from "../../models/Course";
-import { lessonValidator } from "./helpers";
+import { getPrevNextCursor, lessonValidator } from "./helpers";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
 import { Course } from "../../models/Course";
+import { deleteMedia } from "../../services/medialit";
+import { Progress } from "../../models/Progress";
+import { Group } from "@courselit/common-models";
+import { recordProgress } from "../users/logic";
 
 const { permissions } = constants;
 
@@ -21,7 +25,7 @@ const getLessonOrThrow = async (id: string, ctx: GQLContext) => {
     checkIfAuthenticated(ctx);
 
     const lesson = await LessonModel.findOne({
-        _id: id,
+        lessonId: id,
         domain: ctx.subdomain._id,
     });
 
@@ -52,7 +56,7 @@ export const getLesson = async (id: string, ctx: GQLContext) => {
 
 export const getLessonDetails = async (id: string, ctx: GQLContext) => {
     const lesson = await LessonModel.findOne({
-        _id: id,
+        lessonId: id,
         domain: ctx.subdomain._id,
     });
 
@@ -62,10 +66,21 @@ export const getLessonDetails = async (id: string, ctx: GQLContext) => {
 
     if (
         lesson.requiresEnrollment &&
-        (!ctx.user || !ctx.user.purchases.includes(lesson.courseId))
+        (!ctx.user ||
+            !ctx.user.purchases.some(
+                (purchase: Progress) => purchase.courseId === lesson.courseId
+            ))
     ) {
         throw new Error(responses.not_enrolled);
     }
+
+    const { prevLesson, nextLesson } = await getPrevNextCursor(
+        lesson.courseId,
+        ctx.subdomain._id,
+        lesson.lessonId
+    );
+    lesson.prevLesson = prevLesson;
+    lesson.nextLesson = nextLesson;
 
     return lesson;
 };
@@ -80,7 +95,7 @@ export const createLesson = async (lessonData: Lesson, ctx: GQLContext) => {
 
     try {
         const course: Course | null = await CourseModel.findOne({
-            _id: lessonData.courseId,
+            courseId: lessonData.courseId,
             domain: ctx.subdomain._id,
         });
         if (!course) throw new Error(responses.item_not_found);
@@ -94,12 +109,13 @@ export const createLesson = async (lessonData: Lesson, ctx: GQLContext) => {
             mediaId: lessonData.mediaId,
             downloadable: lessonData.downloadable,
             creatorId: ctx.user._id,
-            courseId: course._id,
-            groupId: new mongoose.Types.ObjectId(lessonData.groupId),
+            courseId: course.courseId,
+            groupId: lessonData.groupId,
             groupRank: -1,
+            requiresEnrollment: lessonData.requiresEnrollment,
         });
 
-        course.lessons.push(lesson.id);
+        course.lessons.push(lesson.lessonId);
         await (course as any).save();
 
         return lesson;
@@ -139,6 +155,10 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
         }
         await (course as any).save();
 
+        if (lesson.mediaId) {
+            await deleteMedia(lesson.mediaId);
+        }
+
         await lesson.remove();
         return true;
     } catch (err: any) {
@@ -147,21 +167,62 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
 };
 
 export const getAllLessons = async (course: Course, ctx: GQLContext) => {
-    const lessons = await LessonModel.find({
-        _id: {
-            $in: [...course.lessons],
+    const lessons = await LessonModel.find(
+        {
+            lessonId: {
+                $in: [...course.lessons],
+            },
+            domain: ctx.subdomain._id,
         },
+        {
+            id: 1,
+            lessonId: 1,
+            type: 1,
+            title: 1,
+            requiresEnrollment: 1,
+            courseId: 1,
+            groupId: 1,
+            groupRank: 1,
+        }
+    );
+
+    return lessons;
+};
+
+export const deleteAllLessons = async (courseId: string, ctx: GQLContext) => {
+    const allLessonsWithMedia = await LessonModel.find(
+        {
+            courseId,
+            domain: ctx.subdomain._id,
+            mediaId: { $ne: null },
+        },
+        {
+            mediaId: 1,
+        }
+    );
+    for (let media of allLessonsWithMedia) {
+        await deleteMedia(media.mediaId);
+    }
+    await LessonModel.deleteMany({
+        courseId,
         domain: ctx.subdomain._id,
     });
+};
 
-    const lessonMetaOnly = (lesson: Lesson) => ({
-        id: lesson.id,
-        title: lesson.title,
-        requiresEnrollment: lesson.requiresEnrollment,
+export const markLessonCompleted = async (
+    lessonId: string,
+    ctx: GQLContext
+) => {
+    const lesson = await LessonModel.findOne({ lessonId });
+    if (!lesson) {
+        throw new Error(responses.item_not_found);
+    }
+
+    await recordProgress({
+        lessonId,
         courseId: lesson.courseId,
-        groupId: lesson.groupId,
-        groupRank: lesson.groupRank,
+        user: ctx.user,
     });
 
-    return lessons.map(lessonMetaOnly);
+    return true;
 };

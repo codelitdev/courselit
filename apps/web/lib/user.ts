@@ -26,6 +26,7 @@ export async function createUser({
             constants.permissions.manageCourse,
             constants.permissions.manageAnyCourse,
             constants.permissions.publishCourse,
+            // TODO: replace media perms with course perms
             constants.permissions.manageMedia,
             constants.permissions.manageAnyMedia,
             constants.permissions.uploadMedia,

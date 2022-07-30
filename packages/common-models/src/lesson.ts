@@ -1,5 +1,5 @@
 export default interface Lesson {
-    id: string;
+    lessonId: string;
     title: string;
     type: string;
     content: string;
@@ -8,4 +8,6 @@ export default interface Lesson {
     courseId: string;
     groupId: string;
     downloadable: boolean;
+    prevLesson?: string;
+    nextLesson?: string;
 }

@@ -95,9 +95,9 @@ MyApp.getInitialProps = wrapper.getInitialAppProps(
                 await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
                     actionCreators.updateSiteInfo()
                 );
-                await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
-                    actionCreators.updateWidgetsData(widgets)
-                );
+                // await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
+                //     actionCreators.updateWidgetsData(widgets)
+                // );
             } catch (error: any) {
                 console.error(error);
                 ctx.res!.statusCode = 404;

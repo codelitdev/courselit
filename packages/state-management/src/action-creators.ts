@@ -12,8 +12,6 @@ import {
     SET_MESSAGE,
     CLEAR_MESSAGE,
     THEME_AVAILABLE,
-    LAYOUT_AVAILABLE,
-    NAVIGATION_AVAILABLE,
     SET_ADDRESS,
     WIDGETS_DATA_AVAILABLE,
 } from "./action-types";
@@ -24,7 +22,6 @@ import type {
     State,
     SiteInfo,
     WidgetsData,
-    Layout,
     Theme,
 } from "@courselit/common-models";
 import { AppMessage } from "@courselit/common-models";
@@ -53,10 +50,13 @@ export function refreshUserProfile(): ThunkAction<
           name,
           id,
           email,
-          purchases,
           userId,
           bio,
-          permissions
+          permissions,
+          purchases {
+            courseId,
+            completedLessons
+          }
         }
       }
       `;
@@ -119,26 +119,12 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
                     stripePublishableKey,
                     codeInjectionHead
                 },
-                layout {
-                    top,
-                    bottom,
-                    aside,
-                    footerLeft,
-                    footerRight
-                },
                 theme {
                     name,
                     active,
                     styles,
                     url
                 },
-                links {
-                    id,
-                    text,
-                    destination,
-                    category,
-                    newTab
-                }
                 }
             }
             `;
@@ -151,9 +137,7 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
 
             dispatch(networkAction(false));
             dispatch(newSiteInfoAvailable(response.site.settings));
-            dispatch(layoutAvailable(response.site.layout));
             dispatch(themeAvailable(response.site.theme));
-            dispatch(navigationAvailable(response.site.links));
         } finally {
             dispatch(networkAction(false));
         }
@@ -176,71 +160,63 @@ export function themeAvailable(theme: Theme) {
     return { type: THEME_AVAILABLE, theme };
 }
 
-export function layoutAvailable(layout: Layout) {
-    return { type: LAYOUT_AVAILABLE, layout };
-}
-
-export function navigationAvailable(links: typeof defaultState.navigation) {
-    return { type: NAVIGATION_AVAILABLE, links };
-}
-
 export function updateBackend(host: string): AnyAction {
     return { type: SET_ADDRESS, address: getAddress(host) };
 }
 
-export function updateWidgetsData(
-    widgets: Record<string, any>,
-    widgetIDPrefix = "widget"
-) {
-    return async (dispatch: any, getState: () => State) => {
-        try {
-            dispatch(networkAction(true));
-            const state = getState();
-            const queryString = combineGraphQLQueries(
-                state.layout,
-                widgets,
-                widgetIDPrefix
-            );
-            if (queryString) {
-                const fetchBuilder = new FetchBuilder()
-                    .setUrl(`${state.address.backend}/api/graph`)
-                    .setIsGraphQLEndpoint(true);
-                const fetch = await fetchBuilder
-                    .setPayload(queryString)
-                    .build();
-                const widgetsData = await fetch.exec();
-                dispatch(widgetsDataAvailable(widgetsData));
-            }
-        } finally {
-            dispatch(networkAction(false));
-        }
-    };
-}
+// export function updateWidgetsData(
+//     widgets: Record<string, any>,
+//     widgetIDPrefix = "widget"
+// ) {
+//     return async (dispatch: any, getState: () => State) => {
+//         try {
+//             dispatch(networkAction(true));
+//             const state = getState();
+//             const queryString = combineGraphQLQueries(
+//                 state.layout,
+//                 widgets,
+//                 widgetIDPrefix
+//             );
+//             if (queryString) {
+//                 const fetchBuilder = new FetchBuilder()
+//                     .setUrl(`${state.address.backend}/api/graph`)
+//                     .setIsGraphQLEndpoint(true);
+//                 const fetch = await fetchBuilder
+//                     .setPayload(queryString)
+//                     .build();
+//                 const widgetsData = await fetch.exec();
+//                 dispatch(widgetsDataAvailable(widgetsData));
+//             }
+//         } finally {
+//             dispatch(networkAction(false));
+//         }
+//     };
+// }
 
-function combineGraphQLQueries(
-    layout: Layout,
-    widgets: Record<string, any>,
-    widgetIDPrefix: string
-) {
-    const widgetsUsedOnLiveSite = Object.values(layout).flat();
-    let queryString = "";
-    for (const widget of widgetsUsedOnLiveSite) {
-        const widgetGetData = widgets[widget.name].widget.getData;
-        if (widgetGetData) {
-            queryString += widgetGetData(
-                `${widgetIDPrefix}${widget._id}`,
-                widget.settings
-            );
-        }
-    }
-    return queryString
-        ? `
-            {
-                ${queryString}
-            }
-        `
-        : "";
-}
+// function combineGraphQLQueries(
+//     layout: Layout,
+//     widgets: Record<string, any>,
+//     widgetIDPrefix: string
+// ) {
+//     const widgetsUsedOnLiveSite = Object.values(layout).flat();
+//     let queryString = "";
+//     for (const widget of widgetsUsedOnLiveSite) {
+//         const widgetGetData = widgets[widget.name].widget.getData;
+//         if (widgetGetData) {
+//             queryString += widgetGetData(
+//                 `${widgetIDPrefix}${widget._id}`,
+//                 widget.settings
+//             );
+//         }
+//     }
+//     return queryString
+//         ? `
+//             {
+//                 ${queryString}
+//             }
+//         `
+//         : "";
+// }
 
 export function widgetsDataAvailable(widgetsData: WidgetsData): AnyAction {
     return { type: WIDGETS_DATA_AVAILABLE, widgetsData };

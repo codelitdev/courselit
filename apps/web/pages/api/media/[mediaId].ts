@@ -34,9 +34,8 @@ async function getMediaDetailsHandler(
 ) {
     if (
         !checkPermission(req.user!.permissions, [
-            constants.permissions.viewAnyMedia,
-            constants.permissions.manageMedia,
-            constants.permissions.manageAnyMedia,
+            constants.permissions.manageAnyCourse,
+            constants.permissions.manageCourse,
         ])
     ) {
         throw new Error(responses.action_not_allowed);
@@ -58,8 +57,8 @@ async function deleteMediaHandler(
 ) {
     if (
         !checkPermission(req.user!.permissions, [
-            constants.permissions.manageMedia,
-            constants.permissions.manageAnyMedia,
+            constants.permissions.manageAnyCourse,
+            constants.permissions.manageCourse,
         ])
     ) {
         throw new Error(responses.action_not_allowed);

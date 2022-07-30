@@ -1,27 +1,29 @@
 import { useEffect } from "react";
 import { connect } from "react-redux";
-import Router from "next/router";
+import { useRouter } from "next/router";
 import { actionCreators } from "@courselit/state-management";
 import type { State, Address } from "@courselit/common-models";
 import { AppMessage } from "@courselit/common-models";
 import { UNABLE_TO_LOGOUT } from "../ui-config/strings";
+import { getBackendAddress } from "../ui-lib/utils";
 
 interface LogoutProps {
     dispatch: any;
     address: Address;
 }
 
-const Logout = ({ dispatch, address }: LogoutProps) => {
+const Logout = ({ dispatch }: LogoutProps) => {
+    const router = useRouter();
     const { setAppMessage, signedOut } = actionCreators;
     useEffect(() => {
         logout();
-    });
+    }, []);
 
     const logout = async () => {
         const response = await fetch("/api/auth/logout");
         if (response.status === 200) {
             dispatch(signedOut());
-            Router.replace("/");
+            router.replace("/");
         } else {
             dispatch(setAppMessage(new AppMessage(UNABLE_TO_LOGOUT)));
         }
@@ -40,3 +42,10 @@ const mapDispatchToProps = (dispatch: any) => ({
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Logout);
+
+// export async function getServerSideProps(context: any) {
+//     const { req } = context;
+//     const address = getBackendAddress(req.headers.host);
+//     await fetch(`${address}/api/auth/logout`);
+//     return { props: {} };
+// }

@@ -10,7 +10,7 @@ const Widget = (props: WidgetProps) => {
     const [posts, setPosts] = React.useState<Course[]>(state.widgetsData[id]);
     const BTN_LOAD_MORE = "View all";
 
-    return posts.length > 0 ? (
+    return posts && posts.length > 0 ? (
         <Section>
             <Grid
                 item

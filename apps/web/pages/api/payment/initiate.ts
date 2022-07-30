@@ -13,6 +13,7 @@ import SiteInfo from "../../../models/SiteInfo";
 import UserModel, { User } from "../../../models/User";
 import { getPaymentMethod } from "../../../payments";
 import PurchaseModel, { Purchase } from "../../../models/Purchase";
+import { Progress } from "../../../models/Progress";
 
 const { transactionSuccess, transactionFailed, transactionInitiated } =
     constants;
@@ -51,8 +52,12 @@ async function initiateHandler(req: ApiRequest, res: NextApiResponse) {
             return res.status(404).json({ error: responses.item_not_found });
         }
 
-        const buyer = user;
-        if (buyer!.purchases.includes(course!.id)) {
+        const buyer = user!;
+        if (
+            buyer.purchases.some(
+                (purchase) => purchase.courseId === course.courseId
+            )
+        ) {
             return res.status(200).json({
                 status: transactionSuccess,
             });
@@ -72,15 +77,15 @@ async function initiateHandler(req: ApiRequest, res: NextApiResponse) {
             }
         }
 
-        const siteinfo = await SiteInfo.findOne({ domain: req.subdomain!._id });
+        const siteinfo = req.subdomain!.settings;
         const paymentMethod = await getPaymentMethod(
             req.subdomain!._id.toString()
         );
 
         const purchase = await PurchaseModel.create({
             domain: req.subdomain!._id.toString(),
-            courseId: course.id,
-            purchasedBy: user!.id,
+            courseId: course.courseId,
+            purchasedBy: user!.userId,
             paymentMethod: paymentMethod.getName(),
             amount: course.cost * 100,
             currencyISOCode: siteinfo.currencyISOCode,
@@ -109,11 +114,25 @@ async function initiateHandler(req: ApiRequest, res: NextApiResponse) {
 }
 
 const finalizeCoursePurchase = async (userId: string, courseId: string) => {
-    const user = await UserModel.findById(userId);
-    const course = await CourseModel.findById(courseId);
+    const user: User | null = await UserModel.findById(userId);
+    const course: Course | null = await CourseModel.findById(courseId);
 
-    if (user && course) {
-        user.purchases.push(course.id);
-        await user.save();
+    if (
+        user &&
+        course &&
+        !user.purchases.some(
+            (purchase: Progress) => purchase.courseId === course.courseId
+        )
+    ) {
+        user.purchases.push({
+            courseId: course.courseId,
+            completedLessons: [],
+        });
+        await (user as any).save();
+        if (!course.customers.some((customer) => customer === user.userId)) {
+            course.customers.push(user.userId);
+            course.sales += course.cost;
+            await (course as any).save();
+        }
     }
 };

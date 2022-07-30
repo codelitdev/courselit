@@ -1,133 +1,88 @@
-import React, { ReactChildren } from "react";
-import { styled } from "@mui/system";
-import { Grid, useTheme } from "@mui/material";
-import { useRouter } from "next/router";
-import Section from "./section";
-import { connect } from "react-redux";
-import { AppState } from "@courselit/state-management";
-import { Layout } from "@courselit/common-models";
-
-const PREFIX = "Template";
-
-const classes = {
-    mainContent: `${PREFIX}-mainContent`,
-    footerContainer: `${PREFIX}-footerContainer`,
-    footer: `${PREFIX}-footer`,
-    padding: `${PREFIX}-padding`,
-};
-
-// TODO jss-to-styled codemod: The Fragment root was replaced by div. Change the tag if needed.
-const Root = styled("div")(({ theme }: { theme: any }) => ({
-    [`& .${classes.mainContent}`]: Object.assign(
-        {},
-        {
-            minHeight: "80vh",
-            margin: "0 auto",
-        },
-        theme.body
-    ),
-
-    [`& .${classes.footerContainer}`]: Object.assign({}, theme.footerContainer),
-
-    [`& .${classes.footer}`]: Object.assign({}, theme.footer),
-
-    [`& .${classes.padding}`]: {
-        padding: theme.spacing(2),
-    },
-}));
+import React, { ReactNode } from "react";
+import { Box, Grid } from "@mui/material";
+import WidgetByName from "./widget-by-name";
+import AppToast from "../../../app-toast";
+import { WidgetInstance } from "@courselit/common-models";
 
 interface TemplateProps {
-    children: ReactChildren;
-    layout: Layout;
+    layout: WidgetInstance[];
+    editing?: boolean;
+    onEditClick?: (widgetId: string) => void;
+    selectedWidget?: string;
+    children: ReactNode;
 }
 
-const Template = (props: TemplateProps) => {
-    const { layout } = props;
-
-    const router = useRouter();
-    const theme: any = useTheme();
+const EditableWidget = ({
+    item,
+    editing,
+    onEditClick,
+}: {
+    item: Record<string, any>;
+    editing: boolean;
+    onEditClick?: (widgetId: string) => void;
+}) => {
+    if (editing) {
+        return (
+            <Box
+                onClick={() => onEditClick && onEditClick(item.widgetId)}
+                sx={{
+                    "&:hover": {
+                        cursor: editing ? "pointer" : "default",
+                    },
+                }}
+            >
+                <WidgetByName
+                    name={item.name}
+                    settings={item.settings || {}}
+                    id={`widget${item._id}`}
+                />
+            </Box>
+        );
+    }
 
     return (
-        <Root>
-            <Grid
-                container
-                className={classes.mainContent}
-                direction="column"
-                spacing={0}
-            >
-                <Grid item>
-                    <Grid container direction="row" spacing={0}>
-                        {/** Main */}
-                        <Grid
-                            item
-                            md={
-                                theme.singleColumnLayout
-                                    ? 12
-                                    : theme.mainContentWidth || 8
-                            }
-                            xs={12}
-                        >
-                            <Grid container direction="column" spacing={0}>
-                                {/** Top */}
-                                {router.pathname === "/" &&
-                                    layout.top.length > 0 && (
-                                        <Grid item>
-                                            <Section name="top" />
-                                        </Grid>
-                                    )}
-
-                                {/** Main Content */}
-                                {props.children &&
-                                    props.children.props &&
-                                    props.children.props.children && (
-                                        <Grid item>{props.children}</Grid>
-                                    )}
-
-                                {/** Bottom */}
-                                {layout.bottom.length > 0 && (
-                                    <Grid item>
-                                        <Section name="bottom" />
-                                    </Grid>
-                                )}
-                            </Grid>
-                        </Grid>
-
-                        {/** Aside */}
-                        {!theme.singleColumnLayout && layout.aside.length > 0 && (
-                            <Grid item md={theme.asideWidth || 4} xs={12}>
-                                <Section name="aside" />
-                            </Grid>
-                        )}
-                    </Grid>
-                </Grid>
-            </Grid>
-
-            {/** Footer */}
-            <div className={classes.footerContainer}>
-                <Grid
-                    container
-                    direction="row"
-                    className={classes.footer}
-                    spacing={0}
-                >
-                    {layout.footerLeft.length > 0 && (
-                        <Grid item xs={12} md={6}>
-                            <Section name="footerLeft" />
-                        </Grid>
-                    )}
-                    {layout.footerRight.length > 0 && (
-                        <Grid item xs={12} md={6}>
-                            <Section name="footerRight" />
-                        </Grid>
-                    )}
-                </Grid>
-            </div>
-        </Root>
+        <WidgetByName
+            name={item.name}
+            settings={item.settings || {}}
+            id={`widget${item._id}`}
+        />
     );
 };
 
-const mapStateToProps = (state: AppState) => ({
-    layout: state.layout,
-});
+const Template = (props: TemplateProps) => {
+    const {
+        layout,
+        editing = false,
+        onEditClick,
+        selectedWidget,
+        children,
+    } = props;
+    if (!layout) return <></>;
+    const footer = layout.filter((widget) => widget.name === "footer")[0];
 
-export default connect(mapStateToProps)(Template);
+    return (
+        <Grid container direction="column">
+            {layout
+                .filter((widget) => widget.name !== "footer")
+                .map((item: any, index: number) => (
+                    <EditableWidget
+                        item={item}
+                        key={item.widgetId}
+                        editing={editing}
+                        onEditClick={onEditClick}
+                    />
+                ))}
+            {children}
+            {footer && (
+                <EditableWidget
+                    item={footer}
+                    editing={editing}
+                    onEditClick={onEditClick}
+                />
+            )}
+            <AppToast />
+        </Grid>
+    );
+};
+
+export default Template;

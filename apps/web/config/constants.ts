@@ -28,12 +28,18 @@ export default {
     jwtExpire: process.env.JWT_EXPIRES_IN || "1d",
     jwtTokenCookieName: process.env.JWT_COOKIE_NAME || "access_token",
 
+    // product types
+    course: "course",
+    download: "download",
+    blog: "blog",
+
     // Content types
     text: "text",
     audio: "audio",
     video: "video",
     pdf: "pdf",
     quiz: "quiz",
+    file: "file",
 
     // Content privacy types
     unlisted: "unlisted",
@@ -78,9 +84,13 @@ export default {
     // limits
     mediaRecordsPerPage: 10,
 
-    // user type
+    // user types
     userTypeTeam: "team",
     userTypeAudience: "audience",
+
+    // page types
+    product: "product",
+    site: "site",
 
     // acceptable currency codes for payments
     currencyISOCodes: [
