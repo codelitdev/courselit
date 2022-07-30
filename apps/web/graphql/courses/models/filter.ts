@@ -1,3 +1,3 @@
-type Filter = "course" | "post";
+type Filter = "course" | "download" | "blog";
 
 export default Filter;

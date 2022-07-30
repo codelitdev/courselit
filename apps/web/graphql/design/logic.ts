@@ -3,7 +3,6 @@ import { checkIfAuthenticated, checkPermission } from "../../lib/graphql";
 import { responses } from "../../config/strings";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
-import DomainModel, { Domain } from "../../models/Domain";
 const { permissions } = constants;
 
 export const setTheme = async (name: string, ctx: GQLContext) => {
@@ -83,31 +82,4 @@ export const getThemes = async (ctx: GQLContext) => {
 
     const themes = await ThemeModel.find({ domain: ctx.subdomain._id });
     return themes;
-};
-
-export const setLayout = async (
-    layoutData: any,
-    ctx: GQLContext
-): Promise<Domain | null> => {
-    checkIfAuthenticated(ctx);
-    if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
-        throw new Error(responses.action_not_allowed);
-    }
-
-    let layoutObject;
-    try {
-        layoutObject = JSON.parse(layoutData.layout);
-    } catch (err) {
-        throw new Error(responses.invalid_layout);
-    }
-
-    const domain = await DomainModel.findById(ctx.subdomain._id);
-    if (!domain) {
-        return null;
-    }
-
-    domain.layout = layoutObject;
-    await domain.save();
-
-    return domain;
 };

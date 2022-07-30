@@ -3,8 +3,9 @@ import * as React from "react";
 
 interface PriceTagProps {
     cost: number;
-    siteInfo: any;
     freeCostCaption: string;
+    currencyUnit?: string;
+    currencyISOCode: string;
 }
 
 const PriceTag = (props: PriceTagProps) => {
@@ -12,11 +13,11 @@ const PriceTag = (props: PriceTagProps) => {
     const costText =
         cost <= 0
             ? props.freeCostCaption
-            : props.siteInfo.currencyUnit
-            ? `${props.siteInfo.currencyUnit}${cost}`
-            : `${cost} ${props.siteInfo.currencyISOCode}`;
+            : props.currencyUnit
+            ? `${props.currencyUnit}${cost}`
+            : `${cost} ${props.currencyISOCode}`;
 
-    return <Typography variant="h5">{costText}</Typography>;
+    return <Typography variant="caption">{costText}</Typography>;
 };
 
 export default PriceTag;

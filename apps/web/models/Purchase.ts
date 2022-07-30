@@ -7,9 +7,9 @@ const { transactionInitiated, transactionSuccess, transactionFailed } =
 export interface Purchase {
     domain: mongoose.Types.ObjectId;
     orderId: string;
-    courseId: mongoose.Types.ObjectId;
+    courseId: string;
     purchasedOn: Date;
-    purchasedBy: mongoose.Types.ObjectId;
+    purchasedBy: String;
     paymentMethod: string;
     amount: number;
     status:
@@ -25,9 +25,9 @@ export interface Purchase {
 const PurchaseSchema = new mongoose.Schema<Purchase>({
     domain: { type: mongoose.Schema.Types.ObjectId, required: true },
     orderId: { type: String, required: true, default: generateUniqueId },
-    courseId: { type: mongoose.Schema.Types.ObjectId, required: true },
+    courseId: { type: String, required: true },
     purchasedOn: { type: Date, required: true, default: () => new Date() },
-    purchasedBy: { type: mongoose.Schema.Types.ObjectId, required: true },
+    purchasedBy: { type: String, required: true },
     paymentMethod: { type: String, required: true },
     paymentId: { type: String },
     amount: { type: Number, required: true },

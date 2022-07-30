@@ -44,11 +44,12 @@
         "eslint-config-standard": "^17.0.0",
         "eslint-plugin-n": "^15.2.0",
         "eslint-plugin-promise": "^6.0.0",
-        "typescript": "^4.0.5"
+        "typescript": "^4.7.4"
     },
     "dependencies": {
         "@courselit/common-models": "^0.18.13",
         "@courselit/components-library": "^0.18.13",
+        "@courselit/state-management": "workspace:^",
         "@courselit/utils": "workspace:^",
         "react-redux": "^8.0.2"
     },

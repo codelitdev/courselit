@@ -7,18 +7,20 @@ import menus from "./menus";
 import widgets from "./widgets";
 import courses from "./courses";
 import lessons from "./lessons";
+import pages from "./pages";
 
 export default new graphql.GraphQLSchema({
     query: new graphql.GraphQLObjectType({
         name: "RootQuery",
         fields: {
             ...users.queries,
-            //   ...lessons.queries,
+            ...lessons.queries,
             ...courses.queries,
             ...settings.queries,
             ...design.queries,
             ...menus.queries,
             ...widgets.queries,
+            ...pages.queries,
         },
     }),
     mutation: new graphql.GraphQLObjectType({
@@ -31,6 +33,7 @@ export default new graphql.GraphQLSchema({
             ...design.mutations,
             ...menus.mutations,
             ...widgets.mutations,
+            ...pages.mutations,
         },
     }),
 });

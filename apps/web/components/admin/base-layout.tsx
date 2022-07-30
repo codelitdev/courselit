@@ -1,4 +1,4 @@
-import React, { ReactChildren, useEffect } from "react";
+import React, { ReactChildren, ReactNode, useEffect } from "react";
 import { styled } from "@mui/material/styles";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
@@ -8,13 +8,14 @@ import {
     PermMedia,
     SettingsApplications,
     Palette,
+    Article,
 } from "@mui/icons-material";
 import { CREATOR_AREA_PAGE_TITLE } from "../../ui-config/strings";
 import AppLoader from "../app-loader";
 import Head from "next/head";
 import { canAccessDashboard, checkPermission } from "../../ui-lib/utils";
 import { Grid } from "@mui/material";
-import RouteBasedComponentScaffold from "../public/base-layout/route-based-component-scaffold";
+import RouteBasedComponentScaffold from "../public/scaffold";
 import constants from "../../config/constants";
 import type Profile from "../../ui-models/profile";
 import State from "../../ui-models/state";
@@ -46,46 +47,51 @@ const getSidebarMenuItems = (profile: Profile) => {
         ])
     ) {
         items.push({
-            name: "Courses",
-            route: "/dashboard/courses",
+            label: "Products",
+            href: "/dashboard/products",
             icon: <LibraryBooks />,
+        });
+        items.push({
+            label: "Blogs",
+            href: "/dashboard/blogs",
+            icon: <Article />,
         });
     }
 
-    if (
-        checkPermission(profile.permissions, [
-            permissions.viewAnyMedia,
-            permissions.manageMedia,
-            permissions.manageAnyMedia,
-        ])
-    ) {
-        items.push({
-            name: "Media",
-            route: "/dashboard/media",
-            icon: <PermMedia />,
-        });
-    }
+    // if (
+    //     checkPermission(profile.permissions, [
+    //         permissions.viewAnyMedia,
+    //         permissions.manageMedia,
+    //         permissions.manageAnyMedia,
+    //     ])
+    // ) {
+    //     items.push({
+    //         label: "Media",
+    //         href: "/dashboard/media",
+    //         icon: <PermMedia />,
+    //     });
+    // }
 
     if (profile.permissions.includes(permissions.manageUsers)) {
         items.push({
-            name: "Users",
-            route: "/dashboard/users",
+            label: "Users",
+            href: "/dashboard/users",
             icon: <SupervisedUserCircle />,
         });
     }
 
     if (profile.permissions.includes(permissions.manageSite)) {
         items.push({
-            name: "Site",
-            route: "/dashboard/design",
+            label: "Site",
+            href: "/dashboard/design",
             icon: <Palette />,
         });
     }
 
     if (profile.permissions.includes(permissions.manageSettings)) {
         items.push({
-            name: "Settings",
-            route: "/dashboard/settings",
+            label: "Settings",
+            href: "/dashboard/settings",
             icon: <SettingsApplications />,
         });
     }
@@ -97,7 +103,7 @@ interface BaseLayoutProps {
     auth: Auth;
     profile: Profile;
     siteInfo: SiteInfo;
-    children: ReactChildren;
+    children: ReactNode;
     title: string;
     address: Address;
 }
@@ -120,7 +126,7 @@ const BaseLayoutAdmin = ({
 
     useEffect(() => {
         if (auth.checked && auth.guest) {
-            router.push(`/login?redirect=${router.pathname}`);
+            router.push(`/login?redirect=${router.asPath}`);
         }
     }, [auth.checked]);
 

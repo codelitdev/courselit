@@ -82,7 +82,7 @@ const Stripe = (props: StripeProps) => {
     return (
         <Button
             onClick={handleClick}
-            variant="outlined"
+            variant="contained"
             color="primary"
             size="large"
         >

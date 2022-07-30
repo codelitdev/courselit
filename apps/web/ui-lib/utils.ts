@@ -1,36 +1,11 @@
-import fetch from "isomorphic-unfetch";
 import { permissions } from "../ui-config/constants";
 import { RichText as TextEditor } from "@courselit/components-library";
 import type { Profile } from "@courselit/common-models";
-
-export const queryGraphQL = async (
-    url: string,
-    query: Record<string, unknown>,
-    token: string
-) => {
-    const options: Record<string, unknown> = {
-        method: "POST",
-        headers: token
-            ? {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-              }
-            : { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
-    };
-    let response: any = await fetch(url, options);
-    response = await response.json();
-
-    if (response.errors && response.errors.length > 0) {
-        throw new Error(response.errors[0].message);
-    }
-
-    return response.data;
-};
+import { FetchBuilder } from "@courselit/utils";
 
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-export const formattedLocaleDate = (epochString: string) =>
+export const formattedLocaleDate = (epochString: Date) =>
     new Date(Number(epochString)).toLocaleString("en-US", {
         year: "numeric",
         month: "long",
@@ -48,6 +23,8 @@ export const formulateCourseUrl = (course: any, backend = "") =>
     }`;
 
 export const getPostDescriptionSnippet = (rawDraftJSContentState: any) => {
+    if (!rawDraftJSContentState) return "";
+
     const firstSentence = TextEditor.hydrate({ data: rawDraftJSContentState })
         .getCurrentContent()
         .getPlainText()
@@ -137,3 +114,56 @@ export const canAccessDashboard = (profile: Profile) => {
 
 export const constructThumbnailUrlFromFileUrl = (url: string) =>
     url ? url.replace(url.split("/").pop(), "thumb.webp") : null;
+
+export const getPage = async (backend: string, id?: string) => {
+    const query = id
+        ? `
+    query {
+        page: getPage(id: "${id}") {
+            name,
+            layout,
+        }
+    }
+    `
+        : `
+    query {
+        page: getPage {
+            name,
+            layout,
+        }
+    }
+    `;
+    try {
+        const fetch = new FetchBuilder()
+            .setUrl(`${backend}/api/graph`)
+            .setPayload(query)
+            .setIsGraphQLEndpoint(true)
+            .build();
+        const response = await fetch.exec();
+        return response.page;
+    } catch (e: any) {
+        console.log("getPage", e.message); // eslint-disable-line no-console
+    }
+};
+
+export const isEnrolled = (courseId: string, profile: Profile) =>
+    profile.fetched &&
+    profile.purchases.some((purchase: any) => purchase.courseId === courseId);
+
+export const isLessonCompleted = ({
+    courseId,
+    lessonId,
+    profile,
+}: {
+    courseId: string;
+    lessonId: string;
+    profile: Profile;
+}) => {
+    const indexOfCurrentCourse = profile.purchases.findIndex(
+        (purchase) => purchase.courseId === courseId
+    );
+    if (indexOfCurrentCourse === -1) return false;
+    return profile.purchases[indexOfCurrentCourse].completedLessons.some(
+        (lesson) => lesson === lessonId
+    );
+};

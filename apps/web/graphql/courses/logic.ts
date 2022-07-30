@@ -3,8 +3,8 @@
  */
 import slugify from "slugify";
 import CourseModel, { Course } from "../../models/Course";
-import User from "../../models/User";
-import { responses } from "../../config/strings";
+import UserModel, { User } from "../../models/User";
+import { internal, responses } from "../../config/strings";
 import {
     checkIfAuthenticated,
     validateOffset,
@@ -14,14 +14,31 @@ import {
     makeModelTextSearchable,
 } from "../../lib/graphql";
 import constants from "../../config/constants";
-import { validateBlogPosts } from "./helpers";
+import {
+    calculatePercentageCompletion,
+    getPaginatedCoursesForAdmin,
+    setupBlog,
+    setupCourse,
+    validateCourse,
+} from "./helpers";
 import Lesson from "../../models/Lesson";
 import GQLContext from "../../models/GQLContext";
 import Filter from "./models/filter";
+import mongoose from "mongoose";
+import { Group } from "@courselit/common-models";
+import { deleteAllLessons } from "../lessons/logic";
+import { deleteMedia } from "../../services/medialit";
+import PageModel, { Page } from "../../models/Page";
+import { Progress } from "../../models/Progress";
+import { getPrevNextCursor } from "../lessons/helpers";
+import { Banner } from "@courselit/common-widgets";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
-const getCourseOrThrow = async (id: string, ctx: GQLContext) => {
+const getCourseOrThrow = async (
+    id: mongoose.Types.ObjectId | undefined,
+    ctx: GQLContext
+) => {
     checkIfAuthenticated(ctx);
 
     const course = await CourseModel.findOne({
@@ -50,27 +67,11 @@ const getCourseOrThrow = async (id: string, ctx: GQLContext) => {
     return course;
 };
 
-export const getCourse = async (
-    id: string | null = null,
-    courseId: string | null = null,
-    ctx: GQLContext
-) => {
-    if (!id && !courseId) {
-        throw new Error(responses.invalid_course_id);
-    }
-
-    let course;
-    if (id) {
-        course = await CourseModel.findOne({
-            _id: id,
-            domain: ctx.subdomain._id,
-        });
-    } else {
-        course = await CourseModel.findOne({
-            courseId,
-            domain: ctx.subdomain._id,
-        });
-    }
+export const getCourse = async (id: string, ctx: GQLContext) => {
+    const course = await CourseModel.findOne({
+        courseId: id,
+        domain: ctx.subdomain._id,
+    });
 
     if (!course) {
         throw new Error(responses.item_not_found);
@@ -88,39 +89,46 @@ export const getCourse = async (
     }
 
     if (course.published) {
+        if ([constants.course, constants.download].includes(course.type)) {
+            const { nextLesson } = await getPrevNextCursor(
+                course.courseId,
+                ctx.subdomain._id
+            );
+            course.firstLesson = nextLesson;
+        }
         return course;
     } else {
         throw new Error(responses.item_not_found);
     }
 };
 
-export const createCourse = async (courseData: Course, ctx: GQLContext) => {
+export const createCourse = async (
+    courseData: { title: string; type: Filter },
+    ctx: GQLContext
+) => {
     checkIfAuthenticated(ctx);
     if (!checkPermission(ctx.user.permissions, [permissions.manageCourse])) {
         throw new Error(responses.action_not_allowed);
     }
 
-    courseData = await validateBlogPosts(courseData, ctx);
-
-    const course = await CourseModel.create({
-        domain: ctx.subdomain._id,
-        title: courseData.title,
-        cost: courseData.cost,
-        privacy: courseData.privacy,
-        isBlog: courseData.isBlog,
-        isFeatured: courseData.isFeatured,
-        description: courseData.description,
-        featuredImage: courseData.featuredImage,
-        creatorId: ctx.user.userId || ctx.user._id,
-        creatorName: ctx.user.name,
-        slug: slugify(courseData.title.toLowerCase()),
-        tags: courseData.tags,
-    });
-
-    return course;
+    if (courseData.type === "blog") {
+        return await setupBlog({
+            title: courseData.title,
+            ctx,
+        });
+    } else {
+        return await setupCourse({
+            title: courseData.title,
+            type: courseData.type,
+            ctx,
+        });
+    }
 };
 
-export const updateCourse = async (courseData, ctx) => {
+export const updateCourse = async (
+    courseData: Partial<Course>,
+    ctx: GQLContext
+) => {
     let course = await getCourseOrThrow(courseData.id, ctx);
 
     for (const key of Object.keys(courseData)) {
@@ -134,62 +142,51 @@ export const updateCourse = async (courseData, ctx) => {
         course[key] = courseData[key];
     }
 
-    course = await validateBlogPosts(course, ctx);
+    course = await validateCourse(course, ctx);
     course = await course.save();
+    await PageModel.updateOne(
+        { entityId: course.courseId, domain: ctx.subdomain._id },
+        { $set: { name: course.title } }
+    );
     return course;
 };
 
-export const deleteCourse = async (id, ctx) => {
+export const deleteCourse = async (
+    id: mongoose.Types.ObjectId,
+    ctx: GQLContext
+) => {
     const course = await getCourseOrThrow(id, ctx);
 
-    if (course.lessons.length > 0) {
-        throw new Error(responses.course_not_empty);
-    }
-
     try {
+        await deleteAllLessons(course.courseId, ctx);
+        if (course.featuredImage) {
+            await deleteMedia(course.featuredImage);
+        }
+        await PageModel.deleteOne({
+            entityId: course.courseId,
+            domain: ctx.subdomain._id,
+        });
         await course.remove();
         return true;
-    } catch (err) {
+    } catch (err: any) {
         throw new Error(err.message);
     }
 };
 
-export const addLesson = async (courseId, lessonId, ctx) => {
-    const course = await getCourseOrThrow(courseId, ctx);
-
-    if (course.lessons.indexOf(lessonId) === -1) {
-        course.lessons.push(lessonId);
-    }
-
-    try {
-        await course.save();
-    } catch (err) {
-        return false;
-    }
-
-    return true;
-};
-
-export const removeLesson = async (courseId, lessonId, ctx) => {
-    const course = await getCourseOrThrow(courseId, ctx);
-
-    if (~course.lessons.indexOf(lessonId)) {
-        course.lessons.splice(course.lessons.indexOf(lessonId), 1);
-    }
-
-    try {
-        await course.save();
-    } catch (err) {
-        return false;
-    }
-
-    return true;
-};
-
-export const getCoursesAsAdmin = async (offset, ctx, text) => {
-    checkIfAuthenticated(ctx);
+export const getCoursesAsAdmin = async ({
+    offset,
+    context,
+    searchText,
+    filterBy,
+}: {
+    offset: number;
+    context: GQLContext;
+    searchText?: string;
+    filterBy?: Filter[];
+}) => {
+    checkIfAuthenticated(context);
     validateOffset(offset);
-    const user = ctx.user;
+    const user = context.user;
 
     if (
         !checkPermission(user.permissions, [
@@ -200,26 +197,28 @@ export const getCoursesAsAdmin = async (offset, ctx, text) => {
         throw new Error(responses.action_not_allowed);
     }
 
-    const query = {
-        domain: ctx.subdomain._id,
+    const query: Partial<Omit<Course, "type">> & {
+        $text?: Record<string, unknown>;
+        type?: string | { $in: string[] };
+    } = {
+        domain: context.subdomain._id,
     };
     if (!checkPermission(user.permissions, [permissions.manageAnyCourse])) {
         query.creatorId = `${user.userId || user.id}`;
     }
 
-    if (text) query.$text = { $search: text };
-    const SearchableCourse = makeModelTextSearchable(CourseModel);
+    if (filterBy) {
+        query.type = { $in: filterBy };
+    } else {
+        query.type = { $in: [constants.download, constants.course] };
+    }
 
-    const resultSet = await SearchableCourse(
-        { offset, query, graphQLContext: ctx },
-        {
-            itemsPerPage,
-            sortByColumn: "updatedAt",
-            sortOrder: -1,
-        }
-    );
+    if (searchText) query.$text = { $search: searchText };
 
-    return resultSet;
+    return await getPaginatedCoursesForAdmin({
+        query,
+        page: offset,
+    });
 };
 
 export const getCourses = async ({
@@ -231,7 +230,7 @@ export const getCourses = async ({
     offset: number;
     ctx: GQLContext;
     tag?: string;
-    filterBy?: Filter;
+    filterBy?: Filter[];
 }) => {
     validateOffset(offset);
     const query: Record<string, unknown> = {
@@ -243,13 +242,23 @@ export const getCourses = async ({
         query.tags = tag;
     }
     if (filterBy) {
-        query.isBlog = filterBy === "post" ? true : false;
+        query.type = { $in: filterBy };
     }
 
-    const courses = await CourseModel.find(
-        query,
-        "id title cost isBlog description creatorName updatedAt slug featuredImage courseId isFeatured tags groups"
-    )
+    const courses = await CourseModel.find(query, {
+        id: 1,
+        title: 1,
+        cost: 1,
+        description: 1,
+        type: 1,
+        creatorName: 1,
+        updatedAt: 1,
+        slug: 1,
+        featuredImage: 1,
+        courseId: 1,
+        tags: 1,
+        groups: 1,
+    })
         .sort({ updatedAt: -1 })
         .skip((offset - 1) * itemsPerPage)
         .limit(itemsPerPage);
@@ -258,18 +267,17 @@ export const getCourses = async ({
         id: x.id,
         title: x.title,
         cost: x.cost,
-        isBlog: x.isBlog,
         description: extractPlainTextFromDraftJS(
             x.description,
             blogPostSnippetLength
         ),
+        type: x.type,
         creatorName: x.creatorName,
         updatedAt: x.updatedAt,
         slug: x.slug,
         featuredImage: x.featuredImage,
         courseId: x.courseId,
         tags: x.tags,
-        isFeatured: x.isFeatured,
         groups: x.isBlog ? null : x.groups,
     }));
 };
@@ -298,39 +306,70 @@ export const getCourses = async ({
 //   return dbQuery;
 // };
 
-export const getEnrolledCourses = async (userId, ctx) => {
+export const getEnrolledCourses = async (userId: string, ctx: GQLContext) => {
     checkIfAuthenticated(ctx);
 
     if (!checkPermission(ctx.user.permissions, [permissions.manageAnyCourse])) {
-        throw new Error(responses.action_not_allowed);
+        if (userId !== ctx.user.userId) {
+            throw new Error(responses.action_not_allowed);
+        }
     }
 
-    const user = await User.findOne({ _id: userId, domain: ctx.subdomain._id });
+    const user = await UserModel.findOne({ userId, domain: ctx.subdomain._id });
     if (!user) {
         throw new Error(responses.user_not_found);
     }
 
-    return CourseModel.find(
+    const enrolledCourses = await CourseModel.find(
         {
-            _id: {
-                $in: [...user.purchases],
+            courseId: {
+                $in: [
+                    ...user.purchases.map(
+                        (course: Progress) => course.courseId
+                    ),
+                ],
             },
             domain: ctx.subdomain._id,
         },
-        "id title"
+        {
+            courseId: 1,
+            title: 1,
+            lessons: 1,
+            type: 1,
+            slug: 1,
+        }
     );
+
+    return enrolledCourses.map((course) => ({
+        courseId: course.courseId,
+        title: course.title,
+        type: course.type,
+        slug: course.slug,
+        progress: calculatePercentageCompletion(user, course),
+    }));
 };
 
-export const addGroup = async ({ id, name, collapsed, ctx }) => {
+export const addGroup = async ({
+    id,
+    name,
+    collapsed,
+    ctx,
+}: {
+    id: mongoose.Types.ObjectId;
+    name: string;
+    collapsed: boolean;
+    ctx: GQLContext;
+}) => {
     const course = await getCourseOrThrow(id, ctx);
-    const existingName = (group) => group.name === name;
+    const existingName = (group: Group) => group.name === name;
 
     if (course.groups.some(existingName)) {
         throw new Error(responses.existing_group);
     }
 
     const maximumRank = course.groups.reduce(
-        (acc, value) => (value.rank > acc ? value.rank : acc),
+        (acc: number, value: { rank: number }) =>
+            value.rank > acc ? value.rank : acc,
         0
     );
 

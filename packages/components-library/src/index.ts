@@ -5,6 +5,9 @@ import RichText from "./rich-text";
 import OverviewAndDetail from "./overview-and-detail";
 import CourseItem from "./course-item";
 import Image from "./image";
+import Select from "./select";
+import Menu from "./menu";
+import Link from "./link";
 
 export {
     PriceTag,
@@ -14,4 +17,7 @@ export {
     OverviewAndDetail,
     CourseItem,
     Image,
+    Select,
+    Menu,
+    Link,
 };

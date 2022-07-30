@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import constants from "../config/constants";
 import { generateUniqueId } from "@courselit/utils";
 import type { Group } from "@courselit/common-models";
+const { course, download, blog, unlisted, open } = constants;
+const { text, video, audio, pdf, quiz } = constants;
 
 export interface Course {
     domain: mongoose.Types.ObjectId;
@@ -10,7 +12,8 @@ export interface Course {
     title: string;
     slug: string;
     cost: number;
-    privacy: typeof constants.unlisted | typeof constants.open;
+    privacy: typeof unlisted | typeof open;
+    type: typeof course | typeof download | typeof blog;
     creatorId: string;
     creatorName: string;
     published: boolean;
@@ -21,6 +24,9 @@ export interface Course {
     description?: string;
     featuredImage?: string;
     groups: Group[];
+    sales: number;
+    customers: string[];
+    pageId?: string;
 }
 
 const CourseSchema = new mongoose.Schema<Course>(
@@ -33,13 +39,16 @@ const CourseSchema = new mongoose.Schema<Course>(
         privacy: {
             type: String,
             required: true,
-            enum: [constants.unlisted, constants.open],
+            enum: [unlisted, open],
+        },
+        type: {
+            type: String,
+            required: true,
+            enum: [course, download, blog],
         },
         creatorId: { type: String, required: true },
         creatorName: { type: String },
         published: { type: Boolean, required: true, default: false },
-        isBlog: { type: Boolean, required: true, default: false },
-        isFeatured: { type: Boolean, required: true, default: false },
         tags: [{ type: String }],
         lessons: [String],
         description: String,
@@ -47,12 +56,18 @@ const CourseSchema = new mongoose.Schema<Course>(
         groups: [
             {
                 name: { type: String, required: true },
-                // order of the group on the UI
+                _id: {
+                    type: String,
+                    required: true,
+                    default: generateUniqueId,
+                },
                 rank: { type: Number, required: true },
-                // to not show associated lessons as top members on the UI
                 collapsed: { type: Boolean, required: true, default: true },
             },
         ],
+        sales: { type: Number, required: true, default: 0.0 },
+        customers: [String],
+        pageId: { type: String },
     },
     {
         timestamps: true,

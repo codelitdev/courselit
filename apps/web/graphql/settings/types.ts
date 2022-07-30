@@ -4,13 +4,11 @@ import {
     GraphQLString,
     GraphQLInputObjectType,
     GraphQLNonNull,
-    GraphQLList,
 } from "graphql";
 import mediaTypes from "../media/types";
 import { getMedia } from "../media/logic";
 const { mediaType } = mediaTypes;
 import designTypes from "../design/types";
-import menuTypes from "../menus/types";
 
 const siteType = new GraphQLObjectType({
     name: "SiteInfo",
@@ -19,7 +17,7 @@ const siteType = new GraphQLObjectType({
         subtitle: { type: GraphQLString },
         logopath: {
             type: mediaType,
-            resolve: (settings, _, context, __) => getMedia(settings.logopath),
+            resolve: (settings, _, __, ___) => getMedia(settings.logopath),
         },
         currencyUnit: { type: GraphQLString },
         currencyISOCode: { type: GraphQLString },
@@ -57,9 +55,7 @@ const domain = new GraphQLObjectType({
     fields: {
         name: { type: new GraphQLNonNull(GraphQLString) },
         settings: { type: siteType },
-        layout: { type: designTypes.layoutType },
         theme: { type: designTypes.themeType },
-        links: { type: new GraphQLList(menuTypes.linkType) },
     },
 });
 

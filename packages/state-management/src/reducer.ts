@@ -11,8 +11,6 @@ import {
     SET_MESSAGE,
     CLEAR_MESSAGE,
     THEME_AVAILABLE,
-    LAYOUT_AVAILABLE,
-    NAVIGATION_AVAILABLE,
     SET_ADDRESS,
     WIDGETS_DATA_AVAILABLE,
 } from "./action-types";
@@ -129,24 +127,6 @@ function themeReducer(state = initialState.theme, action: Action) {
     }
 }
 
-function layoutReducer(state = initialState.layout, action: Action) {
-    switch (action.type) {
-        case LAYOUT_AVAILABLE:
-            return action.layout || state;
-        default:
-            return state;
-    }
-}
-
-function navigationReducer(state = initialState.navigation, action: Action) {
-    switch (action.type) {
-        case NAVIGATION_AVAILABLE:
-            return action.links || [];
-        default:
-            return state;
-    }
-}
-
 function addressReducer(state = initialState.address, action: Action) {
     switch (action.type) {
         case SET_ADDRESS:
@@ -175,8 +155,6 @@ const appReducers = combineReducers({
     profile: profileReducer,
     message: messageReducer,
     theme: themeReducer,
-    layout: layoutReducer,
-    navigation: navigationReducer,
     address: addressReducer,
     widgetsData: widgetsDataReducer,
 });

@@ -4,7 +4,6 @@ import {
     GraphQLNonNull,
     GraphQLList,
     GraphQLID,
-    GraphQLBoolean,
     GraphQLEnumType,
 } from "graphql";
 import types from "./types";
@@ -16,12 +15,15 @@ import {
 } from "./logic";
 import GQLContext from "../../models/GQLContext";
 import Filter from "./models/filter";
+import constants from "../../config/constants";
+const { course, download, blog } = constants;
 
 const courseFilters = new GraphQLEnumType({
     name: "CourseFilters",
     values: {
-        COURSE: { value: "course" },
-        POST: { value: "post" },
+        [course.toUpperCase()]: { value: course },
+        [download.toUpperCase()]: { value: download },
+        [blog.toUpperCase()]: { value: blog },
     },
 });
 
@@ -30,20 +32,14 @@ export default {
         type: types.courseType,
         args: {
             id: {
-                type: GraphQLString,
-            },
-            courseId: {
-                type: GraphQLString,
+                type: new GraphQLNonNull(GraphQLString),
             },
         },
-        resolve: (
-            _: any,
-            { id, courseId }: { id: string | null; courseId: string | null },
-            context: GQLContext
-        ) => getCourse(id, courseId, context),
+        resolve: (_: any, { id }: { id: string }, context: GQLContext) =>
+            getCourse(id, context),
     },
     getCoursesAsAdmin: {
-        type: new GraphQLList(types.creatorOrAdminCoursesItemType),
+        type: new GraphQLList(types.adminCourseItemType),
         args: {
             offset: {
                 type: new GraphQLNonNull(GraphQLInt),
@@ -51,12 +47,19 @@ export default {
             searchText: {
                 type: GraphQLString,
             },
+            filterBy: {
+                type: new GraphQLList(courseFilters),
+            },
         },
         resolve: (
             _: any,
-            { offset, searchText }: { offset: number; searchText: string },
+            {
+                offset,
+                searchText,
+                filterBy,
+            }: { offset: number; searchText?: string; filterBy?: Filter },
             context: GQLContext
-        ) => getCoursesAsAdmin(offset, context, searchText),
+        ) => getCoursesAsAdmin({ offset, context, searchText, filterBy }),
     },
     //   getPosts: {
     //     type: new GraphQLList(types.postType),
@@ -81,7 +84,7 @@ export default {
                 type: GraphQLString,
             },
             filterBy: {
-                type: courseFilters,
+                type: new GraphQLList(courseFilters),
             },
         },
         resolve: (
@@ -90,15 +93,15 @@ export default {
                 offset,
                 tag,
                 filterBy,
-            }: { offset: number; tag?: string; filterBy?: Filter },
+            }: { offset: number; tag?: string; filterBy?: Filter[] },
             ctx: GQLContext
         ) => getCourses({ offset, tag, filterBy, ctx }),
     },
     getEnrolledCourses: {
-        type: new GraphQLList(types.creatorOrAdminCoursesItemType),
+        type: new GraphQLList(types.enrolledCourses),
         args: {
             userId: {
-                type: new GraphQLNonNull(GraphQLID),
+                type: new GraphQLNonNull(GraphQLString),
             },
         },
         resolve: (
