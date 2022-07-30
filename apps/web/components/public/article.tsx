@@ -93,10 +93,6 @@ const Article = (props: ArticleProps) => {
                 container
                 component="article"
                 direction="column"
-                spacing={2}
-                sx={{
-                    padding: 2,
-                }}
             >
                 <Grid item component="header">
                     <Typography variant="h2" className={classes.header}>

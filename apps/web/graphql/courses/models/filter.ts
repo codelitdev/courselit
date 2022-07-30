@@ -1,5 +1,3 @@
-import constants from "../../../config/constants";
-const { course, download, blog } = constants;
-type Filter = typeof course | typeof download | typeof blog;
+type Filter = "course" | "download" | "blog";
 
 export default Filter;

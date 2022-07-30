@@ -47,6 +47,9 @@ export default {
             searchText: {
                 type: GraphQLString,
             },
+            filterBy: {
+                type: new GraphQLList(courseFilters),
+            },
         },
         resolve: (
             _: any,
@@ -90,7 +93,7 @@ export default {
                 offset,
                 tag,
                 filterBy,
-            }: { offset: number; tag?: string; filterBy?: Filter },
+            }: { offset: number; tag?: string; filterBy?: Filter[] },
             ctx: GQLContext
         ) => getCourses({ offset, tag, filterBy, ctx }),
     },

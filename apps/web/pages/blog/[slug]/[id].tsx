@@ -1,12 +1,18 @@
 import { connect } from "react-redux";
-import { formulateCourseUrl, getBackendAddress } from "../../../ui-lib/utils";
+import {
+    formulateCourseUrl,
+    getBackendAddress,
+    getPage,
+} from "../../../ui-lib/utils";
 import { Grid } from "@mui/material";
 import Head from "next/head";
 import { FetchBuilder } from "@courselit/utils";
-import type { SiteInfo, Address, Course } from "@courselit/common-models";
+import type { SiteInfo, Address, Course, Page } from "@courselit/common-models";
 import type { AppState } from "@courselit/state-management";
 import dynamic from "next/dynamic";
 import BaseLayout from "../../../components/public/base-layout";
+import { Link } from "@courselit/components-library";
+import { BACK_TO_BLOG } from "../../../ui-config/strings";
 
 const Article = dynamic(() => import("../../../components/public/article"));
 
@@ -14,47 +20,50 @@ interface PostProps {
     siteInfo: SiteInfo;
     address: Address;
     post: Course;
+    page: Page;
 }
 
-const Post = (props: PostProps) => {
+const Post = ({ siteInfo, address, post, page }: PostProps) => {
     const articleOptions = {
         showAttribution: true,
     };
 
     return (
-        <BaseLayout title={props.post.title}>
-            {props.post && (
-                <Grid item xs={12}>
+        <BaseLayout title={post.title} layout={page.layout}>
+            {post && (
+                <Grid
+                    container
+                    direction="column"
+                    sx={{ minHeight: "80vh", p: 2 }}>
                     <Head>
                         <meta
                             property="og:url"
-                            content={formulateCourseUrl(
-                                props.post,
-                                props.address.frontend
-                            )}
+                            content={formulateCourseUrl(post, address.frontend)}
                         />
                         <meta property="og:type" content="article" />
-                        <meta property="og:title" content={props.post.title} />
+                        <meta property="og:title" content={post.title} />
                         {/** TODO: re-enable the following meta tag once SSR is supported */}
                         {/* <meta
               property="og:description"
-              content={getPostDescriptionSnippet(props.post.description)}
+              content={getPostDescriptionSnippet(post.description)}
             /> */}
-                        <meta
-                            property="og:author"
-                            content={props.post.creatorName}
-                        />
-                        {props.post.featuredImage && (
+                        <meta property="og:author" content={post.creatorName} />
+                        {post.featuredImage && (
                             <meta
                                 property="og:image"
                                 content={
-                                    props.post.featuredImage &&
-                                    props.post.featuredImage.file
+                                    post.featuredImage &&
+                                    post.featuredImage.thumbnail
                                 }
                             />
                         )}
                     </Head>
-                    <Article course={props.post} options={articleOptions} />
+                    <Grid item sx={{ mb: 4 }}>
+                        <Article course={post} options={articleOptions} />
+                    </Grid>
+                    <Grid item>
+                        <Link href="/blog">{BACK_TO_BLOG}</Link>
+                    </Grid>
                 </Grid>
             )}
         </BaseLayout>
@@ -62,9 +71,11 @@ const Post = (props: PostProps) => {
 };
 
 export async function getServerSideProps({ query, req }: any) {
+    const address = getBackendAddress(req.headers.host);
+    const page = await getPage(address);
     const graphQuery = `
     query {
-      post: getCourse(courseId: "${query.id}") {
+      post: getCourse(id: "${query.id}") {
           id,
           title,
           description,
@@ -76,14 +87,14 @@ export async function getServerSideProps({ query, req }: any) {
           creatorName,
           creatorId,
           slug,
-          isBlog,
           courseId,
           tags
       }
     }
   `;
+  console.log(graphQuery);
     const fetch = new FetchBuilder()
-        .setUrl(`${getBackendAddress(req.headers.host)}/api/graph`)
+        .setUrl(`${address}/api/graph`)
         .setPayload(graphQuery)
         .setIsGraphQLEndpoint(true)
         .build();
@@ -93,6 +104,7 @@ export async function getServerSideProps({ query, req }: any) {
         const response = await fetch.exec();
         post = response.post;
     } catch (err) {
+        console.log(err);
         return {
             notFound: true,
         };
@@ -101,6 +113,7 @@ export async function getServerSideProps({ query, req }: any) {
     return {
         props: {
             post,
+            page,
         },
     };
 }

@@ -33,7 +33,12 @@ const Appearance = (props: AppearanceProps) => {
                         </Typography>
                     </Grid>
                     <Grid>
-                        <Button variant="contained">{BTN_EDIT_SITE}</Button>
+                        <Button
+                            component="a"
+                            href={`/dashboard/page/homepage/edit`}
+                            variant="contained">
+                            {BTN_EDIT_SITE}
+                        </Button>
                     </Grid>
                 </Grid>
             </Grid>

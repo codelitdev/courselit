@@ -127,7 +127,7 @@ const CourseViewer = (props: CourseProps) => {
                 contentPadding={0}
             >
                 <Grid container direction="column">
-                    <Grid item>
+                    <Grid item sx={{ p: 2 }}>
                         <Article
                             course={course}
                             options={{ showEnrollmentArea: true }}

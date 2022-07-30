@@ -1,11 +1,15 @@
 import { getPaymentMethod } from "../../payments";
-import { responses } from "../../config/strings";
+import { internal, responses } from "../../config/strings";
 import GQLContext from "../../models/GQLContext";
 import CourseModel, { Course } from "../../models/Course";
 import { checkMediaForPublicAccess } from "../media/logic";
 import constants from "../../config/constants";
 import { Progress } from "../../models/Progress";
 import { User } from "../../models/User";
+import Page from "../../models/Page";
+import slugify from "slugify";
+import { addGroup } from "./logic";
+import { Banner } from "@courselit/common-widgets";
 
 const validatePaymentMethod = async (domain: string) => {
     try {
@@ -112,4 +116,71 @@ export const calculatePercentageCompletion = (user: User, course: Course) => {
     if (!purchasedCourse.completedLessons.length) return 0;
 
     return purchasedCourse.completedLessons.length / course.lessons.length;
+};
+
+export const setupCourse = async ({
+    title,
+    type,
+    ctx,
+}: {
+    title: string;
+    type: "course" | "download";
+    ctx: GQLContext;
+}) => {
+    const page = await Page.create({
+        domain: ctx.subdomain._id,
+        name: title,
+        creatorId: ctx.user.userId,
+        pageId: slugify(title.toLowerCase()),
+    });
+
+    const course = await CourseModel.create({
+        domain: ctx.subdomain._id,
+        title: title,
+        cost: 0,
+        privacy: constants.unlisted,
+        creatorId: ctx.user.userId,
+        creatorName: ctx.user.name,
+        slug: slugify(title.toLowerCase()),
+        type: type,
+        pageId: page.pageId,
+    });
+    await addGroup({
+        id: course._id,
+        name: internal.default_group_name,
+        collapsed: false,
+        ctx,
+    });
+    page.entityId = course.courseId;
+    page.layout = [
+        Banner.init({
+            pageId: page.pageId,
+            type: "PRODUCT",
+            entityId: course.courseId,
+        }),
+    ];
+    await page.save();
+
+    return course;
+};
+
+export const setupBlog = async ({
+    title,
+    ctx,
+}: {
+    title: string;
+    ctx: GQLContext;
+}) => {
+    const course = await CourseModel.create({
+        domain: ctx.subdomain._id,
+        title: title,
+        cost: 0,
+        privacy: constants.unlisted,
+        creatorId: ctx.user.userId,
+        creatorName: ctx.user.name,
+        slug: slugify(title.toLowerCase()),
+        type: constants.blog,
+    });
+
+    return course;
 };

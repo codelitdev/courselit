@@ -8,6 +8,7 @@ import {
     PermMedia,
     SettingsApplications,
     Palette,
+    Article,
 } from "@mui/icons-material";
 import { CREATOR_AREA_PAGE_TITLE } from "../../ui-config/strings";
 import AppLoader from "../app-loader";
@@ -50,21 +51,26 @@ const getSidebarMenuItems = (profile: Profile) => {
             href: "/dashboard/products",
             icon: <LibraryBooks />,
         });
-    }
-
-    if (
-        checkPermission(profile.permissions, [
-            permissions.viewAnyMedia,
-            permissions.manageMedia,
-            permissions.manageAnyMedia,
-        ])
-    ) {
         items.push({
-            label: "Media",
-            href: "/dashboard/media",
-            icon: <PermMedia />,
+            label: "Blogs",
+            href: "/dashboard/blogs",
+            icon: <Article />,
         });
     }
+
+    // if (
+    //     checkPermission(profile.permissions, [
+    //         permissions.viewAnyMedia,
+    //         permissions.manageMedia,
+    //         permissions.manageAnyMedia,
+    //     ])
+    // ) {
+    //     items.push({
+    //         label: "Media",
+    //         href: "/dashboard/media",
+    //         icon: <PermMedia />,
+    //     });
+    // }
 
     if (profile.permissions.includes(permissions.manageUsers)) {
         items.push({
