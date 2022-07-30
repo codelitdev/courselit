@@ -1,6 +1,6 @@
 {
     "name": "@courselit/web",
-    "version": "0.19.0",
+    "version": "0.19.1",
     "private": true,
     "scripts": {
         "dev": "next dev",
@@ -10,12 +10,12 @@
         "prettier": "prettier --write **/*.ts"
     },
     "dependencies": {
-        "@courselit/common-models": "^0.19.0",
-        "@courselit/common-widgets": "^0.19.0",
-        "@courselit/components-library": "^0.19.0",
-        "@courselit/state-management": "^0.19.0",
-        "@courselit/utils": "^0.19.0",
-        "@courselit/widget-buttondown": "^0.19.0",
+        "@courselit/common-models": "^0.19.1",
+        "@courselit/common-widgets": "^0.19.1",
+        "@courselit/components-library": "^0.19.1",
+        "@courselit/state-management": "^0.19.1",
+        "@courselit/utils": "^0.19.1",
+        "@courselit/widget-buttondown": "^0.19.1",
         "@emotion/cache": "^11.7.1",
         "@emotion/react": "^11.8.2",
         "@emotion/server": "^11.4.0",
