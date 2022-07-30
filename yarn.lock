@@ -453,7 +453,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-
 "@courselit/common-models@^0.19.1, @courselit/common-models@workspace:packages/common-models":
   version: 0.0.0-use.local
   resolution: "@courselit/common-models@workspace:packages/common-models"
