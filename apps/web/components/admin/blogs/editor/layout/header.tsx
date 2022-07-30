@@ -77,14 +77,14 @@ function BlogHeader({ id, breadcrumbs, address, dispatch }: BlogHeaderProps) {
                                 {
                                     label: MENU_BLOG_VISIT,
                                     type: "link",
-                                    href: `/blog/${course.slug}/${course.courseId}`
+                                    href: `/blog/${course.slug}/${course.courseId}`,
                                 },
                                 {
                                     label: PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
                                     type: "button",
                                     onClick: () =>
                                         setDeleteProductPopupOpened(true),
-                                }
+                                },
                             ]}
                             icon={<MoreVert />}
                         />

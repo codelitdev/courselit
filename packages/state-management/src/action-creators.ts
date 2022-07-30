@@ -68,7 +68,6 @@ export function refreshUserProfile(): ThunkAction<
             const response = await fetch.exec();
             dispatch(networkAction(false));
             dispatch(updateProfile(response.profile));
-        } catch (err) {
         } finally {
             dispatch(networkAction(false));
         }

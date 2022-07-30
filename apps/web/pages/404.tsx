@@ -17,7 +17,6 @@ function Custom404({ address }: { address: Address }) {
     const loadPage = async () => {
         const page = await getPage(`${address.backend}`);
         if (page) {
-            console.log(page);
             setLayout(page.layout);
         }
     };

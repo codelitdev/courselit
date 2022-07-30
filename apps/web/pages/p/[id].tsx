@@ -22,7 +22,6 @@ export async function getServerSideProps({ query, req }: any) {
     const { id } = query;
     const address = getBackendAddress(req.headers.host);
     const page = await getPage(address, id);
-    console.log(page);
     if (!page) {
         return {
             notFound: true,

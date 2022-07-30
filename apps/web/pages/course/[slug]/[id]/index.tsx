@@ -89,7 +89,6 @@ export function generateSideBarItems(
 
 const CourseViewer = (props: CourseProps) => {
     const { course, profile } = props;
-    console.log("Course", course, profile);
     let key = 0;
 
     return (
@@ -232,7 +231,6 @@ export async function getServerSideProps({ query, req }: any) {
             };
         }
     } catch (err: any) {
-        console.log(err);
         return {
             notFound: true,
         };

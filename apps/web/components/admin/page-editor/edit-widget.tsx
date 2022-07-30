@@ -21,7 +21,6 @@ interface EditWidgetProps {
 }
 
 function EditWidget({ onChange, onClose, onDelete, widget }: EditWidgetProps) {
-    console.log(widget);
     const actualWidget = widgets[widget.name];
     const onDeleteWidget = () => {
         onDelete(widget.widgetId);

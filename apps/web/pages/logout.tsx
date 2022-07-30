@@ -21,7 +21,6 @@ const Logout = ({ dispatch }: LogoutProps) => {
 
     const logout = async () => {
         const response = await fetch("/api/auth/logout");
-        console.log(response, response.status);
         if (response.status === 200) {
             dispatch(signedOut());
             router.replace("/");
