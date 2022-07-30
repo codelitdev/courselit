@@ -17,6 +17,8 @@ import constants from "../../config/constants";
 import {
     calculatePercentageCompletion,
     getPaginatedCoursesForAdmin,
+    setupBlog,
+    setupCourse,
     validateCourse,
 } from "./helpers";
 import Lesson from "../../models/Lesson";
@@ -87,11 +89,13 @@ export const getCourse = async (id: string, ctx: GQLContext) => {
     }
 
     if (course.published) {
-        const { nextLesson } = await getPrevNextCursor(
-            course.courseId,
-            ctx.subdomain._id
-        );
-        course.firstLesson = nextLesson;
+        if ([constants.course,constants.download].includes(course.type)) {
+            const { nextLesson } = await getPrevNextCursor(
+                course.courseId,
+                ctx.subdomain._id
+            );
+            course.firstLesson = nextLesson;
+        }
         return course;
     } else {
         throw new Error(responses.item_not_found);
@@ -107,41 +111,18 @@ export const createCourse = async (
         throw new Error(responses.action_not_allowed);
     }
 
-    const page = await PageModel.create({
-        domain: ctx.subdomain._id,
-        name: courseData.title,
-        creatorId: ctx.user.userId,
-        pageId: slugify(courseData.title.toLowerCase()),
-    });
-
-    const course = await CourseModel.create({
-        domain: ctx.subdomain._id,
-        title: courseData.title,
-        cost: 0,
-        privacy: constants.unlisted,
-        creatorId: ctx.user.userId,
-        creatorName: ctx.user.name,
-        slug: slugify(courseData.title.toLowerCase()),
-        type: courseData.type,
-        pageId: page.pageId,
-    });
-    await addGroup({
-        id: course._id,
-        name: internal.default_group_name,
-        collapsed: false,
-        ctx,
-    });
-    page.entityId = course.courseId;
-    page.layout = [
-        Banner.init({
-            pageId: page.pageId,
-            type: "PRODUCT",
-            entityId: course.courseId,
-        }),
-    ];
-    await page.save();
-
-    return course;
+    if (courseData.type === "blog") {
+        return await setupBlog({
+            title: courseData.title,
+            ctx,
+        });
+    } else {
+        return await setupCourse({
+            title: courseData.title,
+            type: courseData.type,
+            ctx,
+        });
+    }
 };
 
 export const updateCourse = async (
@@ -201,7 +182,7 @@ export const getCoursesAsAdmin = async ({
     offset: number;
     context: GQLContext;
     searchText?: string;
-    filterBy?: Filter;
+    filterBy?: Filter[];
 }) => {
     checkIfAuthenticated(context);
     validateOffset(offset);
@@ -227,12 +208,13 @@ export const getCoursesAsAdmin = async ({
     }
 
     if (filterBy) {
-        query.type = filterBy;
+        query.type = { $in: filterBy };
     } else {
         query.type = { $in: [constants.download, constants.course] };
     }
 
     if (searchText) query.$text = { $search: searchText };
+    console.log(query);
 
     return await getPaginatedCoursesForAdmin({
         query,
@@ -263,10 +245,24 @@ export const getCourses = async ({
     if (filterBy) {
         query.type = { $in: filterBy };
     }
+    console.log(query);
 
     const courses = await CourseModel.find(
         query,
-        "id title cost isBlog description type creatorName updatedAt slug featuredImage courseId isFeatured tags groups"
+        {
+            id: 1,
+            title: 1,
+            cost: 1,
+            description: 1,
+            type: 1,
+            creatorName: 1,
+            updatedAt: 1,
+            slug: 1,
+            featuredImage: 1,
+            courseId: 1,
+            tags: 1,
+            groups: 1
+        }
     )
         .sort({ updatedAt: -1 })
         .skip((offset - 1) * itemsPerPage)
@@ -276,7 +272,6 @@ export const getCourses = async ({
         id: x.id,
         title: x.title,
         cost: x.cost,
-        isBlog: x.isBlog,
         description: extractPlainTextFromDraftJS(
             x.description,
             blogPostSnippetLength
@@ -288,7 +283,6 @@ export const getCourses = async ({
         featuredImage: x.featuredImage,
         courseId: x.courseId,
         tags: x.tags,
-        isFeatured: x.isFeatured,
         groups: x.isBlog ? null : x.groups,
     }));
 };
