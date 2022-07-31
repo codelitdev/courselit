@@ -120,8 +120,8 @@ export default function Widget({
         <Grid
             container
             justifyContent="space-between"
-            alignItems={verticalLayout ? "flex-start" : "center"}
             direction={direction}
+            alignItems="center"
             sx={{
                 backgroundColor: backgroundColor,
             }}
@@ -177,7 +177,7 @@ export default function Widget({
                         </Typography>
                     </Grid>
                     {(plainTextDescription || product.description) && (
-                        <Grid item sx={{ pb: 2 }}>
+                        <Grid item sx={{ pb: 2, width: 1 }}>
                             <RichText
                                 initialContentState={RichText.hydrate({
                                     data: plainTextDescription

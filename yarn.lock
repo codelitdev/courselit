@@ -1277,9 +1277,9 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:*, @types/node@npm:>=8.1.0":
-  version: 18.6.2
-  resolution: "@types/node@npm:18.6.2"
-  checksum: 644c460baedb1fbbd55369ab621167cb39ddaa727fd4fcf4bc7080183cf936d7ff8c2c886ba93ff42768d6f7a579a540e6d1e63d3adba4e5758fb13671ae68ce
+  version: 18.6.3
+  resolution: "@types/node@npm:18.6.3"
+  checksum: 38495b8fd27200d2b7ab9ccd8c1e2475d2411fba15330f2cba869a85ef79dd42382a2658c8dd298ace8c21ed3bfafcdea408faecd74928b144377d07d00e7c8c
   languageName: node
   linkType: hard
 
@@ -7706,8 +7706,8 @@ __metadata:
   linkType: hard
 
 "react-transition-group@npm:^4.4.2":
-  version: 4.4.3
-  resolution: "react-transition-group@npm:4.4.3"
+  version: 4.4.4
+  resolution: "react-transition-group@npm:4.4.4"
   dependencies:
     "@babel/runtime": ^7.5.5
     dom-helpers: ^5.0.1
@@ -7716,7 +7716,7 @@ __metadata:
   peerDependencies:
     react: ">=16.6.0"
     react-dom: ">=16.6.0"
-  checksum: fd2da13b367fa1bfda8c1d4e1df6207212e51da954ab4d3a2593995f5aa03c129a579020876a39fde4f5c3ccb8085bb0a7f663f5ddc5646be59a288d6eb9a4b1
+  checksum: d2b402f4c64d54582fe01f652b4c5128ee33517b1eff41801178534667ef45b8f051e127463b4c8012d4140d821456ab6ec7d30043c9ff33e6754c7ca1cfbd0b
   languageName: node
   linkType: hard
 

@@ -9,7 +9,7 @@ interface TemplateProps {
     editing?: boolean;
     onEditClick?: (widgetId: string) => void;
     selectedWidget?: string;
-    children: ReactNode;
+    children?: ReactNode;
 }
 
 const EditableWidget = ({
