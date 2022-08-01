@@ -217,11 +217,13 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
                             />
                         }
                         options={[
-                            ...settings.links.map((link) => ({
-                                label: link.label,
-                                type: "link" as "link",
-                                href: link.href,
-                            })),
+                            ...(settings.links
+                                ? settings.links.map((link) => ({
+                                      label: link.label,
+                                      type: "link" as "link",
+                                      href: link.href,
+                                  }))
+                                : []),
                             state.auth.guest
                                 ? undefined
                                 : {

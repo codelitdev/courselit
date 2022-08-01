@@ -11,8 +11,7 @@ interface IndexProps {
 
 const Index = ({ siteinfo, page }: IndexProps) => {
     return (
-        <BaseLayout title={siteinfo.subtitle} layout={page.layout}>
-        </BaseLayout>
+        <BaseLayout title={siteinfo.subtitle} layout={page.layout}></BaseLayout>
     );
 };
 
