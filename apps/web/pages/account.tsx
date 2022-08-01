@@ -4,6 +4,7 @@ import { AppState } from "@courselit/state-management";
 import { connect } from "react-redux";
 import BaseLayout from "../components/public/base-layout";
 import {
+    ACCOUNT_NO_PURCHASE_PLACEHOLDER,
     ACCOUNT_PROGRESS_SUFFIX,
     PROFILE_MY_COURSES,
     PROFILE_PAGE_HEADER,
@@ -25,6 +26,7 @@ interface AccountProps {
 
 function Account({ auth, page, profile, address }: AccountProps) {
     const [courses, setCourses] = useState([]);
+    const [loaded, setLoaded] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -61,6 +63,7 @@ function Account({ auth, page, profile, address }: AccountProps) {
             if (response.courses) {
                 setCourses(response.courses);
             }
+            setLoaded(true);
         } catch (e: any) {
             console.error("Accounts page", e.message);
         }
@@ -72,50 +75,63 @@ function Account({ auth, page, profile, address }: AccountProps) {
                 <Grid item sx={{ p: 2 }}>
                     <Typography variant="h4">{PROFILE_MY_COURSES}</Typography>
                 </Grid>
-                {!courses.length && (
+                {!loaded && (
                     <Grid item xs={12} sx={{ p: 2 }}>
-                        <Skeleton variant="rectangular" height={200} />
+                        <Skeleton variant="rectangular" height={132} />
                     </Grid>
                 )}
-                {courses.map((course: Record<string, string>) => (
-                    <Grid item key={course.courseId as string} sx={{ p: 2 }}>
-                        <Section>
-                            <Grid container direction="column" sx={{}}>
-                                <Grid item sx={{ mb: 4 }}>
-                                    <Grid
-                                        container
-                                        alignItems="center"
-                                        justifyContent="space-between"
-                                    >
-                                        <Grid item>
-                                            <Typography variant="h6">
-                                                {course.title}
-                                            </Typography>
-                                        </Grid>
-                                        <Grid item>
-                                            <Typography>
-                                                {(
-                                                    (course.progress as unknown) *
-                                                    100
-                                                ).toFixed(2)}
-                                                {ACCOUNT_PROGRESS_SUFFIX}
-                                            </Typography>
+                {loaded &&
+                    courses.length &&
+                    courses.map((course: Record<string, string>) => (
+                        <Grid
+                            item
+                            key={course.courseId as string}
+                            sx={{ p: 2 }}
+                        >
+                            <Section>
+                                <Grid container direction="column" sx={{}}>
+                                    <Grid item sx={{ mb: 4 }}>
+                                        <Grid
+                                            container
+                                            alignItems="center"
+                                            justifyContent="space-between"
+                                        >
+                                            <Grid item>
+                                                <Typography variant="h6">
+                                                    {course.title}
+                                                </Typography>
+                                            </Grid>
+                                            <Grid item>
+                                                <Typography>
+                                                    {(
+                                                        (course.progress as unknown) *
+                                                        100
+                                                    ).toFixed(2)}
+                                                    {ACCOUNT_PROGRESS_SUFFIX}
+                                                </Typography>
+                                            </Grid>
                                         </Grid>
                                     </Grid>
+                                    <Grid item alignSelf="flex-end">
+                                        <Link
+                                            href={`/course/${course.slug}/${course.courseId}`}
+                                        >
+                                            <Button variant="contained">
+                                                {VISIT_COURSE_BUTTON}
+                                            </Button>
+                                        </Link>
+                                    </Grid>
                                 </Grid>
-                                <Grid item alignSelf="flex-end">
-                                    <Link
-                                        href={`/course/${course.slug}/${course.courseId}`}
-                                    >
-                                        <Button variant="contained">
-                                            {VISIT_COURSE_BUTTON}
-                                        </Button>
-                                    </Link>
-                                </Grid>
-                            </Grid>
-                        </Section>
+                            </Section>
+                        </Grid>
+                    ))}
+                {loaded && !courses.length && (
+                    <Grid item>
+                        <Typography variant="body1">
+                            {ACCOUNT_NO_PURCHASE_PLACEHOLDER}
+                        </Typography>
                     </Grid>
-                ))}
+                )}
             </Grid>
         </BaseLayout>
     );

@@ -9,9 +9,17 @@ interface LinkProps {
 }
 
 export default function Link({ href, children, sxProps }: LinkProps) {
+    const linkProps = Object.assign(
+        {},
+        {
+            cursor: "pointer",
+        },
+        { ...sxProps }
+    );
+
     return (
         <NextLink href={href}>
-            <MuiLink sx={sxProps}>{children}</MuiLink>
+            <MuiLink sx={linkProps}>{children}</MuiLink>
         </NextLink>
     );
 }

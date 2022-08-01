@@ -342,3 +342,5 @@ export const MANAGE_BLOG_PAGE_HEADING = "Blogs";
 export const BLOG_TABLE_HEADER_NAME = "Title";
 export const PAGE_HEADER_NEW_BLOG = "New blog";
 export const MENU_BLOG_VISIT = "Visit blog";
+export const ACCOUNT_NO_PURCHASE_PLACEHOLDER =
+    "Your enrolled courses will show up here";
