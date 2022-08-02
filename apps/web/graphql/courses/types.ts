@@ -57,7 +57,7 @@ const courseType = new GraphQLObjectType({
         isBlog: { type: new GraphQLNonNull(GraphQLBoolean) },
         isFeatured: { type: new GraphQLNonNull(GraphQLBoolean) },
         type: { type: new GraphQLNonNull(courseTypeFilters) },
-        tags: { type: new GraphQLList(courseTypeFilters) },
+        tags: { type: new GraphQLList(GraphQLString) },
         creatorId: { type: new GraphQLNonNull(GraphQLID) },
         creatorName: { type: GraphQLString },
         lessons: {
