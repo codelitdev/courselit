@@ -23,18 +23,26 @@ const getVideoID = (str) => {
 };
 
 const styles = {
+    containerFlex: {
+        display: "flex",
+        justifyContent: "center",
+    },
     container: {
-        textAlign: "center",
+        maxWidth: 640,
+        flexGrow: 1,
     },
     iframeContainer: {
-        height: 480,
-        overflow: "hidden",
-        borderRadius: "8px",
-        boxShadow: "0px 12px 11px -11px rgba(0, 0, 0, 0.57)",
+        position: "relative",
+        paddingBottom: "56.25%",
     },
     iframe: {
-        height: "100%",
+        position: "absolute",
+        top: 0,
+        left: 0,
         width: "100%",
+        height: "100%",
+        // aspectRatio: 16 / 9,
+        // width: "100%",
     },
     link: {
         display: "block",
@@ -47,21 +55,23 @@ const styles = {
 
 const YouTube = (props) => {
     return (
-        <div style={styles.container}>
-            <div style={styles.iframeContainer}>
-                <iframe
-                    src={`https://www.youtube.com/embed/${getVideoID(
-                        props.decoratedText
-                    )}`}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    style={styles.iframe}
-                />
+        <div style={styles.containerFlex}>
+            <div style={styles.container}>
+                <div style={styles.iframeContainer}>
+                    <iframe
+                        src={`https://www.youtube.com/embed/${getVideoID(
+                            props.decoratedText
+                        )}`}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        style={styles.iframe}
+                    />
+                </div>
+                <a href={props.decoratedText} style={styles.link}>
+                    {props.children}
+                </a>
             </div>
-            <a href={props.decoratedText} style={styles.link}>
-                {props.children}
-            </a>
         </div>
     );
 };

@@ -81,7 +81,7 @@ function Account({ auth, page, profile, address }: AccountProps) {
                     </Grid>
                 )}
                 {loaded &&
-                    courses.length &&
+                    courses.length > 0 &&
                     courses.map((course: Record<string, string>) => (
                         <Grid
                             item
@@ -126,7 +126,7 @@ function Account({ auth, page, profile, address }: AccountProps) {
                         </Grid>
                     ))}
                 {loaded && !courses.length && (
-                    <Grid item>
+                    <Grid item sx={{ p: 2 }}>
                         <Typography variant="body1">
                             {ACCOUNT_NO_PURCHASE_PLACEHOLDER}
                         </Typography>
