@@ -1,10 +1,11 @@
 import { HEADER_BLOG_POSTS_SECTION } from "../../ui-config/strings";
-import { FetchBuilder } from "@courselit/utils";
+import { capitalize, FetchBuilder } from "@courselit/utils";
 import { Grid, Typography } from "@mui/material";
 import { getBackendAddress, getPage } from "../../ui-lib/utils";
 import dynamic from "next/dynamic";
 import { Course, Page } from "@courselit/common-models";
 import BaseLayout from "../../components/public/base-layout";
+import { useRouter } from "next/router";
 const Items = dynamic(() => import("../../components/public/items"));
 
 const generateQuery = (pageOffset = 1) => `
@@ -31,11 +32,11 @@ interface PostsProps {
 }
 
 function Posts(props: PostsProps) {
+    const router = useRouter();
+    const path = capitalize(router.pathname.split("/")[1]);
+
     return (
-        <BaseLayout
-            title={HEADER_BLOG_POSTS_SECTION}
-            layout={props.page.layout}
-        >
+        <BaseLayout title={path} layout={props.page.layout}>
             <Grid
                 container
                 direction="column"
@@ -45,9 +46,7 @@ function Posts(props: PostsProps) {
                 }}
             >
                 <Grid item sx={{ mb: 2 }}>
-                    <Typography variant="h2">
-                        {HEADER_BLOG_POSTS_SECTION}
-                    </Typography>
+                    <Typography variant="h2">{path}</Typography>
                 </Grid>
                 <Grid item>
                     <Items

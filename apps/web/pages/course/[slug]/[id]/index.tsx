@@ -132,23 +132,25 @@ const CourseViewer = (props: CourseProps) => {
                             options={{ showEnrollmentArea: true }}
                         />
                     </Grid>
-                    <Grid item sx={{ p: 2 }} alignSelf="flex-end">
-                        <Link
-                            href={`/course/${course.slug}/${course.courseId}/${course.firstLesson}`}
-                            sxProps={{
-                                textDecoration: "none",
-                            }}
-                        >
-                            <Button
-                                component="a"
-                                size="large"
-                                variant="contained"
-                                endIcon={<ArrowForward />}
+                    {isEnrolled(course.courseId, profile) && (
+                        <Grid item sx={{ p: 2 }} alignSelf="flex-end">
+                            <Link
+                                href={`/course/${course.slug}/${course.courseId}/${course.firstLesson}`}
+                                sxProps={{
+                                    textDecoration: "none",
+                                }}
                             >
-                                {COURSE_PROGRESS_START}
-                            </Button>
-                        </Link>
-                    </Grid>
+                                <Button
+                                    component="a"
+                                    size="large"
+                                    variant="contained"
+                                    endIcon={<ArrowForward />}
+                                >
+                                    {COURSE_PROGRESS_START}
+                                </Button>
+                            </Link>
+                        </Grid>
+                    )}
                 </Grid>
             </RouteBasedComponentScaffold>
         </>
