@@ -387,7 +387,7 @@ const Settings = (props: SettingsProps) => {
                 <Grid container direction="column">
                     <Grid item sx={{ mb: 4 }}>
                         <form onSubmit={handleSettingsSubmit}>
-                            <Grid container direction="column" spacing={1}>
+                            <Grid container direction="column">
                                 <Grid item>
                                     <Typography variant="h4">
                                         {SITE_SETTINGS_SECTION_GENERAL}
@@ -469,7 +469,7 @@ const Settings = (props: SettingsProps) => {
                                         {SITE_SETTINGS_SECTION_PAYMENT}
                                     </Typography>
                                 </Grid>
-                                <Grid item>
+                                <Grid item sx={{ mb: 2 }}>
                                     <SingleSelect
                                         title={SITE_SETTINGS_CURRENCY}
                                         options={currencies.map((currency) => ({
@@ -591,11 +591,13 @@ const Settings = (props: SettingsProps) => {
                                                 newSettings.stripeSecret || ""
                                             }
                                             onChange={onChangeData}
+                                            sx={{ mb: 2 }}
                                         />
                                         <Grid
                                             container
                                             direction="column"
                                             spacing={1}
+                                            sx={{ mb: 2 }}
                                         >
                                             <Grid item>
                                                 <Typography variant="subtitle2">
@@ -617,9 +619,9 @@ const Settings = (props: SettingsProps) => {
                                             <Grid item>
                                                 <Typography>
                                                     <a
-                                                        href={`${props.address.backend}/payment/webhook`}
+                                                        href={`${props.address.backend}/api/payment/webhook`}
                                                     >
-                                                        {`${props.address.backend}/payment/webhook`}
+                                                        {`${props.address.backend}/api/payment/webhook`}
                                                     </a>
                                                 </Typography>
                                             </Grid>

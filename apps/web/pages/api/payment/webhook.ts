@@ -3,12 +3,11 @@ import { NextApiRequest, NextApiResponse } from "next";
 import nc from "next-connect";
 import passport from "passport";
 import constants from "../../../config/constants";
+import finalizePurchase from "../../../lib/finalize-purchase";
 import connectDb from "../../../middlewares/connect-db";
 import verifyDomain from "../../../middlewares/verify-domain";
 import ApiRequest from "../../../models/ApiRequest";
-import Course from "../../../models/Course";
 import PurchaseModel, { Purchase } from "../../../models/Purchase";
-import User from "../../../models/User";
 import { getPaymentMethod } from "../../../payments";
 const { transactionSuccess } = constants;
 
@@ -40,7 +39,7 @@ async function webhookHandler(req: ApiRequest, res: NextApiResponse) {
             purchaseRecord.status = transactionSuccess;
             await (purchaseRecord as any).save();
 
-            await finalizeCoursePurchase(
+            await finalizePurchase(
                 purchaseRecord.purchasedBy,
                 purchaseRecord.courseId
             );
@@ -59,18 +58,3 @@ async function webhookHandler(req: ApiRequest, res: NextApiResponse) {
         });
     }
 }
-
-const finalizeCoursePurchase = async (userId: string, courseId: string) => {
-    const user = await User.findOne({ userId });
-    const course = await Course.findOne({ courseId });
-
-    if (user && course) {
-        user.purchases.push({
-            courseId: course.courseId,
-        });
-        await user.save();
-
-        course.sales = course.sales + course.cost;
-        await course.save();
-    }
-};

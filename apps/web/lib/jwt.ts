@@ -1,4 +1,3 @@
-import { NextApiRequest } from "next";
 import { Strategy, ExtractJwt, StrategyOptions } from "passport-jwt";
 import constants from "../config/constants";
 import UserModel, { User } from "../models/User";

@@ -9,11 +9,9 @@ import verifyDomain from "../../../middlewares/verify-domain";
 import verifyJwt from "../../../middlewares/verify-jwt";
 import ApiRequest from "../../../models/ApiRequest";
 import CourseModel, { Course } from "../../../models/Course";
-import SiteInfo from "../../../models/SiteInfo";
-import UserModel, { User } from "../../../models/User";
 import { getPaymentMethod } from "../../../payments";
 import PurchaseModel, { Purchase } from "../../../models/Purchase";
-import { Progress } from "../../../models/Progress";
+import finalizePurchase from "../../../lib/finalize-purchase";
 
 const { transactionSuccess, transactionFailed, transactionInitiated } =
     constants;
@@ -65,10 +63,7 @@ async function initiateHandler(req: ApiRequest, res: NextApiResponse) {
 
         if (course.cost === 0) {
             try {
-                await finalizeCoursePurchase(
-                    user!.id.toString(),
-                    course!.id.toString()
-                );
+                await finalizePurchase(user!.userId, course!.courseId);
                 return res.status(200).json({
                     status: transactionSuccess,
                 });
@@ -112,27 +107,3 @@ async function initiateHandler(req: ApiRequest, res: NextApiResponse) {
         });
     }
 }
-
-const finalizeCoursePurchase = async (userId: string, courseId: string) => {
-    const user: User | null = await UserModel.findById(userId);
-    const course: Course | null = await CourseModel.findById(courseId);
-
-    if (
-        user &&
-        course &&
-        !user.purchases.some(
-            (purchase: Progress) => purchase.courseId === course.courseId
-        )
-    ) {
-        user.purchases.push({
-            courseId: course.courseId,
-            completedLessons: [],
-        });
-        await (user as any).save();
-        if (!course.customers.some((customer) => customer === user.userId)) {
-            course.customers.push(user.userId);
-            course.sales += course.cost;
-            await (course as any).save();
-        }
-    }
-};
