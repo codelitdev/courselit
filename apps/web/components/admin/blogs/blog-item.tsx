@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { AppMessage, Course } from "@courselit/common-models";
+import { Course } from "@courselit/common-models";
 import {
     Grid,
     TableCell,
@@ -22,20 +22,14 @@ import { MoreVert } from "@mui/icons-material";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import type { SiteInfo, Address } from "@courselit/common-models";
 import { connect } from "react-redux";
-import { FetchBuilder, formatCurrency } from "@courselit/utils";
 import { Image, Menu } from "@courselit/components-library";
 import dynamic from "next/dynamic";
-import {
-    networkAction,
-    setAppMessage,
-} from "@courselit/state-management/dist/action-creators";
 import { deleteProduct } from "./helpers";
 
 const AppDialog = dynamic(() => import("../../public/app-dialog"));
 
 function BlogItem({
     details,
-    siteinfo,
     address,
     dispatch,
     position,

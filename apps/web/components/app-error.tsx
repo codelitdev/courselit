@@ -2,7 +2,6 @@ import React from "react";
 import { Typography, Grid } from "@mui/material";
 import { USER_ERROR_HEADER } from "../ui-config/strings";
 import { Section } from "@courselit/components-library";
-import BaseLayout from "./public/base-layout";
 
 interface AppErrorProps {
     error: string;

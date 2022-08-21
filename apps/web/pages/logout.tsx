@@ -5,7 +5,6 @@ import { actionCreators } from "@courselit/state-management";
 import type { State, Address } from "@courselit/common-models";
 import { AppMessage } from "@courselit/common-models";
 import { UNABLE_TO_LOGOUT } from "../ui-config/strings";
-import { getBackendAddress } from "../ui-lib/utils";
 
 interface LogoutProps {
     dispatch: any;

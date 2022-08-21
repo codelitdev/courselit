@@ -11,7 +11,7 @@ import {
 } from "../../ui-config/constants";
 import { connect } from "react-redux";
 import { actionCreators } from "@courselit/state-management";
-import { Typography, Grid, Button, Skeleton } from "@mui/material";
+import { Typography, Grid, Button } from "@mui/material";
 import {
     BUTTON_LESSON_DOWNLOAD,
     COURSE_PROGRESS_FINISH,
@@ -26,7 +26,6 @@ import { RichText as TextEditor, Link } from "@courselit/components-library";
 import {
     Address,
     AppMessage,
-    Course,
     Lesson,
     Profile,
 } from "@courselit/common-models";
@@ -39,7 +38,6 @@ import {
 import {
     ArrowBack,
     ArrowForward,
-    Download,
     OpenInNew,
 } from "@mui/icons-material";
 import { isEnrolled } from "../../ui-lib/utils";

@@ -1,4 +1,3 @@
-import { HEADER_BLOG_POSTS_SECTION } from "../../ui-config/strings";
 import { capitalize, FetchBuilder } from "@courselit/utils";
 import { Grid, Typography } from "@mui/material";
 import { getBackendAddress, getPage } from "../../ui-lib/utils";

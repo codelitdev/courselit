@@ -155,7 +155,7 @@ export const setupCourse = async ({
     page.layout = [
         Banner.init({
             pageId: page.pageId,
-            type: "PRODUCT",
+            type: "product",
             entityId: course.courseId,
         }),
     ];

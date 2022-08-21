@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import { NextApiRequest, NextApiResponse } from "next";
 import nc from "next-connect";
 import passport from "passport";
@@ -9,7 +8,6 @@ import verifyDomain from "../../../middlewares/verify-domain";
 import verifyJwt from "../../../middlewares/verify-jwt";
 import ApiRequest from "../../../models/ApiRequest";
 import PurchaseModel, { Purchase } from "../../../models/Purchase";
-import { User } from "../../../models/User";
 
 passport.use(jwtStrategy);
 
@@ -41,13 +39,7 @@ async function verifyHandler(req: ApiRequest, res: NextApiResponse) {
             orderId: purchaseId,
         });
 
-        if (
-            !purchaseRecord ||
-            !isSelf({
-                loggedInUser: user!,
-                buyerId: purchaseRecord.purchasedBy,
-            })
-        ) {
+        if (!purchaseRecord || user!.userId !== purchaseRecord.purchasedBy) {
             return res.status(404).json({ message: responses.item_not_found });
         }
 
@@ -61,11 +53,3 @@ async function verifyHandler(req: ApiRequest, res: NextApiResponse) {
         });
     }
 }
-
-const isSelf = ({
-    loggedInUser,
-    buyerId,
-}: {
-    loggedInUser: User;
-    buyerId: mongoose.Types.ObjectId;
-}) => loggedInUser.id.toString() === buyerId.toString();

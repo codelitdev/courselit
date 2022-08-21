@@ -1,4 +1,3 @@
-import GQLContext from "../../models/GQLContext";
 import * as medialitService from "../../services/medialit";
 
 export const getMedia = async (mediaId?: string) => {

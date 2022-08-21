@@ -1,4 +1,3 @@
-import { generateUniqueId } from "@courselit/utils";
 import mongoose from "mongoose";
 import WidgetSchema, { Widget } from "./Widget";
 import constants from "../config/constants";

@@ -19,6 +19,7 @@ import {
     PRODUCT_STATUS_PUBLISHED,
     PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
     PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE,
+    VIEW_PAGE_MENU_ITEM,
 } from "../../../ui-config/strings";
 import { MoreVert } from "@mui/icons-material";
 import type { AppDispatch, AppState } from "@courselit/state-management";
@@ -144,6 +145,12 @@ function Product({
             <TableCell align="right">
                 <Menu
                     options={[
+                        {
+                            label: VIEW_PAGE_MENU_ITEM,
+                            type: "link",
+                            href: `/p/${product.pageId}`,
+                            newTab: true,
+                        },
                         {
                             label: PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE,
                             type: "link",

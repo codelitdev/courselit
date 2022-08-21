@@ -1,7 +1,6 @@
 /**
  * Business logic for managing lessons
  */
-import mongoose from "mongoose";
 import LessonModel, { Lesson } from "../../models/Lesson";
 import { responses } from "../../config/strings";
 import {
@@ -16,7 +15,6 @@ import GQLContext from "../../models/GQLContext";
 import { Course } from "../../models/Course";
 import { deleteMedia } from "../../services/medialit";
 import { Progress } from "../../models/Progress";
-import { Group } from "@courselit/common-models";
 import { recordProgress } from "../users/logic";
 
 const { permissions } = constants;

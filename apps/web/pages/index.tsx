@@ -1,5 +1,4 @@
 import { connect } from "react-redux";
-import { Grid } from "@mui/material";
 import { getBackendAddress, getPage } from "../ui-lib/utils";
 import type { SiteInfo, State, Page } from "@courselit/common-models";
 import BaseLayout from "../components/public/base-layout";

@@ -18,7 +18,6 @@ import {
     PURCHASE_ID_HEADER,
 } from "../../ui-config/strings";
 import Link from "next/link";
-import { Section } from "@courselit/components-library";
 import dynamic from "next/dynamic";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { Address, AppMessage, Auth } from "@courselit/common-models";
@@ -33,6 +32,7 @@ interface PurchaseStatusProps {
     auth: Auth;
     address: Address;
     dispatch: AppDispatch;
+    loading: boolean;
 }
 
 const PurchaseStatus = (props: PurchaseStatusProps) => {
@@ -76,94 +76,94 @@ const PurchaseStatus = (props: PurchaseStatusProps) => {
     };
 
     return (
-        <Section>
-            <Grid container>
-                {status === TRANSACTION_SUCCESS && (
-                    <Grid item container direction="column" spacing={4}>
-                        <Grid item>
-                            <Typography variant="h2">
-                                {TRANSACTION_STATUS_SUCCESS}
-                            </Typography>
-                        </Grid>
-                        <Grid item>
-                            <Typography variant="body1" color="textSecondary">
-                                {TRANSACTION_STATUS_SUCCESS_DETAILS}
-                            </Typography>
-                        </Grid>
-                        <Grid item>
-                            <Link href={courseLink}>
-                                <Button variant="outlined" color="primary">
-                                    {VISIT_COURSE_BUTTON}
-                                </Button>
-                            </Link>
-                        </Grid>
+        <Grid container>
+            {status === TRANSACTION_SUCCESS && (
+                <Grid item container direction="column" spacing={2}>
+                    <Grid item>
+                        <Typography variant="h5">
+                            {TRANSACTION_STATUS_SUCCESS}
+                        </Typography>
                     </Grid>
-                )}
-                {status === TRANSACTION_INITIATED && (
-                    <>
-                        {loading ? (
-                            <>
-                                <AppLoader />
-                            </>
-                        ) : (
-                            <Grid item container direction="column" spacing={4}>
-                                <Grid item>
-                                    <Typography variant="h2">
-                                        {TRANSACTION_STATUS_INITIATED}
-                                    </Typography>
-                                </Grid>
-                                <Grid item>
-                                    <Typography variant="subtitle2">
-                                        {PURCHASE_ID_HEADER}: {id}
-                                    </Typography>
-                                </Grid>
-                                <Grid item>
-                                    <Button
-                                        variant="outlined"
-                                        color="primary"
-                                        onClick={getPaymentStatus}
-                                    >
-                                        {VERIFY_PAYMENT_BUTTON}
-                                    </Button>
-                                </Grid>
+                    <Grid item>
+                        <Typography variant="body1" color="textSecondary">
+                            {TRANSACTION_STATUS_SUCCESS_DETAILS}
+                        </Typography>
+                    </Grid>
+                    <Grid item>
+                        <Link href={courseLink}>
+                            <Button variant="outlined" color="primary">
+                                {VISIT_COURSE_BUTTON}
+                            </Button>
+                        </Link>
+                    </Grid>
+                </Grid>
+            )}
+            {status === TRANSACTION_INITIATED && (
+                <>
+                    {loading ? (
+                        <>
+                            <AppLoader />
+                        </>
+                    ) : (
+                        <Grid item container direction="column" spacing={2}>
+                            <Grid item>
+                                <Typography variant="h5">
+                                    {TRANSACTION_STATUS_INITIATED}
+                                </Typography>
                             </Grid>
-                        )}
-                    </>
-                )}
-                {status === TRANSACTION_FAILED && (
-                    <Grid item container direction="column" spacing={4}>
-                        <Grid item>
-                            <Typography variant="h2">
-                                {TRANSACTION_STATUS_FAILED}
-                            </Typography>
-                        </Grid>
-                        <Grid item>
-                            <Typography variant="body1" color="textSecondary">
-                                {TRANSACTION_STATUS_FAILED_DETAILS}
-                            </Typography>
-                        </Grid>
-                        <Grid item>
-                            <Typography variant="subtitle2">
-                                {PURCHASE_ID_HEADER}: {id}
-                            </Typography>
-                        </Grid>
-                        <Grid item>
-                            <Link href={courseLink}>
-                                <Button variant="outlined" color="primary">
-                                    {VISIT_COURSE_BUTTON}
+                            <Grid item>
+                                <Typography variant="subtitle2">
+                                    {PURCHASE_ID_HEADER}: {id}
+                                </Typography>
+                            </Grid>
+                            <Grid item>
+                                <Button
+                                    variant="outlined"
+                                    color="primary"
+                                    onClick={getPaymentStatus}
+                                    disabled={props.loading}
+                                >
+                                    {VERIFY_PAYMENT_BUTTON}
                                 </Button>
-                            </Link>
+                            </Grid>
                         </Grid>
+                    )}
+                </>
+            )}
+            {status === TRANSACTION_FAILED && (
+                <Grid item container direction="column" spacing={2}>
+                    <Grid item>
+                        <Typography variant="h5">
+                            {TRANSACTION_STATUS_FAILED}
+                        </Typography>
                     </Grid>
-                )}
-            </Grid>
-        </Section>
+                    <Grid item>
+                        <Typography variant="body1" color="textSecondary">
+                            {TRANSACTION_STATUS_FAILED_DETAILS}
+                        </Typography>
+                    </Grid>
+                    <Grid item>
+                        <Typography variant="subtitle2">
+                            {PURCHASE_ID_HEADER}: {id}
+                        </Typography>
+                    </Grid>
+                    <Grid item>
+                        <Link href={courseLink}>
+                            <Button variant="outlined" color="primary">
+                                {VISIT_COURSE_BUTTON}
+                            </Button>
+                        </Link>
+                    </Grid>
+                </Grid>
+            )}
+        </Grid>
     );
 };
 
 const mapStateToProps = (state: AppState) => ({
     auth: state.auth,
     address: state.address,
+    loading: state.networkAction,
 });
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });

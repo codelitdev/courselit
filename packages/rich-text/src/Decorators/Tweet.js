@@ -37,11 +37,11 @@ const Tweet = (props) => {
         }
     }, []);
 
-    /* eslint-disable one-var */
+    /* eslint-disable one-var, prefer-const */
     const twitterFunc = function (d, s, id) {
-        var js,
-            fjs = d.getElementsByTagName(s)[0],
-            t = window.twttr || {};
+        let js;
+            const fjs = d.getElementsByTagName(s)[0];
+            const t = window.twttr || {};
         if (d.getElementById(id)) return t;
         js = d.createElement(s);
         js.id = id;
@@ -53,7 +53,7 @@ const Tweet = (props) => {
         };
         return t;
     };
-    /* eslint-enable one-var */
+    /* eslint-enable one-var, prefer-const  */
 
     useEffect(() => {
         const tokens = props.decoratedText.split("/");

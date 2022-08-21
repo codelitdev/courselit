@@ -1,8 +1,13 @@
 import { capitalize } from "../../lib/utils";
 import constants from "../../config/constants";
 import { responses } from "../../config/strings";
-import { SiteInfo } from "../../models/SiteInfo";
-const { paypal, stripe, paytm, none, currencyISOCodes } = constants;
+import { Settings as SiteInfo } from "../../models/SiteInfo";
+const { paypal, stripe, paytm, none } = constants;
+import currencies from "../../data/iso4217.json";
+
+const currencyISOCodes = currencies.map((currency) =>
+    currency.AlphabeticCode?.toLowerCase()
+);
 
 const verifyCurrencyISOCode = (isoCode: string) => {
     if (!currencyISOCodes.includes(isoCode.toLowerCase())) {
@@ -31,10 +36,6 @@ export const checkForInvalidPaymentSettings = (
 
     if (!siteInfo.paymentMethod) {
         return;
-    }
-
-    if (!siteInfo.currencyUnit) {
-        return new Error(responses.currency_unit_required);
     }
 
     if (![paypal, stripe, paytm, none].includes(siteInfo.paymentMethod)) {

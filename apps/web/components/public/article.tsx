@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { styled } from "@mui/system";
 import { Typography, Grid, Chip, Button } from "@mui/material";
 import {
@@ -148,7 +148,10 @@ const Article = (props: ArticleProps) => {
                                     <PriceTag
                                         cost={course.cost}
                                         freeCostCaption={FREE_COST}
-                                        siteInfo={props.siteInfo}
+                                        currencyISOCode={
+                                            props.siteInfo
+                                                .currencyISOCode as string
+                                        }
                                     />
                                 </Grid>
                                 <Grid>

@@ -7,24 +7,18 @@ import {
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
-import {
-    Button,
-    FormControl,
-    Grid,
-    InputLabel,
-    MenuItem,
-    Select,
-    TextField,
-    Typography,
-} from "@mui/material";
+import { Button, Grid, TextField } from "@mui/material";
 import { connect } from "react-redux";
 import {
     APP_MESSAGE_COURSE_SAVED,
     BUTTON_SAVE,
     PRICING_DROPDOWN,
+    PRICING_FREE,
+    PRICING_PAID,
     PRICING_PAID_NO_PAYMENT_METHOD,
 } from "../../../../ui-config/strings";
 import useCourse from "./course-hook";
+import { Select } from "@courselit/components-library";
 
 interface PricingProps {
     id: string;
@@ -78,8 +72,7 @@ function Pricing({ id, siteinfo, address, dispatch }: PricingProps) {
         }
     };
 
-    const onSelectionChanged = (e) => {
-        const val = +e.target.value;
+    const onSelectionChanged = (val: number) => {
         setPaid(val);
         if (!val) {
             setCost(0);
@@ -91,36 +84,25 @@ function Pricing({ id, siteinfo, address, dispatch }: PricingProps) {
             <form onSubmit={updatePricing}>
                 <Grid container>
                     <Grid item xs={12} sx={{ mb: 2 }}>
-                        <FormControl fullWidth>
-                            <InputLabel id="demo-simple-select-label">
-                                {PRICING_DROPDOWN}
-                            </InputLabel>
-                            <Select
-                                labelId="demo-simple-select-label"
-                                id="demo-simple-select"
-                                value={paid}
-                                label={PRICING_DROPDOWN}
-                                onChange={onSelectionChanged}
-                            >
-                                <MenuItem value={0}>Free</MenuItem>
-                                <MenuItem
-                                    value={1}
-                                    disabled={!siteinfo.paymentMethod}
-                                >
-                                    <Grid container direction="column">
-                                        <Grid item>Paid</Grid>
-                                        <Grid item>
-                                            <Typography
-                                                variant="body2"
-                                                color="textSecondary"
-                                            >
-                                                {PRICING_PAID_NO_PAYMENT_METHOD}
-                                            </Typography>
-                                        </Grid>
-                                    </Grid>
-                                </MenuItem>
-                            </Select>
-                        </FormControl>
+                        <Select
+                            value={paid}
+                            title={PRICING_DROPDOWN}
+                            onChange={onSelectionChanged}
+                            options={[
+                                {
+                                    label: PRICING_FREE,
+                                    value: 0,
+                                },
+                                {
+                                    label: PRICING_PAID,
+                                    value: 1,
+                                    sublabel: siteinfo.paymentMethod
+                                        ? ""
+                                        : PRICING_PAID_NO_PAYMENT_METHOD,
+                                    disabled: !siteinfo.paymentMethod,
+                                },
+                            ]}
+                        />
                     </Grid>
                     {!!paid && (
                         <Grid item xs={12} sx={{ mb: 2 }}>

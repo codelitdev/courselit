@@ -6,7 +6,6 @@ export default interface SiteInfo {
         file: string;
         thumbnail: string;
     };
-    currencyUnit?: string;
     currencyISOCode?: string;
     paymentMethod?: string;
     stripePublishableKey?: string;

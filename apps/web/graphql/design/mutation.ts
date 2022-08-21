@@ -1,8 +1,7 @@
 import { GraphQLNonNull, GraphQLString, GraphQLBoolean } from "graphql";
 import GQLContext from "../../models/GQLContext";
 import types from "./types";
-import settingsTypes from "../settings/types";
-import { addTheme, setTheme, removeTheme, setLayout } from "./logic";
+import { addTheme, setTheme, removeTheme } from "./logic";
 
 export default {
     addTheme: {

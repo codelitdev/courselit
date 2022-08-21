@@ -3,7 +3,7 @@ import { Address } from "@courselit/common-models";
 import widgets from "../../../ui-config/widgets";
 import { connect } from "react-redux";
 import { AppState } from "@courselit/state-management";
-import { Button, Grid, IconButton, Typography, useTheme } from "@mui/material";
+import { Button, Grid, IconButton, Typography } from "@mui/material";
 import { Close } from "@mui/icons-material";
 import AdminWidget from "./admin-widget";
 

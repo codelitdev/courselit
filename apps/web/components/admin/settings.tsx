@@ -1,4 +1,4 @@
-import React, { useState, useEffect, FormEvent } from "react";
+import React, { useState, useEffect } from "react";
 import { styled } from "@mui/system";
 import { connect } from "react-redux";
 import {
@@ -12,24 +12,13 @@ import {
     PAYMENT_METHOD_NONE,
     MIMETYPE_IMAGE,
 } from "../../ui-config/constants";
-import {
-    TextField,
-    Button,
-    Typography,
-    FormControl,
-    Select,
-    InputLabel,
-    MenuItem,
-    Grid,
-    capitalize,
-} from "@mui/material";
+import { TextField, Button, Typography, Grid, capitalize } from "@mui/material";
 import {
     SITE_SETTINGS_TITLE,
     SITE_SETTINGS_SUBTITLE,
-    SITE_SETTINGS_CURRENCY_UNIT,
     SITE_SETTINGS_LOGO,
     SITE_SETTINGS_PAGE_HEADING,
-    SITE_SETTINGS_CURRENCY_ISO_CODE_TEXT,
+    SITE_SETTINGS_CURRENCY,
     SITE_ADMIN_SETTINGS_STRIPE_SECRET,
     SITE_ADMIN_SETTINGS_PAYPAL_SECRET,
     SITE_ADMIN_SETTINGS_PAYTM_SECRET,
@@ -43,16 +32,17 @@ import {
     HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK,
     SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK,
     BUTTON_SAVE,
-    PAYMENT_METHOD_NAME_NONE,
+    SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL,
 } from "../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
 import { decode, encode } from "base-64";
 import dynamic from "next/dynamic";
 import { AppMessage } from "@courselit/common-models";
-import { Section } from "@courselit/components-library";
 import type { SiteInfo, Address, Auth } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
+import currencies from "../../data/iso4217.json";
+import { Select as SingleSelect } from "@courselit/components-library";
 
 const { networkAction, newSiteInfoAvailable, setAppMessage } = actionCreators;
 
@@ -105,7 +95,6 @@ const Settings = (props: SettingsProps) => {
             file: "",
             thumbnail: "",
         },
-        currencyUnit: "",
         currencyISOCode: "",
         paymentMethod: "",
         stripePublishableKey: "",
@@ -137,7 +126,6 @@ const Settings = (props: SettingsProps) => {
                 logopath {
                 thumbnail
                 },
-                currencyUnit,
                 currencyISOCode,
                 paymentMethod,
                 stripePublishableKey,
@@ -164,7 +152,6 @@ const Settings = (props: SettingsProps) => {
             title: settingsResponse.title || "",
             subtitle: settingsResponse.subtitle || "",
             logopath: settingsResponse.logopath,
-            currencyUnit: settingsResponse.currencyUnit || "",
             currencyISOCode: settingsResponse.currencyISOCode || "",
             paymentMethod: settingsResponse.paymentMethod || "",
             stripePublishableKey: settingsResponse.stripePublishableKey || "",
@@ -199,7 +186,6 @@ const Settings = (props: SettingsProps) => {
             logopath {
             thumbnail
             },
-            currencyUnit,
             currencyISOCode,
             paymentMethod,
             stripePublishableKey,
@@ -219,7 +205,6 @@ const Settings = (props: SettingsProps) => {
                         title: settings.title,
                         subtitle: settings.subtitle,
                         logopath: settings.logopath,
-                        currencyUnit: settings.currencyUnit,
                         currencyISOCode: settings.currencyISOCode,
                         paymentMethod: settings.paymentMethod,
                         stripePublishableKey: settings.stripePublishableKey,
@@ -259,7 +244,6 @@ const Settings = (props: SettingsProps) => {
                     logopath {
                         thumbnail
                     },
-                    currencyUnit,
                     currencyISOCode,
                     paymentMethod,
                     stripePublishableKey,
@@ -279,7 +263,6 @@ const Settings = (props: SettingsProps) => {
                         title: settings.title,
                         subtitle: settings.subtitle,
                         logopath: settings.logopath,
-                        currencyUnit: settings.currencyUnit,
                         currencyISOCode: settings.currencyISOCode,
                         paymentMethod: settings.paymentMethod,
                         stripePublishableKey: settings.stripePublishableKey,
@@ -332,7 +315,6 @@ const Settings = (props: SettingsProps) => {
                     logopath {
                         thumbnail
                     },
-                    currencyUnit,
                     currencyISOCode,
                     paymentMethod,
                     stripePublishableKey,
@@ -348,18 +330,7 @@ const Settings = (props: SettingsProps) => {
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
                 props.dispatch(
-                    newSiteInfoAvailable({
-                        title: settings.title,
-                        subtitle: settings.subtitle,
-                        logopath: settings.logopath,
-                        currencyUnit: settings.currencyUnit,
-                        currencyISOCode: settings.currencyISOCode,
-                        paymentMethod: settings.paymentMethod,
-                        stripePublishableKey: settings.stripePublishableKey,
-                        codeInjectionHead: settings.codeInjectionHead
-                            ? encode(settings.codeInjectionHead)
-                            : "",
-                    })
+                    newSiteInfoAvailable(response.settings.settings)
                 );
                 props.dispatch(
                     setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED))
@@ -373,9 +344,6 @@ const Settings = (props: SettingsProps) => {
     };
 
     const getPaymentSettings = (getNewSettings = false) => ({
-        currencyUnit: getNewSettings
-            ? newSettings.currencyUnit
-            : settings.currencyUnit,
         currencyISOCode: getNewSettings
             ? newSettings.currencyISOCode
             : settings.currencyISOCode,
@@ -404,10 +372,10 @@ const Settings = (props: SettingsProps) => {
                 </Typography>
             </Grid>
             <Grid item xs={12}>
-                <Grid container direction="column" spacing={4}>
-                    <Grid item>
+                <Grid container direction="column">
+                    <Grid item sx={{ mb: 4 }}>
                         <form onSubmit={handleSettingsSubmit}>
-                            <Grid container direction="column" spacing={1}>
+                            <Grid container direction="column">
                                 <Grid item>
                                     <Typography variant="h4">
                                         {SITE_SETTINGS_SECTION_GENERAL}
@@ -481,82 +449,64 @@ const Settings = (props: SettingsProps) => {
                             </Grid>
                         </form>
                     </Grid>
-                    <Grid item>
+                    <Grid item sx={{ mb: 4 }}>
                         <form onSubmit={handlePaymentSettingsSubmit}>
                             <Grid container direction="column" spacing={1}>
-                                <Grid item>
+                                <Grid item sx={{ mb: 2 }}>
                                     <Typography variant="h4">
                                         {SITE_SETTINGS_SECTION_PAYMENT}
                                     </Typography>
                                 </Grid>
-                                <Grid item>
-                                    <TextField
-                                        variant="outlined"
-                                        label={SITE_SETTINGS_CURRENCY_UNIT}
-                                        fullWidth
-                                        margin="normal"
-                                        name="currencyUnit"
-                                        value={newSettings.currencyUnit || ""}
-                                        onChange={onChangeData}
-                                    />
-                                </Grid>
-                                <Grid item>
-                                    <TextField
-                                        variant="outlined"
-                                        label={
-                                            SITE_SETTINGS_CURRENCY_ISO_CODE_TEXT
-                                        }
-                                        fullWidth
-                                        margin="normal"
-                                        name="currencyISOCode"
+                                <Grid item sx={{ mb: 2 }}>
+                                    <SingleSelect
+                                        title={SITE_SETTINGS_CURRENCY}
+                                        options={currencies.map((currency) => ({
+                                            label: currency.Currency,
+                                            value:
+                                                currency.AlphabeticCode || "",
+                                        }))}
                                         value={
-                                            newSettings.currencyISOCode || ""
+                                            newSettings.currencyISOCode?.toUpperCase() ||
+                                            ""
                                         }
-                                        onChange={onChangeData}
-                                        maxLength={3}
+                                        onChange={(value) =>
+                                            setNewSettings(
+                                                Object.assign({}, newSettings, {
+                                                    currencyISOCode: value,
+                                                })
+                                            )
+                                        }
                                     />
                                 </Grid>
                                 <Grid item>
-                                    <FormControl
-                                        variant="outlined"
-                                        className={classes.formControl}
-                                    >
-                                        <InputLabel htmlFor="outlined-paymentmethod-simple">
-                                            {SITE_ADMIN_SETTINGS_PAYMENT_METHOD}
-                                        </InputLabel>
-                                        <Select
-                                            autoWidth
-                                            value={newSettings.paymentMethod}
-                                            onChange={onChangeData}
-                                            inputProps={{
-                                                name: "paymentMethod",
-                                                id: "outlined-paymentmethod-simple",
-                                            }}
-                                        >
-                                            <MenuItem
-                                                value={PAYMENT_METHOD_NONE}
-                                            >
-                                                <Typography color="textSecondary">
-                                                    {capitalize(
-                                                        PAYMENT_METHOD_NAME_NONE.toLowerCase()
-                                                    )}
-                                                </Typography>
-                                            </MenuItem>
-                                            <MenuItem
-                                                value={PAYMENT_METHOD_STRIPE}
-                                            >
-                                                {capitalize(
+                                    <SingleSelect
+                                        title={
+                                            SITE_ADMIN_SETTINGS_PAYMENT_METHOD
+                                        }
+                                        value={
+                                            newSettings.paymentMethod ||
+                                            PAYMENT_METHOD_NONE
+                                        }
+                                        options={[
+                                            {
+                                                label: SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL,
+                                                value: PAYMENT_METHOD_NONE,
+                                            },
+                                            {
+                                                label: capitalize(
                                                     PAYMENT_METHOD_STRIPE.toLowerCase()
-                                                )}
-                                            </MenuItem>
-                                            {/* <MenuItem value={PAYMENT_METHOD_PAYPAL} disabled={true}>
-                          {capitalize(PAYMENT_METHOD_PAYPAL.toLowerCase())}
-                        </MenuItem> */}
-                                            {/* <MenuItem value={PAYMENT_METHOD_PAYTM} disabled={true}>
-                          {capitalize(PAYMENT_METHOD_PAYTM.toLowerCase())}
-                        </MenuItem> */}
-                                        </Select>
-                                    </FormControl>
+                                                ),
+                                                value: PAYMENT_METHOD_STRIPE,
+                                            },
+                                        ]}
+                                        onChange={(value) =>
+                                            setNewSettings(
+                                                Object.assign({}, newSettings, {
+                                                    paymentMethod: value,
+                                                })
+                                            )
+                                        }
+                                    />
                                 </Grid>
 
                                 {newSettings.paymentMethod ===
@@ -589,11 +539,13 @@ const Settings = (props: SettingsProps) => {
                                                 newSettings.stripeSecret || ""
                                             }
                                             onChange={onChangeData}
+                                            sx={{ mb: 2 }}
                                         />
                                         <Grid
                                             container
                                             direction="column"
                                             spacing={1}
+                                            sx={{ mb: 2 }}
                                         >
                                             <Grid item>
                                                 <Typography variant="subtitle2">
@@ -615,9 +567,9 @@ const Settings = (props: SettingsProps) => {
                                             <Grid item>
                                                 <Typography>
                                                     <a
-                                                        href={`${props.address.backend}/payment/webhook`}
+                                                        href={`${props.address.backend}/api/payment/webhook`}
                                                     >
-                                                        {`${props.address.backend}/payment/webhook`}
+                                                        {`${props.address.backend}/api/payment/webhook`}
                                                     </a>
                                                 </Typography>
                                             </Grid>

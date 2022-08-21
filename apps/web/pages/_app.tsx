@@ -20,7 +20,6 @@ import { ThunkDispatch } from "redux-thunk";
 import { actionCreators } from "@courselit/state-management";
 import CodeInjector from "../components/public/code-injector";
 import { DefaultTheme } from "@mui/private-theming";
-import widgets from "../ui-config/widgets";
 
 type CourseLitProps = AppProps & {
     emotionCache: EmotionCache;
@@ -73,7 +72,9 @@ function MyApp({
                 <ThemeProvider theme={muiTheme}>
                     <CssBaseline />
                     <div
-                        style={{ visibility: !mounted ? "hidden" : "visible" }}
+                        style={{
+                            visibility: !mounted ? "hidden" : "visible",
+                        }}
                     >
                         <Component {...pageProps} />
                     </div>

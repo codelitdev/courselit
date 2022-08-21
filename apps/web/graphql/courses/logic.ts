@@ -1,17 +1,15 @@
 /**
  * Business logic for managing courses.
  */
-import slugify from "slugify";
 import CourseModel, { Course } from "../../models/Course";
-import UserModel, { User } from "../../models/User";
-import { internal, responses } from "../../config/strings";
+import UserModel from "../../models/User";
+import { responses } from "../../config/strings";
 import {
     checkIfAuthenticated,
     validateOffset,
     extractPlainTextFromDraftJS,
     checkPermission,
     checkOwnershipWithoutModel,
-    makeModelTextSearchable,
 } from "../../lib/graphql";
 import constants from "../../config/constants";
 import {
@@ -28,10 +26,9 @@ import mongoose from "mongoose";
 import { Group } from "@courselit/common-models";
 import { deleteAllLessons } from "../lessons/logic";
 import { deleteMedia } from "../../services/medialit";
-import PageModel, { Page } from "../../models/Page";
+import PageModel from "../../models/Page";
 import { Progress } from "../../models/Progress";
 import { getPrevNextCursor } from "../lessons/helpers";
-import { Banner } from "@courselit/common-widgets";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
