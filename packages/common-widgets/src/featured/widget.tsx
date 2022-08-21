@@ -58,6 +58,7 @@ export default function Widget({
                     creatorName,
                     creatorId,
                     courseId,
+                    cost
                 }
             }
         `;
@@ -115,6 +116,7 @@ export default function Widget({
             </Grid>
         );
     }
+    console.log(`Widget`, type, name);
 
     return (
         <Grid
@@ -167,7 +169,6 @@ export default function Widget({
                                 cost={product.cost}
                                 freeCostCaption="FREE"
                                 currencyISOCode={state.siteinfo.currencyISOCode}
-                                currencyUnit={state.siteinfo.currencyUnit}
                             />
                         </Grid>
                     )}

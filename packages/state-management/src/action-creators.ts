@@ -113,7 +113,6 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
                     logopath {
                         file
                     },
-                    currencyUnit,
                     currencyISOCode,
                     paymentMethod,
                     stripePublishableKey,

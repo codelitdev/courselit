@@ -148,7 +148,10 @@ const Article = (props: ArticleProps) => {
                                     <PriceTag
                                         cost={course.cost}
                                         freeCostCaption={FREE_COST}
-                                        siteInfo={props.siteInfo}
+                                        currencyISOCode={
+                                            props.siteInfo
+                                                .currencyISOCode as string
+                                        }
                                     />
                                 </Grid>
                                 <Grid>

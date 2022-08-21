@@ -46,9 +46,6 @@ function siteinfoReducer(state = initialState.siteinfo, action: Action) {
                     logopath:
                         action.siteinfo.logopath ||
                         initialState.siteinfo.logopath,
-                    currencyUnit:
-                        action.siteinfo.currencyUnit ||
-                        initialState.siteinfo.currencyUnit,
                     currencyISOCode:
                         action.siteinfo.currencyISOCode ||
                         initialState.siteinfo.currencyISOCode,

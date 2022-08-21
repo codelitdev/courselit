@@ -9,7 +9,7 @@ export interface Purchase {
     orderId: string;
     courseId: string;
     purchasedOn: Date;
-    purchasedBy: String;
+    purchasedBy: string;
     paymentMethod: string;
     amount: number;
     status:

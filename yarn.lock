@@ -394,6 +394,7 @@ __metadata:
     "@courselit/rich-text": ^0.19.14
     "@types/react": ^17.0.43
     "@types/react-redux": ^7.1.11
+    currency-symbol-map: ^5.1.0
     typescript: ^4.6.3
   peerDependencies:
     "@mui/material": ^5.9.2
@@ -3132,6 +3133,13 @@ __metadata:
   version: 3.1.0
   resolution: "csstype@npm:3.1.0"
   checksum: 644e986cefab86525f0b674a06889cfdbb1f117e5b7d1ce0fc55b0423ecc58807a1ea42ecc75c4f18999d14fc42d1d255f84662a45003a52bb5840e977eb2ffd
+  languageName: node
+  linkType: hard
+
+"currency-symbol-map@npm:^5.1.0":
+  version: 5.1.0
+  resolution: "currency-symbol-map@npm:5.1.0"
+  checksum: 7c84dd81bff5703179a816012650b3e11f128e1fa83b7d376acdf8f41d544e9f6036ab08a02521cf365ed9b7a5c34bae276c7f23e0239936165534cb39d52a43
   languageName: node
   linkType: hard
 

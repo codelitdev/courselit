@@ -41,13 +41,7 @@ async function verifyHandler(req: ApiRequest, res: NextApiResponse) {
             orderId: purchaseId,
         });
 
-        if (
-            !purchaseRecord ||
-            !isSelf({
-                loggedInUser: user!,
-                buyerId: purchaseRecord.purchasedBy,
-            })
-        ) {
+        if (!purchaseRecord || user!.userId !== purchaseRecord.purchasedBy) {
             return res.status(404).json({ message: responses.item_not_found });
         }
 
@@ -67,5 +61,5 @@ const isSelf = ({
     buyerId,
 }: {
     loggedInUser: User;
-    buyerId: mongoose.Types.ObjectId;
-}) => loggedInUser.id.toString() === buyerId.toString();
+    buyerId: string;
+}) => loggedInUser._id.toString() === buyerId;

@@ -12,6 +12,7 @@ interface Option {
     label: string;
     value: string | number;
     sublabel?: string;
+    disabled?: boolean;
 }
 
 interface SelectProps {
@@ -42,7 +43,11 @@ export default function Select({
                 }
             >
                 {options.map((option: Option) => (
-                    <MenuItem value={option.value} key={option.value}>
+                    <MenuItem
+                        value={option.value}
+                        key={option.value}
+                        disabled={option.disabled || false}
+                    >
                         <Grid container direction="column">
                             <Grid item>{option.label}</Grid>
                             {option.sublabel && (

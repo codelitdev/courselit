@@ -12,6 +12,7 @@ import { addGroup } from "./logic";
 import { Banner } from "@courselit/common-widgets";
 
 const validatePaymentMethod = async (domain: string) => {
+    console.log(`validatePaymentMethod`, domain);
     try {
         await getPaymentMethod(domain);
     } catch (err: any) {
@@ -155,7 +156,7 @@ export const setupCourse = async ({
     page.layout = [
         Banner.init({
             pageId: page.pageId,
-            type: "PRODUCT",
+            type: "product",
             entityId: course.courseId,
         }),
     ];

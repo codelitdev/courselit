@@ -72,7 +72,9 @@ const Template = (props: TemplateProps) => {
                         onEditClick={onEditClick}
                     />
                 ))}
-            {children}
+            <Grid item sx={{ minHeight: "70vh" }}>
+                {children}
+            </Grid>
             {footer && (
                 <EditableWidget
                     item={footer}

@@ -11,13 +11,17 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { connect } from "react-redux";
 import BaseLayout from "../../components/public/base-layout";
-import Checkout from "../../components/public/checkout";
 import { FREE_COURSES_TEXT } from "../../ui-config/constants";
 import {
     CHECKOUT_PAGE_TITLE,
     CHECKOUT_PAGE_TOTAL,
 } from "../../ui-config/strings";
 import { getBackendAddress, getPage } from "../../ui-lib/utils";
+import dynamic from "next/dynamic";
+const PurchaseStatus = dynamic(
+    () => import("../../components/public/purchase-status")
+);
+const Checkout = dynamic(() => import("../../components/public/checkout"));
 
 interface CheckoutProductProps {
     page: Page;
@@ -44,7 +48,7 @@ function CheckoutProduct({
     const loadCourse = async () => {
         const query = `
             query {
-                product: getCourse(id: "${router.query.id}") {
+                product: getCourse(id: "${router.query.pid}") {
                     title,
                     cost
                     description,
@@ -53,6 +57,7 @@ function CheckoutProduct({
                         caption
                     },
                     courseId,
+                    slug
                 }
             }
         `;
@@ -113,7 +118,6 @@ function CheckoutProduct({
                                         <PriceTag
                                             cost={product.cost as number}
                                             freeCostCaption={FREE_COURSES_TEXT}
-                                            currencyUnit={siteInfo.currencyUnit}
                                             currencyISOCode={
                                                 siteInfo.currencyISOCode as string
                                             }
@@ -121,9 +125,16 @@ function CheckoutProduct({
                                     </Grid>
                                 </Grid>
                             </Grid>
-                            <Grid item alignSelf="flex-end">
-                                <Checkout course={product as Course} />
-                            </Grid>
+                            {router.query.id && (
+                                <Grid item>
+                                    <PurchaseStatus />
+                                </Grid>
+                            )}
+                            {!router.query.id && (
+                                <Grid item alignSelf="flex-end">
+                                    <Checkout course={product as Course} />
+                                </Grid>
+                            )}
                         </Grid>
                     </Grid>
                 )}

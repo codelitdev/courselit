@@ -5,6 +5,7 @@ interface LinkOption {
     label: string;
     type: "link";
     href: string;
+    newTab?: boolean;
 }
 
 interface ButtonOption {
@@ -85,6 +86,7 @@ export default function Menu(props: MenuProps) {
                                 component="a"
                                 href={option.href}
                                 key={option.label}
+                                target={option.newTab ? "_blank" : "_self"}
                             >
                                 {option.label}
                             </MenuItem>

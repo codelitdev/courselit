@@ -60,15 +60,17 @@ async function webhookHandler(req: ApiRequest, res: NextApiResponse) {
     }
 }
 
-const finalizeCoursePurchase = async (
-    userId: mongoose.Types.ObjectId,
-    courseId: mongoose.Types.ObjectId
-) => {
-    const user = await User.findById(userId);
-    const course = await Course.findById(courseId);
+const finalizeCoursePurchase = async (userId: string, courseId: string) => {
+    const user = await User.findOne({ userId });
+    const course = await Course.findOne({ courseId });
 
     if (user && course) {
-        user.purchases.push(course.id);
+        user.purchases.push({
+            courseId: course.courseId,
+        });
         await user.save();
+
+        course.sales = course.sales + course.cost;
+        await course.save();
     }
 };

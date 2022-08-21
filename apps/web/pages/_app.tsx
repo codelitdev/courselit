@@ -73,7 +73,9 @@ function MyApp({
                 <ThemeProvider theme={muiTheme}>
                     <CssBaseline />
                     <div
-                        style={{ visibility: !mounted ? "hidden" : "visible" }}
+                        style={{
+                            visibility: !mounted ? "hidden" : "visible",
+                        }}
                     >
                         <Component {...pageProps} />
                     </div>

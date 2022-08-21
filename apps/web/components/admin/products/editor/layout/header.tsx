@@ -3,16 +3,20 @@ import { MoreVert } from "@mui/icons-material";
 import {
     Breadcrumbs,
     Grid,
-    IconButton,
-    Menu,
-    MenuItem,
+    // IconButton,
+    // Menu,
+    // MenuItem,
     Typography,
 } from "@mui/material";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { EDIT_PAGE_MENU_ITEM } from "../../../../../ui-config/strings";
+import {
+    EDIT_PAGE_MENU_ITEM,
+    VIEW_PAGE_MENU_ITEM,
+} from "../../../../../ui-config/strings";
 import useCourse from "../course-hook";
 import { useRouter } from "next/router";
+import { Menu } from "@courselit/components-library";
 
 const AppLoader = dynamic(() => import("../../../../app-loader"));
 
@@ -67,7 +71,23 @@ export default function ProductHeader({ id, breadcrumbs }: ProductHeaderProps) {
                         <Typography variant="h1">{course.title}</Typography>
                     </Grid>
                     <Grid item>
-                        <IconButton
+                        <Menu
+                            options={[
+                                {
+                                    label: VIEW_PAGE_MENU_ITEM,
+                                    href: `/p/${course.pageId}`,
+                                    type: "link",
+                                    newTab: true,
+                                },
+                                {
+                                    label: EDIT_PAGE_MENU_ITEM,
+                                    href: `/dashboard/page/${course.pageId}/edit`,
+                                    type: "link",
+                                },
+                            ]}
+                            icon={<MoreVert />}
+                        />
+                        {/* <IconButton
                             onClick={handleClick}
                             size="small"
                             sx={{ ml: 2 }}
@@ -95,7 +115,7 @@ export default function ProductHeader({ id, breadcrumbs }: ProductHeaderProps) {
                             >
                                 {EDIT_PAGE_MENU_ITEM}
                             </MenuItem>
-                        </Menu>
+                        </Menu> */}
                     </Grid>
                 </Grid>
             </Grid>

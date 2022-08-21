@@ -19,7 +19,6 @@ const siteType = new GraphQLObjectType({
             type: mediaType,
             resolve: (settings, _, __, ___) => getMedia(settings.logopath),
         },
-        currencyUnit: { type: GraphQLString },
         currencyISOCode: { type: GraphQLString },
         paymentMethod: { type: GraphQLString },
         stripePublishableKey: { type: GraphQLString },
@@ -40,7 +39,6 @@ const siteUpdateType = new GraphQLInputObjectType({
 const sitePaymentUpdateType = new GraphQLInputObjectType({
     name: "SitePaymentUpdateInput",
     fields: {
-        currencyUnit: { type: GraphQLString },
         currencyISOCode: { type: GraphQLString },
         paymentMethod: { type: GraphQLString },
         stripePublishableKey: { type: GraphQLString },

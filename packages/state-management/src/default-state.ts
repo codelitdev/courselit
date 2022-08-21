@@ -10,7 +10,6 @@ export default {
             file: "",
             thumbnail: "",
         },
-        currencyUnit: "",
         currencyISOCode: "",
         paymentMethod: "",
         stripePublishableKey: "",

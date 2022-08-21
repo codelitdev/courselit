@@ -8,7 +8,6 @@ import type { AppState, AppDispatch } from "@courselit/state-management";
 import {
     Address,
     AppMessage,
-    Auth,
     Course,
     SiteInfo,
 } from "@courselit/common-models";
@@ -34,8 +33,8 @@ const Stripe = (props: StripeProps) => {
             courseid: course.courseId,
             metadata: JSON.stringify({
                 cancelUrl: `${address.frontend}${router.asPath}`,
-                successUrl: `${address.frontend}/purchase`,
-                sourceUrl: router.asPath,
+                successUrl: `${address.frontend}/checkout/${course.courseId}`,
+                sourceUrl: `/course/${course.slug}/${course.courseId}`,
             }),
         };
         const fetch = new FetchBuilder()
@@ -52,12 +51,14 @@ const Stripe = (props: StripeProps) => {
                 redirectToOnUnAuth: router.asPath,
             });
             dispatch(networkAction(false));
-            response &&
-                response.paymentTracker &&
-                (await redirectToStripeCheckout({
+            if (response.status === "initiated") {
+                await redirectToStripeCheckout({
                     stripe: await stripePromise,
                     sessionId: response.paymentTracker,
-                }));
+                });
+            } else if (response.status === "success") {
+                router.replace(`/course/${course.slug}/${course.courseId}`);
+            }
         } catch (err: any) {
             dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
