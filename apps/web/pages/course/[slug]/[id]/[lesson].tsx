@@ -5,7 +5,6 @@ import { getServerSideProps, generateSideBarItems } from ".";
 import type { Course, Profile } from "@courselit/common-models";
 import { AppState } from "@courselit/state-management";
 import { connect } from "react-redux";
-import { useEffect } from "react";
 
 interface LessonProps {
     course: Course;

@@ -6,7 +6,6 @@ import useCourse from "../course-hook";
 import { useRouter } from "next/router";
 import { Menu } from "@courselit/components-library";
 import {
-    BTN_DELETE_COURSE,
     DELETE_PRODUCT_POPUP_HEADER,
     DELETE_PRODUCT_POPUP_TEXT,
     MENU_BLOG_VISIT,

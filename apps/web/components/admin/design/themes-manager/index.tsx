@@ -38,8 +38,6 @@ import { THEMES_REPO } from "../../../../ui-config/constants";
 import ThemeItem from "./theme-item";
 import type { Address } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
-import { Menu } from "@courselit/components-library";
-import { MoreVert } from "@mui/icons-material";
 
 const { setAppMessage, networkAction, updateSiteInfo } = actionCreators;
 

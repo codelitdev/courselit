@@ -2,9 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
     AppMessage,
     Page,
-    PageTypeSite,
     SiteInfo,
-    PageTypeProduct,
     WidgetInstance,
 } from "@courselit/common-models";
 import type { Address, Auth, Profile } from "@courselit/common-models";

@@ -1,8 +1,8 @@
 import constants from "../config/constants";
 import { internal, responses } from "../config/strings";
-import StripePayment from "./stripe-payment";
-import SiteInfoModel, { SiteInfo } from "../models/SiteInfo";
 import DomainModel, { Domain } from "../models/Domain";
+import { SiteInfo } from "../models/SiteInfo";
+import StripePayment from "./stripe-payment";
 
 const { paypal, stripe, paytm } = constants;
 const {

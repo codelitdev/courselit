@@ -15,7 +15,6 @@ import {
     VIEW_PAGE_MENU_ITEM,
 } from "../../../../../ui-config/strings";
 import useCourse from "../course-hook";
-import { useRouter } from "next/router";
 import { Menu } from "@courselit/components-library";
 
 const AppLoader = dynamic(() => import("../../../../app-loader"));
@@ -31,16 +30,7 @@ interface ProductHeaderProps {
 }
 
 export default function ProductHeader({ id, breadcrumbs }: ProductHeaderProps) {
-    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-    const open = Boolean(anchorEl);
-    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
     const course = useCourse(id);
-    const router = useRouter();
 
     if (!course) {
         return <></>;
@@ -87,35 +77,6 @@ export default function ProductHeader({ id, breadcrumbs }: ProductHeaderProps) {
                             ]}
                             icon={<MoreVert />}
                         />
-                        {/* <IconButton
-                            onClick={handleClick}
-                            size="small"
-                            sx={{ ml: 2 }}
-                            aria-controls={open ? "product-menu" : undefined}
-                            aria-haspopup="true"
-                            aria-expanded={open ? "true" : undefined}
-                        >
-                            <MoreVert />
-                        </IconButton>
-                        <Menu
-                            id="basic-menu"
-                            anchorEl={anchorEl}
-                            open={open}
-                            onClose={handleClose}
-                            MenuListProps={{
-                                "aria-labelledby": "basic-button",
-                            }}
-                        >
-                            <MenuItem
-                                onClick={() =>
-                                    router.push(
-                                        `/dashboard/page/${course.pageId}/edit`
-                                    )
-                                }
-                            >
-                                {EDIT_PAGE_MENU_ITEM}
-                            </MenuItem>
-                        </Menu> */}
                     </Grid>
                 </Grid>
             </Grid>

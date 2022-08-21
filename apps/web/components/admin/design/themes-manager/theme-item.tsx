@@ -1,11 +1,10 @@
 import React, { useState } from "react";
-import { Grid, Button, TableRow, TableCell } from "@mui/material";
+import { TableRow, TableCell } from "@mui/material";
 import {
     BUTTON_THEME_APPLY,
     BUTTON_THEME_REMIX,
     BUTTON_THEME_UNINSTALL,
     POPUP_CANCEL_ACTION,
-    POPUP_OK_ACTION,
     DELETE_THEME_POPUP_HEADER,
     APPLY_THEME_POPUP_HEADER,
 } from "../../../../ui-config/strings";

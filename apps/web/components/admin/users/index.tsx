@@ -31,7 +31,6 @@ import {
 } from "../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";
-import { Section } from "@courselit/components-library";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
 import type {

@@ -16,7 +16,6 @@ import {
     WIDGETS_DATA_AVAILABLE,
 } from "./action-types";
 import { FetchBuilder } from "@courselit/utils";
-import defaultState from "./default-state";
 import getAddress from "./utils/get-address";
 import type {
     State,

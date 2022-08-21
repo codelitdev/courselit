@@ -1,4 +1,4 @@
-import { Strategy, ExtractJwt, StrategyOptions } from "passport-jwt";
+import { Strategy, StrategyOptions } from "passport-jwt";
 import constants from "../config/constants";
 import UserModel, { User } from "../models/User";
 import { getLoginSession } from "./auth";

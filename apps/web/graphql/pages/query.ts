@@ -1,4 +1,4 @@
-import { GraphQLList, GraphQLNonNull, GraphQLString } from "graphql";
+import { GraphQLList, GraphQLString } from "graphql";
 import GQLContext from "../../models/GQLContext";
 import { getPage, getPages } from "./logic";
 import types from "./types";

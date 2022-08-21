@@ -10,7 +10,7 @@ import verifyJwt from "../../../middlewares/verify-jwt";
 import ApiRequest from "../../../models/ApiRequest";
 import CourseModel, { Course } from "../../../models/Course";
 import { getPaymentMethod } from "../../../payments";
-import PurchaseModel, { Purchase } from "../../../models/Purchase";
+import PurchaseModel from "../../../models/Purchase";
 import finalizePurchase from "../../../lib/finalize-purchase";
 
 const { transactionSuccess, transactionFailed, transactionInitiated } =

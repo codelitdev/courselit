@@ -1,4 +1,3 @@
-import { Address } from "@courselit/common-models";
 import { AppState } from "@courselit/state-management";
 import { ComponentType } from "react";
 import { connect } from "react-redux";

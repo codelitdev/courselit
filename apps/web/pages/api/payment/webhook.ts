@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import { NextApiRequest, NextApiResponse } from "next";
 import nc from "next-connect";
 import passport from "passport";

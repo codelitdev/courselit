@@ -20,7 +20,6 @@ import { ThunkDispatch } from "redux-thunk";
 import { actionCreators } from "@courselit/state-management";
 import CodeInjector from "../components/public/code-injector";
 import { DefaultTheme } from "@mui/private-theming";
-import widgets from "../ui-config/widgets";
 
 type CourseLitProps = AppProps & {
     emotionCache: EmotionCache;

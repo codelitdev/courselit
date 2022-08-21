@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import LinkSchema, { Link } from "./Link";
 import SettingsSchema, { Settings } from "./SiteInfo";
 import { Theme, ThemeSchema } from "./Theme";
 import WidgetSchema, { Widget } from "./Widget";

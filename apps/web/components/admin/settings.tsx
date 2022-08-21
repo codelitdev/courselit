@@ -1,4 +1,4 @@
-import React, { useState, useEffect, FormEvent } from "react";
+import React, { useState, useEffect } from "react";
 import { styled } from "@mui/system";
 import { connect } from "react-redux";
 import {
@@ -12,21 +12,10 @@ import {
     PAYMENT_METHOD_NONE,
     MIMETYPE_IMAGE,
 } from "../../ui-config/constants";
-import {
-    TextField,
-    Button,
-    Typography,
-    FormControl,
-    Select,
-    InputLabel,
-    MenuItem,
-    Grid,
-    capitalize,
-} from "@mui/material";
+import { TextField, Button, Typography, Grid, capitalize } from "@mui/material";
 import {
     SITE_SETTINGS_TITLE,
     SITE_SETTINGS_SUBTITLE,
-    SITE_SETTINGS_CURRENCY_UNIT,
     SITE_SETTINGS_LOGO,
     SITE_SETTINGS_PAGE_HEADING,
     SITE_SETTINGS_CURRENCY,
@@ -43,7 +32,6 @@ import {
     HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK,
     SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK,
     BUTTON_SAVE,
-    PAYMENT_METHOD_NAME_NONE,
     SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL,
 } from "../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
@@ -519,46 +507,6 @@ const Settings = (props: SettingsProps) => {
                                             )
                                         }
                                     />
-                                    {/* <FormControl
-                                        variant="outlined"
-                                        className={classes.formControl}
-                                    >
-                                        <InputLabel htmlFor="outlined-paymentmethod-simple">
-                                            {SITE_ADMIN_SETTINGS_PAYMENT_METHOD}
-                                        </InputLabel>
-                                        <Select
-                                            autoWidth
-                                            value={newSettings.paymentMethod}
-                                            onChange={onChangeData}
-                                            inputProps={{
-                                                name: "paymentMethod",
-                                                id: "outlined-paymentmethod-simple",
-                                            }}
-                                        >
-                                            <MenuItem
-                                                value={PAYMENT_METHOD_NONE}
-                                            >
-                                                <Typography color="textSecondary">
-                                                    {capitalize(
-                                                        PAYMENT_METHOD_NAME_NONE.toLowerCase()
-                                                    )}
-                                                </Typography>
-                                            </MenuItem>
-                                            <MenuItem
-                                                value={PAYMENT_METHOD_STRIPE}
-                                            >
-                                                {capitalize(
-                                                    PAYMENT_METHOD_STRIPE.toLowerCase()
-                                                )}
-                                            </MenuItem>
-                                            <MenuItem value={PAYMENT_METHOD_PAYPAL} disabled={true}>
-                          {capitalize(PAYMENT_METHOD_PAYPAL.toLowerCase())}
-                        </MenuItem>
-                                            <MenuItem value={PAYMENT_METHOD_PAYTM} disabled={true}>
-                          {capitalize(PAYMENT_METHOD_PAYTM.toLowerCase())}
-                        </MenuItem>
-                                        </Select>
-                                    </FormControl> */}
                                 </Grid>
 
                                 {newSettings.paymentMethod ===

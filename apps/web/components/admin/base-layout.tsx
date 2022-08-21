@@ -1,11 +1,10 @@
-import React, { ReactChildren, ReactNode, useEffect } from "react";
+import React, { ReactNode, useEffect } from "react";
 import { styled } from "@mui/material/styles";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
 import {
     LibraryBooks,
     SupervisedUserCircle,
-    PermMedia,
     SettingsApplications,
     Palette,
     Article,
@@ -21,7 +20,6 @@ import type Profile from "../../ui-models/profile";
 import State from "../../ui-models/state";
 import Auth from "../../ui-models/auth";
 import SiteInfo from "../../ui-models/site-info";
-import Address from "../../ui-models/address";
 const { permissions } = constants;
 
 const PREFIX = "BaseLayout";
@@ -105,7 +103,6 @@ interface BaseLayoutProps {
     siteInfo: SiteInfo;
     children: ReactNode;
     title: string;
-    address: Address;
 }
 
 const BaseLayoutAdmin = ({
@@ -114,7 +111,6 @@ const BaseLayoutAdmin = ({
     siteInfo,
     children,
     title,
-    address,
 }: BaseLayoutProps) => {
     const router = useRouter();
 

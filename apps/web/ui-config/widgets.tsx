@@ -1,12 +1,8 @@
 // import buttondown from "@courselit/widget-buttondown";
 import { Widget } from "@courselit/common-models";
 import {
-    RichText,
-    TaggedContent,
-    Footer,
-    Header,
-    Featured,
-    Banner,
+    Banner, Featured, Footer,
+    Header, RichText
 } from "@courselit/common-widgets";
 
 function loadWidgets(): Record<string, any> {

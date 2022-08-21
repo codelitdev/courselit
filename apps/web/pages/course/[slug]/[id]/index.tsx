@@ -8,10 +8,8 @@ import {
     isLessonCompleted,
 } from "../../../../ui-lib/utils";
 import {
-    ArrowBack,
     ArrowForward,
     CheckCircle,
-    Circle,
     CircleOutlined,
     Lock,
 } from "@mui/icons-material";
