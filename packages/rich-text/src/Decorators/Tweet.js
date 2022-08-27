@@ -40,8 +40,8 @@ const Tweet = (props) => {
     /* eslint-disable one-var, prefer-const */
     const twitterFunc = function (d, s, id) {
         let js;
-            const fjs = d.getElementsByTagName(s)[0];
-            const t = window.twttr || {};
+        const fjs = d.getElementsByTagName(s)[0];
+        const t = window.twttr || {};
         if (d.getElementById(id)) return t;
         js = d.createElement(s);
         js.id = id;

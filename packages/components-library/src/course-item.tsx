@@ -55,9 +55,17 @@ const CourseItem = (props: CourseItemProps) => {
                         <Image
                             src={
                                 course.featuredImage &&
-                                course.featuredImage.thumbnail
+                                (course.featuredImage.file ||
+                                    course.featuredImage.thumbnail)
                             }
                             loading={thumbnailLoading}
+                            height={{
+                                xs: 220,
+                                sm: 414,
+                                md: 276,
+                                lg: 392,
+                                xl: 704,
+                            }}
                             sizes="40vw"
                         />
                     </Grid>

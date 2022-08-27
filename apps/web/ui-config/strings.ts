@@ -219,7 +219,6 @@ export const TRANSACTION_STATUS_FAILED = "Payment Failed.";
 export const TRANSACTION_STATUS_FAILED_DETAILS =
     "The payment service provider was unable to process your payment. Please go back and try again.";
 export const VISIT_COURSE_BUTTON = "Launch course";
-export const VISIT_POST_BUTTON = "Visit post";
 export const VERIFY_PAYMENT_BUTTON = "Re-check Payment Status";
 export const PURCHASE_ID_HEADER = "Purchase ID";
 export const PAGE_HEADER_FEATURED = "Featured Content";

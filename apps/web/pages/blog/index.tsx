@@ -17,7 +17,7 @@ const generateQuery = (pageOffset = 1) => `
       creatorName,
       slug,
       featuredImage {
-          thumbnail
+        file
       },
       courseId,
       type

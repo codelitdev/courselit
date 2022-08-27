@@ -77,6 +77,7 @@ function BlogHeader({ id, breadcrumbs, address, dispatch }: BlogHeaderProps) {
                                     label: MENU_BLOG_VISIT,
                                     type: "link",
                                     href: `/blog/${course.slug}/${course.courseId}`,
+                                    newTab: true,
                                 },
                                 {
                                     label: PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT,

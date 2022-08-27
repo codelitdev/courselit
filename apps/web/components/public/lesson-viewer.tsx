@@ -23,23 +23,14 @@ import {
     NOT_ENROLLED_HEADER,
 } from "../../ui-config/strings";
 import { RichText as TextEditor, Link } from "@courselit/components-library";
-import {
-    Address,
-    AppMessage,
-    Lesson,
-    Profile,
-} from "@courselit/common-models";
+import { Address, AppMessage, Lesson, Profile } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { useRouter } from "next/router";
 import {
     refreshUserProfile,
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
-import {
-    ArrowBack,
-    ArrowForward,
-    OpenInNew,
-} from "@mui/icons-material";
+import { ArrowBack, ArrowForward, OpenInNew } from "@mui/icons-material";
 import { isEnrolled } from "../../ui-lib/utils";
 
 const { networkAction } = actionCreators;
