@@ -6,6 +6,7 @@ import {
     Footer,
     Header,
     RichText,
+    NewsletterSignup,
 } from "@courselit/common-widgets";
 
 function loadWidgets(): Record<string, any> {
@@ -18,6 +19,7 @@ function loadWidgets(): Record<string, any> {
     widgets[Header.metadata.name] = Header;
     widgets[Featured.metadata.name] = Featured;
     widgets[Banner.metadata.name] = Banner;
+    widgets[NewsletterSignup.metadata.name] = NewsletterSignup;
 
     // Additional widgets are added here
     // widgets[buttondown.metadata.name] = buttondown;
