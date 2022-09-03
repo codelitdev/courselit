@@ -10,6 +10,7 @@ import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
 const { permissions } = constants;
 import { Progress } from "../../models/Progress";
+import mongoose from "mongoose";
 
 const removeAdminFieldsFromUserObject = ({
     id,
@@ -208,3 +209,42 @@ export const recordProgress = async ({
         await (user as any).save();
     }
 };
+
+export async function createUser({
+    domain,
+    email,
+    lead,
+}: {
+    domain: mongoose.Types.ObjectId;
+    email: string;
+    lead?: typeof constants.leadWebsite | typeof constants.leadNewsletter;
+}): Promise<User> {
+    const newUser: Partial<User> = {
+        domain: domain,
+        email: email,
+        active: true,
+        purchases: [],
+        permissions: [],
+        lead: lead || constants.leadWebsite,
+    };
+    const notTheFirstUserOfDomain = await UserModel.countDocuments({ domain });
+    if (notTheFirstUserOfDomain) {
+        newUser.permissions = [constants.permissions.enrollInCourse];
+    } else {
+        newUser.permissions = [
+            constants.permissions.manageCourse,
+            constants.permissions.manageAnyCourse,
+            constants.permissions.publishCourse,
+            // TODO: replace media perms with course perms
+            constants.permissions.manageMedia,
+            constants.permissions.manageAnyMedia,
+            constants.permissions.uploadMedia,
+            constants.permissions.viewAnyMedia,
+            constants.permissions.manageSite,
+            constants.permissions.manageSettings,
+            constants.permissions.manageUsers,
+        ];
+    }
+    newUser.lead = lead;
+    return await UserModel.create(newUser);
+}

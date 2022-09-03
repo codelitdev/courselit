@@ -76,6 +76,10 @@ export default {
         manageUsers: "user:manage",
     },
 
+    // entry point for the user
+    leadWebsite: "website",
+    leadNewsletter: "newsletter",
+
     // log levels
     severityError: "error",
     severityInfo: "info",

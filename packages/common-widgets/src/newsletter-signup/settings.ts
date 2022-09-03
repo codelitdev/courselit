@@ -6,5 +6,7 @@ export default interface Settings {
     foregroundColor?: `#${string}`;
     btnBackgroundColor?: `#${string}`;
     btnForegroundColor?: `#${string}`;
-    alignment: "left" | "right" | "center";
+    alignment?: "left" | "right" | "center";
+    successMessage?: string;
+    failureMessage?: string;
 }

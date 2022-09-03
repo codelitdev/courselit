@@ -116,7 +116,6 @@ export default function Widget({
             </Grid>
         );
     }
-    console.log(`Widget`, type, name);
 
     return (
         <Grid

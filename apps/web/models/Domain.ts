@@ -3,6 +3,10 @@ import SettingsSchema, { Settings } from "./SiteInfo";
 import { Theme, ThemeSchema } from "./Theme";
 import WidgetSchema, { Widget } from "./Widget";
 
+interface SharedWidgets {
+    [x: string]: Widget;
+}
+
 export interface Domain {
     _id: mongoose.Types.ObjectId;
     name: string;
@@ -13,8 +17,7 @@ export interface Domain {
     updatedAt: Date;
     settings: Settings;
     theme: Theme;
-    header: Widget;
-    footer: Widget;
+    sharedWidgets: SharedWidgets;
 }
 
 const DomainSchema = new mongoose.Schema<Domain>(
@@ -25,8 +28,7 @@ const DomainSchema = new mongoose.Schema<Domain>(
         deleted: { type: Boolean, required: true, default: false },
         settings: SettingsSchema,
         theme: ThemeSchema,
-        header: WidgetSchema,
-        footer: WidgetSchema,
+        sharedWidgets: { type: mongoose.Schema.Types.Mixed, default: {} },
     },
     {
         timestamps: true,
