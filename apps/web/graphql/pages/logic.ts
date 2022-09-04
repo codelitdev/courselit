@@ -6,7 +6,6 @@ import {
 } from "../../lib/graphql";
 import GQLContext from "../../models/GQLContext";
 import PageModel, { Page } from "../../models/Page";
-import { Widget } from "../../models/Widget";
 import { permissions } from "../../ui-config/constants";
 import { getPageResponse } from "./helpers";
 import constants from "../../config/constants";
@@ -158,7 +157,6 @@ export const savePage = async (
             (ctx.subdomain as any).markModified("sharedWidgets");
             await (ctx.subdomain as any).save();
             page!.draftLayout = layout;
-            // console.log(page!.draftLayout);
         } catch (err: any) {
             throw new Error(err.message);
         }

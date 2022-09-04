@@ -75,7 +75,7 @@ export default function Widget({
                 setProduct(response.product);
             }
         } catch (err) {
-            console.log("Error", err.message);
+            console.log("Error", err.message); // eslint-disable-line no-console
         } finally {
             dispatch(actionCreators.networkAction(false));
         }

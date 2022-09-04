@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import SettingsSchema, { Settings } from "./SiteInfo";
 import { Theme, ThemeSchema } from "./Theme";
-import WidgetSchema, { Widget } from "./Widget";
+import { Widget } from "./Widget";
 
 interface SharedWidgets {
     [x: string]: Widget;

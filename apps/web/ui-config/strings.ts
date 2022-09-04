@@ -275,9 +275,12 @@ export const UNABLE_TO_LOGOUT = "Logout failed. Try again.";
 export const USER_TABLE_HEADER_NAME = "Details";
 export const USER_TABLE_HEADER_JOINED = "Joined";
 export const USER_TABLE_HEADER_LAST_ACTIVE = "Last login";
+export const USER_TABLE_HEADER_EMAIL = "Email";
+export const USER_TABLE_HEADER_NAME_NAME = "Name";
 export const USER_TYPE_TEAM = "Team";
-export const USER_TYPE_AUDIENCE = "Audience";
-export const USER_TYPE_ALL = "All";
+export const USER_TYPE_CUSOMER = "Customer";
+export const USER_TYPE_ALL = "Everyone";
+export const USER_TYPE_SUBSCRIBER = "Subscriber";
 export const USER_FILTER_PERMISSION = "Type";
 export const USER_TYPE_TOOLTIP =
     "Segregate users based on their roles. Audience users are the ones who can enroll in courses. Team users are the ones who have admin rights.";
@@ -345,3 +348,5 @@ export const PAGE_HEADER_NEW_BLOG = "New blog";
 export const MENU_BLOG_VISIT = "Visit blog";
 export const ACCOUNT_NO_PURCHASE_PLACEHOLDER =
     "Your enrolled courses will show up here";
+export const EXPORT_CSV = "Export to CSV";
+export const GENERIC_FAILURE_MESSAGE = "That didn't work. Please try again.";

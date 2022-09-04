@@ -62,7 +62,7 @@ export default function AdminWidget({
                 setProducts(response.products);
             }
         } catch (err: any) {
-            console.log(err);
+            console.log(err); // eslint-disable-line no-console
         } finally {
             dispatch(actionCreators.networkAction(false));
         }

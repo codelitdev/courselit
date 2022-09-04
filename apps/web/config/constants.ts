@@ -90,7 +90,8 @@ export default {
 
     // user types
     userTypeTeam: "team",
-    userTypeAudience: "audience",
+    userTypeCustomer: "customer",
+    userTypeNewsletterSubscriber: "subscriber",
 
     // page types
     product: "product",

@@ -11,7 +11,8 @@ import {
 } from "graphql";
 import constants from "../../config/constants";
 
-const { userTypeTeam, userTypeAudience } = constants;
+const { userTypeTeam, userTypeCustomer, userTypeNewsletterSubscriber } =
+    constants;
 
 const progress = new GraphQLObjectType({
     name: "Progress",
@@ -52,7 +53,8 @@ const userGroupType = new GraphQLEnumType({
     name: "UserGroupType",
     values: {
         TEAM: { value: userTypeTeam },
-        AUDIENCE: { value: userTypeAudience },
+        CUSTOMER: { value: userTypeCustomer },
+        SUBSCRIBER: { value: userTypeNewsletterSubscriber },
     },
 });
 
@@ -62,6 +64,7 @@ const userSearchInput = new GraphQLInputObjectType({
         offset: { type: GraphQLInt },
         searchText: { type: GraphQLString },
         type: { type: userGroupType },
+        email: { type: GraphQLString },
     },
 });
 

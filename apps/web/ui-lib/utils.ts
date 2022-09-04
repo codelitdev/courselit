@@ -140,7 +140,6 @@ export const getPage = async (backend: string, id?: string) => {
             .setIsGraphQLEndpoint(true)
             .build();
         const response = await fetch.exec();
-        console.log(`getPage`, response);
         return response.page;
     } catch (e: any) {
         console.log("getPage", e.message); // eslint-disable-line no-console

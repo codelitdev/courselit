@@ -1,20 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, FormEvent } from "react";
 import {
     Avatar,
     Button,
-    FormControl,
     Grid,
-    InputLabel,
-    MenuItem,
-    Select,
-    SelectChangeEvent,
     Table,
     TableBody,
     TableCell,
     TableContainer,
     TableHead,
     TableRow,
-    Tooltip,
+    TextField,
     Typography,
 } from "@mui/material";
 import {
@@ -24,29 +19,36 @@ import {
     USERS_MANAGER_PAGE_HEADING,
     USER_TABLE_HEADER_LAST_ACTIVE,
     USER_TYPE_TEAM,
-    USER_TYPE_AUDIENCE,
+    USER_TYPE_CUSOMER,
     USER_FILTER_PERMISSION,
-    USER_TYPE_TOOLTIP,
     USER_TYPE_ALL,
+    EXPORT_CSV,
+    USER_TYPE_SUBSCRIBER,
+    GENERIC_FAILURE_MESSAGE,
+    USER_TABLE_HEADER_EMAIL,
+    USER_TABLE_HEADER_NAME_NAME,
 } from "../../../ui-config/strings";
-import { FetchBuilder } from "@courselit/utils";
+import { exportToCsv, FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
-import type {
+import {
     Profile,
     User,
     Auth,
     Address,
     State,
+    AppMessage,
 } from "@courselit/common-models";
 import { checkPermission } from "../../../ui-lib/utils";
 import { permissions } from "../../../ui-config/constants";
 import Link from "next/link";
 import MuiLink from "@mui/material/Link";
-import { Help } from "@mui/icons-material";
 import { ThunkDispatch } from "redux-thunk";
 import { AnyAction } from "redux";
+import { Select as SingleSelect } from "@courselit/components-library";
+import { setAppMessage } from "@courselit/state-management/dist/action-creators";
+import { CSVLink } from "react-csv";
 
 const { networkAction } = actionCreators;
 
@@ -66,10 +68,12 @@ const UsersManager = ({
     const [usersPaginationOffset, setUsersPaginationOffset] = useState(1);
     const [users, setUsers] = useState<User[]>([]);
     const [type, setType] = useState("");
+    const [searchEmail, setSearchEmail] = useState("");
+    const [searchEmailHook, setSearchEmailHook] = useState(0);
 
     useEffect(() => {
         loadUsers();
-    }, [usersPaginationOffset, type]);
+    }, [usersPaginationOffset, type, searchEmailHook]);
 
     const loadUsers = async () => {
         const query =
@@ -79,6 +83,23 @@ const UsersManager = ({
                     users: getUsers(searchData: {
                         offset: ${usersPaginationOffset},
                         type: ${type.toUpperCase()}
+                    }) {
+                        id,
+                        name,
+                        userId,
+                        email,
+                        permissions,
+                        createdAt,
+                        updatedAt
+                    }
+                }
+            `
+                : searchEmail
+                ? `
+                query {
+                    users: getUsers(searchData: {
+                        offset: ${usersPaginationOffset}
+                        email: "${searchEmail}"
                     }) {
                         id,
                         name,
@@ -105,6 +126,10 @@ const UsersManager = ({
                     }
                 }
             `;
+        await fetchUsers(query);
+    };
+
+    const fetchUsers = async (query: string) => {
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
             .setPayload(query)
@@ -119,6 +144,7 @@ const UsersManager = ({
                 setUsers([...users, ...response.users]);
             }
         } catch (err) {
+            dispatch(setAppMessage(new AppMessage(GENERIC_FAILURE_MESSAGE)));
         } finally {
             (dispatch as ThunkDispatch<State, null, AnyAction>)(
                 networkAction(false)
@@ -147,23 +173,119 @@ const UsersManager = ({
             types.push(USER_TYPE_TEAM);
         }
         if (hasAudiencePermission) {
-            types.push(USER_TYPE_AUDIENCE);
+            types.push(USER_TYPE_CUSOMER);
         }
         return types.join(", ");
     };
 
-    const handleUserTypeChange = (e: SelectChangeEvent) => {
-        setType(e.target.value);
+    const handleUserTypeChange = (value: string) => {
+        setSearchEmail("");
+        setType(value);
         setUsers([]);
         setUsersPaginationOffset(1);
     };
 
+    const searchByEmail = async (e: FormEvent) => {
+        e.preventDefault();
+        setUsers([]);
+        setUsersPaginationOffset(1);
+        setType("");
+        setSearchEmailHook(searchEmailHook + 1);
+        // const query = `
+        //     query {
+        //         users: getUsers(searchData: {
+        //             offset: ${usersPaginationOffset}
+        //             email: "${searchEmail}"
+        //         }) {
+        //             id,
+        //             name,
+        //             userId,
+        //             email,
+        //             permissions,
+        //             createdAt,
+        //             updatedAt
+        //         }
+        //     }
+        // `
+        // await fetchUsers(query);
+    };
+
+    const exportData = () => {
+        exportToCsv(users.map((user) => Object.values(user)));
+    };
+
     return (
         <Grid container direction="column">
-            <Grid item>
+            <Grid item sx={{ mb: 3 }}>
                 <Typography variant="h1">
                     {USERS_MANAGER_PAGE_HEADING}
                 </Typography>
+            </Grid>
+            <Grid item sx={{ mb: 2 }}>
+                <Grid container spacing={2} alignItems="center">
+                    <Grid item>
+                        <form onSubmit={searchByEmail}>
+                            <TextField
+                                type="email"
+                                label="Search by email"
+                                onChange={(e) => setSearchEmail(e.target.value)}
+                                value={searchEmail}
+                                required
+                            />
+                        </form>
+                    </Grid>
+                    <Grid item sx={{ minWidth: 140 }}>
+                        <SingleSelect
+                            title={USER_FILTER_PERMISSION}
+                            onChange={handleUserTypeChange}
+                            value={type}
+                            options={[
+                                { label: USER_TYPE_ALL, value: "" },
+                                {
+                                    label: USER_TYPE_CUSOMER,
+                                    value: USER_TYPE_CUSOMER,
+                                },
+                                {
+                                    label: USER_TYPE_TEAM,
+                                    value: USER_TYPE_TEAM,
+                                },
+                                {
+                                    label: USER_TYPE_SUBSCRIBER,
+                                    value: USER_TYPE_SUBSCRIBER,
+                                },
+                            ]}
+                        />
+                    </Grid>
+                    <Grid item>
+                        <CSVLink
+                            filename={"users-courselit.csv"}
+                            headers={[
+                                USER_TABLE_HEADER_EMAIL,
+                                USER_TABLE_HEADER_NAME_NAME,
+                                USER_TABLE_HEADER_JOINED,
+                                USER_TABLE_HEADER_LAST_ACTIVE,
+                            ]}
+                            data={users.map((user) => [
+                                user.email,
+                                user.name,
+                                user.createdAt
+                                    ? new Date(
+                                          +user.createdAt
+                                      ).toLocaleDateString()
+                                    : "",
+                                user.updatedAt !== user.createdAt
+                                    ? user.updatedAt
+                                        ? new Date(
+                                              +user.updatedAt
+                                          ).toLocaleDateString()
+                                        : ""
+                                    : "",
+                            ])}
+                        >
+                            {EXPORT_CSV}
+                        </CSVLink>
+                    </Grid>
+                </Grid>
             </Grid>
             <Grid item>
                 <TableContainer>
@@ -171,60 +293,7 @@ const UsersManager = ({
                         <TableHead>
                             <TableRow>
                                 <TableCell>{USER_TABLE_HEADER_NAME}</TableCell>
-                                <TableCell align="right">
-                                    <Grid
-                                        container
-                                        justifyContent="end"
-                                        alignItems="center"
-                                    >
-                                        <Grid item>
-                                            <FormControl sx={{ minWidth: 120 }}>
-                                                <InputLabel
-                                                    htmlFor="permissions-select"
-                                                    id="type-select"
-                                                    shrink
-                                                >
-                                                    {USER_FILTER_PERMISSION}
-                                                </InputLabel>
-                                                <Select
-                                                    onChange={
-                                                        handleUserTypeChange
-                                                    }
-                                                    displayEmpty
-                                                    value={type}
-                                                    id="permissions-select"
-                                                    label="Grouping"
-                                                    labelId="type-select"
-                                                    size="small"
-                                                >
-                                                    <MenuItem value="">
-                                                        {USER_TYPE_ALL}
-                                                    </MenuItem>
-                                                    <MenuItem
-                                                        value={
-                                                            USER_TYPE_AUDIENCE
-                                                        }
-                                                    >
-                                                        {USER_TYPE_AUDIENCE}
-                                                    </MenuItem>
-                                                    <MenuItem
-                                                        value={USER_TYPE_TEAM}
-                                                    >
-                                                        {USER_TYPE_TEAM}
-                                                    </MenuItem>
-                                                </Select>
-                                            </FormControl>
-                                        </Grid>
-                                        <Grid item>
-                                            <Tooltip title={USER_TYPE_TOOLTIP}>
-                                                <Help
-                                                    fontSize="small"
-                                                    color="disabled"
-                                                />
-                                            </Tooltip>
-                                        </Grid>
-                                    </Grid>
-                                </TableCell>
+                                <TableCell align="right">Type</TableCell>
                                 <TableCell align="right">
                                     {USER_TABLE_HEADER_JOINED}
                                 </TableCell>

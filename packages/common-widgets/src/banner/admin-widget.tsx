@@ -19,7 +19,6 @@ export default function AdminWidget({
     settings,
     onChange,
 }: AdminWidgetProps) {
-    console.log("Banner widget", name, settings);
     const [productId, setProductId] = useState(settings.entityId || "");
     const customSettingsChanged = (customSettings: Settings) => {
         onChange(Object.assign({}, settings, customSettings));

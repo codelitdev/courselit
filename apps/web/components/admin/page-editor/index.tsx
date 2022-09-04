@@ -86,7 +86,6 @@ function PageEditor({
 
     useEffect(() => {
         if (JSON.stringify(layout) !== JSON.stringify(page.draftLayout)) {
-            console.log("debouncedSave", layout, page.draftLayout);
             debouncedSave(page.pageId, layout);
         }
     }, [layout]);
@@ -205,7 +204,6 @@ function PageEditor({
                 }
             }
         `;
-        console.log(layout);
         await fetchPage(mutation);
     };
 
