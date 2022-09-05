@@ -33,9 +33,9 @@
 
 # Introduction
 
-CourseLit is a [batteries included](https://en.wikipedia.org/wiki/Batteries_Included) learning management system (aka LMS) for everyone. It is an open source alternative to Techable, Thinkific, Podia and the likes.
+CourseLit is a [batteries included](https://en.wikipedia.org/wiki/Batteries_Included) learning management system (aka LMS) for everyone. It is an open source alternative to Techable, Thinkific, Podia, Teachery, LearnDash and the likes.
 
-It comes pre-equipped with all the basic tools you'd require to efficiently run and administer your online teaching business. Features include course authoring, student management, payment processing (via Stripe), website customization and analytics (very limited as of now).
+It comes pre-equipped with all the basic tools you need to efficiently run and administer your online teaching business. Features include course authoring, student management, payment processing (via Stripe), website builder, custom sales pages and analytics (very limited as of now).
 
 Check out this live example to see what you can build with CourseLit. [Click here](https://codelit.dev).
 
