@@ -1,6 +1,8 @@
 import { generateUniqueId } from "@courselit/utils";
 import mongoose from "mongoose";
 import ProgressSchema, { Progress } from "./Progress";
+import constants from "../config/constants";
+const { leadWebsite: website, leadNewsletter: newsletter } = constants;
 
 export interface User {
     _id: mongoose.Types.ObjectId;
@@ -14,6 +16,8 @@ export interface User {
     permissions: string[];
     createdAt: Date;
     updatedAt: Date;
+    subscribedToUpdates: boolean;
+    lead: typeof website | typeof newsletter;
 }
 
 const UserSchema = new mongoose.Schema<User>(
@@ -26,6 +30,13 @@ const UserSchema = new mongoose.Schema<User>(
         purchases: [ProgressSchema],
         bio: { type: String },
         permissions: [String],
+        subscribedToUpdates: { type: Boolean, default: true },
+        lead: {
+            type: String,
+            required: true,
+            enum: [website, newsletter],
+            default: website,
+        },
     },
     {
         timestamps: true,

@@ -26,6 +26,7 @@ import dynamic from "next/dynamic";
 import Head from "next/head";
 import Link from "next/link";
 import { Menu } from "@courselit/components-library";
+import widgets from "../../../ui-config/widgets";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
@@ -52,7 +53,7 @@ function PageEditor({
 }: PageEditorProps) {
     const [pages, setPages] = useState([]);
     const [page, setPage] = useState<Partial<Page>>({});
-    const [layout, setLayout] = useState<WidgetInstance[]>([]);
+    const [layout, setLayout] = useState<Partial<WidgetInstance>[]>([]);
     const [selectedWidget, setSelectedWidget] = useState<string>("");
     const [showWidgetSelector, setShowWidgetSelector] =
         useState<boolean>(false);
@@ -98,6 +99,7 @@ function PageEditor({
                 }) {
                     pageId,
                     name,
+                    type,
                     layout,
                     draftLayout
                 }
@@ -234,6 +236,7 @@ function PageEditor({
                 type: page.type,
                 entityId: page.entityId,
             },
+            shared: widgets[name].shared,
         });
         await savePage(page.pageId, [...layout]);
     };

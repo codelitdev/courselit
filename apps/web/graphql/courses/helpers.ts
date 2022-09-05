@@ -9,7 +9,7 @@ import { User } from "../../models/User";
 import Page from "../../models/Page";
 import slugify from "slugify";
 import { addGroup } from "./logic";
-import { Banner } from "@courselit/common-widgets";
+import { Banner, Footer, Header } from "@courselit/common-widgets";
 
 const validatePaymentMethod = async (domain: string) => {
     try {
@@ -152,13 +152,7 @@ export const setupCourse = async ({
         ctx,
     });
     page.entityId = course.courseId;
-    page.layout = [
-        Banner.init({
-            pageId: page.pageId,
-            type: "product",
-            entityId: course.courseId,
-        }),
-    ];
+    page.layout = getInitialLayout(page.pageId, course.courseId);
     await page.save();
 
     return course;
@@ -183,4 +177,24 @@ export const setupBlog = async ({
     });
 
     return course;
+};
+
+const getInitialLayout = (pageId: string, courseId: string) => {
+    return [
+        {
+            name: Header.metadata.name,
+            deleteable: false,
+            shared: true,
+        },
+        Banner.init({
+            pageId: pageId,
+            type: "product",
+            entityId: courseId,
+        }),
+        {
+            name: Footer.metadata.name,
+            deleteable: false,
+            shared: true,
+        },
+    ];
 };

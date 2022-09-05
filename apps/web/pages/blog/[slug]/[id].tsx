@@ -29,13 +29,13 @@ const Post = ({ siteInfo, address, post, page }: PostProps) => {
     };
 
     return (
-        <BaseLayout title={post.title} layout={page.layout}>
+        <BaseLayout
+            title={post.title}
+            layout={page.layout}
+            childrenOnTop={true}
+        >
             {post && (
-                <Grid
-                    container
-                    direction="column"
-                    sx={{ minHeight: "80vh", p: 2 }}
-                >
+                <Grid container direction="column" sx={{ minHeight: "80vh" }}>
                     <Head>
                         <meta
                             property="og:url"
@@ -59,10 +59,10 @@ const Post = ({ siteInfo, address, post, page }: PostProps) => {
                             />
                         )}
                     </Head>
-                    <Grid item sx={{ mb: 4 }}>
+                    <Grid item sx={{ mb: 2, p: 2 }}>
                         <Article course={post} options={articleOptions} />
                     </Grid>
-                    <Grid item>
+                    <Grid item sx={{ p: 2 }}>
                         <Link href="/blog">{BACK_TO_BLOG}</Link>
                     </Grid>
                 </Grid>
@@ -73,7 +73,7 @@ const Post = ({ siteInfo, address, post, page }: PostProps) => {
 
 export async function getServerSideProps({ query, req }: any) {
     const address = getBackendAddress(req.headers.host);
-    const page = await getPage(address);
+    const page = await getPage(address, "blog");
     const graphQuery = `
     query {
       post: getCourse(id: "${query.id}") {

@@ -1,4 +1,3 @@
-// import buttondown from "@courselit/widget-buttondown";
 import { Widget } from "@courselit/common-models";
 import {
     Banner,
@@ -6,6 +5,7 @@ import {
     Footer,
     Header,
     RichText,
+    NewsletterSignup,
 } from "@courselit/common-widgets";
 
 function loadWidgets(): Record<string, any> {
@@ -13,11 +13,15 @@ function loadWidgets(): Record<string, any> {
 
     // Add common widgets to CourseLit
     widgets[RichText.metadata.name] = RichText;
-    // widgets[TaggedContent.metadata.name] = TaggedContent;
-    widgets[Footer.metadata.name] = Footer;
-    widgets[Header.metadata.name] = Header;
     widgets[Featured.metadata.name] = Featured;
     widgets[Banner.metadata.name] = Banner;
+    widgets[Footer.metadata.name] = Object.assign({}, Footer, { shared: true });
+    widgets[Header.metadata.name] = Object.assign({}, Header, { shared: true });
+    widgets[NewsletterSignup.metadata.name] = Object.assign(
+        {},
+        NewsletterSignup,
+        { shared: true }
+    );
 
     // Additional widgets are added here
     // widgets[buttondown.metadata.name] = buttondown;

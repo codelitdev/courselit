@@ -76,6 +76,10 @@ export default {
         manageUsers: "user:manage",
     },
 
+    // entry point for the user
+    leadWebsite: "website",
+    leadNewsletter: "newsletter",
+
     // log levels
     severityError: "error",
     severityInfo: "info",
@@ -86,11 +90,13 @@ export default {
 
     // user types
     userTypeTeam: "team",
-    userTypeAudience: "audience",
+    userTypeCustomer: "customer",
+    userTypeNewsletterSubscriber: "subscriber",
 
     // page types
     product: "product",
     site: "site",
+    blogPage: "blog",
 
     // acceptable currency codes for payments
     currencyISOCodes: [

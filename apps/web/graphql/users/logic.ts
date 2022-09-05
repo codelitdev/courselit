@@ -8,8 +8,14 @@ import {
 } from "../../lib/graphql";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
-const { permissions } = constants;
+const {
+    permissions,
+    userTypeCustomer,
+    userTypeTeam,
+    userTypeNewsletterSubscriber,
+} = constants;
 import { Progress } from "../../models/Progress";
+import mongoose from "mongoose";
 
 const removeAdminFieldsFromUserObject = ({
     id,
@@ -129,12 +135,13 @@ const updateCoursesForCreatorName = async (creatorId, creatorName) => {
     );
 };
 
-type UserGroupType = "team" | "audience";
+type UserGroupType = "team" | "customer" | "subscriber";
 
 interface SearchData {
     searchText?: string;
     offset?: number;
     type?: UserGroupType;
+    email?: string;
 }
 
 export const getUsers = async (
@@ -149,7 +156,10 @@ export const getUsers = async (
     const query: Record<string, unknown> = { domain: ctx.subdomain._id };
     if (searchData.searchText) query.$text = { $search: searchData.searchText };
     if (searchData.type) {
-        query.permissions = getQueryForFilteringByPermissions(searchData.type);
+        addFilterToQueryBasedOnUserGroup(query, searchData.type);
+    }
+    if (searchData.email) {
+        query.email = new RegExp(searchData.email);
     }
 
     const searchUsers = makeModelTextSearchable(UserModel);
@@ -162,25 +172,26 @@ export const getUsers = async (
     return users;
 };
 
-const getQueryForFilteringByPermissions = (
+const addFilterToQueryBasedOnUserGroup = (
+    query: Record<string, unknown>,
     type: UserGroupType
-): {
-    $in: string[];
-} => {
+): Record<string, unknown> => {
     if (type === constants.userTypeTeam) {
         const allPerms = Object.values(constants.permissions);
         const indexOfEnrollCoursePermission = allPerms.indexOf(
             constants.permissions.enrollInCourse
         );
         allPerms.splice(indexOfEnrollCoursePermission, 1);
-        return {
+        query.permissions = {
             $in: [...allPerms],
         };
-    } else if (type === constants.userTypeAudience) {
-        return { $in: [constants.permissions.enrollInCourse] };
-    } else {
-        return { $in: Object.values(constants.permissions) };
+    } else if (type === constants.userTypeCustomer) {
+        query.permissions = { $in: [constants.permissions.enrollInCourse] };
+    } else if (type === constants.userTypeNewsletterSubscriber) {
+        query.subscribedToUpdates = true;
     }
+
+    return query;
 };
 
 export const recordProgress = async ({
@@ -208,3 +219,42 @@ export const recordProgress = async ({
         await (user as any).save();
     }
 };
+
+export async function createUser({
+    domain,
+    email,
+    lead,
+}: {
+    domain: mongoose.Types.ObjectId;
+    email: string;
+    lead?: typeof constants.leadWebsite | typeof constants.leadNewsletter;
+}): Promise<User> {
+    const newUser: Partial<User> = {
+        domain: domain,
+        email: email,
+        active: true,
+        purchases: [],
+        permissions: [],
+        lead: lead || constants.leadWebsite,
+    };
+    const notTheFirstUserOfDomain = await UserModel.countDocuments({ domain });
+    if (notTheFirstUserOfDomain) {
+        newUser.permissions = [constants.permissions.enrollInCourse];
+    } else {
+        newUser.permissions = [
+            constants.permissions.manageCourse,
+            constants.permissions.manageAnyCourse,
+            constants.permissions.publishCourse,
+            // TODO: replace media perms with course perms
+            constants.permissions.manageMedia,
+            constants.permissions.manageAnyMedia,
+            constants.permissions.uploadMedia,
+            constants.permissions.viewAnyMedia,
+            constants.permissions.manageSite,
+            constants.permissions.manageSettings,
+            constants.permissions.manageUsers,
+        ];
+    }
+    newUser.lead = lead;
+    return await UserModel.create(newUser);
+}

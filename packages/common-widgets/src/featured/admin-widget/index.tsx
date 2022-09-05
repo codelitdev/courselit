@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Address } from "@courselit/common-models";
+import type { Address } from "@courselit/common-models";
 import Settings from "../settings";
 import { Grid, Skeleton } from "@mui/material";
 import { capitalize, FetchBuilder } from "@courselit/utils";
@@ -62,7 +62,7 @@ export default function AdminWidget({
                 setProducts(response.products);
             }
         } catch (err: any) {
-            console.log(err);
+            console.log(err); // eslint-disable-line no-console
         } finally {
             dispatch(actionCreators.networkAction(false));
         }

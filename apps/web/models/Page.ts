@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import WidgetSchema, { Widget } from "./Widget";
 import constants from "../config/constants";
-const { product, site } = constants;
+const { product, site, blogPage } = constants;
 
 export interface Page {
     id: mongoose.Types.ObjectId;
@@ -10,7 +10,7 @@ export interface Page {
     name: string;
     layout: Widget[];
     draftLayout: Widget[];
-    type: typeof product | typeof site;
+    type: typeof product | typeof site | typeof blogPage;
     creatorId: String;
     entityId?: string;
 }
@@ -21,7 +21,7 @@ const PageSchema = new mongoose.Schema<Page>({
     type: {
         type: String,
         required: true,
-        enum: [product, site],
+        enum: [product, site, blogPage],
         default: product,
     },
     creatorId: { type: String, required: true },

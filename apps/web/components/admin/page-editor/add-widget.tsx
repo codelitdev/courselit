@@ -1,4 +1,8 @@
-import { PageTypeProduct, PageTypeSite } from "@courselit/common-models";
+import {
+    PageTypeProduct,
+    PageTypeSite,
+    PageTypeBlog,
+} from "@courselit/common-models";
 import { Close } from "@mui/icons-material";
 import {
     Grid,
@@ -12,7 +16,7 @@ import { EDIT_PAGE_ADD_WIDGET_TITLE } from "../../../ui-config/strings";
 import widgets from "../../../ui-config/widgets";
 
 interface WidgetsListProps {
-    pageType: PageTypeProduct | PageTypeSite;
+    pageType: PageTypeProduct | PageTypeSite | PageTypeBlog;
     onSelection: (...args: any[]) => void;
     onClose: (...args: any[]) => void;
 }

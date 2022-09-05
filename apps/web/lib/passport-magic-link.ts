@@ -9,7 +9,7 @@ import { send } from "../services/mail";
 import { responses } from "../config/strings";
 import LoginEmailTemplate from "../templates/login-email";
 import ApiRequest from "../models/ApiRequest";
-import { createUser } from "./user";
+import { createUser } from "../graphql/users/logic";
 
 export default new Strategy(
     {

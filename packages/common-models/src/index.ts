@@ -19,3 +19,4 @@ export type { default as Page } from "./page";
 export type { default as WidgetInstance } from "./widget-instance";
 export type { Product as PageTypeProduct } from "./page-type";
 export type { Site as PageTypeSite } from "./page-type";
+export type { Blog as PageTypeBlog } from "./page-type";

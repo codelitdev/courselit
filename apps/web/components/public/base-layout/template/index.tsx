@@ -3,6 +3,7 @@ import { Box, Grid } from "@mui/material";
 import WidgetByName from "./widget-by-name";
 import AppToast from "../../../app-toast";
 import { WidgetInstance } from "@courselit/common-models";
+import { Footer, Header } from "@courselit/common-widgets";
 
 interface TemplateProps {
     layout: WidgetInstance[];
@@ -10,6 +11,7 @@ interface TemplateProps {
     onEditClick?: (widgetId: string) => void;
     selectedWidget?: string;
     children?: ReactNode;
+    childrenOnTop: boolean;
 }
 
 const EditableWidget = ({
@@ -56,25 +58,71 @@ const Template = (props: TemplateProps) => {
         onEditClick,
         selectedWidget,
         children,
+        childrenOnTop = false,
     } = props;
     if (!layout) return <></>;
-    const footer = layout.filter((widget) => widget.name === "footer")[0];
+    const footer = layout.filter(
+        (widget) => widget.name === Footer.metadata.name
+    )[0];
+    const header = layout.filter(
+        (widget) => widget.name === Header.metadata.name
+    )[0];
 
     return (
         <Grid container direction="column">
-            {layout
-                .filter((widget) => widget.name !== "footer")
-                .map((item: any, index: number) => (
-                    <EditableWidget
-                        item={item}
-                        key={item.widgetId}
-                        editing={editing}
-                        onEditClick={onEditClick}
-                    />
-                ))}
-            <Grid item sx={{ minHeight: "70vh" }}>
-                {children}
-            </Grid>
+            {header && (
+                <EditableWidget
+                    item={header}
+                    editing={editing}
+                    onEditClick={onEditClick}
+                />
+            )}
+            {childrenOnTop && (
+                <>
+                    <Grid item sx={{ minHeight: "70vh" }}>
+                        {children}
+                    </Grid>
+                    {layout
+                        .filter(
+                            (widget) =>
+                                ![
+                                    Header.metadata.name,
+                                    Footer.metadata.name,
+                                ].includes(widget.name)
+                        )
+                        .map((item: any, index: number) => (
+                            <EditableWidget
+                                item={item}
+                                key={item.widgetId}
+                                editing={editing}
+                                onEditClick={onEditClick}
+                            />
+                        ))}
+                </>
+            )}
+            {!childrenOnTop && (
+                <>
+                    {layout
+                        .filter(
+                            (widget) =>
+                                ![
+                                    Header.metadata.name,
+                                    Footer.metadata.name,
+                                ].includes(widget.name)
+                        )
+                        .map((item: any, index: number) => (
+                            <EditableWidget
+                                item={item}
+                                key={item.widgetId}
+                                editing={editing}
+                                onEditClick={onEditClick}
+                            />
+                        ))}
+                    <Grid item sx={{ minHeight: "70vh" }}>
+                        {children}
+                    </Grid>
+                </>
+            )}
             {footer && (
                 <EditableWidget
                     item={footer}

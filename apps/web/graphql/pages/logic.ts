@@ -6,30 +6,21 @@ import {
 } from "../../lib/graphql";
 import GQLContext from "../../models/GQLContext";
 import PageModel, { Page } from "../../models/Page";
-import { Widget } from "../../models/Widget";
 import { permissions } from "../../ui-config/constants";
 import { getPageResponse } from "./helpers";
 import constants from "../../config/constants";
 import Course from "../../models/Course";
+import { generateUniqueId } from "@courselit/utils";
 const { product } = constants;
 
 export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
-    let subdomainChanged = false;
-    if (!ctx.subdomain.header) {
-        ctx.subdomain.header = { name: "header", deleteable: false };
-        subdomainChanged = true;
-    }
-    if (!ctx.subdomain.footer) {
-        ctx.subdomain.footer = { name: "footer", deleteable: false };
-        subdomainChanged = true;
-    }
-    if (subdomainChanged) {
-        await (ctx.subdomain as any).save();
-    }
-
+    await initSharedWidgets(ctx);
     if (!id) {
         return {
-            layout: [ctx.subdomain.header, ctx.subdomain.footer],
+            layout: [
+                ctx.subdomain.sharedWidgets.header,
+                ctx.subdomain.sharedWidgets.footer,
+            ],
         };
     }
 
@@ -77,6 +68,41 @@ export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
     }
 }
 
+async function initSharedWidgets(ctx: GQLContext) {
+    let subdomainChanged = false;
+    if (!ctx.subdomain.sharedWidgets.header) {
+        ctx.subdomain.sharedWidgets.header = {
+            name: "header",
+            shared: true,
+            deleteable: false,
+            widgetId: generateUniqueId(),
+        };
+        subdomainChanged = true;
+    }
+    if (!ctx.subdomain.sharedWidgets.footer) {
+        ctx.subdomain.sharedWidgets.footer = {
+            name: "footer",
+            shared: true,
+            deleteable: false,
+            widgetId: generateUniqueId(),
+        };
+        subdomainChanged = true;
+    }
+    if (!ctx.subdomain.sharedWidgets["newsletter-signup"]) {
+        ctx.subdomain.sharedWidgets["newsletter-signup"] = {
+            name: "newsletter-signup",
+            shared: true,
+            deleteable: true,
+            widgetId: generateUniqueId(),
+        };
+        subdomainChanged = true;
+    }
+    if (subdomainChanged) {
+        (ctx.subdomain as any).markModified("sharedWidgets");
+        await (ctx.subdomain as any).save();
+    }
+}
+
 interface Draft {
     pageId: string;
     layout: string;
@@ -118,28 +144,20 @@ export const savePage = async (
             } catch (err) {
                 throw new Error(responses.invalid_layout);
             }
-            const header = layout.filter(
-                (widget: Widget) => widget.name === "header"
-            )[0];
-            const footer = layout.filter(
-                (widget: Widget) => widget.name === "footer"
-            )[0];
-            let subdomainChanged = false;
-            if (header) {
-                ctx.subdomain.header = header;
-                subdomainChanged = true;
+            for (let widget of layout) {
+                if (widget.shared && widget.widgetId) {
+                    ctx.subdomain.sharedWidgets[widget.name] = Object.assign(
+                        {},
+                        ctx.subdomain.sharedWidgets[widget.name],
+                        widget
+                    );
+                    widget.settings = undefined;
+                }
             }
-            if (footer) {
-                ctx.subdomain.footer = footer;
-                subdomainChanged = true;
-            }
-            if (subdomainChanged) {
-                await (ctx.subdomain as any).save();
-            }
-            page!.draftLayout = layout.filter(
-                (widget: Widget) => !["header", "footer"].includes(widget.name)
-            );
-        } catch (err) {
+            (ctx.subdomain as any).markModified("sharedWidgets");
+            await (ctx.subdomain as any).save();
+            page!.draftLayout = layout;
+        } catch (err: any) {
             throw new Error(err.message);
         }
     }

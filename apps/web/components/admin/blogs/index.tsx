@@ -32,8 +32,11 @@ import {
     MANAGE_BLOG_PAGE_HEADING,
     PRODUCTS_TABLE_HEADER_ACTIONS,
     PRODUCTS_TABLE_HEADER_STATUS,
+    PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE,
 } from "../../../ui-config/strings";
 import dynamic from "next/dynamic";
+import { Menu } from "@courselit/components-library";
+import { MoreVert } from "@mui/icons-material";
 
 const BlogItem = dynamic(() => import("./blog-item"));
 
@@ -109,11 +112,27 @@ const Index = (props: IndexProps) => {
                         </Typography>
                     </Grid>
                     <Grid item>
-                        <Link href="/dashboard/blog/new">
-                            <Button variant="contained" component="a">
-                                {BTN_NEW_BLOG}
-                            </Button>
-                        </Link>
+                        <Grid container alignItems="center">
+                            <Grid item sx={{ mr: 1 }}>
+                                <Link href="/dashboard/blog/new">
+                                    <Button variant="contained" component="a">
+                                        {BTN_NEW_BLOG}
+                                    </Button>
+                                </Link>
+                            </Grid>
+                            <Grid item>
+                                <Menu
+                                    options={[
+                                        {
+                                            label: PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE,
+                                            type: "link",
+                                            href: `/dashboard/page/blog/edit`,
+                                        },
+                                    ]}
+                                    icon={<MoreVert />}
+                                />
+                            </Grid>
+                        </Grid>
                     </Grid>
                 </Grid>
             </Grid>
