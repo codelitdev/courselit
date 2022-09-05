@@ -140,6 +140,14 @@ CourseLit uses [Material-UI's Theming](https://material-ui.com/customization/the
 
 To learn how to design themes for CourseLit, see this [link](https://codelit.gitbook.io/courselit/administration-1/layout-and-themes#themes).
 
+## Shared Widgets
+
+Shared widgets are those whose settings are stored on the domain level, instead of page level. Hence, a user is not required to configure a shared widget individually for every single page it is used on.
+
+Any page can use a shared widget but the widget's settings are going to be saved and retrieved from the domain.
+
+⚠️ A shared widget's settings are immediately published and are reflected on all pages. There is no draft mode for shared widgets.
+
 ## Something's Not Clear?
 
 Come chat with us in our [official Discord channel](https://discord.com/invite/GR4bQsN).
