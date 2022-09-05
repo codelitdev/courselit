@@ -99,6 +99,7 @@ function PageEditor({
                 }) {
                     pageId,
                     name,
+                    type,
                     layout,
                     draftLayout
                 }

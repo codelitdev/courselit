@@ -63,6 +63,7 @@ const Widget = ({
                         )
                     )
                 );
+                setEmail("");
             } else {
                 dispatch(
                     setAppMessage(
@@ -104,6 +105,7 @@ const Widget = ({
                 <Grid item sx={{ mb: 2 }}>
                     <TextField
                         label="Email"
+                        value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Enter your email"
                         type="email"

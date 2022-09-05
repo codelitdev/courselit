@@ -96,6 +96,7 @@ export default {
     // page types
     product: "product",
     site: "site",
+    blogPage: "blog",
 
     // acceptable currency codes for payments
     currencyISOCodes: [

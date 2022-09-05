@@ -10,6 +10,7 @@ interface MasterLayoutProps {
     siteInfo: any;
     layout: WidgetInstance[];
     children?: ReactNode;
+    childrenOnTop?: boolean;
 }
 
 const MasterLayout = ({
@@ -17,6 +18,7 @@ const MasterLayout = ({
     siteInfo,
     children,
     layout,
+    childrenOnTop = false,
 }: MasterLayoutProps) => {
     return (
         <>
@@ -37,7 +39,9 @@ const MasterLayout = ({
                     content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
                 />
             </Head>
-            <Template layout={layout}>{children}</Template>
+            <Template layout={layout} childrenOnTop={childrenOnTop}>
+                {children}
+            </Template>
         </>
     );
 };
