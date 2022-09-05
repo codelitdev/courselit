@@ -14,7 +14,10 @@ const Media = (props) => {
 
     if (type === Media.VIDEO_TYPE) {
         element = (
-            <video controls controlsList="nodownload">
+            <video
+                controls
+                controlsList="nodownload" // eslint-disable-line react/no-unknown-property
+            >
                 <source src={options.url} type="video/mp4" />
                 Your browser does not support the video tag.
             </video>

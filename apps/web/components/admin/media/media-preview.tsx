@@ -167,7 +167,7 @@ const MediaPreview = (props: MediaPreviewProps) => {
                     {mimeType === "video/mp4" && (
                         <video
                             controls
-                            controlsList="nodownload"
+                            controlsList="nodownload" // eslint-disable-line react/no-unknown-property
                             className={classes.video}
                         >
                             <source src={file} type="video/mp4" />
@@ -175,7 +175,10 @@ const MediaPreview = (props: MediaPreviewProps) => {
                         </video>
                     )}
                     {mimeType === "audio/mp3" && (
-                        <audio controls controlsList="nodownload">
+                        <audio
+                            controls
+                            controlsList="nodownload" // eslint-disable-line react/no-unknown-property
+                        >
                             <source src={file} type="audio/mpeg" />
                             Your browser does not support the video tag.
                         </audio>

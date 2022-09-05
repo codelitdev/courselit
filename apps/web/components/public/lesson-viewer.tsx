@@ -245,7 +245,7 @@ const LessonViewer = ({
                         <Grid item>
                             <video
                                 controls
-                                controlsList="nodownload"
+                                controlsList="nodownload" // eslint-disable-line react/no-unknown-property
                                 className={`${classes.videoPlayer} ${classes.section}`}
                             >
                                 <source
@@ -270,7 +270,7 @@ const LessonViewer = ({
                         <Grid item>
                             <audio
                                 controls
-                                controlsList="nodownload"
+                                controlsList="nodownload" // eslint-disable-line react/no-unknown-property
                                 className={classes.section}
                             >
                                 <source
