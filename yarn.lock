@@ -353,7 +353,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@courselit/common-models@^0.20.0, @courselit/common-models@workspace:packages/common-models":
+"@courselit/common-models@^0.20.1, @courselit/common-models@workspace:packages/common-models":
   version: 0.0.0-use.local
   resolution: "@courselit/common-models@workspace:packages/common-models"
   dependencies:
@@ -366,14 +366,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@courselit/common-widgets@^0.20.0, @courselit/common-widgets@workspace:packages/common-widgets":
+"@courselit/common-widgets@^0.20.1, @courselit/common-widgets@workspace:packages/common-widgets":
   version: 0.0.0-use.local
   resolution: "@courselit/common-widgets@workspace:packages/common-widgets"
   dependencies:
-    "@courselit/common-models": ^0.20.0
-    "@courselit/components-library": ^0.20.0
-    "@courselit/state-management": ^0.20.0
-    "@courselit/utils": ^0.20.0
+    "@courselit/common-models": ^0.20.1
+    "@courselit/components-library": ^0.20.1
+    "@courselit/state-management": ^0.20.1
+    "@courselit/utils": ^0.20.1
     eslint-config-standard: ^17.0.0
     eslint-plugin-n: ^15.2.0
     eslint-plugin-promise: ^6.0.0
@@ -386,12 +386,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@courselit/components-library@^0.20.0, @courselit/components-library@workspace:packages/components-library":
+"@courselit/components-library@^0.20.1, @courselit/components-library@workspace:packages/components-library":
   version: 0.0.0-use.local
   resolution: "@courselit/components-library@workspace:packages/components-library"
   dependencies:
-    "@courselit/common-models": ^0.20.0
-    "@courselit/rich-text": ^0.20.0
+    "@courselit/common-models": ^0.20.1
+    "@courselit/rich-text": ^0.20.1
     "@types/react": ^17.0.43
     "@types/react-redux": ^7.1.11
     currency-symbol-map: ^5.1.0
@@ -404,7 +404,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@courselit/rich-text@^0.20.0, @courselit/rich-text@workspace:packages/rich-text":
+"@courselit/rich-text@^0.20.1, @courselit/rich-text@workspace:packages/rich-text":
   version: 0.0.0-use.local
   resolution: "@courselit/rich-text@workspace:packages/rich-text"
   dependencies:
@@ -429,12 +429,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@courselit/state-management@^0.20.0, @courselit/state-management@workspace:packages/state-management":
+"@courselit/state-management@^0.20.1, @courselit/state-management@workspace:packages/state-management":
   version: 0.0.0-use.local
   resolution: "@courselit/state-management@workspace:packages/state-management"
   dependencies:
-    "@courselit/common-models": ^0.20.0
-    "@courselit/utils": ^0.20.0
+    "@courselit/common-models": ^0.20.1
+    "@courselit/utils": ^0.20.1
     "@typescript-eslint/eslint-plugin": ^5.18.0
     "@typescript-eslint/parser": ^5.18.0
     base-64: ^1.0.0
@@ -447,7 +447,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@courselit/utils@^0.20.0, @courselit/utils@workspace:packages/utils":
+"@courselit/utils@^0.20.1, @courselit/utils@workspace:packages/utils":
   version: 0.0.0-use.local
   resolution: "@courselit/utils@workspace:packages/utils"
   dependencies:
@@ -462,11 +462,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@courselit/web@workspace:apps/web"
   dependencies:
-    "@courselit/common-models": ^0.20.0
-    "@courselit/common-widgets": ^0.20.0
-    "@courselit/components-library": ^0.20.0
-    "@courselit/state-management": ^0.20.0
-    "@courselit/utils": ^0.20.0
+    "@courselit/common-models": ^0.20.1
+    "@courselit/common-widgets": ^0.20.1
+    "@courselit/components-library": ^0.20.1
+    "@courselit/state-management": ^0.20.1
+    "@courselit/utils": ^0.20.1
     "@emotion/cache": ^11.7.1
     "@emotion/react": ^11.8.2
     "@emotion/server": ^11.4.0
@@ -499,7 +499,7 @@ __metadata:
     jsonwebtoken: ^8.5.1
     mongodb: ^4.4.1
     mongoose: ^6.2.4
-    next: latest
+    next: 12.2.4
     next-connect: ^0.12.2
     nodemailer: ^6.7.2
     passport: ^0.6.0
@@ -524,7 +524,7 @@ __metadata:
   dependencies:
     "@babel/core": ^7.11.1
     "@babel/preset-react": ^7.10.4
-    "@courselit/components-library": ^0.20.0
+    "@courselit/components-library": ^0.20.1
     babel-loader: ^8.1.0
     webpack: ^4.44.1
     webpack-cli: ^3.3.12
@@ -974,10 +974,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@next/env@npm:12.2.3":
-  version: 12.2.3
-  resolution: "@next/env@npm:12.2.3"
-  checksum: e96dcbea3fbb3d6b6a0799fe2e41c4929ded383659709f5bd00b6479b0711b89891b72fb28753b428933871d5fd91792fa54bc64a74a038c704b5862d40821ec
+"@next/env@npm:12.2.4":
+  version: 12.2.4
+  resolution: "@next/env@npm:12.2.4"
+  checksum: f09ae1ddebaa2b081e13b55d3d533b281f335e8ec7d70743d935b3a1295f2f8f0510a39d5991afaeb728949d5c518dd34a0cf3003016d62042b6d0f2e6489cb8
   languageName: node
   linkType: hard
 
@@ -990,93 +990,93 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@next/swc-android-arm-eabi@npm:12.2.3":
-  version: 12.2.3
-  resolution: "@next/swc-android-arm-eabi@npm:12.2.3"
+"@next/swc-android-arm-eabi@npm:12.2.4":
+  version: 12.2.4
+  resolution: "@next/swc-android-arm-eabi@npm:12.2.4"
   conditions: os=android & cpu=arm
   languageName: node
   linkType: hard
 
-"@next/swc-android-arm64@npm:12.2.3":
-  version: 12.2.3
-  resolution: "@next/swc-android-arm64@npm:12.2.3"
+"@next/swc-android-arm64@npm:12.2.4":
+  version: 12.2.4
+  resolution: "@next/swc-android-arm64@npm:12.2.4"
   conditions: os=android & cpu=arm64
   languageName: node
   linkType: hard
 
-"@next/swc-darwin-arm64@npm:12.2.3":
-  version: 12.2.3
-  resolution: "@next/swc-darwin-arm64@npm:12.2.3"
+"@next/swc-darwin-arm64@npm:12.2.4":
+  version: 12.2.4
+  resolution: "@next/swc-darwin-arm64@npm:12.2.4"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@next/swc-darwin-x64@npm:12.2.3":
-  version: 12.2.3
-  resolution: "@next/swc-darwin-x64@npm:12.2.3"
+"@next/swc-darwin-x64@npm:12.2.4":
+  version: 12.2.4
+  resolution: "@next/swc-darwin-x64@npm:12.2.4"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@next/swc-freebsd-x64@npm:12.2.3":
-  version: 12.2.3
-  resolution: "@next/swc-freebsd-x64@npm:12.2.3"
+"@next/swc-freebsd-x64@npm:12.2.4":
+  version: 12.2.4
+  resolution: "@next/swc-freebsd-x64@npm:12.2.4"
   conditions: os=freebsd & cpu=x64
   languageName: node
   linkType: hard
 
-"@next/swc-linux-arm-gnueabihf@npm:12.2.3":
-  version: 12.2.3
-  resolution: "@next/swc-linux-arm-gnueabihf@npm:12.2.3"
+"@next/swc-linux-arm-gnueabihf@npm:12.2.4":
+  version: 12.2.4
+  resolution: "@next/swc-linux-arm-gnueabihf@npm:12.2.4"
   conditions: os=linux & cpu=arm
   languageName: node
   linkType: hard
 
-"@next/swc-linux-arm64-gnu@npm:12.2.3":
-  version: 12.2.3
-  resolution: "@next/swc-linux-arm64-gnu@npm:12.2.3"
+"@next/swc-linux-arm64-gnu@npm:12.2.4":
+  version: 12.2.4
+  resolution: "@next/swc-linux-arm64-gnu@npm:12.2.4"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@next/swc-linux-arm64-musl@npm:12.2.3":
-  version: 12.2.3
-  resolution: "@next/swc-linux-arm64-musl@npm:12.2.3"
+"@next/swc-linux-arm64-musl@npm:12.2.4":
+  version: 12.2.4
+  resolution: "@next/swc-linux-arm64-musl@npm:12.2.4"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@next/swc-linux-x64-gnu@npm:12.2.3":
-  version: 12.2.3
-  resolution: "@next/swc-linux-x64-gnu@npm:12.2.3"
+"@next/swc-linux-x64-gnu@npm:12.2.4":
+  version: 12.2.4
+  resolution: "@next/swc-linux-x64-gnu@npm:12.2.4"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@next/swc-linux-x64-musl@npm:12.2.3":
-  version: 12.2.3
-  resolution: "@next/swc-linux-x64-musl@npm:12.2.3"
+"@next/swc-linux-x64-musl@npm:12.2.4":
+  version: 12.2.4
+  resolution: "@next/swc-linux-x64-musl@npm:12.2.4"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@next/swc-win32-arm64-msvc@npm:12.2.3":
-  version: 12.2.3
-  resolution: "@next/swc-win32-arm64-msvc@npm:12.2.3"
+"@next/swc-win32-arm64-msvc@npm:12.2.4":
+  version: 12.2.4
+  resolution: "@next/swc-win32-arm64-msvc@npm:12.2.4"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@next/swc-win32-ia32-msvc@npm:12.2.3":
-  version: 12.2.3
-  resolution: "@next/swc-win32-ia32-msvc@npm:12.2.3"
+"@next/swc-win32-ia32-msvc@npm:12.2.4":
+  version: 12.2.4
+  resolution: "@next/swc-win32-ia32-msvc@npm:12.2.4"
   conditions: os=win32 & cpu=ia32
   languageName: node
   linkType: hard
 
-"@next/swc-win32-x64-msvc@npm:12.2.3":
-  version: 12.2.3
-  resolution: "@next/swc-win32-x64-msvc@npm:12.2.3"
+"@next/swc-win32-x64-msvc@npm:12.2.4":
+  version: 12.2.4
+  resolution: "@next/swc-win32-x64-msvc@npm:12.2.4"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -6541,24 +6541,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"next@npm:latest":
-  version: 12.2.3
-  resolution: "next@npm:12.2.3"
+"next@npm:12.2.4":
+  version: 12.2.4
+  resolution: "next@npm:12.2.4"
   dependencies:
-    "@next/env": 12.2.3
-    "@next/swc-android-arm-eabi": 12.2.3
-    "@next/swc-android-arm64": 12.2.3
-    "@next/swc-darwin-arm64": 12.2.3
-    "@next/swc-darwin-x64": 12.2.3
-    "@next/swc-freebsd-x64": 12.2.3
-    "@next/swc-linux-arm-gnueabihf": 12.2.3
-    "@next/swc-linux-arm64-gnu": 12.2.3
-    "@next/swc-linux-arm64-musl": 12.2.3
-    "@next/swc-linux-x64-gnu": 12.2.3
-    "@next/swc-linux-x64-musl": 12.2.3
-    "@next/swc-win32-arm64-msvc": 12.2.3
-    "@next/swc-win32-ia32-msvc": 12.2.3
-    "@next/swc-win32-x64-msvc": 12.2.3
+    "@next/env": 12.2.4
+    "@next/swc-android-arm-eabi": 12.2.4
+    "@next/swc-android-arm64": 12.2.4
+    "@next/swc-darwin-arm64": 12.2.4
+    "@next/swc-darwin-x64": 12.2.4
+    "@next/swc-freebsd-x64": 12.2.4
+    "@next/swc-linux-arm-gnueabihf": 12.2.4
+    "@next/swc-linux-arm64-gnu": 12.2.4
+    "@next/swc-linux-arm64-musl": 12.2.4
+    "@next/swc-linux-x64-gnu": 12.2.4
+    "@next/swc-linux-x64-musl": 12.2.4
+    "@next/swc-win32-arm64-msvc": 12.2.4
+    "@next/swc-win32-ia32-msvc": 12.2.4
+    "@next/swc-win32-x64-msvc": 12.2.4
     "@swc/helpers": 0.4.3
     caniuse-lite: ^1.0.30001332
     postcss: 8.4.14
@@ -6606,7 +6606,7 @@ __metadata:
       optional: true
   bin:
     next: dist/bin/next
-  checksum: b13b42fbb327adca51abeef68aca4b31c82297f07eb3a12d31a3bf2c1aa9ca34cf1ab41bc2b9f4d3162623e70a1ddf230da39fd3ce241b1eea113a4a010a11fd
+  checksum: 31da1485d3499b2d43b452378931cc04d3593dcdecb7629263d5f5dae375ae956d68963a7398b613a283d0c42c50a7ab9f5ef911d8df50f740e8438721e06457
   languageName: node
   linkType: hard
 
