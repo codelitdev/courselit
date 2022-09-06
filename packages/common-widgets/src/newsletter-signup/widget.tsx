@@ -120,6 +120,7 @@ const Widget = ({
                         }}
                         type="submit"
                         disabled={state.networkAction}
+                        size="large"
                     >
                         {btnText || DEFAULT_BTN_TEXT}
                     </Button>
