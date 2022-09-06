@@ -18,7 +18,7 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
     const [description, setDescription] = useState(settings.description);
     const [buttonAction, setButtonAction] = useState(settings.buttonAction);
     const [buttonCaption, setButtonCaption] = useState(settings.buttonCaption);
-    const [mediaId, setMediaId] = useState(settings.mediaId);
+    // const [mediaId, setMediaId] = useState(settings.mediaId);
     const [youtubeLink, setYoutubeLink] = useState(settings.youtubeLink);
     const [alignment, setAlignment] = useState(settings.alignment || "left");
     const [backgroundColor, setBackgroundColor] = useState(
@@ -41,7 +41,7 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
             description,
             buttonAction,
             buttonCaption,
-            mediaId,
+            // mediaId,
             youtubeLink,
             alignment,
             backgroundColor,
@@ -55,7 +55,7 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
         description,
         buttonAction,
         buttonCaption,
-        mediaId,
+        // mediaId,
         youtubeLink,
         alignment,
         backgroundColor,
