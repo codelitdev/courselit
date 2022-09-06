@@ -1,0 +1,8 @@
+undecided:
+  - "@courselit/web"
+  - "@courselit/common-models"
+  - "@courselit/common-widgets"
+  - "@courselit/components-library"
+  - "@courselit/rich-text"
+  - "@courselit/state-management"
+  - "@courselit/utils"
