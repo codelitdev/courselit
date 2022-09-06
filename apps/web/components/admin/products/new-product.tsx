@@ -1,18 +1,9 @@
 import React, { useState } from "react";
 import { Address, AppMessage } from "@courselit/common-models";
-import { Section } from "@courselit/components-library";
+import { Section, Select } from "@courselit/components-library";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
-import {
-    Button,
-    FormControl,
-    Grid,
-    InputLabel,
-    MenuItem,
-    Select,
-    TextField,
-    Typography,
-} from "@mui/material";
+import { Button, Grid, TextField, Typography } from "@mui/material";
 import { useRouter } from "next/router";
 import { connect } from "react-redux";
 import {
@@ -26,6 +17,7 @@ import {
     FORM_NEW_PRODUCT_MENU_COURSE_SUBTITLE,
     FORM_NEW_PRODUCT_MENU_DOWNLOADS_SUBTITLE,
     FORM_NEW_PRODUCT_TITLE_PLC,
+    FORM_NEW_PRODUCT_TYPE,
 } from "../../../ui-config/strings";
 import { capitalize } from "../../../ui-lib/utils";
 import {
@@ -104,59 +96,29 @@ function NewProduct({
                                 />
                             </Grid>
                             <Grid item xs={12}>
-                                <FormControl required fullWidth>
-                                    <InputLabel id="product-selection-label">
-                                        Product type
-                                    </InputLabel>
-                                    <Select
-                                        labelId="product-selection-label"
-                                        id="product-select"
-                                        value={type}
-                                        label="Product type"
-                                        onChange={(e) =>
-                                            setType(e.target.value)
-                                        }
-                                    >
-                                        <MenuItem value={COURSE_TYPE_COURSE}>
-                                            <Grid container direction="column">
-                                                <Grid item>
-                                                    {capitalize(
-                                                        COURSE_TYPE_COURSE
-                                                    )}
-                                                </Grid>
-                                                <Grid item>
-                                                    <Typography
-                                                        variant="body2"
-                                                        color="textSecondary"
-                                                    >
-                                                        {
-                                                            FORM_NEW_PRODUCT_MENU_COURSE_SUBTITLE
-                                                        }
-                                                    </Typography>
-                                                </Grid>
-                                            </Grid>
-                                        </MenuItem>
-                                        <MenuItem value={COURSE_TYPE_DOWNLOAD}>
-                                            <Grid container direction="column">
-                                                <Grid item>
-                                                    {capitalize(
-                                                        COURSE_TYPE_DOWNLOAD
-                                                    )}
-                                                </Grid>
-                                                <Grid item>
-                                                    <Typography
-                                                        variant="body2"
-                                                        color="textSecondary"
-                                                    >
-                                                        {
-                                                            FORM_NEW_PRODUCT_MENU_DOWNLOADS_SUBTITLE
-                                                        }
-                                                    </Typography>
-                                                </Grid>
-                                            </Grid>
-                                        </MenuItem>
-                                    </Select>
-                                </FormControl>
+                                <Select
+                                    title={FORM_NEW_PRODUCT_TYPE}
+                                    value={type}
+                                    onChange={(e: string) => setType(e)}
+                                    options={[
+                                        {
+                                            label: capitalize(
+                                                COURSE_TYPE_COURSE
+                                            ),
+                                            value: COURSE_TYPE_COURSE,
+                                            sublabel:
+                                                FORM_NEW_PRODUCT_MENU_COURSE_SUBTITLE,
+                                        },
+                                        {
+                                            label: capitalize(
+                                                COURSE_TYPE_DOWNLOAD
+                                            ),
+                                            value: COURSE_TYPE_DOWNLOAD,
+                                            sublabel:
+                                                FORM_NEW_PRODUCT_MENU_DOWNLOADS_SUBTITLE,
+                                        },
+                                    ]}
+                                />
                             </Grid>
                             <Grid item>
                                 <Button
