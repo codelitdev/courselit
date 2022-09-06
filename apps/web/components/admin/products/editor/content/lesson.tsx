@@ -99,15 +99,9 @@ const LessonEditor = ({
     );
     const [lesson, setLesson] = useState<Lesson>(emptyLesson);
     const router = useRouter();
-    const inputLabel: any = React.useRef(null);
-    const [labelWidth, setLabelWidth] = React.useState<any>(0);
     const [deleteLessonPopupOpened, setDeleteLessonPopupOpened] =
         useState(false);
     const course = useCourse(courseId);
-
-    useEffect(() => {
-        setLabelWidth(inputLabel.current && inputLabel.current.offsetWidth);
-    }, [lesson.type]);
 
     useEffect(() => {
         lessonId && loadLesson(lessonId);
@@ -366,7 +360,8 @@ const LessonEditor = ({
                         <form onSubmit={onLessonCreate}>
                             <Grid container direction="column">
                                 <Grid item sx={{ mb: 2 }}>
-                                    {course?.type === COURSE_TYPE_COURSE && (
+                                    {course?.type?.toLowerCase() ===
+                                        COURSE_TYPE_COURSE && (
                                         <TextField
                                             required
                                             variant="outlined"
@@ -379,7 +374,8 @@ const LessonEditor = ({
                                         />
                                     )}
                                 </Grid>
-                                {course?.type === COURSE_TYPE_COURSE && (
+                                {course?.type?.toLowerCase() ===
+                                    COURSE_TYPE_COURSE && (
                                     <Grid item sx={{ mb: 2 }}>
                                         <SingleSelect
                                             title={TYPE_DROPDOWN}
