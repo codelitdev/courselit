@@ -30,6 +30,8 @@ export default function Widget({
         alignment = "left",
         backgroundColor,
         foregroundColor,
+        buttonBackground,
+        buttonForeground,
         style = "normal",
     },
 }: WidgetProps<Settings>) {
@@ -58,7 +60,10 @@ export default function Widget({
                 direction={direction}
                 alignItems="center"
                 sx={{
-                    backgroundColor: backgroundColor,
+                    backgroundColor:
+                        style === "card"
+                            ? backgroundColor || "#eee"
+                            : backgroundColor,
                     color: foregroundColor,
                     p: 2,
                     borderRadius: style === "card" ? 2 : 0,
@@ -70,7 +75,10 @@ export default function Widget({
                         md={6}
                         xs={12}
                         sx={{
-                            mb: 2,
+                            mb: {
+                                xs: 2,
+                                md: 0,
+                            },
                             pr: {
                                 xs: 0,
                                 md:
@@ -138,7 +146,7 @@ export default function Widget({
                         },
                     }}
                 >
-                    <Grid container>
+                    <Grid container direction="column">
                         <Grid item sx={{ mb: 2 }}>
                             <Typography variant="h2">{title}</Typography>
                         </Grid>
@@ -156,6 +164,10 @@ export default function Widget({
                                     href={buttonAction}
                                     variant="contained"
                                     size="large"
+                                    sx={{
+                                        backgroundColor: buttonBackground,
+                                        color: buttonForeground,
+                                    }}
                                 >
                                     {buttonCaption}
                                 </Button>

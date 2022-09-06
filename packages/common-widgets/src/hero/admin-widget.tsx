@@ -27,6 +27,12 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
     const [foregroundColor, setForegroundColor] = useState(
         settings.foregroundColor
     );
+    const [buttonBackground, setButtonBackground] = useState(
+        settings.buttonBackground
+    );
+    const [buttonForeground, setButtonForeground] = useState(
+        settings.buttonForeground
+    );
     const [style, setStyle] = useState(settings.style || "normal");
 
     useEffect(() => {
@@ -41,6 +47,8 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
             backgroundColor,
             foregroundColor,
             style,
+            buttonBackground,
+            buttonForeground,
         });
     }, [
         title,
@@ -53,6 +61,8 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
         backgroundColor,
         foregroundColor,
         style,
+        buttonBackground,
+        buttonForeground,
     ]);
 
     return (
@@ -124,6 +134,42 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                             type="color"
                             value={foregroundColor}
                             onChange={(e) => setForegroundColor(e.target.value)}
+                        />
+                    </Grid>
+                </Grid>
+            </Grid>
+            <Grid item xs={12} sx={{ mb: 2 }}>
+                <Grid container justifyContent="space-between">
+                    <Grid item>
+                        <Typography variant="subtitle1">
+                            Button color
+                        </Typography>
+                    </Grid>
+                    <Grid item>
+                        <input
+                            type="color"
+                            value={buttonBackground}
+                            onChange={(e) =>
+                                setButtonBackground(e.target.value)
+                            }
+                        />
+                    </Grid>
+                </Grid>
+            </Grid>
+            <Grid item xs={12} sx={{ mb: 2 }}>
+                <Grid container justifyContent="space-between">
+                    <Grid item>
+                        <Typography variant="subtitle1">
+                            Button text color
+                        </Typography>
+                    </Grid>
+                    <Grid item>
+                        <input
+                            type="color"
+                            value={buttonForeground}
+                            onChange={(e) =>
+                                setButtonForeground(e.target.value)
+                            }
                         />
                     </Grid>
                 </Grid>

@@ -3,6 +3,8 @@ export default interface Settings {
     description?: string;
     buttonCaption?: string;
     buttonAction?: string;
+    buttonBackground?: string;
+    buttonForeground?: string;
     mediaId?: string;
     youtubeLink?: string;
     alignment?: "left" | "right";
