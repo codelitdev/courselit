@@ -637,7 +637,7 @@ const Settings = (props: SettingsProps) => {
                             </Grid>
                         </form>
                     </Grid>
-                    <Grid item sx={{ display: "none" }}>
+                    <Grid item>
                         <form onSubmit={handleCodeInjectionSettingsSubmit}>
                             <Grid container direction="column">
                                 <Grid item>

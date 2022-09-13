@@ -167,7 +167,7 @@ export const SUBHEADER_COURSES_SECTION =
     "Learn new skills with our carefully crafted courses.";
 export const SUBHEADER_FEATURED_SECTION =
     "Hand picked resources by the editors.";
-export const SUBHEADER_THEME_ADD_THEME = "Install new theme";
+export const SUBHEADER_THEME_ADD_THEME = "New theme";
 export const SUBHEADER_THEME_ADDED_THEME = "Installed themes";
 export const SUBHEADER_THEME_ADD_THEME_INPUT_LABEL = "Theme Editor";
 export const SUBHEADER_THEME_ADD_THEME_INPUT_PLACEHOLDER =
