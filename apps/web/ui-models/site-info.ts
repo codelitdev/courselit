@@ -10,6 +10,7 @@ export default interface SiteInfo {
     paymentMethod?: string;
     stripePublishableKey?: string;
     codeInjectionHead?: string;
+    codeInjectionBody?: string;
     stripeSecret?: string;
     paypalSecret?: string;
     paytmSecret?: string;

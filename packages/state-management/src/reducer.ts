@@ -58,6 +58,9 @@ function siteinfoReducer(state = initialState.siteinfo, action: Action) {
                     codeInjectionHead:
                         decode(action.siteinfo.codeInjectionHead) ||
                         initialState.siteinfo.codeInjectionHead,
+                    codeInjectionBody:
+                        decode(action.siteinfo.codeInjectionBody) ||
+                        initialState.siteinfo.codeInjectionBody,
                 };
             } catch (e) {
                 return state;

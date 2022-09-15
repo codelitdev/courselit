@@ -32,7 +32,6 @@ import {
     SUBHEADER_THEME_ADD_THEME,
     SUBHEADER_THEME_ADD_THEME_INPUT_LABEL,
     SUBHEADER_THEME_ADD_THEME_INPUT_PLACEHOLDER,
-    SUBHEADER_THEME_INSTALLED_THEMES,
     THEMES_TABLE_HEADER_NAME,
 } from "../../../../ui-config/strings";
 import { THEMES_REPO } from "../../../../ui-config/constants";
@@ -337,6 +336,8 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
                 </Section>
             )}
             <Grid item sx={{ mb: 2 }}>
+                {installedThemes.length === 0 && <Typography color="textSecondary">{NO_THEMES_INSTALLED}</Typography>}
+                {installedThemes.length > 0 && 
                 <TableContainer>
                     <Table aria-label="Themes">
                         <TableHead>
@@ -362,6 +363,7 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
                         </TableBody>
                     </Table>
                 </TableContainer>
+                }
             </Grid>
             <Grid item>
                 <Link

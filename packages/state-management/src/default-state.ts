@@ -14,6 +14,7 @@ export default {
         paymentMethod: "",
         stripePublishableKey: "",
         codeInjectionHead: "",
+        codeInjectionBody: "",
     },
     networkAction: false,
     profile: {

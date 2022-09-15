@@ -23,6 +23,7 @@ const siteType = new GraphQLObjectType({
         paymentMethod: { type: GraphQLString },
         stripePublishableKey: { type: GraphQLString },
         codeInjectionHead: { type: GraphQLString },
+        codeInjectionBody: { type: GraphQLString },
     },
 });
 
@@ -33,6 +34,7 @@ const siteUpdateType = new GraphQLInputObjectType({
         subtitle: { type: GraphQLString },
         logopath: { type: GraphQLID },
         codeInjectionHead: { type: GraphQLString },
+        codeInjectionBody: { type: GraphQLString },
     },
 });
 

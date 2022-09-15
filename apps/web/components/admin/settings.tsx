@@ -33,6 +33,7 @@ import {
     SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK,
     BUTTON_SAVE,
     SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL,
+    SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY,
 } from "../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
 import { decode, encode } from "base-64";
@@ -99,6 +100,7 @@ const Settings = (props: SettingsProps) => {
         paymentMethod: "",
         stripePublishableKey: "",
         codeInjectionHead: "",
+        codeInjectionBody: "",
         stripeSecret: "",
         paypalSecret: "",
         paytmSecret: "",
@@ -129,7 +131,8 @@ const Settings = (props: SettingsProps) => {
                 currencyISOCode,
                 paymentMethod,
                 stripePublishableKey,
-                codeInjectionHead
+                codeInjectionHead,
+                codeInjectionBody
             }
         }
     }`;
@@ -148,6 +151,11 @@ const Settings = (props: SettingsProps) => {
                 settingsResponse.codeInjectionHead
             );
         }
+        if (settingsResponse.codeInjectionBody) {
+            settingsResponse.codeInjectionBody = decode(
+                settingsResponse.codeInjectionBody
+            );
+        }
         const settingsResponseWithNullsRemoved = {
             title: settingsResponse.title || "",
             subtitle: settingsResponse.subtitle || "",
@@ -156,6 +164,7 @@ const Settings = (props: SettingsProps) => {
             paymentMethod: settingsResponse.paymentMethod || "",
             stripePublishableKey: settingsResponse.stripePublishableKey || "",
             codeInjectionHead: settingsResponse.codeInjectionHead || "",
+            codeInjectionBody: settingsResponse.codeInjectionBody || "",
         };
         setSettings(
             Object.assign({}, settings, settingsResponseWithNullsRemoved)
@@ -189,7 +198,8 @@ const Settings = (props: SettingsProps) => {
             currencyISOCode,
             paymentMethod,
             stripePublishableKey,
-            codeInjectionHead
+            codeInjectionHead,
+            codeInjectionBody
           }
       }
     }`;
@@ -211,6 +221,9 @@ const Settings = (props: SettingsProps) => {
                         codeInjectionHead: settings.codeInjectionHead
                             ? encode(settings.codeInjectionHead)
                             : "",
+                        codeInjectionBody: settings.codeInjectionBody
+                            ? encode(settings.codeInjectionBody)
+                            : "",
                     })
                 );
                 props.dispatch(
@@ -229,14 +242,15 @@ const Settings = (props: SettingsProps) => {
     ) => {
         event.preventDefault();
 
-        if (!newSettings.codeInjectionHead) {
+        if (!newSettings.codeInjectionHead && !newSettings.codeInjectionBody) {
             return;
         }
 
         const query = `
         mutation {
             settings: updateSiteInfo(siteData: {
-                codeInjectionHead: "${encode(newSettings.codeInjectionHead)}"
+                codeInjectionHead: "${encode(newSettings.codeInjectionHead)}",
+                codeInjectionBody: "${encode(newSettings.codeInjectionBody)}"
             }) {
                 settings {
                     title,
@@ -247,7 +261,8 @@ const Settings = (props: SettingsProps) => {
                     currencyISOCode,
                     paymentMethod,
                     stripePublishableKey,
-                    codeInjectionHead
+                    codeInjectionHead,
+                    codeInjectionBody
                 }
             }
         }`;
@@ -268,6 +283,9 @@ const Settings = (props: SettingsProps) => {
                         stripePublishableKey: settings.stripePublishableKey,
                         codeInjectionHead: settings.codeInjectionHead
                             ? encode(settings.codeInjectionHead)
+                            : "",
+                        codeInjectionBody: settings.codeInjectionBody
+                            ? encode(settings.codeInjectionBody)
                             : "",
                     })
                 );
@@ -318,7 +336,8 @@ const Settings = (props: SettingsProps) => {
                     currencyISOCode,
                     paymentMethod,
                     stripePublishableKey,
-                    codeInjectionHead
+                    codeInjectionHead,
+                    codeInjectionBody
                 }
             }
         }`;
@@ -663,14 +682,33 @@ const Settings = (props: SettingsProps) => {
                                     />
                                 </Grid>
                                 <Grid item>
+                                    <TextField
+                                        variant="outlined"
+                                        label={
+                                            SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY
+                                        }
+                                        fullWidth
+                                        margin="normal"
+                                        name="codeInjectionBody"
+                                        value={
+                                            newSettings.codeInjectionBody || ""
+                                        }
+                                        onChange={onChangeData}
+                                        multiline
+                                        rows={10}
+                                    />
+                                </Grid>
+                                <Grid item>
                                     <Button
                                         type="submit"
                                         value={BUTTON_SAVE}
                                         color="primary"
                                         variant="outlined"
                                         disabled={
-                                            settings.codeInjectionHead ===
-                                                newSettings.codeInjectionHead ||
+                                            (settings.codeInjectionHead ===
+                                                newSettings.codeInjectionHead
+                                                &&  settings.codeInjectionBody === newSettings.codeInjectionBody
+                                            ) ||
                                             props.networkAction
                                         }
                                     >
