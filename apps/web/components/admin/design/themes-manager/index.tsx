@@ -1,5 +1,4 @@
 import React, { useRef, useState, useEffect } from "react";
-import { styled } from "@mui/material/styles";
 import { connect } from "react-redux";
 import {
     Grid,
@@ -42,23 +41,6 @@ import { Add } from "@mui/icons-material";
 import { Section } from "@courselit/components-library";
 
 const { setAppMessage, networkAction, updateSiteInfo } = actionCreators;
-
-const PREFIX = "index";
-
-const classes = {
-    section: `${PREFIX}-section`,
-    sectionHeader: `${PREFIX}-sectionHeader`,
-};
-
-const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
-    [`& .${classes.section}`]: {
-        marginBottom: theme.spacing(2),
-    },
-
-    [`& .${classes.sectionHeader}`]: {
-        marginBottom: theme.spacing(2),
-    },
-}));
 
 interface ThemesManagerProps {
     address: Address;
@@ -265,7 +247,6 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
                     <Grid item>
                         <Typography
                             variant="h4"
-                            className={classes.sectionHeader}
                         >
                             {CARD_HEADER_THEME}
                         </Typography>
