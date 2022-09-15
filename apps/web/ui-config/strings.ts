@@ -151,9 +151,11 @@ export const COURSE_TYPE_COURSE = "Course";
 export const COURSE_CREATOR_PREFIX = "By";
 export const APP_MESSAGE_SETTINGS_SAVED = "Settings saved";
 export const ENROLLED_COURSES_HEADER = "Enrolled courses";
-export const SITE_CUSTOMISATIONS_SETTING_HEADER = "Customizations";
+export const SITE_CUSTOMISATIONS_SETTING_HEADER = "Code Injection";
 export const SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD =
     "Code Injection in <head>";
+export const SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY =
+    "Code Injection in <body>";
 export const DISCARD_COURSE_CHANGES_POPUP_HEADER =
     "Discard changes made to the course?";
 export const FEATURED_SECTION_HEADER = "Featured Resources";
@@ -167,12 +169,11 @@ export const SUBHEADER_COURSES_SECTION =
     "Learn new skills with our carefully crafted courses.";
 export const SUBHEADER_FEATURED_SECTION =
     "Hand picked resources by the editors.";
-export const SUBHEADER_THEME_ADD_THEME = "Install new theme";
+export const SUBHEADER_THEME_ADD_THEME = "New theme";
 export const SUBHEADER_THEME_ADDED_THEME = "Installed themes";
 export const SUBHEADER_THEME_ADD_THEME_INPUT_LABEL = "Theme Editor";
 export const SUBHEADER_THEME_ADD_THEME_INPUT_PLACEHOLDER =
     "Paste valid JSON here";
-export const SUBHEADER_THEME_INSTALLED_THEMES = "Installed themes";
 export const BUTTON_GET_THEMES = "Get more themes";
 export const ERROR_SNACKBAR_PREFIX = "Error";
 export const BUTTON_THEME_APPLY = "Apply";

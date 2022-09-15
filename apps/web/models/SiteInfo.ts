@@ -8,6 +8,7 @@ export interface Settings {
     paymentMethod?: string;
     stripePublishableKey?: string;
     codeInjectionHead?: string;
+    codeInjectionBody?: string;
     stripeSecret?: string;
     paytmSecret?: string;
     paypalSecret?: string;
@@ -21,6 +22,7 @@ const SettingsSchema = new mongoose.Schema<Settings>({
     paymentMethod: { type: String },
     stripePublishableKey: { type: String },
     codeInjectionHead: { type: String },
+    codeInjectionBody: { type: String },
     stripeSecret: { type: String },
     paytmSecret: { type: String },
     paypalSecret: { type: String },

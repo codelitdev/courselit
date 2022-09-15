@@ -24,7 +24,7 @@ export const setTheme = async (name: string, ctx: GQLContext) => {
     theme.active = true;
     await theme.save();
     ctx.subdomain.theme = theme;
-    await ctx.subdomain.save();
+    await (ctx.subdomain as any).save();
 
     return theme;
 };

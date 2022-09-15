@@ -1,5 +1,4 @@
 import React, { useRef, useState, useEffect } from "react";
-import { styled } from "@mui/material/styles";
 import { connect } from "react-redux";
 import {
     Grid,
@@ -22,6 +21,7 @@ import {
     APP_MESSAGE_THEME_COPIED,
     APP_MESSAGE_THEME_INSTALLED,
     APP_MESSAGE_THEME_UNINSTALLED,
+    BUTTON_CANCEL_TEXT,
     BUTTON_GET_THEMES,
     BUTTON_THEME_INSTALL,
     CARD_HEADER_THEME,
@@ -31,32 +31,16 @@ import {
     SUBHEADER_THEME_ADD_THEME,
     SUBHEADER_THEME_ADD_THEME_INPUT_LABEL,
     SUBHEADER_THEME_ADD_THEME_INPUT_PLACEHOLDER,
-    SUBHEADER_THEME_INSTALLED_THEMES,
     THEMES_TABLE_HEADER_NAME,
 } from "../../../../ui-config/strings";
 import { THEMES_REPO } from "../../../../ui-config/constants";
 import ThemeItem from "./theme-item";
 import type { Address } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
+import { Add } from "@mui/icons-material";
+import { Section } from "@courselit/components-library";
 
 const { setAppMessage, networkAction, updateSiteInfo } = actionCreators;
-
-const PREFIX = "index";
-
-const classes = {
-    section: `${PREFIX}-section`,
-    sectionHeader: `${PREFIX}-sectionHeader`,
-};
-
-const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
-    [`& .${classes.section}`]: {
-        marginBottom: theme.spacing(2),
-    },
-
-    [`& .${classes.sectionHeader}`]: {
-        marginBottom: theme.spacing(2),
-    },
-}));
 
 interface ThemesManagerProps {
     address: Address;
@@ -67,6 +51,7 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
     const [installedThemes, setInstalledThemes] = useState([]);
     const [newThemeText, setNewThemeText] = useState("");
     const [isNewThemeTextValid, setIsNewThemeTextValid] = useState(false);
+    const [themeEditorVisible, setThemeEditorVisible] = useState(false);
     const themeInputRef = useRef();
 
     const fetch = new FetchBuilder()
@@ -76,6 +61,12 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
     useEffect(() => {
         loadInstalledThemes();
     }, []);
+
+    useEffect(() => {
+        if (themeEditorVisible) {
+            themeInputRef.current.focus();
+        }
+    }, [themeEditorVisible]);
 
     const loadInstalledThemes = async () => {
         const query = `
@@ -191,6 +182,7 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
                 );
                 loadInstalledThemes();
                 await dispatch(updateSiteInfo());
+                cancelThemeInstallation();
             }
         } catch (err: any) {
             dispatch(setAppMessage(new AppMessage(err.message)));
@@ -235,19 +227,98 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
             setNewThemeText(JSON.stringify(themeCopy, null, 3));
 
             dispatch(setAppMessage(new AppMessage(APP_MESSAGE_THEME_COPIED)));
-
-            themeInputRef.current.focus();
+            setThemeEditorVisible(true);
         }
+    };
+
+    const cancelThemeInstallation = () => {
+        setNewThemeText("");
+        setThemeEditorVisible(false);
     };
 
     return (
         <Grid container direction="column">
-            <Grid item>
-                <Typography variant="h4" className={classes.sectionHeader}>
-                    {CARD_HEADER_THEME}
-                </Typography>
+            <Grid item sx={{ mb: 2 }}>
+                <Grid
+                    container
+                    justifyContent="space-between"
+                    alignItems="center"
+                >
+                    <Grid item>
+                        <Typography
+                            variant="h4"
+                        >
+                            {CARD_HEADER_THEME}
+                        </Typography>
+                    </Grid>
+                    {!themeEditorVisible && (
+                        <Grid item>
+                            <Button
+                                onClick={() => setThemeEditorVisible(true)}
+                                startIcon={<Add />}
+                            >
+                                {SUBHEADER_THEME_ADD_THEME}
+                            </Button>
+                        </Grid>
+                    )}
+                </Grid>
             </Grid>
-            <Grid item>
+            {themeEditorVisible && (
+                <Section>
+                    <Grid item container direction="column" spacing={2}>
+                        <Grid
+                            item
+                            container
+                            justifyContent="space-between"
+                            alignItems="center"
+                        >
+                            <Typography variant="h6">
+                                {SUBHEADER_THEME_ADD_THEME}
+                            </Typography>
+                        </Grid>
+                        <Grid item>
+                            <form>
+                                <TextField
+                                    required
+                                    variant="outlined"
+                                    label={
+                                        SUBHEADER_THEME_ADD_THEME_INPUT_LABEL
+                                    }
+                                    fullWidth
+                                    value={newThemeText}
+                                    onChange={onNewThemeTextChanged}
+                                    placeholder={
+                                        SUBHEADER_THEME_ADD_THEME_INPUT_PLACEHOLDER
+                                    }
+                                    multiline
+                                    rows={10}
+                                    inputRef={themeInputRef}
+                                />
+                            </form>
+                        </Grid>
+                        <Grid item>
+                            <Grid container>
+                                <Grid item>
+                                    <Button
+                                        disabled={!isNewThemeTextValid}
+                                        onClick={addTheme}
+                                    >
+                                        {BUTTON_THEME_INSTALL}
+                                    </Button>
+                                </Grid>
+                                <Grid item>
+                                    <Button onClick={cancelThemeInstallation}>
+                                        {BUTTON_CANCEL_TEXT}
+                                    </Button>
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                </Section>
+            )}
+            <Grid item sx={{ mb: 2 }}>
+                {installedThemes.length === 0 && <Typography color="textSecondary">{NO_THEMES_INSTALLED}</Typography>}
+                {installedThemes.length > 0 && 
                 <TableContainer>
                     <Table aria-label="Themes">
                         <TableHead>
@@ -273,95 +344,19 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
                         </TableBody>
                     </Table>
                 </TableContainer>
+                }
+            </Grid>
+            <Grid item>
+                <Link
+                    href={THEMES_REPO}
+                    target="_blank"
+                    rel="noopener"
+                    underline="hover"
+                >
+                    {BUTTON_GET_THEMES}
+                </Link>
             </Grid>
         </Grid>
-    );
-
-    return (
-        <StyledGrid item xs={12}>
-            <div className={classes.section}>
-                <Typography variant="h4" className={classes.sectionHeader}>
-                    {CARD_HEADER_THEME}
-                </Typography>
-                <Grid container direction="column" spacing={4}>
-                    <Grid item>
-                        <Typography variant="h5">
-                            {SUBHEADER_THEME_INSTALLED_THEMES}
-                        </Typography>
-                    </Grid>
-                    {installedThemes.length !== 0 && (
-                        <Grid item container direction="column">
-                            {installedThemes.map((theme: Theme) => (
-                                <ThemeItem
-                                    theme={theme}
-                                    key={theme.name}
-                                    onApply={onThemeApply}
-                                    onRemix={onThemeRemix}
-                                    onUninstall={onThemeUninstall}
-                                />
-                            ))}
-                        </Grid>
-                    )}
-                    {installedThemes.length === 0 && (
-                        <Grid item>
-                            <Typography variant="body1" color="textSecondary">
-                                {NO_THEMES_INSTALLED}
-                            </Typography>
-                        </Grid>
-                    )}
-                    <Grid item>
-                        <Link
-                            href={THEMES_REPO}
-                            target="_blank"
-                            rel="noopener"
-                            underline="hover"
-                        >
-                            {BUTTON_GET_THEMES}
-                        </Link>
-                    </Grid>
-                    <Grid item container direction="column" spacing={2}>
-                        <Grid
-                            item
-                            container
-                            justifyContent="space-between"
-                            alignItems="center"
-                        >
-                            <Typography variant="h5">
-                                {SUBHEADER_THEME_ADD_THEME}
-                            </Typography>
-                        </Grid>
-                        <Grid item>
-                            <form>
-                                <TextField
-                                    required
-                                    variant="outlined"
-                                    label={
-                                        SUBHEADER_THEME_ADD_THEME_INPUT_LABEL
-                                    }
-                                    fullWidth
-                                    value={newThemeText}
-                                    onChange={onNewThemeTextChanged}
-                                    placeholder={
-                                        SUBHEADER_THEME_ADD_THEME_INPUT_PLACEHOLDER
-                                    }
-                                    multiline
-                                    rows={10}
-                                    inputRef={themeInputRef}
-                                />
-                            </form>
-                        </Grid>
-                        <Grid item>
-                            <Button
-                                disabled={!isNewThemeTextValid}
-                                onClick={addTheme}
-                            >
-                                {BUTTON_THEME_INSTALL}
-                            </Button>
-                        </Grid>
-                    </Grid>
-                </Grid>
-            </div>
-        </StyledGrid>
     );
 };
 

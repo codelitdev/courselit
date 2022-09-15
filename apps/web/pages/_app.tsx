@@ -20,6 +20,7 @@ import { ThunkDispatch } from "redux-thunk";
 import { actionCreators } from "@courselit/state-management";
 import CodeInjector from "../components/public/code-injector";
 import { DefaultTheme } from "@mui/private-theming";
+import { useRouter } from "next/router";
 
 type CourseLitProps = AppProps & {
     emotionCache: EmotionCache;
@@ -35,6 +36,7 @@ function MyApp({
     const [mounted, setMounted] = useState(false);
     const store = useStore();
     const { theme } = store.getState();
+    const router = useRouter();
 
     let muiTheme;
     if (theme.styles) {
@@ -78,7 +80,7 @@ function MyApp({
                     >
                         <Component {...pageProps} />
                     </div>
-                    <CodeInjector />
+                    <CodeInjector router={router} />
                 </ThemeProvider>
             </CacheProvider>
         </Provider>

@@ -44,62 +44,34 @@ const ThemeItem = (props: ThemeItemProps) => {
         props.onApply(props.theme.name);
     };
 
+    const generateOptions = () => {
+        const options = [];
+        if (!props.theme.active) {
+            options.push({
+                label: BUTTON_THEME_APPLY,
+                type: "button",
+                onClick: () => setApplyConfirmationPopupOpened(true),
+            });
+        }
+        options.push({
+            label: BUTTON_THEME_REMIX,
+            type: "button",
+            onClick: () => props.onRemix(props.theme.name),
+        });
+        options.push({
+            label: BUTTON_THEME_UNINSTALL,
+            type: "button",
+            onClick: () => setUninstallConfirmationPopupOpened(true),
+        });
+        return options;
+    };
+
     return (
         <TableRow>
             <TableCell>{props.theme.name}</TableCell>
             <TableCell align="right">
-                <Menu
-                    options={[
-                        {
-                            label: BUTTON_THEME_APPLY,
-                            type: "button",
-                            onClick: () =>
-                                setApplyConfirmationPopupOpened(true),
-                        },
-                        {
-                            label: BUTTON_THEME_REMIX,
-                            type: "button",
-                            onClick: () => props.onRemix(props.theme.name),
-                        },
-                        {
-                            label: BUTTON_THEME_UNINSTALL,
-                            type: "button",
-                            onClick: () =>
-                                setUninstallConfirmationPopupOpened(true),
-                        },
-                    ]}
-                    icon={<MoreVert />}
-                />
+                <Menu options={generateOptions()} icon={<MoreVert />} />
             </TableCell>
-            {/* <Grid item>
-                <Grid container>
-                    {!props.theme.active && (
-                        <Grid item>
-                            <Button
-                                onClick={() =>
-                                    setApplyConfirmationPopupOpened(true)
-                                }
-                            >
-                                {BUTTON_THEME_APPLY}
-                            </Button>
-                        </Grid>
-                    )}
-                    <Grid item>
-                        <Button onClick={() => props.onRemix(props.theme.name)}>
-                            {BUTTON_THEME_REMIX}
-                        </Button>
-                    </Grid>
-                    <Grid item>
-                        <Button
-                            onClick={() =>
-                                setUninstallConfirmationPopupOpened(true)
-                            }
-                        >
-                            {BUTTON_THEME_UNINSTALL}
-                        </Button>
-                    </Grid>
-                </Grid>
-            </Grid> */}
             <AppDialog
                 onOpen={uninstallConfirmationPopupOpened}
                 onClose={closeUninstallConfirmationPopup}
