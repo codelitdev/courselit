@@ -1,9 +1,11 @@
+import Media from "./media";
+
 export default interface Lesson {
     lessonId: string;
     title: string;
     type: string;
     content: string;
-    media: Record<string, unknown>;
+    media: Media;
     requiresEnrollment: boolean;
     courseId: string;
     groupId: string;

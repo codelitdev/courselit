@@ -1,21 +1,15 @@
-import React, { useState, createRef, useEffect } from "react";
+import * as React from "react";
 import { styled } from "@mui/material/styles";
 import { Button, Grid, TextField, Typography, Checkbox } from "@mui/material";
 import { connect } from "react-redux";
-import { Section } from "@courselit/components-library";
-import {
-    BUTTON_ADD_FILE,
-    MEDIA_UPLOAD_BUTTON_TEXT,
-    MEDIA_UPLOADING,
-    MEDIA_PUBLIC,
-} from "../../../ui-config/strings";
 import { AppMessage } from "@courselit/common-models";
 import type { Auth, Address } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
-import { responses } from "../../../config/strings";
+import Section from "../section";
 
+const { useState, createRef, useEffect } = React;
 const { networkAction, setAppMessage } = actionCreators;
 
 const PREFIX = "Upload";
@@ -30,21 +24,37 @@ const StyledSection = styled(Section)({
     },
 });
 
+interface Strings {
+    buttonAddFile?: string;
+    fileUploaded?: string;
+    uploadFailed?: string;
+    uploading?: string;
+    uploadButtonText?: string;
+    publiclyAvailable?: string;
+}
+
 interface UploadProps {
     auth: Auth;
     address: Address;
     dispatch: AppDispatch;
     resetOverview: any;
+    strings: Strings;
 }
 
-function Upload({ auth, address, dispatch, resetOverview }: UploadProps) {
+function Upload({
+    auth,
+    address,
+    dispatch,
+    resetOverview,
+    strings,
+}: UploadProps) {
     const defaultUploadData = {
         caption: "",
         uploading: false,
         public: false,
     };
     const [uploadData, setUploadData] = useState(defaultUploadData);
-    const fileInput = createRef();
+    const fileInput: React.RefObject<HTMLInputElement> = createRef();
     const [uploading, setUploading] = useState(false);
     const [presignedUrl, setPresignedUrl] = useState("");
 
@@ -58,43 +68,6 @@ function Upload({ auth, address, dispatch, resetOverview }: UploadProps) {
             })
         );
 
-    // const uploadToLocalDisk = async () => {
-    //   const fD = new window.FormData();
-    //   fD.append("title", uploadData.title);
-    //   fD.append("caption", uploadData.caption);
-    //   fD.append("file", fileInput.current.files[0]);
-
-    //   setUploadData(
-    //     Object.assign({}, uploadData, {
-    //       uploading: true,
-    //     })
-    //   );
-
-    //   try {
-    //     setUploading(true);
-
-    //     let res = await fetch(`${address.backend}/media`, {
-    //       method: "POST",
-    //       headers: {
-    //         Authorization: `Bearer ${auth.token}`,
-    //       },
-    //       body: fD,
-    //     });
-    //     res = await res.json();
-
-    //     if (res.media) {
-    //       setUploadData(defaultUploadData);
-    //       dispatch(setAppMessage(new AppMessage(FILE_UPLOAD_SUCCESS)));
-    //       resetOverview();
-    //     } else {
-    //       dispatch(setAppMessage(new AppMessage(res.message)));
-    //     }
-    //   } catch (err) {
-    //     dispatch(setAppMessage(new AppMessage(err.message)));
-    //   } finally {
-    //     setUploading(false);
-    //   }
-    // };
     useEffect(() => {
         getPresignedUrl();
     }, []);
@@ -110,14 +83,19 @@ function Upload({ auth, address, dispatch, resetOverview }: UploadProps) {
             setPresignedUrl(response.url);
         } catch (err: any) {
             dispatch(
-                setAppMessage(new AppMessage(responses.presigned_url_failed))
+                setAppMessage(
+                    new AppMessage(
+                        strings.uploadFailed ||
+                            "That did not work! Please go back and try again."
+                    )
+                )
             );
         } finally {
             dispatch(networkAction(false));
         }
     };
 
-    const onUpload = async (e) => {
+    const onUpload = async (e: React.FormEvent) => {
         e.preventDefault();
         await uploadToServer();
     };
@@ -143,7 +121,12 @@ function Upload({ auth, address, dispatch, resetOverview }: UploadProps) {
             });
             if (res.status === 200) {
                 dispatch(
-                    setAppMessage(new AppMessage(responses.file_uploaded))
+                    setAppMessage(
+                        new AppMessage(
+                            strings.fileUploaded ||
+                                "The file is uploaded. Go back to see your media."
+                        )
+                    )
                 );
                 resetForm();
                 resetOverview();
@@ -166,7 +149,7 @@ function Upload({ auth, address, dispatch, resetOverview }: UploadProps) {
         <StyledSection>
             <form onSubmit={onUpload} encType="multipart/form-data">
                 <Button variant="outlined" component="label" color="primary">
-                    {BUTTON_ADD_FILE}
+                    {strings.buttonAddFile || "Select a file"}
                     <input
                         type="file"
                         name="file"
@@ -185,7 +168,9 @@ function Upload({ auth, address, dispatch, resetOverview }: UploadProps) {
                 />
                 <Grid container alignItems="center">
                     <Grid item>
-                        <Typography variant="body1">{MEDIA_PUBLIC}</Typography>
+                        <Typography variant="body1">
+                            {strings.publiclyAvailable || "Publicly available"}
+                        </Typography>
                     </Grid>
                     <Grid item>
                         <Checkbox
@@ -199,18 +184,13 @@ function Upload({ auth, address, dispatch, resetOverview }: UploadProps) {
                     disabled={uploading || !presignedUrl}
                     variant="outlined"
                 >
-                    {uploading ? MEDIA_UPLOADING : MEDIA_UPLOAD_BUTTON_TEXT}
+                    {uploading
+                        ? strings.uploading || "Uploading..."
+                        : strings.uploadButtonText || "Upload"}
                 </Button>
             </form>
         </StyledSection>
     );
 }
 
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-    auth: state.auth,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(Upload);
+export default Upload;

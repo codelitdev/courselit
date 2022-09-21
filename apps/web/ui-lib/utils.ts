@@ -33,23 +33,6 @@ export const getPostDescriptionSnippet = (rawDraftJSContentState: any) => {
     return firstSentence ? firstSentence + "." : firstSentence;
 };
 
-export const getGraphQLQueryFields = (
-    jsObj: any,
-    fieldsNotPutBetweenQuotes = []
-) => {
-    let queryString = "{";
-    for (const i of Object.keys(jsObj)) {
-        if (jsObj[i] !== undefined) {
-            queryString += fieldsNotPutBetweenQuotes.includes(i)
-                ? `${i}: ${jsObj[i]},`
-                : `${i}: "${jsObj[i]}",`;
-        }
-    }
-    queryString += "}";
-
-    return queryString;
-};
-
 export const getObjectContainingOnlyChangedFields = (
     baseline: Record<string, any>,
     obj: Record<string, any>

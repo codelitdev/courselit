@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { styled } from "@mui/system";
 import { connect } from "react-redux";
-import {
-    getGraphQLQueryFields,
-    getObjectContainingOnlyChangedFields,
-} from "../../ui-lib/utils";
+import { getObjectContainingOnlyChangedFields } from "../../ui-lib/utils";
 import {
     PAYMENT_METHOD_PAYPAL,
     PAYMENT_METHOD_PAYTM,
@@ -35,15 +32,17 @@ import {
     SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL,
     SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY,
 } from "../../ui-config/strings";
-import { FetchBuilder } from "@courselit/utils";
+import { FetchBuilder, getGraphQLQueryFields } from "@courselit/utils";
 import { decode, encode } from "base-64";
-import dynamic from "next/dynamic";
-import { AppMessage } from "@courselit/common-models";
+import { AppMessage, Profile } from "@courselit/common-models";
 import type { SiteInfo, Address, Auth } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
 import currencies from "../../data/iso4217.json";
-import { Select as SingleSelect } from "@courselit/components-library";
+import {
+    Select as SingleSelect,
+    MediaSelector,
+} from "@courselit/components-library";
 
 const { networkAction, newSiteInfoAvailable, setAppMessage } = actionCreators;
 
@@ -78,11 +77,10 @@ const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
     },
 }));
 
-const MediaSelector = dynamic(() => import("./media/media-selector"));
-
 interface SettingsProps {
     siteinfo: SiteInfo;
     auth: Auth;
+    profile: Profile;
     dispatch: (...args: any[]) => void;
     address: Address;
     networkAction: boolean;
@@ -307,9 +305,7 @@ const Settings = (props: SettingsProps) => {
 
         const change = Object.prototype.hasOwnProperty.call(e, "mediaId")
             ? {
-                  logopath: {
-                      mediaId: (e as any).mediaId,
-                  },
+                  logopath: e,
               }
             : { [e.target.name]: e.target.value };
         setNewSettings(Object.assign({}, newSettings, change));
@@ -425,6 +421,10 @@ const Settings = (props: SettingsProps) => {
                                 </Grid>
                                 <Grid item>
                                     <MediaSelector
+                                        auth={props.auth}
+                                        profile={props.profile}
+                                        dispatch={props.dispatch}
+                                        address={props.address}
                                         title={SITE_SETTINGS_LOGO}
                                         src={
                                             (newSettings.logopath &&
@@ -437,6 +437,7 @@ const Settings = (props: SettingsProps) => {
                                         onSelection={onChangeData}
                                         mimeTypesToShow={[...MIMETYPE_IMAGE]}
                                         access="public"
+                                        strings={{}}
                                     />
                                 </Grid>
                                 <Grid item>
@@ -706,9 +707,9 @@ const Settings = (props: SettingsProps) => {
                                         variant="outlined"
                                         disabled={
                                             (settings.codeInjectionHead ===
-                                                newSettings.codeInjectionHead
-                                                &&  settings.codeInjectionBody === newSettings.codeInjectionBody
-                                            ) ||
+                                                newSettings.codeInjectionHead &&
+                                                settings.codeInjectionBody ===
+                                                    newSettings.codeInjectionBody) ||
                                             props.networkAction
                                         }
                                     >
@@ -729,6 +730,7 @@ const mapStateToProps = (state: AppState) => ({
     auth: state.auth,
     address: state.address,
     networkAction: state.networkAction,
+    profile: state.profile,
 });
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({

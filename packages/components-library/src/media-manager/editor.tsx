@@ -1,50 +1,45 @@
-import React, { useState } from "react";
+import * as React from "react";
 import { Button, Grid, Typography, Checkbox } from "@mui/material";
-import {
-    APP_MESSAGE_CHANGES_SAVED,
-    DELETE_MEDIA_POPUP_HEADER,
-    POPUP_CANCEL_ACTION,
-    POPUP_OK_ACTION,
-    BUTTON_DELETE_MEDIA,
-    MEDIA_PUBLIC,
-} from "../../../ui-config/strings";
-import dynamic from "next/dynamic";
-import { getGraphQLQueryFields } from "../../../ui-lib/utils";
-import { FetchBuilder } from "@courselit/utils";
-import { AppMessage } from "@courselit/common-models";
-import { connect } from "react-redux";
-import { useRouter } from "next/router";
-import { Section } from "@courselit/components-library";
-import type { Auth, Address } from "@courselit/common-models";
-import type { AppDispatch, AppState } from "@courselit/state-management";
+import { FetchBuilder, getGraphQLQueryFields } from "@courselit/utils";
+import { AppMessage, Media } from "@courselit/common-models";
+import type { Address } from "@courselit/common-models";
+import type { AppDispatch } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
-import { responses } from "../../../config/strings";
+import Dialog from "../dialog";
+import Section from "../section";
 
+const { useState } = React;
 const { networkAction, setAppMessage } = actionCreators;
 
-const AppDialog = dynamic(() => import("../../public/app-dialog"));
-const MediaPreview = dynamic(() => import("./media-preview"));
+interface Strings {
+    changesSaved?: string;
+    mediaDeleted?: string;
+    deleteMediaPopupHeader?: string;
+    popupCancelAction?: string;
+    popupOKAction?: string;
+    deleteMediaButton?: string;
+    publiclyAvailable?: string;
+}
 
 interface EditorProps {
-    auth: Auth;
     media: any;
     address: Address;
     dispatch: AppDispatch;
-    onMediaEdited: () => void;
+    onMediaEdited: (media: Media) => void;
     onMediaDeleted: (id: string) => void;
+    strings: Strings;
 }
 
 function Editor({
-    auth,
     media,
     address,
     dispatch,
     onMediaEdited,
     onMediaDeleted,
+    strings,
 }: EditorProps) {
     const [mediaBeingEdited, setMediaBeingEdited] = useState(media);
     const [deleteMediaPopupOpened, setDeleteMediaPopupOpened] = useState(false);
-    const Router = useRouter();
 
     const onMediaBeingEditedChanged = (e: any) =>
         setMediaBeingEdited(
@@ -69,7 +64,14 @@ function Editor({
                 .build();
 
             const response = await fetch.exec();
-            dispatch(setAppMessage(new AppMessage(responses.media_deleted)));
+            dispatch(
+                setAppMessage(
+                    new AppMessage(
+                        strings.mediaDeleted ||
+                            "The media is deleted. Go back to see your media."
+                    )
+                )
+            );
             onMediaDeleted(mediaBeingEdited.id);
         } catch (err: any) {
             dispatch(setAppMessage(new AppMessage(err.message)));
@@ -115,7 +117,9 @@ function Editor({
 
             if (response.media) {
                 dispatch(
-                    setAppMessage(new AppMessage(APP_MESSAGE_CHANGES_SAVED))
+                    setAppMessage(
+                        new AppMessage(strings.changesSaved || "Changes saved")
+                    )
                 );
                 onMediaEdited(response.media);
             }
@@ -139,7 +143,8 @@ function Editor({
                     >
                         <Grid item>
                             <Typography variant="body1">
-                                {MEDIA_PUBLIC}
+                                {strings.publiclyAvailable ||
+                                    "Publicly available"}
                             </Typography>
                         </Grid>
                         <Grid item>
@@ -156,7 +161,7 @@ function Editor({
                         variant="outlined"
                         color="error"
                     >
-                        {BUTTON_DELETE_MEDIA}
+                        {strings.deleteMediaButton || "Delete"}
                     </Button>
                 </Section>
                 {/* <Section>
@@ -210,29 +215,23 @@ function Editor({
             {/* <Grid item xs={12} md={6}>
         <MediaPreview item={media} />
       </Grid> */}
-            <AppDialog
+            <Dialog
                 onOpen={deleteMediaPopupOpened}
                 onClose={closeDeleteMediaPopup}
-                title={DELETE_MEDIA_POPUP_HEADER}
+                title={strings.deleteMediaPopupHeader || "Delete this file?"}
                 actions={[
                     {
-                        name: POPUP_CANCEL_ACTION,
+                        name: strings.popupCancelAction || "Cancel",
                         callback: closeDeleteMediaPopup,
                     },
-                    { name: POPUP_OK_ACTION, callback: onMediaDelete },
+                    {
+                        name: strings.popupOKAction || "Delete",
+                        callback: onMediaDelete,
+                    },
                 ]}
             />
         </Grid>
     );
 }
 
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-    auth: state.auth,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({
-    dispatch: dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(Editor);
+export default Editor;
