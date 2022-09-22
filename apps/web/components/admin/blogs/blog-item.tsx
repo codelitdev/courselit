@@ -22,11 +22,8 @@ import { MoreVert } from "@mui/icons-material";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import type { SiteInfo, Address } from "@courselit/common-models";
 import { connect } from "react-redux";
-import { Image, Menu } from "@courselit/components-library";
-import dynamic from "next/dynamic";
+import { Dialog, Image, Menu } from "@courselit/components-library";
 import { deleteProduct } from "./helpers";
-
-const AppDialog = dynamic(() => import("../../public/app-dialog"));
 
 function BlogItem({
     details,
@@ -139,7 +136,7 @@ function BlogItem({
                     icon={<MoreVert />}
                 />
             </TableCell>
-            <AppDialog
+            <Dialog
                 onOpen={deleteProductPopupOpened}
                 onClose={closeDeletePopup}
                 title={DELETE_PRODUCT_POPUP_HEADER}
@@ -166,7 +163,7 @@ function BlogItem({
                 <Typography variant="subtitle1">
                     {DELETE_PRODUCT_POPUP_TEXT}
                 </Typography>
-            </AppDialog>
+            </Dialog>
         </TableRow>
     );
 }

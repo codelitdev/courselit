@@ -124,7 +124,7 @@ const Index = (props: IndexProps) => {
             ),
         });
         if (
-            checkPermission(props.profile.permissions, [
+            checkPermission(profile.permissions, [
                 UIConstants.permissions.uploadMedia,
             ])
         ) {

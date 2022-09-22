@@ -1,7 +1,6 @@
 import * as React from "react";
 import { styled } from "@mui/material/styles";
 import { Button, Grid, TextField, Typography, Checkbox } from "@mui/material";
-import { connect } from "react-redux";
 import { AppMessage } from "@courselit/common-models";
 import type { Auth, Address } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";

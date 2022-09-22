@@ -7,7 +7,6 @@ import {
     IconButton,
     InputAdornment,
 } from "@mui/material";
-import { connect } from "react-redux";
 import { FileCopy } from "@mui/icons-material";
 import { AppMessage } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";

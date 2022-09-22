@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import useCourse from "../course-hook";
 import { useRouter } from "next/router";
-import { Menu } from "@courselit/components-library";
+import { Dialog, Menu } from "@courselit/components-library";
 import {
     DELETE_PRODUCT_POPUP_HEADER,
     DELETE_PRODUCT_POPUP_TEXT,
@@ -15,7 +15,6 @@ import {
 } from "../../../../../ui-config/strings";
 import { MoreVert } from "@mui/icons-material";
 import { deleteProduct } from "../../helpers";
-import AppDialog from "../../../../public/app-dialog";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import { connect } from "react-redux";
 import { Address } from "@courselit/common-models";
@@ -120,7 +119,7 @@ function BlogHeader({ id, breadcrumbs, address, dispatch }: BlogHeaderProps) {
                     </Grid>
                 </Grid>
             </Grid>
-            <AppDialog
+            <Dialog
                 onOpen={deleteProductPopupOpened}
                 onClose={closeDeletePopup}
                 title={DELETE_PRODUCT_POPUP_HEADER}
@@ -147,7 +146,7 @@ function BlogHeader({ id, breadcrumbs, address, dispatch }: BlogHeaderProps) {
                 <Typography variant="subtitle1">
                     {DELETE_PRODUCT_POPUP_TEXT}
                 </Typography>
-            </AppDialog>
+            </Dialog>
         </Grid>
     );
 }
