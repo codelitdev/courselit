@@ -7,7 +7,10 @@ import {
 import GQLContext from "../../models/GQLContext";
 import PageModel, { Page } from "../../models/Page";
 import { permissions } from "../../ui-config/constants";
-import { getPageResponse } from "./helpers";
+import {
+    getPageResponse,
+    replaceMediaIdWithMediaObjectForWidget,
+} from "./helpers";
 import constants from "../../config/constants";
 import Course from "../../models/Course";
 import { generateUniqueId } from "@courselit/utils";
@@ -152,6 +155,11 @@ export const savePage = async (
                         widget
                     );
                     widget.settings = undefined;
+                } else {
+                    widget.settings =
+                        await replaceMediaIdWithMediaObjectForWidget(
+                            widget.settings
+                        );
                 }
             }
             (ctx.subdomain as any).markModified("sharedWidgets");

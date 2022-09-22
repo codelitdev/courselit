@@ -25,7 +25,7 @@ export default function Widget({
         description,
         buttonCaption,
         buttonAction,
-        mediaId,
+        media,
         youtubeLink,
         alignment = "left",
         backgroundColor,
@@ -33,9 +33,10 @@ export default function Widget({
         buttonBackground,
         buttonForeground,
         style = "normal",
+        mediaRadius = 0,
     },
 }: WidgetProps<Settings>) {
-    const hasHeroGraphic = youtubeLink || mediaId;
+    const hasHeroGraphic = youtubeLink || (media && media.mediaId);
     let direction: GridDirection;
     switch (alignment) {
         case "left":
@@ -100,6 +101,8 @@ export default function Widget({
                                 sx={{
                                     position: "relative",
                                     paddingBottom: "56.25%",
+                                    borderRadius: `${mediaRadius}px`,
+                                    overflow: "hidden",
                                 }}
                             >
                                 <Iframe
@@ -110,15 +113,19 @@ export default function Widget({
                                 />
                             </Box>
                         )}
-                        {!youtubeLink && mediaId && (
+                        {!youtubeLink && media && media.mediaId && (
                             <Grid
                                 item
                                 xs={12}
-                                md={6}
-                                sx={{ p: 2, textAlign: "center", width: 1 }}
+                                sx={{
+                                    p: 2,
+                                    textAlign: "center",
+                                    width: 1,
+                                    borderRadius: `${mediaRadius}px`,
+                                }}
                             >
                                 <Image
-                                    src={mediaId}
+                                    src={media && media.file}
                                     width={1}
                                     height={{
                                         xs: 224,

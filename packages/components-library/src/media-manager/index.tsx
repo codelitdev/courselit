@@ -45,7 +45,7 @@ interface IndexProps {
     profile: Profile;
     dispatch: AppDispatch;
     address: Address;
-    mimeTypesToShow: string[];
+    mimeTypesToShow?: string[];
     selectionMode: boolean;
     onSelect: (...args: any[]) => void;
     strings: Strings;

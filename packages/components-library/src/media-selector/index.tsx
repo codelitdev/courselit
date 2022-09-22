@@ -43,14 +43,14 @@ interface MediaSelectorProps {
     title: string;
     src: string;
     onSelection: (...args: any[]) => void;
-    mimeTypesToShow: string[];
+    mimeTypesToShow?: string[];
     access?: "public" | "private";
     strings: Strings;
 }
 
 const MediaSelector = (props: MediaSelectorProps) => {
     const [dialogOpened, setDialogOpened] = useState(false);
-    const { strings, auth, profile, dispatch, address } = props;
+    const { strings, auth, profile, dispatch, address, src, title } = props;
 
     const onSelection = (media: any) => {
         setDialogOpened(!dialogOpened);
@@ -60,10 +60,10 @@ const MediaSelector = (props: MediaSelectorProps) => {
     return (
         <Grid container direction="row" alignItems="center" spacing={2}>
             <Grid item>
-                <Typography variant="body1">{props.title}</Typography>
+                <Typography variant="body1">{title}</Typography>
             </Grid>
             <Grid item>
-                <Image src={props.src} height={64} width={64} />
+                <Image src={src} height={64} width={64} />
             </Grid>
             <Grid item>
                 <Button

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import type { Address } from "@courselit/common-models";
+import type { Address, Auth, Media, Profile } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
 import { Grid, TextField, Typography } from "@mui/material";
 import Settings from "./settings";
-import { Select } from "@courselit/components-library";
+import { MediaSelector, Select } from "@courselit/components-library";
 
 interface AdminWidgetProps {
     name: string;
@@ -12,13 +12,25 @@ interface AdminWidgetProps {
     address: Address;
     networkAction: boolean;
     dispatch: AppDispatch;
+    auth: Auth;
+    profile: Profile;
 }
-export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
+
+export default function AdminWidget({
+    settings,
+    onChange,
+    dispatch,
+    auth,
+    profile,
+    address,
+}: AdminWidgetProps) {
     const [title, setTitle] = useState(settings.title);
     const [description, setDescription] = useState(settings.description);
     const [buttonAction, setButtonAction] = useState(settings.buttonAction);
     const [buttonCaption, setButtonCaption] = useState(settings.buttonCaption);
-    // const [mediaId, setMediaId] = useState(settings.mediaId);
+    const [mediaBorderRadius, setMediaBorderRadius] = useState(
+        settings.mediaRadius
+    );
     const [youtubeLink, setYoutubeLink] = useState(settings.youtubeLink);
     const [alignment, setAlignment] = useState(settings.alignment || "left");
     const [backgroundColor, setBackgroundColor] = useState(
@@ -33,29 +45,35 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
     const [buttonForeground, setButtonForeground] = useState(
         settings.buttonForeground
     );
+    const [media, setMedia] = useState<Partial<Media>>(settings.media || {});
     const [style, setStyle] = useState(settings.style || "normal");
 
-    useEffect(() => {
+    const onSettingsChanged = () =>
         onChange({
             title,
             description,
             buttonAction,
             buttonCaption,
-            // mediaId,
             youtubeLink,
+            media: {
+                mediaId: media.mediaId,
+            },
             alignment,
             backgroundColor,
             foregroundColor,
             style,
             buttonBackground,
             buttonForeground,
+            mediaRadius: mediaBorderRadius,
         });
+
+    useEffect(() => {
+        onSettingsChanged();
     }, [
         title,
         description,
         buttonAction,
         buttonCaption,
-        // mediaId,
         youtubeLink,
         alignment,
         backgroundColor,
@@ -63,6 +81,8 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
         style,
         buttonBackground,
         buttonForeground,
+        media,
+        mediaBorderRadius,
     ]);
 
     return (
@@ -82,6 +102,23 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                     onChange={(e) => setDescription(e.target.value)}
                     minRows={5}
                     fullWidth
+                />
+            </Grid>
+            <Grid item sx={{ mb: 2 }}>
+                <MediaSelector
+                    title=""
+                    src={media && media.thumbnail}
+                    dispatch={dispatch}
+                    auth={auth}
+                    profile={profile}
+                    address={address}
+                    onSelection={(media: Media) => {
+                        if (media) {
+                            setMedia(media);
+                        }
+                    }}
+                    strings={{}}
+                    access="public"
                 />
             </Grid>
             <Grid item sx={{ mb: 2 }}>
@@ -194,6 +231,15 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                         { label: "Card", value: "card" },
                     ]}
                     onChange={(value) => setStyle(value)}
+                />
+            </Grid>
+            <Grid item sx={{ mb: 2 }}>
+                <TextField
+                    label="Media border radius"
+                    value={mediaBorderRadius}
+                    type="number"
+                    onChange={(e) => setMediaBorderRadius(+e.target.value)}
+                    fullWidth
                 />
             </Grid>
         </Grid>
