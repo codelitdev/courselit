@@ -1,4 +1,4 @@
-import Media from "./media";
+import { Media } from "@courselit/common-models";
 
 export default interface Lesson {
     id: string;

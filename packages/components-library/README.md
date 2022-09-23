@@ -1,3 +1,3 @@
-# `@courselit/components-library`
+# CourseLit's Components Library
 
-A library that contains presentational (read: "dumb") React components and helper functions for CourseLit LMS.
+This module contains reusable components which are used accross the CourseLit platform.

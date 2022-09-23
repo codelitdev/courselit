@@ -5,7 +5,7 @@ import { AppState } from "@courselit/state-management";
 type InjectionSection = "head" | "body";
 
 interface CodeInjectorProps {
-    router: Record<string, unknown>,
+    router: Record<string, unknown>;
     head?: string;
     body?: string;
 }
@@ -58,7 +58,7 @@ class CodeInjector extends React.Component<CodeInjectorProps> {
 
 const mapStateToProps = (state: AppState) => ({
     head: state.siteinfo.codeInjectionHead,
-    body: state.siteinfo.codeInjectionBody
+    body: state.siteinfo.codeInjectionBody,
 });
 
 export default connect(mapStateToProps)(CodeInjector);

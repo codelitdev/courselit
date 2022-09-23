@@ -78,10 +78,13 @@ const Template = (props: TemplateProps) => {
                 />
             )}
             {childrenOnTop && (
-                <>
-                    <Grid item sx={{ minHeight: "70vh" }}>
-                        {children}
-                    </Grid>
+                <Grid
+                    item
+                    container
+                    direction="column"
+                    sx={{ minHeight: "80vh" }}
+                >
+                    <Grid item>{children}</Grid>
                     {layout
                         .filter(
                             (widget) =>
@@ -98,10 +101,15 @@ const Template = (props: TemplateProps) => {
                                 onEditClick={onEditClick}
                             />
                         ))}
-                </>
+                </Grid>
             )}
             {!childrenOnTop && (
-                <>
+                <Grid
+                    item
+                    container
+                    direction="column"
+                    sx={{ minHeight: "80vh" }}
+                >
                     {layout
                         .filter(
                             (widget) =>
@@ -118,10 +126,8 @@ const Template = (props: TemplateProps) => {
                                 onEditClick={onEditClick}
                             />
                         ))}
-                    <Grid item sx={{ minHeight: "70vh" }}>
-                        {children}
-                    </Grid>
-                </>
+                    <Grid item>{children}</Grid>
+                </Grid>
             )}
             {footer && (
                 <EditableWidget

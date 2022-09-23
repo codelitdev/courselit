@@ -1,12 +1,22 @@
 import React, { FormEvent, useEffect, useState } from "react";
-import { RichText, Section } from "@courselit/components-library";
+import {
+    MediaSelector,
+    RichText,
+    Section,
+} from "@courselit/components-library";
 import useCourse from "./course-hook";
 import { FetchBuilder } from "@courselit/utils";
 import {
     networkAction,
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
-import { Address, AppMessage } from "@courselit/common-models";
+import {
+    Address,
+    AppMessage,
+    Auth,
+    Media,
+    Profile,
+} from "@courselit/common-models";
 import {
     APP_MESSAGE_COURSE_SAVED,
     BUTTON_SAVE,
@@ -15,17 +25,17 @@ import {
 import { connect } from "react-redux";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import { Button, Grid, TextField } from "@mui/material";
-import MediaSelector from "../../media/media-selector";
 import { MIMETYPE_IMAGE } from "../../../../ui-config/constants";
-import Media from "@courselit/common-models/dist/media";
 
 interface DetailsProps {
     id: string;
+    auth: Auth;
+    profile: Profile;
     address: Address;
     dispatch: AppDispatch;
 }
 
-function Details({ id, address, dispatch }: DetailsProps) {
+function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState(RichText.emptyState());
     const [featuredImage, setFeaturedImage] = useState<Media>(null);
@@ -113,6 +123,11 @@ function Details({ id, address, dispatch }: DetailsProps) {
                             }}
                             mimeTypesToShow={[...MIMETYPE_IMAGE]}
                             access="public"
+                            strings={{}}
+                            auth={auth}
+                            profile={profile}
+                            dispatch={dispatch}
+                            address={address}
                         />
                     </Grid>
                 </Grid>
@@ -136,6 +151,8 @@ function Details({ id, address, dispatch }: DetailsProps) {
 }
 
 const mapStateToProps = (state: AppState) => ({
+    auth: state.auth,
+    profile: state.profile,
     address: state.address,
 });
 

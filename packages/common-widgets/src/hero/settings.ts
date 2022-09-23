@@ -1,3 +1,5 @@
+import { Media } from "@courselit/common-models";
+
 export default interface Settings {
     title?: string;
     description?: string;
@@ -5,10 +7,11 @@ export default interface Settings {
     buttonAction?: string;
     buttonBackground?: string;
     buttonForeground?: string;
-    mediaId?: string;
+    media?: Media;
     youtubeLink?: string;
     alignment?: "left" | "right";
     backgroundColor?: string;
     foregroundColor?: string;
     style: "card" | "normal";
+    mediaRadius?: number;
 }

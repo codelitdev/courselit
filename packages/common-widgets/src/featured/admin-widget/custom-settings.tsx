@@ -15,7 +15,6 @@ export default function CustomSettings({
     settings,
     onChange,
 }: CustomSettingsProps) {
-    console.log("custom settings", name, settings);
     const [title, setTitle] = useState(settings.title);
     const [description, setDescription] = useState(
         settings.description

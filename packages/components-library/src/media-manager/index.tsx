@@ -1,54 +1,55 @@
-import React, { useEffect, useState } from "react";
-import { styled } from "@mui/material/styles";
+import * as React from "react";
 import { ImageListItemBar, Button } from "@mui/material";
-import { connect } from "react-redux";
-import {
-    MEDIA_MANAGER_PAGE_HEADING,
-    LOAD_MORE_TEXT,
-    HEADER_EDITING_MEDIA,
-    MEDIA_MANAGER_DIALOG_TITLE,
-} from "../../../ui-config/strings";
 import { Add } from "@mui/icons-material";
-import { OverviewAndDetail, Image } from "@courselit/components-library";
-import dynamic from "next/dynamic";
 import { actionCreators } from "@courselit/state-management";
 import type { AppDispatch, AppState } from "@courselit/state-management";
-import { checkPermission } from "../../../ui-lib/utils";
-import { AppMessage } from "@courselit/common-models";
-import constants from "../../../config/constants";
-import type { Auth, Profile, Address, Media } from "@courselit/common-models";
-const { permissions } = constants;
+import { AppMessage, Media, UIConstants } from "@courselit/common-models";
+import type { Auth, Profile, Address } from "@courselit/common-models";
+import { checkPermission } from "@courselit/utils";
+import Upload from "./upload";
+import Editor from "./editor";
+import MediaPreview from "./media-preview";
+import OverviewAndDetail from "../overview-and-detail";
+import Image from "../image";
 
+const { useEffect, useState } = React;
 const { networkAction, setAppMessage } = actionCreators;
 
-const PREFIX = "index";
-
-const classes = {
-    btn: `${PREFIX}-btn`,
-};
-
-const StyledOverviewAndDetail = styled(OverviewAndDetail)(
-    ({ theme }: { theme: any }) => ({
-        [`& .${classes.btn}`]: {
-            width: "100%",
-            height: "100%",
-        },
-    })
-);
-
-const Upload = dynamic(() => import("./upload"));
-const Editor = dynamic(() => import("./editor"));
-const MediaPreview = dynamic(() => import("./media-preview"));
+interface Strings {
+    header?: string;
+    loadMoreText?: string;
+    editingArea?: string;
+    dialogTitle?: string;
+    buttonAddFile?: string;
+    fileUploaded?: string;
+    uploadFailed?: string;
+    uploading?: string;
+    uploadButtonText?: string;
+    headerMediaPreview?: string;
+    originalFileNameHeader?: string;
+    previewPDFFile?: string;
+    directUrl?: string;
+    urlCopied?: string;
+    fileType?: string;
+    changesSaved?: string;
+    mediaDeleted?: string;
+    deleteMediaPopupHeader?: string;
+    popupCancelAction?: string;
+    popupOKAction?: string;
+    deleteMediaButton?: string;
+    publiclyAvailable?: string;
+}
 
 interface IndexProps {
     auth: Auth;
     profile: Profile;
     dispatch: AppDispatch;
     address: Address;
-    mimeTypesToShow: string[];
+    mimeTypesToShow?: string[];
     selectionMode: boolean;
     onSelect: (...args: any[]) => void;
-    access: "public" | "private";
+    strings: Strings;
+    access?: "public" | "private";
 }
 
 const Index = (props: IndexProps) => {
@@ -57,7 +58,7 @@ const Index = (props: IndexProps) => {
     const [componentsMap, setComponentsMap] = useState([]);
     const [refreshMedia, setRefreshMedia] = useState(0);
     const [searchText] = useState("");
-    const { address } = props;
+    const { address, strings, dispatch, auth, profile } = props;
 
     useEffect(() => {
         loadMedia();
@@ -117,18 +118,14 @@ const Index = (props: IndexProps) => {
         });
         map.push({
             Overview: (
-                <Button
-                    variant="outlined"
-                    className={classes.btn}
-                    onClick={() => loadMedia()}
-                >
-                    {LOAD_MORE_TEXT}
+                <Button variant="outlined" onClick={() => loadMedia()}>
+                    {props.strings.loadMoreText || "Load more"}
                 </Button>
             ),
         });
         if (
-            checkPermission(props.profile.permissions, [
-                permissions.uploadMedia,
+            checkPermission(profile.permissions, [
+                UIConstants.permissions.uploadMedia,
             ])
         ) {
             map.unshift(getAddMediaComponentConfig());
@@ -137,7 +134,7 @@ const Index = (props: IndexProps) => {
     };
 
     const getComponentConfig = (media: Media) => {
-        const componentConfig = {
+        const componentConfig: Record<string, unknown> = {
             Overview: (
                 <>
                     <Image src={media.thumbnail!} />
@@ -149,16 +146,41 @@ const Index = (props: IndexProps) => {
             ),
         };
 
-        componentConfig.subtitle = HEADER_EDITING_MEDIA;
+        componentConfig.subtitle = props.strings.editingArea || "Edit media";
 
         if (!props.selectionMode) {
             componentConfig.Detail = (
                 <div>
-                    <MediaPreview item={media} />
+                    <MediaPreview
+                        item={media}
+                        dispatch={dispatch}
+                        address={address}
+                        strings={{
+                            headerMediaPreview: strings.headerMediaPreview,
+                            originalFileNameHeader:
+                                strings.originalFileNameHeader,
+                            previewPDFFile: strings.previewPDFFile,
+                            directUrl: strings.directUrl,
+                            urlCopied: strings.urlCopied,
+                            fileType: strings.fileType,
+                        }}
+                    />
                     <Editor
+                        address={address}
+                        dispatch={dispatch}
                         media={media}
                         onMediaEdited={onMediaEdited}
                         onMediaDeleted={onMediaDeleted}
+                        strings={{
+                            changesSaved: strings.changesSaved,
+                            mediaDeleted: strings.mediaDeleted,
+                            deleteMediaPopupHeader:
+                                strings.deleteMediaPopupHeader,
+                            popupCancelAction: strings.popupCancelAction,
+                            popupOKAction: strings.popupOKAction,
+                            deleteMediaButton: strings.deleteMediaButton,
+                            publiclyAvailable: strings.publiclyAvailable,
+                        }}
                     />
                 </div>
             );
@@ -168,20 +190,30 @@ const Index = (props: IndexProps) => {
     };
 
     const getAddMediaComponentConfig = () => ({
-        subtitle: MEDIA_MANAGER_DIALOG_TITLE,
+        subtitle: props.strings.dialogTitle || "Add media",
         Overview: (
             <>
-                <Button
-                    variant="outlined"
-                    color="primary"
-                    startIcon={<Add />}
-                    className={classes.btn}
-                >
+                <Button variant="outlined" color="primary" startIcon={<Add />}>
                     Add new
                 </Button>
             </>
         ),
-        Detail: <Upload resetOverview={resetOverview} />,
+        Detail: (
+            <Upload
+                resetOverview={resetOverview}
+                auth={auth}
+                address={address}
+                dispatch={dispatch}
+                strings={{
+                    buttonAddFile: strings.buttonAddFile,
+                    fileUploaded: strings.fileUploaded,
+                    uploadFailed: strings.uploadFailed,
+                    uploading: strings.uploading,
+                    uploadButtonText: strings.uploadButtonText,
+                    publiclyAvailable: strings.publiclyAvailable,
+                }}
+            />
+        ),
     });
 
     const resetOverview = () => {
@@ -217,17 +249,11 @@ const Index = (props: IndexProps) => {
 
     return (
         <OverviewAndDetail
-            title={MEDIA_MANAGER_PAGE_HEADING}
+            title={props.strings.header || "Media"}
             componentsMap={componentsMap}
             onSelect={onSelect}
         />
     );
 };
 
-const mapStateToProps = (state: AppState) => ({
-    auth: state.auth,
-    profile: state.profile,
-    address: state.address,
-});
-
-export default connect(mapStateToProps)(Index);
+export default Index;

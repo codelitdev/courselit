@@ -8,6 +8,9 @@ import Image from "./image";
 import Select from "./select";
 import Menu from "./menu";
 import Link from "./link";
+import Dialog from "./dialog";
+import MediaManager from "./media-manager";
+import MediaSelector from "./media-selector";
 
 export {
     PriceTag,
@@ -20,4 +23,7 @@ export {
     Select,
     Menu,
     Link,
+    Dialog,
+    MediaManager,
+    MediaSelector,
 };

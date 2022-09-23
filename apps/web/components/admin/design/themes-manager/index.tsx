@@ -245,9 +245,7 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
                     alignItems="center"
                 >
                     <Grid item>
-                        <Typography
-                            variant="h4"
-                        >
+                        <Typography variant="h4">
                             {CARD_HEADER_THEME}
                         </Typography>
                     </Grid>
@@ -317,34 +315,38 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
                 </Section>
             )}
             <Grid item sx={{ mb: 2 }}>
-                {installedThemes.length === 0 && <Typography color="textSecondary">{NO_THEMES_INSTALLED}</Typography>}
-                {installedThemes.length > 0 && 
-                <TableContainer>
-                    <Table aria-label="Themes">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>
-                                    {THEMES_TABLE_HEADER_NAME}
-                                </TableCell>
-                                <TableCell align="right">
-                                    {THEMES_TABLE_HEADER_NAME}
-                                </TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {installedThemes.map((theme: Theme) => (
-                                <ThemeItem
-                                    theme={theme}
-                                    key={theme.name}
-                                    onApply={onThemeApply}
-                                    onRemix={onThemeRemix}
-                                    onUninstall={onThemeUninstall}
-                                />
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-                }
+                {installedThemes.length === 0 && (
+                    <Typography color="textSecondary">
+                        {NO_THEMES_INSTALLED}
+                    </Typography>
+                )}
+                {installedThemes.length > 0 && (
+                    <TableContainer>
+                        <Table aria-label="Themes">
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell>
+                                        {THEMES_TABLE_HEADER_NAME}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        {THEMES_TABLE_HEADER_NAME}
+                                    </TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {installedThemes.map((theme: Theme) => (
+                                    <ThemeItem
+                                        theme={theme}
+                                        key={theme.name}
+                                        onApply={onThemeApply}
+                                        onRemix={onThemeRemix}
+                                        onUninstall={onThemeUninstall}
+                                    />
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                )}
             </Grid>
             <Grid item>
                 <Link

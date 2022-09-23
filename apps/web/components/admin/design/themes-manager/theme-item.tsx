@@ -8,9 +8,8 @@ import {
     DELETE_THEME_POPUP_HEADER,
     APPLY_THEME_POPUP_HEADER,
 } from "../../../../ui-config/strings";
-import AppDialog from "../../../public/app-dialog";
 import Theme from "../../../../ui-models/theme";
-import { Menu } from "@courselit/components-library";
+import { Dialog, Menu } from "@courselit/components-library";
 import { MoreVert } from "@mui/icons-material";
 
 interface ThemeItemProps {
@@ -72,7 +71,7 @@ const ThemeItem = (props: ThemeItemProps) => {
             <TableCell align="right">
                 <Menu options={generateOptions()} icon={<MoreVert />} />
             </TableCell>
-            <AppDialog
+            <Dialog
                 onOpen={uninstallConfirmationPopupOpened}
                 onClose={closeUninstallConfirmationPopup}
                 title={`${DELETE_THEME_POPUP_HEADER} ${props.theme.name}?`}
@@ -84,7 +83,7 @@ const ThemeItem = (props: ThemeItemProps) => {
                     { name: BUTTON_THEME_UNINSTALL, callback: uninstallTheme },
                 ]}
             />
-            <AppDialog
+            <Dialog
                 onOpen={applyConfirmationPopupOpened}
                 onClose={closeApplyConfirmationPopup}
                 title={`${APPLY_THEME_POPUP_HEADER} ${props.theme.name}?`}

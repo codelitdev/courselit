@@ -43,12 +43,16 @@
         "@mui/material": "^5.9.2",
         "next": "12.2.4",
         "react": "^17.0.2",
-        "react-redux": "^8.0.1"
+        "react-redux": "^8.0.1",
+        "redux": "^4.2.0",
+        "redux-thunk": "^2.4.1"
     },
     "gitHead": "fca7d2f8455c835f1c185a1ebc8513c6269ebe5b",
     "dependencies": {
         "@courselit/common-models": "^0.22.0",
         "@courselit/rich-text": "^0.22.0",
+        "@courselit/state-management": "^0.22.0",
+        "@courselit/utils": "^0.22.0",
         "currency-symbol-map": "^5.1.0"
     }
 }

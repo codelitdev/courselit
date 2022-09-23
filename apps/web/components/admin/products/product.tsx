@@ -26,14 +26,11 @@ import type { AppDispatch, AppState } from "@courselit/state-management";
 import type { SiteInfo, Address } from "@courselit/common-models";
 import { connect } from "react-redux";
 import { FetchBuilder, formatCurrency } from "@courselit/utils";
-import { Image, Menu } from "@courselit/components-library";
-import dynamic from "next/dynamic";
+import { Dialog, Image, Menu } from "@courselit/components-library";
 import {
     networkAction,
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
-
-const AppDialog = dynamic(() => import("../../public/app-dialog"));
 
 function Product({
     details,
@@ -165,7 +162,7 @@ function Product({
                     icon={<MoreVert />}
                 />
             </TableCell>
-            <AppDialog
+            <Dialog
                 onOpen={deleteProductPopupOpened}
                 onClose={closeDeletePopup}
                 title={DELETE_PRODUCT_POPUP_HEADER}
@@ -180,7 +177,7 @@ function Product({
                 <Typography variant="subtitle1">
                     {DELETE_PRODUCT_POPUP_TEXT}
                 </Typography>
-            </AppDialog>
+            </Dialog>
         </TableRow>
     );
 }

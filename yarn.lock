@@ -392,6 +392,8 @@ __metadata:
   dependencies:
     "@courselit/common-models": ^0.22.0
     "@courselit/rich-text": ^0.22.0
+    "@courselit/state-management": ^0.22.0
+    "@courselit/utils": ^0.22.0
     "@types/react": ^17.0.43
     "@types/react-redux": ^7.1.11
     currency-symbol-map: ^5.1.0
@@ -401,6 +403,8 @@ __metadata:
     next: 12.2.4
     react: ^17.0.2
     react-redux: ^8.0.1
+    redux: ^4.2.0
+    redux-thunk: ^2.4.1
   languageName: unknown
   linkType: soft
 

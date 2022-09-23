@@ -39,14 +39,13 @@ import {
 } from "../../../../../ui-config/constants";
 import { FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";
-import { AppMessage } from "@courselit/common-models";
+import { AppMessage, Media, Profile } from "@courselit/common-models";
 import {
     Section,
     RichText as TextEditor,
     RichText,
     Select as SingleSelect,
 } from "@courselit/components-library";
-import dynamic from "next/dynamic";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import type { Auth, Lesson, Address } from "@courselit/common-models";
 import { actionCreators } from "@courselit/state-management";
@@ -54,17 +53,16 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import useCourse from "../course-hook";
 import { Help } from "@mui/icons-material";
+import { Dialog, MediaSelector } from "@courselit/components-library";
 
 const { networkAction, setAppMessage } = actionCreators;
-
-const AppDialog = dynamic(() => import("../../../../public/app-dialog"));
-const MediaSelector = dynamic(() => import("../../../media/media-selector"));
 
 interface LessonEditorProps {
     courseId: string;
     sectionId: string;
     lessonId?: string;
     auth: Auth;
+    profile: Profile;
     dispatch: AppDispatch;
     address: Address;
 }
@@ -75,6 +73,8 @@ const LessonEditor = ({
     lessonId,
     dispatch,
     address,
+    profile,
+    auth,
 }: LessonEditorProps) => {
     const emptyLesson: Lesson = Object.assign(
         {},
@@ -315,6 +315,8 @@ const LessonEditor = ({
         ) {
             return MIMETYPE_PDF;
         }
+
+        return [...MIMETYPE_AUDIO, ...MIMETYPE_VIDEO, ...MIMETYPE_PDF];
     };
 
     const goBackLessonList = () =>
@@ -423,6 +425,11 @@ const LessonEditor = ({
                                                         );
                                                 }}
                                                 mimeTypesToShow={getMimeTypesToShow()}
+                                                strings={{}}
+                                                auth={auth}
+                                                profile={profile}
+                                                dispatch={dispatch}
+                                                address={address}
                                             />
                                         </div>
                                     )}
@@ -559,7 +566,7 @@ const LessonEditor = ({
                     </Grid>
                 </Grid>
             )}
-            <AppDialog
+            <Dialog
                 onOpen={deleteLessonPopupOpened}
                 onClose={closeDeleteLessonPopup}
                 title={DELETE_LESSON_POPUP_HEADER}
@@ -577,6 +584,7 @@ const LessonEditor = ({
 
 const mapStateToProps = (state: AppState) => ({
     auth: state.auth,
+    profile: state.profile,
     address: state.address,
 });
 

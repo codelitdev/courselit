@@ -1,4 +1,4 @@
-import Media from "../models/Media";
+import { Media } from "@courselit/common-models";
 
 const medialitServer = process.env.MEDIALIT_SERVER || "https://medialit.cloud";
 

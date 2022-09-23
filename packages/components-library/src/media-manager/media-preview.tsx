@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import * as React from "react";
 import { styled } from "@mui/material/styles";
 import {
     Grid,
@@ -7,24 +7,18 @@ import {
     IconButton,
     InputAdornment,
 } from "@mui/material";
-import {
-    HEADER_MEDIA_PREVIEW,
-    MEDIA_EDITOR_ORIGINAL_FILE_NAME_HEADER,
-    PREVIEW_PDF_FILE,
-    MEDIA_DIRECT_URL,
-    MEDIA_URL_COPIED,
-    MEDIA_FILE_TYPE,
-} from "../../../ui-config/strings";
-import { connect } from "react-redux";
-import { Section } from "@courselit/components-library";
 import { FileCopy } from "@mui/icons-material";
 import { AppMessage } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import type { Address, Media } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
 import { actionCreators } from "@courselit/state-management";
-import { Image } from "@courselit/components-library";
+import Section from "../section";
+import Image from "../image";
+import { AnyAction } from "redux";
+import { ThunkDispatch } from "redux-thunk";
 
+const { useEffect, useState } = React;
 const { networkAction, setAppMessage } = actionCreators;
 
 const PREFIX = "MediaPreview";
@@ -50,15 +44,25 @@ const StyledSection = styled(Section)({
     },
 });
 
+interface Strings {
+    headerMediaPreview?: string;
+    originalFileNameHeader?: string;
+    previewPDFFile?: string;
+    directUrl?: string;
+    urlCopied?: string;
+    fileType?: string;
+}
+
 interface MediaPreviewProps {
     item: Media;
     address: Address;
     dispatch: AppDispatch;
+    strings: Strings;
 }
 
 const MediaPreview = (props: MediaPreviewProps) => {
     const [item, setItem] = useState(props.item);
-    const { dispatch, address } = props;
+    const { dispatch, address, strings } = props;
     const { mediaId, originalFileName, mimeType, caption, file, size, access } =
         item;
 
@@ -97,7 +101,9 @@ const MediaPreview = (props: MediaPreviewProps) => {
         try {
             await navigator.clipboard.writeText(file!);
             (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                setAppMessage(new AppMessage(MEDIA_URL_COPIED))
+                setAppMessage(
+                    new AppMessage(strings.urlCopied || "Copied to clipboard")
+                )
             );
         } catch (e) {}
     };
@@ -106,15 +112,17 @@ const MediaPreview = (props: MediaPreviewProps) => {
         <StyledSection>
             <Grid container direction="column" spacing={1}>
                 <Grid item>
-                    <Typography variant="h4">{HEADER_MEDIA_PREVIEW}</Typography>
+                    <Typography variant="h4">
+                        {strings.headerMediaPreview || "Preview"}
+                    </Typography>
                 </Grid>
                 <Grid item>
                     <TextField
                         variant="outlined"
-                        label={MEDIA_EDITOR_ORIGINAL_FILE_NAME_HEADER}
+                        label={strings.originalFileNameHeader || "File Name"}
                         fullWidth
                         margin="normal"
-                        name={MEDIA_EDITOR_ORIGINAL_FILE_NAME_HEADER}
+                        name={strings.originalFileNameHeader || "File Name"}
                         value={originalFileName}
                         disabled={true}
                     />
@@ -122,10 +130,10 @@ const MediaPreview = (props: MediaPreviewProps) => {
                 <Grid item>
                     <TextField
                         variant="outlined"
-                        label={MEDIA_FILE_TYPE}
+                        label={strings.fileType || "File type"}
                         fullWidth
                         margin="normal"
-                        name={MEDIA_FILE_TYPE}
+                        name={strings.fileType || "File type"}
                         value={mimeType}
                         disabled={true}
                     />
@@ -134,10 +142,10 @@ const MediaPreview = (props: MediaPreviewProps) => {
                     <Grid item>
                         <TextField
                             variant="outlined"
-                            label={MEDIA_DIRECT_URL}
+                            label={strings.directUrl || "Direct URL"}
                             fullWidth
                             margin="normal"
-                            name={MEDIA_DIRECT_URL}
+                            name={strings.directUrl || "Direct URL"}
                             value={file}
                             disabled={true}
                             InputProps={{
@@ -191,7 +199,7 @@ const MediaPreview = (props: MediaPreviewProps) => {
                             target="_blank"
                             rel="noopener noreferrer"
                         >
-                            {PREVIEW_PDF_FILE}
+                            {strings.previewPDFFile || "Preview in a new tab"}
                         </a>
                     </Grid>
                 )}
@@ -200,12 +208,4 @@ const MediaPreview = (props: MediaPreviewProps) => {
     );
 };
 
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({
-    dispatch: dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(MediaPreview);
+export default MediaPreview;
