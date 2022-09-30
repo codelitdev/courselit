@@ -15,7 +15,8 @@ const {
     userTypeNewsletterSubscriber,
 } = constants;
 import { Progress } from "../../models/Progress";
-import mongoose from "mongoose";
+import { initMandatoryPages } from "../pages/logic";
+import { Domain } from "../../models/Domain";
 
 const removeAdminFieldsFromUserObject = ({
     id,
@@ -176,7 +177,7 @@ const addFilterToQueryBasedOnUserGroup = (
     query: Record<string, unknown>,
     type: UserGroupType
 ): Record<string, unknown> => {
-    if (type === constants.userTypeTeam) {
+    if (type === userTypeTeam) {
         const allPerms = Object.values(constants.permissions);
         const indexOfEnrollCoursePermission = allPerms.indexOf(
             constants.permissions.enrollInCourse
@@ -185,9 +186,9 @@ const addFilterToQueryBasedOnUserGroup = (
         query.permissions = {
             $in: [...allPerms],
         };
-    } else if (type === constants.userTypeCustomer) {
+    } else if (type === userTypeCustomer) {
         query.permissions = { $in: [constants.permissions.enrollInCourse] };
-    } else if (type === constants.userTypeNewsletterSubscriber) {
+    } else if (type === userTypeNewsletterSubscriber) {
         query.subscribedToUpdates = true;
     }
 
@@ -225,19 +226,21 @@ export async function createUser({
     email,
     lead,
 }: {
-    domain: mongoose.Types.ObjectId;
+    domain: Domain;
     email: string;
     lead?: typeof constants.leadWebsite | typeof constants.leadNewsletter;
 }): Promise<User> {
     const newUser: Partial<User> = {
-        domain: domain,
+        domain: domain._id,
         email: email,
         active: true,
         purchases: [],
         permissions: [],
         lead: lead || constants.leadWebsite,
     };
-    const notTheFirstUserOfDomain = await UserModel.countDocuments({ domain });
+    const notTheFirstUserOfDomain = await UserModel.countDocuments({
+        domain: domain._id,
+    });
     if (notTheFirstUserOfDomain) {
         newUser.permissions = [constants.permissions.enrollInCourse];
     } else {
@@ -256,5 +259,9 @@ export async function createUser({
         ];
     }
     newUser.lead = lead;
-    return await UserModel.create(newUser);
+    const user = await UserModel.create(newUser);
+
+    await initMandatoryPages(domain, user);
+
+    return user;
 }
