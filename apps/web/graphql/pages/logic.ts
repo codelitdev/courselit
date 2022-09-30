@@ -14,7 +14,10 @@ import {
 import constants from "../../config/constants";
 import Course from "../../models/Course";
 import { generateUniqueId } from "@courselit/utils";
-const { product } = constants;
+import { Footer, Header } from "@courselit/common-widgets";
+import { User } from "@courselit/common-models";
+import { Domain } from "../../models/Domain";
+const { product, site, blogPage } = constants;
 
 export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
     await initSharedWidgets(ctx);
@@ -27,10 +30,10 @@ export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
         };
     }
 
-    if (
+    const isAdmin =
         ctx.user &&
-        checkPermission(ctx.user.permissions, [permissions.manageSite])
-    ) {
+        checkPermission(ctx.user.permissions, [permissions.manageSite]);
+    if (isAdmin) {
         const page = await PageModel.findOne(
             {
                 pageId: id,
@@ -45,6 +48,8 @@ export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
                 draftLayout: 1,
             }
         );
+        if (!page) return;
+
         return getPageResponse(page, ctx);
     } else {
         const page = await PageModel.findOne(
@@ -60,6 +65,8 @@ export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
                 entityId: 1,
             }
         );
+        if (!page) return;
+
         if (page.type === product) {
             const course = await Course.findOne({ courseId: page.entityId });
             if (!course.published) {
@@ -194,4 +201,93 @@ export const getPages = async (ctx: GQLContext) => {
     );
 
     return pages;
+};
+
+export const initMandatoryPages = async (domain: Domain, user: User) => {
+    await PageModel.insertMany<Page>([
+        {
+            domain: domain._id,
+            pageId: "homepage",
+            type: site,
+            creatorId: user.userId,
+            name: "Home page",
+            entityId: domain.name,
+            layout: [
+                {
+                    name: Header.metadata.name,
+                    deleteable: false,
+                    shared: true,
+                },
+                {
+                    name: Footer.metadata.name,
+                    deleteable: false,
+                    shared: true,
+                },
+            ],
+            draftLayout: [],
+        },
+        {
+            domain: domain._id,
+            pageId: "privacy",
+            type: site,
+            creatorId: user.userId,
+            name: "Privacy policy",
+            entityId: domain.name,
+            layout: [
+                {
+                    name: Header.metadata.name,
+                    deleteable: false,
+                    shared: true,
+                },
+                {
+                    name: Footer.metadata.name,
+                    deleteable: false,
+                    shared: true,
+                },
+            ],
+            draftLayout: [],
+        },
+        {
+            domain: domain._id,
+            pageId: "terms",
+            type: site,
+            creatorId: user.userId,
+            name: "Terms of Service",
+            entityId: domain.name,
+            layout: [
+                {
+                    name: Header.metadata.name,
+                    deleteable: false,
+                    shared: true,
+                },
+                {
+                    name: Footer.metadata.name,
+                    deleteable: false,
+                    shared: true,
+                },
+            ],
+            draftLayout: [],
+        },
+        {
+            domain: domain._id,
+            pageId: "blog",
+            type: blogPage,
+            creatorId: user.userId,
+            name: "Blog",
+            entityId: domain.name,
+            layout: [
+                {
+                    name: Header.metadata.name,
+                    deleteable: false,
+                    shared: true,
+                },
+                {
+                    name: Footer.metadata.name,
+                    deleteable: false,
+                    shared: true,
+                },
+            ],
+            draftLayout: [],
+        },
+    ]);
 };

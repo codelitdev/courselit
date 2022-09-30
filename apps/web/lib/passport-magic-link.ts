@@ -42,7 +42,7 @@ export default new Strategy(
 
         if (!dbUser) {
             dbUser = await createUser({
-                domain: req.subdomain!._id,
+                domain: req.subdomain!,
                 email: user.email,
             });
         }
