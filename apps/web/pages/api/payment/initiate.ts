@@ -12,6 +12,7 @@ import CourseModel, { Course } from "../../../models/Course";
 import { getPaymentMethod } from "../../../payments";
 import PurchaseModel from "../../../models/Purchase";
 import finalizePurchase from "../../../lib/finalize-purchase";
+import { error } from "../../../services/logger";
 
 const { transactionSuccess, transactionFailed, transactionInitiated } =
     constants;
@@ -20,6 +21,10 @@ passport.use(jwtStrategy);
 
 export default nc<NextApiRequest, NextApiResponse>({
     onError: (err, req, res, next) => {
+        error(err.message, {
+            fileName: `/api/payment/initiate.ts`,
+            stack: err.stack,
+        });
         res.status(500).json({ error: err.message });
     },
     onNoMatch: (req, res) => {

@@ -8,11 +8,19 @@ import jwtStrategy from "../../lib/jwt";
 import ApiRequest from "../../models/ApiRequest";
 import connectDb from "../../middlewares/connect-db";
 import constants from "../../config/constants";
+import { error } from "../../services/logger";
+import { responses } from "../../config/strings";
 
 passport.use(jwtStrategy);
 
 export default nc<NextApiRequest, NextApiResponse>({
     onError: (err, req, res, next) => {
+        if (err.message.indexOf(responses.domain_doesnt_exist) === -1) {
+            error(err.message, {
+                fileName: `/api/graph.ts`,
+                stack: err.stack,
+            });
+        }
         res.status(500).json({ error: err.message });
     },
     onNoMatch: (req, res) => {

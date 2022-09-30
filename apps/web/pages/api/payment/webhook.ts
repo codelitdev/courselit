@@ -8,10 +8,15 @@ import verifyDomain from "../../../middlewares/verify-domain";
 import ApiRequest from "../../../models/ApiRequest";
 import PurchaseModel, { Purchase } from "../../../models/Purchase";
 import { getPaymentMethod } from "../../../payments";
+import { error } from "../../../services/logger";
 const { transactionSuccess } = constants;
 
 export default nc<NextApiRequest, NextApiResponse>({
     onError: (err, req, res, next) => {
+        error(err.message, {
+            fileName: `/api/payment/webhook.ts`,
+            stack: err.stack,
+        });
         res.status(500).json({ error: err.message });
     },
     onNoMatch: (req, res) => {

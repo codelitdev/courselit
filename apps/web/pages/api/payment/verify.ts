@@ -8,11 +8,16 @@ import verifyDomain from "../../../middlewares/verify-domain";
 import verifyJwt from "../../../middlewares/verify-jwt";
 import ApiRequest from "../../../models/ApiRequest";
 import PurchaseModel, { Purchase } from "../../../models/Purchase";
+import { error } from "../../../services/logger";
 
 passport.use(jwtStrategy);
 
 export default nc<NextApiRequest, NextApiResponse>({
     onError: (err, req, res, next) => {
+        error(err.message, {
+            fileName: `/api/payment/verify.ts`,
+            stack: err.stack,
+        });
         res.status(500).json({ error: err.message });
     },
     onNoMatch: (req, res) => {

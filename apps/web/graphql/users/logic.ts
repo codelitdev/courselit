@@ -261,7 +261,9 @@ export async function createUser({
     newUser.lead = lead;
     const user = await UserModel.create(newUser);
 
-    await initMandatoryPages(domain, user);
+    if (!notTheFirstUserOfDomain) {
+        await initMandatoryPages(domain, user);
+    }
 
     return user;
 }

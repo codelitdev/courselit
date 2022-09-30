@@ -27,7 +27,10 @@ export const warn = async (
 
 export const error = async (
     message: string,
-    metadata?: Record<string, unknown>
+    metadata?: {
+        fileName?: string;
+        stack?: Record<string, unknown>;
+    }
 ) => {
     await Log.create({
         severity: severityError,

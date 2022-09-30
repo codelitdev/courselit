@@ -10,11 +10,16 @@ import { setLoginSession } from "../../../lib/auth";
 import { responses } from "../../../config/strings";
 import connectDb from "../../../middlewares/connect-db";
 import User from "../../../models/User";
+import { error } from "../../../services/logger";
 
 passport.use(magicLinkStrategy);
 
 export default nc<NextApiRequest, NextApiResponse>({
     onError: (err, req, res, next) => {
+        error(err.message, {
+            fileName: `/api/auth/login.ts`,
+            stack: err.stack,
+        });
         res.status(500).json({ error: err.message });
     },
     onNoMatch: (req, res) => {
