@@ -1,5 +1,5 @@
 ---
-title: Self Hosting CourseLit 
+title: Self Hosting CourseLit
 description: Hosting CourseLit on your own server
 layout: ../../layouts/MainLayout.astro
 ---
@@ -23,7 +23,7 @@ EMAIL_FROM=from_field
 MEDIALIT_APIKEY=apikey
 ```
 
-> ⚠️ You need to have a [MediaLit](https://medialit.cloud) account in order to upload media on courselit. you can self-host MediaLit, refer the section titled hosting medialit below. 
+> ⚠️ You need to have a [MediaLit](https://medialit.cloud) account in order to upload media on courselit. you can self-host MediaLit, refer the section titled hosting medialit below.
 
 Now, create a new file called docker-compose.yml and paste the following in the file.
 
@@ -44,7 +44,7 @@ services:
       - MEDIALIT_APIKEY=${MEDIALIT_APIKEY}
     ports:
       - "3000:3000"
-    container_name: app 
+    container_name: app
     restart: on-failure
 ```
 
@@ -56,10 +56,9 @@ docker-compose up
 
 Visit http://localhost:3000 to see CourseLit in action.
 
-
 ## Hosting MediaLit
 
-MediaLit powers CourseLit's media management and optimisation. You can use the cloud hosted version (paid) or self host it. MediaLit offers a Docker image which we can use to self host it. 
+MediaLit powers CourseLit's media management and optimisation. You can use the cloud hosted version (paid) or self host it. MediaLit offers a Docker image which we can use to self host it.
 
 Let's see how.
 
@@ -109,6 +108,7 @@ CLOUD_PREFIX=medialit
 Run docker-compose up to bring up the services.
 
 ### Generate An API Key On MediaLit
+
 First you need to obtain the container id of your MediaLit instance. To do this, run:
 
 ```
