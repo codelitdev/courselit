@@ -9,9 +9,9 @@ on:
   workflow_dispatch:
     inputs:
       path:
-        description: 'Path to your Astro project'
+        description: "Path to your Astro project"
         required: true
-        default: apps/docs
+        default: "./apps/docs"
         type: string
   
 # Allow this job to clone the repo and create a page deployment
