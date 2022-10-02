@@ -1,5 +1,5 @@
 export const SITE = {
-    title: "CourseLit",
+    title: "CourseLit Documentation",
     description: "Sell courses, digital downloads on your own website",
     defaultLanguage: "en_US",
 };
