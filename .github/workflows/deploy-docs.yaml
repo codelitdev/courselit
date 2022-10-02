@@ -24,6 +24,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Print inputs
+        run: echo "${{ toJSON(github.event.inputs) }}"
       - name: Checkout your repository using git
         uses: actions/checkout@v2          
       - name: Install, build, and upload your site
