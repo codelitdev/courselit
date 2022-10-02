@@ -27,7 +27,7 @@ Visit <a href="https://courselit.app" target="_blank">courselit.app</a> to use t
 
 CourseLit is an open-source LMS and can be hosted on a server where you control everything. If data ownership is at center of your business, self-hosting CourseLit is a way to go.
 
-Follow [our guide](./self-hosting) for full, step by step instructions for hosting CourseLit on your server.
+Follow [our guide](/en/self-hosting) for full, step by step instructions for hosting CourseLit on your server.
 
 ### Join Our Community
 
