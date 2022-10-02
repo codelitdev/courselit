@@ -5,23 +5,17 @@
 <p align="center">
   <b>
     <a href="https://courselit.app">Website</a> |
-    <a href="https://docs.courselit.app/post/KH9ERinOpM02OgBzA7_8O/hosting-courselit-on-your-own-server">Getting started</a> |
+    <a href="https://docs.courselit.app">Getting started</a> |
     <a href="https://docs.courselit.app">Documentation</a>
   </b>
 </p>
 
 <p align="center">
-  <a href="https://github.com/codelitdev/courselit/actions">
-    <img src="https://badgen.net/github/status/codelitdev/courselit" alt="Status">
-  </a>
   <a href="https://discord.gg/GR4bQsN">
     <img src="https://img.shields.io/badge/chat-discord-blue" alt="Chat">
   </a>
-  <a href="https://hub.docker.com/r/codelit/courselit-proxy">
-    <img src="https://badgen.net/docker/pulls/codelit/courselit-proxy" alt="Downloads">
-  </a>
   <a href="https://github.com/codelitdev/courselit">
-    <img src="https://badgen.net/github/last-commit/codelitdev/courselit" alt="Last commit">
+    <img src="https://badgen.net/github/tag/codelitdev/courselit" alt="Release">
   </a>
   <a href="https://lgtm.com/projects/g/codelitdev/courselit/alerts/">
     <img src="https://img.shields.io/lgtm/alerts/g/codelitdev/courselit.svg?logo=lgtm&logoWidth=18" alt="Lgtm">
@@ -37,7 +31,7 @@ CourseLit is a [batteries included](https://en.wikipedia.org/wiki/Batteries_Incl
 
 It comes pre-equipped with all the basic tools you need to efficiently run and administer your online teaching business. Features include course authoring, student management, payment processing (via Stripe), website builder, custom sales pages and analytics (very limited as of now).
 
-Check out this live example to see what you can build with CourseLit. [Click here](https://codelit.dev).
+Check out this live example to see what you can build with CourseLit. [Click here](https://www.codelit.dev).
 
 ## Screenshot
 
@@ -45,7 +39,9 @@ Check out this live example to see what you can build with CourseLit. [Click her
 
 ## Getting Started
 
-To install CourseLit on your cloud server, please follow [our official guide](https://codelit.gitbook.io/courselit/getting-started).
+Visit [courselit.app](https://courselit.app) to use the cloud hosted version. Sign up for a free account to get a 14 days trial period to experience the platform without any restrictions. No credit card required.
+
+To install CourseLit on your own server, please follow [our official guide](https://docs.courselit.app/en/self-hosting/).
 
 ## Development
 

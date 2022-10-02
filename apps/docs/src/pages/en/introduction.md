@@ -17,7 +17,7 @@ CourseLit is a **learning management system** (aka LMS) for everyone who wants t
 -   **Page Builder**: Customize your website and product pages to your heart's content.
 -   **Third Party Integrations**: Integrate analytics, chatbots etc., by injecting third party code snippets.
 -   **Self-hosted**: Host CourseLit on your own server to claim total data ownership.
--   **Open Source**: Read and modify the source code to build your own variantions.
+-   **Open Source**: Read and modify the source code to build your own variations.
 
 ### Try CourseLit
 
