@@ -21,6 +21,7 @@ import { actionCreators } from "@courselit/state-management";
 import CodeInjector from "../components/public/code-injector";
 import { DefaultTheme } from "@mui/private-theming";
 import { useRouter } from "next/router";
+import "remirror/styles/all.css";
 
 type CourseLitProps = AppProps & {
     emotionCache: EmotionCache;

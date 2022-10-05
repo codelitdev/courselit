@@ -1,0 +1,52 @@
+{
+    "name": "@courselit/text-editor",
+    "version": "0.0.1",
+    "description": "A text editor based on Remirror",
+    "keywords": [
+        "text editor",
+        "prose mirror",
+        "courselit"
+    ],
+    "author": "Rajat Saxena <hi@sub.rajatsaxena.dev>",
+    "homepage": "https://github.com/codelitdev/courselit#readme",
+    "license": "MIT",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "directories": {
+        "lib": "src",
+        "test": "__tests__"
+    },
+    "files": [
+        "dist"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/codelitdev/courselit.git"
+    },
+    "scripts": {
+        "test": "echo \"Error: run tests from root\" && exit 1",
+        "build": "tsc",
+        "prepublishOnly": "yarn run build"
+    },
+    "bugs": {
+        "url": "https://github.com/codelitdev/courselit/issues"
+    },
+    "peerDependencies": {
+        "@mui/icons-material": "^5.5.0",
+        "@mui/material": "^5.9.2",
+        "react": "^17.0.2",
+        "remirror": "^2.0.9"
+    },
+    "dependencies": {
+        "@remirror/pm": "^2.0.0",
+        "@remirror/react": "^2.0.9",
+        "@remirror/react-editors": "^1.0.9"
+    },
+    "devDependencies": {
+        "@types/node": "^18.8.0",
+        "typescript": "^4.8.4"
+    }
+}
