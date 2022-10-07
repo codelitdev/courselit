@@ -25,6 +25,7 @@ export default function AdminWidget({
 }: AdminWidgetProps) {
     const [productId, setProductId] = useState(settings.productId || "");
     const [products, setProducts] = useState([]);
+    const [productsLoaded, setProductsLoaded] = useState(false);
     const customSettingsChanged = (customSettings: Settings) => {
         onChange(Object.assign({}, settings, customSettings));
     };
@@ -58,6 +59,7 @@ export default function AdminWidget({
         try {
             dispatch(actionCreators.networkAction(true));
             const response = await fetch.exec();
+            setProductsLoaded(true);
             if (response.products) {
                 setProducts(response.products);
             }
@@ -68,7 +70,7 @@ export default function AdminWidget({
         }
     };
 
-    if (products.length < 1) {
+    if (!productsLoaded) {
         return (
             <>
                 <Skeleton variant="rectangular" height={50} sx={{ mb: 2 }} />

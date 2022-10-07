@@ -41,14 +41,14 @@ const markMap: MarkMap = {
 };
 
 interface RendererProps {
-    doc: RemirrorJSON;
+    json: RemirrorJSON;
 }
 
-const Renderer = ({ doc }: RendererProps): JSX.Element => {
+const Renderer = ({ json }: RendererProps): JSX.Element => {
     return (
         <ThemeProvider>
             <RemirrorRenderer
-                json={doc}
+                json={json}
                 typeMap={typeMap}
                 markMap={markMap}
                 skipUnknownTypes

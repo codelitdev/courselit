@@ -11,6 +11,8 @@ import Link from "./link";
 import Dialog from "./dialog";
 import MediaManager from "./media-manager";
 import MediaSelector from "./media-selector";
+import TextEditor from "./text-editor";
+import TextRenderer from "./text-renderer";
 
 export {
     PriceTag,
@@ -26,4 +28,6 @@ export {
     Dialog,
     MediaManager,
     MediaSelector,
+    TextEditor,
+    TextRenderer,
 };

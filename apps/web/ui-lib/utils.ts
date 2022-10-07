@@ -1,5 +1,4 @@
 import { permissions } from "../ui-config/constants";
-import { RichText as TextEditor } from "@courselit/components-library";
 import type { Profile } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
 
@@ -22,16 +21,16 @@ export const formulateCourseUrl = (course: any, backend = "") =>
         course.slug
     }`;
 
-export const getPostDescriptionSnippet = (rawDraftJSContentState: any) => {
-    if (!rawDraftJSContentState) return "";
+// export const getPostDescriptionSnippet = (rawDraftJSContentState: any) => {
+//     if (!rawDraftJSContentState) return "";
 
-    const firstSentence = TextEditor.hydrate({ data: rawDraftJSContentState })
-        .getCurrentContent()
-        .getPlainText()
-        .split(".")[0];
+//     const firstSentence = TextEditor.hydrate({ data: rawDraftJSContentState })
+//         .getCurrentContent()
+//         .getPlainText()
+//         .split(".")[0];
 
-    return firstSentence ? firstSentence + "." : firstSentence;
-};
+//     return firstSentence ? firstSentence + "." : firstSentence;
+// };
 
 export const getObjectContainingOnlyChangedFields = (
     baseline: Record<string, any>,

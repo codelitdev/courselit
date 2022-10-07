@@ -15,7 +15,6 @@ import {
 import {
     CommandButton,
     CommandButtonGroup,
-    FloatingToolbar,
     FloatingWrapper,
     useActive,
     useAttrs,
@@ -159,7 +158,6 @@ const DelayAutoFocusInput = ({
 const FloatingLinkToolbar = () => {
     const {
         isEditing,
-        linkPositioner,
         clickEdit,
         onRemove,
         submitHref,

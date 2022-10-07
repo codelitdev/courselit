@@ -1,4 +1,4 @@
 export default interface Settings {
-    text?: string;
+    text?: any;
     padding?: number;
 }

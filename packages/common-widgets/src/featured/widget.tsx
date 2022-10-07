@@ -1,5 +1,10 @@
 import { Course, WidgetProps } from "@courselit/common-models";
-import { Image, PriceTag, RichText } from "@courselit/components-library";
+import {
+    Image,
+    PriceTag,
+    TextRenderer,
+    TextEditor,
+} from "@courselit/components-library";
 import { actionCreators } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import {
@@ -81,7 +86,6 @@ export default function Widget({
         }
     };
 
-    const plainTextDescription = RichText.getPlainText(description);
     let direction: GridDirection;
     switch (alignment) {
         case "top":
@@ -176,18 +180,13 @@ export default function Widget({
                             {title || product.title}
                         </Typography>
                     </Grid>
-                    {(plainTextDescription || product.description) && (
+                    {product.description && (
                         <Grid item sx={{ pb: 2, width: 1 }}>
-                            <RichText
-                                initialContentState={RichText.hydrate({
-                                    data: plainTextDescription
-                                        ? description
-                                        : product.description ||
-                                          RichText.stringify(
-                                              RichText.emptyState()
-                                          ),
-                                })}
-                                readOnly={true}
+                            <TextRenderer
+                                json={
+                                    product.description &&
+                                    JSON.parse(product.description)
+                                }
                             />
                         </Grid>
                     )}

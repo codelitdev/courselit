@@ -1,4 +1,4 @@
-import React, { FC, PropsWithChildren, useCallback } from "react";
+import React, { useEffect, FC, PropsWithChildren, useCallback } from "react";
 import {
     PlaceholderExtension,
     wysiwygPreset,
@@ -13,6 +13,8 @@ import {
     useRemirror,
 } from "@remirror/react";
 import { AllStyledComponent } from "@remirror/styles/emotion";
+import { RemirrorContentType } from "@remirror/core-types";
+import { getTextContentFromSlice } from "@remirror/core";
 
 import BubbleMenu from "./BubbleMenu";
 import Toolbar from "./Toolbar";
@@ -22,6 +24,7 @@ export interface WysiwygEditorProps extends Partial<ReactEditorProps> {
     onChange: (...args: any[]) => void;
     showToolbar?: boolean;
     editable?: boolean;
+    refresh?: number;
 }
 
 export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
@@ -32,11 +35,20 @@ export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
     children,
     showToolbar = true,
     editable = true,
+    refresh,
     ...rest
 }) => {
     if (typeof window === "undefined") {
         return <></>;
     }
+
+    useEffect(() => {
+        manager.view.updateState(
+            manager.createState({
+                content: initialContent as RemirrorContentType,
+            })
+        );
+    }, [refresh]);
 
     const wysiwygPresetArrayWithoutImageExtension = wysiwygPreset().filter(
         (extension) => extension instanceof ImageExtension !== true
@@ -56,7 +68,11 @@ export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
         manager,
         state,
         onChange: onChangeRemirror,
-    } = useRemirror({ extensions, stringHandler });
+    } = useRemirror({
+        extensions,
+        stringHandler,
+        content: initialContent as RemirrorContentType,
+    });
 
     const onChangeFunc = (data: any) => {
         onChange(data.helpers.getJSON());
@@ -67,7 +83,7 @@ export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
             <ThemeProvider>
                 <Remirror
                     manager={manager}
-                    initialContent={initialContent}
+                    state={state}
                     onChange={(data) => {
                         onChangeFunc(data);
                         onChangeRemirror(data);
@@ -85,3 +101,6 @@ export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
         </AllStyledComponent>
     );
 };
+
+(WysiwygEditor as any).getPlainText = (doc: any) =>
+    getTextContentFromSlice(doc);

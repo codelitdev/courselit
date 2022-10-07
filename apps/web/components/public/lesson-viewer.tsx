@@ -22,7 +22,7 @@ import {
     ENROLL_IN_THE_COURSE,
     NOT_ENROLLED_HEADER,
 } from "../../ui-config/strings";
-import { RichText as TextEditor, Link } from "@courselit/components-library";
+import { TextRenderer, Link } from "@courselit/components-library";
 import { Address, AppMessage, Lesson, Profile } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { useRouter } from "next/router";
@@ -139,13 +139,7 @@ const LessonViewer = ({
             const response = await fetch.exec();
 
             if (response.lesson) {
-                setLesson(
-                    Object.assign({}, response.lesson, {
-                        content: TextEditor.hydrate({
-                            data: response.lesson.content,
-                        }),
-                    })
-                );
+                setLesson(response.lesson);
             }
         } catch (err: any) {
             if (err.message === "You are not enrolled in the course") {
@@ -313,9 +307,8 @@ const LessonViewer = ({
                         lesson.type &&
                         lesson.content && (
                             <Grid item className={classes.section}>
-                                <TextEditor
-                                    initialContentState={lesson.content}
-                                    readOnly={true}
+                                <TextRenderer
+                                    json={JSON.parse(lesson.content)}
                                 />
                             </Grid>
                         )}

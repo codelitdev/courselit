@@ -52,6 +52,7 @@
         "@courselit/common-models": "^0.23.3",
         "@courselit/rich-text": "^0.23.3",
         "@courselit/state-management": "^0.23.3",
+        "@courselit/text-editor": "workspace:^",
         "@courselit/utils": "^0.23.3",
         "currency-symbol-map": "^5.1.0"
     }

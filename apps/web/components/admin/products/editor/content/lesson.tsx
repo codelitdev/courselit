@@ -42,9 +42,8 @@ import { connect } from "react-redux";
 import { AppMessage, Media, Profile } from "@courselit/common-models";
 import {
     Section,
-    RichText as TextEditor,
-    RichText,
     Select as SingleSelect,
+    TextEditor,
 } from "@courselit/components-library";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import type { Auth, Lesson, Address } from "@courselit/common-models";
@@ -82,7 +81,6 @@ const LessonEditor = ({
             id: "",
             title: "",
             type: "",
-            content: RichText.emptyState(),
             media: {
                 id: "",
                 originalFileName: "",
@@ -101,6 +99,8 @@ const LessonEditor = ({
     const router = useRouter();
     const [deleteLessonPopupOpened, setDeleteLessonPopupOpened] =
         useState(false);
+    const [refresh, setRefresh] = useState(0);
+    const [content, setContent] = useState();
     const course = useCourse(courseId);
 
     useEffect(() => {
@@ -151,13 +151,10 @@ const LessonEditor = ({
             dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.lesson) {
-                setLesson(
-                    Object.assign({}, response.lesson, {
-                        content: TextEditor.hydrate({
-                            data: response.lesson.content,
-                        }),
-                    })
-                );
+                const content = JSON.parse(response.lesson.content);
+                setLesson(response.lesson);
+                setContent(content);
+                setRefresh(refresh + 1);
             }
         } catch (err: any) {
             dispatch(setAppMessage(new AppMessage(err.message)));
@@ -184,7 +181,7 @@ const LessonEditor = ({
         title: "${lesson.title}",
         downloadable: ${lesson.downloadable},
         type: ${lesson.type.toUpperCase()},
-        content: "${TextEditor.stringify(lesson.content)}",
+        content: ${JSON.stringify(JSON.stringify(content))},
         mediaId: ${
             lesson.media && lesson.media.mediaId
                 ? '"' + lesson.media.mediaId + '"'
@@ -220,7 +217,7 @@ const LessonEditor = ({
         title: "${lesson.title}",
         downloadable: ${lesson.downloadable},
         type: ${lesson.type.toUpperCase()},
-        content: "${TextEditor.stringify(lesson.content)}",
+        content: ${JSON.stringify(JSON.stringify(content))},
         mediaId: ${
             lesson.media && lesson.media.mediaId
                 ? '"' + lesson.media.mediaId + '"'
@@ -294,8 +291,9 @@ const LessonEditor = ({
             })
         );
 
-    const changeTextContent = (editorState: string) =>
-        setLesson(Object.assign({}, lesson, { content: editorState }));
+    const changeTextContent = (state: Record<string, unknown>) => {
+        setLesson(Object.assign({}, lesson, { content: state }));
+    };
 
     const closeDeleteLessonPopup = () => setDeleteLessonPopupOpened(false);
 
@@ -443,10 +441,11 @@ const LessonEditor = ({
                                             </Grid>
                                             <Grid item>
                                                 <TextEditor
-                                                    initialContentState={
-                                                        lesson.content
+                                                    initialContent={content}
+                                                    refresh={refresh}
+                                                    onChange={(state: any) =>
+                                                        setContent(state)
                                                     }
-                                                    onChange={changeTextContent}
                                                 />
                                             </Grid>
                                         </Grid>

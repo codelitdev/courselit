@@ -9,9 +9,9 @@ import {
 import { connect } from "react-redux";
 import {
     PriceTag,
-    RichText as TextEditor,
     Image,
     Link,
+    TextRenderer,
 } from "@courselit/components-library";
 import { ENROLL_BUTTON_TEXT, FREE_COST } from "../../ui-config/strings";
 import dynamic from "next/dynamic";
@@ -79,13 +79,6 @@ interface ArticleOptionsProps {
 
 const Article = (props: ArticleProps) => {
     const { course, options, profile } = props;
-
-    let courseDescriptionHydrated;
-    try {
-        courseDescriptionHydrated = TextEditor.hydrate({
-            data: course.description,
-        });
-    } catch (err) {}
 
     return (
         <StyledSection>
@@ -172,14 +165,14 @@ const Article = (props: ArticleProps) => {
                             </Grid>
                         </Grid>
                     )}
-                {courseDescriptionHydrated && process.browser && (
-                    <Grid item>
-                        <TextEditor
-                            initialContentState={courseDescriptionHydrated}
-                            readOnly={true}
-                        />
-                    </Grid>
-                )}
+                <Grid
+                    item
+                    sx={{
+                        overflow: "hidden",
+                    }}
+                >
+                    <TextRenderer json={JSON.parse(course.description)} />
+                </Grid>
                 {course.tags.length > 0 && (
                     <Grid item container alignItems="center" spacing={1}>
                         <Grid item>

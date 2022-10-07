@@ -709,6 +709,7 @@ __metadata:
     "@courselit/common-models": ^0.23.3
     "@courselit/rich-text": ^0.23.3
     "@courselit/state-management": ^0.23.3
+    "@courselit/text-editor": "workspace:^"
     "@courselit/utils": ^0.23.3
     "@types/react": ^17.0.43
     "@types/react-redux": ^7.1.11
