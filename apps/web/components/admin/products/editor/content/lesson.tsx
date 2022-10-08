@@ -151,9 +151,12 @@ const LessonEditor = ({
             dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.lesson) {
-                const content = JSON.parse(response.lesson.content);
                 setLesson(response.lesson);
-                setContent(content);
+                setContent(
+                    response.lesson.content
+                        ? JSON.parse(response.lesson.content)
+                        : undefined
+                );
                 setRefresh(refresh + 1);
             }
         } catch (err: any) {
@@ -181,7 +184,11 @@ const LessonEditor = ({
         title: "${lesson.title}",
         downloadable: ${lesson.downloadable},
         type: ${lesson.type.toUpperCase()},
-        content: ${JSON.stringify(JSON.stringify(content))},
+        content: ${
+            content
+                ? JSON.stringify(JSON.stringify(content))
+                : JSON.stringify("")
+        },
         mediaId: ${
             lesson.media && lesson.media.mediaId
                 ? '"' + lesson.media.mediaId + '"'
@@ -217,7 +224,11 @@ const LessonEditor = ({
         title: "${lesson.title}",
         downloadable: ${lesson.downloadable},
         type: ${lesson.type.toUpperCase()},
-        content: ${JSON.stringify(JSON.stringify(content))},
+        content: ${
+            content
+                ? JSON.stringify(JSON.stringify(content))
+                : JSON.stringify("")
+        },
         mediaId: ${
             lesson.media && lesson.media.mediaId
                 ? '"' + lesson.media.mediaId + '"'

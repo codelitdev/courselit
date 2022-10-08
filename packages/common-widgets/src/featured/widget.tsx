@@ -1,10 +1,5 @@
 import { Course, WidgetProps } from "@courselit/common-models";
-import {
-    Image,
-    PriceTag,
-    TextRenderer,
-    TextEditor,
-} from "@courselit/components-library";
+import { Image, PriceTag, TextRenderer } from "@courselit/components-library";
 import { actionCreators } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import {

@@ -21,17 +21,6 @@ export const formulateCourseUrl = (course: any, backend = "") =>
         course.slug
     }`;
 
-// export const getPostDescriptionSnippet = (rawDraftJSContentState: any) => {
-//     if (!rawDraftJSContentState) return "";
-
-//     const firstSentence = TextEditor.hydrate({ data: rawDraftJSContentState })
-//         .getCurrentContent()
-//         .getPlainText()
-//         .split(".")[0];
-
-//     return firstSentence ? firstSentence + "." : firstSentence;
-// };
-
 export const getObjectContainingOnlyChangedFields = (
     baseline: Record<string, any>,
     obj: Record<string, any>

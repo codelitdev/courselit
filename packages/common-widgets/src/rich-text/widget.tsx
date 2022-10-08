@@ -5,6 +5,8 @@ import { Box } from "@mui/material";
 import Settings from "./settings";
 
 const Widget = ({ settings: { text, padding } }: WidgetProps<Settings>) => {
+    if (!text) return <></>;
+
     return (
         <Box
             sx={{

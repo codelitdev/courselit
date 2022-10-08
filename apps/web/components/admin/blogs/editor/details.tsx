@@ -40,8 +40,9 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
     useEffect(() => {
         if (course) {
             setTitle(course.title);
-            const content = JSON.parse(course.description);
-            setDescription(content);
+            setDescription(
+                course.description ? JSON.parse(course.description) : undefined
+            );
             setFeaturedImage(course.featuredImage);
             setRefreshDetails(refreshDetails + 1);
         }

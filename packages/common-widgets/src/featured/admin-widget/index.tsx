@@ -4,7 +4,7 @@ import Settings from "../settings";
 import { Grid, Skeleton } from "@mui/material";
 import { capitalize, FetchBuilder } from "@courselit/utils";
 import { actionCreators, AppDispatch } from "@courselit/state-management";
-import { RichText as TextEditor, Select } from "@courselit/components-library";
+import { Select } from "@courselit/components-library";
 import CustomSettings from "./custom-settings";
 
 interface AdminWidgetProps {

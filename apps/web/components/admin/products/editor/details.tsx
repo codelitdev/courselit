@@ -46,7 +46,7 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
         if (course) {
             setTitle(course.title);
             setDescription(
-                course.description && JSON.parse(course.description)
+                course.description ? JSON.parse(course.description) : undefined
             );
             setFeaturedImage(course.featuredImage);
             setRefresh(refresh + 1);
@@ -109,9 +109,9 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
                     <Grid item xs={12} sx={{ mb: 2 }}>
                         <TextEditor
                             initialContent={description}
-                            onChange={(state: Record<string, unknown>) =>
-                                setDescription(state)
-                            }
+                            onChange={(state: Record<string, unknown>) => {
+                                setDescription(state);
+                            }}
                             refresh={refresh}
                         />
                     </Grid>

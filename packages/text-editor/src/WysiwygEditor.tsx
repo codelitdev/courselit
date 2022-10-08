@@ -27,6 +27,11 @@ export interface WysiwygEditorProps extends Partial<ReactEditorProps> {
     refresh?: number;
 }
 
+const emptyDoc: RemirrorContentType = {
+    type: "doc",
+    content: [],
+};
+
 export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
     initialContent,
     onChange,
@@ -71,7 +76,7 @@ export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
     } = useRemirror({
         extensions,
         stringHandler,
-        content: initialContent as RemirrorContentType,
+        content: (initialContent as RemirrorContentType) || emptyDoc,
     });
 
     const onChangeFunc = (data: any) => {
