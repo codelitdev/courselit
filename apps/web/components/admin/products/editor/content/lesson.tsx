@@ -302,10 +302,6 @@ const LessonEditor = ({
             })
         );
 
-    const changeTextContent = (state: Record<string, unknown>) => {
-        setLesson(Object.assign({}, lesson, { content: state }));
-    };
-
     const closeDeleteLessonPopup = () => setDeleteLessonPopupOpened(false);
 
     const getMimeTypesToShow = () => {
