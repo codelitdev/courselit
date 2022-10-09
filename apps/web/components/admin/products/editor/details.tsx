@@ -1,7 +1,7 @@
 import React, { FormEvent, useEffect, useState } from "react";
 import {
     MediaSelector,
-    RichText,
+    TextEditor,
     Section,
 } from "@courselit/components-library";
 import useCourse from "./course-hook";
@@ -37,19 +37,19 @@ interface DetailsProps {
 
 function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
     const [title, setTitle] = useState("");
-    const [description, setDescription] = useState(RichText.emptyState());
+    const [description, setDescription] = useState<Record<string, unknown>>();
     const [featuredImage, setFeaturedImage] = useState<Media>(null);
+    const [refresh, setRefresh] = useState(0);
     const course = useCourse(id);
 
     useEffect(() => {
         if (course) {
             setTitle(course.title);
             setDescription(
-                course.description
-                    ? RichText.hydrate({ data: course.description })
-                    : RichText.emptyState()
+                course.description ? JSON.parse(course.description) : undefined
             );
             setFeaturedImage(course.featuredImage);
+            setRefresh(refresh + 1);
         }
     }, [course]);
 
@@ -61,10 +61,10 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
             updateCourse(courseData: {
                 id: "${course.id}"
                 title: "${title}",
-          description: "${RichText.stringify(description)}",
-          featuredImage: ${
-              featuredImage ? '"' + featuredImage.mediaId + '"' : null
-          },
+                description: ${JSON.stringify(JSON.stringify(description))},
+                featuredImage: ${
+                    featuredImage ? '"' + featuredImage.mediaId + '"' : null
+                },
             }) {
                 id
             }
@@ -107,11 +107,12 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
                         />
                     </Grid>
                     <Grid item xs={12} sx={{ mb: 2 }}>
-                        <RichText
-                            initialContentState={description}
-                            onChange={(editorState) =>
-                                setDescription(editorState)
-                            }
+                        <TextEditor
+                            initialContent={description}
+                            onChange={(state: Record<string, unknown>) => {
+                                setDescription(state);
+                            }}
+                            refresh={refresh}
                         />
                     </Grid>
                     <Grid item>

@@ -2,7 +2,7 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import { FormLabel, Grid, TextField, Typography } from "@mui/material";
 import Settings from "../settings";
-import { RichText as TextEditor, Select } from "@courselit/components-library";
+import { TextEditor, Select } from "@courselit/components-library";
 
 interface CustomSettingsProps {
     name: string;
@@ -16,11 +16,7 @@ export default function CustomSettings({
     onChange,
 }: CustomSettingsProps) {
     const [title, setTitle] = useState(settings.title);
-    const [description, setDescription] = useState(
-        settings.description
-            ? TextEditor.hydrate({ data: settings.description })
-            : TextEditor.emptyState()
-    );
+    const [description, setDescription] = useState(settings.description);
     const [buttonCaption, setButtonCaption] = useState(settings.buttonCaption);
     const [buttonAction, setButtonAction] = useState(settings.buttonAction);
     const [alignment, setAlignment] = useState(settings.alignment || "left");
@@ -32,7 +28,7 @@ export default function CustomSettings({
     useEffect(() => {
         onChange({
             title,
-            description: TextEditor.stringify(description),
+            description,
             buttonCaption,
             alignment,
             buttonAction,
@@ -63,8 +59,9 @@ export default function CustomSettings({
             <Grid item xs={12} sx={{ mb: 2 }}>
                 <FormLabel>Custom description</FormLabel>
                 <TextEditor
-                    initialContentState={description}
-                    onChange={(editorState: any) => setDescription(editorState)}
+                    initialContent={description}
+                    onChange={(state: any) => setDescription(state)}
+                    showToolbar={false}
                 />
             </Grid>
             <Grid item xs={12} sx={{ mb: 2 }}>

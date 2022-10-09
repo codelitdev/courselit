@@ -24,7 +24,7 @@ const validatePaymentMethod = async (domain: string) => {
 };
 
 export const validateCourse = async (courseData: Course, ctx: GQLContext) => {
-    if (courseData.isBlog) {
+    if (courseData.type === constants.blog) {
         if (!courseData.description) {
             throw new Error(responses.blog_description_empty);
         }

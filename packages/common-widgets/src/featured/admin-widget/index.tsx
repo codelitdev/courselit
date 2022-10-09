@@ -4,7 +4,7 @@ import Settings from "../settings";
 import { Grid, Skeleton } from "@mui/material";
 import { capitalize, FetchBuilder } from "@courselit/utils";
 import { actionCreators, AppDispatch } from "@courselit/state-management";
-import { RichText as TextEditor, Select } from "@courselit/components-library";
+import { Select } from "@courselit/components-library";
 import CustomSettings from "./custom-settings";
 
 interface AdminWidgetProps {
@@ -25,6 +25,7 @@ export default function AdminWidget({
 }: AdminWidgetProps) {
     const [productId, setProductId] = useState(settings.productId || "");
     const [products, setProducts] = useState([]);
+    const [productsLoaded, setProductsLoaded] = useState(false);
     const customSettingsChanged = (customSettings: Settings) => {
         onChange(Object.assign({}, settings, customSettings));
     };
@@ -58,6 +59,7 @@ export default function AdminWidget({
         try {
             dispatch(actionCreators.networkAction(true));
             const response = await fetch.exec();
+            setProductsLoaded(true);
             if (response.products) {
                 setProducts(response.products);
             }
@@ -68,7 +70,7 @@ export default function AdminWidget({
         }
     };
 
-    if (products.length < 1) {
+    if (!productsLoaded) {
         return (
             <>
                 <Skeleton variant="rectangular" height={50} sx={{ mb: 2 }} />

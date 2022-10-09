@@ -1,8 +1,8 @@
 import React, { FormEvent, useEffect, useState } from "react";
 import {
     MediaSelector,
-    RichText,
     Section,
+    TextEditor,
 } from "@courselit/components-library";
 import useCourse from "./course-hook";
 import { FetchBuilder } from "@courselit/utils";
@@ -32,19 +32,19 @@ interface DetailsProps {
 
 function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
     const [title, setTitle] = useState("");
-    const [description, setDescription] = useState(RichText.emptyState());
+    const [description, setDescription] = useState();
     const [featuredImage, setFeaturedImage] = useState<Media>(null);
+    const [refreshDetails, setRefreshDetails] = useState(0);
     const course = useCourse(id);
 
     useEffect(() => {
         if (course) {
             setTitle(course.title);
             setDescription(
-                course.description
-                    ? RichText.hydrate({ data: course.description })
-                    : RichText.emptyState()
+                course.description ? JSON.parse(course.description) : undefined
             );
             setFeaturedImage(course.featuredImage);
+            setRefreshDetails(refreshDetails + 1);
         }
     }, [course]);
 
@@ -56,10 +56,10 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
             updateCourse(courseData: {
                 id: "${course.id}"
                 title: "${title}",
-          description: "${RichText.stringify(description)}",
-          featuredImage: ${
-              featuredImage ? '"' + featuredImage.mediaId + '"' : null
-          },
+                description: ${JSON.stringify(JSON.stringify(description))},
+                featuredImage: ${
+                    featuredImage ? '"' + featuredImage.mediaId + '"' : null
+                },
             }) {
                 id
             }
@@ -102,11 +102,10 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
                         />
                     </Grid>
                     <Grid item xs={12} sx={{ mb: 2 }}>
-                        <RichText
-                            initialContentState={description}
-                            onChange={(editorState) =>
-                                setDescription(editorState)
-                            }
+                        <TextEditor
+                            initialContent={description}
+                            refresh={refreshDetails}
+                            onChange={(state: any) => setDescription(state)}
                         />
                     </Grid>
                     <Grid item>
@@ -127,16 +126,7 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
                     </Grid>
                 </Grid>
                 <Grid item>
-                    <Button
-                        type="submit"
-                        variant="contained"
-                        // disabled={
-                        //     !title ||
-                        //     (course?.title === title &&
-                        //         course?.featuredImage?.mediaId ===
-                        //             featuredImage?.mediaId)
-                        // }
-                    >
+                    <Button type="submit" variant="contained">
                         {BUTTON_SAVE}
                     </Button>
                 </Grid>

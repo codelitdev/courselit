@@ -1,7 +1,6 @@
 import PriceTag from "./pricetag";
 import Section from "./section";
 import WidgetHelpers from "./widget-helpers";
-import RichText from "./rich-text";
 import OverviewAndDetail from "./overview-and-detail";
 import CourseItem from "./course-item";
 import Image from "./image";
@@ -11,12 +10,13 @@ import Link from "./link";
 import Dialog from "./dialog";
 import MediaManager from "./media-manager";
 import MediaSelector from "./media-selector";
+import TextEditor from "./text-editor";
+import TextRenderer from "./text-renderer";
 
 export {
     PriceTag,
     Section,
     WidgetHelpers,
-    RichText,
     OverviewAndDetail,
     CourseItem,
     Image,
@@ -26,4 +26,6 @@ export {
     Dialog,
     MediaManager,
     MediaSelector,
+    TextEditor,
+    TextRenderer,
 };

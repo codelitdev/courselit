@@ -14,6 +14,7 @@
         "@courselit/common-widgets": "^0.23.3",
         "@courselit/components-library": "^0.23.3",
         "@courselit/state-management": "^0.23.3",
+        "@courselit/text-editor": "workspace:^",
         "@courselit/utils": "^0.23.3",
         "@emotion/cache": "^11.7.1",
         "@emotion/react": "^11.8.2",
@@ -43,6 +44,7 @@
         "react-csv": "^2.2.2",
         "react-dom": "17.0.2",
         "react-redux": "^8.0.1",
+        "remirror": "^2.0.9",
         "sharp": "^0.30.6",
         "slugify": "^1.6.5",
         "stripe": "^8.219.0"

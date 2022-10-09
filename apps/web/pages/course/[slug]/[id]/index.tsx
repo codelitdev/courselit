@@ -3,7 +3,6 @@ import Head from "next/head";
 import {
     formulateCourseUrl,
     getBackendAddress,
-    getPostDescriptionSnippet,
     isEnrolled,
     isLessonCompleted,
 } from "../../../../ui-lib/utils";
@@ -105,10 +104,10 @@ const CourseViewer = (props: CourseProps) => {
                 />
                 <meta property="og:type" content="article" />
                 <meta property="og:title" content={course.title} />
-                <meta
+                {/* <meta
                     property="og:description"
                     content={getPostDescriptionSnippet(course.description)}
-                />
+                /> */}
                 <meta property="og:author" content={course.creatorName} />
                 {course.featuredImage && (
                     <meta

@@ -1,5 +1,5 @@
-import React, { ChangeEvent, useEffect, useState } from "react";
-import { RichText as TextEditor } from "@courselit/components-library";
+import React, { useEffect, useState } from "react";
+import { TextEditor } from "@courselit/components-library";
 import { Grid, InputAdornment, TextField } from "@mui/material";
 import Settings from "./settings";
 
@@ -9,26 +9,23 @@ export interface AboutWidgetProps {
 }
 
 const AdminWidget = ({ settings, onChange }: AboutWidgetProps) => {
-    const [editorState, setEditorState] = useState(
-        settings.text
-            ? TextEditor.hydrate({ data: settings.text })
-            : TextEditor.emptyState()
-    );
+    const [content, setContent] = useState(settings.text);
     const [padding, setPadding] = useState(settings.padding || 16);
 
     useEffect(() => {
         onChange({
-            text: TextEditor.stringify(editorState),
+            text: content,
             padding,
         });
-    }, [editorState, padding]);
+    }, [content, padding]);
 
     return (
         <Grid container direction="column" spacing={2}>
             <Grid item>
                 <TextEditor
-                    initialContentState={editorState}
-                    onChange={(editorState: any) => setEditorState(editorState)}
+                    initialContent={content}
+                    onChange={(state: any) => setContent(state)}
+                    showToolbar={false}
                 />
             </Grid>
             <Grid item>
