@@ -1,6 +1,8 @@
 # Rich Text Editor & Displayer
 
-A full-fledged rich text editor and displayer for React apps, built using DraftJS.
+> **Deprecated**: Since Draftjs is no longer maintained, we will not be providing updates to this editor. Please use [@courselit/text-editor](https://www.npmjs.com/package/@courselit/text-editor) instead.
+
+A full-fledged rich text editor and displayer for React apps, built using [Draft.js](https://draftjs.org).
 
 ## Styling
 
