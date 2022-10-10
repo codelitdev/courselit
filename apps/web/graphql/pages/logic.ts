@@ -177,7 +177,15 @@ export const savePage = async (
         }
     }
 
-    await (page as any).save();
+    try {
+        await (page as any).save();
+    } catch (e: any) {
+        // We want to safely ignore the error where `__v` property does not
+        // match for a document as it signifies a race condition in mongoose.
+        if (!/^No matching document/.test(e.message)) {
+            throw new Error(e.message);
+        }
+    }
 
     return getPageResponse(page!, ctx);
 };

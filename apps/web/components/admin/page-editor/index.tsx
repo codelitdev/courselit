@@ -194,7 +194,7 @@ function PageEditor({
             mutation {
                 page: savePage(pageData: {
                     pageId: "${pageId}",
-                    layout: "${JSON.stringify(layout).replace(/"/g, '\\"')}"
+                    layout: ${JSON.stringify(JSON.stringify(layout))}
                 }) {
                     pageId,
                     name,

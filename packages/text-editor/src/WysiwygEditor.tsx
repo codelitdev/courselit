@@ -15,6 +15,7 @@ import {
 import { AllStyledComponent } from "@remirror/styles/emotion";
 import { RemirrorContentType } from "@remirror/core-types";
 import { getTextContentFromSlice } from "@remirror/core";
+import { InvalidContentHandler } from "remirror";
 
 import BubbleMenu from "./BubbleMenu";
 import Toolbar from "./Toolbar";
@@ -69,6 +70,14 @@ export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
         [placeholder]
     );
 
+    const onError: InvalidContentHandler = useCallback(
+        ({ json, invalidContent, transformers }) => {
+            // Automatically remove all invalid nodes and marks.
+            return transformers.remove(json, invalidContent);
+        },
+        []
+    );
+
     const {
         manager,
         state,
@@ -77,6 +86,7 @@ export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
         extensions,
         stringHandler,
         content: (initialContent as RemirrorContentType) || emptyDoc,
+        onError,
     });
 
     const onChangeFunc = (data: any) => {
