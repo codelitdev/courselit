@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { Address } from "@courselit/common-models";
 import Settings from "./settings";
 import {

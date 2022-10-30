@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import { useState } from "react";
 import { Address } from "@courselit/common-models";
 import widgets from "../../../ui-config/widgets";
 import { connect } from "react-redux";
@@ -67,7 +67,6 @@ function EditWidget({ onChange, onClose, onDelete, widget }: EditWidgetProps) {
                             name={widget.name}
                             settings={widget.settings || {}}
                             onChange={(e: Record<string, unknown>) => {
-                                console.log(e);
                                 onChange(widget.widgetId, e);
                             }}
                         />
