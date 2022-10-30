@@ -22,6 +22,7 @@ import CodeInjector from "../components/public/code-injector";
 import { DefaultTheme } from "@mui/private-theming";
 import { useRouter } from "next/router";
 import "remirror/styles/all.css";
+import themeOptions from "../ui-config/mui-custom-theme";
 
 type CourseLitProps = AppProps & {
     emotionCache: EmotionCache;
@@ -42,11 +43,11 @@ function MyApp({
     let muiTheme;
     if (theme.styles) {
         muiTheme = responsiveFontSizes(
-            createTheme(deepmerge<DefaultTheme>(defaultTheme, theme.styles))
+            createTheme(deepmerge<DefaultTheme>(themeOptions, theme.styles))
         );
     } else {
         console.warn(CONSOLE_MESSAGE_THEME_INVALID);
-        muiTheme = responsiveFontSizes(createTheme(defaultTheme));
+        muiTheme = responsiveFontSizes(createTheme(themeOptions));
     }
 
     useEffect(() => {

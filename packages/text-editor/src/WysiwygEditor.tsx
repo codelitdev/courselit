@@ -26,6 +26,7 @@ export interface WysiwygEditorProps extends Partial<ReactEditorProps> {
     showToolbar?: boolean;
     editable?: boolean;
     refresh?: number;
+    fontFamily?: string;
 }
 
 const emptyDoc: RemirrorContentType = {
@@ -42,8 +43,15 @@ export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
     showToolbar = true,
     editable = true,
     refresh,
+    fontFamily,
     ...rest
 }) => {
+    const theme = {
+        fontFamily: {
+            default: fontFamily,
+        },
+    };
+
     if (typeof window === "undefined") {
         return <></>;
     }
@@ -95,7 +103,7 @@ export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
 
     return (
         <AllStyledComponent>
-            <ThemeProvider>
+            <ThemeProvider theme={theme}>
                 <Remirror
                     manager={manager}
                     state={state}
