@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Address } from "@courselit/common-models";
-import Settings from "../featured/settings";
+import Settings from "../settings";
 import { Grid } from "@mui/material";
 import { AppDispatch } from "@courselit/state-management";
-import CustomSettings from "../featured/admin-widget/custom-settings";
+import CustomSettings from "./custom-settings";
 
 interface AdminWidgetProps {
     name: string;

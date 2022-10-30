@@ -11,7 +11,7 @@ import {
     networkAction,
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
-import { debounce, FetchBuilder } from "@courselit/utils";
+import { debounce, FetchBuilder, generateUniqueId } from "@courselit/utils";
 import { AppBar, Button, Grid, Toolbar, Typography } from "@mui/material";
 import { connect } from "react-redux";
 import {
@@ -31,6 +31,8 @@ import widgets from "../../../ui-config/widgets";
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
 const WidgetsList = dynamic(() => import("./widgets-list"));
+
+const DEBOUNCE_TIME = 500;
 
 interface PageEditorProps {
     id: string;
@@ -62,7 +64,7 @@ function PageEditor({
         debounce(
             async (pageId: string, layout: Record<string, unknown>[]) =>
                 await savePage(pageId, layout),
-            100
+            DEBOUNCE_TIME
         ),
         []
     );
@@ -89,6 +91,11 @@ function PageEditor({
             debouncedSave(page.pageId, layout);
         }
     }, [layout]);
+
+    const onItemClick = (widgetId: string) => {
+        setLayout([...layout]);
+        setSelectedWidget(widgetId);
+    };
 
     const onPublish = async () => {
         const mutation = `
@@ -149,14 +156,14 @@ function PageEditor({
             }
         }
         `;
-        await fetchPage(query);
+        await fetchPage(query, true);
     };
 
     const onWidgetClicked = (widgetId: string) => {
         setSelectedWidget(widgetId);
     };
 
-    const fetchPage = async (query: string) => {
+    const fetchPage = async (query: string, refreshLayout: boolean = false) => {
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
             .setPayload(query)
@@ -167,9 +174,11 @@ function PageEditor({
             const response = await fetch.exec();
             if (response.page) {
                 const pageBeingEdited = response.page;
-                setLayout(
-                    JSON.parse(JSON.stringify(pageBeingEdited.draftLayout))
-                );
+                if (refreshLayout) {
+                    setLayout(
+                        JSON.parse(JSON.stringify(pageBeingEdited.draftLayout))
+                    );
+                }
                 setPage(pageBeingEdited);
             } else {
                 dispatch(
@@ -224,21 +233,27 @@ function PageEditor({
             (widget) => widget.widgetId === widgetId
         );
         layout.splice(widgetIndex, 1);
-        await savePage(page.pageId, layout);
+        setLayout(layout);
+        await savePage(page.pageId!, layout);
     };
 
     const addWidget = async (name: string) => {
-        setShowWidgetSelector(false);
+        const widgetId = generateUniqueId();
         layout.splice(layout.length - 1, 0, {
+            widgetId,
             name,
+            shared: widgets[name].shared,
+            deleteable: true,
             settings: {
                 pageId: page.pageId,
                 type: page.type,
                 entityId: page.entityId,
             },
-            shared: widgets[name].shared,
         });
-        await savePage(page.pageId, [...layout]);
+        setLayout(layout);
+        setShowWidgetSelector(false);
+        onItemClick(widgetId);
+        await savePage(page.pageId!, [...layout]);
     };
 
     const onClose = () => {
@@ -335,10 +350,7 @@ function PageEditor({
                                 onAddNewClick={() =>
                                     setShowWidgetSelector(true)
                                 }
-                                onItemClick={(widgetId: string) => {
-                                    setLayout([...layout]);
-                                    setSelectedWidget(widgetId);
-                                }}
+                                onItemClick={onItemClick}
                             />
                         )}
                         {!selectedWidget && showWidgetSelector && (

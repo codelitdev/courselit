@@ -11,11 +11,6 @@ export const formattedLocaleDate = (epochString: Date) =>
         day: "numeric",
     });
 
-// Regex copied from: https://stackoverflow.com/a/48675160/942589
-export const makeGraphQLQueryStringFromJSObject = (
-    obj: Record<string, unknown>
-) => JSON.stringify(obj).replace(/"([^(")"]+)":/g, "$1:");
-
 export const formulateCourseUrl = (course: any, backend = "") =>
     `${backend}/${course.isBlog ? "post" : "course"}/${course.courseId}/${
         course.slug
@@ -34,16 +29,17 @@ export const getObjectContainingOnlyChangedFields = (
     return result;
 };
 
-export const areObjectsDifferent = (
-    baseline: Record<string, unknown>,
-    obj: Record<string, unknown>
-) => {
-    const onlyChangedFields = getObjectContainingOnlyChangedFields(
-        baseline,
-        obj
-    );
-    return !!Object.keys(onlyChangedFields).length;
-};
+// TODO: Remove this commented out method
+// export const areObjectsDifferent = (
+//     baseline: Record<string, unknown>,
+//     obj: Record<string, unknown>
+// ) => {
+//     const onlyChangedFields = getObjectContainingOnlyChangedFields(
+//         baseline,
+//         obj
+//     );
+//     return !!Object.keys(onlyChangedFields).length;
+// };
 
 export const getAddress = (host: string) => {
     return {

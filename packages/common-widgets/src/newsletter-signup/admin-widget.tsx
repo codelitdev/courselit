@@ -45,33 +45,30 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
     const [alignment, setAlignment] = useState(settings.alignment || "left");
 
     useEffect(() => {
-        onChange(
-            {
-                title,
-                subtitle,
-                btnText,
-                backgroundColor,
-                foregroundColor,
-                btnBackgroundColor,
-                btnForegroundColor,
-                alignment,
-                successMessage,
-                failureMessage,
-            },
-            [
-                title,
-                subtitle,
-                btnText,
-                backgroundColor,
-                foregroundColor,
-                btnBackgroundColor,
-                btnForegroundColor,
-                alignment,
-                successMessage,
-                failureMessage,
-            ]
-        );
-    });
+        onChange({
+            title,
+            subtitle,
+            btnText,
+            backgroundColor,
+            foregroundColor,
+            btnBackgroundColor,
+            btnForegroundColor,
+            alignment,
+            successMessage,
+            failureMessage,
+        });
+    }, [
+        title,
+        subtitle,
+        btnText,
+        backgroundColor,
+        foregroundColor,
+        btnBackgroundColor,
+        btnForegroundColor,
+        alignment,
+        successMessage,
+        failureMessage,
+    ]);
 
     return (
         <Grid container direction="column">

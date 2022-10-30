@@ -5,3 +5,4 @@ export { default as debounce } from "./debounce";
 export { default as capitalize } from "./capitalize";
 export { default as checkPermission } from "./check-permissions";
 export { default as getGraphQLQueryFields } from "./get-graphql-query-fields";
+export { default as getGraphQLQueryStringFromObject } from "./get-graphql-query-string-from-object";
