@@ -242,7 +242,6 @@ export const getCourses = async ({
         query.courseId = {
             $in: ids,
         };
-        console.log(query);
         courses = await CourseModel.find(query, {
             id: 1,
             title: 1,
