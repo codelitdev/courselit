@@ -1,8 +1,10 @@
-import { PageTypeProduct, PageTypeSite } from ".";
+import { PageTypeBlog, PageTypeProduct, PageTypeSite } from ".";
+
+type PageType = PageTypeProduct | PageTypeSite | PageTypeBlog;
 
 export default interface WidgetMetadata {
     name: string;
     displayName: string;
-    compatibleWith: (PageTypeProduct | PageTypeSite)[];
+    compatibleWith: PageType[];
     icon?: string;
 }

@@ -223,42 +223,65 @@ export const getCourses = async ({
     ctx,
     tag,
     filterBy,
+    ids,
 }: {
-    offset: number;
     ctx: GQLContext;
+    offset?: number;
+    ids?: string[];
     tag?: string;
     filterBy?: Filter[];
 }) => {
-    validateOffset(offset);
     const query: Record<string, unknown> = {
         published: true,
         privacy: open.toLowerCase(),
         domain: ctx.subdomain._id,
     };
-    if (tag) {
-        query.tags = tag;
-    }
-    if (filterBy) {
-        query.type = { $in: filterBy };
-    }
 
-    const courses = await CourseModel.find(query, {
-        id: 1,
-        title: 1,
-        cost: 1,
-        description: 1,
-        type: 1,
-        creatorName: 1,
-        updatedAt: 1,
-        slug: 1,
-        featuredImage: 1,
-        courseId: 1,
-        tags: 1,
-        groups: 1,
-    })
-        .sort({ updatedAt: -1 })
-        .skip((offset - 1) * itemsPerPage)
-        .limit(itemsPerPage);
+    let courses;
+    if (ids) {
+        query.courseId = {
+            $in: ids,
+        };
+        courses = await CourseModel.find(query, {
+            id: 1,
+            title: 1,
+            cost: 1,
+            description: 1,
+            type: 1,
+            creatorName: 1,
+            updatedAt: 1,
+            slug: 1,
+            featuredImage: 1,
+            courseId: 1,
+            tags: 1,
+            groups: 1,
+        });
+    } else {
+        validateOffset(offset);
+        if (tag) {
+            query.tags = tag;
+        }
+        if (filterBy) {
+            query.type = { $in: filterBy };
+        }
+        courses = await CourseModel.find(query, {
+            id: 1,
+            title: 1,
+            cost: 1,
+            description: 1,
+            type: 1,
+            creatorName: 1,
+            updatedAt: 1,
+            slug: 1,
+            featuredImage: 1,
+            courseId: 1,
+            tags: 1,
+            groups: 1,
+        })
+            .sort({ updatedAt: -1 })
+            .skip((offset! - 1) * itemsPerPage)
+            .limit(itemsPerPage);
+    }
 
     return courses.map((x) => ({
         id: x.id,
@@ -278,30 +301,6 @@ export const getCourses = async ({
         groups: x.isBlog ? null : x.groups,
     }));
 };
-
-// export const getCourses = async ({ offset, tag, ctx }: {
-//     offset: number;
-//     tag?: string;
-//     ctx: GQLContext;
-// }) => {
-//   const query: Record<string, unknown> = {
-//     isBlog: false,
-//     published: true,
-//     privacy: open.toLowerCase(),
-//     domain: ctx.subdomain._id,
-//   };
-//   if (tag) {
-//     query.tags = tag;
-//   }
-
-//   let dbQuery = CourseModel.find(
-//     query,
-//     "id title featuredImage cost creatorName slug description updatedAt isFeatured courseId tags"
-//   ).sort({ updatedAt: -1 });
-//   dbQuery = dbQuery.skip((offset - 1) * itemsPerPage).limit(itemsPerPage);
-
-//   return dbQuery;
-// };
 
 export const getEnrolledCourses = async (userId: string, ctx: GQLContext) => {
     checkIfAuthenticated(ctx);
@@ -442,46 +441,3 @@ export const updateGroup = async ({
         { new: true }
     );
 };
-
-// export const updateGroupName = async (id, courseId, name, ctx) => {
-//   const course = await getCourseOrThrow(courseId, ctx);
-//   const existingName = (group) => group.name === name;
-
-//   if (course.groups.some(existingName)) {
-//     throw new Error(responses.existing_group);
-//   }
-
-//   return await CourseModel.findOneAndUpdate(
-//     {
-//       _id: course._id.toString(),
-//       "groups._id": id,
-//     },
-//     {
-//       $set: {
-//         "groups.$.name": name,
-//       },
-//     },
-//     {
-//       new: true,
-//     }
-//   );
-// };
-
-// export const updateGroupRank = async (id, courseId, rank, ctx) => {
-//   const course = await getCourseOrThrow(courseId, ctx);
-
-//   return await CourseModel.findOneAndUpdate(
-//     {
-//       _id: course._id.toString(),
-//       "groups._id": id,
-//     },
-//     {
-//       $set: {
-//         "groups.$.rank": rank,
-//       },
-//     },
-//     {
-//       new: true,
-//     }
-//   );
-// };

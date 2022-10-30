@@ -47,8 +47,8 @@ export const checkOwnershipWithoutModel = <
     return true;
 };
 
-export const validateOffset = (offset: number) => {
-    if (offset < 1) throw new Error(responses.invalid_offset);
+export const validateOffset = (offset?: number) => {
+    if (!offset || offset < 1) throw new Error(responses.invalid_offset);
 };
 
 export const extractPlainTextFromDraftJS = (

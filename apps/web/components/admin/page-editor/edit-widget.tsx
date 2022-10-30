@@ -1,4 +1,4 @@
-import React from "react";
+import { useState } from "react";
 import { Address } from "@courselit/common-models";
 import widgets from "../../../ui-config/widgets";
 import { connect } from "react-redux";
@@ -21,10 +21,16 @@ interface EditWidgetProps {
 }
 
 function EditWidget({ onChange, onClose, onDelete, widget }: EditWidgetProps) {
+    const [deleteUnderProgress, setDeleteUnderProgress] = useState(false);
     const actualWidget = widgets[widget.name];
+
     const onDeleteWidget = () => {
-        onDelete(widget.widgetId);
-        onClose();
+        if (deleteUnderProgress) {
+            onDelete(widget.widgetId);
+            onClose();
+        } else {
+            setDeleteUnderProgress(true);
+        }
     };
 
     return (
@@ -56,7 +62,7 @@ function EditWidget({ onChange, onClose, onDelete, widget }: EditWidgetProps) {
             </Grid>
             {actualWidget && (
                 <>
-                    <Grid item sx={{ mb: 4 }}>
+                    <Grid item>
                         <AdminWidget
                             name={widget.name}
                             settings={widget.settings || {}}
@@ -65,13 +71,30 @@ function EditWidget({ onChange, onClose, onDelete, widget }: EditWidgetProps) {
                             }}
                         />
                     </Grid>
-                    {widget.deleteable && (
-                        <Grid item alignSelf="center">
-                            <Button color="error" onClick={onDeleteWidget}>
-                                Delete block
-                            </Button>
+                    <Grid item>
+                        <Grid
+                            container
+                            justifyContent={
+                                widget.deleteable ? "space-between" : "flex-end"
+                            }
+                        >
+                            {widget.deleteable && (
+                                <Grid item>
+                                    <Button
+                                        color="error"
+                                        onClick={onDeleteWidget}
+                                    >
+                                        {deleteUnderProgress
+                                            ? "Sure?"
+                                            : "Delete block"}
+                                    </Button>
+                                </Grid>
+                            )}
+                            <Grid item justifyItems="flex-end">
+                                <Button onClick={onClose}>Done</Button>
+                            </Grid>
                         </Grid>
-                    )}
+                    </Grid>
                 </>
             )}
             {!actualWidget && <Typography>{widget.name} not found</Typography>}
