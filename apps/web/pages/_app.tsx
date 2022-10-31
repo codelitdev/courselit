@@ -11,7 +11,6 @@ import {
     responsiveFontSizes,
     ThemeProvider,
 } from "@mui/material/styles";
-import defaultTheme from "../ui-config/default-theme";
 import { deepmerge } from "@mui/utils";
 import App from "next/app";
 import type { State } from "@courselit/common-models";
