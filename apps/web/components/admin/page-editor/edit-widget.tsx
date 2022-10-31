@@ -62,7 +62,7 @@ function EditWidget({ onChange, onClose, onDelete, widget }: EditWidgetProps) {
             </Grid>
             {actualWidget && (
                 <>
-                    <Grid item>
+                    <Grid item sx={{ mb: 1 }}>
                         <AdminWidget
                             name={widget.name}
                             settings={widget.settings || {}}
