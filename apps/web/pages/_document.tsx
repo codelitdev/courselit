@@ -11,7 +11,7 @@ class MyDocument extends Document {
                     {/* <meta name="theme-color" content={theme.palette.primary.main} /> */}
                     <link
                         rel="stylesheet"
-                        href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+                        href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,500,700&display=swap"
                     />
                 </Head>
                 <body style={{ height: "100%", width: "100%", margin: 0 }}>

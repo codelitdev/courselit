@@ -42,11 +42,18 @@ const markMap: MarkMap = {
 
 interface RendererProps {
     json: RemirrorJSON;
+    fontFamily?: string;
 }
 
-const Renderer = ({ json }: RendererProps): JSX.Element => {
+const Renderer = ({ json, fontFamily }: RendererProps): JSX.Element => {
+    const theme = {
+        fontFamily: {
+            default: fontFamily,
+        },
+    };
+
     return (
-        <ThemeProvider>
+        <ThemeProvider theme={theme}>
             <RemirrorRenderer
                 json={json}
                 typeMap={typeMap}

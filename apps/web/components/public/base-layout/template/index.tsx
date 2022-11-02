@@ -28,8 +28,23 @@ const EditableWidget = ({
             <Box
                 onClick={() => onEditClick && onEditClick(item.widgetId)}
                 sx={{
+                    position: "relative",
                     "&:hover": {
                         cursor: editing ? "pointer" : "default",
+                    },
+                    "&:after": {
+                        content: '""',
+                        position: "absolute",
+                        width: 1,
+                        height: 1,
+                        top: 0,
+                        left: 0,
+                        background: "rgba(0,0,0,0.2)",
+                        opacity: 0,
+                        transition: "all 0.5s",
+                    },
+                    "&:hover:after": {
+                        opacity: 1,
                     },
                 }}
             >
