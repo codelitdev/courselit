@@ -3,6 +3,7 @@ import TextEditor from "@courselit/text-editor";
 import { useTheme } from "@mui/material";
 
 export interface WysiwygEditorProps {
+    initialContent?: Record<string, unknown>;
     onChange: (...args: any[]) => void;
     showToolbar?: boolean;
     editable?: boolean;
