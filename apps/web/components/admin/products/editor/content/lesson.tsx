@@ -151,7 +151,7 @@ const LessonEditor = ({
             const response = await fetch.exec();
             if (response.lesson) {
                 setLesson(response.lesson);
-                const newContent = setContent(
+                setContent(
                     response.lesson.type.toLowerCase() === LESSON_TYPE_TEXT
                         ? response.lesson.content
                             ? JSON.parse(response.lesson.content)
