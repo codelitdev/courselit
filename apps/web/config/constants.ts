@@ -40,6 +40,7 @@ export default {
     pdf: "pdf",
     quiz: "quiz",
     file: "file",
+    embed: "embed",
 
     // Content privacy types
     unlisted: "unlisted",

@@ -97,7 +97,7 @@ export const createLesson = async (lessonData: Lesson, ctx: GQLContext) => {
             domain: ctx.subdomain._id,
         });
         if (!course) throw new Error(responses.item_not_found);
-        if (course.isBlog) throw new Error(responses.cannot_add_to_blogs);
+        if (course.isBlog) throw new Error(responses.cannot_add_to_blogs); // TODO: refactor this
 
         const lesson = await LessonModel.create({
             domain: ctx.subdomain._id,

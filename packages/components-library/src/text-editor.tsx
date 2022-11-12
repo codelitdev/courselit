@@ -11,6 +11,7 @@ export interface WysiwygEditorProps {
 }
 
 export default function Editor({
+    initialContent,
     onChange,
     showToolbar,
     editable,
@@ -20,6 +21,7 @@ export default function Editor({
 
     return (
         <TextEditor
+            initialContent={initialContent}
             onChange={onChange}
             showToolbar={showToolbar}
             editable={editable}

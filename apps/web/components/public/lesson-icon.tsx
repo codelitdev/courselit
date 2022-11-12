@@ -1,6 +1,7 @@
 import React from "react";
 import {
     Article,
+    ArtTrack,
     Audiotrack,
     InsertDriveFile,
     OndemandVideo,
@@ -10,6 +11,7 @@ import {
 } from "@mui/icons-material";
 import {
     LESSON_TYPE_AUDIO,
+    LESSON_TYPE_EMBED,
     LESSON_TYPE_FILE,
     LESSON_TYPE_PDF,
     LESSON_TYPE_QUIZ,
@@ -39,6 +41,8 @@ export default function LessonIcon({ type }: { type: Type }) {
             return <Quiz />;
         case LESSON_TYPE_FILE:
             return <InsertDriveFile />;
+        case LESSON_TYPE_EMBED:
+            return <ArtTrack />;
         default:
             return <TextSnippet />;
     }

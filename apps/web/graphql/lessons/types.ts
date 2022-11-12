@@ -11,7 +11,7 @@ import constants from "../../config/constants";
 import mediaTypes from "../media/types";
 import { getMedia } from "../media/logic";
 
-const { text, audio, video, pdf, quiz, file } = constants;
+const { text, audio, video, pdf, quiz, file, embed } = constants;
 
 const DESCRIPTION_REQUIRES_ENROLLMENT =
     "Should the content of this lesson be visible to only enrolled customers.";
@@ -28,6 +28,7 @@ const lessontypeType = new GraphQLEnumType({
         PDF: { value: pdf },
         QUIZ: { value: quiz },
         FILE: { value: file },
+        EMBED: { value: embed },
     },
 });
 

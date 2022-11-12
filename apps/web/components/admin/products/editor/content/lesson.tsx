@@ -23,6 +23,8 @@ import {
     EDIT_LESSON_TEXT,
     BUTTON_DELETE_LESSON_TEXT,
     LESSON_PREVIEW_TOOLTIP,
+    LESSON_CONTENT_EMBED_HEADER,
+    LESSON_CONTENT_EMBED_PLACEHOLDER,
 } from "../../../../../ui-config/strings";
 import {
     LESSON_TYPE_TEXT,
@@ -36,15 +38,12 @@ import {
     MIMETYPE_PDF,
     COURSE_TYPE_COURSE,
     COURSE_TYPE_DOWNLOAD,
+    LESSON_TYPE_EMBED,
 } from "../../../../../ui-config/constants";
 import { FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";
 import { AppMessage, Media, Profile } from "@courselit/common-models";
-import {
-    Section,
-    Select as SingleSelect,
-    TextEditor,
-} from "@courselit/components-library";
+import { Section, Select, TextEditor } from "@courselit/components-library";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import type { Auth, Lesson, Address } from "@courselit/common-models";
 import { actionCreators } from "@courselit/state-management";
@@ -152,10 +151,12 @@ const LessonEditor = ({
             const response = await fetch.exec();
             if (response.lesson) {
                 setLesson(response.lesson);
-                setContent(
-                    response.lesson.content
-                        ? JSON.parse(response.lesson.content)
-                        : undefined
+                const newContent = setContent(
+                    response.lesson.type.toLowerCase() === LESSON_TYPE_TEXT
+                        ? response.lesson.content
+                            ? JSON.parse(response.lesson.content)
+                            : undefined
+                        : response.lesson.content
                 );
                 setRefresh(refresh + 1);
             }
@@ -184,11 +185,7 @@ const LessonEditor = ({
         title: "${lesson.title}",
         downloadable: ${lesson.downloadable},
         type: ${lesson.type.toUpperCase()},
-        content: ${
-            content
-                ? JSON.stringify(JSON.stringify(content))
-                : JSON.stringify("")
-        },
+        content: ${formatContentForSending()},
         mediaId: ${
             lesson.media && lesson.media.mediaId
                 ? '"' + lesson.media.mediaId + '"'
@@ -217,6 +214,13 @@ const LessonEditor = ({
         }
     };
 
+    const formatContentForSending = () =>
+        lesson.type.toLowerCase() === LESSON_TYPE_TEXT
+            ? content
+                ? JSON.stringify(JSON.stringify(content))
+                : JSON.stringify("")
+            : JSON.stringify(content);
+
     const createLesson = async () => {
         const query = `
     mutation {
@@ -224,11 +228,7 @@ const LessonEditor = ({
         title: "${lesson.title}",
         downloadable: ${lesson.downloadable},
         type: ${lesson.type.toUpperCase()},
-        content: ${
-            content
-                ? JSON.stringify(JSON.stringify(content))
-                : JSON.stringify("")
-        },
+        content: ${formatContentForSending() || '""'},
         mediaId: ${
             lesson.media && lesson.media.mediaId
                 ? '"' + lesson.media.mediaId + '"'
@@ -344,6 +344,10 @@ const LessonEditor = ({
             label: capitalize(LESSON_TYPE_PDF),
             value: String.prototype.toUpperCase.call(LESSON_TYPE_PDF),
         },
+        {
+            label: capitalize(LESSON_TYPE_EMBED),
+            value: String.prototype.toUpperCase.call(LESSON_TYPE_EMBED),
+        },
     ];
     if (course?.type === COURSE_TYPE_COURSE.toUpperCase()) {
         selectOptions.unshift({
@@ -384,7 +388,7 @@ const LessonEditor = ({
                                 {course?.type?.toLowerCase() ===
                                     COURSE_TYPE_COURSE && (
                                     <Grid item sx={{ mb: 2 }}>
-                                        <SingleSelect
+                                        <Select
                                             title={TYPE_DROPDOWN}
                                             value={lesson.type}
                                             options={selectOptions}
@@ -395,6 +399,7 @@ const LessonEditor = ({
                                                     })
                                                 );
                                             }}
+                                            disabled={!!lesson.lessonId}
                                         />
                                     </Grid>
                                 )}
@@ -405,6 +410,9 @@ const LessonEditor = ({
                                         ),
                                         String.prototype.toUpperCase.call(
                                             LESSON_TYPE_QUIZ
+                                        ),
+                                        String.prototype.toUpperCase.call(
+                                            LESSON_TYPE_EMBED
                                         ),
                                     ].includes(lesson.type) && (
                                         <div>
@@ -453,6 +461,29 @@ const LessonEditor = ({
                                                     onChange={(state: any) =>
                                                         setContent(state)
                                                     }
+                                                />
+                                            </Grid>
+                                        </Grid>
+                                    )}
+                                    {lesson.type.toLowerCase() ===
+                                        LESSON_TYPE_EMBED && (
+                                        <Grid container direction="column">
+                                            <Grid item>
+                                                <TextField
+                                                    label={
+                                                        LESSON_CONTENT_EMBED_HEADER
+                                                    }
+                                                    placeholder={
+                                                        LESSON_CONTENT_EMBED_PLACEHOLDER
+                                                    }
+                                                    required
+                                                    value={content}
+                                                    onChange={(e: any) =>
+                                                        setContent(
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    fullWidth
                                                 />
                                             </Grid>
                                         </Grid>
