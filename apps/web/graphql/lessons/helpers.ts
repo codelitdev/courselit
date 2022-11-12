@@ -4,10 +4,10 @@ import LessonModel, { Lesson } from "../../models/Lesson";
 import CourseModel from "../../models/Course";
 import { Group } from "@courselit/common-models";
 import mongoose from "mongoose";
-const { text, audio, video, pdf } = constants;
+const { text, audio, video, pdf, embed } = constants;
 
 export const lessonValidator = (lessonData: Lesson) => {
-    if (lessonData.type === text && !lessonData.content) {
+    if ([text, embed].includes(lessonData.type) && !lessonData.content) {
         throw new Error(responses.content_cannot_be_null);
     }
 

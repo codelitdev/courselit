@@ -20,6 +20,7 @@ interface SelectProps {
     onChange: (...args: any[]) => void;
     value: string | number;
     title: string;
+    disabled?: boolean;
 }
 
 export default function Select({
@@ -27,6 +28,7 @@ export default function Select({
     onChange,
     value,
     title,
+    disabled,
 }: SelectProps) {
     const id = `${title.split(" ").join().toLowerCase()}`;
 
@@ -41,6 +43,7 @@ export default function Select({
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     onChange(e.target.value)
                 }
+                disabled={disabled}
             >
                 {options.map((option: Option) => (
                     <MenuItem

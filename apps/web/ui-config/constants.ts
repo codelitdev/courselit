@@ -13,6 +13,7 @@ export const LESSON_TYPE_VIDEO = "video";
 export const LESSON_TYPE_PDF = "pdf";
 export const LESSON_TYPE_QUIZ = "quiz";
 export const LESSON_TYPE_FILE = "file";
+export const LESSON_TYPE_EMBED = "embed";
 
 export const FREE_COURSES_TEXT = "FREE";
 
@@ -35,7 +36,7 @@ export const TRANSACTION_FAILED = "failed";
 export const CONSECUTIVE_PAYMENT_VERIFICATION_REQUEST_GAP = 2000;
 
 // mime types
-export const MIMETYPE_VIDEO = ["video/mp4"];
+export const MIMETYPE_VIDEO = ["video/mp4", "video/quicktime"];
 export const MIMETYPE_AUDIO = ["audio/mp3", "audio/mpeg"];
 export const MIMETYPE_IMAGE = ["image/png", "image/jpeg", "image/webp"];
 export const MIMETYPE_PDF = ["application/pdf"];

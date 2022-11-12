@@ -1,7 +1,7 @@
 import { generateUniqueId } from "@courselit/utils";
 import mongoose from "mongoose";
 import constants from "../config/constants";
-const { text, video, audio, pdf, quiz, file } = constants;
+const { text, video, audio, pdf, quiz, file, embed } = constants;
 
 export interface Lesson {
     id: mongoose.Types.ObjectId;
@@ -14,7 +14,8 @@ export interface Lesson {
         | typeof audio
         | typeof pdf
         | typeof quiz
-        | typeof file;
+        | typeof file
+        | typeof embed;
     content?: string;
     mediaId?: string;
     downloadable: boolean;
@@ -33,7 +34,7 @@ const LessonSchema = new mongoose.Schema<Lesson>({
     type: {
         type: String,
         required: true,
-        enum: [text, video, audio, pdf, quiz, file],
+        enum: [text, video, audio, pdf, quiz, file, embed],
     },
     content: String,
     mediaId: String,

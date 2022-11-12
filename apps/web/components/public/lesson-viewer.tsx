@@ -8,12 +8,12 @@ import {
     LESSON_TYPE_PDF,
     LESSON_TYPE_FILE,
     LESSON_TYPE_TEXT,
+    LESSON_TYPE_EMBED,
 } from "../../ui-config/constants";
 import { connect } from "react-redux";
 import { actionCreators } from "@courselit/state-management";
 import { Typography, Grid, Button } from "@mui/material";
 import {
-    BUTTON_LESSON_DOWNLOAD,
     COURSE_PROGRESS_FINISH,
     COURSE_PROGRESS_INTRO,
     COURSE_PROGRESS_NEXT,
@@ -30,8 +30,9 @@ import {
     refreshUserProfile,
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
-import { ArrowBack, ArrowForward, OpenInNew } from "@mui/icons-material";
+import { ArrowBack, ArrowForward } from "@mui/icons-material";
 import { isEnrolled } from "../../ui-lib/utils";
+import LessonEmbedViewer from "./lesson-embed-viewer";
 
 const { networkAction } = actionCreators;
 
@@ -55,6 +56,7 @@ const StyledSection = styled("div")(({ theme }: { theme: any }) => ({
 
     [`& .${classes.section}`]: {
         marginTop: "1.6em",
+        paddingBottom: 100,
     },
 }));
 
@@ -236,11 +238,19 @@ const LessonViewer = ({
                     </Grid>
                     {String.prototype.toUpperCase.call(LESSON_TYPE_VIDEO) ===
                         lesson.type && (
-                        <Grid item>
+                        <Grid
+                            item
+                            className={classes.section}
+                            sx={{
+                                overflow: "hidden",
+                                borderRadius: 4,
+                            }}
+                        >
                             <video
                                 controls
                                 controlsList="nodownload" // eslint-disable-line react/no-unknown-property
-                                className={`${classes.videoPlayer} ${classes.section}`}
+                                className={classes.videoPlayer}
+                                key={lesson.lessonId}
                             >
                                 <source
                                     src={
@@ -286,7 +296,7 @@ const LessonViewer = ({
                     )}
                     {String.prototype.toUpperCase.call(LESSON_TYPE_PDF) ===
                         lesson.type && (
-                        <Grid item>
+                        <Grid item className={classes.section}>
                             <iframe
                                 frameBorder="0"
                                 width="100%"
@@ -312,36 +322,52 @@ const LessonViewer = ({
                                 />
                             </Grid>
                         )}
+                    {String.prototype.toUpperCase.call(LESSON_TYPE_EMBED) ===
+                        lesson.type &&
+                        lesson.content && (
+                            <Grid item className={classes.section}>
+                                <LessonEmbedViewer content={lesson.content} />
+                            </Grid>
+                        )}
                     {String.prototype.toUpperCase.call(LESSON_TYPE_FILE) ===
                         lesson.type && (
-                        <Grid item>
+                        <Grid item className={classes.section}>
                             <Grid
                                 container
                                 justifyContent="center"
                                 alignItems="center"
-                                sx={{ minHeight: "50vh" }}
                             >
-                                <Grid item>
-                                    <Button
-                                        component="a"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        href={lesson.media.file as string}
-                                        download={lesson.media.originalFileName}
-                                        startIcon={<OpenInNew />}
-                                        size="large"
-                                        variant="contained"
-                                        disableElevation
-                                    >
-                                        {BUTTON_LESSON_DOWNLOAD}
-                                    </Button>
-                                </Grid>
+                                <Grid
+                                    item
+                                    xs={12}
+                                    component="object"
+                                    data={lesson.media.file as string}
+                                    sx={{
+                                        height: "100vh",
+                                    }}
+                                />
                             </Grid>
                         </Grid>
                     )}
                     {isEnrolled(lesson.courseId, profile) && (
-                        <Grid item>
-                            <Grid container justifyContent="flex-end">
+                        <Grid
+                            item
+                            sx={{
+                                position: "fixed",
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                            }}
+                        >
+                            <Grid
+                                container
+                                justifyContent="flex-end"
+                                sx={(theme) => ({
+                                    padding: 2,
+                                    backgroundColor:
+                                        theme.palette.background.default,
+                                })}
+                            >
                                 <Grid item sx={{ mr: 2 }}>
                                     {!lesson.prevLesson && (
                                         <Link
