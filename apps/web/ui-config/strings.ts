@@ -350,6 +350,6 @@ export const BLOG_TABLE_HEADER_NAME = "Title";
 export const PAGE_HEADER_NEW_BLOG = "New blog";
 export const MENU_BLOG_VISIT = "Visit blog";
 export const ACCOUNT_NO_PURCHASE_PLACEHOLDER =
-    "Your enrolled courses will show up here";
+    "Your enrolled courses will show up here.";
 export const EXPORT_CSV = "Export to CSV";
 export const GENERIC_FAILURE_MESSAGE = "That didn't work. Please try again.";

@@ -5,9 +5,9 @@ import constants from "../config/constants";
 import { isSubscriptionValid } from "../lib/utils";
 import { NextApiResponse } from "next";
 import ApiRequest from "../models/ApiRequest";
+import { createUser } from "../graphql/users/logic";
 
-const { domainNameForSingleTenancy, placeholderEmailForSingleTenancy } =
-    constants;
+const { domainNameForSingleTenancy } = constants;
 
 const getDomainBasedOnSubdomain = async (
     subdomain: string
@@ -59,6 +59,8 @@ export default async function verifyDomain(
     res: NextApiResponse,
     next: any
 ): Promise<void> {
+    let domain: Domain | null;
+
     if (process.env.MULTITENANT === "true") {
         const domainName = req.headers.host?.split(".")[0];
 
@@ -66,7 +68,7 @@ export default async function verifyDomain(
             throw new Error(responses.domain_missing);
         }
 
-        const domain = await getDomain({
+        domain = await getDomain({
             hostName: req.headers.host || "",
             domainName,
         });
@@ -79,22 +81,34 @@ export default async function verifyDomain(
         if (!validSubscription) {
             throw new Error(responses.not_valid_subscription);
         }
-
-        req.subdomain = domain;
-        next();
     } else {
-        let domain = await DomainModel.findOne({
+        domain = await DomainModel.findOne({
             name: domainNameForSingleTenancy,
         });
 
         if (!domain) {
+            if (!process.env.SUPER_ADMIN_EMAIL) {
+                console.error(responses.domain_super_admin_email_missing);
+                process.exit(1);
+            }
+
             domain = await DomainModel.create({
                 name: domainNameForSingleTenancy,
-                email: placeholderEmailForSingleTenancy,
+                email: process.env.SUPER_ADMIN_EMAIL,
             });
         }
-
-        req.subdomain = domain;
-        next();
     }
+
+    if (!domain!.settings) {
+        domain!.settings = {};
+        await createUser({
+            domain: domain!,
+            email: domain!.email,
+            superAdmin: true,
+        });
+        (domain! as any).save();
+    }
+
+    req.subdomain = domain!;
+    next();
 }
