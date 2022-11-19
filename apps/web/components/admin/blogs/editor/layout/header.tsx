@@ -52,9 +52,13 @@ function BlogHeader({ id, breadcrumbs, address, dispatch }: BlogHeaderProps) {
                     <Breadcrumbs aria-label="product-breadcrumbs">
                         {breadcrumbs.map((crumb: Breadcrumb) =>
                             crumb.url ? (
-                                <Link href={crumb.url}>{crumb.text}</Link>
+                                <Link href={crumb.url} key={crumb.url}>
+                                    {crumb.text}
+                                </Link>
                             ) : (
-                                <Typography>{crumb.text}</Typography>
+                                <Typography key={crumb.text}>
+                                    {crumb.text}
+                                </Typography>
                             )
                         )}
                     </Breadcrumbs>
