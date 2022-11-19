@@ -12,6 +12,7 @@ We recommend hosting it using [docker-compose](https://docs.docker.com/compose/)
 DB_CONNECTION_STRING=mongodb_connection_string
 JWT_SECRET=long_random_string
 TAG=latest
+SUPER_ADMIN_EMAIL=john@doe.com
 
 # Email
 EMAIL_HOST=host
@@ -23,7 +24,7 @@ EMAIL_FROM=from_field
 MEDIALIT_APIKEY=apikey
 ```
 
-> ⚠️ You need to have a [MediaLit](https://medialit.cloud) account in order to upload media on courselit. you can self-host MediaLit, refer the section titled hosting medialit below.
+> ⚠️ You need to have a [MediaLit](https://medialit.cloud) account in order to upload media on courselit. you can self-host MediaLit, refer the section titled [hosting medialit](#hosting-medialit) below.
 
 Now, create a new file called docker-compose.yml and paste the following in the file.
 
@@ -133,6 +134,12 @@ MEDIALIT_APIKEY=key_from_above_step
 ```
 
 That's it! You now have a fully functioning LMS powered by CourseLit.
+
+## Logging into the admin dashboard
+
+CourseLit sets up a super admin user account using the email address we provide in the `SUPER_ADMIN_EMAIL` field in the `.env` file.
+
+Click on the profile button located at the top right corner of the homepage, then click on the `login` option to go to the login screen. Enter your email in the login form to get a magic link in your inbox.
 
 ## Stuck somewhere?
 
