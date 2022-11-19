@@ -107,6 +107,13 @@ EOF
 }
 
 function setup_ssl () {
+    echo "Enter an email to be used for setting up a super admin account. Make sure you can receive emails on this email address."
+    read EMAIL
+    [[ -z "$EMAIL" ]] && { echo "A email is necessary to continue. Please try again."; exit 1; }
+
+    # Pass EMAIL to the environment
+    echo "SUPER_ADMIN_EMAIL=$EMAIL" >> $CONFIGHOME/.env
+
 cat > $CONFIGHOME/Caddyfile <<EOF
 ${DOMAIN} {
 	reverse_proxy app:3000

@@ -14,6 +14,8 @@ export const responses = {
     email_already_registered: "This email is already registered",
     domain_missing: "Domain is missing",
     domain_doesnt_exist: "Domain does not exist",
+    domain_super_admin_email_missing:
+        "SUPER_ADMIN_EMAIL environment variable is not defined",
     cross_domain_access_prohibited: "Invalid credentials",
     locked: "Account locked",
     not_valid_subscription: "No valid subscription found",

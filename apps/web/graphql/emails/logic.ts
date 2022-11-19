@@ -15,7 +15,7 @@ export async function createSubscription(
 
         if (!dbUser) {
             dbUser = await createUser({
-                domain: ctx.subdomain!._id,
+                domain: ctx.subdomain!,
                 email: email,
                 lead: constants.leadNewsletter,
             });

@@ -225,10 +225,12 @@ export async function createUser({
     domain,
     email,
     lead,
+    superAdmin = false,
 }: {
     domain: Domain;
     email: string;
     lead?: typeof constants.leadWebsite | typeof constants.leadNewsletter;
+    superAdmin?: boolean;
 }): Promise<User> {
     const newUser: Partial<User> = {
         domain: domain._id,
@@ -238,12 +240,7 @@ export async function createUser({
         permissions: [],
         lead: lead || constants.leadWebsite,
     };
-    const notTheFirstUserOfDomain = await UserModel.countDocuments({
-        domain: domain._id,
-    });
-    if (notTheFirstUserOfDomain) {
-        newUser.permissions = [constants.permissions.enrollInCourse];
-    } else {
+    if (superAdmin) {
         newUser.permissions = [
             constants.permissions.manageCourse,
             constants.permissions.manageAnyCourse,
@@ -257,11 +254,13 @@ export async function createUser({
             constants.permissions.manageSettings,
             constants.permissions.manageUsers,
         ];
+    } else {
+        newUser.permissions = [constants.permissions.enrollInCourse];
     }
     newUser.lead = lead;
     const user = await UserModel.create(newUser);
 
-    if (!notTheFirstUserOfDomain) {
+    if (superAdmin) {
         await initMandatoryPages(domain, user);
     }
 
