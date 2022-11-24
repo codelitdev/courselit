@@ -50,6 +50,23 @@ export const SIDEBAR: Sidebar = {
             { text: "Self hosting", link: "en/self-hosting" },
             // { text: 'Page 3', link: 'en/page-3' },
         ],
+        "Online courses": [
+            { text: "Creating a course", link: "en/create-course" },
+            { text: "Adding lessons", link: "en/add-lesson" }
+        ],
+        "Digital downloads": [
+            { text: "Creating a digital download", link: "en/create-digital-download" }
+        ],
+        "Blogs": [
+            { text: "Writing", link: "en/writing-blog" }
+        ],
+        "Website": [
+            { text: "Page builder basics", link: "en/page-builder-basics" },
+            { text: "Shared blocks", link: "en/page-builder-shared-blocks" }
+        ],
+        "Payments": [
+            { text: "Set up Stripe", link: "en/payment-stripe-setup" }
+        ]
         // 'Another Section': [{ text: 'Page 4', link: 'en/page-4' }],
     },
 };
