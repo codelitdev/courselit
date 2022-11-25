@@ -5,8 +5,8 @@ import { AppMessage, Media } from "@courselit/common-models";
 import type { Address } from "@courselit/common-models";
 import type { AppDispatch } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
-import Dialog from "../dialog";
-import Section from "../section";
+import Dialog from "../../dialog";
+import Section from "../../section";
 
 const { useState } = React;
 const { networkAction, setAppMessage } = actionCreators;

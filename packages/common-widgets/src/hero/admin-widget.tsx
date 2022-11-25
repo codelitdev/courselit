@@ -108,6 +108,7 @@ export default function AdminWidget({
                 <MediaSelector
                     title=""
                     src={media && media.thumbnail}
+                    srcTitle={media && media.originalFileName}
                     dispatch={dispatch}
                     auth={auth}
                     profile={profile}

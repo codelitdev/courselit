@@ -123,7 +123,6 @@ export const createLesson = async (lessonData: Lesson, ctx: GQLContext) => {
 };
 
 export const updateLesson = async (lessonData: any, ctx: GQLContext) => {
-    // TODO: work out a better way to save things
     let lesson = await getLessonOrThrow(lessonData.id, ctx);
 
     lessonValidator(lessonData);
@@ -143,14 +142,12 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
         // remove from the parent Course's lessons array
         let course: Course | null = await CourseModel.findOne({
             domain: ctx.subdomain._id,
-        }).elemMatch("lessons", { $eq: lesson.id });
+        }).elemMatch("lessons", { $eq: lesson.lessonId });
         if (!course) {
-            return null;
+            return false;
         }
 
-        if (~course.lessons.indexOf(lesson.id)) {
-            course.lessons.splice(course.lessons.indexOf(lesson.id), 1);
-        }
+        course.lessons.splice(course.lessons.indexOf(lesson.lessonId), 1);
         await (course as any).save();
 
         if (lesson.mediaId) {

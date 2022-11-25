@@ -264,10 +264,10 @@ const LessonEditor = ({
 
         if (lesson.lessonId) {
             const query = `
-      mutation r {
-        result: deleteLesson(id: "${lesson.lessonId}")
-      }
-      `;
+                mutation r {
+                    result: deleteLesson(id: "${lesson.lessonId}")
+                }
+            `;
             const fetch = new FetchBuilder()
                 .setUrl(`${address.backend}/api/graph`)
                 .setPayload(query)
@@ -421,6 +421,11 @@ const LessonEditor = ({
                                                 src={
                                                     lesson.media &&
                                                     lesson.media.thumbnail
+                                                }
+                                                srcTitle={
+                                                    lesson.media &&
+                                                    lesson.media
+                                                        .originalFileName
                                                 }
                                                 onSelection={(
                                                     media?: Media

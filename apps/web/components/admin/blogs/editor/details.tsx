@@ -112,6 +112,9 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
                         <MediaSelector
                             title={FORM_FIELD_FEATURED_IMAGE}
                             src={featuredImage && featuredImage.thumbnail}
+                            srcTitle={
+                                featuredImage && featuredImage.originalFileName
+                            }
                             onSelection={(media?: Media) => {
                                 media && setFeaturedImage(media || null);
                             }}

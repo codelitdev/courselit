@@ -93,6 +93,7 @@ const Settings = (props: SettingsProps) => {
         logopath: {
             file: "",
             thumbnail: "",
+            originalFileName: "",
         },
         currencyISOCode: "",
         paymentMethod: "",
@@ -124,7 +125,8 @@ const Settings = (props: SettingsProps) => {
                 title,
                 subtitle,
                 logopath {
-                thumbnail
+                    thumbnail,
+                    originalFileName
                 },
                 currencyISOCode,
                 paymentMethod,
@@ -254,7 +256,8 @@ const Settings = (props: SettingsProps) => {
                     title,
                     subtitle,
                     logopath {
-                        thumbnail
+                        thumbnail,
+                        originalFileName
                     },
                     currencyISOCode,
                     paymentMethod,
@@ -299,6 +302,7 @@ const Settings = (props: SettingsProps) => {
     };
 
     const onChangeData = (e: React.ChangeEvent<HTMLInputElement>) => {
+        console.log("settings", e);
         if (!e) {
             return;
         }
@@ -327,7 +331,8 @@ const Settings = (props: SettingsProps) => {
                     title,
                     subtitle,
                     logopath {
-                        thumbnail
+                        thumbnail,
+                        originalFileName
                     },
                     currencyISOCode,
                     paymentMethod,
@@ -433,6 +438,14 @@ const Settings = (props: SettingsProps) => {
                                             (props.siteinfo.logopath &&
                                                 props.siteinfo.logopath
                                                     .thumbnail)
+                                        }
+                                        srcTitle={
+                                            (newSettings.logopath &&
+                                                newSettings.logopath
+                                                    .originalFileName) ||
+                                            (props.siteinfo.logopath &&
+                                                props.siteinfo.logopath
+                                                    .originalFileName)
                                         }
                                         onSelection={onChangeData}
                                         mimeTypesToShow={[...MIMETYPE_IMAGE]}
