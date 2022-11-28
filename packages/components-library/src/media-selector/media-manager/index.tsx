@@ -9,7 +9,6 @@ import { checkPermission } from "@courselit/utils";
 import Upload from "./upload";
 import Editor from "./editor";
 import MediaPreview from "./media-preview";
-import OverviewAndDetail from "../../overview-and-detail";
 import Image from "../../image";
 import Access from "../access";
 
@@ -56,10 +55,8 @@ interface IndexProps {
 const Index = (props: IndexProps) => {
     const [mediaPaginationOffset, setMediaPaginationOffset] = useState(1);
     const [creatorMedia, setCreatorMedia] = useState<Media[]>([]);
-    const [componentsMap, setComponentsMap] = useState([]);
     const [refreshMedia, setRefreshMedia] = useState(0);
-    const [searchText] = useState("");
-    const { address, strings, dispatch, auth, profile } = props;
+    const { address, strings, dispatch, profile } = props;
 
     useEffect(() => {
         loadMedia();

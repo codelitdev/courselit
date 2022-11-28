@@ -21,7 +21,6 @@ import DrawerListItemIcon from "./base-layout/drawer-list-item-icon";
 import Header from "./base-layout/header";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
-import dynamic from "next/dynamic";
 import State from "../../ui-models/state";
 import { SiteInfo } from "@courselit/common-models";
 

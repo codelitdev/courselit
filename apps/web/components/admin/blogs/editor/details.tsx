@@ -53,7 +53,6 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
 
     const updateDetails = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        console.log(featuredImage);
 
         const mutation = `
             mutation {

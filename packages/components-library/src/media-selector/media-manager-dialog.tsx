@@ -71,18 +71,8 @@ interface MediaManagerDialogProps {
 
 const MediaManagerDialog = (props: MediaManagerDialogProps) => {
     // const [selectedMedia, setSelectedMedia] = useState();
-    const {
-        onClose,
-        onOpen,
-        mimeTypesToShow,
-        access,
-        title,
-        strings,
-        auth,
-        profile,
-        dispatch,
-        address,
-    } = props;
+    const { onClose, onOpen, access, title, strings, dispatch, address } =
+        props;
 
     const handleSelection = (media: Media) => onClose(media);
 
@@ -170,10 +160,6 @@ const MediaManagerDialog = (props: MediaManagerDialogProps) => {
         } finally {
             setUploading(false);
         }
-    };
-
-    const resetForm = () => {
-        setPresignedUrl("");
     };
 
     return (

@@ -136,10 +136,6 @@ function Upload({
         }
     };
 
-    const resetForm = () => {
-        setPresignedUrl("");
-    };
-
     return (
         <StyledSection>
             <form onSubmit={onUpload} encType="multipart/form-data">

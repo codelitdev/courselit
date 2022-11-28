@@ -20,7 +20,6 @@ export interface Settings {
 const SettingsSchema = new mongoose.Schema<Settings>({
     title: { type: String },
     subtitle: { type: String },
-    logo: { type: String },
     logo: MediaSchema,
     currencyISOCode: { type: String, maxlength: 3 },
     paymentMethod: { type: String },

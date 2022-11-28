@@ -47,7 +47,6 @@ export const updateSiteInfo = async (
     ctx: GQLContext
 ) => {
     checkIfAuthenticated(ctx);
-    console.log(siteData);
 
     if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
         throw new Error(responses.action_not_allowed);
@@ -76,7 +75,6 @@ export const updatePaymentInfo = async (
     ctx: GQLContext
 ) => {
     checkIfAuthenticated(ctx);
-    console.log(siteData);
 
     if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
         throw new Error(responses.action_not_allowed);
@@ -108,7 +106,6 @@ export const updatePaymentInfo = async (
     if (failedPaymentMethod) {
         throw getPaymentInvalidException(failedPaymentMethod);
     }
-    console.log(domain.settings);
 
     if (domain.settings.paymentMethod) {
         domain.settings.currencyISOCode =

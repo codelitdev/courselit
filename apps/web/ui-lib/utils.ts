@@ -16,19 +16,6 @@ export const formulateCourseUrl = (course: any, backend = "") =>
         course.slug
     }`;
 
-export const getObjectContainingOnlyChangedFields = (
-    baseline: Record<string, any>,
-    obj: Record<string, any>
-) => {
-    const result: Record<string, unknown> = {};
-    for (const i of Object.keys(baseline)) {
-        if (baseline[i] !== obj[i]) {
-            result[i] = obj[i];
-        }
-    }
-    return result;
-};
-
 export const getAddress = (host: string) => {
     return {
         domain: extractDomainFromURL(host),

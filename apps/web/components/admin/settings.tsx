@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { styled } from "@mui/system";
 import { connect } from "react-redux";
-import { getObjectContainingOnlyChangedFields } from "../../ui-lib/utils";
 import {
     PAYMENT_METHOD_PAYPAL,
     PAYMENT_METHOD_PAYTM,
@@ -32,7 +31,7 @@ import {
     SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL,
     SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY,
 } from "../../ui-config/strings";
-import { FetchBuilder, getGraphQLQueryFields } from "@courselit/utils";
+import { FetchBuilder } from "@courselit/utils";
 import { decode, encode } from "base-64";
 import { AppMessage, Profile } from "@courselit/common-models";
 import type { SiteInfo, Address, Auth } from "@courselit/common-models";
@@ -354,7 +353,6 @@ const Settings = (props: SettingsProps) => {
                 }
             }`;
 
-        console.log(query);
         try {
             const fetchRequest = fetch.setPayload(query).build();
             props.dispatch(networkAction(true));
