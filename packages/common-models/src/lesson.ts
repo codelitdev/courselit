@@ -5,11 +5,11 @@ export default interface Lesson {
     title: string;
     type: string;
     content: string;
-    media: Media;
     requiresEnrollment: boolean;
     courseId: string;
     groupId: string;
     downloadable: boolean;
+    media?: Partial<Media>;
     prevLesson?: string;
     nextLesson?: string;
 }

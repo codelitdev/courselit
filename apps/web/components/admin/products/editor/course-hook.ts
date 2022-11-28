@@ -44,7 +44,13 @@ export default function useCourse(id: string): Partial<Course> | undefined {
                     cost,
                     featuredImage {
                         mediaId,
-                        thumbnail
+                        originalFileName,
+                        mimeType,
+                        size,
+                        access,
+                        file,
+                        thumbnail,
+                        caption
                     },
                     published,
                     privacy,

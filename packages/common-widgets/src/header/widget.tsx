@@ -25,10 +25,10 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
         >
             <Grid item>
                 <Grid container alignItems="center">
-                    {state.siteinfo.logopath && (
+                    {state.siteinfo.logo && (
                         <Grid item sx={{ mr: 1 }}>
                             <Image
-                                src={state.siteinfo.logopath.file}
+                                src={state.siteinfo.logo.file}
                                 height={{ xs: 32, lg: 36 }}
                                 width={{ xs: 32, lg: 36 }}
                                 borderRadius={2}

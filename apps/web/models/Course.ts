@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 import constants from "../config/constants";
 import { generateUniqueId } from "@courselit/utils";
-import type { Group } from "@courselit/common-models";
+import type { Group, Media } from "@courselit/common-models";
+import MediaSchema from "./Media";
 const { course, download, blog, unlisted, open } = constants;
-const { text, video, audio, pdf, quiz } = constants;
 
 export interface Course {
     domain: mongoose.Types.ObjectId;
@@ -22,7 +22,7 @@ export interface Course {
     tags: string[];
     lessons: any[];
     description?: string;
-    featuredImage?: string;
+    featuredImage?: Media;
     groups: Group[];
     sales: number;
     customers: string[];
@@ -52,7 +52,7 @@ const CourseSchema = new mongoose.Schema<Course>(
         tags: [{ type: String }],
         lessons: [String],
         description: String,
-        featuredImage: String,
+        featuredImage: MediaSchema,
         groups: [
             {
                 name: { type: String, required: true },

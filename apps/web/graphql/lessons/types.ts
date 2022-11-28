@@ -51,7 +51,7 @@ const lessonType = new GraphQLObjectType({
         content: { type: GraphQLString },
         media: {
             type: mediaTypes.mediaType,
-            resolve: (lesson, _, __, ___) => getMedia(lesson.mediaId),
+            resolve: (lesson, _, __, ___) => getMedia(lesson.media),
         },
         prevLesson: { type: GraphQLString },
         nextLesson: { type: GraphQLString },
@@ -92,7 +92,7 @@ const lessonInputType = new GraphQLInputObjectType({
             type: new GraphQLNonNull(GraphQLBoolean),
         },
         content: { type: GraphQLString },
-        mediaId: { type: GraphQLID },
+        media: { type: mediaTypes.mediaInputType },
         downloadable: { type: GraphQLBoolean },
         groupId: { type: new GraphQLNonNull(GraphQLID) },
     },
@@ -108,7 +108,7 @@ const lessonUpdateType = new GraphQLInputObjectType({
         title: { type: GraphQLString },
         type: { type: lessontypeType },
         content: { type: GraphQLString },
-        mediaId: { type: GraphQLID },
+        media: { type: mediaTypes.mediaInputType },
         downloadable: { type: GraphQLBoolean },
         requiresEnrollment: {
             description: DESCRIPTION_REQUIRES_ENROLLMENT,

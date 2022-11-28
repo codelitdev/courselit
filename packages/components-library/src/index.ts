@@ -8,9 +8,8 @@ import Select from "./select";
 import Menu from "./menu";
 import Link from "./link";
 import Dialog from "./dialog";
-import MediaManager from "./media-manager";
 import MediaSelector from "./media-selector";
-import TextEditor from "./text-editor";
+import TextEditor, { emptyDoc as TextEditorEmptyDoc } from "./text-editor";
 import TextRenderer from "./text-renderer";
 
 export {
@@ -24,8 +23,8 @@ export {
     Menu,
     Link,
     Dialog,
-    MediaManager,
     MediaSelector,
     TextEditor,
+    TextEditorEmptyDoc,
     TextRenderer,
 };

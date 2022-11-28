@@ -20,6 +20,7 @@ import { InvalidContentHandler } from "remirror";
 import BubbleMenu from "./BubbleMenu";
 import Toolbar from "./Toolbar";
 import { ReactEditorProps } from "./types";
+import emptyDoc from "./empty-doc";
 
 export interface WysiwygEditorProps extends Partial<ReactEditorProps> {
     onChange: (...args: any[]) => void;
@@ -28,11 +29,6 @@ export interface WysiwygEditorProps extends Partial<ReactEditorProps> {
     refresh?: number;
     fontFamily?: string;
 }
-
-const emptyDoc: RemirrorContentType = {
-    type: "doc",
-    content: [],
-};
 
 export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
     initialContent,
@@ -127,3 +123,4 @@ export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
 
 (WysiwygEditor as any).getPlainText = (doc: any) =>
     getTextContentFromSlice(doc);
+(WysiwygEditor as any).emptyDoc = emptyDoc;

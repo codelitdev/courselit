@@ -74,27 +74,17 @@ const LessonEditor = ({
     profile,
     auth,
 }: LessonEditorProps) => {
-    const emptyLesson: Lesson = Object.assign(
-        {},
-        {
-            id: "",
-            title: "",
-            type: "",
-            media: {
-                id: "",
-                originalFileName: "",
-                file: "",
-                mimeType: "",
-                public: false,
-            },
-            downloadable: false,
-            requiresEnrollment: true,
-            courseId,
-            groupId: sectionId,
-            lessonId: "",
-        }
-    );
-    const [lesson, setLesson] = useState<Lesson>(emptyLesson);
+    const [lesson, setLesson] = useState<Lesson>({
+        lessonId: "",
+        title: "",
+        type: "",
+        media: {},
+        downloadable: false,
+        requiresEnrollment: true,
+        courseId,
+        groupId: sectionId,
+        content: "",
+    });
     const router = useRouter();
     const [deleteLessonPopupOpened, setDeleteLessonPopupOpened] =
         useState(false);
@@ -121,24 +111,27 @@ const LessonEditor = ({
 
     const loadLesson = async (id: string) => {
         const query = `
-    query {
-      lesson: getLesson(id: "${id}") {
-        title,
-        downloadable,
-        type,
-        content,
-        media {
-          mediaId,
-          file,
-          originalFileName,
-          caption,
-          thumbnail
-        },
-        requiresEnrollment,
-        lessonId
-      }
-    }
-    `;
+            query {
+                lesson: getLesson(id: "${id}") {
+                    title,
+                    downloadable,
+                    type,
+                    content,
+                    media {
+                        mediaId,
+                        originalFileName,
+                        mimeType,
+                        size,
+                        access,
+                        file,
+                        thumbnail,
+                        caption
+                    },
+                    requiresEnrollment,
+                    lessonId
+                }
+            }
+        `;
 
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
@@ -179,24 +172,37 @@ const LessonEditor = ({
 
     const updateLesson = async () => {
         const query = `
-    mutation {
-      lesson: updateLesson(lessonData: {
-        id: "${lesson.lessonId}"
-        title: "${lesson.title}",
-        downloadable: ${lesson.downloadable},
-        type: ${lesson.type.toUpperCase()},
-        content: ${formatContentForSending()},
-        mediaId: ${
-            lesson.media && lesson.media.mediaId
-                ? '"' + lesson.media.mediaId + '"'
-                : null
-        },
-        requiresEnrollment: ${lesson.requiresEnrollment}
-      }) {
-        lessonId
-      }
-    }
-    `;
+            mutation {
+                lesson: updateLesson(lessonData: {
+                    id: "${lesson.lessonId}"
+                    title: "${lesson.title}",
+                    downloadable: ${lesson.downloadable},
+                    type: ${lesson.type.toUpperCase()},
+                    content: ${formatContentForSending()},
+                    media: ${
+                        lesson.media
+                            ? `{
+                        mediaId: "${lesson.media.mediaId}",
+                        originalFileName: "${lesson.media.originalFileName}",
+                        mimeType: "${lesson.media.mimeType}",
+                        size: ${lesson.media.size},
+                        access: "${lesson.media.access}",
+                        file: ${
+                            lesson.media.access === "public"
+                                ? `"${lesson.media.file}"`
+                                : null
+                        },
+                        thumbnail: "${lesson.media.thumbnail}",
+                        caption: "${lesson.media.caption}"
+                    }`
+                            : null
+                    }, 
+                    requiresEnrollment: ${lesson.requiresEnrollment}
+                }) {
+                    lessonId
+                }
+            }
+        `;
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
             .setPayload(query)
@@ -223,25 +229,38 @@ const LessonEditor = ({
 
     const createLesson = async () => {
         const query = `
-    mutation {
-      lesson: createLesson(lessonData: {
-        title: "${lesson.title}",
-        downloadable: ${lesson.downloadable},
-        type: ${lesson.type.toUpperCase()},
-        content: ${formatContentForSending() || '""'},
-        mediaId: ${
-            lesson.media && lesson.media.mediaId
-                ? '"' + lesson.media.mediaId + '"'
-                : null
-        },
-        courseId: "${lesson.courseId}",
-        requiresEnrollment: ${lesson.requiresEnrollment},
-        groupId: "${lesson.groupId}"
-      }) {
-        lessonId   
-      }
-    }
-    `;
+            mutation {
+                lesson: createLesson(lessonData: {
+                    title: "${lesson.title}",
+                    downloadable: ${lesson.downloadable},
+                    type: ${lesson.type.toUpperCase()},
+                    content: ${formatContentForSending() || '""'},
+                    media: ${
+                        lesson.media
+                            ? `{
+                        mediaId: "${lesson.media.mediaId}",
+                        originalFileName: "${lesson.media.originalFileName}",
+                        mimeType: "${lesson.media.mimeType}",
+                        size: ${lesson.media.size},
+                        access: "${lesson.media.access}",
+                        file: ${
+                            lesson.media.access === "public"
+                                ? `"${lesson.media.file}"`
+                                : null
+                        },
+                        thumbnail: "${lesson.media.thumbnail}",
+                        caption: "${lesson.media.caption}"
+                    }`
+                            : null
+                    }, 
+                    courseId: "${lesson.courseId}",
+                    requiresEnrollment: ${lesson.requiresEnrollment},
+                    groupId: "${lesson.groupId}"
+                }) {
+                    lessonId   
+                }
+            }
+        `;
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
             .setPayload(query)
@@ -264,10 +283,10 @@ const LessonEditor = ({
 
         if (lesson.lessonId) {
             const query = `
-      mutation r {
-        result: deleteLesson(id: "${lesson.lessonId}")
-      }
-      `;
+                mutation r {
+                    result: deleteLesson(id: "${lesson.lessonId}")
+                }
+            `;
             const fetch = new FetchBuilder()
                 .setUrl(`${address.backend}/api/graph`)
                 .setPayload(query)
@@ -419,8 +438,16 @@ const LessonEditor = ({
                                             <MediaSelector
                                                 title={CONTENT_URL_LABEL}
                                                 src={
-                                                    lesson.media &&
-                                                    lesson.media.thumbnail
+                                                    (lesson.media &&
+                                                        lesson.media
+                                                            .thumbnail) ||
+                                                    ""
+                                                }
+                                                srcTitle={
+                                                    (lesson.media &&
+                                                        lesson.media
+                                                            .originalFileName) ||
+                                                    ""
                                                 }
                                                 onSelection={(
                                                     media?: Media

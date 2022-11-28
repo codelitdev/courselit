@@ -1,6 +1,7 @@
 import * as React from "react";
 import TextEditor from "@courselit/text-editor";
 import { useTheme } from "@mui/material";
+export { emptyDoc } from "@courselit/text-editor";
 
 export interface WysiwygEditorProps {
     initialContent?: any;

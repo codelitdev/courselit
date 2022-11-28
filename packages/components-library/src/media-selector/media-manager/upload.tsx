@@ -2,11 +2,12 @@ import * as React from "react";
 import { styled } from "@mui/material/styles";
 import { Button, Grid, TextField, Typography, Checkbox } from "@mui/material";
 import { AppMessage } from "@courselit/common-models";
-import type { Auth, Address } from "@courselit/common-models";
+import type { Address } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
-import type { AppDispatch, AppState } from "@courselit/state-management";
+import type { AppDispatch } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
-import Section from "../section";
+import Section from "../../section";
+import Access from "../access";
 
 const { useState, createRef, useEffect } = React;
 const { networkAction, setAppMessage } = actionCreators;
@@ -33,24 +34,26 @@ interface Strings {
 }
 
 interface UploadProps {
-    auth: Auth;
     address: Address;
     dispatch: AppDispatch;
     resetOverview: any;
     strings: Strings;
+    access?: Access;
+    onSelect: (...args: any[]) => void;
 }
 
 function Upload({
-    auth,
     address,
     dispatch,
     resetOverview,
     strings,
+    access = "private",
+    onSelect,
 }: UploadProps) {
     const defaultUploadData = {
         caption: "",
         uploading: false,
-        public: false,
+        public: access === "public",
     };
     const [uploadData, setUploadData] = useState(defaultUploadData);
     const fileInput: React.RefObject<HTMLInputElement> = createRef();
@@ -96,6 +99,7 @@ function Upload({
 
     const onUpload = async (e: React.FormEvent) => {
         e.preventDefault();
+        e.stopPropagation();
         await uploadToServer();
     };
 
@@ -119,16 +123,8 @@ function Upload({
                 body: fD,
             });
             if (res.status === 200) {
-                dispatch(
-                    setAppMessage(
-                        new AppMessage(
-                            strings.fileUploaded ||
-                                "The file is uploaded. Go back to see your media."
-                        )
-                    )
-                );
-                resetForm();
-                resetOverview();
+                const media = await res.json();
+                onSelect(media);
             } else {
                 res = await res.json();
                 throw new Error(res.error);
@@ -138,10 +134,6 @@ function Upload({
         } finally {
             setUploading(false);
         }
-    };
-
-    const resetForm = () => {
-        setPresignedUrl("");
     };
 
     return (
@@ -174,7 +166,8 @@ function Upload({
                     <Grid item>
                         <Checkbox
                             name="public"
-                            onChange={onUploadDataChanged}
+                            checked={uploadData.public}
+                            disabled={true}
                         />
                     </Grid>
                 </Grid>

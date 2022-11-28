@@ -9,8 +9,8 @@ import { checkPermission } from "@courselit/utils";
 import Upload from "./upload";
 import Editor from "./editor";
 import MediaPreview from "./media-preview";
-import OverviewAndDetail from "../overview-and-detail";
-import Image from "../image";
+import Image from "../../image";
+import Access from "../access";
 
 const { useEffect, useState } = React;
 const { networkAction, setAppMessage } = actionCreators;
@@ -49,16 +49,14 @@ interface IndexProps {
     selectionMode: boolean;
     onSelect: (...args: any[]) => void;
     strings: Strings;
-    access?: "public" | "private";
+    access?: Access;
 }
 
 const Index = (props: IndexProps) => {
     const [mediaPaginationOffset, setMediaPaginationOffset] = useState(1);
     const [creatorMedia, setCreatorMedia] = useState<Media[]>([]);
-    const [componentsMap, setComponentsMap] = useState([]);
     const [refreshMedia, setRefreshMedia] = useState(0);
-    const [searchText] = useState("");
-    const { address, strings, dispatch, auth, profile } = props;
+    const { address, strings, dispatch, profile } = props;
 
     useEffect(() => {
         loadMedia();
@@ -117,11 +115,11 @@ const Index = (props: IndexProps) => {
             map.push(getComponentConfig(media));
         });
         map.push({
-            Overview: (
+            Overview: [
                 <Button variant="outlined" onClick={() => loadMedia()}>
                     {props.strings.loadMoreText || "Load more"}
-                </Button>
-            ),
+                </Button>,
+            ],
         });
         if (
             checkPermission(profile.permissions, [
@@ -135,15 +133,13 @@ const Index = (props: IndexProps) => {
 
     const getComponentConfig = (media: Media) => {
         const componentConfig: Record<string, unknown> = {
-            Overview: (
-                <>
-                    <Image src={media.thumbnail!} />
-                    <ImageListItemBar
-                        title={media.originalFileName}
-                        subtitle={media.mimeType}
-                    />
-                </>
-            ),
+            Overview: [
+                <Image src={media.thumbnail!} />,
+                <ImageListItemBar
+                    title={media.originalFileName}
+                    subtitle={media.mimeType}
+                />,
+            ],
         };
 
         componentConfig.subtitle = props.strings.editingArea || "Edit media";
@@ -191,19 +187,18 @@ const Index = (props: IndexProps) => {
 
     const getAddMediaComponentConfig = () => ({
         subtitle: props.strings.dialogTitle || "Add media",
-        Overview: (
-            <>
-                <Button variant="outlined" color="primary" startIcon={<Add />}>
-                    Add new
-                </Button>
-            </>
-        ),
+        Overview: [
+            <Button variant="outlined" color="primary" startIcon={<Add />}>
+                Add new
+            </Button>,
+        ],
         Detail: (
             <Upload
                 resetOverview={resetOverview}
-                auth={auth}
                 address={address}
                 dispatch={dispatch}
+                access={props.access}
+                onSelect={onSelect}
                 strings={{
                     buttonAddFile: strings.buttonAddFile,
                     fileUploaded: strings.fileUploaded,
@@ -248,11 +243,26 @@ const Index = (props: IndexProps) => {
     };
 
     return (
-        <OverviewAndDetail
-            title={props.strings.header || "Media"}
-            componentsMap={componentsMap}
-            onSelect={onSelect}
+        <Upload
+            resetOverview={resetOverview}
+            address={address}
+            dispatch={dispatch}
+            access={props.access}
+            onSelect={props.onSelect}
+            strings={{
+                buttonAddFile: strings.buttonAddFile,
+                fileUploaded: strings.fileUploaded,
+                uploadFailed: strings.uploadFailed,
+                uploading: strings.uploading,
+                uploadButtonText: strings.uploadButtonText,
+                publiclyAvailable: strings.publiclyAvailable,
+            }}
         />
+        // <OverviewAndDetail
+        //     title={props.strings.header || "Media"}
+        //     componentsMap={componentsMap}
+        //     onSelect={onSelect}
+        // />
     );
 };
 

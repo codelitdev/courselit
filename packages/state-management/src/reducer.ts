@@ -43,9 +43,7 @@ function siteinfoReducer(state = initialState.siteinfo, action: Action) {
                     subtitle:
                         action.siteinfo.subtitle ||
                         initialState.siteinfo.subtitle,
-                    logopath:
-                        action.siteinfo.logopath ||
-                        initialState.siteinfo.logopath,
+                    logo: action.siteinfo.logo || initialState.siteinfo.logo,
                     currencyISOCode:
                         action.siteinfo.currencyISOCode ||
                         initialState.siteinfo.currencyISOCode,

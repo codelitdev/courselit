@@ -6,7 +6,7 @@ export default {
     siteinfo: {
         title: "",
         subtitle: "",
-        logopath: {
+        logo: {
             file: "",
             thumbnail: "",
         },

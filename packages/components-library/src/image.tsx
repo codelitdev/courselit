@@ -54,7 +54,7 @@ const Image = (props: ImgProps) => {
                 position: "relative",
                 width,
                 height,
-                borderRadius: borderRadius || 4,
+                borderRadius: borderRadius || 2,
                 overflow: "hidden",
             }}
         >

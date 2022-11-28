@@ -4,6 +4,7 @@ import Image from "../image";
 import MediaManagerDialog from "./media-manager-dialog";
 import { Address, Auth, Profile } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
+import Access from "./access";
 
 const { useState } = React;
 
@@ -42,15 +43,17 @@ interface MediaSelectorProps {
     address: Address;
     title: string;
     src: string;
+    srcTitle: string;
     onSelection: (...args: any[]) => void;
     mimeTypesToShow?: string[];
-    access?: "public" | "private";
+    access?: Access;
     strings: Strings;
 }
 
 const MediaSelector = (props: MediaSelectorProps) => {
     const [dialogOpened, setDialogOpened] = useState(false);
-    const { strings, auth, profile, dispatch, address, src, title } = props;
+    const { strings, auth, profile, dispatch, address, src, title, srcTitle } =
+        props;
 
     const onSelection = (media: any) => {
         setDialogOpened(!dialogOpened);
@@ -63,7 +66,10 @@ const MediaSelector = (props: MediaSelectorProps) => {
                 <Typography variant="body1">{title}</Typography>
             </Grid>
             <Grid item>
-                <Image src={src} height={64} width={64} />
+                <Grid container direction="column">
+                    <Image src={src} height={64} width={64} />
+                    <Typography variant="caption">{srcTitle}</Typography>
+                </Grid>
             </Grid>
             <Grid item>
                 <Button
@@ -73,44 +79,46 @@ const MediaSelector = (props: MediaSelectorProps) => {
                     {strings.buttonCaption || "Select media"}
                 </Button>
             </Grid>
-            <MediaManagerDialog
-                auth={auth}
-                profile={profile}
-                dispatch={dispatch}
-                address={address}
-                onOpen={dialogOpened}
-                onClose={onSelection}
-                title={strings.dialogTitle || "Select media"}
-                mediaAdditionAllowed={false}
-                mimeTypesToShow={props.mimeTypesToShow}
-                access={props.access}
-                strings={{
-                    cancelCaption: strings.cancelCaption,
-                    dialogSelectCaption: strings.dialogSelectCaption,
-                    dialogTitle: strings.dialogTitle,
-                    header: strings.header,
-                    loadMoreText: strings.loadMoreText,
-                    editingArea: strings.editingArea,
-                    buttonAddFile: strings.buttonAddFile,
-                    fileUploaded: strings.fileUploaded,
-                    uploadFailed: strings.uploadFailed,
-                    uploading: strings.uploading,
-                    uploadButtonText: strings.uploadButtonText,
-                    headerMediaPreview: strings.headerMediaPreview,
-                    originalFileNameHeader: strings.originalFileNameHeader,
-                    previewPDFFile: strings.previewPDFFile,
-                    directUrl: strings.directUrl,
-                    urlCopied: strings.urlCopied,
-                    fileType: strings.fileType,
-                    changesSaved: strings.changesSaved,
-                    mediaDeleted: strings.mediaDeleted,
-                    deleteMediaPopupHeader: strings.deleteMediaPopupHeader,
-                    popupCancelAction: strings.popupCancelAction,
-                    popupOKAction: strings.popupOKAction,
-                    deleteMediaButton: strings.deleteMediaButton,
-                    publiclyAvailable: strings.publiclyAvailable,
-                }}
-            />
+            {dialogOpened && (
+                <MediaManagerDialog
+                    auth={auth}
+                    profile={profile}
+                    dispatch={dispatch}
+                    address={address}
+                    onOpen={dialogOpened}
+                    onClose={onSelection}
+                    title={strings.dialogTitle || "Select media"}
+                    mediaAdditionAllowed={false}
+                    mimeTypesToShow={props.mimeTypesToShow}
+                    access={props.access}
+                    strings={{
+                        cancelCaption: strings.cancelCaption,
+                        dialogSelectCaption: strings.dialogSelectCaption,
+                        dialogTitle: strings.dialogTitle,
+                        header: strings.header,
+                        loadMoreText: strings.loadMoreText,
+                        editingArea: strings.editingArea,
+                        buttonAddFile: strings.buttonAddFile,
+                        fileUploaded: strings.fileUploaded,
+                        uploadFailed: strings.uploadFailed,
+                        uploading: strings.uploading,
+                        uploadButtonText: strings.uploadButtonText,
+                        headerMediaPreview: strings.headerMediaPreview,
+                        originalFileNameHeader: strings.originalFileNameHeader,
+                        previewPDFFile: strings.previewPDFFile,
+                        directUrl: strings.directUrl,
+                        urlCopied: strings.urlCopied,
+                        fileType: strings.fileType,
+                        changesSaved: strings.changesSaved,
+                        mediaDeleted: strings.mediaDeleted,
+                        deleteMediaPopupHeader: strings.deleteMediaPopupHeader,
+                        popupCancelAction: strings.popupCancelAction,
+                        popupOKAction: strings.popupOKAction,
+                        deleteMediaButton: strings.deleteMediaButton,
+                        publiclyAvailable: strings.publiclyAvailable,
+                    }}
+                />
+            )}
         </Grid>
     );
 };

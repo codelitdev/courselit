@@ -15,7 +15,7 @@ export const lessonValidator = (lessonData: Lesson) => {
         (lessonData.type === audio ||
             lessonData.type === video ||
             lessonData.type === pdf) &&
-        !lessonData.mediaId
+        !(lessonData.media && lessonData.media.mediaId)
     ) {
         throw new Error(responses.media_id_cannot_be_null);
     }

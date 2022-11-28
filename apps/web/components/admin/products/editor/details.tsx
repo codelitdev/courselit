@@ -3,6 +3,7 @@ import {
     MediaSelector,
     TextEditor,
     Section,
+    TextEditorEmptyDoc,
 } from "@courselit/components-library";
 import useCourse from "./course-hook";
 import { FetchBuilder } from "@courselit/utils";
@@ -37,18 +38,20 @@ interface DetailsProps {
 
 function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
     const [title, setTitle] = useState("");
-    const [description, setDescription] = useState<Record<string, unknown>>();
-    const [featuredImage, setFeaturedImage] = useState<Media>(null);
+    const [description, setDescription] = useState(TextEditorEmptyDoc);
+    const [featuredImage, setFeaturedImage] = useState<Partial<Media>>({});
     const [refresh, setRefresh] = useState(0);
     const course = useCourse(id);
 
     useEffect(() => {
         if (course) {
-            setTitle(course.title);
+            setTitle(course.title || "");
             setDescription(
-                course.description ? JSON.parse(course.description) : undefined
+                course.description
+                    ? JSON.parse(course.description)
+                    : TextEditorEmptyDoc
             );
-            setFeaturedImage(course.featuredImage);
+            setFeaturedImage(course.featuredImage || {});
             setRefresh(refresh + 1);
         }
     }, [course]);
@@ -57,18 +60,33 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
         e.preventDefault();
 
         const mutation = `
-        mutation {
-            updateCourse(courseData: {
-                id: "${course.id}"
-                title: "${title}",
-                description: ${JSON.stringify(JSON.stringify(description))},
-                featuredImage: ${
-                    featuredImage ? '"' + featuredImage.mediaId + '"' : null
-                },
-            }) {
-                id
+            mutation {
+                updateCourse(courseData: {
+                    id: "${course!.id}",
+                    title: "${title}",
+                    description: ${JSON.stringify(JSON.stringify(description))},
+                    featuredImage: ${
+                        featuredImage.mediaId
+                            ? `{
+                        mediaId: "${featuredImage.mediaId}",
+                        originalFileName: "${featuredImage.originalFileName}",
+                        mimeType: "${featuredImage.mimeType}",
+                        size: ${featuredImage.size},
+                        access: "${featuredImage.access}",
+                        file: ${
+                            featuredImage.access === "public"
+                                ? `"${featuredImage.file}"`
+                                : null
+                        },
+                        thumbnail: "${featuredImage.thumbnail}",
+                        caption: "${featuredImage.caption}"
+                    }`
+                            : null
+                    } 
+                }) {
+                    id
+                }
             }
-        }
         `;
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
@@ -118,7 +136,14 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
                     <Grid item>
                         <MediaSelector
                             title={FORM_FIELD_FEATURED_IMAGE}
-                            src={featuredImage && featuredImage.thumbnail}
+                            src={
+                                (featuredImage && featuredImage.thumbnail) || ""
+                            }
+                            srcTitle={
+                                (featuredImage &&
+                                    featuredImage.originalFileName) ||
+                                ""
+                            }
                             onSelection={(media?: Media) => {
                                 media && setFeaturedImage(media || null);
                             }}

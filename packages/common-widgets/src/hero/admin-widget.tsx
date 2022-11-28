@@ -55,9 +55,7 @@ export default function AdminWidget({
             buttonAction,
             buttonCaption,
             youtubeLink,
-            media: {
-                mediaId: media.mediaId,
-            },
+            media,
             alignment,
             backgroundColor,
             foregroundColor,
@@ -108,6 +106,7 @@ export default function AdminWidget({
                 <MediaSelector
                     title=""
                     src={media && media.thumbnail}
+                    srcTitle={media && media.originalFileName}
                     dispatch={dispatch}
                     auth={auth}
                     profile={profile}

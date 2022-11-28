@@ -109,7 +109,7 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
                 settings {
                     title,
                     subtitle,
-                    logopath {
+                    logo {
                         file
                     },
                     currencyISOCode,

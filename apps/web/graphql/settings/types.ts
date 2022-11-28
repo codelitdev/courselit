@@ -1,23 +1,22 @@
 import {
     GraphQLObjectType,
-    GraphQLID,
     GraphQLString,
     GraphQLInputObjectType,
     GraphQLNonNull,
 } from "graphql";
 import mediaTypes from "../media/types";
 import { getMedia } from "../media/logic";
-const { mediaType } = mediaTypes;
 import designTypes from "../design/types";
+const { mediaType } = mediaTypes;
 
 const siteType = new GraphQLObjectType({
     name: "SiteInfo",
     fields: {
         title: { type: GraphQLString },
         subtitle: { type: GraphQLString },
-        logopath: {
+        logo: {
             type: mediaType,
-            resolve: (settings, _, __, ___) => getMedia(settings.logopath),
+            resolve: (settings, _, __, ___) => getMedia(settings.logo),
         },
         currencyISOCode: { type: GraphQLString },
         paymentMethod: { type: GraphQLString },
@@ -32,7 +31,7 @@ const siteUpdateType = new GraphQLInputObjectType({
     fields: {
         title: { type: GraphQLString },
         subtitle: { type: GraphQLString },
-        logopath: { type: GraphQLID },
+        logo: { type: mediaTypes.mediaInputType },
         codeInjectionHead: { type: GraphQLString },
         codeInjectionBody: { type: GraphQLString },
     },

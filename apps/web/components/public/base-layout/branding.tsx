@@ -25,7 +25,7 @@ const Branding = ({ siteinfo }: BrandingProps) => {
                 >
                     <Image
                         borderRadius={1}
-                        src={siteinfo.logopath.file}
+                        src={siteinfo.logo.file}
                         width={36}
                         height={36}
                     />

@@ -13,8 +13,8 @@ import type { AppDispatch, AppState } from "@courselit/state-management";
 import type { Address, Media } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
 import { actionCreators } from "@courselit/state-management";
-import Section from "../section";
-import Image from "../image";
+import Section from "../../section";
+import Image from "../../image";
 import { AnyAction } from "redux";
 import { ThunkDispatch } from "redux-thunk";
 
