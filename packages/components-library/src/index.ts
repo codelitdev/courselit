@@ -9,7 +9,7 @@ import Menu from "./menu";
 import Link from "./link";
 import Dialog from "./dialog";
 import MediaSelector from "./media-selector";
-import TextEditor from "./text-editor";
+import TextEditor, { emptyDoc as TextEditorEmptyDoc } from "./text-editor";
 import TextRenderer from "./text-renderer";
 
 export {
@@ -25,5 +25,6 @@ export {
     Dialog,
     MediaSelector,
     TextEditor,
+    TextEditorEmptyDoc,
     TextRenderer,
 };

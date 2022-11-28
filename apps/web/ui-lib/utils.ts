@@ -29,18 +29,6 @@ export const getObjectContainingOnlyChangedFields = (
     return result;
 };
 
-// TODO: Remove this commented out method
-// export const areObjectsDifferent = (
-//     baseline: Record<string, unknown>,
-//     obj: Record<string, unknown>
-// ) => {
-//     const onlyChangedFields = getObjectContainingOnlyChangedFields(
-//         baseline,
-//         obj
-//     );
-//     return !!Object.keys(onlyChangedFields).length;
-// };
-
 export const getAddress = (host: string) => {
     return {
         domain: extractDomainFromURL(host),

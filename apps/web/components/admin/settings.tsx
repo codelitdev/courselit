@@ -87,27 +87,8 @@ interface SettingsProps {
 }
 
 const Settings = (props: SettingsProps) => {
-    const defaultSettingsState = {
-        title: "",
-        subtitle: "",
-        logopath: {
-            file: "",
-            thumbnail: "",
-            originalFileName: "",
-        },
-        currencyISOCode: "",
-        paymentMethod: "",
-        stripePublishableKey: "",
-        codeInjectionHead: "",
-        codeInjectionBody: "",
-        stripeSecret: "",
-        paypalSecret: "",
-        paytmSecret: "",
-    };
-
-    const [settings, setSettings] = useState<SiteInfo>(defaultSettingsState);
-    const [newSettings, setNewSettings] =
-        useState<SiteInfo>(defaultSettingsState);
+    const [settings, setSettings] = useState<Partial<SiteInfo>>({});
+    const [newSettings, setNewSettings] = useState<Partial<SiteInfo>>({});
 
     const fetch = new FetchBuilder()
         .setUrl(`${props.address.backend}/api/graph`)
@@ -117,25 +98,50 @@ const Settings = (props: SettingsProps) => {
         loadAdminSettings();
     }, []);
 
+    useEffect(() => {
+        props.dispatch(
+            newSiteInfoAvailable({
+                title: settings.title || "",
+                subtitle: settings.subtitle || "",
+                logo: settings.logo,
+                currencyISOCode: settings.currencyISOCode,
+                paymentMethod: settings.paymentMethod,
+                stripePublishableKey: settings.stripePublishableKey,
+                codeInjectionHead: settings.codeInjectionHead
+                    ? encode(settings.codeInjectionHead)
+                    : "",
+                codeInjectionBody: settings.codeInjectionBody
+                    ? encode(settings.codeInjectionBody)
+                    : "",
+            })
+        );
+    }, [settings]);
+
     const loadAdminSettings = async () => {
         const query = `
-    query {
-        settings: getSiteInfo {
-            settings {
-                title,
-                subtitle,
-                logopath {
-                    thumbnail,
-                    originalFileName
-                },
-                currencyISOCode,
-                paymentMethod,
-                stripePublishableKey,
-                codeInjectionHead,
-                codeInjectionBody
-            }
-        }
-    }`;
+            query {
+                settings: getSiteInfo {
+                    settings {
+                        title,
+                        subtitle,
+                        logo {
+                            mediaId,
+                            originalFileName,
+                            mimeType,
+                            size,
+                            access,
+                            file,
+                            thumbnail,
+                            caption
+                        },
+                        currencyISOCode,
+                        paymentMethod,
+                        stripePublishableKey,
+                        codeInjectionHead,
+                        codeInjectionBody
+                    }
+                }
+            }`;
         try {
             const fetchRequest = fetch.setPayload(query).build();
             const response = await fetchRequest.exec();
@@ -159,7 +165,7 @@ const Settings = (props: SettingsProps) => {
         const settingsResponseWithNullsRemoved = {
             title: settingsResponse.title || "",
             subtitle: settingsResponse.subtitle || "",
-            logopath: settingsResponse.logopath,
+            logo: settingsResponse.logo,
             currencyISOCode: settingsResponse.currencyISOCode || "",
             paymentMethod: settingsResponse.paymentMethod || "",
             stripePublishableKey: settingsResponse.stripePublishableKey || "",
@@ -179,30 +185,52 @@ const Settings = (props: SettingsProps) => {
     ) => {
         event.preventDefault();
         const query = `
-    mutation {
-      settings: updateSiteInfo(siteData: {
-        title: "${newSettings.title}",
-        subtitle: "${newSettings.subtitle}",
-        logopath: ${
-            newSettings.logopath && newSettings.logopath.mediaId
-                ? '"' + newSettings.logopath.mediaId + '"'
-                : null
-        },
-      }) {
-          settings {
-            title,
-            subtitle,
-            logopath {
-            thumbnail
-            },
-            currencyISOCode,
-            paymentMethod,
-            stripePublishableKey,
-            codeInjectionHead,
-            codeInjectionBody
-          }
-      }
-    }`;
+            mutation {
+                settings: updateSiteInfo(siteData: {
+                    title: "${newSettings.title}",
+                    subtitle: "${newSettings.subtitle}",
+                    logo: ${
+                        newSettings.logo && newSettings.logo.mediaId
+                            ? `{
+                                mediaId: "${newSettings.logo.mediaId}",
+                                originalFileName: "${
+                                    newSettings.logo.originalFileName
+                                }",
+                                mimeType: "${newSettings.logo.mimeType}",
+                                size: ${newSettings.logo.size},
+                                access: "${newSettings.logo.access}",
+                                file: ${
+                                    newSettings.logo.access === "public"
+                                        ? `"${newSettings.logo.file}"`
+                                        : null
+                                },
+                                thumbnail: "${newSettings.logo.thumbnail}",
+                                caption: "${newSettings.logo.caption}"
+                            }`
+                            : null
+                    } 
+                }) {
+                    settings {
+                        title,
+                        subtitle,
+                        logo {
+                            mediaId,
+                            originalFileName,
+                            mimeType,
+                            size,
+                            access,
+                            file,
+                            thumbnail,
+                            caption
+                        },
+                        currencyISOCode,
+                        paymentMethod,
+                        stripePublishableKey,
+                        codeInjectionHead,
+                        codeInjectionBody
+                    }
+                }
+            }`;
 
         try {
             const fetchRequest = fetch.setPayload(query).build();
@@ -210,22 +238,6 @@ const Settings = (props: SettingsProps) => {
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
-                props.dispatch(
-                    newSiteInfoAvailable({
-                        title: settings.title,
-                        subtitle: settings.subtitle,
-                        logopath: settings.logopath,
-                        currencyISOCode: settings.currencyISOCode,
-                        paymentMethod: settings.paymentMethod,
-                        stripePublishableKey: settings.stripePublishableKey,
-                        codeInjectionHead: settings.codeInjectionHead
-                            ? encode(settings.codeInjectionHead)
-                            : "",
-                        codeInjectionBody: settings.codeInjectionBody
-                            ? encode(settings.codeInjectionBody)
-                            : "",
-                    })
-                );
                 props.dispatch(
                     setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED))
                 );
@@ -255,9 +267,15 @@ const Settings = (props: SettingsProps) => {
                 settings {
                     title,
                     subtitle,
-                    logopath {
+                    logo {
+                        mediaId,
+                        originalFileName,
+                        mimeType,
+                        size,
+                        access,
+                        file,
                         thumbnail,
-                        originalFileName
+                        caption
                     },
                     currencyISOCode,
                     paymentMethod,
@@ -274,22 +292,6 @@ const Settings = (props: SettingsProps) => {
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
-                props.dispatch(
-                    newSiteInfoAvailable({
-                        title: settings.title,
-                        subtitle: settings.subtitle,
-                        logopath: settings.logopath,
-                        currencyISOCode: settings.currencyISOCode,
-                        paymentMethod: settings.paymentMethod,
-                        stripePublishableKey: settings.stripePublishableKey,
-                        codeInjectionHead: settings.codeInjectionHead
-                            ? encode(settings.codeInjectionHead)
-                            : "",
-                        codeInjectionBody: settings.codeInjectionBody
-                            ? encode(settings.codeInjectionBody)
-                            : "",
-                    })
-                );
                 props.dispatch(
                     setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED))
                 );
@@ -302,14 +304,13 @@ const Settings = (props: SettingsProps) => {
     };
 
     const onChangeData = (e: React.ChangeEvent<HTMLInputElement>) => {
-        console.log("settings", e);
         if (!e) {
             return;
         }
 
         const change = Object.prototype.hasOwnProperty.call(e, "mediaId")
             ? {
-                  logopath: e,
+                  logo: e,
               }
             : { [e.target.name]: e.target.value };
         setNewSettings(Object.assign({}, newSettings, change));
@@ -319,39 +320,47 @@ const Settings = (props: SettingsProps) => {
         event: React.FormEvent<HTMLFormElement>
     ) => {
         event.preventDefault();
-        const onlyChangedSettings = getObjectContainingOnlyChangedFields(
-            settings,
-            newSettings
-        );
-        const formattedQuery = getGraphQLQueryFields(onlyChangedSettings);
         const query = `
-        mutation {
-            settings: updatePaymentInfo(siteData: ${formattedQuery}) {
-                settings {
-                    title,
-                    subtitle,
-                    logopath {
-                        thumbnail,
-                        originalFileName
-                    },
-                    currencyISOCode,
-                    paymentMethod,
-                    stripePublishableKey,
-                    codeInjectionHead,
-                    codeInjectionBody
+            mutation {
+                settings: updatePaymentInfo(siteData: {
+                    currencyISOCode: "${newSettings.currencyISOCode}",
+                    paymentMethod: "${newSettings.paymentMethod}",
+                    stripePublishableKey: "${newSettings.stripePublishableKey}"
+                    ${
+                        newSettings.stripeSecret
+                            ? `, stripeSecret: "${newSettings.stripeSecret}"`
+                            : ""
+                    }
+                }) {
+                    settings {
+                        title,
+                        subtitle,
+                        logo {
+                            mediaId,
+                            originalFileName,
+                            mimeType,
+                            size,
+                            access,
+                            file,
+                            thumbnail,
+                            caption
+                        },
+                        currencyISOCode,
+                        paymentMethod,
+                        stripePublishableKey,
+                        codeInjectionHead,
+                        codeInjectionBody
+                    }
                 }
-            }
-        }`;
+            }`;
 
+        console.log(query);
         try {
             const fetchRequest = fetch.setPayload(query).build();
             props.dispatch(networkAction(true));
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
-                props.dispatch(
-                    newSiteInfoAvailable(response.settings.settings)
-                );
                 props.dispatch(
                     setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED))
                 );
@@ -432,19 +441,17 @@ const Settings = (props: SettingsProps) => {
                                         address={props.address}
                                         title={SITE_SETTINGS_LOGO}
                                         src={
-                                            (newSettings.logopath &&
-                                                newSettings.logopath
-                                                    .thumbnail) ||
-                                            (props.siteinfo.logopath &&
-                                                props.siteinfo.logopath
-                                                    .thumbnail)
+                                            (newSettings.logo &&
+                                                newSettings.logo.thumbnail) ||
+                                            (props.siteinfo.logo &&
+                                                props.siteinfo.logo.thumbnail)
                                         }
                                         srcTitle={
-                                            (newSettings.logopath &&
-                                                newSettings.logopath
+                                            (newSettings.logo &&
+                                                newSettings.logo
                                                     .originalFileName) ||
-                                            (props.siteinfo.logopath &&
-                                                props.siteinfo.logopath
+                                            (props.siteinfo.logo &&
+                                                props.siteinfo.logo
                                                     .originalFileName)
                                         }
                                         onSelection={onChangeData}
@@ -463,14 +470,13 @@ const Settings = (props: SettingsProps) => {
                                             JSON.stringify({
                                                 title: settings.title,
                                                 subtitle: settings.subtitle,
-                                                logopath: settings.logopath,
+                                                logo: settings.logo,
                                             }) ===
                                                 JSON.stringify({
                                                     title: newSettings.title,
                                                     subtitle:
                                                         newSettings.subtitle,
-                                                    logopath:
-                                                        newSettings.logopath,
+                                                    logo: newSettings.logo,
                                                 }) ||
                                             !newSettings.title ||
                                             props.networkAction
@@ -573,6 +579,7 @@ const Settings = (props: SettingsProps) => {
                                             }
                                             onChange={onChangeData}
                                             sx={{ mb: 2 }}
+                                            autoComplete="off"
                                         />
                                         <Grid
                                             container

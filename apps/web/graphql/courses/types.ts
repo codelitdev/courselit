@@ -95,11 +95,9 @@ const courseUpdateInput = new GraphQLInputObjectType({
         cost: { type: GraphQLFloat },
         published: { type: GraphQLBoolean },
         privacy: { type: courseStatusType },
-        // isBlog: { type: GraphQLBoolean },
-        // isFeatured: { type: GraphQLBoolean },
         tags: { type: new GraphQLList(GraphQLString) },
         description: { type: GraphQLString },
-        featuredImage: { type: GraphQLString },
+        featuredImage: { type: mediaTypes.mediaInputType },
     },
 });
 

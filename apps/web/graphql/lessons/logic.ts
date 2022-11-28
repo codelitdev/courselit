@@ -104,7 +104,7 @@ export const createLesson = async (lessonData: Lesson, ctx: GQLContext) => {
             title: lessonData.title,
             type: lessonData.type,
             content: lessonData.content,
-            mediaId: lessonData.mediaId,
+            media: lessonData.media,
             downloadable: lessonData.downloadable,
             creatorId: ctx.user._id,
             courseId: course.courseId,

@@ -11,7 +11,6 @@ import {
     TextField,
 } from "@mui/material";
 import Dialog from "@mui/material/Dialog";
-import MediaManager from "./media-manager/index";
 import {
     Address,
     AppMessage,
@@ -161,18 +160,7 @@ const MediaManagerDialog = (props: MediaManagerDialogProps) => {
             });
             if (res.status === 200) {
                 const media = await res.json();
-                console.log("upload", media);
                 handleSelection(media);
-                // dispatch(
-                //     setAppMessage(
-                //         new AppMessage(
-                //             strings.fileUploaded ||
-                //                 "The file is uploaded. Go back to see your media."
-                //         )
-                //     )
-                // );
-                // resetForm();
-                // resetOverview();
             } else {
                 res = await res.json();
                 throw new Error(res.error);
@@ -226,40 +214,6 @@ const MediaManagerDialog = (props: MediaManagerDialogProps) => {
                         </Grid>
                     </Grid>
                 </form>
-                {/* <MediaManager
-                    auth={auth}
-                    profile={profile}
-                    dispatch={dispatch}
-                    address={address}
-                    selectionMode={true}
-                    onSelect={(media) => setSelectedMedia(media)}
-                    mimeTypesToShow={mimeTypesToShow}
-                    access={access}
-                    strings={{
-                        header: strings.header,
-                        loadMoreText: strings.loadMoreText,
-                        editingArea: strings.editingArea,
-                        dialogTitle: strings.dialogTitle,
-                        buttonAddFile: strings.buttonAddFile,
-                        fileUploaded: strings.fileUploaded,
-                        uploadFailed: strings.uploadFailed,
-                        uploading: strings.uploading,
-                        uploadButtonText: strings.uploadButtonText,
-                        headerMediaPreview: strings.headerMediaPreview,
-                        originalFileNameHeader: strings.originalFileNameHeader,
-                        previewPDFFile: strings.previewPDFFile,
-                        directUrl: strings.directUrl,
-                        urlCopied: strings.urlCopied,
-                        fileType: strings.fileType,
-                        changesSaved: strings.changesSaved,
-                        mediaDeleted: strings.mediaDeleted,
-                        deleteMediaPopupHeader: strings.deleteMediaPopupHeader,
-                        popupCancelAction: strings.popupCancelAction,
-                        popupOKAction: strings.popupOKAction,
-                        deleteMediaButton: strings.deleteMediaButton,
-                        publiclyAvailable: strings.publiclyAvailable,
-                    }}
-                /> */}
             </DialogContent>
             <DialogActions>
                 <Button onClick={() => onClose()}>

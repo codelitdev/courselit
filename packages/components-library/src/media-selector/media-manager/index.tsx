@@ -102,10 +102,6 @@ const Index = (props: IndexProps) => {
         }
     };
 
-    useEffect(() => {
-        console.log(creatorMedia);
-    }, [creatorMedia]);
-
     const getUrlSearchParamQuery = () => {
         const urlSearchParams = new URLSearchParams();
         urlSearchParams.append("page", mediaPaginationOffset.toString());

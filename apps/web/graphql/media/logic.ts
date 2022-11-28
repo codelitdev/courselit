@@ -1,21 +1,12 @@
+import { Media } from "@courselit/common-models";
+import constants from "../../config/constants";
 import * as medialitService from "../../services/medialit";
+const { privateMedia } = constants;
 
-export const getMedia = async (mediaId?: string) => {
-    let media;
-
-    if (mediaId) {
-        media = await medialitService.getMedia(mediaId);
+export const getMedia = async (media?: Media) => {
+    if (media && media.access === privateMedia) {
+        return medialitService.getMedia(media.mediaId);
     }
 
     return media;
-};
-
-export const checkMediaForPublicAccess = async (
-    mediaId: string
-): Promise<boolean> => {
-    const media = await getMedia(mediaId);
-    if (!media) {
-        return false;
-    }
-    return media.access === "public";
 };

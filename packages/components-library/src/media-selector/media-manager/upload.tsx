@@ -124,18 +124,7 @@ function Upload({
             });
             if (res.status === 200) {
                 const media = await res.json();
-                console.log("upload", media);
                 onSelect(media);
-                // dispatch(
-                //     setAppMessage(
-                //         new AppMessage(
-                //             strings.fileUploaded ||
-                //                 "The file is uploaded. Go back to see your media."
-                //         )
-                //     )
-                // );
-                // resetForm();
-                // resetOverview();
             } else {
                 res = await res.json();
                 throw new Error(res.error);

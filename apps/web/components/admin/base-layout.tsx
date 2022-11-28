@@ -138,8 +138,8 @@ const BaseLayoutAdmin = ({
                 <link
                     rel="icon"
                     href={
-                        siteInfo.logopath && siteInfo.logopath.file
-                            ? siteInfo.logopath.file
+                        siteInfo.logo && siteInfo.logo.file
+                            ? siteInfo.logo.file
                             : "/favicon.ico"
                     }
                 />

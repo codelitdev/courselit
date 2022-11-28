@@ -128,8 +128,6 @@ const Root = styled("div")(({ theme }: { theme: any }) => ({
     },
 }));
 
-const Branding = dynamic(() => import("./base-layout/branding"));
-
 export interface ComponentScaffoldMenuItem {
     label: string;
     href?: string;

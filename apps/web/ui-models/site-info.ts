@@ -1,7 +1,7 @@
 export default interface SiteInfo {
     title: string;
     subtitle: string;
-    logopath: {
+    logo: {
         mediaId?: string;
         file: string;
         thumbnail: string;

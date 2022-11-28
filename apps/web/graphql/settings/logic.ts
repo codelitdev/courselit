@@ -9,7 +9,6 @@ import {
 } from "./helpers";
 import type GQLContext from "../../models/GQLContext";
 import type SiteInfo from "../../ui-models/site-info";
-import { checkMediaForPublicAccess } from "../media/logic";
 import DomainModel, { Domain } from "../../models/Domain";
 
 const { permissions } = constants;
@@ -48,6 +47,7 @@ export const updateSiteInfo = async (
     ctx: GQLContext
 ) => {
     checkIfAuthenticated(ctx);
+    console.log(siteData);
 
     if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
         throw new Error(responses.action_not_allowed);
@@ -66,41 +66,17 @@ export const updateSiteInfo = async (
         throw new Error(responses.school_title_not_set);
     }
 
-    if (domain.settings.logopath) {
-        const logoIsPubliclyAccessible = await checkMediaForPublicAccess(
-            domain.settings.logopath
-        );
-        if (!logoIsPubliclyAccessible) {
-            throw new Error(responses.publicly_inaccessible);
-        }
-    }
-
-    await domain.save();
+    await (domain as any).save();
 
     return domain;
 };
-
-async function throwErrorIfLogoMediaIsNotPublic(src?: string) {
-    if (!src) {
-        return;
-    }
-
-    let media = null;
-    try {
-        media = await medialitService.getMedia(src);
-    } catch (e: any) {}
-
-    const isLogoPubliclyAvailable = media && media.access === "public";
-    if (!isLogoPubliclyAvailable) {
-        throw new Error(responses.publicly_inaccessible);
-    }
-}
 
 export const updatePaymentInfo = async (
     siteData: Record<string, unknown>,
     ctx: GQLContext
 ) => {
     checkIfAuthenticated(ctx);
+    console.log(siteData);
 
     if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
         throw new Error(responses.action_not_allowed);
@@ -132,6 +108,7 @@ export const updatePaymentInfo = async (
     if (failedPaymentMethod) {
         throw getPaymentInvalidException(failedPaymentMethod);
     }
+    console.log(domain.settings);
 
     if (domain.settings.paymentMethod) {
         domain.settings.currencyISOCode =

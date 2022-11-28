@@ -41,6 +41,10 @@ export default {
     file: "file",
     embed: "embed",
 
+    // media access type
+    publicMedia: "public",
+    privateMedia: "private",
+
     // Content privacy types
     unlisted: "unlisted",
     open: "public",

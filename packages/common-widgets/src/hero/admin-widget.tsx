@@ -55,9 +55,7 @@ export default function AdminWidget({
             buttonAction,
             buttonCaption,
             youtubeLink,
-            media: {
-                mediaId: media.mediaId,
-            },
+            media,
             alignment,
             backgroundColor,
             foregroundColor,
