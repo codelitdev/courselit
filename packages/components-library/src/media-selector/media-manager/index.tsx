@@ -55,6 +55,7 @@ interface IndexProps {
 const Index = (props: IndexProps) => {
     const [mediaPaginationOffset, setMediaPaginationOffset] = useState(1);
     const [creatorMedia, setCreatorMedia] = useState<Media[]>([]);
+    const [_, setComponentsMap] = useState([]);
     const [refreshMedia, setRefreshMedia] = useState(0);
     const { address, strings, dispatch, profile } = props;
 
