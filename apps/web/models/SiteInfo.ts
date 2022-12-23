@@ -5,7 +5,6 @@ import MediaSchema from "./Media";
 export interface Settings {
     title?: string;
     subtitle?: string;
-    logo?: string;
     logo?: Media;
     currencyISOCode?: string;
     paymentMethod?: string;
