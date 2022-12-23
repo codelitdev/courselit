@@ -21,6 +21,10 @@ import BubbleMenu from "./BubbleMenu";
 import Toolbar from "./Toolbar";
 import { ReactEditorProps } from "./types";
 import emptyDoc from "./empty-doc";
+import { CodeMirrorExtension } from "@remirror/extension-codemirror6";
+import { languages } from "@codemirror/language-data";
+import { oneDark } from "@codemirror/theme-one-dark";
+import { basicSetup } from "codemirror";
 
 export interface WysiwygEditorProps extends Partial<ReactEditorProps> {
     onChange: (...args: any[]) => void;
@@ -69,6 +73,10 @@ export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
             new PlaceholderExtension({ placeholder }),
             new TableExtension(),
             new ImageExtension({ enableResizing: true }),
+            new CodeMirrorExtension({
+                languages: languages,
+                extensions: [basicSetup, oneDark],
+            }),
             ...wysiwygPresetArrayWithoutImageExtension,
         ],
         [placeholder]

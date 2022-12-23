@@ -12,12 +12,14 @@ import {
     ThemeProvider,
 } from "@remirror/react";
 import { RemirrorJSON } from "@remirror/core-types";
+import { CodeMirrorRenderer } from "./code-mirror-renderer";
 
 const typeMap: MarkMap = {
     blockquote: "blockquote",
     bulletList: "ul",
     callout: Callout,
     codeBlock: CodeBlock,
+    codeMirror: CodeMirrorRenderer,
     doc: Doc,
     hardBreak: "br",
     heading: Heading,
