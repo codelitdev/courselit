@@ -31,7 +31,7 @@ interface QuizViewerProps {
 }
 
 function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
-    const { questions, passingGrade, requiresPassingGrade } = content;
+    const { questions } = content;
     const [answers, setAnswers] = useState<number[][]>([
         ...content.questions.map((item) => []),
     ]);

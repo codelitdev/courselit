@@ -39,7 +39,7 @@ import { Address } from "@courselit/common-models";
 import { CheckCircle, CheckCircleOutline, Search } from "@mui/icons-material";
 import useCourse from "../../course-hook";
 import Link from "next/link";
-const { networkAction, setAppMessage } = actionCreators;
+const { networkAction } = actionCreators;
 
 interface StudentsProps {
     course: ReturnType<typeof useCourse>;
