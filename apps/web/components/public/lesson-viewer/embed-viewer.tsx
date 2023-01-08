@@ -40,7 +40,7 @@ const YouTubeEmbed = ({ content }: { content: string }) => {
 };
 
 interface LessonEmbedViewerProps {
-    content: string;
+    content: { value: string };
 }
 
 const LessonEmbedViewer = ({ content }: LessonEmbedViewerProps) => {
@@ -58,12 +58,12 @@ const LessonEmbedViewer = ({ content }: LessonEmbedViewerProps) => {
             }}
         >
             <Grid item xs={12}>
-                {content.match(YouTubeRegex) && (
-                    <YouTubeEmbed content={content} />
+                {content.value.match(YouTubeRegex) && (
+                    <YouTubeEmbed content={content.value} />
                 )}
             </Grid>
             <Grid item>
-                <a href={content}>{content}</a>
+                <a href={content.value}>{content.value}</a>
             </Grid>
         </Grid>
     );

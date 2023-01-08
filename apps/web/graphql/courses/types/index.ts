@@ -10,11 +10,12 @@ import {
     GraphQLList,
     GraphQLInputObjectType,
 } from "graphql";
-import constants from "../../config/constants";
-import lessonTypes from "../lessons/types";
-import { getAllLessons } from "../lessons/logic";
-import { getMedia } from "../media/logic";
-import mediaTypes from "../media/types";
+import constants from "../../../config/constants";
+import lessonTypes from "../../lessons/types";
+import { getAllLessons } from "../../lessons/logic";
+import { getMedia } from "../../media/logic";
+import mediaTypes from "../../media/types";
+import { reports } from "./reports";
 
 const { lessonMetaType } = lessonTypes;
 const { unlisted, open, course, download, blog } = constants;
@@ -181,4 +182,5 @@ export default {
     postType,
     publicCoursesType,
     enrolledCourses,
+    reports,
 };

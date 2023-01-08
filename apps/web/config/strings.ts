@@ -87,6 +87,12 @@ export const responses = {
     file_uploaded: "The file is uploaded. Go back to see your media.",
     media_deleted: "The media is deleted. Go back to see your media.",
     invalid_access_type: "The access type can either be public or private.",
+    answers_missing: "Answers are missing.",
+    cannot_be_evaluated: "This lesson cannot be evaluated.",
+    need_to_pass: "You need to pass this test in order to mark it completed.",
+    no_correct_answer:
+        "Every question needs to have at least one correct answer.",
+    no_empty_option: "Options without text are not allowed in questions.",
 };
 
 export const internal = {

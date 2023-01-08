@@ -22,3 +22,6 @@ export type { Site as PageTypeSite } from "./page-type";
 export type { Blog as PageTypeBlog } from "./page-type";
 export * as UIConstants from "./ui-constants";
 export type { default as Media } from "./media";
+export type { Quiz } from "./quiz";
+export type { Question } from "./question";
+export type { TextEditorContent } from "./text-editor-content";

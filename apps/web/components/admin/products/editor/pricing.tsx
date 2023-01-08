@@ -115,6 +115,9 @@ function Pricing({ id, siteinfo, address, dispatch }: PricingProps) {
                                 name="title"
                                 value={cost}
                                 type="number"
+                                inputProps={{
+                                    step: "0.1",
+                                }}
                                 onChange={(e) =>
                                     setCost(+e.target.value as number)
                                 }

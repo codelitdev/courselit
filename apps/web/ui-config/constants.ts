@@ -64,3 +64,5 @@ export const permissions = {
 
 export const COURSE_TYPE_COURSE = "course";
 export const COURSE_TYPE_DOWNLOAD = "download";
+
+export const DEFAULT_PASSING_GRADE = 70;

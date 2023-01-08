@@ -1,7 +1,7 @@
 /**
  * Business logic for managing courses.
  */
-import CourseModel, { Course } from "../../models/Course";
+import CourseModel from "../../models/Course";
 import UserModel from "../../models/User";
 import { responses } from "../../config/strings";
 import {
@@ -23,7 +23,7 @@ import Lesson from "../../models/Lesson";
 import GQLContext from "../../models/GQLContext";
 import Filter from "./models/filter";
 import mongoose from "mongoose";
-import { Group } from "@courselit/common-models";
+import { Course, Group } from "@courselit/common-models";
 import { deleteAllLessons } from "../lessons/logic";
 import { deleteMedia } from "../../services/medialit";
 import PageModel from "../../models/Page";
@@ -32,14 +32,23 @@ import { getPrevNextCursor } from "../lessons/helpers";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
-const getCourseOrThrow = async (
+export const getCourseOrThrow = async (
     id: mongoose.Types.ObjectId | undefined,
-    ctx: GQLContext
+    ctx: GQLContext,
+    courseId?: string
 ) => {
     checkIfAuthenticated(ctx);
 
+    const query = courseId
+        ? {
+              courseId,
+          }
+        : {
+              _id: id,
+          };
+
     const course = await CourseModel.findOne({
-        _id: id,
+        ...query,
         domain: ctx.subdomain._id,
     });
 
@@ -440,4 +449,69 @@ export const updateGroup = async ({
         { $set },
         { new: true }
     );
+};
+
+export const getStudents = async ({
+    course,
+    ctx,
+    text,
+}: {
+    course: Course;
+    ctx: GQLContext;
+    text?: string;
+}) => {
+    const matchCondition = text
+        ? {
+              $match: {
+                  "purchases.courseId": course.courseId,
+                  domain: ctx.subdomain._id,
+                  $or: [
+                      { email: new RegExp(text) },
+                      { name: new RegExp(text) },
+                  ],
+              },
+          }
+        : {
+              $match: {
+                  "purchases.courseId": course.courseId,
+                  domain: ctx.subdomain._id,
+              },
+          };
+    const result = await UserModel.aggregate([
+        matchCondition,
+        {
+            $addFields: {
+                completedLessons: {
+                    $filter: {
+                        input: "$purchases",
+                        as: "t",
+                        cond: {
+                            $eq: ["$$t.courseId", course.courseId],
+                        },
+                    },
+                },
+            },
+        },
+        {
+            $unwind: "$completedLessons",
+        },
+        {
+            $addFields: {
+                progress: "$completedLessons.completedLessons",
+                signedUpOn: "$completedLessons.createdAt",
+                lastAccessedOn: "$completedLessons.updatedAt",
+            },
+        },
+        {
+            $project: {
+                userId: 1,
+                email: 1,
+                name: 1,
+                progress: 1,
+                signedUpOn: 1,
+                lastAccessedOn: 1,
+            },
+        },
+    ]);
+    return result;
 };

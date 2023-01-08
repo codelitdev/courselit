@@ -11,10 +11,12 @@ import {
     getCoursesAsAdmin,
     getCourses,
     getEnrolledCourses,
+    getCourseOrThrow,
 } from "./logic";
 import GQLContext from "../../models/GQLContext";
 import Filter from "./models/filter";
 import constants from "../../config/constants";
+import { reports } from "./types/reports";
 const { course, download, blog } = constants;
 
 const courseFilters = new GraphQLEnumType({
@@ -60,19 +62,16 @@ export default {
             context: GQLContext
         ) => getCoursesAsAdmin({ offset, context, searchText, filterBy }),
     },
-    //   getPosts: {
-    //     type: new GraphQLList(types.postType),
-    //     args: {
-    //       offset: {
-    //         type: new GraphQLNonNull(GraphQLInt),
-    //       },
-    //       tag: {
-    //         type: GraphQLString
-    //       },
-    //     },
-    //     resolve: (_: any, { offset, tag }: { offset: number, tag?: string }, ctx: GQLContext) =>
-    //       getPosts({ offset, tag, ctx }),
-    //   },
+    getReports: {
+        type: reports,
+        args: {
+            id: {
+                type: new GraphQLNonNull(GraphQLString),
+            },
+        },
+        resolve: (_: any, { id }: { id: string }, ctx: GQLContext) =>
+            getCourseOrThrow(undefined, ctx, id),
+    },
     getCourses: {
         type: new GraphQLList(types.publicCoursesType),
         args: {

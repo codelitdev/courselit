@@ -9,7 +9,7 @@ const BaseLayout = dynamic(() => import("../../../base-layout"));
 const ProductHeader = dynamic(() => import("./header"));
 const Tabs = dynamic(() => import("../../../../tabs"));
 
-interface ProductEditorLayoutProps {
+export interface ProductEditorLayoutProps {
     children: ReactNode;
 }
 

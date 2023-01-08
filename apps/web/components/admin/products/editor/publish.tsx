@@ -27,9 +27,9 @@ interface PublishProps {
 }
 
 function Publish({ id, address, dispatch, loading }: PublishProps) {
+    let course = useCourse(id);
     const [published, setPublished] = useState(course?.published);
     const [privacy, setPrivacy] = useState(course?.privacy);
-    let course = useCourse(id);
 
     useEffect(() => {
         if (course) {
@@ -150,7 +150,7 @@ function Publish({ id, address, dispatch, loading }: PublishProps) {
                                 <Button
                                     onClick={toggleVisibility}
                                     variant="outlined"
-                                    disabled={loading}
+                                    disabled={loading || !published}
                                 >
                                     {privacy}
                                 </Button>

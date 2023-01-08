@@ -5,9 +5,7 @@ import {
     COURSE_TYPE_DOWNLOAD,
 } from "../../../../../ui-config/constants";
 import useCourse from "../course-hook";
-import dynamic from "next/dynamic";
-
-const LessonsList = dynamic(() => import("./lessons-list"));
+import LessonsList from "./lessons-list";
 
 interface EditorProps {
     id: string;

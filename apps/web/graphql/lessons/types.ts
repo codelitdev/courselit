@@ -6,10 +6,12 @@ import {
     GraphQLObjectType,
     GraphQLNonNull,
     GraphQLBoolean,
+    GraphQLInt,
 } from "graphql";
 import constants from "../../config/constants";
 import mediaTypes from "../media/types";
 import { getMedia } from "../media/logic";
+import { GraphQLJSONObject } from "graphql-type-json";
 
 const { text, audio, video, pdf, quiz, file, embed } = constants;
 
@@ -48,7 +50,7 @@ const lessonType = new GraphQLObjectType({
             type: new GraphQLNonNull(GraphQLBoolean),
         },
         courseId: { type: new GraphQLNonNull(GraphQLID) },
-        content: { type: GraphQLString },
+        content: { type: GraphQLJSONObject },
         media: {
             type: mediaTypes.mediaType,
             resolve: (lesson, _, __, ___) => getMedia(lesson.media),
@@ -106,7 +108,6 @@ const lessonUpdateType = new GraphQLInputObjectType({
     fields: {
         id: { type: new GraphQLNonNull(GraphQLID) },
         title: { type: GraphQLString },
-        type: { type: lessontypeType },
         content: { type: GraphQLString },
         media: { type: mediaTypes.mediaInputType },
         downloadable: { type: GraphQLBoolean },
@@ -117,10 +118,21 @@ const lessonUpdateType = new GraphQLInputObjectType({
     },
 });
 
+const evaluationResult = new GraphQLObjectType({
+    name: "EvaluationResult",
+    fields: {
+        pass: { type: new GraphQLNonNull(GraphQLBoolean) },
+        score: { type: GraphQLInt },
+        requiresPassingGrade: { type: new GraphQLNonNull(GraphQLBoolean) },
+        passingGrade: { type: GraphQLInt },
+    },
+});
+
 export default {
     lessontypeType,
     lessonType,
     lessonInputType,
     lessonUpdateType,
     lessonMetaType,
+    evaluationResult,
 };
