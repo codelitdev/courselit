@@ -10,7 +10,7 @@ import {
     Tooltip,
     Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
     LESSON_QUIZ_ADD_OPTION_BTN,
     LESSON_QUIZ_CONTENT_HEADER,

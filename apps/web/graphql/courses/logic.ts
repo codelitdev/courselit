@@ -513,6 +513,5 @@ export const getStudents = async ({
             },
         },
     ]);
-    console.log(result);
     return result;
 };

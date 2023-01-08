@@ -2,7 +2,6 @@ import React from "react";
 import Grid from "@mui/material/Grid";
 import useCourse from "../course-hook";
 import Students from "./students";
-import { Course } from "@courselit/common-models";
 
 interface CourseReportsProps {
     id: string;

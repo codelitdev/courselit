@@ -141,7 +141,6 @@ export const getPrevNextCursor = async (
 export function evaluateLessonResult(content: Quiz, answers: number[][]) {
     let userScore = 0;
     let actualScore = 0;
-    console.log(answers, content.questions);
 
     for (
         let questionIndex = 0;
@@ -150,7 +149,6 @@ export function evaluateLessonResult(content: Quiz, answers: number[][]) {
     ) {
         const question = content.questions[questionIndex];
         const userAnswersForThisQuestion = answers[questionIndex] || [];
-        console.log(question, userAnswersForThisQuestion);
 
         for (
             let optionIndex = 0;

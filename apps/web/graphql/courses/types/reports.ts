@@ -1,7 +1,6 @@
 import { Course } from "@courselit/common-models";
 import {
     GraphQLFloat,
-    GraphQLInt,
     GraphQLList,
     GraphQLNonNull,
     GraphQLObjectType,

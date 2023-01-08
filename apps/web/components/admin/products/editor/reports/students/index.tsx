@@ -1,3 +1,4 @@
+import React from "react";
 import Table from "@mui/material/Table";
 import TableContainer from "@mui/material/Table";
 import TableHead from "@mui/material/TableHead";
@@ -17,7 +18,6 @@ import {
     USER_TABLE_HEADER_NAME,
 } from "../../../../../../ui-config/strings";
 import {
-    Button,
     Dialog,
     DialogContent,
     DialogTitle,
@@ -27,7 +27,7 @@ import {
     ListItemText,
     TextField,
 } from "@mui/material";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { FetchBuilder } from "@courselit/utils";
 import {
     actionCreators,
@@ -36,13 +36,7 @@ import {
 } from "@courselit/state-management";
 import { connect } from "react-redux";
 import { Address } from "@courselit/common-models";
-import AppLoader from "../../../../../app-loader";
-import {
-    CheckCircle,
-    CheckCircleOutline,
-    CheckOutlined,
-    Search,
-} from "@mui/icons-material";
+import { CheckCircle, CheckCircleOutline, Search } from "@mui/icons-material";
 import useCourse from "../../course-hook";
 import Link from "next/link";
 const { networkAction, setAppMessage } = actionCreators;
@@ -244,11 +238,11 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
                     onClose={resetActiveStudent}
                 >
                     <DialogTitle>
-                        <b>{student!.name || student!.email}</b>'s Progress
+                        <b>{student!.name || student!.email}</b>&apos;s Progress
                     </DialogTitle>
                     <DialogContent>
                         {course?.lessons?.map((lesson: any) => (
-                            <ListItem>
+                            <ListItem key={lesson.lessonId}>
                                 <ListItemText>{lesson.title}</ListItemText>
                                 <ListItemIcon>
                                     {student.progress.includes(

@@ -40,7 +40,6 @@ import {
     COURSE_TYPE_COURSE,
     COURSE_TYPE_DOWNLOAD,
     LESSON_TYPE_EMBED,
-    DEFAULT_PASSING_GRADE,
 } from "../../../../../ui-config/constants";
 import { FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";

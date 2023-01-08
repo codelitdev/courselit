@@ -11,8 +11,8 @@ import {
 } from "@courselit/state-management";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
-import { Button, Checkbox, Grid, Tooltip, Typography } from "@mui/material";
-import { ChangeEvent, FormEvent, useCallback, useState } from "react";
+import { Button, Checkbox, Grid, Typography } from "@mui/material";
+import { ChangeEvent, useState } from "react";
 import { connect } from "react-redux";
 import {
     QUIZ_FAIL_MESSAGE,
