@@ -1,4 +1,4 @@
-import { AppMessage, Course } from "@courselit/common-models";
+import { AppMessage, Course, Lesson } from "@courselit/common-models";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import {
     networkAction,
@@ -9,7 +9,14 @@ import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 
-export default function useCourse(id: string): Partial<Course> | undefined {
+export default function useCourse(id: string):
+    | Partial<
+          Course & {
+              lessons: Pick<Lesson, "title" | "groupId" | "lessonId" | "type"> &
+                  { id: string }[];
+          }
+      >
+    | undefined {
     const address = useSelector((state: AppState) => state.address);
     const dispatch: AppDispatch = useDispatch();
     const [course, setCourse] = useState();

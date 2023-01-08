@@ -9,7 +9,8 @@ import {
     LESSON_TYPE_FILE,
     LESSON_TYPE_TEXT,
     LESSON_TYPE_EMBED,
-} from "../../ui-config/constants";
+    LESSON_TYPE_QUIZ,
+} from "../../../ui-config/constants";
 import { connect } from "react-redux";
 import { actionCreators } from "@courselit/state-management";
 import { Typography, Grid, Button } from "@mui/material";
@@ -21,9 +22,15 @@ import {
     ENROLL_BUTTON_TEXT,
     ENROLL_IN_THE_COURSE,
     NOT_ENROLLED_HEADER,
-} from "../../ui-config/strings";
+} from "../../../ui-config/strings";
 import { TextRenderer, Link } from "@courselit/components-library";
-import { Address, AppMessage, Lesson, Profile } from "@courselit/common-models";
+import {
+    Address,
+    AppMessage,
+    Lesson,
+    Profile,
+    Quiz,
+} from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { useRouter } from "next/router";
 import {
@@ -31,8 +38,9 @@ import {
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
 import { ArrowBack, ArrowForward } from "@mui/icons-material";
-import { isEnrolled } from "../../ui-lib/utils";
-import LessonEmbedViewer from "./lesson-embed-viewer";
+import { isEnrolled } from "../../../ui-lib/utils";
+import LessonEmbedViewer from "./embed-viewer";
+import QuizViewer from "./quiz-viewer";
 
 const { networkAction } = actionCreators;
 
@@ -90,6 +98,7 @@ interface LessonViewerProps {
     dispatch: AppDispatch;
     profile: Profile;
     address: Address;
+    networkAction: boolean;
 }
 
 const LessonViewer = ({
@@ -98,6 +107,7 @@ const LessonViewer = ({
     dispatch,
     profile,
     address,
+    networkAction: loading,
 }: LessonViewerProps) => {
     const [lesson, setLesson] = useState<Lesson>();
     const router = useRouter();
@@ -317,9 +327,7 @@ const LessonViewer = ({
                         lesson.type &&
                         lesson.content && (
                             <Grid item className={classes.section}>
-                                <TextRenderer
-                                    json={JSON.parse(lesson.content)}
-                                />
+                                <TextRenderer json={lesson.content} />
                             </Grid>
                         )}
                     {String.prototype.toUpperCase.call(LESSON_TYPE_EMBED) ===
@@ -327,6 +335,16 @@ const LessonViewer = ({
                         lesson.content && (
                             <Grid item className={classes.section}>
                                 <LessonEmbedViewer content={lesson.content} />
+                            </Grid>
+                        )}
+                    {String.prototype.toUpperCase.call(LESSON_TYPE_QUIZ) ===
+                        lesson.type &&
+                        lesson.content && (
+                            <Grid item className={classes.section}>
+                                <QuizViewer
+                                    lessonId={lesson.lessonId}
+                                    content={lesson.content as Quiz}
+                                />
                             </Grid>
                         )}
                     {String.prototype.toUpperCase.call(LESSON_TYPE_FILE) ===
@@ -341,7 +359,7 @@ const LessonViewer = ({
                                     item
                                     xs={12}
                                     component="object"
-                                    data={lesson.media.file as string}
+                                    data={lesson.media?.file as string}
                                     sx={{
                                         height: "100vh",
                                     }}
@@ -413,6 +431,7 @@ const LessonViewer = ({
                                         }
                                         variant="contained"
                                         onClick={markCompleteAndNext}
+                                        disabled={loading}
                                     >
                                         {lesson.nextLesson
                                             ? COURSE_PROGRESS_NEXT
@@ -431,6 +450,7 @@ const LessonViewer = ({
 const mapStateToProps = (state: AppState) => ({
     profile: state.profile,
     address: state.address,
+    networkAction: state.networkAction,
 });
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({

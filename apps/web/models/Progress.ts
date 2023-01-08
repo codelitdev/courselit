@@ -5,9 +5,14 @@ export interface Progress {
     completedLessons: string[];
 }
 
-const ProgressSchema = new mongoose.Schema<Progress>({
-    courseId: { type: String, required: true },
-    completedLessons: { type: [String] },
-});
+const ProgressSchema = new mongoose.Schema<Progress>(
+    {
+        courseId: { type: String, required: true },
+        completedLessons: { type: [String] },
+    },
+    {
+        timestamps: true,
+    }
+);
 
 export default ProgressSchema;

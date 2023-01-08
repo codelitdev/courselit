@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, ChangeEvent } from "react";
 import {
     Button,
     TextField,
@@ -25,6 +25,7 @@ import {
     LESSON_PREVIEW_TOOLTIP,
     LESSON_CONTENT_EMBED_HEADER,
     LESSON_CONTENT_EMBED_PLACEHOLDER,
+    BUTTON_SAVING,
 } from "../../../../../ui-config/strings";
 import {
     LESSON_TYPE_TEXT,
@@ -39,10 +40,11 @@ import {
     COURSE_TYPE_COURSE,
     COURSE_TYPE_DOWNLOAD,
     LESSON_TYPE_EMBED,
+    DEFAULT_PASSING_GRADE,
 } from "../../../../../ui-config/constants";
 import { FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";
-import { AppMessage, Media, Profile } from "@courselit/common-models";
+import { AppMessage, Media, Profile, Quiz } from "@courselit/common-models";
 import { Section, Select, TextEditor } from "@courselit/components-library";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import type { Auth, Lesson, Address } from "@courselit/common-models";
@@ -52,6 +54,7 @@ import { useRouter } from "next/router";
 import useCourse from "../course-hook";
 import { Help } from "@mui/icons-material";
 import { Dialog, MediaSelector } from "@courselit/components-library";
+import { QuizBuilder } from "./quiz-builder";
 
 const { networkAction, setAppMessage } = actionCreators;
 
@@ -89,7 +92,12 @@ const LessonEditor = ({
     const [deleteLessonPopupOpened, setDeleteLessonPopupOpened] =
         useState(false);
     const [refresh, setRefresh] = useState(0);
-    const [content, setContent] = useState();
+    const [content, setContent] = useState<{ value: string }>({ value: "" });
+    const [textContent, setTextContent] = useState<Record<string, unknown>>({
+        type: "doc",
+    });
+    const [quizContent, setQuizContent] = useState<Partial<Quiz>>({});
+    const [loading, setLoading] = useState(false);
     const course = useCourse(courseId);
 
     useEffect(() => {
@@ -144,14 +152,19 @@ const LessonEditor = ({
             const response = await fetch.exec();
             if (response.lesson) {
                 setLesson(response.lesson);
-                setContent(
-                    response.lesson.type.toLowerCase() === LESSON_TYPE_TEXT
-                        ? response.lesson.content
-                            ? JSON.parse(response.lesson.content)
-                            : undefined
-                        : response.lesson.content
-                );
-                setRefresh(refresh + 1);
+                switch (response.lesson.type.toLowerCase()) {
+                    case LESSON_TYPE_TEXT:
+                        setTextContent(
+                            response.lesson.content || { type: "doc" }
+                        );
+                        setRefresh(refresh + 1);
+                        break;
+                    case LESSON_TYPE_QUIZ:
+                        setQuizContent(response.lesson.content || {});
+                        break;
+                    default:
+                        setContent(response.lesson.content || { value: "" });
+                }
             }
         } catch (err: any) {
             dispatch(setAppMessage(new AppMessage(err.message)));
@@ -177,24 +190,25 @@ const LessonEditor = ({
                     id: "${lesson.lessonId}"
                     title: "${lesson.title}",
                     downloadable: ${lesson.downloadable},
-                    type: ${lesson.type.toUpperCase()},
                     content: ${formatContentForSending()},
                     media: ${
-                        lesson.media
+                        lesson.media && lesson.media.mediaId
                             ? `{
-                        mediaId: "${lesson.media.mediaId}",
-                        originalFileName: "${lesson.media.originalFileName}",
-                        mimeType: "${lesson.media.mimeType}",
-                        size: ${lesson.media.size},
-                        access: "${lesson.media.access}",
-                        file: ${
-                            lesson.media.access === "public"
-                                ? `"${lesson.media.file}"`
-                                : null
-                        },
-                        thumbnail: "${lesson.media.thumbnail}",
-                        caption: "${lesson.media.caption}"
-                    }`
+                                mediaId: "${lesson.media.mediaId}",
+                                originalFileName: "${
+                                    lesson.media.originalFileName
+                                }",
+                                mimeType: "${lesson.media.mimeType}",
+                                size: ${lesson.media.size || 0},
+                                access: "${lesson.media.access}",
+                                file: ${
+                                    lesson.media.access === "public"
+                                        ? `"${lesson.media.file}"`
+                                        : null
+                                },
+                                thumbnail: "${lesson.media.thumbnail}",
+                                caption: "${lesson.media.caption}"
+                            }`
                             : null
                     }, 
                     requiresEnrollment: ${lesson.requiresEnrollment}
@@ -211,21 +225,27 @@ const LessonEditor = ({
 
         try {
             dispatch(networkAction(true));
+            setLoading(true);
             await fetch.exec();
             goBackLessonList();
         } catch (err: any) {
             dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
             dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
-    const formatContentForSending = () =>
-        lesson.type.toLowerCase() === LESSON_TYPE_TEXT
-            ? content
-                ? JSON.stringify(JSON.stringify(content))
-                : JSON.stringify("")
-            : JSON.stringify(content);
+    const formatContentForSending = () => {
+        switch (lesson.type.toLowerCase()) {
+            case LESSON_TYPE_TEXT:
+                return JSON.stringify(JSON.stringify(textContent));
+            case LESSON_TYPE_QUIZ:
+                return JSON.stringify(JSON.stringify(quizContent));
+            default:
+                return JSON.stringify(JSON.stringify(content));
+        }
+    };
 
     const createLesson = async () => {
         const query = `
@@ -234,14 +254,14 @@ const LessonEditor = ({
                     title: "${lesson.title}",
                     downloadable: ${lesson.downloadable},
                     type: ${lesson.type.toUpperCase()},
-                    content: ${formatContentForSending() || '""'},
+                    content: ${formatContentForSending()},
                     media: ${
-                        lesson.media
+                        lesson.media && lesson.media.mediaId
                             ? `{
                         mediaId: "${lesson.media.mediaId}",
                         originalFileName: "${lesson.media.originalFileName}",
                         mimeType: "${lesson.media.mimeType}",
-                        size: ${lesson.media.size},
+                        size: ${lesson.media.size || 0},
                         access: "${lesson.media.access}",
                         file: ${
                             lesson.media.access === "public"
@@ -269,12 +289,14 @@ const LessonEditor = ({
 
         try {
             dispatch(networkAction(true));
+            setLoading(true);
             await fetch.exec();
             goBackLessonList();
         } catch (err: any) {
             dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
             dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -295,6 +317,7 @@ const LessonEditor = ({
 
             try {
                 dispatch(networkAction(true));
+                setLoading(true);
                 const response = await fetch.exec();
 
                 if (response.result) {
@@ -307,6 +330,8 @@ const LessonEditor = ({
                 }
             } catch (err: any) {
                 dispatch(setAppMessage(new AppMessage(err.message)));
+            } finally {
+                setLoading(false);
             }
         }
     };
@@ -346,32 +371,76 @@ const LessonEditor = ({
     const goBackLessonList = () =>
         router.replace(`/dashboard/product/${courseId}/content`);
 
-    const selectOptions = [
-        {
-            label: capitalize(LESSON_TYPE_FILE),
-            value: String.prototype.toUpperCase.call(LESSON_TYPE_FILE),
-        },
-        {
-            label: capitalize(LESSON_TYPE_VIDEO),
-            value: String.prototype.toUpperCase.call(LESSON_TYPE_VIDEO),
-        },
-        {
-            label: capitalize(LESSON_TYPE_AUDIO),
-            value: String.prototype.toUpperCase.call(LESSON_TYPE_AUDIO),
-        },
-        {
-            label: capitalize(LESSON_TYPE_PDF),
-            value: String.prototype.toUpperCase.call(LESSON_TYPE_PDF),
-        },
-        {
-            label: capitalize(LESSON_TYPE_EMBED),
-            value: String.prototype.toUpperCase.call(LESSON_TYPE_EMBED),
-        },
-    ];
+    const selectOptions =
+        course?.type === COURSE_TYPE_COURSE.toUpperCase()
+            ? [
+                  {
+                      label: capitalize(LESSON_TYPE_FILE),
+                      value: String.prototype.toUpperCase.call(
+                          LESSON_TYPE_FILE
+                      ),
+                  },
+                  {
+                      label: capitalize(LESSON_TYPE_VIDEO),
+                      value: String.prototype.toUpperCase.call(
+                          LESSON_TYPE_VIDEO
+                      ),
+                  },
+                  {
+                      label: capitalize(LESSON_TYPE_AUDIO),
+                      value: String.prototype.toUpperCase.call(
+                          LESSON_TYPE_AUDIO
+                      ),
+                  },
+                  {
+                      label: capitalize(LESSON_TYPE_PDF),
+                      value: String.prototype.toUpperCase.call(LESSON_TYPE_PDF),
+                  },
+                  {
+                      label: capitalize(LESSON_TYPE_EMBED),
+                      value: String.prototype.toUpperCase.call(
+                          LESSON_TYPE_EMBED
+                      ),
+                  },
+              ]
+            : [
+                  {
+                      label: capitalize(LESSON_TYPE_FILE),
+                      value: String.prototype.toUpperCase.call(
+                          LESSON_TYPE_FILE
+                      ),
+                  },
+                  {
+                      label: capitalize(LESSON_TYPE_VIDEO),
+                      value: String.prototype.toUpperCase.call(
+                          LESSON_TYPE_VIDEO
+                      ),
+                  },
+                  {
+                      label: capitalize(LESSON_TYPE_AUDIO),
+                      value: String.prototype.toUpperCase.call(
+                          LESSON_TYPE_AUDIO
+                      ),
+                  },
+                  {
+                      label: capitalize(LESSON_TYPE_PDF),
+                      value: String.prototype.toUpperCase.call(LESSON_TYPE_PDF),
+                  },
+                  {
+                      label: capitalize(LESSON_TYPE_EMBED),
+                      value: String.prototype.toUpperCase.call(
+                          LESSON_TYPE_EMBED
+                      ),
+                  },
+              ];
     if (course?.type === COURSE_TYPE_COURSE.toUpperCase()) {
         selectOptions.unshift({
             label: capitalize(LESSON_TYPE_TEXT),
             value: String.prototype.toUpperCase.call(LESSON_TYPE_TEXT),
+        });
+        selectOptions.push({
+            label: capitalize(LESSON_TYPE_QUIZ),
+            value: String.prototype.toUpperCase.call(LESSON_TYPE_QUIZ),
         });
     }
 
@@ -458,7 +527,9 @@ const LessonEditor = ({
                                                                 {},
                                                                 lesson,
                                                                 {
-                                                                    title: media.originalFileName,
+                                                                    title:
+                                                                        lesson.title ||
+                                                                        media.originalFileName,
                                                                     media,
                                                                 }
                                                             )
@@ -483,14 +554,24 @@ const LessonEditor = ({
                                             </Grid>
                                             <Grid item>
                                                 <TextEditor
-                                                    initialContent={content}
+                                                    initialContent={textContent}
                                                     refresh={refresh}
                                                     onChange={(state: any) =>
-                                                        setContent(state)
+                                                        setTextContent(state)
                                                     }
                                                 />
                                             </Grid>
                                         </Grid>
+                                    )}
+                                    {lesson.type.toLowerCase() ===
+                                        LESSON_TYPE_QUIZ && (
+                                        <QuizBuilder
+                                            content={quizContent}
+                                            // key={JSON.stringify(quizContent)} // to discard state between re-renders
+                                            onChange={(state: any) =>
+                                                setQuizContent(state)
+                                            }
+                                        />
                                     )}
                                     {lesson.type.toLowerCase() ===
                                         LESSON_TYPE_EMBED && (
@@ -504,11 +585,14 @@ const LessonEditor = ({
                                                         LESSON_CONTENT_EMBED_PLACEHOLDER
                                                     }
                                                     required
-                                                    value={content}
-                                                    onChange={(e: any) =>
-                                                        setContent(
-                                                            e.target.value
-                                                        )
+                                                    value={content.value}
+                                                    onChange={(
+                                                        e: ChangeEvent<HTMLInputElement>
+                                                    ) =>
+                                                        setContent({
+                                                            value: e.target
+                                                                .value,
+                                                        })
                                                     }
                                                     fullWidth
                                                 />
@@ -545,48 +629,53 @@ const LessonEditor = ({
                                         </Grid>
                                     )}
                                 </Grid>
-                                <Grid item sx={{ mb: 2 }}>
-                                    <Grid
-                                        container
-                                        justifyContent="space-between"
-                                        alignItems="center"
-                                    >
-                                        <Grid item>
-                                            <Grid container>
-                                                <Grid item sx={{ mr: 1 }}>
-                                                    <Typography
-                                                        variant="body1"
-                                                        color="textSecondary"
-                                                    >
-                                                        {LESSON_PREVIEW}
-                                                    </Typography>
-                                                </Grid>
-                                                <Grid item>
-                                                    <Tooltip
-                                                        title={
-                                                            LESSON_PREVIEW_TOOLTIP
-                                                        }
-                                                    >
-                                                        <Help
-                                                            color="disabled"
-                                                            fontSize="small"
-                                                        />
-                                                    </Tooltip>
+                                {lesson.type.toLowerCase() !==
+                                    LESSON_TYPE_QUIZ && (
+                                    <Grid item sx={{ mb: 2 }}>
+                                        <Grid
+                                            container
+                                            justifyContent="space-between"
+                                            alignItems="center"
+                                        >
+                                            <Grid item>
+                                                <Grid container>
+                                                    <Grid item sx={{ mr: 1 }}>
+                                                        <Typography
+                                                            variant="body1"
+                                                            color="textSecondary"
+                                                        >
+                                                            {LESSON_PREVIEW}
+                                                        </Typography>
+                                                    </Grid>
+                                                    <Grid item>
+                                                        <Tooltip
+                                                            title={
+                                                                LESSON_PREVIEW_TOOLTIP
+                                                            }
+                                                        >
+                                                            <Help
+                                                                color="disabled"
+                                                                fontSize="small"
+                                                            />
+                                                        </Tooltip>
+                                                    </Grid>
                                                 </Grid>
                                             </Grid>
-                                        </Grid>
-                                        <Grid item>
-                                            <Switch
-                                                type="checkbox"
-                                                name="requiresEnrollment"
-                                                checked={
-                                                    !lesson.requiresEnrollment
-                                                }
-                                                onChange={onLessonDetailsChange}
-                                            />
+                                            <Grid item>
+                                                <Switch
+                                                    type="checkbox"
+                                                    name="requiresEnrollment"
+                                                    checked={
+                                                        !lesson.requiresEnrollment
+                                                    }
+                                                    onChange={
+                                                        onLessonDetailsChange
+                                                    }
+                                                />
+                                            </Grid>
                                         </Grid>
                                     </Grid>
-                                </Grid>
+                                )}
                                 <Grid item>
                                     <Grid
                                         container
@@ -596,10 +685,14 @@ const LessonEditor = ({
                                             <Button
                                                 type="submit"
                                                 variant="contained"
-                                                disabled={!lesson.title}
+                                                disabled={
+                                                    !lesson.title || loading
+                                                }
                                                 sx={{ mr: 1 }}
                                             >
-                                                {BUTTON_SAVE}
+                                                {loading
+                                                    ? BUTTON_SAVING
+                                                    : BUTTON_SAVE}
                                             </Button>
                                             {courseId && (
                                                 <Link

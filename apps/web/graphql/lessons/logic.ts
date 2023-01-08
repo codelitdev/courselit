@@ -9,17 +9,26 @@ import {
     checkOwnershipWithoutModel,
 } from "../../lib/graphql";
 import CourseModel from "../../models/Course";
-import { getPrevNextCursor, lessonValidator } from "./helpers";
+import {
+    evaluateLessonResult,
+    getPrevNextCursor,
+    lessonValidator,
+} from "./helpers";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
 import { Course } from "../../models/Course";
 import { deleteMedia } from "../../services/medialit";
 import { Progress } from "../../models/Progress";
 import { recordProgress } from "../users/logic";
+import { Quiz } from "@courselit/common-models";
+import LessonEvaluation from "../../models/LessonEvaluation";
 
-const { permissions } = constants;
+const { permissions, quiz } = constants;
 
-const getLessonOrThrow = async (id: string, ctx: GQLContext) => {
+const getLessonOrThrow = async (
+    id: string,
+    ctx: GQLContext
+): Promise<Lesson> => {
     checkIfAuthenticated(ctx);
 
     const lesson = await LessonModel.findOne({
@@ -80,10 +89,33 @@ export const getLessonDetails = async (id: string, ctx: GQLContext) => {
     lesson.prevLesson = prevLesson;
     lesson.nextLesson = nextLesson;
 
+    if (lesson.type === quiz) {
+        return removeCorrectAnswersProp(lesson);
+    }
+
     return lesson;
 };
 
-export const createLesson = async (lessonData: Lesson, ctx: GQLContext) => {
+function removeCorrectAnswersProp(lesson: Lesson) {
+    if (lesson.content && lesson.content.questions) {
+        for (let question of lesson.content.questions as any[]) {
+            question.options = question.options.map((option: any) => ({
+                text: option.text,
+            }));
+        }
+    }
+
+    return lesson;
+}
+
+export type LessonWithStringContent = Omit<Lesson, "content"> & {
+    content: string;
+};
+
+export const createLesson = async (
+    lessonData: LessonWithStringContent,
+    ctx: GQLContext
+) => {
     checkIfAuthenticated(ctx);
     if (!checkPermission(ctx.user.permissions, [permissions.manageCourse])) {
         throw new Error(responses.action_not_allowed);
@@ -103,7 +135,7 @@ export const createLesson = async (lessonData: Lesson, ctx: GQLContext) => {
             domain: ctx.subdomain._id,
             title: lessonData.title,
             type: lessonData.type,
-            content: lessonData.content,
+            content: JSON.parse(lessonData.content),
             media: lessonData.media,
             downloadable: lessonData.downloadable,
             creatorId: ctx.user._id,
@@ -122,16 +154,32 @@ export const createLesson = async (lessonData: Lesson, ctx: GQLContext) => {
     }
 };
 
-export const updateLesson = async (lessonData: any, ctx: GQLContext) => {
+export const updateLesson = async (
+    lessonData: Pick<
+        LessonWithStringContent,
+        | "title"
+        | "content"
+        | "media"
+        | "downloadable"
+        | "requiresEnrollment"
+        | "type"
+    > & { id: string },
+    ctx: GQLContext
+) => {
     let lesson = await getLessonOrThrow(lessonData.id, ctx);
 
+    lessonData.type = lesson.type;
     lessonValidator(lessonData);
 
     for (const key of Object.keys(lessonData)) {
-        lesson[key] = lessonData[key];
+        if (key === "content") {
+            lesson.content = JSON.parse(lessonData.content);
+        } else {
+            lesson[key] = lessonData[key];
+        }
     }
 
-    lesson = await lesson.save();
+    lesson = await (lesson as any).save();
     return lesson;
 };
 
@@ -206,11 +254,31 @@ export const deleteAllLessons = async (courseId: string, ctx: GQLContext) => {
 
 export const markLessonCompleted = async (
     lessonId: string,
-    ctx: GQLContext
+    ctx: GQLContext,
+    answers: string
 ) => {
-    const lesson = await LessonModel.findOne({ lessonId });
+    const lesson = await LessonModel.findOne<Lesson>({ lessonId });
     if (!lesson) {
         throw new Error(responses.item_not_found);
+    }
+
+    const enrolledItemIndex = ctx.user.purchases.findIndex(
+        (progress: Progress) => progress.courseId === lesson.courseId
+    );
+
+    if (enrolledItemIndex === -1) {
+        throw new Error(responses.not_enrolled);
+    }
+
+    if (lesson.type === quiz) {
+        const lessonEvaluations = await LessonEvaluation.countDocuments({
+            pass: true,
+            lessonId: lesson.lessonId,
+            domain: ctx.subdomain._id,
+        });
+        if (lessonEvaluations === 0) {
+            throw new Error(responses.need_to_pass);
+        }
     }
 
     await recordProgress({
@@ -220,4 +288,52 @@ export const markLessonCompleted = async (
     });
 
     return true;
+};
+
+export const evaluateLesson = async (
+    lessonId: string,
+    answers: { answers: number[][] },
+    ctx: GQLContext
+) => {
+    const lesson = await LessonModel.findOne<Lesson>({ lessonId });
+    if (!lesson) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const enrolledItemIndex = ctx.user.purchases.findIndex(
+        (progress: Progress) => progress.courseId === lesson.courseId
+    );
+
+    if (enrolledItemIndex === -1) {
+        throw new Error(responses.not_enrolled);
+    }
+
+    if (lesson.type !== quiz) {
+        throw new Error(responses.cannot_be_evaluated);
+    }
+
+    if (!answers.answers || !answers.answers.length) {
+        throw new Error(responses.answers_missing);
+    }
+
+    const { pass, score } = evaluateLessonResult(
+        lesson.content as Quiz,
+        answers.answers
+    );
+
+    await LessonEvaluation.create({
+        domain: ctx.subdomain._id,
+        lessonId: lesson.lessonId,
+        pass,
+        score,
+        requiresPassingGrade: (lesson.content as Quiz).requiresPassingGrade,
+        passingGrade: (lesson.content as Quiz).passingGrade,
+    });
+
+    return {
+        pass,
+        score,
+        requiresPassingGrade: (lesson.content as Quiz).requiresPassingGrade,
+        passingGrade: (lesson.content as Quiz).passingGrade,
+    };
 };

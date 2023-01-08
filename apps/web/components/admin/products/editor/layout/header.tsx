@@ -17,8 +17,6 @@ import {
 import useCourse from "../course-hook";
 import { Menu } from "@courselit/components-library";
 
-const AppLoader = dynamic(() => import("../../../../app-loader"));
-
 interface Breadcrumb {
     text: string;
     url: string;

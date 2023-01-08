@@ -91,8 +91,13 @@ function Product({
     return (
         <TableRow key={product.courseId}>
             <TableCell>
-                <Link href={`/dashboard/product/${product.courseId}/content`}>
-                    <Grid container spacing={1} alignItems="center">
+                <Link href={`/dashboard/product/${product.courseId}/reports`}>
+                    <Grid
+                        container
+                        spacing={1}
+                        alignItems="center"
+                        component="a"
+                    >
                         <Grid item>
                             <Image
                                 src={
@@ -104,7 +109,13 @@ function Product({
                             />
                         </Grid>
                         <Grid item>
-                            <Grid container direction="column">
+                            <Grid
+                                container
+                                direction="column"
+                                sx={{
+                                    cursor: "pointer",
+                                }}
+                            >
                                 <MuiLink>
                                     <Grid item>
                                         <Typography variant="subtitle1">
