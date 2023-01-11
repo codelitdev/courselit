@@ -1,5 +1,5 @@
 export const SITE = {
-    title: "CourseLit Documentation",
+    title: "CourseLit Docs",
     description: "Sell courses, digital downloads on your own website",
     defaultLanguage: "en_US",
 };
@@ -50,6 +50,6 @@ export const SIDEBAR: Sidebar = {
             { text: "Self hosting", link: "en/self-hosting" },
             // { text: 'Page 3', link: 'en/page-3' },
         ],
-        // 'Another Section': [{ text: 'Page 4', link: 'en/page-4' }],
+        Courses: [{ text: "Add quiz", link: "en/lessons/add-quiz" }],
     },
 };

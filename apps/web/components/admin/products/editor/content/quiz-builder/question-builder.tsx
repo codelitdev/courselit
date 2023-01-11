@@ -17,6 +17,7 @@ import {
     LESSON_QUIZ_OPTIONS_HEADER,
     QUESTION_BUILDER_COLLAPSE_TOOLTIP,
     QUESTION_BUILDER_CORRECT_ANS_TOOLTIP,
+    QUESTION_BUILDER_DELETE_TOOLTIP,
     QUESTION_BUILDER_EXPAND_TOOLTIP,
 } from "../../../../../../ui-config/strings";
 
@@ -28,6 +29,7 @@ interface QuestionProps {
     setOptionText: (index: number, text: string) => void;
     setCorrectOption: (index: number, checked: boolean) => void;
     addNewOption: () => void;
+    deleteQuestion: (index: number) => void;
 }
 
 export function QuestionBuilder({
@@ -38,6 +40,7 @@ export function QuestionBuilder({
     removeOption,
     addNewOption,
     setCorrectOption,
+    deleteQuestion,
 }: QuestionProps) {
     const [collapsed, setCollapsed] = useState(false);
 
@@ -64,6 +67,13 @@ export function QuestionBuilder({
                     </Typography>
                 </Grid>
                 <Grid item>
+                    {index > 0 && (
+                        <Tooltip title={QUESTION_BUILDER_DELETE_TOOLTIP}>
+                            <IconButton onClick={() => deleteQuestion(index)}>
+                                <Delete />
+                            </IconButton>
+                        </Tooltip>
+                    )}
                     <Tooltip title={QUESTION_BUILDER_EXPAND_TOOLTIP}>
                         <IconButton onClick={() => setCollapsed(false)}>
                             <ExpandMore />
@@ -105,6 +115,15 @@ export function QuestionBuilder({
                         </Typography>
                     </Grid>
                     <Grid item>
+                        {index > 0 && (
+                            <Tooltip title={QUESTION_BUILDER_DELETE_TOOLTIP}>
+                                <IconButton
+                                    onClick={() => deleteQuestion(index)}
+                                >
+                                    <Delete />
+                                </IconButton>
+                            </Tooltip>
+                        )}
                         <Tooltip title={QUESTION_BUILDER_COLLAPSE_TOOLTIP}>
                             <IconButton onClick={() => setCollapsed(true)}>
                                 <ExpandLess />
