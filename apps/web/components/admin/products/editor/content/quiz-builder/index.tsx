@@ -86,6 +86,11 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
         setQuestions([...questions]);
     };
 
+    const deleteQuestion = (questionIndex: number) => {
+        questions.splice(questionIndex, 1);
+        setQuestions([...questions]);
+    };
+
     const addNewQuestion = () =>
         setQuestions([
             ...questions,
@@ -116,6 +121,7 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
                             setOptionText={setOptionText(index)}
                             setCorrectOption={setCorrectAnswer(index)}
                             addNewOption={() => addNewOption(index)}
+                            deleteQuestion={deleteQuestion}
                         />
                     </Section>
                 </Grid>
