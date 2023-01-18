@@ -27,7 +27,7 @@ jobs:
           action: "upload"
           ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          app_location: "apps/web" # App source code path
+          app_location: "/" # App source code path
           output_location: "apps/web/.next" # Built app content directory - optional
           ###### End of Repository/Build Configurations ######
           app_build_command: "npm i -g yarn@2 && yarn install && yarn build && cd apps/web && yarn build"
