@@ -22,7 +22,7 @@ jobs:
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         env: 
-          CUSTOM_BUILD_COMMAND: "yarn install"
+          CUSTOM_BUILD_COMMAND: "yarn install && yarn build"
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_GRAY_MEADOW_012CE1110 }}
           repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
@@ -32,8 +32,8 @@ jobs:
           app_location: "apps/web" # App source code path
           api_location: "" # Api source code path - optional
           output_location: "" # Built app content directory - optional
+          skip_app_build: true
           ###### End of Repository/Build Configurations ######
-          app_build_command: "yarn build:azure"
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
