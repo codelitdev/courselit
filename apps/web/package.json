@@ -7,7 +7,8 @@
         "build": "next build",
         "start": "next start",
         "lint": "next lint",
-        "prettier": "prettier --write **/*.ts"
+        "prettier": "prettier --write **/*.ts",
+        "build:azure": "cd ../../ && yarn build && cd -"
     },
     "dependencies": {
         "@courselit/common-models": "workspace:^",
