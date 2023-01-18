@@ -534,29 +534,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-transform-react-display-name@npm:^7.18.6":
-  version: 7.18.6
-  resolution: "@babel/plugin-transform-react-display-name@npm:7.18.6"
-  dependencies:
-    "@babel/helper-plugin-utils": ^7.18.6
-  peerDependencies:
-    "@babel/core": ^7.0.0-0
-  checksum: 51c087ab9e41ef71a29335587da28417536c6f816c292e092ffc0e0985d2f032656801d4dd502213ce32481f4ba6c69402993ffa67f0818a07606ff811e4be49
-  languageName: node
-  linkType: hard
-
-"@babel/plugin-transform-react-jsx-development@npm:^7.18.6":
-  version: 7.18.6
-  resolution: "@babel/plugin-transform-react-jsx-development@npm:7.18.6"
-  dependencies:
-    "@babel/plugin-transform-react-jsx": ^7.18.6
-  peerDependencies:
-    "@babel/core": ^7.0.0-0
-  checksum: ec9fa65db66f938b75c45e99584367779ac3e0af8afc589187262e1337c7c4205ea312877813ae4df9fb93d766627b8968d74ac2ba702e4883b1dbbe4953ecee
-  languageName: node
-  linkType: hard
-
-"@babel/plugin-transform-react-jsx@npm:^7.17.12, @babel/plugin-transform-react-jsx@npm:^7.18.6":
+"@babel/plugin-transform-react-jsx@npm:^7.17.12":
   version: 7.19.0
   resolution: "@babel/plugin-transform-react-jsx@npm:7.19.0"
   dependencies:
@@ -571,18 +549,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-transform-react-pure-annotations@npm:^7.18.6":
-  version: 7.18.6
-  resolution: "@babel/plugin-transform-react-pure-annotations@npm:7.18.6"
-  dependencies:
-    "@babel/helper-annotate-as-pure": ^7.18.6
-    "@babel/helper-plugin-utils": ^7.18.6
-  peerDependencies:
-    "@babel/core": ^7.0.0-0
-  checksum: 97c4873d409088f437f9084d084615948198dd87fc6723ada0e7e29c5a03623c2f3e03df3f52e7e7d4d23be32a08ea00818bff302812e48713c706713bd06219
-  languageName: node
-  linkType: hard
-
 "@babel/polyfill@npm:^7.0.0":
   version: 7.12.1
   resolution: "@babel/polyfill@npm:7.12.1"
@@ -590,22 +556,6 @@ __metadata:
     core-js: ^2.6.5
     regenerator-runtime: ^0.13.4
   checksum: 3f59a9d85a41b390b044a1be13e11ae6d8efbfcf4e07217964585c7cef337b828eecfc5e164083227189146d2b6efc1affae8f59c831438eb40b848ab6fe5f39
-  languageName: node
-  linkType: hard
-
-"@babel/preset-react@npm:^7.10.4":
-  version: 7.18.6
-  resolution: "@babel/preset-react@npm:7.18.6"
-  dependencies:
-    "@babel/helper-plugin-utils": ^7.18.6
-    "@babel/helper-validator-option": ^7.18.6
-    "@babel/plugin-transform-react-display-name": ^7.18.6
-    "@babel/plugin-transform-react-jsx": ^7.18.6
-    "@babel/plugin-transform-react-jsx-development": ^7.18.6
-    "@babel/plugin-transform-react-pure-annotations": ^7.18.6
-  peerDependencies:
-    "@babel/core": ^7.0.0-0
-  checksum: 540d9cf0a0cc0bb07e6879994e6fb7152f87dafbac880b56b65e2f528134c7ba33e0cd140b58700c77b2ebf4c81fa6468fed0ba391462d75efc7f8c1699bb4c3
   languageName: node
   linkType: hard
 
@@ -954,7 +904,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@courselit/common-models@^0.29.0, @courselit/common-models@workspace:packages/common-models":
+"@courselit/common-models@workspace:^, @courselit/common-models@workspace:packages/common-models":
   version: 0.0.0-use.local
   resolution: "@courselit/common-models@workspace:packages/common-models"
   dependencies:
@@ -963,23 +913,25 @@ __metadata:
     eslint: ^8.12.0
     redux: ^4.1.2
     redux-thunk: ^2.4.1
+    rimraf: ^4.1.1
     typescript: ^4.6.0
   languageName: unknown
   linkType: soft
 
-"@courselit/common-widgets@^0.29.0, @courselit/common-widgets@workspace:packages/common-widgets":
+"@courselit/common-widgets@workspace:^, @courselit/common-widgets@workspace:packages/common-widgets":
   version: 0.0.0-use.local
   resolution: "@courselit/common-widgets@workspace:packages/common-widgets"
   dependencies:
-    "@courselit/common-models": ^0.29.0
-    "@courselit/components-library": ^0.29.0
-    "@courselit/state-management": ^0.29.0
-    "@courselit/utils": ^0.29.0
+    "@courselit/common-models": "workspace:^"
+    "@courselit/components-library": "workspace:^"
+    "@courselit/state-management": "workspace:^"
+    "@courselit/utils": "workspace:^"
     "@mui/icons-material": ^5.10.6
     eslint-config-standard: ^17.0.0
     eslint-plugin-n: ^15.2.0
     eslint-plugin-promise: ^6.0.0
     react-redux: ^8.0.2
+    rimraf: ^4.1.1
     typescript: ^4.7.4
   peerDependencies:
     "@mui/material": ^5.5.0
@@ -988,18 +940,19 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@courselit/components-library@^0.29.0, @courselit/components-library@workspace:packages/components-library":
+"@courselit/components-library@workspace:^, @courselit/components-library@workspace:packages/components-library":
   version: 0.0.0-use.local
   resolution: "@courselit/components-library@workspace:packages/components-library"
   dependencies:
-    "@courselit/common-models": ^0.29.0
-    "@courselit/rich-text": ^0.29.0
-    "@courselit/state-management": ^0.29.0
+    "@courselit/common-models": "workspace:^"
+    "@courselit/rich-text": "workspace:^"
+    "@courselit/state-management": "workspace:^"
     "@courselit/text-editor": ^0.6.0
-    "@courselit/utils": ^0.29.0
+    "@courselit/utils": "workspace:^"
     "@types/react": ^17.0.43
     "@types/react-redux": ^7.1.11
     currency-symbol-map: ^5.1.0
+    rimraf: ^4.1.1
     typescript: ^4.6.3
   peerDependencies:
     "@mui/material": ^5.9.2
@@ -1027,10 +980,11 @@ __metadata:
     preact: ^10.7.3
     react: ^18.1.0
     react-dom: ^18.1.0
+    rimraf: ^4.1.1
   languageName: unknown
   linkType: soft
 
-"@courselit/rich-text@^0.29.0, @courselit/rich-text@workspace:packages/rich-text":
+"@courselit/rich-text@workspace:^, @courselit/rich-text@workspace:packages/rich-text":
   version: 0.0.0-use.local
   resolution: "@courselit/rich-text@workspace:packages/rich-text"
   dependencies:
@@ -1045,6 +999,7 @@ __metadata:
     prismjs: ^1.28.0
     prop-types: ^15.7.2
     react-jss: ^10.5.0
+    rimraf: ^4.1.1
     style-loader: ^2.0.0
     svg-react-loader: ^0.4.6
     webpack: ^4.44.1
@@ -1055,12 +1010,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@courselit/state-management@^0.29.0, @courselit/state-management@workspace:packages/state-management":
+"@courselit/state-management@workspace:^, @courselit/state-management@workspace:packages/state-management":
   version: 0.0.0-use.local
   resolution: "@courselit/state-management@workspace:packages/state-management"
   dependencies:
-    "@courselit/common-models": ^0.29.0
-    "@courselit/utils": ^0.29.0
+    "@courselit/common-models": "workspace:^"
+    "@courselit/utils": "workspace:^"
     "@typescript-eslint/eslint-plugin": ^5.18.0
     "@typescript-eslint/parser": ^5.18.0
     base-64: ^1.0.0
@@ -1069,6 +1024,7 @@ __metadata:
     react-redux: ^8.0.1
     redux: ^4.2.0
     redux-thunk: ^2.4.1
+    rimraf: ^4.1.1
     typescript: ^4.6.3
   languageName: unknown
   linkType: soft
@@ -1086,6 +1042,7 @@ __metadata:
     "@remirror/react-editors": ^1.0.9
     "@types/node": ^18.8.0
     codemirror: ^6.0.1
+    rimraf: ^4.1.1
     typescript: ^4.8.4
   peerDependencies:
     "@mui/icons-material": ^5.5.0
@@ -1095,13 +1052,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@courselit/utils@^0.29.0, @courselit/utils@workspace:packages/utils":
+"@courselit/utils@workspace:^, @courselit/utils@workspace:packages/utils":
   version: 0.0.0-use.local
   resolution: "@courselit/utils@workspace:packages/utils"
   dependencies:
     "@typescript-eslint/eslint-plugin": ^5.18.0
     "@typescript-eslint/parser": ^5.18.0
     eslint: ^8.12.0
+    rimraf: ^4.1.1
     typescript: ^4.6.3
   languageName: unknown
   linkType: soft
@@ -1110,11 +1068,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@courselit/web@workspace:apps/web"
   dependencies:
-    "@courselit/common-models": ^0.29.0
-    "@courselit/common-widgets": ^0.29.0
-    "@courselit/components-library": ^0.29.0
-    "@courselit/state-management": ^0.29.0
-    "@courselit/utils": ^0.29.0
+    "@courselit/common-models": "workspace:^"
+    "@courselit/common-widgets": "workspace:^"
+    "@courselit/components-library": "workspace:^"
+    "@courselit/state-management": "workspace:^"
+    "@courselit/utils": "workspace:^"
     "@emotion/cache": ^11.7.1
     "@emotion/react": ^11.8.2
     "@emotion/server": ^11.4.0
@@ -1164,27 +1122,6 @@ __metadata:
     slugify: ^1.6.5
     stripe: ^8.219.0
     typescript: 4.6.2
-  languageName: unknown
-  linkType: soft
-
-"@courselit/widget-buttondown@workspace:packages/widget-buttondown":
-  version: 0.0.0-use.local
-  resolution: "@courselit/widget-buttondown@workspace:packages/widget-buttondown"
-  dependencies:
-    "@babel/core": ^7.11.1
-    "@babel/preset-react": ^7.10.4
-    "@courselit/components-library": ^0.29.0
-    babel-loader: ^8.1.0
-    webpack: ^4.44.1
-    webpack-cli: ^3.3.12
-  peerDependencies:
-    "@material-ui/core": ^4.8.1
-    "@material-ui/icons": ^4.4.1
-    "@material-ui/styles": ^4.7.1
-    prop-types: ^15.7.2
-    react: ^17.0.2
-    react-dom: ^17.0.2
-    react-redux: ^8.0.1
   languageName: unknown
   linkType: soft
 
@@ -14162,6 +14099,15 @@ __metadata:
   bin:
     rimraf: bin.js
   checksum: 87f4164e396f0171b0a3386cc1877a817f572148ee13a7e113b238e48e8a9f2f31d009a92ec38a591ff1567d9662c6b67fd8818a2dbbaed74bc26a87a2a4a9a0
+  languageName: node
+  linkType: hard
+
+"rimraf@npm:^4.1.1":
+  version: 4.1.1
+  resolution: "rimraf@npm:4.1.1"
+  bin:
+    rimraf: dist/cjs/src/bin.js
+  checksum: f52d46f59c1a532b3d0f73cb5228ff8f7df4ee87b9df95cf655788ea186c935b5c6ab4c45b66f8de5ed1e3690f58ff83f9a5b0ba1ae2e76a9bf36415f37732f7
   languageName: node
   linkType: hard
 

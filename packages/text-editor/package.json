@@ -29,6 +29,7 @@
     "scripts": {
         "test": "echo \"Error: run tests from root\" && exit 1",
         "build": "tsc",
+        "clean": "rimraf dist/",
         "prepublishOnly": "yarn run build"
     },
     "bugs": {
@@ -52,6 +53,7 @@
     },
     "devDependencies": {
         "@types/node": "^18.8.0",
+        "rimraf": "^4.1.1",
         "typescript": "^4.8.4"
     }
 }
