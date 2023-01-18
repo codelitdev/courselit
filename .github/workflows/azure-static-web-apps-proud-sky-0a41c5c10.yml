@@ -22,7 +22,6 @@ jobs:
         run: |
           npm i -g yarn@2
           yarn install
-          yarn build
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -34,7 +33,6 @@ jobs:
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
           app_location: "/" # App source code path
           output_location: "apps/web/.next" # Built app content directory - optional
-          skip_app_build: true
           ###### End of Repository/Build Configurations ######
           app_build_command: "yarn build"
 
