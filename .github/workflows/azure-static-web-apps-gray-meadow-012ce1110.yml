@@ -32,7 +32,6 @@ jobs:
           app_location: "apps/web" # App source code path
           api_location: "" # Api source code path - optional
           output_location: "" # Built app content directory - optional
-          skip_app_build: true
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
