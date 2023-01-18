@@ -980,7 +980,6 @@ __metadata:
     preact: ^10.7.3
     react: ^18.1.0
     react-dom: ^18.1.0
-    rimraf: ^4.1.1
   languageName: unknown
   linkType: soft
 
@@ -999,7 +998,6 @@ __metadata:
     prismjs: ^1.28.0
     prop-types: ^15.7.2
     react-jss: ^10.5.0
-    rimraf: ^4.1.1
     style-loader: ^2.0.0
     svg-react-loader: ^0.4.6
     webpack: ^4.44.1
