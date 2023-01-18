@@ -18,7 +18,7 @@
   "scripts": {
     "lint": "eslint packages apps",
     "prettier": "prettier --write packages apps docs *.md",
-    "build": "yarn workspaces foreach -t --exclude @courselit/web --exclude @courselit/rich-text run build",
+    "build": "yarn workspaces foreach -t --exclude @courselit/web --exclude @courselit/rich-text --exclude @courselit/docs run build",
     "clean": "yarn workspaces foreach run clean",
     "publish": "yarn workspaces foreach --no-private npm publish",
     "dev": "yarn workspace @courselit/web dev"
