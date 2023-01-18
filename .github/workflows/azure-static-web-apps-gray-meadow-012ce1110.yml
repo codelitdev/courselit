@@ -31,7 +31,7 @@ jobs:
           api_location: "" # Api source code path - optional
           output_location: "apps/web/.next" # Built app content directory - optional
           ###### End of Repository/Build Configurations ######
-          app_build_command: "npm i -g yarn@2 && yarn install && yarn build"
+          app_build_command: "yarn build"
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
