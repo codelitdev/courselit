@@ -170,7 +170,12 @@ const MediaManagerDialog = (props: MediaManagerDialogProps) => {
     };
 
     return (
-        <Dialog onClose={onClose} open={onOpen} fullWidth={true} maxWidth="xs">
+        <Dialog
+            onClose={() => onClose()}
+            open={onOpen}
+            fullWidth={true}
+            maxWidth="xs"
+        >
             <DialogTitle>{title}</DialogTitle>
             <DialogContent>
                 {uploading && !presignedUrl && <CircularProgress />}
@@ -219,10 +224,7 @@ const MediaManagerDialog = (props: MediaManagerDialogProps) => {
                     {strings.cancelCaption || "Cancel"}
                 </Button>
                 {presignedUrl && (
-                    <Button
-                        disabled={uploading || !presignedUrl}
-                        onClick={onUpload}
-                    >
+                    <Button disabled={uploading} onClick={onUpload}>
                         {uploading
                             ? strings.uploading || "Uploading..."
                             : strings.uploadButtonText || "Upload"}

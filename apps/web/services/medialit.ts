@@ -116,7 +116,6 @@ export async function deleteMedia(mediaId: string): Promise<boolean> {
 }
 
 function checkMediaLitAPIKeyOrThrow() {
-    console.log(`checkMediaLitAPIKeyOrThrow`, process.env);
     if (!process.env.MEDIALIT_APIKEY) {
         throw new Error(responses.medialit_apikey_notfound);
     }

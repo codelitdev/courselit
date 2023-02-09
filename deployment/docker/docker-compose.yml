@@ -11,7 +11,6 @@ services:
       - EMAIL_PASS=${EMAIL_PASS}
       - EMAIL_HOST=${EMAIL_HOST}
       - EMAIL_FROM=${EMAIL_FROM}
-      - MEDIALIT_APIKEY=${MEDIALIT_APIKEY}
       - SUPER_ADMIN_EMAIL=${SUPER_ADMIN_EMAIL?'SUPER_ADMIN_EMAIL environment variable is not defined'}
     expose:
       - "3000"
