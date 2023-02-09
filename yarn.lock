@@ -1134,7 +1134,6 @@ __metadata:
     "@types/pug": ^2.0.6
     "@types/react": 17.0.39
     "@types/react-redux": ^7.1.23
-    "@types/redux": ^3.6.0
     "@types/redux-thunk": ^2.1.0
     base-64: ^1.0.0
     cookie: ^0.4.2
@@ -4046,13 +4045,6 @@ __metadata:
   dependencies:
     redux: ^3.6.0
   checksum: 9f20ef229a62163127c72f7cbd72f0f5cb4fa27874b47649a456574c33efc021ecf8f1fe50dfe616c09342e2c02f63316d8c41fe9afa25a59d739951e2837fae
-  languageName: node
-  linkType: hard
-
-"@types/redux@npm:^3.6.0":
-  version: 3.6.31
-  resolution: "@types/redux@npm:3.6.31"
-  checksum: 7bfaa5c5390364d8ba4132033f9887f1c1ed96fda434d3f70be801e0997542a89c03dcd656e3bc8a1ea84bb6450e25e833cf17302dbd9055d6ff0e1f1b4f9a31
   languageName: node
   linkType: hard
 

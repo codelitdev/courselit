@@ -93,6 +93,7 @@ export const responses = {
     no_correct_answer:
         "Every question needs to have at least one correct answer.",
     no_empty_option: "Options without text are not allowed in questions.",
+    medialit_apikey_notfound: "You need to configure MediaLit to upload files.",
 };
 
 export const internal = {

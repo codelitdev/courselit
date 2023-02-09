@@ -52,7 +52,7 @@ EMAIL_PASS=pass
 EMAIL_FROM=from
 
 # MediaLit
-MEDIALIT_APIKEY=apikey-to-access-the-medialit-server
+#MEDIALIT_APIKEY=apikey-to-access-the-medialit-server
 EOF
 
 # Download necessary files
