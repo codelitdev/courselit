@@ -87,7 +87,6 @@ const MediaManagerDialog = (props: MediaManagerDialogProps) => {
     const fileInput: React.RefObject<HTMLInputElement> = React.createRef();
     const [uploading, setUploading] = useState(false);
     const [presignedUrl, setPresignedUrl] = useState("");
-    const [presignedUrlFetched, setPresignedUrlFetched] = useState(false);
     const [error, setError] = useState("");
 
     const onUploadDataChanged = (e: any) =>
@@ -125,7 +124,6 @@ const MediaManagerDialog = (props: MediaManagerDialogProps) => {
             );
             */
         } finally {
-            setPresignedUrlFetched(true);
             setUploading(false);
         }
     };
