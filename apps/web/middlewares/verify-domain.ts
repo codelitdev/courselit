@@ -29,13 +29,16 @@ const getDomain = async ({
     domainName: string;
 }): Promise<Domain | null> => {
     const domainBoundToLiveWebsite = new RegExp(`${process.env.DOMAIN}$`);
+    console.log(`domainBoundToLiveWebsite`, domainBoundToLiveWebsite);
 
     if (
         process.env.NODE_ENV === "production" &&
         !domainBoundToLiveWebsite.test(hostName)
     ) {
+        console.log(`Came here 1`, hostName);
         return await getDomainBasedOnCustomDomain(hostName);
     } else {
+        console.log(`Came here 2`, domainName);
         return await getDomainBasedOnSubdomain(domainName);
     }
 };
