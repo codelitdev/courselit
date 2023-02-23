@@ -74,11 +74,9 @@ export default async function verifyDomain(
         });
 
         if (!domain) {
-            return res
-                .status(404)
-                .json({
-                    message: `${responses.domain_doesnt_exist}: ${domainName}`,
-                });
+            return res.status(404).json({
+                message: `${responses.domain_doesnt_exist}: ${domainName}`,
+            });
             //throw new Error(`${responses.domain_doesnt_exist}: ${domainName}`);
         }
 
