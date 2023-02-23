@@ -29,16 +29,13 @@ const getDomain = async ({
     domainName: string;
 }): Promise<Domain | null> => {
     const domainBoundToLiveWebsite = new RegExp(`${process.env.DOMAIN}$`);
-    console.log(`domainBoundToLiveWebsite`, domainBoundToLiveWebsite);
 
     if (
         process.env.NODE_ENV === "production" &&
         !domainBoundToLiveWebsite.test(hostName)
     ) {
-        console.log(`Came here 1`, hostName);
         return await getDomainBasedOnCustomDomain(hostName);
     } else {
-        console.log(`Came here 2`, domainName);
         return await getDomainBasedOnSubdomain(domainName);
     }
 };
@@ -77,12 +74,20 @@ export default async function verifyDomain(
         });
 
         if (!domain) {
-            throw new Error(`${responses.domain_doesnt_exist}: ${domainName}`);
+            return res
+                .status(404)
+                .json({
+                    message: `${responses.domain_doesnt_exist}: ${domainName}`,
+                });
+            //throw new Error(`${responses.domain_doesnt_exist}: ${domainName}`);
         }
 
         const validSubscription = await hasValidSubscription(domain.email);
         if (!validSubscription) {
-            throw new Error(responses.not_valid_subscription);
+            return res
+                .status(404)
+                .json({ message: responses.not_valid_subscription });
+            //throw new Error(responses.not_valid_subscription);
         }
     } else {
         domain = await DomainModel.findOne({
