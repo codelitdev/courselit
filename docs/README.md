@@ -1,12 +1,21 @@
 <p align="center">
-  <img src="./assets/banner.png">
+  <img src="./assets/card.png">
+</p>
+
+<h1 align="center">CourseLit</h1>
+
+<p align="center">
+    Sell online courses and digital downloads from your own website. 
+    <br />
+    <br />
+    An open source alternative to Teachable, Thinkific, Podia and the likes.
 </p>
 
 <p align="center">
   <b>
     <a href="https://courselit.app">Website</a> |
-    <a href="https://docs.courselit.app">Getting started</a> |
-    <a href="https://docs.courselit.app">Documentation</a>
+    <a href="https://docs.courselit.app">Documentation</a> | 
+    <a href="https://honey-oviraptor-4b7.notion.site/4a82d434ff2e485c8eb4b22f13252fef?v=9873e6e4812c420ab6a5cd81eca11356">Roadmap</a>
   </b>
 </p>
 
@@ -17,31 +26,38 @@
   <a href="https://github.com/codelitdev/courselit">
     <img src="https://badgen.net/github/tag/codelitdev/courselit" alt="Release">
   </a>
-  <a href="https://lgtm.com/projects/g/codelitdev/courselit/alerts/">
-    <img src="https://img.shields.io/lgtm/alerts/g/codelitdev/courselit.svg?logo=lgtm&logoWidth=18" alt="Lgtm">
-  </a>
   <a href="https://github.com/codelitdev/courselit/blob/deployment/LICENSE">
     <img src="https://badgen.net/github/license/codelitdev/courselit" alt="License">
   </a>
 </p>
 
-# Introduction
+# A modern LMS for everyone
 
-CourseLit is a [batteries included](https://en.wikipedia.org/wiki/Batteries_Included) learning management system (aka LMS) for everyone. It is an open source alternative to Techable, Thinkific, Podia, Teachery, LearnDash and the likes.
+CourseLit is a [batteries included](https://en.wikipedia.org/wiki/Batteries_Included) learning management system (aka LMS) for everyone. It is an open source alternative to Teachable, Thinkific, Podia, Teachery, LearnDash and the likes.
 
 It comes pre-equipped with all the basic tools you need to efficiently run and administer your online teaching business. Features include course authoring, student management, payment processing (via Stripe), website builder, custom sales pages and analytics (very limited as of now).
 
-Check out this live example to see what you can build with CourseLit. [Click here](https://www.codelit.dev).
+Check out this live example to see what you can build with CourseLit. [Click here](https://codelit.dev).
 
-## Screenshot
+### Screenshots
 
-![courselit cms screenshot](./assets/screenshot2.png)
+|     ![Landing page](./assets/codelit.png)      |
+| :--------------------------------------------: |
+| <b>A real landing page built with CourseLit<b> |
 
-## Getting Started
+| ![courselit lms screenshot](./assets/courselit-dashboard.png) |
+| :-----------------------------------------------------------: |
+|                    <b>Admin dashboard</b>                     |
+
+## Features
+
+Checkout our [documentation](https://docs.courselit.app/en/introduction/#key-features) for an updated list of features.
+
+## Getting started
 
 Visit [courselit.app](https://courselit.app) to use the cloud hosted version. Sign up for a free account to get a 14 days trial period to experience the platform without any restrictions. No credit card required.
 
-To install CourseLit on your own server, please follow [our official guide](https://docs.courselit.app/en/self-hosting/).
+To self host CourseLit, follow our [official guide](https://docs.courselit.app/en/self-hosting/).
 
 ## Development
 
@@ -76,10 +92,10 @@ If you do not want to use the cloud hosted version, you can roll your own instan
 MEDIALIT_SERVER=medialit_server_location
 ```
 
-## Writing Your Own Widget
+## Writing your own widget
 
 You can add additional functionality to your application via building your own widgets. Have a look at [this](widgets.md) document.
 
-## Environment variables.
+## Environment variables
 
 Have a look at the [docker-compose.yml](../deployment/docker/docker-compose.yml) file to know what all environment variables are available for you to tweak.
