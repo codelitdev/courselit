@@ -10,6 +10,8 @@ import {
     Typography,
     TextField,
 } from "@mui/material";
+import CircularProgress from "@mui/material/CircularProgress";
+import Alert from "@mui/material/Alert";
 import Dialog from "@mui/material/Dialog";
 import {
     Address,
@@ -85,6 +87,7 @@ const MediaManagerDialog = (props: MediaManagerDialogProps) => {
     const fileInput: React.RefObject<HTMLInputElement> = React.createRef();
     const [uploading, setUploading] = useState(false);
     const [presignedUrl, setPresignedUrl] = useState("");
+    const [error, setError] = useState("");
 
     const onUploadDataChanged = (e: any) =>
         setUploadData(
@@ -106,20 +109,22 @@ const MediaManagerDialog = (props: MediaManagerDialogProps) => {
             .setIsGraphQLEndpoint(false)
             .build();
         try {
-            dispatch(networkAction(true));
+            setUploading(true);
             const response = await fetch.exec();
             setPresignedUrl(response.url);
         } catch (err: any) {
+            setError(err.message);
+            /*
             dispatch(
                 setAppMessage(
                     new AppMessage(
-                        strings.uploadFailed ||
-                            "That did not work! Please go back and try again."
+                        err.message
                     )
                 )
             );
+            */
         } finally {
-            dispatch(networkAction(false));
+            setUploading(false);
         }
     };
 
@@ -163,18 +168,27 @@ const MediaManagerDialog = (props: MediaManagerDialogProps) => {
     };
 
     return (
-        <Dialog onClose={onClose} open={onOpen} fullWidth={true} maxWidth="xs">
+        <Dialog
+            onClose={() => onClose()}
+            open={onOpen}
+            fullWidth={true}
+            maxWidth="xs"
+        >
             <DialogTitle>{title}</DialogTitle>
             <DialogContent>
-                <form onSubmit={onUpload} encType="multipart/form-data">
-                    <Button
-                        variant="outlined"
-                        component="label"
-                        color="primary"
-                    >
-                        {strings.buttonAddFile || "Select a file"}
-                        <input type="file" name="file" ref={fileInput} />
-                    </Button>
+                {uploading && !presignedUrl && <CircularProgress />}
+                {error && <Alert severity="error">{error}</Alert>}
+                {presignedUrl && (
+                    <form onSubmit={onUpload} encType="multipart/form-data">
+                        <Button
+                            variant="outlined"
+                            component="label"
+                            color="primary"
+                        >
+                            {strings.buttonAddFile || "Select a file"}
+                            <input type="file" name="file" ref={fileInput} />
+                        </Button>
+                        {/*
                     <TextField
                         variant="outlined"
                         label="Alt text"
@@ -199,20 +213,21 @@ const MediaManagerDialog = (props: MediaManagerDialogProps) => {
                             />
                         </Grid>
                     </Grid>
-                </form>
+                    */}
+                    </form>
+                )}
             </DialogContent>
             <DialogActions>
                 <Button onClick={() => onClose()}>
                     {strings.cancelCaption || "Cancel"}
                 </Button>
-                <Button
-                    disabled={uploading || !presignedUrl}
-                    onClick={onUpload}
-                >
-                    {uploading
-                        ? strings.uploading || "Uploading..."
-                        : strings.uploadButtonText || "Upload"}
-                </Button>
+                {presignedUrl && (
+                    <Button disabled={uploading} onClick={onUpload}>
+                        {uploading
+                            ? strings.uploading || "Uploading..."
+                            : strings.uploadButtonText || "Upload"}
+                    </Button>
+                )}
             </DialogActions>
         </Dialog>
     );

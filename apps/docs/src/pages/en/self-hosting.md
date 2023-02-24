@@ -32,12 +32,7 @@ EMAIL_HOST=host
 EMAIL_USER=user
 EMAIL_PASS=pass
 EMAIL_FROM=from_field
-
-# MediaLit
-MEDIALIT_APIKEY=apikey
 ```
-
-> ⚠️ You need to have a [MediaLit](https://medialit.cloud) account in order to upload media on courselit. you can self-host MediaLit, refer the section titled [hosting medialit](#hosting-medialit) below.
 
 Now, create a new file called docker-compose.yml and paste the following in the file.
 
@@ -55,7 +50,7 @@ services:
       - EMAIL_PASS=${EMAIL_PASS}
       - EMAIL_HOST=${EMAIL_HOST}
       - EMAIL_FROM=${EMAIL_FROM}
-      - MEDIALIT_APIKEY=${MEDIALIT_APIKEY}
+      - SUPER_ADMIN_EMAIL=${SUPER_ADMIN_EMAIL}
     ports:
       - "3000:3000"
     container_name: app
@@ -72,11 +67,10 @@ Visit http://localhost:3000 to see CourseLit in action.
 
 ## Hosting MediaLit
 
-MediaLit powers CourseLit's media management and optimisation. You can use the cloud hosted version (paid) or self host it. MediaLit offers a Docker image which we can use to self host it.
+If you want to upload media (images, videos etc.) to your school, you need to configure MediaLit. MediaLit powers CourseLit's media management and optimisation.
+You can use the cloud hosted version (paid) or self host it. MediaLit offers a Docker image which we can self host.
 
-Let's see how.
-
-Paste the following code in your docker-compose.yml file, under the existing content.
+To self host, paste the following code in your `docker-compose.yml` file, under the existing content.
 
 ```
 medialit:
@@ -103,7 +97,7 @@ medialit:
   restart: on-failure
 ```
 
-In your `.env` file, paste the following code and change the values as per your environment.
+In your `.env` file, paste the following code (under the existing content) and change the values as per your environment.
 
 ```
 # Medialit Server
@@ -119,7 +113,14 @@ PORT=8000
 CLOUD_PREFIX=medialit
 ```
 
-Run docker-compose up to bring up the services.
+Restart the services by running the following commands.
+
+```
+docker-compose down
+docker-compose up
+```
+
+> **NOTE**: The MediaLit installation is done but is not yet integrated with CourseLit! There are a few more steps. Keep reading.
 
 ### Generate An API Key On MediaLit
 
@@ -129,7 +130,7 @@ First you need to obtain the container id of your MediaLit instance. To do this,
 docker ps
 ```
 
-Once you have the ID of the container, run the following to generate an API key
+Once you have the ID of the `MediaLit` container, run the following to generate an API key
 
 ```
 docker exec <container_id_from_above_step> node dist/scripts/create-local-user.js
@@ -139,11 +140,25 @@ Keep the generated API key safe. We will use it in the following step.
 
 ### Using Self-hosted MediaLit With CourseLit
 
-Open the `.env` file and change the following values.
+Open the `.env` file and add the following lines.
 
 ```
 MEDIALIT_SERVER=http://localhost:8000
 MEDIALIT_APIKEY=key_from_above_step
+```
+
+Now, in the `docker-compose.yml` file, add the following two lines under the `environment` block of the `app` service.
+
+```
+      - MEDIALIT_APIKEY=${MEDIALIT_APIKEY}
+      - MEDIALIT_SERVER=${MEDIALIT_SERVER}
+```
+
+Restart the server by running the following commands.
+
+```
+docker-compose down
+docker-compose up
 ```
 
 That's it! You now have a fully functioning LMS powered by CourseLit.

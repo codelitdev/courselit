@@ -84,14 +84,7 @@ function Upload({
             const response = await fetch.exec();
             setPresignedUrl(response.url);
         } catch (err: any) {
-            dispatch(
-                setAppMessage(
-                    new AppMessage(
-                        strings.uploadFailed ||
-                            "That did not work! Please go back and try again."
-                    )
-                )
-            );
+            dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
             dispatch(networkAction(false));
         }

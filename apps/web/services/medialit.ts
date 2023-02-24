@@ -1,4 +1,5 @@
 import { Media } from "@courselit/common-models";
+import { responses } from "../config/strings.ts";
 
 const medialitServer = process.env.MEDIALIT_SERVER || "https://medialit.cloud";
 
@@ -15,6 +16,7 @@ export async function getPaginatedMedia({
     limit,
     access,
 }: GetPaginatedMediaProps): Promise<Media[]> {
+    checkMediaLitAPIKeyOrThrow();
     const urlParams = new URLSearchParams();
     urlParams.append("group", group);
     urlParams.append("page", page ? page.toString() : "1");
@@ -46,6 +48,7 @@ export async function getPaginatedMedia({
 }
 
 export async function getMedia(mediaId: string): Promise<Media> {
+    checkMediaLitAPIKeyOrThrow();
     let response: any = await fetch(`${medialitServer}/media/get/${mediaId}`, {
         method: "POST",
         headers: {
@@ -62,6 +65,7 @@ export async function getMedia(mediaId: string): Promise<Media> {
 export async function getPresignedUrlForUpload(
     domain: string
 ): Promise<string> {
+    checkMediaLitAPIKeyOrThrow();
     let response: any = await fetch(
         `${medialitServer}/media/presigned/create`,
         {
@@ -85,6 +89,7 @@ export async function getPresignedUrlForUpload(
 }
 
 export async function deleteMedia(mediaId: string): Promise<boolean> {
+    checkMediaLitAPIKeyOrThrow();
     let response: any = await fetch(
         `${medialitServer}/media/delete/${mediaId}`,
         {
@@ -107,5 +112,11 @@ export async function deleteMedia(mediaId: string): Promise<boolean> {
         return true;
     } else {
         throw new Error(response.message);
+    }
+}
+
+function checkMediaLitAPIKeyOrThrow() {
+    if (!process.env.MEDIALIT_APIKEY) {
+        throw new Error(responses.medialit_apikey_notfound);
     }
 }

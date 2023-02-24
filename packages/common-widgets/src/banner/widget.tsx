@@ -36,7 +36,7 @@ export default function Widget({
         if (id) {
             if (type === "site" && name !== "featured") {
                 setProduct({
-                    title: state.siteinfo.title,
+                    title: state.siteinfo.title || "CourseLit",
                 });
             } else {
                 loadCourse();
