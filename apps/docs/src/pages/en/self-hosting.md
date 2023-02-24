@@ -4,6 +4,19 @@ description: Hosting CourseLit on your own server
 layout: ../../layouts/MainLayout.astro
 ---
 
+We offer two ways to self-host CourseLit, which are as follows.
+
+1. On [Vercel](https://vercel.com).
+2. On a VPS using Docker.
+
+## Hosting on Vercel
+
+To quickly spin up an instance of CourseLit on Vercel, click the following button.
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fcodelitdev%2Fcourselit&env=DB_CONNECTION_STRING,JWT_SECRET,SUPER_ADMIN_EMAIL,EMAIL_USER,EMAIL_PASS,EMAIL_HOST,EMAIL_FROM&envDescription=Configuration%20for%20your%20app&project-name=courselit&root-directory=apps%2Fweb&build-command=cd+..%2F+%26%26+git+checkout+workspace-based-resolution+%26%26+NODE_OPTIONS%3D--openssl-legacy-provider+yarn+build)
+
+## Hosting on a VPS using Docker
+
 We offer a Docker image which you can easily host in any environment where Docker is supported.
 
 We recommend hosting it using [docker-compose](https://docs.docker.com/compose/). Create a new file called `.env`, paste the following content in the file and change the values as per your environment.

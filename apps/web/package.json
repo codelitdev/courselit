@@ -7,14 +7,15 @@
         "build": "next build",
         "start": "next start",
         "lint": "next lint",
-        "prettier": "prettier --write **/*.ts"
+        "prettier": "prettier --write **/*.ts",
+        "build:azure": "cd ../../ && yarn build && cd -"
     },
     "dependencies": {
-        "@courselit/common-models": "^0.30.1",
-        "@courselit/common-widgets": "^0.30.1",
-        "@courselit/components-library": "^0.30.1",
-        "@courselit/state-management": "^0.30.1",
-        "@courselit/utils": "^0.30.1",
+        "@courselit/common-models": "workspace:^",
+        "@courselit/common-widgets": "workspace:^",
+        "@courselit/components-library": "workspace:^",
+        "@courselit/state-management": "workspace:^",
+        "@courselit/utils": "workspace:^",
         "@emotion/cache": "^11.7.1",
         "@emotion/react": "^11.8.2",
         "@emotion/server": "^11.4.0",
@@ -65,5 +66,9 @@
         "eslint-config-prettier": "^8.5.0",
         "prettier": "^2.5.1",
         "typescript": "4.6.2"
-    }
+    },
+    "engines": {
+        "yarn": "~3.2.0"
+    },
+    "engineStrict": true
 }

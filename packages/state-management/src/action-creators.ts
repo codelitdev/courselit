@@ -134,9 +134,12 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
                 .build();
             const response = await fetch.exec();
 
-            dispatch(networkAction(false));
-            dispatch(newSiteInfoAvailable(response.site.settings));
-            dispatch(themeAvailable(response.site.theme));
+            if (response && response.site) {
+                dispatch(newSiteInfoAvailable(response.site.settings));
+                dispatch(themeAvailable(response.site.theme));
+            }
+        } catch (err) {
+            console.error(err); // eslint-disable-line no-console
         } finally {
             dispatch(networkAction(false));
         }

@@ -18,7 +18,8 @@
   "scripts": {
     "lint": "eslint packages apps",
     "prettier": "prettier --write packages apps docs *.md",
-    "build": "yarn workspaces foreach --exclude @courselit/web --exclude @courselit/widget-buttondown run build",
+    "build": "yarn workspaces foreach -t --exclude @courselit/docs run build",
+    "clean": "yarn workspaces foreach run clean",
     "publish": "yarn workspaces foreach --no-private npm publish",
     "dev": "yarn workspace @courselit/web dev"
   },
@@ -31,5 +32,9 @@
     "eslint-plugin-react-hooks": "^4.5.0",
     "eslint-plugin-unused-imports": "^2.0.0",
     "prettier": "^2.6.2"
-  }
+  },
+  "engines": {
+    "yarn": "~3.2.0"
+  },
+  "engineStrict": true
 }
