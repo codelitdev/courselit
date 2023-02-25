@@ -78,7 +78,7 @@ jobs:
         id: metaapp
         uses: docker/metadata-action@v3
         with:
-          images: courselit
+          images: codelit/courselit-app
 
       - name: Docker meta for the proxy
         id: metaproxy
