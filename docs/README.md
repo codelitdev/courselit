@@ -41,13 +41,17 @@ Check out this live example to see what you can build with CourseLit. [Click her
 
 ### Screenshots
 
-|     ![Landing page](./assets/codelit.png)      |
-| :--------------------------------------------: |
-| <b>A real landing page built with CourseLit<b> |
-
-| ![courselit lms screenshot](./assets/courselit-dashboard.png) |
-| :-----------------------------------------------------------: |
-|                    <b>Admin dashboard</b>                     |
+<figure>
+    <figcaption><b>1. A landing page built with CourseLit</b></figcaption>
+    <br />
+    <img src="./assets/codelit.png" alt="Admin dashboard">
+</figure>
+<br />
+<figure>
+    <figcaption><b>2. Admin dashboard</b></figcaption>
+    <br />
+    <img src="./assets/courselit-dashboard.png" alt="Admin dashboard">
+</figure>
 
 ## Features
 
@@ -58,6 +62,8 @@ Checkout our [documentation](https://docs.courselit.app/en/introduction/#key-fea
 Visit [courselit.app](https://courselit.app) to use the cloud hosted version. Sign up for a free account to get a 14 days trial period to experience the platform without any restrictions. No credit card required.
 
 To self host CourseLit, follow our [official guide](https://docs.courselit.app/en/self-hosting/).
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fcodelitdev%2Fcourselit&env=DB_CONNECTION_STRING,JWT_SECRET,SUPER_ADMIN_EMAIL,EMAIL_USER,EMAIL_PASS,EMAIL_HOST,EMAIL_FROM&envDescription=Configuration%20for%20your%20app&project-name=courselit&build-command=cd+..%2F+%26%26+NODE_OPTIONS%3D--openssl-legacy-provider+yarn+build&root-directory=apps%2Fweb)
 
 ## Development
 
