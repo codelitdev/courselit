@@ -41,17 +41,13 @@ Check out this live example to see what you can build with CourseLit. [Click her
 
 ### Screenshots
 
-<figure>
-    <figcaption><b>1. A landing page built with CourseLit</b></figcaption>
-    <br />
-    <img src="./assets/codelit.png" alt="Admin dashboard">
-</figure>
-<br />
-<figure>
-    <figcaption><b>2. Admin dashboard</b></figcaption>
-    <br />
-    <img src="./assets/courselit-dashboard.png" alt="Admin dashboard">
-</figure>
+**1. A real landing page build with CourseLit**
+
+![Landing page](./assets/codelit.png)
+
+**2. Admin dashboard**
+
+![courselit lms screenshot](./assets/courselit-dashboard.png)
 
 ## Features
 
