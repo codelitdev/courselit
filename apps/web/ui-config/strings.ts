@@ -193,14 +193,6 @@ export const CONSOLE_MESSAGE_THEME_INVALID =
     "The active MUI theme is invalid. Falling back to the default theme.";
 export const APP_MESSAGE_THEME_APPLIED = "Theme applied";
 export const APP_MESSAGE_THEME_UNINSTALLED = "Theme uninstalled";
-export const HEADER_NAVIGATION = "Menus";
-export const LABEL_NAVIGATION_LINK_TEXT = "Text";
-export const LABEL_NAVIGATION_LINK_DESTINATION = "Location";
-export const LINK_DROPDOWN = "Category";
-export const ADD_NEW_LINK_BUTTON = "Add new link";
-export const LABEL_NAVIGATION_LINK_NEWTAB = "New tab";
-export const WIDGETS_PAGE_HEADER = "Widgets";
-export const PAYMENTS_SHIPPING_ADDRESS_SECTION_HEADER = "Shipping Address";
 export const HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK =
     "Payment Confirmation Webhook URL";
 export const SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK =

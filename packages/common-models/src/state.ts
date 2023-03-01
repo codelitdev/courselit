@@ -11,7 +11,6 @@ export default interface State {
     siteinfo: SiteInfo;
     networkAction: boolean;
     profile: Profile;
-    navigation: Link[];
     address: Address;
     widgetsData: WidgetsData;
     theme: Theme;

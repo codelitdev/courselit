@@ -7,6 +7,7 @@ import {
     RichText,
     NewsletterSignup,
     Hero,
+    Grid,
 } from "@courselit/common-widgets";
 
 function loadWidgets(): Record<string, any> {
@@ -17,6 +18,7 @@ function loadWidgets(): Record<string, any> {
     widgets[Featured.metadata.name] = Featured;
     widgets[Banner.metadata.name] = Banner;
     widgets[Hero.metadata.name] = Hero;
+    widgets[Grid.metadata.name] = Grid;
     widgets[Footer.metadata.name] = Object.assign({}, Footer, { shared: true });
     widgets[Header.metadata.name] = Object.assign({}, Header, { shared: true });
     widgets[NewsletterSignup.metadata.name] = Object.assign(

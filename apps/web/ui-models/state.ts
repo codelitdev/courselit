@@ -9,7 +9,6 @@ export default interface State {
     siteinfo: SiteInfo;
     profile: Profile;
     networkAction: boolean;
-    navigation: Link[];
     layout: Layout;
     address: Address;
     auth: Auth;
