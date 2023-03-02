@@ -54,7 +54,6 @@ export default function ItemEditor({
                         <Tooltip title="Go back">
                             <IconButton
                                 aria-label="go back"
-                                size="small"
                                 onClick={itemChanged}
                             >
                                 <ArrowBack fontSize="small" />
@@ -63,11 +62,7 @@ export default function ItemEditor({
                     </Grid>
                     <Grid item>
                         <Tooltip title="Delete">
-                            <IconButton
-                                aria-label="delete"
-                                size="small"
-                                onClick={onDelete}
-                            >
+                            <IconButton aria-label="delete" onClick={onDelete}>
                                 <Delete fontSize="small" />
                             </IconButton>
                         </Tooltip>
@@ -80,7 +75,6 @@ export default function ItemEditor({
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     fullWidth
-                    size="small"
                 />
             </Grid>
             <Grid item sx={{ mb: 2 }}>
@@ -97,7 +91,6 @@ export default function ItemEditor({
                     onChange={(e) => setButtonCaption(e.target.value)}
                     fullWidth
                     sx={{ mb: 2 }}
-                    size="small"
                 />
             </Grid>
             <Grid item>
@@ -107,7 +100,6 @@ export default function ItemEditor({
                     onChange={(e) => setButtonAction(e.target.value)}
                     fullWidth
                     sx={{ mb: 2 }}
-                    size="small"
                 />
             </Grid>
             <Grid item>

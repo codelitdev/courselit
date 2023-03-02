@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
-import Settings, { Item } from "../settings";
+import Settings, { Alignment, Item } from "../settings";
 import { TextEditor } from "@courselit/components-library";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
@@ -12,6 +12,7 @@ import ListItemText from "@mui/material/ListItemText";
 import ItemEditor from "./item-editor";
 import { Address, Auth, Profile } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
+import { Select } from "@courselit/components-library";
 
 interface AdminWidgetProps {
     settings: Settings;
@@ -78,6 +79,12 @@ export default function AdminWidget({
     const [items, setItems] = useState<Item[]>(
         settings.items || [dummyItem, dummyItem, dummyItem]
     );
+    const [headerAlignment, setHeaderAlignment] = useState<Alignment>(
+        settings.headerAlignment || "center"
+    );
+    const [itemsAlignment, setItemsAlignment] = useState<Alignment>(
+        settings.itemsAlignment || "center"
+    );
     const [itemEditorOpened, setItemEditorOpened] = useState(false);
     const [itemBeingEditedIndex, setItemBeingEditedIndex] = useState(-1);
 
@@ -85,6 +92,7 @@ export default function AdminWidget({
         onChange({
             title,
             description,
+            headerAlignment,
             buttonAction,
             buttonCaption,
             backgroundColor,
@@ -92,6 +100,7 @@ export default function AdminWidget({
             buttonBackground,
             buttonForeground,
             items,
+            itemsAlignment
         });
 
     useEffect(() => {
@@ -99,6 +108,7 @@ export default function AdminWidget({
     }, [
         title,
         description,
+        headerAlignment,
         buttonAction,
         buttonCaption,
         backgroundColor,
@@ -106,6 +116,7 @@ export default function AdminWidget({
         buttonBackground,
         buttonForeground,
         items,
+        itemsAlignment
     ]);
 
     const onItemChange = (newItemData: Item) => {
@@ -149,7 +160,6 @@ export default function AdminWidget({
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     fullWidth
-                    size="small"
                 />
             </Grid>
             <Grid item sx={{ mb: 2 }}>
@@ -178,7 +188,7 @@ export default function AdminWidget({
                     </Grid>
                 </Grid>
             </Grid>
-            <Grid item xs={12} sx={{ mb: 4 }}>
+            <Grid item xs={12} sx={{ mb: 2 }}>
                 <Grid container justifyContent="space-between">
                     <Grid item>
                         <Typography variant="subtitle1">Text color</Typography>
@@ -191,6 +201,19 @@ export default function AdminWidget({
                         />
                     </Grid>
                 </Grid>
+            </Grid>
+            <Grid item sx={{ mb: 4 }}>
+                <Select
+                    title="Header alignment"
+                    value={headerAlignment}
+                    options={[
+                        { label: "Left", value: "left" },
+                        { label: "Center", value: "center" },
+                    ]}
+                    onChange={(value: Alignment) =>
+                        setHeaderAlignment(value)
+                    }
+                />
             </Grid>
             <Grid item sx={{ mb: 4 }}>
                 <Grid container direction="column">
@@ -210,7 +233,6 @@ export default function AdminWidget({
                             onChange={(e) => setButtonCaption(e.target.value)}
                             fullWidth
                             sx={{ mb: 2 }}
-                            size="small"
                         />
                     </Grid>
                     <Grid item>
@@ -220,7 +242,6 @@ export default function AdminWidget({
                             onChange={(e) => setButtonAction(e.target.value)}
                             fullWidth
                             sx={{ mb: 2 }}
-                            size="small"
                         />
                     </Grid>
                     <Grid item>
@@ -296,6 +317,19 @@ export default function AdminWidget({
                         <Button onClick={addNewItem}>Add new item</Button>
                     </Grid>
                 </Grid>
+            </Grid>
+            <Grid item sx={{ mb: 4 }}>
+                <Select
+                    title="Items alignment"
+                    value={itemsAlignment}
+                    options={[
+                        { label: "Left", value: "left" },
+                        { label: "Center", value: "center" },
+                    ]}
+                    onChange={(value: Alignment) =>
+                        setItemsAlignment(value)
+                    }
+                />
             </Grid>
         </Grid>
     );

@@ -8,9 +8,13 @@ export interface Item {
     media?: Media;
 }
 
+export type Alignment = "center" | "left";
+
 export default interface Settings {
-    title?: string;
+    title: string;
     description?: Record<string, unknown>;
+    headerAlignment: Alignment;
+    itemsAlignment: Alignment;
     buttonCaption?: string;
     buttonAction?: string;
     buttonBackground?: string;
