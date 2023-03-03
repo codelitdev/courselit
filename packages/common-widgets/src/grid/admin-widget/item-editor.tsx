@@ -7,8 +7,6 @@ import Tooltip from "@mui/material/Tooltip";
 import { MediaSelector, TextEditor } from "@courselit/components-library";
 import { Address, Auth, Media, Profile } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
-import ArrowBack from "@mui/icons-material/ArrowBack";
-import Delete from "@mui/icons-material/Delete";
 
 interface ItemProps {
     item: Item;
