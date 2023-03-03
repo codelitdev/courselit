@@ -21,15 +21,18 @@ interface EditWidgetProps {
 }
 
 function EditWidget({ onChange, onClose, onDelete, widget }: EditWidgetProps) {
-    const [deleteUnderProgress, setDeleteUnderProgress] = useState(false);
+    const [deleteConfirmation, setDeleteConfirmation] = useState(false);
+    const [hideActionButtons, setHideActionButtons] = useState(false);
     const actualWidget = widgets[widget.name];
+    const [preservedStateAcrossRerender, setPreservedStateAcrossRerender] =
+        useState<Record<string, unknown>>({});
 
     const onDeleteWidget = () => {
-        if (deleteUnderProgress) {
+        if (deleteConfirmation) {
             onDelete(widget.widgetId);
             onClose();
         } else {
-            setDeleteUnderProgress(true);
+            setDeleteConfirmation(true);
         }
     };
 
@@ -69,32 +72,46 @@ function EditWidget({ onChange, onClose, onDelete, widget }: EditWidgetProps) {
                             onChange={(e: Record<string, unknown>) => {
                                 onChange(widget.widgetId, e);
                             }}
+                            hideActionButtons={(
+                                e: boolean,
+                                state: Record<string, unknown>
+                            ) => {
+                                setHideActionButtons(e);
+                                setPreservedStateAcrossRerender(state);
+                            }}
+                            preservedStateAcrossRerender={
+                                preservedStateAcrossRerender
+                            }
                         />
                     </Grid>
-                    <Grid item>
-                        <Grid
-                            container
-                            justifyContent={
-                                widget.deleteable ? "space-between" : "flex-end"
-                            }
-                        >
-                            {widget.deleteable && (
-                                <Grid item>
-                                    <Button
-                                        color="error"
-                                        onClick={onDeleteWidget}
-                                    >
-                                        {deleteUnderProgress
-                                            ? "Sure?"
-                                            : "Delete block"}
-                                    </Button>
+                    {!hideActionButtons && (
+                        <Grid item>
+                            <Grid
+                                container
+                                justifyContent={
+                                    widget.deleteable
+                                        ? "space-between"
+                                        : "flex-end"
+                                }
+                            >
+                                {widget.deleteable && (
+                                    <Grid item>
+                                        <Button
+                                            color="error"
+                                            onClick={onDeleteWidget}
+                                        >
+                                            {deleteConfirmation
+                                                ? "Sure?"
+                                                : "Delete block"}
+                                        </Button>
+                                    </Grid>
+                                )}
+                                <Grid item justifyItems="flex-end">
+                                    <Button onClick={onClose}>Done</Button>
                                 </Grid>
-                            )}
-                            <Grid item justifyItems="flex-end">
-                                <Button onClick={onClose}>Done</Button>
                             </Grid>
                         </Grid>
-                    </Grid>
+                    )}
                 </>
             )}
             {!actualWidget && <Typography>{widget.name} not found</Typography>}

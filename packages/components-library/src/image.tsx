@@ -13,6 +13,7 @@ interface ImgProps {
     sizes?: `${string}vw`;
     width?: any;
     borderRadius?: number;
+    noDefaultImage?: boolean;
 }
 
 // Copied from: https://github.com/vercel/next.js/blob/canary/examples/image-component/pages/shimmer.js
@@ -45,8 +46,13 @@ const Image = (props: ImgProps) => {
         sizes = "100vw",
         width = 1,
         borderRadius,
+        noDefaultImage = false,
     } = props;
     const source = src || defaultImage || "/courselit_backdrop.webp";
+
+    if (noDefaultImage && !src && !defaultImage) {
+        return null;
+    }
 
     return (
         <Box

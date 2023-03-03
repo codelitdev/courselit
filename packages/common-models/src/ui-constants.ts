@@ -42,10 +42,6 @@ export const MIMETYPE_PDF = ["application/pdf"];
 
 export const THEMES_REPO = "https://github.com/codelitdev/courselit-themes";
 
-// Navigation categories
-export const NAVIGATION_CATEGORY_MAIN = "main";
-export const NAVIGATION_CATEGORY_FOOTER = "footer";
-
 // Role-based access permissions
 export const permissions = {
     manageCourse: "course:manage",
