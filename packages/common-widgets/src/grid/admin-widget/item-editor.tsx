@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Grid from "@mui/material/Grid";
 import { Item } from "../settings";
-import IconButton from "@mui/material/IconButton";
+import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
 import { MediaSelector, TextEditor } from "@courselit/components-library";
@@ -48,27 +48,6 @@ export default function ItemEditor({
 
     return (
         <Grid container direction="column" sx={{ mb: 12 }}>
-            <Grid item sx={{ mb: 2 }}>
-                <Grid container justifyContent="space-between">
-                    <Grid item>
-                        <Tooltip title="Go back">
-                            <IconButton
-                                aria-label="go back"
-                                onClick={itemChanged}
-                            >
-                                <ArrowBack fontSize="small" />
-                            </IconButton>
-                        </Tooltip>
-                    </Grid>
-                    <Grid item>
-                        <Tooltip title="Delete">
-                            <IconButton aria-label="delete" onClick={onDelete}>
-                                <Delete fontSize="small" />
-                            </IconButton>
-                        </Tooltip>
-                    </Grid>
-                </Grid>
-            </Grid>
             <Grid item>
                 <TextField
                     label="Title"
@@ -102,7 +81,7 @@ export default function ItemEditor({
                     sx={{ mb: 2 }}
                 />
             </Grid>
-            <Grid item>
+            <Grid item sx={{ mb: 4 }}>
                 <MediaSelector
                     title=""
                     src={media && media.thumbnail}
@@ -119,6 +98,28 @@ export default function ItemEditor({
                     strings={{}}
                     access="public"
                 />
+            </Grid>
+            <Grid item>
+                <Grid container justifyContent="space-between">
+                    <Grid item>
+                        <Tooltip title="Delete">
+                            <Button
+                                aria-label="delete"
+                                color="error"
+                                onClick={onDelete}
+                            >
+                                Delete
+                            </Button>
+                        </Tooltip>
+                    </Grid>
+                    <Grid item>
+                        <Tooltip title="Go back">
+                            <Button aria-label="done" onClick={itemChanged}>
+                                Done
+                            </Button>
+                        </Tooltip>
+                    </Grid>
+                </Grid>
             </Grid>
         </Grid>
     );

@@ -32,7 +32,7 @@ export default function Widget({
                 color: foregroundColor,
             }}
         >
-            <Grid item sx={{ mb: 8 }}>
+            <Grid item sx={{ mb: 6 }}>
                 <Grid
                     container
                     direction="column"
@@ -66,21 +66,21 @@ export default function Widget({
                     )}
                 </Grid>
             </Grid>
-            {items && items.length && 
-            <Grid item>
-                <Grid container justifyContent="space-between">
-                    {items.map((item: Item, index: number) => (
-                        <Itemm
-                            item={item}
-                            key={index}
-                            buttonBackground={buttonBackground}
-                            buttonForeground={buttonForeground}
-                            alignment={itemsAlignment}
-                        />
-                    ))}
+            {items && items.length > 0 && (
+                <Grid item>
+                    <Grid container spacing={2}>
+                        {items.map((item: Item, index: number) => (
+                            <Itemm
+                                item={item}
+                                key={index}
+                                buttonBackground={buttonBackground}
+                                buttonForeground={buttonForeground}
+                                alignment={itemsAlignment}
+                            />
+                        ))}
+                    </Grid>
                 </Grid>
-            </Grid>
-            }
+            )}
         </Grid>
     );
 }

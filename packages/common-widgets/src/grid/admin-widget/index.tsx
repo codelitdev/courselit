@@ -14,13 +14,18 @@ import { Address, Auth, Profile } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
 import { Select } from "@courselit/components-library";
 
-interface AdminWidgetProps {
+export interface AdminWidgetProps {
     settings: Settings;
     onChange: (...args: any[]) => void;
     address: Address;
     dispatch: AppDispatch;
     auth: Auth;
     profile: Profile;
+    hideActionButtons: (
+        e: boolean,
+        preservedStateAcrossRerender: Record<string, unknown>
+    ) => void;
+    preservedStateAcrossRerender: Record<string, unknown>;
 }
 
 export default function AdminWidget({
@@ -30,13 +35,20 @@ export default function AdminWidget({
     profile,
     dispatch,
     address,
+    hideActionButtons,
+    preservedStateAcrossRerender,
 }: AdminWidgetProps) {
     const dummyDescription: Record<string, unknown> = {
         type: "doc",
         content: [
             {
                 type: "paragraph",
-                content: [{ type: "text", text: "The details will go here." }],
+                content: [
+                    {
+                        type: "text",
+                        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                    },
+                ],
             },
         ],
     };
@@ -85,7 +97,6 @@ export default function AdminWidget({
     const [itemsAlignment, setItemsAlignment] = useState<Alignment>(
         settings.itemsAlignment || "center"
     );
-    const [itemEditorOpened, setItemEditorOpened] = useState(false);
     const [itemBeingEditedIndex, setItemBeingEditedIndex] = useState(-1);
 
     const onSettingsChanged = () =>
@@ -100,7 +111,7 @@ export default function AdminWidget({
             buttonBackground,
             buttonForeground,
             items,
-            itemsAlignment
+            itemsAlignment,
         });
 
     useEffect(() => {
@@ -116,28 +127,40 @@ export default function AdminWidget({
         buttonBackground,
         buttonForeground,
         items,
-        itemsAlignment
+        itemsAlignment,
     ]);
 
     const onItemChange = (newItemData: Item) => {
         items[itemBeingEditedIndex] = newItemData;
         setItems([...items]);
-        setItemEditorOpened(false);
+        setItemBeingEditedIndex(-1);
+        hideActionButtons(false, {});
     };
 
     const onDelete = () => {
         items.splice(itemBeingEditedIndex, 1);
         setItems([...items]);
-        setItemEditorOpened(false);
+        setItemBeingEditedIndex(-1);
+        hideActionButtons(false, {});
     };
+
+    useEffect(() => {
+        if (typeof preservedStateAcrossRerender.selectedItem === "number") {
+            if (preservedStateAcrossRerender.selectedItem === items.length) {
+                setItems([...items, dummyItem]);
+            }
+            setItemBeingEditedIndex(preservedStateAcrossRerender.selectedItem);
+        }
+    }, [preservedStateAcrossRerender]);
 
     const addNewItem = () => {
-        setItemBeingEditedIndex(items.length);
-        setItemEditorOpened(true);
-        setItems([...items, dummyItem]);
+        // setItemBeingEditedIndex(items.length);
+        // setItemEditorOpened(true);
+        // setItems([...items, dummyItem]);
+        hideActionButtons(true, { selectedItem: items.length });
     };
 
-    if (itemEditorOpened) {
+    if (itemBeingEditedIndex !== -1) {
         return (
             <ItemEditor
                 item={items[itemBeingEditedIndex]}
@@ -210,9 +233,7 @@ export default function AdminWidget({
                         { label: "Left", value: "left" },
                         { label: "Center", value: "center" },
                     ]}
-                    onChange={(value: Alignment) =>
-                        setHeaderAlignment(value)
-                    }
+                    onChange={(value: Alignment) => setHeaderAlignment(value)}
                 />
             </Grid>
             <Grid item sx={{ mb: 4 }}>
@@ -300,11 +321,12 @@ export default function AdminWidget({
                     <Grid item>
                         <List>
                             {items.map((item: Item, index: number) => (
-                                <ListItem disablePadding>
+                                <ListItem disablePadding key={index}>
                                     <ListItemButton
                                         onClick={() => {
-                                            setItemBeingEditedIndex(index);
-                                            setItemEditorOpened(true);
+                                            hideActionButtons(true, {
+                                                selectedItem: index,
+                                            });
                                         }}
                                     >
                                         <ListItemText primary={item.title} />
@@ -326,9 +348,7 @@ export default function AdminWidget({
                         { label: "Left", value: "left" },
                         { label: "Center", value: "center" },
                     ]}
-                    onChange={(value: Alignment) =>
-                        setItemsAlignment(value)
-                    }
+                    onChange={(value: Alignment) => setItemsAlignment(value)}
                 />
             </Grid>
         </Grid>
