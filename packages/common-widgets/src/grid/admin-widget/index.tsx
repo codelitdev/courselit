@@ -154,9 +154,6 @@ export default function AdminWidget({
     }, [preservedStateAcrossRerender]);
 
     const addNewItem = () => {
-        // setItemBeingEditedIndex(items.length);
-        // setItemEditorOpened(true);
-        // setItems([...items, dummyItem]);
         hideActionButtons(true, { selectedItem: items.length });
     };
 
