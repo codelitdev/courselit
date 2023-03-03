@@ -1,6 +1,5 @@
 import Address from "./address";
 import Auth from "./auth";
-import Link from "./link";
 import Profile from "./profile";
 import SiteInfo from "./site-info";
 import WidgetsData from "./widgets-data";

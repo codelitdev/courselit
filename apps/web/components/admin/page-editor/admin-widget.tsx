@@ -1,5 +1,5 @@
 import { AppState } from "@courselit/state-management";
-import { ComponentType, memo } from "react";
+import { ComponentType } from "react";
 import { connect } from "react-redux";
 import widgets from "../../../ui-config/widgets";
 
