@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
-import Settings, { Alignment, Item } from "../settings";
-import { TextEditor } from "@courselit/components-library";
+import Settings, { Item } from "../settings";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import List from "@mui/material/List";
@@ -10,9 +9,14 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import ItemEditor from "./item-editor";
-import { Address, Auth, Profile } from "@courselit/common-models";
+import { Address, Auth, Profile, Alignment } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
-import { Select } from "@courselit/components-library";
+import {
+    AdminWidgetPanel,
+    ColorSelector,
+    Select,
+    TextEditor,
+} from "@courselit/components-library";
 
 export interface AdminWidgetProps {
     settings: Settings;
@@ -174,148 +178,80 @@ export default function AdminWidget({
 
     return (
         <Grid container direction="column">
-            <Grid item>
-                <TextField
-                    label="Title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    fullWidth
-                />
-            </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <Typography variant="subtitle1" sx={{ mt: 2 }}>
-                    Description
-                </Typography>
-                <TextEditor
-                    initialContent={description}
-                    onChange={(state: any) => setDescription(state)}
-                    showToolbar={false}
-                />
-            </Grid>
-            <Grid item xs={12} sx={{ mb: 2 }}>
-                <Grid container justifyContent="space-between">
-                    <Grid item>
-                        <Typography variant="subtitle1">
-                            Background color
-                        </Typography>
-                    </Grid>
-                    <Grid item>
-                        <input
-                            type="color"
-                            value={backgroundColor}
-                            onChange={(e) => setBackgroundColor(e.target.value)}
-                        />
-                    </Grid>
-                </Grid>
-            </Grid>
-            <Grid item xs={12} sx={{ mb: 2 }}>
-                <Grid container justifyContent="space-between">
-                    <Grid item>
-                        <Typography variant="subtitle1">Text color</Typography>
-                    </Grid>
-                    <Grid item>
-                        <input
-                            type="color"
-                            value={foregroundColor}
-                            onChange={(e) => setForegroundColor(e.target.value)}
-                        />
-                    </Grid>
-                </Grid>
-            </Grid>
             <Grid item sx={{ mb: 4 }}>
-                <Select
-                    title="Header alignment"
-                    value={headerAlignment}
-                    options={[
-                        { label: "Left", value: "left" },
-                        { label: "Center", value: "center" },
-                    ]}
-                    onChange={(value: Alignment) => setHeaderAlignment(value)}
-                />
-            </Grid>
-            <Grid item sx={{ mb: 4 }}>
-                <Grid container direction="column">
+                <AdminWidgetPanel title="Header">
                     <Grid item sx={{ mb: 2 }}>
-                        <Typography
-                            variant="overline"
-                            color="textSecondary"
-                            sx={{ fontWeight: "bold" }}
-                        >
-                            Call to action
-                        </Typography>
+                        <TextField
+                            label="Title"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            fullWidth
+                        />
+                    </Grid>
+                    <Grid item sx={{ mb: 2 }}>
+                        <Typography variant="subtitle1">Description</Typography>
+                        <TextEditor
+                            initialContent={description}
+                            onChange={(state: any) => setDescription(state)}
+                            showToolbar={false}
+                        />
                     </Grid>
                     <Grid item>
+                        <Select
+                            title="Header alignment"
+                            value={headerAlignment}
+                            options={[
+                                { label: "Left", value: "left" },
+                                { label: "Center", value: "center" },
+                            ]}
+                            onChange={(value: Alignment) =>
+                                setHeaderAlignment(value)
+                            }
+                        />
+                    </Grid>
+                </AdminWidgetPanel>
+            </Grid>
+            <Grid item sx={{ mb: 4 }}>
+                <AdminWidgetPanel title="Call to action">
+                    <Grid item sx={{ mb: 2 }}>
                         <TextField
                             label="Button Text"
                             value={buttonCaption}
                             onChange={(e) => setButtonCaption(e.target.value)}
                             fullWidth
-                            sx={{ mb: 2 }}
                         />
                     </Grid>
-                    <Grid item>
+                    <Grid item sx={{ mb: 2 }}>
                         <TextField
                             label="Button Action"
                             value={buttonAction}
                             onChange={(e) => setButtonAction(e.target.value)}
                             fullWidth
-                            sx={{ mb: 2 }}
+                        />
+                    </Grid>
+                    <Grid item sx={{ mb: 2 }}>
+                        <ColorSelector
+                            title="Button color"
+                            value={buttonBackground}
+                            onChange={(value: string) =>
+                                setButtonBackground(value)
+                            }
                         />
                     </Grid>
                     <Grid item>
-                        <Grid
-                            container
-                            justifyContent="space-between"
-                            sx={{ mb: 2 }}
-                        >
-                            <Grid item>
-                                <Typography variant="subtitle1">
-                                    Button color
-                                </Typography>
-                            </Grid>
-                            <Grid item>
-                                <input
-                                    type="color"
-                                    value={buttonBackground}
-                                    onChange={(e) =>
-                                        setButtonBackground(e.target.value)
-                                    }
-                                />
-                            </Grid>
-                        </Grid>
+                        <ColorSelector
+                            title="Button text color"
+                            value={buttonForeground}
+                            onChange={(value: string) =>
+                                setButtonForeground(value)
+                            }
+                        />
                     </Grid>
-                    <Grid item>
-                        <Grid container justifyContent="space-between">
-                            <Grid item>
-                                <Typography variant="subtitle1">
-                                    Button text color
-                                </Typography>
-                            </Grid>
-                            <Grid item>
-                                <input
-                                    type="color"
-                                    value={buttonForeground}
-                                    onChange={(e) =>
-                                        setButtonForeground(e.target.value)
-                                    }
-                                />
-                            </Grid>
-                        </Grid>
-                    </Grid>
-                </Grid>
+                </AdminWidgetPanel>
             </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <Grid container direction="column">
-                    <Grid item>
-                        <Typography
-                            variant="overline"
-                            color="textSecondary"
-                            sx={{ fontWeight: "bold" }}
-                        >
-                            Items
-                        </Typography>
-                    </Grid>
-                    <Grid item>
+            <Grid item sx={{ mb: 4 }}>
+                <AdminWidgetPanel title="Items">
+                    <Grid item sx={{ mb: 2 }}>
                         <List>
                             {items.map((item: Item, index: number) => (
                                 <ListItem disablePadding key={index}>
@@ -332,21 +268,45 @@ export default function AdminWidget({
                             ))}
                         </List>
                     </Grid>
-                    <Grid item>
+                    <Grid item sx={{ mb: 2 }}>
                         <Button onClick={addNewItem}>Add new item</Button>
                     </Grid>
-                </Grid>
+                    <Grid item>
+                        <Select
+                            title="Items alignment"
+                            value={itemsAlignment}
+                            options={[
+                                { label: "Left", value: "left" },
+                                { label: "Center", value: "center" },
+                            ]}
+                            onChange={(value: Alignment) =>
+                                setItemsAlignment(value)
+                            }
+                        />
+                    </Grid>
+                </AdminWidgetPanel>
             </Grid>
             <Grid item sx={{ mb: 4 }}>
-                <Select
-                    title="Items alignment"
-                    value={itemsAlignment}
-                    options={[
-                        { label: "Left", value: "left" },
-                        { label: "Center", value: "center" },
-                    ]}
-                    onChange={(value: Alignment) => setItemsAlignment(value)}
-                />
+                <AdminWidgetPanel title="Design">
+                    <Grid item sx={{ mb: 2 }}>
+                        <ColorSelector
+                            title="Background color"
+                            value={backgroundColor}
+                            onChange={(value: string) =>
+                                setBackgroundColor(value)
+                            }
+                        />
+                    </Grid>
+                    <Grid item>
+                        <ColorSelector
+                            title="Text color"
+                            value={foregroundColor}
+                            onChange={(value: string) =>
+                                setForegroundColor(value)
+                            }
+                        />
+                    </Grid>
+                </AdminWidgetPanel>
             </Grid>
         </Grid>
     );

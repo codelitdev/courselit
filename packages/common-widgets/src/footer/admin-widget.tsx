@@ -1,3 +1,4 @@
+import { AdminWidgetPanel, ColorSelector } from "@courselit/components-library";
 import { Grid, TextField, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import type Settings from "./settings";
@@ -22,34 +23,24 @@ export default function AdminWidget({
     }, [bgColor, color]);
 
     return (
-        <Grid container>
-            <Grid item xs={12} sx={{ mb: 2 }}>
-                <Grid container justifyContent="space-between">
-                    <Grid item>
-                        <Typography variant="subtitle1">Text</Typography>
-                    </Grid>
-                    <Grid item>
-                        <input
-                            type="color"
+        <Grid container direction="column">
+            <Grid item sx={{ mb: 4 }}>
+                <AdminWidgetPanel title="Design">
+                    <Grid item sx={{ mb: 2 }}>
+                        <ColorSelector
+                            title="Text color"
                             value={color}
-                            onChange={(e) => setColor(e.target.value)}
+                            onChange={(value: string) => setColor(value)}
                         />
                     </Grid>
-                </Grid>
-            </Grid>
-            <Grid item xs={12} sx={{ mb: 2 }}>
-                <Grid container justifyContent="space-between">
-                    <Grid item>
-                        <Typography variant="subtitle1">Background</Typography>
-                    </Grid>
-                    <Grid item>
-                        <input
-                            type="color"
+                    <Grid item sx={{ mb: 2 }}>
+                        <ColorSelector
+                            title="Background color"
                             value={bgColor}
-                            onChange={(e) => setBgColor(e.target.value)}
+                            onChange={(value: string) => setBgColor(value)}
                         />
                     </Grid>
-                </Grid>
+                </AdminWidgetPanel>
             </Grid>
         </Grid>
     );

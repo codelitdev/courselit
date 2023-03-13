@@ -1,6 +1,6 @@
-import { Media } from "@courselit/common-models";
+import { Media, WidgetDefaultSettings } from "@courselit/common-models";
 
-export default interface Settings {
+export default interface Settings extends WidgetDefaultSettings {
     title?: string;
     description?: string;
     buttonCaption?: string;

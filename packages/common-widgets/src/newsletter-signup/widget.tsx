@@ -1,9 +1,9 @@
 import React, { FormEvent, useState } from "react";
-import { AppMessage, WidgetProps } from "@courselit/common-models";
+import { AppMessage } from "@courselit/common-models";
 import { Button, Grid, TextField, Typography } from "@mui/material";
 import Settings from "./settings";
-import { FetchBuilder } from "@courselit/utils";
 import { actionCreators } from "@courselit/state-management";
+import { FetchBuilder } from "@courselit/utils";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import {
     DEFAULT_BTN_TEXT,
@@ -11,6 +11,13 @@ import {
     DEFAULT_SUCCESS_MESSAGE,
     DEFAULT_TITLE,
 } from "./constants";
+import type { AppState, AppDispatch } from "@courselit/state-management";
+
+export interface WidgetProps {
+    settings: Settings;
+    state: AppState;
+    dispatch: AppDispatch;
+}
 
 const Widget = ({
     settings: {
@@ -27,7 +34,7 @@ const Widget = ({
     },
     state,
     dispatch,
-}: WidgetProps<Settings>) => {
+}: WidgetProps) => {
     const [email, setEmail] = useState("");
     const submitEmail = async () => {};
     const justifyContent =

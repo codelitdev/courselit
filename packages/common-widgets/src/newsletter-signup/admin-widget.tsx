@@ -3,7 +3,11 @@ import type { Address } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
 import { Grid, TextField, Typography } from "@mui/material";
 import type Settings from "./settings";
-import { Select } from "@courselit/components-library";
+import {
+    AdminWidgetPanel,
+    ColorSelector,
+    Select,
+} from "@courselit/components-library";
 import {
     DEFAULT_BTN_TEXT,
     DEFAULT_FAILURE_MESSAGE,
@@ -72,139 +76,111 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
 
     return (
         <Grid container direction="column">
-            <Grid item sx={{ mb: 2 }}>
-                <TextField
-                    label="Title"
-                    value={title}
-                    placeholder={DEFAULT_TITLE}
-                    onChange={(e) => setTitle(e.target.value)}
-                    fullWidth
-                />
-            </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <TextField
-                    label="Subtitle"
-                    value={subtitle}
-                    onChange={(e) => setSubtitle(e.target.value)}
-                    fullWidth
-                />
-            </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <TextField
-                    label="Button text"
-                    value={btnText}
-                    placeholder={DEFAULT_BTN_TEXT}
-                    onChange={(e) => setBtnText(e.target.value)}
-                    fullWidth
-                />
-            </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <TextField
-                    label="Success message"
-                    value={successMessage}
-                    placeholder={DEFAULT_SUCCESS_MESSAGE}
-                    onChange={(e) => setSuccessMessage(e.target.value)}
-                    fullWidth
-                />
-            </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <TextField
-                    label="Failure message"
-                    value={failureMessage}
-                    placeholder={DEFAULT_FAILURE_MESSAGE}
-                    onChange={(e) => setFailureMessage(e.target.value)}
-                    fullWidth
-                />
-            </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <Grid container justifyContent="space-between">
-                    <Grid item>
-                        <Typography variant="subtitle1">Text color</Typography>
-                    </Grid>
-                    <Grid item>
-                        <input
-                            type="color"
-                            value={foregroundColor}
-                            onChange={(e) =>
-                                setForegroundColor(
-                                    e.target.value as `#${string}`
-                                )
-                            }
+            <Grid item sx={{ mb: 4 }}>
+                <AdminWidgetPanel title="Basic">
+                    <Grid item sx={{ mb: 2 }}>
+                        <TextField
+                            label="Title"
+                            value={title}
+                            placeholder={DEFAULT_TITLE}
+                            onChange={(e) => setTitle(e.target.value)}
+                            fullWidth
                         />
                     </Grid>
-                </Grid>
-            </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <Grid container justifyContent="space-between">
-                    <Grid item>
-                        <Typography variant="subtitle1">
-                            Background color
-                        </Typography>
-                    </Grid>
-                    <Grid item>
-                        <input
-                            type="color"
-                            value={backgroundColor}
-                            onChange={(e) =>
-                                setBackgroundColor(
-                                    e.target.value as `#${string}`
-                                )
-                            }
+                    <Grid item sx={{ mb: 2 }}>
+                        <TextField
+                            label="Subtitle"
+                            value={subtitle}
+                            onChange={(e) => setSubtitle(e.target.value)}
+                            fullWidth
                         />
                     </Grid>
-                </Grid>
-            </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <Grid container justifyContent="space-between">
-                    <Grid item>
-                        <Typography variant="subtitle1">
-                            Button color
-                        </Typography>
+                    <Grid item sx={{ mb: 2 }}>
+                        <TextField
+                            label="Success message"
+                            value={successMessage}
+                            placeholder={DEFAULT_SUCCESS_MESSAGE}
+                            onChange={(e) => setSuccessMessage(e.target.value)}
+                            fullWidth
+                        />
                     </Grid>
                     <Grid item>
-                        <input
-                            type="color"
+                        <TextField
+                            label="Failure message"
+                            value={failureMessage}
+                            placeholder={DEFAULT_FAILURE_MESSAGE}
+                            onChange={(e) => setFailureMessage(e.target.value)}
+                            fullWidth
+                        />
+                    </Grid>
+                </AdminWidgetPanel>
+            </Grid>
+            <Grid item sx={{ mb: 4 }}>
+                <AdminWidgetPanel title="Call to action">
+                    <Grid item sx={{ mb: 2 }}>
+                        <TextField
+                            label="Button text"
+                            value={btnText}
+                            placeholder={DEFAULT_BTN_TEXT}
+                            onChange={(e) => setBtnText(e.target.value)}
+                            fullWidth
+                        />
+                    </Grid>
+                    <Grid item sx={{ mb: 2 }}>
+                        <ColorSelector
+                            title="Button color"
                             value={btnBackgroundColor}
-                            onChange={(e) =>
-                                setBtnBackgroundColor(
-                                    e.target.value as `#${string}`
-                                )
+                            onChange={(value: string) =>
+                                setBtnBackgroundColor(value)
                             }
                         />
                     </Grid>
-                </Grid>
-            </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <Grid container justifyContent="space-between">
                     <Grid item>
-                        <Typography variant="subtitle1">Button text</Typography>
-                    </Grid>
-                    <Grid item>
-                        <input
-                            type="color"
+                        <ColorSelector
+                            title="Button text"
                             value={btnForegroundColor}
-                            onChange={(e) =>
-                                setBtnForegroundColor(
-                                    e.target.value as `#${string}`
-                                )
+                            onChange={(value: string) =>
+                                setBtnForegroundColor(value)
                             }
                         />
                     </Grid>
-                </Grid>
+                </AdminWidgetPanel>
             </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <Select
-                    value={alignment}
-                    title="Alignment"
-                    onChange={(value: Settings["alignment"]) =>
-                        setAlignment(value)
-                    }
-                    options={[
-                        { label: "Left", value: "left" },
-                        { label: "Center", value: "center" },
-                        { label: "Right", value: "right" },
-                    ]}
-                />
+            <Grid item sx={{ mb: 4 }}>
+                <AdminWidgetPanel title="Design">
+                    <Grid item sx={{ mb: 2 }}>
+                        <ColorSelector
+                            title="Text color"
+                            value={foregroundColor}
+                            onChange={(value: string) =>
+                                setForegroundColor(value)
+                            }
+                        />
+                    </Grid>
+                    <Grid item sx={{ mb: 2 }}>
+                        <ColorSelector
+                            title="Background color"
+                            value={backgroundColor}
+                            onChange={(value: string) =>
+                                setBackgroundColor(value)
+                            }
+                        />
+                    </Grid>
+                    <Grid item>
+                        <Select
+                            value={alignment}
+                            title="Alignment"
+                            onChange={(value: Settings["alignment"]) =>
+                                setAlignment(value)
+                            }
+                            options={[
+                                { label: "Left", value: "left" },
+                                { label: "Center", value: "center" },
+                                { label: "Right", value: "right" },
+                            ]}
+                        />
+                    </Grid>
+                </AdminWidgetPanel>
             </Grid>
         </Grid>
     );

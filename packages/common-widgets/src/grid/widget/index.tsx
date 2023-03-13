@@ -44,7 +44,16 @@ export default function Widget({
                         <Typography variant="h4">{title}</Typography>
                     </Grid>
                     {description && (
-                        <Grid item sx={{ mb: 2 }}>
+                        <Grid
+                            item
+                            sx={{
+                                mb: 2,
+                                textAlign:
+                                    headerAlignment === "center"
+                                        ? "center"
+                                        : "left",
+                            }}
+                        >
                             <TextRenderer json={description} />
                         </Grid>
                     )}

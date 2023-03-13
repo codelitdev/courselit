@@ -11,6 +11,9 @@ import Dialog from "./dialog";
 import MediaSelector from "./media-selector";
 import TextEditor, { emptyDoc as TextEditorEmptyDoc } from "./text-editor";
 import TextRenderer from "./text-renderer";
+import LessonIcon from "./lesson-icon";
+import ColorSelector from "./color-selector";
+import AdminWidgetPanel from "./admin-widget-panel";
 
 export {
     PriceTag,
@@ -27,4 +30,7 @@ export {
     TextEditor,
     TextEditorEmptyDoc,
     TextRenderer,
+    LessonIcon,
+    ColorSelector,
+    AdminWidgetPanel,
 };

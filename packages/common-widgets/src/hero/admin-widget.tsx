@@ -3,7 +3,13 @@ import type { Address, Auth, Media, Profile } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
 import { Grid, TextField, Typography } from "@mui/material";
 import Settings from "./settings";
-import { MediaSelector, Select } from "@courselit/components-library";
+import {
+    AdminWidgetPanel,
+    ColorSelector,
+    MediaSelector,
+    Select,
+    TextEditor,
+} from "@courselit/components-library";
 
 interface AdminWidgetProps {
     name: string;
@@ -24,8 +30,24 @@ export default function AdminWidget({
     profile,
     address,
 }: AdminWidgetProps) {
-    const [title, setTitle] = useState(settings.title);
-    const [description, setDescription] = useState(settings.description);
+    const dummyDescription: Record<string, unknown> = {
+        type: "doc",
+        content: [
+            {
+                type: "paragraph",
+                content: [
+                    {
+                        type: "text",
+                        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                    },
+                ],
+            },
+        ],
+    };
+    const [title, setTitle] = useState(settings.title || "Hero section");
+    const [description, setDescription] = useState(
+        settings.description || dummyDescription
+    );
     const [buttonAction, setButtonAction] = useState(settings.buttonAction);
     const [buttonCaption, setButtonCaption] = useState(settings.buttonCaption);
     const [mediaBorderRadius, setMediaBorderRadius] = useState(
@@ -85,161 +107,148 @@ export default function AdminWidget({
 
     return (
         <Grid container direction="column">
-            <Grid item sx={{ mb: 2 }}>
-                <TextField
-                    label="Title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    fullWidth
-                />
-            </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <TextField
-                    label="Description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    minRows={5}
-                    fullWidth
-                />
-            </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <MediaSelector
-                    title=""
-                    src={media && media.thumbnail}
-                    srcTitle={media && media.originalFileName}
-                    dispatch={dispatch}
-                    auth={auth}
-                    profile={profile}
-                    address={address}
-                    onSelection={(media: Media) => {
-                        if (media) {
-                            setMedia(media);
-                        }
-                    }}
-                    strings={{}}
-                    access="public"
-                />
-            </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <TextField
-                    label="Youtube Video Id"
-                    value={youtubeLink}
-                    onChange={(e) => setYoutubeLink(e.target.value)}
-                    fullWidth
-                />
-            </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <TextField
-                    label="Button Text"
-                    value={buttonCaption}
-                    onChange={(e) => setButtonCaption(e.target.value)}
-                    fullWidth
-                />
-            </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <TextField
-                    label="Button Action"
-                    value={buttonAction}
-                    onChange={(e) => setButtonAction(e.target.value)}
-                    fullWidth
-                />
-            </Grid>
-            <Grid item xs={12} sx={{ mb: 2 }}>
-                <Grid container justifyContent="space-between">
-                    <Grid item>
-                        <Typography variant="subtitle1">
-                            Background color
-                        </Typography>
-                    </Grid>
-                    <Grid item>
-                        <input
-                            type="color"
-                            value={backgroundColor}
-                            onChange={(e) => setBackgroundColor(e.target.value)}
+            <Grid item sx={{ mb: 4 }}>
+                <AdminWidgetPanel title="Basic">
+                    <Grid item sx={{ mb: 2 }}>
+                        <TextField
+                            label="Title"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            fullWidth
                         />
                     </Grid>
-                </Grid>
-            </Grid>
-            <Grid item xs={12} sx={{ mb: 2 }}>
-                <Grid container justifyContent="space-between">
                     <Grid item>
-                        <Typography variant="subtitle1">Text color</Typography>
-                    </Grid>
-                    <Grid item>
-                        <input
-                            type="color"
-                            value={foregroundColor}
-                            onChange={(e) => setForegroundColor(e.target.value)}
+                        <Typography variant="subtitle1">Description</Typography>
+                        <TextEditor
+                            initialContent={description}
+                            onChange={(state: any) => setDescription(state)}
+                            showToolbar={false}
                         />
                     </Grid>
-                </Grid>
+                </AdminWidgetPanel>
             </Grid>
-            <Grid item xs={12} sx={{ mb: 2 }}>
-                <Grid container justifyContent="space-between">
-                    <Grid item>
-                        <Typography variant="subtitle1">
-                            Button color
-                        </Typography>
+            <Grid item sx={{ mb: 4 }}>
+                <AdminWidgetPanel title="Media">
+                    <Grid item sx={{ mb: 2 }}>
+                        <MediaSelector
+                            title=""
+                            src={media && media.thumbnail}
+                            srcTitle={media && media.originalFileName}
+                            dispatch={dispatch}
+                            auth={auth}
+                            profile={profile}
+                            address={address}
+                            onSelection={(media: Media) => {
+                                if (media) {
+                                    setMedia(media);
+                                }
+                            }}
+                            strings={{}}
+                            access="public"
+                        />
                     </Grid>
+                    {/* <Grid item sx={{ mb: 2 }}>
+                        <TextField
+                            label="Youtube Video Id"
+                            value={youtubeLink}
+                            onChange={(e) => setYoutubeLink(e.target.value)}
+                            fullWidth
+                        />
+                    </Grid> */}
                     <Grid item>
-                        <input
-                            type="color"
+                        <Select
+                            title="alignment"
+                            value={alignment}
+                            options={[
+                                { label: "Left", value: "left" },
+                                { label: "Right", value: "right" },
+                            ]}
+                            onChange={(value) => setAlignment(value)}
+                        />
+                    </Grid>
+                </AdminWidgetPanel>
+            </Grid>
+            <Grid item sx={{ mb: 4 }}>
+                <AdminWidgetPanel title="Call to action">
+                    <Grid item sx={{ mb: 2 }}>
+                        <TextField
+                            label="Button Text"
+                            value={buttonCaption}
+                            onChange={(e) => setButtonCaption(e.target.value)}
+                            fullWidth
+                        />
+                    </Grid>
+                    <Grid item sx={{ mb: 2 }}>
+                        <TextField
+                            label="Button Action"
+                            value={buttonAction}
+                            onChange={(e) => setButtonAction(e.target.value)}
+                            fullWidth
+                        />
+                    </Grid>
+                    <Grid item xs={12} sx={{ mb: 2 }}>
+                        <ColorSelector
+                            title="Button color"
                             value={buttonBackground}
-                            onChange={(e) =>
-                                setButtonBackground(e.target.value)
+                            onChange={(value: string) =>
+                                setButtonBackground(value)
                             }
                         />
                     </Grid>
-                </Grid>
-            </Grid>
-            <Grid item xs={12} sx={{ mb: 2 }}>
-                <Grid container justifyContent="space-between">
-                    <Grid item>
-                        <Typography variant="subtitle1">
-                            Button text color
-                        </Typography>
-                    </Grid>
-                    <Grid item>
-                        <input
-                            type="color"
+                    <Grid item xs={12}>
+                        <ColorSelector
+                            title="Button text color"
                             value={buttonForeground}
-                            onChange={(e) =>
-                                setButtonForeground(e.target.value)
+                            onChange={(value: string) =>
+                                setButtonForeground(value)
                             }
                         />
                     </Grid>
-                </Grid>
+                </AdminWidgetPanel>
             </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <Select
-                    title="Alignment"
-                    value={alignment}
-                    options={[
-                        { label: "Left", value: "left" },
-                        { label: "Right", value: "right" },
-                    ]}
-                    onChange={(value) => setAlignment(value)}
-                />
-            </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <Select
-                    title="Style"
-                    value={style}
-                    options={[
-                        { label: "Normal", value: "normal" },
-                        { label: "Card", value: "card" },
-                    ]}
-                    onChange={(value) => setStyle(value)}
-                />
-            </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <TextField
-                    label="Media border radius"
-                    value={mediaBorderRadius}
-                    type="number"
-                    onChange={(e) => setMediaBorderRadius(+e.target.value)}
-                    fullWidth
-                />
+            <Grid item sx={{ mb: 4 }}>
+                <AdminWidgetPanel title="Design">
+                    <Grid item sx={{ mb: 2 }}>
+                        <ColorSelector
+                            title="Background color"
+                            value={backgroundColor}
+                            onChange={(value: string) =>
+                                setBackgroundColor(value)
+                            }
+                        />
+                    </Grid>
+                    <Grid item sx={{ mb: 2 }}>
+                        <ColorSelector
+                            title="Text color"
+                            value={foregroundColor}
+                            onChange={(value: string) =>
+                                setForegroundColor(value)
+                            }
+                        />
+                    </Grid>
+                    <Grid item>
+                        <Select
+                            title="Style"
+                            value={style}
+                            options={[
+                                { label: "Normal", value: "normal" },
+                                { label: "Card", value: "card" },
+                            ]}
+                            onChange={(value) => setStyle(value)}
+                        />
+                    </Grid>
+                    {/* <Grid item>
+                        <TextField
+                            label="Media border radius"
+                            value={mediaBorderRadius}
+                            type="number"
+                            onChange={(e) =>
+                                setMediaBorderRadius(+e.target.value)
+                            }
+                            fullWidth
+                        />
+                    </Grid> */}
+                </AdminWidgetPanel>
             </Grid>
         </Grid>
     );

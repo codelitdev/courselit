@@ -1,3 +1,4 @@
+import { Edit } from "@mui/icons-material";
 import { Button, Grid, IconButton, TextField, Typography } from "@mui/material";
 import { grey } from "@mui/material/colors";
 import React, { useState } from "react";
@@ -51,9 +52,12 @@ export default function LinkEditor({
                         <Typography>{label}</Typography>
                     </Grid>
                     <Grid item>
-                        <Button size="small" onClick={(e) => setEditing(true)}>
-                            Edit
-                        </Button>
+                        <IconButton
+                            size="small"
+                            onClick={(e) => setEditing(true)}
+                        >
+                            <Edit />
+                        </IconButton>
                     </Grid>
                 </Grid>
             )}

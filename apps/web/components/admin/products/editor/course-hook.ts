@@ -1,3 +1,4 @@
+import { Address } from "@courselit/common-models";
 import { AppMessage, Course, Lesson } from "@courselit/common-models";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import {
@@ -17,7 +18,7 @@ export default function useCourse(id: string):
           }
       >
     | undefined {
-    const address = useSelector((state: AppState) => state.address);
+    const address: Address = useSelector((state: AppState) => state.address);
     const dispatch: AppDispatch = useDispatch();
     const [course, setCourse] = useState();
 

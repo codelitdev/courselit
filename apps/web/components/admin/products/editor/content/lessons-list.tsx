@@ -19,7 +19,7 @@ import useCourse from "../course-hook";
 import { Add, MoreVert } from "@mui/icons-material";
 import { Course, Lesson } from "@courselit/common-models";
 import { useRouter } from "next/router";
-import LessonIcon from "../../../../public/lesson-icon";
+import { LessonIcon } from "@courselit/components-library";
 
 interface LessonSectionProps {
     group: Record<string, unknown>;

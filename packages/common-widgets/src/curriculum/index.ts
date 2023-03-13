@@ -4,6 +4,6 @@ import Widget from "./widget";
 
 export default {
     widget: Widget,
-    adminWidget: AdminWidget,
     metadata,
+    adminWidget: AdminWidget,
 };
