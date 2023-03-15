@@ -14,8 +14,14 @@ import {
 } from "@mui/material";
 import { capitalize, FetchBuilder } from "@courselit/utils";
 import { actionCreators, AppDispatch } from "@courselit/state-management";
-import { Select, TextEditor } from "@courselit/components-library";
+import {
+    AdminWidgetPanel,
+    ColorSelector,
+    Select,
+    TextEditor,
+} from "@courselit/components-library";
 import { Delete } from "@mui/icons-material";
+import { Alignment } from "@courselit/common-models";
 
 interface AdminWidgetProps {
     name: string;
@@ -33,15 +39,34 @@ export default function AdminWidget({
     address,
     dispatch,
 }: AdminWidgetProps) {
+    const dummyDescription: Record<string, unknown> = {
+        type: "doc",
+        content: [
+            {
+                type: "paragraph",
+                content: [
+                    {
+                        type: "text",
+                        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                    },
+                ],
+            },
+        ],
+    };
     const [allProducts, setAllProducts] = useState([]);
     const [products, setProducts] = useState(settings.products || []);
     const [productsLoaded, setProductsLoaded] = useState(false);
-    const [title, setTitle] = useState(settings.title);
-    const [description, setDescription] = useState(settings.description);
+    const [title, setTitle] = useState(settings.title || "Featured");
+    const [description, setDescription] = useState(
+        settings.description || dummyDescription
+    );
     const [backgroundColor, setBackgroundColor] = useState(
         settings.backgroundColor || "inherit"
     );
     const [color, setColor] = useState(settings.color || "inherit");
+    const [headerAlignment, setHeaderAlignment] = useState<Alignment>(
+        settings.headerAlignment || "left"
+    );
 
     useEffect(() => {
         onChange({
@@ -50,8 +75,9 @@ export default function AdminWidget({
             backgroundColor,
             color,
             products,
+            headerAlignment,
         });
-    }, [products, title, description, backgroundColor, color]);
+    }, [products, title, description, backgroundColor, color, headerAlignment]);
 
     useEffect(() => {
         loadPublishedProducts();
@@ -86,15 +112,6 @@ export default function AdminWidget({
         }
     };
 
-    if (!productsLoaded) {
-        return (
-            <>
-                <Skeleton variant="rectangular" height={50} sx={{ mb: 2 }} />
-                <Skeleton variant="rectangular" height={20} />
-            </>
-        );
-    }
-
     const addProduct = (productId: string) => {
         setProducts([productId, ...products]);
     };
@@ -104,93 +121,123 @@ export default function AdminWidget({
     };
 
     return (
-        <Grid container>
-            <Grid item xs={12} sx={{ mb: 2 }}>
-                <Select
-                    title="Select a product"
-                    value={""}
-                    options={allProducts
-                        .filter(
-                            (product) => !products.includes(product.courseId)
-                        )
-                        .map((product) => ({
-                            label: product.title,
-                            value: product.courseId,
-                            sublabel: capitalize(product.type),
-                        }))}
-                    onChange={addProduct}
-                />
-            </Grid>
-            <Grid item xs={12}>
-                <List>
-                    {products.map((product: string) => {
-                        const productItem = allProducts.filter(
-                            (productItem) => productItem.courseId === product
-                        )[0];
-                        if (!productItem) return <></>;
-                        return (
-                            <ListItem
-                                key={productItem.courseId}
-                                secondaryAction={
-                                    <IconButton
-                                        onClick={() => removeProduct(product)}
-                                    >
-                                        <Delete />
-                                    </IconButton>
-                                }
-                            >
-                                <ListItemText primary={productItem.title} />
-                            </ListItem>
-                        );
-                    })}
-                </List>
-            </Grid>
-            <Grid item xs={12} sx={{ mb: 2 }}>
-                <TextField
-                    variant="outlined"
-                    fullWidth
-                    value={title}
-                    label="Custom title"
-                    onChange={(e) => setTitle(e.target.value)}
-                />
-            </Grid>
-            <Grid item xs={12} sx={{ mb: 2 }}>
-                <FormLabel>Custom description</FormLabel>
-                <TextEditor
-                    initialContent={description}
-                    onChange={(state: any) => setDescription(state)}
-                    showToolbar={false}
-                />
-            </Grid>
-            <Grid item xs={12} sx={{ mb: 2 }}>
-                <Grid container justifyContent="space-between">
-                    <Grid item>
-                        <Typography variant="subtitle1">
-                            Background color
-                        </Typography>
+        <Grid container direction="column">
+            <Grid item sx={{ mb: 4 }}>
+                <AdminWidgetPanel title="Header">
+                    <Grid item sx={{ mb: 2 }}>
+                        <TextField
+                            variant="outlined"
+                            fullWidth
+                            value={title}
+                            label="Title"
+                            onChange={(e) => setTitle(e.target.value)}
+                        />
                     </Grid>
-                    <Grid item>
-                        <input
-                            type="color"
+                    <Grid item sx={{ mb: 2 }}>
+                        <FormLabel>Description</FormLabel>
+                        <TextEditor
+                            initialContent={description}
+                            onChange={(state: any) => setDescription(state)}
+                            showToolbar={false}
+                        />
+                    </Grid>
+                    <Grid item sx={{ mb: 2 }}>
+                        <Select
+                            title="Header alignment"
+                            value={headerAlignment}
+                            options={[
+                                { label: "Left", value: "left" },
+                                { label: "Center", value: "center" },
+                            ]}
+                            onChange={(value: Alignment) =>
+                                setHeaderAlignment(value)
+                            }
+                        />
+                    </Grid>
+                </AdminWidgetPanel>
+            </Grid>
+            {!productsLoaded && (
+                <Grid item>
+                    <Skeleton
+                        variant="rectangular"
+                        height={50}
+                        sx={{ mb: 2 }}
+                    />
+                    <Skeleton variant="rectangular" height={20} />
+                </Grid>
+            )}
+            {productsLoaded && (
+                <Grid item sx={{ mb: 4 }}>
+                    <AdminWidgetPanel title="Products">
+                        <Grid item sx={{ mb: 2 }}>
+                            <Select
+                                title="Select a product"
+                                value={""}
+                                options={allProducts
+                                    .filter(
+                                        (product) =>
+                                            !products.includes(product.courseId)
+                                    )
+                                    .map((product) => ({
+                                        label: product.title,
+                                        value: product.courseId,
+                                        sublabel: capitalize(product.type),
+                                    }))}
+                                onChange={addProduct}
+                            />
+                        </Grid>
+                        <Grid item>
+                            <List>
+                                {products.map((product: string) => {
+                                    const productItem = allProducts.filter(
+                                        (productItem) =>
+                                            productItem.courseId === product
+                                    )[0];
+                                    if (!productItem) return <></>;
+                                    return (
+                                        <ListItem
+                                            key={productItem.courseId}
+                                            secondaryAction={
+                                                <IconButton
+                                                    onClick={() =>
+                                                        removeProduct(product)
+                                                    }
+                                                    size="small"
+                                                >
+                                                    <Delete />
+                                                </IconButton>
+                                            }
+                                        >
+                                            <ListItemText
+                                                primary={productItem.title}
+                                            />
+                                        </ListItem>
+                                    );
+                                })}
+                            </List>
+                        </Grid>
+                    </AdminWidgetPanel>
+                </Grid>
+            )}
+            <Grid item sx={{ mb: 4 }}>
+                <AdminWidgetPanel title="Design">
+                    <Grid item sx={{ mb: 2 }}>
+                        <ColorSelector
+                            title="Background color"
                             value={backgroundColor}
-                            onChange={(e) => setBackgroundColor(e.target.value)}
+                            onChange={(value: string) =>
+                                setBackgroundColor(value)
+                            }
                         />
                     </Grid>
-                </Grid>
-            </Grid>
-            <Grid item xs={12} sx={{ mb: 2 }}>
-                <Grid container justifyContent="space-between">
-                    <Grid item>
-                        <Typography variant="subtitle1">Text color</Typography>
-                    </Grid>
-                    <Grid item>
-                        <input
-                            type="color"
+                    <Grid item sx={{ mb: 2 }}>
+                        <ColorSelector
+                            title="Color"
                             value={color}
-                            onChange={(e) => setColor(e.target.value)}
+                            onChange={(value: string) => setColor(value)}
                         />
                     </Grid>
-                </Grid>
+                </AdminWidgetPanel>
             </Grid>
         </Grid>
     );

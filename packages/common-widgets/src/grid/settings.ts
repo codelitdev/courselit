@@ -1,4 +1,8 @@
-import { Media } from "@courselit/common-models";
+import type {
+    Alignment,
+    Media,
+    WidgetDefaultSettings,
+} from "@courselit/common-models";
 
 export interface Item {
     title: string;
@@ -8,9 +12,7 @@ export interface Item {
     media?: Media;
 }
 
-export type Alignment = "center" | "left";
-
-export default interface Settings {
+export default interface Settings extends WidgetDefaultSettings {
     title: string;
     description?: Record<string, unknown>;
     headerAlignment: Alignment;

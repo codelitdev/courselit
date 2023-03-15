@@ -1,4 +1,11 @@
-export default interface Settings {
-    text?: any;
-    padding?: number;
+import type {
+    Alignment,
+    WidgetDefaultSettings,
+} from "@courselit/common-models";
+
+export default interface Settings extends WidgetDefaultSettings {
+    text: Record<string, unknown>;
+    alignment: Alignment | "right";
+    color?: string;
+    backgroundColor?: string;
 }

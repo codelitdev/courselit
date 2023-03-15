@@ -25,6 +25,9 @@ export default function Widget({
         type,
         backgroundColor,
         color,
+        buttonBackground,
+        buttonForeground,
+        textAlignment,
     },
     state,
     dispatch,
@@ -121,15 +124,14 @@ export default function Widget({
             container
             justifyContent="space-between"
             direction={direction}
-            alignItems="center"
+            alignItems={!verticalLayout ? "center" : ""}
             sx={{
-                backgroundColor: backgroundColor,
+                backgroundColor,
             }}
         >
             {product.featuredImage && (
                 <Grid
                     item
-                    xs={12}
                     md={verticalLayout ? 12 : 6}
                     sx={{ p: 2, textAlign: "center", width: 1 }}
                 >
@@ -154,13 +156,14 @@ export default function Widget({
                     />
                 </Grid>
             )}
-            <Grid
-                item
-                xs={12}
-                md={verticalLayout ? 12 : 6}
-                sx={{ p: 2, color: color || "inherit" }}
-            >
-                <Grid container direction="column">
+            <Grid item md={verticalLayout ? 12 : 6} sx={{ p: 2, color }}>
+                <Grid
+                    container
+                    direction="column"
+                    alignItems={
+                        textAlignment === "center" ? "center" : "flex-start"
+                    }
+                >
                     {!(type === "site" && name === "banner") && (
                         <Grid item sx={{ pb: 1 }}>
                             <PriceTag
@@ -176,7 +179,16 @@ export default function Widget({
                         </Typography>
                     </Grid>
                     {(description || product.description) && (
-                        <Grid item sx={{ pb: 2, width: 1 }}>
+                        <Grid
+                            item
+                            sx={{
+                                pb: 2,
+                                textAlign:
+                                    textAlignment === "center"
+                                        ? "center"
+                                        : "left",
+                            }}
+                        >
                             <TextRenderer
                                 json={
                                     description ||
@@ -206,6 +218,10 @@ export default function Widget({
                                 href={`/checkout/${id}`}
                                 variant="contained"
                                 size="large"
+                                sx={{
+                                    backgroundColor: buttonBackground,
+                                    color: buttonForeground,
+                                }}
                             >
                                 {buttonCaption || "Buy now"}
                             </Button>

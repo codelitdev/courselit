@@ -1,13 +1,18 @@
 import * as React from "react";
-import { WidgetProps } from "@courselit/common-models";
 import { Grid, Typography } from "@mui/material";
 import { Link } from "@courselit/components-library";
 import Settings from "./settings";
+import { State } from "@courselit/common-models";
+
+export interface WidgetProps {
+    settings: Settings;
+    state: State;
+}
 
 const Widget = ({
     settings: { backgroundColor, textColor },
     state,
-}: WidgetProps<Settings>) => {
+}: WidgetProps) => {
     const linkProps = {
         color: textColor || "inherit",
         textDecoration: "none",

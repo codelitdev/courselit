@@ -9,7 +9,7 @@ import {
     Typography,
 } from "@mui/material";
 import Settings from "./settings";
-import { Image } from "@courselit/components-library";
+import { Image, TextRenderer } from "@courselit/components-library";
 
 const Iframe = styled("iframe")({
     position: "absolute",
@@ -118,7 +118,6 @@ export default function Widget({
                                 item
                                 xs={12}
                                 sx={{
-                                    p: 2,
                                     textAlign: "center",
                                     width: 1,
                                     borderRadius: `${mediaRadius}px`,
@@ -158,10 +157,13 @@ export default function Widget({
                             <Typography variant="h2">{title}</Typography>
                         </Grid>
                         {description && (
-                            <Grid item sx={{ mb: 4 }}>
-                                <Typography variant="body1">
-                                    {description}
-                                </Typography>
+                            <Grid
+                                item
+                                sx={{
+                                    mb: buttonAction && buttonCaption ? 4 : 0,
+                                }}
+                            >
+                                <TextRenderer json={description} />
                             </Grid>
                         )}
                         {buttonAction && buttonCaption && (

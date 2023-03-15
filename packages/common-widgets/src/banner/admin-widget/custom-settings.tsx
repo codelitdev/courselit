@@ -2,7 +2,13 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import { FormLabel, Grid, TextField, Typography } from "@mui/material";
 import Settings from "../settings";
-import { TextEditor, Select } from "@courselit/components-library";
+import {
+    TextEditor,
+    Select,
+    ColorSelector,
+    AdminWidgetPanel,
+} from "@courselit/components-library";
+import { Alignment } from "@courselit/common-models";
 
 interface CustomSettingsProps {
     name: string;
@@ -24,6 +30,15 @@ export default function CustomSettings({
         settings.backgroundColor || "inherit"
     );
     const [color, setColor] = useState(settings.color || "inherit");
+    const [buttonBackground, setButtonBackground] = useState(
+        settings.buttonBackground
+    );
+    const [buttonForeground, setButtonForeground] = useState(
+        settings.buttonForeground
+    );
+    const [textAlignment, setTextAlignment] = useState<Alignment>(
+        settings.textAlignment || "left"
+    );
 
     useEffect(() => {
         onChange({
@@ -34,6 +49,9 @@ export default function CustomSettings({
             buttonAction,
             backgroundColor,
             color,
+            buttonBackground,
+            buttonForeground,
+            textAlignment,
         });
     }, [
         title,
@@ -43,90 +61,124 @@ export default function CustomSettings({
         buttonAction,
         backgroundColor,
         color,
+        buttonBackground,
+        buttonForeground,
+        textAlignment,
     ]);
 
     return (
-        <>
-            <Grid item xs={12} sx={{ mb: 2 }}>
-                <TextField
-                    variant="outlined"
-                    fullWidth
-                    value={title}
-                    label="Custom title"
-                    onChange={(e) => setTitle(e.target.value)}
-                />
+        <Grid container direction="column">
+            <Grid item sx={{ mb: 4 }}>
+                <AdminWidgetPanel title="Basic">
+                    <Grid item sx={{ mb: 2 }}>
+                        <TextField
+                            variant="outlined"
+                            fullWidth
+                            value={title}
+                            label="Custom title"
+                            onChange={(e) => setTitle(e.target.value)}
+                        />
+                    </Grid>
+                    <Grid item sx={{ mb: 2 }}>
+                        <FormLabel>Custom description</FormLabel>
+                        <TextEditor
+                            initialContent={description}
+                            onChange={(state: any) => setDescription(state)}
+                            showToolbar={false}
+                        />
+                    </Grid>
+                </AdminWidgetPanel>
             </Grid>
-            <Grid item xs={12} sx={{ mb: 2 }}>
-                <FormLabel>Custom description</FormLabel>
-                <TextEditor
-                    initialContent={description}
-                    onChange={(state: any) => setDescription(state)}
-                    showToolbar={false}
-                />
-            </Grid>
-            <Grid item xs={12} sx={{ mb: 2 }}>
-                <TextField
-                    variant="outlined"
-                    fullWidth
-                    value={buttonCaption}
-                    label="Button caption"
-                    onChange={(e) => setButtonCaption(e.target.value)}
-                />
-            </Grid>
-            {name === "banner" && settings.type === "site" && (
-                <Grid item xs={12} sx={{ mb: 2 }}>
-                    <TextField
-                        variant="outlined"
-                        fullWidth
-                        value={buttonAction}
-                        label="Button Action (URL)"
-                        onChange={(e) => setButtonAction(e.target.value)}
-                    />
-                </Grid>
-            )}
-            <Grid item xs={12} sx={{ mb: 2 }}>
-                <Select
-                    title="Alignment"
-                    value={alignment}
-                    options={[
-                        { label: "Top", value: "top" },
-                        { label: "Bottom", value: "bottom" },
-                        { label: "Left", value: "left" },
-                        { label: "Right", value: "right" },
-                    ]}
-                    onChange={(value) => setAlignment(value)}
-                />
-            </Grid>
-            <Grid item xs={12} sx={{ mb: 2 }}>
-                <Grid container justifyContent="space-between">
-                    <Grid item>
-                        <Typography variant="subtitle1">
-                            Background color
-                        </Typography>
+            <Grid item sx={{ mb: 4 }}>
+                <AdminWidgetPanel title="Call to action">
+                    <Grid item sx={{ mb: 2 }}>
+                        <TextField
+                            variant="outlined"
+                            fullWidth
+                            value={buttonCaption}
+                            label="Button caption"
+                            onChange={(e) => setButtonCaption(e.target.value)}
+                        />
+                    </Grid>
+                    {name === "banner" && settings.type === "site" && (
+                        <Grid item sx={{ mb: 2 }}>
+                            <TextField
+                                variant="outlined"
+                                fullWidth
+                                value={buttonAction}
+                                label="Button Action (URL)"
+                                onChange={(e) =>
+                                    setButtonAction(e.target.value)
+                                }
+                            />
+                        </Grid>
+                    )}
+                    <Grid item sx={{ mb: 2 }}>
+                        <ColorSelector
+                            title="Button color"
+                            value={buttonBackground}
+                            onChange={(value: string) =>
+                                setButtonBackground(value)
+                            }
+                        />
                     </Grid>
                     <Grid item>
-                        <input
-                            type="color"
+                        <ColorSelector
+                            title="Button text color"
+                            value={buttonForeground}
+                            onChange={(value: string) =>
+                                setButtonForeground(value)
+                            }
+                        />
+                    </Grid>
+                </AdminWidgetPanel>
+            </Grid>
+            <Grid item sx={{ mb: 4 }}>
+                <AdminWidgetPanel title="Design">
+                    <Grid item sx={{ mb: 2 }}>
+                        <ColorSelector
+                            title="Background color"
                             value={backgroundColor}
-                            onChange={(e) => setBackgroundColor(e.target.value)}
+                            onChange={(value: string) =>
+                                setBackgroundColor(value)
+                            }
                         />
                     </Grid>
-                </Grid>
-            </Grid>
-            <Grid item xs={12} sx={{ mb: 2 }}>
-                <Grid container justifyContent="space-between">
-                    <Grid item>
-                        <Typography variant="subtitle1">Text color</Typography>
-                    </Grid>
-                    <Grid item>
-                        <input
-                            type="color"
+                    <Grid item sx={{ mb: 2 }}>
+                        <ColorSelector
+                            title="Text color"
                             value={color}
-                            onChange={(e) => setColor(e.target.value)}
+                            onChange={(value: string) => setColor(value)}
                         />
                     </Grid>
-                </Grid>
+                    <Grid item sx={{ mb: 2 }}>
+                        <Select
+                            title="Text content position"
+                            value={alignment}
+                            options={[
+                                { label: "Top", value: "top" },
+                                { label: "Bottom", value: "bottom" },
+                                { label: "Left", value: "left" },
+                                { label: "Right", value: "right" },
+                            ]}
+                            onChange={(value) => setAlignment(value)}
+                        />
+                    </Grid>
+                    <Grid item>
+                        <Select
+                            title="Text alignment"
+                            value={textAlignment}
+                            options={[
+                                { label: "Left", value: "left" },
+                                { label: "Center", value: "center" },
+                            ]}
+                            onChange={(value: Alignment) =>
+                                setTextAlignment(value)
+                            }
+                        />
+                    </Grid>
+                </AdminWidgetPanel>
             </Grid>
-        </>
+        </Grid>
     );
 }

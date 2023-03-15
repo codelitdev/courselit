@@ -2,9 +2,9 @@ import * as React from "react";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import { Alignment, Item } from "../settings";
-import { TextRenderer } from "@courselit/components-library";
-import { Image } from "@courselit/components-library";
+import { Item } from "../settings";
+import { TextRenderer, Image } from "@courselit/components-library";
+import { Alignment } from "@courselit/common-models";
 
 interface ItemmProps {
     item: Item;

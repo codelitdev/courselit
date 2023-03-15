@@ -224,7 +224,11 @@ function PageEditor({
         const widgetIndex = layout.findIndex(
             (widget) => widget.widgetId === widgetId
         );
-        layout[widgetIndex].settings = settings;
+        layout[widgetIndex].settings = Object.assign(
+            {},
+            layout[widgetIndex].settings,
+            settings
+        );
         setLayout([...layout]);
     };
 

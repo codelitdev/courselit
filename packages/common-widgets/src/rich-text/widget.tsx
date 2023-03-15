@@ -4,13 +4,18 @@ import type { WidgetProps } from "@courselit/common-models";
 import { Box } from "@mui/material";
 import Settings from "./settings";
 
-const Widget = ({ settings: { text, padding } }: WidgetProps<Settings>) => {
+const Widget = ({
+    settings: { text, alignment, backgroundColor, color },
+}: WidgetProps<Settings>) => {
     if (!text) return <></>;
 
     return (
         <Box
             sx={{
-                p: padding ? `${padding || 0}px` : 2,
+                p: 2,
+                textAlign: alignment,
+                backgroundColor,
+                color,
             }}
         >
             <TextRenderer json={text} />

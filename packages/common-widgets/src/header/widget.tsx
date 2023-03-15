@@ -1,18 +1,16 @@
 import React from "react";
-import {
-    Avatar,
-    Box,
-    Button,
-    Grid,
-    Link as MuiLink,
-    Typography,
-} from "@mui/material";
-import { WidgetProps } from "@courselit/common-models";
+import { Avatar, Box, Grid, Link as MuiLink, Typography } from "@mui/material";
 import Settings, { Link } from "./settings";
 import { Image, Menu, Link as NextLink } from "@courselit/components-library";
 import { Close, Menu as MenuIcon } from "@mui/icons-material";
+import { State } from "@courselit/common-models";
 
-export default function Widget({ state, settings }: WidgetProps<Settings>) {
+interface WidgetProps {
+    settings: Settings;
+    state: State;
+}
+
+export default function Widget({ state, settings }: WidgetProps) {
     return (
         <Grid
             container

@@ -11,7 +11,14 @@ import Settings from "./settings";
 
 export default function Widget({
     name,
-    settings: { products, title, description, backgroundColor, color },
+    settings: {
+        products,
+        title,
+        description,
+        backgroundColor,
+        color,
+        headerAlignment,
+    },
     state,
     dispatch,
     config,
@@ -75,13 +82,23 @@ export default function Widget({
             }}
         >
             <Grid item sx={{ mb: 2 }}>
-                <Typography variant="h2">{title}</Typography>
-            </Grid>
-            {description && (
-                <Grid item sx={{ mb: 2 }}>
-                    <TextRenderer json={description} />
+                <Grid
+                    container
+                    direction="column"
+                    alignItems={
+                        headerAlignment === "center" ? "center" : "flex-start"
+                    }
+                >
+                    <Grid item>
+                        <Typography variant="h4">{title}</Typography>
+                    </Grid>
+                    {description && (
+                        <Grid item>
+                            <TextRenderer json={description} />
+                        </Grid>
+                    )}
                 </Grid>
-            )}
+            </Grid>
             {productItems.length > 0 && (
                 <Grid container justifyContent="space-between" spacing={2}>
                     {productItems.map((course: Course, index: number) => (

@@ -24,15 +24,13 @@ export default function AdminWidget({
         onChange(Object.assign({}, settings, customSettings));
     };
 
+    if (!productId) return null;
+
     return (
-        <Grid container>
-            {productId && (
-                <CustomSettings
-                    name={name}
-                    settings={settings}
-                    onChange={customSettingsChanged}
-                />
-            )}
-        </Grid>
+        <CustomSettings
+            name={name}
+            settings={settings}
+            onChange={customSettingsChanged}
+        />
     );
 }

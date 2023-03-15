@@ -1,8 +1,9 @@
 import { ThunkDispatch } from "redux-thunk";
 import { AnyAction } from "redux";
 import State from "./state";
+import WidgetDefaultSettings from "./widget-default-settings";
 
-export default interface WidgetProps<T = Record<string, unknown>> {
+export default interface WidgetProps<T extends WidgetDefaultSettings> {
     id: string;
     name: string;
     section: string;
