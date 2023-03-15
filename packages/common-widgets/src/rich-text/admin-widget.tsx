@@ -5,7 +5,7 @@ import {
     Select,
     TextEditor,
 } from "@courselit/components-library";
-import { Grid, InputAdornment, TextField, Typography } from "@mui/material";
+import { Grid, Typography } from "@mui/material";
 import Settings from "./settings";
 import { Alignment } from "@courselit/common-models";
 
