@@ -1,8 +1,8 @@
 import { WidgetMetadata } from "@courselit/common-models";
 
 const metadata: WidgetMetadata = {
-    name: "curriculum",
-    displayName: "Curriculum",
+    name: "content",
+    displayName: "Content",
     compatibleWith: ["product"],
 };
 

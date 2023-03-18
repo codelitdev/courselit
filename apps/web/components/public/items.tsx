@@ -19,7 +19,7 @@ interface ListProps {
     initialItems: any[];
     showLoadMoreButton: boolean;
     dispatch: AppDispatch;
-    posts: boolean;
+    posts?: boolean;
     address: Address;
     siteInfo: SiteInfo;
 }
@@ -64,7 +64,7 @@ const List = (props: ListProps) => {
 
     return courses.length > 0 ? (
         <>
-            <Grid container justifyContent="space-between" spacing={2}>
+            <Grid container spacing={2}>
                 {courses.map((course: CourseModel, index: number) => (
                     <CourseItem
                         course={course}

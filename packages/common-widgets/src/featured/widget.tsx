@@ -47,7 +47,8 @@ export default function Widget({
                     },
                     courseId,
                     cost,
-                    type
+                    type,
+                    pageId
                 }
             }
         `;

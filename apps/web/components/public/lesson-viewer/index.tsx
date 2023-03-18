@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { styled } from "@mui/system";
-import PropTypes from "prop-types";
 import { FetchBuilder } from "@courselit/utils";
 import {
     LESSON_TYPE_VIDEO,
@@ -24,12 +23,13 @@ import {
     NOT_ENROLLED_HEADER,
 } from "../../../ui-config/strings";
 import { TextRenderer, Link } from "@courselit/components-library";
-import {
+import type {
     Address,
     AppMessage,
     Lesson,
     Profile,
     Quiz,
+    SiteInfo,
 } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { useRouter } from "next/router";
@@ -41,6 +41,7 @@ import { ArrowBack, ArrowForward } from "@mui/icons-material";
 import { isEnrolled } from "../../../ui-lib/utils";
 import LessonEmbedViewer from "./embed-viewer";
 import QuizViewer from "./quiz-viewer";
+import Head from "next/head";
 
 const { networkAction } = actionCreators;
 
@@ -88,10 +89,6 @@ const Caption = (props: CaptionProps) => {
     );
 };
 
-Caption.propTypes = {
-    text: PropTypes.string,
-};
-
 interface LessonViewerProps {
     slug: string;
     lessonId: string;
@@ -99,6 +96,7 @@ interface LessonViewerProps {
     profile: Profile;
     address: Address;
     networkAction: boolean;
+    siteinfo: SiteInfo;
 }
 
 const LessonViewer = ({
@@ -107,6 +105,7 @@ const LessonViewer = ({
     dispatch,
     profile,
     address,
+    siteinfo,
     networkAction: loading,
 }: LessonViewerProps) => {
     const [lesson, setLesson] = useState<Lesson>();
@@ -234,6 +233,25 @@ const LessonViewer = ({
 
     return (
         <StyledSection>
+            {lesson && (
+                <Head>
+                    <title>
+                        {lesson.title} | {siteinfo.title}
+                    </title>
+                    <link
+                        rel="icon"
+                        href={
+                            siteinfo.logo && siteinfo.logo.file
+                                ? siteinfo.logo.file
+                                : "/favicon.ico"
+                        }
+                    />
+                    <meta
+                        name="viewport"
+                        content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
+                    />
+                </Head>
+            )}
             {lesson && (
                 <Grid
                     container
@@ -451,6 +469,7 @@ const mapStateToProps = (state: AppState) => ({
     profile: state.profile,
     address: state.address,
     networkAction: state.networkAction,
+    siteinfo: state.siteinfo,
 });
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({

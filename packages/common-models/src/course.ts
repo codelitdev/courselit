@@ -15,4 +15,5 @@ export default interface Course {
     isBlog: boolean;
     tags: string[];
     type: string;
+    pageId?: string;
 }

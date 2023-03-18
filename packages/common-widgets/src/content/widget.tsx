@@ -85,7 +85,8 @@ export default function Widget({
                     },
                     published,
                     privacy,
-                    pageId
+                    pageId,
+                    slug
                 }
             }
         `;

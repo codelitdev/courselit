@@ -264,6 +264,7 @@ export const getCourses = async ({
             courseId: 1,
             tags: 1,
             groups: 1,
+            pageId: 1,
         });
     } else {
         validateOffset(offset);
@@ -286,6 +287,7 @@ export const getCourses = async ({
             courseId: 1,
             tags: 1,
             groups: 1,
+            pageId: 1,
         })
             .sort({ updatedAt: -1 })
             .skip((offset! - 1) * itemsPerPage)
@@ -308,6 +310,7 @@ export const getCourses = async ({
         courseId: x.courseId,
         tags: x.tags,
         groups: x.isBlog ? null : x.groups,
+        pageId: x.isBlog ? undefined : x.pageId,
     }));
 };
 

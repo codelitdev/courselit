@@ -22,7 +22,8 @@ const generateQuery = (pageOffset = 1) => `
       },
       courseId,
       cost,
-      type
+      type,
+      pageId
     }
   }
 `;

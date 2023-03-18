@@ -21,19 +21,23 @@ const CourseItem = (props: CourseItemProps) => {
         thumbnailLoading = "lazy",
     } = props;
 
+    const href =
+        course.type === "BLOG"
+            ? `/blog/${course.slug}/${course.courseId}`
+            : `/p/${course.pageId}`;
+
     return (
         <Grid
             item
             xs={12}
-            md={6}
+            md={4}
+            lg={3}
             sx={{
                 mb: 3,
             }}
         >
             <Link
-                href={`/${course.type === "BLOG" ? "blog" : "course"}/${
-                    course.slug
-                }/${course.courseId}`}
+                href={href}
                 sxProps={{
                     textDecoration: "none",
                     color: "inherit",
@@ -44,13 +48,7 @@ const CourseItem = (props: CourseItemProps) => {
                     },
                 }}
             >
-                <Grid
-                    item
-                    container
-                    direction="column"
-                    component="article"
-                    spacing={1}
-                >
+                <Grid container direction="column" component="article">
                     <Grid item>
                         <Image
                             src={
@@ -59,25 +57,21 @@ const CourseItem = (props: CourseItemProps) => {
                                     course.featuredImage.thumbnail)
                             }
                             loading={thumbnailLoading}
-                            height={{
-                                xs: 220,
-                                sm: 414,
-                                md: 276,
-                                lg: 392,
-                                xl: 704,
-                            }}
                             sizes="40vw"
                         />
                     </Grid>
                     {course.type !== "BLOG" && (
                         <Grid item>
-                            <Typography variant="overline">
+                            <Typography
+                                variant="overline"
+                                color="textSecondary"
+                            >
                                 {course.type.toUpperCase()}
                             </Typography>
                         </Grid>
                     )}
                     <Grid item>
-                        <Typography variant="h5">{course.title}</Typography>
+                        <Typography variant="h6">{course.title}</Typography>
                     </Grid>
                     <Grid item>
                         <Typography variant="body1" color="textSecondary">

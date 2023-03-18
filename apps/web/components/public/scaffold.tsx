@@ -1,4 +1,4 @@
-import React, { ReactNode, useState /* useEffect */ } from "react";
+import React, { ReactNode, useState } from "react";
 import { styled } from "@mui/system";
 import AppBar from "@mui/material/AppBar";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -22,7 +22,6 @@ import Header from "./base-layout/header";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
 import State from "../../ui-models/state";
-import { SiteInfo } from "@courselit/common-models";
 
 const PREFIX = "RouteBasedComponentScaffold";
 const drawerWidth = 240;
@@ -135,13 +134,18 @@ export interface ComponentScaffoldMenuItem {
 }
 
 interface ComponentScaffoldProps {
-    siteinfo: SiteInfo;
     networkAction: boolean;
     items: ComponentScaffoldMenuItem[];
     contentPadding?: number;
+    children: ReactNode;
 }
 
-const ComponentScaffold = (props: ComponentScaffoldProps) => {
+const ComponentScaffold = ({
+    items,
+    networkAction,
+    contentPadding,
+    children,
+}: ComponentScaffoldProps) => {
     const theme = useTheme();
     const [mobileOpen, setMobileOpen] = useState(false);
     const router = useRouter();
@@ -158,58 +162,57 @@ const ComponentScaffold = (props: ComponentScaffoldProps) => {
         <>
             <Toolbar />
             <List>
-                {props.items.map(
-                    (item: ComponentScaffoldMenuItem, index: number) =>
-                        item.href ? (
-                            <ListItem
-                                button
-                                key={index}
-                                onClick={() => navigateTo(item.href as string)}
-                                sx={{
-                                    backgroundColor:
-                                        router.asPath === item.href
-                                            ? "#d6d6d6"
-                                            : "inherit",
-                                }}
+                {items.map((item: ComponentScaffoldMenuItem, index: number) =>
+                    item.href ? (
+                        <ListItem
+                            button
+                            key={index}
+                            onClick={() => navigateTo(item.href as string)}
+                            sx={{
+                                backgroundColor:
+                                    router.asPath === item.href
+                                        ? "#d6d6d6"
+                                        : "inherit",
+                            }}
+                        >
+                            <Grid
+                                container
+                                direction="row"
+                                alignItems="center"
+                                justifyContent={
+                                    item.icon && item.iconPlacementRight
+                                        ? "space-between"
+                                        : "flex-start"
+                                }
                             >
-                                <Grid
-                                    container
-                                    direction="row"
-                                    alignItems="center"
-                                    justifyContent={
-                                        item.icon && item.iconPlacementRight
-                                            ? "space-between"
-                                            : "flex-start"
-                                    }
-                                >
-                                    {item.icon && !item.iconPlacementRight && (
-                                        <Grid item>
-                                            <DrawerListItemIcon
-                                                icon={item.icon as object}
-                                            />
-                                        </Grid>
-                                    )}
+                                {item.icon && !item.iconPlacementRight && (
                                     <Grid item>
-                                        <Typography variant="subtitle2">
-                                            {item.label as string}
-                                        </Typography>
-                                        {/* <ListItemText primary={item.name} /> */}
+                                        <DrawerListItemIcon
+                                            icon={item.icon as object}
+                                        />
                                     </Grid>
-                                    {item.icon && item.iconPlacementRight && (
-                                        <Grid item>
-                                            <DrawerListItemIcon
-                                                icon={item.icon as object}
-                                                right={true}
-                                            />
-                                        </Grid>
-                                    )}
+                                )}
+                                <Grid item>
+                                    <Typography variant="subtitle2">
+                                        {item.label as string}
+                                    </Typography>
+                                    {/* <ListItemText primary={item.name} /> */}
                                 </Grid>
-                            </ListItem>
-                        ) : (
-                            <ListSubheader key={index} sx={{ mt: 2 }}>
-                                {item.label as string}
-                            </ListSubheader>
-                        )
+                                {item.icon && item.iconPlacementRight && (
+                                    <Grid item>
+                                        <DrawerListItemIcon
+                                            icon={item.icon as object}
+                                            right={true}
+                                        />
+                                    </Grid>
+                                )}
+                            </Grid>
+                        </ListItem>
+                    ) : (
+                        <ListSubheader key={index} sx={{ mt: 2 }}>
+                            {item.label as string}
+                        </ListSubheader>
+                    )
                 )}
             </List>
         </>
@@ -267,7 +270,7 @@ const ComponentScaffold = (props: ComponentScaffoldProps) => {
                 <Toolbar />
                 <LinearProgress
                     className={
-                        props.networkAction
+                        networkAction
                             ? classes.showprogress
                             : classes.hideprogress
                     }
@@ -275,13 +278,11 @@ const ComponentScaffold = (props: ComponentScaffoldProps) => {
                 <Grid
                     container
                     sx={{
-                        p: props.hasOwnProperty("contentPadding")
-                            ? props.contentPadding
-                            : 2,
+                        p: contentPadding || 2,
                     }}
                 >
                     <Grid item xs={12} className={classes.contentMain}>
-                        {props.children}
+                        {children}
                     </Grid>
                 </Grid>
             </main>
@@ -292,7 +293,6 @@ const ComponentScaffold = (props: ComponentScaffoldProps) => {
 
 const mapStateToProps = (state: State) => ({
     networkAction: state.networkAction,
-    siteinfo: state.siteinfo,
 });
 
 export default connect(mapStateToProps)(ComponentScaffold);
