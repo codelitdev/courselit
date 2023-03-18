@@ -159,6 +159,7 @@ const publicCoursesType = new GraphQLObjectType({
         courseId: { type: new GraphQLNonNull(GraphQLString) },
         tags: { type: new GraphQLList(GraphQLString) },
         groups: { type: new GraphQLList(courseGroupType) },
+        pageId: { type: GraphQLString },
     },
 });
 

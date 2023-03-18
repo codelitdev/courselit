@@ -149,7 +149,7 @@ const PurchaseStatus = (props: PurchaseStatusProps) => {
                     </Grid>
                     <Grid item>
                         <Link href={courseLink}>
-                            <Button variant="outlined" color="primary">
+                            <Button variant="contained">
                                 {VISIT_COURSE_BUTTON}
                             </Button>
                         </Link>

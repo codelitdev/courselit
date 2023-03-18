@@ -18,7 +18,11 @@ const PriceTag = (props: PriceTagProps) => {
                   props.currencyISOCode.toUpperCase() + " "
               }${cost}`;
 
-    return <Typography variant="h6">{costText}</Typography>;
+    return (
+        <Typography variant="subtitle1" sx={{ fontWeight: "bolder" }}>
+            {costText}
+        </Typography>
+    );
 };
 
 export default PriceTag;

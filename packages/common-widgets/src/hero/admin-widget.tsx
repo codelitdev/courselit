@@ -69,6 +69,7 @@ export default function AdminWidget({
     );
     const [media, setMedia] = useState<Partial<Media>>(settings.media || {});
     const [style, setStyle] = useState(settings.style || "normal");
+    console.log(settings.description);
 
     const onSettingsChanged = () =>
         onChange({
@@ -234,7 +235,9 @@ export default function AdminWidget({
                                 { label: "Normal", value: "normal" },
                                 { label: "Card", value: "card" },
                             ]}
-                            onChange={(value) => setStyle(value)}
+                            onChange={(value: "normal" | "card") =>
+                                setStyle(value)
+                            }
                         />
                     </Grid>
                     {/* <Grid item>

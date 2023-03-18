@@ -17,7 +17,7 @@ interface AdminWidgetProps {
     onChange: (...args: any[]) => void;
 }
 export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
-    const [title, setTitle] = useState(settings.title || "Curriculum");
+    const [title, setTitle] = useState(settings.title || "Content");
     const [description, setDescription] = useState(settings.description);
     const [headerAlignment, setHeaderAlignment] = useState<Alignment>(
         settings.headerAlignment || "center"
