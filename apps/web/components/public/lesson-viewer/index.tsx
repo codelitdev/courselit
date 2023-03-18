@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { styled } from "@mui/system";
-import PropTypes from "prop-types";
 import { FetchBuilder } from "@courselit/utils";
 import {
     LESSON_TYPE_VIDEO,
