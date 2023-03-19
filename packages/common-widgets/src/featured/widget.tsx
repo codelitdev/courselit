@@ -101,7 +101,7 @@ export default function Widget({
                 </Grid>
             </Grid>
             {productItems.length > 0 && (
-                <Grid container justifyContent="space-between" spacing={2}>
+                <Grid container spacing={2}>
                     {productItems.map((course: Course, index: number) => (
                         <CourseItem
                             course={course}
