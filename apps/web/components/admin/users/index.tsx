@@ -1,7 +1,6 @@
 import React, { useState, useEffect, FormEvent } from "react";
 import {
     Avatar,
-    Button,
     Grid,
     Table,
     TableBody,
@@ -12,8 +11,8 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
+import Pagination from "@mui/material/Pagination";
 import {
-    LOAD_MORE_TEXT,
     USER_TABLE_HEADER_NAME,
     USER_TABLE_HEADER_JOINED,
     USERS_MANAGER_PAGE_HEADING,
@@ -41,7 +40,7 @@ import {
     AppMessage,
 } from "@courselit/common-models";
 import { checkPermission } from "../../../ui-lib/utils";
-import { permissions } from "../../../ui-config/constants";
+import { permissions, ITEMS_PER_PAGE } from "../../../ui-config/constants";
 import Link from "next/link";
 import MuiLink from "@mui/material/Link";
 import { ThunkDispatch } from "redux-thunk";
@@ -70,6 +69,7 @@ const UsersManager = ({
     const [type, setType] = useState("");
     const [searchEmail, setSearchEmail] = useState("");
     const [searchEmailHook, setSearchEmailHook] = useState(0);
+    const [count, setCount] = useState(0);
 
     useEffect(() => {
         loadUsers();
@@ -91,7 +91,11 @@ const UsersManager = ({
                         permissions,
                         createdAt,
                         updatedAt
-                    }
+                    },
+                    count: getUsersCount(searchData: {
+                        offset: ${usersPaginationOffset},
+                        type: ${type.toUpperCase()}
+                    })
                 }
             `
                 : searchEmail
@@ -108,7 +112,11 @@ const UsersManager = ({
                         permissions,
                         createdAt,
                         updatedAt
-                    }
+                    },
+                    count: getUsersCount(searchData: {
+                        offset: ${usersPaginationOffset}
+                        email: "${searchEmail}"
+                    }) 
                 }
             `
                 : `
@@ -123,7 +131,10 @@ const UsersManager = ({
                         permissions,
                         createdAt,
                         updatedAt
-                    }
+                    },
+                    count: getUsersCount(searchData: {
+                        offset: ${usersPaginationOffset}
+                    })
                 }
             `;
         await fetchUsers(query);
@@ -141,7 +152,10 @@ const UsersManager = ({
             );
             const response = await fetch.exec();
             if (response.users && response.users.length > 0) {
-                setUsers([...users, ...response.users]);
+                setUsers(response.users);
+            }
+            if (response.count) {
+                setCount(response.count);
             }
         } catch (err) {
             dispatch(setAppMessage(new AppMessage(GENERIC_FAILURE_MESSAGE)));
@@ -191,23 +205,6 @@ const UsersManager = ({
         setUsersPaginationOffset(1);
         setType("");
         setSearchEmailHook(searchEmailHook + 1);
-        // const query = `
-        //     query {
-        //         users: getUsers(searchData: {
-        //             offset: ${usersPaginationOffset}
-        //             email: "${searchEmail}"
-        //         }) {
-        //             id,
-        //             name,
-        //             userId,
-        //             email,
-        //             permissions,
-        //             createdAt,
-        //             updatedAt
-        //         }
-        //     }
-        // `
-        // await fetchUsers(query);
     };
 
     const exportData = () => {
@@ -287,7 +284,7 @@ const UsersManager = ({
                     </Grid>
                 </Grid>
             </Grid>
-            <Grid item>
+            <Grid item sx={{ mb: 2 }}>
                 <TableContainer>
                     <Table aria-label="Users">
                         <TableHead>
@@ -372,22 +369,15 @@ const UsersManager = ({
                     </Table>
                 </TableContainer>
             </Grid>
-            {users.length > 0 && (
-                <Grid item container justifyContent="center">
-                    <Grid item>
-                        <Button
-                            variant="outlined"
-                            onClick={() =>
-                                setUsersPaginationOffset(
-                                    usersPaginationOffset + 1
-                                )
-                            }
-                        >
-                            {LOAD_MORE_TEXT}
-                        </Button>
-                    </Grid>
-                </Grid>
-            )}
+            <Grid item alignSelf="center">
+                <Pagination
+                    count={Math.ceil(count / ITEMS_PER_PAGE)}
+                    page={usersPaginationOffset}
+                    onChange={(e: ChangeEvent<unknown>, value: number) =>
+                        setUsersPaginationOffset(value)
+                    }
+                />
+            </Grid>
         </Grid>
     );
 };

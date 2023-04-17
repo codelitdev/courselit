@@ -62,3 +62,5 @@ export const COURSE_TYPE_COURSE = "course";
 export const COURSE_TYPE_DOWNLOAD = "download";
 
 export const DEFAULT_PASSING_GRADE = 70;
+
+export const ITEMS_PER_PAGE = 10; // this should be in sync with backend's itemsPerPage

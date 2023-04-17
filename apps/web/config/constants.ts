@@ -50,7 +50,7 @@ export default {
     open: "public",
 
     // Pagination config
-    itemsPerPage: process.env.ITEMS_PER_PAGE ? +process.env.ITEMS_PER_PAGE : 20,
+    itemsPerPage: process.env.ITEMS_PER_PAGE ? +process.env.ITEMS_PER_PAGE : 10,
     defaultOffset: 1,
     blogPostSnippetLength: 135,
 
