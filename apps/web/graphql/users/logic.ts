@@ -154,6 +154,7 @@ export const getUsers = async (
         throw new Error(responses.action_not_allowed);
     }
 
+    /*
     const query: Record<string, unknown> = { domain: ctx.subdomain._id };
     if (searchData.searchText) query.$text = { $search: searchData.searchText };
     if (searchData.type) {
@@ -162,15 +163,42 @@ export const getUsers = async (
     if (searchData.email) {
         query.email = new RegExp(searchData.email);
     }
+    */
 
     const searchUsers = makeModelTextSearchable(UserModel);
-
+    const query = buildQueryFromSearchData(ctx.subdomain._id, searchData);
     const users = await searchUsers(
         { offset: searchData.offset, query, graphQLContext: ctx },
         { itemsPerPage: constants.itemsPerPage }
     );
 
     return users;
+};
+
+export const getUsersCount = async (
+    searchData: SearchData = {},
+    ctx: GQLContext
+) => {
+    checkIfAuthenticated(ctx);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const query = buildQueryFromSearchData(ctx.subdomain._id, searchData);
+    return await UserModel.countDocuments(query);
+};
+
+const buildQueryFromSearchData = (domain, searchData: SearchData = {}) => {
+    const query: Record<string, unknown> = { domain };
+    if (searchData.searchText) query.$text = { $search: searchData.searchText };
+    if (searchData.type) {
+        addFilterToQueryBasedOnUserGroup(query, searchData.type);
+    }
+    if (searchData.email) {
+        query.email = new RegExp(searchData.email);
+    }
+
+    return query;
 };
 
 const addFilterToQueryBasedOnUserGroup = (

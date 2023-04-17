@@ -1,6 +1,11 @@
-import { GraphQLString, GraphQLList } from "graphql";
+import {
+    GraphQLInt,
+    GraphQLString,
+    GraphQLList,
+    GraphQLNonNull,
+} from "graphql";
 import types from "./types";
-import { getUser, getUsers } from "./logic";
+import { getUser, getUsers, getUsersCount } from "./logic";
 import GQLContext from "../../models/GQLContext";
 
 export default {
@@ -20,5 +25,13 @@ export default {
         },
         resolve: (_: any, { searchData }: any, context: GQLContext) =>
             getUsers(searchData, context),
+    },
+    getUsersCount: {
+        type: new GraphQLNonNull(GraphQLInt),
+        args: {
+            searchData: { type: types.userSearchInput },
+        },
+        resolve: (_: any, { searchData }: any, context: GQLContext) =>
+            getUsersCount(searchData, context),
     },
 };
