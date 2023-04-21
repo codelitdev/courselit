@@ -11,6 +11,7 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
+import Button from '@mui/material/Button'
 import Pagination from "@mui/material/Pagination";
 import {
     USER_TABLE_HEADER_NAME,
@@ -26,6 +27,7 @@ import {
     GENERIC_FAILURE_MESSAGE,
     USER_TABLE_HEADER_EMAIL,
     USER_TABLE_HEADER_NAME_NAME,
+    BTN_SEND_MAIL
 } from "../../../ui-config/strings";
 import { exportToCsv, FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";
@@ -48,6 +50,7 @@ import { AnyAction } from "redux";
 import { Select as SingleSelect } from "@courselit/components-library";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import { CSVLink } from "react-csv";
+import Email from "@mui/icons-material/Email"
 
 const { networkAction } = actionCreators;
 
@@ -138,6 +141,71 @@ const UsersManager = ({
                 }
             `;
         await fetchUsers(query);
+    };
+
+    const getEmailAddresses = async () => {
+        const query =
+            type !== ""
+                ? `
+                query {
+                    users: getUsers(
+                        searchData: {
+                            type: ${type.toUpperCase()}
+                        }, 
+                        noPagination: true
+                    ) {
+                        email
+                    }
+                }
+            `
+                : searchEmail
+                ? `
+                query {
+                    users: getUsers(
+                        searchData: {
+                            email: "${searchEmail}"
+                        }, 
+                        noPagination: true
+                    ) {
+                        email
+                    }
+                }
+            `
+                : `
+                query {
+                    users: getUsers(
+                        searchData: {
+                            offset: ${usersPaginationOffset}
+                        }, 
+                        noPagination: true
+                    ) {
+                        email
+                    },
+                    count: getUsersCount(searchData: {
+                        offset: ${usersPaginationOffset}
+                    })
+                }
+            `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload(query)
+            .setIsGraphQLEndpoint(true)
+            .build();
+        try {
+            (dispatch as ThunkDispatch<State, null, AnyAction>)(
+                networkAction(true)
+            );
+            const response = await fetch.exec();
+            if (response.users && response.users.length > 0) {
+                console.log(response.users);
+            }
+        } catch (err) {
+            dispatch(setAppMessage(new AppMessage(GENERIC_FAILURE_MESSAGE)));
+        } finally {
+            (dispatch as ThunkDispatch<State, null, AnyAction>)(
+                networkAction(false)
+            );
+        }
     };
 
     const fetchUsers = async (query: string) => {
@@ -253,7 +321,7 @@ const UsersManager = ({
                             ]}
                         />
                     </Grid>
-                    <Grid item>
+                    <Grid item sx={{ display: 'none' }}>
                         <CSVLink
                             filename={"users-courselit.csv"}
                             headers={[
@@ -281,6 +349,15 @@ const UsersManager = ({
                         >
                             {EXPORT_CSV}
                         </CSVLink>
+                    </Grid>
+                    <Grid item>
+                        <Button
+                            variant="outlined"
+                            endIcon={<Email />}
+                            size="large"
+                            onClick={getEmailAddresses}>
+                            {BTN_SEND_MAIL}
+                        </Button>
                     </Grid>
                 </Grid>
             </Grid>

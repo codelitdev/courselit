@@ -113,8 +113,11 @@ export const makeModelTextSearchable =
         validateSearchInput(searchData, checkIfRequestIsAuthenticated);
 
         const query = Model.find(searchData.query)
-            .skip(offset * itemsPerPage)
-            .limit(itemsPerPage);
+        if (itemsPerPage !== Infinity) {
+            query
+                .skip(offset * itemsPerPage)
+                .limit(itemsPerPage);
+        }
         if (options.sortByColumn && options.sortOrder) {
             query.sort({ [options.sortByColumn]: options.sortOrder });
         }

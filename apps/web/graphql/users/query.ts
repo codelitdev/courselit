@@ -3,6 +3,7 @@ import {
     GraphQLString,
     GraphQLList,
     GraphQLNonNull,
+    GraphQLBoolean
 } from "graphql";
 import types from "./types";
 import { getUser, getUsers, getUsersCount } from "./logic";
@@ -22,9 +23,10 @@ export default {
         type: new GraphQLList(types.userType),
         args: {
             searchData: { type: types.userSearchInput },
+            noPagination: { type: GraphQLBoolean }
         },
-        resolve: (_: any, { searchData }: any, context: GQLContext) =>
-            getUsers(searchData, context),
+        resolve: (_: any, { searchData, noPagination }: any, context: GQLContext) =>
+            getUsers(searchData, context, noPagination),
     },
     getUsersCount: {
         type: new GraphQLNonNull(GraphQLInt),

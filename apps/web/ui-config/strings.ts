@@ -367,3 +367,4 @@ export const COURSE_STUDENT_TABLE_HEADER_LAST_ACCESSED_ON = "Last accessed";
 export const COURSE_STUDENT_SEARCH_BY_TEXT = "Search student";
 export const COURSE_STUDENT_NO_RECORDS = "No student found";
 export const QUESTION_BUILDER_DELETE_TOOLTIP = "Delete question";
+export const BTN_SEND_MAIL = "Send mail";

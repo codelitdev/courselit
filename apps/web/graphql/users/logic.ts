@@ -147,29 +147,19 @@ interface SearchData {
 
 export const getUsers = async (
     searchData: SearchData = {},
-    ctx: GQLContext
+    ctx: GQLContext,
+    noPagination: boolean = false
 ) => {
     checkIfAuthenticated(ctx);
     if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
         throw new Error(responses.action_not_allowed);
     }
 
-    /*
-    const query: Record<string, unknown> = { domain: ctx.subdomain._id };
-    if (searchData.searchText) query.$text = { $search: searchData.searchText };
-    if (searchData.type) {
-        addFilterToQueryBasedOnUserGroup(query, searchData.type);
-    }
-    if (searchData.email) {
-        query.email = new RegExp(searchData.email);
-    }
-    */
-
     const searchUsers = makeModelTextSearchable(UserModel);
     const query = buildQueryFromSearchData(ctx.subdomain._id, searchData);
     const users = await searchUsers(
-        { offset: searchData.offset, query, graphQLContext: ctx },
-        { itemsPerPage: constants.itemsPerPage }
+        { offset: noPagination ? 1 : searchData.offset, query, graphQLContext: ctx },
+        { itemsPerPage: noPagination ? Infinity : constants.itemsPerPage }
     );
 
     return users;

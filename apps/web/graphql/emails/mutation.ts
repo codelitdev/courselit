@@ -13,5 +13,5 @@ export default {
             { email }: { email: string },
             context: GQLContext
         ) => createSubscription(email, context),
-    },
+    }
 };
