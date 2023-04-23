@@ -11,7 +11,7 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import Button from '@mui/material/Button'
+import Button from "@mui/material/Button";
 import Pagination from "@mui/material/Pagination";
 import {
     USER_TABLE_HEADER_NAME,
@@ -27,7 +27,7 @@ import {
     GENERIC_FAILURE_MESSAGE,
     USER_TABLE_HEADER_EMAIL,
     USER_TABLE_HEADER_NAME_NAME,
-    BTN_SEND_MAIL
+    BTN_SEND_MAIL,
 } from "../../../ui-config/strings";
 import { exportToCsv, FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";
@@ -50,7 +50,8 @@ import { AnyAction } from "redux";
 import { Select as SingleSelect } from "@courselit/components-library";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import { CSVLink } from "react-csv";
-import Email from "@mui/icons-material/Email"
+import Email from "@mui/icons-material/Email";
+import { useRouter } from "next/router";
 
 const { networkAction } = actionCreators;
 
@@ -73,6 +74,7 @@ const UsersManager = ({
     const [searchEmail, setSearchEmail] = useState("");
     const [searchEmailHook, setSearchEmailHook] = useState(0);
     const [count, setCount] = useState(0);
+    const router = useRouter();
 
     useEffect(() => {
         loadUsers();
@@ -143,47 +145,41 @@ const UsersManager = ({
         await fetchUsers(query);
     };
 
-    const getEmailAddresses = async () => {
+    const createMail = async () => {
         const query =
             type !== ""
                 ? `
-                query {
-                    users: getUsers(
+                mutation {
+                    mail: createMail(
                         searchData: {
                             type: ${type.toUpperCase()}
-                        }, 
-                        noPagination: true
+                        } 
                     ) {
-                        email
+                        mailId
                     }
                 }
             `
                 : searchEmail
                 ? `
-                query {
-                    users: getUsers(
+                mutation {
+                    mail: createMail(
                         searchData: {
                             email: "${searchEmail}"
-                        }, 
-                        noPagination: true
+                        } 
                     ) {
-                        email
+                        mailId
                     }
                 }
             `
                 : `
-                query {
-                    users: getUsers(
+                mutation {
+                    mail: createMail(
                         searchData: {
                             offset: ${usersPaginationOffset}
-                        }, 
-                        noPagination: true
+                        } 
                     ) {
-                        email
-                    },
-                    count: getUsersCount(searchData: {
-                        offset: ${usersPaginationOffset}
-                    })
+                        mailId
+                    }
                 }
             `;
         const fetch = new FetchBuilder()
@@ -196,8 +192,8 @@ const UsersManager = ({
                 networkAction(true)
             );
             const response = await fetch.exec();
-            if (response.users && response.users.length > 0) {
-                console.log(response.users);
+            if (response.mail && response.mail.mailId) {
+                router.push(`/dashboard/mails/${response.mail.mailId}/edit`);
             }
         } catch (err) {
             dispatch(setAppMessage(new AppMessage(GENERIC_FAILURE_MESSAGE)));
@@ -321,7 +317,7 @@ const UsersManager = ({
                             ]}
                         />
                     </Grid>
-                    <Grid item sx={{ display: 'none' }}>
+                    <Grid item sx={{ display: "none" }}>
                         <CSVLink
                             filename={"users-courselit.csv"}
                             headers={[
@@ -355,7 +351,8 @@ const UsersManager = ({
                             variant="outlined"
                             endIcon={<Email />}
                             size="large"
-                            onClick={getEmailAddresses}>
+                            onClick={createMail}
+                        >
                             {BTN_SEND_MAIL}
                         </Button>
                     </Grid>

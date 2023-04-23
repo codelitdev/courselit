@@ -158,7 +158,11 @@ export const getUsers = async (
     const searchUsers = makeModelTextSearchable(UserModel);
     const query = buildQueryFromSearchData(ctx.subdomain._id, searchData);
     const users = await searchUsers(
-        { offset: noPagination ? 1 : searchData.offset, query, graphQLContext: ctx },
+        {
+            offset: noPagination ? 1 : searchData.offset,
+            query,
+            graphQLContext: ctx,
+        },
         { itemsPerPage: noPagination ? Infinity : constants.itemsPerPage }
     );
 

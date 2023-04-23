@@ -163,20 +163,16 @@ export const deleteCourse = async (
 ) => {
     const course = await getCourseOrThrow(id, ctx);
 
-    try {
-        await deleteAllLessons(course.courseId, ctx);
-        if (course.featuredImage) {
-            await deleteMedia(course.featuredImage);
-        }
-        await PageModel.deleteOne({
-            entityId: course.courseId,
-            domain: ctx.subdomain._id,
-        });
-        await course.remove();
-        return true;
-    } catch (err: any) {
-        throw new Error(err.message);
+    await deleteAllLessons(course.courseId, ctx);
+    if (course.featuredImage) {
+        await deleteMedia(course.featuredImage);
     }
+    await PageModel.deleteOne({
+        entityId: course.courseId,
+        domain: ctx.subdomain._id,
+    });
+    await course.remove();
+    return true;
 };
 
 export const getCoursesAsAdmin = async ({
