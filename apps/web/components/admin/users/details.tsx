@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { Grid, Typography, Switch, IconButton } from "@mui/material";
+import {
+    Grid,
+    Typography,
+    Switch,
+    IconButton,
+    Breadcrumbs,
+} from "@mui/material";
 import { connect } from "react-redux";
 import {
     SWITCH_ACCOUNT_ACTIVE,
     ENROLLED_COURSES_HEADER,
+    USERS_MANAGER_PAGE_HEADING,
+    PAGE_HEADER_EDIT_USER,
 } from "../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
 import { AppMessage } from "@courselit/common-models";
@@ -14,6 +22,7 @@ import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
 import Link from "next/link";
 import { ArrowBack } from "@mui/icons-material";
+import MuiLink from "@mui/material/Link";
 
 const { networkAction, setAppMessage } = actionCreators;
 
@@ -145,30 +154,31 @@ const Details = ({ userId, auth, address, dispatch }: DetailsProps) => {
                     className={classes.container}
                     spacing={2}
                 >
-                    <Grid item xs>
-                        <Grid container alignItems="center">
-                            <Grid item>
-                                <IconButton size="large">
-                                    <Link href="/dashboard/users">
-                                        <ArrowBack />
-                                    </Link>
-                                </IconButton>
-                            </Grid>
-                            <Grid item>
-                                <Grid item>
-                                    <Typography variant="h1">
-                                        {userData.name
-                                            ? userData.name
-                                            : userData.email}
-                                    </Typography>
-                                    <Typography variant="body2">
-                                        <a href={`mailto:${userData.email}`}>
-                                            {userData.email}
-                                        </a>
-                                    </Typography>
-                                </Grid>
-                            </Grid>
-                        </Grid>
+                    <Grid item sx={{ mb: 2 }}>
+                        <Breadcrumbs aria-label="breakcrumb">
+                            <Link href="/dashboard/users">
+                                <MuiLink
+                                    color="inherit"
+                                    underline="hover"
+                                    sx={{ cursor: "pointer" }}
+                                >
+                                    {USERS_MANAGER_PAGE_HEADING}
+                                </MuiLink>
+                            </Link>
+                            <Typography color="text.primary">
+                                {PAGE_HEADER_EDIT_USER}
+                            </Typography>
+                        </Breadcrumbs>
+                    </Grid>
+                    <Grid item>
+                        <Typography variant="h1">
+                            {userData.name ? userData.name : userData.email}
+                        </Typography>
+                        <Typography variant="body2">
+                            <a href={`mailto:${userData.email}`}>
+                                {userData.email}
+                            </a>
+                        </Typography>
                     </Grid>
                     <Grid item>
                         <Grid container spacing={2}>

@@ -40,6 +40,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
         to: "",
         subject: "",
         body: "",
+        published: false,
     });
     const debouncedSave = debounce(async () => await saveMail(), 1000);
 
@@ -64,7 +65,8 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                     mailId,
                     to,
                     subject,
-                    body
+                    body,
+                    published
                 }
             }`;
 
@@ -79,6 +81,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                     to: response.mail.to || "",
                     subject: response.mail.subject || "",
                     body: response.mail.body || "",
+                    published: response.mail.published || false,
                 });
             }
         } catch (e: any) {
@@ -94,12 +97,9 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
         const mutation = `
             mutation {
                 mail: updateMail(mailData: ${getGraphQLQueryStringFromObject(
-                    mail
+                    Object.assign({}, mail, { published: undefined })
                 )}) {
                     mailId,
-                    to,
-                    subject,
-                    body
                 }
             }`;
 
@@ -123,8 +123,26 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
         );
     };
 
-    const onSubmit = (e: FormEvent) => {
+    const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
+
+        const mutation = `
+            mutation {
+                mail: sendMail(mailId: "${id}") {
+                    mailId
+                }
+            }`;
+
+        const fetcher = fetch.setPayload(mutation).build();
+
+        try {
+            dispatch(networkAction(true));
+            const response = await fetcher.exec();
+        } catch (e: any) {
+            dispatch(setAppMessage(new AppMessage(GENERIC_FAILURE_MESSAGE)));
+        } finally {
+            dispatch(networkAction(false));
+        }
     };
 
     if (!mail.mailId) {
@@ -194,7 +212,10 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                     <Button
                         variant="contained"
                         disabled={
-                            mail.to.length < 1 || !mail.subject || !mail.body
+                            mail.to.length < 1 ||
+                            !mail.subject ||
+                            !mail.body ||
+                            mail.published
                         }
                         type="submit"
                     >

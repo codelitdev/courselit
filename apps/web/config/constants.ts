@@ -1,6 +1,8 @@
 /**
  * This file provides app wide constants
  */
+import { UIConstants } from "@courselit/common-models";
+const { permissions } = UIConstants;
 
 export default {
     domainNameForSingleTenancy: "main",
@@ -66,19 +68,7 @@ export default {
     transactionFailed: "failed",
 
     // permissions for role-based access
-    permissions: {
-        manageCourse: "course:manage",
-        manageAnyCourse: "course:manage_any",
-        publishCourse: "course:publish",
-        enrollInCourse: "course:enroll",
-        manageMedia: "media:manage",
-        manageAnyMedia: "media:manage_any",
-        uploadMedia: "media:upload",
-        viewAnyMedia: "media:view_any",
-        manageSite: "site:manage",
-        manageSettings: "setting:manage",
-        manageUsers: "user:manage",
-    },
+    permissions,
 
     // entry point for the user
     leadWebsite: "website",

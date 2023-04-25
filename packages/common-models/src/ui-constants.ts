@@ -55,6 +55,8 @@ export const permissions = {
     manageSite: "site:manage",
     manageSettings: "setting:manage",
     manageUsers: "user:manage",
+    manageMail: "mail:manage",
+    manageAnyMail: "mail:manage_any",
 };
 
 export const COURSE_TYPE_COURSE = "course";

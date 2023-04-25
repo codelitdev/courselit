@@ -8,18 +8,27 @@ import {
     SettingsApplications,
     Palette,
     Article,
+    Mail,
 } from "@mui/icons-material";
-import { CREATOR_AREA_PAGE_TITLE } from "../../ui-config/strings";
+import {
+    CREATOR_AREA_PAGE_TITLE,
+    SIDEBAR_MENU_BLOGS,
+    SIDEBAR_MENU_PRODUCTS,
+    SIDEBAR_MENU_SETTINGS,
+    SIDEBAR_MENU_SITE,
+    SIDEBAR_MENU_USERS,
+    SIDEBAR_MENU_MAILS,
+} from "../../ui-config/strings";
 import AppLoader from "../app-loader";
 import Head from "next/head";
 import { canAccessDashboard, checkPermission } from "../../ui-lib/utils";
 import { Grid } from "@mui/material";
 import RouteBasedComponentScaffold from "../public/scaffold";
-import constants from "../../config/constants";
 import type Profile from "../../ui-models/profile";
 import State from "../../ui-models/state";
 import Auth from "../../ui-models/auth";
 import SiteInfo from "../../ui-models/site-info";
+import { UIConstants as constants } from "@courselit/common-models";
 const { permissions } = constants;
 
 const PREFIX = "BaseLayout";
@@ -45,34 +54,34 @@ const getSidebarMenuItems = (profile: Profile) => {
         ])
     ) {
         items.push({
-            label: "Products",
+            label: SIDEBAR_MENU_PRODUCTS,
             href: "/dashboard/products",
             icon: <LibraryBooks />,
         });
         items.push({
-            label: "Blogs",
+            label: SIDEBAR_MENU_BLOGS,
             href: "/dashboard/blogs",
             icon: <Article />,
         });
     }
 
-    // if (
-    //     checkPermission(profile.permissions, [
-    //         permissions.viewAnyMedia,
-    //         permissions.manageMedia,
-    //         permissions.manageAnyMedia,
-    //     ])
-    // ) {
-    //     items.push({
-    //         label: "Media",
-    //         href: "/dashboard/media",
-    //         icon: <PermMedia />,
-    //     });
-    // }
+    if (
+        checkPermission(profile.permissions, [
+            permissions.manageMail,
+            permissions.manageAnyMail,
+        ]) &&
+        process.env.NEXT_PUBLIC_TOGGLE_MAIL === "true"
+    ) {
+        items.push({
+            label: SIDEBAR_MENU_MAILS,
+            href: "/dashboard/mails",
+            icon: <Mail />,
+        });
+    }
 
     if (profile.permissions.includes(permissions.manageUsers)) {
         items.push({
-            label: "Users",
+            label: SIDEBAR_MENU_USERS,
             href: "/dashboard/users",
             icon: <SupervisedUserCircle />,
         });
@@ -80,7 +89,7 @@ const getSidebarMenuItems = (profile: Profile) => {
 
     if (profile.permissions.includes(permissions.manageSite)) {
         items.push({
-            label: "Site",
+            label: SIDEBAR_MENU_SITE,
             href: "/dashboard/design",
             icon: <Palette />,
         });
@@ -88,7 +97,7 @@ const getSidebarMenuItems = (profile: Profile) => {
 
     if (profile.permissions.includes(permissions.manageSettings)) {
         items.push({
-            label: "Settings",
+            label: SIDEBAR_MENU_SETTINGS,
             href: "/dashboard/settings",
             icon: <SettingsApplications />,
         });

@@ -43,21 +43,6 @@ export const MIMETYPE_PDF = ["application/pdf"];
 
 export const THEMES_REPO = "https://github.com/codelitdev/courselit-themes";
 
-// Role-based access permissions
-export const permissions = {
-    manageCourse: "course:manage",
-    manageAnyCourse: "course:manage_any",
-    publishCourse: "course:publish",
-    enrollInCourse: "course:enroll",
-    manageMedia: "media:manage",
-    manageAnyMedia: "media:manage_any",
-    uploadMedia: "media:upload",
-    viewAnyMedia: "media:view_any",
-    manageSite: "site:manage",
-    manageSettings: "setting:manage",
-    manageUsers: "user:manage",
-};
-
 export const COURSE_TYPE_COURSE = "course";
 export const COURSE_TYPE_DOWNLOAD = "download";
 

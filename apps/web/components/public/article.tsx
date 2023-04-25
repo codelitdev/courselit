@@ -14,9 +14,9 @@ import {
 } from "@courselit/components-library";
 import { ENROLL_BUTTON_TEXT, FREE_COST } from "../../ui-config/strings";
 import dynamic from "next/dynamic";
-import constants from "../../config/constants";
 import { AppState } from "@courselit/state-management";
 import { Course, Profile, SiteInfo } from "@courselit/common-models";
+import { UIConstants as constants } from "@courselit/common-models";
 
 const { permissions } = constants;
 

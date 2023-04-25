@@ -1,6 +1,7 @@
-import { permissions } from "../ui-config/constants";
 import type { Profile } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
+import { UIConstants } from "@courselit/common-models";
+const { permissions } = UIConstants;
 
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -51,6 +52,8 @@ export const canAccessDashboard = (profile: Profile) => {
         permissions.manageSettings,
         permissions.manageUsers,
         permissions.viewAnyMedia,
+        permissions.manageMail,
+        permissions.manageAnyMail,
     ]);
 };
 

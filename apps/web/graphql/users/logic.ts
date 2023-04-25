@@ -275,6 +275,8 @@ export async function createUser({
             constants.permissions.manageSite,
             constants.permissions.manageSettings,
             constants.permissions.manageUsers,
+            constants.permissions.manageMail,
+            constants.permissions.manageAnyMail,
         ];
     } else {
         newUser.permissions = [constants.permissions.enrollInCourse];

@@ -6,7 +6,6 @@ import {
 } from "../../lib/graphql";
 import GQLContext from "../../models/GQLContext";
 import PageModel, { Page } from "../../models/Page";
-import { permissions } from "../../ui-config/constants";
 import { getPageResponse } from "./helpers";
 import constants from "../../config/constants";
 import Course from "../../models/Course";
@@ -14,7 +13,7 @@ import { generateUniqueId } from "@courselit/utils";
 import { Footer, Header } from "@courselit/common-widgets";
 import { User } from "@courselit/common-models";
 import { Domain } from "../../models/Domain";
-const { product, site, blogPage } = constants;
+const { product, site, blogPage, permissions } = constants;
 
 export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
     await initSharedWidgets(ctx);

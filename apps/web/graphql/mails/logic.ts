@@ -12,6 +12,7 @@ import {
 import { responses } from "../../config/strings";
 import mongoose from "mongoose";
 import SearchData from "./models/search-data";
+import { send } from "../../services/mail";
 
 export async function createSubscription(
     email: string,
@@ -101,10 +102,10 @@ export async function getMails(
             offset: searchData.offset || 1,
             graphQLContext: ctx,
         },
-        { 
+        {
             itemsPerPage: searchData.rowsPerPage || constants.itemsPerPage,
             sortByColumn: "updatedAt",
-            sortOrder: -1
+            sortOrder: -1,
         }
     );
 
@@ -155,5 +156,36 @@ export async function updateMail(
             stack: e.stack,
         });
         return null;
+    }
+}
+
+export async function sendMail(mailId: string, ctx: GQLContext): Promise<Mail> {
+    checkIfAuthenticated(ctx);
+
+    let mail: Mail | null = await MailModel.findOne({
+        mailId: mailId,
+        domain: ctx.subdomain._id,
+    });
+
+    if (!checkOwnershipWithoutModel(mail, ctx)) {
+        throw new Error(responses.item_not_found);
+    }
+
+    try {
+        await send({
+            to: mail.to,
+            subject: mail.subject,
+            body: mail.body,
+        });
+
+        mail.published = true;
+        mail = await mail.save();
+
+        return mail;
+    } catch (e: any) {
+        error(e.message, {
+            stack: e.stack,
+        });
+        throw e;
     }
 }

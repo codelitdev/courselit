@@ -42,7 +42,7 @@ import {
     AppMessage,
 } from "@courselit/common-models";
 import { checkPermission } from "../../../ui-lib/utils";
-import { permissions, ITEMS_PER_PAGE } from "../../../ui-config/constants";
+import { ITEMS_PER_PAGE } from "../../../ui-config/constants";
 import Link from "next/link";
 import MuiLink from "@mui/material/Link";
 import { ThunkDispatch } from "redux-thunk";
@@ -52,8 +52,10 @@ import { setAppMessage } from "@courselit/state-management/dist/action-creators"
 import { CSVLink } from "react-csv";
 import Email from "@mui/icons-material/Email";
 import { useRouter } from "next/router";
+import { UIConstants } from "@courselit/common-models";
 
 const { networkAction } = actionCreators;
+const { permissions } = UIConstants;
 
 interface UserManagerProps {
     auth: Auth;
@@ -243,6 +245,8 @@ const UsersManager = ({
             permissions.manageSite,
             permissions.manageSettings,
             permissions.manageUsers,
+            permissions.manageMail,
+            permissions.manageAnyMail,
         ]);
         const hasAudiencePermission = checkPermission(user.permissions, [
             permissions.enrollInCourse,
@@ -346,16 +350,18 @@ const UsersManager = ({
                             {EXPORT_CSV}
                         </CSVLink>
                     </Grid>
-                    <Grid item>
-                        <Button
-                            variant="outlined"
-                            endIcon={<Email />}
-                            size="large"
-                            onClick={createMail}
-                        >
-                            {BTN_SEND_MAIL}
-                        </Button>
-                    </Grid>
+                    {process.env.NEXT_PUBLIC_TOGGLE_MAIL === "true" && (
+                        <Grid item>
+                            <Button
+                                variant="outlined"
+                                endIcon={<Email />}
+                                size="large"
+                                onClick={createMail}
+                            >
+                                {BTN_SEND_MAIL}
+                            </Button>
+                        </Grid>
+                    )}
                 </Grid>
             </Grid>
             <Grid item sx={{ mb: 2 }}>

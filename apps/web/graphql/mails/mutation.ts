@@ -1,6 +1,6 @@
 import { GraphQLBoolean, GraphQLNonNull, GraphQLString } from "graphql";
 import GQLContext from "../../models/GQLContext";
-import { createSubscription, createMail, updateMail } from "./logic";
+import { createSubscription, createMail, updateMail, sendMail } from "./logic";
 import types from "./types.ts";
 import userTypes from "../users/types.ts";
 
@@ -41,5 +41,18 @@ export default {
             }: { mailData: Pick<Mail, "mailId" | "to" | "subject" | "body"> },
             context: GQLContext
         ) => updateMail(mailData, context),
+    },
+    sendMail: {
+        type: types.mail,
+        args: {
+            mailId: {
+                type: new GraphQLNonNull(GraphQLString),
+            },
+        },
+        resolve: async (
+            _: any,
+            { mailId }: { mailId: string },
+            context: GQLContext
+        ) => sendMail(mailId, context),
     },
 };
