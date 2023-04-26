@@ -1,5 +1,5 @@
 import type { Profile } from "@courselit/common-models";
-import { FetchBuilder } from "@courselit/utils";
+import { checkPermission, FetchBuilder } from "@courselit/utils";
 import { UIConstants } from "@courselit/common-models";
 const { permissions } = UIConstants;
 
@@ -30,6 +30,7 @@ export const getBackendAddress = (host: string) => {
     return `${protocol}://${host}`;
 };
 
+/*
 export const checkPermission = (
     actualPermissions: string[],
     desiredPermissions: string[]
@@ -37,6 +38,7 @@ export const checkPermission = (
     actualPermissions.some((permission) =>
         desiredPermissions.includes(permission)
     );
+*/
 
 const extractDomainFromURL = (host: string) => {
     return host.split(":")[0];

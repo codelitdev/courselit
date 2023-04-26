@@ -2,14 +2,13 @@ import { responses } from "../../config/strings";
 import {
     checkIfAuthenticated,
     checkOwnershipWithoutModel,
-    checkPermission,
 } from "../../lib/graphql";
 import GQLContext from "../../models/GQLContext";
 import PageModel, { Page } from "../../models/Page";
 import { getPageResponse } from "./helpers";
 import constants from "../../config/constants";
 import Course from "../../models/Course";
-import { generateUniqueId } from "@courselit/utils";
+import { checkPermission, generateUniqueId } from "@courselit/utils";
 import { Footer, Header } from "@courselit/common-widgets";
 import { User } from "@courselit/common-models";
 import { Domain } from "../../models/Domain";

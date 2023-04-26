@@ -12,7 +12,8 @@ import {
     CLEAR_MESSAGE,
     THEME_AVAILABLE,
     SET_ADDRESS,
-    WIDGETS_DATA_AVAILABLE,
+    //WIDGETS_DATA_AVAILABLE,
+    FEATURE_FLAGS_AVAILABLE,
 } from "./action-types";
 import { HYDRATE } from "next-redux-wrapper";
 import initialState from "./default-state";
@@ -137,10 +138,23 @@ function addressReducer(state = initialState.address, action: Action) {
     }
 }
 
+/*
 function widgetsDataReducer(state = initialState.widgetsData, action: Action) {
     switch (action.type) {
         case WIDGETS_DATA_AVAILABLE:
             return action.widgetsData;
+        default:
+            return state;
+    }
+}
+*/
+function featureFlagsReducer(
+    state = initialState.featureFlags,
+    action: Action
+) {
+    switch (action.type) {
+        case FEATURE_FLAGS_AVAILABLE:
+            return action.fFlags;
         default:
             return state;
     }
@@ -154,7 +168,8 @@ const appReducers = combineReducers({
     message: messageReducer,
     theme: themeReducer,
     address: addressReducer,
-    widgetsData: widgetsDataReducer,
+    featureFlags: featureFlagsReducer,
+    //widgetsData: widgetsDataReducer,
 });
 
 const reducer = (state = initialState, action: Action) => {

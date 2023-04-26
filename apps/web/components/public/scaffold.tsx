@@ -21,7 +21,7 @@ import DrawerListItemIcon from "./base-layout/drawer-list-item-icon";
 import Header from "./base-layout/header";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
-import State from "../../ui-models/state";
+import { AppState } from "@courselit/state-management";
 
 const PREFIX = "RouteBasedComponentScaffold";
 const drawerWidth = 240;
@@ -291,7 +291,7 @@ const ComponentScaffold = ({
     );
 };
 
-const mapStateToProps = (state: State) => ({
+const mapStateToProps = (state: AppState) => ({
     networkAction: state.networkAction,
 });
 

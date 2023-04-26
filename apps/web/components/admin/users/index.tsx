@@ -29,7 +29,7 @@ import {
     USER_TABLE_HEADER_NAME_NAME,
     BTN_SEND_MAIL,
 } from "../../../ui-config/strings";
-import { exportToCsv, FetchBuilder } from "@courselit/utils";
+import { checkPermission, exportToCsv, FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
@@ -41,7 +41,6 @@ import {
     State,
     AppMessage,
 } from "@courselit/common-models";
-import { checkPermission } from "../../../ui-lib/utils";
 import { ITEMS_PER_PAGE } from "../../../ui-config/constants";
 import Link from "next/link";
 import MuiLink from "@mui/material/Link";
@@ -62,6 +61,7 @@ interface UserManagerProps {
     address: Address;
     dispatch: AppDispatch;
     profile: Profile;
+    featureFlags: string[];
 }
 
 const UsersManager = ({
@@ -69,6 +69,7 @@ const UsersManager = ({
     address,
     dispatch,
     profile,
+    featureFlags,
 }: UserManagerProps) => {
     const [usersPaginationOffset, setUsersPaginationOffset] = useState(1);
     const [users, setUsers] = useState<User[]>([]);
@@ -350,7 +351,7 @@ const UsersManager = ({
                             {EXPORT_CSV}
                         </CSVLink>
                     </Grid>
-                    {process.env.NEXT_PUBLIC_TOGGLE_MAIL === "true" && (
+                    {featureFlags.includes("mail") && (
                         <Grid item>
                             <Button
                                 variant="outlined"
@@ -466,6 +467,7 @@ const mapStateToProps = (state: AppState) => ({
     auth: state.auth,
     address: state.address,
     profile: state.profile,
+    featureFlags: state.featureFlags,
 });
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({

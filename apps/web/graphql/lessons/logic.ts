@@ -5,7 +5,6 @@ import LessonModel, { Lesson } from "../../models/Lesson";
 import { responses } from "../../config/strings";
 import {
     checkIfAuthenticated,
-    checkPermission,
     checkOwnershipWithoutModel,
 } from "../../lib/graphql";
 import CourseModel from "../../models/Course";
@@ -22,6 +21,7 @@ import { Progress } from "../../models/Progress";
 import { recordProgress } from "../users/logic";
 import { Quiz } from "@courselit/common-models";
 import LessonEvaluation from "../../models/LessonEvaluation";
+import { checkPermission } from "@courselit/utils";
 
 const { permissions, quiz } = constants;
 

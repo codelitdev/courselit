@@ -18,6 +18,7 @@ export interface Domain {
     settings: Settings;
     theme: Theme;
     sharedWidgets: SharedWidgets;
+    featureFlags: string[];
 }
 
 const DomainSchema = new mongoose.Schema<Domain>(
@@ -29,6 +30,7 @@ const DomainSchema = new mongoose.Schema<Domain>(
         settings: SettingsSchema,
         theme: ThemeSchema,
         sharedWidgets: { type: mongoose.Schema.Types.Mixed, default: {} },
+        featureFlags: { type: [String] },
     },
     {
         timestamps: true,

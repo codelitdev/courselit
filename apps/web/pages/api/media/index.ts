@@ -2,7 +2,6 @@ import { NextApiRequest, NextApiResponse } from "next";
 import nc from "next-connect";
 import passport from "passport";
 import { responses } from "../../../config/strings";
-import { checkPermission } from "../../../lib/graphql";
 import jwtStrategy from "../../../lib/jwt";
 import connectDb from "../../../middlewares/connect-db";
 import verifyDomain from "../../../middlewares/verify-domain";
@@ -11,6 +10,7 @@ import ApiRequest from "../../../models/ApiRequest";
 import { error } from "../../../services/logger";
 import * as medialitService from "../../../services/medialit";
 import { UIConstants as constants } from "@courselit/common-models";
+import { checkPermission } from "@courselit/utils";
 
 passport.use(jwtStrategy);
 

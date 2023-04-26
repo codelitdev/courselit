@@ -21,14 +21,15 @@ import {
 } from "../../ui-config/strings";
 import AppLoader from "../app-loader";
 import Head from "next/head";
-import { canAccessDashboard, checkPermission } from "../../ui-lib/utils";
+import { canAccessDashboard } from "../../ui-lib/utils";
 import { Grid } from "@mui/material";
 import RouteBasedComponentScaffold from "../public/scaffold";
 import type Profile from "../../ui-models/profile";
-import State from "../../ui-models/state";
 import Auth from "../../ui-models/auth";
 import SiteInfo from "../../ui-models/site-info";
 import { UIConstants as constants } from "@courselit/common-models";
+import { checkPermission } from "@courselit/utils";
+import { AppState } from "@courselit/state-management";
 const { permissions } = constants;
 
 const PREFIX = "BaseLayout";
@@ -44,7 +45,7 @@ const StyledGrid = styled(Grid)({
     },
 });
 
-const getSidebarMenuItems = (profile: Profile) => {
+const getSidebarMenuItems = (profile: Profile, featureFlags: string[]) => {
     const items = [];
 
     if (
@@ -66,11 +67,11 @@ const getSidebarMenuItems = (profile: Profile) => {
     }
 
     if (
+        featureFlags.includes("mail") &&
         checkPermission(profile.permissions, [
             permissions.manageMail,
             permissions.manageAnyMail,
-        ]) &&
-        process.env.NEXT_PUBLIC_TOGGLE_MAIL === "true"
+        ])
     ) {
         items.push({
             label: SIDEBAR_MENU_MAILS,
@@ -112,6 +113,7 @@ interface BaseLayoutProps {
     siteInfo: SiteInfo;
     children: ReactNode;
     title: string;
+    featureFlags: string[];
 }
 
 const BaseLayoutAdmin = ({
@@ -120,6 +122,7 @@ const BaseLayoutAdmin = ({
     siteInfo,
     children,
     title,
+    featureFlags,
 }: BaseLayoutProps) => {
     const router = useRouter();
 
@@ -135,7 +138,7 @@ const BaseLayoutAdmin = ({
         }
     }, [auth.checked]);
 
-    const items = getSidebarMenuItems(profile);
+    const items = getSidebarMenuItems(profile, featureFlags);
 
     return profile.fetched && canAccessDashboard(profile) ? (
         <>
@@ -175,11 +178,12 @@ const BaseLayoutAdmin = ({
     );
 };
 
-const mapStateToProps = (state: State) => ({
+const mapStateToProps = (state: AppState) => ({
     auth: state.auth,
     profile: state.profile,
     siteInfo: state.siteinfo,
     address: state.address,
+    featureFlags: state.featureFlags,
 });
 
 export default connect(mapStateToProps)(BaseLayoutAdmin);

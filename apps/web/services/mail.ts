@@ -6,9 +6,15 @@ interface MailProps {
     to: string;
     subject: string;
     body: string;
+    from?: string;
 }
 
-export const send = async ({ to, subject, body }: MailProps) => {
+export const send = async ({
+    to,
+    subject,
+    body,
+    from = mailFrom,
+}: MailProps) => {
     const transporter = nodemailer.createTransport({
         host: mailHost,
         port: mailPort,
@@ -20,7 +26,7 @@ export const send = async ({ to, subject, body }: MailProps) => {
 
     try {
         await transporter.sendMail({
-            from: mailFrom,
+            from,
             to,
             subject,
             html: body,

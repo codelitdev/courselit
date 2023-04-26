@@ -1,10 +1,6 @@
 import React from "react";
 import { Typography, Grid, Chip, Button } from "@mui/material";
-import {
-    formattedLocaleDate,
-    checkPermission,
-    isEnrolled,
-} from "../../ui-lib/utils";
+import { formattedLocaleDate, isEnrolled } from "../../ui-lib/utils";
 import { connect } from "react-redux";
 import {
     PriceTag,
@@ -17,6 +13,7 @@ import dynamic from "next/dynamic";
 import { AppState } from "@courselit/state-management";
 import { Course, Profile, SiteInfo } from "@courselit/common-models";
 import { UIConstants as constants } from "@courselit/common-models";
+import { checkPermission } from "@courselit/utils";
 
 const { permissions } = constants;
 

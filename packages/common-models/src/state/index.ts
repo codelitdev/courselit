@@ -2,7 +2,7 @@ import Address from "../address";
 import Auth from "../auth";
 import Profile from "../profile";
 import SiteInfo from "../site-info";
-import WidgetsData from "./widgets-data";
+//import WidgetsData from "./widgets-data";
 import Theme from "../theme";
 
 export default interface State {
@@ -11,6 +11,7 @@ export default interface State {
     networkAction: boolean;
     profile: Profile;
     address: Address;
-    widgetsData: WidgetsData;
+    //widgetsData: WidgetsData;
     theme: Theme;
+    featureFlags: string[];
 }

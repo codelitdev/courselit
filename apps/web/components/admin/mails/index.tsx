@@ -1,7 +1,7 @@
 import React, { ChangeEvent, useEffect, useState } from "react";
 import { Address, Auth, AppMessage } from "@courselit/common-models";
 import { Section } from "@courselit/components-library";
-import { AppDispatch } from "@courselit/state-management";
+import { AppDispatch, AppState } from "@courselit/state-management";
 import TablePagination from "@mui/material/TablePagination";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
@@ -19,6 +19,7 @@ import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import Link from "next/link";
 import { Chip } from "@mui/material";
+import { Done } from "@mui/icons-material";
 const { networkAction } = actionCreators;
 
 interface MailsProps {
@@ -136,8 +137,10 @@ function Mails({ auth, address, dispatch }: MailsProps) {
                                                     >
                                                         {mail.published && (
                                                             <Chip
+                                                                icon={<Done />}
                                                                 label="Sent"
                                                                 size="small"
+                                                                color="success"
                                                             />
                                                         )}
                                                         {!mail.published && (

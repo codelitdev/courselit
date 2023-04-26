@@ -134,6 +134,7 @@ const validateSearchInput = (
     }
 };
 
+/*
 export const checkPermission = (
     actualPermissions: string[],
     desiredPermissions: string[]
@@ -141,3 +142,4 @@ export const checkPermission = (
     actualPermissions.some((permission) =>
         desiredPermissions.includes(permission)
     );
+*/

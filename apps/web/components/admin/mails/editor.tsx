@@ -23,6 +23,7 @@ import {
     MAIL_TO_PLACEHOLDER,
     PAGE_HEADER_ALL_MAILS,
     PAGE_HEADER_EDIT_MAIL,
+    TOAST_MAIL_SENT,
 } from "../../../ui-config/strings";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import Link from "next/link";
@@ -129,7 +130,11 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
         const mutation = `
             mutation {
                 mail: sendMail(mailId: "${id}") {
-                    mailId
+                    mailId,
+                    to,
+                    subject,
+                    body,
+                    published
                 }
             }`;
 
@@ -138,8 +143,12 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
         try {
             dispatch(networkAction(true));
             const response = await fetcher.exec();
+            if (response.mail) {
+                setMail(response.mail);
+            }
+            dispatch(setAppMessage(new AppMessage(TOAST_MAIL_SENT)));
         } catch (e: any) {
-            dispatch(setAppMessage(new AppMessage(GENERIC_FAILURE_MESSAGE)));
+            dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
             dispatch(networkAction(false));
         }
@@ -160,7 +169,11 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                 <Grid item sx={{ mb: 2 }}>
                     <Breadcrumbs aria-label="breakcrumb">
                         <Link href="/dashboard/mails">
-                            <MuiLink color="inherit" underline="hover">
+                            <MuiLink
+                                color="inherit"
+                                underline="hover"
+                                sx={{ cursor: "pointer" }}
+                            >
                                 {PAGE_HEADER_ALL_MAILS}
                             </MuiLink>
                         </Link>
@@ -184,6 +197,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
                             onChange("to", e.target.value.split(/,\s*/))
                         }
+                        disabled={mail.published}
                     />
                 </Grid>
                 <Grid item sx={{ mb: 2 }}>
@@ -194,6 +208,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
                             onChange("subject", e.target.value)
                         }
+                        disabled={mail.published}
                     />
                 </Grid>
                 <Grid item sx={{ mb: 2 }}>
@@ -206,22 +221,24 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
                             onChange("body", e.target.value)
                         }
+                        disabled={mail.published}
                     />
                 </Grid>
-                <Grid item>
-                    <Button
-                        variant="contained"
-                        disabled={
-                            mail.to.length < 1 ||
-                            !mail.subject ||
-                            !mail.body ||
-                            mail.published
-                        }
-                        type="submit"
-                    >
-                        {BTN_SEND}
-                    </Button>
-                </Grid>
+                {!mail.published && (
+                    <Grid item>
+                        <Button
+                            variant="contained"
+                            disabled={
+                                mail.to.length < 1 ||
+                                !mail.subject ||
+                                !mail.body
+                            }
+                            type="submit"
+                        >
+                            {BTN_SEND}
+                        </Button>
+                    </Grid>
+                )}
             </Grid>
         </Section>
     );

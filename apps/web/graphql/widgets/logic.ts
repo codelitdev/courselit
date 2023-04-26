@@ -1,6 +1,6 @@
 import Widget from "../../models/Widget";
 import type GQLContext from "../../models/GQLContext";
-import { checkIfAuthenticated, checkPermission } from "../../lib/graphql";
+import { checkIfAuthenticated } from "../../lib/graphql";
 import { responses } from "../../config/strings";
 import constants from "../../config/constants";
 const { permissions } = constants;

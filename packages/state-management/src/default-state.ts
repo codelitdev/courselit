@@ -37,5 +37,6 @@ export default {
         backend: "",
         frontend: "",
     },
-    widgetsData: {},
+    featureFlags: [],
+    //widgetsData: {},
 };

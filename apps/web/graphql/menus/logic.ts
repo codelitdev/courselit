@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
-import { checkIfAuthenticated, checkPermission } from "../../lib/graphql";
+import { checkIfAuthenticated } from "../../lib/graphql";
 import type GQLContext from "../../models/GQLContext";
 import { Link } from "../../models/Link";
 import DomainModel, { Domain } from "../../models/Domain";
 import { responses } from "../../config/strings";
 import constants from "../../config/constants";
+import { checkPermission } from "@courselit/utils";
 const { permissions } = constants;
 
 export const saveLink = async (

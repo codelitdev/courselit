@@ -4,7 +4,6 @@ import { responses } from "../../config/strings";
 import {
     makeModelTextSearchable,
     checkIfAuthenticated,
-    checkPermission,
 } from "../../lib/graphql";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
@@ -17,6 +16,7 @@ const {
 import { Progress } from "../../models/Progress";
 import { initMandatoryPages } from "../pages/logic";
 import { Domain } from "../../models/Domain";
+import { checkPermission } from "@courselit/utils";
 
 const removeAdminFieldsFromUserObject = ({
     id,

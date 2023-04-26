@@ -13,6 +13,9 @@ import { responses } from "../../config/strings";
 import mongoose from "mongoose";
 import SearchData from "./models/search-data";
 import { send } from "../../services/mail";
+import { checkPermission } from "@courselit/utils";
+
+const { permissions } = constants;
 
 export async function createSubscription(
     email: string,
@@ -46,6 +49,15 @@ export async function createMail(
     ctx: GQLContext
 ): Promise<Mail | null> {
     checkIfAuthenticated(ctx);
+
+    if (
+        !checkPermission(ctx.user.permissions, [
+            permissions.manageMail,
+            permissions.manageAnyMail,
+        ])
+    ) {
+        throw new Error(responses.action_not_allowed);
+    }
 
     try {
         const matchingUsers = await getUsers(searchData, ctx, true);
@@ -171,8 +183,16 @@ export async function sendMail(mailId: string, ctx: GQLContext): Promise<Mail> {
         throw new Error(responses.item_not_found);
     }
 
+    if (mail!.published) {
+        throw new Error(responses.mail_already_sent);
+    }
+
     try {
+        const from = `${ctx.subdomain.settings.title || ctx.subdomain.name} ${
+            ctx.user.email
+        }`;
         await send({
+            from,
             to: mail.to,
             subject: mail.subject,
             body: mail.body,

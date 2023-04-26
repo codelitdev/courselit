@@ -8,7 +8,6 @@ import {
     checkIfAuthenticated,
     validateOffset,
     extractPlainTextFromDraftJS,
-    checkPermission,
     checkOwnershipWithoutModel,
 } from "../../lib/graphql";
 import constants from "../../config/constants";
@@ -29,6 +28,7 @@ import { deleteMedia } from "../../services/medialit";
 import PageModel from "../../models/Page";
 import { Progress } from "../../models/Progress";
 import { getPrevNextCursor } from "../lessons/helpers";
+import { checkPermission } from "@courselit/utils";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 

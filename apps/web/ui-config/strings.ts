@@ -383,3 +383,4 @@ export const SIDEBAR_MENU_SETTINGS = "Settings";
 export const SIDEBAR_MENU_PRODUCTS = "Products";
 export const SIDEBAR_MENU_BLOGS = "Blogs";
 export const PAGE_HEADER_EDIT_USER = "Edit user";
+export const TOAST_MAIL_SENT = "Mail sent";

@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-    Grid,
-    Typography,
-    Switch,
-    IconButton,
-    Breadcrumbs,
-} from "@mui/material";
+import { Grid, Typography, Switch, Breadcrumbs } from "@mui/material";
 import { connect } from "react-redux";
 import {
     SWITCH_ACCOUNT_ACTIVE,
@@ -21,7 +15,6 @@ import type { Address, Auth, Course, User } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
 import Link from "next/link";
-import { ArrowBack } from "@mui/icons-material";
 import MuiLink from "@mui/material/Link";
 
 const { networkAction, setAppMessage } = actionCreators;

@@ -1,5 +1,5 @@
 import SiteInfoModel from "../../models/SiteInfo";
-import { checkIfAuthenticated, checkPermission } from "../../lib/graphql";
+import { checkIfAuthenticated } from "../../lib/graphql";
 import { responses } from "../../config/strings";
 import constants from "../../config/constants";
 import {
@@ -10,6 +10,7 @@ import {
 import type GQLContext from "../../models/GQLContext";
 import type SiteInfo from "../../ui-models/site-info";
 import DomainModel, { Domain } from "../../models/Domain";
+import { checkPermission } from "@courselit/utils";
 
 const { permissions } = constants;
 
