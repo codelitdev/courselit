@@ -24,7 +24,7 @@ export default {
             searchData: { type: types.userSearchInput },
         },
         resolve: (_: any, { searchData }: any, context: GQLContext) =>
-            getUsers(searchData, context),
+            getUsers({ searchData, ctx: context }),
     },
     getUsersCount: {
         type: new GraphQLNonNull(GraphQLInt),

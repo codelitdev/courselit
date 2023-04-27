@@ -14,8 +14,6 @@ import {
     PERM_SETTINGS,
     PERM_USERS,
     PERM_SITE,
-    PERM_MAIL_MANAGE,
-    PERM_MAIL_MANAGE_ANY,
 } from "../../../ui-config/strings";
 import { connect } from "react-redux";
 import { FetchBuilder } from "@courselit/utils";
@@ -58,8 +56,6 @@ function PermissionsEditor({
         [permissions.manageSite]: PERM_SITE,
         [permissions.manageSettings]: PERM_SETTINGS,
         [permissions.manageUsers]: PERM_USERS,
-        [permissions.manageMail]: PERM_MAIL_MANAGE,
-        [permissions.manageAnyMail]: PERM_MAIL_MANAGE_ANY,
     };
 
     useEffect(() => {

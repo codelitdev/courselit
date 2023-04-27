@@ -145,13 +145,24 @@ interface SearchData {
     email?: string;
 }
 
-export const getUsers = async (
-    searchData: SearchData = {},
-    ctx: GQLContext,
-    noPagination: boolean = false
-) => {
+interface GetUsersParams {
+    searchData: SearchData;
+    ctx: GQLContext;
+    noPagination: boolean;
+    hasMailPermissions: boolean;
+}
+
+export const getUsers = async ({
+    searchData = {},
+    ctx,
+    noPagination = false,
+    hasMailPermissions = false,
+}: GetUsersParams) => {
     checkIfAuthenticated(ctx);
-    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+    if (
+        !hasMailPermissions &&
+        !checkPermission(ctx.user.permissions, [permissions.manageUsers])
+    ) {
         throw new Error(responses.action_not_allowed);
     }
 
@@ -275,8 +286,6 @@ export async function createUser({
             constants.permissions.manageSite,
             constants.permissions.manageSettings,
             constants.permissions.manageUsers,
-            constants.permissions.manageMail,
-            constants.permissions.manageAnyMail,
         ];
     } else {
         newUser.permissions = [constants.permissions.enrollInCourse];

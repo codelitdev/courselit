@@ -6,7 +6,6 @@ import { createUser, getUsers } from "../users/logic";
 import MailModel, { Mail } from "../../models/Mail";
 import {
     checkIfAuthenticated,
-    checkOwnershipWithoutModel,
     makeModelTextSearchable,
 } from "../../lib/graphql";
 import { responses } from "../../config/strings";
@@ -14,6 +13,7 @@ import mongoose from "mongoose";
 import SearchData from "./models/search-data";
 import { send } from "../../services/mail";
 import { checkPermission } from "@courselit/utils";
+import { UIConstants } from "@courselit/common-models";
 
 const { permissions } = constants;
 
@@ -50,17 +50,17 @@ export async function createMail(
 ): Promise<Mail | null> {
     checkIfAuthenticated(ctx);
 
-    if (
-        !checkPermission(ctx.user.permissions, [
-            permissions.manageMail,
-            permissions.manageAnyMail,
-        ])
-    ) {
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
         throw new Error(responses.action_not_allowed);
     }
 
     try {
-        const matchingUsers = await getUsers(searchData, ctx, true);
+        const matchingUsers = await getUsers({
+            searchData,
+            ctx,
+            noPagination: true,
+            hasMailPermissions: true,
+        });
         const emails = matchingUsers.map((x) => x.email);
         const mail = await MailModel.create({
             domain: ctx.subdomain._id,
@@ -73,7 +73,7 @@ export async function createMail(
         error(e.message, {
             stack: e.stack,
         });
-        return null;
+        throw e;
     }
 }
 
@@ -88,8 +88,8 @@ export async function getMail(
         domain: ctx.subdomain._id,
     });
 
-    if (!checkOwnershipWithoutModel(mail, ctx)) {
-        throw new Error(responses.item_not_found);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
     }
 
     return mail;
@@ -100,11 +100,10 @@ export async function getMails(
     ctx: GQLContext
 ): Promise<Mail | null> {
     checkIfAuthenticated(ctx);
-    /*
+
     if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
         throw new Error(responses.action_not_allowed);
     }
-    */
 
     const searchMails = makeModelTextSearchable(MailModel);
     const query = buildQueryFromSearchData(ctx.subdomain._id, searchData);
@@ -124,14 +123,29 @@ export async function getMails(
     return mails;
 }
 
+export async function getMailsCount(
+    searchData: SearchData = {},
+    ctx: GQLContext
+): Promise<number> {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const searchMails = makeModelTextSearchable(MailModel);
+    const query = buildQueryFromSearchData(ctx.subdomain._id, searchData);
+    return await MailModel.countDocuments(query);
+}
+
 const buildQueryFromSearchData = (
     domain: mongoose.Types.ObjectId,
     searchData: SearchData = {},
     creatorId: string
 ) => {
     const query: Record<string, unknown> = { domain };
-    if (creatorId) {
-        query.creatorId = creatorId;
+    if (searchData.creatorId) {
+        query.creatorId = searchData.creatorId;
     }
     if (searchData.searchText) query.$text = { $search: searchData.searchText };
 
@@ -139,7 +153,7 @@ const buildQueryFromSearchData = (
 };
 
 export async function updateMail(
-    mailData: Pick<Mail, "mailId" | "to" | "subject" | "body">,
+    mailData: Pick<Mail, "mailId" | "to" | "subject" | "body"> = {},
     ctx: GQLContext
 ): Promise<Mail> {
     checkIfAuthenticated(ctx);
@@ -149,8 +163,23 @@ export async function updateMail(
         domain: ctx.subdomain._id,
     });
 
-    if (!checkOwnershipWithoutModel(mail, ctx)) {
-        throw new Error(responses.item_not_found);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    if (
+        mailData.subject &&
+        mailData.subject.length > UIConstants.MAIL_SUBJECT_MAX_LENGTH
+    ) {
+        throw new Error(responses.mail_subject_length_exceeded);
+    }
+
+    if (mailData.to) {
+        mailData.to = removeEmptyMembers([...new Set(mailData.to)]);
+    }
+
+    if (mailData.to && mailData.to.length > UIConstants.MAIL_MAX_RECIPIENTS) {
+        throw new Error(responses.mail_max_recipients_exceeded);
     }
 
     try {
@@ -171,6 +200,9 @@ export async function updateMail(
     }
 }
 
+const removeEmptyMembers = (arr: string[]) =>
+    arr.filter((x) => x.trim() !== "");
+
 export async function sendMail(mailId: string, ctx: GQLContext): Promise<Mail> {
     checkIfAuthenticated(ctx);
 
@@ -179,8 +211,8 @@ export async function sendMail(mailId: string, ctx: GQLContext): Promise<Mail> {
         domain: ctx.subdomain._id,
     });
 
-    if (!checkOwnershipWithoutModel(mail, ctx)) {
-        throw new Error(responses.item_not_found);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
     }
 
     if (mail!.published) {

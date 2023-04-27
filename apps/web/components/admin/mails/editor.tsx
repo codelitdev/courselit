@@ -13,11 +13,15 @@ import {
     FetchBuilder,
     getGraphQLQueryStringFromObject,
 } from "@courselit/utils";
-import { Address, AppMessage, Mail } from "@courselit/common-models";
+import {
+    Address,
+    AppMessage,
+    Mail,
+    UIConstants,
+} from "@courselit/common-models";
 import { connect } from "react-redux";
 import {
     BTN_SEND,
-    GENERIC_FAILURE_MESSAGE,
     MAIL_BODY_PLACEHOLDER,
     MAIL_SUBJECT_PLACEHOLDER,
     MAIL_TO_PLACEHOLDER,
@@ -110,7 +114,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
             dispatch(networkAction(true));
             const response = await fetcher.exec();
         } catch (e: any) {
-            dispatch(setAppMessage(new AppMessage(GENERIC_FAILURE_MESSAGE)));
+            dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
             dispatch(networkAction(false));
         }
@@ -195,7 +199,12 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                         fullWidth
                         label={MAIL_TO_PLACEHOLDER}
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            onChange("to", e.target.value.split(/,\s*/))
+                            onChange(
+                                "to",
+                                e.target.value.split(
+                                    UIConstants.MAIL_RECIPIENTS_SPLIT_REGEX
+                                )
+                            )
                         }
                         disabled={mail.published}
                     />

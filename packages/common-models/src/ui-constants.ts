@@ -55,9 +55,13 @@ export const permissions = {
     manageSite: "site:manage",
     manageSettings: "setting:manage",
     manageUsers: "user:manage",
-    manageMail: "mail:manage",
-    manageAnyMail: "mail:manage_any",
 };
 
 export const COURSE_TYPE_COURSE = "course";
 export const COURSE_TYPE_DOWNLOAD = "download";
+
+// limits
+export const MAIL_SUBJECT_MAX_LENGTH = 78;
+export const MAIL_MAX_RECIPIENTS = 5;
+
+export const MAIL_RECIPIENTS_SPLIT_REGEX = /,\s*/;

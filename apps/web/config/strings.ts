@@ -1,6 +1,7 @@
 /**
  * This file provides strings used app wide.
  */
+import { UIConstants } from "@courselit/common-models";
 
 export const responses = {
     // passportjs responses
@@ -95,6 +96,8 @@ export const responses = {
     no_empty_option: "Options without text are not allowed in questions.",
     medialit_apikey_notfound: "You need to configure MediaLit to upload files.",
     mail_already_sent: "The mail is already sent",
+    mail_subject_length_exceeded: `Subject cannot be longer than ${UIConstants.MAIL_SUBJECT_MAX_LENGTH} characters`,
+    mail_max_recipients_exceeded: `Total number of recipients cannot exceed ${UIConstants.MAIL_MAX_RECIPIENTS}`,
 };
 
 export const internal = {

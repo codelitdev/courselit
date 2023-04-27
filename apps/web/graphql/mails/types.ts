@@ -7,6 +7,9 @@ import {
     GraphQLObjectType,
     GraphQLString,
 } from "graphql";
+import GQLContext from "../../models/GQLContext";
+import { getUser } from "../users/logic";
+import userTypes from "../users/types";
 
 const mail = new GraphQLObjectType({
     name: "Mail",
@@ -15,7 +18,11 @@ const mail = new GraphQLObjectType({
         to: { type: new GraphQLList(GraphQLString) },
         subject: { type: GraphQLString },
         body: { type: GraphQLString },
-        userId: { type: new GraphQLNonNull(GraphQLString) },
+        user: {
+            type: userTypes.userType,
+            resolve: (mail, _, ctx: GQLContext, __) =>
+                getUser(null, mail.creatorId, ctx),
+        },
         published: { type: new GraphQLNonNull(GraphQLBoolean) },
         createdAt: { type: GraphQLString },
         updatedAt: { type: GraphQLString },

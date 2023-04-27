@@ -1,6 +1,11 @@
-import { GraphQLList, GraphQLNonNull, GraphQLString } from "graphql";
+import {
+    GraphQLInt,
+    GraphQLList,
+    GraphQLNonNull,
+    GraphQLString,
+} from "graphql";
 import types from "./types.ts";
-import { getMail, getMails } from "./logic.ts";
+import { getMail, getMails, getMailsCount } from "./logic.ts";
 import SearchData from "./models/search-data";
 
 export default {
@@ -27,5 +32,13 @@ export default {
             { searchData }: { searchData: SearchData },
             context: GQLContext
         ) => getMails(searchData, context),
+    },
+    getMailsCount: {
+        type: new GraphQLNonNull(GraphQLInt),
+        args: {
+            searchData: { type: types.mailSearchInput },
+        },
+        resolve: (_: any, { searchData }: any, context: GQLContext) =>
+            getMailsCount(searchData, context),
     },
 };

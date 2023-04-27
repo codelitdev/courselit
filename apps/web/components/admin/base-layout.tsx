@@ -66,26 +66,19 @@ const getSidebarMenuItems = (profile: Profile, featureFlags: string[]) => {
         });
     }
 
-    if (
-        featureFlags.includes("mail") &&
-        checkPermission(profile.permissions, [
-            permissions.manageMail,
-            permissions.manageAnyMail,
-        ])
-    ) {
-        items.push({
-            label: SIDEBAR_MENU_MAILS,
-            href: "/dashboard/mails",
-            icon: <Mail />,
-        });
-    }
-
     if (profile.permissions.includes(permissions.manageUsers)) {
         items.push({
             label: SIDEBAR_MENU_USERS,
             href: "/dashboard/users",
             icon: <SupervisedUserCircle />,
         });
+        if (featureFlags.includes("mail")) {
+            items.push({
+                label: SIDEBAR_MENU_MAILS,
+                href: "/dashboard/mails",
+                icon: <Mail />,
+            });
+        }
     }
 
     if (profile.permissions.includes(permissions.manageSite)) {

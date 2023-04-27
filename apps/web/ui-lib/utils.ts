@@ -54,8 +54,6 @@ export const canAccessDashboard = (profile: Profile) => {
         permissions.manageSettings,
         permissions.manageUsers,
         permissions.viewAnyMedia,
-        permissions.manageMail,
-        permissions.manageAnyMail,
     ]);
 };
 

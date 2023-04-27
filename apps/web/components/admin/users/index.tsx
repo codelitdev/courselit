@@ -191,7 +191,7 @@ const UsersManager = ({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            (dispatch as ThunkDispatch<State, null, AnyAction>)(
+            (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
                 networkAction(true)
             );
             const response = await fetch.exec();
@@ -201,7 +201,7 @@ const UsersManager = ({
         } catch (err) {
             dispatch(setAppMessage(new AppMessage(GENERIC_FAILURE_MESSAGE)));
         } finally {
-            (dispatch as ThunkDispatch<State, null, AnyAction>)(
+            (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
                 networkAction(false)
             );
         }
@@ -246,8 +246,6 @@ const UsersManager = ({
             permissions.manageSite,
             permissions.manageSettings,
             permissions.manageUsers,
-            permissions.manageMail,
-            permissions.manageAnyMail,
         ]);
         const hasAudiencePermission = checkPermission(user.permissions, [
             permissions.enrollInCourse,
