@@ -48,7 +48,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
         body: "",
         published: false,
     });
-    const [sending, setSending] = useState(false)
+    const [sending, setSending] = useState(false);
     const debouncedSave = debounce(async () => await saveMail(), 1000);
 
     useEffect(() => {
@@ -148,7 +148,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
 
         try {
             dispatch(networkAction(true));
-            setSending(true)
+            setSending(true);
             const response = await fetcher.exec();
             if (response.mail) {
                 setMail(response.mail);
@@ -158,7 +158,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
             dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
             dispatch(networkAction(false));
-            setSending(false)
+            setSending(false);
         }
     };
 

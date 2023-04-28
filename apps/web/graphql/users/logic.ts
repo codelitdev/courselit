@@ -174,9 +174,9 @@ export const getUsers = async ({
             query,
             graphQLContext: ctx,
         },
-        { 
-            itemsPerPage: noPagination 
-                ? Infinity 
+        {
+            itemsPerPage: noPagination
+                ? Infinity
                 : searchData.rowsPerPage || constants.itemsPerPage,
             sortByColumn: "createdAt",
             sortOrder: -1,

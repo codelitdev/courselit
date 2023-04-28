@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import constants from "../config/constants";
+import { error } from "./logger";
 const { mailHost, mailUser, mailPass, mailFrom, mailPort } = constants;
 
 interface MailProps {
@@ -32,6 +33,9 @@ export const send = async ({
             html: body,
         });
     } catch (err) {
-        console.error(err); // eslint-disable-line no-console
+        error(err.message, {
+            fileName: "services/mail.ts",
+            stack: err.stack,
+        });
     }
 };

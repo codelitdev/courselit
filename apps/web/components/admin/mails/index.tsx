@@ -196,9 +196,7 @@ function Mails({ auth, address, profile, dispatch, featureFlags }: MailsProps) {
                 <>
                     <Grid item xs={12} component={Paper}>
                         <TableContainer>
-                            <Table 
-                                aria-label="Mails" 
-                                sx={{ minWidth: "100%" }}>
+                            <Table aria-label="Mails" sx={{ minWidth: "100%" }}>
                                 <TableHead>
                                     <TableRow>
                                         <TableCell>

@@ -13,11 +13,10 @@ import {
     Toolbar,
     Typography,
 } from "@mui/material";
-import Button from "@mui/material/Button";
-import Box from '@mui/material/Box';
+import Box from "@mui/material/Box";
 import TablePagination from "@mui/material/TablePagination";
-import Tooltip from '@mui/material/Tooltip';
-import IconButton from '@mui/material/IconButton'
+import Tooltip from "@mui/material/Tooltip";
+import IconButton from "@mui/material/IconButton";
 import {
     USER_TABLE_HEADER_NAME,
     USER_TABLE_HEADER_JOINED,
@@ -29,11 +28,9 @@ import {
     USER_TYPE_ALL,
     EXPORT_CSV,
     USER_TYPE_SUBSCRIBER,
-    GENERIC_FAILURE_MESSAGE,
     USER_TABLE_HEADER_EMAIL,
     USER_TABLE_HEADER_NAME_NAME,
-    BTN_SEND_MAIL,
-    TOOLTIP_USER_PAGE_SEND_MAIL
+    TOOLTIP_USER_PAGE_SEND_MAIL,
 } from "../../../ui-config/strings";
 import { checkPermission, exportToCsv, FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";
@@ -47,7 +44,6 @@ import {
     State,
     AppMessage,
 } from "@courselit/common-models";
-import { ITEMS_PER_PAGE } from "../../../ui-config/constants";
 import Link from "next/link";
 import MuiLink from "@mui/material/Link";
 import { ThunkDispatch } from "redux-thunk";
@@ -56,8 +52,8 @@ import { Select as SingleSelect } from "@courselit/components-library";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import { CSVLink } from "react-csv";
 import Email from "@mui/icons-material/Email";
-import Cancel from '@mui/icons-material/Cancel';
-import InputAdornment from '@mui/material/InputAdornment';
+import Cancel from "@mui/icons-material/Cancel";
+import InputAdornment from "@mui/material/InputAdornment";
 import { useRouter } from "next/router";
 import { UIConstants } from "@courselit/common-models";
 
@@ -94,7 +90,7 @@ const UsersManager = ({
 
     useEffect(() => {
         loadUsersCount();
-    }, [rowsPerPage, type, searchEmailHook])
+    }, [rowsPerPage, type, searchEmailHook]);
 
     const handlePageChange = (
         e: MouseEvent<HTMLButtonElement> | null,
@@ -350,32 +346,34 @@ const UsersManager = ({
             </Grid>
             <Grid item sx={{ mb: 2 }} component={Paper}>
                 <Toolbar>
-                        <Box 
-                            component="form" 
-                            onSubmit={searchByEmail}
-                            sx={{ pr: 1 }}>
-                            <TextField
-                                type="email"
-                                label="Search by email"
-                                onChange={(e) => setSearchEmail(e.target.value)}
-                                value={searchEmail}
-                                required
-                                InputProps={{
-                                    endAdornment: searchEmail ? (
-                                        <InputAdornment>
-                                            <IconButton
-                                                aria-label="clear email search box"
-                                                onClick={() => {
-                                                    setSearchEmail("")
-                                                    searchByEmail()
-                                                }}>
-                                                <Cancel />
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ) : undefined
-                                }}
-                            />
-                        </Box>
+                    <Box
+                        component="form"
+                        onSubmit={searchByEmail}
+                        sx={{ pr: 1 }}
+                    >
+                        <TextField
+                            type="email"
+                            label="Search by email"
+                            onChange={(e) => setSearchEmail(e.target.value)}
+                            value={searchEmail}
+                            required
+                            InputProps={{
+                                endAdornment: searchEmail ? (
+                                    <InputAdornment>
+                                        <IconButton
+                                            aria-label="clear email search box"
+                                            onClick={() => {
+                                                setSearchEmail("");
+                                                searchByEmail();
+                                            }}
+                                        >
+                                            <Cancel />
+                                        </IconButton>
+                                    </InputAdornment>
+                                ) : undefined,
+                            }}
+                        />
+                    </Box>
                     <Box sx={{ minWidth: 140 }}>
                         <SingleSelect
                             title={USER_FILTER_PERMISSION}
@@ -429,12 +427,11 @@ const UsersManager = ({
                     </Box>
                     <Box sx={{ flexGrow: 1 }}></Box>
                     {featureFlags.includes("mail") && (
-                            <Tooltip title={TOOLTIP_USER_PAGE_SEND_MAIL}>
-                                <IconButton 
-                                    onClick={createMail}>
-                                    <Email />
-                                </IconButton>
-                            </Tooltip>
+                        <Tooltip title={TOOLTIP_USER_PAGE_SEND_MAIL}>
+                            <IconButton onClick={createMail}>
+                                <Email />
+                            </IconButton>
+                        </Tooltip>
                     )}
                 </Toolbar>
                 <TableContainer>
@@ -520,14 +517,14 @@ const UsersManager = ({
                         </TableBody>
                     </Table>
                 </TableContainer>
-                        <TablePagination
-                            component="div"
-                            count={count}
-                            page={page}
-                            onPageChange={handlePageChange}
-                            rowsPerPage={rowsPerPage}
-                            onRowsPerPageChange={handleRowsPerPageChange}
-                        />
+                <TablePagination
+                    component="div"
+                    count={count}
+                    page={page}
+                    onPageChange={handlePageChange}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={handleRowsPerPageChange}
+                />
             </Grid>
         </Grid>
     );
