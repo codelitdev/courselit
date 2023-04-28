@@ -2,11 +2,11 @@ import React from "react";
 import { Button, Grid, Typography } from "@mui/material";
 import { BTN_EDIT_SITE, HEADER_DESIGN } from "../../../ui-config/strings";
 import { connect } from "react-redux";
-import constants from "../../../config/constants";
-import { checkPermission } from "../../../ui-lib/utils";
 import dynamic from "next/dynamic";
-import State from "../../../ui-models/state";
 import Profile from "../../../ui-models/profile";
+import { UIConstants as constants } from "@courselit/common-models";
+import { checkPermission } from "@courselit/utils";
+import { AppState } from "@courselit/state-management";
 const ThemesManager = dynamic(() => import("./themes-manager"));
 
 const { permissions } = constants;
@@ -54,7 +54,7 @@ const Appearance = (props: AppearanceProps) => {
     );
 };
 
-const mapStateToProps = (state: State) => ({
+const mapStateToProps = (state: AppState) => ({
     profile: state.profile,
 });
 

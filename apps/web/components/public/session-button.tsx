@@ -7,7 +7,7 @@ import {
 } from "../../ui-config/strings";
 import { Button } from "@mui/material";
 import Profile from "../../ui-models/profile";
-import State from "../../ui-models/state";
+import { AppState } from "@courselit/state-management";
 
 interface SessionButtonProps {
     auth: any;
@@ -34,7 +34,7 @@ function SessionButton(props: SessionButtonProps) {
     );
 }
 
-const mapStateToProps = (state: State) => ({
+const mapStateToProps = (state: AppState) => ({
     auth: state.auth,
     profile: state.profile,
 });

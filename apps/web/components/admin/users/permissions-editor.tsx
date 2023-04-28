@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Grid, Typography, Checkbox, IconButton } from "@mui/material";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
-import { permissions } from "../../../ui-config/constants";
 import {
     PERM_COURSE_MANAGE,
     PERM_COURSE_MANAGE_ANY,
@@ -22,8 +21,10 @@ import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
 import { AppMessage } from "@courselit/common-models";
 import type { User, Auth, Address } from "@courselit/common-models";
+import { UIConstants } from "@courselit/common-models";
 
 const { networkAction, setAppMessage } = actionCreators;
+const { permissions } = UIConstants;
 
 interface PermissionsEditorProps {
     user: User;
@@ -142,20 +143,12 @@ function PermissionsEditor({
                         <Typography variant="subtitle1">
                             {permissionToCaptionMap[permission]}
                         </Typography>
-                        {networkCallUnderway && (
-                            <Checkbox
-                                name={permission}
-                                disabled
-                                checked={activePermissions.includes(permission)}
-                            />
-                        )}
-                        {!networkCallUnderway && (
-                            <Checkbox
-                                name={permission}
-                                checked={activePermissions.includes(permission)}
-                                onChange={(e) => savePermissions(permission, e)}
-                            />
-                        )}
+                        <Checkbox
+                            name={permission}
+                            disabled={networkCallUnderway}
+                            checked={activePermissions.includes(permission)}
+                            onChange={(e) => savePermissions(permission, e)}
+                        />
                     </Grid>
                 ))}
         </Grid>

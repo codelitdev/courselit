@@ -4,7 +4,6 @@ import { responses } from "../../config/strings";
 import {
     makeModelTextSearchable,
     checkIfAuthenticated,
-    checkPermission,
 } from "../../lib/graphql";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
@@ -17,6 +16,7 @@ const {
 import { Progress } from "../../models/Progress";
 import { initMandatoryPages } from "../pages/logic";
 import { Domain } from "../../models/Domain";
+import { checkPermission } from "@courselit/utils";
 
 const removeAdminFieldsFromUserObject = ({
     id,
@@ -145,31 +145,42 @@ interface SearchData {
     email?: string;
 }
 
-export const getUsers = async (
-    searchData: SearchData = {},
-    ctx: GQLContext
-) => {
+interface GetUsersParams {
+    searchData: SearchData;
+    ctx: GQLContext;
+    noPagination: boolean;
+    hasMailPermissions: boolean;
+}
+
+export const getUsers = async ({
+    searchData = {},
+    ctx,
+    noPagination = false,
+    hasMailPermissions = false,
+}: GetUsersParams) => {
     checkIfAuthenticated(ctx);
-    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+    if (
+        !hasMailPermissions &&
+        !checkPermission(ctx.user.permissions, [permissions.manageUsers])
+    ) {
         throw new Error(responses.action_not_allowed);
     }
-
-    /*
-    const query: Record<string, unknown> = { domain: ctx.subdomain._id };
-    if (searchData.searchText) query.$text = { $search: searchData.searchText };
-    if (searchData.type) {
-        addFilterToQueryBasedOnUserGroup(query, searchData.type);
-    }
-    if (searchData.email) {
-        query.email = new RegExp(searchData.email);
-    }
-    */
 
     const searchUsers = makeModelTextSearchable(UserModel);
     const query = buildQueryFromSearchData(ctx.subdomain._id, searchData);
     const users = await searchUsers(
-        { offset: searchData.offset, query, graphQLContext: ctx },
-        { itemsPerPage: constants.itemsPerPage }
+        {
+            offset: noPagination ? 1 : searchData.offset,
+            query,
+            graphQLContext: ctx,
+        },
+        {
+            itemsPerPage: noPagination
+                ? Infinity
+                : searchData.rowsPerPage || constants.itemsPerPage,
+            sortByColumn: "createdAt",
+            sortOrder: -1,
+        }
     );
 
     return users;

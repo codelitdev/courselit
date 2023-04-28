@@ -100,7 +100,6 @@ export default function Widget({
             const response = await fetch.exec();
             if (response.course) {
                 setCourse(response.course);
-                console.log(response.course);
             }
         } catch (err: any) {
             dispatch(setAppMessage(new AppMessage(err.message)));

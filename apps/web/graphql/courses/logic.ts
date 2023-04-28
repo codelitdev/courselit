@@ -8,7 +8,6 @@ import {
     checkIfAuthenticated,
     validateOffset,
     extractPlainTextFromDraftJS,
-    checkPermission,
     checkOwnershipWithoutModel,
 } from "../../lib/graphql";
 import constants from "../../config/constants";
@@ -29,6 +28,7 @@ import { deleteMedia } from "../../services/medialit";
 import PageModel from "../../models/Page";
 import { Progress } from "../../models/Progress";
 import { getPrevNextCursor } from "../lessons/helpers";
+import { checkPermission } from "@courselit/utils";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -163,20 +163,16 @@ export const deleteCourse = async (
 ) => {
     const course = await getCourseOrThrow(id, ctx);
 
-    try {
-        await deleteAllLessons(course.courseId, ctx);
-        if (course.featuredImage) {
-            await deleteMedia(course.featuredImage);
-        }
-        await PageModel.deleteOne({
-            entityId: course.courseId,
-            domain: ctx.subdomain._id,
-        });
-        await course.remove();
-        return true;
-    } catch (err: any) {
-        throw new Error(err.message);
+    await deleteAllLessons(course.courseId, ctx);
+    if (course.featuredImage) {
+        await deleteMedia(course.featuredImage);
     }
+    await PageModel.deleteOne({
+        entityId: course.courseId,
+        domain: ctx.subdomain._id,
+    });
+    await course.remove();
+    return true;
 };
 
 export const getCoursesAsAdmin = async ({

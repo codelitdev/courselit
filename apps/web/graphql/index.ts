@@ -8,7 +8,7 @@ import widgets from "./widgets";
 import courses from "./courses";
 import lessons from "./lessons";
 import pages from "./pages";
-import emails from "./emails";
+import mails from "./mails";
 
 export default new graphql.GraphQLSchema({
     query: new graphql.GraphQLObjectType({
@@ -22,7 +22,7 @@ export default new graphql.GraphQLSchema({
             ...menus.queries,
             ...widgets.queries,
             ...pages.queries,
-            ...emails.queries,
+            ...mails.queries,
         },
     }),
     mutation: new graphql.GraphQLObjectType({
@@ -36,7 +36,7 @@ export default new graphql.GraphQLSchema({
             ...menus.mutations,
             ...widgets.mutations,
             ...pages.mutations,
-            ...emails.mutations,
+            ...mails.mutations,
         },
     }),
 });

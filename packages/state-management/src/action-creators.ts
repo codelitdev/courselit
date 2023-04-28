@@ -13,14 +13,15 @@ import {
     CLEAR_MESSAGE,
     THEME_AVAILABLE,
     SET_ADDRESS,
-    WIDGETS_DATA_AVAILABLE,
+    //WIDGETS_DATA_AVAILABLE,
+    FEATURE_FLAGS_AVAILABLE,
 } from "./action-types";
 import { FetchBuilder } from "@courselit/utils";
 import getAddress from "./utils/get-address";
 import type {
     State,
     SiteInfo,
-    WidgetsData,
+    //WidgetsData,
     Theme,
 } from "@courselit/common-models";
 import { AppMessage } from "@courselit/common-models";
@@ -105,25 +106,26 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
 
             const query = `
             { site: getSiteInfo {
-                name,
-                settings {
-                    title,
-                    subtitle,
-                    logo {
-                        file
-                    },
-                    currencyISOCode,
-                    paymentMethod,
-                    stripePublishableKey,
-                    codeInjectionHead,
-                    codeInjectionBody
-                },
-                theme {
                     name,
-                    active,
-                    styles,
-                    url
-                },
+                    settings {
+                        title,
+                        subtitle,
+                        logo {
+                            file
+                        },
+                        currencyISOCode,
+                        paymentMethod,
+                        stripePublishableKey,
+                        codeInjectionHead,
+                        codeInjectionBody
+                    },
+                    theme {
+                        name,
+                        active,
+                        styles,
+                        url
+                    },
+                    featureFlags
                 }
             }
             `;
@@ -137,6 +139,7 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
             if (response && response.site) {
                 dispatch(newSiteInfoAvailable(response.site.settings));
                 dispatch(themeAvailable(response.site.theme));
+                dispatch(featureFlagsAvailable(response.site.featureFlags));
             }
         } catch (err) {
             console.error(err); // eslint-disable-line no-console
@@ -164,6 +167,10 @@ export function themeAvailable(theme: Theme) {
 
 export function updateBackend(host: string): AnyAction {
     return { type: SET_ADDRESS, address: getAddress(host) };
+}
+
+export function featureFlagsAvailable(fFlags: string[]): AnyAction {
+    return { type: FEATURE_FLAGS_AVAILABLE, fFlags };
 }
 
 // export function updateWidgetsData(
@@ -220,6 +227,8 @@ export function updateBackend(host: string): AnyAction {
 //         : "";
 // }
 
+/*
 export function widgetsDataAvailable(widgetsData: WidgetsData): AnyAction {
     return { type: WIDGETS_DATA_AVAILABLE, widgetsData };
 }
+*/
