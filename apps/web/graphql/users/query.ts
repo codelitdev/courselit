@@ -34,12 +34,4 @@ export default {
         resolve: (_: any, { searchData }: any, context: GQLContext) =>
             getUsersCount(searchData, context),
     },
-    getUsersCount: {
-        type: new GraphQLNonNull(GraphQLInt),
-        args: {
-            searchData: { type: types.userSearchInput },
-        },
-        resolve: (_: any, { searchData }: any, context: GQLContext) =>
-            getUsersCount(searchData, context),
-    },
 };
