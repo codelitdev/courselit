@@ -28,7 +28,7 @@ export async function createSubscription(
         });
 
         if (!dbUser) {
-            dbUser = await createUser({
+            await createUser({
                 domain: ctx.subdomain!,
                 email: email,
                 lead: constants.leadNewsletter,
@@ -137,7 +137,6 @@ export async function getMailsCount(
         throw new Error(responses.action_not_allowed);
     }
 
-    const searchMails = makeModelTextSearchable(MailModel);
     const query = buildQueryFromSearchData(ctx.subdomain._id, searchData);
     return await MailModel.countDocuments(query);
 }

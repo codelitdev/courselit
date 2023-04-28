@@ -98,8 +98,6 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
         }
     };
 
-    const checkFirstLoad = () => !mail.subject && !mail.body && !mail.to;
-
     const saveMail = async () => {
         const mutation = `
             mutation {
@@ -114,7 +112,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
 
         try {
             dispatch(networkAction(true));
-            const response = await fetcher.exec();
+            await fetcher.exec();
         } catch (e: any) {
             dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
