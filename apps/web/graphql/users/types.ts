@@ -61,10 +61,11 @@ const userGroupType = new GraphQLEnumType({
 const userSearchInput = new GraphQLInputObjectType({
     name: "UserSearchInput",
     fields: {
-        offset: { type: GraphQLInt },
         searchText: { type: GraphQLString },
         type: { type: userGroupType },
         email: { type: GraphQLString },
+        offset: { type: GraphQLInt },
+        rowsPerPage: { type: GraphQLInt },
     },
 });
 

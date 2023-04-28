@@ -3,12 +3,12 @@ import { styled } from "@mui/material/styles";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
 import {
-    LibraryBooks,
-    SupervisedUserCircle,
-    SettingsApplications,
-    Palette,
-    Article,
-    Mail,
+    LibraryBooksOutlined,
+    SupervisedUserCircleOutlined,
+    SettingsApplicationsOutlined,
+    PaletteOutlined,
+    ArticleOutlined,
+    MailOutlined,
 } from "@mui/icons-material";
 import {
     CREATOR_AREA_PAGE_TITLE,
@@ -57,12 +57,12 @@ const getSidebarMenuItems = (profile: Profile, featureFlags: string[]) => {
         items.push({
             label: SIDEBAR_MENU_PRODUCTS,
             href: "/dashboard/products",
-            icon: <LibraryBooks />,
+            icon: <LibraryBooksOutlined />,
         });
         items.push({
             label: SIDEBAR_MENU_BLOGS,
             href: "/dashboard/blogs",
-            icon: <Article />,
+            icon: <ArticleOutlined />,
         });
     }
 
@@ -70,13 +70,13 @@ const getSidebarMenuItems = (profile: Profile, featureFlags: string[]) => {
         items.push({
             label: SIDEBAR_MENU_USERS,
             href: "/dashboard/users",
-            icon: <SupervisedUserCircle />,
+            icon: <SupervisedUserCircleOutlined />,
         });
         if (featureFlags.includes("mail")) {
             items.push({
                 label: SIDEBAR_MENU_MAILS,
                 href: "/dashboard/mails",
-                icon: <Mail />,
+                icon: <MailOutlined />,
             });
         }
     }
@@ -85,7 +85,7 @@ const getSidebarMenuItems = (profile: Profile, featureFlags: string[]) => {
         items.push({
             label: SIDEBAR_MENU_SITE,
             href: "/dashboard/design",
-            icon: <Palette />,
+            icon: <PaletteOutlined />,
         });
     }
 
@@ -93,7 +93,7 @@ const getSidebarMenuItems = (profile: Profile, featureFlags: string[]) => {
         items.push({
             label: SIDEBAR_MENU_SETTINGS,
             href: "/dashboard/settings",
-            icon: <SettingsApplications />,
+            icon: <SettingsApplicationsOutlined />,
         });
     }
 

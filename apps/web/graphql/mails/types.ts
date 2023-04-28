@@ -42,8 +42,8 @@ const mailUpdate = new GraphQLInputObjectType({
 const mailSearchInput = new GraphQLInputObjectType({
     name: "MailSearchInput",
     fields: {
-        offset: { type: GraphQLInt },
         searchText: { type: GraphQLString },
+        offset: { type: GraphQLInt },
         rowsPerPage: { type: GraphQLInt },
     },
 });

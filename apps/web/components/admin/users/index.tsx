@@ -2,6 +2,7 @@ import React, { useState, useEffect, FormEvent } from "react";
 import {
     Avatar,
     Grid,
+    Paper,
     Table,
     TableBody,
     TableCell,
@@ -9,10 +10,14 @@ import {
     TableHead,
     TableRow,
     TextField,
+    Toolbar,
     Typography,
 } from "@mui/material";
 import Button from "@mui/material/Button";
-import Pagination from "@mui/material/Pagination";
+import Box from '@mui/material/Box';
+import TablePagination from "@mui/material/TablePagination";
+import Tooltip from '@mui/material/Tooltip';
+import IconButton from '@mui/material/IconButton'
 import {
     USER_TABLE_HEADER_NAME,
     USER_TABLE_HEADER_JOINED,
@@ -28,6 +33,7 @@ import {
     USER_TABLE_HEADER_EMAIL,
     USER_TABLE_HEADER_NAME_NAME,
     BTN_SEND_MAIL,
+    TOOLTIP_USER_PAGE_SEND_MAIL
 } from "../../../ui-config/strings";
 import { checkPermission, exportToCsv, FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";
@@ -50,6 +56,8 @@ import { Select as SingleSelect } from "@courselit/components-library";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import { CSVLink } from "react-csv";
 import Email from "@mui/icons-material/Email";
+import Cancel from '@mui/icons-material/Cancel';
+import InputAdornment from '@mui/material/InputAdornment';
 import { useRouter } from "next/router";
 import { UIConstants } from "@courselit/common-models";
 
@@ -71,7 +79,8 @@ const UsersManager = ({
     profile,
     featureFlags,
 }: UserManagerProps) => {
-    const [usersPaginationOffset, setUsersPaginationOffset] = useState(1);
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [users, setUsers] = useState<User[]>([]);
     const [type, setType] = useState("");
     const [searchEmail, setSearchEmail] = useState("");
@@ -81,7 +90,25 @@ const UsersManager = ({
 
     useEffect(() => {
         loadUsers();
-    }, [usersPaginationOffset, type, searchEmailHook]);
+    }, [page, rowsPerPage, type, searchEmailHook]);
+
+    useEffect(() => {
+        loadUsersCount();
+    }, [rowsPerPage, type, searchEmailHook])
+
+    const handlePageChange = (
+        e: MouseEvent<HTMLButtonElement> | null,
+        newPage: number
+    ) => {
+        setPage(newPage);
+    };
+
+    const handleRowsPerPageChange = (
+        e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    ) => {
+        setRowsPerPage(parseInt(e.target.value, 10));
+        setPage(0);
+    };
 
     const loadUsers = async () => {
         const query =
@@ -89,8 +116,9 @@ const UsersManager = ({
                 ? `
                 query {
                     users: getUsers(searchData: {
-                        offset: ${usersPaginationOffset},
                         type: ${type.toUpperCase()}
+                        offset: ${page + 1},
+                        rowsPerPage: ${rowsPerPage}
                     }) {
                         id,
                         name,
@@ -100,8 +128,72 @@ const UsersManager = ({
                         createdAt,
                         updatedAt
                     },
+                }
+            `
+                : searchEmail
+                ? `
+                query {
+                    users: getUsers(searchData: {
+                        offset: ${page + 1}
+                        email: "${searchEmail}",
+                        rowsPerPage: ${rowsPerPage}
+                    }) {
+                        id,
+                        name,
+                        userId,
+                        email,
+                        permissions,
+                        createdAt,
+                        updatedAt
+                    },
+                }
+            `
+                : `
+                query {
+                    users: getUsers(searchData: {
+                        offset: ${page + 1},
+                        rowsPerPage: ${rowsPerPage}
+                    }) {
+                        id,
+                        name,
+                        userId,
+                        email,
+                        permissions,
+                        createdAt,
+                        updatedAt
+                    },
+                }
+            `;
+
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload(query)
+            .setIsGraphQLEndpoint(true)
+            .build();
+        try {
+            (dispatch as ThunkDispatch<State, null, AnyAction>)(
+                networkAction(true)
+            );
+            const response = await fetch.exec();
+            if (response.users && response.users.length > 0) {
+                setUsers(response.users);
+            }
+        } catch (err) {
+            dispatch(setAppMessage(new AppMessage(err.message)));
+        } finally {
+            (dispatch as ThunkDispatch<State, null, AnyAction>)(
+                networkAction(false)
+            );
+        }
+    };
+
+    const loadUsersCount = async () => {
+        const query =
+            type !== ""
+                ? `
+                query {
                     count: getUsersCount(searchData: {
-                        offset: ${usersPaginationOffset},
+                        offset: ${page},
                         type: ${type.toUpperCase()}
                     })
                 }
@@ -109,43 +201,40 @@ const UsersManager = ({
                 : searchEmail
                 ? `
                 query {
-                    users: getUsers(searchData: {
-                        offset: ${usersPaginationOffset}
-                        email: "${searchEmail}"
-                    }) {
-                        id,
-                        name,
-                        userId,
-                        email,
-                        permissions,
-                        createdAt,
-                        updatedAt
-                    },
                     count: getUsersCount(searchData: {
-                        offset: ${usersPaginationOffset}
+                        offset: ${page}
                         email: "${searchEmail}"
                     }) 
                 }
             `
                 : `
                 query {
-                    users: getUsers(searchData: {
-                        offset: ${usersPaginationOffset}
-                    }) {
-                        id,
-                        name,
-                        userId,
-                        email,
-                        permissions,
-                        createdAt,
-                        updatedAt
-                    },
                     count: getUsersCount(searchData: {
-                        offset: ${usersPaginationOffset}
+                        offset: ${page}
                     })
                 }
             `;
-        await fetchUsers(query);
+
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload(query)
+            .setIsGraphQLEndpoint(true)
+            .build();
+        try {
+            (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
+                networkAction(true)
+            );
+            const response = await fetch.exec();
+            if (response.count) {
+                setCount(response.count);
+            }
+        } catch (err) {
+            dispatch(setAppMessage(new AppMessage(err.message)));
+        } finally {
+            (dispatch as ThunkDispatch<State, null, AnyAction>)(
+                networkAction(false)
+            );
+        }
     };
 
     const createMail = async () => {
@@ -178,7 +267,7 @@ const UsersManager = ({
                 mutation {
                     mail: createMail(
                         searchData: {
-                            offset: ${usersPaginationOffset}
+                            offset: ${page}
                         } 
                     ) {
                         mailId
@@ -199,35 +288,9 @@ const UsersManager = ({
                 router.push(`/dashboard/mails/${response.mail.mailId}/edit`);
             }
         } catch (err) {
-            dispatch(setAppMessage(new AppMessage(GENERIC_FAILURE_MESSAGE)));
+            dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
             (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                networkAction(false)
-            );
-        }
-    };
-
-    const fetchUsers = async (query: string) => {
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            (dispatch as ThunkDispatch<State, null, AnyAction>)(
-                networkAction(true)
-            );
-            const response = await fetch.exec();
-            if (response.users && response.users.length > 0) {
-                setUsers(response.users);
-            }
-            if (response.count) {
-                setCount(response.count);
-            }
-        } catch (err) {
-            dispatch(setAppMessage(new AppMessage(GENERIC_FAILURE_MESSAGE)));
-        } finally {
-            (dispatch as ThunkDispatch<State, null, AnyAction>)(
                 networkAction(false)
             );
         }
@@ -263,13 +326,13 @@ const UsersManager = ({
         setSearchEmail("");
         setType(value);
         setUsers([]);
-        setUsersPaginationOffset(1);
+        setPage(0);
     };
 
-    const searchByEmail = async (e: FormEvent) => {
-        e.preventDefault();
+    const searchByEmail = async (e?: FormEvent) => {
+        e && e.preventDefault();
         setUsers([]);
-        setUsersPaginationOffset(1);
+        setPage(0);
         setType("");
         setSearchEmailHook(searchEmailHook + 1);
     };
@@ -280,25 +343,40 @@ const UsersManager = ({
 
     return (
         <Grid container direction="column">
-            <Grid item sx={{ mb: 3 }}>
+            <Grid item sx={{ mb: 2 }}>
                 <Typography variant="h1">
                     {USERS_MANAGER_PAGE_HEADING}
                 </Typography>
             </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <Grid container spacing={2} alignItems="center">
-                    <Grid item>
-                        <form onSubmit={searchByEmail}>
+            <Grid item sx={{ mb: 2 }} component={Paper}>
+                <Toolbar>
+                        <Box 
+                            component="form" 
+                            onSubmit={searchByEmail}
+                            sx={{ pr: 1 }}>
                             <TextField
                                 type="email"
                                 label="Search by email"
                                 onChange={(e) => setSearchEmail(e.target.value)}
                                 value={searchEmail}
                                 required
+                                InputProps={{
+                                    endAdornment: searchEmail ? (
+                                        <InputAdornment>
+                                            <IconButton
+                                                aria-label="clear email search box"
+                                                onClick={() => {
+                                                    setSearchEmail("")
+                                                    searchByEmail()
+                                                }}>
+                                                <Cancel />
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ) : undefined
+                                }}
                             />
-                        </form>
-                    </Grid>
-                    <Grid item sx={{ minWidth: 140 }}>
+                        </Box>
+                    <Box sx={{ minWidth: 140 }}>
                         <SingleSelect
                             title={USER_FILTER_PERMISSION}
                             onChange={handleUserTypeChange}
@@ -319,8 +397,8 @@ const UsersManager = ({
                                 },
                             ]}
                         />
-                    </Grid>
-                    <Grid item sx={{ display: "none" }}>
+                    </Box>
+                    <Box sx={{ display: "none" }}>
                         <CSVLink
                             filename={"users-courselit.csv"}
                             headers={[
@@ -348,22 +426,17 @@ const UsersManager = ({
                         >
                             {EXPORT_CSV}
                         </CSVLink>
-                    </Grid>
+                    </Box>
+                    <Box sx={{ flexGrow: 1 }}></Box>
                     {featureFlags.includes("mail") && (
-                        <Grid item>
-                            <Button
-                                variant="outlined"
-                                endIcon={<Email />}
-                                size="large"
-                                onClick={createMail}
-                            >
-                                {BTN_SEND_MAIL}
-                            </Button>
-                        </Grid>
+                            <Tooltip title={TOOLTIP_USER_PAGE_SEND_MAIL}>
+                                <IconButton 
+                                    onClick={createMail}>
+                                    <Email />
+                                </IconButton>
+                            </Tooltip>
                     )}
-                </Grid>
-            </Grid>
-            <Grid item sx={{ mb: 2 }}>
+                </Toolbar>
                 <TableContainer>
                     <Table aria-label="Users">
                         <TableHead>
@@ -447,15 +520,14 @@ const UsersManager = ({
                         </TableBody>
                     </Table>
                 </TableContainer>
-            </Grid>
-            <Grid item alignSelf="center">
-                <Pagination
-                    count={Math.ceil(count / ITEMS_PER_PAGE)}
-                    page={usersPaginationOffset}
-                    onChange={(e: ChangeEvent<unknown>, value: number) =>
-                        setUsersPaginationOffset(value)
-                    }
-                />
+                        <TablePagination
+                            component="div"
+                            count={count}
+                            page={page}
+                            onPageChange={handlePageChange}
+                            rowsPerPage={rowsPerPage}
+                            onRowsPerPageChange={handleRowsPerPageChange}
+                        />
             </Grid>
         </Grid>
     );

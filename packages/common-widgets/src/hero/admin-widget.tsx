@@ -69,7 +69,6 @@ export default function AdminWidget({
     );
     const [media, setMedia] = useState<Partial<Media>>(settings.media || {});
     const [style, setStyle] = useState(settings.style || "normal");
-    console.log(settings.description);
 
     const onSettingsChanged = () =>
         onChange({

@@ -55,13 +55,17 @@ export async function createMail(
     }
 
     try {
-        const matchingUsers = await getUsers({
-            searchData,
-            ctx,
-            noPagination: true,
-            hasMailPermissions: true,
-        });
-        const emails = matchingUsers.map((x) => x.email);
+        let emails = [];
+        let emptySearchData = Object.keys(searchData).length === 0;
+        if (!emptySearchData) {
+            const matchingUsers = await getUsers({
+                searchData,
+                ctx,
+                noPagination: true,
+                hasMailPermissions: true,
+            });
+            emails = matchingUsers.map((x) => x.email);
+        }
         const mail = await MailModel.create({
             domain: ctx.subdomain._id,
             creatorId: ctx.user.userId,

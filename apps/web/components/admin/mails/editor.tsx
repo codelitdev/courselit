@@ -22,6 +22,7 @@ import {
 import { connect } from "react-redux";
 import {
     BTN_SEND,
+    BTN_SENDING,
     MAIL_BODY_PLACEHOLDER,
     MAIL_SUBJECT_PLACEHOLDER,
     MAIL_TO_PLACEHOLDER,
@@ -47,6 +48,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
         body: "",
         published: false,
     });
+    const [sending, setSending] = useState(false)
     const debouncedSave = debounce(async () => await saveMail(), 1000);
 
     useEffect(() => {
@@ -146,6 +148,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
 
         try {
             dispatch(networkAction(true));
+            setSending(true)
             const response = await fetcher.exec();
             if (response.mail) {
                 setMail(response.mail);
@@ -155,6 +158,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
             dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
             dispatch(networkAction(false));
+            setSending(false)
         }
     };
 
@@ -240,11 +244,12 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                             disabled={
                                 mail.to.length < 1 ||
                                 !mail.subject ||
-                                !mail.body
+                                !mail.body ||
+                                sending
                             }
                             type="submit"
                         >
-                            {BTN_SEND}
+                            {sending ? BTN_SENDING : BTN_SEND}
                         </Button>
                     </Grid>
                 )}

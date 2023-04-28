@@ -62,6 +62,6 @@ export const COURSE_TYPE_DOWNLOAD = "download";
 
 // limits
 export const MAIL_SUBJECT_MAX_LENGTH = 78;
-export const MAIL_MAX_RECIPIENTS = 5;
+export const MAIL_MAX_RECIPIENTS = 500;
 
 export const MAIL_RECIPIENTS_SPLIT_REGEX = /,\s*/;

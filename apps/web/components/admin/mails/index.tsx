@@ -66,7 +66,7 @@ function Mails({ auth, address, profile, dispatch, featureFlags }: MailsProps) {
 
     useEffect(() => {
         loadMails();
-    }, [page]);
+    }, [page, rowsPerPage]);
 
     useEffect(() => {
         if (!featureFlags.includes("mail")) {
@@ -194,9 +194,11 @@ function Mails({ auth, address, profile, dispatch, featureFlags }: MailsProps) {
             )}
             {mails.length > 0 && (
                 <>
-                    <Grid item xs={12}>
-                        <TableContainer component={Paper}>
-                            <Table sx={{ minWidth: "100%" }}>
+                    <Grid item xs={12} component={Paper}>
+                        <TableContainer>
+                            <Table 
+                                aria-label="Mails" 
+                                sx={{ minWidth: "100%" }}>
                                 <TableHead>
                                     <TableRow>
                                         <TableCell>
@@ -278,8 +280,6 @@ function Mails({ auth, address, profile, dispatch, featureFlags }: MailsProps) {
                                 </TableBody>
                             </Table>
                         </TableContainer>
-                    </Grid>
-                    <Grid item>
                         <TablePagination
                             component="div"
                             count={count}
