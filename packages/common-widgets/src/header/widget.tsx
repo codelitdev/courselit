@@ -159,23 +159,23 @@ export default function Widget({ state, settings }: WidgetProps) {
                             </Avatar>
                         }
                         options={[
-                            state.auth.guest
-                                ? undefined
-                                : {
-                                      label: "My content",
-                                      type: "link",
-                                      href: "/my-content",
-                                  },
                             state.profile.fetched &&
                             checkPermission(state.profile.permissions, [
                                 UIConstants.permissions.enrollInCourse,
                             ])
                                 ? {
+                                      label: "My content",
+                                      type: "link",
+                                      href: "/my-content",
+                                  }
+                                : undefined,
+                            state.auth.guest
+                                ? undefined
+                                : {
                                       label: "Profile",
                                       type: "link",
                                       href: "/profile",
-                                  }
-                                : undefined,
+                                  },
                             state.profile.fetched &&
                             checkPermission(state.profile.permissions, [
                                 UIConstants.permissions.manageCourse,
@@ -232,23 +232,23 @@ export default function Widget({ state, settings }: WidgetProps) {
                                       href: link.href,
                                   }))
                                 : []),
-                            state.auth.guest
-                                ? undefined
-                                : {
-                                      label: "My content",
-                                      type: "link",
-                                      href: "/my-content",
-                                  },
                             state.profile.fetched &&
                             checkPermission(state.profile.permissions, [
                                 UIConstants.permissions.enrollInCourse,
                             ])
                                 ? {
+                                      label: "My content",
+                                      type: "link",
+                                      href: "/my-content",
+                                  }
+                                : undefined,
+                            state.auth.guest
+                                ? undefined
+                                : {
                                       label: "Profile",
                                       type: "link",
                                       href: "/profile",
-                                  }
-                                : undefined,
+                                  },
                             state.profile.fetched &&
                             checkPermission(state.profile.permissions, [
                                 UIConstants.permissions.manageCourse,
