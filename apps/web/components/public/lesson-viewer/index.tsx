@@ -189,7 +189,7 @@ const LessonViewer = ({
                         }`
                     );
                 } else {
-                    router.push(`/account`);
+                    router.push(`/my-content`);
                 }
             }
         } catch (err: any) {

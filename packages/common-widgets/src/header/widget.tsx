@@ -3,7 +3,8 @@ import { Avatar, Box, Grid, Link as MuiLink, Typography } from "@mui/material";
 import Settings, { Link } from "./settings";
 import { Image, Menu, Link as NextLink } from "@courselit/components-library";
 import { Close, Menu as MenuIcon } from "@mui/icons-material";
-import { State } from "@courselit/common-models";
+import { State, UIConstants } from "@courselit/common-models";
+import { checkPermission } from "@courselit/utils";
 
 interface WidgetProps {
     settings: Settings;
@@ -161,12 +162,31 @@ export default function Widget({ state, settings }: WidgetProps) {
                             state.auth.guest
                                 ? undefined
                                 : {
-                                      label: "Account",
+                                      label: "My content",
                                       type: "link",
-                                      href: "/account",
+                                      href: "/my-content",
                                   },
                             state.profile.fetched &&
-                            state.profile.permissions.length > 1
+                            checkPermission(state.profile.permissions, [
+                                UIConstants.permissions.enrollInCourse,
+                            ])
+                                ? {
+                                      label: "Profile",
+                                      type: "link",
+                                      href: "/profile",
+                                  }
+                                : undefined,
+                            state.profile.fetched &&
+                            checkPermission(state.profile.permissions, [
+                                UIConstants.permissions.manageCourse,
+                                UIConstants.permissions.manageAnyCourse,
+                                UIConstants.permissions.manageMedia,
+                                UIConstants.permissions.manageAnyMedia,
+                                UIConstants.permissions.manageSite,
+                                UIConstants.permissions.manageSettings,
+                                UIConstants.permissions.manageUsers,
+                                UIConstants.permissions.viewAnyMedia,
+                            ])
                                 ? {
                                       label: "Dashboard",
                                       type: "link",
@@ -178,16 +198,6 @@ export default function Widget({ state, settings }: WidgetProps) {
                                 type: "link",
                                 href: state.auth.guest ? "/login" : "/logout",
                             },
-                            // {
-                            //     label: "Account",
-                            //     type: "link",
-                            //     href: "/account",
-                            // },
-                            // {
-                            //     label: "Logout",
-                            //     type: "link",
-                            //     href: "/logout",
-                            // },
                         ]}
                     />
                 </Box>
@@ -225,10 +235,37 @@ export default function Widget({ state, settings }: WidgetProps) {
                             state.auth.guest
                                 ? undefined
                                 : {
-                                      label: "Account",
+                                      label: "My content",
                                       type: "link",
-                                      href: "/account",
+                                      href: "/my-content",
                                   },
+                            state.profile.fetched &&
+                            checkPermission(state.profile.permissions, [
+                                UIConstants.permissions.enrollInCourse,
+                            ])
+                                ? {
+                                      label: "Profile",
+                                      type: "link",
+                                      href: "/profile",
+                                  }
+                                : undefined,
+                            state.profile.fetched &&
+                            checkPermission(state.profile.permissions, [
+                                UIConstants.permissions.manageCourse,
+                                UIConstants.permissions.manageAnyCourse,
+                                UIConstants.permissions.manageMedia,
+                                UIConstants.permissions.manageAnyMedia,
+                                UIConstants.permissions.manageSite,
+                                UIConstants.permissions.manageSettings,
+                                UIConstants.permissions.manageUsers,
+                                UIConstants.permissions.viewAnyMedia,
+                            ])
+                                ? {
+                                      label: "Dashboard",
+                                      type: "link",
+                                      href: "/dashboard/products",
+                                  }
+                                : undefined,
                             {
                                 label: state.auth.guest ? "Login" : "Logout",
                                 type: "link",

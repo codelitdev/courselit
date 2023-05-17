@@ -33,6 +33,7 @@ const userType = new GraphQLObjectType({
         userId: { type: new GraphQLNonNull(GraphQLString) },
         bio: { type: GraphQLString },
         permissions: { type: new GraphQLList(GraphQLString) },
+        subscribedToUpdates: { type: GraphQLBoolean },
         createdAt: { type: GraphQLString },
         updatedAt: { type: GraphQLString },
     },
@@ -46,6 +47,7 @@ const userUpdateInput = new GraphQLInputObjectType({
         active: { type: GraphQLBoolean },
         bio: { type: GraphQLString },
         permissions: { type: new GraphQLList(GraphQLString) },
+        subscribedToUpdates: { type: GraphQLBoolean },
     },
 });
 

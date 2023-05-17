@@ -45,7 +45,7 @@ const Free = ({ course, auth, dispatch, address }: FreeProps) => {
 
             if (response.status === "success") {
                 dispatch(refreshUserProfile());
-                router.replace(`/account`);
+                router.replace(`/my-content`);
             } else if (response.status === "failed") {
                 dispatch(setAppMessage(new AppMessage(response.error)));
             }

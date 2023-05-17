@@ -225,15 +225,15 @@ export const HEADER_RESET_PASSWORD = "Reset password";
 export const HEADER_DESIGN = "Site";
 export const HEADER_YOUR_PROFILE = "Your Profile";
 export const PROFILE_PAGE_MESSAGE_NOT_LOGGED_IN = "to see your profile.";
-export const PROFILE_PAGE_HEADER = "Your courses";
-export const PROFILE_MY_COURSES = "My Courses";
-export const PROFILE_PAGE_NOT_ENROLLED = "You are not enrolled in any course.";
-export const PROFILE_PAGE_BROWSE_COURSES_TEXT = "Browse our courses";
+export const PROFILE_PAGE_HEADER = "Profile";
+export const MY_CONTENT_HEADER = "My Courses";
+export const PROFILE_EMAIL_PREFERENCES = "Email preferences";
+export const PROFILE_SECTION_DETAILS = "Personal details";
 export const PROFILE_SECTION_DETAILS_NAME = "Name";
 export const PROFILE_SECTION_DETAILS_EMAIL = "Email";
 export const PROFILE_SECTION_DETAILS_BIO = "Bio";
-export const PROFILE_SECTION_DETAILS_BIO_EMPTY =
-    "The user has not filled the bio.";
+export const PROFILE_EMAIL_PREFERENCES_NEWSLETTER_OPTION_TEXT =
+    "Receive newsletter and marketing emails";
 export const BTN_PUBLISH = "Publish";
 export const BTN_UNPUBLISH = "Draft";
 export const PERM_SECTION_HEADER = "Permissions";
