@@ -12,4 +12,5 @@ export default interface Profile {
     bio: string;
     permissions: string[];
     userId: string;
+    subscribedToUpdates: string;
 }

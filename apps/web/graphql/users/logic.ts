@@ -107,7 +107,10 @@ export const updateUser = async (userData, ctx) => {
             continue;
         }
 
-        if (!["bio", "name"].includes(key) && id === ctx.user.id) {
+        if (
+            !["bio", "name", "subscribedToUpdates"].includes(key) &&
+            id === ctx.user.id
+        ) {
             throw new Error(responses.action_not_allowed);
         }
 

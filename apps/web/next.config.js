@@ -10,7 +10,7 @@ const nextConfig = {
         ignoreBuildErrors: true,
     },
     images: {
-        domains: [cdn],
+        domains: [cdn, "courselit-test.sgp1.cdn.digitaloceanspaces.com"],
     },
 };
 

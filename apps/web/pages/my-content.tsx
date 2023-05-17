@@ -6,8 +6,7 @@ import BaseLayout from "../components/public/base-layout";
 import {
     ACCOUNT_NO_PURCHASE_PLACEHOLDER,
     ACCOUNT_PROGRESS_SUFFIX,
-    PROFILE_MY_COURSES,
-    PROFILE_PAGE_HEADER,
+    MY_CONTENT_HEADER,
     VISIT_COURSE_BUTTON,
 } from "../ui-config/strings";
 import { getBackendAddress, getPage } from "../ui-lib/utils";
@@ -65,15 +64,15 @@ function Account({ auth, page, profile, address }: AccountProps) {
             }
             setLoaded(true);
         } catch (e: any) {
-            console.error("Accounts page", e.message);
+            console.error("My-content page", e.message);
         }
     };
 
     return (
-        <BaseLayout layout={page.layout} title={PROFILE_PAGE_HEADER}>
+        <BaseLayout layout={page.layout} title={MY_CONTENT_HEADER}>
             <Grid container sx={{ minHeight: "80vh" }} direction="column">
                 <Grid item sx={{ p: 2 }}>
-                    <Typography variant="h4">{PROFILE_MY_COURSES}</Typography>
+                    <Typography variant="h4">{MY_CONTENT_HEADER}</Typography>
                 </Grid>
                 {!loaded && (
                     <Grid item xs={12} sx={{ p: 2 }}>
