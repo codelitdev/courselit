@@ -15,6 +15,8 @@ import { Button, Grid, Skeleton, Typography } from "@mui/material";
 import { FetchBuilder } from "@courselit/utils";
 import { Section } from "@courselit/components-library";
 import Link from "next/link";
+import { checkPermission } from "@courselit/utils";
+import { UIConstants } from "@courselit/common-models";
 
 interface AccountProps {
     auth: Auth;
@@ -36,6 +38,14 @@ function Account({ auth, page, profile, address }: AccountProps) {
 
     useEffect(() => {
         if (profile.userId) {
+            if (
+                !checkPermission(profile.permissions, [
+                    UIConstants.permissions.enrollInCourse,
+                ])
+            ) {
+                router.replace("/");
+            }
+
             loadEnrolledCourses();
         }
     }, [profile]);
