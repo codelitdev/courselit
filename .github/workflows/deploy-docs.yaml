@@ -21,7 +21,7 @@ jobs:
       - name: Checkout your repository using git
         uses: actions/checkout@v3          
       - name: Install, build, and upload your site
-        uses: withastro/action/.github/workflows/release.yml@eb924df8be69e075043d5e5f1cd076584e817136
+        uses: withastro/action/.github/workflows/release.yml@v0.2.0
         with:
           path: "./apps/docs"
 

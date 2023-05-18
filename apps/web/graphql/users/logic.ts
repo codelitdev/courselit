@@ -75,15 +75,17 @@ export const getUser = async (email = null, userId = null, ctx: GQLContext) => {
 };
 
 const validateUserProperties = (user) => {
-    checkForInvalidPermissions(user)
+    checkForInvalidPermissions(user);
 };
 
 const checkForInvalidPermissions = (user) => {
-    const invalidPerms = user.permissions.filter(x => !Object.values(permissions).includes(x))
+    const invalidPerms = user.permissions.filter(
+        (x) => !Object.values(permissions).includes(x)
+    );
     if (invalidPerms.length) {
         throw new Error(responses.invalid_permission);
     }
-}
+};
 
 export const updateUser = async (userData: any, ctx: GQLContext) => {
     checkIfAuthenticated(ctx);
