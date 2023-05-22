@@ -214,11 +214,15 @@ export async function sendMail(mailId: string, ctx: GQLContext): Promise<Mail> {
         domain: ctx.subdomain._id,
     });
 
+    if (!mail) {
+        throw new Error(responses.item_not_found);
+    }
+
     if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
         throw new Error(responses.action_not_allowed);
     }
 
-    if (mail!.published) {
+    if (mail.published) {
         throw new Error(responses.mail_already_sent);
     }
 
@@ -226,15 +230,26 @@ export async function sendMail(mailId: string, ctx: GQLContext): Promise<Mail> {
         const from = `${ctx.subdomain.settings.title || ctx.subdomain.name} ${
             ctx.user.email
         }`;
-        await send({
-            from,
-            to: mail.to,
-            subject: mail.subject,
-            body: mail.body,
-        });
+
+        if (mail.to && mail.to.length === 1) {
+            await send({
+                from,
+                to: mail.to!,
+                subject: mail.subject!,
+                body: mail.body!,
+            });
+        } else {
+            await send({
+                from,
+                bcc: mail.to,
+                to: "",
+                subject: mail.subject!,
+                body: mail.body!,
+            });
+        }
 
         mail.published = true;
-        mail = await mail.save();
+        mail = await (mail as any).save();
 
         return mail;
     } catch (e: any) {

@@ -8,6 +8,7 @@ interface MailProps {
     subject: string;
     body: string;
     from?: string;
+    bcc?: string;
 }
 
 export const send = async ({
@@ -15,6 +16,7 @@ export const send = async ({
     subject,
     body,
     from = mailFrom,
+    bcc,
 }: MailProps) => {
     const transporter = nodemailer.createTransport({
         host: mailHost,
@@ -31,11 +33,13 @@ export const send = async ({
             to,
             subject,
             html: body,
+            bcc,
         });
-    } catch (err) {
+    } catch (err: any) {
         error(err.message, {
             fileName: "services/mail.ts",
             stack: err.stack,
         });
+        throw err;
     }
 };
