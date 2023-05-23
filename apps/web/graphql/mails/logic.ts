@@ -11,7 +11,6 @@ import {
 import { responses } from "../../config/strings";
 import mongoose from "mongoose";
 import SearchData from "./models/search-data";
-import { send } from "../../services/mail";
 import { checkPermission } from "@courselit/utils";
 import { UIConstants } from "@courselit/common-models";
 import { addMailJob } from "../../services/queue";
@@ -211,8 +210,8 @@ export async function updateMail(
 const removeEmptyMembers = (arr: string[]) =>
     arr.filter((x) => x.trim() !== "");
 
-function isNotUndefined (mail: Mail | null): mail is Mail {
-    return !!mail
+function isNotUndefined(mail: Mail | null): mail is Mail {
+    return !!mail;
 }
 
 export async function sendMail(mailId: string, ctx: GQLContext): Promise<Mail> {
@@ -245,7 +244,7 @@ export async function sendMail(mailId: string, ctx: GQLContext): Promise<Mail> {
             to: mail.to!,
             subject: mail.subject!,
             body: mail.body!,
-        })
+        });
 
         mail.published = true;
         await (mail as any).save();

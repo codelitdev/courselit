@@ -4,12 +4,12 @@ export async function addMailJob({
     to,
     from,
     subject,
-    body
+    body,
 }: {
-    to: string[],
-    from: string,
-    subject: string,
-    body: string
+    to: string[];
+    from: string;
+    subject: string;
+    body: string;
 }) {
     const response = await fetch(`${queueServer}/job/mail`, {
         method: "POST",
@@ -20,12 +20,12 @@ export async function addMailJob({
             to,
             from,
             subject,
-            body
-        })
-    })
+            body,
+        }),
+    });
     const jsonResponse = await response.json();
 
     if (response.status !== 200) {
-        throw new Error(jsonResponse.error) 
+        throw new Error(jsonResponse.error);
     }
 }
