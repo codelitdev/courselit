@@ -5,7 +5,7 @@ export interface Mail {
     domain: mongoose.Types.ObjectId;
     mailId: string;
     creatorId: string;
-    to?: string;
+    to?: string[];
     subject?: string;
     body?: string;
     published: boolean;

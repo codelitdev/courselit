@@ -14,6 +14,7 @@ import SearchData from "./models/search-data";
 import { send } from "../../services/mail";
 import { checkPermission } from "@courselit/utils";
 import { UIConstants } from "@courselit/common-models";
+import { addMailJob } from "../../services/queue";
 
 const { permissions } = constants;
 
@@ -158,13 +159,17 @@ const buildQueryFromSearchData = (
 export async function updateMail(
     mailData: Pick<Mail, "mailId" | "to" | "subject" | "body"> = {},
     ctx: GQLContext
-): Promise<Mail> {
+): Promise<Mail | null> {
     checkIfAuthenticated(ctx);
 
     let mail: Mail | null = await MailModel.findOne({
         mailId: mailData.mailId,
         domain: ctx.subdomain._id,
     });
+
+    if (!isNotUndefined(mail)) {
+        throw new Error(responses.item_not_found);
+    }
 
     if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
         throw new Error(responses.action_not_allowed);
@@ -178,7 +183,7 @@ export async function updateMail(
     }
 
     if (mailData.to) {
-        mailData.to = removeEmptyMembers([...new Set(mailData.to)]);
+        mailData.to = removeEmptyMembers(Array.from(new Set(mailData.to)));
     }
 
     if (mailData.to && mailData.to.length > UIConstants.MAIL_MAX_RECIPIENTS) {
@@ -192,7 +197,7 @@ export async function updateMail(
             mail[key] = mailData[key];
         }
 
-        mail = await mail.save();
+        mail = await (mail as any).save();
 
         return mail;
     } catch (e: any) {
@@ -206,6 +211,10 @@ export async function updateMail(
 const removeEmptyMembers = (arr: string[]) =>
     arr.filter((x) => x.trim() !== "");
 
+function isNotUndefined (mail: Mail | null): mail is Mail {
+    return !!mail
+}
+
 export async function sendMail(mailId: string, ctx: GQLContext): Promise<Mail> {
     checkIfAuthenticated(ctx);
 
@@ -214,7 +223,7 @@ export async function sendMail(mailId: string, ctx: GQLContext): Promise<Mail> {
         domain: ctx.subdomain._id,
     });
 
-    if (!mail) {
+    if (!isNotUndefined(mail)) {
         throw new Error(responses.item_not_found);
     }
 
@@ -231,31 +240,21 @@ export async function sendMail(mailId: string, ctx: GQLContext): Promise<Mail> {
             ctx.user.email
         }`;
 
-        if (mail.to && mail.to.length === 1) {
-            await send({
-                from,
-                to: mail.to!,
-                subject: mail.subject!,
-                body: mail.body!,
-            });
-        } else {
-            await send({
-                from,
-                bcc: mail.to,
-                to: "",
-                subject: mail.subject!,
-                body: mail.body!,
-            });
-        }
+        await addMailJob({
+            from,
+            to: mail.to!,
+            subject: mail.subject!,
+            body: mail.body!,
+        })
 
         mail.published = true;
-        mail = await (mail as any).save();
+        await (mail as any).save();
 
         return mail;
     } catch (e: any) {
         error(e.message, {
             stack: e.stack,
         });
-        throw e;
+        throw new Error(responses.internal_error);
     }
 }

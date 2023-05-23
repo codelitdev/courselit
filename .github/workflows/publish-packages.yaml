@@ -86,6 +86,12 @@ jobs:
         with:
           images: codelit/courselit-proxy
 
+      - name: Docker meta for the queue 
+        id: metaqueue
+        uses: docker/metadata-action@v3
+        with:
+          images: codelit/courselit-queue
+
       - name: Build and push app 
         id: docker_build_app
         uses: docker/build-push-action@v2
@@ -109,3 +115,15 @@ jobs:
 
       - name: Image digest
         run: echo ${{ steps.docker_build_proxy.outputs.digest }}
+
+      - name: Build and push queue 
+        id: docker_build_queue
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./services/queue/Dockerfile
+          push: true
+          tags: ${{ steps.metaqueue.outputs.tags }}
+
+      - name: Image digest
+        run: echo ${{ steps.docker_build_queue.outputs.digest }}
