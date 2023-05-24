@@ -21,7 +21,7 @@ export default {
     mailHost: process.env.EMAIL_HOST,
     mailUser: process.env.EMAIL_USER,
     mailPass: process.env.EMAIL_PASS,
-    mailFrom: process.env.EMAIL_FROM,
+    mailFrom: process.env.EMAIL_FROM || "",
     mailPort: process.env.EMAIL_PORT ? +process.env.EMAIL_PORT : 587,
 
     // password related config

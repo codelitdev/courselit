@@ -41,8 +41,6 @@ services:
       - REDIS_HOST=redis
     expose:
       - "80"
-    ports:
-      - "4001:80"
     restart: on-failure 
     depends_on: 
       - redis
