@@ -28,7 +28,7 @@ export default new Strategy(
         const emailBody = pug.render(LoginEmailTemplate, { magiclink });
         return process.env.NODE_ENV === "production"
             ? await send({
-                  to: user.email,
+                  to: [user.email],
                   subject: `${responses.sign_in_mail_prefix} ${req.headers["host"]}`,
                   body: emailBody,
               })
