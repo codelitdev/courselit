@@ -13,7 +13,6 @@ import mongoose from "mongoose";
 import SearchData from "./models/search-data";
 import { checkPermission } from "@courselit/utils";
 import { UIConstants } from "@courselit/common-models";
-import { addMailJob } from "../../services/queue";
 import { send } from "../../services/mail";
 
 const { permissions } = constants;
@@ -236,7 +235,7 @@ export async function sendMail(mailId: string, ctx: GQLContext): Promise<Mail> {
     }
 
     if (!mail.to || !mail.subject || !mail.body) {
-        throw new Error(responses.invalid_mail)
+        throw new Error(responses.invalid_mail);
     }
 
     try {
@@ -245,11 +244,11 @@ export async function sendMail(mailId: string, ctx: GQLContext): Promise<Mail> {
         }`;
 
         await send({
-             from,
-             to: mail.to,
-             subject: mail.subject,
-             body: mail.body,
-         });
+            from,
+            to: mail.to,
+            subject: mail.subject,
+            body: mail.body,
+        });
 
         mail.published = true;
         await (mail as any).save();
