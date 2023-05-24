@@ -98,6 +98,7 @@ export const responses = {
     mail_already_sent: "The mail is already sent",
     mail_subject_length_exceeded: `Subject cannot be longer than ${UIConstants.MAIL_SUBJECT_MAX_LENGTH} characters`,
     mail_max_recipients_exceeded: `Total number of recipients cannot exceed ${UIConstants.MAIL_MAX_RECIPIENTS}`,
+    invalid_mail: 'To, Subject and Body fields are required'
 };
 
 export const internal = {

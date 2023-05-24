@@ -14,6 +14,7 @@ import SearchData from "./models/search-data";
 import { checkPermission } from "@courselit/utils";
 import { UIConstants } from "@courselit/common-models";
 import { addMailJob } from "../../services/queue";
+import { send } from "../../services/mail";
 
 const { permissions } = constants;
 
@@ -234,17 +235,21 @@ export async function sendMail(mailId: string, ctx: GQLContext): Promise<Mail> {
         throw new Error(responses.mail_already_sent);
     }
 
+    if (!mail.to || !mail.subject || !mail.body) {
+        throw new Error(responses.invalid_mail)
+    }
+
     try {
         const from = `${ctx.subdomain.settings.title || ctx.subdomain.name} ${
             ctx.user.email
         }`;
 
-        await addMailJob({
-            from,
-            to: mail.to!,
-            subject: mail.subject!,
-            body: mail.body!,
-        });
+        await send({
+             from,
+             to: mail.to,
+             subject: mail.subject,
+             body: mail.body,
+         });
 
         mail.published = true;
         await (mail as any).save();
