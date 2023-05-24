@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import constants from "../config/constants";
+import { responses } from "../config/strings";
 import { error } from "./logger";
 import { addMailJob } from "./queue";
 
@@ -26,27 +27,43 @@ export const send = async ({
     body,
     from = mailFrom,
 }: MailProps) => {
-    try {
-        if (process.env.QUEUE_SERVER) {
+    if (process.env.QUEUE_SERVER) {
+        try {
             await addMailJob({
                 from,
                 to,
                 subject,
                 body,
             });
-        } else {
-            await transporter.sendMail({
-                from,
-                to,
-                subject,
-                html: body,
+        } catch (err: any) {
+            error(err.message, {
+                fileName: "services/mail.ts",
+                stack: err.stack,
             });
+
+            throw new Error(responses.internal_error);
         }
-    } catch (err: any) {
-        error(err.message, {
-            fileName: "services/mail.ts",
-            stack: err.stack,
-        });
-        throw err;
+    } else {
+        let atLeastOneSuccessfulSend = false;
+        for (const recipient of to) {
+            try {
+                await transporter.sendMail({
+                    from,
+                    to: recipient,
+                    subject,
+                    html: body,
+                });
+                atLeastOneSuccessfulSend = true;
+            } catch (err: any) {
+                error(err.message, {
+                    fileName: "services/mail.ts",
+                    stack: err.stack,
+                });
+            }
+        }
+
+        if (!atLeastOneSuccessfulSend) {
+            throw new Error(responses.email_delivery_failed_for_all_recipients);
+        }
     }
 };

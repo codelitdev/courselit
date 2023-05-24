@@ -238,19 +238,19 @@ export async function sendMail(mailId: string, ctx: GQLContext): Promise<Mail> {
         throw new Error(responses.invalid_mail);
     }
 
+    const from = `${ctx.subdomain.settings.title || ctx.subdomain.name} ${
+        ctx.user.email
+    }`;
+
+    await send({
+        from,
+        to: mail.to,
+        subject: mail.subject,
+        body: mail.body,
+    });
+
+    mail.published = true;
     try {
-        const from = `${ctx.subdomain.settings.title || ctx.subdomain.name} ${
-            ctx.user.email
-        }`;
-
-        await send({
-            from,
-            to: mail.to,
-            subject: mail.subject,
-            body: mail.body,
-        });
-
-        mail.published = true;
         await (mail as any).save();
 
         return mail;

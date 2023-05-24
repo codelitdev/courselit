@@ -99,6 +99,8 @@ export const responses = {
     mail_subject_length_exceeded: `Subject cannot be longer than ${UIConstants.MAIL_SUBJECT_MAX_LENGTH} characters`,
     mail_max_recipients_exceeded: `Total number of recipients cannot exceed ${UIConstants.MAIL_MAX_RECIPIENTS}`,
     invalid_mail: "To, Subject and Body fields are required",
+    email_delivery_failed_for_all_recipients:
+        "Email delivery failed for all recipients",
 };
 
 export const internal = {
