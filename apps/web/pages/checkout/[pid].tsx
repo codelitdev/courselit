@@ -153,7 +153,7 @@ const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
 export default connect(mapStateToProps)(CheckoutProduct);
 
 export async function getServerSideProps({ query, req }: any) {
-    const address = getBackendAddress(req.headers.host);
+    const address = getBackendAddress(req.headers);
     const page = await getPage(address);
     if (!page) {
         return { notFound: true };

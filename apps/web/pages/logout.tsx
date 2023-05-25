@@ -44,7 +44,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(Logout);
 
 // export async function getServerSideProps(context: any) {
 //     const { req } = context;
-//     const address = getBackendAddress(req.headers.host);
+//     const address = getBackendAddress(req.headers);
 //     await fetch(`${address}/api/auth/logout`);
 //     return { props: {} };
 // }

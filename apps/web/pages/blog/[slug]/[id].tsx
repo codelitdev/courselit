@@ -72,7 +72,7 @@ const Post = ({ siteInfo, address, post, page }: PostProps) => {
 };
 
 export async function getServerSideProps({ query, req }: any) {
-    const address = getBackendAddress(req.headers.host);
+    const address = getBackendAddress(req.headers);
     const page = await getPage(address, "blog");
     const graphQuery = `
     query {

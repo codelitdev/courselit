@@ -86,12 +86,9 @@ const getCourses = async (backend: string, tag: string) => {
 };
 
 export async function getServerSideProps({ query, req }: any) {
-    const address = getBackendAddress(req.headers.host);
+    const address = getBackendAddress(req.headers);
     const page = await getPage(address);
-    const courses = await getCourses(
-        getBackendAddress(req.headers.host),
-        query.tag
-    );
+    const courses = await getCourses(getBackendAddress(req.headers), query.tag);
     return { props: { courses, page } };
 }
 
