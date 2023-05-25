@@ -62,6 +62,13 @@ const Courses = (props: CoursesProps) => {
     );
 };
 
+export async function getServerSideProps({ req }: any) {
+    const address = getBackendAddress(req.headers);
+    const page = await getPage(address);
+    const courses = await getCourses(address);
+    return { props: { courses, page } };
+}
+
 const getCourses = async (backend: string) => {
     let courses = [];
     try {
@@ -75,12 +82,5 @@ const getCourses = async (backend: string) => {
     } catch (e) {}
     return courses;
 };
-
-export async function getServerSideProps({ req }: any) {
-    const address = getBackendAddress(req.headers.host);
-    const page = await getPage(address);
-    const courses = await getCourses(getBackendAddress(req.headers.host));
-    return { props: { courses, page } };
-}
 
 export default Courses;

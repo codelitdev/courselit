@@ -156,7 +156,7 @@ export default connect(mapStateToProps)(Account);
 
 export async function getServerSideProps(context: any) {
     const { req } = context;
-    const address = getBackendAddress(req.headers.host);
+    const address = getBackendAddress(req.headers);
     const page = await getPage(address);
     if (!page) {
         return {

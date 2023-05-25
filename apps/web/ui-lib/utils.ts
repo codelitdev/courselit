@@ -25,9 +25,11 @@ export const getAddress = (host: string) => {
     };
 };
 
-export const getBackendAddress = (host: string) => {
-    const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-    return `${protocol}://${host}`;
+export const getBackendAddress = (
+    headers: Record<string, unknown>
+): `${string}://${string}` => {
+    const protocol = headers["x-forwarded-proto"] || "http";
+    return `${protocol}://${headers.host}`;
 };
 
 /*

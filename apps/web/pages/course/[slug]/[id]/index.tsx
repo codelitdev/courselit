@@ -189,7 +189,7 @@ export async function getServerSideProps({ query, req }: any) {
     }
   `;
     const fetch = new FetchBuilder()
-        .setUrl(`${getBackendAddress(req.headers.host)}/api/graph`)
+        .setUrl(`${getBackendAddress(req.headers)}/api/graph`)
         .setPayload(graphQuery)
         .setIsGraphQLEndpoint(true)
         .build();

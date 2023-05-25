@@ -20,7 +20,7 @@ export default connect(mapStateToProps)(Index);
 
 export async function getServerSideProps({ query, req }: any) {
     const { id } = query;
-    const address = getBackendAddress(req.headers.host);
+    const address = getBackendAddress(req.headers);
     const page = await getPage(address, id);
     if (!page) {
         return {

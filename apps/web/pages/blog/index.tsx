@@ -77,7 +77,7 @@ const getCourses = async (backend: string) => {
 };
 
 export async function getServerSideProps({ req }: any) {
-    const address = getBackendAddress(req.headers.host);
+    const address = getBackendAddress(req.headers);
     const page = await getPage(address);
     const courses = await getCourses(address);
     return { props: { courses, page } };

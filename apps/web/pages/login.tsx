@@ -159,7 +159,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(Login);
 
 export async function getServerSideProps(context: any) {
     const { req } = context;
-    const address = getBackendAddress(req.headers.host);
+    const address = getBackendAddress(req.headers);
     const page = await getPage(address);
     return { props: { page } };
 }
