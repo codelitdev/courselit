@@ -57,4 +57,6 @@ COPY --from=builder /app/apps/web ./apps/web
 
 RUN yarn workspaces focus --all --production 
 
+ENV PORT ${PORT:-3000}
+
 CMD [ "yarn", "workspace", "@courselit/web", "start" ]
