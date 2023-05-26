@@ -1,18 +1,36 @@
 import nodemailer from "nodemailer";
-import constants from "../config/constants";
 import { responses } from "../config/strings";
 import { error } from "./logger";
 import { addMailJob } from "./queue";
 
-const { mailHost, mailUser, mailPass, mailFrom, mailPort } = constants;
-const transporter = nodemailer.createTransport({
-    host: mailHost,
-    port: mailPort,
-    auth: {
-        user: mailUser,
-        pass: mailPass,
-    },
-});
+const mailHost = process.env.EMAIL_HOST;
+const mailUser = process.env.EMAIL_USER;
+const mailPass = process.env.EMAIL_PASS;
+const mailFrom = process.env.EMAIL_FROM || "";
+const mailPort = process.env.EMAIL_PORT ? +process.env.EMAIL_PORT : 587;
+
+let transporter: any;
+if (mailHost && mailUser && mailPass && mailPort) {
+    transporter = nodemailer.createTransport({
+        host: mailHost,
+        port: mailPort,
+        auth: {
+            user: mailUser,
+            pass: mailPass,
+        },
+    });
+} else {
+    transporter = {
+        sendMail: async function ({
+            to,
+            from,
+            subject,
+            html 
+        }: Pick<MailProps, "to" | "subject" | "from"> & {html?: string}) {
+            console.log("Mail:", to, from, subject, html) // eslint-disable-line no-console
+        }
+    }
+}
 
 interface MailProps {
     to: string[];

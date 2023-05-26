@@ -17,13 +17,6 @@ export default {
             ? process.env.API_PREFIX || "/api"
             : "",
 
-    // mail settings
-    mailHost: process.env.EMAIL_HOST,
-    mailUser: process.env.EMAIL_USER,
-    mailPass: process.env.EMAIL_PASS,
-    mailFrom: process.env.EMAIL_FROM || "",
-    mailPort: process.env.EMAIL_PORT ? +process.env.EMAIL_PORT : 587,
-
     // password related config
     jwtSecret: process.env.JWT_SECRET,
     jwtExpire: process.env.JWT_EXPIRES_IN || "1d",
