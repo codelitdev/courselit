@@ -27,10 +27,10 @@ export default new Strategy(
         });
         const emailBody = pug.render(LoginEmailTemplate, { magiclink });
         return await send({
-                  to: [user.email],
-                  subject: `${responses.sign_in_mail_prefix} ${req.headers["host"]}`,
-                  body: emailBody,
-              })
+            to: [user.email],
+            subject: `${responses.sign_in_mail_prefix} ${req.headers["host"]}`,
+            body: emailBody,
+        });
     },
     async (req: ApiRequest, user: User) => {
         let dbUser: User | null = await UserModel.findOne({

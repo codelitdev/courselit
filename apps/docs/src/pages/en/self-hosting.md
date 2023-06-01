@@ -17,21 +17,57 @@ To quickly spin up an instance of CourseLit on Vercel, click the following butto
 
 ## Hosting on a VPS using Docker
 
-We offer a Docker image which you can easily host in any environment where Docker is supported.
+We offer a Docker image which you can easily host in any environment where Docker is supported. We recommend [docker-compose](https://docs.docker.com/compose/) for hosting CourseLit.
 
-We recommend hosting it using [docker-compose](https://docs.docker.com/compose/). Create a new file called `.env`, paste the following content in the file and change the values as per your environment.
+Run the following command in order.
+
+1. Download the docker-compose.yml file onto your system.
+
+```sh
+wget https://raw.githubusercontent.com/codelitdev/courselit/main/deployment/docker/docker-compose.yml
+```
+
+2. Start the app
+
+```sh
+SUPER_ADMIN_EMAIL=your@email.com docker compose up
+```
+
+The email you specify here will be set as the super admin of your CourseLit instance.
+
+3. Test the app
+
+Visit [http://localhost](http://localhost) to see CourseLit in action. There won't be much to see at this point.
+
+4. Log in to customize your school
+
+Click on the top right icon and then on the [login](http://localhost/login) menu. Enter the email you provided in Step #2 to log in. Since, we haven't set the mail yet, the magic link to log in will be dumped onto the `docker compose` logs. Locate the link and click on it (or copy paste it in the browser) to log in.
+
+The login link will look something like `http://localhost/login?token=some-long-string`.
+
+> Note: This will be a barebones instance. Things like mails and file uploads will not work. You can follow rest of this guide to set those things up.
+
+### Enable emails
+
+If you want to send emails using CourseLit, it is easy as well.
+
+1. Create an enviroment file called `.env` with the following content and replace the values accordingly.
 
 ```
-DB_CONNECTION_STRING=mongodb_connection_string
-JWT_SECRET=long_random_string
-TAG=latest
-SUPER_ADMIN_EMAIL=john@doe.com
+SUPER_ADMIN_EMAIL=your@email.com
 
 # Email
 EMAIL_HOST=host
 EMAIL_USER=user
 EMAIL_PASS=pass
 EMAIL_FROM=from_field
+```
+
+2. Restart the app
+
+```
+docker compose down
+docker compose up
 ```
 
 Now, create a new file called docker-compose.yml and paste the following in the file.
@@ -65,10 +101,9 @@ docker-compose up
 
 Visit http://localhost:3000 to see CourseLit in action.
 
-## Hosting MediaLit
+### Enable file uploads
 
-If you want to upload media (images, videos etc.) to your school, you need to configure MediaLit. MediaLit powers CourseLit's media management and optimisation.
-You can use the cloud hosted version (paid) or self host it. MediaLit offers a Docker image which we can self host.
+If you want to upload media (images, videos etc.) to your school, you need to configure [MediaLit](https://hub.docker.com/r/codelit/medialit). MediaLit powers CourseLit's media management and optimisation. MediaLit offers a Docker image which you can self host.
 
 To self host, paste the following code in your `docker-compose.yml` file, under the existing content.
 
@@ -116,13 +151,13 @@ CLOUD_PREFIX=medialit
 Restart the services by running the following commands.
 
 ```
-docker-compose down
-docker-compose up
+docker compose down
+docker compose up
 ```
 
 > **NOTE**: The MediaLit installation is done but is not yet integrated with CourseLit! There are a few more steps. Keep reading.
 
-### Generate An API Key On MediaLit
+#### Obtain the API key from MediaLit
 
 First you need to obtain the container id of your MediaLit instance. To do this, run:
 
@@ -138,7 +173,7 @@ docker exec <container_id_from_above_step> node dist/scripts/create-local-user.j
 
 Keep the generated API key safe. We will use it in the following step.
 
-### Using Self-hosted MediaLit With CourseLit
+#### Using Self-hosted MediaLit With CourseLit
 
 Open the `.env` file and add the following lines.
 
@@ -157,17 +192,11 @@ Now, in the `docker-compose.yml` file, add the following two lines under the `en
 Restart the server by running the following commands.
 
 ```
-docker-compose down
-docker-compose up
+docker compose down
+docker compose up
 ```
 
 That's it! You now have a fully functioning LMS powered by CourseLit.
-
-## Logging into the admin dashboard
-
-CourseLit sets up a super admin user account using the email address we provide in the `SUPER_ADMIN_EMAIL` field in the `.env` file.
-
-Click on the profile button located at the top right corner of the homepage, then click on the `login` option to go to the login screen. Enter your email in the login form to get a magic link in your inbox.
 
 ## Stuck somewhere?
 
