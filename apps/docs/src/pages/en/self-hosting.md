@@ -55,7 +55,7 @@ Visit [http://localhost/dashboard](http://localhost/dashboard) to customise your
 
 If you want to send emails using CourseLit, it is easy as well.
 
-1. Create an enviroment file called `.env` with the following content and replace the values accordingly.
+1. Create an enviroment file called `.env` with the following content (in the same directory as your `docker-compose.yml` file) and replace the values accordingly.
 
 ```
 SUPER_ADMIN_EMAIL=your@email.com
