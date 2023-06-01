@@ -35,19 +35,23 @@ SUPER_ADMIN_EMAIL=your@email.com docker compose up
 
 The email you specify here will be set as the super admin of your CourseLit instance.
 
-3. Test the app
+3. Test drive your CourseLit school
 
-Visit [http://localhost](http://localhost) to see CourseLit in action. There won't be much to see at this point.
+Visit [http://localhost](http://localhost) to see your school. There won't be much to see at this point. You need to customise it.
 
-4. Log in to customize your school
+4. Log in to your school
 
 Click on the top right icon and then on the [login](http://localhost/login) menu. Enter the email you provided in Step #2 to log in. Since, we haven't set the mail yet, the magic link to log in will be dumped onto the `docker compose` logs. Locate the link and click on it (or copy paste it in the browser) to log in.
 
 The login link will look something like `http://localhost/login?token=some-long-string`.
 
+5. Customise your school
+
+Visit [http://localhost/dashboard](http://localhost/dashboard) to customise your school.
+
 > Note: This will be a barebones instance. Things like mails and file uploads will not work. You can follow rest of this guide to set those things up.
 
-### Enable emails
+### Enabling emails
 
 If you want to send emails using CourseLit, it is easy as well.
 
@@ -101,7 +105,7 @@ docker-compose up
 
 Visit http://localhost:3000 to see CourseLit in action.
 
-### Enable file uploads
+### Enabling file uploads
 
 If you want to upload media (images, videos etc.) to your school, you need to configure [MediaLit](https://hub.docker.com/r/codelit/medialit). MediaLit powers CourseLit's media management and optimisation. MediaLit offers a Docker image which you can self host.
 
