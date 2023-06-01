@@ -24,7 +24,7 @@ Run the following command in order.
 1. Download the docker-compose.yml file onto your system.
 
 ```sh
-wget https://raw.githubusercontent.com/codelitdev/courselit/main/deployment/docker/docker-compose.yml
+curl https://raw.githubusercontent.com/codelitdev/courselit/main/deployment/docker/docker-compose.yml --output docker-compose.yml --silent
 ```
 
 2. Start the app
