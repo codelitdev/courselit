@@ -72,7 +72,7 @@ EMAIL_FROM=from_field
 2. Restart the app
 
 ```
-docker compose down
+docker compose stop
 docker compose up
 ```
 
@@ -157,7 +157,7 @@ CLOUD_PREFIX=medialit
 Restart the services by running the following commands.
 
 ```
-docker compose down
+docker compose stop
 docker compose up
 ```
 
@@ -198,7 +198,7 @@ Now, in the `docker-compose.yml` file, add the following two lines under the `en
 Restart the server by running the following commands.
 
 ```
-docker compose down
+docker compose stop
 docker compose up
 ```
 
