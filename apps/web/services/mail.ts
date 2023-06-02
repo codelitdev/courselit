@@ -25,11 +25,11 @@ if (mailHost && mailUser && mailPass && mailPort) {
             to,
             from,
             subject,
-            html 
-        }: Pick<MailProps, "to" | "subject" | "from"> & {html?: string}) {
-            console.log("Mail:", to, from, subject, html) // eslint-disable-line no-console
-        }
-    }
+            html,
+        }: Pick<MailProps, "to" | "subject" | "from"> & { html?: string }) {
+            console.log("Mail:", to, from, subject, html); // eslint-disable-line no-console
+        },
+    };
 }
 
 interface MailProps {
