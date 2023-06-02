@@ -45,7 +45,7 @@ Visit [http://localhost](http://localhost) to see your school. There won't be mu
 
 Click on the top right icon and then on the [login](http://localhost/login) menu. Enter the email you provided in Step #2 to log in. Since, we haven't set the mail yet, the magic link to log in will be dumped onto the `docker compose` logs. Locate the link and click on it (or copy paste it in the browser) to log in.
 
-The login link will look something like `http://localhost/login?token=some-long-string`.
+The login link looks something like `http://localhost/login?token=some-long-string`.
 
 ##### 5. Customise your school
 
@@ -55,7 +55,7 @@ Visit [http://localhost/dashboard](http://localhost/dashboard) to customise your
 
 ### Enabling emails
 
-If you want to send emails using CourseLit, it is easy as well.
+If you want to send emails (including Magic links to log in) using CourseLit, it is easy as well.
 
 1. Create an enviroment file called `.env` with the following content (in the same directory as your `docker-compose.yml` file) and replace the values accordingly.
 
@@ -75,37 +75,6 @@ EMAIL_FROM=from_field
 docker compose stop
 docker compose up
 ```
-
-Now, create a new file called docker-compose.yml and paste the following in the file.
-
-```
-version: "3"
-
-services:
-  app:
-    image: codelit/courselit-app:${TAG}
-    environment:
-      - NODE_ENV=production
-      - JWT_SECRET=${JWT_SECRET}
-      - DB_CONNECTION_STRING=${DB_CONNECTION_STRING}
-      - EMAIL_USER=${EMAIL_USER}
-      - EMAIL_PASS=${EMAIL_PASS}
-      - EMAIL_HOST=${EMAIL_HOST}
-      - EMAIL_FROM=${EMAIL_FROM}
-      - SUPER_ADMIN_EMAIL=${SUPER_ADMIN_EMAIL}
-    ports:
-      - "3000:3000"
-    container_name: app
-    restart: on-failure
-```
-
-Now, you can start CourseLit using the following command.
-
-```
-docker-compose up
-```
-
-Visit http://localhost:3000 to see CourseLit in action.
 
 ### Enabling file uploads
 
