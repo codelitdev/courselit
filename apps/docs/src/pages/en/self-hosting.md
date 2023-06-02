@@ -21,15 +21,15 @@ To quickly spin up an instance of CourseLit on Vercel, click the following butto
 
 We offer a Docker image which you can easily host in any environment where Docker is supported. We recommend [docker-compose](https://docs.docker.com/compose/) for hosting CourseLit.
 
-Run the following command in order.
+Run the following commands in order.
 
-1. Download the docker-compose.yml file onto your system.
+##### 1. Download `docker-compose.yml` file onto your system.
 
 ```sh
 curl https://raw.githubusercontent.com/codelitdev/courselit/main/deployment/docker/docker-compose.yml --output docker-compose.yml --silent
 ```
 
-2. Start the app
+##### 2. Start the app
 
 ```sh
 SUPER_ADMIN_EMAIL=your@email.com docker compose up
@@ -37,17 +37,17 @@ SUPER_ADMIN_EMAIL=your@email.com docker compose up
 
 The email you specify here will be set as the super admin of your CourseLit instance.
 
-3. Test drive your CourseLit school
+##### 3. Test drive your CourseLit school
 
 Visit [http://localhost](http://localhost) to see your school. There won't be much to see at this point. You need to customise it.
 
-4. Log in to your school
+##### 4. Log in to your school
 
 Click on the top right icon and then on the [login](http://localhost/login) menu. Enter the email you provided in Step #2 to log in. Since, we haven't set the mail yet, the magic link to log in will be dumped onto the `docker compose` logs. Locate the link and click on it (or copy paste it in the browser) to log in.
 
 The login link will look something like `http://localhost/login?token=some-long-string`.
 
-5. Customise your school
+##### 5. Customise your school
 
 Visit [http://localhost/dashboard](http://localhost/dashboard) to customise your school.
 
