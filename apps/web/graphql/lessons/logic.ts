@@ -254,8 +254,7 @@ export const deleteAllLessons = async (courseId: string, ctx: GQLContext) => {
 
 export const markLessonCompleted = async (
     lessonId: string,
-    ctx: GQLContext,
-    answers: string
+    ctx: GQLContext
 ) => {
     const lesson = await LessonModel.findOne<Lesson>({ lessonId });
     if (!lesson) {
@@ -274,6 +273,7 @@ export const markLessonCompleted = async (
         const lessonEvaluations = await LessonEvaluation.countDocuments({
             pass: true,
             lessonId: lesson.lessonId,
+            userId: ctx.user.userId,
             domain: ctx.subdomain._id,
         });
         if (lessonEvaluations === 0) {
@@ -324,6 +324,7 @@ export const evaluateLesson = async (
     await LessonEvaluation.create({
         domain: ctx.subdomain._id,
         lessonId: lesson.lessonId,
+        userId: ctx.user.userId,
         pass,
         score,
         requiresPassingGrade: (lesson.content as Quiz).requiresPassingGrade,

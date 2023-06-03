@@ -476,6 +476,7 @@ export const getStudents = async ({
                   domain: ctx.subdomain._id,
               },
           };
+
     const result = await UserModel.aggregate([
         matchCondition,
         {
@@ -512,5 +513,6 @@ export const getStudents = async ({
             },
         },
     ]);
+
     return result;
 };
