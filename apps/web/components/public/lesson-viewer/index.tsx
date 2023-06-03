@@ -25,12 +25,12 @@ import {
 import { TextRenderer, Link } from "@courselit/components-library";
 import type {
     Address,
-    AppMessage,
     Lesson,
     Profile,
     Quiz,
     SiteInfo,
 } from "@courselit/common-models";
+import { AppMessage } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { useRouter } from "next/router";
 import {
