@@ -18,7 +18,7 @@ export default function Link({ href, children, sxProps }: LinkProps) {
     );
 
     return (
-        <NextLink href={href}>
+        <NextLink href={href} legacyBehavior>
             <MuiLink sx={linkProps}>{children}</MuiLink>
         </NextLink>
     );
