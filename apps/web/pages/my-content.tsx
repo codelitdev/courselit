@@ -122,9 +122,7 @@ function Account({ auth, page, profile, address }: AccountProps) {
                                         </Grid>
                                     </Grid>
                                     <Grid item alignSelf="flex-end">
-                                        <Link
-                                            href={`/course/${course.slug}/${course.courseId}`}
-                                        >
+                                        <Link href={`/course/${course.slug}/${course.courseId}`} legacyBehavior>
                                             <Button variant="contained">
                                                 {VISIT_COURSE_BUTTON}
                                             </Button>
