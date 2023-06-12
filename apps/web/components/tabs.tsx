@@ -26,7 +26,7 @@ function Tabs({ tabs }: TabsProps) {
         <StyledUl>
             {tabs.map((tab: Tab) => (
                 <StyledLi key={tab.text}>
-                    <Link href={tab.url}>
+                    <Link href={tab.url} legacyBehavior>
                         <MuiLink
                             variant="h5"
                             color="inherit"

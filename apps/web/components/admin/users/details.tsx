@@ -149,7 +149,7 @@ const Details = ({ userId, auth, address, dispatch }: DetailsProps) => {
                 >
                     <Grid item sx={{ mb: 2 }}>
                         <Breadcrumbs aria-label="breakcrumb">
-                            <Link href="/dashboard/users">
+                            <Link href="/dashboard/users" legacyBehavior>
                                 <MuiLink
                                     color="inherit"
                                     underline="hover"

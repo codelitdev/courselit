@@ -91,7 +91,7 @@ function Product({
     return (
         <TableRow key={product.courseId}>
             <TableCell>
-                <Link href={`/dashboard/product/${product.courseId}/reports`}>
+                <Link href={`/dashboard/product/${product.courseId}/reports`} legacyBehavior>
                     <Grid
                         container
                         spacing={1}

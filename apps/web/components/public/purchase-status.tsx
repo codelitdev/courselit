@@ -90,7 +90,7 @@ const PurchaseStatus = (props: PurchaseStatusProps) => {
                         </Typography>
                     </Grid>
                     <Grid item>
-                        <Link href={courseLink}>
+                        <Link href={courseLink} legacyBehavior>
                             <Button variant="outlined" color="primary">
                                 {VISIT_COURSE_BUTTON}
                             </Button>
@@ -148,7 +148,7 @@ const PurchaseStatus = (props: PurchaseStatusProps) => {
                         </Typography>
                     </Grid>
                     <Grid item>
-                        <Link href={courseLink}>
+                        <Link href={courseLink} legacyBehavior>
                             <Button variant="contained">
                                 {VISIT_COURSE_BUTTON}
                             </Button>

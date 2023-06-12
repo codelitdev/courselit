@@ -470,9 +470,7 @@ const UsersManager = ({
                                             </Grid>
                                             <Grid item>
                                                 <Grid item>
-                                                    <Link
-                                                        href={`/dashboard/users/${user.userId}`}
-                                                    >
+                                                    <Link href={`/dashboard/users/${user.userId}`} legacyBehavior>
                                                         <MuiLink
                                                             color="inherit"
                                                             variant="body1"

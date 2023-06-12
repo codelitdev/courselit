@@ -111,7 +111,7 @@ function LessonSection({ group, course }: LessonSectionProps) {
                                 <Grid item>
                                     <Link
                                         href={`/dashboard/product/${course.courseId}/section/${group.id}/lesson/${lesson.lessonId}`}
-                                    >
+                                        legacyBehavior>
                                         {lesson.title}
                                     </Link>
                                 </Grid>
@@ -126,7 +126,7 @@ function LessonSection({ group, course }: LessonSectionProps) {
                 >
                     <Link
                         href={`/dashboard/product/${course.courseId}/section/${group.id}/lesson/new`}
-                    >
+                        legacyBehavior>
                         <Button component="a" startIcon={<Add />}>
                             {BUTTON_NEW_LESSON_TEXT}
                         </Button>
@@ -161,7 +161,7 @@ function LessonsList({ id }: LessonsProps) {
                     <LessonSection group={group} course={course} />
                 </Grid>
             ))}
-            <Link href={`/dashboard/product/${id}/section/new`}>
+            <Link href={`/dashboard/product/${id}/section/new`} legacyBehavior>
                 <Button component="a">{BUTTON_NEW_GROUP_TEXT}</Button>
             </Link>
         </Grid>

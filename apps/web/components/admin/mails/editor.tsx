@@ -174,7 +174,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
             >
                 <Grid item sx={{ mb: 2 }}>
                     <Breadcrumbs aria-label="breakcrumb">
-                        <Link href="/dashboard/mails">
+                        <Link href="/dashboard/mails" legacyBehavior>
                             <MuiLink
                                 color="inherit"
                                 underline="hover"

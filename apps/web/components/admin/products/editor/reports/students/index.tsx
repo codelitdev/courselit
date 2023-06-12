@@ -178,9 +178,7 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
                             {students.map((student: any) => (
                                 <TableRow key={student.email as string}>
                                     <TableCell>
-                                        <Link
-                                            href={`/dashboard/users/${student.userId}`}
-                                        >
+                                        <Link href={`/dashboard/users/${student.userId}`} legacyBehavior>
                                             <MuiLink
                                                 sx={{
                                                     cursor: "pointer",
