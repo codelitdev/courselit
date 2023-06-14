@@ -26,21 +26,21 @@ function Tabs({ tabs }: TabsProps) {
         <StyledUl>
             {tabs.map((tab: Tab) => (
                 <StyledLi key={tab.text}>
-                    <Link href={tab.url} legacyBehavior>
-                        <MuiLink
-                            variant="h5"
-                            color="inherit"
-                            sx={{
-                                cursor: "pointer",
-                                textDecoration:
-                                    router.asPath === tab.url
-                                        ? "underline"
-                                        : "none",
-                            }}
-                        >
-                            {tab.text}
-                        </MuiLink>
-                    </Link>
+                    <MuiLink
+                        variant="h5"
+                        color="inherit"
+                        sx={{
+                            cursor: "pointer",
+                            textDecoration:
+                                router.asPath === tab.url
+                                    ? "underline"
+                                    : "none",
+                        }}
+                        href={tab.url}
+                        component={Link}
+                    >
+                        {tab.text}
+                    </MuiLink>
                 </StyledLi>
             ))}
         </StyledUl>

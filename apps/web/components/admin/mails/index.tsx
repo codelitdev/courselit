@@ -218,7 +218,8 @@ function Mails({ auth, address, profile, dispatch, featureFlags }: MailsProps) {
                                         <Link
                                             href={`/dashboard/mails/${mail.mailId}/edit`}
                                             key={mail.mailId}
-                                            legacyBehavior>
+                                            legacyBehavior
+                                        >
                                             <TableRow
                                                 hover
                                                 sx={{ cursor: "pointer" }}
@@ -234,7 +235,10 @@ function Mails({ auth, address, profile, dispatch, featureFlags }: MailsProps) {
                                                     align="right"
                                                     scope="row"
                                                 >
-                                                    <Link href={`/dashboard/users/${mail.user.userId}`} legacyBehavior>
+                                                    <Link
+                                                        href={`/dashboard/users/${mail.user.userId}`}
+                                                        legacyBehavior
+                                                    >
                                                         {mail.user.name ||
                                                             mail.user.email}
                                                     </Link>

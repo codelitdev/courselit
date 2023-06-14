@@ -91,12 +91,13 @@ function Product({
     return (
         <TableRow key={product.courseId}>
             <TableCell>
-                <Link href={`/dashboard/product/${product.courseId}/reports`} legacyBehavior>
+                <Link
+                    href={`/dashboard/product/${product.courseId}/reports`}
+                >
                     <Grid
                         container
                         spacing={1}
                         alignItems="center"
-                        component="a"
                     >
                         <Grid item>
                             <Image
@@ -106,6 +107,7 @@ function Product({
                                 }
                                 height={64}
                                 width={64}
+                                alt=""
                             />
                         </Grid>
                         <Grid item>

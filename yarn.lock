@@ -1823,7 +1823,7 @@ __metadata:
   peerDependencies:
     "@mui/icons-material": ^5.5.0
     "@mui/material": ^5.9.2
-    next: 12.2.4
+    next: "*"
     react: ^17.0.2
     react-redux: ^8.0.1
     redux: ^4.2.0

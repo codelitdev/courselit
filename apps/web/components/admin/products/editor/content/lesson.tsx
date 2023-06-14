@@ -694,8 +694,10 @@ const LessonEditor = ({
                                                     : BUTTON_SAVE}
                                             </Button>
                                             {courseId && (
-                                                <Link href={`/dashboard/product/${courseId}/content`} legacyBehavior>
-                                                    <Button component="a">
+                                                <Link
+                                                    href={`/dashboard/product/${courseId}/content`}
+                                                >
+                                                    <Button>
                                                         {POPUP_CANCEL_ACTION}
                                                     </Button>
                                                 </Link>

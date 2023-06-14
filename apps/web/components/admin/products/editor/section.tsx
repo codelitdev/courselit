@@ -133,8 +133,10 @@ function SectionEditor({
                             {BTN_CONTINUE}
                         </Button>
                         {course.courseId && (
-                            <Link href={`/dashboard/product/${course.courseId}/content`} legacyBehavior>
-                                <Button component="a">
+                            <Link
+                                href={`/dashboard/product/${course.courseId}/content`}
+                            >
+                                <Button>
                                     {POPUP_CANCEL_ACTION}
                                 </Button>
                             </Link>

@@ -470,18 +470,18 @@ const UsersManager = ({
                                             </Grid>
                                             <Grid item>
                                                 <Grid item>
-                                                    <Link href={`/dashboard/users/${user.userId}`} legacyBehavior>
-                                                        <MuiLink
-                                                            color="inherit"
-                                                            variant="body1"
-                                                        >
-                                                            <b>
-                                                                {user.name
-                                                                    ? user.name
-                                                                    : user.email}
-                                                            </b>
-                                                        </MuiLink>
-                                                    </Link>
+                                                    <MuiLink
+                                                        color="inherit"
+                                                        variant="body1"
+                                                        href={`/dashboard/users/${user.userId}`}
+                                                        component={Link}
+                                                    >
+                                                        <b>
+                                                            {user.name
+                                                                ? user.name
+                                                                : user.email}
+                                                        </b>
+                                                    </MuiLink>
                                                 </Grid>
                                                 <Grid item>
                                                     <Typography variant="body1">

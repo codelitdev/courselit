@@ -15,21 +15,23 @@ interface SessionButtonProps {
 }
 
 function SessionButton(props: SessionButtonProps) {
-    return <>
-        {props.auth.guest ? (
-            <Link href="/login" legacyBehavior>
-                <Button sx={{ color: "white" }}>
-                    {GENERIC_SIGNIN_TEXT}
-                </Button>
-            </Link>
-        ) : (
-            <Link href="/logout" legacyBehavior>
-                <Button sx={{ color: "white" }}>
-                    {GENERIC_SIGNOUT_TEXT}
-                </Button>
-            </Link>
-        )}
-    </>;
+    return (
+        <>
+            {props.auth.guest ? (
+                <Link href="/login">
+                    <Button sx={{ color: "white" }}>
+                        {GENERIC_SIGNIN_TEXT}
+                    </Button>
+                </Link>
+            ) : (
+                <Link href="/logout">
+                    <Button sx={{ color: "white" }}>
+                        {GENERIC_SIGNOUT_TEXT}
+                    </Button>
+                </Link>
+            )}
+        </>
+    );
 }
 
 const mapStateToProps = (state: AppState) => ({

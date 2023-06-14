@@ -33,7 +33,10 @@ export default function ProductHeader({ id, breadcrumbs }: ProductHeaderProps) {
                     <Breadcrumbs aria-label="product-breadcrumbs">
                         {breadcrumbs.map((crumb: Breadcrumb) =>
                             crumb.url ? (
-                                <Link href={crumb.url} key={crumb.url} legacyBehavior>
+                                <Link
+                                    href={crumb.url}
+                                    key={crumb.url}
+                                >
                                     {crumb.text}
                                 </Link>
                             ) : (

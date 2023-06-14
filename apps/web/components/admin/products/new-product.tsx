@@ -133,8 +133,10 @@ function NewProduct({
                                 >
                                     {BTN_CONTINUE}
                                 </Button>
-                                <Link href={`/dashboard/products`} legacyBehavior>
-                                    <Button component="a">
+                                <Link
+                                    href={`/dashboard/products`}
+                                >
+                                    <Button>
                                         {BUTTON_CANCEL_TEXT}
                                     </Button>
                                 </Link>

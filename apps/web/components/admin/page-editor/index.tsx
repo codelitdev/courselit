@@ -315,9 +315,8 @@ function PageEditor({
                                             ? `/dashboard/product/${page.entityId}/content`
                                             : "/dashboard/products"
                                     }
-                                    legacyBehavior>
+                                >
                                     <Button
-                                        component="a"
                                         sx={{ color: "white" }}
                                     >
                                         {EDIT_PAGE_BUTTON_DONE}
