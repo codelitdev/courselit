@@ -139,7 +139,7 @@ const Index = (props: IndexProps) => {
                         </Typography>
                     </Grid>
                     <Grid item>
-                        <Link href="/dashboard/product/new">
+                        <Link href="/dashboard/product/new" legacyBehavior>
                             <Button variant="contained" component="a">
                                 {BTN_NEW_PRODUCT}
                             </Button>

@@ -92,7 +92,7 @@ function NewBlog({ address, dispatch, networkAction: loading }: NewBlogProps) {
                                 >
                                     {BTN_CONTINUE}
                                 </Button>
-                                <Link href={`/dashboard/blogs`}>
+                                <Link href={`/dashboard/blogs`} legacyBehavior>
                                     <Button component="a">
                                         {BUTTON_CANCEL_TEXT}
                                     </Button>

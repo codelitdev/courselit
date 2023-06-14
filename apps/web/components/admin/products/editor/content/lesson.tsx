@@ -697,7 +697,7 @@ const LessonEditor = ({
                                                 <Link
                                                     href={`/dashboard/product/${courseId}/content`}
                                                 >
-                                                    <Button component="a">
+                                                    <Button>
                                                         {POPUP_CANCEL_ACTION}
                                                     </Button>
                                                 </Link>

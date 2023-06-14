@@ -174,15 +174,14 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
             >
                 <Grid item sx={{ mb: 2 }}>
                     <Breadcrumbs aria-label="breakcrumb">
-                        <Link href="/dashboard/mails">
-                            <MuiLink
-                                color="inherit"
-                                underline="hover"
-                                sx={{ cursor: "pointer" }}
-                            >
-                                {PAGE_HEADER_ALL_MAILS}
-                            </MuiLink>
-                        </Link>
+                        <MuiLink
+                            href="/dashboard/mails"
+                            color="inherit"
+                            underline="hover"
+                            component={Link}
+                            sx={{ cursor: "pointer" }}>
+                            {PAGE_HEADER_ALL_MAILS}
+                        </MuiLink>
                         <Typography color="text.primary">
                             {PAGE_HEADER_EDIT_MAIL}
                         </Typography>

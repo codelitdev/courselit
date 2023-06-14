@@ -173,7 +173,10 @@ function ProfileIndex({
                         <Section>
                             <Grid container direction="column">
                                 <Grid item>
-                                    <Link href="#personal-details">
+                                    <Link
+                                        href="#personal-details"
+                                       legacyBehavior
+                                    >
                                         <Typography variant="h4">
                                             {PROFILE_SECTION_DETAILS}
                                         </Typography>
@@ -241,7 +244,10 @@ function ProfileIndex({
                         <Section>
                             <Grid container direction="column" spacing={1}>
                                 <Grid item>
-                                    <Link href="#email-preferences">
+                                    <Link
+                                        href="#email-preferences"
+                                        legacyBehavior
+                                    >
                                         <Typography variant="h4">
                                             {PROFILE_EMAIL_PREFERENCES}
                                         </Typography>

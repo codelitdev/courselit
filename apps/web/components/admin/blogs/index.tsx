@@ -114,7 +114,7 @@ const Index = (props: IndexProps) => {
                     <Grid item>
                         <Grid container alignItems="center">
                             <Grid item sx={{ mr: 1 }}>
-                                <Link href="/dashboard/blog/new">
+                                <Link href="/dashboard/blog/new" legacyBehavior>
                                     <Button variant="contained" component="a">
                                         {BTN_NEW_BLOG}
                                     </Button>

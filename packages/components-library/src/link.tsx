@@ -1,6 +1,6 @@
 import * as React from "react";
 import NextLink from "next/link";
-import { Link as MuiLink } from "@mui/material";
+import { Link as MuiLink } from '@mui/material';
 
 interface LinkProps {
     href: string;
@@ -18,8 +18,9 @@ export default function Link({ href, children, sxProps }: LinkProps) {
     );
 
     return (
-        <NextLink href={href}>
-            <MuiLink sx={linkProps}>{children}</MuiLink>
-        </NextLink>
+        <MuiLink 
+            href={href}
+            sx={linkProps}
+            component={NextLink}>{children}</MuiLink>
     );
 }

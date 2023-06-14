@@ -470,20 +470,18 @@ const UsersManager = ({
                                             </Grid>
                                             <Grid item>
                                                 <Grid item>
-                                                    <Link
+                                                    <MuiLink
+                                                        color="inherit"
+                                                        variant="body1"
                                                         href={`/dashboard/users/${user.userId}`}
+                                                        component={Link}
                                                     >
-                                                        <MuiLink
-                                                            color="inherit"
-                                                            variant="body1"
-                                                        >
-                                                            <b>
-                                                                {user.name
-                                                                    ? user.name
-                                                                    : user.email}
-                                                            </b>
-                                                        </MuiLink>
-                                                    </Link>
+                                                        <b>
+                                                            {user.name
+                                                                ? user.name
+                                                                : user.email}
+                                                        </b>
+                                                    </MuiLink>
                                                 </Grid>
                                                 <Grid item>
                                                     <Typography variant="body1">

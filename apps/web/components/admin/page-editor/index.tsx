@@ -317,7 +317,6 @@ function PageEditor({
                                     }
                                 >
                                     <Button
-                                        component="a"
                                         sx={{ color: "white" }}
                                     >
                                         {EDIT_PAGE_BUTTON_DONE}

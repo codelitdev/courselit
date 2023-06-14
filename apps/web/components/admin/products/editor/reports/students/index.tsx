@@ -178,18 +178,16 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
                             {students.map((student: any) => (
                                 <TableRow key={student.email as string}>
                                     <TableCell>
-                                        <Link
+                                        <MuiLink
+                                            sx={{
+                                                cursor: "pointer",
+                                            }}
                                             href={`/dashboard/users/${student.userId}`}
+                                            component={Link}
                                         >
-                                            <MuiLink
-                                                sx={{
-                                                    cursor: "pointer",
-                                                }}
-                                            >
-                                                {student.name ||
-                                                    (student.email as string)}
-                                            </MuiLink>
-                                        </Link>
+                                            {student.name ||
+                                                (student.email as string)}
+                                        </MuiLink>
                                     </TableCell>
                                     <TableCell
                                         onClick={() => showProgress(student)}
