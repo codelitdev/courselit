@@ -1802,8 +1802,8 @@ __metadata:
     typescript: ^4.7.4
   peerDependencies:
     "@mui/material": ^5.5.0
-    react: ^17.0.2
-    react-dom: ^17.0.2
+    react: ^18.2.0
+    react-dom: ^18.2.0
   languageName: unknown
   linkType: soft
 
@@ -1823,8 +1823,8 @@ __metadata:
   peerDependencies:
     "@mui/icons-material": ^5.5.0
     "@mui/material": ^5.9.2
-    next: "*"
-    react: ^17.0.2
+    next: ^13.4.4
+    react: ^18.2.0
     react-redux: ^8.0.1
     redux: ^4.2.0
     redux-thunk: ^2.4.1
@@ -1963,7 +1963,7 @@ __metadata:
     jsonwebtoken: ^9.0.0
     mongodb: ^4.4.1
     mongoose: ^6.2.4
-    next: latest
+    next: ^13.4.4
     next-connect: ^0.12.2
     nodemailer: ^6.7.2
     passport: ^0.6.0
@@ -1971,9 +1971,9 @@ __metadata:
     passport-magic-link: ^2.1.0
     prettier: ^2.5.1
     pug: ^3.0.2
-    react: latest
+    react: ^18.2.0
     react-csv: ^2.2.2
-    react-dom: latest
+    react-dom: ^18.2.0
     react-redux: ^8.0.1
     remirror: ^2.0.9
     sharp: ^0.30.6
@@ -11651,7 +11651,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"next@npm:latest":
+"next@npm:^13.4.4":
   version: 13.4.5
   resolution: "next@npm:13.4.5"
   dependencies:
@@ -13248,7 +13248,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-dom@npm:^18.1.0, react-dom@npm:latest":
+"react-dom@npm:^18.1.0, react-dom@npm:^18.2.0":
   version: 18.2.0
   resolution: "react-dom@npm:18.2.0"
   dependencies:
@@ -13356,7 +13356,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:^18.1.0, react@npm:latest":
+"react@npm:^18.1.0, react@npm:^18.2.0":
   version: 18.2.0
   resolution: "react@npm:18.2.0"
   dependencies:
