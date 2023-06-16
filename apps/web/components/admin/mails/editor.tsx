@@ -179,7 +179,8 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                             color="inherit"
                             underline="hover"
                             component={Link}
-                            sx={{ cursor: "pointer" }}>
+                            sx={{ cursor: "pointer" }}
+                        >
                             {PAGE_HEADER_ALL_MAILS}
                         </MuiLink>
                         <Typography color="text.primary">

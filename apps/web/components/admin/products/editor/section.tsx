@@ -136,9 +136,7 @@ function SectionEditor({
                             <Link
                                 href={`/dashboard/product/${course.courseId}/content`}
                             >
-                                <Button>
-                                    {POPUP_CANCEL_ACTION}
-                                </Button>
+                                <Button>{POPUP_CANCEL_ACTION}</Button>
                             </Link>
                         )}
                     </form>

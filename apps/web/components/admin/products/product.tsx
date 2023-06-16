@@ -91,14 +91,8 @@ function Product({
     return (
         <TableRow key={product.courseId}>
             <TableCell>
-                <Link
-                    href={`/dashboard/product/${product.courseId}/reports`}
-                >
-                    <Grid
-                        container
-                        spacing={1}
-                        alignItems="center"
-                    >
+                <Link href={`/dashboard/product/${product.courseId}/reports`}>
+                    <Grid container spacing={1} alignItems="center">
                         <Grid item>
                             <Image
                                 src={

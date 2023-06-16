@@ -80,9 +80,7 @@ function BlogItem({
     return (
         <TableRow key={product.courseId}>
             <TableCell>
-                <Link
-                    href={`/dashboard/blog/${product.courseId}/details`}
-                >
+                <Link href={`/dashboard/blog/${product.courseId}/details`}>
                     <Grid container spacing={1} alignItems="center">
                         <Grid item>
                             <Image

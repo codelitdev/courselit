@@ -22,6 +22,7 @@ import { DefaultTheme } from "@mui/private-theming";
 import { useRouter } from "next/router";
 import "remirror/styles/all.css";
 import themeOptions from "../ui-config/mui-custom-theme";
+import { getBackendAddress } from "../ui-lib/utils";
 
 type CourseLitProps = AppProps & {
     emotionCache: EmotionCache;
@@ -92,8 +93,7 @@ MyApp.getInitialProps = wrapper.getInitialAppProps(
     (store) => async (context) => {
         const { ctx } = context;
         if (ctx.req && ctx.req.headers && ctx.req.headers.host) {
-            const protocol = ctx.req.headers["x-forwarded-proto"] || "http";
-            const backend = `${protocol}://${ctx.req.headers.host}`;
+            const backend = getBackendAddress(ctx.req.headers);
             store.dispatch(actionCreators.updateBackend(backend));
             try {
                 await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(

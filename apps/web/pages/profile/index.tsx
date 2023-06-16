@@ -175,7 +175,7 @@ function ProfileIndex({
                                 <Grid item>
                                     <Link
                                         href="#personal-details"
-                                       legacyBehavior
+                                        legacyBehavior
                                     >
                                         <Typography variant="h4">
                                             {PROFILE_SECTION_DETAILS}
