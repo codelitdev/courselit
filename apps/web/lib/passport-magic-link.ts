@@ -22,7 +22,7 @@ export default new Strategy(
         const magiclink = generateMagicLink({
             token,
             hostname: req.headers["host"] || "",
-            secure: req.headers["x-forwarded-proto"] ? true : false,
+            protocol: req.headers["x-forwarded-proto"],
             redirect: req.body.redirect,
         });
         const emailBody = pug.render(LoginEmailTemplate, { magiclink });

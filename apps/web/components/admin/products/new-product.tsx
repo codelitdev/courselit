@@ -133,12 +133,8 @@ function NewProduct({
                                 >
                                     {BTN_CONTINUE}
                                 </Button>
-                                <Link
-                                    href={`/dashboard/products`}
-                                >
-                                    <Button>
-                                        {BUTTON_CANCEL_TEXT}
-                                    </Button>
+                                <Link href={`/dashboard/products`}>
+                                    <Button>{BUTTON_CANCEL_TEXT}</Button>
                                 </Link>
                             </Grid>
                         </Grid>

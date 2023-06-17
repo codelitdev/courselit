@@ -1,6 +1,7 @@
 import type { Profile } from "@courselit/common-models";
 import { checkPermission, FetchBuilder } from "@courselit/utils";
 import { UIConstants } from "@courselit/common-models";
+import { getProtocol } from "../lib/utils";
 const { permissions } = UIConstants;
 
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -28,19 +29,10 @@ export const getAddress = (host: string) => {
 export const getBackendAddress = (
     headers: Record<string, unknown>
 ): `${string}://${string}` => {
-    const protocol = headers["x-forwarded-proto"] || "http";
-    return `${protocol}://${headers.host}`;
+    return `${getProtocol(
+        headers["x-forwarded-proto"] as string | string[] | undefined
+    )}://${headers.host}`;
 };
-
-/*
-export const checkPermission = (
-    actualPermissions: string[],
-    desiredPermissions: string[]
-) =>
-    actualPermissions.some((permission) =>
-        desiredPermissions.includes(permission)
-    );
-*/
 
 const extractDomainFromURL = (host: string) => {
     return host.split(":")[0];

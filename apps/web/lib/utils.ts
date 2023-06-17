@@ -10,17 +10,21 @@ export const isSubscriptionValid = (dateStr: Date): boolean => {
 interface MagicLinkProps {
     token: string;
     hostname: string;
-    secure: boolean;
+    protocol: string | string[] | undefined;
     redirect?: string;
 }
 
 export const generateMagicLink = ({
     token,
     hostname,
-    secure = true,
+    protocol,
     redirect,
 }: MagicLinkProps) => {
-    return `http${secure ? "s" : ""}://${hostname}/login?token=${token}${
+    return `${getProtocol(protocol)}://${hostname}/login?token=${token}${
         redirect ? `&redirect=${redirect}` : ""
     }`;
+};
+
+export const getProtocol = (protocol: string | string[] = "http") => {
+    return protocol.includes("https") ? "https" : "http";
 };

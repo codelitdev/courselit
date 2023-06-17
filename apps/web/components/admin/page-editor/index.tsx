@@ -316,9 +316,7 @@ function PageEditor({
                                             : "/dashboard/products"
                                     }
                                 >
-                                    <Button
-                                        sx={{ color: "white" }}
-                                    >
+                                    <Button sx={{ color: "white" }}>
                                         {EDIT_PAGE_BUTTON_DONE}
                                     </Button>
                                 </Link>
