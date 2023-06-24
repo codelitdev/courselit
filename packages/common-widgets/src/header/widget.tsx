@@ -90,51 +90,6 @@ export default function Widget({ state, settings }: WidgetProps) {
                 </Grid>
             </Grid>
             <Grid item>
-                {/*
-                {state.auth.guest ? (
-                    <Box
-                        sx={{
-                            display: { xs: "none", lg: "flex" },
-                        }}
-                    >
-                        <Menu
-                            icon={
-                                <Avatar
-                                    sx={{
-                                        width: 32,
-                                        height: 32,
-                                        color:
-                                            settings.loginBtnColor || "inherit",
-                                        bgcolor:
-                                            settings.loginBtnBgColor ||
-                                            "inherit",
-                                    }}
-                                />
-                            }
-                            options={[
-                                {
-                                    label: "Login",
-                                    type: "link",
-                                    href: "/login",
-                                },
-                            ]}
-                        />
-                    </Box>
-                ) : (
-                    // <Button
-                    //     component="a"
-                    //     href="/login"
-                    //     sx={{
-                    //         color: settings.loginBtnColor || "white",
-                    //         backgroundColor:
-                    //             settings.loginBtnBgColor || "inherit",
-                    //         display: { xs: "none", lg: "flex" },
-                    //     }}
-                    //     disableElevation
-                    // >
-                    //     Login
-                    // </Button>
-                */}
                 <Box
                     sx={{
                         display: { xs: "none", lg: "flex" },

@@ -7,4 +7,5 @@ export default interface Page {
     type: Product | Site;
     layout: WidgetInstance[];
     entityId?: string;
+    pageData?: Record<string, unknown>;
 }

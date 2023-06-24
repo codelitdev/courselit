@@ -142,7 +142,7 @@ export const setupCourse = async ({
         ctx,
     });
     page.entityId = course.courseId;
-    page.layout = getInitialLayout(page.pageId, course.courseId);
+    page.layout = getInitialLayout();
     await page.save();
 
     return course;
@@ -169,18 +169,16 @@ export const setupBlog = async ({
     return course;
 };
 
-const getInitialLayout = (pageId: string, courseId: string) => {
+const getInitialLayout = () => {
     return [
         {
             name: Header.metadata.name,
             deleteable: false,
             shared: true,
         },
-        Banner.init({
-            pageId: pageId,
-            type: "product",
-            entityId: courseId,
-        }),
+        {
+            name: Banner.metadata.name,
+        },
         {
             name: Footer.metadata.name,
             deleteable: false,

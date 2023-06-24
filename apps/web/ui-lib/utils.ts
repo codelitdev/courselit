@@ -61,6 +61,7 @@ export const getPage = async (backend: string, id?: string) => {
         page: getPage(id: "${id}") {
             name,
             layout,
+            pageData
         }
     }
     `

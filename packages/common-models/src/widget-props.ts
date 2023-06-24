@@ -7,8 +7,8 @@ export default interface WidgetProps<T extends WidgetDefaultSettings> {
     id: string;
     name: string;
     section: string;
+    pageData: Record<string, unknown>;
     config: Record<string, unknown>;
-    utilities: unknown;
     state: State;
     dispatch: ThunkDispatch<State, null, AnyAction>;
     settings: T;

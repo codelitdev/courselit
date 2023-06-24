@@ -8,8 +8,14 @@ interface IndexProps {
     page: Page;
 }
 
-const Index = ({ siteinfo, page }: IndexProps) => {
-    return <BaseLayout title={page.name} layout={page.layout}></BaseLayout>;
+const Index = ({ page }: IndexProps) => {
+    return (
+        <BaseLayout
+            title={page.name}
+            layout={page.layout}
+            pageData={page.pageData}
+        />
+    );
 };
 
 const mapStateToProps = (state: State) => ({

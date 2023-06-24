@@ -7,19 +7,21 @@ import { Footer, Header } from "@courselit/common-widgets";
 
 interface TemplateProps {
     layout: WidgetInstance[];
+    pageData: Record<string, unknown>;
     editing?: boolean;
     onEditClick?: (widgetId: string) => void;
-    selectedWidget?: string;
     children?: ReactNode;
     childrenOnTop: boolean;
 }
 
 const EditableWidget = ({
     item,
+    pageData,
     editing,
     onEditClick,
 }: {
     item: Record<string, any>;
+    pageData: Record<string, unknown>;
     editing: boolean;
     onEditClick?: (widgetId: string) => void;
 }) => {
@@ -51,6 +53,7 @@ const EditableWidget = ({
                 <WidgetByName
                     name={item.name}
                     settings={item.settings || {}}
+                    pageData={pageData}
                     id={`widget${item._id}`}
                 />
             </Box>
@@ -61,6 +64,7 @@ const EditableWidget = ({
         <WidgetByName
             name={item.name}
             settings={item.settings || {}}
+            pageData={pageData}
             id={`widget${item._id}`}
         />
     );
@@ -69,9 +73,9 @@ const EditableWidget = ({
 const Template = (props: TemplateProps) => {
     const {
         layout,
+        pageData,
         editing = false,
         onEditClick,
-        selectedWidget,
         children,
         childrenOnTop = false,
     } = props;
@@ -89,6 +93,7 @@ const Template = (props: TemplateProps) => {
                 <EditableWidget
                     item={header}
                     editing={editing}
+                    pageData={pageData}
                     onEditClick={onEditClick}
                 />
             )}
@@ -114,6 +119,7 @@ const Template = (props: TemplateProps) => {
                                 key={item.widgetId}
                                 editing={editing}
                                 onEditClick={onEditClick}
+                                pageData={pageData}
                             />
                         ))}
                 </Grid>
@@ -136,6 +142,7 @@ const Template = (props: TemplateProps) => {
                         .map((item: any, index: number) => (
                             <EditableWidget
                                 item={item}
+                                pageData={pageData}
                                 key={item.widgetId}
                                 editing={editing}
                                 onEditClick={onEditClick}
@@ -147,6 +154,7 @@ const Template = (props: TemplateProps) => {
             {footer && (
                 <EditableWidget
                     item={footer}
+                    pageData={pageData}
                     editing={editing}
                     onEditClick={onEditClick}
                 />

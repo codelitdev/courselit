@@ -106,7 +106,7 @@ export default function Widget({
                         <CourseItem
                             course={course}
                             siteInfo={state.siteinfo}
-                            freeCostCaption={config.FREE_COST_CAPTION as string}
+                            freeCostCaption={"FREE"}
                             key={index}
                         />
                     ))}

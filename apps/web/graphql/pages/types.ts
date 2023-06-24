@@ -19,6 +19,7 @@ const page = new GraphQLObjectType({
         entityId: { type: GraphQLString },
         layout: { type: new GraphQLList(GraphQLJSONObject) },
         draftLayout: { type: new GraphQLList(GraphQLJSONObject) },
+        pageData: { type: GraphQLJSONObject },
     },
 });
 

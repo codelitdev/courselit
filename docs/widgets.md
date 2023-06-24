@@ -44,11 +44,10 @@ The `widget` and `adminWidget` components receive the following props from the s
 1. **name**: The name of the widget. This can be used while interacting with the database via GraphQL endpoints (described in the following sections).
 2. **settings**: The widget's settings object.
 3. **config**: An object containing various configuration settings. Check [this](../apps/web/components/public/base-layout/template/widget-by-name.tsx) file to see what all configurations are available.
-4. **utilities**: An object containing utility functions from the core app. Check [this](../apps/web/ui-lib/utils.ts) file to see what all functions are available.
-5. **section**: A name of the section where the widget is being displayed. As a widget can be displayed in multiple sections (if it supports), you can use this value to adapt the styling of the widget.
-6. **state**: The app's state powered by Redux. Equivalent to Redux's `store.getState()`.
-7. **dispatch**: The Redux dispatcher.
-8. **id**: An identifier to identify widget's data in the app state's `widgetsData` property.
+4. **section**: A name of the section where the widget is being displayed. As a widget can be displayed in multiple sections (if it supports), you can use this value to adapt the styling of the widget.
+5. **state**: The app's state powered by Redux. Equivalent to Redux's `store.getState()`.
+6. **dispatch**: The Redux dispatcher.
+7. **id**: An identifier to identify widget's data in the app state's `widgetsData` property.
 
 ## Metadata
 
