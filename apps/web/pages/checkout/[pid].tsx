@@ -1,14 +1,9 @@
-import { Address, Course, Page, SiteInfo } from "@courselit/common-models";
+import { Course, Page, SiteInfo } from "@courselit/common-models";
 import { PriceTag } from "@courselit/components-library";
-import {
-    actionCreators,
-    AppDispatch,
-    AppState,
-} from "@courselit/state-management";
+import { AppState } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import { Grid, Skeleton, Typography } from "@mui/material";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
 import { connect } from "react-redux";
 import BaseLayout from "../../components/public/base-layout";
 import { FREE_COURSES_TEXT } from "../../ui-config/constants";
@@ -25,60 +20,12 @@ const Checkout = dynamic(() => import("../../components/public/checkout"));
 
 interface CheckoutProductProps {
     page: Page;
+    product: Course;
     siteInfo: SiteInfo;
-    address: Address;
-    dispatch: AppDispatch;
 }
 
-function CheckoutProduct({
-    page,
-    siteInfo,
-    address,
-    dispatch,
-}: CheckoutProductProps) {
-    const [product, setProduct] = useState<Course>();
+function CheckoutProduct({ page, product, siteInfo }: CheckoutProductProps) {
     const router = useRouter();
-
-    useEffect(() => {
-        if (!router.isReady) return;
-
-        loadCourse();
-    }, [router.isReady]);
-
-    const loadCourse = async () => {
-        const query = `
-            query {
-                product: getCourse(id: "${router.query.pid}") {
-                    title,
-                    cost
-                    description,
-                    featuredImage {
-                        thumbnail,
-                        caption
-                    },
-                    courseId,
-                    slug
-                }
-            }
-        `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
-            .setIsGraphQLEndpoint(true)
-            .build();
-
-        try {
-            dispatch(actionCreators.networkAction(true));
-            const response = await fetch.exec();
-            if (response.product) {
-                setProduct(response.product);
-            }
-        } catch (err: any) {
-            console.error("Error", err.message);
-        } finally {
-            dispatch(actionCreators.networkAction(false));
-        }
-    };
 
     return (
         <BaseLayout layout={page.layout} title={CHECKOUT_PAGE_TITLE}>
@@ -145,10 +92,7 @@ function CheckoutProduct({
 
 const mapStateToProps = (state: AppState) => ({
     siteInfo: state.siteinfo,
-    address: state.address,
 });
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
 
 export default connect(mapStateToProps)(CheckoutProduct);
 
@@ -158,5 +102,37 @@ export async function getServerSideProps({ query, req }: any) {
     if (!page) {
         return { notFound: true };
     }
-    return { props: { page } };
+    const course = await getCourse(query.pid, address);
+    return { props: { page, product: course } };
 }
+
+const getCourse = async (courseId: string, address: string) => {
+    const query = `
+            query {
+                product: getCourse(id: "${courseId}") {
+                    title,
+                    cost
+                    description,
+                    featuredImage {
+                        thumbnail,
+                        caption
+                    },
+                    courseId,
+                    slug,
+                    type
+                }
+            }
+        `;
+    const fetch = new FetchBuilder()
+        .setUrl(`${address}/api/graph`)
+        .setPayload(query)
+        .setIsGraphQLEndpoint(true)
+        .build();
+
+    try {
+        const response = await fetch.exec();
+        return response.product;
+    } catch (err: any) {
+        console.error("Error", err.message);
+    }
+};

@@ -114,7 +114,7 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                     </Grid>
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
-                            title="Background background"
+                            title="Button background"
                             value={loginBtnBgColor}
                             onChange={(value: string) =>
                                 setLoginBtnBgColor(value)

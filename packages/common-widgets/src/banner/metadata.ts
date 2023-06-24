@@ -3,7 +3,7 @@ import { WidgetMetadata } from "@courselit/common-models";
 const metadata: WidgetMetadata = {
     name: "banner",
     displayName: "Banner",
-    compatibleWith: ["product", "site"],
+    compatibleWith: ["product"],
 };
 
 export default metadata;

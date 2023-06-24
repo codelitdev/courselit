@@ -108,7 +108,8 @@ function PageEditor({
                     name,
                     type,
                     layout,
-                    draftLayout
+                    draftLayout,
+                    pageData
                 }
             }
         `;
@@ -152,7 +153,8 @@ function PageEditor({
                 type,
                 entityId,
                 layout,
-                draftLayout
+                draftLayout,
+                pageData
             }
         }
         `;
@@ -210,7 +212,8 @@ function PageEditor({
                     type,
                     entityId,
                     layout,
-                    draftLayout
+                    draftLayout,
+                    pageData
                 }
             }
         `;
@@ -373,6 +376,7 @@ function PageEditor({
                     >
                         <Template
                             layout={layout}
+                            pageData={page.pageData || {}}
                             editing={true}
                             onEditClick={onWidgetClicked}
                             selectedWidget={selectedWidget}
