@@ -1,3 +1,6 @@
+const withNextInItStats = require('next-in-it-stats/cjs')({
+  legacy: true,
+});
 /** @type {import('next').NextConfig} */
 
 const cdn = process.env.MEDIALIT_SERVER
@@ -14,4 +17,4 @@ const nextConfig = {
     },
 };
 
-module.exports = nextConfig;
+module.exports = withNextInItStats(nextConfig);
