@@ -1,6 +1,6 @@
 import { ThemeOptions } from "@mui/material/styles";
 
-const themeOptions: ThemeOptions = {
+const themeOptions = (): ThemeOptions => ({
     palette: {
         primary: {
             main: "#000000",
@@ -13,7 +13,7 @@ const themeOptions: ThemeOptions = {
         },
     },
     typography: {
-        fontFamily: "Source Sans Pro",
+        fontFamily: "Roboto",
         fontSize: 14,
     },
     components: {
@@ -25,6 +25,6 @@ const themeOptions: ThemeOptions = {
             },
         },
     },
-};
+});
 
 export default themeOptions;

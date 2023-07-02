@@ -84,7 +84,10 @@ export default function Menu(props: MenuProps) {
                         option.type === "link" ? (
                             <MenuItem
                                 component="a"
-                                href={option.href}
+                                onClick={() => {
+                                    handleClose();
+                                    window.location.href = option.href;
+                                }}
                                 key={option.label}
                                 target={option.newTab ? "_blank" : "_self"}
                             >
@@ -92,7 +95,10 @@ export default function Menu(props: MenuProps) {
                             </MenuItem>
                         ) : (
                             <MenuItem
-                                onClick={option.onClick}
+                                onClick={() => {
+                                    option.onClick();
+                                    handleClose();
+                                }}
                                 key={option.label}
                             >
                                 {option.label}

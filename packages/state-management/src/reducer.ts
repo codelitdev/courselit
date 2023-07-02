@@ -14,6 +14,7 @@ import {
     SET_ADDRESS,
     //WIDGETS_DATA_AVAILABLE,
     FEATURE_FLAGS_AVAILABLE,
+    TYPEFACES_AVAILABLE,
 } from "./action-types";
 import { HYDRATE } from "next-redux-wrapper";
 import initialState from "./default-state";
@@ -160,6 +161,15 @@ function featureFlagsReducer(
     }
 }
 
+function typefacesReducer(state = initialState.typefaces, action: Action) {
+    switch (action.type) {
+        case TYPEFACES_AVAILABLE:
+            return action.typefaces;
+        default:
+            return state;
+    }
+}
+
 const appReducers = combineReducers({
     auth: authReducer,
     siteinfo: siteinfoReducer,
@@ -169,6 +179,7 @@ const appReducers = combineReducers({
     theme: themeReducer,
     address: addressReducer,
     featureFlags: featureFlagsReducer,
+    typefaces: typefacesReducer,
     //widgetsData: widgetsDataReducer,
 });
 

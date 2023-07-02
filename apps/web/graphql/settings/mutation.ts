@@ -1,6 +1,11 @@
-import { GraphQLNonNull } from "graphql";
+import { GraphQLList, GraphQLNonNull } from "graphql";
 import types from "./types";
-import { updateSiteInfo, updatePaymentInfo } from "./logic";
+import {
+    updateSiteInfo,
+    updatePaymentInfo,
+    updateDraftTypefaces,
+} from "./logic";
+import { Typeface } from "@courselit/common-models";
 
 export default {
     updateSiteInfo: {
@@ -28,5 +33,18 @@ export default {
             { siteData }: { siteData: Record<string, unknown> },
             context: any
         ) => updatePaymentInfo(siteData, context),
+    },
+    updateDraftTypefaces: {
+        type: types.domain,
+        args: {
+            typefaces: {
+                type: new GraphQLList(types.typefaceInputType),
+            },
+        },
+        resolve: async (
+            _: any,
+            { typefaces }: { typefaces: Typeface[] },
+            context: any
+        ) => updateDraftTypefaces(typefaces, context),
     },
 };

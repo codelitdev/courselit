@@ -141,6 +141,7 @@ export const savePage = async (
             page.layout = page.draftLayout;
             page.draftLayout = [];
         }
+        ctx.subdomain.typefaces = ctx.subdomain.draftTypefaces;
     } else if ("layout" in pageData) {
         try {
             let layout;
@@ -168,6 +169,9 @@ export const savePage = async (
     }
 
     try {
+        if ("publish" in pageData) {
+            await (ctx.subdomain as any).save();
+        }
         await (page as any).save();
     } catch (e: any) {
         // We want to safely ignore the error where `__v` property does not

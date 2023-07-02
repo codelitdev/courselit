@@ -5,24 +5,22 @@ import CssBaseline from "@mui/material/CssBaseline";
 import createEmotionCache from "../ui-lib/create-emotion-cache";
 import { Provider, useStore } from "react-redux";
 import { store as wrapper } from "@courselit/state-management";
-import { CONSOLE_MESSAGE_THEME_INVALID } from "../ui-config/strings";
 import {
     createTheme,
     responsiveFontSizes,
     ThemeProvider,
 } from "@mui/material/styles";
-import { deepmerge } from "@mui/utils";
 import App from "next/app";
 import type { State } from "@courselit/common-models";
 import { AnyAction } from "redux";
 import { ThunkDispatch } from "redux-thunk";
 import { actionCreators } from "@courselit/state-management";
 import CodeInjector from "../components/public/code-injector";
-import { DefaultTheme } from "@mui/private-theming";
 import { useRouter } from "next/router";
 import "remirror/styles/all.css";
 import themeOptions from "../ui-config/mui-custom-theme";
 import { getBackendAddress } from "../ui-lib/utils";
+import FontsInjector from "../components/public/fonts-injector";
 
 type CourseLitProps = AppProps & {
     emotionCache: EmotionCache;
@@ -37,18 +35,9 @@ function MyApp({
 }: CourseLitProps) {
     const [mounted, setMounted] = useState(false);
     const store = useStore();
-    const { theme } = store.getState();
     const router = useRouter();
 
-    let muiTheme;
-    if (theme.styles) {
-        muiTheme = responsiveFontSizes(
-            createTheme(deepmerge<DefaultTheme>(themeOptions, theme.styles))
-        );
-    } else {
-        console.warn(CONSOLE_MESSAGE_THEME_INVALID);
-        muiTheme = responsiveFontSizes(createTheme(themeOptions));
-    }
+    const muiTheme = responsiveFontSizes(createTheme(themeOptions()));
 
     useEffect(() => {
         setMounted(true);
@@ -83,6 +72,7 @@ function MyApp({
                         <Component {...pageProps} />
                     </div>
                     <CodeInjector router={router} />
+                    <FontsInjector router={router} />
                 </ThemeProvider>
             </CacheProvider>
         </Provider>
@@ -99,13 +89,8 @@ MyApp.getInitialProps = wrapper.getInitialAppProps(
                 await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
                     actionCreators.updateSiteInfo()
                 );
-                // await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
-                //     actionCreators.updateWidgetsData(widgets)
-                // );
             } catch (error: any) {
                 console.error(error);
-                //ctx.res!.statusCode = 404;
-                //ctx.res!.end("Not found");
                 return;
             }
         }

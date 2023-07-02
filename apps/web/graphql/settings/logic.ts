@@ -1,4 +1,3 @@
-import SiteInfoModel from "../../models/SiteInfo";
 import { checkIfAuthenticated } from "../../lib/graphql";
 import { responses } from "../../config/strings";
 import constants from "../../config/constants";
@@ -8,28 +7,36 @@ import {
     getPaymentInvalidException,
 } from "./helpers";
 import type GQLContext from "../../models/GQLContext";
-import type SiteInfo from "../../ui-models/site-info";
 import DomainModel, { Domain } from "../../models/Domain";
 import { checkPermission } from "@courselit/utils";
+import { Typeface } from "@courselit/common-models";
 
 const { permissions } = constants;
 
 export const getSiteInfo = async (ctx: GQLContext) => {
+    const exclusionProjection: Record<string, 0> = {
+        email: 0,
+        deleted: 0,
+        customDomain: 0,
+        "settings.stripeSecret": 0,
+        "settings.paytmSecret": 0,
+        "settings.paypalSecret": 0,
+    };
+    const isAdmin =
+        ctx.user &&
+        checkPermission(ctx.user.permissions, [permissions.manageSettings]);
+    if (!isAdmin) {
+        exclusionProjection.draftTypefaces = 0;
+    }
     const domain: Domain | null = await DomainModel.findById(
         ctx.subdomain._id,
-        {
-            email: 0,
-            deleted: 0,
-            customDomain: 0,
-            "settings.stripeSecret": 0,
-            "settings.paytmSecret": 0,
-            "settings.paypalSecret": 0,
-        }
+        exclusionProjection
     );
 
     return domain;
 };
 
+/*
 export const getSiteInfoAsAdmin = async (ctx: GQLContext) => {
     checkIfAuthenticated(ctx);
 
@@ -42,6 +49,7 @@ export const getSiteInfoAsAdmin = async (ctx: GQLContext) => {
     });
     return siteinfo;
 };
+*/
 
 export const updateSiteInfo = async (
     siteData: Record<string, unknown>,
@@ -65,6 +73,28 @@ export const updateSiteInfo = async (
     if (!domain.settings.title || !domain.settings.title.trim()) {
         throw new Error(responses.school_title_not_set);
     }
+
+    await (domain as any).save();
+
+    return domain;
+};
+
+export const updateDraftTypefaces = async (
+    typefaces: Typeface[],
+    ctx: GQLContext
+) => {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const domain: Domain | null = await DomainModel.findById(ctx.subdomain._id);
+    if (!domain) {
+        return null;
+    }
+
+    domain.draftTypefaces = typefaces;
 
     await (domain as any).save();
 

@@ -38,5 +38,5 @@ export default {
         frontend: "",
     },
     featureFlags: [],
-    //widgetsData: {},
+    typefaces: [],
 };

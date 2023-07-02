@@ -23,7 +23,7 @@ const Widget = ({
             container
             sx={{
                 p: 2,
-                backgroundColor: backgroundColor || "#eee",
+                backgroundColor: backgroundColor || "inherit",
                 color: textColor || "inherit",
             }}
         >
