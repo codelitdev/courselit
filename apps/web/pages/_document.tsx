@@ -8,10 +8,14 @@ class MyDocument extends Document {
             <Html lang="en" style={{ height: "100%", width: "100%" }}>
                 <Head>
                     <meta charSet="utf-8" />
-                    {/* <meta name="theme-color" content={theme.palette.primary.main} /> */}
                     <link
                         rel="stylesheet"
-                        href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,500,700&display=swap"
+                        href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+                    />
+                    <link
+                        rel="preconnect"
+                        href="https://fonts.gstatic.com"
+                        crossOrigin="true"
                     />
                 </Head>
                 <body style={{ height: "100%", width: "100%", margin: 0 }}>

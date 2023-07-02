@@ -15,6 +15,7 @@ import {
     SET_ADDRESS,
     //WIDGETS_DATA_AVAILABLE,
     FEATURE_FLAGS_AVAILABLE,
+    TYPEFACES_AVAILABLE,
 } from "./action-types";
 import { FetchBuilder } from "@courselit/utils";
 import getAddress from "./utils/get-address";
@@ -23,6 +24,7 @@ import type {
     SiteInfo,
     //WidgetsData,
     Theme,
+    Typeface,
 } from "@courselit/common-models";
 import { AppMessage } from "@courselit/common-models";
 import { ThunkAction } from "redux-thunk";
@@ -125,7 +127,12 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
                         styles,
                         url
                     },
-                    featureFlags
+                    featureFlags,
+                    typefaces {
+                        section,
+                        typeface,
+                        fontWeights
+                    },
                 }
             }
             `;
@@ -140,6 +147,7 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
                 dispatch(newSiteInfoAvailable(response.site.settings));
                 dispatch(themeAvailable(response.site.theme));
                 dispatch(featureFlagsAvailable(response.site.featureFlags));
+                dispatch(typefacesAvailable(response.site.typefaces));
             }
         } catch (err) {
             console.error(err); // eslint-disable-line no-console
@@ -173,62 +181,6 @@ export function featureFlagsAvailable(fFlags: string[]): AnyAction {
     return { type: FEATURE_FLAGS_AVAILABLE, fFlags };
 }
 
-// export function updateWidgetsData(
-//     widgets: Record<string, any>,
-//     widgetIDPrefix = "widget"
-// ) {
-//     return async (dispatch: any, getState: () => State) => {
-//         try {
-//             dispatch(networkAction(true));
-//             const state = getState();
-//             const queryString = combineGraphQLQueries(
-//                 state.layout,
-//                 widgets,
-//                 widgetIDPrefix
-//             );
-//             if (queryString) {
-//                 const fetchBuilder = new FetchBuilder()
-//                     .setUrl(`${state.address.backend}/api/graph`)
-//                     .setIsGraphQLEndpoint(true);
-//                 const fetch = await fetchBuilder
-//                     .setPayload(queryString)
-//                     .build();
-//                 const widgetsData = await fetch.exec();
-//                 dispatch(widgetsDataAvailable(widgetsData));
-//             }
-//         } finally {
-//             dispatch(networkAction(false));
-//         }
-//     };
-// }
-
-// function combineGraphQLQueries(
-//     layout: Layout,
-//     widgets: Record<string, any>,
-//     widgetIDPrefix: string
-// ) {
-//     const widgetsUsedOnLiveSite = Object.values(layout).flat();
-//     let queryString = "";
-//     for (const widget of widgetsUsedOnLiveSite) {
-//         const widgetGetData = widgets[widget.name].widget.getData;
-//         if (widgetGetData) {
-//             queryString += widgetGetData(
-//                 `${widgetIDPrefix}${widget._id}`,
-//                 widget.settings
-//             );
-//         }
-//     }
-//     return queryString
-//         ? `
-//             {
-//                 ${queryString}
-//             }
-//         `
-//         : "";
-// }
-
-/*
-export function widgetsDataAvailable(widgetsData: WidgetsData): AnyAction {
-    return { type: WIDGETS_DATA_AVAILABLE, widgetsData };
+export function typefacesAvailable(typefaces: Typeface[]): AnyAction {
+    return { type: TYPEFACES_AVAILABLE, typefaces };
 }
-*/

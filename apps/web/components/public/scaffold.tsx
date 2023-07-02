@@ -58,7 +58,7 @@ const Root = styled("div")(({ theme }: { theme: any }) => ({
     [`& .${classes.appBar}`]: Object.assign(
         {},
         {
-            zIndex: theme.zIndex.drawer + 1,
+            // zIndex: theme.zIndex.drawer + 1,
             // [theme.breakpoints.up("sm")]: {
             //     width: `calc(100% - ${drawerWidth}px)`,
             //     marginLeft: drawerWidth,

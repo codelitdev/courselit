@@ -3,6 +3,8 @@ import {
     AppMessage,
     Page,
     SiteInfo,
+    Theme,
+    Typeface,
     WidgetInstance,
 } from "@courselit/common-models";
 import type { Address, Auth, Profile } from "@courselit/common-models";
@@ -11,8 +13,22 @@ import {
     networkAction,
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
-import { debounce, FetchBuilder, generateUniqueId } from "@courselit/utils";
-import { AppBar, Button, Grid, Toolbar, Typography } from "@mui/material";
+import {
+    debounce,
+    FetchBuilder,
+    generateUniqueId,
+    getGraphQLQueryStringFromObject,
+} from "@courselit/utils";
+import {
+    AppBar,
+    Button,
+    CssBaseline,
+    Grid,
+    Paper,
+    Skeleton,
+    Toolbar,
+    Typography,
+} from "@mui/material";
 import { connect } from "react-redux";
 import {
     EDIT_PAGE_BUTTON_DONE,
@@ -20,13 +36,19 @@ import {
     PAGE_TITLE_EDIT_PAGE,
 } from "../../../ui-config/strings";
 import { useRouter } from "next/router";
-import { canAccessDashboard } from "../../../ui-lib/utils";
+import {
+    canAccessDashboard,
+    generateFontString,
+    createMuiTheme,
+} from "../../../ui-lib/utils";
 import Template from "../../public/base-layout/template";
 import dynamic from "next/dynamic";
 import Head from "next/head";
 import Link from "next/link";
 import { Menu } from "@courselit/components-library";
 import widgets from "../../../ui-config/widgets";
+import { ThemeProvider } from "@mui/material/styles";
+import { Box } from "@mui/system";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
@@ -42,6 +64,8 @@ interface PageEditorProps {
     dispatch: AppDispatch;
     loading: boolean;
     siteInfo: SiteInfo;
+    theme: Theme;
+    typefaces: Typeface[];
 }
 
 function PageEditor({
@@ -52,6 +76,8 @@ function PageEditor({
     dispatch,
     loading,
     siteInfo,
+    theme,
+    typefaces,
 }: PageEditorProps) {
     const [pages, setPages] = useState([]);
     const [page, setPage] = useState<Partial<Page>>({});
@@ -59,6 +85,8 @@ function PageEditor({
     const [selectedWidget, setSelectedWidget] = useState<string>("");
     const [showWidgetSelector, setShowWidgetSelector] =
         useState<boolean>(false);
+    const [draftTypefaces, setDraftTypefaces] = useState([]);
+
     const router = useRouter();
     const debouncedSave = useCallback(
         debounce(
@@ -69,9 +97,13 @@ function PageEditor({
         []
     );
 
+    const fontString = generateFontString(draftTypefaces);
+    const muiTheme = createMuiTheme(draftTypefaces, theme);
+
     useEffect(() => {
         loadPages();
         loadPage();
+        loadDraftTypefaces();
     }, []);
 
     useEffect(() => {
@@ -159,6 +191,39 @@ function PageEditor({
         }
         `;
         await fetchPage(query, true);
+    };
+
+    const loadDraftTypefaces = async () => {
+        const query = `
+        { site: getSiteInfo {
+                draftTypefaces {
+                    section,
+                    typeface,
+                    fontWeights,
+                    fontSize,
+                    lineHeight,
+                    letterSpacing,
+                    case
+                },
+            }
+        }
+        `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload(query)
+            .setIsGraphQLEndpoint(true)
+            .build();
+        try {
+            dispatch(networkAction(true));
+            const response = await fetch.exec();
+            if (response.site.draftTypefaces) {
+                setDraftTypefaces(response.site.draftTypefaces);
+            }
+        } catch (err: any) {
+            dispatch(setAppMessage(new AppMessage(err.message)));
+        } finally {
+            dispatch(networkAction(false));
+        }
     };
 
     const onWidgetClicked = (widgetId: string) => {
@@ -282,12 +347,55 @@ function PageEditor({
         [selectedWidget]
     );
 
+    const saveDraftTypefaces = async (fontName: string) => {
+        const newTypefaces: Typeface[] = structuredClone(draftTypefaces);
+        const defaultSection = newTypefaces.filter(
+            (x) => x.section === "default"
+        )[0];
+        defaultSection.typeface = fontName;
+
+        const query = `
+            mutation {
+                site: updateDraftTypefaces(
+                    typefaces: ${getGraphQLQueryStringFromObject(newTypefaces)} 
+                ) {
+                    draftTypefaces {
+                        section,
+                        typeface,
+                        fontWeights,
+                        fontSize,
+                        lineHeight,
+                        letterSpacing,
+                        case
+                    },
+                }
+            }
+        `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload(query)
+            .setIsGraphQLEndpoint(true)
+            .build();
+        try {
+            dispatch(networkAction(true));
+            const response = await fetch.exec();
+            if (response.site) {
+                setDraftTypefaces(response.site.draftTypefaces);
+            }
+        } catch (err: any) {
+            dispatch(setAppMessage(new AppMessage(err.message)));
+        } finally {
+            dispatch(networkAction(false));
+        }
+    };
+
     return (
         <Grid container direction="column">
             <Head>
                 <title>
                     {PAGE_TITLE_EDIT_PAGE} {page.name} | {siteInfo.title}
                 </title>
+                {fontString && <link rel="stylesheet" href={fontString} />}
             </Head>
             <AppBar position="sticky">
                 <Toolbar>
@@ -299,6 +407,41 @@ function PageEditor({
                         }))}
                         label={page.name}
                         buttonColor="#fff"
+                    />
+                    <Menu
+                        options={[
+                            {
+                                label: "Roboto",
+                                type: "button",
+                                onClick: () => saveDraftTypefaces("Roboto"),
+                            },
+                            {
+                                label: "Open Sans",
+                                type: "button",
+                                onClick: () => saveDraftTypefaces("Open Sans"),
+                            },
+                            {
+                                label: "Agdasima",
+                                type: "button",
+                                onClick: () => saveDraftTypefaces("Agdasima"),
+                            },
+                            {
+                                label: "Lato",
+                                type: "button",
+                                onClick: () => saveDraftTypefaces("Lato"),
+                            },
+                            {
+                                label: "Montserrat",
+                                type: "button",
+                                onClick: () => saveDraftTypefaces("Montserrat"),
+                            },
+                            {
+                                label: "Poppins",
+                                type: "button",
+                                onClick: () => saveDraftTypefaces("Poppins"),
+                            },
+                        ]}
+                        label={"Font"}
                     />
                     <Grid item sx={{ flexGrow: 1 }}>
                         <Grid
@@ -374,13 +517,30 @@ function PageEditor({
                             height: "100vh",
                         }}
                     >
-                        <Template
-                            layout={layout}
-                            pageData={page.pageData || {}}
-                            editing={true}
-                            onEditClick={onWidgetClicked}
-                            selectedWidget={selectedWidget}
-                        />
+                        {draftTypefaces.length === 0 && (
+                            <Box sx={{ p: 2 }}>
+                                <Skeleton
+                                    variant="rectangular"
+                                    height={100}
+                                    sx={{ mb: 2 }}
+                                />
+                                <Skeleton variant="rectangular" height={100} />
+                            </Box>
+                        )}
+                        {draftTypefaces.length > 0 && (
+                            <ThemeProvider theme={muiTheme}>
+                                <CssBaseline />
+                                <Paper elevation={0}>
+                                    <Template
+                                        layout={layout}
+                                        pageData={page.pageData || {}}
+                                        editing={true}
+                                        onEditClick={onWidgetClicked}
+                                        selectedWidget={selectedWidget}
+                                    />
+                                </Paper>
+                            </ThemeProvider>
+                        )}
                     </Grid>
                 </Grid>
             </Grid>
@@ -394,6 +554,8 @@ const mapStateToProps = (state: AppState) => ({
     address: state.address,
     loading: state.networkAction,
     siteInfo: state.siteinfo,
+    theme: state.theme,
+    typefaces: state.typefaces,
 });
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });

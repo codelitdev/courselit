@@ -4,11 +4,38 @@ import {
     GraphQLInputObjectType,
     GraphQLNonNull,
     GraphQLList,
+    GraphQLInt,
 } from "graphql";
 import mediaTypes from "../media/types";
 import { getMedia } from "../media/logic";
 import designTypes from "../design/types";
 const { mediaType } = mediaTypes;
+
+const typefaceType = new GraphQLObjectType({
+    name: "Typeface",
+    fields: {
+        section: { type: new GraphQLNonNull(GraphQLString) },
+        typeface: { type: new GraphQLNonNull(GraphQLString) },
+        fontWeights: { type: new GraphQLList(GraphQLInt) },
+        fontSize: { type: GraphQLInt },
+        lineHeight: { type: GraphQLInt },
+        letterSpacing: { type: GraphQLInt },
+        case: { type: GraphQLString },
+    },
+});
+
+const typefaceInputType = new GraphQLInputObjectType({
+    name: "TypefaceInput",
+    fields: {
+        section: { type: new GraphQLNonNull(GraphQLString) },
+        typeface: { type: new GraphQLNonNull(GraphQLString) },
+        fontWeights: { type: new GraphQLList(GraphQLInt) },
+        fontSize: { type: GraphQLInt },
+        lineHeight: { type: GraphQLInt },
+        letterSpacing: { type: GraphQLInt },
+        case: { type: GraphQLString },
+    },
+});
 
 const siteUpdateType = new GraphQLInputObjectType({
     name: "SiteInfoUpdateInput",
@@ -57,6 +84,8 @@ const domain = new GraphQLObjectType({
         settings: { type: siteType },
         theme: { type: designTypes.themeType },
         featureFlags: { type: new GraphQLList(GraphQLString) },
+        typefaces: { type: new GraphQLList(typefaceType) },
+        draftTypefaces: { type: new GraphQLList(typefaceType) },
     },
 });
 
@@ -64,4 +93,5 @@ export default {
     siteUpdateType,
     sitePaymentUpdateType,
     domain,
+    typefaceInputType,
 };

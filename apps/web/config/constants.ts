@@ -85,6 +85,9 @@ export default {
     site: "site",
     blogPage: "blog",
 
+    // typography
+    typeface: "Roboto",
+
     // acceptable currency codes for payments
     currencyISOCodes: [
         "afn",

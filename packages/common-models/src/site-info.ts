@@ -1,4 +1,5 @@
 import Media from "./media";
+import { Typeface } from "./typeface";
 
 export default interface SiteInfo {
     title: string;
@@ -12,4 +13,6 @@ export default interface SiteInfo {
     stripeSecret?: string;
     paypalSecret?: string;
     paytmSecret?: string;
+    typefaces: Typeface[];
+    draftTypefaces: Typeface[];
 }
