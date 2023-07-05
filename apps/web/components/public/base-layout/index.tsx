@@ -30,13 +30,12 @@ const MasterLayout = ({
     childrenOnTop = false,
 }: MasterLayoutProps) => {
     const muiTheme = createMuiTheme(typefaces, theme);
+    console.log(title, siteInfo.title);
 
     return (
         <>
             <Head>
-                <title>
-                    {title} | {siteInfo.title}
-                </title>
+                <title>{title || siteInfo.title}</title>
                 <link
                     rel="icon"
                     href={

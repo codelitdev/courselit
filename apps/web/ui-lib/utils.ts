@@ -149,3 +149,21 @@ export const createMuiTheme = (typefaces: Typeface[], theme: Theme) => {
     }
     return muiTheme;
 };
+
+const swapMembers = (arr: any[], index1: number, index2: number): any[] => {
+    if (index1 < 0 || index1 > arr.length - 1) {
+        console.log("returning 1");
+        return arr;
+    }
+    if (index2 < 0 || index2 > arr.length - 1) {
+        console.log("returning 2");
+        return arr;
+    }
+    [arr[index1], arr[index2]] = [arr[index2], arr[index1]];
+    return arr;
+};
+
+export const moveMemberUp = (arr: any[], index: number) =>
+    swapMembers(arr, index - 1, index);
+export const moveMemberDown = (arr: any[], index: number) =>
+    swapMembers(arr, index, index + 1);

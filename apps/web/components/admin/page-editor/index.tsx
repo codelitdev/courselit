@@ -40,6 +40,8 @@ import {
     canAccessDashboard,
     generateFontString,
     createMuiTheme,
+    moveMemberUp,
+    moveMemberDown,
 } from "../../../ui-lib/utils";
 import Template from "../../public/base-layout/template";
 import dynamic from "next/dynamic";
@@ -49,6 +51,7 @@ import { Menu } from "@courselit/components-library";
 import widgets from "../../../ui-config/widgets";
 import { ThemeProvider } from "@mui/material/styles";
 import { Box } from "@mui/system";
+import editWidget from "./edit-widget";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
@@ -68,6 +71,14 @@ interface PageEditorProps {
     typefaces: Typeface[];
 }
 
+type LeftPaneContent =
+    | "fonts"
+    | "pages"
+    | "themes"
+    | "editor"
+    | "widgets"
+    | "none";
+
 function PageEditor({
     id,
     address,
@@ -82,10 +93,11 @@ function PageEditor({
     const [pages, setPages] = useState([]);
     const [page, setPage] = useState<Partial<Page>>({});
     const [layout, setLayout] = useState<Partial<WidgetInstance>[]>([]);
-    const [selectedWidget, setSelectedWidget] = useState<string>("");
-    const [showWidgetSelector, setShowWidgetSelector] =
-        useState<boolean>(false);
+    const [selectedWidget, setSelectedWidget] = useState<string>();
+    const [selectedWidgetIndex, setSelectedWidgetIndex] = useState<number>(-1);
     const [draftTypefaces, setDraftTypefaces] = useState([]);
+    const [leftPaneContent, setLeftPaneContent] =
+        useState<LeftPaneContent>("none");
 
     const router = useRouter();
     const debouncedSave = useCallback(
@@ -228,6 +240,7 @@ function PageEditor({
 
     const onWidgetClicked = (widgetId: string) => {
         setSelectedWidget(widgetId);
+        setLeftPaneContent("editor");
     };
 
     const fetchPage = async (query: string, refreshLayout: boolean = false) => {
@@ -300,7 +313,7 @@ function PageEditor({
         setLayout([...layout]);
     };
 
-    const onDelete = async (widgetId: string) => {
+    const deleteWidget = async (widgetId: string) => {
         const widgetIndex = layout.findIndex(
             (widget) => widget.widgetId === widgetId
         );
@@ -311,7 +324,7 @@ function PageEditor({
 
     const addWidget = async (name: string) => {
         const widgetId = generateUniqueId();
-        layout.splice(layout.length - 1, 0, {
+        layout.splice(selectedWidgetIndex + 1, 0, {
             widgetId,
             name,
             shared: widgets[name].shared,
@@ -323,13 +336,15 @@ function PageEditor({
             },
         });
         setLayout(layout);
-        setShowWidgetSelector(false);
+        //setShowWidgetSelector(false);
         onItemClick(widgetId);
+        setLeftPaneContent("editor");
         await savePage(page.pageId!, [...layout]);
     };
 
     const onClose = () => {
-        setSelectedWidget("");
+        setSelectedWidget();
+        setLeftPaneContent("none");
     };
 
     const editWidget = useMemo(
@@ -341,7 +356,7 @@ function PageEditor({
                 }
                 onChange={onWidgetSettingsChanged}
                 onClose={onClose}
-                onDelete={onDelete}
+                onDelete={deleteWidget}
             />
         ),
         [selectedWidget]
@@ -389,12 +404,36 @@ function PageEditor({
         }
     };
 
+    const onAddWidgetBelow = (index: number) => {
+        setSelectedWidgetIndex(index);
+        setLeftPaneContent("widgets");
+        console.log(`onAddWidgetBelow: ${index}`);
+    };
+    const onMoveWidgetDown = (index: number) => {
+        setLayout([...moveMemberDown(layout, index)]);
+        console.log(index);
+    };
+    const onMoveWidgetUp = (index: number) => {
+        setLayout([...moveMemberUp(layout, index)]);
+    };
+
+    const activeSidePaneContent = (
+        <>
+            {leftPaneContent === "widgets" && (
+                <AddWidget
+                    pageType={page.type?.toLowerCase()}
+                    onSelection={addWidget}
+                    onClose={(e) => setLeftPaneContent("none")}
+                />
+            )}
+            {leftPaneContent === "editor" && editWidget}
+        </>
+    );
+
     return (
         <Grid container direction="column">
             <Head>
-                <title>
-                    {PAGE_TITLE_EDIT_PAGE} {page.name} | {siteInfo.title}
-                </title>
+                <title>{`${PAGE_TITLE_EDIT_PAGE} ${page.name || ""}`}</title>
                 {fontString && <link rel="stylesheet" href={fontString} />}
             </Head>
             <AppBar position="sticky">
@@ -481,36 +520,22 @@ function PageEditor({
             </AppBar>
             <Grid item>
                 <Grid container>
+                    {leftPaneContent !== "none" && (
+                        <Grid
+                            item
+                            xs={3}
+                            sx={{
+                                borderRight: "1px solid #eee",
+                                overflow: "scroll",
+                                height: "100vh",
+                            }}
+                        >
+                            {activeSidePaneContent}
+                        </Grid>
+                    )}
                     <Grid
                         item
-                        xs={3}
-                        sx={{
-                            borderRight: "1px solid #eee",
-                            overflow: "scroll",
-                            height: "100vh",
-                        }}
-                    >
-                        {selectedWidget && editWidget}
-                        {!selectedWidget && !showWidgetSelector && (
-                            <WidgetsList
-                                layout={layout}
-                                onAddNewClick={() =>
-                                    setShowWidgetSelector(true)
-                                }
-                                onItemClick={onItemClick}
-                            />
-                        )}
-                        {!selectedWidget && showWidgetSelector && (
-                            <AddWidget
-                                pageType={page.type?.toLowerCase()}
-                                onSelection={addWidget}
-                                onClose={(e) => setShowWidgetSelector(false)}
-                            />
-                        )}
-                    </Grid>
-                    <Grid
-                        item
-                        xs={9}
+                        xs={leftPaneContent === "none" ? 12 : 9}
                         sx={{
                             flexGrow: 1,
                             overflow: "scroll",
@@ -537,6 +562,9 @@ function PageEditor({
                                         editing={true}
                                         onEditClick={onWidgetClicked}
                                         selectedWidget={selectedWidget}
+                                        onAddWidgetBelow={onAddWidgetBelow}
+                                        onMoveWidgetDown={onMoveWidgetDown}
+                                        onMoveWidgetUp={onMoveWidgetUp}
                                     />
                                 </Paper>
                             </ThemeProvider>
