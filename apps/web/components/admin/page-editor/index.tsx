@@ -34,6 +34,8 @@ import {
     EDIT_PAGE_BUTTON_DONE,
     EDIT_PAGE_BUTTON_UPDATE,
     PAGE_TITLE_EDIT_PAGE,
+    EDIT_PAGE_BUTTON_FONTS,
+    EDIT_PAGE_HEADER_ALL_PAGES,
 } from "../../../ui-config/strings";
 import { useRouter } from "next/router";
 import {
@@ -50,12 +52,13 @@ import Link from "next/link";
 import { Menu } from "@courselit/components-library";
 import widgets from "../../../ui-config/widgets";
 import { ThemeProvider } from "@mui/material/styles";
-import { Box } from "@mui/system";
-import editWidget from "./edit-widget";
+import Box from "@mui/material/Box";
+import PagesList from "./pages-list";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
 const WidgetsList = dynamic(() => import("./widgets-list"));
+const FontsList = dynamic(() => import("./fonts-list.tsx"));
 
 const DEBOUNCE_TIME = 500;
 
@@ -407,11 +410,9 @@ function PageEditor({
     const onAddWidgetBelow = (index: number) => {
         setSelectedWidgetIndex(index);
         setLeftPaneContent("widgets");
-        console.log(`onAddWidgetBelow: ${index}`);
     };
     const onMoveWidgetDown = (index: number) => {
         setLayout([...moveMemberDown(layout, index)]);
-        console.log(index);
     };
     const onMoveWidgetUp = (index: number) => {
         setLayout([...moveMemberUp(layout, index)]);
@@ -427,6 +428,16 @@ function PageEditor({
                 />
             )}
             {leftPaneContent === "editor" && editWidget}
+            {leftPaneContent === "fonts" && (
+                <FontsList
+                    draftTypefaces={draftTypefaces}
+                    onClose={onClose}
+                    saveDraftTypefaces={saveDraftTypefaces}
+                />
+            )}
+            {leftPaneContent === "pages" && (
+                <PagesList pages={pages} onClose={onClose} />
+            )}
         </>
     );
 
@@ -447,41 +458,22 @@ function PageEditor({
                         label={page.name}
                         buttonColor="#fff"
                     />
-                    <Menu
-                        options={[
-                            {
-                                label: "Roboto",
-                                type: "button",
-                                onClick: () => saveDraftTypefaces("Roboto"),
-                            },
-                            {
-                                label: "Open Sans",
-                                type: "button",
-                                onClick: () => saveDraftTypefaces("Open Sans"),
-                            },
-                            {
-                                label: "Agdasima",
-                                type: "button",
-                                onClick: () => saveDraftTypefaces("Agdasima"),
-                            },
-                            {
-                                label: "Lato",
-                                type: "button",
-                                onClick: () => saveDraftTypefaces("Lato"),
-                            },
-                            {
-                                label: "Montserrat",
-                                type: "button",
-                                onClick: () => saveDraftTypefaces("Montserrat"),
-                            },
-                            {
-                                label: "Poppins",
-                                type: "button",
-                                onClick: () => saveDraftTypefaces("Poppins"),
-                            },
-                        ]}
-                        label={"Font"}
-                    />
+                    <Button
+                        onClick={() => {
+                            setLeftPaneContent("pages");
+                        }}
+                        sx={{ color: "white" }}
+                    >
+                        {EDIT_PAGE_HEADER_ALL_PAGES}
+                    </Button>
+                    <Button
+                        onClick={() => {
+                            setLeftPaneContent("fonts");
+                        }}
+                        sx={{ color: "white" }}
+                    >
+                        {EDIT_PAGE_BUTTON_FONTS}
+                    </Button>
                     <Grid item sx={{ flexGrow: 1 }}>
                         <Grid
                             container

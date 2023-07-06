@@ -76,6 +76,7 @@ export default function Widget({ state, settings }: WidgetProps) {
                         (settings.links as Link[]).map((link: Link, index) => (
                             <Grid item sx={{ mr: 1 }} key={index}>
                                 <MuiLink
+                                    variant="body1"
                                     href={link.href}
                                     sx={{
                                         textDecoration: "none",

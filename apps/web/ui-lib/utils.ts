@@ -152,11 +152,9 @@ export const createMuiTheme = (typefaces: Typeface[], theme: Theme) => {
 
 const swapMembers = (arr: any[], index1: number, index2: number): any[] => {
     if (index1 < 0 || index1 > arr.length - 1) {
-        console.log("returning 1");
         return arr;
     }
     if (index2 < 0 || index2 > arr.length - 1) {
-        console.log("returning 2");
         return arr;
     }
     [arr[index1], arr[index2]] = [arr[index2], arr[index1]];

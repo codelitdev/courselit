@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import { Box, Button, Grid, IconButton } from "@mui/material";
+import { Box, Button, Grid } from "@mui/material";
 import WidgetByName from "./widget-by-name";
 import AppToast from "../../../app-toast";
 import { WidgetInstance } from "@courselit/common-models";
