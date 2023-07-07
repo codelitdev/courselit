@@ -18,7 +18,12 @@ export default function Link({ href, children, sxProps }: LinkProps) {
     );
 
     return (
-        <MuiLink href={href} sx={linkProps} component={NextLink}>
+        <MuiLink
+            variant="body1"
+            href={href}
+            sx={linkProps}
+            component={NextLink}
+        >
             {children}
         </MuiLink>
     );

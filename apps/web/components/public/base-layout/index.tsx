@@ -34,9 +34,7 @@ const MasterLayout = ({
     return (
         <>
             <Head>
-                <title>
-                    {title} | {siteInfo.title}
-                </title>
+                <title>{title || siteInfo.title}</title>
                 <link
                     rel="icon"
                     href={
