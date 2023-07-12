@@ -35,7 +35,6 @@ import {
     EDIT_PAGE_BUTTON_UPDATE,
     PAGE_TITLE_EDIT_PAGE,
     EDIT_PAGE_BUTTON_FONTS,
-    EDIT_PAGE_HEADER_ALL_PAGES,
 } from "../../../ui-config/strings";
 import { useRouter } from "next/router";
 import {
@@ -49,12 +48,14 @@ import Template from "../../public/base-layout/template";
 import dynamic from "next/dynamic";
 import Head from "next/head";
 import Link from "next/link";
-import { Menu } from "@courselit/components-library";
 import widgets from "../../../ui-config/widgets";
 import { ThemeProvider } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import PagesList from "./pages-list";
 
+import CloudDone from "@mui/icons-material/CloudDone";
+import Sync from "@mui/icons-material/Sync";
+import AppToast from "../../app-toast";
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
 const WidgetsList = dynamic(() => import("./widgets-list"));
@@ -116,9 +117,9 @@ function PageEditor({
     const muiTheme = createMuiTheme(draftTypefaces, theme);
 
     useEffect(() => {
-        loadPages();
-        loadPage();
         loadDraftTypefaces();
+        loadPage();
+        loadPages();
     }, []);
 
     useEffect(() => {
@@ -186,6 +187,7 @@ function PageEditor({
             }
         } catch (err: any) {
             dispatch(setAppMessage(new AppMessage(err.message)));
+            router.replace(`/dashboard`);
         } finally {
             dispatch(networkAction(false));
         }
@@ -267,7 +269,7 @@ function PageEditor({
                 dispatch(
                     setAppMessage(new AppMessage(`The page does not exist.`))
                 );
-                router.replace(`/dashboard/products`);
+                router.replace(`/dashboard`);
             }
         } catch (err: any) {
             dispatch(setAppMessage(new AppMessage(err.message)));
@@ -355,7 +357,7 @@ function PageEditor({
             <EditWidget
                 widget={
                     page &&
-                    layout.filter((x) => x.widgetId === selectedWidget)[0]
+                    layout?.filter((x) => x.widgetId === selectedWidget)[0]
                 }
                 onChange={onWidgetSettingsChanged}
                 onClose={onClose}
@@ -449,22 +451,13 @@ function PageEditor({
             </Head>
             <AppBar position="sticky">
                 <Toolbar>
-                    <Menu
-                        options={pages.map((page: Record<string, unknown>) => ({
-                            label: page.name,
-                            type: "link",
-                            href: `/dashboard/page/${page.pageId}/edit`,
-                        }))}
-                        label={page.name}
-                        buttonColor="#fff"
-                    />
                     <Button
                         onClick={() => {
                             setLeftPaneContent("pages");
                         }}
                         sx={{ color: "white" }}
                     >
-                        {EDIT_PAGE_HEADER_ALL_PAGES}
+                        {page.name}
                     </Button>
                     <Button
                         onClick={() => {
@@ -482,7 +475,8 @@ function PageEditor({
                         >
                             <Grid item>
                                 <Typography variant="body2">
-                                    {loading ? "Saving" : "Saved"}
+                                    {loading && <Sync />}
+                                    {!loading && <CloudDone />}
                                 </Typography>
                             </Grid>
                             <Grid item>
@@ -564,6 +558,7 @@ function PageEditor({
                     </Grid>
                 </Grid>
             </Grid>
+            <AppToast />
         </Grid>
     );
 }

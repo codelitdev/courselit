@@ -7,7 +7,6 @@ import ListItemText from "@mui/material/ListItemText";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import { EDIT_PAGE_HEADER_ALL_PAGES } from "../../../ui-config/strings";
-import Link from "next/link";
 
 interface PagesListProps {
     pages: { pageId: string; name: string }[];
@@ -38,7 +37,6 @@ function PagesList({ pages, onClose }: PagesListProps) {
             {pages.map((page) => (
                 <ListItemButton
                     href={`/dashboard/page/${page.pageId}/edit`}
-                    component={Link}
                     key={page.pageId}
                 >
                     <ListItemText primary={page.name} />

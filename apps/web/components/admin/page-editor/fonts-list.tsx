@@ -25,10 +25,22 @@ function FontsList({
     const fonts = [
         "Roboto",
         "Open Sans",
-        "Agdasima",
-        "Lato",
         "Montserrat",
+        "Lato",
         "Poppins",
+        "Source Sans Pro",
+        "Raleway",
+        "Noto Sans",
+        "Inter",
+        "Merriweather",
+        "Alegreya",
+        "Aleo",
+        "Muli",
+        "Arapey",
+        "Nunito",
+        "Carme",
+        "Rubik",
+        "Enriqueta",
     ];
     const defaultTypeface = draftTypefaces.filter(
         (x) => x.section === "default"
