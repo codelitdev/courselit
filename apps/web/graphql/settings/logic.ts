@@ -22,10 +22,10 @@ export const getSiteInfo = async (ctx: GQLContext) => {
         "settings.paytmSecret": 0,
         "settings.paypalSecret": 0,
     };
-    const isAdmin =
+    const siteEditor =
         ctx.user &&
-        checkPermission(ctx.user.permissions, [permissions.manageSettings]);
-    if (!isAdmin) {
+        checkPermission(ctx.user.permissions, [permissions.manageSite]);
+    if (!siteEditor) {
         exclusionProjection.draftTypefaces = 0;
     }
     const domain: Domain | null = await DomainModel.findById(

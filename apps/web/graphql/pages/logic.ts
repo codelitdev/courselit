@@ -1,8 +1,5 @@
 import { responses } from "../../config/strings";
-import {
-    checkIfAuthenticated,
-    checkOwnershipWithoutModel,
-} from "../../lib/graphql";
+import { checkIfAuthenticated } from "../../lib/graphql";
 import GQLContext from "../../models/GQLContext";
 import PageModel, { Page } from "../../models/Page";
 import { getPageResponse } from "./helpers";
@@ -131,10 +128,6 @@ export const savePage = async (
         pageId,
         domain: ctx.subdomain._id,
     });
-
-    if (!checkOwnershipWithoutModel(page, ctx)) {
-        throw new Error(responses.item_not_found);
-    }
 
     if ("publish" in pageData) {
         if (page && page.draftLayout.length) {

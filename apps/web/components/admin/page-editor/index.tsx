@@ -55,6 +55,7 @@ import PagesList from "./pages-list";
 
 import CloudDone from "@mui/icons-material/CloudDone";
 import Sync from "@mui/icons-material/Sync";
+import AppToast from "../../app-toast";
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
 const WidgetsList = dynamic(() => import("./widgets-list"));
@@ -116,9 +117,9 @@ function PageEditor({
     const muiTheme = createMuiTheme(draftTypefaces, theme);
 
     useEffect(() => {
-        loadPages();
-        loadPage();
         loadDraftTypefaces();
+        loadPage();
+        loadPages();
     }, []);
 
     useEffect(() => {
@@ -186,6 +187,7 @@ function PageEditor({
             }
         } catch (err: any) {
             dispatch(setAppMessage(new AppMessage(err.message)));
+            router.replace(`/dashboard`);
         } finally {
             dispatch(networkAction(false));
         }
@@ -267,7 +269,7 @@ function PageEditor({
                 dispatch(
                     setAppMessage(new AppMessage(`The page does not exist.`))
                 );
-                router.replace(`/dashboard/products`);
+                router.replace(`/dashboard`);
             }
         } catch (err: any) {
             dispatch(setAppMessage(new AppMessage(err.message)));
@@ -355,7 +357,7 @@ function PageEditor({
             <EditWidget
                 widget={
                     page &&
-                    layout.filter((x) => x.widgetId === selectedWidget)[0]
+                    layout?.filter((x) => x.widgetId === selectedWidget)[0]
                 }
                 onChange={onWidgetSettingsChanged}
                 onClose={onClose}
@@ -556,6 +558,7 @@ function PageEditor({
                     </Grid>
                 </Grid>
             </Grid>
+            <AppToast />
         </Grid>
     );
 }
