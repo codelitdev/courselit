@@ -18,9 +18,16 @@ interface EditWidgetProps {
         widgetId: string;
         deleteable: boolean;
     };
+    pageData: Record<string, unknown>;
 }
 
-function EditWidget({ onChange, onClose, onDelete, widget }: EditWidgetProps) {
+function EditWidget({
+    onChange,
+    onClose,
+    onDelete,
+    widget,
+    pageData,
+}: EditWidgetProps) {
     const [deleteConfirmation, setDeleteConfirmation] = useState(false);
     const [hideActionButtons, setHideActionButtons] = useState(false);
     const actualWidget = widgets[widget.name];
@@ -82,6 +89,7 @@ function EditWidget({ onChange, onClose, onDelete, widget }: EditWidgetProps) {
                             preservedStateAcrossRerender={
                                 preservedStateAcrossRerender
                             }
+                            pageData={pageData}
                         />
                     </Grid>
                     {!hideActionButtons && (

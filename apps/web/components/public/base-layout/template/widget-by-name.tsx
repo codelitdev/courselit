@@ -10,6 +10,7 @@ interface WidgetByNameProps {
     dispatch: AppDispatch;
     settings: Record<string, unknown>;
     pageData: Record<string, unknown>;
+    editing: boolean;
 }
 
 const WidgetByName = ({
@@ -19,6 +20,7 @@ const WidgetByName = ({
     dispatch,
     settings,
     pageData,
+    editing = false,
 }: WidgetByNameProps) => {
     if (!widgets[name]) return <>{name} component is not found.</>;
 
@@ -29,6 +31,7 @@ const WidgetByName = ({
         dispatch,
         id,
         pageData,
+        editing,
     });
 };
 

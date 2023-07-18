@@ -12,6 +12,7 @@ interface AdminWidgetProps {
         preservedStateAcrossRerender: Record<string, unknown>
     ) => void;
     preservedStateAcrossRerender: Record<string, unknown>;
+    pageData: Record<string, unknown>;
 }
 
 function AdminWidget({
@@ -20,6 +21,7 @@ function AdminWidget({
     onChange,
     hideActionButtons,
     preservedStateAcrossRerender,
+    pageData,
 }: AdminWidgetProps) {
     const AdminWidget = widgets[name].adminWidget;
     const AdminWidgetWithStateAndDispatch: any = connect(
@@ -33,6 +35,7 @@ function AdminWidget({
             onChange={onChange}
             hideActionButtons={hideActionButtons}
             preservedStateAcrossRerender={preservedStateAcrossRerender}
+            pageData={pageData}
         />
     );
 }

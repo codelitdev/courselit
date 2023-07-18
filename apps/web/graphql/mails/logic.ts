@@ -14,6 +14,11 @@ import SearchData from "./models/search-data";
 import { checkPermission } from "@courselit/utils";
 import { UIConstants } from "@courselit/common-models";
 import { send } from "../../services/mail";
+import CourseModel, { Course } from "../../models/Course";
+import DownloadLinkModel from "../../models/DownloadLink";
+import pug from "pug";
+import digitalDownloadTemplate from "../../templates/download-link";
+import finalizePurchase from "../../lib/finalize-purchase";
 
 const { permissions } = constants;
 
@@ -260,4 +265,72 @@ export async function sendMail(mailId: string, ctx: GQLContext): Promise<Mail> {
         });
         throw new Error(responses.internal_error);
     }
+}
+
+export async function sendCourseOverMail(
+    courseId: string,
+    email: string,
+    ctx: GQLContext
+): Promise<boolean> {
+    const course: Course | null = await CourseModel.findOne({
+        courseId,
+        domain: ctx.subdomain._id,
+        published: true,
+        costType: constants.costEmail,
+    });
+
+    if (!course) {
+        throw new Error(responses.item_not_found);
+    }
+
+    let dbUser: User | null = await UserModel.findOne({
+        email,
+        domain: ctx.subdomain._id,
+    });
+
+    if (!dbUser) {
+        dbUser = await createUser({
+            domain: ctx.subdomain!,
+            email: email,
+            lead: constants.leadDownload,
+        });
+    }
+
+    await finalizePurchase(dbUser.userId, course.courseId);
+
+    if (course.lessons.length === 0) {
+        return true;
+    }
+
+    await createTemplateAndSendMail({ course, ctx, user: dbUser });
+    return true;
+}
+
+async function createTemplateAndSendMail({
+    course,
+    ctx,
+    user,
+}: {
+    course: Course;
+    ctx: GQLContext;
+    user: User;
+}) {
+    const downloadLink = await DownloadLinkModel.create({
+        domain: ctx.subdomain!._id,
+        courseId: course.courseId,
+        userId: user.userId,
+    });
+
+    const emailBody = pug.render(digitalDownloadTemplate, {
+        downloadLink: `${ctx.address}/api/download/${downloadLink.token}`,
+        loginLink: `${ctx.address}/login`,
+        courseName: course.title,
+        name: course.creatorName || ctx.subdomain.settings.title || "",
+    });
+
+    await send({
+        to: [user.email],
+        subject: `Thank you for signing up for ${course.title}`,
+        body: emailBody,
+    });
 }

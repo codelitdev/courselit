@@ -359,6 +359,7 @@ function PageEditor({
                     page &&
                     layout?.filter((x) => x.widgetId === selectedWidget)[0]
                 }
+                pageData={page.pageData || {}}
                 onChange={onWidgetSettingsChanged}
                 onClose={onClose}
                 onDelete={deleteWidget}

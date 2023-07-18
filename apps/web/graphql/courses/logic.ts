@@ -500,6 +500,7 @@ export const getStudents = async ({
                 progress: "$completedLessons.completedLessons",
                 signedUpOn: "$completedLessons.createdAt",
                 lastAccessedOn: "$completedLessons.updatedAt",
+                downloaded: "$completedLessons.downloaded",
             },
         },
         {
@@ -510,6 +511,7 @@ export const getStudents = async ({
                 progress: 1,
                 signedUpOn: 1,
                 lastAccessedOn: 1,
+                downloaded: 1,
             },
         },
     ]);

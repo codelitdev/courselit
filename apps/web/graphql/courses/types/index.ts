@@ -18,13 +18,31 @@ import mediaTypes from "../../media/types";
 import { reports } from "./reports";
 
 const { lessonMetaType } = lessonTypes;
-const { unlisted, open, course, download, blog } = constants;
+const {
+    unlisted,
+    open,
+    course,
+    download,
+    blog,
+    costPaid,
+    costEmail,
+    costFree,
+} = constants;
 
 const courseStatusType = new GraphQLEnumType({
     name: "CoursePrivacyType",
     values: {
         UNLISTED: { value: unlisted },
         PUBLIC: { value: open },
+    },
+});
+
+const courseCostType = new GraphQLEnumType({
+    name: "CostType",
+    values: {
+        PAID: { value: costPaid },
+        FREE: { value: costFree },
+        EMAIL: { value: costEmail },
     },
 });
 
@@ -53,6 +71,7 @@ const courseType = new GraphQLObjectType({
         id: { type: new GraphQLNonNull(GraphQLID) },
         title: { type: new GraphQLNonNull(GraphQLString) },
         cost: { type: new GraphQLNonNull(GraphQLFloat) },
+        costType: { type: courseCostType },
         published: { type: new GraphQLNonNull(GraphQLBoolean) },
         privacy: { type: new GraphQLNonNull(courseStatusType) },
         isBlog: { type: new GraphQLNonNull(GraphQLBoolean) },
@@ -93,6 +112,7 @@ const courseUpdateInput = new GraphQLInputObjectType({
     fields: {
         id: { type: new GraphQLNonNull(GraphQLID) },
         title: { type: GraphQLString },
+        costType: { type: courseCostType },
         cost: { type: GraphQLFloat },
         published: { type: GraphQLBoolean },
         privacy: { type: courseStatusType },
@@ -145,6 +165,7 @@ const publicCoursesType = new GraphQLObjectType({
     fields: {
         id: { type: new GraphQLNonNull(GraphQLID) },
         title: { type: new GraphQLNonNull(GraphQLString) },
+        costType: { type: courseCostType },
         cost: { type: new GraphQLNonNull(GraphQLFloat) },
         description: { type: new GraphQLNonNull(GraphQLString) },
         type: { type: new GraphQLNonNull(courseTypeFilters) },

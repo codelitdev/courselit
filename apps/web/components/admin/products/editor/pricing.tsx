@@ -13,9 +13,16 @@ import {
     APP_MESSAGE_COURSE_SAVED,
     BUTTON_SAVE,
     PRICING_DROPDOWN,
+    PRICING_EMAIL,
+    PRICING_EMAIL_LABEL,
+    PRICING_EMAIL_SUBTITLE,
     PRICING_FREE,
+    PRICING_FREE_LABEL,
+    PRICING_FREE_SUBTITLE,
     PRICING_PAID,
+    PRICING_PAID_LABEL,
     PRICING_PAID_NO_PAYMENT_METHOD,
+    PRICING_PAID_SUBTITLE,
 } from "../../../../ui-config/strings";
 import useCourse from "./course-hook";
 import { Select } from "@courselit/components-library";
@@ -28,14 +35,16 @@ interface PricingProps {
 }
 
 function Pricing({ id, siteinfo, address, dispatch }: PricingProps) {
-    const [paid, setPaid] = useState(0);
-    const [cost, setCost] = useState(0);
     const course = useCourse(id);
+    const [cost, setCost] = useState(course?.cost);
+    const [costType, setCostType] = useState<string>(
+        course?.costType?.toLowerCase() || PRICING_FREE
+    );
 
     useEffect(() => {
         if (course) {
-            setPaid(course!.cost > 0 ? 1 : 0);
             setCost(course!.cost);
+            setCostType(course!.costType!.toLowerCase());
         }
     }, [course]);
 
@@ -46,7 +55,8 @@ function Pricing({ id, siteinfo, address, dispatch }: PricingProps) {
         mutation {
             updateCourse(courseData: {
                 id: "${course!.id}",
-                cost: ${paid ? cost : 0}
+                costType: ${costType.toUpperCase()},
+                cost: ${cost}
             }) {
                 id
             }
@@ -72,12 +82,9 @@ function Pricing({ id, siteinfo, address, dispatch }: PricingProps) {
         }
     };
 
-    const onSelectionChanged = (val: number) => {
-        setPaid(val);
-        if (!val) {
-            setCost(0);
-        }
-    };
+    if (!course?.courseId) {
+        return null;
+    }
 
     return (
         <Section>
@@ -85,26 +92,34 @@ function Pricing({ id, siteinfo, address, dispatch }: PricingProps) {
                 <Grid container>
                     <Grid item xs={12} sx={{ mb: 2 }}>
                         <Select
-                            value={paid}
+                            value={costType}
                             title={PRICING_DROPDOWN}
-                            onChange={onSelectionChanged}
+                            onChange={(val: string) => {
+                                setCostType(val);
+                            }}
                             options={[
                                 {
-                                    label: PRICING_FREE,
-                                    value: 0,
+                                    label: PRICING_FREE_LABEL,
+                                    value: PRICING_FREE,
+                                    sublabel: PRICING_FREE_SUBTITLE,
                                 },
                                 {
-                                    label: PRICING_PAID,
-                                    value: 1,
+                                    label: PRICING_EMAIL_LABEL,
+                                    value: PRICING_EMAIL,
+                                    sublabel: PRICING_EMAIL_SUBTITLE,
+                                },
+                                {
+                                    label: PRICING_PAID_LABEL,
+                                    value: PRICING_PAID,
                                     sublabel: siteinfo.paymentMethod
-                                        ? ""
+                                        ? PRICING_PAID_SUBTITLE
                                         : PRICING_PAID_NO_PAYMENT_METHOD,
                                     disabled: !siteinfo.paymentMethod,
                                 },
                             ]}
                         />
                     </Grid>
-                    {!!paid && (
+                    {PRICING_PAID === costType && (
                         <Grid item xs={12} sx={{ mb: 2 }}>
                             <TextField
                                 required
@@ -128,7 +143,13 @@ function Pricing({ id, siteinfo, address, dispatch }: PricingProps) {
                         <Button
                             type="submit"
                             variant="contained"
-                            disabled={!course || course.cost === cost}
+                            disabled={
+                                !course ||
+                                (costType === PRICING_PAID &&
+                                    (!cost || course.cost === cost)) ||
+                                (costType !== PRICING_PAID &&
+                                    costType === course.costType?.toLowerCase())
+                            }
                         >
                             {BUTTON_SAVE}
                         </Button>

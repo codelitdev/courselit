@@ -1,7 +1,8 @@
+import constants from "../config/constants";
+
 /**
  * This file provides application wide strings.
  */
-
 export const ERR_ALL_FIELDS_REQUIRED = "All fields are required.";
 export const ERR_PASSWORDS_DONT_MATCH = "Passwords do not match.";
 export const SIGNUP_SUCCESS = "Sign up successful. Please sign in.";
@@ -310,8 +311,18 @@ export const EDIT_SECTION_HEADER = "Edit section";
 export const DELETE_SECTION_HEADER = "Delete section";
 export const PRICING_HEADER = "Pricing";
 export const PRICING_DROPDOWN = "Pick your pricing scheme";
-export const PRICING_FREE = "Free";
-export const PRICING_PAID = "Paid";
+export const PRICING_FREE = constants.costFree;
+export const PRICING_FREE_LABEL = "Free";
+export const PRICING_FREE_SUBTITLE =
+    "People can access the content for free. The user needs to be signed in.";
+export const PRICING_EMAIL = constants.costEmail;
+export const PRICING_EMAIL_LABEL = "Free email delivery";
+export const PRICING_EMAIL_SUBTITLE =
+    "People will be sent the content over email. The user needs not be signed in.";
+export const PRICING_PAID = constants.costPaid;
+export const PRICING_PAID_LABEL = "Paid";
+export const PRICING_PAID_SUBTITLE =
+    "People can access the content after a one time payment. The user needs to be signed in.";
 export const PRICING_PAID_NO_PAYMENT_METHOD =
     "Set a payment method in Settings to enable this option.";
 export const PUBLISH_TAB_STATUS_TITLE = "Status";
@@ -362,6 +373,7 @@ export const QUIZ_PASS_MESSAGE = "Pass! You scored";
 export const QUIZ_FAIL_MESSAGE = "Fail! You scored";
 export const COURSE_STUDENT_REPORT_HEADER = "Students";
 export const COURSE_STUDENT_TABLE_HEADER_PROGRESS = "Progress";
+export const COURSE_STUDENT_TABLE_HEADER_DOWNLOAD = "Downloaded";
 export const COURSE_STUDENT_TABLE_HEADER_SIGNED_UP_ON = "Enrolled on";
 export const COURSE_STUDENT_TABLE_HEADER_LAST_ACCESSED_ON = "Last accessed";
 export const COURSE_STUDENT_SEARCH_BY_TEXT = "Search student";

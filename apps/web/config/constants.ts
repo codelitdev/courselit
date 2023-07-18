@@ -44,6 +44,11 @@ export default {
     unlisted: "unlisted",
     open: "public",
 
+    // Cost types
+    costFree: "free",
+    costEmail: "email",
+    costPaid: "paid",
+
     // Pagination config
     itemsPerPage: process.env.ITEMS_PER_PAGE ? +process.env.ITEMS_PER_PAGE : 10,
     defaultOffset: 1,
@@ -66,6 +71,7 @@ export default {
     // entry point for the user
     leadWebsite: "website",
     leadNewsletter: "newsletter",
+    leadDownload: "download",
 
     // log levels
     severityError: "error",
@@ -87,6 +93,10 @@ export default {
 
     // typography
     typeface: "Roboto",
+
+    // Download links settings
+    downLoadLinkExpiresInDays: 2,
+    downLoadLinkLength: 128,
 
     // acceptable currency codes for payments
     currencyISOCodes: [
@@ -270,4 +280,4 @@ export default {
         "xpt",
         "xag",
     ],
-};
+} as const;

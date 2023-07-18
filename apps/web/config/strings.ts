@@ -101,6 +101,11 @@ export const responses = {
     invalid_mail: "To, Subject and Body fields are required",
     email_delivery_failed_for_all_recipients:
         "Email delivery failed for all recipients",
+
+    // api responses
+    digital_download_no_files:
+        "This digital download is empty. Please contact the creator.",
+    download_link_expired: "The download link has expired",
 };
 
 export const internal = {

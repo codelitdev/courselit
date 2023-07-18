@@ -12,9 +12,11 @@ import {
     COURSE_STUDENT_NO_RECORDS,
     COURSE_STUDENT_REPORT_HEADER,
     COURSE_STUDENT_SEARCH_BY_TEXT,
+    COURSE_STUDENT_TABLE_HEADER_DOWNLOAD,
     COURSE_STUDENT_TABLE_HEADER_LAST_ACCESSED_ON,
     COURSE_STUDENT_TABLE_HEADER_PROGRESS,
     COURSE_STUDENT_TABLE_HEADER_SIGNED_UP_ON,
+    PRICING_EMAIL,
     USER_TABLE_HEADER_NAME,
 } from "../../../../../../ui-config/strings";
 import {
@@ -36,7 +38,12 @@ import {
 } from "@courselit/state-management";
 import { connect } from "react-redux";
 import { Address } from "@courselit/common-models";
-import { CheckCircle, CheckCircleOutline, Search } from "@mui/icons-material";
+import {
+    CheckCircle,
+    CheckCircleOutline,
+    DoneSharp,
+    Search,
+} from "@mui/icons-material";
 import useCourse from "../../course-hook";
 import Link from "next/link";
 const { networkAction } = actionCreators;
@@ -80,7 +87,8 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
                         name,
                         progress,
                         signedUpOn,
-                        lastAccessedOn
+                        lastAccessedOn,
+                        downloaded
                     }
                 }
             }
@@ -94,7 +102,8 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
                         name,
                         progress,
                         signedUpOn,
-                        lastAccessedOn
+                        lastAccessedOn,
+                        downloaded
                     }
                 }
             }
@@ -161,9 +170,18 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
                         <TableHead>
                             <TableRow>
                                 <TableCell>{USER_TABLE_HEADER_NAME}</TableCell>
-                                <TableCell>
-                                    {COURSE_STUDENT_TABLE_HEADER_PROGRESS}
-                                </TableCell>
+                                {course?.costType?.toLowerCase() !==
+                                    PRICING_EMAIL && (
+                                    <TableCell>
+                                        {COURSE_STUDENT_TABLE_HEADER_PROGRESS}
+                                    </TableCell>
+                                )}
+                                {course?.costType?.toLowerCase() ===
+                                    PRICING_EMAIL && (
+                                    <TableCell>
+                                        {COURSE_STUDENT_TABLE_HEADER_DOWNLOAD}
+                                    </TableCell>
+                                )}
                                 <TableCell>
                                     {COURSE_STUDENT_TABLE_HEADER_SIGNED_UP_ON}
                                 </TableCell>
@@ -189,18 +207,35 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
                                                 (student.email as string)}
                                         </MuiLink>
                                     </TableCell>
-                                    <TableCell
-                                        onClick={() => showProgress(student)}
-                                        sx={{
-                                            cursor: "pointer",
-                                            "&:hover": {
-                                                textDecoration: "underline",
-                                            },
-                                        }}
-                                    >
-                                        {(student.progress as string[]).length}{" "}
-                                        / {course?.lessons?.length}
-                                    </TableCell>
+                                    {course?.costType?.toLowerCase() !==
+                                        PRICING_EMAIL && (
+                                        <TableCell
+                                            onClick={() =>
+                                                showProgress(student)
+                                            }
+                                            sx={{
+                                                cursor: "pointer",
+                                                "&:hover": {
+                                                    textDecoration: "underline",
+                                                },
+                                            }}
+                                        >
+                                            {
+                                                (student.progress as string[])
+                                                    .length
+                                            }{" "}
+                                            / {course?.lessons?.length}
+                                        </TableCell>
+                                    )}
+                                    {course?.costType?.toLowerCase() ===
+                                        PRICING_EMAIL && (
+                                        <TableCell>
+                                            {student.downloaded && (
+                                                <DoneSharp />
+                                            )}
+                                            {!student.downloaded && <></>}
+                                        </TableCell>
+                                    )}
                                     <TableCell>
                                         {student.signedUpOn
                                             ? new Date(

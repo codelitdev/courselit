@@ -10,6 +10,7 @@ import connectDb from "../../middlewares/connect-db";
 import constants from "../../config/constants";
 import { error } from "../../services/logger";
 import { responses } from "../../config/strings";
+import { getAddress } from "../../lib/utils";
 
 passport.use(jwtStrategy);
 
@@ -43,7 +44,13 @@ export default nc<NextApiRequest, NextApiResponse>({
         }
 
         const source = req.body.query;
-        const contextValue = { user: req.user, subdomain: req.subdomain };
+        const hostname = req.headers["host"] || "";
+        const protocol = req.headers["x-forwarded-proto"];
+        const contextValue = {
+            user: req.user,
+            subdomain: req.subdomain,
+            address: getAddress(hostname, protocol),
+        };
         const response = await graphql({
             schema,
             source,

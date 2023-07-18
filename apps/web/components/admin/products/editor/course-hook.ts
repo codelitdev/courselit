@@ -50,6 +50,7 @@ export default function useCourse(id: string):
                     },
                     courseId,
                     cost,
+                    costType,
                     featuredImage {
                         mediaId,
                         originalFileName,
