@@ -76,6 +76,7 @@ const EditableWidget = ({
                     settings={item.settings || {}}
                     pageData={pageData}
                     id={`widget${item._id}`}
+                    editing={editing}
                 />
                 <Grid
                     className="lol"

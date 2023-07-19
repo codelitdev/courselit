@@ -1,5 +1,6 @@
 import { Course } from "@courselit/common-models";
 import {
+    GraphQLBoolean,
     GraphQLFloat,
     GraphQLList,
     GraphQLNonNull,
@@ -18,6 +19,7 @@ const student = new GraphQLObjectType({
         progress: { type: new GraphQLList(GraphQLString) },
         signedUpOn: { type: GraphQLFloat },
         lastAccessedOn: { type: GraphQLFloat },
+        downloaded: { type: GraphQLBoolean },
     },
 });
 

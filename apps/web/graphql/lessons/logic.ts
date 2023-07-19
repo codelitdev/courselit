@@ -232,6 +232,7 @@ export const getAllLessons = async (course: Course, ctx: GQLContext) => {
     return lessons;
 };
 
+// TODO: refactor this as it might not be deleting the media
 export const deleteAllLessons = async (courseId: string, ctx: GQLContext) => {
     const allLessonsWithMedia = await LessonModel.find(
         {

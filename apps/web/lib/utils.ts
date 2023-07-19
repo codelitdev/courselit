@@ -20,10 +20,15 @@ export const generateMagicLink = ({
     protocol,
     redirect,
 }: MagicLinkProps) => {
-    return `${getProtocol(protocol)}://${hostname}/login?token=${token}${
+    return `${getAddress(hostname, protocol)}/login?token=${token}${
         redirect ? `&redirect=${redirect}` : ""
     }`;
 };
+
+export const getAddress = (
+    hostname: string,
+    protocol: string | string[] = "http"
+) => `${getProtocol(protocol)}://${hostname}`;
 
 export const getProtocol = (protocol: string | string[] = "http") => {
     return protocol.includes("https") ? "https" : "http";

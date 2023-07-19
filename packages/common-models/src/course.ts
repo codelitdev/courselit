@@ -9,6 +9,7 @@ export default interface Course {
     slug: string;
     isFeatured: boolean;
     cost: number;
+    costType: string;
     creatorId: string;
     updatedAt: Date;
     featuredImage: Media;

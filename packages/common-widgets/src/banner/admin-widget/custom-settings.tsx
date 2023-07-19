@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
-import { FormLabel, Grid, TextField, Typography } from "@mui/material";
+import { FormLabel, Grid, TextField } from "@mui/material";
 import Settings from "../settings";
 import {
     TextEditor,
@@ -9,18 +9,34 @@ import {
     AdminWidgetPanel,
 } from "@courselit/components-library";
 import { Alignment } from "@courselit/common-models";
+import { DEFAULT_FAILURE_MESSAGE, DEFAULT_SUCCESS_MESSAGE } from "../constants";
 
 interface CustomSettingsProps {
     name: string;
     settings: Settings;
+    pageData: Record<string, unknown>;
     onChange: (...args: any[]) => void;
 }
 
 export default function CustomSettings({
-    name,
     settings,
     onChange,
+    pageData,
 }: CustomSettingsProps) {
+    const defaultSuccessMessage: Record<string, unknown> = {
+        type: "doc",
+        content: [
+            {
+                type: "paragraph",
+                content: [
+                    {
+                        type: "text",
+                        text: DEFAULT_SUCCESS_MESSAGE,
+                    },
+                ],
+            },
+        ],
+    };
     const [title, setTitle] = useState(settings.title);
     const [description, setDescription] = useState(settings.description);
     const [buttonCaption, setButtonCaption] = useState(settings.buttonCaption);
@@ -39,6 +55,16 @@ export default function CustomSettings({
     const [textAlignment, setTextAlignment] = useState<Alignment>(
         settings.textAlignment || "left"
     );
+    const [successMessage, setSuccessMessage] = useState(
+        settings.successMessage || defaultSuccessMessage
+    );
+    const [failureMessage, setFailureMessage] = useState(
+        settings.failureMessage || DEFAULT_FAILURE_MESSAGE
+    );
+    const [editingViewShowSuccess, setEditingViewShowSuccess] = useState<1 | 0>(
+        settings.editingViewShowSuccess || 0
+    );
+    const type = Object.keys(pageData).length === 0 ? "site" : "product";
 
     useEffect(() => {
         onChange({
@@ -52,6 +78,9 @@ export default function CustomSettings({
             buttonBackground,
             buttonForeground,
             textAlignment,
+            successMessage,
+            failureMessage,
+            editingViewShowSuccess,
         });
     }, [
         title,
@@ -64,6 +93,9 @@ export default function CustomSettings({
         buttonBackground,
         buttonForeground,
         textAlignment,
+        successMessage,
+        failureMessage,
+        editingViewShowSuccess,
     ]);
 
     return (
@@ -100,7 +132,7 @@ export default function CustomSettings({
                             onChange={(e) => setButtonCaption(e.target.value)}
                         />
                     </Grid>
-                    {name === "banner" && settings.type === "site" && (
+                    {type === "site" && (
                         <Grid item sx={{ mb: 2 }}>
                             <TextField
                                 variant="outlined"
@@ -122,7 +154,7 @@ export default function CustomSettings({
                             }
                         />
                     </Grid>
-                    <Grid item>
+                    <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Button text color"
                             value={buttonForeground}
@@ -131,6 +163,44 @@ export default function CustomSettings({
                             }
                         />
                     </Grid>
+                    {pageData.costType === "email" && (
+                        <>
+                            <Grid item sx={{ mb: 2 }}>
+                                <FormLabel>Success message</FormLabel>
+                                <TextEditor
+                                    initialContent={successMessage}
+                                    onChange={(state: any) =>
+                                        setSuccessMessage(state)
+                                    }
+                                    showToolbar={false}
+                                />
+                            </Grid>
+                            <Grid item sx={{ mb: 2 }}>
+                                <TextField
+                                    label="Failure message"
+                                    value={failureMessage}
+                                    placeholder={DEFAULT_FAILURE_MESSAGE}
+                                    onChange={(e) =>
+                                        setFailureMessage(e.target.value)
+                                    }
+                                    fullWidth
+                                />
+                            </Grid>
+                            <Grid item>
+                                <Select
+                                    title="Editing view"
+                                    value={editingViewShowSuccess}
+                                    options={[
+                                        { label: "Before submit", value: 0 },
+                                        { label: "After submit", value: 1 },
+                                    ]}
+                                    onChange={(value: 1 | 0) =>
+                                        setEditingViewShowSuccess(value)
+                                    }
+                                />
+                            </Grid>
+                        </>
+                    )}
                 </AdminWidgetPanel>
             </Grid>
             <Grid item sx={{ mb: 4 }}>

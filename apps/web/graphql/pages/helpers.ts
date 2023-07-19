@@ -51,6 +51,7 @@ async function getCourse(
     | "title"
     | "description"
     | "cost"
+    | "costType"
     | "type"
     | "tags"
     | "featuredImage"
@@ -66,6 +67,7 @@ async function getCourse(
             title: 1,
             description: 1,
             cost: 1,
+            costType: 1,
             type: 1,
             tags: 1,
             featuredImage: 1,

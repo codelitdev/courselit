@@ -36,7 +36,6 @@ const Widget = ({
     dispatch,
 }: WidgetProps) => {
     const [email, setEmail] = useState("");
-    const submitEmail = async () => {};
     const justifyContent =
         alignment === "center"
             ? "center"

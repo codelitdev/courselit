@@ -33,10 +33,10 @@ export default function Widget({
         foregroundColor,
         badgeBackgroundColor,
         badgeForegroundColor,
-        entityId,
     },
     state,
     dispatch,
+    pageData: product,
 }: WidgetProps<Settings>) {
     const [course, setCourse] = useState<CourseWithGroups>(null);
     const [formattedCourse, setFormattedCourse] = useState<
@@ -44,10 +44,10 @@ export default function Widget({
     >({});
 
     useEffect(() => {
-        if (entityId) {
-            loadCourse(entityId);
+        if (product.courseId) {
+            loadCourse(product.courseId as string);
         }
-    }, [entityId]);
+    }, [product]);
 
     const loadCourse = async (courseId: string) => {
         const query = `
@@ -175,7 +175,7 @@ export default function Widget({
                 </Grid>
             )}
             {Object.keys(formattedCourse).map((group, index) => (
-                <Grid item sx={{ mt: index > 0 ? 3 : 0 }}>
+                <Grid item sx={{ mt: index > 0 ? 3 : 0 }} key={index}>
                     <Grid container direction="column">
                         <Grid item>
                             <Grid container spacing={1} alignItems="center">

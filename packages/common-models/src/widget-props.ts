@@ -12,4 +12,5 @@ export default interface WidgetProps<T extends WidgetDefaultSettings> {
     state: State;
     dispatch: ThunkDispatch<State, null, AnyAction>;
     settings: T;
+    editing: boolean;
 }

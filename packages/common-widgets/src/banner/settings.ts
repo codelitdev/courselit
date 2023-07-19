@@ -6,8 +6,6 @@ import {
 } from "@courselit/common-models";
 
 export default interface Settings extends WidgetDefaultSettings {
-    entityId: string;
-    type: PageTypeProduct | PageTypeSite;
     productId?: string;
     title?: string;
     description?: string;
@@ -19,4 +17,7 @@ export default interface Settings extends WidgetDefaultSettings {
     color?: string;
     buttonBackground?: string;
     buttonForeground?: string;
+    successMessage?: string;
+    failureMessage?: string;
+    editingViewShowSuccess: 1 | 0;
 }

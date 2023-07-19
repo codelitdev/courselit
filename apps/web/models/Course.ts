@@ -3,7 +3,16 @@ import constants from "../config/constants";
 import { generateUniqueId } from "@courselit/utils";
 import type { Group, Media } from "@courselit/common-models";
 import MediaSchema from "./Media";
-const { course, download, blog, unlisted, open } = constants;
+const {
+    course,
+    download,
+    blog,
+    unlisted,
+    open,
+    costFree,
+    costPaid,
+    costEmail,
+} = constants;
 
 export interface Course {
     domain: mongoose.Types.ObjectId;
@@ -12,6 +21,7 @@ export interface Course {
     title: string;
     slug: string;
     cost: number;
+    costType: typeof costFree | typeof costPaid | typeof costEmail;
     privacy: typeof unlisted | typeof open;
     type: typeof course | typeof download | typeof blog;
     creatorId: string;
@@ -36,6 +46,11 @@ const CourseSchema = new mongoose.Schema<Course>(
         title: { type: String, required: true },
         slug: { type: String, required: true },
         cost: { type: Number, required: true },
+        costType: {
+            type: String,
+            required: true,
+            enum: [costFree, costEmail, costPaid],
+        },
         privacy: {
             type: String,
             required: true,

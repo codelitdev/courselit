@@ -33,13 +33,25 @@ export const validateCourse = async (courseData: Course, ctx: GQLContext) => {
         }
 
         courseData.cost = 0;
+        courseData.costType = constants.costFree;
     }
 
-    if (courseData.cost < 0) {
+    if (courseData.costType !== constants.costPaid) {
+        courseData.cost = 0;
+    }
+
+    if (courseData.costType === constants.costPaid && courseData.cost < 0) {
         throw new Error(responses.invalid_cost);
     }
 
-    if (courseData.cost > 0) {
+    if (
+        courseData.type === constants.course &&
+        courseData.costType === constants.costEmail
+    ) {
+        throw new Error(responses.courses_cannot_be_downloaded);
+    }
+
+    if (courseData.costType === constants.costPaid && courseData.cost > 0) {
         await validatePaymentMethod(ctx.subdomain._id.toString());
     }
 
@@ -128,6 +140,7 @@ export const setupCourse = async ({
         domain: ctx.subdomain._id,
         title: title,
         cost: 0,
+        costType: constants.costFree,
         privacy: constants.unlisted,
         creatorId: ctx.user.userId,
         creatorName: ctx.user.name,
@@ -159,6 +172,7 @@ export const setupBlog = async ({
         domain: ctx.subdomain._id,
         title: title,
         cost: 0,
+        costType: constants.costFree,
         privacy: constants.unlisted,
         creatorId: ctx.user.userId,
         creatorName: ctx.user.name,
