@@ -236,7 +236,7 @@ export const PROFILE_SECTION_DETAILS_BIO = "Bio";
 export const PROFILE_EMAIL_PREFERENCES_NEWSLETTER_OPTION_TEXT =
     "Receive newsletter and marketing emails";
 export const BTN_PUBLISH = "Publish";
-export const BTN_UNPUBLISH = "Draft";
+export const BTN_UNPUBLISH = "Unpublish";
 export const PERM_SECTION_HEADER = "Permissions";
 export const PERM_COURSE_MANAGE = "Create content";
 export const PERM_COURSE_MANAGE_ANY = "Manage all content";

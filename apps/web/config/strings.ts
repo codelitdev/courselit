@@ -101,6 +101,7 @@ export const responses = {
     invalid_mail: "To, Subject and Body fields are required",
     email_delivery_failed_for_all_recipients:
         "Email delivery failed for all recipients",
+    courses_cannot_be_downloaded: "A course cannot be offered as a download.",
 
     // api responses
     digital_download_no_files:

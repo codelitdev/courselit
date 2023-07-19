@@ -6,7 +6,6 @@ import {
 } from "@courselit/common-models";
 
 export default interface Settings extends WidgetDefaultSettings {
-    type: PageTypeProduct | PageTypeSite;
     productId?: string;
     title?: string;
     description?: string;

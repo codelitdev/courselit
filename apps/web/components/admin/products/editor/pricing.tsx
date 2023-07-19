@@ -26,6 +26,7 @@ import {
 } from "../../../../ui-config/strings";
 import useCourse from "./course-hook";
 import { Select } from "@courselit/components-library";
+import { COURSE_TYPE_DOWNLOAD } from "../../../../ui-config/constants";
 
 interface PricingProps {
     id: string;
@@ -86,6 +87,29 @@ function Pricing({ id, siteinfo, address, dispatch }: PricingProps) {
         return null;
     }
 
+    const options = [
+        {
+            label: PRICING_FREE_LABEL,
+            value: PRICING_FREE,
+            sublabel: PRICING_FREE_SUBTITLE,
+        },
+        {
+            label: PRICING_PAID_LABEL,
+            value: PRICING_PAID,
+            sublabel: siteinfo.paymentMethod
+                ? PRICING_PAID_SUBTITLE
+                : PRICING_PAID_NO_PAYMENT_METHOD,
+            disabled: !siteinfo.paymentMethod,
+        },
+    ];
+    if (course.type?.toLowerCase() === COURSE_TYPE_DOWNLOAD) {
+        options.splice(1, 0, {
+            label: PRICING_EMAIL_LABEL,
+            value: PRICING_EMAIL,
+            sublabel: PRICING_EMAIL_SUBTITLE,
+        });
+    }
+
     return (
         <Section>
             <form onSubmit={updatePricing}>
@@ -97,26 +121,7 @@ function Pricing({ id, siteinfo, address, dispatch }: PricingProps) {
                             onChange={(val: string) => {
                                 setCostType(val);
                             }}
-                            options={[
-                                {
-                                    label: PRICING_FREE_LABEL,
-                                    value: PRICING_FREE,
-                                    sublabel: PRICING_FREE_SUBTITLE,
-                                },
-                                {
-                                    label: PRICING_EMAIL_LABEL,
-                                    value: PRICING_EMAIL,
-                                    sublabel: PRICING_EMAIL_SUBTITLE,
-                                },
-                                {
-                                    label: PRICING_PAID_LABEL,
-                                    value: PRICING_PAID,
-                                    sublabel: siteinfo.paymentMethod
-                                        ? PRICING_PAID_SUBTITLE
-                                        : PRICING_PAID_NO_PAYMENT_METHOD,
-                                    disabled: !siteinfo.paymentMethod,
-                                },
-                            ]}
+                            options={options}
                         />
                     </Grid>
                     {PRICING_PAID === costType && (

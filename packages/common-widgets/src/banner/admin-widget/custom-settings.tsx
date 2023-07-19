@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
-import { FormLabel, Grid, TextField, Typography } from "@mui/material";
+import { FormLabel, Grid, TextField } from "@mui/material";
 import Settings from "../settings";
 import {
     TextEditor,
@@ -9,7 +9,7 @@ import {
     AdminWidgetPanel,
 } from "@courselit/components-library";
 import { Alignment } from "@courselit/common-models";
-import { DEFAULT_FAILURE_MESSAGE } from "../constants";
+import { DEFAULT_FAILURE_MESSAGE, DEFAULT_SUCCESS_MESSAGE } from "../constants";
 
 interface CustomSettingsProps {
     name: string;
@@ -19,11 +19,24 @@ interface CustomSettingsProps {
 }
 
 export default function CustomSettings({
-    name,
     settings,
     onChange,
     pageData,
 }: CustomSettingsProps) {
+    const defaultSuccessMessage: Record<string, unknown> = {
+        type: "doc",
+        content: [
+            {
+                type: "paragraph",
+                content: [
+                    {
+                        type: "text",
+                        text: DEFAULT_SUCCESS_MESSAGE,
+                    },
+                ],
+            },
+        ],
+    };
     const [title, setTitle] = useState(settings.title);
     const [description, setDescription] = useState(settings.description);
     const [buttonCaption, setButtonCaption] = useState(settings.buttonCaption);
@@ -43,7 +56,7 @@ export default function CustomSettings({
         settings.textAlignment || "left"
     );
     const [successMessage, setSuccessMessage] = useState(
-        settings.successMessage
+        settings.successMessage || defaultSuccessMessage
     );
     const [failureMessage, setFailureMessage] = useState(
         settings.failureMessage || DEFAULT_FAILURE_MESSAGE
@@ -51,6 +64,7 @@ export default function CustomSettings({
     const [editingViewShowSuccess, setEditingViewShowSuccess] = useState<1 | 0>(
         settings.editingViewShowSuccess || 0
     );
+    const type = Object.keys(pageData).length === 0 ? "site" : "product";
 
     useEffect(() => {
         onChange({
@@ -118,7 +132,7 @@ export default function CustomSettings({
                             onChange={(e) => setButtonCaption(e.target.value)}
                         />
                     </Grid>
-                    {settings.type === "site" && (
+                    {type === "site" && (
                         <Grid item sx={{ mb: 2 }}>
                             <TextField
                                 variant="outlined"

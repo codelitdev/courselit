@@ -43,6 +43,7 @@ export const MIMETYPE_PDF = ["application/pdf"];
 
 export const THEMES_REPO = "https://github.com/codelitdev/courselit-themes";
 
+// Course Type
 export const COURSE_TYPE_COURSE = "course";
 export const COURSE_TYPE_DOWNLOAD = "download";
 

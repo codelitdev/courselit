@@ -1,4 +1,4 @@
-import { AppMessage, Course, WidgetProps } from "@courselit/common-models";
+import { AppMessage, WidgetProps } from "@courselit/common-models";
 import { Image, PriceTag, TextRenderer } from "@courselit/components-library";
 import { actionCreators } from "@courselit/state-management";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
@@ -11,18 +11,16 @@ import {
     Typography,
 } from "@mui/material";
 import React, { FormEvent, useEffect, useState } from "react";
-import { DEFAULT_FAILURE_MESSAGE } from "./constants";
+import { DEFAULT_FAILURE_MESSAGE, DEFAULT_SUCCESS_MESSAGE } from "./constants";
 import Settings from "./settings";
 
 export default function Widget({
-    name,
     settings: {
         title,
         description,
         buttonCaption,
         buttonAction,
         alignment,
-        type,
         backgroundColor,
         color,
         buttonBackground,
@@ -39,7 +37,21 @@ export default function Widget({
 }: WidgetProps<Settings>) {
     const [email, setEmail] = useState("");
     const [success, setSuccess] = useState(false);
-    console.log(state, editing, description, successMessage);
+    const type = Object.keys(product).length === 0 ? "site" : "product";
+    const defaultSuccessMessage: Record<string, unknown> = {
+        type: "doc",
+        content: [
+            {
+                type: "paragraph",
+                content: [
+                    {
+                        type: "text",
+                        text: DEFAULT_SUCCESS_MESSAGE,
+                    },
+                ],
+            },
+        ],
+    };
 
     let direction: GridDirection;
     switch (alignment) {
@@ -59,6 +71,10 @@ export default function Widget({
             direction = "row";
     }
     const verticalLayout = ["top", "bottom"].includes(alignment);
+    const showEditingView =
+        typeof editingViewShowSuccess === "undefined"
+            ? 0
+            : editingViewShowSuccess;
 
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -155,7 +171,7 @@ export default function Widget({
                         </Grid>
                     )}
                     <Grid item sx={{ pb: 1 }}>
-                        <Typography variant="h2">
+                        <Typography variant="h2" sx={{ mb: 2 }}>
                             {title ||
                                 (type === "site"
                                     ? state.siteinfo.title
@@ -186,12 +202,15 @@ export default function Widget({
                     )}
                     {type === "product" && product.costType === "email" && (
                         <Grid item>
-                            {((editing && editingViewShowSuccess === 1) ||
+                            {((editing && showEditingView === 1) ||
                                 success) && (
-                                <TextRenderer json={successMessage} />
+                                <TextRenderer
+                                    json={
+                                        successMessage || defaultSuccessMessage
+                                    }
+                                />
                             )}
-                            {(!editing ||
-                                (editing && editingViewShowSuccess === 0)) &&
+                            {(!editing || (editing && showEditingView === 0)) &&
                                 !success && (
                                     <Grid
                                         container
