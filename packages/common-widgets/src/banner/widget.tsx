@@ -10,7 +10,7 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import React, { FormEvent, useEffect, useState } from "react";
+import React, { FormEvent, useState } from "react";
 import { DEFAULT_FAILURE_MESSAGE, DEFAULT_SUCCESS_MESSAGE } from "./constants";
 import Settings from "./settings";
 
