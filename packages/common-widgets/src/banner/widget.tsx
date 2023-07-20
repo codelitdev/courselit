@@ -100,17 +100,15 @@ export default function Widget({
             if (response.response) {
                 setEmail("");
                 setSuccess(true);
-            } else {
-                dispatch(
-                    setAppMessage(
-                        new AppMessage(
-                            failureMessage || DEFAULT_FAILURE_MESSAGE
-                        )
-                    )
-                );
             }
         } catch (e) {
-            console.error(e.message);
+            dispatch(
+                setAppMessage(
+                    new AppMessage(
+                        failureMessage || DEFAULT_FAILURE_MESSAGE
+                    )
+                )
+            );
         } finally {
             dispatch(actionCreators.networkAction(false));
         }
