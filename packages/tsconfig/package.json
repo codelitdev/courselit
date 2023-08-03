@@ -1,0 +1,19 @@
+{
+    "name": "tsconfig",
+    "version": "0.0.0",
+    "description": "TSConfig for CourseLit",
+    "author": "Rajat Saxena <hi@rajatsaxena.dev>",
+    "homepage": "https://github.com/codelitdev/courselit#readme",
+    "private": true,
+    "license": "MIT",
+    "publishConfig": {
+        "access": "public"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/codelitdev/courselit.git"
+    },
+    "bugs": {
+        "url": "https://github.com/codelitdev/courselit/issues"
+    }
+}

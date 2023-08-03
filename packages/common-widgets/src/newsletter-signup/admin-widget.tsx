@@ -129,8 +129,8 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Button color"
-                            value={btnBackgroundColor}
-                            onChange={(value: string) =>
+                            value={btnBackgroundColor || "inherit"}
+                            onChange={(value?: string) =>
                                 setBtnBackgroundColor(value)
                             }
                         />
@@ -138,8 +138,8 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                     <Grid item>
                         <ColorSelector
                             title="Button text"
-                            value={btnForegroundColor}
-                            onChange={(value: string) =>
+                            value={btnForegroundColor || "inherit"}
+                            onChange={(value?: string) =>
                                 setBtnForegroundColor(value)
                             }
                         />
@@ -151,8 +151,8 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Text color"
-                            value={foregroundColor}
-                            onChange={(value: string) =>
+                            value={foregroundColor || "inherit"}
+                            onChange={(value?: string) =>
                                 setForegroundColor(value)
                             }
                         />
@@ -160,8 +160,8 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Background color"
-                            value={backgroundColor}
-                            onChange={(value: string) =>
+                            value={backgroundColor || "inherit"}
+                            onChange={(value?: string) =>
                                 setBackgroundColor(value)
                             }
                         />

@@ -13,6 +13,7 @@
     "dependencies": {
         "@courselit/common-models": "workspace:^",
         "@courselit/common-widgets": "workspace:^",
+        "@courselit/common-widgets-2": "workspace:^",
         "@courselit/components-library": "workspace:^",
         "@courselit/state-management": "workspace:^",
         "@courselit/utils": "workspace:^",
@@ -65,7 +66,11 @@
         "eslint": "8.10.0",
         "eslint-config-next": "latest",
         "eslint-config-prettier": "^8.5.0",
+        "postcss": "^8.4.27",
         "prettier": "^2.5.1",
+        "tailwind-config": "workspace:^",
+        "tailwindcss": "^3.3.3",
+        "tsconfig": "workspace:^",
         "typescript": "4.6.2"
     },
     "engines": {

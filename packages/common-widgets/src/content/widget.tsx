@@ -38,7 +38,7 @@ export default function Widget({
     dispatch,
     pageData: product,
 }: WidgetProps<Settings>) {
-    const [course, setCourse] = useState<CourseWithGroups>(null);
+    const [course, setCourse] = useState<CourseWithGroups>();
     const [formattedCourse, setFormattedCourse] = useState<
         Record<string, Lesson[]>
     >({});

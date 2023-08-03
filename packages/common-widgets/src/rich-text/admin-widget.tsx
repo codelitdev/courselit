@@ -66,15 +66,15 @@ const AdminWidget = ({ settings, onChange }: AboutWidgetProps) => {
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Text color"
-                            value={color}
-                            onChange={(value: string) => setColor(value)}
+                            value={color || "inherit"}
+                            onChange={(value?: string) => setColor(value)}
                         />
                     </Grid>
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Background color"
-                            value={backgroundColor}
-                            onChange={(value: string) =>
+                            value={backgroundColor || ""}
+                            onChange={(value?: string) =>
                                 setBackgroundColor(value)
                             }
                         />

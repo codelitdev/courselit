@@ -43,9 +43,9 @@ export default function CustomSettings({
     const [buttonAction, setButtonAction] = useState(settings.buttonAction);
     const [alignment, setAlignment] = useState(settings.alignment || "left");
     const [backgroundColor, setBackgroundColor] = useState(
-        settings.backgroundColor || "inherit"
+        settings.backgroundColor
     );
-    const [color, setColor] = useState(settings.color || "inherit");
+    const [color, setColor] = useState(settings.color);
     const [buttonBackground, setButtonBackground] = useState(
         settings.buttonBackground
     );
@@ -148,8 +148,8 @@ export default function CustomSettings({
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Button color"
-                            value={buttonBackground}
-                            onChange={(value: string) =>
+                            value={buttonBackground || "inherit"}
+                            onChange={(value?: string) =>
                                 setButtonBackground(value)
                             }
                         />
@@ -157,8 +157,8 @@ export default function CustomSettings({
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Button text color"
-                            value={buttonForeground}
-                            onChange={(value: string) =>
+                            value={buttonForeground || "inherit"}
+                            onChange={(value?: string) =>
                                 setButtonForeground(value)
                             }
                         />
@@ -208,8 +208,8 @@ export default function CustomSettings({
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Background color"
-                            value={backgroundColor}
-                            onChange={(value: string) =>
+                            value={backgroundColor || "inherit"}
+                            onChange={(value?: string) =>
                                 setBackgroundColor(value)
                             }
                         />
@@ -217,8 +217,8 @@ export default function CustomSettings({
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Text color"
-                            value={color}
-                            onChange={(value: string) => setColor(value)}
+                            value={color || "inherit"}
+                            onChange={(value?: string) => setColor(value)}
                         />
                     </Grid>
                     <Grid item sx={{ mb: 2 }}>

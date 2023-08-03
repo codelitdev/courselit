@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import "../styles/globals.css";
+import "@courselit/common-widgets-2/styles.css"
 import type { AppProps } from "next/app";
 import { CacheProvider, EmotionCache } from "@emotion/react";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -21,6 +23,7 @@ import "remirror/styles/all.css";
 import themeOptions from "../ui-config/mui-custom-theme";
 import { getBackendAddress } from "../ui-lib/utils";
 import FontsInjector from "../components/public/fonts-injector";
+import { Text } from "@courselit/common-widgets-2";
 
 type CourseLitProps = AppProps & {
     emotionCache: EmotionCache;
@@ -64,6 +67,8 @@ function MyApp({
             <CacheProvider value={emotionCache}>
                 <ThemeProvider theme={muiTheme}>
                     <CssBaseline />
+                    <Text />
+                    <span className="text-3xl p-2 bg-green-500/50">Hey</span>
                     <div
                         style={{
                             visibility: !mounted ? "hidden" : "visible",

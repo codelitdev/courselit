@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
 import type { Address } from "@courselit/common-models";
 import Settings from "./settings";
 import {
@@ -10,7 +10,6 @@ import {
     ListItemText,
     Skeleton,
     TextField,
-    Typography,
 } from "@mui/material";
 import { capitalize, FetchBuilder } from "@courselit/utils";
 import { actionCreators, AppDispatch } from "@courselit/state-management";
@@ -24,7 +23,6 @@ import { Delete } from "@mui/icons-material";
 import { Alignment } from "@courselit/common-models";
 
 interface AdminWidgetProps {
-    name: string;
     settings: Settings;
     onChange: (...args: any[]) => void;
     address: Address;
@@ -33,7 +31,6 @@ interface AdminWidgetProps {
 }
 
 export default function AdminWidget({
-    name,
     settings,
     onChange,
     address,
@@ -61,9 +58,9 @@ export default function AdminWidget({
         settings.description || dummyDescription
     );
     const [backgroundColor, setBackgroundColor] = useState(
-        settings.backgroundColor || "inherit"
+        settings.backgroundColor
     );
-    const [color, setColor] = useState(settings.color || "inherit");
+    const [color, setColor] = useState(settings.color);
     const [headerAlignment, setHeaderAlignment] = useState<Alignment>(
         settings.headerAlignment || "left"
     );
@@ -130,7 +127,7 @@ export default function AdminWidget({
                             fullWidth
                             value={title}
                             label="Title"
-                            onChange={(e) => setTitle(e.target.value)}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
                         />
                     </Grid>
                     <Grid item sx={{ mb: 2 }}>
@@ -224,8 +221,8 @@ export default function AdminWidget({
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Background color"
-                            value={backgroundColor}
-                            onChange={(value: string) =>
+                            value={backgroundColor || "inherit"}
+                            onChange={(value?: string) =>
                                 setBackgroundColor(value)
                             }
                         />
@@ -233,8 +230,8 @@ export default function AdminWidget({
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Color"
-                            value={color}
-                            onChange={(value: string) => setColor(value)}
+                            value={color || "inherit"}
+                            onChange={(value?: string) => setColor(value)}
                         />
                     </Grid>
                 </AdminWidgetPanel>

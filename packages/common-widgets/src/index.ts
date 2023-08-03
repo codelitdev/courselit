@@ -1,3 +1,5 @@
+import "./styles.css";
+
 export { default as RichText } from "./rich-text";
 export { default as Footer } from "./footer";
 export { default as Header } from "./header";

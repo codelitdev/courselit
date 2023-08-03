@@ -1,0 +1,37 @@
+{
+    "name": "@courselit/common-widgets-2",
+    "version": "0.0.0",
+    "description": "Common widgets",
+    "author": "Rajat Saxena <hi@rajatsaxena.dev>",
+    "homepage": "https://github.com/codelitdev/courselit#readme",
+    "private": true,
+    "license": "MIT",
+    "publishConfig": {
+        "access": "public"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/codelitdev/courselit.git"
+    },
+    "bugs": {
+        "url": "https://github.com/codelitdev/courselit/issues"
+    },
+    "scripts": {
+        "build": "tsup",
+        "dev": "tsup --watch",
+        "check-types": "tsc --noEmit"
+    },
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": "./dist",
+        "./styles.css": "./dist/index.css"
+    },
+    "devDependencies": {
+        "autoprefixer": "^10.4.14",
+        "postcss": "^8.4.27",
+        "tailwind-config": "workspace:^",
+        "tsconfig": "workspace:^",
+        "tsup": "^7.1.0",
+        "typescript": "^5.1.6"
+    }
+}

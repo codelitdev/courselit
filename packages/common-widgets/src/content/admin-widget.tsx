@@ -97,8 +97,8 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Background color"
-                            value={backgroundColor}
-                            onChange={(value: string) =>
+                            value={backgroundColor || "inherit"}
+                            onChange={(value?: string) =>
                                 setBackgroundColor(value)
                             }
                         />
@@ -106,8 +106,8 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Text color"
-                            value={foregroundColor}
-                            onChange={(value: string) =>
+                            value={foregroundColor || "inherit"}
+                            onChange={(value?: string) =>
                                 setForegroundColor(value)
                             }
                         />
@@ -115,8 +115,8 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Badge color"
-                            value={badgeBackgroundColor}
-                            onChange={(value: string) =>
+                            value={badgeBackgroundColor || "inherit"}
+                            onChange={(value?: string) =>
                                 setBadgeBackgroundColor(value)
                             }
                         />
@@ -124,8 +124,8 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                     <Grid item>
                         <ColorSelector
                             title="Badge text color"
-                            value={badgeForegroundColor}
-                            onChange={(value: string) =>
+                            value={badgeForegroundColor || "inherit"}
+                            onChange={(value?: string) =>
                                 setBadgeForegroundColor(value)
                             }
                         />

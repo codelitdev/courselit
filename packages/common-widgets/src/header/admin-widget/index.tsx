@@ -15,17 +15,17 @@ interface AdminWidgetProps {
 
 export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
     const [links, setLinks] = useState(settings.links || []);
-    const [appBarBackground, setAppBarBackground] = useState(
-        settings.appBarBackground || "#eee"
+    const [appBarBackground, setAppBarBackground] = useState<string|undefined>(
+        settings.appBarBackground
     );
-    const [logoColor, setLogoColor] = useState(settings.logoColor || "");
-    const [loginBtnBgColor, setLoginBtnBgColor] = useState(
-        settings.loginBtnBgColor || ""
+    const [logoColor, setLogoColor] = useState<string|undefined>(settings.logoColor);
+    const [loginBtnBgColor, setLoginBtnBgColor] = useState<string|undefined>(
+        settings.loginBtnBgColor
     );
-    const [loginBtnColor, setLoginBtnColor] = useState(
-        settings.loginBtnColor || "#fff"
+    const [loginBtnColor, setLoginBtnColor] = useState<string|undefined>(
+        settings.loginBtnColor
     );
-    const [linkColor, setLinkColor] = useState(settings.linkColor || "");
+    const [linkColor, setLinkColor] = useState<string|undefined>(settings.linkColor);
     const [linkAlignment, setLinkAlignment] = useState(
         settings.linkAlignment || "left"
     );
@@ -99,15 +99,15 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Logo color"
-                            value={logoColor}
-                            onChange={(value: string) => setLogoColor(value)}
+                            value={logoColor || "inherit"}
+                            onChange={(value?: string) => setLogoColor(value)}
                         />
                     </Grid>
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Background color"
-                            value={appBarBackground}
-                            onChange={(value: string) =>
+                            value={appBarBackground || "#eee"}
+                            onChange={(value?: string) =>
                                 setAppBarBackground(value)
                             }
                         />
@@ -115,8 +115,8 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Button background"
-                            value={loginBtnBgColor}
-                            onChange={(value: string) =>
+                            value={loginBtnBgColor || ""}
+                            onChange={(value?: string) =>
                                 setLoginBtnBgColor(value)
                             }
                         />
@@ -124,8 +124,8 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Button text"
-                            value={loginBtnColor}
-                            onChange={(value: string) =>
+                            value={loginBtnColor || "#fff"}
+                            onChange={(value?: string) =>
                                 setLoginBtnColor(value)
                             }
                         />
@@ -133,8 +133,8 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Links"
-                            value={linkColor}
-                            onChange={(value: string) => setLinkColor(value)}
+                            value={linkColor || ""}
+                            onChange={(value?: string) => setLinkColor(value)}
                         />
                     </Grid>
                     <Grid item sx={{ mb: 2 }}>
