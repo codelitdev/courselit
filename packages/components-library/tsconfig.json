@@ -8,7 +8,6 @@
         "jsx": "react",
         "moduleResolution": "node",
         "declaration": true,
-        "typeRoots": ["./types", "./node_modules/@types"],
         "skipLibCheck": true
     },
     "exclude": ["node_modules", "dist"]

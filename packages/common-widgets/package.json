@@ -28,6 +28,7 @@
         "clean": "rimraf dist/",
         "prepublishOnly": "yarn run build",
         "build": "tsup",
+        "tsc:build": "tsc",
         "dev": "tsup --watch",
         "check-types": "tsc --noEmit"
     },
@@ -48,7 +49,7 @@
         "rimraf": "^4.1.1",
         "tailwind-config": "workspace:^",
         "tsconfig": "workspace:^",
-        "tsup": "^6.6.0",
+        "tsup": "6.6.0",
         "typescript": "^5.1.6"
     },
     "dependencies": {

@@ -12,7 +12,7 @@ export default function AdminWidget({
     settings: { backgroundColor = "#eee", textColor },
     onChange,
 }: AdminWidgetProps) {
-    const [bgColor, setBgColor] = useState<string|undefined>(backgroundColor);
+    const [bgColor, setBgColor] = useState<string | undefined>(backgroundColor);
     const [color, setColor] = useState(textColor);
 
     useEffect(() => {

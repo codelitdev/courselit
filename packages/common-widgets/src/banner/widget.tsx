@@ -104,9 +104,7 @@ export default function Widget({
         } catch (e) {
             dispatch(
                 setAppMessage(
-                    new AppMessage(
-                        failureMessage || DEFAULT_FAILURE_MESSAGE
-                    )
+                    new AppMessage(failureMessage || DEFAULT_FAILURE_MESSAGE)
                 )
             );
         } finally {

@@ -1,7 +1,5 @@
-import * as React from "react";
-import Grid from "@mui/material/Grid";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
+import React from "react";
+import { Grid, Typography, Button } from "@mui/material";
 import { Item } from "../settings";
 import { TextRenderer, Image } from "@courselit/components-library";
 import { Alignment } from "@courselit/common-models";

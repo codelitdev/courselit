@@ -1,13 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Grid from "@mui/material/Grid";
-import TextField from "@mui/material/TextField";
 import Settings, { Item } from "../settings";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemText from "@mui/material/ListItemText";
 import ItemEditor from "./item-editor";
 import { Address, Auth, Profile, Alignment } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
@@ -17,6 +9,16 @@ import {
     Select,
     TextEditor,
 } from "@courselit/components-library";
+import {
+    Grid,
+    TextField,
+    Typography,
+    Button,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemText,
+} from "@mui/material";
 
 export interface AdminWidgetProps {
     settings: Settings;

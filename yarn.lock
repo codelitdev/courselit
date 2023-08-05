@@ -1823,7 +1823,7 @@ __metadata:
     rimraf: ^4.1.1
     tailwind-config: "workspace:^"
     tsconfig: "workspace:^"
-    tsup: ^6.6.0
+    tsup: 6.6.0
     typescript: ^5.1.6
   peerDependencies:
     "@mui/material": ^5.5.0
@@ -16334,9 +16334,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tsup@npm:^6.6.0":
-  version: 6.7.0
-  resolution: "tsup@npm:6.7.0"
+"tsup@npm:6.6.0":
+  version: 6.6.0
+  resolution: "tsup@npm:6.6.0"
   dependencies:
     bundle-require: ^4.0.0
     cac: ^6.7.12
@@ -16355,7 +16355,7 @@ __metadata:
   peerDependencies:
     "@swc/core": ^1
     postcss: ^8.4.12
-    typescript: ">=4.1.0"
+    typescript: ^4.1.0
   peerDependenciesMeta:
     "@swc/core":
       optional: true
@@ -16366,7 +16366,7 @@ __metadata:
   bin:
     tsup: dist/cli-default.js
     tsup-node: dist/cli-node.js
-  checksum: 91ff179f0b9828a6880b6decaa8603fd7af0311f46a38d3a93647a2497298750d676810aeff533a335443a01a7b340dbba7c76523bcd7a87d7b05b7677742901
+  checksum: 202ed7a6b607190f47dd7503994e8e62ce672a35ff3ecaf4c1dc4c8a9590b99f91ce8c1303e28781b5a089450140492729a41d93874e87936aed94e205155551
   languageName: node
   linkType: hard
 

@@ -127,7 +127,9 @@ export default function AdminWidget({
                             fullWidth
                             value={title}
                             label="Title"
-                            onChange={(e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                setTitle(e.target.value)
+                            }
                         />
                     </Grid>
                     <Grid item sx={{ mb: 2 }}>

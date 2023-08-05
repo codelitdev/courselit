@@ -1,11 +1,9 @@
 import React from "react";
 import { WidgetProps } from "@courselit/common-models";
 import Settings, { Item } from "../settings";
-import Grid from "@mui/material/Grid";
-import Typography from "@mui/material/Typography";
 import { TextRenderer } from "@courselit/components-library";
-import Button from "@mui/material/Button";
 import Itemm from "./item";
+import { Grid, Typography, Button } from "@mui/material";
 
 export default function Widget({
     settings: {

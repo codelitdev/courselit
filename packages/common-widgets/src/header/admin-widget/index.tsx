@@ -15,17 +15,21 @@ interface AdminWidgetProps {
 
 export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
     const [links, setLinks] = useState(settings.links || []);
-    const [appBarBackground, setAppBarBackground] = useState<string|undefined>(
-        settings.appBarBackground
+    const [appBarBackground, setAppBarBackground] = useState<
+        string | undefined
+    >(settings.appBarBackground);
+    const [logoColor, setLogoColor] = useState<string | undefined>(
+        settings.logoColor
     );
-    const [logoColor, setLogoColor] = useState<string|undefined>(settings.logoColor);
-    const [loginBtnBgColor, setLoginBtnBgColor] = useState<string|undefined>(
+    const [loginBtnBgColor, setLoginBtnBgColor] = useState<string | undefined>(
         settings.loginBtnBgColor
     );
-    const [loginBtnColor, setLoginBtnColor] = useState<string|undefined>(
+    const [loginBtnColor, setLoginBtnColor] = useState<string | undefined>(
         settings.loginBtnColor
     );
-    const [linkColor, setLinkColor] = useState<string|undefined>(settings.linkColor);
+    const [linkColor, setLinkColor] = useState<string | undefined>(
+        settings.linkColor
+    );
     const [linkAlignment, setLinkAlignment] = useState(
         settings.linkAlignment || "left"
     );

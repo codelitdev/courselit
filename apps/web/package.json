@@ -13,7 +13,6 @@
     "dependencies": {
         "@courselit/common-models": "workspace:^",
         "@courselit/common-widgets": "workspace:^",
-        "@courselit/common-widgets-2": "workspace:^",
         "@courselit/components-library": "workspace:^",
         "@courselit/state-management": "workspace:^",
         "@courselit/utils": "workspace:^",
