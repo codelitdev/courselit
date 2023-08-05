@@ -33,7 +33,7 @@
         "graphql-type-json": "^0.3.2",
         "jsonwebtoken": "^9.0.0",
         "mongodb": "^4.4.1",
-        "mongoose": "^6.2.4",
+        "mongoose": "^7.4.2",
         "next": "^13.4.4",
         "next-connect": "^0.12.2",
         "nodemailer": "^6.7.2",
@@ -75,5 +75,8 @@
     "engines": {
         "yarn": "~3.2.0"
     },
-    "engineStrict": true
+    "engineStrict": true,
+    "resolutions": {
+        "passport-magic-link/jsonwebtoken": "^9.0.0"
+    }
 }
