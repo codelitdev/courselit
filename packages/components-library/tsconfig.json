@@ -4,7 +4,10 @@
     "compilerOptions": {
         "outDir": "./dist",
         "lib": ["dom"],
-        "strict": false
+        "strict": false,
+        "paths": {
+            "@courselit/components-library/icons/*": ["./src/icons/*"]
+        }
     },
     "include": ["src/**/*"]
 }

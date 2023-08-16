@@ -1827,6 +1827,7 @@ __metadata:
     "@courselit/state-management": "workspace:^"
     "@courselit/text-editor": "workspace:^"
     "@courselit/utils": "workspace:^"
+    "@radix-ui/react-icons": ^1.3.0
     "@types/react": ^17.0.43
     "@types/react-redux": ^7.1.11
     currency-symbol-map: ^5.1.0
@@ -3129,6 +3130,15 @@ __metadata:
   peerDependencies:
     "@proload/core": ^0.3.2
   checksum: 23a0ab650f85003954257031585917be81fecef24119c2a71f097e7b397229f95a80f269822473eeffcd6d48991f202cef343a1ba3157d5d68998c5adddb4a59
+  languageName: node
+  linkType: hard
+
+"@radix-ui/react-icons@npm:^1.3.0":
+  version: 1.3.0
+  resolution: "@radix-ui/react-icons@npm:1.3.0"
+  peerDependencies:
+    react: ^16.x || ^17.x || ^18.x
+  checksum: 982f3ee2271eaaa12b944506ef7701d20fad847082592d99b393b66a2ebbd4cc89e3a0ba48146ed8801418a7bfd76cd55901dc5cb7c6ef404001e7e4c73d05f6
   languageName: node
   linkType: hard
 
