@@ -54,6 +54,7 @@ class Fetch {
 
         if (response.status === 401) {
             typeof window !== "undefined" &&
+                // @ts-ignore
                 Router.replace(
                     options && options.redirectToOnUnAuth
                         ? `/login?redirect=${options.redirectToOnUnAuth}`

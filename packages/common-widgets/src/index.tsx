@@ -5,7 +5,7 @@ export * from "./footer";
 export * from "./header";
 export * from "./featured";
 export * from "./banner";
-export * from "./newsletter-signup";
+export * from "./email-form";
 export * from "./hero";
 export * from "./grid";
 export * from "./content";

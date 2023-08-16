@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import { Course, WidgetProps } from "@courselit/common-models";
 import { CourseItem, TextRenderer } from "@courselit/components-library";
 import { actionCreators } from "@courselit/state-management";
@@ -5,12 +6,9 @@ import {
     FetchBuilder,
     getGraphQLQueryStringFromObject,
 } from "@courselit/utils";
-import { Grid, Typography } from "@mui/material";
-import React, { useEffect, useState } from "react";
 import Settings from "./settings";
 
 export default function Widget({
-    name,
     settings: {
         products,
         title,
@@ -21,7 +19,6 @@ export default function Widget({
     },
     state,
     dispatch,
-    config,
 }: WidgetProps<Settings>) {
     const [productItems, setProductItems] = useState<Partial<Course>[]>([]);
 
@@ -72,46 +69,37 @@ export default function Widget({
     };
 
     return (
-        <Grid
-            container
-            justifyContent="space-between"
-            direction="column"
-            sx={{
+        <div
+            className="p-4"
+            style={{
+                backgroundColor,
                 color,
-                backgroundColor: backgroundColor,
-                p: 2,
             }}
         >
-            <Grid item sx={{ mb: 2 }}>
-                <Grid
-                    container
-                    direction="column"
-                    alignItems={
-                        headerAlignment === "center" ? "center" : "flex-start"
-                    }
-                >
-                    <Grid item>
-                        <Typography variant="h4">{title}</Typography>
-                    </Grid>
-                    {description && (
-                        <Grid item>
-                            <TextRenderer json={description} />
-                        </Grid>
-                    )}
-                </Grid>
-            </Grid>
+            <div
+                className="flex flex-col mb-4"
+                style={{
+                    alignItems:
+                        headerAlignment === "center" ? "center" : "flex-start",
+                }}
+            >
+                <h2 className="text-4xl mb-4">{title}</h2>
+                {description && <TextRenderer json={description} />}
+            </div>
             {productItems.length > 0 && (
-                <Grid container spacing={2}>
+                <div className="flex flex-wrap gap-[1%]">
                     {productItems.map((course: Course, index: number) => (
-                        <CourseItem
-                            course={course}
-                            siteInfo={state.siteinfo}
-                            freeCostCaption={"FREE"}
-                            key={index}
-                        />
+                        <div className="basis-full md:basis-[49.5%] lg:basis-[32.6666%] mb-6">
+                            <CourseItem
+                                course={course}
+                                siteInfo={state.siteinfo}
+                                freeCostCaption={"FREE"}
+                                key={index}
+                            />
+                        </div>
                     ))}
-                </Grid>
+                </div>
             )}
-        </Grid>
+        </div>
     );
 }

@@ -20,6 +20,7 @@ export default function Widget({ state, settings }: WidgetProps) {
                 backgroundColor: settings.appBarBackground,
             }}
         >
+            {/* @ts-ignore */}
             <NextLink href="/">
                 <div className="flex items-center mr-2">
                     {state.siteinfo.logo && (
@@ -58,6 +59,7 @@ export default function Widget({ state, settings }: WidgetProps) {
                                     color: settings.linkColor || "inherit",
                                 }}
                             >
+                                {/* @ts-ignore */}
                                 <NextLink href={link.href}>
                                     {link.label}
                                 </NextLink>

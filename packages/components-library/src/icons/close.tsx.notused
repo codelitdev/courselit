@@ -1,0 +1,1 @@
+export { Cross2Icon as Close } from "@radix-ui/react-icons";

@@ -1,14 +1,10 @@
 {
+    "extends": "tsconfig/react-library.json",
+    "exclude": ["dist", "build", "node_modules"],
     "compilerOptions": {
         "outDir": "./dist",
         "lib": ["dom"],
-        "noImplicitAny": true,
-        "module": "commonjs",
-        "target": "es5",
-        "jsx": "react",
-        "moduleResolution": "node",
-        "declaration": true,
-        "skipLibCheck": true
+        "strict": false
     },
-    "exclude": ["node_modules", "dist"]
+    "include": ["src/**/*"]
 }

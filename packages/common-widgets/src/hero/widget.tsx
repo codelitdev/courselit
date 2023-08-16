@@ -1,13 +1,6 @@
 import React from "react";
 import { WidgetProps } from "@courselit/common-models";
-import {
-    Box,
-    Button,
-    Grid,
-    GridDirection,
-    styled,
-    Typography,
-} from "@mui/material";
+import { Button, Grid, styled, Typography } from "@mui/material";
 import Settings from "./settings";
 import { Image, TextRenderer } from "@courselit/components-library";
 
@@ -37,7 +30,7 @@ export default function Widget({
     },
 }: WidgetProps<Settings>) {
     const hasHeroGraphic = youtubeLink || (media && media.mediaId);
-    let direction: GridDirection;
+    let direction: "row" | "row-reverse";
     switch (alignment) {
         case "left":
             direction = "row";
@@ -50,59 +43,37 @@ export default function Widget({
     }
 
     return (
-        <Box
-            sx={{
-                p: style === "card" ? 2 : 0,
-            }}
-        >
-            <Grid
-                container
-                justifyContent="space-between"
-                direction={direction}
-                alignItems="center"
-                sx={{
+        <div className={`${style === "card" ? "p-4" : "p-0"}`}>
+            <div
+                className="flex justify-between items-center p-4"
+                style={{
                     backgroundColor:
                         style === "card"
                             ? backgroundColor || "#eee"
                             : backgroundColor,
                     color: foregroundColor,
-                    p: 2,
                     borderRadius: style === "card" ? 2 : 0,
+                    flexDirection: direction,
                 }}
             >
                 {hasHeroGraphic && (
-                    <Grid
-                        item
-                        md={6}
-                        xs={12}
-                        sx={{
-                            mb: {
-                                xs: 2,
-                                md: 0,
-                            },
-                            pr: {
-                                xs: 0,
-                                md:
-                                    hasHeroGraphic && alignment === "left"
-                                        ? 1
-                                        : 0,
-                            },
-                            pl: {
-                                xs: 0,
-                                md:
-                                    hasHeroGraphic && alignment === "right"
-                                        ? 1
-                                        : 0,
-                            },
-                        }}
+                    <div
+                        className={`sm:w-full sm:mb-2 sm:pr-0 sm:pl-0 md:w-1/2 md:mb-0 ${
+                            hasHeroGraphic && alignment === "right"
+                                ? "md:pl-1"
+                                : "md:pl-0"
+                        } ${
+                            hasHeroGraphic && alignment === "right"
+                                ? "md:pl-1"
+                                : "md:pl-0"
+                        }`}
                     >
                         {youtubeLink && (
-                            <Box
-                                sx={{
-                                    position: "relative",
+                            <div
+                                className="relative overflow-hidden"
+                                style={{
                                     paddingBottom: "56.25%",
                                     borderRadius: `${mediaRadius}px`,
-                                    overflow: "hidden",
                                 }}
                             >
                                 <Iframe
@@ -111,15 +82,12 @@ export default function Widget({
                                     allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                                     allowFullScreen
                                 />
-                            </Box>
+                            </div>
                         )}
                         {!youtubeLink && media && media.mediaId && (
-                            <Grid
-                                item
-                                xs={12}
-                                sx={{
-                                    textAlign: "center",
-                                    width: 1,
+                            <div
+                                className="w-full text-center"
+                                style={{
                                     borderRadius: `${mediaRadius}px`,
                                 }}
                             >
@@ -133,41 +101,38 @@ export default function Widget({
                                         lg: 286,
                                     }}
                                 />
-                            </Grid>
+                            </div>
                         )}
-                    </Grid>
+                    </div>
                 )}
-                <Grid
-                    item
-                    md={hasHeroGraphic ? 6 : 12}
-                    xs={12}
-                    sx={{
-                        pr: {
-                            xs: 0,
-                            md: hasHeroGraphic && alignment === "right" ? 1 : 0,
-                        },
-                        pl: {
-                            xs: 0,
-                            md: hasHeroGraphic && alignment === "left" ? 1 : 0,
-                        },
-                    }}
+                <div
+                    className={`sm:w-full ${
+                        hasHeroGraphic ? "md:w-1/2" : "md:w-full"
+                    } sm:pr-0 sm:pl-0 ${
+                        hasHeroGraphic && alignment === "right"
+                            ? "md:pr-1"
+                            : "md:pr-0"
+                    } ${
+                        hasHeroGraphic && alignment === "left"
+                            ? "md:pl-1"
+                            : "md:pl-0"
+                    }`}
                 >
-                    <Grid container direction="column">
-                        <Grid item sx={{ mb: 2 }}>
-                            <Typography variant="h2">{title}</Typography>
-                        </Grid>
+                    <div className="flex flex-col">
+                        <h2 className="mb-4 text-4xl">{title}</h2>
                         {description && (
-                            <Grid
-                                item
-                                sx={{
-                                    mb: buttonAction && buttonCaption ? 4 : 0,
-                                }}
+                            <div
+                                className={`${
+                                    buttonAction && buttonCaption
+                                        ? "mb-8"
+                                        : "mb-0"
+                                }`}
                             >
                                 <TextRenderer json={description} />
-                            </Grid>
+                            </div>
                         )}
                         {buttonAction && buttonCaption && (
-                            <Grid item>
+                            <div>
                                 <Button
                                     component="a"
                                     href={buttonAction}
@@ -180,11 +145,11 @@ export default function Widget({
                                 >
                                     {buttonCaption}
                                 </Button>
-                            </Grid>
+                            </div>
                         )}
-                    </Grid>
-                </Grid>
-            </Grid>
-        </Box>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }

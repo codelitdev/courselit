@@ -37,6 +37,7 @@ const AdminWidget = ({ settings, onChange }: AboutWidgetProps) => {
         settings.backgroundColor
     );
     const [color, setColor] = useState(settings.color);
+    console.log(TextEditor)
 
     useEffect(() => {
         onChange({

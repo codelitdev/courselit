@@ -20,8 +20,8 @@
         "@emotion/react": "^11.8.2",
         "@emotion/server": "^11.4.0",
         "@emotion/styled": "^11.8.1",
-        "@mui/icons-material": "^5.5.0",
-        "@mui/material": "^5.5.0",
+        "@mui/icons-material": "^5.14.3",
+        "@mui/material": "^5.14.5",
         "@mui/utils": "^5.4.4",
         "@stripe/stripe-js": "^1.29.0",
         "@types/base-64": "^1.0.0",
@@ -45,7 +45,6 @@
         "react-csv": "^2.2.2",
         "react-dom": "^18.2.0",
         "react-redux": "^8.0.1",
-        "remirror": "^2.0.9",
         "sharp": "^0.30.6",
         "slugify": "^1.6.5",
         "stripe": "^8.219.0"

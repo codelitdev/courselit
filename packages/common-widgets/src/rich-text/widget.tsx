@@ -1,7 +1,6 @@
 import React from "react";
 import { TextRenderer } from "@courselit/components-library";
 import type { WidgetProps } from "@courselit/common-models";
-import { Box } from "@mui/material";
 import Settings from "./settings";
 
 const Widget = ({
@@ -10,16 +9,16 @@ const Widget = ({
     if (!text) return <></>;
 
     return (
-        <Box
-            sx={{
-                p: 2,
-                textAlign: alignment,
+        <div
+            className="p-4"
+            style={{
                 backgroundColor,
                 color,
+                textAlign: alignment,
             }}
         >
             <TextRenderer json={text} />
-        </Box>
+        </div>
     );
 };
 

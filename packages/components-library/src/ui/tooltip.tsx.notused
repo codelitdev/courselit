@@ -1,0 +1,26 @@
+// @ts-nocheck
+import * as React from "react";
+import * as Tooltip from "@radix-ui/react-tooltip";
+
+interface TooltipProps {
+    content: React.ReactNode;
+    text: string;
+}
+
+export function Tooltip ({content, text}: TooltipProps) {
+    return (
+        <Tooltip.Provider>
+            <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                    {content}
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                    <Tooltip.Content>
+                        {text}
+                        <Tooltip.Arrow />
+                    </Tooltip.Content>
+                </Tooltip.Portal>
+            </Tooltip.Root>
+        </Tooltip.Provider>
+    )
+}

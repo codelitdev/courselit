@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "../styles/globals.css";
 import "@courselit/common-widgets/styles.css";
+import "@courselit/components-library/styles.css";
 import type { AppProps } from "next/app";
 import { CacheProvider, EmotionCache } from "@emotion/react";
 import CssBaseline from "@mui/material/CssBaseline";

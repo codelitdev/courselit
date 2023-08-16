@@ -3,6 +3,8 @@ import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import { IconButton, Tooltip } from "@mui/material";
 import { Close } from "@mui/icons-material";
+//import { Close as CloseIcon } from "./icons/close"
+//import { Tooltip as Tooltip2 } from './ui/tooltip'
 
 interface ColorSelectorProps {
     title: string;
@@ -16,11 +18,9 @@ export default function ColorSelector({
     onChange,
 }: ColorSelectorProps) {
     return (
-        <Grid container justifyContent="space-between">
-            <Grid item>
-                <Typography variant="subtitle1">{title}</Typography>
-            </Grid>
-            <Grid item>
+        <div className="flex justify-between">
+            <p>{title}</p>
+            <div>
                 <input
                     type="color"
                     value={value}
@@ -31,7 +31,7 @@ export default function ColorSelector({
                         <Close />
                     </IconButton>
                 </Tooltip>
-            </Grid>
-        </Grid>
+            </div>
+        </div>
     );
 }

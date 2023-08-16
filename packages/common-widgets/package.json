@@ -8,7 +8,7 @@
         "courselit",
         "course"
     ],
-    "author": "Rajat Saxena <social@rajats.xyz>",
+    "author": "Rajat Saxena <hi@codelit.dev>",
     "homepage": "https://github.com/codelitdev/courselit#readme",
     "license": "MIT",
     "types": "dist/index.d.ts",
@@ -36,9 +36,8 @@
         "url": "https://github.com/codelitdev/courselit/issues"
     },
     "peerDependencies": {
-        "@mui/material": "^5.5.0",
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0"
+        "@mui/material": "^5.14.5",
+        "react": "^18.2.0"
     },
     "devDependencies": {
         "autoprefixer": "^10.4.14",
@@ -57,7 +56,7 @@
         "@courselit/components-library": "workspace:^",
         "@courselit/state-management": "workspace:^",
         "@courselit/utils": "workspace:^",
-        "@mui/icons-material": "^5.10.6",
+        "@mui/icons-material": "^5.14.3",
         "react-redux": "^8.0.2"
     },
     "gitHead": "e91494470733b09bc3e772a9079162a844b40d97"

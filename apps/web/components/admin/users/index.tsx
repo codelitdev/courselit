@@ -13,7 +13,7 @@ import {
     Toolbar,
     Typography,
 } from "@mui/material";
-import Box from "@mui/material/Box";
+import { Box } from "@mui/material";
 import TablePagination from "@mui/material/TablePagination";
 import Tooltip from "@mui/material/Tooltip";
 import IconButton from "@mui/material/IconButton";

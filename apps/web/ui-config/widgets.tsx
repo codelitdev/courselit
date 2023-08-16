@@ -5,7 +5,7 @@ import {
     Footer,
     Header,
     RichText,
-    NewsletterSignup,
+    EmailForm,
     Hero,
     Grid,
     Content,
@@ -13,7 +13,6 @@ import {
 
 function loadWidgets(): Record<string, any> {
     const widgets: Record<string, Widget> = {};
-    //console.log(Grid.widget)
 
     // Add common widgets to CourseLit
     widgets[RichText.metadata.name] = RichText;
@@ -24,14 +23,9 @@ function loadWidgets(): Record<string, any> {
     widgets[Content.metadata.name] = Content;
     widgets[Footer.metadata.name] = Object.assign({}, Footer, { shared: true });
     widgets[Header.metadata.name] = Object.assign({}, Header, { shared: true });
-    widgets[NewsletterSignup.metadata.name] = Object.assign(
-        {},
-        NewsletterSignup,
-        { shared: true }
-    );
-
-    // Additional widgets are added here
-    // widgets[buttondown.metadata.name] = buttondown;
+    widgets[EmailForm.metadata.name] = Object.assign({}, EmailForm, {
+        shared: true,
+    });
 
     return widgets;
 }

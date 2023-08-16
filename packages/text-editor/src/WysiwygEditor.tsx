@@ -34,7 +34,7 @@ export interface WysiwygEditorProps extends Partial<ReactEditorProps> {
     fontFamily?: string;
 }
 
-export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
+const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
     initialContent,
     onChange,
     placeholder,
@@ -58,6 +58,7 @@ export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
 
     useEffect(() => {
         manager.view.updateState(
+            // @ts-ignore
             manager.createState({
                 content: initialContent as RemirrorContentType,
             })
@@ -74,6 +75,7 @@ export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
             new TableExtension(),
             new ImageExtension({ enableResizing: true }),
             new CodeMirrorExtension({
+                // @ts-ignore
                 languages: languages,
                 extensions: [basicSetup, oneDark],
             }),
@@ -107,7 +109,9 @@ export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
 
     return (
         <AllStyledComponent>
+            {/* @ts-ignore */}
             <ThemeProvider theme={theme}>
+                {/* @ts-ignore */}
                 <Remirror
                     manager={manager}
                     state={state}
@@ -132,3 +136,5 @@ export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
 (WysiwygEditor as any).getPlainText = (doc: any) =>
     getTextContentFromSlice(doc);
 (WysiwygEditor as any).emptyDoc = emptyDoc;
+
+export default WysiwygEditor;

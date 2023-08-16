@@ -7,18 +7,16 @@
         "components",
         "courselit"
     ],
-    "author": "Rajat Saxena <social@rajats.xyz>",
+    "author": "Rajat Saxena <hi@codelit.dev>",
     "homepage": "https://github.com/codelitdev/courselit#readme",
     "license": "MIT",
-    "main": "dist/index.js",
     "types": "dist/index.d.ts",
-    "directories": {
-        "lib": "src",
-        "test": "__tests__"
+    "exports": {
+        ".": "./dist",
+        "./styles.css": "./dist/index.css",
+        "./ui": "./dist/ui",
+        "./icons": "./dist/icons"
     },
-    "files": [
-        "dist"
-    ],
     "publishConfig": {
         "access": "public"
     },
@@ -28,34 +26,46 @@
     },
     "scripts": {
         "test": "echo \"Error: run tests from root\" && exit 1",
-        "build": "tsc",
         "clean": "rimraf dist/",
-        "prepublishOnly": "yarn run build"
+        "prepublishOnly": "yarn run build",
+        "build": "tsup",
+        "tsc:build": "tsc",
+        "dev": "tsup --watch",
+        "check-types": "tsc --noEmit"
     },
     "bugs": {
         "url": "https://github.com/codelitdev/courselit/issues"
     },
     "devDependencies": {
-        "@types/react": "^17.0.43",
+        "@types/react": "^18.0.14",
         "@types/react-redux": "^7.1.11",
+        "autoprefixer": "^10.4.14",
+        "postcss": "^8.4.27",
         "rimraf": "^4.1.1",
-        "typescript": "^4.6.3"
+        "tailwind-config": "workspace:^",
+        "tsconfig": "workspace:^",
+        "tsup": "6.6.0",
+        "typescript": "^5.1.6"
     },
     "peerDependencies": {
-        "@mui/icons-material": "^5.5.0",
-        "@mui/material": "^5.9.2",
+        "@mui/icons-material": "^5.14.3",
+        "@mui/material": "^5.14.5",
         "next": "^13.4.4",
         "react": "^18.2.0",
         "react-redux": "^8.0.1",
         "redux": "^4.2.0",
         "redux-thunk": "^2.4.1"
     },
-    "gitHead": "fca7d2f8455c835f1c185a1ebc8513c6269ebe5b",
     "dependencies": {
         "@courselit/common-models": "workspace:^",
         "@courselit/state-management": "workspace:^",
         "@courselit/text-editor": "workspace:^",
         "@courselit/utils": "workspace:^",
-        "currency-symbol-map": "^5.1.0"
-    }
+        "@radix-ui/react-icons": "^1.3.0",
+        "@radix-ui/react-tooltip": "^1.0.6",
+        "currency-symbol-map": "^5.1.0",
+        "i": "^0.3.7",
+        "npm": "^9.8.1"
+    },
+    "gitHead": "fca7d2f8455c835f1c185a1ebc8513c6269ebe5b"
 }

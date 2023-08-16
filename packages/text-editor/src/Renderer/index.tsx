@@ -55,6 +55,7 @@ const Renderer = ({ json, fontFamily }: RendererProps): JSX.Element => {
     };
 
     return (
+        // @ts-ignore
         <ThemeProvider theme={theme}>
             <RemirrorRenderer
                 json={json}
