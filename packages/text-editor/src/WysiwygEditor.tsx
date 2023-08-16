@@ -34,7 +34,7 @@ export interface WysiwygEditorProps extends Partial<ReactEditorProps> {
     fontFamily?: string;
 }
 
-export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
+const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
     initialContent,
     onChange,
     placeholder,
@@ -132,3 +132,5 @@ export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
 (WysiwygEditor as any).getPlainText = (doc: any) =>
     getTextContentFromSlice(doc);
 (WysiwygEditor as any).emptyDoc = emptyDoc;
+
+export default WysiwygEditor;
