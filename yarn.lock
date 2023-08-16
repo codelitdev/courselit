@@ -1831,7 +1831,10 @@ __metadata:
     "@types/react-redux": ^7.1.11
     currency-symbol-map: ^5.1.0
     rimraf: ^4.1.1
-    typescript: ^4.6.3
+    tailwind-config: "workspace:^"
+    tsconfig: "workspace:^"
+    tsup: 6.6.0
+    typescript: ^5.1.6
   peerDependencies:
     "@mui/icons-material": ^5.5.0
     "@mui/material": ^5.9.2

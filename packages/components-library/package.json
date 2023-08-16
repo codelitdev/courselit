@@ -11,14 +11,10 @@
     "homepage": "https://github.com/codelitdev/courselit#readme",
     "license": "MIT",
     "main": "dist/index.js",
-    "types": "dist/index.d.ts",
-    "directories": {
-        "lib": "src",
-        "test": "__tests__"
+    "exports": {
+        ".": "./dist",
+        "./styles.css": "./dist/index.css"
     },
-    "files": [
-        "dist"
-    ],
     "publishConfig": {
         "access": "public"
     },
@@ -28,9 +24,12 @@
     },
     "scripts": {
         "test": "echo \"Error: run tests from root\" && exit 1",
-        "build": "tsc",
         "clean": "rimraf dist/",
-        "prepublishOnly": "yarn run build"
+        "prepublishOnly": "yarn run build",
+        "build": "tsup",
+        "tsc:build": "tsc",
+        "dev": "tsup --watch",
+        "check-types": "tsc --noEmit"
     },
     "bugs": {
         "url": "https://github.com/codelitdev/courselit/issues"
@@ -39,7 +38,10 @@
         "@types/react": "^17.0.43",
         "@types/react-redux": "^7.1.11",
         "rimraf": "^4.1.1",
-        "typescript": "^4.6.3"
+        "tailwind-config": "workspace:^",
+        "tsconfig": "workspace:^",
+        "tsup": "6.6.0",
+        "typescript": "^5.1.6"
     },
     "peerDependencies": {
         "@mui/icons-material": "^5.5.0",
