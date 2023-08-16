@@ -1,6 +1,4 @@
-import * as React from "react";
-import { useEffect, useState } from "react";
-import Grid from "@mui/material/Grid";
+import React, { useEffect, useState } from "react";
 import { LessonIcon, TextRenderer } from "@courselit/components-library";
 import {
     AppMessage,
@@ -11,13 +9,11 @@ import {
     WidgetProps,
 } from "@courselit/common-models";
 import Settings from "./settings";
-import Typography from "@mui/material/Typography";
 import { FetchBuilder } from "@courselit/utils";
 import { actionCreators } from "@courselit/state-management";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
-import Chip from "@mui/material/Chip";
-import Skeleton from "@mui/material/Skeleton";
 import { Link } from "@courselit/components-library";
+import { Chip, Skeleton, Typography, Grid } from "@mui/material";
 
 interface CourseWithGroups extends Course {
     groups: Group[];
@@ -45,6 +41,7 @@ export default function Widget({
 
     useEffect(() => {
         if (product.courseId) {
+            console.log(product);
             loadCourse(product.courseId as string);
         }
     }, [product]);
@@ -121,58 +118,40 @@ export default function Widget({
     }, [course]);
 
     return (
-        <Grid
-            container
-            direction="column"
-            sx={{
-                p: 2,
+        <div
+            className="flex flex-col p-4"
+            style={{
                 backgroundColor,
                 color: foregroundColor,
             }}
         >
-            <Grid item sx={{ mb: 2 }}>
-                <Grid
-                    container
-                    direction="column"
-                    alignItems={
-                        headerAlignment === "center" ? "center" : "flex-start"
-                    }
-                >
-                    <Grid item>
-                        <Typography variant="h4">{title}</Typography>
-                    </Grid>
-                    {description && (
-                        <Grid
-                            item
-                            sx={{
-                                textAlign:
-                                    headerAlignment === "center"
-                                        ? "center"
-                                        : "left",
-                            }}
-                        >
-                            <TextRenderer json={description} />
-                        </Grid>
-                    )}
-                </Grid>
-            </Grid>
+            <div
+                className={`flex flex-col mb-4 ${
+                    headerAlignment === "center"
+                        ? "items-center"
+                        : "items-start"
+                }`}
+            >
+                <h2 className="mb-4 text-4xl">{title}</h2>
+                {description && (
+                    <div
+                        className={`${
+                            headerAlignment === "center"
+                                ? "text-center"
+                                : "text-left"
+                        }`}
+                    >
+                        <TextRenderer json={description} />
+                    </div>
+                )}
+            </div>
             {!course && (
-                <Grid item>
-                    <Grid container spacing={1}>
-                        <Grid item xs={12}>
-                            <Skeleton variant="rectangular" height={50} />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <Skeleton variant="text" />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <Skeleton variant="text" />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <Skeleton variant="text" />
-                        </Grid>
-                    </Grid>
-                </Grid>
+                <div className="flex flex-col">
+                    <Skeleton variant="rectangular" height={50} />
+                    <Skeleton variant="text" />
+                    <Skeleton variant="text" />
+                    <Skeleton variant="text" />
+                </div>
             )}
             {Object.keys(formattedCourse).map((group, index) => (
                 <Grid item sx={{ mt: index > 0 ? 3 : 0 }} key={index}>
@@ -256,6 +235,6 @@ export default function Widget({
                 //         ))}
                 // </Grid>
             ))}
-        </Grid>
+        </div>
     );
 }

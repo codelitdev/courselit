@@ -1,6 +1,6 @@
 import React, { FormEvent, useState } from "react";
 import { AppMessage } from "@courselit/common-models";
-import { Button, Grid, TextField, Typography } from "@mui/material";
+import { Button, TextField } from "@mui/material";
 import Settings from "./settings";
 import { actionCreators } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
@@ -88,27 +88,17 @@ const Widget = ({
 
     return (
         <form onSubmit={onSubmit}>
-            <Grid
-                container
-                direction="column"
-                alignItems={justifyContent}
-                sx={{
-                    p: 2,
+            <div
+                className="flex flex-col p-4"
+                style={{
                     backgroundColor,
                     color: foregroundColor,
+                    alignItems: justifyContent,
                 }}
             >
-                <Grid item sx={{ mb: 2 }}>
-                    <Typography variant="h4">
-                        {title || DEFAULT_TITLE}
-                    </Typography>
-                </Grid>
-                {subtitle && (
-                    <Grid item sx={{ mb: 2 }}>
-                        <Typography variant="subtitle1">{subtitle}</Typography>
-                    </Grid>
-                )}
-                <Grid item sx={{ mb: 2 }}>
+                <h2 className="text-4xl mb-4">{title || DEFAULT_TITLE}</h2>
+                {subtitle && <h3 className="mb-4">{subtitle}</h3>}
+                <div className="mb-4">
                     <TextField
                         label="Email"
                         value={email}
@@ -117,22 +107,20 @@ const Widget = ({
                         type="email"
                         required
                     />
-                </Grid>
-                <Grid item>
-                    <Button
-                        sx={{
-                            backgroundColor: btnBackgroundColor,
-                            color: btnForegroundColor,
-                        }}
-                        type="submit"
-                        disabled={state.networkAction}
-                        size="large"
-                        variant="contained"
-                    >
-                        {btnText || DEFAULT_BTN_TEXT}
-                    </Button>
-                </Grid>
-            </Grid>
+                </div>
+                <Button
+                    sx={{
+                        backgroundColor: btnBackgroundColor,
+                        color: btnForegroundColor,
+                    }}
+                    type="submit"
+                    disabled={state.networkAction}
+                    size="large"
+                    variant="contained"
+                >
+                    {btnText || DEFAULT_BTN_TEXT}
+                </Button>
+            </div>
         </form>
     );
 };

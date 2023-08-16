@@ -1,16 +1,10 @@
+import React, { FormEvent, useState } from "react";
 import { AppMessage, WidgetProps } from "@courselit/common-models";
 import { Image, PriceTag, TextRenderer } from "@courselit/components-library";
 import { actionCreators } from "@courselit/state-management";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
-import {
-    Button,
-    Grid,
-    GridDirection,
-    TextField,
-    Typography,
-} from "@mui/material";
-import React, { FormEvent, useState } from "react";
+import { Button, TextField } from "@mui/material";
 import { DEFAULT_FAILURE_MESSAGE, DEFAULT_SUCCESS_MESSAGE } from "./constants";
 import Settings from "./settings";
 
@@ -53,7 +47,7 @@ export default function Widget({
         ],
     };
 
-    let direction: GridDirection;
+    let direction: "row" | "row-reverse" | "column" | "column-reverse";
     switch (alignment) {
         case "top":
             direction = "column-reverse";
@@ -113,20 +107,19 @@ export default function Widget({
     };
 
     return (
-        <Grid
-            container
-            justifyContent="space-between"
-            direction={direction}
-            alignItems={!verticalLayout ? "center" : ""}
-            sx={{
+        <div
+            className="flex space-between"
+            style={{
+                flexDirection: direction,
+                alignItems: !verticalLayout ? "center" : "",
                 backgroundColor,
             }}
         >
             {product.featuredImage && (
-                <Grid
-                    item
-                    md={verticalLayout ? 12 : 6}
-                    sx={{ p: 2, textAlign: "center", width: 1 }}
+                <div
+                    className={`p-4 text-center ${
+                        verticalLayout ? "md:w-full" : "w-1/2"
+                    }`}
                 >
                     <Image
                         src={(product.featuredImage as any).file}
@@ -147,43 +140,44 @@ export default function Widget({
                                   }
                         }
                     />
-                </Grid>
+                </div>
             )}
-            <Grid item md={verticalLayout ? 12 : 6} sx={{ p: 2, color }}>
-                <Grid
-                    container
-                    direction="column"
-                    alignItems={
-                        textAlignment === "center" ? "center" : "flex-start"
-                    }
+            <div
+                className={`p-4 ${verticalLayout ? "md:w-full" : "w-1/2"}`}
+                style={{ color }}
+            >
+                <div
+                    className={`flex flex-col ${
+                        textAlignment === "center"
+                            ? "items-center"
+                            : "items-start"
+                    }`}
                 >
                     {type !== "site" && (
-                        <Grid item sx={{ pb: 1 }}>
+                        <div className="pb-1">
                             <PriceTag
                                 cost={product.cost as number}
                                 freeCostCaption="FREE"
                                 currencyISOCode={state.siteinfo.currencyISOCode}
                             />
-                        </Grid>
+                        </div>
                     )}
-                    <Grid item sx={{ pb: 1 }}>
-                        <Typography variant="h2" sx={{ mb: 2 }}>
+                    <div className="pb-1">
+                        <h1 className="text-4xl mb-4">
+                            {/* @ts-ignore */}
                             {title ||
                                 (type === "site"
                                     ? state.siteinfo.title
                                     : product.title)}
-                        </Typography>
-                    </Grid>
+                        </h1>
+                    </div>
                     {(description || product.description) && (
-                        <Grid
-                            item
-                            sx={{
-                                pb: 2,
-                                textAlign:
-                                    textAlignment === "center"
-                                        ? "center"
-                                        : "left",
-                            }}
+                        <div
+                            className={`pb-4 ${
+                                textAlignment === "center"
+                                    ? "text-center"
+                                    : "text-left"
+                            }`}
                         >
                             <TextRenderer
                                 json={
@@ -194,10 +188,10 @@ export default function Widget({
                                         ))
                                 }
                             />
-                        </Grid>
+                        </div>
                     )}
                     {type === "product" && product.costType === "email" && (
-                        <Grid item>
+                        <div>
                             {((editing && showEditingView === 1) ||
                                 success) && (
                                 <TextRenderer
@@ -208,13 +202,11 @@ export default function Widget({
                             )}
                             {(!editing || (editing && showEditingView === 0)) &&
                                 !success && (
-                                    <Grid
-                                        container
-                                        direction="column"
-                                        component="form"
+                                    <form
+                                        className="flex flex-col"
                                         onSubmit={onSubmit}
                                     >
-                                        <Grid item sx={{ mb: 2 }}>
+                                        <div className="mb-4">
                                             <TextField
                                                 label="Email"
                                                 value={email}
@@ -225,8 +217,8 @@ export default function Widget({
                                                 type="email"
                                                 required
                                             />
-                                        </Grid>
-                                        <Grid item>
+                                        </div>
+                                        <div>
                                             <Button
                                                 sx={{
                                                     backgroundColor:
@@ -241,44 +233,40 @@ export default function Widget({
                                                 {buttonCaption ||
                                                     "Get for free"}
                                             </Button>
-                                        </Grid>
-                                    </Grid>
+                                        </div>
+                                    </form>
                                 )}
-                        </Grid>
+                        </div>
                     )}
                     {type === "product" &&
                         ["paid", "free"].includes(
                             product.costType as string
                         ) && (
-                            <Grid item>
-                                <Button
-                                    component="a"
-                                    href={`/checkout/${product.courseId}`}
-                                    variant="contained"
-                                    size="large"
-                                    sx={{
-                                        backgroundColor: buttonBackground,
-                                        color: buttonForeground,
-                                    }}
-                                >
-                                    {buttonCaption || "Buy now"}
-                                </Button>
-                            </Grid>
-                        )}
-                    {type === "site" && buttonAction && (
-                        <Grid item>
                             <Button
                                 component="a"
-                                href={buttonAction}
+                                href={`/checkout/${product.courseId}`}
                                 variant="contained"
                                 size="large"
+                                sx={{
+                                    backgroundColor: buttonBackground,
+                                    color: buttonForeground,
+                                }}
                             >
-                                {buttonCaption || "Set a URL"}
+                                {buttonCaption || "Buy now"}
                             </Button>
-                        </Grid>
+                        )}
+                    {type === "site" && buttonAction && (
+                        <Button
+                            component="a"
+                            href={buttonAction}
+                            variant="contained"
+                            size="large"
+                        >
+                            {buttonCaption || "Set a URL"}
+                        </Button>
                     )}
-                </Grid>
-            </Grid>
-        </Grid>
+                </div>
+            </div>
+        </div>
     );
 }

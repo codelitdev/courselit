@@ -1,5 +1,4 @@
 import * as React from "react";
-import { Grid, Typography } from "@mui/material";
 import { Link } from "@courselit/components-library";
 import Settings from "./settings";
 import { State } from "@courselit/common-models";
@@ -19,34 +18,25 @@ const Widget = ({
     };
 
     return (
-        <Grid
-            container
-            sx={{
-                p: 2,
+        <div
+            className="flex justify-between p-4"
+            style={{
                 backgroundColor: backgroundColor || "inherit",
                 color: textColor || "inherit",
             }}
         >
-            <Grid item xs={12} md={6}>
-                <Typography variant="body1">
-                    © {state.siteinfo.title} {new Date().getFullYear()}
-                </Typography>
-            </Grid>
-            <Grid item xs={12} md={6}>
-                <Grid container direction="column" alignItems="flex-end">
-                    <Grid item>
-                        <Link href="/p/terms" sxProps={linkProps}>
-                            Terms of Use
-                        </Link>
-                    </Grid>
-                    <Grid item>
-                        <Link href="/p/privacy" sxProps={linkProps}>
-                            Privacy Policy
-                        </Link>
-                    </Grid>
-                </Grid>
-            </Grid>
-        </Grid>
+            <p>
+                © {state.siteinfo.title} {new Date().getFullYear()}
+            </p>
+            <div className="flex flex-col items-end">
+                <Link href="/p/terms" sxProps={linkProps}>
+                    Terms of Use
+                </Link>
+                <Link href="/p/privacy" sxProps={linkProps}>
+                    Privacy Policy
+                </Link>
+            </div>
+        </div>
     );
 };
 

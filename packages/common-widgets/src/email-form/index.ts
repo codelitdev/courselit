@@ -2,7 +2,7 @@ import AdminWidget from "./admin-widget";
 import metadata from "./metadata";
 import Widget from "./widget";
 
-export const NewsletterSignup = {
+export const EmailForm = {
     widget: Widget,
     metadata,
     adminWidget: AdminWidget,

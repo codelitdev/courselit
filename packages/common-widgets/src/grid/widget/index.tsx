@@ -3,7 +3,7 @@ import { WidgetProps } from "@courselit/common-models";
 import Settings, { Item } from "../settings";
 import { TextRenderer } from "@courselit/components-library";
 import Itemm from "./item";
-import { Grid, Typography, Button } from "@mui/material";
+import { Button } from "@mui/material";
 
 export default function Widget({
     settings: {
@@ -21,73 +21,62 @@ export default function Widget({
     },
 }: WidgetProps<Settings>) {
     return (
-        <Grid
-            container
-            direction="column"
-            sx={{
-                p: 2,
+        <div
+            className="flex flex-col p-4"
+            style={{
                 backgroundColor,
                 color: foregroundColor,
             }}
         >
-            <Grid item sx={{ mb: 6 }}>
-                <Grid
-                    container
-                    direction="column"
-                    alignItems={
-                        headerAlignment === "center" ? "center" : "flex-start"
-                    }
+            <div className="mb-12">
+                <div
+                    className={`flex flex-col ${
+                        headerAlignment === "center"
+                            ? "items-center"
+                            : "items-start"
+                    }`}
                 >
-                    <Grid item sx={{ mb: 2 }}>
-                        <Typography variant="h4">{title}</Typography>
-                    </Grid>
+                    <h2 className="text-4xl mb-4">{title}</h2>
                     {description && (
-                        <Grid
-                            item
-                            sx={{
-                                mb: 2,
-                                textAlign:
-                                    headerAlignment === "center"
-                                        ? "center"
-                                        : "left",
-                            }}
+                        <div
+                            className={`mb-4 ${
+                                headerAlignment === "center"
+                                    ? "text-center"
+                                    : "text-left"
+                            }`}
                         >
                             <TextRenderer json={description} />
-                        </Grid>
+                        </div>
                     )}
                     {buttonAction && buttonCaption && (
-                        <Grid item>
-                            <Button
-                                component="a"
-                                href={buttonAction}
-                                variant="contained"
-                                size="large"
-                                sx={{
-                                    backgroundColor: buttonBackground,
-                                    color: buttonForeground,
-                                }}
-                            >
-                                {buttonCaption}
-                            </Button>
-                        </Grid>
+                        <Button
+                            component="a"
+                            href={buttonAction}
+                            variant="contained"
+                            size="large"
+                            sx={{
+                                backgroundColor: buttonBackground,
+                                color: buttonForeground,
+                            }}
+                        >
+                            {buttonCaption}
+                        </Button>
                     )}
-                </Grid>
-            </Grid>
+                </div>
+            </div>
             {items && items.length > 0 && (
-                <Grid item>
-                    <Grid container spacing={2}>
-                        {items.map((item: Item, index: number) => (
-                            <Itemm
-                                item={item}
-                                key={index}
-                                buttonBackground={buttonBackground}
-                                buttonForeground={buttonForeground}
-                                alignment={itemsAlignment}
-                            />
-                        ))}
-                    </Grid>
-                </Grid>
+                <div className="flex flex-wrap">
+                    {items.map((item: Item, index: number) => (
+                        <Itemm
+                            item={item}
+                            key={index}
+                            buttonBackground={buttonBackground}
+                            buttonForeground={buttonForeground}
+                            alignment={itemsAlignment}
+                        />
+                    ))}
+                </div>
             )}
-        </Grid>
+        </div>
     );
 }
