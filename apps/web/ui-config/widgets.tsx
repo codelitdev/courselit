@@ -24,11 +24,9 @@ function loadWidgets(): Record<string, any> {
     widgets[Content.metadata.name] = Content;
     widgets[Footer.metadata.name] = Object.assign({}, Footer, { shared: true });
     widgets[Header.metadata.name] = Object.assign({}, Header, { shared: true });
-    widgets[EmailForm.metadata.name] = Object.assign(
-        {},
-        EmailForm,
-        { shared: true }
-    );
+    widgets[EmailForm.metadata.name] = Object.assign({}, EmailForm, {
+        shared: true,
+    });
 
     // Additional widgets are added here
     // widgets[buttondown.metadata.name] = buttondown;

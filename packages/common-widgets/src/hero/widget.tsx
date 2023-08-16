@@ -68,13 +68,13 @@ export default function Widget({
                                     borderRadius: `${mediaRadius}px`,
                                 }}
                             >
-                                <iframe 
+                                <iframe
                                     className="related left-0 top-0 w-full h-full"
                                     src={`https://www.youtube.com/embed/${youtubeLink}`}
                                     frameBorder="0"
                                     allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                                     allowFullScreen
-                                    />
+                                />
                             </div>
                         )}
                         {!youtubeLink && media && media.mediaId && (

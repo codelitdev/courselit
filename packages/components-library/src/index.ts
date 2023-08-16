@@ -1,4 +1,4 @@
-import "./styles.css"
+import "./styles.css";
 
 import PriceTag from "./pricetag";
 import Section from "./section";
