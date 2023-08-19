@@ -4,7 +4,7 @@ import widgets from "../../../ui-config/widgets";
 import { connect } from "react-redux";
 import { AppState } from "@courselit/state-management";
 import { Button, Grid, IconButton, Typography } from "@mui/material";
-import { Close } from "@mui/icons-material";
+import { Cross as Close } from "@courselit/icons";
 import AdminWidget from "./admin-widget";
 
 interface EditWidgetProps {

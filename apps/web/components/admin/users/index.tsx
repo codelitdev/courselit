@@ -51,11 +51,11 @@ import { AnyAction } from "redux";
 import { Select as SingleSelect } from "@courselit/components-library";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import { CSVLink } from "react-csv";
-import Email from "@mui/icons-material/Email";
-import Cancel from "@mui/icons-material/Cancel";
+import { Cancel } from "@courselit/icons";
 import InputAdornment from "@mui/material/InputAdornment";
 import { useRouter } from "next/router";
 import { UIConstants } from "@courselit/common-models";
+import { Mail } from "@courselit/icons";
 
 const { networkAction } = actionCreators;
 const { permissions } = UIConstants;
@@ -429,7 +429,7 @@ const UsersManager = ({
                     {featureFlags.includes("mail") && (
                         <Tooltip title={TOOLTIP_USER_PAGE_SEND_MAIL}>
                             <IconButton onClick={createMail}>
-                                <Email />
+                                <Mail />
                             </IconButton>
                         </Tooltip>
                     )}

@@ -51,7 +51,7 @@ import { actionCreators } from "@courselit/state-management";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import useCourse from "../course-hook";
-import { Help } from "@mui/icons-material";
+import { Help } from "@courselit/icons";
 import { Dialog, MediaSelector } from "@courselit/components-library";
 import { QuizBuilder } from "./quiz-builder";
 
@@ -652,10 +652,7 @@ const LessonEditor = ({
                                                                 LESSON_PREVIEW_TOOLTIP
                                                             }
                                                         >
-                                                            <Help
-                                                                color="disabled"
-                                                                fontSize="small"
-                                                            />
+                                                            <Help />
                                                         </Tooltip>
                                                     </Grid>
                                                 </Grid>

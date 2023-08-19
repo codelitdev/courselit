@@ -2,7 +2,7 @@ import React, { SyntheticEvent } from "react";
 import { connect } from "react-redux";
 import { Snackbar, IconButton, Button } from "@mui/material";
 import { actionCreators } from "@courselit/state-management";
-import { Close } from "@mui/icons-material";
+import { Cross as Close } from "@courselit/icons";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 
 const { clearAppMessage } = actionCreators;

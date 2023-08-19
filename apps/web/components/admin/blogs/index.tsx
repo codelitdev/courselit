@@ -36,7 +36,7 @@ import {
 } from "../../../ui-config/strings";
 import dynamic from "next/dynamic";
 import { Menu } from "@courselit/components-library";
-import { MoreVert } from "@mui/icons-material";
+import { MoreVert } from "@courselit/icons";
 
 const BlogItem = dynamic(() => import("./blog-item"));
 

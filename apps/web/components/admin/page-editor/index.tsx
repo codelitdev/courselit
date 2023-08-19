@@ -52,10 +52,9 @@ import widgets from "../../../ui-config/widgets";
 import { ThemeProvider } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import PagesList from "./pages-list";
-
-import CloudDone from "@mui/icons-material/CloudDone";
-import Sync from "@mui/icons-material/Sync";
+import { Sync, CheckCircled } from "@courselit/icons";
 import AppToast from "../../app-toast";
+
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
 const WidgetsList = dynamic(() => import("./widgets-list"));
@@ -477,7 +476,7 @@ function PageEditor({
                             <Grid item>
                                 <Typography variant="body2">
                                     {loading && <Sync />}
-                                    {!loading && <CloudDone />}
+                                    {!loading && <CheckCircled />}
                                 </Typography>
                             </Grid>
                             <Grid item>

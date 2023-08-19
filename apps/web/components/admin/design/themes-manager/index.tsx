@@ -37,7 +37,7 @@ import { THEMES_REPO } from "../../../../ui-config/constants";
 import ThemeItem from "./theme-item";
 import type { Address } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
-import { Add } from "@mui/icons-material";
+import { Add } from "@courselit/icons";
 import { Section } from "@courselit/components-library";
 
 const { setAppMessage, networkAction, updateSiteInfo } = actionCreators;

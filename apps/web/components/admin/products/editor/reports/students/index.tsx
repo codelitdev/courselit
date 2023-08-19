@@ -38,12 +38,7 @@ import {
 } from "@courselit/state-management";
 import { connect } from "react-redux";
 import { Address } from "@courselit/common-models";
-import {
-    CheckCircle,
-    CheckCircleOutline,
-    DoneSharp,
-    Search,
-} from "@mui/icons-material";
+import { Search, Circle, CheckCircled } from "@courselit/icons";
 import useCourse from "../../course-hook";
 import Link from "next/link";
 const { networkAction } = actionCreators;
@@ -231,7 +226,7 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
                                         PRICING_EMAIL && (
                                         <TableCell>
                                             {student.downloaded && (
-                                                <DoneSharp />
+                                                <CheckCircled />
                                             )}
                                             {!student.downloaded && <></>}
                                         </TableCell>
@@ -281,9 +276,9 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
                                     {student.progress.includes(
                                         lesson.lessonId
                                     ) ? (
-                                        <CheckCircle />
+                                        <CheckCircled />
                                     ) : (
-                                        <CheckCircleOutline />
+                                        <Circle />
                                     )}
                                 </ListItemIcon>
                             </ListItem>

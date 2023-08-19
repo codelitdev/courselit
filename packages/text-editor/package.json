@@ -36,7 +36,6 @@
         "url": "https://github.com/codelitdev/courselit/issues"
     },
     "peerDependencies": {
-        "@mui/icons-material": "^5.5.0",
         "@mui/material": "^5.9.2",
         "react": "^17.0.2",
         "remirror": "^2.0.9"

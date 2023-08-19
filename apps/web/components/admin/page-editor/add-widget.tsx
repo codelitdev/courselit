@@ -3,7 +3,7 @@ import {
     PageTypeSite,
     PageTypeBlog,
 } from "@courselit/common-models";
-import { Close } from "@mui/icons-material";
+import { Cross as Close } from "@courselit/icons";
 import {
     Grid,
     IconButton,

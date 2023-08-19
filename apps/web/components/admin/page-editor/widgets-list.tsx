@@ -1,5 +1,5 @@
 import React from "react";
-import { Add, Warning } from "@mui/icons-material";
+import { Add, Warning } from "@courselit/icons";
 import { List, ListItem, ListItemButton, Typography } from "@mui/material";
 import { EDIT_PAGE_WIDGET_LIST_HEADER } from "../../../ui-config/strings";
 import widgets from "../../../ui-config/widgets";
@@ -77,7 +77,7 @@ function WidgetList({ layout, onItemClick, onAddNewClick }: WidgetListProps) {
                     key="add-new"
                     sx={(theme) => ({ color: theme.palette.primary.main })}
                 >
-                    <Add fontSize="small" sx={{ mr: 1 }} />
+                    <Add />
                     Add new
                 </ListItemButton>
                 <WidgetItem item={footer} onItemClick={onItemClick} />

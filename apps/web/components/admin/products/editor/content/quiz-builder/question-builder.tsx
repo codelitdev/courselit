@@ -1,6 +1,6 @@
 import React, { ChangeEvent } from "react";
 import { Question } from "@courselit/common-models";
-import { Delete, ExpandLess, ExpandMore } from "@mui/icons-material";
+import { Delete, ExpandLess, ExpandMore } from "@courselit/icons";
 import {
     Button,
     Checkbox,

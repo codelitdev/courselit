@@ -16,7 +16,7 @@ import {
     EDIT_SECTION_HEADER,
 } from "../../../../../ui-config/strings";
 import useCourse from "../course-hook";
-import { Add, MoreVert } from "@mui/icons-material";
+import { Add, MoreVert } from "@courselit/icons";
 import { Course, Lesson } from "@courselit/common-models";
 import { useRouter } from "next/router";
 import { LessonIcon } from "@courselit/components-library";

@@ -8,8 +8,7 @@ import Grid from "@mui/material/Grid";
 import { Typeface } from "@courselit/common-models";
 import { EDIT_PAGE_BUTTON_FONTS } from "../../../ui-config/strings";
 import IconButton from "@mui/material/IconButton";
-import Close from "@mui/icons-material/Close";
-import Star from "@mui/icons-material/Star";
+import { Cross as Close, Star } from "@courselit/icons";
 
 interface FontListProps {
     draftTypefaces: Typeface[];

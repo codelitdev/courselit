@@ -54,8 +54,8 @@
     },
     "dependencies": {
         "@courselit/common-models": "workspace:^",
-        "@courselit/icons": "workspace:^",
         "@courselit/components-library": "workspace:^",
+        "@courselit/icons": "workspace:^",
         "@courselit/state-management": "workspace:^",
         "@courselit/utils": "workspace:^",
         "react-redux": "^8.0.2"

@@ -1798,9 +1798,9 @@ __metadata:
   dependencies:
     "@courselit/common-models": "workspace:^"
     "@courselit/components-library": "workspace:^"
+    "@courselit/icons": "workspace:^"
     "@courselit/state-management": "workspace:^"
     "@courselit/utils": "workspace:^"
-    "@mui/icons-material": ^5.10.6
     autoprefixer: ^10.4.14
     eslint-config-standard: ^17.0.0
     eslint-plugin-n: ^15.2.0
@@ -1931,7 +1931,6 @@ __metadata:
     rimraf: ^4.1.1
     typescript: ^4.8.4
   peerDependencies:
-    "@mui/icons-material": ^5.5.0
     "@mui/material": ^5.9.2
     react: ^17.0.2
     remirror: ^2.0.9
@@ -1957,13 +1956,13 @@ __metadata:
     "@courselit/common-models": "workspace:^"
     "@courselit/common-widgets": "workspace:^"
     "@courselit/components-library": "workspace:^"
+    "@courselit/icons": "workspace:^"
     "@courselit/state-management": "workspace:^"
     "@courselit/utils": "workspace:^"
     "@emotion/cache": ^11.7.1
     "@emotion/react": ^11.8.2
     "@emotion/server": ^11.4.0
     "@emotion/styled": ^11.8.1
-    "@mui/icons-material": ^5.5.0
     "@mui/material": ^5.5.0
     "@mui/utils": ^5.4.4
     "@stripe/stripe-js": ^1.29.0
@@ -2801,22 +2800,6 @@ __metadata:
   version: 5.10.7
   resolution: "@mui/core-downloads-tracker@npm:5.10.7"
   checksum: aa299d1efd307e6a3184a53d89701085171bf5adc4e47f6883bf18d93e3daa02ec9a01af78274184041559c64ec46d87b12690b28699101997fbdd227c10f70b
-  languageName: node
-  linkType: hard
-
-"@mui/icons-material@npm:^5.10.6, @mui/icons-material@npm:^5.5.0":
-  version: 5.10.6
-  resolution: "@mui/icons-material@npm:5.10.6"
-  dependencies:
-    "@babel/runtime": ^7.19.0
-  peerDependencies:
-    "@mui/material": ^5.0.0
-    "@types/react": ^17.0.0 || ^18.0.0
-    react: ^17.0.0 || ^18.0.0
-  peerDependenciesMeta:
-    "@types/react":
-      optional: true
-  checksum: c8577b5252d08c3b067c4119aae0b774ab6fb782d56d6e394ed26e1cfbaeca8634ac9ab455b9709415106d906d134f0fee23e2254b120de4ef246ca959b22de8
   languageName: node
   linkType: hard
 

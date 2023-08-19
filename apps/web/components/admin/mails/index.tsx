@@ -26,7 +26,7 @@ import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import Link from "next/link";
 import { Button, Chip } from "@mui/material";
-import { Done } from "@mui/icons-material";
+import { Check } from "@courselit/icons";
 import { useRouter } from "next/router";
 import { ThunkDispatch } from "redux-thunk";
 const { networkAction } = actionCreators;
@@ -261,7 +261,7 @@ function Mails({ auth, address, profile, dispatch, featureFlags }: MailsProps) {
                                                 >
                                                     {mail.published && (
                                                         <Chip
-                                                            icon={<Done />}
+                                                            icon={<Check />}
                                                             label="Sent"
                                                             size="small"
                                                             color="success"

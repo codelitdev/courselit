@@ -37,7 +37,7 @@ import {
     refreshUserProfile,
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
-import { ArrowBack, ArrowForward } from "@mui/icons-material";
+import { ArrowLeft, ArrowRight } from "@courselit/icons";
 import { isEnrolled } from "../../../ui-lib/utils";
 import LessonEmbedViewer from "./embed-viewer";
 import QuizViewer from "./quiz-viewer";
@@ -415,7 +415,7 @@ const LessonViewer = ({
                                             <Button
                                                 component="a"
                                                 size="large"
-                                                startIcon={<ArrowBack />}
+                                                startIcon={<ArrowLeft />}
                                             >
                                                 {COURSE_PROGRESS_INTRO}
                                             </Button>
@@ -431,7 +431,7 @@ const LessonViewer = ({
                                             <Button
                                                 component="a"
                                                 size="large"
-                                                startIcon={<ArrowBack />}
+                                                startIcon={<ArrowLeft />}
                                             >
                                                 {COURSE_PROGRESS_PREV}
                                             </Button>
@@ -444,7 +444,7 @@ const LessonViewer = ({
                                         size="large"
                                         endIcon={
                                             lesson.nextLesson ? (
-                                                <ArrowForward />
+                                                <ArrowRight />
                                             ) : undefined
                                         }
                                         variant="contained"

@@ -6,12 +6,7 @@ import {
     isEnrolled,
     isLessonCompleted,
 } from "../../../../ui-lib/utils";
-import {
-    ArrowForward,
-    CheckCircle,
-    CircleOutlined,
-    Lock,
-} from "@mui/icons-material";
+import { ArrowRight, CheckCircled, Circle, Lock } from "@courselit/icons";
 import {
     COURSE_PROGRESS_START,
     SIDEBAR_TEXT_COURSE_ABOUT,
@@ -71,9 +66,9 @@ export function generateSideBarItems(
                             lessonId: lesson.lessonId,
                             profile,
                         }) ? (
-                            <CheckCircle />
+                            <CheckCircled />
                         ) : (
-                            <CircleOutlined />
+                            <Circle />
                         )
                     ) : undefined,
                 iconPlacementRight: true,
@@ -141,7 +136,7 @@ const CourseViewer = (props: CourseProps) => {
                                     component="a"
                                     size="large"
                                     variant="contained"
-                                    endIcon={<ArrowForward />}
+                                    endIcon={<ArrowRight />}
                                 >
                                     {COURSE_PROGRESS_START}
                                 </Button>

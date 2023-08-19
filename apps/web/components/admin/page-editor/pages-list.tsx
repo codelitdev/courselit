@@ -1,5 +1,5 @@
 import IconButton from "@mui/material/IconButton";
-import Close from "@mui/icons-material/Close";
+import { Cross as Close } from "@courselit/icons";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItem from "@mui/material/ListItem";

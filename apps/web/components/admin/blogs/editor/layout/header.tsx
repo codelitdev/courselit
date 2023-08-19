@@ -13,7 +13,7 @@ import {
     POPUP_OK_ACTION,
     PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
 } from "../../../../../ui-config/strings";
-import { MoreVert } from "@mui/icons-material";
+import { MoreVert } from "@courselit/icons";
 import { deleteProduct } from "../../helpers";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import { connect } from "react-redux";

@@ -7,7 +7,7 @@ import Hidden from "@mui/material/Hidden";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
-import { Menu } from "@mui/icons-material";
+import { Menu } from "@courselit/icons";
 import {
     Toolbar,
     Grid,

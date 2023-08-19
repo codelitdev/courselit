@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Grid, Typography, Checkbox, IconButton } from "@mui/material";
-import { ExpandLess, ExpandMore } from "@mui/icons-material";
+import { ExpandLess, ExpandMore } from "@courselit/icons";
 import {
     PERM_COURSE_MANAGE,
     PERM_COURSE_MANAGE_ANY,

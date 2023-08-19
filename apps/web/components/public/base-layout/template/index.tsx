@@ -4,7 +4,7 @@ import WidgetByName from "./widget-by-name";
 import AppToast from "../../../app-toast";
 import { WidgetInstance } from "@courselit/common-models";
 import { Footer, Header } from "@courselit/common-widgets";
-import { ArrowDownward, ArrowUpward } from "@mui/icons-material";
+import { ArrowDownward, ArrowUpward } from "@courselit/icons";
 
 interface TemplateProps {
     layout: WidgetInstance[];
