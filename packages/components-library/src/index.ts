@@ -3,7 +3,6 @@ import "./styles.css";
 import PriceTag from "./pricetag";
 import Section from "./section";
 import WidgetHelpers from "./widget-helpers";
-import OverviewAndDetail from "./overview-and-detail";
 import CourseItem from "./course-item";
 import Image from "./image";
 import Select from "./select";
@@ -21,7 +20,6 @@ export {
     PriceTag,
     Section,
     WidgetHelpers,
-    OverviewAndDetail,
     CourseItem,
     Image,
     Select,

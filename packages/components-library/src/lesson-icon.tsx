@@ -1,13 +1,15 @@
 import * as React from "react";
 import { LessonType } from "@courselit/common-models";
-import { Video } from "@courselit/components-library/icons/video";
-import { Text as TextIcon } from '@courselit/components-library/icons/text'
-import { File } from "@courselit/components-library/icons/file";
-import { Speaker } from "@courselit/components-library/icons/speaker";
-import { FileText } from "@courselit/components-library/icons/file-text";
-import { Link } from "@courselit/components-library/icons/link";
-import { Quiz } from "@courselit/components-library/icons/quiz";
-import { QuestionMark } from "@courselit/components-library/icons/question-mark";
+import {
+    Video,
+    Text as TextIcon,
+    File,
+    Speaker,
+    FileText,
+    Link,
+    Quiz,
+    QuestionMark,
+} from "@courselit/icons";
 
 export default function LessonIcon({ type }: { type: LessonType }) {
     switch (type.toLowerCase() as LessonType) {

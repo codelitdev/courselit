@@ -1,4 +1,4 @@
-import { Edit } from "@mui/icons-material";
+import { Edit } from "@courselit/icons";
 import { Button, Grid, IconButton, TextField, Typography } from "@mui/material";
 import { grey } from "@mui/material/colors";
 import React, { useState } from "react";

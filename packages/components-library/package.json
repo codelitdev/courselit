@@ -10,11 +10,11 @@
     "author": "Rajat Saxena <social@rajats.xyz>",
     "homepage": "https://github.com/codelitdev/courselit#readme",
     "license": "MIT",
-    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
     "exports": {
         ".": "./dist",
         "./styles.css": "./dist/index.css",
-        "./icons": "./dist/icons"
+        "./icons": "./dist/icons.mjs"
     },
     "publishConfig": {
         "access": "public"
@@ -45,7 +45,6 @@
         "typescript": "^5.1.6"
     },
     "peerDependencies": {
-        "@mui/icons-material": "^5.5.0",
         "@mui/material": "^5.9.2",
         "next": "^13.4.4",
         "react": "^18.2.0",
@@ -56,10 +55,10 @@
     "gitHead": "fca7d2f8455c835f1c185a1ebc8513c6269ebe5b",
     "dependencies": {
         "@courselit/common-models": "workspace:^",
+        "@courselit/icons": "workspace:^",
         "@courselit/state-management": "workspace:^",
         "@courselit/text-editor": "workspace:^",
         "@courselit/utils": "workspace:^",
-        "@radix-ui/react-icons": "^1.3.0",
         "currency-symbol-map": "^5.1.0"
     }
 }

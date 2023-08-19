@@ -2,7 +2,7 @@ import React from "react";
 import { Avatar } from "@mui/material";
 import Settings, { Link } from "./settings";
 import { Image, Menu } from "@courselit/components-library";
-import { Close, Menu as MenuIcon } from "@mui/icons-material";
+import { Cross as Close, Menu as MenuIcon } from "@courselit/icons";
 import { State, UIConstants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
 import NextLink from "next/link";
@@ -68,18 +68,22 @@ export default function Widget({ state, settings }: WidgetProps) {
             <div className="lg:hidden">
                 <Menu
                     icon={
-                        <MenuIcon
-                            sx={{
+                        <div
+                            style={{
                                 color: settings.loginBtnBgColor || "inherit",
                             }}
-                        />
+                        >
+                            <MenuIcon />
+                        </div>
                     }
                     openIcon={
-                        <Close
-                            sx={{
+                        <div
+                            style={{
                                 color: settings.loginBtnBgColor || "inherit",
                             }}
-                        />
+                        >
+                            <Close />
+                        </div>
                     }
                     options={[
                         ...(settings.links

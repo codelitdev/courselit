@@ -19,7 +19,7 @@ import {
     Select,
     TextEditor,
 } from "@courselit/components-library";
-import { Delete } from "@mui/icons-material";
+import { Delete } from "@courselit/icons";
 import { Alignment } from "@courselit/common-models";
 
 interface AdminWidgetProps {

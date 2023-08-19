@@ -54,10 +54,10 @@
     },
     "dependencies": {
         "@courselit/common-models": "workspace:^",
+        "@courselit/icons": "workspace:^",
         "@courselit/components-library": "workspace:^",
         "@courselit/state-management": "workspace:^",
         "@courselit/utils": "workspace:^",
-        "@mui/icons-material": "^5.10.6",
         "react-redux": "^8.0.2"
     },
     "gitHead": "e91494470733b09bc3e772a9079162a844b40d97"

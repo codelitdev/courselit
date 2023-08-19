@@ -1,0 +1,13 @@
+export { ArrowLeftIcon as ArrowLeft } from "@radix-ui/react-icons";
+export { Cross2Icon as Cross } from "@radix-ui/react-icons";
+export { TrashIcon as Delete } from "@radix-ui/react-icons";
+export { FileTextIcon as FileText } from "@radix-ui/react-icons";
+export { FileIcon as File } from "@radix-ui/react-icons";
+export { Link1Icon as Link } from "@radix-ui/react-icons";
+export { QuestionMarkIcon as QuestionMark } from "@radix-ui/react-icons";
+export { MixIcon as Quiz } from "@radix-ui/react-icons";
+export { SpeakerModerateIcon as Speaker } from "@radix-ui/react-icons";
+export { ReaderIcon as Text } from "@radix-ui/react-icons";
+export { VideoIcon as Video } from "@radix-ui/react-icons";
+export { HamburgerMenuIcon as Menu } from "@radix-ui/react-icons";
+export { Pencil1Icon as Edit } from "@radix-ui/react-icons";
