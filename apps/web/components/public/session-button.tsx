@@ -5,7 +5,7 @@ import {
     GENERIC_SIGNOUT_TEXT,
     GENERIC_SIGNIN_TEXT,
 } from "../../ui-config/strings";
-import { Button } from "@mui/material";
+import { Button } from "@courselit/components-library";
 import Profile from "../../ui-models/profile";
 import { AppState } from "@courselit/state-management";
 
@@ -19,15 +19,11 @@ function SessionButton(props: SessionButtonProps) {
         <>
             {props.auth.guest ? (
                 <Link href="/login">
-                    <Button sx={{ color: "white" }}>
-                        {GENERIC_SIGNIN_TEXT}
-                    </Button>
+                    <Button component="button">{GENERIC_SIGNIN_TEXT}</Button>
                 </Link>
             ) : (
                 <Link href="/logout">
-                    <Button sx={{ color: "white" }}>
-                        {GENERIC_SIGNOUT_TEXT}
-                    </Button>
+                    <Button component="button">{GENERIC_SIGNOUT_TEXT}</Button>
                 </Link>
             )}
         </>

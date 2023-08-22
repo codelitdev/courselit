@@ -24,8 +24,8 @@ import RouteBasedComponentScaffold, {
     ComponentScaffoldMenuItem,
 } from "../../../../components/public/scaffold";
 import Article from "../../../../components/public/article";
-import { Button, Grid } from "@mui/material";
-import { Link } from "@courselit/components-library";
+import { Grid } from "@mui/material";
+import { Link, Button } from "@courselit/components-library";
 
 interface CourseProps {
     course: any;
@@ -132,13 +132,9 @@ const CourseViewer = (props: CourseProps) => {
                                     textDecoration: "none",
                                 }}
                             >
-                                <Button
-                                    component="a"
-                                    size="large"
-                                    variant="contained"
-                                    endIcon={<ArrowRight />}
-                                >
+                                <Button component="button">
                                     {COURSE_PROGRESS_START}
+                                    <ArrowRight />
                                 </Button>
                             </Link>
                         </Grid>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
 import { FetchBuilder } from "@courselit/utils";
-import { Grid, Button } from "@mui/material";
+import { Grid } from "@mui/material";
 import { BTN_LOAD_MORE, FREE_COST } from "../../ui-config/strings";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
@@ -10,7 +10,7 @@ import type {
     Course as CourseModel,
     SiteInfo,
 } from "@courselit/common-models";
-import { CourseItem } from "@courselit/components-library";
+import { CourseItem, Button } from "@courselit/components-library";
 
 const { networkAction } = actionCreators;
 
@@ -77,8 +77,8 @@ const List = (props: ListProps) => {
             {shouldShowLoadMoreButton && courses.length > 0 && (
                 <Grid item xs={12}>
                     <Button
-                        variant="outlined"
-                        disableElevation
+                        component="button"
+                        variant="soft"
                         onClick={() => setOffset(offset + 1)}
                     >
                         {BTN_LOAD_MORE}

@@ -1,10 +1,11 @@
 import * as React from "react";
-import { Grid, Button, Typography } from "@mui/material";
+import { Grid, Typography } from "@mui/material";
 import Image from "../image";
 import MediaManagerDialog from "./media-manager-dialog";
 import { Address, Auth, Profile } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
 import Access from "./access";
+import Button from "../button";
 
 const { useState } = React;
 
@@ -73,7 +74,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
             </Grid>
             <Grid item>
                 <Button
-                    variant="outlined"
+                    component="button"
                     onClick={() => setDialogOpened(!dialogOpened)}
                 >
                     {strings.buttonCaption || "Select media"}

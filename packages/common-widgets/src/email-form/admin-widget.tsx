@@ -44,7 +44,7 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
         settings.btnBackgroundColor
     );
     const [btnForegroundColor, setBtnForegroundColor] = useState(
-        settings.btnBackgroundColor
+        settings.btnForegroundColor
     );
     const [alignment, setAlignment] = useState(settings.alignment || "left");
 

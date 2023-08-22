@@ -6,7 +6,7 @@ import {
     TRANSACTION_INITIATED,
     TRANSACTION_SUCCESS,
 } from "../../ui-config/constants";
-import { Button, Grid, Typography } from "@mui/material";
+import { Grid, Typography } from "@mui/material";
 import {
     TRANSACTION_STATUS_FAILED,
     TRANSACTION_STATUS_FAILED_DETAILS,
@@ -23,6 +23,7 @@ import type { AppDispatch, AppState } from "@courselit/state-management";
 import { Address, AppMessage, Auth } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
 import { actionCreators } from "@courselit/state-management";
+import { Button } from "@courselit/components-library";
 
 const { networkAction, setAppMessage } = actionCreators;
 
@@ -91,7 +92,7 @@ const PurchaseStatus = (props: PurchaseStatusProps) => {
                     </Grid>
                     <Grid item>
                         <Link href={courseLink} legacyBehavior>
-                            <Button variant="outlined" color="primary">
+                            <Button component="link">
                                 {VISIT_COURSE_BUTTON}
                             </Button>
                         </Link>
@@ -118,8 +119,7 @@ const PurchaseStatus = (props: PurchaseStatusProps) => {
                             </Grid>
                             <Grid item>
                                 <Button
-                                    variant="outlined"
-                                    color="primary"
+                                    component="button"
                                     onClick={getPaymentStatus}
                                     disabled={props.loading}
                                 >
@@ -149,7 +149,7 @@ const PurchaseStatus = (props: PurchaseStatusProps) => {
                     </Grid>
                     <Grid item>
                         <Link href={courseLink} legacyBehavior>
-                            <Button variant="contained">
+                            <Button component="link">
                                 {VISIT_COURSE_BUTTON}
                             </Button>
                         </Link>

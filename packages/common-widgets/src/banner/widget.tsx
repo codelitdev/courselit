@@ -1,10 +1,15 @@
 import React, { FormEvent, useState } from "react";
 import { AppMessage, WidgetProps } from "@courselit/common-models";
-import { Image, PriceTag, TextRenderer } from "@courselit/components-library";
+import {
+    Image,
+    PriceTag,
+    TextRenderer,
+    Button,
+} from "@courselit/components-library";
 import { actionCreators } from "@courselit/state-management";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
-import { Button, TextField } from "@mui/material";
+import { TextField } from "@mui/material";
 import { DEFAULT_FAILURE_MESSAGE, DEFAULT_SUCCESS_MESSAGE } from "./constants";
 import Settings from "./settings";
 
@@ -220,15 +225,14 @@ export default function Widget({
                                         </div>
                                         <div>
                                             <Button
-                                                sx={{
+                                                style={{
                                                     backgroundColor:
                                                         buttonBackground,
                                                     color: buttonForeground,
                                                 }}
                                                 type="submit"
                                                 disabled={state.networkAction}
-                                                size="large"
-                                                variant="contained"
+                                                component="button"
                                             >
                                                 {buttonCaption ||
                                                     "Get for free"}
@@ -243,11 +247,9 @@ export default function Widget({
                             product.costType as string
                         ) && (
                             <Button
-                                component="a"
                                 href={`/checkout/${product.courseId}`}
-                                variant="contained"
-                                size="large"
-                                sx={{
+                                component="link"
+                                style={{
                                     backgroundColor: buttonBackground,
                                     color: buttonForeground,
                                 }}
@@ -257,10 +259,12 @@ export default function Widget({
                         )}
                     {type === "site" && buttonAction && (
                         <Button
-                            component="a"
+                            component="link"
                             href={buttonAction}
-                            variant="contained"
-                            size="large"
+                            style={{
+                                backgroundColor: buttonBackground,
+                                color: buttonForeground,
+                            }}
                         >
                             {buttonCaption || "Set a URL"}
                         </Button>

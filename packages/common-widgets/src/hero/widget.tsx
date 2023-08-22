@@ -1,8 +1,7 @@
 import React from "react";
 import { WidgetProps } from "@courselit/common-models";
-import { Button } from "@mui/material";
 import Settings from "./settings";
-import { Image, TextRenderer } from "@courselit/components-library";
+import { Image, TextRenderer, Button } from "@courselit/components-library";
 
 export default function Widget({
     settings: {
@@ -127,11 +126,9 @@ export default function Widget({
                         {buttonAction && buttonCaption && (
                             <div>
                                 <Button
-                                    component="a"
                                     href={buttonAction}
-                                    variant="contained"
-                                    size="large"
-                                    sx={{
+                                    component="link"
+                                    style={{
                                         backgroundColor: buttonBackground,
                                         color: buttonForeground,
                                     }}

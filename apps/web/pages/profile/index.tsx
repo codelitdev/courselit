@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { FetchBuilder } from "@courselit/utils";
-import { Button, Checkbox, Grid, TextField, Typography } from "@mui/material";
+import { Checkbox, Grid, TextField, Typography } from "@mui/material";
 import {
     PROFILE_PAGE_HEADER,
     PROFILE_SECTION_DETAILS_NAME,
@@ -16,7 +16,7 @@ import { connect } from "react-redux";
 import Link from "next/link";
 import { actionCreators } from "@courselit/state-management";
 import { getBackendAddress, getPage } from "../../ui-lib/utils";
-import { Section } from "@courselit/components-library";
+import { Section, Button } from "@courselit/components-library";
 import type {
     Address,
     Auth,
@@ -232,7 +232,6 @@ function ProfileIndex({
                                             bio === (user && user.bio) &&
                                             name === (user && user.name)
                                         }
-                                        variant="contained"
                                     >
                                         {BUTTON_SAVE}
                                     </Button>

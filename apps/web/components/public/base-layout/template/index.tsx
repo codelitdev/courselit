@@ -1,10 +1,11 @@
 import React, { ReactNode } from "react";
-import { Box, Button, Grid } from "@mui/material";
+import { Box, Grid } from "@mui/material";
 import WidgetByName from "./widget-by-name";
 import AppToast from "../../../app-toast";
 import { WidgetInstance } from "@courselit/common-models";
 import { Footer, Header } from "@courselit/common-widgets";
 import { ArrowDownward, ArrowUpward } from "@courselit/icons";
+import { Button } from "@courselit/components-library";
 
 interface TemplateProps {
     layout: WidgetInstance[];
@@ -92,25 +93,20 @@ const EditableWidget = ({
                     {allowsUpwardMovement && (
                         <Grid item>
                             <Button
-                                color="primary"
-                                variant="contained"
-                                size="small"
+                                component="button"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onMoveWidgetUp(index);
                                 }}
-                                startIcon={<ArrowUpward />}
                             >
-                                Move up
+                                <ArrowUpward /> Move up
                             </Button>
                         </Grid>
                     )}
                     {allowsWidgetAddition && (
                         <Grid item>
                             <Button
-                                color="primary"
-                                variant="contained"
-                                size="small"
+                                component="button"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onAddWidgetBelow(index);
@@ -123,16 +119,13 @@ const EditableWidget = ({
                     {allowsDownwardMovement && (
                         <Grid item>
                             <Button
-                                color="primary"
-                                variant="contained"
-                                size="small"
+                                component="button"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onMoveWidgetDown(index);
                                 }}
-                                endIcon={<ArrowDownward />}
                             >
-                                Move down
+                                Move down <ArrowDownward />
                             </Button>
                         </Grid>
                     )}

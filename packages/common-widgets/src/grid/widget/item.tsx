@@ -1,7 +1,6 @@
 import React from "react";
-import { Button } from "@mui/material";
 import { Item } from "../settings";
-import { TextRenderer, Image } from "@courselit/components-library";
+import { TextRenderer, Image, Button } from "@courselit/components-library";
 import { Alignment } from "@courselit/common-models";
 
 interface ItemmProps {
@@ -18,7 +17,7 @@ export default function Itemm({
     alignment,
 }: ItemmProps) {
     return (
-        <div className="sm:w-full md:w-1/2 lg:w-1/3 mb-6">
+        <div>
             {media && media.file && (
                 <div className="mb-4">
                     <Image
@@ -34,23 +33,21 @@ export default function Itemm({
                     alignment === "center" ? "items-center" : "items-start"
                 }`}
             >
-                <h3 className="text-3xl">{title}</h3>
+                <h3 className="text-3xl mb-2">{title}</h3>
                 {description && (
                     <div
-                        className={
+                        className={`mb-2 ${
                             alignment === "center" ? "text-center" : "text-left"
-                        }
+                        }`}
                     >
                         <TextRenderer json={description} />
                     </div>
                 )}
                 {buttonAction && buttonCaption && (
                     <Button
-                        component="a"
                         href={buttonAction}
-                        variant="contained"
-                        size="large"
-                        sx={{
+                        component="link"
+                        style={{
                             backgroundColor: buttonBackground,
                             color: buttonForeground,
                         }}

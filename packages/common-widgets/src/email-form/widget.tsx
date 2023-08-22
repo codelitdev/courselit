@@ -1,6 +1,6 @@
 import React, { FormEvent, useState } from "react";
 import { AppMessage } from "@courselit/common-models";
-import { Button, TextField } from "@mui/material";
+import { TextField } from "@mui/material";
 import Settings from "./settings";
 import { actionCreators } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
@@ -12,6 +12,7 @@ import {
     DEFAULT_TITLE,
 } from "./constants";
 import type { AppState, AppDispatch } from "@courselit/state-management";
+import { Button } from "@courselit/components-library";
 
 export interface WidgetProps {
     settings: Settings;
@@ -24,7 +25,7 @@ const Widget = ({
         title,
         subtitle = "Sign up here to get the latest articles, news and updates.",
         btnText,
-        backgroundColor = "#eee",
+        backgroundColor,
         foregroundColor,
         btnBackgroundColor,
         btnForegroundColor,
@@ -109,14 +110,13 @@ const Widget = ({
                     />
                 </div>
                 <Button
-                    sx={{
+                    component="button"
+                    style={{
                         backgroundColor: btnBackgroundColor,
                         color: btnForegroundColor,
                     }}
                     type="submit"
                     disabled={state.networkAction}
-                    size="large"
-                    variant="contained"
                 >
                     {btnText || DEFAULT_BTN_TEXT}
                 </Button>

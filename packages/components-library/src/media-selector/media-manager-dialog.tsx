@@ -4,7 +4,6 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    Button,
     Grid,
     Checkbox,
     Typography,
@@ -27,6 +26,7 @@ import {
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
+import Button from "../button";
 
 const { useState } = React;
 
@@ -180,11 +180,7 @@ const MediaManagerDialog = (props: MediaManagerDialogProps) => {
                 {error && <Alert severity="error">{error}</Alert>}
                 {presignedUrl && (
                     <form onSubmit={onUpload} encType="multipart/form-data">
-                        <Button
-                            variant="outlined"
-                            component="label"
-                            color="primary"
-                        >
+                        <Button component="button" color="primary">
                             {strings.buttonAddFile || "Select a file"}
                             <input type="file" name="file" ref={fileInput} />
                         </Button>
@@ -218,11 +214,19 @@ const MediaManagerDialog = (props: MediaManagerDialogProps) => {
                 )}
             </DialogContent>
             <DialogActions>
-                <Button onClick={() => onClose()}>
+                <Button
+                    component="button"
+                    onClick={() => onClose()}
+                    variant="soft"
+                >
                     {strings.cancelCaption || "Cancel"}
                 </Button>
                 {presignedUrl && (
-                    <Button disabled={uploading} onClick={onUpload}>
+                    <Button
+                        disabled={uploading}
+                        component="button"
+                        onClick={onUpload}
+                    >
                         {uploading
                             ? strings.uploading || "Uploading..."
                             : strings.uploadButtonText || "Upload"}

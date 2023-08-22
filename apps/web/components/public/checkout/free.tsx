@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button } from "@mui/material";
+import { Button } from "@courselit/components-library";
 import { ENROLL_BUTTON_TEXT } from "../../../ui-config/strings";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
@@ -58,13 +58,7 @@ const Free = ({ course, auth, dispatch, address }: FreeProps) => {
     };
 
     return (
-        <Button
-            onClick={handleClick}
-            variant="contained"
-            color="primary"
-            disabled={disabled}
-            size="large"
-        >
+        <Button onClick={handleClick} component="button" disabled={disabled}>
             {ENROLL_BUTTON_TEXT}
         </Button>
     );

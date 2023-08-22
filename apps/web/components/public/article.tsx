@@ -1,5 +1,5 @@
 import React from "react";
-import { Typography, Grid, Chip, Button } from "@mui/material";
+import { Typography, Grid, Chip } from "@mui/material";
 import { formattedLocaleDate, isEnrolled } from "../../ui-lib/utils";
 import { connect } from "react-redux";
 import {
@@ -14,6 +14,7 @@ import { AppState } from "@courselit/state-management";
 import { Course, Profile, SiteInfo } from "@courselit/common-models";
 import { UIConstants as constants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
+import { Button } from "@courselit/components-library";
 
 const { permissions } = constants;
 
@@ -95,7 +96,7 @@ const Article = (props: ArticleProps) => {
                                         textDecoration: "none",
                                     }}
                                 >
-                                    <Button variant="contained" size="large">
+                                    <Button component="button">
                                         {ENROLL_BUTTON_TEXT}
                                     </Button>
                                 </Link>

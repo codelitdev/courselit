@@ -11,7 +11,7 @@ import {
 } from "@courselit/state-management";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
-import { Button, Checkbox, Grid, Typography } from "@mui/material";
+import { Checkbox, Grid, Typography } from "@mui/material";
 import { ChangeEvent, useState } from "react";
 import { connect } from "react-redux";
 import {
@@ -20,6 +20,7 @@ import {
     QUIZ_VIEWER_EVALUATE_BTN,
     QUIZ_VIEWER_EVALUATE_BTN_LOADING,
 } from "../../../ui-config/strings";
+import { Button } from "@courselit/components-library";
 
 const { networkAction } = actionCreators;
 
@@ -187,7 +188,12 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
                 </Grid>
             ))}
             <Grid item>
-                <Button type="submit" disabled={loading}>
+                <Button
+                    component="button"
+                    type="submit"
+                    disabled={loading}
+                    variant="soft"
+                >
                     {loading
                         ? QUIZ_VIEWER_EVALUATE_BTN_LOADING
                         : QUIZ_VIEWER_EVALUATE_BTN}

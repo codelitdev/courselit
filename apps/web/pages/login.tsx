@@ -6,7 +6,7 @@ import {
     ERROR_SIGNIN_GENERATING_LINK,
     SIGNIN_SUCCESS_PREFIX,
 } from "../ui-config/strings";
-import { Grid, TextField, Button, Typography } from "@mui/material";
+import { Grid, TextField, Typography } from "@mui/material";
 import { useRouter } from "next/router";
 import type { Address, Auth, State } from "@courselit/common-models";
 import { AppMessage } from "@courselit/common-models";
@@ -16,6 +16,7 @@ import type { ThunkDispatch } from "redux-thunk";
 import type { AnyAction } from "redux";
 import BaseLayout from "../components/public/base-layout";
 import { getBackendAddress, getPage } from "../ui-lib/utils";
+import { Button } from "@courselit/components-library";
 
 interface LoginProps {
     address: Address;
@@ -129,9 +130,8 @@ const Login = ({ address, auth, dispatch, progress, page }: LoginProps) => {
                             </Grid>
                             <Grid item>
                                 <Button
-                                    variant="outlined"
+                                    component="button"
                                     type="submit"
-                                    color="primary"
                                     disabled={progress || !email}
                                 >
                                     {BTN_LOGIN}

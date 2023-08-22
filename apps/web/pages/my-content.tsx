@@ -11,9 +11,9 @@ import {
 } from "../ui-config/strings";
 import { getBackendAddress, getPage } from "../ui-lib/utils";
 import type { Address, Auth, Page, Profile } from "@courselit/common-models";
-import { Button, Grid, Skeleton, Typography } from "@mui/material";
+import { Grid, Skeleton, Typography } from "@mui/material";
 import { FetchBuilder } from "@courselit/utils";
-import { Section } from "@courselit/components-library";
+import { Section, Button } from "@courselit/components-library";
 import Link from "next/link";
 import { checkPermission } from "@courselit/utils";
 import { UIConstants } from "@courselit/common-models";
@@ -125,7 +125,10 @@ function Account({ auth, page, profile, address }: AccountProps) {
                                         <Link
                                             href={`/course/${course.slug}/${course.courseId}`}
                                         >
-                                            <Button variant="contained">
+                                            <Button
+                                                component="link"
+                                                variant="soft"
+                                            >
                                                 {VISIT_COURSE_BUTTON}
                                             </Button>
                                         </Link>
