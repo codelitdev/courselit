@@ -1,5 +1,6 @@
 import * as React from "react";
-import { Button, IconButton, Menu as MuiMenu, MenuItem } from "@mui/material";
+import { Button, Menu as MuiMenu, MenuItem } from "@mui/material";
+import IconButton from "./icon-button";
 
 interface LinkOption {
     label: string;
@@ -58,13 +59,7 @@ export default function Menu(props: MenuProps) {
                 </Button>
             )}
             {"icon" in props && (
-                <IconButton
-                    id="menu-button"
-                    aria-controls={open ? "basic-menu" : undefined}
-                    aria-haspopup="true"
-                    aria-expanded={open ? "true" : undefined}
-                    onClick={handleClick}
-                >
+                <IconButton onClick={handleClick} variant="soft">
                     {open && (props.openIcon ? props.openIcon : props.icon)}
                     {!open && props.icon}
                 </IconButton>

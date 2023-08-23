@@ -1,8 +1,9 @@
 import { Edit } from "@courselit/icons";
-import { Button, Grid, IconButton, TextField, Typography } from "@mui/material";
+import { Grid, TextField, Typography } from "@mui/material";
 import { grey } from "@mui/material/colors";
 import React, { useState } from "react";
 import { Link } from "../settings";
+import { Button, IconButton } from "@courselit/components-library";
 
 interface LinkEditorProps {
     link: Link;
@@ -53,7 +54,7 @@ export default function LinkEditor({
                     </Grid>
                     <Grid item>
                         <IconButton
-                            size="small"
+                            variant="soft"
                             onClick={(e) => setEditing(true)}
                         >
                             <Edit />
@@ -79,24 +80,18 @@ export default function LinkEditor({
                             fullWidth
                         />
                     </Grid>
-                    <Grid item>
-                        <Grid container>
-                            <Grid item flexGrow={1}>
-                                <Button
-                                    onClick={deleteLink}
-                                    color="warning"
-                                    fullWidth
-                                >
-                                    Delete
-                                </Button>
-                            </Grid>
-                            <Grid item flexGrow={1}>
-                                <Button onClick={updateLink} fullWidth>
-                                    Done
-                                </Button>
-                            </Grid>
-                        </Grid>
-                    </Grid>
+                    <div className="flex gap-2 justify-end">
+                        <Button
+                            component="button"
+                            onClick={deleteLink}
+                            variant="soft"
+                        >
+                            Delete
+                        </Button>
+                        <Button onClick={updateLink} component="button">
+                            Done
+                        </Button>
+                    </div>
                 </Grid>
             )}
         </>

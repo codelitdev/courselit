@@ -1,15 +1,7 @@
 import React, { ChangeEvent } from "react";
 import { Question } from "@courselit/common-models";
 import { Delete, ExpandLess, ExpandMore } from "@courselit/icons";
-import {
-    Button,
-    Checkbox,
-    Grid,
-    IconButton,
-    TextField,
-    Tooltip,
-    Typography,
-} from "@mui/material";
+import { Checkbox, Grid, TextField, Tooltip, Typography } from "@mui/material";
 import { useState } from "react";
 import {
     LESSON_QUIZ_ADD_OPTION_BTN,
@@ -20,6 +12,7 @@ import {
     QUESTION_BUILDER_DELETE_TOOLTIP,
     QUESTION_BUILDER_EXPAND_TOOLTIP,
 } from "../../../../../../ui-config/strings";
+import { IconButton, Button } from "@courselit/components-library";
 
 interface QuestionProps {
     details: Question;
@@ -66,20 +59,26 @@ export function QuestionBuilder({
                         {`${LESSON_QUIZ_CONTENT_HEADER} #${index + 1}`}
                     </Typography>
                 </Grid>
-                <Grid item>
+                <div className="flex gap-1">
                     {index > 0 && (
                         <Tooltip title={QUESTION_BUILDER_DELETE_TOOLTIP}>
-                            <IconButton onClick={() => deleteQuestion(index)}>
+                            <IconButton
+                                variant="soft"
+                                onClick={() => deleteQuestion(index)}
+                            >
                                 <Delete />
                             </IconButton>
                         </Tooltip>
                     )}
                     <Tooltip title={QUESTION_BUILDER_EXPAND_TOOLTIP}>
-                        <IconButton onClick={() => setCollapsed(false)}>
+                        <IconButton
+                            variant="soft"
+                            onClick={() => setCollapsed(false)}
+                        >
                             <ExpandMore />
                         </IconButton>
                     </Tooltip>
-                </Grid>
+                </div>
             </Grid>
         );
     }
@@ -114,22 +113,26 @@ export function QuestionBuilder({
                             {`${LESSON_QUIZ_CONTENT_HEADER} #${index + 1}`}
                         </Typography>
                     </Grid>
-                    <Grid item>
+                    <div className="flex gap-1">
                         {index > 0 && (
                             <Tooltip title={QUESTION_BUILDER_DELETE_TOOLTIP}>
                                 <IconButton
                                     onClick={() => deleteQuestion(index)}
+                                    variant="soft"
                                 >
                                     <Delete />
                                 </IconButton>
                             </Tooltip>
                         )}
                         <Tooltip title={QUESTION_BUILDER_COLLAPSE_TOOLTIP}>
-                            <IconButton onClick={() => setCollapsed(true)}>
+                            <IconButton
+                                onClick={() => setCollapsed(true)}
+                                variant="soft"
+                            >
                                 <ExpandLess />
                             </IconButton>
                         </Tooltip>
-                    </Grid>
+                    </div>
                 </Grid>
             </Grid>
             <Grid item sx={{ marginBottom: 1 }}>
@@ -192,7 +195,10 @@ export function QuestionBuilder({
                         />
                     </Grid>
                     <Grid item>
-                        <IconButton onClick={() => removeOption(index)}>
+                        <IconButton
+                            onClick={() => removeOption(index)}
+                            variant="soft"
+                        >
                             <Delete />
                         </IconButton>
                     </Grid>
@@ -205,8 +211,9 @@ export function QuestionBuilder({
                 }}
             >
                 <Button
+                    component="button"
                     onClick={() => addNewOption()}
-                    variant="outlined"
+                    variant="soft"
                     tabIndex={0}
                 >
                     {LESSON_QUIZ_ADD_OPTION_BTN}

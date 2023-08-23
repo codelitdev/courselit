@@ -1,4 +1,3 @@
-import IconButton from "@mui/material/IconButton";
 import { Cross as Close } from "@courselit/icons";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
@@ -7,6 +6,7 @@ import ListItemText from "@mui/material/ListItemText";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import { EDIT_PAGE_HEADER_ALL_PAGES } from "../../../ui-config/strings";
+import { IconButton } from "@courselit/components-library";
 
 interface PagesListProps {
     pages: { pageId: string; name: string }[];
@@ -28,7 +28,7 @@ function PagesList({ pages, onClose }: PagesListProps) {
                         </Typography>
                     </Grid>
                     <Grid item>
-                        <IconButton onClick={onClose}>
+                        <IconButton onClick={onClose} variant="soft">
                             <Close fontSize="small" />
                         </IconButton>
                     </Grid>

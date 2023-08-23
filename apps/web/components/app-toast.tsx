@@ -1,9 +1,10 @@
 import React, { SyntheticEvent } from "react";
 import { connect } from "react-redux";
-import { Snackbar, IconButton, Button } from "@mui/material";
+import { Snackbar, Button } from "@mui/material";
 import { actionCreators } from "@courselit/state-management";
 import { Cross as Close } from "@courselit/icons";
 import type { AppDispatch, AppState } from "@courselit/state-management";
+import { IconButton } from "@courselit/components-library";
 
 const { clearAppMessage } = actionCreators;
 
@@ -37,12 +38,7 @@ const AppToast = (props: AppToastProps) => {
 
     const getActionButtonsArray = () => {
         const actionButtonsArray = [
-            <IconButton
-                key="close"
-                aria-label="close"
-                color="inherit"
-                onClick={handleClose}
-            >
+            <IconButton key="close" onClick={handleClose}>
                 <Close />
             </IconButton>,
         ];

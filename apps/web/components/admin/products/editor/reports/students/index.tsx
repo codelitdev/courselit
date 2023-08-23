@@ -23,7 +23,6 @@ import {
     Dialog,
     DialogContent,
     DialogTitle,
-    IconButton,
     ListItem,
     ListItemIcon,
     ListItemText,
@@ -41,6 +40,7 @@ import { Address } from "@courselit/common-models";
 import { Search, Circle, CheckCircled } from "@courselit/icons";
 import useCourse from "../../course-hook";
 import Link from "next/link";
+import { IconButton } from "@courselit/components-library";
 const { networkAction } = actionCreators;
 
 interface StudentsProps {
@@ -150,7 +150,7 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
                     fullWidth
                     InputProps={{
                         endAdornment: (
-                            <IconButton onClick={fetchStudents}>
+                            <IconButton onClick={fetchStudents} variant="soft">
                                 <Search />
                             </IconButton>
                         ),

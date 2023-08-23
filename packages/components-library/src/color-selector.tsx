@@ -1,6 +1,7 @@
 import * as React from "react";
-import { IconButton, Tooltip } from "@mui/material";
+import { Tooltip } from "@mui/material";
 import { Cross } from "@courselit/icons";
+import IconButton from "./icon-button";
 
 interface ColorSelectorProps {
     title: string;
@@ -23,7 +24,7 @@ export default function ColorSelector({
                     onChange={(e) => onChange(e.target.value)}
                 />
                 <Tooltip title="Reset" placement="right" arrow>
-                    <IconButton onClick={() => onChange()} size="small">
+                    <IconButton onClick={() => onChange()} variant="soft">
                         <Cross />
                     </IconButton>
                 </Tooltip>

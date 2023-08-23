@@ -7,8 +7,8 @@ import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 import { Typeface } from "@courselit/common-models";
 import { EDIT_PAGE_BUTTON_FONTS } from "../../../ui-config/strings";
-import IconButton from "@mui/material/IconButton";
 import { Cross as Close, Star } from "@courselit/icons";
+import { IconButton } from "@courselit/components-library";
 
 interface FontListProps {
     draftTypefaces: Typeface[];
@@ -59,7 +59,7 @@ function FontsList({
                         </Typography>
                     </Grid>
                     <Grid item>
-                        <IconButton onClick={onClose}>
+                        <IconButton onClick={onClose} variant="soft">
                             <Close fontSize="small" />
                         </IconButton>
                     </Grid>

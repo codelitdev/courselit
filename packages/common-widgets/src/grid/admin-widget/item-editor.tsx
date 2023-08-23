@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import Grid from "@mui/material/Grid";
 import { Item } from "../settings";
-import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
 import { MediaSelector, TextEditor } from "@courselit/components-library";
 import { Address, Auth, Media, Profile } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
+import { Button } from "@courselit/components-library";
 
 interface ItemProps {
     item: Item;
@@ -102,9 +102,9 @@ export default function ItemEditor({
                     <Grid item>
                         <Tooltip title="Delete">
                             <Button
-                                aria-label="delete"
-                                color="error"
+                                component="button"
                                 onClick={onDelete}
+                                variant="soft"
                             >
                                 Delete
                             </Button>
@@ -112,7 +112,7 @@ export default function ItemEditor({
                     </Grid>
                     <Grid item>
                         <Tooltip title="Go back">
-                            <Button aria-label="done" onClick={itemChanged}>
+                            <Button component="button" onClick={itemChanged}>
                                 Done
                             </Button>
                         </Tooltip>

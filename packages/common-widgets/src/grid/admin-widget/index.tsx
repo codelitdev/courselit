@@ -8,12 +8,12 @@ import {
     ColorSelector,
     Select,
     TextEditor,
+    Button,
 } from "@courselit/components-library";
 import {
     Grid,
     TextField,
     Typography,
-    Button,
     List,
     ListItem,
     ListItemButton,
@@ -271,7 +271,13 @@ export default function AdminWidget({
                         </List>
                     </Grid>
                     <Grid item sx={{ mb: 2 }}>
-                        <Button onClick={addNewItem}>Add new item</Button>
+                        <Button
+                            component="button"
+                            variant="soft"
+                            onClick={addNewItem}
+                        >
+                            Add new item
+                        </Button>
                     </Grid>
                     <Grid item>
                         <Select

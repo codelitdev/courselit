@@ -4,7 +4,6 @@ import Settings from "./settings";
 import {
     FormLabel,
     Grid,
-    IconButton,
     List,
     ListItem,
     ListItemText,
@@ -21,6 +20,7 @@ import {
 } from "@courselit/components-library";
 import { Delete } from "@courselit/icons";
 import { Alignment } from "@courselit/common-models";
+import { IconButton } from "@courselit/components-library";
 
 interface AdminWidgetProps {
     settings: Settings;
@@ -201,7 +201,7 @@ export default function AdminWidget({
                                                     onClick={() =>
                                                         removeProduct(product)
                                                     }
-                                                    size="small"
+                                                    variant="soft"
                                                 >
                                                     <Delete />
                                                 </IconButton>

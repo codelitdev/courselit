@@ -3,10 +3,10 @@ import {
     PageTypeSite,
     PageTypeBlog,
 } from "@courselit/common-models";
+import { IconButton } from "@courselit/components-library";
 import { Cross as Close } from "@courselit/icons";
 import {
     Grid,
-    IconButton,
     List,
     ListItem,
     ListItemButton,
@@ -38,7 +38,7 @@ function AddWidget({ pageType, onSelection, onClose }: WidgetsListProps) {
                                 </Typography>
                             </Grid>
                             <Grid item>
-                                <IconButton onClick={onClose}>
+                                <IconButton variant="soft" onClick={onClose}>
                                     <Close fontSize="small" />
                                 </IconButton>
                             </Grid>

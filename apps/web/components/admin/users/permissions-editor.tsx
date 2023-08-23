@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Grid, Typography, Checkbox, IconButton } from "@mui/material";
+import { Grid, Typography, Checkbox } from "@mui/material";
 import { ExpandLess, ExpandMore } from "@courselit/icons";
 import {
     PERM_COURSE_MANAGE,
@@ -22,6 +22,7 @@ import { actionCreators } from "@courselit/state-management";
 import { AppMessage } from "@courselit/common-models";
 import type { User, Auth, Address } from "@courselit/common-models";
 import { UIConstants } from "@courselit/common-models";
+import { IconButton } from "@courselit/components-library";
 
 const { networkAction, setAppMessage } = actionCreators;
 const { permissions } = UIConstants;
@@ -125,7 +126,7 @@ function PermissionsEditor({
                     <Typography variant="h4">{PERM_SECTION_HEADER}</Typography>
                 </Grid>
                 <Grid item>
-                    <IconButton onClick={toggleExpandedState} size="large">
+                    <IconButton onClick={toggleExpandedState} variant="soft">
                         {expanded ? <ExpandLess /> : <ExpandMore />}
                     </IconButton>
                 </Grid>

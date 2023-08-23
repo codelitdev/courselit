@@ -75,6 +75,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
             <Grid item>
                 <Button
                     component="button"
+                    variant="soft"
                     onClick={() => setDialogOpened(!dialogOpened)}
                 >
                     {strings.buttonCaption || "Select media"}

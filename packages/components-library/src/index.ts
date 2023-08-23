@@ -16,6 +16,7 @@ import LessonIcon from "./lesson-icon";
 import ColorSelector from "./color-selector";
 import AdminWidgetPanel from "./admin-widget-panel";
 import Button from "./button";
+import IconButton from "./icon-button";
 
 export {
     PriceTag,
@@ -35,4 +36,5 @@ export {
     ColorSelector,
     AdminWidgetPanel,
     Button,
+    IconButton,
 };
