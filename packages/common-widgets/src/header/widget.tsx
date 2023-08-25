@@ -36,7 +36,7 @@ export default function Widget({ state, settings }: WidgetProps) {
                         style={{
                             color: settings.logoColor || "inherit",
                         }}
-                        className="font-semibold text-2xl"
+                        className="font-bold text-2xl"
                     >
                         {state.siteinfo.title}
                     </p>
@@ -57,6 +57,7 @@ export default function Widget({ state, settings }: WidgetProps) {
                                 style={{
                                     color: settings.linkColor || "inherit",
                                 }}
+                                key={index}
                             >
                                 <NextLink href={link.href}>
                                     {link.label}

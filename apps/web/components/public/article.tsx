@@ -1,5 +1,4 @@
 import React from "react";
-import { Typography, Grid, Chip } from "@mui/material";
 import { formattedLocaleDate, isEnrolled } from "../../ui-lib/utils";
 import { connect } from "react-redux";
 import {
@@ -9,7 +8,6 @@ import {
     TextRenderer,
 } from "@courselit/components-library";
 import { ENROLL_BUTTON_TEXT, FREE_COST } from "../../ui-config/strings";
-import dynamic from "next/dynamic";
 import { AppState } from "@courselit/state-management";
 import { Course, Profile, SiteInfo } from "@courselit/common-models";
 import { UIConstants as constants } from "@courselit/common-models";
@@ -17,8 +15,6 @@ import { checkPermission } from "@courselit/utils";
 import { Button } from "@courselit/components-library";
 
 const { permissions } = constants;
-
-const BuyButton = dynamic(() => import("./checkout"));
 
 interface ArticleProps {
     course: Course;
@@ -36,26 +32,22 @@ const Article = (props: ArticleProps) => {
     const { course, options, profile } = props;
 
     return (
-        <Grid container component="article" direction="column" spacing={1}>
-            <Grid item component="header">
-                <Typography variant="h2">{course.title}</Typography>
-            </Grid>
-            {options.showAttribution && (
-                <Grid item container direction="column">
-                    <Grid item>
-                        <Typography variant="overline" component="p">
-                            <Link href={`/profile/${course.creatorId}`}>
-                                {course.creatorName}
-                            </Link>
-                        </Typography>
-                        <Typography variant="overline">
+        <div className="flex flex-col">
+            <header>
+                <h1 className="text-4xl font-semibold mb-4">{course.title}</h1>
+                {options.showAttribution && (
+                    <div className="flex flex-col mb-4">
+                        <Link href={`/profile/${course.creatorId}`}>
+                            <p className="font-medium">{course.creatorName}</p>
+                        </Link>
+                        <p className="font-light text-sm">
                             {formattedLocaleDate(course.updatedAt)}
-                        </Typography>
-                    </Grid>
-                </Grid>
-            )}
+                        </p>
+                    </div>
+                )}
+            </header>
             {course.featuredImage && (
-                <Grid item>
+                <div className="mt-4 mb-8">
                     <Image
                         alt={course.featuredImage.caption}
                         src={course.featuredImage.file!}
@@ -63,7 +55,7 @@ const Article = (props: ArticleProps) => {
                         sizes="80vw"
                         height={360}
                     />
-                </Grid>
+                </div>
             )}
             {options.showEnrollmentArea &&
                 (profile.fetched
@@ -72,44 +64,30 @@ const Article = (props: ArticleProps) => {
                           permissions.enrollInCourse,
                       ])
                     : true) && (
-                    <Grid item>
+                    <div>
                         <p>{profile.fetched}</p>
-                        <Grid
-                            container
-                            direction="row"
-                            justifyContent="space-between"
-                            alignItems="center"
-                        >
-                            <Grid item>
-                                <PriceTag
-                                    cost={course.cost}
-                                    freeCostCaption={FREE_COST}
-                                    currencyISOCode={
-                                        props.siteInfo.currencyISOCode as string
-                                    }
-                                />
-                            </Grid>
-                            <Grid>
-                                <Link
-                                    href={`/checkout/${course.courseId}`}
-                                    sxProps={{
-                                        textDecoration: "none",
-                                    }}
-                                >
-                                    <Button component="button">
-                                        {ENROLL_BUTTON_TEXT}
-                                    </Button>
-                                </Link>
-                            </Grid>
-                        </Grid>
-                    </Grid>
+                        <div className="flex justify-between items-center">
+                            <PriceTag
+                                cost={course.cost}
+                                freeCostCaption={FREE_COST}
+                                currencyISOCode={
+                                    props.siteInfo.currencyISOCode as string
+                                }
+                            />
+                            <Link
+                                href={`/checkout/${course.courseId}`}
+                                sxProps={{
+                                    textDecoration: "none",
+                                }}
+                            >
+                                <Button component="button">
+                                    {ENROLL_BUTTON_TEXT}
+                                </Button>
+                            </Link>
+                        </div>
+                    </div>
                 )}
-            <Grid
-                item
-                sx={{
-                    overflow: "hidden",
-                }}
-            >
+            <div className="overflow-hidden">
                 <TextRenderer
                     json={
                         course.description
@@ -117,7 +95,8 @@ const Article = (props: ArticleProps) => {
                             : { type: "doc" }
                     }
                 />
-            </Grid>
+            </div>
+            {/*
             {course.tags.length > 0 && (
                 <Grid item container alignItems="center" spacing={1}>
                     <Grid item>
@@ -132,7 +111,8 @@ const Article = (props: ArticleProps) => {
                     </Grid>
                 </Grid>
             )}
-        </Grid>
+            */}
+        </div>
     );
 };
 

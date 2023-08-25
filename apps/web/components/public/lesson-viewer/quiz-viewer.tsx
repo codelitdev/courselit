@@ -11,7 +11,7 @@ import {
 } from "@courselit/state-management";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
-import { Checkbox, Grid, Typography } from "@mui/material";
+import { Checkbox } from "@mui/material";
 import { ChangeEvent, useState } from "react";
 import { connect } from "react-redux";
 import {
@@ -125,81 +125,40 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
     };
 
     return (
-        <Grid container direction="column" component="form" onSubmit={evaluate}>
+        <form className="flex flex-col" onSubmit={evaluate}>
             {questions.map((question: Question, questionIndex: number) => (
-                <Grid
-                    item
-                    sx={{
-                        marginBottom: 1,
-                        paddingTop: 1,
-                        paddingBottom: 1,
-                        paddingRight: 2,
-                        paddingLeft: 2,
-                        border: "1px solid #eee",
-                        borderRadius: 3,
-                    }}
-                    component="fieldset"
+                <fieldset
+                    className="flex flex-col py-2 px-4 mb-4 border rounded border-slate-200"
                     key={questionIndex}
                 >
-                    <Grid container direction="column">
-                        <Grid
-                            item
-                            sx={{
-                                marginBottom: 1,
-                            }}
-                        >
-                            <Typography variant="h6" component="legend">
-                                {question.text}
-                            </Typography>
-                        </Grid>
-                        {question.options.map((option, index: number) => (
-                            <Grid item key={index}>
-                                <Grid
-                                    container
-                                    direction="row"
-                                    alignItems="center"
-                                    sx={{
-                                        marginBottom: 1,
-                                    }}
-                                >
-                                    <Grid item>
-                                        <Checkbox
-                                            checked={option.correctAnswer}
-                                            onChange={(
-                                                e: ChangeEvent<HTMLInputElement>
-                                            ) =>
-                                                setAnswerForQuestion(
-                                                    e.target.checked,
-                                                    questionIndex,
-                                                    index
-                                                )
-                                            }
-                                        />
-                                    </Grid>
-                                    <Grid item xs>
-                                        <Typography component="label">
-                                            {option.text}
-                                        </Typography>
-                                    </Grid>
-                                </Grid>
-                            </Grid>
-                        ))}
-                    </Grid>
-                </Grid>
+                    <h2 className="font-medium text-xl mb-2">
+                        {question.text}
+                    </h2>
+                    {question.options.map((option, index: number) => (
+                        <div className="flex items-center mb-2" key={index}>
+                            <Checkbox
+                                checked={option.correctAnswer}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                    setAnswerForQuestion(
+                                        e.target.checked,
+                                        questionIndex,
+                                        index
+                                    )
+                                }
+                            />
+                            <label>{option.text}</label>
+                        </div>
+                    ))}
+                </fieldset>
             ))}
-            <Grid item>
-                <Button
-                    component="button"
-                    type="submit"
-                    disabled={loading}
-                    variant="soft"
-                >
+            <div>
+                <Button component="button" type="submit" disabled={loading}>
                     {loading
                         ? QUIZ_VIEWER_EVALUATE_BTN_LOADING
                         : QUIZ_VIEWER_EVALUATE_BTN}
                 </Button>
-            </Grid>
-        </Grid>
+            </div>
+        </form>
     );
 }
 

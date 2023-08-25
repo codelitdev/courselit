@@ -6,7 +6,6 @@ import {
     TRANSACTION_INITIATED,
     TRANSACTION_SUCCESS,
 } from "../../ui-config/constants";
-import { Grid, Typography } from "@mui/material";
 import {
     TRANSACTION_STATUS_FAILED,
     TRANSACTION_STATUS_FAILED_DETAILS,
@@ -77,27 +76,17 @@ const PurchaseStatus = (props: PurchaseStatusProps) => {
     };
 
     return (
-        <Grid container>
+        <>
             {status === TRANSACTION_SUCCESS && (
-                <Grid item container direction="column" spacing={2}>
-                    <Grid item>
-                        <Typography variant="h5">
-                            {TRANSACTION_STATUS_SUCCESS}
-                        </Typography>
-                    </Grid>
-                    <Grid item>
-                        <Typography variant="body1" color="textSecondary">
-                            {TRANSACTION_STATUS_SUCCESS_DETAILS}
-                        </Typography>
-                    </Grid>
-                    <Grid item>
-                        <Link href={courseLink} legacyBehavior>
-                            <Button component="link">
-                                {VISIT_COURSE_BUTTON}
-                            </Button>
-                        </Link>
-                    </Grid>
-                </Grid>
+                <div>
+                    <h3 className="text-lg font-semibold mb-2">
+                        {TRANSACTION_STATUS_SUCCESS}
+                    </h3>
+                    <p className="mb-2">{TRANSACTION_STATUS_SUCCESS_DETAILS}</p>
+                    <Link href={courseLink} legacyBehavior>
+                        <Button component="link">{VISIT_COURSE_BUTTON}</Button>
+                    </Link>
+                </div>
             )}
             {status === TRANSACTION_INITIATED && (
                 <>
@@ -106,57 +95,39 @@ const PurchaseStatus = (props: PurchaseStatusProps) => {
                             <AppLoader />
                         </>
                     ) : (
-                        <Grid item container direction="column" spacing={2}>
-                            <Grid item>
-                                <Typography variant="h5">
-                                    {TRANSACTION_STATUS_INITIATED}
-                                </Typography>
-                            </Grid>
-                            <Grid item>
-                                <Typography variant="subtitle2">
-                                    {PURCHASE_ID_HEADER}: {id}
-                                </Typography>
-                            </Grid>
-                            <Grid item>
-                                <Button
-                                    component="button"
-                                    onClick={getPaymentStatus}
-                                    disabled={props.loading}
-                                >
-                                    {VERIFY_PAYMENT_BUTTON}
-                                </Button>
-                            </Grid>
-                        </Grid>
+                        <div>
+                            <h3 className="text-lg font-semibold mb-2">
+                                {TRANSACTION_STATUS_INITIATED}
+                            </h3>
+                            <p className="text-sm mb-8">
+                                {PURCHASE_ID_HEADER}: {id}
+                            </p>
+                            <Button
+                                component="button"
+                                onClick={getPaymentStatus}
+                                disabled={props.loading}
+                            >
+                                {VERIFY_PAYMENT_BUTTON}
+                            </Button>
+                        </div>
                     )}
                 </>
             )}
             {status === TRANSACTION_FAILED && (
-                <Grid item container direction="column" spacing={2}>
-                    <Grid item>
-                        <Typography variant="h5">
-                            {TRANSACTION_STATUS_FAILED}
-                        </Typography>
-                    </Grid>
-                    <Grid item>
-                        <Typography variant="body1" color="textSecondary">
-                            {TRANSACTION_STATUS_FAILED_DETAILS}
-                        </Typography>
-                    </Grid>
-                    <Grid item>
-                        <Typography variant="subtitle2">
-                            {PURCHASE_ID_HEADER}: {id}
-                        </Typography>
-                    </Grid>
-                    <Grid item>
-                        <Link href={courseLink} legacyBehavior>
-                            <Button component="link">
-                                {VISIT_COURSE_BUTTON}
-                            </Button>
-                        </Link>
-                    </Grid>
-                </Grid>
+                <div>
+                    <h3 className="text-lg font-semibold mb-2">
+                        {TRANSACTION_STATUS_FAILED}
+                    </h3>
+                    <p className="mb-2">{TRANSACTION_STATUS_FAILED_DETAILS}</p>
+                    <p className="text-sm mb-8">
+                        {PURCHASE_ID_HEADER}: {id}
+                    </p>
+                    <Link href={courseLink} legacyBehavior>
+                        <Button component="link">{VISIT_COURSE_BUTTON}</Button>
+                    </Link>
+                </div>
             )}
-        </Grid>
+        </>
     );
 };
 

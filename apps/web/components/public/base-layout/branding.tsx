@@ -1,9 +1,4 @@
-/**
- * A component that shows site's logo and name.
- */
-
 import React from "react";
-import { Grid, Typography } from "@mui/material";
 import { connect } from "react-redux";
 import type { AppState } from "@courselit/state-management";
 import { Image, Link } from "@courselit/components-library";
@@ -15,8 +10,8 @@ interface BrandingProps {
 
 const Branding = ({ siteinfo }: BrandingProps) => {
     return (
-        <Grid container alignItems="center">
-            <Grid item sx={{ mr: 1 }}>
+        <div className="flex items-center">
+            <div className="mr-2">
                 <Link
                     href="/"
                     sxProps={{
@@ -28,13 +23,12 @@ const Branding = ({ siteinfo }: BrandingProps) => {
                         src={siteinfo.logo.file}
                         width={36}
                         height={36}
+                        alt=""
                     />
                 </Link>
-            </Grid>
-            <Grid item>
-                <Typography variant="h5">{siteinfo.title}</Typography>
-            </Grid>
-        </Grid>
+            </div>
+            <p className="text-2xl font-bold">{siteinfo.title}</p>
+        </div>
     );
 };
 
