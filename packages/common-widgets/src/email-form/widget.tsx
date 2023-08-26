@@ -13,6 +13,9 @@ import {
 } from "./constants";
 import type { AppState, AppDispatch } from "@courselit/state-management";
 import { Button } from "@courselit/components-library";
+import { Form } from "@courselit/components-library";
+import { FormField } from "@courselit/components-library";
+import { FormSubmit } from "@courselit/components-library";
 
 export interface WidgetProps {
     settings: Settings;
@@ -88,7 +91,7 @@ const Widget = ({
     };
 
     return (
-        <form onSubmit={onSubmit}>
+        <Form onSubmit={onSubmit}>
             <div
                 className="flex flex-col p-4"
                 style={{
@@ -100,28 +103,29 @@ const Widget = ({
                 <h2 className="text-4xl mb-4">{title || DEFAULT_TITLE}</h2>
                 {subtitle && <h3 className="mb-4">{subtitle}</h3>}
                 <div className="mb-4">
-                    <TextField
+                    <FormField
                         label="Email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Enter your email"
                         type="email"
                         required
+                        messages={[
+                            {match: "valueMissing", text: "Your email is required"},
+                            {match: "typeMismatch", text: "Invalid email"}
+                        ]}
                     />
                 </div>
-                <Button
-                    component="button"
+                <FormSubmit
                     style={{
                         backgroundColor: btnBackgroundColor,
                         color: btnForegroundColor,
                     }}
-                    type="submit"
                     disabled={state.networkAction}
-                >
-                    {btnText || DEFAULT_BTN_TEXT}
-                </Button>
+                    text={btnText || DEFAULT_BTN_TEXT}
+                />
             </div>
-        </form>
+        </Form>
     );
 };
 

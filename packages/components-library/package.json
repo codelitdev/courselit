@@ -59,6 +59,7 @@
         "@courselit/state-management": "workspace:^",
         "@courselit/text-editor": "workspace:^",
         "@courselit/utils": "workspace:^",
+        "@radix-ui/react-form": "^0.0.3",
         "currency-symbol-map": "^5.1.0"
     }
 }

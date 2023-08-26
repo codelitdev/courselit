@@ -17,6 +17,9 @@ import ColorSelector from "./color-selector";
 import AdminWidgetPanel from "./admin-widget-panel";
 import Button from "./button";
 import IconButton from "./icon-button";
+import Form from "./form";
+import FormField from "./form-field";
+import FormSubmit from "./form-submit";
 
 export {
     PriceTag,
@@ -37,4 +40,7 @@ export {
     AdminWidgetPanel,
     Button,
     IconButton,
+    Form,
+    FormField,
+    FormSubmit
 };
