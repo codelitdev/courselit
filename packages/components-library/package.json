@@ -46,10 +46,10 @@
     },
     "peerDependencies": {
         "@mui/material": "^5.9.2",
-        "next": "^13.4.4",
+        "next": "^13.4.11",
         "react": "^18.2.0",
-        "react-redux": "^8.0.1",
-        "redux": "^4.2.0",
+        "react-redux": "^8.1.2",
+        "redux": "^4.2.1",
         "redux-thunk": "^2.4.1"
     },
     "gitHead": "fca7d2f8455c835f1c185a1ebc8513c6269ebe5b",
@@ -59,6 +59,7 @@
         "@courselit/state-management": "workspace:^",
         "@courselit/text-editor": "workspace:^",
         "@courselit/utils": "workspace:^",
+        "@radix-ui/react-alert-dialog": "^1.0.4",
         "@radix-ui/react-form": "^0.0.3",
         "currency-symbol-map": "^5.1.0"
     }
