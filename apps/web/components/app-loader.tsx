@@ -1,10 +1,8 @@
 import React from "react";
-import { CircularProgress } from '@courselit/components-library'
+import { CircularProgress } from "@courselit/components-library";
 
 const AppLoader = () => {
-    return (
-        <CircularProgress />
-    );
+    return <CircularProgress />;
 };
 
 export default AppLoader;

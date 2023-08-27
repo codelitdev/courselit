@@ -8,7 +8,7 @@ interface SectionProps {
 const Section = ({ className = "", children }: SectionProps) => {
     return (
         <section
-            className={`flex flex-col border rounded border-slate-200 ${className}`}
+            className={`flex flex-col border rounded border-slate-200 p-4 ${className}`}
         >
             {children}
         </section>

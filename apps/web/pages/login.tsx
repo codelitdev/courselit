@@ -6,9 +6,7 @@ import {
     ERROR_SIGNIN_GENERATING_LINK,
     SIGNIN_SUCCESS_PREFIX,
     LOGIN_SECTION_EMAIL_INVALID,
-    LOGIN_SECTION_EMAIL_MISSING,
 } from "../ui-config/strings";
-import { Grid, TextField, Typography } from "@mui/material";
 import { useRouter } from "next/router";
 import type { Address, Auth, State } from "@courselit/common-models";
 import { AppMessage } from "@courselit/common-models";
@@ -18,12 +16,7 @@ import type { ThunkDispatch } from "redux-thunk";
 import type { AnyAction } from "redux";
 import BaseLayout from "../components/public/base-layout";
 import { getBackendAddress, getPage } from "../ui-lib/utils";
-import {
-    Button,
-    Form,
-    FormField,
-    FormSubmit,
-} from "@courselit/components-library";
+import { Form, FormField, FormSubmit } from "@courselit/components-library";
 
 interface LoginProps {
     address: Address;

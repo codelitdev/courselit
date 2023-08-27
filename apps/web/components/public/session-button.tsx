@@ -19,15 +19,11 @@ function SessionButton(props: SessionButtonProps) {
         <>
             {props.auth.guest ? (
                 <Link href="/login">
-                    <Button component="button">
-                        {GENERIC_SIGNIN_TEXT}
-                    </Button>
+                    <Button component="button">{GENERIC_SIGNIN_TEXT}</Button>
                 </Link>
             ) : (
                 <Link href="/logout">
-                    <Button component="button">
-                        {GENERIC_SIGNOUT_TEXT}
-                    </Button>
+                    <Button component="button">{GENERIC_SIGNOUT_TEXT}</Button>
                 </Link>
             )}
         </>

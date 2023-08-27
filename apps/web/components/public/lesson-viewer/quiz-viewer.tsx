@@ -19,7 +19,7 @@ import {
     QUIZ_VIEWER_EVALUATE_BTN,
     QUIZ_VIEWER_EVALUATE_BTN_LOADING,
 } from "../../../ui-config/strings";
-import { Button, Form, FormSubmit } from "@courselit/components-library";
+import { Form, FormSubmit } from "@courselit/components-library";
 
 const { networkAction } = actionCreators;
 
@@ -135,7 +135,8 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
                     </h2>
                     {question.options.map((option, index: number) => (
                         <div className="flex items-center mb-2" key={index}>
-                            <input type="checkbox"
+                            <input
+                                type="checkbox"
                                 className="mr-2"
                                 checked={option.correctAnswer}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
@@ -152,11 +153,14 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
                 </fieldset>
             ))}
             <div>
-                <FormSubmit disabled={loading}
-                    text={loading
-                        ? QUIZ_VIEWER_EVALUATE_BTN_LOADING
-                        : QUIZ_VIEWER_EVALUATE_BTN}>
-                </FormSubmit>
+                <FormSubmit
+                    disabled={loading}
+                    text={
+                        loading
+                            ? QUIZ_VIEWER_EVALUATE_BTN_LOADING
+                            : QUIZ_VIEWER_EVALUATE_BTN
+                    }
+                ></FormSubmit>
             </div>
         </Form>
     );

@@ -44,5 +44,5 @@ export {
     Form,
     FormField,
     FormSubmit,
-    CircularProgress
+    CircularProgress,
 };

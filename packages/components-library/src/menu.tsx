@@ -1,6 +1,7 @@
 import * as React from "react";
-import { Button, Menu as MuiMenu, MenuItem } from "@mui/material";
+import { Menu as MuiMenu, MenuItem } from "@mui/material";
 import IconButton from "./icon-button";
+import Button from "./button";
 
 interface LinkOption {
     label: string;
@@ -21,12 +22,14 @@ interface MenuWithButton {
     options: Option[];
     label: string;
     buttonColor?: string;
+    style?: Record<string, string>;
 }
 
 interface MenuWithIconButton {
     options: Option[];
     icon: any;
     openIcon?: any;
+    style?: Record<string, string>;
 }
 
 type MenuProps = MenuWithButton | MenuWithIconButton;
@@ -46,20 +49,20 @@ export default function Menu(props: MenuProps) {
         <div>
             {"label" in props && (
                 <Button
+                    component="button"
                     id="menu-button"
-                    aria-controls={open ? "basic-menu" : undefined}
-                    aria-haspopup="true"
-                    aria-expanded={open ? "true" : undefined}
                     onClick={handleClick}
-                    sx={{
-                        color: props.buttonColor || "inherit",
-                    }}
+                    style={{ ...props.style }}
                 >
                     {props.label}
                 </Button>
             )}
             {"icon" in props && (
-                <IconButton onClick={handleClick} variant="soft">
+                <IconButton
+                    onClick={handleClick}
+                    variant="soft"
+                    style={{ ...props.style }}
+                >
                     {open && (props.openIcon ? props.openIcon : props.icon)}
                     {!open && props.icon}
                 </IconButton>

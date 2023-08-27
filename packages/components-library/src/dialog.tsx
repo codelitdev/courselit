@@ -4,9 +4,9 @@ import {
     Dialog,
     DialogTitle,
     DialogActions,
-    Button,
     DialogContent,
 } from "@mui/material";
+import Button from "./button";
 
 interface Action {
     name: string;
@@ -28,7 +28,11 @@ const AppDialog = (props: AppDialogProps) => {
     if (props.actions) {
         for (const action of props.actions) {
             dialogActions.push(
-                <Button onClick={action.callback} key={action.name}>
+                <Button
+                    component="button"
+                    onClick={action.callback}
+                    key={action.name}
+                >
                     {action.name}
                 </Button>
             );

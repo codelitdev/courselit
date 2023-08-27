@@ -5,10 +5,17 @@ interface ButtonProps {
     className?: string;
     onClick: (...args: any[]) => any;
     variant?: "soft" | "classic";
+    style?: Record<string, string>;
 }
 
 export default function IconButton(props: ButtonProps) {
-    const { children, className = "", onClick, variant = "classic" } = props;
+    const {
+        children,
+        className = "",
+        onClick,
+        variant = "classic",
+        style,
+    } = props;
     let commonClasses =
         "flex items-center gap-1 p-1 rounded disabled:pointer-events-none";
 
@@ -21,7 +28,11 @@ export default function IconButton(props: ButtonProps) {
     }
 
     return (
-        <button className={`${commonClasses} ${className}`} onClick={onClick}>
+        <button
+            className={`${commonClasses} ${className}`}
+            onClick={onClick}
+            style={{ ...style }}
+        >
             {children}
         </button>
     );

@@ -2,7 +2,7 @@ import React from "react";
 import { Avatar } from "@mui/material";
 import Settings, { Link } from "./settings";
 import { Image, Menu } from "@courselit/components-library";
-import { Cross as Close, Menu as MenuIcon } from "@courselit/icons";
+import { Cross as Close, Menu as MenuIcon, Person } from "@courselit/icons";
 import { State, UIConstants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
 import NextLink from "next/link";
@@ -68,24 +68,12 @@ export default function Widget({ state, settings }: WidgetProps) {
             </div>
             <div className="lg:hidden">
                 <Menu
-                    icon={
-                        <div
-                            style={{
-                                color: settings.loginBtnBgColor || "inherit",
-                            }}
-                        >
-                            <MenuIcon />
-                        </div>
-                    }
-                    openIcon={
-                        <div
-                            style={{
-                                color: settings.loginBtnBgColor || "inherit",
-                            }}
-                        >
-                            <Close />
-                        </div>
-                    }
+                    icon={<MenuIcon />}
+                    style={{
+                        color: settings.loginBtnColor || "inherit",
+                        backgroundColor: settings.loginBtnBgColor || "inherit",
+                    }}
+                    openIcon={<Close />}
                     options={[
                         ...(settings.links
                             ? settings.links.map((link) => ({
@@ -138,20 +126,11 @@ export default function Widget({ state, settings }: WidgetProps) {
             </div>
             <div className="hidden lg:!block">
                 <Menu
-                    icon={
-                        <Avatar
-                            sx={{
-                                width: 32,
-                                height: 32,
-                                color: settings.loginBtnColor || "inherit",
-                                bgcolor: settings.loginBtnBgColor || "inherit",
-                            }}
-                        >
-                            {state.profile.fetched
-                                ? state.profile.email.charAt(0).toUpperCase()
-                                : undefined}
-                        </Avatar>
-                    }
+                    icon={<Person />}
+                    style={{
+                        color: settings.loginBtnColor || "inherit",
+                        backgroundColor: settings.loginBtnBgColor || "inherit",
+                    }}
                     options={[
                         state.profile.fetched &&
                         checkPermission(state.profile.permissions, [
