@@ -20,6 +20,7 @@ import IconButton from "./icon-button";
 import Form from "./form";
 import FormField from "./form-field";
 import FormSubmit from "./form-submit";
+import CircularProgress from "./circular-progress";
 
 export {
     PriceTag,
@@ -43,4 +44,5 @@ export {
     Form,
     FormField,
     FormSubmit,
+    CircularProgress
 };

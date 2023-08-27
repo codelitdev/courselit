@@ -7,7 +7,6 @@ import {
     Select as SingleSelect,
     Typography,
 } from "@mui/material";
-import IconButton from "./icon-button";
 
 interface Option {
     label: string;

@@ -4,12 +4,7 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    Grid,
-    Checkbox,
-    Typography,
-    TextField,
 } from "@mui/material";
-import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import Dialog from "@mui/material/Dialog";
 import {
@@ -27,6 +22,7 @@ import {
 } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
 import Button from "../button";
+import CircularProgress from "../circular-progress";
 
 const { useState } = React;
 
