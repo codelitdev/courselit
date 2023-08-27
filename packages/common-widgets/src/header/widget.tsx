@@ -49,7 +49,7 @@ export default function Widget({ state, settings }: WidgetProps) {
                         : "justify-start"
                 }`}
             >
-                <div className="lg:block hidden">
+                <div className="lg:!block hidden">
                     {settings.links &&
                         (settings.links as Link[]).map((link: Link, index) => (
                             <span
@@ -136,7 +136,7 @@ export default function Widget({ state, settings }: WidgetProps) {
                     ]}
                 />
             </div>
-            <div className="lg:block hidden">
+            <div className="hidden lg:!block">
                 <Menu
                     icon={
                         <Avatar

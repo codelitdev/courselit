@@ -1,18 +1,46 @@
 import * as React from "react";
-import { Control, CustomMatcher, Field, Label, Message } from "@radix-ui/react-form";
+import {
+    Control,
+    CustomMatcher,
+    Field,
+    Label,
+    Message,
+} from "@radix-ui/react-form";
 
 interface Message {
     text: string;
-    match: "valueMissing" | "valid" | "typeMismatch" | "tooShort" | "tooLong" | "stepMismatch" | "rangeUnderflow" | "rangeOverflow" | "patternMismatch" | "badInput" | CustomMatcher; 
+    match:
+        | "valueMissing"
+        | "valid"
+        | "typeMismatch"
+        | "tooShort"
+        | "tooLong"
+        | "stepMismatch"
+        | "rangeUnderflow"
+        | "rangeOverflow"
+        | "patternMismatch"
+        | "badInput"
+        | CustomMatcher;
 }
 
 export interface FormFieldProps {
     label: string;
     component?: "input" | "textarea";
-    type?: "email" | "number" | "file" | "color" | "checkbox" | "hidden" | "range" | "submit" | "text" | "url";
+    type?:
+        | "email"
+        | "number"
+        | "file"
+        | "color"
+        | "checkbox"
+        | "hidden"
+        | "range"
+        | "submit"
+        | "text"
+        | "url";
     messages?: Message[];
     [key: string]: any;
     name?: string;
+    className?: string;
 }
 
 export default function FormField({
@@ -21,27 +49,31 @@ export default function FormField({
     type = "text",
     messages,
     name,
+    className = "",
     ...componentProps
 }: FormFieldProps) {
-    const controlClasses = "border border-black hover:border-slate-500 rounded py-1 px-2 outline-none hover:shadow-[0_0_0_1px_grey] focus:shadow-[0_0_0_2px_grey]" 
+    const controlClasses =
+        "w-full border border-slate-300 hover:border-slate-400 rounded py-1 px-2 outline-none focus:border-slate-600";
     const Component = component;
 
     return (
-            <Field name={name}>
-                <div className="flex items-baseline justify-between">
-                    <Label className="mb-1 font-medium">{label}</Label>
-                    {messages && messages.map(message => 
-                        <Message className="text-sm" match={message.match}>
+        <Field className={`flex flex-col ${className}`} name={name}>
+            <div className="flex items-baseline justify-between">
+                <Label className="mb-1 font-medium">{label}</Label>
+                {messages &&
+                    messages.map((message) => (
+                        <Message className="text-xs" match={message.match}>
                             {message.text}
                         </Message>
-                    )}
-                </div>
-                <Control asChild>
-                    <Component
-                        className={controlClasses}
-                        type={type}
-                        {...componentProps} />
-                </Control>
-            </Field>
-    )
+                    ))}
+            </div>
+            <Control asChild>
+                <Component
+                    className={controlClasses}
+                    type={type}
+                    {...componentProps}
+                />
+            </Control>
+        </Field>
+    );
 }

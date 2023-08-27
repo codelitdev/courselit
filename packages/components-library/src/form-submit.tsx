@@ -10,7 +10,9 @@ interface FormSubmitProps {
 export default function FormSubmit({ text, ...other }: FormSubmitProps) {
     return (
         <Submit asChild>
-            <Button component="button" {...other}>{text}</Button>
+            <Button component="button" {...other}>
+                {text}
+            </Button>
         </Submit>
-    )
+    );
 }

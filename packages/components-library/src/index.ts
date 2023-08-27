@@ -42,5 +42,5 @@ export {
     IconButton,
     Form,
     FormField,
-    FormSubmit
+    FormSubmit,
 };

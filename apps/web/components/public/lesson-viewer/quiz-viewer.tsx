@@ -11,7 +11,6 @@ import {
 } from "@courselit/state-management";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
-import { Checkbox } from "@mui/material";
 import { ChangeEvent, useState } from "react";
 import { connect } from "react-redux";
 import {
@@ -20,7 +19,7 @@ import {
     QUIZ_VIEWER_EVALUATE_BTN,
     QUIZ_VIEWER_EVALUATE_BTN_LOADING,
 } from "../../../ui-config/strings";
-import { Button } from "@courselit/components-library";
+import { Button, Form, FormSubmit } from "@courselit/components-library";
 
 const { networkAction } = actionCreators;
 
@@ -125,7 +124,7 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
     };
 
     return (
-        <form className="flex flex-col" onSubmit={evaluate}>
+        <Form onSubmit={evaluate}>
             {questions.map((question: Question, questionIndex: number) => (
                 <fieldset
                     className="flex flex-col py-2 px-4 mb-4 border rounded border-slate-200"
@@ -136,7 +135,8 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
                     </h2>
                     {question.options.map((option, index: number) => (
                         <div className="flex items-center mb-2" key={index}>
-                            <Checkbox
+                            <input type="checkbox"
+                                className="mr-2"
                                 checked={option.correctAnswer}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
                                     setAnswerForQuestion(
@@ -152,13 +152,13 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
                 </fieldset>
             ))}
             <div>
-                <Button component="button" type="submit" disabled={loading}>
-                    {loading
+                <FormSubmit disabled={loading}
+                    text={loading
                         ? QUIZ_VIEWER_EVALUATE_BTN_LOADING
-                        : QUIZ_VIEWER_EVALUATE_BTN}
-                </Button>
+                        : QUIZ_VIEWER_EVALUATE_BTN}>
+                </FormSubmit>
             </div>
-        </form>
+        </Form>
     );
 }
 

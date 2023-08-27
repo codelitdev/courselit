@@ -111,8 +111,11 @@ const Widget = ({
                         type="email"
                         required
                         messages={[
-                            {match: "valueMissing", text: "Your email is required"},
-                            {match: "typeMismatch", text: "Invalid email"}
+                            {
+                                match: "valueMissing",
+                                text: "Your email is required",
+                            },
+                            { match: "typeMismatch", text: "Invalid email" },
                         ]}
                     />
                 </div>

@@ -5,6 +5,8 @@ import {
     LOGIN_SECTION_HEADER,
     ERROR_SIGNIN_GENERATING_LINK,
     SIGNIN_SUCCESS_PREFIX,
+    LOGIN_SECTION_EMAIL_INVALID,
+    LOGIN_SECTION_EMAIL_MISSING,
 } from "../ui-config/strings";
 import { Grid, TextField, Typography } from "@mui/material";
 import { useRouter } from "next/router";
@@ -16,7 +18,12 @@ import type { ThunkDispatch } from "redux-thunk";
 import type { AnyAction } from "redux";
 import BaseLayout from "../components/public/base-layout";
 import { getBackendAddress, getPage } from "../ui-lib/utils";
-import { Button } from "@courselit/components-library";
+import {
+    Button,
+    Form,
+    FormField,
+    FormSubmit,
+} from "@courselit/components-library";
 
 interface LoginProps {
     address: Address;
@@ -107,40 +114,35 @@ const Login = ({ address, auth, dispatch, progress, page }: LoginProps) => {
 
     return (
         <BaseLayout title={LOGIN_SECTION_HEADER} layout={page.layout}>
-            <Grid container direction="row" sx={{ p: 2, minHeight: "80vh" }}>
-                <Grid item xs={12}>
-                    <form onSubmit={requestMagicLink}>
-                        <Grid container direction="column" spacing={1}>
-                            <Grid item>
-                                <Typography variant="h4">
-                                    {LOGIN_SECTION_HEADER}
-                                </Typography>
-                            </Grid>
-                            <Grid item>
-                                <TextField
-                                    type="email"
-                                    value={email}
-                                    variant="outlined"
-                                    label="Email"
-                                    fullWidth
-                                    margin="normal"
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                />
-                            </Grid>
-                            <Grid item>
-                                <Button
-                                    component="button"
-                                    type="submit"
-                                    disabled={progress || !email}
-                                >
-                                    {BTN_LOGIN}
-                                </Button>
-                            </Grid>
-                        </Grid>
-                    </form>
-                </Grid>
-            </Grid>
+            <Form onSubmit={requestMagicLink}>
+                <div className="p-4">
+                    <h1 className="text-4xl font-semibold mb-4">
+                        {LOGIN_SECTION_HEADER}
+                    </h1>
+                    <div className="mb-4">
+                        <FormField
+                            type="email"
+                            value={email}
+                            variant="outlined"
+                            label="Email"
+                            fullWidth
+                            margin="normal"
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            messages={[
+                                {
+                                    match: "typeMismatch",
+                                    text: LOGIN_SECTION_EMAIL_INVALID,
+                                },
+                            ]}
+                        />
+                    </div>
+                    <FormSubmit
+                        text={BTN_LOGIN}
+                        disabled={progress || !email}
+                    />
+                </div>
+            </Form>
         </BaseLayout>
     );
 };
