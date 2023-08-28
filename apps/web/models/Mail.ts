@@ -23,7 +23,7 @@ const MailSchema = new mongoose.Schema<Mail>(
     },
     {
         timestamps: true,
-    }
+    },
 );
 
 export default mongoose.models.Mail || mongoose.model("Mail", MailSchema);

@@ -4,9 +4,23 @@ import NextLink from "next/link";
 interface LinkProps {
     href: string;
     children?: React.ReactNode;
-    sxProps?: Record<string, unknown>;
+    openInSameTab?: boolean;
 }
 
-export default function Link({ href, children }: LinkProps) {
-    return <NextLink href={href}>{children}</NextLink>;
+export default function Link({ href, children, openInSameTab }: LinkProps) {
+    const isInternal = href.startsWith("/");
+
+    return isInternal ? (
+        <NextLink href={href} style={{ flexGrow: 1 }}>
+            {children}
+        </NextLink>
+    ) : (
+        <a
+            href={href}
+            target={openInSameTab ? "_self" : "_blank"}
+            style={{ flexGrow: 1 }}
+        >
+            {children}
+        </a>
+    );
 }

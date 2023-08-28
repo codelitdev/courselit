@@ -67,7 +67,7 @@ const Image = (props: ImgProps) => {
                 src={source}
                 placeholder="blur"
                 blurDataURL={`data:image/svg+xml;base64,${toBase64(
-                    shimmer(700, 475)
+                    shimmer(700, 475),
                 )}`}
                 alt={alt}
                 priority={loading === "eager" ? true : false}

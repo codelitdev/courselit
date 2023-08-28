@@ -27,7 +27,7 @@ const { permissions, quiz } = constants;
 
 const getLessonOrThrow = async (
     id: string,
-    ctx: GQLContext
+    ctx: GQLContext,
 ): Promise<Lesson> => {
     checkIfAuthenticated(ctx);
 
@@ -75,7 +75,7 @@ export const getLessonDetails = async (id: string, ctx: GQLContext) => {
         lesson.requiresEnrollment &&
         (!ctx.user ||
             !ctx.user.purchases.some(
-                (purchase: Progress) => purchase.courseId === lesson.courseId
+                (purchase: Progress) => purchase.courseId === lesson.courseId,
             ))
     ) {
         throw new Error(responses.not_enrolled);
@@ -84,7 +84,7 @@ export const getLessonDetails = async (id: string, ctx: GQLContext) => {
     const { prevLesson, nextLesson } = await getPrevNextCursor(
         lesson.courseId,
         ctx.subdomain._id,
-        lesson.lessonId
+        lesson.lessonId,
     );
     lesson.prevLesson = prevLesson;
     lesson.nextLesson = nextLesson;
@@ -114,7 +114,7 @@ export type LessonWithStringContent = Omit<Lesson, "content"> & {
 
 export const createLesson = async (
     lessonData: LessonWithStringContent,
-    ctx: GQLContext
+    ctx: GQLContext,
 ) => {
     checkIfAuthenticated(ctx);
     if (!checkPermission(ctx.user.permissions, [permissions.manageCourse])) {
@@ -164,7 +164,7 @@ export const updateLesson = async (
         | "requiresEnrollment"
         | "type"
     > & { id: string },
-    ctx: GQLContext
+    ctx: GQLContext,
 ) => {
     let lesson = await getLessonOrThrow(lessonData.id, ctx);
 
@@ -226,7 +226,7 @@ export const getAllLessons = async (course: Course, ctx: GQLContext) => {
             courseId: 1,
             groupId: 1,
             groupRank: 1,
-        }
+        },
     );
 
     return lessons;
@@ -242,7 +242,7 @@ export const deleteAllLessons = async (courseId: string, ctx: GQLContext) => {
         },
         {
             mediaId: 1,
-        }
+        },
     );
     for (let media of allLessonsWithMedia) {
         await deleteMedia(media.mediaId);
@@ -255,7 +255,7 @@ export const deleteAllLessons = async (courseId: string, ctx: GQLContext) => {
 
 export const markLessonCompleted = async (
     lessonId: string,
-    ctx: GQLContext
+    ctx: GQLContext,
 ) => {
     const lesson = await LessonModel.findOne<Lesson>({ lessonId });
     if (!lesson) {
@@ -263,7 +263,7 @@ export const markLessonCompleted = async (
     }
 
     const enrolledItemIndex = ctx.user.purchases.findIndex(
-        (progress: Progress) => progress.courseId === lesson.courseId
+        (progress: Progress) => progress.courseId === lesson.courseId,
     );
 
     if (enrolledItemIndex === -1) {
@@ -294,7 +294,7 @@ export const markLessonCompleted = async (
 export const evaluateLesson = async (
     lessonId: string,
     answers: { answers: number[][] },
-    ctx: GQLContext
+    ctx: GQLContext,
 ) => {
     const lesson = await LessonModel.findOne<Lesson>({ lessonId });
     if (!lesson) {
@@ -302,7 +302,7 @@ export const evaluateLesson = async (
     }
 
     const enrolledItemIndex = ctx.user.purchases.findIndex(
-        (progress: Progress) => progress.courseId === lesson.courseId
+        (progress: Progress) => progress.courseId === lesson.courseId,
     );
 
     if (enrolledItemIndex === -1) {
@@ -319,7 +319,7 @@ export const evaluateLesson = async (
 
     const { pass, score } = evaluateLessonResult(
         lesson.content as Quiz,
-        answers.answers
+        answers.answers,
     );
 
     await LessonEvaluation.create({

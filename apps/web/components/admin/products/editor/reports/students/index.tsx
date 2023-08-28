@@ -234,14 +234,14 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
                                     <TableCell>
                                         {student.signedUpOn
                                             ? new Date(
-                                                  student.signedUpOn as number
+                                                  student.signedUpOn as number,
                                               ).toLocaleDateString()
                                             : "-"}
                                     </TableCell>
                                     <TableCell>
                                         {student.lastAccessedOn
                                             ? new Date(
-                                                  student.lastAccessedOn as number
+                                                  student.lastAccessedOn as number,
                                               ).toLocaleDateString()
                                             : "-"}
                                     </TableCell>
@@ -274,7 +274,7 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
                                 <ListItemText>{lesson.title}</ListItemText>
                                 <ListItemIcon>
                                     {student.progress.includes(
-                                        lesson.lessonId
+                                        lesson.lessonId,
                                     ) ? (
                                         <CheckCircled />
                                     ) : (

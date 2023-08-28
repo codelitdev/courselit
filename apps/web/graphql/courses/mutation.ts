@@ -27,7 +27,7 @@ export default {
         resolve: async (
             _: any,
             { courseData }: { courseData: Record<string, unknown> },
-            context: GQLContext
+            context: GQLContext,
         ) => createCourse(courseData, context),
     },
     updateCourse: {
@@ -101,7 +101,7 @@ export default {
         resolve: async (
             _: unknown,
             { id, courseId, name, rank, collapsed },
-            context
+            context,
         ) =>
             updateGroup({
                 id,

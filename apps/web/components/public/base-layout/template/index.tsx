@@ -158,14 +158,14 @@ const Template = (props: TemplateProps) => {
     } = props;
     if (!layout) return <></>;
     const footer = layout.filter(
-        (widget) => widget.name === Footer.metadata.name
+        (widget) => widget.name === Footer.metadata.name,
     )[0];
     const header = layout.filter(
-        (widget) => widget.name === Header.metadata.name
+        (widget) => widget.name === Header.metadata.name,
     )[0];
     const widgetsWithoutHeaderAndFooter = layout.filter(
         (widget) =>
-            ![Header.metadata.name, Footer.metadata.name].includes(widget.name)
+            ![Header.metadata.name, Footer.metadata.name].includes(widget.name),
     );
     const pageWidgets = widgetsWithoutHeaderAndFooter.map(
         (item: any, index: number) => (
@@ -185,7 +185,7 @@ const Template = (props: TemplateProps) => {
                 onMoveWidgetUp={onMoveWidgetUp}
                 index={index + 1}
             />
-        )
+        ),
     );
     return (
         <Grid container direction="column">

@@ -80,7 +80,7 @@ const validateUserProperties = (user) => {
 
 const checkForInvalidPermissions = (user) => {
     const invalidPerms = user.permissions.filter(
-        (x) => !Object.values(permissions).includes(x)
+        (x) => !Object.values(permissions).includes(x),
     );
     if (invalidPerms.length) {
         throw new Error(responses.invalid_permission);
@@ -136,7 +136,7 @@ const updateCoursesForCreatorName = async (creatorId, creatorName) => {
         },
         {
             creatorName,
-        }
+        },
     );
 };
 
@@ -184,7 +184,7 @@ export const getUsers = async ({
                 : searchData.rowsPerPage || constants.itemsPerPage,
             sortByColumn: "createdAt",
             sortOrder: -1,
-        }
+        },
     );
 
     return users;
@@ -192,7 +192,7 @@ export const getUsers = async ({
 
 export const getUsersCount = async (
     searchData: SearchData = {},
-    ctx: GQLContext
+    ctx: GQLContext,
 ) => {
     checkIfAuthenticated(ctx);
     if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
@@ -218,12 +218,12 @@ const buildQueryFromSearchData = (domain, searchData: SearchData = {}) => {
 
 const addFilterToQueryBasedOnUserGroup = (
     query: Record<string, unknown>,
-    type: UserGroupType
+    type: UserGroupType,
 ): Record<string, unknown> => {
     if (type === userTypeTeam) {
         const allPerms = Object.values(constants.permissions);
         const indexOfEnrollCoursePermission = allPerms.indexOf(
-            constants.permissions.enrollInCourse
+            constants.permissions.enrollInCourse,
         );
         allPerms.splice(indexOfEnrollCoursePermission, 1);
         query.permissions = {
@@ -248,7 +248,7 @@ export const recordProgress = async ({
     user: User;
 }) => {
     const enrolledItemIndex = user.purchases.findIndex(
-        (progress: Progress) => progress.courseId === courseId
+        (progress: Progress) => progress.courseId === courseId,
     );
 
     if (enrolledItemIndex === -1) {

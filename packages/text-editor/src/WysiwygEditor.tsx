@@ -60,12 +60,12 @@ const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
         manager.view.updateState(
             manager.createState({
                 content: initialContent as RemirrorContentType,
-            })
+            }),
         );
     }, [refresh]);
 
     const wysiwygPresetArrayWithoutImageExtension = wysiwygPreset().filter(
-        (extension) => extension instanceof ImageExtension !== true
+        (extension) => extension instanceof ImageExtension !== true,
     );
 
     const extensions = useCallback(
@@ -79,7 +79,7 @@ const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
             }),
             ...wysiwygPresetArrayWithoutImageExtension,
         ],
-        [placeholder]
+        [placeholder],
     );
 
     const onError: InvalidContentHandler = useCallback(
@@ -87,7 +87,7 @@ const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
             // Automatically remove all invalid nodes and marks.
             return transformers.remove(json, invalidContent);
         },
-        []
+        [],
     );
 
     const {

@@ -10,13 +10,13 @@ import { createUser } from "../graphql/users/logic";
 const { domainNameForSingleTenancy } = constants;
 
 const getDomainBasedOnSubdomain = async (
-    subdomain: string
+    subdomain: string,
 ): Promise<Domain | null> => {
     return await DomainModel.findOne({ name: subdomain, deleted: false });
 };
 
 const getDomainBasedOnCustomDomain = async (
-    customDomain: string
+    customDomain: string,
 ): Promise<Domain | null> => {
     return await DomainModel.findOne({ customDomain, deleted: false });
 };
@@ -57,7 +57,7 @@ const hasValidSubscription = async (email: string): Promise<boolean> => {
 export default async function verifyDomain(
     req: ApiRequest,
     res: NextApiResponse,
-    next: any
+    next: any,
 ): Promise<void> {
     let domain: Domain | null;
 

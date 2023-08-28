@@ -55,14 +55,14 @@ export default function AdminWidget({
     const [productsLoaded, setProductsLoaded] = useState(false);
     const [title, setTitle] = useState(settings.title || "Featured");
     const [description, setDescription] = useState(
-        settings.description || dummyDescription
+        settings.description || dummyDescription,
     );
     const [backgroundColor, setBackgroundColor] = useState(
-        settings.backgroundColor
+        settings.backgroundColor,
     );
     const [color, setColor] = useState(settings.color);
     const [headerAlignment, setHeaderAlignment] = useState<Alignment>(
-        settings.headerAlignment || "left"
+        settings.headerAlignment || "left",
     );
 
     useEffect(() => {
@@ -175,7 +175,9 @@ export default function AdminWidget({
                                 options={allProducts
                                     .filter(
                                         (product) =>
-                                            !products.includes(product.courseId)
+                                            !products.includes(
+                                                product.courseId,
+                                            ),
                                     )
                                     .map((product) => ({
                                         label: product.title,
@@ -190,7 +192,7 @@ export default function AdminWidget({
                                 {products.map((product: string) => {
                                     const productItem = allProducts.filter(
                                         (productItem) =>
-                                            productItem.courseId === product
+                                            productItem.courseId === product,
                                     )[0];
                                     if (!productItem) return <></>;
                                     return (

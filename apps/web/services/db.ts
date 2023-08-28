@@ -13,7 +13,7 @@ export default async function connectToDatabase(): Promise<MongoClient> {
 
     const dbConnection = await mongoose.connect(
         process.env.DB_CONNECTION_STRING || "",
-        options
+        options,
     );
     return <MongoClient>dbConnection.connection.getClient();
 }

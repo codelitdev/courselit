@@ -20,19 +20,19 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
     const [title, setTitle] = useState(settings.title || "Content");
     const [description, setDescription] = useState(settings.description);
     const [headerAlignment, setHeaderAlignment] = useState<Alignment>(
-        settings.headerAlignment || "center"
+        settings.headerAlignment || "center",
     );
     const [backgroundColor, setBackgroundColor] = useState(
-        settings.backgroundColor
+        settings.backgroundColor,
     );
     const [foregroundColor, setForegroundColor] = useState(
-        settings.foregroundColor
+        settings.foregroundColor,
     );
     const [badgeBackgroundColor, setBadgeBackgroundColor] = useState(
-        settings.badgeBackgroundColor
+        settings.badgeBackgroundColor,
     );
     const [badgeForegroundColor, setBadgeForegroundColor] = useState(
-        settings.badgeForegroundColor
+        settings.badgeForegroundColor,
     );
 
     useEffect(() => {

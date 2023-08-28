@@ -1,11 +1,12 @@
 import React from "react";
 import { Avatar } from "@mui/material";
 import Settings, { Link } from "./settings";
-import { Image, Menu } from "@courselit/components-library";
-import { Cross as Close, Menu as MenuIcon, Person } from "@courselit/icons";
+import { Image, Menu2, Link as AppLink } from "@courselit/components-library";
+import { Menu as MenuIcon, Person } from "@courselit/icons";
 import { State, UIConstants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
 import NextLink from "next/link";
+import { MenuItem } from "@courselit/components-library";
 
 interface WidgetProps {
     settings: Settings;
@@ -67,39 +68,34 @@ export default function Widget({ state, settings }: WidgetProps) {
                 </div>
             </div>
             <div className="lg:hidden">
-                <Menu
+                <Menu2
                     icon={<MenuIcon />}
                     style={{
-                        color: settings.loginBtnColor || "inherit",
-                        backgroundColor: settings.loginBtnBgColor || "inherit",
+                        color: settings.loginBtnColor,
+                        backgroundColor: settings.loginBtnBgColor,
                     }}
-                    openIcon={<Close />}
-                    options={[
-                        ...(settings.links
-                            ? settings.links.map((link) => ({
-                                  label: link.label,
-                                  type: "link" as "link",
-                                  href: link.href,
-                              }))
-                            : []),
-                        state.profile.fetched &&
+                >
+                    {settings.links.map((link) => (
+                        <MenuItem key={link.href}>
+                            <AppLink href={link.href}>{link.label}</AppLink>
+                        </MenuItem>
+                    ))}
+                    {state.profile.fetched &&
                         checkPermission(state.profile.permissions, [
                             UIConstants.permissions.enrollInCourse,
-                        ])
-                            ? {
-                                  label: "My content",
-                                  type: "link",
-                                  href: "/my-content",
-                              }
-                            : undefined,
-                        state.auth.guest
-                            ? undefined
-                            : {
-                                  label: "Profile",
-                                  type: "link",
-                                  href: "/profile",
-                              },
-                        state.profile.fetched &&
+                        ]) && (
+                            <MenuItem>
+                                <AppLink href={"/my-content"}>
+                                    My content
+                                </AppLink>
+                            </MenuItem>
+                        )}
+                    {!state.auth.guest && (
+                        <MenuItem>
+                            <AppLink href={"/profile"}>Profile</AppLink>
+                        </MenuItem>
+                    )}
+                    {state.profile.fetched &&
                         checkPermission(state.profile.permissions, [
                             UIConstants.permissions.manageCourse,
                             UIConstants.permissions.manageAnyCourse,
@@ -109,47 +105,44 @@ export default function Widget({ state, settings }: WidgetProps) {
                             UIConstants.permissions.manageSettings,
                             UIConstants.permissions.manageUsers,
                             UIConstants.permissions.viewAnyMedia,
-                        ])
-                            ? {
-                                  label: "Dashboard",
-                                  type: "link",
-                                  href: "/dashboard/products",
-                              }
-                            : undefined,
-                        {
-                            label: state.auth.guest ? "Login" : "Logout",
-                            type: "link",
-                            href: state.auth.guest ? "/login" : "/logout",
-                        },
-                    ]}
-                />
+                        ]) && (
+                            <MenuItem>
+                                <AppLink href={"/dashboard/products"}>
+                                    Dashboard
+                                </AppLink>
+                            </MenuItem>
+                        )}
+                    <MenuItem>
+                        <AppLink href={state.auth.guest ? "/login" : "/logout"}>
+                            {state.auth.guest ? "Login" : "Logout"}
+                        </AppLink>
+                    </MenuItem>
+                </Menu2>
             </div>
             <div className="hidden lg:!block">
-                <Menu
+                <Menu2
                     icon={<Person />}
                     style={{
-                        color: settings.loginBtnColor || "inherit",
-                        backgroundColor: settings.loginBtnBgColor || "inherit",
+                        color: settings.loginBtnColor,
+                        backgroundColor: settings.loginBtnBgColor,
                     }}
-                    options={[
-                        state.profile.fetched &&
+                >
+                    {state.profile.fetched &&
                         checkPermission(state.profile.permissions, [
                             UIConstants.permissions.enrollInCourse,
-                        ])
-                            ? {
-                                  label: "My content",
-                                  type: "link",
-                                  href: "/my-content",
-                              }
-                            : undefined,
-                        state.auth.guest
-                            ? undefined
-                            : {
-                                  label: "Profile",
-                                  type: "link",
-                                  href: "/profile",
-                              },
-                        state.profile.fetched &&
+                        ]) && (
+                            <MenuItem>
+                                <AppLink href={"/my-content"}>
+                                    My content
+                                </AppLink>
+                            </MenuItem>
+                        )}
+                    {!state.auth.guest && (
+                        <MenuItem>
+                            <AppLink href={"/profile"}>Profile</AppLink>
+                        </MenuItem>
+                    )}
+                    {state.profile.fetched &&
                         checkPermission(state.profile.permissions, [
                             UIConstants.permissions.manageCourse,
                             UIConstants.permissions.manageAnyCourse,
@@ -159,20 +152,19 @@ export default function Widget({ state, settings }: WidgetProps) {
                             UIConstants.permissions.manageSettings,
                             UIConstants.permissions.manageUsers,
                             UIConstants.permissions.viewAnyMedia,
-                        ])
-                            ? {
-                                  label: "Dashboard",
-                                  type: "link",
-                                  href: "/dashboard/products",
-                              }
-                            : undefined,
-                        {
-                            label: state.auth.guest ? "Login" : "Logout",
-                            type: "link",
-                            href: state.auth.guest ? "/login" : "/logout",
-                        },
-                    ]}
-                />
+                        ]) && (
+                            <MenuItem>
+                                <AppLink href={"/dashboard/products"}>
+                                    Dashboard
+                                </AppLink>
+                            </MenuItem>
+                        )}
+                    <MenuItem>
+                        <AppLink href={state.auth.guest ? "/login" : "/logout"}>
+                            {state.auth.guest ? "Login" : "Logout"}
+                        </AppLink>
+                    </MenuItem>
+                </Menu2>
             </div>
         </div>
     );

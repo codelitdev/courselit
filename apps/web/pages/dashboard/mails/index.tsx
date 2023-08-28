@@ -3,7 +3,7 @@ import { PAGE_HEADER_ALL_MAILS } from "../../../ui-config/strings";
 
 const Mails = dynamic(() => import("../../../components/admin/mails"));
 const BaseLayout = dynamic(
-    () => import("../../../components/admin/base-layout")
+    () => import("../../../components/admin/base-layout"),
 );
 
 export default function EditPage({}) {

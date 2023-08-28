@@ -19,7 +19,7 @@ class Fetch {
         private payload: unknown,
         private httpMethod: string,
         private isGraphQLEndpoint?: boolean,
-        private headers?: Record<string, string>
+        private headers?: Record<string, string>,
     ) {}
 
     async exec(options?: ExecOptions) {
@@ -39,7 +39,7 @@ class Fetch {
         if (this.headers) {
             fetchOptions.headers = Object.assign(
                 fetchOptions.headers,
-                this.headers
+                this.headers,
             );
         }
 
@@ -49,7 +49,7 @@ class Fetch {
             `${this.url}`,
             fetchOptions,
             response.status,
-            options ? options.redirectToOnUnAuth : ""
+            options ? options.redirectToOnUnAuth : "",
         );
 
         if (response.status === 401) {
@@ -57,7 +57,7 @@ class Fetch {
                 Router.replace(
                     options && options.redirectToOnUnAuth
                         ? `/login?redirect=${options.redirectToOnUnAuth}`
-                        : "/logout"
+                        : "/logout",
                 );
             return {};
         }
@@ -120,7 +120,7 @@ class FetchBuilder {
             this.payload,
             this.httpMethod,
             this.isGraphQLEndpoint,
-            this.headers
+            this.headers,
         );
     }
 }

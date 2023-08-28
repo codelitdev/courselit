@@ -272,7 +272,7 @@ function ProfileIndex({
                                             checked={subscribedToUpdates}
                                             onChange={(e) =>
                                                 saveEmailPreference(
-                                                    e.target.checked
+                                                    e.target.checked,
                                                 )
                                             }
                                         />

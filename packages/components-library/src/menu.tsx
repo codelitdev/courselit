@@ -101,7 +101,7 @@ export default function Menu(props: MenuProps) {
                             >
                                 {option.label}
                             </MenuItem>
-                        )
+                        ),
                     )}
             </MuiMenu>
         </div>

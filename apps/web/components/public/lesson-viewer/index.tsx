@@ -186,7 +186,7 @@ const LessonViewer = ({
                     router.push(
                         `/course/${slug}/${lesson!.courseId}/${
                             lesson!.nextLesson
-                        }`
+                        }`,
                     );
                 } else {
                     router.push(`/my-content`);

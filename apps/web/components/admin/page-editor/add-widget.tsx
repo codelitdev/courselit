@@ -46,11 +46,11 @@ function AddWidget({ pageType, onSelection, onClose }: WidgetsListProps) {
                     </ListItem>
                     {Object.keys(widgets)
                         .filter(
-                            (widget) => !["header", "footer"].includes(widget)
+                            (widget) => !["header", "footer"].includes(widget),
                         )
                         .map((item, index) =>
                             widgets[item].metadata.compatibleWith.includes(
-                                pageType
+                                pageType,
                             ) ? (
                                 <ListItem disablePadding key={index}>
                                     <ListItemButton
@@ -63,7 +63,7 @@ function AddWidget({ pageType, onSelection, onClose }: WidgetsListProps) {
                                 </ListItem>
                             ) : (
                                 <></>
-                            )
+                            ),
                         )}
                 </List>
             </Grid>

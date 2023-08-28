@@ -19,19 +19,19 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
         string | undefined
     >(settings.appBarBackground);
     const [logoColor, setLogoColor] = useState<string | undefined>(
-        settings.logoColor
+        settings.logoColor,
     );
     const [loginBtnBgColor, setLoginBtnBgColor] = useState<string | undefined>(
-        settings.loginBtnBgColor
+        settings.loginBtnBgColor,
     );
     const [loginBtnColor, setLoginBtnColor] = useState<string | undefined>(
-        settings.loginBtnColor
+        settings.loginBtnColor,
     );
     const [linkColor, setLinkColor] = useState<string | undefined>(
-        settings.linkColor
+        settings.linkColor,
     );
     const [linkAlignment, setLinkAlignment] = useState(
-        settings.linkAlignment || "left"
+        settings.linkAlignment || "left",
     );
 
     useEffect(() => {

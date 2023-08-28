@@ -3,10 +3,10 @@ import { useRouter } from "next/router";
 import { ProductEditorLayoutProps } from "../../../../components/admin/products/editor/layout";
 
 const ProductEditorLayout = dynamic<ProductEditorLayoutProps>(
-    () => import("../../../../components/admin/products/editor/layout")
+    () => import("../../../../components/admin/products/editor/layout"),
 );
 const CourseReports = dynamic(
-    () => import("../../../../components/admin/products/editor/reports")
+    () => import("../../../../components/admin/products/editor/reports"),
 );
 
 export default function Reports() {

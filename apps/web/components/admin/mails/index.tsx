@@ -48,13 +48,13 @@ function Mails({ auth, address, profile, dispatch, featureFlags }: MailsProps) {
 
     const handlePageChange = (
         e: MouseEvent<HTMLButtonElement> | null,
-        newPage: number
+        newPage: number,
     ) => {
         setPage(newPage);
     };
 
     const handleRowsPerPageChange = (
-        e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+        e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => {
         setRowsPerPage(parseInt(e.target.value, 10));
         setPage(0);
@@ -150,7 +150,7 @@ function Mails({ auth, address, profile, dispatch, featureFlags }: MailsProps) {
             .build();
         try {
             (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                networkAction(true)
+                networkAction(true),
             );
             const response = await fetch.exec();
             if (response.mail && response.mail.mailId) {
@@ -160,7 +160,7 @@ function Mails({ auth, address, profile, dispatch, featureFlags }: MailsProps) {
             dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
             (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                networkAction(false)
+                networkAction(false),
             );
         }
     };

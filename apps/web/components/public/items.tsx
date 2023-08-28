@@ -25,13 +25,13 @@ interface ListProps {
 
 const List = (props: ListProps) => {
     const [courses, setCourses] = useState<CourseModel[]>(
-        props.initialItems || []
+        props.initialItems || [],
     );
     const [offset, setOffset] = useState(2);
     const [shouldShowLoadMoreButton, setShouldShowLoadMoreButton] = useState(
         typeof props.showLoadMoreButton === "boolean"
             ? props.showLoadMoreButton
-            : false
+            : false,
     );
     const { generateQuery, siteInfo } = props;
     const posts = typeof props.posts === "boolean" ? props.posts : false;

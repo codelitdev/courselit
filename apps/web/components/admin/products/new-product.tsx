@@ -63,7 +63,7 @@ function NewProduct({
             const response = await fetch.exec();
             if (response.course) {
                 router.replace(
-                    `/dashboard/product/${response.course.courseId}/content`
+                    `/dashboard/product/${response.course.courseId}/content`,
                 );
             }
         } catch (err: any) {
@@ -103,7 +103,7 @@ function NewProduct({
                                     options={[
                                         {
                                             label: capitalize(
-                                                COURSE_TYPE_COURSE
+                                                COURSE_TYPE_COURSE,
                                             ),
                                             value: COURSE_TYPE_COURSE,
                                             sublabel:
@@ -111,7 +111,7 @@ function NewProduct({
                                         },
                                         {
                                             label: capitalize(
-                                                COURSE_TYPE_DOWNLOAD
+                                                COURSE_TYPE_DOWNLOAD,
                                             ),
                                             value: COURSE_TYPE_DOWNLOAD,
                                             sublabel:

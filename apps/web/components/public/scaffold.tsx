@@ -64,7 +64,7 @@ const Root = styled("div")(({ theme }: { theme: any }) => ({
             //     marginLeft: drawerWidth,
             // },
         },
-        theme.appBar
+        theme.appBar,
     ),
 
     [`& .${classes.menuButton}`]: {
@@ -79,7 +79,7 @@ const Root = styled("div")(({ theme }: { theme: any }) => ({
             width: drawerWidth,
         },
         {},
-        theme.drawer
+        theme.drawer,
     ),
 
     [`& .${classes.content}`]: {
@@ -105,7 +105,7 @@ const Root = styled("div")(({ theme }: { theme: any }) => ({
             minHeight: "80vh",
             margin: "0 auto",
         },
-        theme.body
+        theme.body,
     ),
 
     [`& .${classes.hideprogress}`]: {
@@ -212,7 +212,7 @@ const ComponentScaffold = ({
                         <ListSubheader key={index} sx={{ mt: 2 }}>
                             {item.label as string}
                         </ListSubheader>
-                    )
+                    ),
                 )}
             </List>
         </>

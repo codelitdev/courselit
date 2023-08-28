@@ -37,7 +37,7 @@ interface CourseProps {
 
 export function generateSideBarItems(
     course: Course & { groupOfLessons: string[] },
-    profile: Profile
+    profile: Profile,
 ): ComponentScaffoldMenuItem[] {
     if (!course) return [];
 
@@ -192,7 +192,7 @@ export async function getServerSideProps({ query, req }: any) {
             const lessonsOrderedByGroups: Record<string, unknown> = {};
             for (const group of post.groups) {
                 lessonsOrderedByGroups[group.name] = post.lessons.filter(
-                    (lesson: Lesson) => lesson.groupId === group.id
+                    (lesson: Lesson) => lesson.groupId === group.id,
                 );
             }
 

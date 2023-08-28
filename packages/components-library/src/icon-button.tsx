@@ -3,9 +3,10 @@ import * as React from "react";
 interface ButtonProps {
     children: React.ReactNode;
     className?: string;
-    onClick: (...args: any[]) => any;
+    onClick?: (...args: any[]) => any;
     variant?: "soft" | "classic";
     style?: Record<string, string>;
+    [x: string]: any;
 }
 
 export default function IconButton(props: ButtonProps) {
@@ -15,6 +16,7 @@ export default function IconButton(props: ButtonProps) {
         onClick,
         variant = "classic",
         style,
+        ...other
     } = props;
     let commonClasses =
         "flex items-center gap-1 p-1 rounded disabled:pointer-events-none";
@@ -32,6 +34,7 @@ export default function IconButton(props: ButtonProps) {
             className={`${commonClasses} ${className}`}
             onClick={onClick}
             style={{ ...style }}
+            {...other}
         >
             {children}
         </button>

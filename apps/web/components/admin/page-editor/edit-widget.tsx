@@ -82,7 +82,7 @@ function EditWidget({
                             }}
                             hideActionButtons={(
                                 e: boolean,
-                                state: Record<string, unknown>
+                                state: Record<string, unknown>,
                             ) => {
                                 setHideActionButtons(e);
                                 setPreservedStateAcrossRerender(state);

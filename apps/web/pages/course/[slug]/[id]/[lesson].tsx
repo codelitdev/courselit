@@ -23,7 +23,7 @@ const Lesson = ({ course, profile }: LessonProps) => {
         <RouteBasedComponentScaffold
             items={generateSideBarItems(
                 course as Course & { groupOfLessons: string[] },
-                profile
+                profile,
             )}
             contentPadding={0}
         >

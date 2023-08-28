@@ -69,18 +69,18 @@ const Widget = ({
                 dispatch(
                     setAppMessage(
                         new AppMessage(
-                            successMessage || DEFAULT_SUCCESS_MESSAGE
-                        )
-                    )
+                            successMessage || DEFAULT_SUCCESS_MESSAGE,
+                        ),
+                    ),
                 );
                 setEmail("");
             } else {
                 dispatch(
                     setAppMessage(
                         new AppMessage(
-                            failureMessage || DEFAULT_FAILURE_MESSAGE
-                        )
-                    )
+                            failureMessage || DEFAULT_FAILURE_MESSAGE,
+                        ),
+                    ),
                 );
             }
         } catch (e) {

@@ -9,13 +9,13 @@ export async function getPageResponse(page: Page, ctx: GQLContext) {
             ? Object.assign({}, ctx.subdomain.sharedWidgets[widget.name], {
                   widgetId: widget.widgetId,
               })
-            : widget
+            : widget,
     );
     const pageData =
         page.type.toLowerCase() === constants.product
             ? await getCourse(
                   page.entityId!,
-                  ctx.subdomain._id as unknown as string
+                  ctx.subdomain._id as unknown as string,
               )
             : {};
 
@@ -33,9 +33,9 @@ export async function getPageResponse(page: Page, ctx: GQLContext) {
                           ? Object.assign(
                                 {},
                                 ctx.subdomain.sharedWidgets[widget.name],
-                                { widgetId: widget.widgetId }
+                                { widgetId: widget.widgetId },
                             )
-                          : widget
+                          : widget,
                   )
                 : layout
             : undefined,
@@ -44,7 +44,7 @@ export async function getPageResponse(page: Page, ctx: GQLContext) {
 
 async function getCourse(
     courseId: string,
-    domain: string
+    domain: string,
 ): Promise<Pick<
     Course,
     | "courseId"
@@ -71,6 +71,6 @@ async function getCourse(
             type: 1,
             tags: 1,
             featuredImage: 1,
-        }
+        },
     );
 }

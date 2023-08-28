@@ -42,7 +42,7 @@ function FontsList({
         "Enriqueta",
     ];
     const defaultTypeface = draftTypefaces.filter(
-        (x) => x.section === "default"
+        (x) => x.section === "default",
     )[0]?.typeface;
 
     return (

@@ -32,10 +32,10 @@ export const getAddress = (host: string) => {
 };
 
 export const getBackendAddress = (
-    headers: Record<string, unknown>
+    headers: Record<string, unknown>,
 ): `${string}://${string}` => {
     return `${getProtocol(
-        headers["x-forwarded-proto"] as string | string[] | undefined
+        headers["x-forwarded-proto"] as string | string[] | undefined,
     )}://${headers.host}`;
 };
 
@@ -105,11 +105,11 @@ export const isLessonCompleted = ({
     profile: Profile;
 }) => {
     const indexOfCurrentCourse = profile.purchases.findIndex(
-        (purchase) => purchase.courseId === courseId
+        (purchase) => purchase.courseId === courseId,
     );
     if (indexOfCurrentCourse === -1) return false;
     return profile.purchases[indexOfCurrentCourse].completedLessons.some(
-        (lesson) => lesson === lessonId
+        (lesson) => lesson === lessonId,
     );
 };
 
@@ -121,8 +121,8 @@ export const generateFontString = (typefaces: Typeface[]): string => {
             fontStringPieces.push(
                 `family=${typeface.typeface.replace(
                     /\s/g,
-                    "+"
-                )}:wght@${typeface.fontWeights.join(";")}`
+                    "+",
+                )}:wght@${typeface.fontWeights.join(";")}`,
             );
         }
     }
@@ -136,12 +136,14 @@ export const generateFontString = (typefaces: Typeface[]): string => {
 export const createMuiTheme = (typefaces: Typeface[], theme: Theme) => {
     const themeOptionsCopy: ThemeOptions = themeOptions();
     themeOptionsCopy.typography.fontFamily = typefaces.filter(
-        (x) => x.section === "default"
+        (x) => x.section === "default",
     )[0]?.typeface;
     let muiTheme;
     if (theme.styles) {
         muiTheme = responsiveFontSizes(
-            createTheme(deepmerge<DefaultTheme>(themeOptionsCopy, theme.styles))
+            createTheme(
+                deepmerge<DefaultTheme>(themeOptionsCopy, theme.styles),
+            ),
         );
     } else {
         console.warn(CONSOLE_MESSAGE_THEME_INVALID);

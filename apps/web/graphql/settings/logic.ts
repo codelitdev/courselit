@@ -30,7 +30,7 @@ export const getSiteInfo = async (ctx: GQLContext) => {
     }
     const domain: Domain | null = await DomainModel.findById(
         ctx.subdomain._id,
-        exclusionProjection
+        exclusionProjection,
     );
 
     return domain;
@@ -53,7 +53,7 @@ export const getSiteInfoAsAdmin = async (ctx: GQLContext) => {
 
 export const updateSiteInfo = async (
     siteData: Record<string, unknown>,
-    ctx: GQLContext
+    ctx: GQLContext,
 ) => {
     checkIfAuthenticated(ctx);
 
@@ -81,7 +81,7 @@ export const updateSiteInfo = async (
 
 export const updateDraftTypefaces = async (
     typefaces: Typeface[],
-    ctx: GQLContext
+    ctx: GQLContext,
 ) => {
     checkIfAuthenticated(ctx);
 
@@ -103,7 +103,7 @@ export const updateDraftTypefaces = async (
 
 export const updatePaymentInfo = async (
     siteData: Record<string, unknown>,
-    ctx: GQLContext
+    ctx: GQLContext,
 ) => {
     checkIfAuthenticated(ctx);
 
@@ -125,14 +125,14 @@ export const updatePaymentInfo = async (
     }
 
     const invalidPaymentMethod = checkForInvalidPaymentSettings(
-        domain.settings
+        domain.settings,
     );
     if (invalidPaymentMethod) {
         throw invalidPaymentMethod;
     }
 
     const failedPaymentMethod = checkForInvalidPaymentMethodSettings(
-        domain.settings
+        domain.settings,
     );
     if (failedPaymentMethod) {
         throw getPaymentInvalidException(failedPaymentMethod);

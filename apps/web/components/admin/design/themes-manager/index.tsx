@@ -101,7 +101,7 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
                 theme: addTheme(theme: {
                     name: "${parsedTheme.name}",
                     styles: ${JSON.stringify(
-                        JSON.stringify(parsedTheme.styles)
+                        JSON.stringify(parsedTheme.styles),
                     )},
                     url: "${parsedTheme.url}"
                 }) {
@@ -114,7 +114,7 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
             const response = await fetcher.exec();
             if (response.errors) {
                 throw new Error(
-                    `${ERROR_SNACKBAR_PREFIX}: ${response.errors[0].message}`
+                    `${ERROR_SNACKBAR_PREFIX}: ${response.errors[0].message}`,
                 );
             }
 
@@ -123,7 +123,7 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
                 setIsNewThemeTextValid(false);
                 loadInstalledThemes();
                 dispatch(
-                    setAppMessage(new AppMessage(APP_MESSAGE_THEME_INSTALLED))
+                    setAppMessage(new AppMessage(APP_MESSAGE_THEME_INSTALLED)),
                 );
             }
         } catch (err: any) {
@@ -178,7 +178,7 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
 
             if (response.theme) {
                 dispatch(
-                    setAppMessage(new AppMessage(APP_MESSAGE_THEME_APPLIED))
+                    setAppMessage(new AppMessage(APP_MESSAGE_THEME_APPLIED)),
                 );
                 loadInstalledThemes();
                 await dispatch(updateSiteInfo());
@@ -206,7 +206,9 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
 
             if (response.removeTheme) {
                 dispatch(
-                    setAppMessage(new AppMessage(APP_MESSAGE_THEME_UNINSTALLED))
+                    setAppMessage(
+                        new AppMessage(APP_MESSAGE_THEME_UNINSTALLED),
+                    ),
                 );
                 loadInstalledThemes();
             }
@@ -219,7 +221,7 @@ const ThemesManager = ({ address, dispatch }: ThemesManagerProps) => {
 
     const onThemeRemix = (themeName: string) => {
         const theme = installedThemes.find(
-            (theme: Theme) => theme.name === themeName
+            (theme: Theme) => theme.name === themeName,
         );
         if (theme) {
             const themeCopy: Theme = Object.assign({}, theme);

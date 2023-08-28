@@ -24,7 +24,7 @@ const { permissions } = constants;
 
 export async function createSubscription(
     email: string,
-    ctx: GQLContext
+    ctx: GQLContext,
 ): Promise<boolean> {
     try {
         let dbUser: User | null = await UserModel.findOne({
@@ -51,7 +51,7 @@ export async function createSubscription(
 
 export async function createMail(
     searchData: SearchData = {},
-    ctx: GQLContext
+    ctx: GQLContext,
 ): Promise<Mail | null> {
     checkIfAuthenticated(ctx);
 
@@ -88,7 +88,7 @@ export async function createMail(
 
 export async function getMail(
     mailId: string,
-    ctx: GQLContext
+    ctx: GQLContext,
 ): Promise<Mail | null> {
     checkIfAuthenticated(ctx);
 
@@ -106,7 +106,7 @@ export async function getMail(
 
 export async function getMails(
     searchData: SearchData = {},
-    ctx: GQLContext
+    ctx: GQLContext,
 ): Promise<Mail | null> {
     checkIfAuthenticated(ctx);
 
@@ -126,7 +126,7 @@ export async function getMails(
             itemsPerPage: searchData.rowsPerPage || constants.itemsPerPage,
             sortByColumn: "updatedAt",
             sortOrder: -1,
-        }
+        },
     );
 
     return mails;
@@ -134,7 +134,7 @@ export async function getMails(
 
 export async function getMailsCount(
     searchData: SearchData = {},
-    ctx: GQLContext
+    ctx: GQLContext,
 ): Promise<number> {
     checkIfAuthenticated(ctx);
 
@@ -149,7 +149,7 @@ export async function getMailsCount(
 const buildQueryFromSearchData = (
     domain: mongoose.Types.ObjectId,
     searchData: SearchData = {},
-    creatorId: string
+    creatorId: string,
 ) => {
     const query: Record<string, unknown> = { domain };
     if (searchData.creatorId) {
@@ -162,7 +162,7 @@ const buildQueryFromSearchData = (
 
 export async function updateMail(
     mailData: Pick<Mail, "mailId" | "to" | "subject" | "body"> = {},
-    ctx: GQLContext
+    ctx: GQLContext,
 ): Promise<Mail | null> {
     checkIfAuthenticated(ctx);
 
@@ -270,7 +270,7 @@ export async function sendMail(mailId: string, ctx: GQLContext): Promise<Mail> {
 export async function sendCourseOverMail(
     courseId: string,
     email: string,
-    ctx: GQLContext
+    ctx: GQLContext,
 ): Promise<boolean> {
     const course: Course | null = await CourseModel.findOne({
         courseId,

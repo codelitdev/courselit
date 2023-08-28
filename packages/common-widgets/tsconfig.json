@@ -6,5 +6,5 @@
         "lib": ["dom"],
         "strict": false
     },
-    "include": ["src/**/*"]
+    "include": ["src/**/*", "additional.d.ts"]
 }

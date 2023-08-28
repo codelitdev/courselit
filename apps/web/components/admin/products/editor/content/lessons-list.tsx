@@ -70,7 +70,7 @@ function LessonSection({ group, course }: LessonSectionProps) {
                                 <MenuItem
                                     onClick={() =>
                                         router.replace(
-                                            `/dashboard/product/${course.courseId}/section/${group.id}`
+                                            `/dashboard/product/${course.courseId}/section/${group.id}`,
                                         )
                                     }
                                 >

@@ -29,22 +29,22 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
     const [subtitle, setSubtitle] = useState(settings.subtitle);
     const [btnText, setBtnText] = useState(settings.btnText);
     const [successMessage, setSuccessMessage] = useState(
-        settings.successMessage
+        settings.successMessage,
     );
     const [failureMessage, setFailureMessage] = useState(
-        settings.failureMessage
+        settings.failureMessage,
     );
     const [backgroundColor, setBackgroundColor] = useState(
-        settings.backgroundColor
+        settings.backgroundColor,
     );
     const [foregroundColor, setForegroundColor] = useState(
-        settings.foregroundColor
+        settings.foregroundColor,
     );
     const [btnBackgroundColor, setBtnBackgroundColor] = useState(
-        settings.btnBackgroundColor
+        settings.btnBackgroundColor,
     );
     const [btnForegroundColor, setBtnForegroundColor] = useState(
-        settings.btnForegroundColor
+        settings.btnForegroundColor,
     );
     const [alignment, setAlignment] = useState(settings.alignment || "left");
 

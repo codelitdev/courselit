@@ -23,5 +23,5 @@ export default nc<NextApiRequest, NextApiResponse>({
         passport.authenticate("jwt", { session: false }),
         (req: NextApiRequest, res: NextApiResponse) => {
             return res.status(200).json({ message: responses.success });
-        }
+        },
     );

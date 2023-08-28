@@ -59,7 +59,7 @@ function BlogHeader({ id, breadcrumbs, address, dispatch }: BlogHeaderProps) {
                                 <Typography key={crumb.text}>
                                     {crumb.text}
                                 </Typography>
-                            )
+                            ),
                         )}
                     </Breadcrumbs>
                 </Grid>

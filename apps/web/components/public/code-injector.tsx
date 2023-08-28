@@ -46,7 +46,7 @@ class CodeInjector extends React.Component<CodeInjectorProps> {
         while ((attr = attributes.pop())) {
             (target.setAttribute as (name: string, value: string) => void)(
                 attr.nodeName,
-                attr.nodeValue
+                attr.nodeValue,
             );
         }
     }

@@ -40,7 +40,7 @@ export default function ProductHeader({ id, breadcrumbs }: ProductHeaderProps) {
                                 <Typography key={crumb.text}>
                                     {crumb.text}
                                 </Typography>
-                            )
+                            ),
                         )}
                     </Breadcrumbs>
                 </Grid>

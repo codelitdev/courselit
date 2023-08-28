@@ -59,7 +59,7 @@ export default {
                 searchText,
                 filterBy,
             }: { offset: number; searchText?: string; filterBy?: Filter },
-            context: GQLContext
+            context: GQLContext,
         ) => getCoursesAsAdmin({ offset, context, searchText, filterBy }),
     },
     getReports: {
@@ -101,7 +101,7 @@ export default {
                 tag?: string;
                 filterBy?: Filter[];
             },
-            ctx: GQLContext
+            ctx: GQLContext,
         ) => getCourses({ offset, ids, tag, filterBy, ctx }),
     },
     getEnrolledCourses: {
@@ -114,7 +114,7 @@ export default {
         resolve: (
             _: any,
             { userId }: { userId: string },
-            context: GQLContext
+            context: GQLContext,
         ) => getEnrolledCourses(userId, context),
     },
 };

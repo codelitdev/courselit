@@ -5,7 +5,7 @@ const { severityError, severityInfo, severityWarn } = constants;
 
 export const info = async (
     message: string,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
 ) => {
     await Log.create({
         severity: severityInfo,
@@ -16,7 +16,7 @@ export const info = async (
 
 export const warn = async (
     message: string,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
 ) => {
     await Log.create({
         severity: severityWarn,
@@ -30,7 +30,7 @@ export const error = async (
     metadata?: {
         fileName?: string;
         stack?: Record<string, unknown>;
-    }
+    },
 ) => {
     await Log.create({
         severity: severityError,

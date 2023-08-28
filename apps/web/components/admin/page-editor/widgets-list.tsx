@@ -42,7 +42,7 @@ function WidgetList({ layout, onItemClick, onAddNewClick }: WidgetListProps) {
                 item={item}
                 onItemClick={onItemClick}
                 key={item.widgetId as string}
-            />
+            />,
         );
     }
     const footer = layout[layout.length - 1];

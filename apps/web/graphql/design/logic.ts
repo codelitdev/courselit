@@ -14,7 +14,7 @@ export const setTheme = async (name: string, ctx: GQLContext) => {
 
     await ThemeModel.updateMany(
         { domain: ctx.subdomain._id },
-        { $set: { active: "false" } }
+        { $set: { active: "false" } },
     );
 
     const theme = await ThemeModel.findOne({ name, domain: ctx.subdomain._id });

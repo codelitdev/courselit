@@ -51,7 +51,7 @@ const AppToast = (props: AppToastProps) => {
                     onClick={message.action!.cb}
                 >
                     {message.action!.text}
-                </Button>
+                </Button>,
             );
         }
 

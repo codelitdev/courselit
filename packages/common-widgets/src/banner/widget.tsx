@@ -103,8 +103,8 @@ export default function Widget({
         } catch (e) {
             dispatch(
                 setAppMessage(
-                    new AppMessage(failureMessage || DEFAULT_FAILURE_MESSAGE)
-                )
+                    new AppMessage(failureMessage || DEFAULT_FAILURE_MESSAGE),
+                ),
             );
         } finally {
             dispatch(actionCreators.networkAction(false));
@@ -189,7 +189,7 @@ export default function Widget({
                                     description ||
                                     (product.description &&
                                         JSON.parse(
-                                            product.description as string
+                                            product.description as string,
                                         ))
                                 }
                             />
@@ -244,7 +244,7 @@ export default function Widget({
                     )}
                     {type === "product" &&
                         ["paid", "free"].includes(
-                            product.costType as string
+                            product.costType as string,
                         ) && (
                             <Button
                                 href={`/checkout/${product.courseId}`}

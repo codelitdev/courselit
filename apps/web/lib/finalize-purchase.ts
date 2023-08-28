@@ -10,7 +10,7 @@ export default async (userId: string, courseId: string) => {
         user &&
         course &&
         !user.purchases.some(
-            (purchase: Progress) => purchase.courseId === course.courseId
+            (purchase: Progress) => purchase.courseId === course.courseId,
         )
     ) {
         user.purchases.push({

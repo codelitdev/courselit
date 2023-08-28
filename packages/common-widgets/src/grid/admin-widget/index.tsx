@@ -29,7 +29,7 @@ export interface AdminWidgetProps {
     profile: Profile;
     hideActionButtons: (
         e: boolean,
-        preservedStateAcrossRerender: Record<string, unknown>
+        preservedStateAcrossRerender: Record<string, unknown>,
     ) => void;
     preservedStateAcrossRerender: Record<string, unknown>;
 }
@@ -78,30 +78,30 @@ export default function AdminWidget({
     };
     const [title, setTitle] = useState(settings.title || "Grid");
     const [description, setDescription] = useState(
-        settings.description || dummyDescription
+        settings.description || dummyDescription,
     );
     const [buttonAction, setButtonAction] = useState(settings.buttonAction);
     const [buttonCaption, setButtonCaption] = useState(settings.buttonCaption);
     const [backgroundColor, setBackgroundColor] = useState(
-        settings.backgroundColor
+        settings.backgroundColor,
     );
     const [foregroundColor, setForegroundColor] = useState(
-        settings.foregroundColor
+        settings.foregroundColor,
     );
     const [buttonBackground, setButtonBackground] = useState(
-        settings.buttonBackground
+        settings.buttonBackground,
     );
     const [buttonForeground, setButtonForeground] = useState(
-        settings.buttonForeground
+        settings.buttonForeground,
     );
     const [items, setItems] = useState<Item[]>(
-        settings.items || [dummyItem, dummyItem, dummyItem]
+        settings.items || [dummyItem, dummyItem, dummyItem],
     );
     const [headerAlignment, setHeaderAlignment] = useState<Alignment>(
-        settings.headerAlignment || "center"
+        settings.headerAlignment || "center",
     );
     const [itemsAlignment, setItemsAlignment] = useState<Alignment>(
-        settings.itemsAlignment || "center"
+        settings.itemsAlignment || "center",
     );
     const [itemBeingEditedIndex, setItemBeingEditedIndex] = useState(-1);
 

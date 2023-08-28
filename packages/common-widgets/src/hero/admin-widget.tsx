@@ -46,26 +46,26 @@ export default function AdminWidget({
     };
     const [title, setTitle] = useState(settings.title || "Hero section");
     const [description, setDescription] = useState(
-        settings.description || dummyDescription
+        settings.description || dummyDescription,
     );
     const [buttonAction, setButtonAction] = useState(settings.buttonAction);
     const [buttonCaption, setButtonCaption] = useState(settings.buttonCaption);
     const [mediaBorderRadius, setMediaBorderRadius] = useState(
-        settings.mediaRadius
+        settings.mediaRadius,
     );
     const [youtubeLink, setYoutubeLink] = useState(settings.youtubeLink);
     const [alignment, setAlignment] = useState(settings.alignment || "left");
     const [backgroundColor, setBackgroundColor] = useState(
-        settings.backgroundColor
+        settings.backgroundColor,
     );
     const [foregroundColor, setForegroundColor] = useState(
-        settings.foregroundColor
+        settings.foregroundColor,
     );
     const [buttonBackground, setButtonBackground] = useState(
-        settings.buttonBackground
+        settings.buttonBackground,
     );
     const [buttonForeground, setButtonForeground] = useState(
-        settings.buttonForeground
+        settings.buttonForeground,
     );
     const [media, setMedia] = useState<Partial<Media>>(settings.media || {});
     const [style, setStyle] = useState(settings.style || "normal");

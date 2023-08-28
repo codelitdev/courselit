@@ -59,7 +59,7 @@ const Login = ({ address, auth, dispatch, progress, page }: LoginProps) => {
                 (dispatch as ThunkDispatch<State, {}, AnyAction>)(signedIn());
             } else {
                 dispatch(
-                    setAppMessage(new AppMessage(ERROR_SIGNIN_VERIFYING_LINK))
+                    setAppMessage(new AppMessage(ERROR_SIGNIN_VERIFYING_LINK)),
                 );
             }
         } catch (err: any) {
@@ -89,13 +89,13 @@ const Login = ({ address, auth, dispatch, progress, page }: LoginProps) => {
                 response = await response.json();
                 dispatch(
                     setAppMessage(
-                        new AppMessage(`${SIGNIN_SUCCESS_PREFIX} ${email}`)
-                    )
+                        new AppMessage(`${SIGNIN_SUCCESS_PREFIX} ${email}`),
+                    ),
                 );
                 setEmail("");
             } else {
                 dispatch(
-                    setAppMessage(new AppMessage(ERROR_SIGNIN_GENERATING_LINK))
+                    setAppMessage(new AppMessage(ERROR_SIGNIN_GENERATING_LINK)),
                 );
             }
         } catch (err: any) {

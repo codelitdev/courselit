@@ -13,7 +13,7 @@ import {
 import { getBackendAddress, getPage } from "../../ui-lib/utils";
 import dynamic from "next/dynamic";
 const PurchaseStatus = dynamic(
-    () => import("../../components/public/purchase-status")
+    () => import("../../components/public/purchase-status"),
 );
 const Checkout = dynamic(() => import("../../components/public/checkout"));
 

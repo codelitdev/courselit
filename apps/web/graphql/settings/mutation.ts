@@ -18,7 +18,7 @@ export default {
         resolve: async (
             _: any,
             { siteData }: { siteData: Record<string, unknown> },
-            context: any
+            context: any,
         ) => updateSiteInfo(siteData, context),
     },
     updatePaymentInfo: {
@@ -31,7 +31,7 @@ export default {
         resolve: async (
             _: any,
             { siteData }: { siteData: Record<string, unknown> },
-            context: any
+            context: any,
         ) => updatePaymentInfo(siteData, context),
     },
     updateDraftTypefaces: {
@@ -44,7 +44,7 @@ export default {
         resolve: async (
             _: any,
             { typefaces }: { typefaces: Typeface[] },
-            context: any
+            context: any,
         ) => updateDraftTypefaces(typefaces, context),
     },
 };

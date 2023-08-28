@@ -35,7 +35,7 @@ const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 export const getCourseOrThrow = async (
     id: mongoose.Types.ObjectId | undefined,
     ctx: GQLContext,
-    courseId?: string
+    courseId?: string,
 ) => {
     checkIfAuthenticated(ctx);
 
@@ -98,7 +98,7 @@ export const getCourse = async (id: string, ctx: GQLContext) => {
         if ([constants.course, constants.download].includes(course.type)) {
             const { nextLesson } = await getPrevNextCursor(
                 course.courseId,
-                ctx.subdomain._id
+                ctx.subdomain._id,
             );
             course.firstLesson = nextLesson;
         }
@@ -110,7 +110,7 @@ export const getCourse = async (id: string, ctx: GQLContext) => {
 
 export const createCourse = async (
     courseData: { title: string; type: Filter },
-    ctx: GQLContext
+    ctx: GQLContext,
 ) => {
     checkIfAuthenticated(ctx);
     if (!checkPermission(ctx.user.permissions, [permissions.manageCourse])) {
@@ -133,7 +133,7 @@ export const createCourse = async (
 
 export const updateCourse = async (
     courseData: Partial<Course>,
-    ctx: GQLContext
+    ctx: GQLContext,
 ) => {
     let course = await getCourseOrThrow(courseData.id, ctx);
 
@@ -152,14 +152,14 @@ export const updateCourse = async (
     course = await course.save();
     await PageModel.updateOne(
         { entityId: course.courseId, domain: ctx.subdomain._id },
-        { $set: { name: course.title } }
+        { $set: { name: course.title } },
     );
     return course;
 };
 
 export const deleteCourse = async (
     id: mongoose.Types.ObjectId,
-    ctx: GQLContext
+    ctx: GQLContext,
 ) => {
     const course = await getCourseOrThrow(id, ctx);
 
@@ -296,7 +296,7 @@ export const getCourses = async ({
         cost: x.cost,
         description: extractPlainTextFromDraftJS(
             x.description,
-            blogPostSnippetLength
+            blogPostSnippetLength,
         ),
         type: x.type,
         creatorName: x.creatorName,
@@ -329,7 +329,7 @@ export const getEnrolledCourses = async (userId: string, ctx: GQLContext) => {
             courseId: {
                 $in: [
                     ...user.purchases.map(
-                        (course: Progress) => course.courseId
+                        (course: Progress) => course.courseId,
                     ),
                 ],
             },
@@ -341,7 +341,7 @@ export const getEnrolledCourses = async (userId: string, ctx: GQLContext) => {
             lessons: 1,
             type: 1,
             slug: 1,
-        }
+        },
     );
 
     return enrolledCourses.map((course) => ({
@@ -374,7 +374,7 @@ export const addGroup = async ({
     const maximumRank = course.groups.reduce(
         (acc: number, value: { rank: number }) =>
             value.rank > acc ? value.rank : acc,
-        0
+        0,
     );
 
     await course.groups.push({
@@ -446,7 +446,7 @@ export const updateGroup = async ({
             "groups._id": id,
         },
         { $set },
-        { new: true }
+        { new: true },
     );
 };
 

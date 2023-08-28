@@ -34,7 +34,7 @@ const AppDialog = (props: AppDialogProps) => {
                     key={action.name}
                 >
                     {action.name}
-                </Button>
+                </Button>,
             );
         }
     }

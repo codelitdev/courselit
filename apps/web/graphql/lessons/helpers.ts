@@ -45,13 +45,13 @@ function validateTextContent(lessonData: LessonValidatorProps) {
 function validateQuizContent(questions: Question[]) {
     for (const question of questions) {
         let correctAnswersCount = question.options.filter(
-            (option) => option.correctAnswer
+            (option) => option.correctAnswer,
         ).length;
         if (correctAnswersCount === 0) {
             throw new Error(responses.no_correct_answer);
         }
         let optionsWithNoText = question.options.filter(
-            (option) => !option.text
+            (option) => !option.text,
         ).length;
         if (optionsWithNoText) {
             throw new Error(responses.no_empty_option);
@@ -74,7 +74,7 @@ function validateMediaContent(lessonData: LessonValidatorProps) {
 type GroupLessonItem = Pick<Lesson, "lessonId" | "groupId" | "groupRank">;
 export const getGroupedLessons = async (
     courseId: string,
-    domainId: mongoose.Types.ObjectId
+    domainId: mongoose.Types.ObjectId,
 ): Promise<GroupLessonItem[]> => {
     const course = await CourseModel.findOne({
         courseId: courseId,
@@ -91,21 +91,21 @@ export const getGroupedLessons = async (
             lessonId: 1,
             groupRank: 1,
             groupId: 1,
-        }
+        },
     );
     const lessonsInSequentialOrder = [];
     for (let group of course.groups.sort(
-        (a: Group, b: Group) => a.rank - b.rank
+        (a: Group, b: Group) => a.rank - b.rank,
     )) {
         lessonsInSequentialOrder.push(
             ...allLessons
                 .filter(
-                    (lesson: GroupLessonItem) => lesson.groupId === group.id
+                    (lesson: GroupLessonItem) => lesson.groupId === group.id,
                 )
                 .sort(
                     (a: GroupLessonItem, b: GroupLessonItem) =>
-                        a.groupRank - b.groupRank
-                )
+                        a.groupRank - b.groupRank,
+                ),
         );
     }
     return lessonsInSequentialOrder;
@@ -114,15 +114,15 @@ export const getGroupedLessons = async (
 export const getPrevNextCursor = async (
     courseId: string,
     domainId: mongoose.Types.ObjectId,
-    lessonId?: string
+    lessonId?: string,
 ) => {
     const lessonsInSequentialOrder = await getGroupedLessons(
         courseId,
-        domainId
+        domainId,
     );
     const indexOfCurrentLesson = lessonId
         ? lessonsInSequentialOrder.findIndex(
-              (item) => item.lessonId === lessonId
+              (item) => item.lessonId === lessonId,
           )
         : -1;
 

@@ -2,10 +2,10 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 
 const BlogEditorLayout = dynamic(
-    () => import("../../../../components/admin/blogs/editor/layout")
+    () => import("../../../../components/admin/blogs/editor/layout"),
 );
 const DetailsEditor = dynamic(
-    () => import("../../../../components/admin/blogs/editor/details")
+    () => import("../../../../components/admin/blogs/editor/details"),
 );
 
 export default function Pricing() {

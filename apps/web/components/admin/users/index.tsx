@@ -94,13 +94,13 @@ const UsersManager = ({
 
     const handlePageChange = (
         e: MouseEvent<HTMLButtonElement> | null,
-        newPage: number
+        newPage: number,
     ) => {
         setPage(newPage);
     };
 
     const handleRowsPerPageChange = (
-        e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+        e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => {
         setRowsPerPage(parseInt(e.target.value, 10));
         setPage(0);
@@ -168,7 +168,7 @@ const UsersManager = ({
             .build();
         try {
             (dispatch as ThunkDispatch<State, null, AnyAction>)(
-                networkAction(true)
+                networkAction(true),
             );
             const response = await fetch.exec();
             if (response.users && response.users.length > 0) {
@@ -178,7 +178,7 @@ const UsersManager = ({
             dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
             (dispatch as ThunkDispatch<State, null, AnyAction>)(
-                networkAction(false)
+                networkAction(false),
             );
         }
     };
@@ -218,7 +218,7 @@ const UsersManager = ({
             .build();
         try {
             (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                networkAction(true)
+                networkAction(true),
             );
             const response = await fetch.exec();
             if (response.count) {
@@ -228,7 +228,7 @@ const UsersManager = ({
             dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
             (dispatch as ThunkDispatch<State, null, AnyAction>)(
-                networkAction(false)
+                networkAction(false),
             );
         }
     };
@@ -277,7 +277,7 @@ const UsersManager = ({
             .build();
         try {
             (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                networkAction(true)
+                networkAction(true),
             );
             const response = await fetch.exec();
             if (response.mail && response.mail.mailId) {
@@ -287,7 +287,7 @@ const UsersManager = ({
             dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
             (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                networkAction(false)
+                networkAction(false),
             );
         }
     };
@@ -410,13 +410,13 @@ const UsersManager = ({
                                 user.name,
                                 user.createdAt
                                     ? new Date(
-                                          +user.createdAt
+                                          +user.createdAt,
                                       ).toLocaleDateString()
                                     : "",
                                 user.updatedAt !== user.createdAt
                                     ? user.updatedAt
                                         ? new Date(
-                                              +user.updatedAt
+                                              +user.updatedAt,
                                           ).toLocaleDateString()
                                         : ""
                                     : "",
@@ -497,7 +497,7 @@ const UsersManager = ({
                                     <TableCell align="right">
                                         {user.createdAt
                                             ? new Date(
-                                                  +user.createdAt
+                                                  +user.createdAt,
                                               ).toLocaleDateString()
                                             : ""}
                                     </TableCell>
@@ -505,7 +505,7 @@ const UsersManager = ({
                                         {user.updatedAt !== user.createdAt
                                             ? user.updatedAt
                                                 ? new Date(
-                                                      +user.updatedAt
+                                                      +user.updatedAt,
                                                   ).toLocaleDateString()
                                                 : ""
                                             : ""}

@@ -69,7 +69,7 @@ function PermissionsEditor({
 
     const savePermissions = async (
         permission: string,
-        event: React.ChangeEvent<HTMLInputElement>
+        event: React.ChangeEvent<HTMLInputElement>,
     ) => {
         event.preventDefault();
         const state = event.target.checked;
@@ -79,7 +79,7 @@ function PermissionsEditor({
             newPermissions = [...activePermissions, permission];
         } else {
             newPermissions = activePermissions.filter(
-                (item) => item !== permission
+                (item) => item !== permission,
             );
         }
 
@@ -102,7 +102,7 @@ function PermissionsEditor({
             .build();
         try {
             (dispatch as ThunkDispatch<State, null, AnyAction>)(
-                networkAction(true)
+                networkAction(true),
             );
             const response = await fetch.exec();
             if (response.user) {
@@ -110,11 +110,11 @@ function PermissionsEditor({
             }
         } catch (err: any) {
             (dispatch as ThunkDispatch<State, null, AnyAction>)(
-                setAppMessage(new AppMessage(err.message))
+                setAppMessage(new AppMessage(err.message)),
             );
         } finally {
             (dispatch as ThunkDispatch<State, null, AnyAction>)(
-                networkAction(false)
+                networkAction(false),
             );
         }
     };

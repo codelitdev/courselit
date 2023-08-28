@@ -31,10 +31,10 @@ const AdminWidget = ({ settings, onChange }: AboutWidgetProps) => {
     };
     const [content, setContent] = useState(settings.text || dummyText);
     const [alignment, setAlignment] = useState<Alignment | "right">(
-        settings.alignment || "left"
+        settings.alignment || "left",
     );
     const [backgroundColor, setBackgroundColor] = useState(
-        settings.backgroundColor
+        settings.backgroundColor,
     );
     const [color, setColor] = useState(settings.color);
 

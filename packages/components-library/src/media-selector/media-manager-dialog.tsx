@@ -88,7 +88,7 @@ const MediaManagerDialog = (props: MediaManagerDialogProps) => {
                     e.target.type === "checkbox"
                         ? e.target.checked
                         : e.target.value,
-            })
+            }),
         );
 
     useEffect(() => {
@@ -135,7 +135,7 @@ const MediaManagerDialog = (props: MediaManagerDialogProps) => {
         setUploadData(
             Object.assign({}, uploadData, {
                 uploading: true,
-            })
+            }),
         );
 
         try {

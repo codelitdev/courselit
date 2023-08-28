@@ -4,7 +4,7 @@ import connectToDatabase from "../services/db";
 export default async function (
     req: NextApiRequest,
     res: NextApiResponse,
-    next: any
+    next: any,
 ) {
     await connectToDatabase();
     next();

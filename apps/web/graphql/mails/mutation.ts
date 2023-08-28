@@ -19,7 +19,7 @@ export default {
         resolve: async (
             _: any,
             { email }: { email: string },
-            context: GQLContext
+            context: GQLContext,
         ) => createSubscription(email, context),
     },
     createMail: {
@@ -30,7 +30,7 @@ export default {
         resolve: async (
             _: any,
             { searchData }: { searchData: any },
-            context: GQLContext
+            context: GQLContext,
         ) => createMail(searchData, context),
     },
     updateMail: {
@@ -45,7 +45,7 @@ export default {
             {
                 mailData,
             }: { mailData: Pick<Mail, "mailId" | "to" | "subject" | "body"> },
-            context: GQLContext
+            context: GQLContext,
         ) => updateMail(mailData, context),
     },
     sendMail: {
@@ -58,7 +58,7 @@ export default {
         resolve: async (
             _: any,
             { mailId }: { mailId: string },
-            context: GQLContext
+            context: GQLContext,
         ) => sendMail(mailId, context),
     },
     sendCourseOverMail: {
@@ -70,7 +70,7 @@ export default {
         resolve: async (
             _: any,
             { courseId, email }: { courseId: string; email: string },
-            context: GQLContext
+            context: GQLContext,
         ) => sendCourseOverMail(courseId, email, context),
     },
 };

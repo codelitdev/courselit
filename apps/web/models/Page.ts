@@ -36,7 +36,7 @@ PageSchema.index(
         domain: 1,
         pageId: 1,
     },
-    { unique: true }
+    { unique: true },
 );
 
 export default mongoose.models.Page || mongoose.model("Page", PageSchema);

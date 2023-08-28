@@ -40,11 +40,11 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
     const setAnswerForQuestion = (
         checked: boolean,
         questionIndex: number,
-        optionIndex: number
+        optionIndex: number,
     ) => {
         const addOptionToQuestion = (
             questionIndex: number,
-            optionIndex: number
+            optionIndex: number,
         ) => {
             answers[questionIndex].push(optionIndex);
             setAnswers([...answers]);
@@ -52,7 +52,7 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
 
         const removeOptionFromQuestion = (
             questionIndex: number,
-            optionIndex: number
+            optionIndex: number,
         ) => {
             const index = answers[questionIndex].indexOf(optionIndex);
             answers[questionIndex].splice(index, 1);
@@ -101,17 +101,17 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
                     dispatch(
                         setAppMessage(
                             new AppMessage(
-                                `${QUIZ_PASS_MESSAGE} ${score} points.`
-                            )
-                        )
+                                `${QUIZ_PASS_MESSAGE} ${score} points.`,
+                            ),
+                        ),
                     );
                 } else {
                     dispatch(
                         setAppMessage(
                             new AppMessage(
-                                `${QUIZ_FAIL_MESSAGE} ${score} points. Requires ${passingGrade} points.`
-                            )
-                        )
+                                `${QUIZ_FAIL_MESSAGE} ${score} points. Requires ${passingGrade} points.`,
+                            ),
+                        ),
                     );
                 }
             }
@@ -143,7 +143,7 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
                                     setAnswerForQuestion(
                                         e.target.checked,
                                         questionIndex,
-                                        index
+                                        index,
                                     )
                                 }
                             />

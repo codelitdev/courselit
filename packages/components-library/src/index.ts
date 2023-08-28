@@ -21,6 +21,8 @@ import Form from "./form";
 import FormField from "./form-field";
 import FormSubmit from "./form-submit";
 import CircularProgress from "./circular-progress";
+import Menu2 from "./menu2";
+import MenuItem from "./menu-item";
 
 export {
     PriceTag,
@@ -45,4 +47,6 @@ export {
     FormField,
     FormSubmit,
     CircularProgress,
+    Menu2,
+    MenuItem,
 };

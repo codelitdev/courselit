@@ -9,7 +9,7 @@ interface AdminWidgetProps {
     onChange: (...args: any[]) => void;
     hideActionButtons: (
         e: boolean,
-        preservedStateAcrossRerender: Record<string, unknown>
+        preservedStateAcrossRerender: Record<string, unknown>,
     ) => void;
     preservedStateAcrossRerender: Record<string, unknown>;
     pageData: Record<string, unknown>;
@@ -25,7 +25,7 @@ function AdminWidget({
 }: AdminWidgetProps) {
     const AdminWidget = widgets[name].adminWidget;
     const AdminWidgetWithStateAndDispatch: any = connect(
-        (state: AppState) => state
+        (state: AppState) => state,
     )(AdminWidget as ComponentType<never>);
 
     return (

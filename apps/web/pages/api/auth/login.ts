@@ -40,7 +40,7 @@ export default nc<NextApiRequest, NextApiResponse>({
             const token = jwt.sign(
                 { email: req.user!.email, domain: req.subdomain!._id },
                 <Secret>constants.jwtSecret,
-                { expiresIn: constants.jwtExpire }
+                { expiresIn: constants.jwtExpire },
             );
 
             await setLoginSession(res, token);
@@ -48,13 +48,13 @@ export default nc<NextApiRequest, NextApiResponse>({
             res.status(200).json({
                 message: responses.success,
             });
-        }
+        },
     )
     .post(
         passport.authenticate("magiclink", { action: "requestToken" }),
         (_, res: NextApiResponse) => {
             res.json({ message: responses.success });
-        }
+        },
     );
 
 async function updateLastActive(id: string) {
@@ -64,6 +64,6 @@ async function updateLastActive(id: string) {
             $currentDate: {
                 updatedAt: true,
             },
-        }
+        },
     );
 }

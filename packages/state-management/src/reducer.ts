@@ -72,7 +72,7 @@ function siteinfoReducer(state = initialState.siteinfo, action: Action) {
 
 function networkActionReducer(
     state = initialState.networkAction,
-    action: Action
+    action: Action,
 ) {
     switch (action.type) {
         case NETWORK_ACTION:
@@ -151,7 +151,7 @@ function widgetsDataReducer(state = initialState.widgetsData, action: Action) {
 */
 function featureFlagsReducer(
     state = initialState.featureFlags,
-    action: Action
+    action: Action,
 ) {
     switch (action.type) {
         case FEATURE_FLAGS_AVAILABLE:

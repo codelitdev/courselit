@@ -177,7 +177,7 @@ const Index = (props: IndexProps) => {
                                         sales: number;
                                         customers: number;
                                     },
-                                    index: number
+                                    index: number,
                                 ) => (
                                     <Product
                                         key={product.courseId}
@@ -185,7 +185,7 @@ const Index = (props: IndexProps) => {
                                         position={index}
                                         onDelete={onDelete}
                                     />
-                                )
+                                ),
                             )}
                         </TableBody>
                     </Table>
@@ -198,7 +198,7 @@ const Index = (props: IndexProps) => {
                             variant="outlined"
                             onClick={() =>
                                 setCoursesPaginationOffset(
-                                    coursesPaginationOffset + 1
+                                    coursesPaginationOffset + 1,
                                 )
                             }
                         >
