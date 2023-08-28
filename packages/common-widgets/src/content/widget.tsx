@@ -187,7 +187,7 @@ export default function Widget({
                                     <Grid item>
                                         <Link
                                             href={`/course/${course.slug}/${course.courseId}/${lesson.lessonId}`}
-                                            sxProps={{
+                                            style={{
                                                 color: foregroundColor,
                                             }}
                                         >

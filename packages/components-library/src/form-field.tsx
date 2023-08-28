@@ -7,7 +7,7 @@ import {
     Message,
 } from "@radix-ui/react-form";
 
-interface Message {
+interface MessageItem {
     text: string;
     match:
         | "valueMissing"
@@ -37,7 +37,7 @@ export interface FormFieldProps {
         | "submit"
         | "text"
         | "url";
-    messages?: Message[];
+    messages?: MessageItem[];
     [key: string]: any;
     name?: string;
     className?: string;
