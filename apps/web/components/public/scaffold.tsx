@@ -4,10 +4,9 @@ import AppBar from "@mui/material/AppBar";
 import CssBaseline from "@mui/material/CssBaseline";
 import Drawer from "@mui/material/Drawer";
 import Hidden from "@mui/material/Hidden";
-import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
-import { Menu } from "@mui/icons-material";
+import { Menu } from "@courselit/icons";
 import {
     Toolbar,
     Grid,
@@ -22,6 +21,7 @@ import Header from "./base-layout/header";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
 import { AppState } from "@courselit/state-management";
+import { IconButton } from "@courselit/components-library";
 
 const PREFIX = "RouteBasedComponentScaffold";
 const drawerWidth = 240;
@@ -64,7 +64,7 @@ const Root = styled("div")(({ theme }: { theme: any }) => ({
             //     marginLeft: drawerWidth,
             // },
         },
-        theme.appBar
+        theme.appBar,
     ),
 
     [`& .${classes.menuButton}`]: {
@@ -79,7 +79,7 @@ const Root = styled("div")(({ theme }: { theme: any }) => ({
             width: drawerWidth,
         },
         {},
-        theme.drawer
+        theme.drawer,
     ),
 
     [`& .${classes.content}`]: {
@@ -105,7 +105,7 @@ const Root = styled("div")(({ theme }: { theme: any }) => ({
             minHeight: "80vh",
             margin: "0 auto",
         },
-        theme.body
+        theme.body,
     ),
 
     [`& .${classes.hideprogress}`]: {
@@ -212,7 +212,7 @@ const ComponentScaffold = ({
                         <ListSubheader key={index} sx={{ mt: 2 }}>
                             {item.label as string}
                         </ListSubheader>
-                    )
+                    ),
                 )}
             </List>
         </>
@@ -224,12 +224,8 @@ const ComponentScaffold = ({
             <AppBar position="fixed" className={classes.appBar}>
                 <Toolbar>
                     <IconButton
-                        color="inherit"
-                        aria-label="open drawer"
-                        edge="start"
                         onClick={handleDrawerToggle}
-                        className={classes.menuButton}
-                        size="large"
+                        className="sm:!hidden"
                     >
                         <Menu />
                     </IconButton>

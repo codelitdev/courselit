@@ -41,8 +41,8 @@ function useLinkShortcut() {
 
                 return setLinkShortcut(props);
             },
-            [isEditing]
-        )
+            [isEditing],
+        ),
     );
 
     return { linkShortcut, isEditing, setIsEditing };
@@ -59,7 +59,7 @@ function useFloatingLinkState() {
     // A positioner which only shows for links.
     const linkPositioner = useMemo(
         () => createMarkPositioner({ type: "link" }),
-        []
+        [],
     );
 
     const onRemove = useCallback(() => {
@@ -128,7 +128,7 @@ function useFloatingLinkState() {
             onRemove,
             submitHref,
             cancelHref,
-        ]
+        ],
     );
 }
 

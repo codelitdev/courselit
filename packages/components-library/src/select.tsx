@@ -1,12 +1,4 @@
 import * as React from "react";
-import {
-    FormControl,
-    Grid,
-    InputLabel,
-    MenuItem,
-    Select as SingleSelect,
-    Typography,
-} from "@mui/material";
 
 interface Option {
     label: string;
@@ -33,40 +25,31 @@ export default function Select({
     const id = `${title.split(" ").join().toLowerCase()}`;
 
     return (
-        <FormControl fullWidth>
-            <InputLabel id={`${id}-label`}>{title}</InputLabel>
-            <SingleSelect
-                labelId={`${id}-label`}
-                id={`${id}-select`}
+        <div className="flex flex-col">
+            <label htmlFor="select" className="mb-4">
+                {title}
+            </label>
+            <select
+                id="select"
                 value={value}
-                label={title}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                     onChange(e.target.value)
                 }
                 disabled={disabled}
+                className="border border-slate-300 hover:border-slate-400 py-1 px-2 rounded"
             >
                 {options.map((option: Option) => (
-                    <MenuItem
+                    <option
                         value={option.value}
                         key={option.value}
                         disabled={option.disabled || false}
+                        className="p-2"
                     >
-                        <Grid container direction="column">
-                            <Grid item>{option.label}</Grid>
-                            {option.sublabel && (
-                                <Grid item>
-                                    <Typography
-                                        variant="body2"
-                                        color="textSecondary"
-                                    >
-                                        {option.sublabel}
-                                    </Typography>
-                                </Grid>
-                            )}
-                        </Grid>
-                    </MenuItem>
+                        {option.label}{" "}
+                        {option.sublabel ? `(${option.sublabel})` : ""}
+                    </option>
                 ))}
-            </SingleSelect>
-        </FormControl>
+            </select>
+        </div>
     );
 }

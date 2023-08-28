@@ -54,7 +54,7 @@ const DomainSchema = new mongoose.Schema<Domain>(
     },
     {
         timestamps: true,
-    }
+    },
 );
 
 export default mongoose.models.Domain || mongoose.model("Domain", DomainSchema);

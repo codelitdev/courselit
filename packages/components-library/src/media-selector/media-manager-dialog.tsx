@@ -1,16 +1,6 @@
 import * as React from "react";
 import { useEffect } from "react";
-import {
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Button,
-    Grid,
-    Checkbox,
-    Typography,
-    TextField,
-} from "@mui/material";
-import CircularProgress from "@mui/material/CircularProgress";
+import { DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import Alert from "@mui/material/Alert";
 import Dialog from "@mui/material/Dialog";
 import {
@@ -27,6 +17,8 @@ import {
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
+import Button from "../button";
+import CircularProgress from "../circular-progress";
 
 const { useState } = React;
 
@@ -96,7 +88,7 @@ const MediaManagerDialog = (props: MediaManagerDialogProps) => {
                     e.target.type === "checkbox"
                         ? e.target.checked
                         : e.target.value,
-            })
+            }),
         );
 
     useEffect(() => {
@@ -143,7 +135,7 @@ const MediaManagerDialog = (props: MediaManagerDialogProps) => {
         setUploadData(
             Object.assign({}, uploadData, {
                 uploading: true,
-            })
+            }),
         );
 
         try {
@@ -180,11 +172,7 @@ const MediaManagerDialog = (props: MediaManagerDialogProps) => {
                 {error && <Alert severity="error">{error}</Alert>}
                 {presignedUrl && (
                     <form onSubmit={onUpload} encType="multipart/form-data">
-                        <Button
-                            variant="outlined"
-                            component="label"
-                            color="primary"
-                        >
+                        <Button component="button" color="primary">
                             {strings.buttonAddFile || "Select a file"}
                             <input type="file" name="file" ref={fileInput} />
                         </Button>
@@ -218,11 +206,19 @@ const MediaManagerDialog = (props: MediaManagerDialogProps) => {
                 )}
             </DialogContent>
             <DialogActions>
-                <Button onClick={() => onClose()}>
+                <Button
+                    component="button"
+                    onClick={() => onClose()}
+                    variant="soft"
+                >
                     {strings.cancelCaption || "Cancel"}
                 </Button>
                 {presignedUrl && (
-                    <Button disabled={uploading} onClick={onUpload}>
+                    <Button
+                        disabled={uploading}
+                        component="button"
+                        onClick={onUpload}
+                    >
                         {uploading
                             ? strings.uploading || "Uploading..."
                             : strings.uploadButtonText || "Upload"}

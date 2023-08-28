@@ -9,7 +9,7 @@ class AppMessage {
     constructor(
         private message: string,
         private actionText?: string,
-        private actionFunc?: (...args: any[]) => void
+        private actionFunc?: (...args: any[]) => void,
     ) {
         if (actionText && typeof actionText !== "string") {
             throw new Error("actionText should be of type string");

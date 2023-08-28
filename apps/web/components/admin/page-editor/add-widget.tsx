@@ -3,10 +3,10 @@ import {
     PageTypeSite,
     PageTypeBlog,
 } from "@courselit/common-models";
-import { Close } from "@mui/icons-material";
+import { IconButton } from "@courselit/components-library";
+import { Cross as Close } from "@courselit/icons";
 import {
     Grid,
-    IconButton,
     List,
     ListItem,
     ListItemButton,
@@ -38,7 +38,7 @@ function AddWidget({ pageType, onSelection, onClose }: WidgetsListProps) {
                                 </Typography>
                             </Grid>
                             <Grid item>
-                                <IconButton onClick={onClose}>
+                                <IconButton variant="soft" onClick={onClose}>
                                     <Close fontSize="small" />
                                 </IconButton>
                             </Grid>
@@ -46,11 +46,11 @@ function AddWidget({ pageType, onSelection, onClose }: WidgetsListProps) {
                     </ListItem>
                     {Object.keys(widgets)
                         .filter(
-                            (widget) => !["header", "footer"].includes(widget)
+                            (widget) => !["header", "footer"].includes(widget),
                         )
                         .map((item, index) =>
                             widgets[item].metadata.compatibleWith.includes(
-                                pageType
+                                pageType,
                             ) ? (
                                 <ListItem disablePadding key={index}>
                                     <ListItemButton
@@ -63,7 +63,7 @@ function AddWidget({ pageType, onSelection, onClose }: WidgetsListProps) {
                                 </ListItem>
                             ) : (
                                 <></>
-                            )
+                            ),
                         )}
                 </List>
             </Grid>

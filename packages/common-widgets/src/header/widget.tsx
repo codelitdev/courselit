@@ -1,10 +1,12 @@
 import React from "react";
-import { Avatar, Box, Grid, Link as MuiLink, Typography } from "@mui/material";
+import { Avatar } from "@mui/material";
 import Settings, { Link } from "./settings";
-import { Image, Menu, Link as NextLink } from "@courselit/components-library";
-import { Close, Menu as MenuIcon } from "@mui/icons-material";
+import { Image, Menu2, Link as AppLink } from "@courselit/components-library";
+import { Menu as MenuIcon, Person } from "@courselit/icons";
 import { State, UIConstants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
+import NextLink from "next/link";
+import { MenuItem } from "@courselit/components-library";
 
 interface WidgetProps {
     settings: Settings;
@@ -13,224 +15,157 @@ interface WidgetProps {
 
 export default function Widget({ state, settings }: WidgetProps) {
     return (
-        <Grid
-            container
-            alignItems="center"
-            justifyContent="space-between"
-            sx={{
-                backgroundColor: settings.appBarBackground || "#eee",
-                p: 2,
+        <div
+            className="flex items-center p-4"
+            style={{
+                backgroundColor: settings.appBarBackground,
             }}
         >
-            <Grid item>
-                <Grid container alignItems="center">
+            <NextLink href="/">
+                <div className="flex items-center mr-2">
                     {state.siteinfo.logo && (
-                        <Grid item sx={{ mr: 1 }}>
+                        <div className="mr-2">
                             <Image
                                 src={state.siteinfo.logo.file}
                                 height={{ xs: 32, lg: 36 }}
                                 width={{ xs: 32, lg: 36 }}
                                 borderRadius={2}
                             />
-                        </Grid>
+                        </div>
                     )}
-                    <Grid item>
-                        <NextLink
-                            href="/"
-                            sxProps={{
-                                textDecoration: "none",
-                                cursor: "pointer",
-                            }}
-                        >
-                            <Typography
-                                color={
-                                    (settings.logoColor as string) || "inherit"
-                                }
-                                variant="h6"
-                            >
-                                {state.siteinfo.title}
-                            </Typography>
-                        </NextLink>
-                    </Grid>
-                </Grid>
-            </Grid>
-            <Grid
-                item
-                flexGrow={1}
-                sx={{
-                    mr: 2,
-                    ml: 2,
-                    display: { xs: "none", lg: "flex" },
-                }}
+                    <p
+                        style={{
+                            color: settings.logoColor || "inherit",
+                        }}
+                        className="font-bold text-2xl"
+                    >
+                        {state.siteinfo.title}
+                    </p>
+                </div>
+            </NextLink>
+            <div
+                className={`flex grow ${
+                    settings.linkAlignment === "right"
+                        ? "justify-end"
+                        : "justify-start"
+                }`}
             >
-                <Grid
-                    container
-                    alignItems="center"
-                    justifyContent={
-                        settings.linkAlignment === "right"
-                            ? "flex-end"
-                            : "flex-start"
-                    }
-                >
+                <div className="lg:!block hidden">
                     {settings.links &&
                         (settings.links as Link[]).map((link: Link, index) => (
-                            <Grid item sx={{ mr: 1 }} key={index}>
-                                <MuiLink
-                                    variant="body1"
-                                    href={link.href}
-                                    sx={{
-                                        textDecoration: "none",
-                                    }}
-                                    color={settings.linkColor || "inherit"}
-                                    key={index}
-                                >
-                                    {link.label}
-                                </MuiLink>
-                            </Grid>
-                        ))}
-                </Grid>
-            </Grid>
-            <Grid item>
-                <Box
-                    sx={{
-                        display: { xs: "none", lg: "flex" },
-                    }}
-                >
-                    <Menu
-                        icon={
-                            <Avatar
-                                sx={{
-                                    width: 32,
-                                    height: 32,
-                                    color: settings.loginBtnColor || "inherit",
-                                    bgcolor:
-                                        settings.loginBtnBgColor || "inherit",
+                            <span
+                                className="mr-2"
+                                style={{
+                                    color: settings.linkColor || "inherit",
                                 }}
+                                key={index}
                             >
-                                {state.profile.fetched
-                                    ? state.profile.email
-                                          .charAt(0)
-                                          .toUpperCase()
-                                    : undefined}
-                            </Avatar>
-                        }
-                        options={[
-                            state.profile.fetched &&
-                            checkPermission(state.profile.permissions, [
-                                UIConstants.permissions.enrollInCourse,
-                            ])
-                                ? {
-                                      label: "My content",
-                                      type: "link",
-                                      href: "/my-content",
-                                  }
-                                : undefined,
-                            state.auth.guest
-                                ? undefined
-                                : {
-                                      label: "Profile",
-                                      type: "link",
-                                      href: "/profile",
-                                  },
-                            state.profile.fetched &&
-                            checkPermission(state.profile.permissions, [
-                                UIConstants.permissions.manageCourse,
-                                UIConstants.permissions.manageAnyCourse,
-                                UIConstants.permissions.manageMedia,
-                                UIConstants.permissions.manageAnyMedia,
-                                UIConstants.permissions.manageSite,
-                                UIConstants.permissions.manageSettings,
-                                UIConstants.permissions.manageUsers,
-                                UIConstants.permissions.viewAnyMedia,
-                            ])
-                                ? {
-                                      label: "Dashboard",
-                                      type: "link",
-                                      href: "/dashboard/products",
-                                  }
-                                : undefined,
-                            {
-                                label: state.auth.guest ? "Login" : "Logout",
-                                type: "link",
-                                href: state.auth.guest ? "/login" : "/logout",
-                            },
-                        ]}
-                    />
-                </Box>
-                {/* )} */}
-                <Box
-                    sx={{
-                        display: { xs: "flex", lg: "none" },
+                                <NextLink href={link.href}>
+                                    {link.label}
+                                </NextLink>
+                            </span>
+                        ))}
+                </div>
+            </div>
+            <div className="lg:hidden">
+                <Menu2
+                    icon={<MenuIcon />}
+                    style={{
+                        color: settings.loginBtnColor,
+                        backgroundColor: settings.loginBtnBgColor,
                     }}
                 >
-                    <Menu
-                        icon={
-                            <MenuIcon
-                                sx={{
-                                    color:
-                                        settings.loginBtnBgColor || "inherit",
-                                }}
-                            />
-                        }
-                        openIcon={
-                            <Close
-                                sx={{
-                                    color:
-                                        settings.loginBtnBgColor || "inherit",
-                                }}
-                            />
-                        }
-                        options={[
-                            ...(settings.links
-                                ? settings.links.map((link) => ({
-                                      label: link.label,
-                                      type: "link" as "link",
-                                      href: link.href,
-                                  }))
-                                : []),
-                            state.profile.fetched &&
-                            checkPermission(state.profile.permissions, [
-                                UIConstants.permissions.enrollInCourse,
-                            ])
-                                ? {
-                                      label: "My content",
-                                      type: "link",
-                                      href: "/my-content",
-                                  }
-                                : undefined,
-                            state.auth.guest
-                                ? undefined
-                                : {
-                                      label: "Profile",
-                                      type: "link",
-                                      href: "/profile",
-                                  },
-                            state.profile.fetched &&
-                            checkPermission(state.profile.permissions, [
-                                UIConstants.permissions.manageCourse,
-                                UIConstants.permissions.manageAnyCourse,
-                                UIConstants.permissions.manageMedia,
-                                UIConstants.permissions.manageAnyMedia,
-                                UIConstants.permissions.manageSite,
-                                UIConstants.permissions.manageSettings,
-                                UIConstants.permissions.manageUsers,
-                                UIConstants.permissions.viewAnyMedia,
-                            ])
-                                ? {
-                                      label: "Dashboard",
-                                      type: "link",
-                                      href: "/dashboard/products",
-                                  }
-                                : undefined,
-                            {
-                                label: state.auth.guest ? "Login" : "Logout",
-                                type: "link",
-                                href: state.auth.guest ? "/login" : "/logout",
-                            },
-                        ]}
-                    />
-                </Box>
-            </Grid>
-        </Grid>
+                    {settings.links.map((link) => (
+                        <MenuItem key={link.href}>
+                            <AppLink href={link.href}>{link.label}</AppLink>
+                        </MenuItem>
+                    ))}
+                    {state.profile.fetched &&
+                        checkPermission(state.profile.permissions, [
+                            UIConstants.permissions.enrollInCourse,
+                        ]) && (
+                            <MenuItem>
+                                <AppLink href={"/my-content"}>
+                                    My content
+                                </AppLink>
+                            </MenuItem>
+                        )}
+                    {!state.auth.guest && (
+                        <MenuItem>
+                            <AppLink href={"/profile"}>Profile</AppLink>
+                        </MenuItem>
+                    )}
+                    {state.profile.fetched &&
+                        checkPermission(state.profile.permissions, [
+                            UIConstants.permissions.manageCourse,
+                            UIConstants.permissions.manageAnyCourse,
+                            UIConstants.permissions.manageMedia,
+                            UIConstants.permissions.manageAnyMedia,
+                            UIConstants.permissions.manageSite,
+                            UIConstants.permissions.manageSettings,
+                            UIConstants.permissions.manageUsers,
+                            UIConstants.permissions.viewAnyMedia,
+                        ]) && (
+                            <MenuItem>
+                                <AppLink href={"/dashboard/products"}>
+                                    Dashboard
+                                </AppLink>
+                            </MenuItem>
+                        )}
+                    <MenuItem>
+                        <AppLink href={state.auth.guest ? "/login" : "/logout"}>
+                            {state.auth.guest ? "Login" : "Logout"}
+                        </AppLink>
+                    </MenuItem>
+                </Menu2>
+            </div>
+            <div className="hidden lg:!block">
+                <Menu2
+                    icon={<Person />}
+                    style={{
+                        color: settings.loginBtnColor,
+                        backgroundColor: settings.loginBtnBgColor,
+                    }}
+                >
+                    {state.profile.fetched &&
+                        checkPermission(state.profile.permissions, [
+                            UIConstants.permissions.enrollInCourse,
+                        ]) && (
+                            <MenuItem>
+                                <AppLink href={"/my-content"}>
+                                    My content
+                                </AppLink>
+                            </MenuItem>
+                        )}
+                    {!state.auth.guest && (
+                        <MenuItem>
+                            <AppLink href={"/profile"}>Profile</AppLink>
+                        </MenuItem>
+                    )}
+                    {state.profile.fetched &&
+                        checkPermission(state.profile.permissions, [
+                            UIConstants.permissions.manageCourse,
+                            UIConstants.permissions.manageAnyCourse,
+                            UIConstants.permissions.manageMedia,
+                            UIConstants.permissions.manageAnyMedia,
+                            UIConstants.permissions.manageSite,
+                            UIConstants.permissions.manageSettings,
+                            UIConstants.permissions.manageUsers,
+                            UIConstants.permissions.viewAnyMedia,
+                        ]) && (
+                            <MenuItem>
+                                <AppLink href={"/dashboard/products"}>
+                                    Dashboard
+                                </AppLink>
+                            </MenuItem>
+                        )}
+                    <MenuItem>
+                        <AppLink href={state.auth.guest ? "/login" : "/logout"}>
+                            {state.auth.guest ? "Login" : "Logout"}
+                        </AppLink>
+                    </MenuItem>
+                </Menu2>
+            </div>
+        </div>
     );
 }

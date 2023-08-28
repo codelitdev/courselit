@@ -38,7 +38,7 @@ export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
                 type: 1,
                 entityId: 1,
                 draftLayout: 1,
-            }
+            },
         );
         if (!page) return;
 
@@ -55,7 +55,7 @@ export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
                 name: 1,
                 type: 1,
                 entityId: 1,
-            }
+            },
         );
         if (!page) return;
 
@@ -117,7 +117,7 @@ interface Published {
 
 export const savePage = async (
     pageData: Draft | Published,
-    ctx: GQLContext
+    ctx: GQLContext,
 ): Promise<Partial<Page> | null> => {
     const { pageId } = pageData;
     checkIfAuthenticated(ctx);
@@ -148,7 +148,7 @@ export const savePage = async (
                     ctx.subdomain.sharedWidgets[widget.name] = Object.assign(
                         {},
                         ctx.subdomain.sharedWidgets[widget.name],
-                        widget
+                        widget,
                     );
                     widget.settings = undefined;
                 }
@@ -192,7 +192,7 @@ export const getPages = async (ctx: GQLContext) => {
             name: 1,
             type: 1,
             entityId: 1,
-        }
+        },
     );
 
     return pages;

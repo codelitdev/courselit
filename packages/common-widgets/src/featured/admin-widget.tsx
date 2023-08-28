@@ -1,16 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
 import type { Address } from "@courselit/common-models";
 import Settings from "./settings";
 import {
     FormLabel,
     Grid,
-    IconButton,
     List,
     ListItem,
     ListItemText,
     Skeleton,
     TextField,
-    Typography,
 } from "@mui/material";
 import { capitalize, FetchBuilder } from "@courselit/utils";
 import { actionCreators, AppDispatch } from "@courselit/state-management";
@@ -20,11 +18,11 @@ import {
     Select,
     TextEditor,
 } from "@courselit/components-library";
-import { Delete } from "@mui/icons-material";
+import { Delete } from "@courselit/icons";
 import { Alignment } from "@courselit/common-models";
+import { IconButton } from "@courselit/components-library";
 
 interface AdminWidgetProps {
-    name: string;
     settings: Settings;
     onChange: (...args: any[]) => void;
     address: Address;
@@ -33,7 +31,6 @@ interface AdminWidgetProps {
 }
 
 export default function AdminWidget({
-    name,
     settings,
     onChange,
     address,
@@ -58,14 +55,14 @@ export default function AdminWidget({
     const [productsLoaded, setProductsLoaded] = useState(false);
     const [title, setTitle] = useState(settings.title || "Featured");
     const [description, setDescription] = useState(
-        settings.description || dummyDescription
+        settings.description || dummyDescription,
     );
     const [backgroundColor, setBackgroundColor] = useState(
-        settings.backgroundColor || "inherit"
+        settings.backgroundColor,
     );
-    const [color, setColor] = useState(settings.color || "inherit");
+    const [color, setColor] = useState(settings.color);
     const [headerAlignment, setHeaderAlignment] = useState<Alignment>(
-        settings.headerAlignment || "left"
+        settings.headerAlignment || "left",
     );
 
     useEffect(() => {
@@ -130,7 +127,9 @@ export default function AdminWidget({
                             fullWidth
                             value={title}
                             label="Title"
-                            onChange={(e) => setTitle(e.target.value)}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                setTitle(e.target.value)
+                            }
                         />
                     </Grid>
                     <Grid item sx={{ mb: 2 }}>
@@ -176,7 +175,9 @@ export default function AdminWidget({
                                 options={allProducts
                                     .filter(
                                         (product) =>
-                                            !products.includes(product.courseId)
+                                            !products.includes(
+                                                product.courseId,
+                                            ),
                                     )
                                     .map((product) => ({
                                         label: product.title,
@@ -191,7 +192,7 @@ export default function AdminWidget({
                                 {products.map((product: string) => {
                                     const productItem = allProducts.filter(
                                         (productItem) =>
-                                            productItem.courseId === product
+                                            productItem.courseId === product,
                                     )[0];
                                     if (!productItem) return <></>;
                                     return (
@@ -202,7 +203,7 @@ export default function AdminWidget({
                                                     onClick={() =>
                                                         removeProduct(product)
                                                     }
-                                                    size="small"
+                                                    variant="soft"
                                                 >
                                                     <Delete />
                                                 </IconButton>
@@ -224,8 +225,8 @@ export default function AdminWidget({
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Background color"
-                            value={backgroundColor}
-                            onChange={(value: string) =>
+                            value={backgroundColor || "inherit"}
+                            onChange={(value?: string) =>
                                 setBackgroundColor(value)
                             }
                         />
@@ -233,8 +234,8 @@ export default function AdminWidget({
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Color"
-                            value={color}
-                            onChange={(value: string) => setColor(value)}
+                            value={color || "inherit"}
+                            onChange={(value?: string) => setColor(value)}
                         />
                     </Grid>
                 </AdminWidgetPanel>

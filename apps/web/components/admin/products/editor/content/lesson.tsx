@@ -51,7 +51,7 @@ import { actionCreators } from "@courselit/state-management";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import useCourse from "../course-hook";
-import { Help } from "@mui/icons-material";
+import { Help } from "@courselit/icons";
 import { Dialog, MediaSelector } from "@courselit/components-library";
 import { QuizBuilder } from "./quiz-builder";
 
@@ -111,7 +111,7 @@ const LessonEditor = ({
                         course.type?.toUpperCase() === COURSE_TYPE_DOWNLOAD
                             ? LESSON_TYPE_TEXT.toUpperCase()
                             : LESSON_TYPE_FILE.toUpperCase(),
-                })
+                }),
             );
         }
     }, [course]);
@@ -154,7 +154,7 @@ const LessonEditor = ({
                 switch (response.lesson.type.toLowerCase()) {
                     case LESSON_TYPE_TEXT:
                         setTextContent(
-                            response.lesson.content || { type: "doc" }
+                            response.lesson.content || { type: "doc" },
                         );
                         setRefresh(refresh + 1);
                         break;
@@ -322,8 +322,8 @@ const LessonEditor = ({
                 if (response.result) {
                     dispatch(
                         setAppMessage(
-                            new AppMessage(APP_MESSAGE_LESSON_DELETED)
-                        )
+                            new AppMessage(APP_MESSAGE_LESSON_DELETED),
+                        ),
                     );
                     router.replace(`/dashboard/product/${courseId}/content`);
                 }
@@ -342,7 +342,7 @@ const LessonEditor = ({
                     e.target.type === "checkbox"
                         ? !e.target.checked
                         : e.target.value,
-            })
+            }),
         );
 
     const closeDeleteLessonPopup = () => setDeleteLessonPopupOpened(false);
@@ -376,19 +376,19 @@ const LessonEditor = ({
                   {
                       label: capitalize(LESSON_TYPE_FILE),
                       value: String.prototype.toUpperCase.call(
-                          LESSON_TYPE_FILE
+                          LESSON_TYPE_FILE,
                       ),
                   },
                   {
                       label: capitalize(LESSON_TYPE_VIDEO),
                       value: String.prototype.toUpperCase.call(
-                          LESSON_TYPE_VIDEO
+                          LESSON_TYPE_VIDEO,
                       ),
                   },
                   {
                       label: capitalize(LESSON_TYPE_AUDIO),
                       value: String.prototype.toUpperCase.call(
-                          LESSON_TYPE_AUDIO
+                          LESSON_TYPE_AUDIO,
                       ),
                   },
                   {
@@ -398,7 +398,7 @@ const LessonEditor = ({
                   {
                       label: capitalize(LESSON_TYPE_EMBED),
                       value: String.prototype.toUpperCase.call(
-                          LESSON_TYPE_EMBED
+                          LESSON_TYPE_EMBED,
                       ),
                   },
               ]
@@ -406,19 +406,19 @@ const LessonEditor = ({
                   {
                       label: capitalize(LESSON_TYPE_FILE),
                       value: String.prototype.toUpperCase.call(
-                          LESSON_TYPE_FILE
+                          LESSON_TYPE_FILE,
                       ),
                   },
                   {
                       label: capitalize(LESSON_TYPE_VIDEO),
                       value: String.prototype.toUpperCase.call(
-                          LESSON_TYPE_VIDEO
+                          LESSON_TYPE_VIDEO,
                       ),
                   },
                   {
                       label: capitalize(LESSON_TYPE_AUDIO),
                       value: String.prototype.toUpperCase.call(
-                          LESSON_TYPE_AUDIO
+                          LESSON_TYPE_AUDIO,
                       ),
                   },
                   {
@@ -428,7 +428,7 @@ const LessonEditor = ({
                   {
                       label: capitalize(LESSON_TYPE_EMBED),
                       value: String.prototype.toUpperCase.call(
-                          LESSON_TYPE_EMBED
+                          LESSON_TYPE_EMBED,
                       ),
                   },
               ];
@@ -483,7 +483,7 @@ const LessonEditor = ({
                                                 setLesson(
                                                     Object.assign({}, lesson, {
                                                         type: value,
-                                                    })
+                                                    }),
                                                 );
                                             }}
                                             disabled={!!lesson.lessonId}
@@ -493,13 +493,13 @@ const LessonEditor = ({
                                 <Grid item sx={{ mb: 2 }}>
                                     {![
                                         String.prototype.toUpperCase.call(
-                                            LESSON_TYPE_TEXT
+                                            LESSON_TYPE_TEXT,
                                         ),
                                         String.prototype.toUpperCase.call(
-                                            LESSON_TYPE_QUIZ
+                                            LESSON_TYPE_QUIZ,
                                         ),
                                         String.prototype.toUpperCase.call(
-                                            LESSON_TYPE_EMBED
+                                            LESSON_TYPE_EMBED,
                                         ),
                                     ].includes(lesson.type) && (
                                         <div>
@@ -518,7 +518,7 @@ const LessonEditor = ({
                                                     ""
                                                 }
                                                 onSelection={(
-                                                    media?: Media
+                                                    media?: Media,
                                                 ) => {
                                                     media &&
                                                         setLesson(
@@ -530,8 +530,8 @@ const LessonEditor = ({
                                                                         lesson.title ||
                                                                         media.originalFileName,
                                                                     media,
-                                                                }
-                                                            )
+                                                                },
+                                                            ),
                                                         );
                                                 }}
                                                 mimeTypesToShow={getMimeTypesToShow()}
@@ -586,7 +586,7 @@ const LessonEditor = ({
                                                     required
                                                     value={content.value}
                                                     onChange={(
-                                                        e: ChangeEvent<HTMLInputElement>
+                                                        e: ChangeEvent<HTMLInputElement>,
                                                     ) =>
                                                         setContent({
                                                             value: e.target
@@ -652,10 +652,7 @@ const LessonEditor = ({
                                                                 LESSON_PREVIEW_TOOLTIP
                                                             }
                                                         >
-                                                            <Help
-                                                                color="disabled"
-                                                                fontSize="small"
-                                                            />
+                                                            <Help />
                                                         </Tooltip>
                                                     </Grid>
                                                 </Grid>
@@ -707,7 +704,7 @@ const LessonEditor = ({
                                             <Button
                                                 onClick={(e) =>
                                                     setDeleteLessonPopupOpened(
-                                                        true
+                                                        true,
                                                     )
                                                 }
                                                 color="error"

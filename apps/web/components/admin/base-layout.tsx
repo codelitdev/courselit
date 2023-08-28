@@ -3,13 +3,13 @@ import { styled } from "@mui/material/styles";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
 import {
-    LibraryBooksOutlined,
-    SupervisedUserCircleOutlined,
-    SettingsApplicationsOutlined,
-    PaletteOutlined,
-    ArticleOutlined,
-    MailOutlined,
-} from "@mui/icons-material";
+    Rocket,
+    Text,
+    Person,
+    Mail,
+    Desktop,
+    Settings,
+} from "@courselit/icons";
 import {
     CREATOR_AREA_PAGE_TITLE,
     SIDEBAR_MENU_BLOGS,
@@ -57,12 +57,12 @@ const getSidebarMenuItems = (profile: Profile, featureFlags: string[]) => {
         items.push({
             label: SIDEBAR_MENU_PRODUCTS,
             href: "/dashboard/products",
-            icon: <LibraryBooksOutlined />,
+            icon: <Rocket />,
         });
         items.push({
             label: SIDEBAR_MENU_BLOGS,
             href: "/dashboard/blogs",
-            icon: <ArticleOutlined />,
+            icon: <Text />,
         });
     }
 
@@ -70,13 +70,13 @@ const getSidebarMenuItems = (profile: Profile, featureFlags: string[]) => {
         items.push({
             label: SIDEBAR_MENU_USERS,
             href: "/dashboard/users",
-            icon: <SupervisedUserCircleOutlined />,
+            icon: <Person />,
         });
         if (featureFlags.includes("mail")) {
             items.push({
                 label: SIDEBAR_MENU_MAILS,
                 href: "/dashboard/mails",
-                icon: <MailOutlined />,
+                icon: <Mail />,
             });
         }
     }
@@ -85,7 +85,7 @@ const getSidebarMenuItems = (profile: Profile, featureFlags: string[]) => {
         items.push({
             label: SIDEBAR_MENU_SITE,
             href: "/dashboard/design",
-            icon: <PaletteOutlined />,
+            icon: <Desktop />,
         });
     }
 
@@ -93,7 +93,7 @@ const getSidebarMenuItems = (profile: Profile, featureFlags: string[]) => {
         items.push({
             label: SIDEBAR_MENU_SETTINGS,
             href: "/dashboard/settings",
-            icon: <SettingsApplicationsOutlined />,
+            icon: <Settings />,
         });
     }
 

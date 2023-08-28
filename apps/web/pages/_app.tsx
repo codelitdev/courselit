@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from "react";
+import "../styles/globals.css";
+import "@courselit/common-widgets/styles.css";
+import "@courselit/components-library/styles.css";
 import type { AppProps } from "next/app";
 import { CacheProvider, EmotionCache } from "@emotion/react";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -51,11 +54,11 @@ function MyApp({
         });
         if (response.status === 200) {
             (store.dispatch as ThunkDispatch<State, null, AnyAction>)(
-                actionCreators.signedIn()
+                actionCreators.signedIn(),
             );
         }
         (store.dispatch as ThunkDispatch<State, null, AnyAction>)(
-            actionCreators.authChecked()
+            actionCreators.authChecked(),
         );
     };
 
@@ -87,7 +90,7 @@ MyApp.getInitialProps = wrapper.getInitialAppProps(
             store.dispatch(actionCreators.updateBackend(backend));
             try {
                 await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
-                    actionCreators.updateSiteInfo()
+                    actionCreators.updateSiteInfo(),
                 );
             } catch (error: any) {
                 console.error(error);
@@ -100,7 +103,7 @@ MyApp.getInitialProps = wrapper.getInitialAppProps(
                 ...(await App.getInitialProps(context)).pageProps,
             },
         };
-    }
+    },
 );
 
 export default wrapper.withRedux(MyApp);

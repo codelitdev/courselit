@@ -1,13 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Grid from "@mui/material/Grid";
-import TextField from "@mui/material/TextField";
 import Settings, { Item } from "../settings";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemText from "@mui/material/ListItemText";
 import ItemEditor from "./item-editor";
 import { Address, Auth, Profile, Alignment } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
@@ -16,7 +8,17 @@ import {
     ColorSelector,
     Select,
     TextEditor,
+    Button,
 } from "@courselit/components-library";
+import {
+    Grid,
+    TextField,
+    Typography,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemText,
+} from "@mui/material";
 
 export interface AdminWidgetProps {
     settings: Settings;
@@ -27,7 +29,7 @@ export interface AdminWidgetProps {
     profile: Profile;
     hideActionButtons: (
         e: boolean,
-        preservedStateAcrossRerender: Record<string, unknown>
+        preservedStateAcrossRerender: Record<string, unknown>,
     ) => void;
     preservedStateAcrossRerender: Record<string, unknown>;
 }
@@ -76,30 +78,30 @@ export default function AdminWidget({
     };
     const [title, setTitle] = useState(settings.title || "Grid");
     const [description, setDescription] = useState(
-        settings.description || dummyDescription
+        settings.description || dummyDescription,
     );
     const [buttonAction, setButtonAction] = useState(settings.buttonAction);
     const [buttonCaption, setButtonCaption] = useState(settings.buttonCaption);
     const [backgroundColor, setBackgroundColor] = useState(
-        settings.backgroundColor
+        settings.backgroundColor,
     );
     const [foregroundColor, setForegroundColor] = useState(
-        settings.foregroundColor
+        settings.foregroundColor,
     );
     const [buttonBackground, setButtonBackground] = useState(
-        settings.buttonBackground
+        settings.buttonBackground,
     );
     const [buttonForeground, setButtonForeground] = useState(
-        settings.buttonForeground
+        settings.buttonForeground,
     );
     const [items, setItems] = useState<Item[]>(
-        settings.items || [dummyItem, dummyItem, dummyItem]
+        settings.items || [dummyItem, dummyItem, dummyItem],
     );
     const [headerAlignment, setHeaderAlignment] = useState<Alignment>(
-        settings.headerAlignment || "center"
+        settings.headerAlignment || "center",
     );
     const [itemsAlignment, setItemsAlignment] = useState<Alignment>(
-        settings.itemsAlignment || "center"
+        settings.itemsAlignment || "center",
     );
     const [itemBeingEditedIndex, setItemBeingEditedIndex] = useState(-1);
 
@@ -232,8 +234,8 @@ export default function AdminWidget({
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Button color"
-                            value={buttonBackground}
-                            onChange={(value: string) =>
+                            value={buttonBackground || "inherit"}
+                            onChange={(value?: string) =>
                                 setButtonBackground(value)
                             }
                         />
@@ -241,8 +243,8 @@ export default function AdminWidget({
                     <Grid item>
                         <ColorSelector
                             title="Button text color"
-                            value={buttonForeground}
-                            onChange={(value: string) =>
+                            value={buttonForeground || "inherit"}
+                            onChange={(value?: string) =>
                                 setButtonForeground(value)
                             }
                         />
@@ -269,7 +271,13 @@ export default function AdminWidget({
                         </List>
                     </Grid>
                     <Grid item sx={{ mb: 2 }}>
-                        <Button onClick={addNewItem}>Add new item</Button>
+                        <Button
+                            component="button"
+                            variant="soft"
+                            onClick={addNewItem}
+                        >
+                            Add new item
+                        </Button>
                     </Grid>
                     <Grid item>
                         <Select
@@ -291,8 +299,8 @@ export default function AdminWidget({
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Background color"
-                            value={backgroundColor}
-                            onChange={(value: string) =>
+                            value={backgroundColor || "inherit"}
+                            onChange={(value?: string) =>
                                 setBackgroundColor(value)
                             }
                         />
@@ -300,8 +308,8 @@ export default function AdminWidget({
                     <Grid item>
                         <ColorSelector
                             title="Text color"
-                            value={foregroundColor}
-                            onChange={(value: string) =>
+                            value={foregroundColor || "inherit"}
+                            onChange={(value?: string) =>
                                 setForegroundColor(value)
                             }
                         />

@@ -3,9 +3,10 @@ import { Address } from "@courselit/common-models";
 import widgets from "../../../ui-config/widgets";
 import { connect } from "react-redux";
 import { AppState } from "@courselit/state-management";
-import { Button, Grid, IconButton, Typography } from "@mui/material";
-import { Close } from "@mui/icons-material";
+import { Button, Grid, Typography } from "@mui/material";
+import { Cross as Close } from "@courselit/icons";
 import AdminWidget from "./admin-widget";
+import { IconButton } from "@courselit/components-library";
 
 interface EditWidgetProps {
     address: Address;
@@ -64,7 +65,7 @@ function EditWidget({
                         </Typography>
                     </Grid>
                     <Grid item>
-                        <IconButton onClick={onClose}>
+                        <IconButton onClick={onClose} variant="soft">
                             <Close fontSize="small" />
                         </IconButton>
                     </Grid>
@@ -81,7 +82,7 @@ function EditWidget({
                             }}
                             hideActionButtons={(
                                 e: boolean,
-                                state: Record<string, unknown>
+                                state: Record<string, unknown>,
                             ) => {
                                 setHideActionButtons(e);
                                 setPreservedStateAcrossRerender(state);

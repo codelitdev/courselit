@@ -43,26 +43,26 @@ export default function CustomSettings({
     const [buttonAction, setButtonAction] = useState(settings.buttonAction);
     const [alignment, setAlignment] = useState(settings.alignment || "left");
     const [backgroundColor, setBackgroundColor] = useState(
-        settings.backgroundColor || "inherit"
+        settings.backgroundColor,
     );
-    const [color, setColor] = useState(settings.color || "inherit");
+    const [color, setColor] = useState(settings.color);
     const [buttonBackground, setButtonBackground] = useState(
-        settings.buttonBackground
+        settings.buttonBackground,
     );
     const [buttonForeground, setButtonForeground] = useState(
-        settings.buttonForeground
+        settings.buttonForeground,
     );
     const [textAlignment, setTextAlignment] = useState<Alignment>(
-        settings.textAlignment || "left"
+        settings.textAlignment || "left",
     );
     const [successMessage, setSuccessMessage] = useState(
-        settings.successMessage || defaultSuccessMessage
+        settings.successMessage || defaultSuccessMessage,
     );
     const [failureMessage, setFailureMessage] = useState(
-        settings.failureMessage || DEFAULT_FAILURE_MESSAGE
+        settings.failureMessage || DEFAULT_FAILURE_MESSAGE,
     );
     const [editingViewShowSuccess, setEditingViewShowSuccess] = useState<1 | 0>(
-        settings.editingViewShowSuccess || 0
+        settings.editingViewShowSuccess || 0,
     );
     const type = Object.keys(pageData).length === 0 ? "site" : "product";
 
@@ -148,8 +148,8 @@ export default function CustomSettings({
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Button color"
-                            value={buttonBackground}
-                            onChange={(value: string) =>
+                            value={buttonBackground || "inherit"}
+                            onChange={(value?: string) =>
                                 setButtonBackground(value)
                             }
                         />
@@ -157,8 +157,8 @@ export default function CustomSettings({
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Button text color"
-                            value={buttonForeground}
-                            onChange={(value: string) =>
+                            value={buttonForeground || "inherit"}
+                            onChange={(value?: string) =>
                                 setButtonForeground(value)
                             }
                         />
@@ -208,8 +208,8 @@ export default function CustomSettings({
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Background color"
-                            value={backgroundColor}
-                            onChange={(value: string) =>
+                            value={backgroundColor || "inherit"}
+                            onChange={(value?: string) =>
                                 setBackgroundColor(value)
                             }
                         />
@@ -217,8 +217,8 @@ export default function CustomSettings({
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Text color"
-                            value={color}
-                            onChange={(value: string) => setColor(value)}
+                            value={color || "inherit"}
+                            onChange={(value?: string) => setColor(value)}
                         />
                     </Grid>
                     <Grid item sx={{ mb: 2 }}>

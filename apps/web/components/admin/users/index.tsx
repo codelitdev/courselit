@@ -51,11 +51,11 @@ import { AnyAction } from "redux";
 import { Select as SingleSelect } from "@courselit/components-library";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import { CSVLink } from "react-csv";
-import Email from "@mui/icons-material/Email";
-import Cancel from "@mui/icons-material/Cancel";
+import { Cancel } from "@courselit/icons";
 import InputAdornment from "@mui/material/InputAdornment";
 import { useRouter } from "next/router";
 import { UIConstants } from "@courselit/common-models";
+import { Mail } from "@courselit/icons";
 
 const { networkAction } = actionCreators;
 const { permissions } = UIConstants;
@@ -94,13 +94,13 @@ const UsersManager = ({
 
     const handlePageChange = (
         e: MouseEvent<HTMLButtonElement> | null,
-        newPage: number
+        newPage: number,
     ) => {
         setPage(newPage);
     };
 
     const handleRowsPerPageChange = (
-        e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+        e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => {
         setRowsPerPage(parseInt(e.target.value, 10));
         setPage(0);
@@ -168,7 +168,7 @@ const UsersManager = ({
             .build();
         try {
             (dispatch as ThunkDispatch<State, null, AnyAction>)(
-                networkAction(true)
+                networkAction(true),
             );
             const response = await fetch.exec();
             if (response.users && response.users.length > 0) {
@@ -178,7 +178,7 @@ const UsersManager = ({
             dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
             (dispatch as ThunkDispatch<State, null, AnyAction>)(
-                networkAction(false)
+                networkAction(false),
             );
         }
     };
@@ -218,7 +218,7 @@ const UsersManager = ({
             .build();
         try {
             (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                networkAction(true)
+                networkAction(true),
             );
             const response = await fetch.exec();
             if (response.count) {
@@ -228,7 +228,7 @@ const UsersManager = ({
             dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
             (dispatch as ThunkDispatch<State, null, AnyAction>)(
-                networkAction(false)
+                networkAction(false),
             );
         }
     };
@@ -277,7 +277,7 @@ const UsersManager = ({
             .build();
         try {
             (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                networkAction(true)
+                networkAction(true),
             );
             const response = await fetch.exec();
             if (response.mail && response.mail.mailId) {
@@ -287,7 +287,7 @@ const UsersManager = ({
             dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
             (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                networkAction(false)
+                networkAction(false),
             );
         }
     };
@@ -410,13 +410,13 @@ const UsersManager = ({
                                 user.name,
                                 user.createdAt
                                     ? new Date(
-                                          +user.createdAt
+                                          +user.createdAt,
                                       ).toLocaleDateString()
                                     : "",
                                 user.updatedAt !== user.createdAt
                                     ? user.updatedAt
                                         ? new Date(
-                                              +user.updatedAt
+                                              +user.updatedAt,
                                           ).toLocaleDateString()
                                         : ""
                                     : "",
@@ -429,7 +429,7 @@ const UsersManager = ({
                     {featureFlags.includes("mail") && (
                         <Tooltip title={TOOLTIP_USER_PAGE_SEND_MAIL}>
                             <IconButton onClick={createMail}>
-                                <Email />
+                                <Mail />
                             </IconButton>
                         </Tooltip>
                     )}
@@ -497,7 +497,7 @@ const UsersManager = ({
                                     <TableCell align="right">
                                         {user.createdAt
                                             ? new Date(
-                                                  +user.createdAt
+                                                  +user.createdAt,
                                               ).toLocaleDateString()
                                             : ""}
                                     </TableCell>
@@ -505,7 +505,7 @@ const UsersManager = ({
                                         {user.updatedAt !== user.createdAt
                                             ? user.updatedAt
                                                 ? new Date(
-                                                      +user.updatedAt
+                                                      +user.updatedAt,
                                                   ).toLocaleDateString()
                                                 : ""
                                             : ""}

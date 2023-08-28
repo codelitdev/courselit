@@ -30,11 +30,11 @@ class FontsInjector extends React.Component<CodeInjectorProps> {
             const link = document.createElement("link");
             (link.setAttribute as (name: string, value: string) => void)(
                 "href",
-                fontString
+                fontString,
             );
             (link.setAttribute as (name: string, value: string) => void)(
                 "rel",
-                "stylesheet"
+                "stylesheet",
             );
 
             (document as Record<string, any>)["head"].appendChild(link);

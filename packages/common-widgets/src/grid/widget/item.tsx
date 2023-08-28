@@ -1,9 +1,6 @@
-import * as React from "react";
-import Grid from "@mui/material/Grid";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
+import React from "react";
 import { Item } from "../settings";
-import { TextRenderer, Image } from "@courselit/components-library";
+import { TextRenderer, Image, Button } from "@courselit/components-library";
 import { Alignment } from "@courselit/common-models";
 
 interface ItemmProps {
@@ -20,64 +17,45 @@ export default function Itemm({
     alignment,
 }: ItemmProps) {
     return (
-        <Grid
-            item
-            xs={12}
-            md={6}
-            lg={4}
-            sx={{
-                mb: 3,
-            }}
-        >
+        <div>
             {media && media.file && (
-                <Grid item sx={{ mb: 2 }}>
+                <div className="mb-4">
                     <Image
                         src={media && media.file}
                         loading="lazy"
                         sizes="40vw"
                         noDefaultImage={true}
                     />
-                </Grid>
+                </div>
             )}
-            <Grid
-                item
-                container
-                direction="column"
-                component="article"
-                spacing={1}
-                alignItems={alignment === "center" ? "center" : "left"}
+            <article
+                className={`flex flex-col ${
+                    alignment === "center" ? "items-center" : "items-start"
+                }`}
             >
-                <Grid item>
-                    <Typography variant="h5">{title}</Typography>
-                </Grid>
+                <h3 className="text-3xl mb-2">{title}</h3>
                 {description && (
-                    <Grid
-                        item
-                        sx={{
-                            textAlign:
-                                alignment === "center" ? "center" : "left",
-                        }}
+                    <div
+                        className={`mb-2 ${
+                            alignment === "center" ? "text-center" : "text-left"
+                        }`}
                     >
                         <TextRenderer json={description} />
-                    </Grid>
+                    </div>
                 )}
                 {buttonAction && buttonCaption && (
-                    <Grid item>
-                        <Button
-                            component="a"
-                            href={buttonAction}
-                            variant="contained"
-                            size="large"
-                            sx={{
-                                backgroundColor: buttonBackground,
-                                color: buttonForeground,
-                            }}
-                        >
-                            {buttonCaption}
-                        </Button>
-                    </Grid>
+                    <Button
+                        href={buttonAction}
+                        component="link"
+                        style={{
+                            backgroundColor: buttonBackground,
+                            color: buttonForeground,
+                        }}
+                    >
+                        {buttonCaption}
+                    </Button>
                 )}
-            </Grid>
-        </Grid>
+            </article>
+        </div>
     );
 }

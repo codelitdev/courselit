@@ -3,13 +3,13 @@ import { useRouter } from "next/router";
 import { BUTTON_NEW_LESSON_TEXT } from "../../../../../../../ui-config/strings";
 
 const BaseLayout = dynamic(
-    () => import("../../../../../../../components/admin/base-layout")
+    () => import("../../../../../../../components/admin/base-layout"),
 );
 const LessonEditor = dynamic(
     () =>
         import(
             "../../../../../../../components/admin/products/editor/content/lesson"
-        )
+        ),
 );
 
 function NewLesson({}) {

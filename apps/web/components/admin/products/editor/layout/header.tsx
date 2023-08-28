@@ -1,5 +1,5 @@
 import React from "react";
-import { MoreVert } from "@mui/icons-material";
+import { MoreVert } from "@courselit/icons";
 import { Breadcrumbs, Grid, Typography } from "@mui/material";
 import Link from "next/link";
 import {
@@ -40,7 +40,7 @@ export default function ProductHeader({ id, breadcrumbs }: ProductHeaderProps) {
                                 <Typography key={crumb.text}>
                                     {crumb.text}
                                 </Typography>
-                            )
+                            ),
                         )}
                     </Breadcrumbs>
                 </Grid>

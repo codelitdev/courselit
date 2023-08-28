@@ -19,7 +19,7 @@ export default function Content({ id }: EditorProps) {
             {course && (
                 <Grid item>
                     {[COURSE_TYPE_COURSE, COURSE_TYPE_DOWNLOAD].includes(
-                        course!.type!.toLowerCase()
+                        course!.type!.toLowerCase(),
                     ) && <LessonsList id={id} />}
                 </Grid>
             )}

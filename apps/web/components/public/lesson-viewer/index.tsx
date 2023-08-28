@@ -12,7 +12,7 @@ import {
 } from "../../../ui-config/constants";
 import { connect } from "react-redux";
 import { actionCreators } from "@courselit/state-management";
-import { Typography, Grid, Button } from "@mui/material";
+import { Typography, Grid } from "@mui/material";
 import {
     COURSE_PROGRESS_FINISH,
     COURSE_PROGRESS_INTRO,
@@ -22,7 +22,7 @@ import {
     ENROLL_IN_THE_COURSE,
     NOT_ENROLLED_HEADER,
 } from "../../../ui-config/strings";
-import { TextRenderer, Link } from "@courselit/components-library";
+import { TextRenderer, Link, Button } from "@courselit/components-library";
 import type {
     Address,
     Lesson,
@@ -37,7 +37,7 @@ import {
     refreshUserProfile,
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
-import { ArrowBack, ArrowForward } from "@mui/icons-material";
+import { ArrowLeft, ArrowRight } from "@courselit/icons";
 import { isEnrolled } from "../../../ui-lib/utils";
 import LessonEmbedViewer from "./embed-viewer";
 import QuizViewer from "./quiz-viewer";
@@ -186,7 +186,7 @@ const LessonViewer = ({
                     router.push(
                         `/course/${slug}/${lesson!.courseId}/${
                             lesson!.nextLesson
-                        }`
+                        }`,
                     );
                 } else {
                     router.push(`/my-content`);
@@ -222,9 +222,7 @@ const LessonViewer = ({
                             textDecoration: "none",
                         }}
                     >
-                        <Button variant="contained" size="large">
-                            {ENROLL_BUTTON_TEXT}
-                        </Button>
+                        <Button component="button">{ENROLL_BUTTON_TEXT}</Button>
                     </Link>
                 </Grid>
             </Grid>
@@ -413,10 +411,10 @@ const LessonViewer = ({
                                             }}
                                         >
                                             <Button
-                                                component="a"
-                                                size="large"
-                                                startIcon={<ArrowBack />}
+                                                component="button"
+                                                variant="soft"
                                             >
+                                                <ArrowLeft />{" "}
                                                 {COURSE_PROGRESS_INTRO}
                                             </Button>
                                         </Link>
@@ -429,10 +427,10 @@ const LessonViewer = ({
                                             }}
                                         >
                                             <Button
-                                                component="a"
-                                                size="large"
-                                                startIcon={<ArrowBack />}
+                                                component="button"
+                                                variant="soft"
                                             >
+                                                <ArrowLeft />{" "}
                                                 {COURSE_PROGRESS_PREV}
                                             </Button>
                                         </Link>
@@ -440,20 +438,16 @@ const LessonViewer = ({
                                 </Grid>
                                 <Grid item>
                                     <Button
-                                        component="a"
-                                        size="large"
-                                        endIcon={
-                                            lesson.nextLesson ? (
-                                                <ArrowForward />
-                                            ) : undefined
-                                        }
-                                        variant="contained"
+                                        component="button"
                                         onClick={markCompleteAndNext}
                                         disabled={loading}
                                     >
                                         {lesson.nextLesson
                                             ? COURSE_PROGRESS_NEXT
                                             : COURSE_PROGRESS_FINISH}
+                                        {lesson.nextLesson ? (
+                                            <ArrowRight />
+                                        ) : undefined}
                                     </Button>
                                 </Grid>
                             </Grid>

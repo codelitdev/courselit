@@ -1,30 +1,26 @@
 import * as React from "react";
 import NextLink from "next/link";
-import { Link as MuiLink } from "@mui/material";
 
 interface LinkProps {
     href: string;
     children?: React.ReactNode;
-    sxProps?: Record<string, unknown>;
+    openInSameTab?: boolean;
 }
 
-export default function Link({ href, children, sxProps }: LinkProps) {
-    const linkProps = Object.assign(
-        {},
-        {
-            cursor: "pointer",
-        },
-        { ...sxProps }
-    );
+export default function Link({ href, children, openInSameTab }: LinkProps) {
+    const isInternal = href.startsWith("/");
 
-    return (
-        <MuiLink
-            variant="body1"
+    return isInternal ? (
+        <NextLink href={href} style={{ flexGrow: 1 }}>
+            {children}
+        </NextLink>
+    ) : (
+        <a
             href={href}
-            sx={linkProps}
-            component={NextLink}
+            target={openInSameTab ? "_self" : "_blank"}
+            style={{ flexGrow: 1 }}
         >
             {children}
-        </MuiLink>
+        </a>
     );
 }

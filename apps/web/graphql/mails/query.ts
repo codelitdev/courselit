@@ -19,7 +19,7 @@ export default {
         resolve: (
             _: any,
             { mailId }: { mailId: string },
-            context: GQLContext
+            context: GQLContext,
         ) => getMail(mailId, context),
     },
     getMails: {
@@ -30,7 +30,7 @@ export default {
         resolve: (
             _: any,
             { searchData }: { searchData: SearchData },
-            context: GQLContext
+            context: GQLContext,
         ) => getMails(searchData, context),
     },
     getMailsCount: {

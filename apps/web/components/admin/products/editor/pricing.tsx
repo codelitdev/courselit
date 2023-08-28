@@ -39,7 +39,7 @@ function Pricing({ id, siteinfo, address, dispatch }: PricingProps) {
     const course = useCourse(id);
     const [cost, setCost] = useState(course?.cost);
     const [costType, setCostType] = useState<string>(
-        course?.costType?.toLowerCase() || PRICING_FREE
+        course?.costType?.toLowerCase() || PRICING_FREE,
     );
 
     useEffect(() => {
@@ -73,7 +73,7 @@ function Pricing({ id, siteinfo, address, dispatch }: PricingProps) {
             const response = await fetch.exec();
             if (response.updateCourse) {
                 dispatch(
-                    setAppMessage(new AppMessage(APP_MESSAGE_COURSE_SAVED))
+                    setAppMessage(new AppMessage(APP_MESSAGE_COURSE_SAVED)),
                 );
             }
         } catch (err: any) {

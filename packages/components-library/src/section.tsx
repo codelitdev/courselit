@@ -1,17 +1,17 @@
 import * as React from "react";
-import { styled } from "@mui/system";
-
-const StyledSection = styled("section")({});
 
 interface SectionProps {
+    className?: string;
     children: any;
 }
 
-const Section = (props: SectionProps) => {
+const Section = ({ className = "", children }: SectionProps) => {
     return (
-        <StyledSection sx={(theme: any) => Object.assign({}, theme.section)}>
-            {props.children}
-        </StyledSection>
+        <section
+            className={`flex flex-col border rounded border-slate-200 p-4 ${className}`}
+        >
+            {children}
+        </section>
     );
 };
 

@@ -58,7 +58,7 @@ async function initiateHandler(req: ApiRequest, res: NextApiResponse) {
         const buyer = user!;
         if (
             buyer.purchases.some(
-                (purchase) => purchase.courseId === course.courseId
+                (purchase) => purchase.courseId === course.courseId,
             )
         ) {
             return res.status(200).json({
@@ -79,7 +79,7 @@ async function initiateHandler(req: ApiRequest, res: NextApiResponse) {
 
         const siteinfo = req.subdomain!.settings;
         const paymentMethod = await getPaymentMethod(
-            req.subdomain!._id.toString()
+            req.subdomain!._id.toString(),
         );
 
         const purchase = await PurchaseModel.create({

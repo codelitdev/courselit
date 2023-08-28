@@ -36,7 +36,7 @@ export async function getPaginatedMedia({
                 apikey: process.env.MEDIALIT_APIKEY,
             }),
             credentials: "same-origin",
-        }
+        },
     );
     const jsonResponse = await response.json();
 
@@ -63,7 +63,7 @@ export async function getMedia(mediaId: string): Promise<Media> {
 }
 
 export async function getPresignedUrlForUpload(
-    domain: string
+    domain: string,
 ): Promise<string> {
     checkMediaLitAPIKeyOrThrow();
     let response: any = await fetch(
@@ -77,7 +77,7 @@ export async function getPresignedUrlForUpload(
                 apikey: process.env.MEDIALIT_APIKEY,
                 group: domain,
             }),
-        }
+        },
     );
     response = await response.json();
 
@@ -100,7 +100,7 @@ export async function deleteMedia(mediaId: string): Promise<boolean> {
             body: JSON.stringify({
                 apikey: process.env.MEDIALIT_APIKEY,
             }),
-        }
+        },
     );
     response = await response.json();
 

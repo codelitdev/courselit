@@ -121,7 +121,7 @@ Widget.getData = (id: string, settings: Record<string, unknown>) => `
         title,
         cost,
         featuredImage {
-            thumbnail 
+            thumbnail
         },
         slug,
         courseId,

@@ -27,7 +27,7 @@ export const generateMagicLink = ({
 
 export const getAddress = (
     hostname: string,
-    protocol: string | string[] = "http"
+    protocol: string | string[] = "http",
 ) => `${getProtocol(protocol)}://${hostname}`;
 
 export const getProtocol = (protocol: string | string[] = "http") => {

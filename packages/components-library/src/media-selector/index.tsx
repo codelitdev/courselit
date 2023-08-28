@@ -1,10 +1,10 @@
 import * as React from "react";
-import { Grid, Button, Typography } from "@mui/material";
 import Image from "../image";
 import MediaManagerDialog from "./media-manager-dialog";
 import { Address, Auth, Profile } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
 import Access from "./access";
+import Button from "../button";
 
 const { useState } = React;
 
@@ -61,24 +61,21 @@ const MediaSelector = (props: MediaSelectorProps) => {
     };
 
     return (
-        <Grid container direction="row" alignItems="center" spacing={2}>
-            <Grid item>
-                <Typography variant="body1">{title}</Typography>
-            </Grid>
-            <Grid item>
-                <Grid container direction="column">
-                    <Image src={src} height={64} width={64} />
-                    <Typography variant="caption">{srcTitle}</Typography>
-                </Grid>
-            </Grid>
-            <Grid item>
+        <div className="flex items-center gap-4">
+            <h4>{title}</h4>
+            <div className="flex flex-col gap-2">
+                <Image src={src} height={64} width={64} />
+                <p className="text-xs">{srcTitle}</p>
+            </div>
+            <div>
                 <Button
-                    variant="outlined"
+                    component="button"
+                    variant="soft"
                     onClick={() => setDialogOpened(!dialogOpened)}
                 >
                     {strings.buttonCaption || "Select media"}
                 </Button>
-            </Grid>
+            </div>
             {dialogOpened && (
                 <MediaManagerDialog
                     auth={auth}
@@ -119,7 +116,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
                     }}
                 />
             )}
-        </Grid>
+        </div>
     );
 };
 

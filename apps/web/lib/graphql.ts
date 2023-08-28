@@ -30,10 +30,10 @@ export const checkOwnership =
     };
 
 export const checkOwnershipWithoutModel = <
-    T extends { creatorId: mongoose.Types.ObjectId }
+    T extends { creatorId: mongoose.Types.ObjectId },
 >(
     item: T | null,
-    ctx: GQLContext
+    ctx: GQLContext,
 ) => {
     if (
         !item ||
@@ -53,11 +53,11 @@ export const validateOffset = (offset?: number) => {
 
 export const extractPlainTextFromDraftJS = (
     encodedEditorStateString: string,
-    characters: number
+    characters: number,
 ) => {
     try {
         const editorState = EditorState.createWithContent(
-            convertFromRaw(JSON.parse(decode(encodedEditorStateString)))
+            convertFromRaw(JSON.parse(decode(encodedEditorStateString))),
         );
         const descriptInPlainText = editorState
             .getCurrentContent()
@@ -125,7 +125,7 @@ export const makeModelTextSearchable =
 
 const validateSearchInput = (
     searchData: SearchData,
-    checkIfRequestIsAuthenticated: boolean
+    checkIfRequestIsAuthenticated: boolean,
 ) => {
     validateOffset(searchData.offset);
     validateMongooseTextSearchQuery(searchData.query);

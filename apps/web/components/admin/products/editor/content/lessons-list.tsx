@@ -1,13 +1,6 @@
 import React, { useState } from "react";
-import { Section } from "@courselit/components-library";
-import {
-    Button,
-    Grid,
-    IconButton,
-    Menu,
-    MenuItem,
-    Typography,
-} from "@mui/material";
+import { IconButton, Section } from "@courselit/components-library";
+import { Button, Grid, Menu, MenuItem, Typography } from "@mui/material";
 import Link from "next/link";
 import {
     BUTTON_NEW_GROUP_TEXT,
@@ -16,7 +9,7 @@ import {
     EDIT_SECTION_HEADER,
 } from "../../../../../ui-config/strings";
 import useCourse from "../course-hook";
-import { Add, MoreVert } from "@mui/icons-material";
+import { Add, MoreVert } from "@courselit/icons";
 import { Course, Lesson } from "@courselit/common-models";
 import { useRouter } from "next/router";
 import { LessonIcon } from "@courselit/components-library";
@@ -62,16 +55,7 @@ function LessonSection({ group, course }: LessonSectionProps) {
                             <Typography variant="h6">{group.name}</Typography>
                         </Grid>
                         <Grid item>
-                            <IconButton
-                                onClick={handleClick}
-                                size="small"
-                                sx={{ ml: 2 }}
-                                aria-controls={
-                                    open ? "section-menu" : undefined
-                                }
-                                aria-haspopup="true"
-                                aria-expanded={open ? "true" : undefined}
-                            >
+                            <IconButton onClick={handleClick} variant="soft">
                                 <MoreVert />
                             </IconButton>
                             <Menu
@@ -86,7 +70,7 @@ function LessonSection({ group, course }: LessonSectionProps) {
                                 <MenuItem
                                     onClick={() =>
                                         router.replace(
-                                            `/dashboard/product/${course.courseId}/section/${group.id}`
+                                            `/dashboard/product/${course.courseId}/section/${group.id}`,
                                         )
                                     }
                                 >

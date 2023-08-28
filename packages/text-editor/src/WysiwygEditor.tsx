@@ -34,7 +34,7 @@ export interface WysiwygEditorProps extends Partial<ReactEditorProps> {
     fontFamily?: string;
 }
 
-export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
+const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
     initialContent,
     onChange,
     placeholder,
@@ -60,12 +60,12 @@ export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
         manager.view.updateState(
             manager.createState({
                 content: initialContent as RemirrorContentType,
-            })
+            }),
         );
     }, [refresh]);
 
     const wysiwygPresetArrayWithoutImageExtension = wysiwygPreset().filter(
-        (extension) => extension instanceof ImageExtension !== true
+        (extension) => extension instanceof ImageExtension !== true,
     );
 
     const extensions = useCallback(
@@ -79,7 +79,7 @@ export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
             }),
             ...wysiwygPresetArrayWithoutImageExtension,
         ],
-        [placeholder]
+        [placeholder],
     );
 
     const onError: InvalidContentHandler = useCallback(
@@ -87,7 +87,7 @@ export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
             // Automatically remove all invalid nodes and marks.
             return transformers.remove(json, invalidContent);
         },
-        []
+        [],
     );
 
     const {
@@ -132,3 +132,5 @@ export const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
 (WysiwygEditor as any).getPlainText = (doc: any) =>
     getTextContentFromSlice(doc);
 (WysiwygEditor as any).emptyDoc = emptyDoc;
+
+export default WysiwygEditor;

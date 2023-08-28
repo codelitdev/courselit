@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "@mui/material";
+import { Button } from "@courselit/components-library";
 import { loadStripe } from "@stripe/stripe-js";
 import { ENROLL_BUTTON_TEXT } from "../../../ui-config/strings";
 import { connect } from "react-redux";
@@ -81,12 +81,7 @@ const Stripe = (props: StripeProps) => {
     };
 
     return (
-        <Button
-            onClick={handleClick}
-            variant="contained"
-            color="primary"
-            size="large"
-        >
+        <Button onClick={handleClick} component="button">
             {ENROLL_BUTTON_TEXT}
         </Button>
     );

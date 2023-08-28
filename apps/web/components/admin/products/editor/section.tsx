@@ -42,7 +42,7 @@ function SectionEditor({
     useEffect(() => {
         if (section && course && course.groups) {
             const group = course.groups.filter(
-                (group) => group.id === section
+                (group) => group.id === section,
             )[0];
             if (group) {
                 setName(group.name);

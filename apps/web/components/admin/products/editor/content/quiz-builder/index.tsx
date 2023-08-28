@@ -31,13 +31,13 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
                 text: `${LESSON_QUIZ_QUESION_PLACEHOLDER} #1`,
                 options: [{ text: "", correctAnswer: false }],
             },
-        ]
+        ],
     );
     const [passingGradeRequired, setPassingGradeRequired] = useState(
-        (content && content.requiresPassingGrade) || false
+        (content && content.requiresPassingGrade) || false,
     );
     const [passingGradePercentage, setPassingGradePercentage] = useState(
-        (content && content.passingGrade) || DEFAULT_PASSING_GRADE
+        (content && content.passingGrade) || DEFAULT_PASSING_GRADE,
     );
 
     useEffect(() => {
@@ -157,7 +157,7 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
                             value={passingGradePercentage}
                             onChange={(e) =>
                                 setPassingGradePercentage(
-                                    parseInt(e.target.value)
+                                    parseInt(e.target.value),
                                 )
                             }
                             InputLabelProps={{ shrink: true }}

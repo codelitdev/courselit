@@ -7,20 +7,19 @@
         "build": "next build",
         "start": "next start",
         "lint": "next lint",
-        "prettier": "prettier --write **/*.ts",
-        "build:azure": "cd ../../ && yarn build && cd -"
+        "prettier": "prettier --write **/*.ts"
     },
     "dependencies": {
         "@courselit/common-models": "workspace:^",
         "@courselit/common-widgets": "workspace:^",
         "@courselit/components-library": "workspace:^",
+        "@courselit/icons": "workspace:^",
         "@courselit/state-management": "workspace:^",
         "@courselit/utils": "workspace:^",
         "@emotion/cache": "^11.7.1",
         "@emotion/react": "^11.8.2",
         "@emotion/server": "^11.4.0",
         "@emotion/styled": "^11.8.1",
-        "@mui/icons-material": "^5.5.0",
         "@mui/material": "^5.5.0",
         "@mui/utils": "^5.4.4",
         "@stripe/stripe-js": "^1.29.0",
@@ -33,8 +32,8 @@
         "graphql-type-json": "^0.3.2",
         "jsonwebtoken": "^9.0.0",
         "mongodb": "^4.4.1",
-        "mongoose": "^6.2.4",
-        "next": "^13.4.4",
+        "mongoose": "^7.4.2",
+        "next": "^13.4.11",
         "next-connect": "^0.12.2",
         "nodemailer": "^6.7.2",
         "passport": "^0.6.0",
@@ -44,7 +43,7 @@
         "react": "^18.2.0",
         "react-csv": "^2.2.2",
         "react-dom": "^18.2.0",
-        "react-redux": "^8.0.1",
+        "react-redux": "^8.1.2",
         "remirror": "^2.0.9",
         "sharp": "^0.30.6",
         "slugify": "^1.6.5",
@@ -62,14 +61,21 @@
         "@types/react": "17.0.39",
         "@types/react-redux": "^7.1.23",
         "@types/redux-thunk": "^2.1.0",
-        "eslint": "8.10.0",
-        "eslint-config-next": "latest",
-        "eslint-config-prettier": "^8.5.0",
-        "prettier": "^2.5.1",
+        "eslint": "8.48.0",
+        "eslint-config-next": "^13.4.19",
+        "eslint-config-prettier": "^9.0.0",
+        "postcss": "^8.4.27",
+        "prettier": "^3.0.2",
+        "tailwind-config": "workspace:^",
+        "tailwindcss": "^3.3.3",
+        "tsconfig": "workspace:^",
         "typescript": "4.6.2"
     },
     "engines": {
         "yarn": "~3.2.0"
     },
-    "engineStrict": true
+    "engineStrict": true,
+    "resolutions": {
+        "passport-magic-link/jsonwebtoken": "^9.0.0"
+    }
 }

@@ -86,7 +86,7 @@ const CourseSchema = new mongoose.Schema<Course>(
     },
     {
         timestamps: true,
-    }
+    },
 );
 
 CourseSchema.index({

@@ -1,6 +1,5 @@
 import * as React from "react";
 import NextImage from "next/legacy/image";
-import { Box } from "@mui/material";
 
 interface ImgProps {
     src: string;
@@ -44,7 +43,6 @@ const Image = (props: ImgProps) => {
         loading = "lazy",
         height = 200,
         sizes = "100vw",
-        width = 1,
         borderRadius,
         noDefaultImage = false,
     } = props;
@@ -55,28 +53,27 @@ const Image = (props: ImgProps) => {
     }
 
     return (
-        <Box
-            sx={{
-                position: "relative",
-                width,
+        <div
+            className="relative overflow-hidden"
+            style={{
                 height,
-                borderRadius: borderRadius || 2,
-                overflow: "hidden",
+                borderRadius: borderRadius || "8px",
             }}
         >
+            {/* @ts-ignore */}
             <NextImage
                 layout="fill"
                 objectFit="cover"
                 src={source}
                 placeholder="blur"
                 blurDataURL={`data:image/svg+xml;base64,${toBase64(
-                    shimmer(700, 475)
+                    shimmer(700, 475),
                 )}`}
                 alt={alt}
                 priority={loading === "eager" ? true : false}
                 sizes={sizes}
             />
-        </Box>
+        </div>
     );
 };
 

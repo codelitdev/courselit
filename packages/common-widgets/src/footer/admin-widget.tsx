@@ -12,7 +12,7 @@ export default function AdminWidget({
     settings: { backgroundColor = "#eee", textColor },
     onChange,
 }: AdminWidgetProps) {
-    const [bgColor, setBgColor] = useState(backgroundColor);
+    const [bgColor, setBgColor] = useState<string | undefined>(backgroundColor);
     const [color, setColor] = useState(textColor);
 
     useEffect(() => {
@@ -29,15 +29,15 @@ export default function AdminWidget({
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Text color"
-                            value={color}
-                            onChange={(value: string) => setColor(value)}
+                            value={color || "inherit"}
+                            onChange={(value?: string) => setColor(value)}
                         />
                     </Grid>
                     <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Background color"
-                            value={bgColor}
-                            onChange={(value: string) => setBgColor(value)}
+                            value={bgColor || "inherit"}
+                            onChange={(value?: string) => setBgColor(value)}
                         />
                     </Grid>
                 </AdminWidgetPanel>

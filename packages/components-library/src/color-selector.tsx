@@ -1,8 +1,7 @@
 import * as React from "react";
-import Grid from "@mui/material/Grid";
-import Typography from "@mui/material/Typography";
-import { IconButton, Tooltip } from "@mui/material";
-import { Close } from "@mui/icons-material";
+import { Cross } from "@courselit/icons";
+import IconButton from "./icon-button";
+import Tooltip from "./tooltip";
 
 interface ColorSelectorProps {
     title: string;
@@ -16,22 +15,20 @@ export default function ColorSelector({
     onChange,
 }: ColorSelectorProps) {
     return (
-        <Grid container justifyContent="space-between">
-            <Grid item>
-                <Typography variant="subtitle1">{title}</Typography>
-            </Grid>
-            <Grid item>
+        <div className="flex justify-between">
+            <p>{title}</p>
+            <div className="flex items-center">
                 <input
                     type="color"
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
                 />
-                <Tooltip title="Reset" placement="right" arrow>
-                    <IconButton onClick={() => onChange()} size="small">
-                        <Close />
+                <Tooltip title="Reset">
+                    <IconButton onClick={() => onChange()} variant="soft">
+                        <Cross />
                     </IconButton>
                 </Tooltip>
-            </Grid>
-        </Grid>
+            </div>
+        </div>
     );
 }

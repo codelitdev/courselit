@@ -59,7 +59,7 @@ async function getMediaHandler(req: ApiRequest, res: NextApiResponse) {
 }
 
 function getAccessType(
-    access?: string | string[]
+    access?: string | string[],
 ): "public" | "private" | undefined {
     if (!access) {
         return;

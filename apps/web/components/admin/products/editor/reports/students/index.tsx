@@ -23,7 +23,6 @@ import {
     Dialog,
     DialogContent,
     DialogTitle,
-    IconButton,
     ListItem,
     ListItemIcon,
     ListItemText,
@@ -38,14 +37,10 @@ import {
 } from "@courselit/state-management";
 import { connect } from "react-redux";
 import { Address } from "@courselit/common-models";
-import {
-    CheckCircle,
-    CheckCircleOutline,
-    DoneSharp,
-    Search,
-} from "@mui/icons-material";
+import { Search, Circle, CheckCircled } from "@courselit/icons";
 import useCourse from "../../course-hook";
 import Link from "next/link";
+import { IconButton } from "@courselit/components-library";
 const { networkAction } = actionCreators;
 
 interface StudentsProps {
@@ -155,7 +150,7 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
                     fullWidth
                     InputProps={{
                         endAdornment: (
-                            <IconButton onClick={fetchStudents}>
+                            <IconButton onClick={fetchStudents} variant="soft">
                                 <Search />
                             </IconButton>
                         ),
@@ -231,7 +226,7 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
                                         PRICING_EMAIL && (
                                         <TableCell>
                                             {student.downloaded && (
-                                                <DoneSharp />
+                                                <CheckCircled />
                                             )}
                                             {!student.downloaded && <></>}
                                         </TableCell>
@@ -239,14 +234,14 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
                                     <TableCell>
                                         {student.signedUpOn
                                             ? new Date(
-                                                  student.signedUpOn as number
+                                                  student.signedUpOn as number,
                                               ).toLocaleDateString()
                                             : "-"}
                                     </TableCell>
                                     <TableCell>
                                         {student.lastAccessedOn
                                             ? new Date(
-                                                  student.lastAccessedOn as number
+                                                  student.lastAccessedOn as number,
                                               ).toLocaleDateString()
                                             : "-"}
                                     </TableCell>
@@ -279,11 +274,11 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
                                 <ListItemText>{lesson.title}</ListItemText>
                                 <ListItemIcon>
                                     {student.progress.includes(
-                                        lesson.lessonId
+                                        lesson.lessonId,
                                     ) ? (
-                                        <CheckCircle />
+                                        <CheckCircled />
                                     ) : (
-                                        <CheckCircleOutline />
+                                        <Circle />
                                     )}
                                 </ListItemIcon>
                             </ListItem>

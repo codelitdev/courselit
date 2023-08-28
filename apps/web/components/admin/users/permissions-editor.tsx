@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Grid, Typography, Checkbox, IconButton } from "@mui/material";
-import { ExpandLess, ExpandMore } from "@mui/icons-material";
+import { Grid, Typography, Checkbox } from "@mui/material";
+import { ExpandLess, ExpandMore } from "@courselit/icons";
 import {
     PERM_COURSE_MANAGE,
     PERM_COURSE_MANAGE_ANY,
@@ -22,6 +22,7 @@ import { actionCreators } from "@courselit/state-management";
 import { AppMessage } from "@courselit/common-models";
 import type { User, Auth, Address } from "@courselit/common-models";
 import { UIConstants } from "@courselit/common-models";
+import { IconButton } from "@courselit/components-library";
 
 const { networkAction, setAppMessage } = actionCreators;
 const { permissions } = UIConstants;
@@ -68,7 +69,7 @@ function PermissionsEditor({
 
     const savePermissions = async (
         permission: string,
-        event: React.ChangeEvent<HTMLInputElement>
+        event: React.ChangeEvent<HTMLInputElement>,
     ) => {
         event.preventDefault();
         const state = event.target.checked;
@@ -78,7 +79,7 @@ function PermissionsEditor({
             newPermissions = [...activePermissions, permission];
         } else {
             newPermissions = activePermissions.filter(
-                (item) => item !== permission
+                (item) => item !== permission,
             );
         }
 
@@ -101,7 +102,7 @@ function PermissionsEditor({
             .build();
         try {
             (dispatch as ThunkDispatch<State, null, AnyAction>)(
-                networkAction(true)
+                networkAction(true),
             );
             const response = await fetch.exec();
             if (response.user) {
@@ -109,11 +110,11 @@ function PermissionsEditor({
             }
         } catch (err: any) {
             (dispatch as ThunkDispatch<State, null, AnyAction>)(
-                setAppMessage(new AppMessage(err.message))
+                setAppMessage(new AppMessage(err.message)),
             );
         } finally {
             (dispatch as ThunkDispatch<State, null, AnyAction>)(
-                networkAction(false)
+                networkAction(false),
             );
         }
     };
@@ -125,7 +126,7 @@ function PermissionsEditor({
                     <Typography variant="h4">{PERM_SECTION_HEADER}</Typography>
                 </Grid>
                 <Grid item>
-                    <IconButton onClick={toggleExpandedState} size="large">
+                    <IconButton onClick={toggleExpandedState} variant="soft">
                         {expanded ? <ExpandLess /> : <ExpandMore />}
                     </IconButton>
                 </Grid>

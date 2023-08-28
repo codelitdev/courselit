@@ -10,7 +10,7 @@ import {
 } from "../../../../ui-config/strings";
 import Theme from "../../../../ui-models/theme";
 import { Dialog, Menu } from "@courselit/components-library";
-import { MoreVert } from "@mui/icons-material";
+import { MoreVert } from "@courselit/icons";
 
 interface ThemeItemProps {
     theme: Theme;

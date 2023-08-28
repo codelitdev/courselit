@@ -3,11 +3,11 @@ import { PAGE_HEADER_NEW_PRODUCT } from "../../../ui-config/strings";
 import dynamic from "next/dynamic";
 
 const BaseLayout = dynamic(
-    () => import("../../../components/admin/base-layout")
+    () => import("../../../components/admin/base-layout"),
 );
 
 const NewProduct = dynamic(
-    () => import("../../../components/admin/products/new-product")
+    () => import("../../../components/admin/products/new-product"),
 );
 
 export default function New() {

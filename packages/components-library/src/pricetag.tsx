@@ -1,6 +1,5 @@
 import * as React from "react";
-import { Typography } from "@mui/material";
-import getSymbolFromCurrency = require("currency-symbol-map");
+import getSymbolFromCurrency from "currency-symbol-map";
 
 interface PriceTagProps {
     cost: number;
@@ -18,11 +17,7 @@ const PriceTag = (props: PriceTagProps) => {
                   props.currencyISOCode.toUpperCase() + " "
               }${cost}`;
 
-    return (
-        <Typography variant="subtitle1" sx={{ fontWeight: "bolder" }}>
-            {costText}
-        </Typography>
-    );
+    return <div className="font-medium">{costText}</div>;
 };
 
 export default PriceTag;

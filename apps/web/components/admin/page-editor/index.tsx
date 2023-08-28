@@ -52,10 +52,9 @@ import widgets from "../../../ui-config/widgets";
 import { ThemeProvider } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import PagesList from "./pages-list";
-
-import CloudDone from "@mui/icons-material/CloudDone";
-import Sync from "@mui/icons-material/Sync";
+import { Sync, CheckCircled } from "@courselit/icons";
 import AppToast from "../../app-toast";
+
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
 const WidgetsList = dynamic(() => import("./widgets-list"));
@@ -108,9 +107,9 @@ function PageEditor({
         debounce(
             async (pageId: string, layout: Record<string, unknown>[]) =>
                 await savePage(pageId, layout),
-            DEBOUNCE_TIME
+            DEBOUNCE_TIME,
         ),
-        []
+        [],
     );
 
     const fontString = generateFontString(draftTypefaces);
@@ -261,13 +260,13 @@ function PageEditor({
                 const pageBeingEdited = response.page;
                 if (refreshLayout) {
                     setLayout(
-                        JSON.parse(JSON.stringify(pageBeingEdited.draftLayout))
+                        JSON.parse(JSON.stringify(pageBeingEdited.draftLayout)),
                     );
                 }
                 setPage(pageBeingEdited);
             } else {
                 dispatch(
-                    setAppMessage(new AppMessage(`The page does not exist.`))
+                    setAppMessage(new AppMessage(`The page does not exist.`)),
                 );
                 router.replace(`/dashboard`);
             }
@@ -280,7 +279,7 @@ function PageEditor({
 
     const savePage = async (
         pageId: string,
-        layout: Record<string, unknown>[]
+        layout: Record<string, unknown>[],
     ) => {
         if (!pageId || !layout || !layout.length) return;
 
@@ -305,22 +304,22 @@ function PageEditor({
 
     const onWidgetSettingsChanged = (
         widgetId: string,
-        settings: Record<string, unknown>
+        settings: Record<string, unknown>,
     ) => {
         const widgetIndex = layout.findIndex(
-            (widget) => widget.widgetId === widgetId
+            (widget) => widget.widgetId === widgetId,
         );
         layout[widgetIndex].settings = Object.assign(
             {},
             layout[widgetIndex].settings,
-            settings
+            settings,
         );
         setLayout([...layout]);
     };
 
     const deleteWidget = async (widgetId: string) => {
         const widgetIndex = layout.findIndex(
-            (widget) => widget.widgetId === widgetId
+            (widget) => widget.widgetId === widgetId,
         );
         layout.splice(widgetIndex, 1);
         setLayout(layout);
@@ -365,13 +364,13 @@ function PageEditor({
                 onDelete={deleteWidget}
             />
         ),
-        [selectedWidget]
+        [selectedWidget],
     );
 
     const saveDraftTypefaces = async (fontName: string) => {
         const newTypefaces: Typeface[] = structuredClone(draftTypefaces);
         const defaultSection = newTypefaces.filter(
-            (x) => x.section === "default"
+            (x) => x.section === "default",
         )[0];
         defaultSection.typeface = fontName;
 
@@ -477,7 +476,7 @@ function PageEditor({
                             <Grid item>
                                 <Typography variant="body2">
                                     {loading && <Sync />}
-                                    {!loading && <CloudDone />}
+                                    {!loading && <CheckCircled />}
                                 </Typography>
                             </Grid>
                             <Grid item>

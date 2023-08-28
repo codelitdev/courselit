@@ -51,7 +51,7 @@ function NewBlog({ address, dispatch, networkAction: loading }: NewBlogProps) {
             const response = await fetch.exec();
             if (response.course) {
                 router.replace(
-                    `/dashboard/blog/${response.course.courseId}/details`
+                    `/dashboard/blog/${response.course.courseId}/details`,
                 );
             }
         } catch (err: any) {

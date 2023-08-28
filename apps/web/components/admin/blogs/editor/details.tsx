@@ -44,7 +44,7 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
             setDescription(
                 course.description
                     ? JSON.parse(course.description)
-                    : TextEditorEmptyDoc
+                    : TextEditorEmptyDoc,
             );
             setFeaturedImage(course.featuredImage || {});
             setRefreshDetails(refreshDetails + 1);
@@ -95,7 +95,7 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
             const response = await fetch.exec();
             if (response.updateCourse) {
                 dispatch(
-                    setAppMessage(new AppMessage(APP_MESSAGE_COURSE_SAVED))
+                    setAppMessage(new AppMessage(APP_MESSAGE_COURSE_SAVED)),
                 );
             }
         } catch (err: any) {

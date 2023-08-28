@@ -11,12 +11,12 @@ import {
 } from "../ui-config/strings";
 import { getBackendAddress, getPage } from "../ui-lib/utils";
 import type { Address, Auth, Page, Profile } from "@courselit/common-models";
-import { Button, Grid, Skeleton, Typography } from "@mui/material";
 import { FetchBuilder } from "@courselit/utils";
-import { Section } from "@courselit/components-library";
+import { Section, Button } from "@courselit/components-library";
 import Link from "next/link";
 import { checkPermission } from "@courselit/utils";
 import { UIConstants } from "@courselit/common-models";
+import AppLoader from "../components/app-loader";
 
 interface AccountProps {
     auth: Auth;
@@ -80,68 +80,50 @@ function Account({ auth, page, profile, address }: AccountProps) {
 
     return (
         <BaseLayout layout={page.layout} title={MY_CONTENT_HEADER}>
-            <Grid container sx={{ minHeight: "80vh" }} direction="column">
-                <Grid item sx={{ p: 2 }}>
-                    <Typography variant="h4">{MY_CONTENT_HEADER}</Typography>
-                </Grid>
+            <div className="flex flex-col min-h-screen">
+                <h1 className="text-4xl font-semibold mb-4 p-4">
+                    {MY_CONTENT_HEADER}
+                </h1>
                 {!loaded && (
-                    <Grid item xs={12} sx={{ p: 2 }}>
-                        <Skeleton variant="rectangular" height={132} />
-                    </Grid>
+                    <div className="flex justify-center items-center">
+                        <AppLoader />
+                    </div>
                 )}
                 {loaded &&
                     courses.length > 0 &&
                     courses.map((course: Record<string, string>) => (
-                        <Grid
-                            item
+                        <div
+                            className="px-4 mb-4"
                             key={course.courseId as string}
-                            sx={{ p: 2 }}
                         >
-                            <Section>
-                                <Grid container direction="column" sx={{}}>
-                                    <Grid item sx={{ mb: 4 }}>
-                                        <Grid
-                                            container
-                                            alignItems="center"
-                                            justifyContent="space-between"
-                                        >
-                                            <Grid item>
-                                                <Typography variant="h6">
-                                                    {course.title}
-                                                </Typography>
-                                            </Grid>
-                                            <Grid item>
-                                                <Typography>
-                                                    {(
-                                                        (course.progress as unknown) *
-                                                        100
-                                                    ).toFixed(2)}
-                                                    {ACCOUNT_PROGRESS_SUFFIX}
-                                                </Typography>
-                                            </Grid>
-                                        </Grid>
-                                    </Grid>
-                                    <Grid item alignSelf="flex-end">
-                                        <Link
-                                            href={`/course/${course.slug}/${course.courseId}`}
-                                        >
-                                            <Button variant="contained">
-                                                {VISIT_COURSE_BUTTON}
-                                            </Button>
-                                        </Link>
-                                    </Grid>
-                                </Grid>
+                            <Section className="p-2">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="font-medium text-lg">
+                                        {course.title}
+                                    </h2>
+                                    <p>
+                                        {(
+                                            (course.progress as unknown) * 100
+                                        ).toFixed(2)}
+                                        {ACCOUNT_PROGRESS_SUFFIX}
+                                    </p>
+                                </div>
+                                <div className="flex justify-end">
+                                    <Link
+                                        href={`/course/${course.slug}/${course.courseId}`}
+                                    >
+                                        <Button component="link">
+                                            {VISIT_COURSE_BUTTON}
+                                        </Button>
+                                    </Link>
+                                </div>
                             </Section>
-                        </Grid>
+                        </div>
                     ))}
                 {loaded && !courses.length && (
-                    <Grid item sx={{ p: 2 }}>
-                        <Typography variant="body1">
-                            {ACCOUNT_NO_PURCHASE_PLACEHOLDER}
-                        </Typography>
-                    </Grid>
+                    <p className="p-4">{ACCOUNT_NO_PURCHASE_PLACEHOLDER}</p>
                 )}
-            </Grid>
+            </div>
         </BaseLayout>
     );
 }

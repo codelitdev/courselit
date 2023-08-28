@@ -403,3 +403,4 @@ export const MAIL_TABLE_HEADER_STATUS = "Status";
 export const TOOLTIP_USER_PAGE_SEND_MAIL = "Send mail to the current selection";
 export const EDIT_PAGE_BUTTON_FONTS = "Fonts";
 export const EDIT_PAGE_HEADER_ALL_PAGES = "Pages";
+export const LOGIN_SECTION_EMAIL_INVALID = "Invalid email";

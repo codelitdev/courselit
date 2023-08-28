@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
 import { FetchBuilder } from "@courselit/utils";
-import { Grid, Button } from "@mui/material";
 import { BTN_LOAD_MORE, FREE_COST } from "../../ui-config/strings";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
@@ -10,7 +9,7 @@ import type {
     Course as CourseModel,
     SiteInfo,
 } from "@courselit/common-models";
-import { CourseItem } from "@courselit/components-library";
+import { CourseItem, Button } from "@courselit/components-library";
 
 const { networkAction } = actionCreators;
 
@@ -26,13 +25,13 @@ interface ListProps {
 
 const List = (props: ListProps) => {
     const [courses, setCourses] = useState<CourseModel[]>(
-        props.initialItems || []
+        props.initialItems || [],
     );
     const [offset, setOffset] = useState(2);
     const [shouldShowLoadMoreButton, setShouldShowLoadMoreButton] = useState(
         typeof props.showLoadMoreButton === "boolean"
             ? props.showLoadMoreButton
-            : false
+            : false,
     );
     const { generateQuery, siteInfo } = props;
     const posts = typeof props.posts === "boolean" ? props.posts : false;
@@ -62,32 +61,36 @@ const List = (props: ListProps) => {
         }
     };
 
-    return courses.length > 0 ? (
+    if (courses.length === 0) {
+        return null;
+    }
+
+    return (
         <>
-            <Grid container spacing={2}>
+            <div className="flex flex-wrap gap-[1%]">
                 {courses.map((course: CourseModel, index: number) => (
-                    <CourseItem
-                        course={course}
-                        siteInfo={siteInfo}
-                        freeCostCaption={FREE_COST}
+                    <div
+                        className="basis-full md:basis-[49.5%] lg:basis-[32.6666%] mb-6"
                         key={index}
-                    />
-                ))}
-            </Grid>
-            {shouldShowLoadMoreButton && courses.length > 0 && (
-                <Grid item xs={12}>
-                    <Button
-                        variant="outlined"
-                        disableElevation
-                        onClick={() => setOffset(offset + 1)}
                     >
-                        {BTN_LOAD_MORE}
-                    </Button>
-                </Grid>
+                        <CourseItem
+                            course={course}
+                            siteInfo={siteInfo}
+                            freeCostCaption={FREE_COST}
+                        />
+                    </div>
+                ))}
+            </div>
+            {shouldShowLoadMoreButton && courses.length > 0 && (
+                <Button
+                    component="button"
+                    variant="soft"
+                    onClick={() => setOffset(offset + 1)}
+                >
+                    {BTN_LOAD_MORE}
+                </Button>
             )}
         </>
-    ) : (
-        <></>
     );
 };
 

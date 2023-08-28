@@ -45,7 +45,7 @@ async function webhookHandler(req: ApiRequest, res: NextApiResponse) {
 
             await finalizePurchase(
                 purchaseRecord.purchasedBy,
-                purchaseRecord.courseId
+                purchaseRecord.courseId,
             );
 
             res.status(200).json({

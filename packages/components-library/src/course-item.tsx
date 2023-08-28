@@ -1,6 +1,4 @@
 import * as React from "react";
-import { styled } from "@mui/system";
-import { Grid, Typography } from "@mui/material";
 import Image from "./image";
 import type { Course, SiteInfo } from "@courselit/common-models";
 import PriceTag from "./pricetag";
@@ -27,69 +25,35 @@ const CourseItem = (props: CourseItemProps) => {
             : `/p/${course.pageId}`;
 
     return (
-        <Grid
-            item
-            xs={12}
-            md={4}
-            lg={3}
-            sx={{
-                mb: 3,
-            }}
-        >
-            <Link
-                href={href}
-                sxProps={{
-                    textDecoration: "none",
-                    color: "inherit",
-                    mb: 2,
-                    display: "block",
-                    "&:hover": {
-                        cursor: "pointer",
-                    },
-                }}
-            >
-                <Grid container direction="column" component="article">
-                    <Grid item>
-                        <Image
-                            src={
-                                course.featuredImage &&
-                                (course.featuredImage.file ||
-                                    course.featuredImage.thumbnail)
-                            }
-                            loading={thumbnailLoading}
-                            sizes="40vw"
-                        />
-                    </Grid>
-                    {course.type !== "BLOG" && (
-                        <Grid item>
-                            <Typography
-                                variant="overline"
-                                color="textSecondary"
-                            >
-                                {course.type.toUpperCase()}
-                            </Typography>
-                        </Grid>
-                    )}
-                    <Grid item>
-                        <Typography variant="h6">{course.title}</Typography>
-                    </Grid>
-                    <Grid item>
-                        <Typography variant="body1" color="textSecondary">
-                            {course.description}
-                        </Typography>
-                    </Grid>
-                    {!(course.type === "BLOG") && (
-                        <Grid item>
-                            <PriceTag
-                                cost={course.cost}
-                                freeCostCaption={freeCostCaption}
-                                currencyISOCode={siteInfo.currencyISOCode}
-                            />
-                        </Grid>
-                    )}
-                </Grid>
-            </Link>
-        </Grid>
+        <Link href={href}>
+            <article className="flex flex-col">
+                <div className="mb-4">
+                    <Image
+                        src={
+                            course.featuredImage &&
+                            (course.featuredImage.file ||
+                                course.featuredImage.thumbnail)
+                        }
+                        loading={thumbnailLoading}
+                        sizes="40vw"
+                    />
+                </div>
+                {course.type !== "BLOG" && (
+                    <h3 className="font-thin text-xs">
+                        {course.type.toUpperCase()}
+                    </h3>
+                )}
+                <h3 className="text-lg font-semibold">{course.title}</h3>
+                <p>{course.description}</p>
+                {!(course.type === "BLOG") && (
+                    <PriceTag
+                        cost={course.cost}
+                        freeCostCaption={freeCostCaption}
+                        currencyISOCode={siteInfo.currencyISOCode}
+                    />
+                )}
+            </article>
+        </Link>
     );
 };
 

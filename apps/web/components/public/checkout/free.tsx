@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { Button } from "@mui/material";
+import { Button } from "@courselit/components-library";
 import { ENROLL_BUTTON_TEXT } from "../../../ui-config/strings";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
 import { actionCreators } from "@courselit/state-management";
-import type { Address, Auth, Course } from "@courselit/common-models";
+import type { Address, Course } from "@courselit/common-models";
 import { AppMessage } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
@@ -14,12 +14,11 @@ const { networkAction, setAppMessage } = actionCreators;
 
 interface FreeProps {
     course: Course;
-    auth: Auth;
     dispatch: AppDispatch;
     address: Address;
 }
 
-const Free = ({ course, auth, dispatch, address }: FreeProps) => {
+const Free = ({ course, dispatch, address }: FreeProps) => {
     const router = useRouter();
     const [disabled, setDisabled] = useState(false);
 
@@ -58,20 +57,13 @@ const Free = ({ course, auth, dispatch, address }: FreeProps) => {
     };
 
     return (
-        <Button
-            onClick={handleClick}
-            variant="contained"
-            color="primary"
-            disabled={disabled}
-            size="large"
-        >
+        <Button onClick={handleClick} component="button" disabled={disabled}>
             {ENROLL_BUTTON_TEXT}
         </Button>
     );
 };
 
 const mapStateToProps = (state: AppState) => ({
-    auth: state.auth,
     address: state.address,
 });
 

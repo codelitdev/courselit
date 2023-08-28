@@ -4,10 +4,10 @@ import { PAGE_HEADER_EDIT_MAIL } from "../../../../ui-config/strings";
 import dynamic from "next/dynamic";
 
 const MailEditor = dynamic(
-    () => import("../../../../components/admin/mails/editor")
+    () => import("../../../../components/admin/mails/editor"),
 );
 const BaseLayout = dynamic(
-    () => import("../../../../components/admin/base-layout")
+    () => import("../../../../components/admin/base-layout"),
 );
 
 export default function EditPage({}) {

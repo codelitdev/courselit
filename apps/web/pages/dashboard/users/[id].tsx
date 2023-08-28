@@ -3,10 +3,10 @@ import { useRouter } from "next/router";
 import { USERS_MANAGER_PAGE_HEADING } from "../../../ui-config/strings";
 
 const BaseLayout = dynamic(
-    () => import("../../../components/admin/base-layout")
+    () => import("../../../components/admin/base-layout"),
 );
 const UserDetails = dynamic(
-    () => import("../../../components/admin/users/details")
+    () => import("../../../components/admin/users/details"),
 );
 
 export default function SiteUsers() {

@@ -36,7 +36,7 @@ export const getWidgetData = async (name: string, ctx: GQLContext) => {
 
 export const saveWidgetSettings = async (
     widgetSettingsData: Record<string, unknown>,
-    ctx: GQLContext
+    ctx: GQLContext,
 ) => {
     checkIfAuthenticated(ctx);
     if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
@@ -84,7 +84,7 @@ export const saveWidgetSettings = async (
 
 export const saveWidgetData = async (
     widgetData: Record<string, unknown>,
-    ctx: GQLContext
+    ctx: GQLContext,
 ) => {
     let data;
     if (widgetData.data !== undefined) {

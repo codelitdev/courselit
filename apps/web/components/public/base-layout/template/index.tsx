@@ -1,10 +1,11 @@
 import React, { ReactNode } from "react";
-import { Box, Button, Grid } from "@mui/material";
+import { Box, Grid } from "@mui/material";
 import WidgetByName from "./widget-by-name";
 import AppToast from "../../../app-toast";
 import { WidgetInstance } from "@courselit/common-models";
 import { Footer, Header } from "@courselit/common-widgets";
-import { ArrowDownward, ArrowUpward } from "@mui/icons-material";
+import { ArrowDownward, ArrowUpward } from "@courselit/icons";
+import { Button } from "@courselit/components-library";
 
 interface TemplateProps {
     layout: WidgetInstance[];
@@ -92,25 +93,20 @@ const EditableWidget = ({
                     {allowsUpwardMovement && (
                         <Grid item>
                             <Button
-                                color="primary"
-                                variant="contained"
-                                size="small"
+                                component="button"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onMoveWidgetUp(index);
                                 }}
-                                startIcon={<ArrowUpward />}
                             >
-                                Move up
+                                <ArrowUpward /> Move up
                             </Button>
                         </Grid>
                     )}
                     {allowsWidgetAddition && (
                         <Grid item>
                             <Button
-                                color="primary"
-                                variant="contained"
-                                size="small"
+                                component="button"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onAddWidgetBelow(index);
@@ -123,16 +119,13 @@ const EditableWidget = ({
                     {allowsDownwardMovement && (
                         <Grid item>
                             <Button
-                                color="primary"
-                                variant="contained"
-                                size="small"
+                                component="button"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onMoveWidgetDown(index);
                                 }}
-                                endIcon={<ArrowDownward />}
                             >
-                                Move down
+                                Move down <ArrowDownward />
                             </Button>
                         </Grid>
                     )}
@@ -165,14 +158,14 @@ const Template = (props: TemplateProps) => {
     } = props;
     if (!layout) return <></>;
     const footer = layout.filter(
-        (widget) => widget.name === Footer.metadata.name
+        (widget) => widget.name === Footer.metadata.name,
     )[0];
     const header = layout.filter(
-        (widget) => widget.name === Header.metadata.name
+        (widget) => widget.name === Header.metadata.name,
     )[0];
     const widgetsWithoutHeaderAndFooter = layout.filter(
         (widget) =>
-            ![Header.metadata.name, Footer.metadata.name].includes(widget.name)
+            ![Header.metadata.name, Footer.metadata.name].includes(widget.name),
     );
     const pageWidgets = widgetsWithoutHeaderAndFooter.map(
         (item: any, index: number) => (
@@ -192,7 +185,7 @@ const Template = (props: TemplateProps) => {
                 onMoveWidgetUp={onMoveWidgetUp}
                 index={index + 1}
             />
-        )
+        ),
     );
     return (
         <Grid container direction="column">

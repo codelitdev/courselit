@@ -102,7 +102,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
         const mutation = `
             mutation {
                 mail: updateMail(mailData: ${getGraphQLQueryStringFromObject(
-                    Object.assign({}, mail, { published: undefined })
+                    Object.assign({}, mail, { published: undefined }),
                 )}) {
                     mailId,
                 }
@@ -124,7 +124,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
         setMail(
             Object.assign({}, mail, {
                 [key]: value,
-            })
+            }),
         );
     };
 
@@ -204,8 +204,8 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                             onChange(
                                 "to",
                                 e.target.value.split(
-                                    UIConstants.MAIL_RECIPIENTS_SPLIT_REGEX
-                                )
+                                    UIConstants.MAIL_RECIPIENTS_SPLIT_REGEX,
+                                ),
                             )
                         }
                         disabled={mail.published}

@@ -27,7 +27,7 @@ export default {
         resolve: async (
             _: any,
             { lessonData }: { lessonData: Lesson },
-            context: GQLContext
+            context: GQLContext,
         ) => createLesson(lessonData, context),
     },
     deleteLesson: {
@@ -48,7 +48,7 @@ export default {
         resolve: async (
             _: any,
             { lessonData }: { lessonData: Lesson },
-            context: GQLContext
+            context: GQLContext,
         ) => updateLesson(lessonData, context),
     },
     markLessonCompleted: {
@@ -60,7 +60,7 @@ export default {
         resolve: async (
             _: any,
             { id, answers }: { id: string; answers: string },
-            context: GQLContext
+            context: GQLContext,
         ) => markLessonCompleted(id, context, answers),
     },
     evaluateLesson: {
@@ -72,7 +72,7 @@ export default {
         resolve: async (
             _: any,
             { id, answers }: { id: string; answers: { answers: number[][] } },
-            context: GQLContext
+            context: GQLContext,
         ) => evaluateLesson(id, answers, context),
     },
 };

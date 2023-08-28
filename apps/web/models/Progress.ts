@@ -14,7 +14,7 @@ const ProgressSchema = new mongoose.Schema<Progress>(
     },
     {
         timestamps: true,
-    }
+    },
 );
 
 export default ProgressSchema;

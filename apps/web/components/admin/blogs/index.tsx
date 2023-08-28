@@ -36,7 +36,7 @@ import {
 } from "../../../ui-config/strings";
 import dynamic from "next/dynamic";
 import { Menu } from "@courselit/components-library";
-import { MoreVert } from "@mui/icons-material";
+import { MoreVert } from "@courselit/icons";
 
 const BlogItem = dynamic(() => import("./blog-item"));
 
@@ -156,7 +156,7 @@ const Index = (props: IndexProps) => {
                                     product: Course & {
                                         published: boolean;
                                     },
-                                    index: number
+                                    index: number,
                                 ) => (
                                     <BlogItem
                                         key={product.courseId}
@@ -164,7 +164,7 @@ const Index = (props: IndexProps) => {
                                         position={index}
                                         onDelete={onDelete}
                                     />
-                                )
+                                ),
                             )}
                         </TableBody>
                     </Table>
@@ -177,7 +177,7 @@ const Index = (props: IndexProps) => {
                             variant="outlined"
                             onClick={() =>
                                 setCoursesPaginationOffset(
-                                    coursesPaginationOffset + 1
+                                    coursesPaginationOffset + 1,
                                 )
                             }
                         >

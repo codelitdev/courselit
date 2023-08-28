@@ -28,7 +28,7 @@ const worker = new Worker(
             logger.error(err);
         }
     },
-    { connection: redis }
+    { connection: redis },
 );
 
 export default worker;

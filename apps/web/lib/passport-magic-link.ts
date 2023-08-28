@@ -46,5 +46,5 @@ export default new Strategy(
         }
 
         return dbUser.active ? dbUser : null;
-    }
+    },
 );

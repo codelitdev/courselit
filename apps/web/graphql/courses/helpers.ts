@@ -112,7 +112,7 @@ export const getPaginatedCoursesForAdmin = async ({
 
 export const calculatePercentageCompletion = (user: User, course: Course) => {
     const purchasedCourse = user.purchases.filter(
-        (item: Progress) => item.courseId === course.courseId
+        (item: Progress) => item.courseId === course.courseId,
     )[0];
 
     if (!purchasedCourse.completedLessons.length) return 0;

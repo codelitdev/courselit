@@ -7,9 +7,8 @@ import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 import { Typeface } from "@courselit/common-models";
 import { EDIT_PAGE_BUTTON_FONTS } from "../../../ui-config/strings";
-import IconButton from "@mui/material/IconButton";
-import Close from "@mui/icons-material/Close";
-import Star from "@mui/icons-material/Star";
+import { Cross as Close, Star } from "@courselit/icons";
+import { IconButton } from "@courselit/components-library";
 
 interface FontListProps {
     draftTypefaces: Typeface[];
@@ -43,7 +42,7 @@ function FontsList({
         "Enriqueta",
     ];
     const defaultTypeface = draftTypefaces.filter(
-        (x) => x.section === "default"
+        (x) => x.section === "default",
     )[0]?.typeface;
 
     return (
@@ -60,7 +59,7 @@ function FontsList({
                         </Typography>
                     </Grid>
                     <Grid item>
-                        <IconButton onClick={onClose}>
+                        <IconButton onClick={onClose} variant="soft">
                             <Close fontSize="small" />
                         </IconButton>
                     </Grid>

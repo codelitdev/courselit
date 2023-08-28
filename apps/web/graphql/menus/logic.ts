@@ -10,7 +10,7 @@ const { permissions } = constants;
 
 export const saveLink = async (
     linkData: Omit<Link, "domain">,
-    ctx: GQLContext
+    ctx: GQLContext,
 ): Promise<Domain | null> => {
     checkIfAuthenticated(ctx);
 
@@ -55,7 +55,7 @@ export const saveLink = async (
 
 export const deleteLink = async (
     id: mongoose.Types.ObjectId,
-    ctx: GQLContext
+    ctx: GQLContext,
 ): Promise<Domain | null> => {
     checkIfAuthenticated(ctx);
 

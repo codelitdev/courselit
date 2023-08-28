@@ -6,7 +6,7 @@ import { Address } from "@courselit/common-models";
 import { useEffect, useState } from "react";
 import { AppState } from "@courselit/state-management";
 import { connect } from "react-redux";
-import { HeartBroken } from "@mui/icons-material";
+import { Cross } from "@courselit/icons";
 
 function Custom404({ address }: { address: Address }) {
     const [layout, setLayout] = useState([]);
@@ -34,7 +34,7 @@ function Custom404({ address }: { address: Address }) {
                 justifyContent="center"
             >
                 <Grid item>
-                    <HeartBroken />
+                    <Cross />
                 </Grid>
                 <Grid item>
                     <Typography variant="h4">{PAGE_TITLE_404}</Typography>

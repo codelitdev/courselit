@@ -1,6 +1,5 @@
 import * as React from "react";
-import TextEditor from "@courselit/text-editor";
-import { useTheme } from "@mui/material";
+import { WysiwygEditor as TextEditor } from "@courselit/text-editor";
 export { emptyDoc } from "@courselit/text-editor";
 
 export interface WysiwygEditorProps {
@@ -18,8 +17,6 @@ export default function Editor({
     editable,
     refresh,
 }: WysiwygEditorProps) {
-    const theme = useTheme();
-
     return (
         <TextEditor
             initialContent={initialContent}
@@ -27,7 +24,7 @@ export default function Editor({
             showToolbar={showToolbar}
             editable={editable}
             refresh={refresh}
-            fontFamily={theme.typography.fontFamily}
+            fontFamily={"inherit"}
         />
     );
 }

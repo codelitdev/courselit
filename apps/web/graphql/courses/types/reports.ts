@@ -37,7 +37,7 @@ export const reports = new GraphQLObjectType({
                 course: Course,
                 { text }: { text?: string },
                 ctx: GQLContext,
-                __
+                __,
             ) => getStudents({ course, ctx, text }),
         },
     },

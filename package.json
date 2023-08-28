@@ -16,7 +16,7 @@
   },
   "license": "MIT",
   "scripts": {
-    "lint": "eslint packages apps",
+    "lint": "eslint packages apps/docs apps/web/pages apps/web/components",
     "prettier": "prettier --write packages apps docs *.md",
     "build": "yarn workspaces foreach -t --exclude @courselit/docs run build",
     "clean": "yarn workspaces foreach run clean",
@@ -31,7 +31,7 @@
     "eslint-plugin-react": "^7.29.4",
     "eslint-plugin-react-hooks": "^4.5.0",
     "eslint-plugin-unused-imports": "^2.0.0",
-    "prettier": "^2.6.2"
+    "prettier": "^3.0.2"
   },
   "engines": {
     "yarn": "~3.2.0"

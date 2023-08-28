@@ -35,7 +35,7 @@ export default nc<NextApiRequest, NextApiResponse>({
 
 async function getMediaDetailsHandler(
     req: ApiRequest & { params: Record<string, any> },
-    res: NextApiResponse
+    res: NextApiResponse,
 ) {
     if (
         !checkPermission(req.user!.permissions, [
@@ -58,7 +58,7 @@ async function getMediaDetailsHandler(
 
 async function deleteMediaHandler(
     req: ApiRequest & { params: Record<string, any> },
-    res: NextApiResponse
+    res: NextApiResponse,
 ) {
     if (
         !checkPermission(req.user!.permissions, [

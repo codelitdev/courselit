@@ -1,6 +1,6 @@
 export default function getGraphQLQueryFields(
     jsObj: any,
-    fieldsNotPutBetweenQuotes: string[] = []
+    fieldsNotPutBetweenQuotes: string[] = [],
 ) {
     let queryString = "{";
     for (const i of Object.keys(jsObj)) {

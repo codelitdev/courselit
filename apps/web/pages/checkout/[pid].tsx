@@ -1,8 +1,7 @@
 import { Course, Page, SiteInfo } from "@courselit/common-models";
-import { PriceTag } from "@courselit/components-library";
+import { PriceTag, Section } from "@courselit/components-library";
 import { AppState } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
-import { Grid, Skeleton, Typography } from "@mui/material";
 import { useRouter } from "next/router";
 import { connect } from "react-redux";
 import BaseLayout from "../../components/public/base-layout";
@@ -14,7 +13,7 @@ import {
 import { getBackendAddress, getPage } from "../../ui-lib/utils";
 import dynamic from "next/dynamic";
 const PurchaseStatus = dynamic(
-    () => import("../../components/public/purchase-status")
+    () => import("../../components/public/purchase-status"),
 );
 const Checkout = dynamic(() => import("../../components/public/checkout"));
 
@@ -29,63 +28,31 @@ function CheckoutProduct({ page, product, siteInfo }: CheckoutProductProps) {
 
     return (
         <BaseLayout layout={page.layout} title={CHECKOUT_PAGE_TITLE}>
-            <Grid container direction="column" sx={{ p: 2, minHeight: "80vh" }}>
-                <Grid item sx={{ mb: 2 }}>
-                    <Typography variant="h4">{CHECKOUT_PAGE_TITLE}</Typography>
-                </Grid>
-                {!product && (
-                    <Grid item xs={12} sx={{ p: 2 }}>
-                        <Skeleton variant="rectangular" height={200} />
-                    </Grid>
-                )}
+            <div className="flex flex-col p-4">
+                <h1 className="text-4xl font-semibold mb-4">
+                    {CHECKOUT_PAGE_TITLE}
+                </h1>
+                {!product && <>...</>}
                 {product && (
-                    <Grid item>
-                        <Grid
-                            container
-                            direction="column"
-                            sx={{
-                                border: "1px solid #eee",
-                                borderRadius: 2,
-                                p: 2,
-                            }}
-                        >
-                            <Grid item sx={{ mb: 2 }}>
-                                <Typography variant="h5">
-                                    {product.title}
-                                </Typography>
-                            </Grid>
-                            <Grid item sx={{ mb: 4 }}>
-                                <Grid container justifyContent="space-between">
-                                    <Grid item>
-                                        <Typography variant="h6">
-                                            {CHECKOUT_PAGE_TOTAL}
-                                        </Typography>
-                                    </Grid>
-                                    <Grid item>
-                                        <PriceTag
-                                            cost={product.cost as number}
-                                            freeCostCaption={FREE_COURSES_TEXT}
-                                            currencyISOCode={
-                                                siteInfo.currencyISOCode as string
-                                            }
-                                        />
-                                    </Grid>
-                                </Grid>
-                            </Grid>
-                            {router.query.id && (
-                                <Grid item>
-                                    <PurchaseStatus />
-                                </Grid>
-                            )}
-                            {!router.query.id && (
-                                <Grid item alignSelf="flex-end">
-                                    <Checkout course={product as Course} />
-                                </Grid>
-                            )}
-                        </Grid>
-                    </Grid>
+                    <Section className="p-2">
+                        <h2 className="text-2xl mb-4">{product.title}</h2>
+                        <div className="flex font-semibold justify-between mb-8">
+                            <p>{CHECKOUT_PAGE_TOTAL}</p>
+                            <PriceTag
+                                cost={product.cost as number}
+                                freeCostCaption={FREE_COURSES_TEXT}
+                                currencyISOCode={
+                                    siteInfo.currencyISOCode as string
+                                }
+                            />
+                        </div>
+                        {router.query.id && <PurchaseStatus />}
+                        {!router.query.id && (
+                            <Checkout course={product as Course} />
+                        )}
+                    </Section>
                 )}
-            </Grid>
+            </div>
         </BaseLayout>
     );
 }

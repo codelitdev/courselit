@@ -5,8 +5,8 @@ import { Settings as SiteInfo } from "../../models/SiteInfo";
 const { paypal, stripe, paytm, none } = constants;
 import currencies from "../../data/iso4217.json";
 
-const currencyISOCodes = currencies.map((currency) =>
-    currency.AlphabeticCode?.toLowerCase()
+const currencyISOCodes = currencies.map(
+    (currency) => currency.AlphabeticCode?.toLowerCase(),
 );
 
 const verifyCurrencyISOCode = (isoCode: string) => {
@@ -30,7 +30,7 @@ const verifyCurrencyISOCodeBasedOnSiteInfo = (siteInfo: SiteInfo) => {
 };
 
 export const checkForInvalidPaymentSettings = (
-    siteInfo: SiteInfo
+    siteInfo: SiteInfo,
 ): undefined | Error => {
     verifyCurrencyISOCodeBasedOnSiteInfo(siteInfo);
 
@@ -44,7 +44,7 @@ export const checkForInvalidPaymentSettings = (
 };
 
 export const checkForInvalidPaymentMethodSettings = (
-    siteInfo: SiteInfo
+    siteInfo: SiteInfo,
 ): string | undefined => {
     if (!siteInfo.paymentMethod) {
         return;
@@ -74,5 +74,5 @@ export const getPaymentInvalidException = (paymentMethod: string) =>
     new Error(
         `${capitalize(paymentMethod)} ${
             responses.payment_settings_invalid_suffix
-        }`
+        }`,
     );

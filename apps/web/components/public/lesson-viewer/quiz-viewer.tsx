@@ -11,7 +11,6 @@ import {
 } from "@courselit/state-management";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
-import { Button, Checkbox, Grid, Typography } from "@mui/material";
 import { ChangeEvent, useState } from "react";
 import { connect } from "react-redux";
 import {
@@ -20,6 +19,7 @@ import {
     QUIZ_VIEWER_EVALUATE_BTN,
     QUIZ_VIEWER_EVALUATE_BTN_LOADING,
 } from "../../../ui-config/strings";
+import { Form, FormSubmit } from "@courselit/components-library";
 
 const { networkAction } = actionCreators;
 
@@ -40,11 +40,11 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
     const setAnswerForQuestion = (
         checked: boolean,
         questionIndex: number,
-        optionIndex: number
+        optionIndex: number,
     ) => {
         const addOptionToQuestion = (
             questionIndex: number,
-            optionIndex: number
+            optionIndex: number,
         ) => {
             answers[questionIndex].push(optionIndex);
             setAnswers([...answers]);
@@ -52,7 +52,7 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
 
         const removeOptionFromQuestion = (
             questionIndex: number,
-            optionIndex: number
+            optionIndex: number,
         ) => {
             const index = answers[questionIndex].indexOf(optionIndex);
             answers[questionIndex].splice(index, 1);
@@ -101,17 +101,17 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
                     dispatch(
                         setAppMessage(
                             new AppMessage(
-                                `${QUIZ_PASS_MESSAGE} ${score} points.`
-                            )
-                        )
+                                `${QUIZ_PASS_MESSAGE} ${score} points.`,
+                            ),
+                        ),
                     );
                 } else {
                     dispatch(
                         setAppMessage(
                             new AppMessage(
-                                `${QUIZ_FAIL_MESSAGE} ${score} points. Requires ${passingGrade} points.`
-                            )
-                        )
+                                `${QUIZ_FAIL_MESSAGE} ${score} points. Requires ${passingGrade} points.`,
+                            ),
+                        ),
                     );
                 }
             }
@@ -124,76 +124,45 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
     };
 
     return (
-        <Grid container direction="column" component="form" onSubmit={evaluate}>
+        <Form onSubmit={evaluate}>
             {questions.map((question: Question, questionIndex: number) => (
-                <Grid
-                    item
-                    sx={{
-                        marginBottom: 1,
-                        paddingTop: 1,
-                        paddingBottom: 1,
-                        paddingRight: 2,
-                        paddingLeft: 2,
-                        border: "1px solid #eee",
-                        borderRadius: 3,
-                    }}
-                    component="fieldset"
+                <fieldset
+                    className="flex flex-col py-2 px-4 mb-4 border rounded border-slate-200"
                     key={questionIndex}
                 >
-                    <Grid container direction="column">
-                        <Grid
-                            item
-                            sx={{
-                                marginBottom: 1,
-                            }}
-                        >
-                            <Typography variant="h6" component="legend">
-                                {question.text}
-                            </Typography>
-                        </Grid>
-                        {question.options.map((option, index: number) => (
-                            <Grid item key={index}>
-                                <Grid
-                                    container
-                                    direction="row"
-                                    alignItems="center"
-                                    sx={{
-                                        marginBottom: 1,
-                                    }}
-                                >
-                                    <Grid item>
-                                        <Checkbox
-                                            checked={option.correctAnswer}
-                                            onChange={(
-                                                e: ChangeEvent<HTMLInputElement>
-                                            ) =>
-                                                setAnswerForQuestion(
-                                                    e.target.checked,
-                                                    questionIndex,
-                                                    index
-                                                )
-                                            }
-                                        />
-                                    </Grid>
-                                    <Grid item xs>
-                                        <Typography component="label">
-                                            {option.text}
-                                        </Typography>
-                                    </Grid>
-                                </Grid>
-                            </Grid>
-                        ))}
-                    </Grid>
-                </Grid>
+                    <h2 className="font-medium text-xl mb-2">
+                        {question.text}
+                    </h2>
+                    {question.options.map((option, index: number) => (
+                        <div className="flex items-center mb-2" key={index}>
+                            <input
+                                type="checkbox"
+                                className="mr-2"
+                                checked={option.correctAnswer}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                    setAnswerForQuestion(
+                                        e.target.checked,
+                                        questionIndex,
+                                        index,
+                                    )
+                                }
+                            />
+                            <label>{option.text}</label>
+                        </div>
+                    ))}
+                </fieldset>
             ))}
-            <Grid item>
-                <Button type="submit" disabled={loading}>
-                    {loading
-                        ? QUIZ_VIEWER_EVALUATE_BTN_LOADING
-                        : QUIZ_VIEWER_EVALUATE_BTN}
-                </Button>
-            </Grid>
-        </Grid>
+            <div>
+                <FormSubmit
+                    disabled={loading}
+                    text={
+                        loading
+                            ? QUIZ_VIEWER_EVALUATE_BTN_LOADING
+                            : QUIZ_VIEWER_EVALUATE_BTN
+                    }
+                ></FormSubmit>
+            </div>
+        </Form>
     );
 }
 

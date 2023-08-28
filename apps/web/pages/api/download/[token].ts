@@ -28,7 +28,7 @@ export default nc<NextApiRequest, NextApiResponse>({
         err: Error,
         req: NextApiResponse,
         res: NextApiResponse,
-        next: any
+        next: any,
     ) => {
         error(err.message, {
             fileName: `/api/payment/initiate.ts`,
@@ -75,7 +75,7 @@ async function downloadFiles(req: ApiRequest, res: NextApiResponse) {
         },
         {
             media: 1,
-        }
+        },
     );
 
     if (allLessons.length === 0) {
@@ -84,7 +84,7 @@ async function downloadFiles(req: ApiRequest, res: NextApiResponse) {
 
     const targetDirectory = `/tmp/${req.subdomain?.name}/${token.substr(
         0,
-        16
+        16,
     )}-${Date.now()}`;
     const filesDirectory = "files";
     const targetDirectoryForFiles = `${targetDirectory}/${filesDirectory}`;
@@ -111,7 +111,7 @@ async function downloadFiles(req: ApiRequest, res: NextApiResponse) {
         res.setHeader("Content-Type", "application/zip");
         res.setHeader(
             "Content-Disposition",
-            `attachment; filename=${course.title}.zip`
+            `attachment; filename=${course.title}.zip`,
         );
         const zipStream = createReadStream(zipFileAddress);
         zipStream.on("close", async () => {
@@ -200,7 +200,7 @@ async function recordProgress({
     }
 
     const enrolledItemIndex = user.purchases.findIndex(
-        (progress: Progress) => progress.courseId === courseId
+        (progress: Progress) => progress.courseId === courseId,
     );
 
     if (enrolledItemIndex === -1) {

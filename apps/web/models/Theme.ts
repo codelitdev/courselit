@@ -32,7 +32,7 @@ ThemeSchema.index(
         domain: 1,
         name: 1,
     },
-    { unique: true, sparse: true }
+    { unique: true, sparse: true },
 );
 
 export default mongoose.models.Theme || mongoose.model("Theme", ThemeSchema);

@@ -112,7 +112,7 @@ const Settings = (props: SettingsProps) => {
                 codeInjectionBody: settings.codeInjectionBody
                     ? encode(settings.codeInjectionBody)
                     : "",
-            })
+            }),
         );
     }, [settings]);
 
@@ -153,12 +153,12 @@ const Settings = (props: SettingsProps) => {
     const setSettingsState = (settingsResponse: SiteInfo) => {
         if (settingsResponse.codeInjectionHead) {
             settingsResponse.codeInjectionHead = decode(
-                settingsResponse.codeInjectionHead
+                settingsResponse.codeInjectionHead,
             );
         }
         if (settingsResponse.codeInjectionBody) {
             settingsResponse.codeInjectionBody = decode(
-                settingsResponse.codeInjectionBody
+                settingsResponse.codeInjectionBody,
             );
         }
         const settingsResponseWithNullsRemoved = {
@@ -172,15 +172,15 @@ const Settings = (props: SettingsProps) => {
             codeInjectionBody: settingsResponse.codeInjectionBody || "",
         };
         setSettings(
-            Object.assign({}, settings, settingsResponseWithNullsRemoved)
+            Object.assign({}, settings, settingsResponseWithNullsRemoved),
         );
         setNewSettings(
-            Object.assign({}, newSettings, settingsResponseWithNullsRemoved)
+            Object.assign({}, newSettings, settingsResponseWithNullsRemoved),
         );
     };
 
     const handleSettingsSubmit = async (
-        event: React.FormEvent<HTMLFormElement>
+        event: React.FormEvent<HTMLFormElement>,
     ) => {
         event.preventDefault();
         const query = `
@@ -238,7 +238,7 @@ const Settings = (props: SettingsProps) => {
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
                 props.dispatch(
-                    setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED))
+                    setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)),
                 );
             }
         } catch (e: any) {
@@ -249,7 +249,7 @@ const Settings = (props: SettingsProps) => {
     };
 
     const handleCodeInjectionSettingsSubmit = async (
-        event: React.FormEvent<HTMLFormElement>
+        event: React.FormEvent<HTMLFormElement>,
     ) => {
         event.preventDefault();
 
@@ -292,7 +292,7 @@ const Settings = (props: SettingsProps) => {
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
                 props.dispatch(
-                    setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED))
+                    setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)),
                 );
             }
         } catch (e: any) {
@@ -316,7 +316,7 @@ const Settings = (props: SettingsProps) => {
     };
 
     const handlePaymentSettingsSubmit = async (
-        event: React.FormEvent<HTMLFormElement>
+        event: React.FormEvent<HTMLFormElement>,
     ) => {
         event.preventDefault();
         const query = `
@@ -360,7 +360,7 @@ const Settings = (props: SettingsProps) => {
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
                 props.dispatch(
-                    setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED))
+                    setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)),
                 );
             }
         } catch (e: any) {
@@ -510,7 +510,7 @@ const Settings = (props: SettingsProps) => {
                                             setNewSettings(
                                                 Object.assign({}, newSettings, {
                                                     currencyISOCode: value,
-                                                })
+                                                }),
                                             )
                                         }
                                     />
@@ -531,7 +531,7 @@ const Settings = (props: SettingsProps) => {
                                             },
                                             {
                                                 label: capitalize(
-                                                    PAYMENT_METHOD_STRIPE.toLowerCase()
+                                                    PAYMENT_METHOD_STRIPE.toLowerCase(),
                                                 ),
                                                 value: PAYMENT_METHOD_STRIPE,
                                             },
@@ -540,7 +540,7 @@ const Settings = (props: SettingsProps) => {
                                             setNewSettings(
                                                 Object.assign({}, newSettings, {
                                                     paymentMethod: value,
-                                                })
+                                                }),
                                             )
                                         }
                                     />
@@ -662,10 +662,10 @@ const Settings = (props: SettingsProps) => {
                                         variant="outlined"
                                         disabled={
                                             JSON.stringify(
-                                                getPaymentSettings()
+                                                getPaymentSettings(),
                                             ) ===
                                             JSON.stringify(
-                                                getPaymentSettings(true)
+                                                getPaymentSettings(true),
                                             )
                                         }
                                     >

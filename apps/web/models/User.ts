@@ -44,7 +44,7 @@ const UserSchema = new mongoose.Schema<User>(
     },
     {
         timestamps: true,
-    }
+    },
 );
 
 UserSchema.index({
@@ -57,7 +57,7 @@ UserSchema.index(
         domain: 1,
         email: 1,
     },
-    { unique: true }
+    { unique: true },
 );
 
 export default mongoose.models.User || mongoose.model("User", UserSchema);

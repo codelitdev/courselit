@@ -6,12 +6,7 @@ import {
     isEnrolled,
     isLessonCompleted,
 } from "../../../../ui-lib/utils";
-import {
-    ArrowForward,
-    CheckCircle,
-    CircleOutlined,
-    Lock,
-} from "@mui/icons-material";
+import { ArrowRight, CheckCircled, Circle, Lock } from "@courselit/icons";
 import {
     COURSE_PROGRESS_START,
     SIDEBAR_TEXT_COURSE_ABOUT,
@@ -29,8 +24,8 @@ import RouteBasedComponentScaffold, {
     ComponentScaffoldMenuItem,
 } from "../../../../components/public/scaffold";
 import Article from "../../../../components/public/article";
-import { Button, Grid } from "@mui/material";
-import { Link } from "@courselit/components-library";
+import { Grid } from "@mui/material";
+import { Link, Button } from "@courselit/components-library";
 
 interface CourseProps {
     course: any;
@@ -42,7 +37,7 @@ interface CourseProps {
 
 export function generateSideBarItems(
     course: Course & { groupOfLessons: string[] },
-    profile: Profile
+    profile: Profile,
 ): ComponentScaffoldMenuItem[] {
     if (!course) return [];
 
@@ -71,9 +66,9 @@ export function generateSideBarItems(
                             lessonId: lesson.lessonId,
                             profile,
                         }) ? (
-                            <CheckCircle />
+                            <CheckCircled />
                         ) : (
-                            <CircleOutlined />
+                            <Circle />
                         )
                     ) : undefined,
                 iconPlacementRight: true,
@@ -137,13 +132,9 @@ const CourseViewer = (props: CourseProps) => {
                                     textDecoration: "none",
                                 }}
                             >
-                                <Button
-                                    component="a"
-                                    size="large"
-                                    variant="contained"
-                                    endIcon={<ArrowForward />}
-                                >
+                                <Button component="button">
                                     {COURSE_PROGRESS_START}
+                                    <ArrowRight />
                                 </Button>
                             </Link>
                         </Grid>
@@ -201,7 +192,7 @@ export async function getServerSideProps({ query, req }: any) {
             const lessonsOrderedByGroups: Record<string, unknown> = {};
             for (const group of post.groups) {
                 lessonsOrderedByGroups[group.name] = post.lessons.filter(
-                    (lesson: Lesson) => lesson.groupId === group.id
+                    (lesson: Lesson) => lesson.groupId === group.id,
                 );
             }
 
