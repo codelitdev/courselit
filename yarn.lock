@@ -1842,6 +1842,7 @@ __metadata:
     "@types/react": ^17.0.43
     "@types/react-redux": ^7.1.11
     currency-symbol-map: ^5.1.0
+    react-dom: ^18.2.0
     rimraf: ^4.1.1
     tailwind-config: "workspace:^"
     tsconfig: "workspace:^"
