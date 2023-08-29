@@ -12,6 +12,9 @@ COPY yarn.lock /app/yarn.lock
 COPY .yarnrc.yml /app/.yarnrc.yml
 
 # copy project related files
+COPY packages/icons /app/packages/icons
+COPY packages/tailwind-config /app/packages/tailwind-config
+COPY packages/tsconfig /app/packages/tsconfig
 COPY packages/common-models /app/packages/common-models
 COPY packages/common-widgets /app/packages/common-widgets
 COPY packages/components-library /app/packages/components-library
@@ -41,6 +44,8 @@ COPY --from=builder /app/yarn.lock ./yarn.lock
 COPY --from=builder /app/.yarnrc.yml ./.yarnrc.yml
 
 # copy project related files
+COPY --from=builder /app/packages/icons/package.json ./packages/icons/package.json
+COPY --from=builder /app/packages/icons/dist ./packages/icons/dist
 COPY --from=builder /app/packages/common-models/package.json ./packages/common-models/package.json
 COPY --from=builder /app/packages/common-models/dist ./packages/common-models/dist
 COPY --from=builder /app/packages/common-widgets/package.json ./packages/common-widgets/package.json
