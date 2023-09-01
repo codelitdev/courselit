@@ -72,14 +72,18 @@ export default function ProductHeader({ id, breadcrumbs }: ProductHeaderProps) {
                             icon={<MoreVert />}
                         />
                         */}
-                        <Menu2
-                            icon={<MoreVert />}
-                            variant="soft">
+                        <Menu2 icon={<MoreVert />} variant="soft">
                             <MenuItem>
-                                <Link href={`/p/${course.pageId}`}>{VIEW_PAGE_MENU_ITEM}</Link>
+                                <Link href={`/p/${course.pageId}`}>
+                                    {VIEW_PAGE_MENU_ITEM}
+                                </Link>
                             </MenuItem>
                             <MenuItem>
-                                <Link href={`/dashboard/page/${course.pageId}/edit`}>{EDIT_PAGE_MENU_ITEM}</Link>
+                                <Link
+                                    href={`/dashboard/page/${course.pageId}/edit`}
+                                >
+                                    {EDIT_PAGE_MENU_ITEM}
+                                </Link>
                             </MenuItem>
                         </Menu2>
                     </Grid>

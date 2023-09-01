@@ -36,7 +36,11 @@ import {
 } from "../../../ui-config/strings";
 import dynamic from "next/dynamic";
 import { MoreVert } from "@courselit/icons";
-import { MenuItem, Menu2, Link as AppLink } from "@courselit/components-library";
+import {
+    MenuItem,
+    Menu2,
+    Link as AppLink,
+} from "@courselit/components-library";
 
 const BlogItem = dynamic(() => import("./blog-item"));
 
@@ -121,13 +125,14 @@ const Index = (props: IndexProps) => {
                                 </Link>
                             </Grid>
                             <Grid item>
-                                <Menu2
-                                    icon={<MoreVert />}
-                                    variant="soft">
+                                <Menu2 icon={<MoreVert />} variant="soft">
                                     <MenuItem>
                                         <AppLink
-                                            href={`/dashboard/page/blog/edit`}>
-                                            {PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE}
+                                            href={`/dashboard/page/blog/edit`}
+                                        >
+                                            {
+                                                PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE
+                                            }
                                         </AppLink>
                                     </MenuItem>
                                 </Menu2>

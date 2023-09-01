@@ -1,6 +1,12 @@
 import * as React from "react";
 import Image from "../image";
-import { Address, AppMessage, Auth, Media, Profile } from "@courselit/common-models";
+import {
+    Address,
+    AppMessage,
+    Auth,
+    Media,
+    Profile,
+} from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
 import Access from "./access";
 import Button from "../button";
@@ -66,8 +72,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
     const [uploadData, setUploadData] = useState(defaultUploadData);
     const fileInput: React.RefObject<HTMLInputElement> = React.createRef();
     const [selectedFile, setSelectedFile] = useState();
-    const { strings, dispatch, address, src, title, srcTitle } =
-        props;
+    const { strings, dispatch, address, src, title, srcTitle } = props;
 
     const onSelection = (media: Media) => {
         props.onSelection(media);
@@ -81,7 +86,6 @@ const MediaSelector = (props: MediaSelectorProps) => {
         const response = await fetch.exec();
         return response.url;
     };
-
 
     const uploadToServer = async (presignedUrl: string): Promise<Media> => {
         const fD = new FormData();
@@ -108,26 +112,26 @@ const MediaSelector = (props: MediaSelectorProps) => {
     };
 
     const uploadFile = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
+        e.preventDefault();
         const file = selectedFile;
 
         if (!file) {
-            setError("File is required")
+            setError("File is required");
             return;
         }
 
         try {
             setUploading(true);
-            const presignedUrl = await getPresignedUrl()
-            const media = await uploadToServer(presignedUrl)
+            const presignedUrl = await getPresignedUrl();
+            const media = await uploadToServer(presignedUrl);
             onSelection(media);
         } catch (err: any) {
             dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
             setUploading(false);
-            setDialogOpened(false)
+            setDialogOpened(false);
         }
-    }
+    };
 
     return (
         <div className="flex items-center gap-4">
@@ -140,42 +144,45 @@ const MediaSelector = (props: MediaSelectorProps) => {
                 <Dialog2
                     title={strings.dialogTitle || "Select media"}
                     trigger={
-                        <Button 
-                            component="button"
-                            >
-                    {strings.buttonCaption || "Select media"}
-                    </Button>
+                        <Button component="button">
+                            {strings.buttonCaption || "Select media"}
+                        </Button>
                     }
                     open={dialogOpened}
                     onOpenChange={setDialogOpened}
                     okButton={
-                        <Button 
+                        <Button
                             component="button"
                             onClick={uploadFile}
-                            disabled={!selectedFile || (selectedFile && uploading)}>
-                           {uploading ? 
-                            strings.uploading || "Uploading"
-                            : strings.uploadButtonText || "Upload" }
+                            disabled={
+                                !selectedFile || (selectedFile && uploading)
+                            }
+                        >
+                            {uploading
+                                ? strings.uploading || "Uploading"
+                                : strings.uploadButtonText || "Upload"}
                         </Button>
                     }
-                    >
-                        {error && <div>{error}</div>}
-                        <Form 
-                            encType="multipart/form-data">
-                            <FormField
-                                label={""}
-                                ref={fileInput}
-                                type="file"
-                                onChange={(e: any) => setSelectedFile(e.target.files[0]) }
-                                messages={[
-                                    {
-                                        match: "valueMissing",
-                                        text: "File is required",
-                                    },
-                                ]}
-                                className="mt-4"
-                                required />
-                        </Form>
+                >
+                    {error && <div>{error}</div>}
+                    <Form encType="multipart/form-data">
+                        <FormField
+                            label={""}
+                            ref={fileInput}
+                            type="file"
+                            onChange={(e: any) =>
+                                setSelectedFile(e.target.files[0])
+                            }
+                            messages={[
+                                {
+                                    match: "valueMissing",
+                                    text: "File is required",
+                                },
+                            ]}
+                            className="mt-4"
+                            required
+                        />
+                    </Form>
                 </Dialog2>
             </div>
         </div>

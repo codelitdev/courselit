@@ -10,6 +10,8 @@ import {
 } from "@courselit/components-library";
 import { Alignment } from "@courselit/common-models";
 import { DEFAULT_FAILURE_MESSAGE, DEFAULT_SUCCESS_MESSAGE } from "../constants";
+import { Form } from "@courselit/components-library";
+import { FormField } from "@courselit/components-library";
 
 interface CustomSettingsProps {
     name: string;
@@ -99,53 +101,45 @@ export default function CustomSettings({
     ]);
 
     return (
-        <Grid container direction="column">
-            <Grid item sx={{ mb: 4 }}>
-                <AdminWidgetPanel title="Basic">
-                    <Grid item sx={{ mb: 2 }}>
-                        <TextField
-                            variant="outlined"
-                            fullWidth
+        <div className="flex flex-col">
+            <div className="mb-4">
+                <Form>
+                    <AdminWidgetPanel title="Basic">
+                        <FormField
                             value={title}
                             label="Custom title"
                             onChange={(e) => setTitle(e.target.value)}
                         />
-                    </Grid>
-                    <Grid item sx={{ mb: 2 }}>
-                        <FormLabel>Custom description</FormLabel>
-                        <TextEditor
-                            initialContent={description}
-                            onChange={(state: any) => setDescription(state)}
-                            showToolbar={false}
-                        />
-                    </Grid>
-                </AdminWidgetPanel>
-            </Grid>
-            <Grid item sx={{ mb: 4 }}>
-                <AdminWidgetPanel title="Call to action">
-                    <Grid item sx={{ mb: 2 }}>
-                        <TextField
-                            variant="outlined"
-                            fullWidth
+                        <div>
+                            <p className="mb-1 font-medium">
+                                Custom description
+                            </p>
+                            <TextEditor
+                                initialContent={description}
+                                onChange={(state: any) => setDescription(state)}
+                                showToolbar={false}
+                            />
+                        </div>
+                    </AdminWidgetPanel>
+                </Form>
+            </div>
+            <div className="mb-4">
+                <Form>
+                    <AdminWidgetPanel title="Call to action">
+                        <FormField
                             value={buttonCaption}
                             label="Button caption"
                             onChange={(e) => setButtonCaption(e.target.value)}
                         />
-                    </Grid>
-                    {type === "site" && (
-                        <Grid item sx={{ mb: 2 }}>
-                            <TextField
-                                variant="outlined"
-                                fullWidth
+                        {type === "site" && (
+                            <FormField
                                 value={buttonAction}
                                 label="Button Action (URL)"
                                 onChange={(e) =>
                                     setButtonAction(e.target.value)
                                 }
                             />
-                        </Grid>
-                    )}
-                    <Grid item sx={{ mb: 2 }}>
+                        )}
                         <ColorSelector
                             title="Button color"
                             value={buttonBackground || "inherit"}
@@ -153,8 +147,6 @@ export default function CustomSettings({
                                 setButtonBackground(value)
                             }
                         />
-                    </Grid>
-                    <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Button text color"
                             value={buttonForeground || "inherit"}
@@ -162,31 +154,28 @@ export default function CustomSettings({
                                 setButtonForeground(value)
                             }
                         />
-                    </Grid>
-                    {pageData.costType === "email" && (
-                        <>
-                            <Grid item sx={{ mb: 2 }}>
-                                <FormLabel>Success message</FormLabel>
-                                <TextEditor
-                                    initialContent={successMessage}
-                                    onChange={(state: any) =>
-                                        setSuccessMessage(state)
-                                    }
-                                    showToolbar={false}
-                                />
-                            </Grid>
-                            <Grid item sx={{ mb: 2 }}>
-                                <TextField
+                        {pageData.costType === "email" && (
+                            <>
+                                <div>
+                                    <p className="mb-1 font-medium">
+                                        Success message
+                                    </p>
+                                    <TextEditor
+                                        initialContent={successMessage}
+                                        onChange={(state: any) =>
+                                            setSuccessMessage(state)
+                                        }
+                                        showToolbar={false}
+                                    />
+                                </div>
+                                <FormField
                                     label="Failure message"
                                     value={failureMessage}
                                     placeholder={DEFAULT_FAILURE_MESSAGE}
                                     onChange={(e) =>
                                         setFailureMessage(e.target.value)
                                     }
-                                    fullWidth
                                 />
-                            </Grid>
-                            <Grid item>
                                 <Select
                                     title="Editing view"
                                     value={editingViewShowSuccess}
@@ -198,57 +187,45 @@ export default function CustomSettings({
                                         setEditingViewShowSuccess(value)
                                     }
                                 />
-                            </Grid>
-                        </>
-                    )}
-                </AdminWidgetPanel>
-            </Grid>
-            <Grid item sx={{ mb: 4 }}>
+                            </>
+                        )}
+                    </AdminWidgetPanel>
+                </Form>
+            </div>
+            <div className="mb-4">
                 <AdminWidgetPanel title="Design">
-                    <Grid item sx={{ mb: 2 }}>
-                        <ColorSelector
-                            title="Background color"
-                            value={backgroundColor || "inherit"}
-                            onChange={(value?: string) =>
-                                setBackgroundColor(value)
-                            }
-                        />
-                    </Grid>
-                    <Grid item sx={{ mb: 2 }}>
-                        <ColorSelector
-                            title="Text color"
-                            value={color || "inherit"}
-                            onChange={(value?: string) => setColor(value)}
-                        />
-                    </Grid>
-                    <Grid item sx={{ mb: 2 }}>
-                        <Select
-                            title="Text content position"
-                            value={alignment}
-                            options={[
-                                { label: "Top", value: "top" },
-                                { label: "Bottom", value: "bottom" },
-                                { label: "Left", value: "left" },
-                                { label: "Right", value: "right" },
-                            ]}
-                            onChange={(value) => setAlignment(value)}
-                        />
-                    </Grid>
-                    <Grid item>
-                        <Select
-                            title="Text alignment"
-                            value={textAlignment}
-                            options={[
-                                { label: "Left", value: "left" },
-                                { label: "Center", value: "center" },
-                            ]}
-                            onChange={(value: Alignment) =>
-                                setTextAlignment(value)
-                            }
-                        />
-                    </Grid>
+                    <ColorSelector
+                        title="Background color"
+                        value={backgroundColor || "inherit"}
+                        onChange={(value?: string) => setBackgroundColor(value)}
+                    />
+                    <ColorSelector
+                        title="Text color"
+                        value={color || "inherit"}
+                        onChange={(value?: string) => setColor(value)}
+                    />
+                    <Select
+                        title="Text content position"
+                        value={alignment}
+                        options={[
+                            { label: "Top", value: "top" },
+                            { label: "Bottom", value: "bottom" },
+                            { label: "Left", value: "left" },
+                            { label: "Right", value: "right" },
+                        ]}
+                        onChange={(value) => setAlignment(value)}
+                    />
+                    <Select
+                        title="Text alignment"
+                        value={textAlignment}
+                        options={[
+                            { label: "Left", value: "left" },
+                            { label: "Center", value: "center" },
+                        ]}
+                        onChange={(value: Alignment) => setTextAlignment(value)}
+                    />
                 </AdminWidgetPanel>
-            </Grid>
-        </Grid>
+            </div>
+        </div>
     );
 }

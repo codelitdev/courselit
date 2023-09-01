@@ -18,9 +18,7 @@ import {
     PRICING_EMAIL,
     USER_TABLE_HEADER_NAME,
 } from "../../../../../../ui-config/strings";
-import {
-    TextField,
-} from "@mui/material";
+import { TextField } from "@mui/material";
 import { ChangeEvent, useEffect, useState } from "react";
 import { FetchBuilder } from "@courselit/utils";
 import {
@@ -184,39 +182,58 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
                                 <TableRow key={student.email as string}>
                                     <TableCell>
                                         <Link
-                                            href={`/dashboard/users/${student.userId}`}>
+                                            href={`/dashboard/users/${student.userId}`}
+                                        >
                                             {student.name ||
                                                 (student.email as string)}
                                         </Link>
                                     </TableCell>
                                     {course?.costType?.toLowerCase() !==
                                         PRICING_EMAIL && (
-                                        <TableCell
-                                        >
+                                        <TableCell>
                                             <Dialog2
-                                                title={
-`${student!.name || student!.email}'s Progress`}
+                                                title={`${
+                                                    student!.name ||
+                                                    student!.email
+                                                }'s Progress`}
                                                 trigger={
                                                     <span className="cursor-pointer w-full">
-                                                   {(student.progress as string[]).length} / {course?.lessons?.length}  
-                                                </span>
-                                                    }>
-                        {course?.lessons?.map((lesson: any) => (
-                            <div 
-                                key={lesson.lessonId}
-                                className="flex justify-between items-center mb-1">
-                                <p>{lesson.title}</p>
-                                <span>
-                                    {student.progress.includes(
-                                        lesson.lessonId,
-                                    ) ? (
-                                        <CheckCircled />
-                                    ) : (
-                                        <Circle />
-                                    )}
-                                </span>
-                            </div>
-                        ))}
+                                                        {
+                                                            (
+                                                                student.progress as string[]
+                                                            ).length
+                                                        }{" "}
+                                                        /{" "}
+                                                        {
+                                                            course?.lessons
+                                                                ?.length
+                                                        }
+                                                    </span>
+                                                }
+                                            >
+                                                {course?.lessons?.map(
+                                                    (lesson: any) => (
+                                                        <div
+                                                            key={
+                                                                lesson.lessonId
+                                                            }
+                                                            className="flex justify-between items-center mb-1"
+                                                        >
+                                                            <p>
+                                                                {lesson.title}
+                                                            </p>
+                                                            <span>
+                                                                {student.progress.includes(
+                                                                    lesson.lessonId,
+                                                                ) ? (
+                                                                    <CheckCircled />
+                                                                ) : (
+                                                                    <Circle />
+                                                                )}
+                                                            </span>
+                                                        </div>
+                                                    ),
+                                                )}
                                             </Dialog2>
                                         </TableCell>
                                     )}

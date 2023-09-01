@@ -173,7 +173,7 @@ export const deleteCourse = async (
     await CourseModel.deleteOne({
         _id: course._id,
         domain: ctx.subdomain._id,
-    })
+    });
     return true;
 };
 

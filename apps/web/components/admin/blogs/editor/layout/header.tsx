@@ -71,29 +71,33 @@ function BlogHeader({ id, breadcrumbs, address, dispatch }: BlogHeaderProps) {
                         <Typography variant="h1">{course.title}</Typography>
                     </Grid>
                     <Grid item>
-                        <Menu2
-                            icon={<MoreVert />}
-                            variant="soft">
+                        <Menu2 icon={<MoreVert />} variant="soft">
                             <MenuItem>
-                                <Link href={`/blog/${course.slug}/${course.courseId}`}>{MENU_BLOG_VISIT}</Link>
+                                <Link
+                                    href={`/blog/${course.slug}/${course.courseId}`}
+                                >
+                                    {MENU_BLOG_VISIT}
+                                </Link>
                             </MenuItem>
-                    <MenuItem 
-                        component="dialog"
-                        title={PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT}
-                        triggerChildren={DELETE_PRODUCT_POPUP_HEADER}
-                        description={DELETE_PRODUCT_POPUP_TEXT}
-                        onClick={
-                        () =>
-                            deleteProduct({
-                                id: course!.id as string,
-                                setDeleteProductPopupOpened,
-                                backend: address.backend,
-                                dispatch,
-                                onDeleteComplete: () => {
-                                    router.replace(`/dashboard/blogs`);
-                                },
-                            })}>
-                    </MenuItem>
+                            <MenuItem
+                                component="dialog"
+                                title={
+                                    PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT
+                                }
+                                triggerChildren={DELETE_PRODUCT_POPUP_HEADER}
+                                description={DELETE_PRODUCT_POPUP_TEXT}
+                                onClick={() =>
+                                    deleteProduct({
+                                        id: course!.id as string,
+                                        setDeleteProductPopupOpened,
+                                        backend: address.backend,
+                                        dispatch,
+                                        onDeleteComplete: () => {
+                                            router.replace(`/dashboard/blogs`);
+                                        },
+                                    })
+                                }
+                            ></MenuItem>
                         </Menu2>
                     </Grid>
                 </Grid>

@@ -8,5 +8,9 @@ interface FormProps {
 }
 
 export default function Form({ onSubmit, children, ...props }: FormProps) {
-    return <Root onSubmit={onSubmit} {...props}>{children}</Root>;
+    return (
+        <Root onSubmit={onSubmit} {...props}>
+            {children}
+        </Root>
+    );
 }

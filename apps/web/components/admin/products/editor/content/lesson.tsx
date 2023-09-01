@@ -701,14 +701,18 @@ const LessonEditor = ({
                                         </Grid>
                                         <Grid item>
                                             <Dialog2
-                                                title={DELETE_LESSON_POPUP_HEADER}
+                                                title={
+                                                    DELETE_LESSON_POPUP_HEADER
+                                                }
                                                 trigger={
-                                            <Button>
-                                                {BUTTON_DELETE_LESSON_TEXT}
-                                            </Button>}
-                                            onClick={onLessonDelete}
-                                            >
-                                            </Dialog2>
+                                                    <Button>
+                                                        {
+                                                            BUTTON_DELETE_LESSON_TEXT
+                                                        }
+                                                    </Button>
+                                                }
+                                                onClick={onLessonDelete}
+                                            ></Dialog2>
                                         </Grid>
                                     </Grid>
                                 </Grid>

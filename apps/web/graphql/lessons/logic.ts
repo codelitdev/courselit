@@ -201,12 +201,12 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
         if (lesson.mediaId) {
             await deleteMedia(lesson.mediaId);
         }
-        console.log(lesson)
+        console.log(lesson);
 
         await LessonModel.deleteOne({
             _id: lesson._id,
             domain: ctx.subdomain._id,
-        })
+        });
         return true;
     } catch (err: any) {
         throw new Error(err.message);

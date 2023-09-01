@@ -48,5 +48,5 @@ export {
     CircularProgress,
     Menu2,
     MenuItem,
-    Dialog2
+    Dialog2,
 };

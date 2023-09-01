@@ -28,7 +28,12 @@ import {
     networkAction,
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
-import { Menu2, MenuItem, Link as AppLink, Image } from "@courselit/components-library";
+import {
+    Menu2,
+    MenuItem,
+    Link as AppLink,
+    Image,
+} from "@courselit/components-library";
 
 function Product({
     details,
@@ -145,28 +150,26 @@ function Product({
                 {formatCurrency(product.sales, siteinfo.currencyISOCode)}
             </TableCell>
             <TableCell align="right">
-                <Menu2 
-                    icon={<MoreVert />}
-                    variant="soft">
+                <Menu2 icon={<MoreVert />} variant="soft">
                     <MenuItem>
-                        <AppLink 
-                            href={`/p/${product.pageId}`}>
+                        <AppLink href={`/p/${product.pageId}`}>
                             {VIEW_PAGE_MENU_ITEM}
                         </AppLink>
                     </MenuItem>
                     <MenuItem>
-                        <AppLink 
-                            href={`/dashboard/page/${product.pageId}/edit`}>
+                        <AppLink
+                            href={`/dashboard/page/${product.pageId}/edit`}
+                        >
                             {PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE}
                         </AppLink>
                     </MenuItem>
-                    <MenuItem 
+                    <MenuItem
                         component="dialog"
                         title={PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT}
                         triggerChildren={DELETE_PRODUCT_POPUP_HEADER}
                         description={DELETE_PRODUCT_POPUP_TEXT}
-                        onClick={deleteProduct}>
-                    </MenuItem>
+                        onClick={deleteProduct}
+                    ></MenuItem>
                 </Menu2>
             </TableCell>
             {/*

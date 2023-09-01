@@ -11,9 +11,6 @@ import {
 import Link from "next/link";
 import {
     DELETE_PRODUCT_POPUP_HEADER,
-    DELETE_PRODUCT_POPUP_TEXT,
-    POPUP_CANCEL_ACTION,
-    POPUP_OK_ACTION,
     PRODUCT_STATUS_DRAFT,
     PRODUCT_STATUS_PUBLISHED,
     PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
@@ -22,7 +19,7 @@ import { MoreVert } from "@courselit/icons";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import type { SiteInfo, Address } from "@courselit/common-models";
 import { connect } from "react-redux";
-import { Dialog, Image, Menu2, MenuItem } from "@courselit/components-library";
+import { Image, Menu2, MenuItem } from "@courselit/components-library";
 import { deleteProduct } from "./helpers";
 
 function BlogItem({
@@ -84,9 +81,7 @@ function BlogItem({
                     <Grid container spacing={1} alignItems="center">
                         <Grid item>
                             <Image
-                                src={
-                                    product.featuredImage?.thumbnail
-                                }
+                                src={product.featuredImage?.thumbnail}
                                 height={64}
                                 width={64}
                                 alt={product.featuredImage?.caption}
@@ -125,14 +120,14 @@ function BlogItem({
                 />
             </TableCell>
             <TableCell align="right">
-                <Menu2
-                    icon={<MoreVert />}
-                    variant="soft">
-                    <MenuItem 
+                <Menu2 icon={<MoreVert />} variant="soft">
+                    <MenuItem
                         component="dialog"
                         title={DELETE_PRODUCT_POPUP_HEADER}
-                        triggerChildren={PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT}
-                        onClick={() => 
+                        triggerChildren={
+                            PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT
+                        }
+                        onClick={() =>
                             deleteProduct({
                                 id: product.id,
                                 setDeleteProductPopupOpened,
@@ -142,8 +137,8 @@ function BlogItem({
                                     onDelete(position);
                                 },
                             })
-                        }>
-                    </MenuItem>
+                        }
+                    ></MenuItem>
                 </Menu2>
             </TableCell>
         </TableRow>

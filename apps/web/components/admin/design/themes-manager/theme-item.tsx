@@ -30,24 +30,26 @@ const ThemeItem = (props: ThemeItemProps) => {
     const generateOptions = () => {
         const options = [];
         if (!props.theme.active) {
-            <MenuItem 
+            <MenuItem
                 component="dialog"
                 title={`${APPLY_THEME_POPUP_HEADER} ${props.theme.name}?`}
                 triggerChildren={BUTTON_THEME_APPLY}
-                onClick={applyTheme}>
-            </MenuItem>
+                onClick={applyTheme}
+            ></MenuItem>;
         }
-        options.push(<MenuItem
-                onSelect={() => props.onRemix(props.theme.name)}>
-                {BUTTON_THEME_REMIX}
-        </MenuItem>)
         options.push(
-        <MenuItem 
-            component="dialog"
-            title={`${DELETE_THEME_POPUP_HEADER} ${props.theme.name}?`}
-            triggerChildren={BUTTON_THEME_UNINSTALL}
-            onClick={uninstallTheme}>
-        </MenuItem>)
+            <MenuItem onSelect={() => props.onRemix(props.theme.name)}>
+                {BUTTON_THEME_REMIX}
+            </MenuItem>,
+        );
+        options.push(
+            <MenuItem
+                component="dialog"
+                title={`${DELETE_THEME_POPUP_HEADER} ${props.theme.name}?`}
+                triggerChildren={BUTTON_THEME_UNINSTALL}
+                onClick={uninstallTheme}
+            ></MenuItem>,
+        );
         return options;
     };
 
@@ -55,9 +57,7 @@ const ThemeItem = (props: ThemeItemProps) => {
         <TableRow>
             <TableCell>{props.theme.name}</TableCell>
             <TableCell align="right">
-                <Menu2 
-                    icon={<MoreVert />}
-                    variant="soft">
+                <Menu2 icon={<MoreVert />} variant="soft">
                     {generateOptions()}
                 </Menu2>
             </TableCell>
