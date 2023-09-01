@@ -37,7 +37,6 @@
     },
     "devDependencies": {
         "@types/react": "^17.0.43",
-        "@types/react-redux": "^7.1.11",
         "rimraf": "^4.1.1",
         "tailwind-config": "workspace:^",
         "tsconfig": "workspace:^",
@@ -45,12 +44,8 @@
         "typescript": "^5.1.6"
     },
     "peerDependencies": {
-        "@mui/material": "^5.9.2",
         "next": "^13.4.11",
-        "react": "^18.2.0",
-        "react-redux": "^8.1.2",
-        "redux": "^4.2.1",
-        "redux-thunk": "^2.4.1"
+        "react": "^18.2.0"
     },
     "gitHead": "fca7d2f8455c835f1c185a1ebc8513c6269ebe5b",
     "dependencies": {

@@ -2,12 +2,12 @@ import { defineConfig, Options } from "tsup";
 
 export default defineConfig((options: Options) => ({
     treeshake: true,
-    //splitting: true,
+    splitting: true,
     entry: ["src/**/*.tsx", "src/**/*.ts"],
     format: ["esm"],
     dts: true,
     minify: true,
     clean: true,
-    external: ["react", "@mui/material", "next/link", "next/legacy/image"],
+    external: ["react", "next/link", "next/legacy/image"],
     ...options,
 }));

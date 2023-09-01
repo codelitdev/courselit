@@ -1840,7 +1840,6 @@ __metadata:
     "@radix-ui/react-form": ^0.0.3
     "@radix-ui/react-tooltip": ^1.0.6
     "@types/react": ^17.0.43
-    "@types/react-redux": ^7.1.11
     currency-symbol-map: ^5.1.0
     react-dom: ^18.2.0
     rimraf: ^4.1.1
@@ -1849,12 +1848,8 @@ __metadata:
     tsup: 6.6.0
     typescript: ^5.1.6
   peerDependencies:
-    "@mui/material": ^5.9.2
     next: ^13.4.11
     react: ^18.2.0
-    react-redux: ^8.1.2
-    redux: ^4.2.1
-    redux-thunk: ^2.4.1
   languageName: unknown
   linkType: soft
 
@@ -5788,7 +5783,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-redux@npm:^7.1.11, @types/react-redux@npm:^7.1.23":
+"@types/react-redux@npm:^7.1.23":
   version: 7.1.24
   resolution: "@types/react-redux@npm:7.1.24"
   dependencies:
