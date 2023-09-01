@@ -1,14 +1,14 @@
 import "./styles.css";
 
+// TODO: Rename Menu2, Dialog2 to Menu and Dialog respectively.
+
 import PriceTag from "./pricetag";
 import Section from "./section";
 import WidgetHelpers from "./widget-helpers";
 import CourseItem from "./course-item";
 import Image from "./image";
 import Select from "./select";
-import Menu from "./menu";
 import Link from "./link";
-import Dialog from "./dialog";
 import MediaSelector from "./media-selector";
 import TextEditor, { emptyDoc as TextEditorEmptyDoc } from "./text-editor";
 import TextRenderer from "./text-renderer";
@@ -32,9 +32,7 @@ export {
     CourseItem,
     Image,
     Select,
-    Menu,
     Link,
-    Dialog,
     MediaSelector,
     TextEditor,
     TextEditorEmptyDoc,

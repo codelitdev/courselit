@@ -13,8 +13,6 @@ import {
     APP_MESSAGE_COURSE_DELETED,
     DELETE_PRODUCT_POPUP_HEADER,
     DELETE_PRODUCT_POPUP_TEXT,
-    POPUP_CANCEL_ACTION,
-    POPUP_OK_ACTION,
     PRODUCT_STATUS_DRAFT,
     PRODUCT_STATUS_PUBLISHED,
     PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
@@ -30,7 +28,7 @@ import {
     networkAction,
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
-import { Menu2, MenuItem, Link as AppLink, Dialog, Image } from "@courselit/components-library";
+import { Menu2, MenuItem, Link as AppLink, Image } from "@courselit/components-library";
 
 function Product({
     details,
@@ -171,6 +169,7 @@ function Product({
                     </MenuItem>
                 </Menu2>
             </TableCell>
+            {/*
             <Dialog
                 onOpen={deleteProductPopupOpened}
                 onClose={closeDeletePopup}
@@ -187,6 +186,7 @@ function Product({
                     {DELETE_PRODUCT_POPUP_TEXT}
                 </Typography>
             </Dialog>
+            */}
         </TableRow>
     );
 }

@@ -7,7 +7,6 @@ import TableRow from "@mui/material/TableRow";
 import TableBody from "@mui/material/TableBody";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
-import MuiLink from "@mui/material/Link";
 import {
     COURSE_STUDENT_NO_RECORDS,
     COURSE_STUDENT_REPORT_HEADER,
@@ -20,12 +19,6 @@ import {
     USER_TABLE_HEADER_NAME,
 } from "../../../../../../ui-config/strings";
 import {
-    Dialog,
-    DialogContent,
-    DialogTitle,
-    ListItem,
-    ListItemIcon,
-    ListItemText,
     TextField,
 } from "@mui/material";
 import { ChangeEvent, useEffect, useState } from "react";
@@ -39,8 +32,7 @@ import { connect } from "react-redux";
 import { Address } from "@courselit/common-models";
 import { Search, Circle, CheckCircled } from "@courselit/icons";
 import useCourse from "../../course-hook";
-import Link from "next/link";
-import { IconButton } from "@courselit/components-library";
+import { Dialog2, IconButton, Link } from "@courselit/components-library";
 const { networkAction } = actionCreators;
 
 interface StudentsProps {
@@ -191,35 +183,41 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
                             {students.map((student: any) => (
                                 <TableRow key={student.email as string}>
                                     <TableCell>
-                                        <MuiLink
-                                            sx={{
-                                                cursor: "pointer",
-                                            }}
-                                            href={`/dashboard/users/${student.userId}`}
-                                            component={Link}
-                                        >
+                                        <Link
+                                            href={`/dashboard/users/${student.userId}`}>
                                             {student.name ||
                                                 (student.email as string)}
-                                        </MuiLink>
+                                        </Link>
                                     </TableCell>
                                     {course?.costType?.toLowerCase() !==
                                         PRICING_EMAIL && (
                                         <TableCell
-                                            onClick={() =>
-                                                showProgress(student)
-                                            }
-                                            sx={{
-                                                cursor: "pointer",
-                                                "&:hover": {
-                                                    textDecoration: "underline",
-                                                },
-                                            }}
                                         >
-                                            {
-                                                (student.progress as string[])
-                                                    .length
-                                            }{" "}
-                                            / {course?.lessons?.length}
+                                            <Dialog2
+                                                title={
+`${student!.name || student!.email}'s Progress`}
+                                                trigger={
+                                                    <span className="cursor-pointer w-full">
+                                                   {(student.progress as string[]).length} / {course?.lessons?.length}  
+                                                </span>
+                                                    }>
+                        {course?.lessons?.map((lesson: any) => (
+                            <div 
+                                key={lesson.lessonId}
+                                className="flex justify-between items-center mb-1">
+                                <p>{lesson.title}</p>
+                                <span>
+                                    {student.progress.includes(
+                                        lesson.lessonId,
+                                    ) ? (
+                                        <CheckCircled />
+                                    ) : (
+                                        <Circle />
+                                    )}
+                                </span>
+                            </div>
+                        ))}
+                                            </Dialog2>
                                         </TableCell>
                                     )}
                                     {course?.costType?.toLowerCase() ===
@@ -260,6 +258,7 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
                     </Grid>
                 </Grid>
             )}
+            {/*
             {student && (
                 <Dialog
                     open={progressDialogOpened}
@@ -286,6 +285,7 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
                     </DialogContent>
                 </Dialog>
             )}
+            */}
         </Grid>
     );
 }

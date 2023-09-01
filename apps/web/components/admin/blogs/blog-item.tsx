@@ -85,11 +85,11 @@ function BlogItem({
                         <Grid item>
                             <Image
                                 src={
-                                    product.featuredImage &&
-                                    product.featuredImage.thumbnail
+                                    product.featuredImage?.thumbnail
                                 }
                                 height={64}
                                 width={64}
+                                alt={product.featuredImage?.caption}
                             />
                         </Grid>
                         <Grid item>
@@ -146,34 +146,6 @@ function BlogItem({
                     </MenuItem>
                 </Menu2>
             </TableCell>
-            <Dialog
-                onOpen={deleteProductPopupOpened}
-                onClose={closeDeletePopup}
-                title={DELETE_PRODUCT_POPUP_HEADER}
-                actions={[
-                    {
-                        name: POPUP_CANCEL_ACTION,
-                        callback: closeDeletePopup,
-                    },
-                    {
-                        name: POPUP_OK_ACTION,
-                        callback: () =>
-                            deleteProduct({
-                                id: product.id,
-                                setDeleteProductPopupOpened,
-                                backend: address.backend,
-                                dispatch,
-                                onDeleteComplete: () => {
-                                    onDelete(position);
-                                },
-                            }),
-                    },
-                ]}
-            >
-                <Typography variant="subtitle1">
-                    {DELETE_PRODUCT_POPUP_TEXT}
-                </Typography>
-            </Dialog>
         </TableRow>
     );
 }

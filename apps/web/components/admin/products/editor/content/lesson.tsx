@@ -17,7 +17,6 @@ import {
     LESSON_PREVIEW,
     DELETE_LESSON_POPUP_HEADER,
     POPUP_CANCEL_ACTION,
-    POPUP_OK_ACTION,
     APP_MESSAGE_LESSON_DELETED,
     BUTTON_NEW_LESSON_TEXT,
     EDIT_LESSON_TEXT,
@@ -52,7 +51,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import useCourse from "../course-hook";
 import { Help } from "@courselit/icons";
-import { Dialog, MediaSelector } from "@courselit/components-library";
+import { Dialog2, MediaSelector } from "@courselit/components-library";
 import { QuizBuilder } from "./quiz-builder";
 
 const { networkAction, setAppMessage } = actionCreators;
@@ -701,16 +700,15 @@ const LessonEditor = ({
                                             )}
                                         </Grid>
                                         <Grid item>
-                                            <Button
-                                                onClick={(e) =>
-                                                    setDeleteLessonPopupOpened(
-                                                        true,
-                                                    )
-                                                }
-                                                color="error"
-                                            >
+                                            <Dialog2
+                                                title={DELETE_LESSON_POPUP_HEADER}
+                                                trigger={
+                                            <Button>
                                                 {BUTTON_DELETE_LESSON_TEXT}
-                                            </Button>
+                                            </Button>}
+                                            onClick={onLessonDelete}
+                                            >
+                                            </Dialog2>
                                         </Grid>
                                     </Grid>
                                 </Grid>
@@ -719,6 +717,7 @@ const LessonEditor = ({
                     </Grid>
                 </Grid>
             )}
+            {/*
             <Dialog
                 onOpen={deleteLessonPopupOpened}
                 onClose={closeDeleteLessonPopup}
@@ -731,6 +730,7 @@ const LessonEditor = ({
                     { name: POPUP_OK_ACTION, callback: onLessonDelete },
                 ]}
             />
+            */}
         </Section>
     );
 };
