@@ -1,16 +1,15 @@
-import React, { useState } from "react";
+import React from "react";
 import { TableRow, TableCell } from "@mui/material";
 import {
     BUTTON_THEME_APPLY,
     BUTTON_THEME_REMIX,
     BUTTON_THEME_UNINSTALL,
-    POPUP_CANCEL_ACTION,
     DELETE_THEME_POPUP_HEADER,
     APPLY_THEME_POPUP_HEADER,
 } from "../../../../ui-config/strings";
 import Theme from "../../../../ui-models/theme";
-import { Dialog, Menu } from "@courselit/components-library";
 import { MoreVert } from "@courselit/icons";
+import { MenuItem, Menu2 } from "@courselit/components-library";
 
 interface ThemeItemProps {
     theme: Theme;
@@ -20,48 +19,35 @@ interface ThemeItemProps {
 }
 
 const ThemeItem = (props: ThemeItemProps) => {
-    const [
-        uninstallConfirmationPopupOpened,
-        setUninstallConfirmationPopupOpened,
-    ] = useState(false);
-    const [applyConfirmationPopupOpened, setApplyConfirmationPopupOpened] =
-        useState(false);
-
-    const closeUninstallConfirmationPopup = () =>
-        setUninstallConfirmationPopupOpened(false);
-
-    const closeApplyConfirmationPopup = () =>
-        setApplyConfirmationPopupOpened(false);
-
     const uninstallTheme = () => {
-        setUninstallConfirmationPopupOpened(false);
         props.onUninstall(props.theme.name);
     };
 
     const applyTheme = () => {
-        setApplyConfirmationPopupOpened(false);
         props.onApply(props.theme.name);
     };
 
     const generateOptions = () => {
         const options = [];
         if (!props.theme.active) {
-            options.push({
-                label: BUTTON_THEME_APPLY,
-                type: "button",
-                onClick: () => setApplyConfirmationPopupOpened(true),
-            });
+            <MenuItem 
+                component="dialog"
+                title={`${APPLY_THEME_POPUP_HEADER} ${props.theme.name}?`}
+                triggerChildren={BUTTON_THEME_APPLY}
+                onClick={applyTheme}>
+            </MenuItem>
         }
-        options.push({
-            label: BUTTON_THEME_REMIX,
-            type: "button",
-            onClick: () => props.onRemix(props.theme.name),
-        });
-        options.push({
-            label: BUTTON_THEME_UNINSTALL,
-            type: "button",
-            onClick: () => setUninstallConfirmationPopupOpened(true),
-        });
+        options.push(<MenuItem
+                onSelect={() => props.onRemix(props.theme.name)}>
+                {BUTTON_THEME_REMIX}
+        </MenuItem>)
+        options.push(
+        <MenuItem 
+            component="dialog"
+            title={`${DELETE_THEME_POPUP_HEADER} ${props.theme.name}?`}
+            triggerChildren={BUTTON_THEME_UNINSTALL}
+            onClick={uninstallTheme}>
+        </MenuItem>)
         return options;
     };
 
@@ -69,32 +55,12 @@ const ThemeItem = (props: ThemeItemProps) => {
         <TableRow>
             <TableCell>{props.theme.name}</TableCell>
             <TableCell align="right">
-                <Menu options={generateOptions()} icon={<MoreVert />} />
+                <Menu2 
+                    icon={<MoreVert />}
+                    variant="soft">
+                    {generateOptions()}
+                </Menu2>
             </TableCell>
-            <Dialog
-                onOpen={uninstallConfirmationPopupOpened}
-                onClose={closeUninstallConfirmationPopup}
-                title={`${DELETE_THEME_POPUP_HEADER} ${props.theme.name}?`}
-                actions={[
-                    {
-                        name: POPUP_CANCEL_ACTION,
-                        callback: closeUninstallConfirmationPopup,
-                    },
-                    { name: BUTTON_THEME_UNINSTALL, callback: uninstallTheme },
-                ]}
-            />
-            <Dialog
-                onOpen={applyConfirmationPopupOpened}
-                onClose={closeApplyConfirmationPopup}
-                title={`${APPLY_THEME_POPUP_HEADER} ${props.theme.name}?`}
-                actions={[
-                    {
-                        name: POPUP_CANCEL_ACTION,
-                        callback: closeApplyConfirmationPopup,
-                    },
-                    { name: BUTTON_THEME_APPLY, callback: applyTheme },
-                ]}
-            />
         </TableRow>
     );
 };

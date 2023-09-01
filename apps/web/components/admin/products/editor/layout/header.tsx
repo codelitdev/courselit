@@ -1,13 +1,12 @@
 import React from "react";
 import { MoreVert } from "@courselit/icons";
 import { Breadcrumbs, Grid, Typography } from "@mui/material";
-import Link from "next/link";
 import {
     EDIT_PAGE_MENU_ITEM,
     VIEW_PAGE_MENU_ITEM,
 } from "../../../../../ui-config/strings";
 import useCourse from "../course-hook";
-import { Menu } from "@courselit/components-library";
+import { Menu2, MenuItem, Link } from "@courselit/components-library";
 
 interface Breadcrumb {
     text: string;
@@ -55,6 +54,7 @@ export default function ProductHeader({ id, breadcrumbs }: ProductHeaderProps) {
                         <Typography variant="h1">{course.title}</Typography>
                     </Grid>
                     <Grid item>
+                        {/*
                         <Menu
                             options={[
                                 {
@@ -71,6 +71,17 @@ export default function ProductHeader({ id, breadcrumbs }: ProductHeaderProps) {
                             ]}
                             icon={<MoreVert />}
                         />
+                        */}
+                        <Menu2
+                            icon={<MoreVert />}
+                            variant="soft">
+                            <MenuItem>
+                                <Link href={`/p/${course.pageId}`}>{VIEW_PAGE_MENU_ITEM}</Link>
+                            </MenuItem>
+                            <MenuItem>
+                                <Link href={`/dashboard/page/${course.pageId}/edit`}>{EDIT_PAGE_MENU_ITEM}</Link>
+                            </MenuItem>
+                        </Menu2>
                     </Grid>
                 </Grid>
             </Grid>

@@ -162,7 +162,6 @@ export const deleteCourse = async (
     ctx: GQLContext,
 ) => {
     const course = await getCourseOrThrow(id, ctx);
-
     await deleteAllLessons(course.courseId, ctx);
     if (course.featuredImage) {
         await deleteMedia(course.featuredImage);
@@ -171,7 +170,10 @@ export const deleteCourse = async (
         entityId: course.courseId,
         domain: ctx.subdomain._id,
     });
-    await course.remove();
+    await CourseModel.deleteOne({
+        _id: course._id,
+        domain: ctx.subdomain._id,
+    })
     return true;
 };
 

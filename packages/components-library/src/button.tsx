@@ -20,7 +20,7 @@ interface LinkButtonProps extends CommonButtonProps {
 
 type ButtonProps = ButtonButtonProps | LinkButtonProps;
 
-export default function Button(props: ButtonProps) {
+const Button = React.forwardRef((props: ButtonProps, forwardedRef: any) => {
     const {
         children,
         className = "",
@@ -46,6 +46,7 @@ export default function Button(props: ButtonProps) {
                 className={`${commonClasses} ${className}`}
                 href={props.href}
                 style={{ ...style }}
+                ref={forwardedRef}
                 {...other}
             >
                 {children}
@@ -58,9 +59,12 @@ export default function Button(props: ButtonProps) {
             className={`${commonClasses} ${className}`}
             onClick={props.onClick}
             style={{ ...style }}
+            ref={forwardedRef}
             {...other}
         >
             {children}
         </button>
     );
-}
+})
+
+export default Button;

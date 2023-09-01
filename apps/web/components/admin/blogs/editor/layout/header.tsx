@@ -1,16 +1,13 @@
 import React, { useState } from "react";
 import { Breadcrumbs, Grid, Typography } from "@mui/material";
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import useCourse from "../course-hook";
 import { useRouter } from "next/router";
-import { Dialog, Menu } from "@courselit/components-library";
+import { MenuItem, Menu2, Link } from "@courselit/components-library";
 import {
     DELETE_PRODUCT_POPUP_HEADER,
     DELETE_PRODUCT_POPUP_TEXT,
     MENU_BLOG_VISIT,
-    POPUP_CANCEL_ACTION,
-    POPUP_OK_ACTION,
     PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
 } from "../../../../../ui-config/strings";
 import { MoreVert } from "@courselit/icons";
@@ -74,67 +71,19 @@ function BlogHeader({ id, breadcrumbs, address, dispatch }: BlogHeaderProps) {
                         <Typography variant="h1">{course.title}</Typography>
                     </Grid>
                     <Grid item>
-                        <Menu
-                            options={[
-                                {
-                                    label: MENU_BLOG_VISIT,
-                                    type: "link",
-                                    href: `/blog/${course.slug}/${course.courseId}`,
-                                    newTab: true,
-                                },
-                                {
-                                    label: PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
-                                    type: "button",
-                                    onClick: () =>
-                                        setDeleteProductPopupOpened(true),
-                                },
-                            ]}
+                        <Menu2
                             icon={<MoreVert />}
-                        />
-                        {/* <IconButton
-                            onClick={handleClick}
-                            size="small"
-                            sx={{ ml: 2 }}
-                            aria-controls={open ? "product-menu" : undefined}
-                            aria-haspopup="true"
-                            aria-expanded={open ? "true" : undefined}
-                        >
-                            <MoreVert />
-                        </IconButton>
-                        <Menu
-                            id="basic-menu"
-                            anchorEl={anchorEl}
-                            open={open}
-                            onClose={handleClose}
-                            MenuListProps={{
-                                "aria-labelledby": "basic-button",
-                            }}
-                        >
-                            <MenuItem
-                                onClick={() =>
-                                    router.push(
-                                        `/dashboard/page/${course.pageId}/edit`
-                                    )
-                                }
-                            >
-                                {EDIT_PAGE_MENU_ITEM}
+                            variant="soft">
+                            <MenuItem>
+                                <Link href={`/blog/${course.slug}/${course.courseId}`}>{MENU_BLOG_VISIT}</Link>
                             </MenuItem>
-                        </Menu> */}
-                    </Grid>
-                </Grid>
-            </Grid>
-            <Dialog
-                onOpen={deleteProductPopupOpened}
-                onClose={closeDeletePopup}
-                title={DELETE_PRODUCT_POPUP_HEADER}
-                actions={[
-                    {
-                        name: POPUP_CANCEL_ACTION,
-                        callback: closeDeletePopup,
-                    },
-                    {
-                        name: POPUP_OK_ACTION,
-                        callback: () =>
+                    <MenuItem 
+                        component="dialog"
+                        title={PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT}
+                        triggerChildren={DELETE_PRODUCT_POPUP_HEADER}
+                        description={DELETE_PRODUCT_POPUP_TEXT}
+                        onClick={
+                        () =>
                             deleteProduct({
                                 id: course!.id as string,
                                 setDeleteProductPopupOpened,
@@ -143,14 +92,12 @@ function BlogHeader({ id, breadcrumbs, address, dispatch }: BlogHeaderProps) {
                                 onDeleteComplete: () => {
                                     router.replace(`/dashboard/blogs`);
                                 },
-                            }),
-                    },
-                ]}
-            >
-                <Typography variant="subtitle1">
-                    {DELETE_PRODUCT_POPUP_TEXT}
-                </Typography>
-            </Dialog>
+                            })}>
+                    </MenuItem>
+                        </Menu2>
+                    </Grid>
+                </Grid>
+            </Grid>
         </Grid>
     );
 }

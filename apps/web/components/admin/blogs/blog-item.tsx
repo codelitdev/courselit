@@ -22,7 +22,7 @@ import { MoreVert } from "@courselit/icons";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import type { SiteInfo, Address } from "@courselit/common-models";
 import { connect } from "react-redux";
-import { Dialog, Image, Menu } from "@courselit/components-library";
+import { Dialog, Image, Menu2, MenuItem } from "@courselit/components-library";
 import { deleteProduct } from "./helpers";
 
 function BlogItem({
@@ -125,16 +125,26 @@ function BlogItem({
                 />
             </TableCell>
             <TableCell align="right">
-                <Menu
-                    options={[
-                        {
-                            label: PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
-                            type: "button",
-                            onClick: () => setDeleteProductPopupOpened(true),
-                        },
-                    ]}
+                <Menu2
                     icon={<MoreVert />}
-                />
+                    variant="soft">
+                    <MenuItem 
+                        component="dialog"
+                        title={DELETE_PRODUCT_POPUP_HEADER}
+                        triggerChildren={PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT}
+                        onClick={() => 
+                            deleteProduct({
+                                id: product.id,
+                                setDeleteProductPopupOpened,
+                                backend: address.backend,
+                                dispatch,
+                                onDeleteComplete: () => {
+                                    onDelete(position);
+                                },
+                            })
+                        }>
+                    </MenuItem>
+                </Menu2>
             </TableCell>
             <Dialog
                 onOpen={deleteProductPopupOpened}

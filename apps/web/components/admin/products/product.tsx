@@ -26,11 +26,11 @@ import type { AppDispatch, AppState } from "@courselit/state-management";
 import type { SiteInfo, Address } from "@courselit/common-models";
 import { connect } from "react-redux";
 import { FetchBuilder, formatCurrency } from "@courselit/utils";
-import { Dialog, Image, Menu } from "@courselit/components-library";
 import {
     networkAction,
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
+import { Menu2, MenuItem, Link as AppLink, Dialog, Image } from "@courselit/components-library";
 
 function Product({
     details,
@@ -147,27 +147,29 @@ function Product({
                 {formatCurrency(product.sales, siteinfo.currencyISOCode)}
             </TableCell>
             <TableCell align="right">
-                <Menu
-                    options={[
-                        {
-                            label: VIEW_PAGE_MENU_ITEM,
-                            type: "link",
-                            href: `/p/${product.pageId}`,
-                            newTab: true,
-                        },
-                        {
-                            label: PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE,
-                            type: "link",
-                            href: `/dashboard/page/${product.pageId}/edit`,
-                        },
-                        {
-                            label: PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
-                            type: "button",
-                            onClick: () => setDeleteProductPopupOpened(true),
-                        },
-                    ]}
+                <Menu2 
                     icon={<MoreVert />}
-                />
+                    variant="soft">
+                    <MenuItem>
+                        <AppLink 
+                            href={`/p/${product.pageId}`}>
+                            {VIEW_PAGE_MENU_ITEM}
+                        </AppLink>
+                    </MenuItem>
+                    <MenuItem>
+                        <AppLink 
+                            href={`/dashboard/page/${product.pageId}/edit`}>
+                            {PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE}
+                        </AppLink>
+                    </MenuItem>
+                    <MenuItem 
+                        component="dialog"
+                        title={PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT}
+                        triggerChildren={DELETE_PRODUCT_POPUP_HEADER}
+                        description={DELETE_PRODUCT_POPUP_TEXT}
+                        onClick={deleteProduct}>
+                    </MenuItem>
+                </Menu2>
             </TableCell>
             <Dialog
                 onOpen={deleteProductPopupOpened}
