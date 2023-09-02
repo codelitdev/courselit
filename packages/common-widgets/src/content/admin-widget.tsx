@@ -2,14 +2,13 @@ import * as React from "react";
 import { Alignment } from "@courselit/common-models";
 import { useEffect, useState } from "react";
 import Settings from "./settings";
-import Grid from "@mui/material/Grid";
-import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
 import {
     AdminWidgetPanel,
     ColorSelector,
     Select,
     TextEditor,
+    Form,
+    FormField,
 } from "@courselit/components-library";
 
 interface AdminWidgetProps {
@@ -56,28 +55,23 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
     ]);
 
     return (
-        <Grid container direction="column">
-            <Grid item sx={{ mb: 4 }}>
-                <AdminWidgetPanel title="Header">
-                    <Grid item>
-                        <TextField
+        <div className="flex flex-col">
+            <div className="mb-4">
+                <Form>
+                    <AdminWidgetPanel title="Header">
+                        <FormField
                             label="Title"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            fullWidth
                         />
-                    </Grid>
-                    <Grid item sx={{ mb: 2 }}>
-                        <Typography variant="subtitle1" sx={{ mt: 2 }}>
-                            Description
-                        </Typography>
-                        <TextEditor
-                            initialContent={description}
-                            onChange={(state: any) => setDescription(state)}
-                            showToolbar={false}
-                        />
-                    </Grid>
-                    <Grid item>
+                        <div>
+                            <p className="mb-1 font-medium">Description</p>
+                            <TextEditor
+                                initialContent={description}
+                                onChange={(state: any) => setDescription(state)}
+                                showToolbar={false}
+                            />
+                        </div>
                         <Select
                             title="Header alignment"
                             value={headerAlignment}
@@ -89,49 +83,37 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                                 setHeaderAlignment(value)
                             }
                         />
-                    </Grid>
-                </AdminWidgetPanel>
-            </Grid>
-            <Grid item sx={{ mb: 4 }}>
+                    </AdminWidgetPanel>
+                </Form>
+            </div>
+            <div className="mb-4">
                 <AdminWidgetPanel title="Design">
-                    <Grid item sx={{ mb: 2 }}>
-                        <ColorSelector
-                            title="Background color"
-                            value={backgroundColor || "inherit"}
-                            onChange={(value?: string) =>
-                                setBackgroundColor(value)
-                            }
-                        />
-                    </Grid>
-                    <Grid item sx={{ mb: 2 }}>
-                        <ColorSelector
-                            title="Text color"
-                            value={foregroundColor || "inherit"}
-                            onChange={(value?: string) =>
-                                setForegroundColor(value)
-                            }
-                        />
-                    </Grid>
-                    <Grid item sx={{ mb: 2 }}>
-                        <ColorSelector
-                            title="Badge color"
-                            value={badgeBackgroundColor || "inherit"}
-                            onChange={(value?: string) =>
-                                setBadgeBackgroundColor(value)
-                            }
-                        />
-                    </Grid>
-                    <Grid item>
-                        <ColorSelector
-                            title="Badge text color"
-                            value={badgeForegroundColor || "inherit"}
-                            onChange={(value?: string) =>
-                                setBadgeForegroundColor(value)
-                            }
-                        />
-                    </Grid>
+                    <ColorSelector
+                        title="Background color"
+                        value={backgroundColor || "inherit"}
+                        onChange={(value?: string) => setBackgroundColor(value)}
+                    />
+                    <ColorSelector
+                        title="Text color"
+                        value={foregroundColor || "inherit"}
+                        onChange={(value?: string) => setForegroundColor(value)}
+                    />
+                    <ColorSelector
+                        title="Badge color"
+                        value={badgeBackgroundColor || "inherit"}
+                        onChange={(value?: string) =>
+                            setBadgeBackgroundColor(value)
+                        }
+                    />
+                    <ColorSelector
+                        title="Badge text color"
+                        value={badgeForegroundColor || "inherit"}
+                        onChange={(value?: string) =>
+                            setBadgeForegroundColor(value)
+                        }
+                    />
                 </AdminWidgetPanel>
-            </Grid>
-        </Grid>
+            </div>
+        </div>
     );
 }

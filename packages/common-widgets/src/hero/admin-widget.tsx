@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import type { Address, Auth, Media, Profile } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
-import { Grid, TextField, Typography } from "@mui/material";
 import Settings from "./settings";
 import {
     AdminWidgetPanel,
@@ -10,6 +9,8 @@ import {
     Select,
     TextEditor,
 } from "@courselit/components-library";
+import { Form } from "@courselit/components-library";
+import { FormField } from "@courselit/components-library";
 
 interface AdminWidgetProps {
     name: string;
@@ -106,87 +107,68 @@ export default function AdminWidget({
     ]);
 
     return (
-        <Grid container direction="column">
-            <Grid item sx={{ mb: 4 }}>
-                <AdminWidgetPanel title="Basic">
-                    <Grid item sx={{ mb: 2 }}>
-                        <TextField
+        <div className="flex flex-col">
+            <div className="mb-4">
+                <Form>
+                    <AdminWidgetPanel title="Basic">
+                        <FormField
                             label="Title"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            fullWidth
                         />
-                    </Grid>
-                    <Grid item>
-                        <Typography variant="subtitle1">Description</Typography>
-                        <TextEditor
-                            initialContent={description}
-                            onChange={(state: any) => setDescription(state)}
-                            showToolbar={false}
-                        />
-                    </Grid>
-                </AdminWidgetPanel>
-            </Grid>
-            <Grid item sx={{ mb: 4 }}>
+                        <div>
+                            <p className="mb-1 font-medium">Description</p>
+                            <TextEditor
+                                initialContent={description}
+                                onChange={(state: any) => setDescription(state)}
+                                showToolbar={false}
+                            />
+                        </div>
+                    </AdminWidgetPanel>
+                </Form>
+            </div>
+            <div className="mb-4">
                 <AdminWidgetPanel title="Media">
-                    <Grid item sx={{ mb: 2 }}>
-                        <MediaSelector
-                            title=""
-                            src={media && media.thumbnail}
-                            srcTitle={media && media.originalFileName}
-                            dispatch={dispatch}
-                            auth={auth}
-                            profile={profile}
-                            address={address}
-                            onSelection={(media: Media) => {
-                                if (media) {
-                                    setMedia(media);
-                                }
-                            }}
-                            strings={{}}
-                            access="public"
-                        />
-                    </Grid>
-                    {/* <Grid item sx={{ mb: 2 }}>
-                        <TextField
-                            label="Youtube Video Id"
-                            value={youtubeLink}
-                            onChange={(e) => setYoutubeLink(e.target.value)}
-                            fullWidth
-                        />
-                    </Grid> */}
-                    <Grid item>
-                        <Select
-                            title="alignment"
-                            value={alignment}
-                            options={[
-                                { label: "Left", value: "left" },
-                                { label: "Right", value: "right" },
-                            ]}
-                            onChange={(value) => setAlignment(value)}
-                        />
-                    </Grid>
+                    <MediaSelector
+                        title=""
+                        src={media && media.thumbnail}
+                        srcTitle={media && media.originalFileName}
+                        dispatch={dispatch}
+                        auth={auth}
+                        profile={profile}
+                        address={address}
+                        onSelection={(media: Media) => {
+                            if (media) {
+                                setMedia(media);
+                            }
+                        }}
+                        strings={{}}
+                        access="public"
+                    />
+                    <Select
+                        title="alignment"
+                        value={alignment}
+                        options={[
+                            { label: "Left", value: "left" },
+                            { label: "Right", value: "right" },
+                        ]}
+                        onChange={(value) => setAlignment(value)}
+                    />
                 </AdminWidgetPanel>
-            </Grid>
-            <Grid item sx={{ mb: 4 }}>
-                <AdminWidgetPanel title="Call to action">
-                    <Grid item sx={{ mb: 2 }}>
-                        <TextField
+            </div>
+            <div className="mb-4">
+                <Form>
+                    <AdminWidgetPanel title="Call to action">
+                        <FormField
                             label="Button Text"
                             value={buttonCaption}
                             onChange={(e) => setButtonCaption(e.target.value)}
-                            fullWidth
                         />
-                    </Grid>
-                    <Grid item sx={{ mb: 2 }}>
-                        <TextField
+                        <FormField
                             label="Button Action"
                             value={buttonAction}
                             onChange={(e) => setButtonAction(e.target.value)}
-                            fullWidth
                         />
-                    </Grid>
-                    <Grid item xs={12} sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Button color"
                             value={buttonBackground || "inherit"}
@@ -194,8 +176,6 @@ export default function AdminWidget({
                                 setButtonBackground(value)
                             }
                         />
-                    </Grid>
-                    <Grid item xs={12}>
                         <ColorSelector
                             title="Button text color"
                             value={buttonForeground || "inherit"}
@@ -203,55 +183,32 @@ export default function AdminWidget({
                                 setButtonForeground(value)
                             }
                         />
-                    </Grid>
-                </AdminWidgetPanel>
-            </Grid>
-            <Grid item sx={{ mb: 4 }}>
+                    </AdminWidgetPanel>
+                </Form>
+            </div>
+            <div className="mb-4">
                 <AdminWidgetPanel title="Design">
-                    <Grid item sx={{ mb: 2 }}>
-                        <ColorSelector
-                            title="Background color"
-                            value={backgroundColor || "inherit"}
-                            onChange={(value?: string) =>
-                                setBackgroundColor(value)
-                            }
-                        />
-                    </Grid>
-                    <Grid item sx={{ mb: 2 }}>
-                        <ColorSelector
-                            title="Text color"
-                            value={foregroundColor || "inherit"}
-                            onChange={(value?: string) =>
-                                setForegroundColor(value)
-                            }
-                        />
-                    </Grid>
-                    <Grid item>
-                        <Select
-                            title="Style"
-                            value={style}
-                            options={[
-                                { label: "Normal", value: "normal" },
-                                { label: "Card", value: "card" },
-                            ]}
-                            onChange={(value: "normal" | "card") =>
-                                setStyle(value)
-                            }
-                        />
-                    </Grid>
-                    {/* <Grid item>
-                        <TextField
-                            label="Media border radius"
-                            value={mediaBorderRadius}
-                            type="number"
-                            onChange={(e) =>
-                                setMediaBorderRadius(+e.target.value)
-                            }
-                            fullWidth
-                        />
-                    </Grid> */}
+                    <ColorSelector
+                        title="Background color"
+                        value={backgroundColor || "inherit"}
+                        onChange={(value?: string) => setBackgroundColor(value)}
+                    />
+                    <ColorSelector
+                        title="Text color"
+                        value={foregroundColor || "inherit"}
+                        onChange={(value?: string) => setForegroundColor(value)}
+                    />
+                    <Select
+                        title="Style"
+                        value={style}
+                        options={[
+                            { label: "Normal", value: "normal" },
+                            { label: "Card", value: "card" },
+                        ]}
+                        onChange={(value: "normal" | "card") => setStyle(value)}
+                    />
                 </AdminWidgetPanel>
-            </Grid>
-        </Grid>
+            </div>
+        </div>
     );
 }

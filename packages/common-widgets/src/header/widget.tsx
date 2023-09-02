@@ -1,5 +1,4 @@
 import React from "react";
-import { Avatar } from "@mui/material";
 import Settings, { Link } from "./settings";
 import { Image, Menu2, Link as AppLink } from "@courselit/components-library";
 import { Menu as MenuIcon, Person } from "@courselit/icons";

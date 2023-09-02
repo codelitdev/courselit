@@ -1,17 +1,16 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
-import { FormLabel, Grid, TextField } from "@mui/material";
 import Settings from "../settings";
 import {
     TextEditor,
     Select,
     ColorSelector,
     AdminWidgetPanel,
+    Form,
+    FormField,
 } from "@courselit/components-library";
 import { Alignment } from "@courselit/common-models";
 import { DEFAULT_FAILURE_MESSAGE, DEFAULT_SUCCESS_MESSAGE } from "../constants";
-import { Form } from "@courselit/components-library";
-import { FormField } from "@courselit/components-library";
 
 interface CustomSettingsProps {
     name: string;
@@ -103,7 +102,11 @@ export default function CustomSettings({
     return (
         <div className="flex flex-col">
             <div className="mb-4">
-                <Form>
+                <Form
+                    onSubmit={(e: React.FormEvent) => {
+                        e.preventDefault();
+                    }}
+                >
                     <AdminWidgetPanel title="Basic">
                         <FormField
                             value={title}

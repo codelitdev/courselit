@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import type { Address } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
-import { Grid, TextField, Typography } from "@mui/material";
 import type Settings from "./settings";
 import {
     AdminWidgetPanel,
     ColorSelector,
     Select,
+    Form,
+    FormField,
 } from "@courselit/components-library";
 import {
     DEFAULT_BTN_TEXT,
@@ -75,58 +76,45 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
     ]);
 
     return (
-        <Grid container direction="column">
-            <Grid item sx={{ mb: 4 }}>
-                <AdminWidgetPanel title="Basic">
-                    <Grid item sx={{ mb: 2 }}>
-                        <TextField
+        <div className="flex flex-col">
+            <div className="mb-4">
+                <Form>
+                    <AdminWidgetPanel title="Basic">
+                        <FormField
                             label="Title"
                             value={title}
                             placeholder={DEFAULT_TITLE}
                             onChange={(e) => setTitle(e.target.value)}
-                            fullWidth
                         />
-                    </Grid>
-                    <Grid item sx={{ mb: 2 }}>
-                        <TextField
+                        <FormField
                             label="Subtitle"
                             value={subtitle}
                             onChange={(e) => setSubtitle(e.target.value)}
-                            fullWidth
                         />
-                    </Grid>
-                    <Grid item sx={{ mb: 2 }}>
-                        <TextField
+                        <FormField
                             label="Success message"
                             value={successMessage}
                             placeholder={DEFAULT_SUCCESS_MESSAGE}
                             onChange={(e) => setSuccessMessage(e.target.value)}
-                            fullWidth
                         />
-                    </Grid>
-                    <Grid item>
-                        <TextField
+                        <FormField
                             label="Failure message"
                             value={failureMessage}
                             placeholder={DEFAULT_FAILURE_MESSAGE}
                             onChange={(e) => setFailureMessage(e.target.value)}
-                            fullWidth
                         />
-                    </Grid>
-                </AdminWidgetPanel>
-            </Grid>
-            <Grid item sx={{ mb: 4 }}>
-                <AdminWidgetPanel title="Call to action">
-                    <Grid item sx={{ mb: 2 }}>
-                        <TextField
+                    </AdminWidgetPanel>
+                </Form>
+            </div>
+            <div className="mb-4">
+                <Form>
+                    <AdminWidgetPanel title="Call to action">
+                        <FormField
                             label="Button text"
                             value={btnText}
                             placeholder={DEFAULT_BTN_TEXT}
                             onChange={(e) => setBtnText(e.target.value)}
-                            fullWidth
                         />
-                    </Grid>
-                    <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Button color"
                             value={btnBackgroundColor || "inherit"}
@@ -134,8 +122,6 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                                 setBtnBackgroundColor(value)
                             }
                         />
-                    </Grid>
-                    <Grid item>
                         <ColorSelector
                             title="Button text"
                             value={btnForegroundColor || "inherit"}
@@ -143,45 +129,35 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                                 setBtnForegroundColor(value)
                             }
                         />
-                    </Grid>
-                </AdminWidgetPanel>
-            </Grid>
-            <Grid item sx={{ mb: 4 }}>
+                    </AdminWidgetPanel>
+                </Form>
+            </div>
+            <div className="mb-4">
                 <AdminWidgetPanel title="Design">
-                    <Grid item sx={{ mb: 2 }}>
-                        <ColorSelector
-                            title="Text color"
-                            value={foregroundColor || "inherit"}
-                            onChange={(value?: string) =>
-                                setForegroundColor(value)
-                            }
-                        />
-                    </Grid>
-                    <Grid item sx={{ mb: 2 }}>
-                        <ColorSelector
-                            title="Background color"
-                            value={backgroundColor || "inherit"}
-                            onChange={(value?: string) =>
-                                setBackgroundColor(value)
-                            }
-                        />
-                    </Grid>
-                    <Grid item>
-                        <Select
-                            value={alignment}
-                            title="Alignment"
-                            onChange={(value: Settings["alignment"]) =>
-                                setAlignment(value)
-                            }
-                            options={[
-                                { label: "Left", value: "left" },
-                                { label: "Center", value: "center" },
-                                { label: "Right", value: "right" },
-                            ]}
-                        />
-                    </Grid>
+                    <ColorSelector
+                        title="Text color"
+                        value={foregroundColor || "inherit"}
+                        onChange={(value?: string) => setForegroundColor(value)}
+                    />
+                    <ColorSelector
+                        title="Background color"
+                        value={backgroundColor || "inherit"}
+                        onChange={(value?: string) => setBackgroundColor(value)}
+                    />
+                    <Select
+                        value={alignment}
+                        title="Alignment"
+                        onChange={(value: Settings["alignment"]) =>
+                            setAlignment(value)
+                        }
+                        options={[
+                            { label: "Left", value: "left" },
+                            { label: "Center", value: "center" },
+                            { label: "Right", value: "right" },
+                        ]}
+                    />
                 </AdminWidgetPanel>
-            </Grid>
-        </Grid>
+            </div>
+        </div>
     );
 }

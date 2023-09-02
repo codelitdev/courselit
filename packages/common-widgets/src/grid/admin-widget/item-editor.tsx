@@ -1,12 +1,16 @@
 import React, { useState } from "react";
-import Grid from "@mui/material/Grid";
 import { Item } from "../settings";
-import TextField from "@mui/material/TextField";
-import Tooltip from "@mui/material/Tooltip";
-import { MediaSelector, TextEditor } from "@courselit/components-library";
+import {
+    MediaSelector,
+    TextEditor,
+    Button,
+    Form,
+    FormField,
+    Tooltip,
+    AdminWidgetPanel,
+} from "@courselit/components-library";
 import { Address, Auth, Media, Profile } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
-import { Button } from "@courselit/components-library";
 
 interface ItemProps {
     item: Item;
@@ -45,61 +49,49 @@ export default function ItemEditor({
         });
 
     return (
-        <Grid container direction="column" sx={{ mb: 12 }}>
-            <Grid item>
-                <TextField
-                    label="Title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    fullWidth
-                />
-            </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <TextEditor
-                    initialContent={description}
-                    onChange={(state: any) => setDescription(state)}
-                    showToolbar={false}
-                />
-            </Grid>
-            <Grid item>
-                <TextField
-                    label="Button Text"
-                    value={buttonCaption}
-                    onChange={(e) => setButtonCaption(e.target.value)}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                />
-            </Grid>
-            <Grid item>
-                <TextField
-                    label="Button Action"
-                    value={buttonAction}
-                    onChange={(e) => setButtonAction(e.target.value)}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                />
-            </Grid>
-            <Grid item sx={{ mb: 4 }}>
-                <MediaSelector
-                    title=""
-                    src={media && media.thumbnail}
-                    srcTitle={media && media.originalFileName}
-                    dispatch={dispatch}
-                    auth={auth}
-                    profile={profile}
-                    address={address}
-                    onSelection={(media: Media) => {
-                        if (media) {
-                            setMedia(media);
-                        }
-                    }}
-                    strings={{}}
-                    access="public"
-                />
-            </Grid>
-            <Grid item>
-                <Grid container justifyContent="space-between">
-                    <Grid item>
+        <div className="flex flex-col">
+            <Form>
+                <AdminWidgetPanel title="Edit item">
+                    <FormField
+                        label="Title"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                    />
+                    <div>
+                        <p className="mb-1 font-medium">Description</p>
+                        <TextEditor
+                            initialContent={description}
+                            onChange={(state: any) => setDescription(state)}
+                            showToolbar={false}
+                        />
+                    </div>
+                    <FormField
+                        label="Button Text"
+                        value={buttonCaption}
+                        onChange={(e) => setButtonCaption(e.target.value)}
+                    />
+                    <FormField
+                        label="Button Action"
+                        value={buttonAction}
+                        onChange={(e) => setButtonAction(e.target.value)}
+                    />
+                    <MediaSelector
+                        title=""
+                        src={media && media.thumbnail}
+                        srcTitle={media && media.originalFileName}
+                        dispatch={dispatch}
+                        auth={auth}
+                        profile={profile}
+                        address={address}
+                        onSelection={(media: Media) => {
+                            if (media) {
+                                setMedia(media);
+                            }
+                        }}
+                        strings={{}}
+                        access="public"
+                    />
+                    <div className="flex justify-between">
                         <Tooltip title="Delete">
                             <Button
                                 component="button"
@@ -109,16 +101,14 @@ export default function ItemEditor({
                                 Delete
                             </Button>
                         </Tooltip>
-                    </Grid>
-                    <Grid item>
                         <Tooltip title="Go back">
                             <Button component="button" onClick={itemChanged}>
                                 Done
                             </Button>
                         </Tooltip>
-                    </Grid>
-                </Grid>
-            </Grid>
-        </Grid>
+                    </div>
+                </AdminWidgetPanel>
+            </Form>
+        </div>
     );
 }

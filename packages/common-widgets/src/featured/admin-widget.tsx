@@ -8,13 +8,13 @@ import {
     ColorSelector,
     Select,
     TextEditor,
+    IconButton,
+    Form,
+    FormField,
+    CircularProgress,
 } from "@courselit/components-library";
 import { Delete } from "@courselit/icons";
 import { Alignment } from "@courselit/common-models";
-import { IconButton } from "@courselit/components-library";
-import { Form } from "@courselit/components-library";
-import { FormField } from "@courselit/components-library";
-import { CircularProgress } from "@courselit/components-library";
 
 interface AdminWidgetProps {
     settings: Settings;

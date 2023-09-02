@@ -1,15 +1,16 @@
-import React, { FormEvent, useState } from "react";
-import { AppMessage, WidgetProps } from "@courselit/common-models";
+import React, { FormEvent, useEffect, useState } from "react";
+import { AppMessage, Media, WidgetProps } from "@courselit/common-models";
 import {
     Image,
     PriceTag,
     TextRenderer,
     Button,
+    Form,
+    FormField,
 } from "@courselit/components-library";
 import { actionCreators } from "@courselit/state-management";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
-import { TextField } from "@mui/material";
 import { DEFAULT_FAILURE_MESSAGE, DEFAULT_SUCCESS_MESSAGE } from "./constants";
 import Settings from "./settings";
 
@@ -52,28 +53,32 @@ export default function Widget({
         ],
     };
 
-    let direction: "row" | "row-reverse" | "column" | "column-reverse";
+    let direction: any;
     switch (alignment) {
         case "top":
-            direction = "column-reverse";
+            direction = "md:!flex-col-reverse";
             break;
         case "bottom":
-            direction = "column";
+            direction = "md:!flex-col";
             break;
         case "left":
-            direction = "row";
+            direction = "md:!flex-row";
             break;
         case "right":
-            direction = "row-reverse";
+            direction = "md:!flex-row-reverse";
             break;
         default:
-            direction = "row";
+            direction = "md:!flex-row";
     }
     const verticalLayout = ["top", "bottom"].includes(alignment);
     const showEditingView =
         typeof editingViewShowSuccess === "undefined"
             ? 0
             : editingViewShowSuccess;
+    const featuredImage: Media =
+        type === "site"
+            ? state.siteinfo.logo
+            : (product.featuredImage as Media);
 
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -111,44 +116,32 @@ export default function Widget({
         }
     };
 
+    useEffect(() => {
+        console.log("Product", product, featuredImage, state);
+    }, [product]);
+
     return (
-        <div
-            className="flex space-between"
+        <section
+            className={`flex flex-col space-between ${direction}`}
             style={{
                 flexDirection: direction,
                 alignItems: !verticalLayout ? "center" : "",
                 backgroundColor,
             }}
         >
-            {product.featuredImage && (
+            {featuredImage && (
                 <div
                     className={`p-4 text-center ${
-                        verticalLayout ? "md:w-full" : "w-1/2"
+                        verticalLayout ? "md:w-full" : "w-full md:w-1/2"
                     }`}
                 >
-                    <Image
-                        src={(product.featuredImage as any).file}
-                        width={verticalLayout ? "100%" : 1}
-                        height={
-                            verticalLayout
-                                ? {
-                                      xs: 224,
-                                      sm: 300,
-                                      md: 384,
-                                      lg: 590,
-                                  }
-                                : {
-                                      xs: 224,
-                                      sm: 352,
-                                      md: 214,
-                                      lg: 286,
-                                  }
-                        }
-                    />
+                    <Image src={featuredImage.file} />
                 </div>
             )}
             <div
-                className={`p-4 ${verticalLayout ? "md:w-full" : "w-1/2"}`}
+                className={`p-4 text-center ${
+                    verticalLayout ? "md:w-full" : "w-full md:w-1/2"
+                }`}
                 style={{ color }}
             >
                 <div
@@ -207,12 +200,12 @@ export default function Widget({
                             )}
                             {(!editing || (editing && showEditingView === 0)) &&
                                 !success && (
-                                    <form
+                                    <Form
                                         className="flex flex-col"
                                         onSubmit={onSubmit}
                                     >
                                         <div className="mb-4">
-                                            <TextField
+                                            <FormField
                                                 label="Email"
                                                 value={email}
                                                 onChange={(e) =>
@@ -238,7 +231,7 @@ export default function Widget({
                                                     "Get for free"}
                                             </Button>
                                         </div>
-                                    </form>
+                                    </Form>
                                 )}
                         </div>
                     )}
@@ -271,6 +264,6 @@ export default function Widget({
                     )}
                 </div>
             </div>
-        </div>
+        </section>
     );
 }

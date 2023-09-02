@@ -9,16 +9,9 @@ import {
     Select,
     TextEditor,
     Button,
+    Form,
+    FormField,
 } from "@courselit/components-library";
-import {
-    Grid,
-    TextField,
-    Typography,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemText,
-} from "@mui/material";
 
 export interface AdminWidgetProps {
     settings: Settings;
@@ -179,26 +172,23 @@ export default function AdminWidget({
     }
 
     return (
-        <Grid container direction="column">
-            <Grid item sx={{ mb: 4 }}>
-                <AdminWidgetPanel title="Header">
-                    <Grid item sx={{ mb: 2 }}>
-                        <TextField
+        <div className="flex flex-col">
+            <div className="mb-4">
+                <Form>
+                    <AdminWidgetPanel title="Header">
+                        <FormField
                             label="Title"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            fullWidth
                         />
-                    </Grid>
-                    <Grid item sx={{ mb: 2 }}>
-                        <Typography variant="subtitle1">Description</Typography>
-                        <TextEditor
-                            initialContent={description}
-                            onChange={(state: any) => setDescription(state)}
-                            showToolbar={false}
-                        />
-                    </Grid>
-                    <Grid item>
+                        <div>
+                            <p className="mb-1 font-medium">Description</p>
+                            <TextEditor
+                                initialContent={description}
+                                onChange={(state: any) => setDescription(state)}
+                                showToolbar={false}
+                            />
+                        </div>
                         <Select
                             title="Header alignment"
                             value={headerAlignment}
@@ -210,28 +200,23 @@ export default function AdminWidget({
                                 setHeaderAlignment(value)
                             }
                         />
-                    </Grid>
-                </AdminWidgetPanel>
-            </Grid>
-            <Grid item sx={{ mb: 4 }}>
-                <AdminWidgetPanel title="Call to action">
-                    <Grid item sx={{ mb: 2 }}>
-                        <TextField
+                    </AdminWidgetPanel>
+                </Form>
+            </div>
+            <div className="mb-4">
+                <Form>
+                    <AdminWidgetPanel title="Call to action">
+                        <FormField
                             label="Button Text"
                             value={buttonCaption}
                             onChange={(e) => setButtonCaption(e.target.value)}
-                            fullWidth
                         />
-                    </Grid>
-                    <Grid item sx={{ mb: 2 }}>
-                        <TextField
+                        <FormField
                             label="Button Action"
                             value={buttonAction}
                             onChange={(e) => setButtonAction(e.target.value)}
                             fullWidth
                         />
-                    </Grid>
-                    <Grid item sx={{ mb: 2 }}>
                         <ColorSelector
                             title="Button color"
                             value={buttonBackground || "inherit"}
@@ -239,8 +224,6 @@ export default function AdminWidget({
                                 setButtonBackground(value)
                             }
                         />
-                    </Grid>
-                    <Grid item>
                         <ColorSelector
                             title="Button text color"
                             value={buttonForeground || "inherit"}
@@ -248,74 +231,57 @@ export default function AdminWidget({
                                 setButtonForeground(value)
                             }
                         />
-                    </Grid>
-                </AdminWidgetPanel>
-            </Grid>
-            <Grid item sx={{ mb: 4 }}>
+                    </AdminWidgetPanel>
+                </Form>
+            </div>
+            <div className="mb-4">
                 <AdminWidgetPanel title="Items">
-                    <Grid item sx={{ mb: 2 }}>
-                        <List>
-                            {items.map((item: Item, index: number) => (
-                                <ListItem disablePadding key={index}>
-                                    <ListItemButton
-                                        onClick={() => {
-                                            hideActionButtons(true, {
-                                                selectedItem: index,
-                                            });
-                                        }}
-                                    >
-                                        <ListItemText primary={item.title} />
-                                    </ListItemButton>
-                                </ListItem>
-                            ))}
-                        </List>
-                    </Grid>
-                    <Grid item sx={{ mb: 2 }}>
-                        <Button
-                            component="button"
-                            variant="soft"
-                            onClick={addNewItem}
-                        >
+                    <ul className="flex flex-col gap-2">
+                        {items.map((item: Item, index: number) => (
+                            <li
+                                onClick={() => {
+                                    hideActionButtons(true, {
+                                        selectedItem: index,
+                                    });
+                                }}
+                                className="p-1 border border-transparent hover:border-slate-300 rounded"
+                            >
+                                {item.title}
+                            </li>
+                        ))}
+                    </ul>
+                    <div>
+                        <Button component="button" onClick={addNewItem}>
                             Add new item
                         </Button>
-                    </Grid>
-                    <Grid item>
-                        <Select
-                            title="Items alignment"
-                            value={itemsAlignment}
-                            options={[
-                                { label: "Left", value: "left" },
-                                { label: "Center", value: "center" },
-                            ]}
-                            onChange={(value: Alignment) =>
-                                setItemsAlignment(value)
-                            }
-                        />
-                    </Grid>
+                    </div>
+                    <Select
+                        title="Items alignment"
+                        value={itemsAlignment}
+                        options={[
+                            { label: "Left", value: "left" },
+                            { label: "Center", value: "center" },
+                        ]}
+                        onChange={(value: Alignment) =>
+                            setItemsAlignment(value)
+                        }
+                    />
                 </AdminWidgetPanel>
-            </Grid>
-            <Grid item sx={{ mb: 4 }}>
+            </div>
+            <div className="mb-4">
                 <AdminWidgetPanel title="Design">
-                    <Grid item sx={{ mb: 2 }}>
-                        <ColorSelector
-                            title="Background color"
-                            value={backgroundColor || "inherit"}
-                            onChange={(value?: string) =>
-                                setBackgroundColor(value)
-                            }
-                        />
-                    </Grid>
-                    <Grid item>
-                        <ColorSelector
-                            title="Text color"
-                            value={foregroundColor || "inherit"}
-                            onChange={(value?: string) =>
-                                setForegroundColor(value)
-                            }
-                        />
-                    </Grid>
+                    <ColorSelector
+                        title="Background color"
+                        value={backgroundColor || "inherit"}
+                        onChange={(value?: string) => setBackgroundColor(value)}
+                    />
+                    <ColorSelector
+                        title="Text color"
+                        value={foregroundColor || "inherit"}
+                        onChange={(value?: string) => setForegroundColor(value)}
+                    />
                 </AdminWidgetPanel>
-            </Grid>
-        </Grid>
+            </div>
+        </div>
     );
 }

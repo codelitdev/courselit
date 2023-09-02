@@ -24,6 +24,8 @@ import CircularProgress from "./circular-progress";
 import Menu2 from "./menu2";
 import MenuItem from "./menu-item";
 import Dialog2 from "./dialog2";
+import Tooltip from "./tooltip";
+import Chip from "./chip";
 
 export {
     PriceTag,
@@ -49,4 +51,6 @@ export {
     Menu2,
     MenuItem,
     Dialog2,
+    Tooltip,
+    Chip,
 };

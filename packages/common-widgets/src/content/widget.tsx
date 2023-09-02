@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { LessonIcon, TextRenderer } from "@courselit/components-library";
 import {
     AppMessage,
     Course,
@@ -12,8 +11,13 @@ import Settings from "./settings";
 import { FetchBuilder } from "@courselit/utils";
 import { actionCreators } from "@courselit/state-management";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
-import { Link } from "@courselit/components-library";
-import { Chip, Skeleton, Typography, Grid } from "@mui/material";
+import {
+    Link,
+    CircularProgress,
+    Chip,
+    LessonIcon,
+    TextRenderer,
+} from "@courselit/components-library";
 
 interface CourseWithGroups extends Course {
     groups: Group[];
@@ -118,7 +122,7 @@ export default function Widget({
     }, [course]);
 
     return (
-        <div
+        <section
             className="flex flex-col p-4"
             style={{
                 backgroundColor,
@@ -147,94 +151,50 @@ export default function Widget({
             </div>
             {!course && (
                 <div className="flex flex-col">
-                    <Skeleton variant="rectangular" height={50} />
-                    <Skeleton variant="text" />
-                    <Skeleton variant="text" />
-                    <Skeleton variant="text" />
+                    <CircularProgress />
                 </div>
             )}
             {Object.keys(formattedCourse).map((group, index) => (
-                <Grid item sx={{ mt: index > 0 ? 3 : 0 }} key={index}>
-                    <Grid container direction="column">
-                        <Grid item>
-                            <Grid container spacing={1} alignItems="center">
-                                <Grid item>
-                                    <Typography variant="h5" sx={{ mb: 1 }}>
-                                        {group}
-                                    </Typography>
-                                </Grid>
-                                <Grid item>
-                                    <Chip
-                                        label={`${formattedCourse[group].length} lessons`}
-                                        size="small"
-                                        sx={{
-                                            color: badgeForegroundColor,
-                                            backgroundColor:
-                                                badgeBackgroundColor,
-                                        }}
-                                    />
-                                </Grid>
-                            </Grid>
-                        </Grid>
-                        {formattedCourse[group].map((lesson: Lesson) => (
-                            <Grid item key={lesson.lessonId}>
-                                <Grid container>
-                                    <Grid item sx={{ mr: 1 }}>
-                                        <LessonIcon
-                                            type={lesson.type as LessonType}
-                                        />
-                                    </Grid>
-                                    <Grid item>
-                                        <Link
-                                            href={`/course/${course.slug}/${course.courseId}/${lesson.lessonId}`}
-                                            style={{
-                                                color: foregroundColor,
-                                            }}
-                                        >
-                                            {lesson.title}
-                                        </Link>
-                                    </Grid>
-                                    {!lesson.requiresEnrollment && (
-                                        <Grid item sx={{ ml: 1 }}>
-                                            <Chip
-                                                label={`Preview`}
-                                                size="small"
-                                                sx={{
-                                                    color: badgeForegroundColor,
-                                                    backgroundColor:
-                                                        badgeBackgroundColor,
-                                                }}
-                                            />
-                                        </Grid>
-                                    )}
-                                </Grid>
-                            </Grid>
-                        ))}
-                    </Grid>
-                </Grid>
-                // <Grid item sx={{ mt: index > 0 ? 2 : 0 }}>
-                //     <Typography variant="h6" sx={{ mb: 1 }}>
-                //         {group.name}
-                //     </Typography>
-                //     {course.lessons
-                //         .filter(
-                //             (lesson: Lesson) => lesson.groupId === group.id
-                //         )
-                //         .sort((a: any, b: any) => a.groupRank - b.groupRank)
-                //         .map((lesson: Lesson) => (
-                //             <Grid item key={lesson.lessonId}>
-                //                 <Grid container>
-                //                     <Grid item sx={{ mr: 1 }}>
-                //                         <LessonIcon
-                //                             type={lesson.type as LessonType}
-                //                         />
-                //                     </Grid>
-                //                     <Grid item>{lesson.title}</Grid>
-                //                 </Grid>
-                //             </Grid>
-                //         ))}
-                // </Grid>
+                <div key={index} className="flex flex-col">
+                    <div className="flex items-center gap-2 mb-4">
+                        <h3 className="text-2xl">{group}</h3>
+                        <Chip
+                            style={{
+                                color: badgeForegroundColor,
+                                backgroundColor: badgeBackgroundColor,
+                            }}
+                        >
+                            {`${formattedCourse[group].length} lessons`}
+                        </Chip>
+                    </div>
+                    {formattedCourse[group].map((lesson: Lesson) => (
+                        <div
+                            className="flex items-center gap-2"
+                            key={lesson.lessonId}
+                        >
+                            <LessonIcon type={lesson.type as LessonType} />
+                            <Link
+                                href={`/course/${course.slug}/${course.courseId}/${lesson.lessonId}`}
+                                style={{
+                                    color: foregroundColor,
+                                }}
+                            >
+                                {lesson.title}
+                            </Link>
+                            {!lesson.requiresEnrollment && (
+                                <Chip
+                                    style={{
+                                        color: badgeForegroundColor,
+                                        backgroundColor: badgeBackgroundColor,
+                                    }}
+                                >
+                                    Preview
+                                </Chip>
+                            )}
+                        </div>
+                    ))}
+                </div>
             ))}
-        </div>
+        </section>
     );
 }
