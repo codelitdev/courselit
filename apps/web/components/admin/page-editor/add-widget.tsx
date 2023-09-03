@@ -1,3 +1,4 @@
+import React from "react";
 import {
     PageTypeProduct,
     PageTypeSite,
@@ -5,13 +6,6 @@ import {
 } from "@courselit/common-models";
 import { IconButton } from "@courselit/components-library";
 import { Cross as Close } from "@courselit/icons";
-import {
-    Grid,
-    List,
-    ListItem,
-    ListItemButton,
-    Typography,
-} from "@mui/material";
 import { EDIT_PAGE_ADD_WIDGET_TITLE } from "../../../ui-config/strings";
 import widgets from "../../../ui-config/widgets";
 
@@ -23,51 +17,31 @@ interface WidgetsListProps {
 
 function AddWidget({ pageType, onSelection, onClose }: WidgetsListProps) {
     return (
-        <Grid container direction="column">
-            <Grid item>
-                <List>
-                    <ListItem>
-                        <Grid
-                            container
-                            justifyContent="space-between"
-                            alignItems="center"
+        <ul>
+            <li className="flex items-center px-2 py-3 justify-between">
+                <h2 className="text-lg font-medium">
+                    {EDIT_PAGE_ADD_WIDGET_TITLE}
+                </h2>
+                <IconButton onClick={onClose} variant="soft">
+                    <Close fontSize="small" />
+                </IconButton>
+            </li>
+            {Object.keys(widgets)
+                .filter((widget) => !["header", "footer"].includes(widget))
+                .map((item, index) =>
+                    widgets[item].metadata.compatibleWith.includes(pageType) ? (
+                        <li
+                            className="flex items-center px-2 py-3 hover:!bg-slate-100 cursor-pointer justify-between"
+                            key={index}
+                            onClick={(e) => onSelection(item)}
                         >
-                            <Grid item>
-                                <Typography variant="h6">
-                                    {EDIT_PAGE_ADD_WIDGET_TITLE}
-                                </Typography>
-                            </Grid>
-                            <Grid item>
-                                <IconButton variant="soft" onClick={onClose}>
-                                    <Close fontSize="small" />
-                                </IconButton>
-                            </Grid>
-                        </Grid>
-                    </ListItem>
-                    {Object.keys(widgets)
-                        .filter(
-                            (widget) => !["header", "footer"].includes(widget),
-                        )
-                        .map((item, index) =>
-                            widgets[item].metadata.compatibleWith.includes(
-                                pageType,
-                            ) ? (
-                                <ListItem disablePadding key={index}>
-                                    <ListItemButton
-                                        onClick={(e) => onSelection(item)}
-                                    >
-                                        <Typography>
-                                            {widgets[item].metadata.displayName}
-                                        </Typography>
-                                    </ListItemButton>
-                                </ListItem>
-                            ) : (
-                                <></>
-                            ),
-                        )}
-                </List>
-            </Grid>
-        </Grid>
+                            {widgets[item].metadata.displayName}
+                        </li>
+                    ) : (
+                        <></>
+                    ),
+                )}
+        </ul>
     );
 }
 

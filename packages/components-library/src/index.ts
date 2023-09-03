@@ -26,6 +26,7 @@ import MenuItem from "./menu-item";
 import Dialog2 from "./dialog2";
 import Tooltip from "./tooltip";
 import Chip from "./chip";
+import Modal from "./modal";
 
 export {
     PriceTag,
@@ -53,4 +54,5 @@ export {
     Dialog2,
     Tooltip,
     Chip,
+    Modal,
 };

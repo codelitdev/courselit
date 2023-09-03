@@ -1,10 +1,4 @@
-import List from "@mui/material/List";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItem from "@mui/material/ListItem";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
-import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
+import React from "react";
 import { Typeface } from "@courselit/common-models";
 import { EDIT_PAGE_BUTTON_FONTS } from "../../../ui-config/strings";
 import { Cross as Close, Star } from "@courselit/icons";
@@ -46,42 +40,26 @@ function FontsList({
     )[0]?.typeface;
 
     return (
-        <List>
-            <ListItem>
-                <Grid
-                    container
-                    justifyContent="space-between"
-                    alignItems="center"
-                >
-                    <Grid item>
-                        <Typography variant="h6">
-                            {EDIT_PAGE_BUTTON_FONTS}
-                        </Typography>
-                    </Grid>
-                    <Grid item>
-                        <IconButton onClick={onClose} variant="soft">
-                            <Close fontSize="small" />
-                        </IconButton>
-                    </Grid>
-                </Grid>
-            </ListItem>
+        <ul>
+            <li className="flex items-center px-2 py-3 justify-between">
+                <h2 className="text-lg font-medium">
+                    {EDIT_PAGE_BUTTON_FONTS}
+                </h2>
+                <IconButton onClick={onClose} variant="soft">
+                    <Close fontSize="small" />
+                </IconButton>
+            </li>
             {fonts.map((font) => (
-                <ListItemButton
+                <li
+                    className="flex items-center px-2 py-3 hover:!bg-slate-100 cursor-pointer justify-between"
                     onClick={() => saveDraftTypefaces(font)}
                     key={font}
                 >
-                    {defaultTypeface === font && (
-                        <ListItemIcon>
-                            <Star />
-                        </ListItemIcon>
-                    )}
-                    <ListItemText
-                        inset={defaultTypeface !== font}
-                        primary={font}
-                    />
-                </ListItemButton>
+                    {font}
+                    {defaultTypeface === font && <Star />}
+                </li>
             ))}
-        </List>
+        </ul>
     );
 }
 

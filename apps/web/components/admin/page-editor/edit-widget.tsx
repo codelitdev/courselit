@@ -3,10 +3,9 @@ import { Address } from "@courselit/common-models";
 import widgets from "../../../ui-config/widgets";
 import { connect } from "react-redux";
 import { AppState } from "@courselit/state-management";
-import { Button, Grid, Typography } from "@mui/material";
 import { Cross as Close } from "@courselit/icons";
 import AdminWidget from "./admin-widget";
-import { IconButton } from "@courselit/components-library";
+import { IconButton, Button } from "@courselit/components-library";
 
 interface EditWidgetProps {
     address: Address;
@@ -45,86 +44,62 @@ function EditWidget({
     };
 
     return (
-        <Grid
-            container
-            direction="column"
-            sx={{
-                p: 2,
-            }}
-        >
-            <Grid item sx={{ mb: 2 }}>
-                <Grid
-                    container
-                    justifyContent="space-between"
-                    alignItems="center"
-                >
-                    <Grid item>
-                        <Typography variant="h6">
-                            {actualWidget && actualWidget.metadata.displayName}
-                            {!actualWidget && widget.name}
-                        </Typography>
-                    </Grid>
-                    <Grid item>
-                        <IconButton onClick={onClose} variant="soft">
-                            <Close fontSize="small" />
-                        </IconButton>
-                    </Grid>
-                </Grid>
-            </Grid>
+        <div className="flex flex-col">
+            <li className="flex items-center px-2 py-3 justify-between">
+                <h2 className="text-lg font-medium">
+                    {actualWidget && actualWidget.metadata.displayName}
+                    {!actualWidget && widget.name}
+                </h2>
+                <IconButton onClick={onClose} variant="soft">
+                    <Close fontSize="small" />
+                </IconButton>
+            </li>
             {actualWidget && (
-                <>
-                    <Grid item sx={{ mb: 1 }}>
-                        <AdminWidget
-                            name={widget.name}
-                            settings={widget.settings || {}}
-                            onChange={(e: Record<string, unknown>) => {
-                                onChange(widget.widgetId, e);
-                            }}
-                            hideActionButtons={(
-                                e: boolean,
-                                state: Record<string, unknown>,
-                            ) => {
-                                setHideActionButtons(e);
-                                setPreservedStateAcrossRerender(state);
-                            }}
-                            preservedStateAcrossRerender={
-                                preservedStateAcrossRerender
-                            }
-                            pageData={pageData}
-                        />
-                    </Grid>
+                <div className="px-2">
+                    <AdminWidget
+                        name={widget.name}
+                        settings={widget.settings || {}}
+                        onChange={(e: Record<string, unknown>) => {
+                            onChange(widget.widgetId, e);
+                        }}
+                        hideActionButtons={(
+                            e: boolean,
+                            state: Record<string, unknown>,
+                        ) => {
+                            setHideActionButtons(e);
+                            setPreservedStateAcrossRerender(state);
+                        }}
+                        preservedStateAcrossRerender={
+                            preservedStateAcrossRerender
+                        }
+                        pageData={pageData}
+                    />
                     {!hideActionButtons && (
-                        <Grid item>
-                            <Grid
-                                container
-                                justifyContent={
-                                    widget.deleteable
-                                        ? "space-between"
-                                        : "flex-end"
-                                }
-                            >
-                                {widget.deleteable && (
-                                    <Grid item>
-                                        <Button
-                                            color="error"
-                                            onClick={onDeleteWidget}
-                                        >
-                                            {deleteConfirmation
-                                                ? "Sure?"
-                                                : "Delete block"}
-                                        </Button>
-                                    </Grid>
-                                )}
-                                <Grid item justifyItems="flex-end">
-                                    <Button onClick={onClose}>Done</Button>
-                                </Grid>
-                            </Grid>
-                        </Grid>
+                        <div
+                            className={`flex mb-8 ${
+                                widget.deleteable
+                                    ? "justify-between"
+                                    : "justify-end"
+                            }`}
+                        >
+                            {widget.deleteable && (
+                                <Button
+                                    color="error"
+                                    onClick={onDeleteWidget}
+                                    variant="soft"
+                                >
+                                    {deleteConfirmation
+                                        ? "Sure?"
+                                        : "Delete block"}
+                                </Button>
+                            )}
+                            <Button onClick={onClose}>Done</Button>
+                        </div>
                     )}
-                </>
+                </div>
             )}
-            {!actualWidget && <Typography>{widget.name} not found</Typography>}
-        </Grid>
+            {!actualWidget && <p>{widget.name} not found</p>}
+        </div>
     );
 }
 

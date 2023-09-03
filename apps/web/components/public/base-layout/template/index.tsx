@@ -188,7 +188,7 @@ const Template = (props: TemplateProps) => {
         ),
     );
     return (
-        <Grid container direction="column">
+        <div className="flex flex-col">
             {header && (
                 <EditableWidget
                     item={header}
@@ -203,26 +203,16 @@ const Template = (props: TemplateProps) => {
                 />
             )}
             {childrenOnTop && (
-                <Grid
-                    item
-                    container
-                    direction="column"
-                    sx={{ minHeight: "80vh" }}
-                >
+                <div className="flex flex-col min-h-[80vh]">
                     <Grid item>{children}</Grid>
                     {pageWidgets}
-                </Grid>
+                </div>
             )}
             {!childrenOnTop && (
-                <Grid
-                    item
-                    container
-                    direction="column"
-                    sx={{ minHeight: "80vh" }}
-                >
+                <div className="flex flex-col min-h-[80vh]">
                     {pageWidgets}
                     <Grid item>{children}</Grid>
-                </Grid>
+                </div>
             )}
             {footer && (
                 <EditableWidget
@@ -234,7 +224,7 @@ const Template = (props: TemplateProps) => {
                 />
             )}
             <AppToast />
-        </Grid>
+        </div>
     );
 };
 

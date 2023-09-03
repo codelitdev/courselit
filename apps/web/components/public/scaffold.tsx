@@ -1,130 +1,10 @@
 import React, { ReactNode, useState } from "react";
-import { styled } from "@mui/system";
-import AppBar from "@mui/material/AppBar";
-import CssBaseline from "@mui/material/CssBaseline";
-import Drawer from "@mui/material/Drawer";
-import Hidden from "@mui/material/Hidden";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import { Menu } from "@courselit/icons";
-import {
-    Toolbar,
-    Grid,
-    LinearProgress,
-    Typography,
-    ListSubheader,
-} from "@mui/material";
-import { useTheme } from "@mui/material";
-import AppToast from "../app-toast";
-import DrawerListItemIcon from "./base-layout/drawer-list-item-icon";
 import Header from "./base-layout/header";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
 import { AppState } from "@courselit/state-management";
-import { IconButton } from "@courselit/components-library";
-
-const PREFIX = "RouteBasedComponentScaffold";
-const drawerWidth = 240;
-
-const classes = {
-    root: `${PREFIX}-root`,
-    drawer: `${PREFIX}-drawer`,
-    appBar: `${PREFIX}-appBar`,
-    menuButton: `${PREFIX}-menuButton`,
-    toolbar: `${PREFIX}-toolbar`,
-    drawerPaper: `${PREFIX}-drawerPaper`,
-    content: `${PREFIX}-content`,
-    activeItem: `${PREFIX}-activeItem`,
-    visitSiteLink: `${PREFIX}-visitSiteLink`,
-    contentMain: `${PREFIX}-contentMain`,
-    showprogress: `${PREFIX}-showprogress`,
-    hideprogress: `${PREFIX}-hideprogress`,
-    menuTitle: `${PREFIX}-menuTitle`,
-    branding: `${PREFIX}-branding`,
-};
-
-const Root = styled("div")(({ theme }: { theme: any }) => ({
-    [`& .${classes.root}`]: {
-        display: "flex",
-    },
-
-    [`& .${classes.drawer}`]: {
-        [theme.breakpoints.up("sm")]: {
-            width: drawerWidth,
-            flexShrink: 0,
-        },
-    },
-
-    [`& .${classes.appBar}`]: Object.assign(
-        {},
-        {
-            zIndex: theme.zIndex.drawer + 1,
-            // [theme.breakpoints.up("sm")]: {
-            //     width: `calc(100% - ${drawerWidth}px)`,
-            //     marginLeft: drawerWidth,
-            // },
-        },
-        theme.appBar,
-    ),
-
-    [`& .${classes.menuButton}`]: {
-        [theme.breakpoints.up("sm")]: {
-            display: "none",
-        },
-    },
-
-    [`& .${classes.drawerPaper}`]: Object.assign(
-        {},
-        {
-            width: drawerWidth,
-        },
-        {},
-        theme.drawer,
-    ),
-
-    [`& .${classes.content}`]: {
-        flexGrow: 1,
-        [theme.breakpoints.up("sm")]: {
-            width: `calc(100% - ${drawerWidth}px)`,
-            marginLeft: drawerWidth,
-        },
-    },
-
-    [`& .${classes.activeItem}`]: {
-        background: "#d6d6d6",
-    },
-
-    [`& .${classes.visitSiteLink}`]: {
-        color: "#fff",
-    },
-
-    [`& .${classes.contentMain}`]: Object.assign(
-        {},
-        {
-            // maxWidth: 1240,
-            minHeight: "80vh",
-            margin: "0 auto",
-        },
-        theme.body,
-    ),
-
-    [`& .${classes.hideprogress}`]: {
-        visibility: "hidden",
-    },
-
-    [`& .${classes.showprogress}`]: {
-        visibility: "visible",
-    },
-
-    [`& .${classes.menuTitle}`]: {
-        marginLeft: theme.spacing(2),
-    },
-
-    [`&.${classes.branding}`]: {
-        paddingLeft: theme.spacing(2),
-        paddingRight: theme.spacing(2),
-    },
-}));
+import { Auth, Profile, SiteInfo } from "@courselit/common-models";
+import { Modal } from "@courselit/components-library";
 
 export interface ComponentScaffoldMenuItem {
     label: string;
@@ -138,157 +18,84 @@ interface ComponentScaffoldProps {
     items: ComponentScaffoldMenuItem[];
     contentPadding?: number;
     children: ReactNode;
+    auth: Auth;
+    profile: Profile;
+    siteinfo: SiteInfo;
 }
 
-const ComponentScaffold = ({
-    items,
-    networkAction,
-    contentPadding,
-    children,
-}: ComponentScaffoldProps) => {
-    const theme = useTheme();
-    const [mobileOpen, setMobileOpen] = useState(false);
+const ComponentScaffold = ({ items, children }: ComponentScaffoldProps) => {
+    const [open, setOpen] = useState(false);
     const router = useRouter();
-
-    function handleDrawerToggle() {
-        setMobileOpen(!mobileOpen);
-    }
 
     function navigateTo(route: string) {
         router.push(route);
     }
 
     const drawer = (
-        <>
-            <Toolbar />
-            <List>
-                {items.map((item: ComponentScaffoldMenuItem, index: number) =>
-                    item.href ? (
-                        <ListItem
-                            button
-                            key={index}
-                            onClick={() => navigateTo(item.href as string)}
-                            sx={{
-                                backgroundColor:
-                                    router.asPath === item.href
-                                        ? "#d6d6d6"
-                                        : "inherit",
-                            }}
-                        >
-                            <Grid
-                                container
-                                direction="row"
-                                alignItems="center"
-                                justifyContent={
-                                    item.icon && item.iconPlacementRight
-                                        ? "space-between"
-                                        : "flex-start"
-                                }
-                            >
-                                {item.icon && !item.iconPlacementRight && (
-                                    <Grid item>
-                                        <DrawerListItemIcon
-                                            icon={item.icon as object}
-                                        />
-                                    </Grid>
-                                )}
-                                <Grid item>
-                                    <Typography variant="subtitle2">
-                                        {item.label as string}
-                                    </Typography>
-                                    {/* <ListItemText primary={item.name} /> */}
-                                </Grid>
-                                {item.icon && item.iconPlacementRight && (
-                                    <Grid item>
-                                        <DrawerListItemIcon
-                                            icon={item.icon as object}
-                                            right={true}
-                                        />
-                                    </Grid>
-                                )}
-                            </Grid>
-                        </ListItem>
-                    ) : (
-                        <ListSubheader key={index} sx={{ mt: 2 }}>
-                            {item.label as string}
-                        </ListSubheader>
-                    ),
-                )}
-            </List>
-        </>
+        <ul className="w-full">
+            {items.map((item: ComponentScaffoldMenuItem, index: number) =>
+                item.href ? (
+                    <li
+                        key={index}
+                        onClick={() => {
+                            setOpen(false);
+                            navigateTo(item.href as string);
+                        }}
+                        style={{
+                            backgroundColor:
+                                router.asPath === item.href
+                                    ? "#d6d6d6"
+                                    : "inherit",
+                        }}
+                        className={`flex items-center px-2 py-3 hover:!bg-slate-100 cursor-pointer ${
+                            item.icon && item.iconPlacementRight
+                                ? "justify-between"
+                                : "justify-start"
+                        }`}
+                    >
+                        {item.icon && !item.iconPlacementRight && (
+                            <div className="mr-2">{item.icon}</div>
+                        )}
+                        <p>{item.label as string}</p>
+                        {item.icon && item.iconPlacementRight && (
+                            <div>{item.icon}</div>
+                        )}
+                    </li>
+                ) : (
+                    <li
+                        key={index}
+                        className="px-2 py-3 text-xs text-slate-500"
+                    >
+                        {item.label as string}
+                    </li>
+                ),
+            )}
+        </ul>
     );
 
     return (
-        <Root>
-            <CssBaseline />
-            <AppBar position="fixed" className={classes.appBar}>
-                <Toolbar>
-                    <IconButton
-                        onClick={handleDrawerToggle}
-                        className="sm:!hidden"
-                    >
-                        <Menu />
-                    </IconButton>
-                    <Header />
-                </Toolbar>
-            </AppBar>
-            <nav className={classes.drawer} aria-label="menu">
-                {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
-                <Hidden smUp implementation="css">
-                    <Drawer
-                        variant="temporary"
-                        anchor={theme.direction === "rtl" ? "right" : "left"}
-                        open={mobileOpen}
-                        onClose={handleDrawerToggle}
-                        classes={{
-                            paper: classes.drawerPaper,
-                        }}
-                        ModalProps={{
-                            keepMounted: true, // Better open performance on mobile.
-                        }}
-                    >
-                        {drawer}
-                    </Drawer>
-                </Hidden>
-                <Hidden smDown implementation="css">
-                    <Drawer
-                        classes={{
-                            paper: classes.drawerPaper,
-                        }}
-                        variant="permanent"
-                        open
-                    >
-                        {drawer}
-                    </Drawer>
-                </Hidden>
-            </nav>
-            <main className={classes.content}>
-                <Toolbar />
-                <LinearProgress
-                    className={
-                        networkAction
-                            ? classes.showprogress
-                            : classes.hideprogress
-                    }
-                />
-                <Grid
-                    container
-                    sx={{
-                        p: contentPadding || 2,
-                    }}
-                >
-                    <Grid item xs={12} className={classes.contentMain}>
-                        {children}
-                    </Grid>
-                </Grid>
-            </main>
-            <AppToast />
-        </Root>
+        <div className="flex">
+            <div className="fixed w-full border-0 border-b border-slate-200">
+                <Header onMenuClick={() => setOpen(true)} />
+            </div>
+            <div className="flex h-screen pt-[70px] w-full">
+                <div className="hidden md:!flex  overflow-y-auto w-[240px] max-h-screen border-0 border-r border-slate-200">
+                    {drawer}
+                </div>
+                <main className="w-full p-4 max-h-screen overflow-y-auto scroll-smooth">
+                    {children}
+                </main>
+            </div>
+            <Modal
+                open={open}
+                onOpenChange={(status: boolean) => setOpen(status)}
+            >
+                {drawer}
+            </Modal>
+        </div>
     );
 };
 
-const mapStateToProps = (state: AppState) => ({
-    networkAction: state.networkAction,
-});
+const mapStateToProps = (state: AppState) => ({});
 
 export default connect(mapStateToProps)(ComponentScaffold);

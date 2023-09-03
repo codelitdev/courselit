@@ -10,25 +10,20 @@ interface BrandingProps {
 
 const Branding = ({ siteinfo }: BrandingProps) => {
     return (
-        <div className="flex items-center">
-            <div className="mr-2">
-                <Link
-                    href="/"
-                    sxProps={{
-                        cursor: "pointer",
-                    }}
-                >
+        <Link href="/">
+            <div className="flex items-center">
+                <div className="mr-2">
                     <Image
                         borderRadius={1}
                         src={siteinfo.logo.file}
                         width={36}
                         height={36}
-                        alt=""
+                        alt="logo"
                     />
-                </Link>
+                </div>
+                <p className="text-2xl font-bold">{siteinfo.title}</p>
             </div>
-            <p className="text-2xl font-bold">{siteinfo.title}</p>
-        </div>
+        </Link>
     );
 };
 
