@@ -1,6 +1,6 @@
+import React from "react";
 import { IconButton } from "@courselit/components-library";
 import { Menu } from "@courselit/icons";
-import React from "react";
 import SessionButton from "../session-button";
 import Branding from "./branding";
 

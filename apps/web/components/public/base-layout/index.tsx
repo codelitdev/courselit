@@ -4,9 +4,6 @@ import Head from "next/head";
 import Template from "./template";
 import type { AppState } from "@courselit/state-management";
 import type { Theme, Typeface, WidgetInstance } from "@courselit/common-models";
-import { ThemeProvider } from "@mui/material/styles";
-import { CssBaseline, Paper } from "@mui/material";
-import { createMuiTheme } from "../../../ui-lib/utils.ts";
 
 interface MasterLayoutProps {
     title: string;
@@ -24,13 +21,9 @@ const MasterLayout = ({
     siteInfo,
     children,
     layout,
-    typefaces,
-    theme,
     pageData = {},
     childrenOnTop = false,
 }: MasterLayoutProps) => {
-    const muiTheme = createMuiTheme(typefaces, theme);
-
     return (
         <>
             <Head>
@@ -48,18 +41,13 @@ const MasterLayout = ({
                     content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
                 />
             </Head>
-            <ThemeProvider theme={muiTheme}>
-                <CssBaseline />
-                <Paper elevation={0}>
-                    <Template
-                        layout={layout}
-                        childrenOnTop={childrenOnTop}
-                        pageData={pageData}
-                    >
-                        {children}
-                    </Template>
-                </Paper>
-            </ThemeProvider>
+            <Template
+                layout={layout}
+                childrenOnTop={childrenOnTop}
+                pageData={pageData}
+            >
+                {children}
+            </Template>
         </>
     );
 };

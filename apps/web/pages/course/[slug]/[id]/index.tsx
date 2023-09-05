@@ -22,9 +22,8 @@ import {
 } from "@courselit/common-models";
 import RouteBasedComponentScaffold, {
     ComponentScaffoldMenuItem,
-} from "../../../../components/public/scaffold";
-import Article from "../../../../components/public/article";
-import { Grid } from "@mui/material";
+} from "@components/public/scaffold";
+import Article from "@components/public/article";
 import { Link, Button } from "@courselit/components-library";
 
 interface CourseProps {
@@ -115,31 +114,25 @@ const CourseViewer = (props: CourseProps) => {
             </Head>
             <RouteBasedComponentScaffold
                 items={generateSideBarItems(course, profile)}
-                contentPadding={0}
             >
-                <Grid container direction="column">
-                    <Grid item sx={{ p: 2 }}>
-                        <Article
-                            course={course}
-                            options={{ showEnrollmentArea: true }}
-                        />
-                    </Grid>
+                <div className="flex flex-col">
+                    <Article
+                        course={course}
+                        options={{ showEnrollmentArea: true }}
+                    />
                     {isEnrolled(course.courseId, profile) && (
-                        <Grid item sx={{ p: 2 }} alignSelf="flex-end">
+                        <div className="self-end">
                             <Link
                                 href={`/course/${course.slug}/${course.courseId}/${course.firstLesson}`}
-                                sxProps={{
-                                    textDecoration: "none",
-                                }}
                             >
                                 <Button component="button">
                                     {COURSE_PROGRESS_START}
                                     <ArrowRight />
                                 </Button>
                             </Link>
-                        </Grid>
+                        </div>
                     )}
-                </Grid>
+                </div>
             </RouteBasedComponentScaffold>
         </>
     );
