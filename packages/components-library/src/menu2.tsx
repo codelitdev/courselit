@@ -2,6 +2,7 @@ import * as React from "react";
 import {
     Arrow,
     Content,
+    Item,
     Portal,
     Root,
     Trigger,

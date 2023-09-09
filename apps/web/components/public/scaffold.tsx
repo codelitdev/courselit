@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import { useRouter } from "next/router";
 import { AppState } from "@courselit/state-management";
 import { Modal } from "@courselit/components-library";
+import AppToast from "@components/app-toast";
 
 export interface ComponentScaffoldMenuItem {
     label: string;
@@ -86,6 +87,7 @@ const ComponentScaffold = ({ items, children }: ComponentScaffoldProps) => {
             >
                 {drawer}
             </Modal>
+            <AppToast />
         </div>
     );
 };

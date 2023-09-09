@@ -29,6 +29,7 @@ import PageModel from "../../models/Page";
 import { Progress } from "../../models/Progress";
 import { getPrevNextCursor } from "../lessons/helpers";
 import { checkPermission } from "@courselit/utils";
+import { error } from "../../services/logger";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -164,7 +165,13 @@ export const deleteCourse = async (
     const course = await getCourseOrThrow(id, ctx);
     await deleteAllLessons(course.courseId, ctx);
     if (course.featuredImage) {
-        await deleteMedia(course.featuredImage);
+        try {
+            await deleteMedia(course.featuredImage);
+        } catch (err) {
+            error(err.message, {
+                stack: err.stack,
+            });
+        }
     }
     await PageModel.deleteOne({
         entityId: course.courseId,

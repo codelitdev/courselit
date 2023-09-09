@@ -1,13 +1,12 @@
 import React, { FormEvent, useEffect, useState } from "react";
 import { Address, AppMessage, SiteInfo } from "@courselit/common-models";
-import { Section } from "@courselit/components-library";
+import { FormField, Section, Form, Button } from "@courselit/components-library";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import {
     networkAction,
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
-import { Button, Grid, TextField } from "@mui/material";
 import { connect } from "react-redux";
 import {
     APP_MESSAGE_COURSE_SAVED,
@@ -112,9 +111,8 @@ function Pricing({ id, siteinfo, address, dispatch }: PricingProps) {
 
     return (
         <Section>
-            <form onSubmit={updatePricing}>
-                <Grid container>
-                    <Grid item xs={12} sx={{ mb: 2 }}>
+             <Form onSubmit={updatePricing}
+                className="flex flex-col gap-4">
                         <Select
                             value={costType}
                             title={PRICING_DROPDOWN}
@@ -123,31 +121,22 @@ function Pricing({ id, siteinfo, address, dispatch }: PricingProps) {
                             }}
                             options={options}
                         />
-                    </Grid>
                     {PRICING_PAID === costType && (
-                        <Grid item xs={12} sx={{ mb: 2 }}>
-                            <TextField
+                            <FormField
                                 required
-                                variant="outlined"
                                 label="Cost"
-                                fullWidth
-                                margin="normal"
                                 name="title"
                                 value={cost}
                                 type="number"
-                                inputProps={{
-                                    step: "0.1",
-                                }}
+                                step="0.1"
                                 onChange={(e) =>
                                     setCost(+e.target.value as number)
                                 }
                             />
-                        </Grid>
                     )}
-                    <Grid item xs={12}>
+                        <div>
                         <Button
                             type="submit"
-                            variant="contained"
                             disabled={
                                 !course ||
                                 (costType === PRICING_PAID &&
@@ -158,9 +147,8 @@ function Pricing({ id, siteinfo, address, dispatch }: PricingProps) {
                         >
                             {BUTTON_SAVE}
                         </Button>
-                    </Grid>
-                </Grid>
-            </form>
+                        </div>
+            </Form>
         </Section>
     );
 }

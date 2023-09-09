@@ -1,9 +1,8 @@
 import React, { FormEvent, useEffect, useState } from "react";
-import { Section } from "@courselit/components-library";
+import { Button, Form, Section } from "@courselit/components-library";
 import useCourse from "./course-hook";
 import { connect } from "react-redux";
-import { Button, Grid, Typography } from "@mui/material";
-import { FetchBuilder } from "@courselit/utils";
+import { capitalize, FetchBuilder } from "@courselit/utils";
 import {
     networkAction,
     setAppMessage,
@@ -99,66 +98,47 @@ function Publish({ id, address, dispatch, loading }: PublishProps) {
 
     return (
         <Section>
-            <form onSubmit={updatePublishingDetails}>
-                <Grid container>
-                    <Grid item xs={12} sx={{ mb: 2 }}>
-                        <Grid
-                            container
-                            justifyContent="space-between"
-                            alignItems="center"
+            <Form onSubmit={updatePublishingDetails}
+                className="flex flex-col gap-4">
+                        <div
+                            className="flex justify-between items-center"
                         >
-                            <Grid item>
-                                <Typography variant="h5">
+                            <div>
+                            <h2>
                                     {PUBLISH_TAB_STATUS_TITLE}
-                                </Typography>
-                                <Typography
-                                    variant="body1"
-                                    color="textSecondary"
-                                >
+                            </h2>
+                            <p className="text-sm text-slate-400">
                                     {PUBLISH_TAB_STATUS_SUBTITLE}
-                                </Typography>
-                            </Grid>
-                            <Grid item>
+                            </p>
+                            </div>
                                 <Button
                                     onClick={togglePublishedStatus}
-                                    variant="outlined"
+                                    variant="soft"
                                     disabled={loading}
                                 >
                                     {published ? BTN_UNPUBLISH : BTN_PUBLISH}
                                 </Button>
-                            </Grid>
-                        </Grid>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <Grid
-                            container
-                            justifyContent="space-between"
-                            alignItems="center"
+                        </div>
+                        <div
+                            className="flex justify-between items-center"
                         >
-                            <Grid item>
-                                <Typography variant="h5">
+                            <div>
+                            <h2>
                                     {PUBLISH_TAB_VISIBILITY_TITLE}
-                                </Typography>
-                                <Typography
-                                    variant="body1"
-                                    color="textSecondary"
-                                >
+                            </h2>
+                            <p className="text-sm text-slate-400">
                                     {PUBLISH_TAB_VISIBILITY_SUBTITLE}
-                                </Typography>
-                            </Grid>
-                            <Grid item>
+                            </p>
+                            </div>
                                 <Button
                                     onClick={toggleVisibility}
-                                    variant="outlined"
+                                    variant="soft"
                                     disabled={loading}
                                 >
-                                    {privacy}
+                                    {capitalize(privacy)}
                                 </Button>
-                            </Grid>
-                        </Grid>
-                    </Grid>
-                </Grid>
-            </form>
+                        </div>
+            </Form>
         </Section>
     );
 }

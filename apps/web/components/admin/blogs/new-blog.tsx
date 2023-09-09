@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { Address, AppMessage } from "@courselit/common-models";
-import { Section } from "@courselit/components-library";
+import { Section, Form, FormField, Button } from "@courselit/components-library";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
-import { Button, Grid, TextField, Typography } from "@mui/material";
 import { useRouter } from "next/router";
 import { connect } from "react-redux";
 import {
@@ -63,45 +62,36 @@ function NewBlog({ address, dispatch, networkAction: loading }: NewBlogProps) {
 
     return (
         <Section>
-            <Grid container direction="column">
-                <Grid item>
-                    <Typography variant="h1">{BTN_NEW_BLOG}</Typography>
-                </Grid>
-                <Grid item>
-                    <form onSubmit={createCourse}>
-                        <Grid container spacing={2}>
-                            <Grid item xs={12}>
-                                <TextField
+            <div
+                className="flex flex-col">
+                <h1 className="text-4xl font-semibold mb-4">
+                            {BTN_NEW_BLOG}
+                </h1>
+                    <Form onSubmit={createCourse}
+                        className="flex flex-col gap-4">
+                                <FormField
                                     required
-                                    variant="outlined"
                                     label="Title"
-                                    fullWidth
-                                    margin="normal"
                                     name="title"
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
                                     placeholder={FORM_NEW_PRODUCT_TITLE_PLC}
                                 />
-                            </Grid>
-                            <Grid item>
+                            <div className="flex gap-2">
                                 <Button
-                                    variant="contained"
                                     disabled={!title || (!!title && loading)}
                                     onClick={createCourse}
-                                    sx={{ mr: 1 }}
                                 >
                                     {BTN_CONTINUE}
                                 </Button>
                                 <Link href={`/dashboard/blogs`} legacyBehavior>
-                                    <Button component="a">
+                                    <Button variant="soft">
                                         {BUTTON_CANCEL_TEXT}
                                     </Button>
                                 </Link>
-                            </Grid>
-                        </Grid>
-                    </form>
-                </Grid>
-            </Grid>
+                            </div>
+                    </Form>
+            </div>
         </Section>
     );
 }

@@ -1,6 +1,6 @@
 import React from "react";
 import { MoreVert } from "@courselit/icons";
-import { Breadcrumbs, Grid, Typography } from "@mui/material";
+import { Breadcrumbs } from "@mui/material";
 import {
     EDIT_PAGE_MENU_ITEM,
     VIEW_PAGE_MENU_ITEM,
@@ -26,9 +26,8 @@ export default function ProductHeader({ id, breadcrumbs }: ProductHeaderProps) {
     }
 
     return (
-        <Grid container direction="column">
+        <div className="flex flex-col gap-4">
             {breadcrumbs && (
-                <Grid item sx={{ mb: 2 }}>
                     <Breadcrumbs aria-label="product-breadcrumbs">
                         {breadcrumbs.map((crumb: Breadcrumb) =>
                             crumb.url ? (
@@ -36,42 +35,19 @@ export default function ProductHeader({ id, breadcrumbs }: ProductHeaderProps) {
                                     {crumb.text}
                                 </Link>
                             ) : (
-                                <Typography key={crumb.text}>
+                                <span key={crumb.text}>
                                     {crumb.text}
-                                </Typography>
+                                </span>
                             ),
                         )}
                     </Breadcrumbs>
-                </Grid>
             )}
-            <Grid item>
-                <Grid
-                    container
-                    justifyContent="space-between"
-                    alignItems="center"
+                <div
+                    className="flex justify-between items-center"
                 >
-                    <Grid item>
-                        <Typography variant="h1">{course.title}</Typography>
-                    </Grid>
-                    <Grid item>
-                        {/*
-                        <Menu
-                            options={[
-                                {
-                                    label: VIEW_PAGE_MENU_ITEM,
-                                    href: `/p/${course.pageId}`,
-                                    type: "link",
-                                    newTab: true,
-                                },
-                                {
-                                    label: EDIT_PAGE_MENU_ITEM,
-                                    href: `/dashboard/page/${course.pageId}/edit`,
-                                    type: "link",
-                                },
-                            ]}
-                            icon={<MoreVert />}
-                        />
-                        */}
+                <h1 className="text-4xl font-semibold mb-4">
+                            {course.title}
+                </h1>
                         <Menu2 icon={<MoreVert />} variant="soft">
                             <MenuItem>
                                 <Link href={`/p/${course.pageId}`}>
@@ -86,9 +62,7 @@ export default function ProductHeader({ id, breadcrumbs }: ProductHeaderProps) {
                                 </Link>
                             </MenuItem>
                         </Menu2>
-                    </Grid>
-                </Grid>
-            </Grid>
-        </Grid>
+                </div>
+        </div>
     );
 }

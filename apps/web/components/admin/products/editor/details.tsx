@@ -4,6 +4,9 @@ import {
     TextEditor,
     Section,
     TextEditorEmptyDoc,
+    Button,
+    Form,
+    FormField
 } from "@courselit/components-library";
 import useCourse from "./course-hook";
 import { FetchBuilder } from "@courselit/utils";
@@ -25,7 +28,7 @@ import {
 } from "../../../../ui-config/strings";
 import { connect } from "react-redux";
 import { AppDispatch, AppState } from "@courselit/state-management";
-import { Button, Grid, TextField } from "@mui/material";
+import { Grid, TextField } from "@mui/material";
 import { MIMETYPE_IMAGE } from "../../../../ui-config/constants";
 
 interface DetailsProps {
@@ -110,21 +113,15 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
 
     return (
         <Section>
-            <form onSubmit={updateDetails}>
-                <Grid container direction="column">
-                    <Grid item xs={12} sx={{ mb: 2 }}>
-                        <TextField
+             <Form onSubmit={updateDetails}
+                className="flex flex-col gap-4">
+                        <FormField
                             required
-                            variant="outlined"
                             label="Title"
-                            fullWidth
-                            margin="normal"
                             name="title"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                         />
-                    </Grid>
-                    <Grid item xs={12} sx={{ mb: 2 }}>
                         <TextEditor
                             initialContent={description}
                             onChange={(state: Record<string, unknown>) => {
@@ -132,8 +129,6 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
                             }}
                             refresh={refresh}
                         />
-                    </Grid>
-                    <Grid item>
                         <MediaSelector
                             title={FORM_FIELD_FEATURED_IMAGE}
                             src={
@@ -155,23 +150,14 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
                             dispatch={dispatch}
                             address={address}
                         />
-                    </Grid>
-                </Grid>
-                <Grid item>
+                    <div>
                     <Button
                         type="submit"
-                        variant="contained"
-                        // disabled={
-                        //     !title ||
-                        //     (course?.title === title &&
-                        //         course?.featuredImage?.mediaId ===
-                        //             featuredImage?.mediaId)
-                        // }
                     >
                         {BUTTON_SAVE}
                     </Button>
-                </Grid>
-            </form>
+                    </div>
+            </Form>
         </Section>
     );
 }

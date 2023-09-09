@@ -4,6 +4,9 @@ import {
     Section,
     TextEditor,
     TextEditorEmptyDoc,
+    Form,
+    FormField,
+    Button
 } from "@courselit/components-library";
 import useCourse from "./course-hook";
 import { FetchBuilder } from "@courselit/utils";
@@ -19,7 +22,6 @@ import {
 } from "../../../../ui-config/strings";
 import { connect } from "react-redux";
 import { AppDispatch, AppState } from "@courselit/state-management";
-import { Button, Grid, TextField } from "@mui/material";
 import { MIMETYPE_IMAGE } from "../../../../ui-config/constants";
 import { Media } from "@courselit/common-models";
 
@@ -107,28 +109,20 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
 
     return (
         <Section>
-            <form onSubmit={updateDetails}>
-                <Grid container direction="column">
-                    <Grid item xs={12} sx={{ mb: 2 }}>
-                        <TextField
+            <Form onSubmit={updateDetails}
+                className="flex flex-col gap-4">
+                        <FormField
                             required
-                            variant="outlined"
                             label="Title"
-                            fullWidth
-                            margin="normal"
                             name="title"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                         />
-                    </Grid>
-                    <Grid item xs={12} sx={{ mb: 2 }}>
                         <TextEditor
                             initialContent={description}
                             refresh={refreshDetails}
                             onChange={(state: any) => setDescription(state)}
                         />
-                    </Grid>
-                    <Grid item>
                         <MediaSelector
                             title={FORM_FIELD_FEATURED_IMAGE}
                             src={
@@ -150,14 +144,13 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
                             dispatch={dispatch}
                             address={address}
                         />
-                    </Grid>
-                </Grid>
-                <Grid item>
-                    <Button type="submit" variant="contained">
+                    <div>
+                    <Button 
+                        type="submit">
                         {BUTTON_SAVE}
                     </Button>
-                </Grid>
-            </form>
+                    </div>
+            </Form>
         </Section>
     );
 }

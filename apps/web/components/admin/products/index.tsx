@@ -1,15 +1,4 @@
 import React, { useEffect, useState } from "react";
-import {
-    Grid,
-    Typography,
-    TableContainer,
-    Table,
-    TableHead,
-    TableBody,
-    TableRow,
-    TableCell,
-    Button,
-} from "@mui/material";
 import { connect } from "react-redux";
 import {
     MANAGE_COURSES_PAGE_HEADING,
@@ -20,33 +9,39 @@ import {
     PRODUCTS_TABLE_HEADER_SALES,
     PRODUCTS_TABLE_HEADER_ACTIONS,
     BTN_NEW_PRODUCT,
+    PRODUCTS_TABLE_HEADER_TYPE,
 } from "../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
-import Link from "next/link";
-import type { Auth, Profile, Address, Course } from "@courselit/common-models";
+import type { Address, Course } from "@courselit/common-models";
 import { AppMessage } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
 import Product from "./product";
+import { Link, Button, Table, TableHead, TableBody } from '@courselit/components-library';
 
 const { networkAction, setAppMessage } = actionCreators;
 
 interface IndexProps {
-    auth: Auth;
-    profile: Profile;
     dispatch: AppDispatch;
     address: Address;
+    loading: boolean;
 }
 
-const Index = (props: IndexProps) => {
+const Index = ({ loading, address, dispatch }: IndexProps) => {
     const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1);
     const [creatorCourses, setCreatorCourses] = useState([]);
     const [searchText, setSearchText] = useState("");
     const [searchState, setSearchState] = useState(0);
+    const [endReached, setEndReached] = useState(false);
 
     useEffect(() => {
         loadCreatorCourses();
     }, []);
+
+    useEffect(() => {
+        console.log(`coursesPaginationOffset`, coursesPaginationOffset)
+        loadCreatorCourses();
+    }, [coursesPaginationOffset])
 
     useEffect(() => {
         loadCreatorCourses();
@@ -94,21 +89,24 @@ const Index = (props: IndexProps) => {
     }
     `;
         const fetch = new FetchBuilder()
-            .setUrl(`${props.address.backend}/api/graph`)
+            .setUrl(`${address.backend}/api/graph`)
             .setPayload(query)
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            props.dispatch(networkAction(true));
+            dispatch(networkAction(true));
+            setEndReached(false);
             const response = await fetch.exec();
-            if (response.courses && response.courses.length > 0) {
-                setCreatorCourses([...creatorCourses, ...response.courses]);
-                setCoursesPaginationOffset(coursesPaginationOffset + 1);
+            if (response.courses) {
+                setCreatorCourses([...response.courses]);
+                if (response.courses.length === 0){
+                    setEndReached(true)
+                }
             }
         } catch (err: any) {
-            props.dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            props.dispatch(networkAction(false));
+            dispatch(networkAction(false));
         }
     };
 
@@ -126,50 +124,52 @@ const Index = (props: IndexProps) => {
     };
 
     return (
-        <Grid container direction="column">
-            <Grid item sx={{ mb: 2 }}>
-                <Grid
-                    container
-                    justifyContent="space-between"
-                    alignItems="center"
+        <div className="flex flex-col">
+                <div
+                    className="flex justify-between items-center mb-8"
                 >
-                    <Grid item>
-                        <Typography variant="h1">
+                <h1 className="text-4xl font-semibold mb-4">
                             {MANAGE_COURSES_PAGE_HEADING}
-                        </Typography>
-                    </Grid>
-                    <Grid item>
-                        <Link href="/dashboard/product/new" legacyBehavior>
-                            <Button variant="contained" component="a">
+                </h1>
+                        <div>
+                        <Link href="/dashboard/product/new">
+
+                            <Button>
                                 {BTN_NEW_PRODUCT}
                             </Button>
                         </Link>
-                    </Grid>
-                </Grid>
-            </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <TableContainer>
-                    <Table aria-label="Products">
+                        </div>
+                </div>
+                    <Table 
+                        aria-label="Products"
+                        >
                         <TableHead>
-                            <TableRow>
-                                <TableCell>
+                                <td>
                                     {PRODUCTS_TABLE_HEADER_NAME}
-                                </TableCell>
-                                <TableCell align="right">
+                                </td>
+                                <td>
+                                    {PRODUCTS_TABLE_HEADER_TYPE}
+                                </td>
+                                <td align="right">
                                     {PRODUCTS_TABLE_HEADER_STATUS}
-                                </TableCell>
-                                <TableCell align="right">
+                                </td>
+                                <td align="right">
                                     {PRODUCTS_TABLE_HEADER_STUDENTS}
-                                </TableCell>
-                                <TableCell align="right">
+                                </td>
+                                <td align="right">
                                     {PRODUCTS_TABLE_HEADER_SALES}
-                                </TableCell>
-                                <TableCell align="right">
+                                </td>
+                                <td align="right">
                                     {PRODUCTS_TABLE_HEADER_ACTIONS}
-                                </TableCell>
-                            </TableRow>
+                                </td>
                         </TableHead>
-                        <TableBody>
+                        <TableBody
+                            loading={loading}
+                            endReached={endReached}
+                            page={coursesPaginationOffset}
+                            onPageChange={(value: number) => {
+                                setCoursesPaginationOffset(value)
+                                }}>
                             {creatorCourses.map(
                                 (
                                     product: Course & {
@@ -189,11 +189,8 @@ const Index = (props: IndexProps) => {
                             )}
                         </TableBody>
                     </Table>
-                </TableContainer>
-            </Grid>
             {creatorCourses.length > 0 && (
-                <Grid item container justifyContent="center" sx={{ mb: 2 }}>
-                    <Grid item>
+                    <div className="flex justify-center">
                         <Button
                             variant="outlined"
                             onClick={() =>
@@ -204,16 +201,13 @@ const Index = (props: IndexProps) => {
                         >
                             {LOAD_MORE_TEXT}
                         </Button>
-                    </Grid>
-                </Grid>
+                </div>
             )}
-        </Grid>
+        </div>
     );
 };
 
 const mapStateToProps = (state: AppState) => ({
-    auth: state.auth,
-    profile: state.profile,
     address: state.address,
     loading: state.networkAction,
 });

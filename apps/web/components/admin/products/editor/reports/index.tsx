@@ -1,5 +1,4 @@
 import React from "react";
-import Grid from "@mui/material/Grid";
 import useCourse from "../course-hook";
 import Students from "./students";
 
@@ -11,12 +10,12 @@ export default function CourseReports({ id }: CourseReportsProps) {
     let course = useCourse(id);
 
     if (!course) {
-        return <></>;
+        return null;
     }
 
     return (
-        <Grid container>
+        <div>
             <Students course={course} />
-        </Grid>
+        </div>
     );
 }

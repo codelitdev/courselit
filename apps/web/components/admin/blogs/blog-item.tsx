@@ -1,16 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { Course } from "@courselit/common-models";
 import {
-    Grid,
-    TableCell,
-    TableRow,
-    Link as MuiLink,
-    Typography,
-    Chip,
-} from "@mui/material";
-import Link from "next/link";
-import {
     DELETE_PRODUCT_POPUP_HEADER,
+    DELETE_PRODUCT_POPUP_TEXT,
     PRODUCT_STATUS_DRAFT,
     PRODUCT_STATUS_PUBLISHED,
     PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
@@ -19,7 +11,7 @@ import { MoreVert } from "@courselit/icons";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import type { SiteInfo, Address } from "@courselit/common-models";
 import { connect } from "react-redux";
-import { Image, Menu2, MenuItem } from "@courselit/components-library";
+import { Chip, Image, Menu2, MenuItem, Link } from "@courselit/components-library";
 import { deleteProduct } from "./helpers";
 
 function BlogItem({
@@ -40,86 +32,37 @@ function BlogItem({
 }) {
     const product = details;
 
-    const [deleteProductPopupOpened, setDeleteProductPopupOpened] =
-        useState(false);
-
-    const closeDeletePopup = () => setDeleteProductPopupOpened(false);
-
-    // const deleteProduct = async () => {
-    //     setDeleteProductPopupOpened(false);
-    //     const query = `
-    // mutation {
-    //   result: deleteCourse(id: "${product.id}")
-    // }
-    // `;
-
-    //     const fetch = new FetchBuilder()
-    //         .setUrl(`${address.backend}/api/graph`)
-    //         .setPayload(query)
-    //         .setIsGraphQLEndpoint(true)
-    //         .build();
-
-    //     try {
-    //         dispatch(networkAction(true));
-    //         const response = await fetch.exec();
-
-    //         if (response.result) {
-    //             onDelete(position);
-    //         }
-    //     } catch (err: any) {
-    //         dispatch(setAppMessage(new AppMessage(err.message)));
-    //     } finally {
-    //         dispatch(networkAction(false));
-    //         dispatch(setAppMessage(new AppMessage(APP_MESSAGE_COURSE_DELETED)));
-    //     }
-    // };
-
     return (
-        <TableRow key={product.courseId}>
-            <TableCell>
+        <tr key={product.courseId} className="hover:!bg-slate-100">
+            <td>
                 <Link href={`/dashboard/blog/${product.courseId}/details`}>
-                    <Grid container spacing={1} alignItems="center">
-                        <Grid item>
+                        <div className="flex items-center gap-2">
                             <Image
                                 src={product.featuredImage?.thumbnail}
                                 height={64}
                                 width={64}
                                 alt={product.featuredImage?.caption}
                             />
-                        </Grid>
-                        <Grid item>
-                            <Grid container direction="column">
-                                <MuiLink>
-                                    <Grid item>
-                                        <Typography variant="subtitle1">
-                                            {product.title}
-                                        </Typography>
-                                    </Grid>
-                                </MuiLink>
-                                <Grid item>
-                                    <Typography
-                                        color="textSecondary"
-                                        variant="body2"
-                                    >
-                                        {product.type}
-                                    </Typography>
-                                </Grid>
-                            </Grid>
-                        </Grid>
-                    </Grid>
+                            <div className="flex flex-col">
+                                <p>{product.title}</p>
+                                <p>{product.type}</p>
+                            </div>
+                    </div>
                 </Link>
-            </TableCell>
-            <TableCell align="right">
+            </td>
+            <td align="right">
                 <Chip
-                    label={
+                    className={
+                        product.published ? "!bg-black" : ""
+                    }
+                >
+                    {
                         product.published
                             ? PRODUCT_STATUS_PUBLISHED
                             : PRODUCT_STATUS_DRAFT
-                    }
-                    color={product.published ? "primary" : "default"}
-                />
-            </TableCell>
-            <TableCell align="right">
+                    }</Chip>
+            </td>
+            <td align="right">
                 <Menu2 icon={<MoreVert />} variant="soft">
                     <MenuItem
                         component="dialog"
@@ -127,10 +70,10 @@ function BlogItem({
                         triggerChildren={
                             PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT
                         }
+                        description={DELETE_PRODUCT_POPUP_TEXT}
                         onClick={() =>
                             deleteProduct({
                                 id: product.id,
-                                setDeleteProductPopupOpened,
                                 backend: address.backend,
                                 dispatch,
                                 onDeleteComplete: () => {
@@ -140,8 +83,8 @@ function BlogItem({
                         }
                     ></MenuItem>
                 </Menu2>
-            </TableCell>
-        </TableRow>
+            </td>
+        </tr>
     );
 }
 

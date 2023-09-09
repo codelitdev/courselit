@@ -8,7 +8,7 @@ import {
     PAYMENT_METHOD_NONE,
     MIMETYPE_IMAGE,
 } from "../../ui-config/constants";
-import { TextField, Button, Typography, Grid, capitalize } from "@mui/material";
+import { TextField, Typography, Grid, capitalize } from "@mui/material";
 import {
     SITE_SETTINGS_TITLE,
     SITE_SETTINGS_SUBTITLE,
@@ -41,6 +41,10 @@ import currencies from "../../data/iso4217.json";
 import {
     Select as SingleSelect,
     MediaSelector,
+    Tabs,
+    Form,
+    FormField,
+    Button
 } from "@courselit/components-library";
 
 const { networkAction, newSiteInfoAvailable, setAppMessage } = actionCreators;
@@ -392,46 +396,26 @@ const Settings = (props: SettingsProps) => {
     });
 
     return (
-        <StyledGrid container spacing={2}>
-            <Grid item xs={12}>
-                <Typography variant="h1" style={{ wordBreak: "break-word" }}>
-                    {SITE_SETTINGS_PAGE_HEADING}
-                </Typography>
-            </Grid>
-            <Grid item xs={12}>
-                <Grid container direction="column">
-                    <Grid item sx={{ mb: 4 }}>
-                        <form onSubmit={handleSettingsSubmit}>
-                            <Grid container direction="column">
-                                <Grid item>
-                                    <Typography variant="h4">
-                                        {SITE_SETTINGS_SECTION_GENERAL}
-                                    </Typography>
-                                </Grid>
-                                <Grid item>
-                                    <TextField
-                                        variant="outlined"
+        <div>
+            <h1 className="text-4xl font-semibold mb-4">
+                {SITE_SETTINGS_PAGE_HEADING}
+            </h1>
+        <Tabs items={[SITE_SETTINGS_SECTION_GENERAL, SITE_SETTINGS_SECTION_PAYMENT, SITE_CUSTOMISATIONS_SETTING_HEADER]}>
+                        <Form onSubmit={handleSettingsSubmit}
+                            className="flex flex-col gap-4 pt-4">
+                                    <FormField
                                         label={SITE_SETTINGS_TITLE}
-                                        fullWidth
-                                        margin="normal"
                                         name="title"
                                         value={newSettings.title || ""}
                                         onChange={onChangeData}
                                         required
                                     />
-                                </Grid>
-                                <Grid item>
-                                    <TextField
-                                        variant="outlined"
+                                    <FormField
                                         label={SITE_SETTINGS_SUBTITLE}
-                                        fullWidth
-                                        margin="normal"
                                         name="subtitle"
                                         value={newSettings.subtitle || ""}
                                         onChange={onChangeData}
                                     />
-                                </Grid>
-                                <Grid item>
                                     <MediaSelector
                                         auth={props.auth}
                                         profile={props.profile}
@@ -457,13 +441,11 @@ const Settings = (props: SettingsProps) => {
                                         access="public"
                                         strings={{}}
                                     />
-                                </Grid>
-                                <Grid item>
+                                    <div>
                                     <Button
                                         type="submit"
                                         value={BUTTON_SAVE}
                                         color="primary"
-                                        variant="outlined"
                                         disabled={
                                             JSON.stringify({
                                                 title: settings.title,
@@ -482,19 +464,10 @@ const Settings = (props: SettingsProps) => {
                                     >
                                         {BUTTON_SAVE}
                                     </Button>
-                                </Grid>
-                            </Grid>
-                        </form>
-                    </Grid>
-                    <Grid item sx={{ mb: 4 }}>
-                        <form onSubmit={handlePaymentSettingsSubmit}>
-                            <Grid container direction="column" spacing={1}>
-                                <Grid item sx={{ mb: 2 }}>
-                                    <Typography variant="h4">
-                                        {SITE_SETTINGS_SECTION_PAYMENT}
-                                    </Typography>
-                                </Grid>
-                                <Grid item sx={{ mb: 2 }}>
+                                    </div>
+                        </Form>
+                        <Form onSubmit={handlePaymentSettingsSubmit}
+                            className="flex flex-col gap-4 pt-4">
                                     <SingleSelect
                                         title={SITE_SETTINGS_CURRENCY}
                                         options={currencies.map((currency) => ({
@@ -514,8 +487,6 @@ const Settings = (props: SettingsProps) => {
                                             )
                                         }
                                     />
-                                </Grid>
-                                <Grid item>
                                     <SingleSelect
                                         title={
                                             SITE_ADMIN_SETTINGS_PAYMENT_METHOD
@@ -544,18 +515,14 @@ const Settings = (props: SettingsProps) => {
                                             )
                                         }
                                     />
-                                </Grid>
 
                                 {newSettings.paymentMethod ===
                                     PAYMENT_METHOD_STRIPE && (
-                                    <Grid item>
-                                        <TextField
-                                            variant="outlined"
+                                    <>
+                                        <FormField
                                             label={
                                                 SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT
                                             }
-                                            fullWidth
-                                            margin="normal"
                                             name="stripePublishableKey"
                                             value={
                                                 newSettings.stripePublishableKey ||
@@ -563,13 +530,10 @@ const Settings = (props: SettingsProps) => {
                                             }
                                             onChange={onChangeData}
                                         />
-                                        <TextField
-                                            variant="outlined"
+                                        <FormField
                                             label={
                                                 SITE_ADMIN_SETTINGS_STRIPE_SECRET
                                             }
-                                            fullWidth
-                                            margin="normal"
                                             name="stripeSecret"
                                             type="password"
                                             value={
@@ -579,20 +543,11 @@ const Settings = (props: SettingsProps) => {
                                             sx={{ mb: 2 }}
                                             autoComplete="off"
                                         />
-                                        <Grid
-                                            container
-                                            direction="column"
-                                            spacing={1}
-                                            sx={{ mb: 2 }}
-                                        >
-                                            <Grid item>
                                                 <Typography variant="subtitle2">
                                                     {
                                                         HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK
                                                     }
                                                 </Typography>
-                                            </Grid>
-                                            <Grid item>
                                                 <Typography
                                                     variant="body2"
                                                     color="textSecondary"
@@ -601,8 +556,6 @@ const Settings = (props: SettingsProps) => {
                                                         SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK
                                                     }
                                                 </Typography>
-                                            </Grid>
-                                            <Grid item>
                                                 <Typography>
                                                     <a
                                                         href={`${props.address.backend}/api/payment/webhook`}
@@ -610,13 +563,10 @@ const Settings = (props: SettingsProps) => {
                                                         {`${props.address.backend}/api/payment/webhook`}
                                                     </a>
                                                 </Typography>
-                                            </Grid>
-                                        </Grid>
-                                    </Grid>
+                                                </>
                                 )}
                                 {newSettings.paymentMethod ===
                                     PAYMENT_METHOD_PAYPAL && (
-                                    <Grid item>
                                         <TextField
                                             variant="outlined"
                                             label={
@@ -632,11 +582,9 @@ const Settings = (props: SettingsProps) => {
                                             onChange={onChangeData}
                                             disabled={true}
                                         />
-                                    </Grid>
                                 )}
                                 {newSettings.paymentMethod ===
                                     PAYMENT_METHOD_PAYTM && (
-                                    <Grid item>
                                         <TextField
                                             variant="outlined"
                                             label={
@@ -652,14 +600,11 @@ const Settings = (props: SettingsProps) => {
                                             onChange={onChangeData}
                                             disabled={true}
                                         />
-                                    </Grid>
                                 )}
-                                <Grid item>
+                                <div>
                                     <Button
                                         type="submit"
                                         value={BUTTON_SAVE}
-                                        color="primary"
-                                        variant="outlined"
                                         disabled={
                                             JSON.stringify(
                                                 getPaymentSettings(),
@@ -671,26 +616,15 @@ const Settings = (props: SettingsProps) => {
                                     >
                                         {BUTTON_SAVE}
                                     </Button>
-                                </Grid>
-                            </Grid>
-                        </form>
-                    </Grid>
-                    <Grid item>
-                        <form onSubmit={handleCodeInjectionSettingsSubmit}>
-                            <Grid container direction="column">
-                                <Grid item>
-                                    <Typography variant="h4">
-                                        {SITE_CUSTOMISATIONS_SETTING_HEADER}
-                                    </Typography>
-                                </Grid>
-                                <Grid item>
-                                    <TextField
-                                        variant="outlined"
+                                </div>
+                        </Form>
+                        <Form onSubmit={handleCodeInjectionSettingsSubmit}
+                            className="flex flex-col gap-4 pt-4">
+                                    <FormField
+                                        component="textarea"
                                         label={
                                             SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD
                                         }
-                                        fullWidth
-                                        margin="normal"
                                         name="codeInjectionHead"
                                         value={
                                             newSettings.codeInjectionHead || ""
@@ -699,15 +633,11 @@ const Settings = (props: SettingsProps) => {
                                         multiline
                                         rows={10}
                                     />
-                                </Grid>
-                                <Grid item>
-                                    <TextField
-                                        variant="outlined"
+                                    <FormField
+                                        component="textarea"
                                         label={
                                             SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY
                                         }
-                                        fullWidth
-                                        margin="normal"
                                         name="codeInjectionBody"
                                         value={
                                             newSettings.codeInjectionBody || ""
@@ -716,8 +646,7 @@ const Settings = (props: SettingsProps) => {
                                         multiline
                                         rows={10}
                                     />
-                                </Grid>
-                                <Grid item>
+                                <div>
                                     <Button
                                         type="submit"
                                         value={BUTTON_SAVE}
@@ -733,13 +662,10 @@ const Settings = (props: SettingsProps) => {
                                     >
                                         {BUTTON_SAVE}
                                     </Button>
-                                </Grid>
-                            </Grid>
-                        </form>
-                    </Grid>
-                </Grid>
-            </Grid>
-        </StyledGrid>
+                                </div>
+                        </Form>
+        </Tabs>
+                </div>
     );
 };
 

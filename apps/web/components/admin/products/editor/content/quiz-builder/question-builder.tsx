@@ -1,7 +1,6 @@
-import React, { ChangeEvent } from "react";
+import React from "react";
 import { Question } from "@courselit/common-models";
 import { Delete, ExpandLess, ExpandMore } from "@courselit/icons";
-import { Checkbox, Grid, TextField, Tooltip, Typography } from "@mui/material";
 import { useState } from "react";
 import {
     LESSON_QUIZ_ADD_OPTION_BTN,
@@ -12,7 +11,8 @@ import {
     QUESTION_BUILDER_DELETE_TOOLTIP,
     QUESTION_BUILDER_EXPAND_TOOLTIP,
 } from "../../../../../../ui-config/strings";
-import { IconButton, Button } from "@courselit/components-library";
+import { Checkbox, IconButton, Button, Tooltip, FormField } from "@courselit/components-library";
+import { FormEvent } from "react";
 
 interface QuestionProps {
     details: Question;
@@ -39,27 +39,12 @@ export function QuestionBuilder({
 
     if (collapsed) {
         return (
-            <Grid
-                container
-                alignItems="center"
-                sx={{
-                    paddingTop: 1,
-                    paddingBottom: 1,
-                    paddingLeft: 2,
-                    paddingRight: 2,
-                    border: "1px solid #eee",
-                    borderRadius: 3,
-                }}
+            <div className="flex items-center justify-between"
             >
-                <Grid item xs>
-                    <Typography
-                        variant="subtitle1"
-                        sx={{ fontWeight: "bolder" }}
-                    >
+                <h3 className="font-medium">
                         {`${LESSON_QUIZ_CONTENT_HEADER} #${index + 1}`}
-                    </Typography>
-                </Grid>
-                <div className="flex gap-1">
+                        </h3>
+                    <div className="flex gap-2">
                     {index > 0 && (
                         <Tooltip title={QUESTION_BUILDER_DELETE_TOOLTIP}>
                             <IconButton
@@ -78,147 +63,88 @@ export function QuestionBuilder({
                             <ExpandMore />
                         </IconButton>
                     </Tooltip>
-                </div>
-            </Grid>
+                    </div>
+            </div>
         );
     }
 
     return (
-        <Grid
-            container
-            direction="column"
-            sx={{
-                marginBottom: 1,
-                paddingTop: 1,
-                paddingBottom: 1,
-                paddingRight: 2,
-                paddingLeft: 2,
-                border: "1px solid #eee",
-                borderRadius: 3,
-            }}
-        >
-            <Grid
-                item
-                xs
-                sx={{
-                    marginBottom: 2,
-                }}
+        <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between"
             >
-                <Grid container alignItems="center">
-                    <Grid item xs sx={{ marginRight: 1 }}>
-                        <Typography
-                            variant="subtitle1"
-                            sx={{ fontWeight: "bolder" }}
-                        >
-                            {`${LESSON_QUIZ_CONTENT_HEADER} #${index + 1}`}
-                        </Typography>
-                    </Grid>
-                    <div className="flex gap-1">
-                        {index > 0 && (
-                            <Tooltip title={QUESTION_BUILDER_DELETE_TOOLTIP}>
-                                <IconButton
-                                    onClick={() => deleteQuestion(index)}
-                                    variant="soft"
-                                >
-                                    <Delete />
-                                </IconButton>
-                            </Tooltip>
-                        )}
-                        <Tooltip title={QUESTION_BUILDER_COLLAPSE_TOOLTIP}>
+                <h3 className="font-medium">
+                        {`${LESSON_QUIZ_CONTENT_HEADER} #${index + 1}`}
+                        </h3>
+                    <div className="flex gap-2">
+                    {index > 0 && (
+                        <Tooltip title={QUESTION_BUILDER_DELETE_TOOLTIP}>
                             <IconButton
-                                onClick={() => setCollapsed(true)}
                                 variant="soft"
+                                onClick={() => deleteQuestion(index)}
                             >
-                                <ExpandLess />
+                                <Delete />
                             </IconButton>
                         </Tooltip>
+                    )}
+                    <Tooltip title={QUESTION_BUILDER_COLLAPSE_TOOLTIP}>
+                        <IconButton
+                            variant="soft"
+                            onClick={() => setCollapsed(true)}
+                        >
+                            <ExpandLess />
+                        </IconButton>
+                    </Tooltip>
                     </div>
-                </Grid>
-            </Grid>
-            <Grid item sx={{ marginBottom: 1 }}>
-                <TextField
+            </div>
+                <FormField
                     value={details.text}
-                    label={LESSON_QUIZ_CONTENT_HEADER}
-                    fullWidth
                     onChange={(e) => setQuestionText(e.target.value)}
-                    maxRows={5}
-                    multiline={true}
                 />
-            </Grid>
-            <Grid
-                item
-                sx={{
-                    marginBottom: 1,
-                }}
-            >
-                <Typography
-                    variant="subtitle2"
-                    color="textSecondary"
-                    sx={{
-                        fontWeight: "bolder",
-                    }}
-                >
+                <h4 className="font-medium text-slate-500">
                     {LESSON_QUIZ_OPTIONS_HEADER}
-                </Typography>
-            </Grid>
+                </h4>
             {details.options.map((option: Option, index: number) => (
-                <Grid
-                    container
-                    direction="row"
-                    alignItems="center"
-                    sx={{
-                        marginBottom: 1,
-                    }}
+                <div className="flex items-center gap-2"
                     key={index}
                 >
-                    <Grid item>
                         <Tooltip
                             title={QUESTION_BUILDER_CORRECT_ANS_TOOLTIP}
-                            tabIndex={0}
                         >
                             <Checkbox
                                 checked={option.correctAnswer}
-                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                    setCorrectOption(index, e.target.checked)
+                                onChange={(value: boolean) =>
+                                    setCorrectOption(index, value)
                                 }
-                                inputProps={{ tabIndex: 0 }}
                             />
                         </Tooltip>
-                    </Grid>
-                    <Grid item xs>
-                        <TextField
+                        <FormField
                             value={option.text}
                             onChange={(e) =>
                                 setOptionText(index, e.target.value)
                             }
-                            fullWidth
+                            className="w-full"
                         />
-                    </Grid>
-                    <Grid item>
                         <IconButton
                             onClick={() => removeOption(index)}
                             variant="soft"
                         >
                             <Delete />
                         </IconButton>
-                    </Grid>
-                </Grid>
+                </div>
             ))}
-            <Grid
-                item
-                sx={{
-                    marginTop: 1,
-                }}
+            <div
             >
                 <Button
                     component="button"
-                    onClick={() => addNewOption()}
+                    onClick={(e: FormEvent<HTMLInputElement>) => {
+                        e.preventDefault();
+                        addNewOption()}}
                     variant="soft"
                     tabIndex={0}
                 >
                     {LESSON_QUIZ_ADD_OPTION_BTN}
                 </Button>
-            </Grid>
-        </Grid>
+            </div>
+        </div>
     );
 }

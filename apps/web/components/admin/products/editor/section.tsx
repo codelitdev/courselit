@@ -1,12 +1,11 @@
 import { Address, AppMessage } from "@courselit/common-models";
-import { Section } from "@courselit/components-library";
+import { Button, Form, FormField, Section } from "@courselit/components-library";
 import {
     actionCreators,
     AppDispatch,
     AppState,
 } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
-import { Button, Grid, TextField, Typography } from "@mui/material";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -107,26 +106,20 @@ function SectionEditor({
 
     return (
         <Section>
-            <Grid container direction="column">
-                <Grid item>
-                    <Typography variant="h2">
+        <div className="flex flex-col">
+                <h1 className="text-4xl font-semibold mb-4">
                         {section ? EDIT_SECTION_HEADER : NEW_SECTION_HEADER}
-                    </Typography>
-                </Grid>
-                <Grid item>
-                    <form onSubmit={updateGroup}>
-                        <TextField
-                            variant="outlined"
+                </h1>
+                    <Form onSubmit={updateGroup} className="flex flex-col gap-4">
+                        <FormField
                             label={LABEL_GROUP_NAME}
-                            fullWidth
-                            margin="normal"
                             name="Section name"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             required
                         />
+                            <div className="flex gap-2">
                         <Button
-                            variant="contained"
                             disabled={!name || loading}
                             type="submit"
                         >
@@ -139,9 +132,9 @@ function SectionEditor({
                                 <Button>{POPUP_CANCEL_ACTION}</Button>
                             </Link>
                         )}
-                    </form>
-                </Grid>
-            </Grid>
+                        </div>
+                    </Form>
+            </div>
         </Section>
     );
 }

@@ -27,6 +27,11 @@ import Dialog2 from "./dialog2";
 import Tooltip from "./tooltip";
 import Chip from "./chip";
 import Modal from "./modal";
+import Toast from "./toast";
+import Switch from "./switch";
+import Checkbox from "./checkbox";
+import Tabs from "./tabs";
+import Table, {TableHead, TableBody, TableRow} from "./table";
 
 export {
     PriceTag,
@@ -55,4 +60,12 @@ export {
     Tooltip,
     Chip,
     Modal,
+    Toast,
+    Switch,
+    Checkbox,
+    Tabs,
+    Table,
+    TableHead,
+    TableBody,
+    TableRow
 };

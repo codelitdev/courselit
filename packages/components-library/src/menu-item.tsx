@@ -28,10 +28,14 @@ const MenuItem = React.forwardRef((props: MenuItemProps, forwardedRef: any) => {
         const { children, ...otherProps } = props;
         return (
             <Item
-                className="flex text-sm rounded outline-none py-1 px-2 hover:!text-white hover:!bg-slate-500 active:!bg-slate-600 disabled:bg-slate-300"
+                asChild
                 {...otherProps}
             >
+                <div
+                className="flex w-full text-sm rounded outline-none py-1 px-2 hover:!text-white hover:!bg-slate-500 active:!bg-slate-600 disabled:bg-slate-300"
+                >
                 {children}
+                </div>
             </Item>
         );
     }
@@ -65,7 +69,7 @@ const MenuItem = React.forwardRef((props: MenuItemProps, forwardedRef: any) => {
                         console.log(onSelect, onOpenChange);
                         onSelect && onSelect();
                     }}
-                    className="flex text-sm rounded outline-none py-1 px-2 hover:!text-white hover:!bg-slate-500 active:!bg-slate-600 disabled:bg-slate-300"
+                    className="flex text-sm rounded outline-none py-1 px-2 hover:!text-white hover:!bg-slate-500 active:!bg-slate-600 disabled:bg-slate-300 cursor-pointer"
                 >
                     {triggerChildren}
                 </Item>

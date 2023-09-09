@@ -12,18 +12,6 @@ import {
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
-import {
-    Button,
-    Grid,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Typography,
-} from "@mui/material";
-import Link from "next/link";
 import { connect } from "react-redux";
 import {
     BLOG_TABLE_HEADER_NAME,
@@ -39,7 +27,8 @@ import { MoreVert } from "@courselit/icons";
 import {
     MenuItem,
     Menu2,
-    Link as AppLink,
+    Button,
+    Link
 } from "@courselit/components-library";
 
 const BlogItem = dynamic(() => import("./blog-item"));
@@ -103,59 +92,45 @@ const Index = (props: IndexProps) => {
     };
 
     return (
-        <Grid container direction="column">
-            <Grid item sx={{ mb: 2 }}>
-                <Grid
-                    container
-                    justifyContent="space-between"
-                    alignItems="center"
+        <div className="flex flex-col">
+                <div className="flex justify-between items-center mb-8"
                 >
-                    <Grid item>
-                        <Typography variant="h1">
+                <h1 className="text-4xl font-semibold mb-4">
                             {MANAGE_BLOG_PAGE_HEADING}
-                        </Typography>
-                    </Grid>
-                    <Grid item>
-                        <Grid container alignItems="center">
-                            <Grid item sx={{ mr: 1 }}>
-                                <Link href="/dashboard/blog/new" legacyBehavior>
-                                    <Button variant="contained" component="a">
+                </h1>
+                        <div
+                            className="flex items-center gap-4">
+                                <Link href="/dashboard/blog/new">
+                                    <Button>
                                         {BTN_NEW_BLOG}
                                     </Button>
                                 </Link>
-                            </Grid>
-                            <Grid item>
                                 <Menu2 icon={<MoreVert />} variant="soft">
                                     <MenuItem>
-                                        <AppLink
+                                        <Link
                                             href={`/dashboard/page/blog/edit`}
                                         >
                                             {
                                                 PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE
                                             }
-                                        </AppLink>
+                                        </Link>
                                     </MenuItem>
                                 </Menu2>
-                            </Grid>
-                        </Grid>
-                    </Grid>
-                </Grid>
-            </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <TableContainer>
-                    <Table aria-label="Products">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>{BLOG_TABLE_HEADER_NAME}</TableCell>
-                                <TableCell align="right">
+                        </div>
+                </div>
+                    <table aria-label="Products">
+                        <thead className="border-0 border-b border-slate-200">
+                            <tr className="font-medium">
+                                <td>{BLOG_TABLE_HEADER_NAME}</td>
+                                <td align="right">
                                     {PRODUCTS_TABLE_HEADER_STATUS}
-                                </TableCell>
-                                <TableCell align="right">
+                                </td>
+                                <td align="right">
                                     {PRODUCTS_TABLE_HEADER_ACTIONS}
-                                </TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
+                                </td>
+                            </tr>
+                        </thead>
+                        <tbody>
                             {creatorCourses.map(
                                 (
                                     product: Course & {
@@ -171,15 +146,12 @@ const Index = (props: IndexProps) => {
                                     />
                                 ),
                             )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </Grid>
+                        </tbody>
+                    </table>
             {creatorCourses.length > 0 && (
-                <Grid item container justifyContent="center" sx={{ mb: 2 }}>
-                    <Grid item>
+                    <div className="flex justify-center">
                         <Button
-                            variant="outlined"
+                            variant="soft"
                             onClick={() =>
                                 setCoursesPaginationOffset(
                                     coursesPaginationOffset + 1,
@@ -188,10 +160,9 @@ const Index = (props: IndexProps) => {
                         >
                             {LOAD_MORE_TEXT}
                         </Button>
-                    </Grid>
-                </Grid>
+                </div>
             )}
-        </Grid>
+        </div>
     );
 };
 

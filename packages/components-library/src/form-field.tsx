@@ -24,7 +24,7 @@ interface MessageItem {
 }
 
 export interface FormFieldProps {
-    label: string;
+    label?: string;
     component?: "input" | "textarea";
     type?:
         | "email"
@@ -59,7 +59,7 @@ export default function FormField({
     return (
         <Field className={`flex flex-col ${className}`} name={name}>
             <div className="flex items-baseline justify-between">
-                <Label className="mb-1 font-medium">{label}</Label>
+                {label && <Label className="mb-1 font-medium">{label}</Label>}
                 {messages &&
                     messages.map((message) => (
                         <Message className="text-xs" match={message.match}>

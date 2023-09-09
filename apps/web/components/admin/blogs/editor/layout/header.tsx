@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Breadcrumbs, Grid, Typography } from "@mui/material";
+import { Breadcrumbs } from "@mui/material";
 import dynamic from "next/dynamic";
 import useCourse from "../course-hook";
 import { useRouter } from "next/router";
@@ -31,10 +31,6 @@ interface BlogHeaderProps {
 }
 
 function BlogHeader({ id, breadcrumbs, address, dispatch }: BlogHeaderProps) {
-    const [deleteProductPopupOpened, setDeleteProductPopupOpened] =
-        useState(false);
-    const closeDeletePopup = () => setDeleteProductPopupOpened(false);
-
     const course = useCourse(id);
     const router = useRouter();
 
@@ -43,9 +39,9 @@ function BlogHeader({ id, breadcrumbs, address, dispatch }: BlogHeaderProps) {
     }
 
     return (
-        <Grid container direction="column">
+        <div className="flex flex-col">
             {breadcrumbs && (
-                <Grid item sx={{ mb: 2 }}>
+                    <div className="mb-4">
                     <Breadcrumbs aria-label="product-breadcrumbs">
                         {breadcrumbs.map((crumb: Breadcrumb) =>
                             crumb.url ? (
@@ -53,24 +49,20 @@ function BlogHeader({ id, breadcrumbs, address, dispatch }: BlogHeaderProps) {
                                     {crumb.text}
                                 </Link>
                             ) : (
-                                <Typography key={crumb.text}>
+                                <li key={crumb.text}>
                                     {crumb.text}
-                                </Typography>
+                                </li>
                             ),
                         )}
                     </Breadcrumbs>
-                </Grid>
+                    </div>
             )}
-            <Grid item>
-                <Grid
-                    container
-                    justifyContent="space-between"
-                    alignItems="center"
+                <div
+                    className="flex justify-between items-center"
                 >
-                    <Grid item>
-                        <Typography variant="h1">{course.title}</Typography>
-                    </Grid>
-                    <Grid item>
+                    <h1 
+                        className="text-4xl font-semibold mb-4">{course.title}</h1>
+                    <div>
                         <Menu2 icon={<MoreVert />} variant="soft">
                             <MenuItem>
                                 <Link
@@ -82,14 +74,15 @@ function BlogHeader({ id, breadcrumbs, address, dispatch }: BlogHeaderProps) {
                             <MenuItem
                                 component="dialog"
                                 title={
-                                    PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT
+                                    DELETE_PRODUCT_POPUP_HEADER
                                 }
-                                triggerChildren={DELETE_PRODUCT_POPUP_HEADER}
+                                triggerChildren={
+                                    PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT
+                                    }
                                 description={DELETE_PRODUCT_POPUP_TEXT}
                                 onClick={() =>
                                     deleteProduct({
                                         id: course!.id as string,
-                                        setDeleteProductPopupOpened,
                                         backend: address.backend,
                                         dispatch,
                                         onDeleteComplete: () => {
@@ -99,10 +92,9 @@ function BlogHeader({ id, breadcrumbs, address, dispatch }: BlogHeaderProps) {
                                 }
                             ></MenuItem>
                         </Menu2>
-                    </Grid>
-                </Grid>
-            </Grid>
-        </Grid>
+                    </div>
+                </div>
+        </div>
     );
 }
 

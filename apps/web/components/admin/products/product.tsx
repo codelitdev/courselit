@@ -1,14 +1,5 @@
-import React, { useState } from "react";
+import React from "react";
 import { AppMessage, Course } from "@courselit/common-models";
-import {
-    Grid,
-    TableCell,
-    TableRow,
-    Link as MuiLink,
-    Typography,
-    Chip,
-} from "@mui/material";
-import Link from "next/link";
 import {
     APP_MESSAGE_COURSE_DELETED,
     DELETE_PRODUCT_POPUP_HEADER,
@@ -23,7 +14,7 @@ import { MoreVert } from "@courselit/icons";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import type { SiteInfo, Address } from "@courselit/common-models";
 import { connect } from "react-redux";
-import { FetchBuilder, formatCurrency } from "@courselit/utils";
+import { capitalize, FetchBuilder, formatCurrency } from "@courselit/utils";
 import {
     networkAction,
     setAppMessage,
@@ -31,8 +22,9 @@ import {
 import {
     Menu2,
     MenuItem,
-    Link as AppLink,
-    Image,
+    Link,
+    Chip,
+    TableRow
 } from "@courselit/components-library";
 
 function Product({
@@ -57,13 +49,7 @@ function Product({
 }) {
     const product = details;
 
-    const [deleteProductPopupOpened, setDeleteProductPopupOpened] =
-        useState(false);
-
-    const closeDeletePopup = () => setDeleteProductPopupOpened(false);
-
     const deleteProduct = async () => {
-        setDeleteProductPopupOpened(false);
         const query = `
     mutation {
       result: deleteCourse(id: "${product.id}")
@@ -93,75 +79,43 @@ function Product({
 
     return (
         <TableRow key={product.courseId}>
-            <TableCell>
+            <td className="py-4">
                 <Link href={`/dashboard/product/${product.courseId}/reports`}>
-                    <Grid container spacing={1} alignItems="center">
-                        <Grid item>
-                            <Image
-                                src={
-                                    product.featuredImage &&
-                                    product.featuredImage.thumbnail
-                                }
-                                height={64}
-                                width={64}
-                                alt=""
-                            />
-                        </Grid>
-                        <Grid item>
-                            <Grid
-                                container
-                                direction="column"
-                                sx={{
-                                    cursor: "pointer",
-                                }}
-                            >
-                                <MuiLink>
-                                    <Grid item>
-                                        <Typography variant="subtitle1">
-                                            {product.title}
-                                        </Typography>
-                                    </Grid>
-                                </MuiLink>
-                                <Grid item>
-                                    <Typography
-                                        color="textSecondary"
-                                        variant="body2"
-                                    >
-                                        {product.type}
-                                    </Typography>
-                                </Grid>
-                            </Grid>
-                        </Grid>
-                    </Grid>
+                                <p>{product.title}</p>
                 </Link>
-            </TableCell>
-            <TableCell align="right">
+            </td>
+            <td>
+                                <p>{capitalize( product.type)}</p>
+            </td>
+            <td align="right">
                 <Chip
-                    label={
+                    className={
+                        product.published ? "!bg-black" : ""
+                        }>
+                    {
                         product.published
                             ? PRODUCT_STATUS_PUBLISHED
                             : PRODUCT_STATUS_DRAFT
                     }
-                    color={product.published ? "primary" : "default"}
-                />
-            </TableCell>
-            <TableCell align="right">{product.customers}</TableCell>
-            <TableCell align="right">
+                </Chip>
+            </td>
+            <td align="right">{product.customers}</td>
+            <td align="right">
                 {formatCurrency(product.sales, siteinfo.currencyISOCode)}
-            </TableCell>
-            <TableCell align="right">
+            </td>
+            <td align="right">
                 <Menu2 icon={<MoreVert />} variant="soft">
                     <MenuItem>
-                        <AppLink href={`/p/${product.pageId}`}>
+                        <Link href={`/p/${product.pageId}`}>
                             {VIEW_PAGE_MENU_ITEM}
-                        </AppLink>
+                        </Link>
                     </MenuItem>
                     <MenuItem>
-                        <AppLink
+                        <Link
                             href={`/dashboard/page/${product.pageId}/edit`}
                         >
                             {PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE}
-                        </AppLink>
+                        </Link>
                     </MenuItem>
                     <MenuItem
                         component="dialog"
@@ -171,25 +125,7 @@ function Product({
                         onClick={deleteProduct}
                     ></MenuItem>
                 </Menu2>
-            </TableCell>
-            {/*
-            <Dialog
-                onOpen={deleteProductPopupOpened}
-                onClose={closeDeletePopup}
-                title={DELETE_PRODUCT_POPUP_HEADER}
-                actions={[
-                    {
-                        name: POPUP_CANCEL_ACTION,
-                        callback: closeDeletePopup,
-                    },
-                    { name: POPUP_OK_ACTION, callback: deleteProduct },
-                ]}
-            >
-                <Typography variant="subtitle1">
-                    {DELETE_PRODUCT_POPUP_TEXT}
-                </Typography>
-            </Dialog>
-            */}
+            </td>
         </TableRow>
     );
 }

@@ -1,14 +1,5 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
 import {
-    Button,
-    TextField,
-    Typography,
-    Grid,
-    Switch,
-    capitalize,
-    Tooltip,
-} from "@mui/material";
-import {
     BUTTON_SAVE,
     DOWNLOADABLE_SWITCH,
     TYPE_DROPDOWN,
@@ -40,18 +31,16 @@ import {
     COURSE_TYPE_DOWNLOAD,
     LESSON_TYPE_EMBED,
 } from "../../../../../ui-config/constants";
-import { FetchBuilder } from "@courselit/utils";
+import { FetchBuilder, capitalize } from "@courselit/utils";
 import { connect } from "react-redux";
 import { AppMessage, Media, Profile, Quiz } from "@courselit/common-models";
-import { Section, Select, TextEditor } from "@courselit/components-library";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import type { Auth, Lesson, Address } from "@courselit/common-models";
 import { actionCreators } from "@courselit/state-management";
-import Link from "next/link";
 import { useRouter } from "next/router";
 import useCourse from "../course-hook";
 import { Help } from "@courselit/icons";
-import { Dialog2, MediaSelector } from "@courselit/components-library";
+import { Tooltip, Link, Section, Button, Select, TextEditor, Dialog2, MediaSelector, Form, FormField, Switch } from "@courselit/components-library";
 import { QuizBuilder } from "./quiz-builder";
 
 const { networkAction, setAppMessage } = actionCreators;
@@ -87,8 +76,6 @@ const LessonEditor = ({
         content: "",
     });
     const router = useRouter();
-    const [deleteLessonPopupOpened, setDeleteLessonPopupOpened] =
-        useState(false);
     const [refresh, setRefresh] = useState(0);
     const [content, setContent] = useState<{ value: string }>({ value: "" });
     const [textContent, setTextContent] = useState<Record<string, unknown>>({
@@ -96,6 +83,9 @@ const LessonEditor = ({
     });
     const [quizContent, setQuizContent] = useState<Partial<Quiz>>({});
     const [loading, setLoading] = useState(false);
+    const [c1, setC1] = useState({
+        b1: false
+    });
     const course = useCourse(courseId);
 
     useEffect(() => {
@@ -299,7 +289,6 @@ const LessonEditor = ({
     };
 
     const onLessonDelete = async (index: number) => {
-        setDeleteLessonPopupOpened(false);
 
         if (lesson.lessonId) {
             const query = `
@@ -343,8 +332,6 @@ const LessonEditor = ({
                         : e.target.value,
             }),
         );
-
-    const closeDeleteLessonPopup = () => setDeleteLessonPopupOpened(false);
 
     const getMimeTypesToShow = () => {
         if (
@@ -442,38 +429,32 @@ const LessonEditor = ({
         });
     }
 
+    if (!lesson.type) {
+        return null;
+    }
+
     return (
         <Section>
-            {lesson.type && (
-                <Grid container direction="column">
-                    <Grid item sx={{ mb: 1 }}>
-                        <Typography variant="h2">
+                    <div className="flex flex-col gap-4">
+                <h1 className="text-4xl font-semibold mb-4">
                             {lessonId
                                 ? EDIT_LESSON_TEXT
                                 : BUTTON_NEW_LESSON_TEXT}
-                        </Typography>
-                    </Grid>
-                    <Grid item>
-                        <form onSubmit={onLessonCreate}>
-                            <Grid container direction="column">
-                                <Grid item sx={{ mb: 2 }}>
+                </h1>
+                        <Form onSubmit={onLessonCreate} 
+                            className="flex flex-col gap-4">
                                     {course?.type?.toLowerCase() ===
                                         COURSE_TYPE_COURSE && (
-                                        <TextField
+                                        <FormField
                                             required
-                                            variant="outlined"
                                             label="Title"
-                                            fullWidth
-                                            margin="normal"
                                             name="title"
                                             value={lesson.title}
                                             onChange={onLessonDetailsChange}
                                         />
                                     )}
-                                </Grid>
                                 {course?.type?.toLowerCase() ===
                                     COURSE_TYPE_COURSE && (
-                                    <Grid item sx={{ mb: 2 }}>
                                         <Select
                                             title={TYPE_DROPDOWN}
                                             value={lesson.type}
@@ -487,9 +468,7 @@ const LessonEditor = ({
                                             }}
                                             disabled={!!lesson.lessonId}
                                         />
-                                    </Grid>
                                 )}
-                                <Grid item sx={{ mb: 2 }}>
                                     {![
                                         String.prototype.toUpperCase.call(
                                             LESSON_TYPE_TEXT,
@@ -501,7 +480,6 @@ const LessonEditor = ({
                                             LESSON_TYPE_EMBED,
                                         ),
                                     ].includes(lesson.type) && (
-                                        <div>
                                             <MediaSelector
                                                 title={CONTENT_URL_LABEL}
                                                 src={
@@ -540,17 +518,13 @@ const LessonEditor = ({
                                                 dispatch={dispatch}
                                                 address={address}
                                             />
-                                        </div>
                                     )}
                                     {lesson.type.toLowerCase() ===
                                         LESSON_TYPE_TEXT && (
-                                        <Grid container direction="column">
-                                            <Grid item>
-                                                <Typography variant="body1">
+                                        <div className="flex flex-col">
+                                            <h2>
                                                     {LESSON_CONTENT_HEADER}
-                                                </Typography>
-                                            </Grid>
-                                            <Grid item>
+                                            </h2>
                                                 <TextEditor
                                                     initialContent={textContent}
                                                     refresh={refresh}
@@ -558,8 +532,7 @@ const LessonEditor = ({
                                                         setTextContent(state)
                                                     }
                                                 />
-                                            </Grid>
-                                        </Grid>
+                                        </div>
                                     )}
                                     {lesson.type.toLowerCase() ===
                                         LESSON_TYPE_QUIZ && (
@@ -573,9 +546,8 @@ const LessonEditor = ({
                                     )}
                                     {lesson.type.toLowerCase() ===
                                         LESSON_TYPE_EMBED && (
-                                        <Grid container direction="column">
-                                            <Grid item>
-                                                <TextField
+                                        <div className="flex flex-col">
+                                                <FormField
                                                     label={
                                                         LESSON_CONTENT_EMBED_HEADER
                                                     }
@@ -592,60 +564,42 @@ const LessonEditor = ({
                                                                 .value,
                                                         })
                                                     }
-                                                    fullWidth
                                                 />
-                                            </Grid>
-                                        </Grid>
+                                        </div>
                                     )}
                                     {[
                                         LESSON_TYPE_VIDEO,
                                         LESSON_TYPE_AUDIO,
                                         LESSON_TYPE_PDF,
                                     ].includes(lesson.type) && (
-                                        <Grid
-                                            container
-                                            justifyContent="space-between"
-                                            alignItems="center"
-                                        >
-                                            <Grid item>
-                                                <Typography variant="body1">
+                                        <div className="flex justify-between items-center">
+                                            <h2>
                                                     {DOWNLOADABLE_SWITCH}
-                                                </Typography>
-                                            </Grid>
-                                            <Grid item>
+                                            </h2>
                                                 <Switch
-                                                    type="checkbox"
                                                     name="downloadable"
                                                     checked={
                                                         lesson.downloadable
                                                     }
                                                     onChange={
-                                                        onLessonDetailsChange
+                                                        (value: boolean) => {
+                                                            setLesson(
+                                                                Object.assign({}, lesson, {
+                                                                    downloadable: value 
+                                                                }),
+                                                            )
+                                                        }
                                                     }
                                                 />
-                                            </Grid>
-                                        </Grid>
+                                        </div>
                                     )}
-                                </Grid>
                                 {lesson.type.toLowerCase() !==
                                     LESSON_TYPE_QUIZ && (
-                                    <Grid item sx={{ mb: 2 }}>
-                                        <Grid
-                                            container
-                                            justifyContent="space-between"
-                                            alignItems="center"
-                                        >
-                                            <Grid item>
-                                                <Grid container>
-                                                    <Grid item sx={{ mr: 1 }}>
-                                                        <Typography
-                                                            variant="body1"
-                                                            color="textSecondary"
-                                                        >
+                                        <div className="flex justify-between items-center">
+                                                <div className="flex items-center gap-2">
+                                            <h2>
                                                             {LESSON_PREVIEW}
-                                                        </Typography>
-                                                    </Grid>
-                                                    <Grid item>
+                                            </h2>
                                                         <Tooltip
                                                             title={
                                                                 LESSON_PREVIEW_TOOLTIP
@@ -653,33 +607,30 @@ const LessonEditor = ({
                                                         >
                                                             <Help />
                                                         </Tooltip>
-                                                    </Grid>
-                                                </Grid>
-                                            </Grid>
-                                            <Grid item>
+                                                </div>
                                                 <Switch
-                                                    type="checkbox"
                                                     name="requiresEnrollment"
                                                     checked={
-                                                        !lesson.requiresEnrollment
+                                                        lesson.requiresEnrollment
                                                     }
                                                     onChange={
-                                                        onLessonDetailsChange
+                                                        (value: boolean) => {
+                                                            setLesson(
+                                                                Object.assign({}, lesson, {
+                                                                    requiresEnrollment: value 
+                                                                }),
+                                                            )
+                                                        }
                                                     }
                                                 />
-                                            </Grid>
-                                        </Grid>
-                                    </Grid>
+
+                                        </div>
                                 )}
-                                <Grid item>
-                                    <Grid
-                                        container
-                                        justifyContent="space-between"
+                                    <div className="flex justify-between"
                                     >
-                                        <Grid item>
+                                        <div className="flex gap-2">
                                             <Button
                                                 type="submit"
-                                                variant="contained"
                                                 disabled={
                                                     !lesson.title || loading
                                                 }
@@ -693,13 +644,12 @@ const LessonEditor = ({
                                                 <Link
                                                     href={`/dashboard/product/${courseId}/content`}
                                                 >
-                                                    <Button>
+                                                    <Button variant="soft">
                                                         {POPUP_CANCEL_ACTION}
                                                     </Button>
                                                 </Link>
                                             )}
-                                        </Grid>
-                                        <Grid item>
+                                        </div>
                                             <Dialog2
                                                 title={
                                                     DELETE_LESSON_POPUP_HEADER
@@ -713,28 +663,9 @@ const LessonEditor = ({
                                                 }
                                                 onClick={onLessonDelete}
                                             ></Dialog2>
-                                        </Grid>
-                                    </Grid>
-                                </Grid>
-                            </Grid>
-                        </form>
-                    </Grid>
-                </Grid>
-            )}
-            {/*
-            <Dialog
-                onOpen={deleteLessonPopupOpened}
-                onClose={closeDeleteLessonPopup}
-                title={DELETE_LESSON_POPUP_HEADER}
-                actions={[
-                    {
-                        name: POPUP_CANCEL_ACTION,
-                        callback: closeDeleteLessonPopup,
-                    },
-                    { name: POPUP_OK_ACTION, callback: onLessonDelete },
-                ]}
-            />
-            */}
+                                    </div>
+                        </Form>
+                </div>
         </Section>
     );
 };
