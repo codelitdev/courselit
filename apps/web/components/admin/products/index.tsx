@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { connect } from "react-redux";
 import {
     MANAGE_COURSES_PAGE_HEADING,
-    LOAD_MORE_TEXT,
     PRODUCTS_TABLE_HEADER_NAME,
     PRODUCTS_TABLE_HEADER_STATUS,
     PRODUCTS_TABLE_HEADER_STUDENTS,
@@ -189,20 +188,6 @@ const Index = ({ loading, address, dispatch }: IndexProps) => {
                             )}
                         </TableBody>
                     </Table>
-            {creatorCourses.length > 0 && (
-                    <div className="flex justify-center">
-                        <Button
-                            variant="outlined"
-                            onClick={() =>
-                                setCoursesPaginationOffset(
-                                    coursesPaginationOffset + 1,
-                                )
-                            }
-                        >
-                            {LOAD_MORE_TEXT}
-                        </Button>
-                </div>
-            )}
         </div>
     );
 };

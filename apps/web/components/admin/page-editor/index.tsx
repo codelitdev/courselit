@@ -59,6 +59,7 @@ interface PageEditorProps {
     siteInfo: SiteInfo;
     theme: Theme;
     typefaces: Typeface[];
+    redirectTo?: string;
 }
 
 type LeftPaneContent =
@@ -77,6 +78,7 @@ function PageEditor({
     dispatch,
     loading,
     theme,
+    redirectTo
 }: PageEditorProps) {
     const [pages, setPages] = useState([]);
     const [page, setPage] = useState<Partial<Page>>({});
@@ -457,17 +459,18 @@ function PageEditor({
                     <div className="flex justify-end items-center gap-2">
                         {loading && <Sync />}
                         {!loading && <CheckCircled />}
-                        <Link
-                            href={
-                                page.type === "PRODUCT"
-                                    ? `/dashboard/product/${page.entityId}/content`
-                                    : "/dashboard/products"
-                            }
-                        >
-                            <Button variant="soft">
+                            <Button 
+                                variant="soft"
+                                component="link"
+                                href={
+                                    redirectTo ||
+                                    (page.type === "product"
+                                        ? `/dashboard/product/${page.entityId}/content`
+                                        : "/dashboard/products")
+                                }
+                                >
                                 {EDIT_PAGE_BUTTON_DONE}
                             </Button>
-                        </Link>
                         <Button onClick={onPublish} sx={{ color: "white" }}>
                             {EDIT_PAGE_BUTTON_UPDATE}
                         </Button>

@@ -74,7 +74,7 @@ const ComponentScaffold = ({ items, children }: ComponentScaffoldProps) => {
                 <Header onMenuClick={() => setOpen(true)} />
             </div>
             <div className="flex h-screen pt-[70px] w-full">
-                <div className="hidden md:!flex overflow-x-hidden overflow-y-auto w-[240px] max-h-screen border-0 border-r border-slate-200">
+                <div className="hidden md:!flex overflow-x-hidden overflow-y-auto w-[240px] max-h-screen border border-r border-slate-200">
                     {drawer}
                 </div>
                 <main className="w-full p-4 max-h-screen overflow-y-auto scroll-smooth">

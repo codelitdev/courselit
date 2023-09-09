@@ -112,7 +112,7 @@ function Product({
                     </MenuItem>
                     <MenuItem>
                         <Link
-                            href={`/dashboard/page/${product.pageId}/edit`}
+                            href={`/dashboard/page/${product.pageId}/edit?redirectTo=/dashboard/products`}
                         >
                             {PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE}
                         </Link>

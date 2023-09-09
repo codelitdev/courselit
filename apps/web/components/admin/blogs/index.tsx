@@ -30,25 +30,32 @@ import {
     Button,
     Link
 } from "@courselit/components-library";
+import { Table } from "@courselit/components-library";
+import { TableHead } from "@courselit/components-library";
+import { TableBody } from "@courselit/components-library";
 
 const BlogItem = dynamic(() => import("./blog-item"));
 
 interface IndexProps {
-    auth: Auth;
-    profile: Profile;
     dispatch: AppDispatch;
     address: Address;
+    loading: boolean;
 }
 
-const Index = (props: IndexProps) => {
+const Index = ({ loading, dispatch, address }: IndexProps) => {
     const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1);
     const [creatorCourses, setCreatorCourses] = useState<
         (Course & { published: boolean })[]
     >([]);
+    const [endReached, setEndReached] = useState(false);
 
     useEffect(() => {
         loadBlogs();
     }, []);
+
+    useEffect(() => {
+        loadBlogs();
+    }, [coursesPaginationOffset])
 
     const loadBlogs = async () => {
         const query = `
@@ -68,21 +75,24 @@ const Index = (props: IndexProps) => {
     }
     `;
         const fetch = new FetchBuilder()
-            .setUrl(`${props.address.backend}/api/graph`)
+            .setUrl(`${address.backend}/api/graph`)
             .setPayload(query)
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            props.dispatch(networkAction(true));
+            dispatch(networkAction(true));
+            setEndReached(false);
             const response = await fetch.exec();
-            if (response.courses && response.courses.length > 0) {
-                setCreatorCourses([...creatorCourses, ...response.courses]);
-                setCoursesPaginationOffset(coursesPaginationOffset + 1);
+            if (response.courses) {
+                setCreatorCourses([...response.courses]);
+                if (response.courses.length === 0){
+                    setEndReached(true)
+                }
             }
         } catch (err: any) {
-            props.dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            props.dispatch(networkAction(false));
+            dispatch(networkAction(false));
         }
     };
 
@@ -108,7 +118,7 @@ const Index = (props: IndexProps) => {
                                 <Menu2 icon={<MoreVert />} variant="soft">
                                     <MenuItem>
                                         <Link
-                                            href={`/dashboard/page/blog/edit`}
+                                            href={`/dashboard/page/blog/edit?redirectTo=/dashboard/blogs`}
                                         >
                                             {
                                                 PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE
@@ -118,9 +128,8 @@ const Index = (props: IndexProps) => {
                                 </Menu2>
                         </div>
                 </div>
-                    <table aria-label="Products">
-                        <thead className="border-0 border-b border-slate-200">
-                            <tr className="font-medium">
+                    <Table aria-label="Products">
+                        <TableHead className="border-0 border-b border-slate-200">
                                 <td>{BLOG_TABLE_HEADER_NAME}</td>
                                 <td align="right">
                                     {PRODUCTS_TABLE_HEADER_STATUS}
@@ -128,9 +137,14 @@ const Index = (props: IndexProps) => {
                                 <td align="right">
                                     {PRODUCTS_TABLE_HEADER_ACTIONS}
                                 </td>
-                            </tr>
-                        </thead>
-                        <tbody>
+                        </TableHead>
+                        <TableBody
+                            loading={loading}
+                            endReached={endReached}
+                            page={coursesPaginationOffset}
+                            onPageChange={(value: number) => {
+                                setCoursesPaginationOffset(value)
+                                }}>
                             {creatorCourses.map(
                                 (
                                     product: Course & {
@@ -146,8 +160,8 @@ const Index = (props: IndexProps) => {
                                     />
                                 ),
                             )}
-                        </tbody>
-                    </table>
+                        </TableBody>
+                    </Table>
             {creatorCourses.length > 0 && (
                     <div className="flex justify-center">
                         <Button

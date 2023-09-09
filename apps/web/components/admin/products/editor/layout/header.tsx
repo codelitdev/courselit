@@ -56,7 +56,7 @@ export default function ProductHeader({ id, breadcrumbs }: ProductHeaderProps) {
                             </MenuItem>
                             <MenuItem>
                                 <Link
-                                    href={`/dashboard/page/${course.pageId}/edit`}
+                                    href={`/dashboard/page/${course.pageId}/edit?redirectTo=/dashboard/product/${course.courseId}/content`}
                                 >
                                     {EDIT_PAGE_MENU_ITEM}
                                 </Link>

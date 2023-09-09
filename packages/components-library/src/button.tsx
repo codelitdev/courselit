@@ -1,4 +1,5 @@
 import * as React from "react";
+import Link from "./link";
 
 interface CommonButtonProps {
     children: React.ReactNode;
@@ -42,15 +43,17 @@ const Button = React.forwardRef((props: ButtonProps, forwardedRef: any) => {
 
     if (component === "link") {
         return (
-            <a
-                className={`${commonClasses} ${className}`}
-                href={props.href}
-                style={{ ...style }}
-                ref={forwardedRef}
-                {...other}
-            >
-                {children}
-            </a>
+           <Link
+                href={props.href}>
+                <span
+                    className={`${commonClasses} ${className}`}
+                    style={{ ...style }}
+                    ref={forwardedRef}
+                    {...other}
+                >
+                    {children}
+                </span>
+            </Link>
         );
     }
 

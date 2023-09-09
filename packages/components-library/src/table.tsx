@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { Children, ReactNode } from "react";
 import IconButton from "./icon-button";
 import { ArrowLeft, ArrowRight } from "@courselit/icons";
 
@@ -19,6 +19,8 @@ interface TableBodyProps {
     onPageChange?: (...args: any[]) => void;
     loading?: boolean;
     endReached?: boolean;
+    count?: number;
+    rowsPerPage?: number;
 }
 
 interface TableRowProps {
@@ -45,27 +47,39 @@ export function TableBody({
     page = 1,
     onPageChange,
     loading = false,
-    endReached = false
+    endReached = false,
+    count,
+    rowsPerPage = 10,
 }: TableBodyProps) {
     return (
         <tbody className={`${className}`}>
             {children}
-            <tr className="flex gap-2 mt-4">
-                <IconButton
-                    variant="soft"
-                    disabled={loading || (page === 1)}
-                    onClick={() => onPageChange(page - 1)}
-                    >
-                    <ArrowLeft />
-                </IconButton>
-                <IconButton
-                    variant="soft"
-                    disabled={loading || endReached}
-                    onClick={() => onPageChange(page + 1)}
-                    >
-                    <ArrowRight />
-                </IconButton>
-            </tr>
+            {onPageChange && <tr>
+                <td 
+                    className="flex items-center gap-2 mt-4"
+                    colSpan={Children.count(children)}>
+                    <IconButton
+                        variant="soft"
+                        disabled={loading || (page === 1)}
+                        onClick={() => onPageChange(page - 1)}
+                        >
+                        <ArrowLeft />
+                    </IconButton>
+                    <p className="text-sm">
+                        {page}
+                    </p>
+                    <IconButton
+                        variant="soft"
+                        disabled={loading || endReached || (count && Math.ceil(count/rowsPerPage) === page)}
+                        onClick={() => onPageChange(page + 1)}
+                        >
+                        <ArrowRight />
+                    </IconButton>
+                    {count &&
+                    <span className="text-sm">of {Math.ceil(count/rowsPerPage)}</span>
+                    }
+                </td>
+            </tr>}
         </tbody>
     )
 }

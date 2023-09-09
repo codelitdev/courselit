@@ -1,23 +1,5 @@
 import React, { useState, useEffect, FormEvent } from "react";
 import {
-    Avatar,
-    Grid,
-    Paper,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    TextField,
-    Toolbar,
-    Typography,
-} from "@mui/material";
-import Box from "@mui/material/Box";
-import TablePagination from "@mui/material/TablePagination";
-import Tooltip from "@mui/material/Tooltip";
-import IconButton from "@mui/material/IconButton";
-import {
     USER_TABLE_HEADER_NAME,
     USER_TABLE_HEADER_JOINED,
     USERS_MANAGER_PAGE_HEADING,
@@ -26,13 +8,17 @@ import {
     USER_TYPE_CUSOMER,
     USER_FILTER_PERMISSION,
     USER_TYPE_ALL,
-    EXPORT_CSV,
+    //EXPORT_CSV,
     USER_TYPE_SUBSCRIBER,
-    USER_TABLE_HEADER_EMAIL,
-    USER_TABLE_HEADER_NAME_NAME,
+    //USER_TABLE_HEADER_EMAIL,
+    //USER_TABLE_HEADER_NAME_NAME,
     TOOLTIP_USER_PAGE_SEND_MAIL,
 } from "../../../ui-config/strings";
-import { checkPermission, exportToCsv, FetchBuilder } from "@courselit/utils";
+import { 
+    checkPermission, 
+    //exportToCsv, 
+    FetchBuilder 
+} from "@courselit/utils";
 import { connect } from "react-redux";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
@@ -44,15 +30,24 @@ import {
     State,
     AppMessage,
 } from "@courselit/common-models";
-import Link from "next/link";
-import MuiLink from "@mui/material/Link";
 import { ThunkDispatch } from "redux-thunk";
 import { AnyAction } from "redux";
-import { Select as SingleSelect } from "@courselit/components-library";
+import { 
+    Tooltip, 
+    Select as SingleSelect, 
+    IconButton,
+    Table,
+    TableHead,
+    TableBody,
+    TableRow,
+    Avatar, 
+    Link,
+    Form,
+    FormField
+} from "@courselit/components-library";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
-import { CSVLink } from "react-csv";
+//import { CSVLink } from "react-csv";
 import { Cancel } from "@courselit/icons";
-import InputAdornment from "@mui/material/InputAdornment";
 import { useRouter } from "next/router";
 import { UIConstants } from "@courselit/common-models";
 import { Mail } from "@courselit/icons";
@@ -75,7 +70,7 @@ const UsersManager = ({
     profile,
     featureFlags,
 }: UserManagerProps) => {
-    const [page, setPage] = useState(0);
+    const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [users, setUsers] = useState<User[]>([]);
     const [type, setType] = useState("");
@@ -93,7 +88,6 @@ const UsersManager = ({
     }, [rowsPerPage, type, searchEmailHook]);
 
     const handlePageChange = (
-        e: MouseEvent<HTMLButtonElement> | null,
         newPage: number,
     ) => {
         setPage(newPage);
@@ -103,7 +97,7 @@ const UsersManager = ({
         e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => {
         setRowsPerPage(parseInt(e.target.value, 10));
-        setPage(0);
+        setPage(1);
     };
 
     const loadUsers = async () => {
@@ -113,7 +107,7 @@ const UsersManager = ({
                 query {
                     users: getUsers(searchData: {
                         type: ${type.toUpperCase()}
-                        offset: ${page + 1},
+                        offset: ${page},
                         rowsPerPage: ${rowsPerPage}
                     }) {
                         id,
@@ -130,7 +124,7 @@ const UsersManager = ({
                 ? `
                 query {
                     users: getUsers(searchData: {
-                        offset: ${page + 1}
+                        offset: ${page}
                         email: "${searchEmail}",
                         rowsPerPage: ${rowsPerPage}
                     }) {
@@ -147,7 +141,7 @@ const UsersManager = ({
                 : `
                 query {
                     users: getUsers(searchData: {
-                        offset: ${page + 1},
+                        offset: ${page},
                         rowsPerPage: ${rowsPerPage}
                     }) {
                         id,
@@ -322,13 +316,13 @@ const UsersManager = ({
         setSearchEmail("");
         setType(value);
         setUsers([]);
-        setPage(0);
+        setPage(1);
     };
 
     const searchByEmail = async (e?: FormEvent) => {
         e && e.preventDefault();
         setUsers([]);
-        setPage(0);
+        setPage(1);
         setType("");
         setSearchEmailHook(searchEmailHook + 1);
     };
@@ -338,43 +332,42 @@ const UsersManager = ({
     };
 
     return (
-        <Grid container direction="column">
-            <Grid item sx={{ mb: 2 }}>
-                <Typography variant="h1">
-                    {USERS_MANAGER_PAGE_HEADING}
-                </Typography>
-            </Grid>
-            <Grid item sx={{ mb: 2 }} component={Paper}>
-                <Toolbar>
-                    <Box
-                        component="form"
+        <div className="flex flex-col">
+                <h1 className="text-4xl font-semibold mb-4">
+                            {USERS_MANAGER_PAGE_HEADING}
+                </h1>
+                <div className="flex items-start justify-between gap-2 mb-4">
+                    <Form
                         onSubmit={searchByEmail}
-                        sx={{ pr: 1 }}
+                        className="flex gap-2 items-start"
                     >
-                        <TextField
+                        <FormField
                             type="email"
                             label="Search by email"
                             onChange={(e) => setSearchEmail(e.target.value)}
                             value={searchEmail}
                             required
-                            InputProps={{
-                                endAdornment: searchEmail ? (
-                                    <InputAdornment>
+                            endIcon={
+                                searchEmail ? (
+                                        <>
+                                        <IconButton 
+                                            type="submit"
+                                            className="hidden"></IconButton>
                                         <IconButton
                                             aria-label="clear email search box"
-                                            onClick={() => {
+                                            variant="soft"
+                                            onClick={(e) => {
+                                                e.preventDefault();
                                                 setSearchEmail("");
                                                 searchByEmail();
                                             }}
                                         >
                                             <Cancel />
                                         </IconButton>
-                                    </InputAdornment>
-                                ) : undefined,
-                            }}
+                                        </>
+                                ) : null
+                            }
                         />
-                    </Box>
-                    <Box sx={{ minWidth: 140 }}>
                         <SingleSelect
                             title={USER_FILTER_PERMISSION}
                             onChange={handleUserTypeChange}
@@ -395,8 +388,8 @@ const UsersManager = ({
                                 },
                             ]}
                         />
-                    </Box>
-                    <Box sx={{ display: "none" }}>
+                    </Form>
+                    {/*
                         <CSVLink
                             filename={"users-courselit.csv"}
                             headers={[
@@ -424,31 +417,35 @@ const UsersManager = ({
                         >
                             {EXPORT_CSV}
                         </CSVLink>
-                    </Box>
-                    <Box sx={{ flexGrow: 1 }}></Box>
+                        */}
                     {featureFlags.includes("mail") && (
                         <Tooltip title={TOOLTIP_USER_PAGE_SEND_MAIL}>
-                            <IconButton onClick={createMail}>
+                            <IconButton 
+                                onClick={createMail}
+                                variant="soft">
                                 <Mail />
                             </IconButton>
                         </Tooltip>
                     )}
-                </Toolbar>
-                <TableContainer>
+                </div>
                     <Table aria-label="Users">
                         <TableHead>
-                            <TableRow>
-                                <TableCell>{USER_TABLE_HEADER_NAME}</TableCell>
-                                <TableCell align="right">Type</TableCell>
-                                <TableCell align="right">
+                                <td>{USER_TABLE_HEADER_NAME}</td>
+                                <td align="right">Type</td>
+                                <td align="right">
                                     {USER_TABLE_HEADER_JOINED}
-                                </TableCell>
-                                <TableCell align="right">
+                                </td>
+                                <td align="right">
                                     {USER_TABLE_HEADER_LAST_ACTIVE}
-                                </TableCell>
-                            </TableRow>
+                                </td>
                         </TableHead>
-                        <TableBody>
+                        <TableBody
+                            count={count}
+                            page={page}
+                            onPageChange={handlePageChange}
+                            rowsPerPage={rowsPerPage}
+                            onRowsPerPageChange={handleRowsPerPageChange}
+                        >
                             {users.map((user) => (
                                 <TableRow
                                     key={user.email}
@@ -458,50 +455,38 @@ const UsersManager = ({
                                         },
                                     }}
                                 >
-                                    <TableCell>
-                                        <Grid
-                                            container
-                                            direction="row"
-                                            spacing={1}
-                                            alignItems="center"
+                                    <td className="py-2">
+                                        <div className="flex items-center gap-2"
                                         >
-                                            <Grid item>
-                                                <Avatar />
-                                            </Grid>
-                                            <Grid item>
-                                                <Grid item>
-                                                    <MuiLink
-                                                        color="inherit"
-                                                        variant="body1"
+                                            <Avatar 
+                                                fallbackText={(user.name ? user.name.charAt(0) : user.email.charAt(0)).toUpperCase()} />
+                                            <div>
+                                                    <Link
                                                         href={`/dashboard/users/${user.userId}`}
-                                                        component={Link}
                                                     >
-                                                        <b>
+                                                    <span className="font-medium">
                                                             {user.name
                                                                 ? user.name
                                                                 : user.email}
-                                                        </b>
-                                                    </MuiLink>
-                                                </Grid>
-                                                <Grid item>
-                                                    <Typography variant="body1">
+                                                    </span>
+                                                    </Link>
+                                                    <div className="text-sm text-slate-600">
                                                         {user.email}
-                                                    </Typography>
-                                                </Grid>
-                                            </Grid>
-                                        </Grid>
-                                    </TableCell>
-                                    <TableCell align="right">
+                                                    </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td align="right">
                                         {getUserType(user)}
-                                    </TableCell>
-                                    <TableCell align="right">
+                                    </td>
+                                    <td align="right">
                                         {user.createdAt
                                             ? new Date(
                                                   +user.createdAt,
                                               ).toLocaleDateString()
                                             : ""}
-                                    </TableCell>
-                                    <TableCell align="right">
+                                    </td>
+                                    <td align="right">
                                         {user.updatedAt !== user.createdAt
                                             ? user.updatedAt
                                                 ? new Date(
@@ -509,22 +494,12 @@ const UsersManager = ({
                                                   ).toLocaleDateString()
                                                 : ""
                                             : ""}
-                                    </TableCell>
+                                    </td>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
-                </TableContainer>
-                <TablePagination
-                    component="div"
-                    count={count}
-                    page={page}
-                    onPageChange={handlePageChange}
-                    rowsPerPage={rowsPerPage}
-                    onRowsPerPageChange={handleRowsPerPageChange}
-                />
-            </Grid>
-        </Grid>
+        </div>
     );
 };
 

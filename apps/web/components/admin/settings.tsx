@@ -30,6 +30,7 @@ import {
     BUTTON_SAVE,
     SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL,
     SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY,
+    BTN_EDIT_SITE,
 } from "../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
 import { decode, encode } from "base-64";
@@ -397,9 +398,19 @@ const Settings = (props: SettingsProps) => {
 
     return (
         <div>
+            <div className="flex justify-between items-baseline">
             <h1 className="text-4xl font-semibold mb-4">
                 {SITE_SETTINGS_PAGE_HEADING}
             </h1>
+            <div>
+                <Button
+                href={`/dashboard/page/homepage/edit?redirectTo=/dashboard/settings`}
+                component="link"
+                >
+                {BTN_EDIT_SITE}
+                </Button>
+            </div>
+            </div>
         <Tabs items={[SITE_SETTINGS_SECTION_GENERAL, SITE_SETTINGS_SECTION_PAYMENT, SITE_CUSTOMISATIONS_SETTING_HEADER]}>
                         <Form onSubmit={handleSettingsSubmit}
                             className="flex flex-col gap-4 pt-4">

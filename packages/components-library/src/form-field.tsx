@@ -41,6 +41,7 @@ export interface FormFieldProps {
     [key: string]: any;
     name?: string;
     className?: string;
+    endIcon?: string;
 }
 
 export default function FormField({
@@ -50,10 +51,11 @@ export default function FormField({
     messages,
     name,
     className = "",
+    endIcon,
     ...componentProps
 }: FormFieldProps) {
     const controlClasses =
-        "w-full border border-slate-300 hover:border-slate-400 rounded py-1 px-2 outline-none focus:border-slate-600";
+        "flex w-full border border-slate-300 hover:border-slate-400 rounded py-1 px-2 outline-none focus:border-slate-600";
     const Component = component;
 
     return (
@@ -67,13 +69,19 @@ export default function FormField({
                         </Message>
                     ))}
             </div>
-            <Control asChild>
-                <Component
-                    className={controlClasses}
-                    type={type}
-                    {...componentProps}
-                />
+            <div
+                className={controlClasses}
+            >
+            <Control asChild
+            >
+                    <Component
+                        type={type}
+                        className="outline-none"
+                        {...componentProps}
+                    />
             </Control>
+            {endIcon}
+            </div>
         </Field>
     );
 }

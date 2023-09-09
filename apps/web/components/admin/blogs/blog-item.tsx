@@ -13,6 +13,7 @@ import type { SiteInfo, Address } from "@courselit/common-models";
 import { connect } from "react-redux";
 import { Chip, Image, Menu2, MenuItem, Link } from "@courselit/components-library";
 import { deleteProduct } from "./helpers";
+import { TableRow } from "@courselit/components-library";
 
 function BlogItem({
     details,
@@ -33,21 +34,10 @@ function BlogItem({
     const product = details;
 
     return (
-        <tr key={product.courseId} className="hover:!bg-slate-100">
-            <td>
+        <TableRow key={product.courseId}>
+            <td className="py-4">
                 <Link href={`/dashboard/blog/${product.courseId}/details`}>
-                        <div className="flex items-center gap-2">
-                            <Image
-                                src={product.featuredImage?.thumbnail}
-                                height={64}
-                                width={64}
-                                alt={product.featuredImage?.caption}
-                            />
-                            <div className="flex flex-col">
                                 <p>{product.title}</p>
-                                <p>{product.type}</p>
-                            </div>
-                    </div>
                 </Link>
             </td>
             <td align="right">
@@ -84,7 +74,7 @@ function BlogItem({
                     ></MenuItem>
                 </Menu2>
             </td>
-        </tr>
+        </TableRow>
     );
 }
 

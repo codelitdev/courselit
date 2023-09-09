@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { Grid, Typography, Switch, Breadcrumbs } from "@mui/material";
 import { connect } from "react-redux";
 import {
     SWITCH_ACCOUNT_ACTIVE,
     ENROLLED_COURSES_HEADER,
     USERS_MANAGER_PAGE_HEADING,
     PAGE_HEADER_EDIT_USER,
+    USER_BASIC_DETAILS_HEADER,
+    USER_EMAIL_SUBHEADER,
+    USER_NAME_SUBHEADER,
 } from "../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
 import { AppMessage } from "@courselit/common-models";
-import { Section } from "@courselit/components-library";
 import PermissionsEditor from "./permissions-editor";
 import type { Address, Auth, Course, User } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
-import Link from "next/link";
-import MuiLink from "@mui/material/Link";
+import { Link, Section, Switch, Breadcrumbs } from '@courselit/components-library';
 
 const { networkAction, setAppMessage } = actionCreators;
 
@@ -29,12 +29,11 @@ const classes = {
 
 interface DetailsProps {
     userId: string;
-    auth: Auth;
     address: Address;
     dispatch: AppDispatch;
 }
 
-const Details = ({ userId, auth, address, dispatch }: DetailsProps) => {
+const Details = ({ userId, address, dispatch }: DetailsProps) => {
     const [userData, setUserData] = useState<User>();
     const [enrolledCourses, setEnrolledCourses] = useState([]);
 
@@ -57,7 +56,10 @@ const Details = ({ userId, auth, address, dispatch }: DetailsProps) => {
             name,
             active,
             permissions,
-            userId
+            userId,
+            purchases {
+               courseId 
+            }
          }
     }
     `;
@@ -138,73 +140,59 @@ const Details = ({ userId, auth, address, dispatch }: DetailsProps) => {
         }
     };
 
-    return (
-        <Section>
-            {userData && (
-                <Grid
-                    container
-                    direction="column"
-                    className={classes.container}
-                    spacing={2}
-                >
-                    <Grid item sx={{ mb: 2 }}>
-                        <Breadcrumbs aria-label="breakcrumb">
-                            <Link href="/dashboard/users" legacyBehavior>
-                                <MuiLink
-                                    color="inherit"
-                                    underline="hover"
-                                    sx={{ cursor: "pointer" }}
-                                >
-                                    {USERS_MANAGER_PAGE_HEADING}
-                                </MuiLink>
-                            </Link>
-                            <Typography color="text.primary">
-                                {PAGE_HEADER_EDIT_USER}
-                            </Typography>
-                        </Breadcrumbs>
-                    </Grid>
-                    <Grid item>
-                        <Typography variant="h1">
-                            {userData.name ? userData.name : userData.email}
-                        </Typography>
-                        <Typography variant="body2">
-                            <a href={`mailto:${userData.email}`}>
-                                {userData.email}
-                            </a>
-                        </Typography>
-                    </Grid>
-                    <Grid item>
-                        <Grid container spacing={2}>
-                            <Grid
-                                item
-                                container
-                                direction="row"
-                                justifyContent="space-between"
-                                xs
-                            >
-                                <Typography variant="subtitle1">
-                                    {SWITCH_ACCOUNT_ACTIVE}
-                                </Typography>
-                                <Switch
-                                    type="checkbox"
-                                    name="active"
-                                    checked={userData.active}
-                                    onChange={(e) =>
-                                        toggleActiveState(e.target.checked)
-                                    }
-                                />
-                            </Grid>
-                        </Grid>
-                        <Grid item>
-                            <Section>
-                                <PermissionsEditor user={userData} />
-                            </Section>
-                        </Grid>
-                    </Grid>
+    if (!userData) { return null; }
 
+    return (
+                <div
+                    className="flex flex-col gap-4"
+                >
+                        <Breadcrumbs aria-label="breakcrumb">
+                            <Link href="/dashboard/users">
+                                    {USERS_MANAGER_PAGE_HEADING}
+                            </Link>
+
+                            <p>
+                                {PAGE_HEADER_EDIT_USER}
+                            </p>
+                        </Breadcrumbs>
+                        <h1 className="text-4xl font-semibold mb-4">
+                            {userData.name ? userData.name : userData.email}
+                        </h1>
+                    <div className="flex gap-2">
+                                <Section className="md:w-1/2" header={USER_BASIC_DETAILS_HEADER}>
+                                <div className="flex items-center justify-between">
+                                    <p>{USER_NAME_SUBHEADER}</p>
+                                    <p>
+                                        {userData.name || '--'} 
+                                    </p>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <p>{USER_EMAIL_SUBHEADER}</p>
+                                    <p>
+                                        
+                                    <Link href={`mailto:${userData.email}`}>
+                                        {userData.email}
+                                    </Link>
+                                    </p>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    {SWITCH_ACCOUNT_ACTIVE}
+                                    <Switch
+                                        type="checkbox"
+                                        name="active"
+                                        checked={userData.active}
+                                        onChange={(value) =>
+                                            toggleActiveState(value)
+                                        }
+                                    />
+                                </div>
+                                </Section>
+                                <PermissionsEditor user={userData} />
+                    </div>
+
+                    {/*
                     {userData.purchases && userData.purchases.length > 0 && (
                         <Grid item>
-                            <Section>
                                 <Typography variant="h6">
                                     {ENROLLED_COURSES_HEADER} (
                                     {userData.purchases.length})
@@ -222,17 +210,14 @@ const Details = ({ userId, auth, address, dispatch }: DetailsProps) => {
                                         </Grid>
                                     ))}
                                 </Grid>
-                            </Section>
                         </Grid>
                     )}
-                </Grid>
-            )}
-        </Section>
+                    */}
+                </div>
     );
 };
 
 const mapStateToProps = (state: AppState) => ({
-    auth: state.auth,
     address: state.address,
     profile: state.profile,
 });

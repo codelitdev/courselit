@@ -81,6 +81,7 @@ const getSidebarMenuItems = (profile: Profile, featureFlags: string[]) => {
         }
     }
 
+    /*
     if (profile.permissions.includes(permissions.manageSite)) {
         items.push({
             label: SIDEBAR_MENU_SITE,
@@ -88,6 +89,7 @@ const getSidebarMenuItems = (profile: Profile, featureFlags: string[]) => {
             icon: <Desktop />,
         });
     }
+    */
 
     if (profile.permissions.includes(permissions.manageSettings)) {
         items.push({
