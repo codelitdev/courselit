@@ -24,7 +24,7 @@ interface MessageItem {
 }
 
 export interface FormFieldProps {
-    label: string;
+    label?: string;
     component?: "input" | "textarea";
     type?:
         | "email"
@@ -41,6 +41,7 @@ export interface FormFieldProps {
     [key: string]: any;
     name?: string;
     className?: string;
+    endIcon?: string;
 }
 
 export default function FormField({
@@ -50,16 +51,17 @@ export default function FormField({
     messages,
     name,
     className = "",
+    endIcon,
     ...componentProps
 }: FormFieldProps) {
     const controlClasses =
-        "w-full border border-slate-300 hover:border-slate-400 rounded py-1 px-2 outline-none focus:border-slate-600";
+        "flex w-full border border-slate-300 hover:border-slate-400 rounded py-1 px-2 outline-none focus:border-slate-600 disabled:pointer-events-none";
     const Component = component;
 
     return (
         <Field className={`flex flex-col ${className}`} name={name}>
             <div className="flex items-baseline justify-between">
-                <Label className="mb-1 font-medium">{label}</Label>
+                {label && <Label className="mb-1 font-medium">{label}</Label>}
                 {messages &&
                     messages.map((message) => (
                         <Message className="text-xs" match={message.match}>
@@ -67,13 +69,16 @@ export default function FormField({
                         </Message>
                     ))}
             </div>
-            <Control asChild>
-                <Component
-                    className={controlClasses}
-                    type={type}
-                    {...componentProps}
-                />
-            </Control>
+            <div className={controlClasses}>
+                <Control asChild>
+                    <Component
+                        type={type}
+                        className="outline-none w-full"
+                        {...componentProps}
+                    />
+                </Control>
+                {endIcon}
+            </div>
         </Field>
     );
 }

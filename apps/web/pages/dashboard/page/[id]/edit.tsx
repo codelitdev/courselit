@@ -6,7 +6,7 @@ interface EditPageProps {}
 
 export default function EditPage({}: EditPageProps) {
     const router = useRouter();
-    const { id } = router.query;
+    const { id, redirectTo } = router.query;
 
-    return <PageEditor id={id as string} />;
+    return <PageEditor id={id as string} redirectTo={redirectTo} />;
 }

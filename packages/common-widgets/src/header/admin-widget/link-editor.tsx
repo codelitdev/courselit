@@ -1,9 +1,13 @@
-import { Edit } from "@courselit/icons";
-import { Grid, TextField, Typography } from "@mui/material";
-import { grey } from "@mui/material/colors";
 import React, { useState } from "react";
+import { Edit } from "@courselit/icons";
 import { Link } from "../settings";
-import { Button, IconButton } from "@courselit/components-library";
+import {
+    Button,
+    Form,
+    FormField,
+    IconButton,
+    Section,
+} from "@courselit/components-library";
 
 interface LinkEditorProps {
     link: Link;
@@ -39,47 +43,30 @@ export default function LinkEditor({
     return (
         <>
             {!editing && (
-                <Grid
-                    container
-                    justifyContent="space-between"
-                    alignItems="center"
-                    sx={{
-                        "&:hover": {
-                            backgroundColor: grey[100],
-                        },
-                    }}
-                >
-                    <Grid item>
-                        <Typography>{label}</Typography>
-                    </Grid>
-                    <Grid item>
-                        <IconButton
-                            variant="soft"
-                            onClick={(e) => setEditing(true)}
-                        >
-                            <Edit />
-                        </IconButton>
-                    </Grid>
-                </Grid>
+                <div className="flex justify-between items-center">
+                    <h2>{label}</h2>
+                    <IconButton
+                        variant="soft"
+                        onClick={(e) => setEditing(true)}
+                    >
+                        <Edit />
+                    </IconButton>
+                </div>
             )}
             {editing && (
-                <Grid container direction="column">
-                    <Grid item sx={{ mb: 1, mt: 1 }}>
-                        <TextField
-                            label="Label"
-                            value={label}
-                            onChange={(e) => setLabel(e.target.value)}
-                            fullWidth
-                        />
-                    </Grid>
-                    <Grid item sx={{ mb: 1 }}>
-                        <TextField
-                            label="URL"
-                            value={href}
-                            onChange={(e) => setHref(e.target.value)}
-                            fullWidth
-                        />
-                    </Grid>
+                <Form className="flex flex-col">
+                    <FormField
+                        label="Label"
+                        value={label}
+                        onChange={(e) => setLabel(e.target.value)}
+                        className="mb-2"
+                    />
+                    <FormField
+                        label="URL"
+                        value={href}
+                        onChange={(e) => setHref(e.target.value)}
+                        className="mb-2"
+                    />
                     <div className="flex gap-2 justify-end">
                         <Button
                             component="button"
@@ -92,7 +79,7 @@ export default function LinkEditor({
                             Done
                         </Button>
                     </div>
-                </Grid>
+                </Form>
             )}
         </>
     );

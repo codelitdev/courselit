@@ -1,6 +1,5 @@
 import React, { FormEvent, useState } from "react";
 import { AppMessage } from "@courselit/common-models";
-import { TextField } from "@mui/material";
 import Settings from "./settings";
 import { actionCreators } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";

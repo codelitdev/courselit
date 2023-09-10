@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { FetchBuilder } from "@courselit/utils";
-import { Checkbox, Grid, TextField, Typography } from "@mui/material";
 import {
     PROFILE_PAGE_HEADER,
     PROFILE_SECTION_DETAILS_NAME,
@@ -13,10 +12,15 @@ import {
     PROFILE_EMAIL_PREFERENCES_NEWSLETTER_OPTION_TEXT,
 } from "../../ui-config/strings";
 import { connect } from "react-redux";
-import Link from "next/link";
 import { actionCreators } from "@courselit/state-management";
 import { getBackendAddress, getPage } from "../../ui-lib/utils";
-import { Section, Button } from "@courselit/components-library";
+import {
+    Checkbox,
+    Section,
+    Button,
+    Form,
+    FormField,
+} from "@courselit/components-library";
 import type {
     Address,
     Auth,
@@ -156,133 +160,61 @@ function ProfileIndex({
 
     return (
         <BaseLayout layout={page.layout} title={PROFILE_PAGE_HEADER}>
-            <Grid item xs={12}>
-                <Grid
-                    container
-                    direction="column"
-                    sx={{
-                        padding: 2,
-                    }}
-                >
-                    <Grid item xs={12} sx={{ mb: 2 }}>
-                        <Typography variant="h2">
-                            {PROFILE_PAGE_HEADER}
-                        </Typography>
-                    </Grid>
-                    <Grid item xs={12} sx={{ mb: 4 }}>
-                        <Section>
-                            <Grid container direction="column">
-                                <Grid item>
-                                    <Link
-                                        href="#personal-details"
-                                        legacyBehavior
-                                    >
-                                        <Typography variant="h4">
-                                            {PROFILE_SECTION_DETAILS}
-                                        </Typography>
-                                    </Link>
-                                </Grid>
-                                <Grid item>
-                                    <TextField
-                                        variant="outlined"
-                                        fullWidth
-                                        margin="normal"
-                                        value={profile.email}
-                                        label={PROFILE_SECTION_DETAILS_EMAIL}
-                                        onChange={(event) =>
-                                            setName(event.target.value)
-                                        }
-                                        disabled={true}
-                                    />
-                                </Grid>
+            <div className="flex flex-col p-4 gap-4">
+                <h1 className="text-4xl font-semibold">
+                    {PROFILE_PAGE_HEADER}
+                </h1>
+                <Form onSubmit={saveDetails}>
+                    <Section header={PROFILE_SECTION_DETAILS}>
+                        <FormField
+                            value={profile.email}
+                            label={PROFILE_SECTION_DETAILS_EMAIL}
+                            onChange={(event) => setName(event.target.value)}
+                            disabled={true}
+                        />
 
-                                <Grid item>
-                                    <TextField
-                                        variant="outlined"
-                                        fullWidth
-                                        margin="normal"
-                                        name="name"
-                                        value={name}
-                                        label={PROFILE_SECTION_DETAILS_NAME}
-                                        onChange={(event) =>
-                                            setName(event.target.value)
-                                        }
-                                    />
-                                </Grid>
-
-                                <Grid item>
-                                    <TextField
-                                        variant="outlined"
-                                        fullWidth
-                                        margin="normal"
-                                        name="bio"
-                                        value={bio}
-                                        onChange={(event) =>
-                                            setBio(event.target.value)
-                                        }
-                                        label={PROFILE_SECTION_DETAILS_BIO}
-                                        multiline={true}
-                                        maxRows={5}
-                                    />
-                                </Grid>
-                                <Grid item>
-                                    <Button
-                                        onClick={saveDetails}
-                                        disabled={
-                                            bio === (user && user.bio) &&
-                                            name === (user && user.name)
-                                        }
-                                    >
-                                        {BUTTON_SAVE}
-                                    </Button>
-                                </Grid>
-                            </Grid>
-                        </Section>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <Section>
-                            <Grid container direction="column" spacing={1}>
-                                <Grid item>
-                                    <Link
-                                        href="#email-preferences"
-                                        legacyBehavior
-                                    >
-                                        <Typography variant="h4">
-                                            {PROFILE_EMAIL_PREFERENCES}
-                                        </Typography>
-                                    </Link>
-                                </Grid>
-                                <Grid
-                                    item
-                                    container
-                                    direction="row"
-                                    justifyContent="space-between"
-                                    xs
-                                >
-                                    <Grid item>
-                                        <Typography variant="subtitle1">
-                                            {
-                                                PROFILE_EMAIL_PREFERENCES_NEWSLETTER_OPTION_TEXT
-                                            }
-                                        </Typography>
-                                    </Grid>
-                                    <Grid item>
-                                        <Checkbox
-                                            disabled={networkActionState}
-                                            checked={subscribedToUpdates}
-                                            onChange={(e) =>
-                                                saveEmailPreference(
-                                                    e.target.checked,
-                                                )
-                                            }
-                                        />
-                                    </Grid>
-                                </Grid>
-                            </Grid>
-                        </Section>
-                    </Grid>
-                </Grid>
-            </Grid>
+                        <FormField
+                            name="name"
+                            value={name}
+                            label={PROFILE_SECTION_DETAILS_NAME}
+                            onChange={(event) => setName(event.target.value)}
+                        />
+                        <FormField
+                            name="bio"
+                            value={bio}
+                            onChange={(event) => setBio(event.target.value)}
+                            label={PROFILE_SECTION_DETAILS_BIO}
+                            multiline={true}
+                            maxRows={5}
+                        />
+                        <div>
+                            <Button
+                                onClick={saveDetails}
+                                disabled={
+                                    bio === (user && user.bio) &&
+                                    name === (user && user.name)
+                                }
+                            >
+                                {BUTTON_SAVE}
+                            </Button>
+                        </div>
+                    </Section>
+                </Form>
+                <Section header={PROFILE_EMAIL_PREFERENCES}>
+                    <div className="flex justify-between">
+                        <p>
+                            {PROFILE_EMAIL_PREFERENCES_NEWSLETTER_OPTION_TEXT}
+                        </p>
+                        <Checkbox
+                            disabled={networkActionState}
+                            checked={subscribedToUpdates}
+                            onChange={(value: boolean) =>
+                                saveEmailPreference(value)
+                            }
+                        />
+                    </div>
+                </Section>
+            </div>
         </BaseLayout>
     );
 }

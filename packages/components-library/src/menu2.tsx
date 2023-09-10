@@ -1,5 +1,12 @@
 import * as React from "react";
-import { Content, Portal, Root, Trigger } from "@radix-ui/react-dropdown-menu";
+import {
+    Arrow,
+    Content,
+    Item,
+    Portal,
+    Root,
+    Trigger,
+} from "@radix-ui/react-dropdown-menu";
 import IconButton from "./icon-button";
 import { Person } from "@courselit/icons";
 
@@ -7,14 +14,22 @@ interface MenuProps {
     icon: React.ReactNode;
     children: React.ReactNode;
     style?: Record<string, string>;
+    [x: string]: any;
 }
 
-export default function Menu({ icon, children, style }: MenuProps) {
+export default function Menu({
+    icon,
+    children,
+    style,
+    ...iconButtonProps
+}: MenuProps) {
     return (
         <Root>
             <Trigger asChild>
                 <span>
-                    <IconButton style={style}>{icon}</IconButton>
+                    <IconButton style={style} {...iconButtonProps}>
+                        {icon}
+                    </IconButton>
                 </span>
             </Trigger>
             <Portal>
@@ -23,6 +38,11 @@ export default function Menu({ icon, children, style }: MenuProps) {
                     style={style}
                 >
                     {children}
+                    <Arrow
+                        fill={
+                            style ? style.backgroundColor || "white" : "white"
+                        }
+                    />
                 </Content>
             </Portal>
         </Root>

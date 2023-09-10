@@ -1,13 +1,8 @@
-import type { Profile, Theme, Typeface } from "@courselit/common-models";
+import type { Profile, Typeface } from "@courselit/common-models";
 import { checkPermission, FetchBuilder } from "@courselit/utils";
 import { UIConstants } from "@courselit/common-models";
 import { getProtocol } from "../lib/utils";
-import { ThemeOptions } from "@mui/material";
-import themeOptions from "../ui-config/mui-custom-theme";
 const { permissions } = UIConstants;
-import { createTheme, responsiveFontSizes } from "@mui/material/styles";
-import { deepmerge } from "@mui/utils";
-import { CONSOLE_MESSAGE_THEME_INVALID } from "../ui-config/strings";
 
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -131,25 +126,6 @@ export const generateFontString = (typefaces: Typeface[]): string => {
     return fontString
         ? `https://fonts.googleapis.com/css2?${fontString}&display=swap`
         : "";
-};
-
-export const createMuiTheme = (typefaces: Typeface[], theme: Theme) => {
-    const themeOptionsCopy: ThemeOptions = themeOptions();
-    themeOptionsCopy.typography.fontFamily = typefaces.filter(
-        (x) => x.section === "default",
-    )[0]?.typeface;
-    let muiTheme;
-    if (theme.styles) {
-        muiTheme = responsiveFontSizes(
-            createTheme(
-                deepmerge<DefaultTheme>(themeOptionsCopy, theme.styles),
-            ),
-        );
-    } else {
-        console.warn(CONSOLE_MESSAGE_THEME_INVALID);
-        muiTheme = responsiveFontSizes(createTheme(themeOptionsCopy));
-    }
-    return muiTheme;
 };
 
 const swapMembers = (arr: any[], index1: number, index2: number): any[] => {

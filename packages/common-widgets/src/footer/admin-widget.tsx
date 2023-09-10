@@ -1,5 +1,4 @@
 import { AdminWidgetPanel, ColorSelector } from "@courselit/components-library";
-import { Grid, TextField, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import type Settings from "./settings";
 
@@ -23,25 +22,21 @@ export default function AdminWidget({
     }, [bgColor, color]);
 
     return (
-        <Grid container direction="column">
-            <Grid item sx={{ mb: 4 }}>
+        <div className="flex flex-col">
+            <div className="mb-4">
                 <AdminWidgetPanel title="Design">
-                    <Grid item sx={{ mb: 2 }}>
-                        <ColorSelector
-                            title="Text color"
-                            value={color || "inherit"}
-                            onChange={(value?: string) => setColor(value)}
-                        />
-                    </Grid>
-                    <Grid item sx={{ mb: 2 }}>
-                        <ColorSelector
-                            title="Background color"
-                            value={bgColor || "inherit"}
-                            onChange={(value?: string) => setBgColor(value)}
-                        />
-                    </Grid>
+                    <ColorSelector
+                        title="Text color"
+                        value={color || "inherit"}
+                        onChange={(value?: string) => setColor(value)}
+                    />
+                    <ColorSelector
+                        title="Background color"
+                        value={bgColor || "inherit"}
+                        onChange={(value?: string) => setBgColor(value)}
+                    />
                 </AdminWidgetPanel>
-            </Grid>
-        </Grid>
+            </div>
+        </div>
     );
 }

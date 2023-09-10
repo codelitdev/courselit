@@ -1,4 +1,5 @@
 import * as React from "react";
+import Link from "./link";
 
 interface CommonButtonProps {
     children: React.ReactNode;
@@ -20,7 +21,7 @@ interface LinkButtonProps extends CommonButtonProps {
 
 type ButtonProps = ButtonButtonProps | LinkButtonProps;
 
-export default function Button(props: ButtonProps) {
+const Button = React.forwardRef((props: ButtonProps, forwardedRef: any) => {
     const {
         children,
         className = "",
@@ -42,14 +43,18 @@ export default function Button(props: ButtonProps) {
 
     if (component === "link") {
         return (
-            <a
-                className={`${commonClasses} ${className}`}
+            <Link 
                 href={props.href}
+                className={`${commonClasses} ${className}`}
                 style={{ ...style }}
-                {...other}
-            >
-                {children}
-            </a>
+                >
+                <span
+                    ref={forwardedRef}
+                    {...other}
+                >
+                    {children}
+                </span>
+            </Link>
         );
     }
 
@@ -58,9 +63,12 @@ export default function Button(props: ButtonProps) {
             className={`${commonClasses} ${className}`}
             onClick={props.onClick}
             style={{ ...style }}
+            ref={forwardedRef}
             {...other}
         >
             {children}
         </button>
     );
-}
+});
+
+export default Button;

@@ -1,12 +1,6 @@
 import { Cross as Close } from "@courselit/icons";
-import List from "@mui/material/List";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItem from "@mui/material/ListItem";
-import ListItemText from "@mui/material/ListItemText";
-import Grid from "@mui/material/Grid";
-import Typography from "@mui/material/Typography";
 import { EDIT_PAGE_HEADER_ALL_PAGES } from "../../../ui-config/strings";
-import { IconButton } from "@courselit/components-library";
+import { IconButton, Link } from "@courselit/components-library";
 
 interface PagesListProps {
     pages: { pageId: string; name: string }[];
@@ -15,34 +9,26 @@ interface PagesListProps {
 
 function PagesList({ pages, onClose }: PagesListProps) {
     return (
-        <List>
-            <ListItem>
-                <Grid
-                    container
-                    justifyContent="space-between"
-                    alignItems="center"
-                >
-                    <Grid item>
-                        <Typography variant="h6">
-                            {EDIT_PAGE_HEADER_ALL_PAGES}
-                        </Typography>
-                    </Grid>
-                    <Grid item>
-                        <IconButton onClick={onClose} variant="soft">
-                            <Close fontSize="small" />
-                        </IconButton>
-                    </Grid>
-                </Grid>
-            </ListItem>
+        <ul>
+            <li className="flex items-center px-2 py-3 justify-between">
+                <h2 className="text-lg font-medium">
+                    {EDIT_PAGE_HEADER_ALL_PAGES}
+                </h2>
+                <IconButton onClick={onClose} variant="soft">
+                    <Close fontSize="small" />
+                </IconButton>
+            </li>
             {pages.map((page) => (
-                <ListItemButton
-                    href={`/dashboard/page/${page.pageId}/edit`}
+                <li
+                    className="flex items-center px-2 py-3 hover:!bg-slate-100 cursor-pointer justify-between"
                     key={page.pageId}
                 >
-                    <ListItemText primary={page.name} />
-                </ListItemButton>
+                    <Link href={`/dashboard/page/${page.pageId}/edit`}>
+                        {page.name}
+                    </Link>
+                </li>
             ))}
-        </List>
+        </ul>
     );
 }
 

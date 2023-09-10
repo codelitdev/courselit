@@ -26,7 +26,7 @@ export default function Select({
 
     return (
         <div className="flex flex-col">
-            <label htmlFor="select" className="mb-4">
+            <label htmlFor="select" className="mb-1 font-medium">
                 {title}
             </label>
             <select

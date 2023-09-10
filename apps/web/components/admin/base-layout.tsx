@@ -1,5 +1,4 @@
 import React, { ReactNode, useEffect } from "react";
-import { styled } from "@mui/material/styles";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
 import {
@@ -7,7 +6,7 @@ import {
     Text,
     Person,
     Mail,
-    Desktop,
+    //Desktop,
     Settings,
 } from "@courselit/icons";
 import {
@@ -15,14 +14,13 @@ import {
     SIDEBAR_MENU_BLOGS,
     SIDEBAR_MENU_PRODUCTS,
     SIDEBAR_MENU_SETTINGS,
-    SIDEBAR_MENU_SITE,
+    //SIDEBAR_MENU_SITE,
     SIDEBAR_MENU_USERS,
     SIDEBAR_MENU_MAILS,
 } from "../../ui-config/strings";
 import AppLoader from "../app-loader";
 import Head from "next/head";
 import { canAccessDashboard } from "../../ui-lib/utils";
-import { Grid } from "@mui/material";
 import RouteBasedComponentScaffold from "../public/scaffold";
 import type Profile from "../../ui-models/profile";
 import Auth from "../../ui-models/auth";
@@ -31,19 +29,6 @@ import { UIConstants as constants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
 import { AppState } from "@courselit/state-management";
 const { permissions } = constants;
-
-const PREFIX = "BaseLayout";
-
-const classes = {
-    loaderContainer: `${PREFIX}-loaderContainer`,
-};
-
-const StyledGrid = styled(Grid)({
-    [`&.${classes.loaderContainer}`]: {
-        height: "100vh",
-        width: "100vw",
-    },
-});
 
 const getSidebarMenuItems = (profile: Profile, featureFlags: string[]) => {
     const items = [];
@@ -81,6 +66,7 @@ const getSidebarMenuItems = (profile: Profile, featureFlags: string[]) => {
         }
     }
 
+    /*
     if (profile.permissions.includes(permissions.manageSite)) {
         items.push({
             label: SIDEBAR_MENU_SITE,
@@ -88,6 +74,7 @@ const getSidebarMenuItems = (profile: Profile, featureFlags: string[]) => {
             icon: <Desktop />,
         });
     }
+    */
 
     if (profile.permissions.includes(permissions.manageSettings)) {
         items.push({
@@ -158,16 +145,9 @@ const BaseLayoutAdmin = ({
             </RouteBasedComponentScaffold>
         </>
     ) : (
-        <StyledGrid
-            container
-            justifyContent="center"
-            alignItems="center"
-            className={classes.loaderContainer}
-        >
-            <Grid item>
-                <AppLoader />
-            </Grid>
-        </StyledGrid>
+        <div className="flex justify-center items-center h-screen w-full">
+            <AppLoader />
+        </div>
     );
 };
 

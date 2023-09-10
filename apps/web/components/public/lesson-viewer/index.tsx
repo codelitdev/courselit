@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { styled } from "@mui/system";
 import { FetchBuilder } from "@courselit/utils";
 import {
     LESSON_TYPE_VIDEO,
@@ -12,7 +11,6 @@ import {
 } from "../../../ui-config/constants";
 import { connect } from "react-redux";
 import { actionCreators } from "@courselit/state-management";
-import { Typography, Grid } from "@mui/material";
 import {
     COURSE_PROGRESS_FINISH,
     COURSE_PROGRESS_INTRO,
@@ -37,37 +35,13 @@ import {
     refreshUserProfile,
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
-import { ArrowLeft, ArrowRight } from "@courselit/icons";
+import { ArrowLeft, ArrowRight, ArrowDownward } from "@courselit/icons";
 import { isEnrolled } from "../../../ui-lib/utils";
 import LessonEmbedViewer from "./embed-viewer";
 import QuizViewer from "./quiz-viewer";
 import Head from "next/head";
 
 const { networkAction } = actionCreators;
-
-const PREFIX = "LessonViewer";
-
-const classes = {
-    notEnrolledHeader: `${PREFIX}-notEnrolledHeader`,
-    videoPlayer: `${PREFIX}-videoPlayer`,
-    section: `${PREFIX}-section`,
-};
-
-const StyledSection = styled("div")(({ theme }: { theme: any }) => ({
-    [`& .${classes.notEnrolledHeader}`]: {
-        marginBottom: theme.spacing(1),
-    },
-
-    [`& .${classes.videoPlayer}`]: {
-        width: "100%",
-        height: "auto",
-    },
-
-    [`& .${classes.section}`]: {
-        marginTop: "1.6em",
-        paddingBottom: 100,
-    },
-}));
 
 interface CaptionProps {
     text: string;
@@ -79,13 +53,9 @@ const Caption = (props: CaptionProps) => {
     }
 
     return (
-        <Grid container justifyContent="center">
-            <Grid item>
-                <Typography variant="caption" color="textSecondary">
-                    {props.text}
-                </Typography>
-            </Grid>
-        </Grid>
+        <div className="flex justify-center">
+            <p className="text-sm text-slate-500">{props.text}</p>
+        </div>
     );
 };
 
@@ -201,261 +171,183 @@ const LessonViewer = ({
 
     if (!lesson) {
         return (
-            <Grid container direction="column" sx={{ p: 2 }}>
-                <Grid item sx={{ mb: 1 }}>
-                    <Typography
-                        variant="h2"
-                        className={classes.notEnrolledHeader}
-                    >
-                        {NOT_ENROLLED_HEADER}
-                    </Typography>
-                </Grid>
-                <Grid item sx={{ mb: 2 }}>
-                    <Typography variant="body1">
-                        {ENROLL_IN_THE_COURSE}
-                    </Typography>
-                </Grid>
-                <Grid item>
-                    <Link
-                        href={`/checkout/${router.query.id}`}
-                        sxProps={{
-                            textDecoration: "none",
-                        }}
-                    >
-                        <Button component="button">{ENROLL_BUTTON_TEXT}</Button>
-                    </Link>
-                </Grid>
-            </Grid>
+            <div className="flex flex-col ">
+                <h1 className="text-4xl font-semibold mb-4">
+                    {NOT_ENROLLED_HEADER}
+                </h1>
+                <p className="mb-4">{ENROLL_IN_THE_COURSE}</p>
+                <Link href={`/checkout/${router.query.id}`}>
+                    <Button component="button">{ENROLL_BUTTON_TEXT}</Button>
+                </Link>
+            </div>
         );
     }
 
     return (
-        <StyledSection>
-            {lesson && (
-                <Head>
-                    <title>
-                        {lesson.title} | {siteinfo.title}
-                    </title>
-                    <link
-                        rel="icon"
-                        href={
-                            siteinfo.logo && siteinfo.logo.file
-                                ? siteinfo.logo.file
-                                : "/favicon.ico"
-                        }
-                    />
-                    <meta
-                        name="viewport"
-                        content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
-                    />
-                </Head>
-            )}
-            {lesson && (
-                <Grid
-                    container
-                    direction="column"
-                    component="article"
-                    sx={{ p: 2 }}
-                >
-                    <Grid item>
-                        <header>
-                            <Typography variant="h2">{lesson.title}</Typography>
-                        </header>
-                    </Grid>
-                    {String.prototype.toUpperCase.call(LESSON_TYPE_VIDEO) ===
-                        lesson.type && (
-                        <Grid
-                            item
-                            className={classes.section}
-                            sx={{
-                                overflow: "hidden",
-                                borderRadius: 4,
-                            }}
+        <>
+            <Head>
+                <title>
+                    {lesson.title} | {siteinfo.title}
+                </title>
+                <link
+                    rel="icon"
+                    href={
+                        siteinfo.logo && siteinfo.logo.file
+                            ? siteinfo.logo.file
+                            : "/favicon.ico"
+                    }
+                />
+                <meta
+                    name="viewport"
+                    content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
+                />
+            </Head>
+            <article className="flex flex-col">
+                <header>
+                    <h1 className="text-4xl font-semibold mb-4">
+                        {lesson.title}
+                    </h1>
+                </header>
+                {String.prototype.toUpperCase.call(LESSON_TYPE_VIDEO) ===
+                    lesson.type && (
+                    <div>
+                        <video
+                            controls
+                            controlsList="nodownload" // eslint-disable-line react/no-unknown-property
+                            key={lesson.lessonId}
+                            className="w-full rounded mb-2"
                         >
-                            <video
-                                controls
-                                controlsList="nodownload" // eslint-disable-line react/no-unknown-property
-                                className={classes.videoPlayer}
-                                key={lesson.lessonId}
-                            >
-                                <source
-                                    src={
-                                        lesson.media &&
-                                        (lesson.media.file as string)
-                                    }
-                                    type="video/mp4"
-                                />
-                                Your browser does not support the video tag.
-                            </video>
-                            <Caption
-                                text={
+                            <source
+                                src={
                                     lesson.media &&
-                                    (lesson.media.caption as string)
+                                    (lesson.media.file as string)
                                 }
+                                type="video/mp4"
                             />
-                        </Grid>
-                    )}
-                    {String.prototype.toUpperCase.call(LESSON_TYPE_AUDIO) ===
-                        lesson.type && (
-                        <Grid item>
-                            <audio
-                                controls
-                                controlsList="nodownload" // eslint-disable-line react/no-unknown-property
-                                className={classes.section}
-                            >
-                                <source
-                                    src={
-                                        lesson.media &&
-                                        (lesson.media.file as string)
-                                    }
-                                    type="audio/mpeg"
-                                />
-                                Your browser does not support the video tag.
-                            </audio>
-                            <Caption
-                                text={
-                                    lesson.media &&
-                                    (lesson.media.caption as string)
-                                }
-                            />
-                        </Grid>
-                    )}
-                    {String.prototype.toUpperCase.call(LESSON_TYPE_PDF) ===
-                        lesson.type && (
-                        <Grid item className={classes.section}>
-                            <iframe
-                                frameBorder="0"
-                                width="100%"
-                                height="500"
-                                src={`${
-                                    lesson.media && lesson.media.file
-                                }#view=fit`}
-                            ></iframe>
-                            <Caption
-                                text={
-                                    lesson.media &&
-                                    (lesson.media.caption as string)
-                                }
-                            />
-                        </Grid>
-                    )}
-                    {String.prototype.toUpperCase.call(LESSON_TYPE_TEXT) ===
-                        lesson.type &&
-                        lesson.content && (
-                            <Grid item className={classes.section}>
-                                <TextRenderer json={lesson.content} />
-                            </Grid>
-                        )}
-                    {String.prototype.toUpperCase.call(LESSON_TYPE_EMBED) ===
-                        lesson.type &&
-                        lesson.content && (
-                            <Grid item className={classes.section}>
-                                <LessonEmbedViewer content={lesson.content} />
-                            </Grid>
-                        )}
-                    {String.prototype.toUpperCase.call(LESSON_TYPE_QUIZ) ===
-                        lesson.type &&
-                        lesson.content && (
-                            <Grid item className={classes.section}>
-                                <QuizViewer
-                                    lessonId={lesson.lessonId}
-                                    content={lesson.content as Quiz}
-                                />
-                            </Grid>
-                        )}
-                    {String.prototype.toUpperCase.call(LESSON_TYPE_FILE) ===
-                        lesson.type && (
-                        <Grid item className={classes.section}>
-                            <Grid
-                                container
-                                justifyContent="center"
-                                alignItems="center"
-                            >
-                                <Grid
-                                    item
-                                    xs={12}
-                                    component="object"
-                                    data={lesson.media?.file as string}
-                                    sx={{
-                                        height: "100vh",
-                                    }}
-                                />
-                            </Grid>
-                        </Grid>
-                    )}
-                    {isEnrolled(lesson.courseId, profile) && (
-                        <Grid
-                            item
-                            sx={{
-                                position: "fixed",
-                                bottom: 0,
-                                left: 0,
-                                right: 0,
-                            }}
+                            Your browser does not support the video tag.
+                        </video>
+                        <Caption
+                            text={
+                                lesson.media &&
+                                (lesson.media.caption ||
+                                    (lesson.media.originalFileName as string))
+                            }
+                        />
+                    </div>
+                )}
+                {String.prototype.toUpperCase.call(LESSON_TYPE_AUDIO) ===
+                    lesson.type && (
+                    <div>
+                        <audio
+                            controls
+                            controlsList="nodownload" // eslint-disable-line react/no-unknown-property
                         >
-                            <Grid
-                                container
-                                justifyContent="flex-end"
-                                sx={(theme) => ({
-                                    padding: 2,
-                                    backgroundColor:
-                                        theme.palette.background.default,
-                                })}
-                            >
-                                <Grid item sx={{ mr: 2 }}>
-                                    {!lesson.prevLesson && (
-                                        <Link
-                                            href={`/course/${slug}/${lesson.courseId}`}
-                                            sxProps={{
-                                                textDecoration: "none",
-                                            }}
-                                        >
-                                            <Button
-                                                component="button"
-                                                variant="soft"
-                                            >
-                                                <ArrowLeft />{" "}
-                                                {COURSE_PROGRESS_INTRO}
-                                            </Button>
-                                        </Link>
-                                    )}
-                                    {lesson.prevLesson && (
-                                        <Link
-                                            href={`/course/${slug}/${lesson.courseId}/${lesson.prevLesson}`}
-                                            sxProps={{
-                                                textDecoration: "none",
-                                            }}
-                                        >
-                                            <Button
-                                                component="button"
-                                                variant="soft"
-                                            >
-                                                <ArrowLeft />{" "}
-                                                {COURSE_PROGRESS_PREV}
-                                            </Button>
-                                        </Link>
-                                    )}
-                                </Grid>
-                                <Grid item>
-                                    <Button
-                                        component="button"
-                                        onClick={markCompleteAndNext}
-                                        disabled={loading}
+                            <source
+                                src={
+                                    lesson.media &&
+                                    (lesson.media.file as string)
+                                }
+                                type="audio/mpeg"
+                            />
+                            Your browser does not support the video tag.
+                        </audio>
+                        <Caption
+                            text={
+                                lesson.media && (lesson.media.caption as string)
+                            }
+                        />
+                    </div>
+                )}
+                {String.prototype.toUpperCase.call(LESSON_TYPE_PDF) ===
+                    lesson.type && (
+                    <div>
+                        <iframe
+                            frameBorder="0"
+                            width="100%"
+                            height="500"
+                            src={`${
+                                lesson.media && lesson.media.file
+                            }#view=fit`}
+                        ></iframe>
+                        <Caption
+                            text={
+                                lesson.media && (lesson.media.caption as string)
+                            }
+                        />
+                    </div>
+                )}
+                {String.prototype.toUpperCase.call(LESSON_TYPE_TEXT) ===
+                    lesson.type &&
+                    lesson.content && <TextRenderer json={lesson.content} />}
+                {String.prototype.toUpperCase.call(LESSON_TYPE_EMBED) ===
+                    lesson.type &&
+                    lesson.content && (
+                        <LessonEmbedViewer content={lesson.content} />
+                    )}
+                {String.prototype.toUpperCase.call(LESSON_TYPE_QUIZ) ===
+                    lesson.type &&
+                    lesson.content && (
+                        <QuizViewer
+                            lessonId={lesson.lessonId}
+                            content={lesson.content as Quiz}
+                        />
+                    )}
+                {String.prototype.toUpperCase.call(LESSON_TYPE_FILE) ===
+                    lesson.type && (
+                    <div>
+                        <Link href={lesson.media?.file}>
+                            <Button>
+                                <ArrowDownward />
+                                {lesson.media?.originalFileName}
+                            </Button>
+                        </Link>
+                    </div>
+                )}
+                {isEnrolled(lesson.courseId, profile) && (
+                    <div className="fixed right-0 bottom-0 left-0">
+                        <div className="flex justify-end p-4">
+                            <div className="mr-2">
+                                {!lesson.prevLesson && (
+                                    <Link
+                                        href={`/course/${slug}/${lesson.courseId}`}
                                     >
-                                        {lesson.nextLesson
-                                            ? COURSE_PROGRESS_NEXT
-                                            : COURSE_PROGRESS_FINISH}
-                                        {lesson.nextLesson ? (
-                                            <ArrowRight />
-                                        ) : undefined}
-                                    </Button>
-                                </Grid>
-                            </Grid>
-                        </Grid>
-                    )}
-                </Grid>
-            )}
-        </StyledSection>
+                                        <Button
+                                            component="button"
+                                            variant="soft"
+                                        >
+                                            <ArrowLeft />{" "}
+                                            {COURSE_PROGRESS_INTRO}
+                                        </Button>
+                                    </Link>
+                                )}
+                                {lesson.prevLesson && (
+                                    <Link
+                                        href={`/course/${slug}/${lesson.courseId}/${lesson.prevLesson}`}
+                                    >
+                                        <Button
+                                            component="button"
+                                            variant="soft"
+                                        >
+                                            <ArrowLeft /> {COURSE_PROGRESS_PREV}
+                                        </Button>
+                                    </Link>
+                                )}
+                            </div>
+                            <Button
+                                component="button"
+                                onClick={markCompleteAndNext}
+                                disabled={loading}
+                            >
+                                {lesson.nextLesson
+                                    ? COURSE_PROGRESS_NEXT
+                                    : COURSE_PROGRESS_FINISH}
+                                {lesson.nextLesson ? <ArrowRight /> : undefined}
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </article>
+        </>
     );
 };
 

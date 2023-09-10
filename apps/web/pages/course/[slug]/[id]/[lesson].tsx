@@ -25,7 +25,6 @@ const Lesson = ({ course, profile }: LessonProps) => {
                 course as Course & { groupOfLessons: string[] },
                 profile,
             )}
-            contentPadding={0}
         >
             {" "}
             {lesson && (

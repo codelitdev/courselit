@@ -6,6 +6,7 @@ interface LinkProps {
     children?: React.ReactNode;
     openInSameTab?: boolean;
     style?: Record<string, string>;
+    className?: string;
 }
 
 export default function Link({
@@ -13,18 +14,26 @@ export default function Link({
     children,
     openInSameTab,
     style,
+    className = "",
 }: LinkProps) {
-    const isInternal = href.startsWith("/");
+    const isInternal = href && href.startsWith("/");
 
     return isInternal ? (
-        <NextLink href={href} style={{ flexGrow: 1, ...style }}>
-            {children}
+        <NextLink 
+            href={href} 
+            >
+            <span 
+                style={{ ...style }}
+                className={className}>
+                {children}
+            </span>
         </NextLink>
     ) : (
         <a
             href={href}
+            style={{ ...style }}
             target={openInSameTab ? "_self" : "_blank"}
-            style={{ flexGrow: 1, ...style }}
+            className={className}
         >
             {children}
         </a>

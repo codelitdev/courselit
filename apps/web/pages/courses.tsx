@@ -1,5 +1,4 @@
-import { capitalize, Grid, Typography } from "@mui/material";
-import { FetchBuilder } from "@courselit/utils";
+import { capitalize, FetchBuilder } from "@courselit/utils";
 import { useRouter } from "next/router";
 import { getBackendAddress, getPage } from "../ui-lib/utils";
 import dynamic from "next/dynamic";
@@ -39,25 +38,14 @@ const Courses = (props: CoursesProps) => {
 
     return (
         <BaseLayout title={path} layout={props.page.layout}>
-            <Grid
-                container
-                direction="column"
-                sx={{
-                    padding: 2,
-                    minHeight: "80vh",
-                }}
-            >
-                <Grid item sx={{ mb: 2 }}>
-                    <Typography variant="h2">{path}</Typography>
-                </Grid>
-                <Grid item>
-                    <Items
-                        showLoadMoreButton={true}
-                        generateQuery={generateQuery}
-                        initialItems={props.courses}
-                    />
-                </Grid>
-            </Grid>
+            <div className="flex flex-col p-4">
+                <h1 className="text-4xl font-semibold mb-4">{path}</h1>
+                <Items
+                    showLoadMoreButton={true}
+                    generateQuery={generateQuery}
+                    initialItems={props.courses}
+                />
+            </div>
         </BaseLayout>
     );
 };

@@ -1,13 +1,4 @@
 import React from "react";
-import Table from "@mui/material/Table";
-import TableContainer from "@mui/material/Table";
-import TableHead from "@mui/material/TableHead";
-import TableCell from "@mui/material/TableCell";
-import TableRow from "@mui/material/TableRow";
-import TableBody from "@mui/material/TableBody";
-import Grid from "@mui/material/Grid";
-import Typography from "@mui/material/Typography";
-import MuiLink from "@mui/material/Link";
 import {
     COURSE_STUDENT_NO_RECORDS,
     COURSE_STUDENT_REPORT_HEADER,
@@ -19,15 +10,6 @@ import {
     PRICING_EMAIL,
     USER_TABLE_HEADER_NAME,
 } from "../../../../../../ui-config/strings";
-import {
-    Dialog,
-    DialogContent,
-    DialogTitle,
-    ListItem,
-    ListItemIcon,
-    ListItemText,
-    TextField,
-} from "@mui/material";
 import { ChangeEvent, useEffect, useState } from "react";
 import { FetchBuilder } from "@courselit/utils";
 import {
@@ -39,8 +21,13 @@ import { connect } from "react-redux";
 import { Address } from "@courselit/common-models";
 import { Search, Circle, CheckCircled } from "@courselit/icons";
 import useCourse from "../../course-hook";
-import Link from "next/link";
-import { IconButton } from "@courselit/components-library";
+import {
+    Dialog2,
+    IconButton,
+    Link,
+    Form,
+    FormField,
+} from "@courselit/components-library";
 const { networkAction } = actionCreators;
 
 interface StudentsProps {
@@ -62,8 +49,6 @@ interface Student {
 function Students({ course, address, dispatch, loading }: StudentsProps) {
     const [students, setStudents] = useState<Student[]>([]);
     const [text, setText] = useState("");
-    const [progressDialogOpened, setProgressDialogOpened] = useState(false);
-    const [student, setStudent] = useState<Student>();
 
     useEffect(() => {
         if (course?.courseId) {
@@ -123,143 +108,128 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
         }
     };
 
-    const showProgress = (student: Student) => {
-        setStudent(student);
-        setProgressDialogOpened(true);
-    };
-
-    const resetActiveStudent = () => {
-        setStudent(undefined);
-        setProgressDialogOpened(false);
-    };
-
     return (
-        <Grid container direction="column" spacing={1}>
-            <Grid item>
-                <Typography variant="subtitle1" sx={{ fontWeight: "bolder" }}>
-                    {COURSE_STUDENT_REPORT_HEADER}
-                </Typography>
-            </Grid>
-            <Grid item>
-                <TextField
+        <div className="flex flex-col">
+            <h1 className="text-xl font-semibold mb-4">
+                {COURSE_STUDENT_REPORT_HEADER}
+            </h1>
+            <Form
+                onSubmit={(e: ChangeEvent<HTMLInputElement>) => {
+                    e.preventDefault();
+                    fetchStudents();
+                }}
+                className="flex gap-2 mb-4"
+            >
+                <FormField
                     onChange={(e: ChangeEvent<HTMLInputElement>) =>
                         setText(e.target.value)
                     }
                     value={text}
                     placeholder={COURSE_STUDENT_SEARCH_BY_TEXT}
-                    fullWidth
-                    InputProps={{
-                        endAdornment: (
-                            <IconButton onClick={fetchStudents} variant="soft">
-                                <Search />
-                            </IconButton>
-                        ),
-                    }}
                     onKeyDown={onKeyDown}
                     disabled={loading}
+                    className="w-full"
                 />
-            </Grid>
-            <Grid item>
-                <TableContainer>
-                    <Table aria-label="Course students">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>{USER_TABLE_HEADER_NAME}</TableCell>
-                                {course?.costType?.toLowerCase() !==
-                                    PRICING_EMAIL && (
-                                    <TableCell>
-                                        {COURSE_STUDENT_TABLE_HEADER_PROGRESS}
-                                    </TableCell>
-                                )}
-                                {course?.costType?.toLowerCase() ===
-                                    PRICING_EMAIL && (
-                                    <TableCell>
-                                        {COURSE_STUDENT_TABLE_HEADER_DOWNLOAD}
-                                    </TableCell>
-                                )}
-                                <TableCell>
-                                    {COURSE_STUDENT_TABLE_HEADER_SIGNED_UP_ON}
-                                </TableCell>
-                                <TableCell>
-                                    {
-                                        COURSE_STUDENT_TABLE_HEADER_LAST_ACCESSED_ON
-                                    }
-                                </TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {students.map((student: any) => (
-                                <TableRow key={student.email as string}>
-                                    <TableCell>
-                                        <MuiLink
-                                            sx={{
-                                                cursor: "pointer",
-                                            }}
-                                            href={`/dashboard/users/${student.userId}`}
-                                            component={Link}
-                                        >
-                                            {student.name ||
-                                                (student.email as string)}
-                                        </MuiLink>
-                                    </TableCell>
-                                    {course?.costType?.toLowerCase() !==
-                                        PRICING_EMAIL && (
-                                        <TableCell
-                                            onClick={() =>
-                                                showProgress(student)
-                                            }
-                                            sx={{
-                                                cursor: "pointer",
-                                                "&:hover": {
-                                                    textDecoration: "underline",
-                                                },
-                                            }}
-                                        >
-                                            {
-                                                (student.progress as string[])
-                                                    .length
-                                            }{" "}
-                                            / {course?.lessons?.length}
-                                        </TableCell>
-                                    )}
-                                    {course?.costType?.toLowerCase() ===
-                                        PRICING_EMAIL && (
-                                        <TableCell>
-                                            {student.downloaded && (
-                                                <CheckCircled />
-                                            )}
-                                            {!student.downloaded && <></>}
-                                        </TableCell>
-                                    )}
-                                    <TableCell>
-                                        {student.signedUpOn
-                                            ? new Date(
-                                                  student.signedUpOn as number,
-                                              ).toLocaleDateString()
-                                            : "-"}
-                                    </TableCell>
-                                    <TableCell>
-                                        {student.lastAccessedOn
-                                            ? new Date(
-                                                  student.lastAccessedOn as number,
-                                              ).toLocaleDateString()
-                                            : "-"}
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </Grid>
+                <IconButton>
+                    <Search />
+                </IconButton>
+            </Form>
+            <table aria-label="Course students">
+                <thead className="border-0 border-b border-slate-200">
+                    <tr className="font-medium">
+                        <td>{USER_TABLE_HEADER_NAME}</td>
+                        {course?.costType?.toLowerCase() !== PRICING_EMAIL && (
+                            <td>{COURSE_STUDENT_TABLE_HEADER_PROGRESS}</td>
+                        )}
+                        {course?.costType?.toLowerCase() === PRICING_EMAIL && (
+                            <td>{COURSE_STUDENT_TABLE_HEADER_DOWNLOAD}</td>
+                        )}
+                        <td>{COURSE_STUDENT_TABLE_HEADER_SIGNED_UP_ON}</td>
+                        <td>{COURSE_STUDENT_TABLE_HEADER_LAST_ACCESSED_ON}</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    {students.map((student: any) => (
+                        <tr
+                            key={student.email as string}
+                            className="hover:!bg-slate-100"
+                        >
+                            <td className="py-2">
+                                <Link
+                                    href={`/dashboard/users/${student.userId}`}
+                                >
+                                    {student.name || (student.email as string)}
+                                </Link>
+                            </td>
+                            {course?.costType?.toLowerCase() !==
+                                PRICING_EMAIL && (
+                                <td className="underline">
+                                    <Dialog2
+                                        title={`${
+                                            student!.name || student!.email
+                                        }'s Progress`}
+                                        trigger={
+                                            <span className="cursor-pointer w-full">
+                                                {
+                                                    (
+                                                        student.progress as string[]
+                                                    ).length
+                                                }{" "}
+                                                / {course?.lessons?.length}
+                                            </span>
+                                        }
+                                    >
+                                        {course?.lessons?.map((lesson: any) => (
+                                            <div
+                                                key={lesson.lessonId}
+                                                className="flex justify-between items-center mb-1"
+                                            >
+                                                <p>{lesson.title}</p>
+                                                <span>
+                                                    {student.progress.includes(
+                                                        lesson.lessonId,
+                                                    ) ? (
+                                                        <CheckCircled />
+                                                    ) : (
+                                                        <Circle />
+                                                    )}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </Dialog2>
+                                </td>
+                            )}
+                            {course?.costType?.toLowerCase() ===
+                                PRICING_EMAIL && (
+                                <td>
+                                    {student.downloaded && <CheckCircled />}
+                                    {!student.downloaded && <></>}
+                                </td>
+                            )}
+                            <td>
+                                {student.signedUpOn
+                                    ? new Date(
+                                          student.signedUpOn as number,
+                                      ).toLocaleDateString()
+                                    : "-"}
+                            </td>
+                            <td>
+                                {student.lastAccessedOn
+                                    ? new Date(
+                                          student.lastAccessedOn as number,
+                                      ).toLocaleDateString()
+                                    : "-"}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
             {!students.length && (
-                <Grid container justifyContent="center" sx={{ mt: 2 }}>
-                    <Grid item>
-                        <Typography variant="subtitle1">
-                            {COURSE_STUDENT_NO_RECORDS}
-                        </Typography>
-                    </Grid>
-                </Grid>
+                <div className="flex justify-center">
+                    <p className="mt-4">{COURSE_STUDENT_NO_RECORDS}</p>
+                </div>
             )}
+            {/*
             {student && (
                 <Dialog
                     open={progressDialogOpened}
@@ -286,7 +256,8 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
                     </DialogContent>
                 </Dialog>
             )}
-        </Grid>
+            */}
+        </div>
     );
 }
 

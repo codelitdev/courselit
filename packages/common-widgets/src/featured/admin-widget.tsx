@@ -1,15 +1,6 @@
 import React, { ChangeEvent, useEffect, useState } from "react";
 import type { Address } from "@courselit/common-models";
 import Settings from "./settings";
-import {
-    FormLabel,
-    Grid,
-    List,
-    ListItem,
-    ListItemText,
-    Skeleton,
-    TextField,
-} from "@mui/material";
 import { capitalize, FetchBuilder } from "@courselit/utils";
 import { actionCreators, AppDispatch } from "@courselit/state-management";
 import {
@@ -17,10 +8,13 @@ import {
     ColorSelector,
     Select,
     TextEditor,
+    IconButton,
+    Form,
+    FormField,
+    CircularProgress,
 } from "@courselit/components-library";
 import { Delete } from "@courselit/icons";
 import { Alignment } from "@courselit/common-models";
-import { IconButton } from "@courselit/components-library";
 
 interface AdminWidgetProps {
     settings: Settings;
@@ -118,29 +112,25 @@ export default function AdminWidget({
     };
 
     return (
-        <Grid container direction="column">
-            <Grid item sx={{ mb: 4 }}>
-                <AdminWidgetPanel title="Header">
-                    <Grid item sx={{ mb: 2 }}>
-                        <TextField
-                            variant="outlined"
-                            fullWidth
+        <div className="flex flex-col">
+            <div className="mb-4">
+                <Form>
+                    <AdminWidgetPanel title="Header">
+                        <FormField
                             value={title}
                             label="Title"
                             onChange={(e: ChangeEvent<HTMLInputElement>) =>
                                 setTitle(e.target.value)
                             }
                         />
-                    </Grid>
-                    <Grid item sx={{ mb: 2 }}>
-                        <FormLabel>Description</FormLabel>
-                        <TextEditor
-                            initialContent={description}
-                            onChange={(state: any) => setDescription(state)}
-                            showToolbar={false}
-                        />
-                    </Grid>
-                    <Grid item sx={{ mb: 2 }}>
+                        <div>
+                            <p className="mb-1 font-medium">Description</p>
+                            <TextEditor
+                                initialContent={description}
+                                onChange={(state: any) => setDescription(state)}
+                                showToolbar={false}
+                            />
+                        </div>
                         <Select
                             title="Header alignment"
                             value={headerAlignment}
@@ -152,94 +142,74 @@ export default function AdminWidget({
                                 setHeaderAlignment(value)
                             }
                         />
-                    </Grid>
-                </AdminWidgetPanel>
-            </Grid>
+                    </AdminWidgetPanel>
+                </Form>
+            </div>
             {!productsLoaded && (
-                <Grid item>
-                    <Skeleton
-                        variant="rectangular"
-                        height={50}
-                        sx={{ mb: 2 }}
-                    />
-                    <Skeleton variant="rectangular" height={20} />
-                </Grid>
+                <div className="flex justify-center mb-4">
+                    <CircularProgress />
+                </div>
             )}
             {productsLoaded && (
-                <Grid item sx={{ mb: 4 }}>
+                <div className="mb-4">
                     <AdminWidgetPanel title="Products">
-                        <Grid item sx={{ mb: 2 }}>
-                            <Select
-                                title="Select a product"
-                                value={""}
-                                options={allProducts
-                                    .filter(
-                                        (product) =>
-                                            !products.includes(
-                                                product.courseId,
-                                            ),
-                                    )
-                                    .map((product) => ({
-                                        label: product.title,
-                                        value: product.courseId,
-                                        sublabel: capitalize(product.type),
-                                    }))}
-                                onChange={addProduct}
-                            />
-                        </Grid>
-                        <Grid item>
-                            <List>
-                                {products.map((product: string) => {
-                                    const productItem = allProducts.filter(
-                                        (productItem) =>
-                                            productItem.courseId === product,
-                                    )[0];
-                                    if (!productItem) return <></>;
-                                    return (
-                                        <ListItem
-                                            key={productItem.courseId}
-                                            secondaryAction={
-                                                <IconButton
-                                                    onClick={() =>
-                                                        removeProduct(product)
-                                                    }
-                                                    variant="soft"
-                                                >
-                                                    <Delete />
-                                                </IconButton>
+                        <Select
+                            title="Select a product"
+                            value={""}
+                            options={allProducts
+                                .filter(
+                                    (product) =>
+                                        !products.includes(product.courseId),
+                                )
+                                .map((product) => ({
+                                    label: product.title,
+                                    value: product.courseId,
+                                    sublabel: capitalize(product.type),
+                                }))}
+                            onChange={addProduct}
+                        />
+                        <ul className="flex flex-col gap-4">
+                            {products.map((product: string) => {
+                                const productItem = allProducts.filter(
+                                    (productItem) =>
+                                        productItem.courseId === product,
+                                )[0];
+                                if (!productItem) return <></>;
+                                return (
+                                    <li
+                                        className="flex justify-between"
+                                        key={productItem.courseId}
+                                    >
+                                        <p>{productItem.title}</p>
+                                        <IconButton
+                                            onClick={() =>
+                                                removeProduct(product)
                                             }
+                                            variant="soft"
                                         >
-                                            <ListItemText
-                                                primary={productItem.title}
-                                            />
-                                        </ListItem>
-                                    );
-                                })}
-                            </List>
-                        </Grid>
+                                            <Delete />
+                                        </IconButton>
+                                    </li>
+                                );
+                            })}
+                        </ul>
                     </AdminWidgetPanel>
-                </Grid>
+                </div>
             )}
-            <Grid item sx={{ mb: 4 }}>
+            <div className="mb-4">
                 <AdminWidgetPanel title="Design">
-                    <Grid item sx={{ mb: 2 }}>
-                        <ColorSelector
-                            title="Background color"
-                            value={backgroundColor || "inherit"}
-                            onChange={(value?: string) =>
-                                setBackgroundColor(value)
-                            }
-                        />
-                    </Grid>
-                    <Grid item sx={{ mb: 2 }}>
-                        <ColorSelector
-                            title="Color"
-                            value={color || "inherit"}
-                            onChange={(value?: string) => setColor(value)}
-                        />
-                    </Grid>
+                    <ColorSelector
+                        title="Background color"
+                        value={backgroundColor || "inherit"}
+                        onChange={(value?: string) => setBackgroundColor(value)}
+                    />
+                    <ColorSelector
+                        title="Color"
+                        value={color || "inherit"}
+                        onChange={(value?: string) => setColor(value)}
+                    />
                 </AdminWidgetPanel>
-            </Grid>
-        </Grid>
+            </div>
+        </div>
     );
 }

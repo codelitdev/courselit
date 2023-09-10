@@ -19,16 +19,6 @@ import {
     generateUniqueId,
     getGraphQLQueryStringFromObject,
 } from "@courselit/utils";
-import {
-    AppBar,
-    Button,
-    CssBaseline,
-    Grid,
-    Paper,
-    Skeleton,
-    Toolbar,
-    Typography,
-} from "@mui/material";
 import { connect } from "react-redux";
 import {
     EDIT_PAGE_BUTTON_DONE,
@@ -40,25 +30,21 @@ import { useRouter } from "next/router";
 import {
     canAccessDashboard,
     generateFontString,
-    createMuiTheme,
     moveMemberUp,
     moveMemberDown,
 } from "../../../ui-lib/utils";
 import Template from "../../public/base-layout/template";
 import dynamic from "next/dynamic";
 import Head from "next/head";
-import Link from "next/link";
 import widgets from "../../../ui-config/widgets";
-import { ThemeProvider } from "@mui/material/styles";
-import Box from "@mui/material/Box";
 import PagesList from "./pages-list";
 import { Sync, CheckCircled } from "@courselit/icons";
 import AppToast from "../../app-toast";
+import { Button, CircularProgress } from "@courselit/components-library";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
-const WidgetsList = dynamic(() => import("./widgets-list"));
-const FontsList = dynamic(() => import("./fonts-list.tsx"));
+const FontsList = dynamic(() => import("./fonts-list"));
 
 const DEBOUNCE_TIME = 500;
 
@@ -72,6 +58,7 @@ interface PageEditorProps {
     siteInfo: SiteInfo;
     theme: Theme;
     typefaces: Typeface[];
+    redirectTo?: string;
 }
 
 type LeftPaneContent =
@@ -89,9 +76,8 @@ function PageEditor({
     profile,
     dispatch,
     loading,
-    siteInfo,
     theme,
-    typefaces,
+    redirectTo,
 }: PageEditorProps) {
     const [pages, setPages] = useState([]);
     const [page, setPage] = useState<Partial<Page>>({});
@@ -113,7 +99,6 @@ function PageEditor({
     );
 
     const fontString = generateFontString(draftTypefaces);
-    const muiTheme = createMuiTheme(draftTypefaces, theme);
 
     useEffect(() => {
         loadDraftTypefaces();
@@ -444,122 +429,76 @@ function PageEditor({
     );
 
     return (
-        <Grid container direction="column">
+        <div className="flex flex-col">
             <Head>
                 <title>{`${PAGE_TITLE_EDIT_PAGE} ${page.name || ""}`}</title>
                 {fontString && <link rel="stylesheet" href={fontString} />}
             </Head>
-            <AppBar position="sticky">
-                <Toolbar>
-                    <Button
-                        onClick={() => {
-                            setLeftPaneContent("pages");
-                        }}
-                        sx={{ color: "white" }}
-                    >
-                        {page.name}
-                    </Button>
-                    <Button
-                        onClick={() => {
-                            setLeftPaneContent("fonts");
-                        }}
-                        sx={{ color: "white" }}
-                    >
-                        {EDIT_PAGE_BUTTON_FONTS}
-                    </Button>
-                    <Grid item sx={{ flexGrow: 1 }}>
-                        <Grid
-                            container
-                            alignItems="center"
-                            justifyContent="flex-end"
-                        >
-                            <Grid item>
-                                <Typography variant="body2">
-                                    {loading && <Sync />}
-                                    {!loading && <CheckCircled />}
-                                </Typography>
-                            </Grid>
-                            <Grid item>
-                                <Link
-                                    href={
-                                        page.type === "PRODUCT"
-                                            ? `/dashboard/product/${page.entityId}/content`
-                                            : "/dashboard/products"
-                                    }
-                                >
-                                    <Button sx={{ color: "white" }}>
-                                        {EDIT_PAGE_BUTTON_DONE}
-                                    </Button>
-                                </Link>
-                            </Grid>
-                            <Grid>
-                                <Button
-                                    onClick={onPublish}
-                                    sx={{ color: "white" }}
-                                >
-                                    {EDIT_PAGE_BUTTON_UPDATE}
-                                </Button>
-                            </Grid>
-                        </Grid>
-                    </Grid>
-                </Toolbar>
-            </AppBar>
-            <Grid item>
-                <Grid container>
-                    {leftPaneContent !== "none" && (
-                        <Grid
-                            item
-                            xs={3}
-                            sx={{
-                                borderRight: "1px solid #eee",
-                                overflow: "scroll",
-                                height: "100vh",
+            <div className="fixed w-full border-0 border-b border-slate-200 z-10">
+                <header className="flex w-full p-4 justify-between bg-white/80 backdrop-blur-md">
+                    <div className="flex gap-2">
+                        <Button
+                            onClick={() => {
+                                setLeftPaneContent("pages");
                             }}
+                            variant="soft"
                         >
-                            {activeSidePaneContent}
-                        </Grid>
+                            {page.name}
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setLeftPaneContent("fonts");
+                            }}
+                            variant="soft"
+                        >
+                            {EDIT_PAGE_BUTTON_FONTS}
+                        </Button>
+                    </div>
+                    <div className="flex justify-end items-center gap-2">
+                        {loading && <Sync />}
+                        {!loading && <CheckCircled />}
+                        <Button
+                            variant="soft"
+                            component="link"
+                            href={
+                                redirectTo ||
+                                (page.type === "product"
+                                    ? `/dashboard/product/${page.entityId}/content`
+                                    : "/dashboard/products")
+                            }
+                        >
+                            {EDIT_PAGE_BUTTON_DONE}
+                        </Button>
+                        <Button onClick={onPublish} sx={{ color: "white" }}>
+                            {EDIT_PAGE_BUTTON_UPDATE}
+                        </Button>
+                    </div>
+                </header>
+            </div>
+            <div className="flex h-screen pt-[64px] w-full">
+                {leftPaneContent !== "none" && (
+                    <div className="overflow-y-auto w-[440px] max-h-screen border-0 border-r border-slate-200">
+                        {activeSidePaneContent}
+                    </div>
+                )}
+                <div className="w-full max-h-screen overflow-y-auto scroll-smooth">
+                    {draftTypefaces.length === 0 && <CircularProgress />}
+                    {draftTypefaces.length > 0 && (
+                        <Template
+                            layout={layout}
+                            pageData={page.pageData || {}}
+                            editing={true}
+                            onEditClick={onWidgetClicked}
+                            selectedWidget={selectedWidget}
+                            onAddWidgetBelow={onAddWidgetBelow}
+                            onMoveWidgetDown={onMoveWidgetDown}
+                            onMoveWidgetUp={onMoveWidgetUp}
+                        />
                     )}
-                    <Grid
-                        item
-                        xs={leftPaneContent === "none" ? 12 : 9}
-                        sx={{
-                            flexGrow: 1,
-                            overflow: "scroll",
-                            height: "100vh",
-                        }}
-                    >
-                        {draftTypefaces.length === 0 && (
-                            <Box sx={{ p: 2 }}>
-                                <Skeleton
-                                    variant="rectangular"
-                                    height={100}
-                                    sx={{ mb: 2 }}
-                                />
-                                <Skeleton variant="rectangular" height={100} />
-                            </Box>
-                        )}
-                        {draftTypefaces.length > 0 && (
-                            <ThemeProvider theme={muiTheme}>
-                                <CssBaseline />
-                                <Paper elevation={0}>
-                                    <Template
-                                        layout={layout}
-                                        pageData={page.pageData || {}}
-                                        editing={true}
-                                        onEditClick={onWidgetClicked}
-                                        selectedWidget={selectedWidget}
-                                        onAddWidgetBelow={onAddWidgetBelow}
-                                        onMoveWidgetDown={onMoveWidgetDown}
-                                        onMoveWidgetUp={onMoveWidgetUp}
-                                    />
-                                </Paper>
-                            </ThemeProvider>
-                        )}
-                    </Grid>
-                </Grid>
-            </Grid>
+                </div>
+            </div>
             <AppToast />
-        </Grid>
+        </div>
     );
 }
 

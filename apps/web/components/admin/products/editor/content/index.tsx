@@ -1,5 +1,4 @@
 import React from "react";
-import { Grid } from "@mui/material";
 import {
     COURSE_TYPE_COURSE,
     COURSE_TYPE_DOWNLOAD,
@@ -15,14 +14,14 @@ export default function Content({ id }: EditorProps) {
     const course = useCourse(id);
 
     return (
-        <Grid container direction="column" spacing={2}>
+        <div className="flex flex-col gap-4">
             {course && (
-                <Grid item>
+                <>
                     {[COURSE_TYPE_COURSE, COURSE_TYPE_DOWNLOAD].includes(
                         course!.type!.toLowerCase(),
                     ) && <LessonsList id={id} />}
-                </Grid>
+                </>
             )}
-        </Grid>
+        </div>
     );
 }

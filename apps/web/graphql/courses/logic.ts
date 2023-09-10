@@ -29,6 +29,7 @@ import PageModel from "../../models/Page";
 import { Progress } from "../../models/Progress";
 import { getPrevNextCursor } from "../lessons/helpers";
 import { checkPermission } from "@courselit/utils";
+import { error } from "../../services/logger";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -162,16 +163,24 @@ export const deleteCourse = async (
     ctx: GQLContext,
 ) => {
     const course = await getCourseOrThrow(id, ctx);
-
     await deleteAllLessons(course.courseId, ctx);
     if (course.featuredImage) {
-        await deleteMedia(course.featuredImage);
+        try {
+            await deleteMedia(course.featuredImage);
+        } catch (err) {
+            error(err.message, {
+                stack: err.stack,
+            });
+        }
     }
     await PageModel.deleteOne({
         entityId: course.courseId,
         domain: ctx.subdomain._id,
     });
-    await course.remove();
+    await CourseModel.deleteOne({
+        _id: course._id,
+        domain: ctx.subdomain._id,
+    });
     return true;
 };
 

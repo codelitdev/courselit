@@ -1,23 +1,5 @@
 import React, { useState, useEffect, FormEvent } from "react";
 import {
-    Avatar,
-    Grid,
-    Paper,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    TextField,
-    Toolbar,
-    Typography,
-} from "@mui/material";
-import Box from "@mui/material/Box";
-import TablePagination from "@mui/material/TablePagination";
-import Tooltip from "@mui/material/Tooltip";
-import IconButton from "@mui/material/IconButton";
-import {
     USER_TABLE_HEADER_NAME,
     USER_TABLE_HEADER_JOINED,
     USERS_MANAGER_PAGE_HEADING,
@@ -26,33 +8,39 @@ import {
     USER_TYPE_CUSOMER,
     USER_FILTER_PERMISSION,
     USER_TYPE_ALL,
-    EXPORT_CSV,
+    //EXPORT_CSV,
     USER_TYPE_SUBSCRIBER,
-    USER_TABLE_HEADER_EMAIL,
-    USER_TABLE_HEADER_NAME_NAME,
+    //USER_TABLE_HEADER_EMAIL,
+    //USER_TABLE_HEADER_NAME_NAME,
     TOOLTIP_USER_PAGE_SEND_MAIL,
 } from "../../../ui-config/strings";
-import { checkPermission, exportToCsv, FetchBuilder } from "@courselit/utils";
+import {
+    checkPermission,
+    //exportToCsv,
+    FetchBuilder,
+} from "@courselit/utils";
 import { connect } from "react-redux";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
-import {
-    Profile,
-    User,
-    Auth,
-    Address,
-    State,
-    AppMessage,
-} from "@courselit/common-models";
-import Link from "next/link";
-import MuiLink from "@mui/material/Link";
+import { User, Address, State, AppMessage } from "@courselit/common-models";
 import { ThunkDispatch } from "redux-thunk";
 import { AnyAction } from "redux";
-import { Select as SingleSelect } from "@courselit/components-library";
+import {
+    Tooltip,
+    Select as SingleSelect,
+    IconButton,
+    Table,
+    TableHead,
+    TableBody,
+    TableRow,
+    Avatar,
+    Link,
+    Form,
+    FormField,
+} from "@courselit/components-library";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
-import { CSVLink } from "react-csv";
+//import { CSVLink } from "react-csv";
 import { Cancel } from "@courselit/icons";
-import InputAdornment from "@mui/material/InputAdornment";
 import { useRouter } from "next/router";
 import { UIConstants } from "@courselit/common-models";
 import { Mail } from "@courselit/icons";
@@ -61,21 +49,19 @@ const { networkAction } = actionCreators;
 const { permissions } = UIConstants;
 
 interface UserManagerProps {
-    auth: Auth;
     address: Address;
     dispatch: AppDispatch;
-    profile: Profile;
     featureFlags: string[];
+    loading: boolean;
 }
 
 const UsersManager = ({
-    auth,
     address,
     dispatch,
-    profile,
     featureFlags,
+    loading,
 }: UserManagerProps) => {
-    const [page, setPage] = useState(0);
+    const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [users, setUsers] = useState<User[]>([]);
     const [type, setType] = useState("");
@@ -92,10 +78,7 @@ const UsersManager = ({
         loadUsersCount();
     }, [rowsPerPage, type, searchEmailHook]);
 
-    const handlePageChange = (
-        e: MouseEvent<HTMLButtonElement> | null,
-        newPage: number,
-    ) => {
+    const handlePageChange = (newPage: number) => {
         setPage(newPage);
     };
 
@@ -103,7 +86,7 @@ const UsersManager = ({
         e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => {
         setRowsPerPage(parseInt(e.target.value, 10));
-        setPage(0);
+        setPage(1);
     };
 
     const loadUsers = async () => {
@@ -113,7 +96,7 @@ const UsersManager = ({
                 query {
                     users: getUsers(searchData: {
                         type: ${type.toUpperCase()}
-                        offset: ${page + 1},
+                        offset: ${page},
                         rowsPerPage: ${rowsPerPage}
                     }) {
                         id,
@@ -130,7 +113,7 @@ const UsersManager = ({
                 ? `
                 query {
                     users: getUsers(searchData: {
-                        offset: ${page + 1}
+                        offset: ${page}
                         email: "${searchEmail}",
                         rowsPerPage: ${rowsPerPage}
                     }) {
@@ -147,7 +130,7 @@ const UsersManager = ({
                 : `
                 query {
                     users: getUsers(searchData: {
-                        offset: ${page + 1},
+                        offset: ${page},
                         rowsPerPage: ${rowsPerPage}
                     }) {
                         id,
@@ -322,13 +305,13 @@ const UsersManager = ({
         setSearchEmail("");
         setType(value);
         setUsers([]);
-        setPage(0);
+        setPage(1);
     };
 
     const searchByEmail = async (e?: FormEvent) => {
         e && e.preventDefault();
         setUsers([]);
-        setPage(0);
+        setPage(1);
         setType("");
         setSearchEmailHook(searchEmailHook + 1);
     };
@@ -338,65 +321,65 @@ const UsersManager = ({
     };
 
     return (
-        <Grid container direction="column">
-            <Grid item sx={{ mb: 2 }}>
-                <Typography variant="h1">
-                    {USERS_MANAGER_PAGE_HEADING}
-                </Typography>
-            </Grid>
-            <Grid item sx={{ mb: 2 }} component={Paper}>
-                <Toolbar>
-                    <Box
-                        component="form"
-                        onSubmit={searchByEmail}
-                        sx={{ pr: 1 }}
-                    >
-                        <TextField
-                            type="email"
-                            label="Search by email"
-                            onChange={(e) => setSearchEmail(e.target.value)}
-                            value={searchEmail}
-                            required
-                            InputProps={{
-                                endAdornment: searchEmail ? (
-                                    <InputAdornment>
-                                        <IconButton
-                                            aria-label="clear email search box"
-                                            onClick={() => {
-                                                setSearchEmail("");
-                                                searchByEmail();
-                                            }}
-                                        >
-                                            <Cancel />
-                                        </IconButton>
-                                    </InputAdornment>
-                                ) : undefined,
-                            }}
-                        />
-                    </Box>
-                    <Box sx={{ minWidth: 140 }}>
-                        <SingleSelect
-                            title={USER_FILTER_PERMISSION}
-                            onChange={handleUserTypeChange}
-                            value={type}
-                            options={[
-                                { label: USER_TYPE_ALL, value: "" },
-                                {
-                                    label: USER_TYPE_CUSOMER,
-                                    value: USER_TYPE_CUSOMER,
-                                },
-                                {
-                                    label: USER_TYPE_TEAM,
-                                    value: USER_TYPE_TEAM,
-                                },
-                                {
-                                    label: USER_TYPE_SUBSCRIBER,
-                                    value: USER_TYPE_SUBSCRIBER,
-                                },
-                            ]}
-                        />
-                    </Box>
-                    <Box sx={{ display: "none" }}>
+        <div className="flex flex-col">
+            <h1 className="text-4xl font-semibold mb-4">
+                {USERS_MANAGER_PAGE_HEADING}
+            </h1>
+            <div className="flex items-start justify-between gap-2 mb-4">
+                <Form
+                    onSubmit={searchByEmail}
+                    className="flex gap-2 items-start"
+                >
+                    <FormField
+                        type="email"
+                        label="Search by email"
+                        onChange={(e) => setSearchEmail(e.target.value)}
+                        value={searchEmail}
+                        required
+                        endIcon={
+                            searchEmail ? (
+                                <>
+                                    <IconButton
+                                        type="submit"
+                                        className="hidden"
+                                    ></IconButton>
+                                    <IconButton
+                                        aria-label="clear email search box"
+                                        variant="soft"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            setSearchEmail("");
+                                            searchByEmail();
+                                        }}
+                                    >
+                                        <Cancel />
+                                    </IconButton>
+                                </>
+                            ) : null
+                        }
+                    />
+                    <SingleSelect
+                        title={USER_FILTER_PERMISSION}
+                        onChange={handleUserTypeChange}
+                        value={type}
+                        options={[
+                            { label: USER_TYPE_ALL, value: "" },
+                            {
+                                label: USER_TYPE_CUSOMER,
+                                value: USER_TYPE_CUSOMER,
+                            },
+                            {
+                                label: USER_TYPE_TEAM,
+                                value: USER_TYPE_TEAM,
+                            },
+                            {
+                                label: USER_TYPE_SUBSCRIBER,
+                                value: USER_TYPE_SUBSCRIBER,
+                            },
+                        ]}
+                    />
+                </Form>
+                {/*
                         <CSVLink
                             filename={"users-courselit.csv"}
                             headers={[
@@ -424,107 +407,85 @@ const UsersManager = ({
                         >
                             {EXPORT_CSV}
                         </CSVLink>
-                    </Box>
-                    <Box sx={{ flexGrow: 1 }}></Box>
-                    {featureFlags.includes("mail") && (
-                        <Tooltip title={TOOLTIP_USER_PAGE_SEND_MAIL}>
-                            <IconButton onClick={createMail}>
-                                <Mail />
-                            </IconButton>
-                        </Tooltip>
-                    )}
-                </Toolbar>
-                <TableContainer>
-                    <Table aria-label="Users">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>{USER_TABLE_HEADER_NAME}</TableCell>
-                                <TableCell align="right">Type</TableCell>
-                                <TableCell align="right">
-                                    {USER_TABLE_HEADER_JOINED}
-                                </TableCell>
-                                <TableCell align="right">
-                                    {USER_TABLE_HEADER_LAST_ACTIVE}
-                                </TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {users.map((user) => (
-                                <TableRow
-                                    key={user.email}
-                                    sx={{
-                                        "&:last-child td, &:last-child th": {
-                                            border: 0,
-                                        },
-                                    }}
-                                >
-                                    <TableCell>
-                                        <Grid
-                                            container
-                                            direction="row"
-                                            spacing={1}
-                                            alignItems="center"
-                                        >
-                                            <Grid item>
-                                                <Avatar />
-                                            </Grid>
-                                            <Grid item>
-                                                <Grid item>
-                                                    <MuiLink
-                                                        color="inherit"
-                                                        variant="body1"
-                                                        href={`/dashboard/users/${user.userId}`}
-                                                        component={Link}
-                                                    >
-                                                        <b>
-                                                            {user.name
-                                                                ? user.name
-                                                                : user.email}
-                                                        </b>
-                                                    </MuiLink>
-                                                </Grid>
-                                                <Grid item>
-                                                    <Typography variant="body1">
-                                                        {user.email}
-                                                    </Typography>
-                                                </Grid>
-                                            </Grid>
-                                        </Grid>
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        {getUserType(user)}
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        {user.createdAt
-                                            ? new Date(
-                                                  +user.createdAt,
-                                              ).toLocaleDateString()
-                                            : ""}
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        {user.updatedAt !== user.createdAt
-                                            ? user.updatedAt
-                                                ? new Date(
-                                                      +user.updatedAt,
-                                                  ).toLocaleDateString()
-                                                : ""
-                                            : ""}
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-                <TablePagination
-                    component="div"
+                        */}
+                {featureFlags.includes("mail") && (
+                    <Tooltip title={TOOLTIP_USER_PAGE_SEND_MAIL}>
+                        <IconButton onClick={createMail} variant="soft">
+                            <Mail />
+                        </IconButton>
+                    </Tooltip>
+                )}
+            </div>
+            <Table aria-label="Users">
+                <TableHead>
+                    <td>{USER_TABLE_HEADER_NAME}</td>
+                    <td align="right">Type</td>
+                    <td align="right">{USER_TABLE_HEADER_JOINED}</td>
+                    <td align="right">{USER_TABLE_HEADER_LAST_ACTIVE}</td>
+                </TableHead>
+                <TableBody
                     count={count}
                     page={page}
                     onPageChange={handlePageChange}
                     rowsPerPage={rowsPerPage}
                     onRowsPerPageChange={handleRowsPerPageChange}
-                />
-            </Grid>
-        </Grid>
+                    loading={loading}
+                >
+                    {users.map((user) => (
+                        <TableRow
+                            key={user.email}
+                            sx={{
+                                "&:last-child td, &:last-child th": {
+                                    border: 0,
+                                },
+                            }}
+                        >
+                            <td className="py-2">
+                                <div className="flex items-center gap-2">
+                                    <Avatar
+                                        fallbackText={(user.name
+                                            ? user.name.charAt(0)
+                                            : user.email.charAt(0)
+                                        ).toUpperCase()}
+                                    />
+                                    <div>
+                                        <Link
+                                            href={`/dashboard/users/${user.userId}`}
+                                        >
+                                            <span className="font-medium">
+                                                {user.name
+                                                    ? user.name
+                                                    : user.email}
+                                            </span>
+                                        </Link>
+                                        <div className="text-sm text-slate-600">
+                                            {user.email}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td align="right">{getUserType(user)}</td>
+                            <td align="right">
+                                {user.createdAt
+                                    ? new Date(
+                                          +user.createdAt,
+                                      ).toLocaleDateString()
+                                    : ""}
+                            </td>
+                            <td align="right">
+                                {user.updatedAt !== user.createdAt
+                                    ? user.updatedAt
+                                        ? new Date(
+                                              +user.updatedAt,
+                                          ).toLocaleDateString()
+                                        : ""
+                                    : ""}
+                            </td>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </div>
     );
 };
 
@@ -533,6 +494,7 @@ const mapStateToProps = (state: AppState) => ({
     address: state.address,
     profile: state.profile,
     featureFlags: state.featureFlags,
+    loading: state.networkAction,
 });
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({

@@ -1,10 +1,8 @@
-import React, { SyntheticEvent } from "react";
+import React from "react";
 import { connect } from "react-redux";
-import { Snackbar, Button } from "@mui/material";
 import { actionCreators } from "@courselit/state-management";
-import { Cross as Close } from "@courselit/icons";
 import type { AppDispatch, AppState } from "@courselit/state-management";
-import { IconButton } from "@courselit/components-library";
+import { Toast } from "@courselit/components-library";
 
 const { clearAppMessage } = actionCreators;
 
@@ -25,9 +23,9 @@ interface AppToastProps {
 }
 
 const AppToast = (props: AppToastProps) => {
-    const { message } = props;
-    const action = message && message.action;
+    const { message, dispatch } = props;
 
+    /*
     const handleClose: any = (_: Event | SyntheticEvent, reason: string) => {
         if (reason === "clickaway") {
             return;
@@ -57,23 +55,13 @@ const AppToast = (props: AppToastProps) => {
 
         return actionButtonsArray;
     };
-
+    */
     return (
-        <>
-            {message && (
-                <Snackbar
-                    anchorOrigin={{
-                        vertical: "bottom",
-                        horizontal: "left",
-                    }}
-                    open={message.open}
-                    autoHideDuration={6000}
-                    onClose={handleClose}
-                    message={<span>{message.message}</span>}
-                    action={getActionButtonsArray()}
-                />
-            )}
-        </>
+        <Toast
+            message={message}
+            dispatch={dispatch}
+            clearMessageAction={clearAppMessage}
+        />
     );
 };
 

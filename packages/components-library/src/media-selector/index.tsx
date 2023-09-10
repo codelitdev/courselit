@@ -1,10 +1,20 @@
 import * as React from "react";
 import Image from "../image";
-import MediaManagerDialog from "./media-manager-dialog";
-import { Address, Auth, Profile } from "@courselit/common-models";
+import {
+    Address,
+    AppMessage,
+    Auth,
+    Media,
+    Profile,
+} from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
 import Access from "./access";
 import Button from "../button";
+import Dialog2 from "../dialog2";
+import { FetchBuilder } from "@courselit/utils";
+import { setAppMessage } from "@courselit/state-management/dist/action-creators";
+import Form from "../form";
+import FormField from "../form-field";
 
 const { useState } = React;
 
@@ -52,12 +62,75 @@ interface MediaSelectorProps {
 
 const MediaSelector = (props: MediaSelectorProps) => {
     const [dialogOpened, setDialogOpened] = useState(false);
-    const { strings, auth, profile, dispatch, address, src, title, srcTitle } =
-        props;
+    const [error, setError] = useState("");
+    const [uploading, setUploading] = useState(false);
+    const defaultUploadData = {
+        caption: "",
+        uploading: false,
+        public: props.access === "public",
+    };
+    const [uploadData, setUploadData] = useState(defaultUploadData);
+    const fileInput: React.RefObject<HTMLInputElement> = React.createRef();
+    const [selectedFile, setSelectedFile] = useState();
+    const { strings, dispatch, address, src, title, srcTitle } = props;
 
-    const onSelection = (media: any) => {
-        setDialogOpened(!dialogOpened);
+    const onSelection = (media: Media) => {
         props.onSelection(media);
+    };
+
+    const getPresignedUrl = async () => {
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/media/presigned`)
+            .setIsGraphQLEndpoint(false)
+            .build();
+        const response = await fetch.exec();
+        return response.url;
+    };
+
+    const uploadToServer = async (presignedUrl: string): Promise<Media> => {
+        const fD = new FormData();
+        fD.append("caption", uploadData.caption);
+        fD.append("access", uploadData.public ? "public" : "private");
+        fD.append("file", selectedFile);
+
+        setUploadData(
+            Object.assign({}, uploadData, {
+                uploading: true,
+            }),
+        );
+        let res: any = await fetch(presignedUrl, {
+            method: "POST",
+            body: fD,
+        });
+        if (res.status === 200) {
+            const media = await res.json();
+            return media;
+        } else {
+            res = await res.json();
+            throw new Error(res.error);
+        }
+    };
+
+    const uploadFile = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const file = selectedFile;
+
+        if (!file) {
+            setError("File is required");
+            return;
+        }
+
+        try {
+            setUploading(true);
+            const presignedUrl = await getPresignedUrl();
+            const media = await uploadToServer(presignedUrl);
+            onSelection(media);
+        } catch (err: any) {
+            dispatch(setAppMessage(new AppMessage(err.message)));
+        } finally {
+            setUploading(false);
+            setDialogOpened(false);
+        }
     };
 
     return (
@@ -68,54 +141,50 @@ const MediaSelector = (props: MediaSelectorProps) => {
                 <p className="text-xs">{srcTitle}</p>
             </div>
             <div>
-                <Button
-                    component="button"
-                    variant="soft"
-                    onClick={() => setDialogOpened(!dialogOpened)}
-                >
-                    {strings.buttonCaption || "Select media"}
-                </Button>
-            </div>
-            {dialogOpened && (
-                <MediaManagerDialog
-                    auth={auth}
-                    profile={profile}
-                    dispatch={dispatch}
-                    address={address}
-                    onOpen={dialogOpened}
-                    onClose={onSelection}
+                <Dialog2
                     title={strings.dialogTitle || "Select media"}
-                    mediaAdditionAllowed={false}
-                    mimeTypesToShow={props.mimeTypesToShow}
-                    access={props.access}
-                    strings={{
-                        cancelCaption: strings.cancelCaption,
-                        dialogSelectCaption: strings.dialogSelectCaption,
-                        dialogTitle: strings.dialogTitle,
-                        header: strings.header,
-                        loadMoreText: strings.loadMoreText,
-                        editingArea: strings.editingArea,
-                        buttonAddFile: strings.buttonAddFile,
-                        fileUploaded: strings.fileUploaded,
-                        uploadFailed: strings.uploadFailed,
-                        uploading: strings.uploading,
-                        uploadButtonText: strings.uploadButtonText,
-                        headerMediaPreview: strings.headerMediaPreview,
-                        originalFileNameHeader: strings.originalFileNameHeader,
-                        previewPDFFile: strings.previewPDFFile,
-                        directUrl: strings.directUrl,
-                        urlCopied: strings.urlCopied,
-                        fileType: strings.fileType,
-                        changesSaved: strings.changesSaved,
-                        mediaDeleted: strings.mediaDeleted,
-                        deleteMediaPopupHeader: strings.deleteMediaPopupHeader,
-                        popupCancelAction: strings.popupCancelAction,
-                        popupOKAction: strings.popupOKAction,
-                        deleteMediaButton: strings.deleteMediaButton,
-                        publiclyAvailable: strings.publiclyAvailable,
-                    }}
-                />
-            )}
+                    trigger={
+                        <Button component="button">
+                            {strings.buttonCaption || "Select media"}
+                        </Button>
+                    }
+                    open={dialogOpened}
+                    onOpenChange={setDialogOpened}
+                    okButton={
+                        <Button
+                            component="button"
+                            onClick={uploadFile}
+                            disabled={
+                                !selectedFile || (selectedFile && uploading)
+                            }
+                        >
+                            {uploading
+                                ? strings.uploading || "Uploading"
+                                : strings.uploadButtonText || "Upload"}
+                        </Button>
+                    }
+                >
+                    {error && <div>{error}</div>}
+                    <Form encType="multipart/form-data">
+                        <FormField
+                            label={""}
+                            ref={fileInput}
+                            type="file"
+                            onChange={(e: any) =>
+                                setSelectedFile(e.target.files[0])
+                            }
+                            messages={[
+                                {
+                                    match: "valueMissing",
+                                    text: "File is required",
+                                },
+                            ]}
+                            className="mt-4"
+                            required
+                        />
+                    </Form>
+                </Dialog2>
+            </div>
         </div>
     );
 };

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { styled } from "@mui/system";
 import { connect } from "react-redux";
 import {
     PAYMENT_METHOD_PAYPAL,
@@ -8,7 +7,6 @@ import {
     PAYMENT_METHOD_NONE,
     MIMETYPE_IMAGE,
 } from "../../ui-config/constants";
-import { TextField, Button, Typography, Grid, capitalize } from "@mui/material";
 import {
     SITE_SETTINGS_TITLE,
     SITE_SETTINGS_SUBTITLE,
@@ -30,8 +28,9 @@ import {
     BUTTON_SAVE,
     SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL,
     SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY,
+    BTN_EDIT_SITE,
 } from "../../ui-config/strings";
-import { FetchBuilder } from "@courselit/utils";
+import { FetchBuilder, capitalize } from "@courselit/utils";
 import { decode, encode } from "base-64";
 import { AppMessage, Profile } from "@courselit/common-models";
 import type { SiteInfo, Address, Auth } from "@courselit/common-models";
@@ -41,40 +40,14 @@ import currencies from "../../data/iso4217.json";
 import {
     Select as SingleSelect,
     MediaSelector,
+    Tabs,
+    Form,
+    FormField,
+    Button,
+    Link,
 } from "@courselit/components-library";
 
 const { networkAction, newSiteInfoAvailable, setAppMessage } = actionCreators;
-
-const PREFIX = "Settings";
-
-const classes = {
-    formControl: `${PREFIX}-formControl`,
-    section: `${PREFIX}-section`,
-    header: `${PREFIX}-header`,
-    sectionContent: `${PREFIX}-sectionContent`,
-    saveButton: `${PREFIX}-saveButton`,
-};
-
-const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
-    [`& .${classes.formControl}`]: {
-        minWidth: "100%",
-        margin: "1em 0em",
-    },
-
-    [`& .${classes.section}`]: {
-        marginBottom: theme.spacing(4),
-    },
-
-    [`& .${classes.header}`]: {
-        marginBottom: theme.spacing(2),
-    },
-
-    [`& .${classes.sectionContent}`]: {},
-
-    [`& .${classes.saveButton}`]: {
-        marginTop: theme.spacing(4),
-    },
-}));
 
 interface SettingsProps {
     siteinfo: SiteInfo;
@@ -392,354 +365,249 @@ const Settings = (props: SettingsProps) => {
     });
 
     return (
-        <StyledGrid container spacing={2}>
-            <Grid item xs={12}>
-                <Typography variant="h1" style={{ wordBreak: "break-word" }}>
+        <div>
+            <div className="flex justify-between items-baseline">
+                <h1 className="text-4xl font-semibold mb-4">
                     {SITE_SETTINGS_PAGE_HEADING}
-                </Typography>
-            </Grid>
-            <Grid item xs={12}>
-                <Grid container direction="column">
-                    <Grid item sx={{ mb: 4 }}>
-                        <form onSubmit={handleSettingsSubmit}>
-                            <Grid container direction="column">
-                                <Grid item>
-                                    <Typography variant="h4">
-                                        {SITE_SETTINGS_SECTION_GENERAL}
-                                    </Typography>
-                                </Grid>
-                                <Grid item>
-                                    <TextField
-                                        variant="outlined"
-                                        label={SITE_SETTINGS_TITLE}
-                                        fullWidth
-                                        margin="normal"
-                                        name="title"
-                                        value={newSettings.title || ""}
-                                        onChange={onChangeData}
-                                        required
-                                    />
-                                </Grid>
-                                <Grid item>
-                                    <TextField
-                                        variant="outlined"
-                                        label={SITE_SETTINGS_SUBTITLE}
-                                        fullWidth
-                                        margin="normal"
-                                        name="subtitle"
-                                        value={newSettings.subtitle || ""}
-                                        onChange={onChangeData}
-                                    />
-                                </Grid>
-                                <Grid item>
-                                    <MediaSelector
-                                        auth={props.auth}
-                                        profile={props.profile}
-                                        dispatch={props.dispatch}
-                                        address={props.address}
-                                        title={SITE_SETTINGS_LOGO}
-                                        src={
-                                            (newSettings.logo &&
-                                                newSettings.logo.thumbnail) ||
-                                            (props.siteinfo.logo &&
-                                                props.siteinfo.logo.thumbnail)
-                                        }
-                                        srcTitle={
-                                            (newSettings.logo &&
-                                                newSettings.logo
-                                                    .originalFileName) ||
-                                            (props.siteinfo.logo &&
-                                                props.siteinfo.logo
-                                                    .originalFileName)
-                                        }
-                                        onSelection={onChangeData}
-                                        mimeTypesToShow={[...MIMETYPE_IMAGE]}
-                                        access="public"
-                                        strings={{}}
-                                    />
-                                </Grid>
-                                <Grid item>
-                                    <Button
-                                        type="submit"
-                                        value={BUTTON_SAVE}
-                                        color="primary"
-                                        variant="outlined"
-                                        disabled={
-                                            JSON.stringify({
-                                                title: settings.title,
-                                                subtitle: settings.subtitle,
-                                                logo: settings.logo,
-                                            }) ===
-                                                JSON.stringify({
-                                                    title: newSettings.title,
-                                                    subtitle:
-                                                        newSettings.subtitle,
-                                                    logo: newSettings.logo,
-                                                }) ||
-                                            !newSettings.title ||
-                                            props.networkAction
-                                        }
-                                    >
-                                        {BUTTON_SAVE}
-                                    </Button>
-                                </Grid>
-                            </Grid>
-                        </form>
-                    </Grid>
-                    <Grid item sx={{ mb: 4 }}>
-                        <form onSubmit={handlePaymentSettingsSubmit}>
-                            <Grid container direction="column" spacing={1}>
-                                <Grid item sx={{ mb: 2 }}>
-                                    <Typography variant="h4">
-                                        {SITE_SETTINGS_SECTION_PAYMENT}
-                                    </Typography>
-                                </Grid>
-                                <Grid item sx={{ mb: 2 }}>
-                                    <SingleSelect
-                                        title={SITE_SETTINGS_CURRENCY}
-                                        options={currencies.map((currency) => ({
-                                            label: currency.Currency,
-                                            value:
-                                                currency.AlphabeticCode || "",
-                                        }))}
-                                        value={
-                                            newSettings.currencyISOCode?.toUpperCase() ||
-                                            ""
-                                        }
-                                        onChange={(value) =>
-                                            setNewSettings(
-                                                Object.assign({}, newSettings, {
-                                                    currencyISOCode: value,
-                                                }),
-                                            )
-                                        }
-                                    />
-                                </Grid>
-                                <Grid item>
-                                    <SingleSelect
-                                        title={
-                                            SITE_ADMIN_SETTINGS_PAYMENT_METHOD
-                                        }
-                                        value={
-                                            newSettings.paymentMethod ||
-                                            PAYMENT_METHOD_NONE
-                                        }
-                                        options={[
-                                            {
-                                                label: SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL,
-                                                value: PAYMENT_METHOD_NONE,
-                                            },
-                                            {
-                                                label: capitalize(
-                                                    PAYMENT_METHOD_STRIPE.toLowerCase(),
-                                                ),
-                                                value: PAYMENT_METHOD_STRIPE,
-                                            },
-                                        ]}
-                                        onChange={(value) =>
-                                            setNewSettings(
-                                                Object.assign({}, newSettings, {
-                                                    paymentMethod: value,
-                                                }),
-                                            )
-                                        }
-                                    />
-                                </Grid>
+                </h1>
+                <div>
+                    <Button
+                        href={`/dashboard/page/homepage/edit?redirectTo=/dashboard/settings`}
+                        component="link"
+                    >
+                        {BTN_EDIT_SITE}
+                    </Button>
+                </div>
+            </div>
+            <Tabs
+                items={[
+                    SITE_SETTINGS_SECTION_GENERAL,
+                    SITE_SETTINGS_SECTION_PAYMENT,
+                    SITE_CUSTOMISATIONS_SETTING_HEADER,
+                ]}
+            >
+                <Form
+                    onSubmit={handleSettingsSubmit}
+                    className="flex flex-col gap-4 pt-4"
+                >
+                    <FormField
+                        label={SITE_SETTINGS_TITLE}
+                        name="title"
+                        value={newSettings.title || ""}
+                        onChange={onChangeData}
+                        required
+                    />
+                    <FormField
+                        label={SITE_SETTINGS_SUBTITLE}
+                        name="subtitle"
+                        value={newSettings.subtitle || ""}
+                        onChange={onChangeData}
+                    />
+                    <MediaSelector
+                        auth={props.auth}
+                        profile={props.profile}
+                        dispatch={props.dispatch}
+                        address={props.address}
+                        title={SITE_SETTINGS_LOGO}
+                        src={
+                            (newSettings.logo && newSettings.logo.thumbnail) ||
+                            (props.siteinfo.logo &&
+                                props.siteinfo.logo.thumbnail)
+                        }
+                        srcTitle={
+                            (newSettings.logo &&
+                                newSettings.logo.originalFileName) ||
+                            (props.siteinfo.logo &&
+                                props.siteinfo.logo.originalFileName)
+                        }
+                        onSelection={onChangeData}
+                        mimeTypesToShow={[...MIMETYPE_IMAGE]}
+                        access="public"
+                        strings={{}}
+                    />
+                    <div>
+                        <Button
+                            type="submit"
+                            value={BUTTON_SAVE}
+                            color="primary"
+                            disabled={
+                                JSON.stringify({
+                                    title: settings.title,
+                                    subtitle: settings.subtitle,
+                                    logo: settings.logo,
+                                }) ===
+                                    JSON.stringify({
+                                        title: newSettings.title,
+                                        subtitle: newSettings.subtitle,
+                                        logo: newSettings.logo,
+                                    }) ||
+                                !newSettings.title ||
+                                props.networkAction
+                            }
+                        >
+                            {BUTTON_SAVE}
+                        </Button>
+                    </div>
+                </Form>
+                <Form
+                    onSubmit={handlePaymentSettingsSubmit}
+                    className="flex flex-col gap-4 pt-4"
+                >
+                    <SingleSelect
+                        title={SITE_SETTINGS_CURRENCY}
+                        options={currencies.map((currency) => ({
+                            label: currency.Currency,
+                            value: currency.AlphabeticCode || "",
+                        }))}
+                        value={newSettings.currencyISOCode?.toUpperCase() || ""}
+                        onChange={(value) =>
+                            setNewSettings(
+                                Object.assign({}, newSettings, {
+                                    currencyISOCode: value,
+                                }),
+                            )
+                        }
+                    />
+                    <SingleSelect
+                        title={SITE_ADMIN_SETTINGS_PAYMENT_METHOD}
+                        value={newSettings.paymentMethod || PAYMENT_METHOD_NONE}
+                        options={[
+                            {
+                                label: SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL,
+                                value: PAYMENT_METHOD_NONE,
+                            },
+                            {
+                                label: capitalize(
+                                    PAYMENT_METHOD_STRIPE.toLowerCase(),
+                                ),
+                                value: PAYMENT_METHOD_STRIPE,
+                            },
+                        ]}
+                        onChange={(value) =>
+                            setNewSettings(
+                                Object.assign({}, newSettings, {
+                                    paymentMethod: value,
+                                }),
+                            )
+                        }
+                    />
 
-                                {newSettings.paymentMethod ===
-                                    PAYMENT_METHOD_STRIPE && (
-                                    <Grid item>
-                                        <TextField
-                                            variant="outlined"
-                                            label={
-                                                SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT
-                                            }
-                                            fullWidth
-                                            margin="normal"
-                                            name="stripePublishableKey"
-                                            value={
-                                                newSettings.stripePublishableKey ||
-                                                ""
-                                            }
-                                            onChange={onChangeData}
-                                        />
-                                        <TextField
-                                            variant="outlined"
-                                            label={
-                                                SITE_ADMIN_SETTINGS_STRIPE_SECRET
-                                            }
-                                            fullWidth
-                                            margin="normal"
-                                            name="stripeSecret"
-                                            type="password"
-                                            value={
-                                                newSettings.stripeSecret || ""
-                                            }
-                                            onChange={onChangeData}
-                                            sx={{ mb: 2 }}
-                                            autoComplete="off"
-                                        />
-                                        <Grid
-                                            container
-                                            direction="column"
-                                            spacing={1}
-                                            sx={{ mb: 2 }}
-                                        >
-                                            <Grid item>
-                                                <Typography variant="subtitle2">
-                                                    {
-                                                        HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK
-                                                    }
-                                                </Typography>
-                                            </Grid>
-                                            <Grid item>
-                                                <Typography
-                                                    variant="body2"
-                                                    color="textSecondary"
-                                                >
-                                                    {
-                                                        SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK
-                                                    }
-                                                </Typography>
-                                            </Grid>
-                                            <Grid item>
-                                                <Typography>
-                                                    <a
-                                                        href={`${props.address.backend}/api/payment/webhook`}
-                                                    >
-                                                        {`${props.address.backend}/api/payment/webhook`}
-                                                    </a>
-                                                </Typography>
-                                            </Grid>
-                                        </Grid>
-                                    </Grid>
-                                )}
-                                {newSettings.paymentMethod ===
-                                    PAYMENT_METHOD_PAYPAL && (
-                                    <Grid item>
-                                        <TextField
-                                            variant="outlined"
-                                            label={
-                                                SITE_ADMIN_SETTINGS_PAYPAL_SECRET
-                                            }
-                                            fullWidth
-                                            margin="normal"
-                                            name="paypalSecret"
-                                            type="password"
-                                            value={
-                                                newSettings.paypalSecret || ""
-                                            }
-                                            onChange={onChangeData}
-                                            disabled={true}
-                                        />
-                                    </Grid>
-                                )}
-                                {newSettings.paymentMethod ===
-                                    PAYMENT_METHOD_PAYTM && (
-                                    <Grid item>
-                                        <TextField
-                                            variant="outlined"
-                                            label={
-                                                SITE_ADMIN_SETTINGS_PAYTM_SECRET
-                                            }
-                                            fullWidth
-                                            margin="normal"
-                                            name="paytmSecret"
-                                            type="password"
-                                            value={
-                                                newSettings.paytmSecret || ""
-                                            }
-                                            onChange={onChangeData}
-                                            disabled={true}
-                                        />
-                                    </Grid>
-                                )}
-                                <Grid item>
-                                    <Button
-                                        type="submit"
-                                        value={BUTTON_SAVE}
-                                        color="primary"
-                                        variant="outlined"
-                                        disabled={
-                                            JSON.stringify(
-                                                getPaymentSettings(),
-                                            ) ===
-                                            JSON.stringify(
-                                                getPaymentSettings(true),
-                                            )
-                                        }
+                    {newSettings.paymentMethod === PAYMENT_METHOD_STRIPE && (
+                        <>
+                            <FormField
+                                label={
+                                    SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT
+                                }
+                                name="stripePublishableKey"
+                                value={newSettings.stripePublishableKey || ""}
+                                onChange={onChangeData}
+                            />
+                            <FormField
+                                label={SITE_ADMIN_SETTINGS_STRIPE_SECRET}
+                                name="stripeSecret"
+                                type="password"
+                                value={newSettings.stripeSecret || ""}
+                                onChange={onChangeData}
+                                sx={{ mb: 2 }}
+                                autoComplete="off"
+                            />
+                            <div className="flex flex-col gap-2">
+                                <p className="font-medium">
+                                    {
+                                        HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK
+                                    }
+                                </p>
+                                <p className="text-slate-600">
+                                    {
+                                        SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK
+                                    }
+                                </p>
+                                <p>
+                                    <Link
+                                        href={`${props.address.backend}/api/payment/webhook`}
+                                        className="hover:underline"
                                     >
-                                        {BUTTON_SAVE}
-                                    </Button>
-                                </Grid>
-                            </Grid>
-                        </form>
-                    </Grid>
-                    <Grid item>
-                        <form onSubmit={handleCodeInjectionSettingsSubmit}>
-                            <Grid container direction="column">
-                                <Grid item>
-                                    <Typography variant="h4">
-                                        {SITE_CUSTOMISATIONS_SETTING_HEADER}
-                                    </Typography>
-                                </Grid>
-                                <Grid item>
-                                    <TextField
-                                        variant="outlined"
-                                        label={
-                                            SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD
-                                        }
-                                        fullWidth
-                                        margin="normal"
-                                        name="codeInjectionHead"
-                                        value={
-                                            newSettings.codeInjectionHead || ""
-                                        }
-                                        onChange={onChangeData}
-                                        multiline
-                                        rows={10}
-                                    />
-                                </Grid>
-                                <Grid item>
-                                    <TextField
-                                        variant="outlined"
-                                        label={
-                                            SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY
-                                        }
-                                        fullWidth
-                                        margin="normal"
-                                        name="codeInjectionBody"
-                                        value={
-                                            newSettings.codeInjectionBody || ""
-                                        }
-                                        onChange={onChangeData}
-                                        multiline
-                                        rows={10}
-                                    />
-                                </Grid>
-                                <Grid item>
-                                    <Button
-                                        type="submit"
-                                        value={BUTTON_SAVE}
-                                        color="primary"
-                                        variant="outlined"
-                                        disabled={
-                                            (settings.codeInjectionHead ===
-                                                newSettings.codeInjectionHead &&
-                                                settings.codeInjectionBody ===
-                                                    newSettings.codeInjectionBody) ||
-                                            props.networkAction
-                                        }
-                                    >
-                                        {BUTTON_SAVE}
-                                    </Button>
-                                </Grid>
-                            </Grid>
-                        </form>
-                    </Grid>
-                </Grid>
-            </Grid>
-        </StyledGrid>
+                                        {`${props.address.backend}/api/payment/webhook`}
+                                    </Link>
+                                </p>
+                            </div>
+                        </>
+                    )}
+                    {newSettings.paymentMethod === PAYMENT_METHOD_PAYPAL && (
+                        <FormField
+                            label={SITE_ADMIN_SETTINGS_PAYPAL_SECRET}
+                            name="paypalSecret"
+                            type="password"
+                            value={newSettings.paypalSecret || ""}
+                            onChange={onChangeData}
+                            disabled={true}
+                        />
+                    )}
+                    {newSettings.paymentMethod === PAYMENT_METHOD_PAYTM && (
+                        <FormField
+                            label={SITE_ADMIN_SETTINGS_PAYTM_SECRET}
+                            name="paytmSecret"
+                            type="password"
+                            value={newSettings.paytmSecret || ""}
+                            onChange={onChangeData}
+                            disabled={true}
+                        />
+                    )}
+                    <div>
+                        <Button
+                            type="submit"
+                            value={BUTTON_SAVE}
+                            disabled={
+                                JSON.stringify(getPaymentSettings()) ===
+                                JSON.stringify(getPaymentSettings(true))
+                            }
+                        >
+                            {BUTTON_SAVE}
+                        </Button>
+                    </div>
+                </Form>
+                <Form
+                    onSubmit={handleCodeInjectionSettingsSubmit}
+                    className="flex flex-col gap-4 pt-4"
+                >
+                    <FormField
+                        component="textarea"
+                        label={SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD}
+                        name="codeInjectionHead"
+                        value={newSettings.codeInjectionHead || ""}
+                        onChange={onChangeData}
+                        multiline
+                        rows={10}
+                    />
+                    <FormField
+                        component="textarea"
+                        label={SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY}
+                        name="codeInjectionBody"
+                        value={newSettings.codeInjectionBody || ""}
+                        onChange={onChangeData}
+                        multiline
+                        rows={10}
+                    />
+                    <div>
+                        <Button
+                            type="submit"
+                            value={BUTTON_SAVE}
+                            color="primary"
+                            variant="outlined"
+                            disabled={
+                                (settings.codeInjectionHead ===
+                                    newSettings.codeInjectionHead &&
+                                    settings.codeInjectionBody ===
+                                        newSettings.codeInjectionBody) ||
+                                props.networkAction
+                            }
+                        >
+                            {BUTTON_SAVE}
+                        </Button>
+                    </div>
+                </Form>
+            </Tabs>
+        </div>
     );
 };
 

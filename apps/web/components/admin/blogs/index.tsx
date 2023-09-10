@@ -1,29 +1,11 @@
 import React, { useEffect, useState } from "react";
-import {
-    Address,
-    AppMessage,
-    Auth,
-    Course,
-    Profile,
-} from "@courselit/common-models";
+import { Address, AppMessage, Course } from "@courselit/common-models";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import {
     networkAction,
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
-import {
-    Button,
-    Grid,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Typography,
-} from "@mui/material";
-import Link from "next/link";
 import { connect } from "react-redux";
 import {
     BLOG_TABLE_HEADER_NAME,
@@ -35,27 +17,34 @@ import {
     PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE,
 } from "../../../ui-config/strings";
 import dynamic from "next/dynamic";
-import { Menu } from "@courselit/components-library";
 import { MoreVert } from "@courselit/icons";
+import { MenuItem, Menu2, Button, Link } from "@courselit/components-library";
+import { Table } from "@courselit/components-library";
+import { TableHead } from "@courselit/components-library";
+import { TableBody } from "@courselit/components-library";
 
 const BlogItem = dynamic(() => import("./blog-item"));
 
 interface IndexProps {
-    auth: Auth;
-    profile: Profile;
     dispatch: AppDispatch;
     address: Address;
+    loading: boolean;
 }
 
-const Index = (props: IndexProps) => {
+const Index = ({ loading, dispatch, address }: IndexProps) => {
     const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1);
     const [creatorCourses, setCreatorCourses] = useState<
         (Course & { published: boolean })[]
     >([]);
+    const [endReached, setEndReached] = useState(false);
 
     useEffect(() => {
         loadBlogs();
     }, []);
+
+    useEffect(() => {
+        loadBlogs();
+    }, [coursesPaginationOffset]);
 
     const loadBlogs = async () => {
         const query = `
@@ -75,21 +64,24 @@ const Index = (props: IndexProps) => {
     }
     `;
         const fetch = new FetchBuilder()
-            .setUrl(`${props.address.backend}/api/graph`)
+            .setUrl(`${address.backend}/api/graph`)
             .setPayload(query)
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            props.dispatch(networkAction(true));
+            dispatch(networkAction(true));
+            setEndReached(false);
             const response = await fetch.exec();
-            if (response.courses && response.courses.length > 0) {
-                setCreatorCourses([...creatorCourses, ...response.courses]);
-                setCoursesPaginationOffset(coursesPaginationOffset + 1);
+            if (response.courses) {
+                setCreatorCourses([...response.courses]);
+                if (response.courses.length === 0) {
+                    setEndReached(true);
+                }
             }
         } catch (err: any) {
-            props.dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            props.dispatch(networkAction(false));
+            dispatch(networkAction(false));
         }
     };
 
@@ -99,94 +91,72 @@ const Index = (props: IndexProps) => {
     };
 
     return (
-        <Grid container direction="column">
-            <Grid item sx={{ mb: 2 }}>
-                <Grid
-                    container
-                    justifyContent="space-between"
-                    alignItems="center"
+        <div className="flex flex-col">
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-4xl font-semibold mb-4">
+                    {MANAGE_BLOG_PAGE_HEADING}
+                </h1>
+                <div className="flex items-center gap-4">
+                    <Link href="/dashboard/blog/new">
+                        <Button>{BTN_NEW_BLOG}</Button>
+                    </Link>
+                    <Menu2 icon={<MoreVert />} variant="soft">
+                        <MenuItem>
+                            <Link
+                                href={`/dashboard/page/blog/edit?redirectTo=/dashboard/blogs`}
+                            >
+                                {PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE}
+                            </Link>
+                        </MenuItem>
+                    </Menu2>
+                </div>
+            </div>
+            <Table aria-label="Products">
+                <TableHead className="border-0 border-b border-slate-200">
+                    <td>{BLOG_TABLE_HEADER_NAME}</td>
+                    <td align="right">{PRODUCTS_TABLE_HEADER_STATUS}</td>
+                    <td align="right">{PRODUCTS_TABLE_HEADER_ACTIONS}</td>
+                </TableHead>
+                <TableBody
+                    loading={loading}
+                    endReached={endReached}
+                    page={coursesPaginationOffset}
+                    onPageChange={(value: number) => {
+                        setCoursesPaginationOffset(value);
+                    }}
                 >
-                    <Grid item>
-                        <Typography variant="h1">
-                            {MANAGE_BLOG_PAGE_HEADING}
-                        </Typography>
-                    </Grid>
-                    <Grid item>
-                        <Grid container alignItems="center">
-                            <Grid item sx={{ mr: 1 }}>
-                                <Link href="/dashboard/blog/new" legacyBehavior>
-                                    <Button variant="contained" component="a">
-                                        {BTN_NEW_BLOG}
-                                    </Button>
-                                </Link>
-                            </Grid>
-                            <Grid item>
-                                <Menu
-                                    options={[
-                                        {
-                                            label: PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE,
-                                            type: "link",
-                                            href: `/dashboard/page/blog/edit`,
-                                        },
-                                    ]}
-                                    icon={<MoreVert />}
-                                />
-                            </Grid>
-                        </Grid>
-                    </Grid>
-                </Grid>
-            </Grid>
-            <Grid item sx={{ mb: 2 }}>
-                <TableContainer>
-                    <Table aria-label="Products">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>{BLOG_TABLE_HEADER_NAME}</TableCell>
-                                <TableCell align="right">
-                                    {PRODUCTS_TABLE_HEADER_STATUS}
-                                </TableCell>
-                                <TableCell align="right">
-                                    {PRODUCTS_TABLE_HEADER_ACTIONS}
-                                </TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {creatorCourses.map(
-                                (
-                                    product: Course & {
-                                        published: boolean;
-                                    },
-                                    index: number,
-                                ) => (
-                                    <BlogItem
-                                        key={product.courseId}
-                                        details={product}
-                                        position={index}
-                                        onDelete={onDelete}
-                                    />
-                                ),
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </Grid>
+                    {creatorCourses.map(
+                        (
+                            product: Course & {
+                                published: boolean;
+                            },
+                            index: number,
+                        ) => (
+                            <BlogItem
+                                key={product.courseId}
+                                details={product}
+                                position={index}
+                                onDelete={onDelete}
+                            />
+                        ),
+                    )}
+                </TableBody>
+            </Table>
             {creatorCourses.length > 0 && (
-                <Grid item container justifyContent="center" sx={{ mb: 2 }}>
-                    <Grid item>
-                        <Button
-                            variant="outlined"
-                            onClick={() =>
-                                setCoursesPaginationOffset(
-                                    coursesPaginationOffset + 1,
-                                )
-                            }
-                        >
-                            {LOAD_MORE_TEXT}
-                        </Button>
-                    </Grid>
-                </Grid>
+                <div className="flex justify-center">
+                    <Button
+                        variant="soft"
+                        onClick={() =>
+                            setCoursesPaginationOffset(
+                                coursesPaginationOffset + 1,
+                            )
+                        }
+                    >
+                        {LOAD_MORE_TEXT}
+                    </Button>
+                </div>
             )}
-        </Grid>
+        </div>
     );
 };
 

@@ -1,5 +1,4 @@
 import BaseLayout from "../components/public/base-layout";
-import { Grid, Typography } from "@mui/material";
 import { PAGE_TITLE_404 } from "../ui-config/strings";
 import { getPage } from "../ui-lib/utils";
 import { Address } from "@courselit/common-models";
@@ -23,23 +22,12 @@ function Custom404({ address }: { address: Address }) {
 
     return (
         <BaseLayout title={PAGE_TITLE_404} layout={layout}>
-            <Grid
-                container
-                sx={{
-                    padding: 2,
-                    minHeight: "80vh",
-                }}
-                direction="column"
-                alignItems="center"
-                justifyContent="center"
-            >
-                <Grid item>
-                    <Cross />
-                </Grid>
-                <Grid item>
-                    <Typography variant="h4">{PAGE_TITLE_404}</Typography>
-                </Grid>
-            </Grid>
+            <div className="flex flex-col gap-4 h-screen justify-center items-center">
+                <Cross />
+                <h1 className="text-4xl font-semibold mb-4">
+                    {PAGE_TITLE_404}
+                </h1>
+            </div>
         </BaseLayout>
     );
 }

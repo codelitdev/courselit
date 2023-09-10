@@ -1,5 +1,4 @@
 import React from "react";
-import { Avatar } from "@mui/material";
 import Settings, { Link } from "./settings";
 import { Image, Menu2, Link as AppLink } from "@courselit/components-library";
 import { Menu as MenuIcon, Person } from "@courselit/icons";
@@ -15,7 +14,7 @@ interface WidgetProps {
 
 export default function Widget({ state, settings }: WidgetProps) {
     return (
-        <div
+        <header
             className="flex items-center p-4"
             style={{
                 backgroundColor: settings.appBarBackground,
@@ -166,6 +165,6 @@ export default function Widget({ state, settings }: WidgetProps) {
                     </MenuItem>
                 </Menu2>
             </div>
-        </div>
+        </header>
     );
 }

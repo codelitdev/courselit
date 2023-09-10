@@ -1,11 +1,5 @@
-import { Section } from "@courselit/components-library";
+import { Form, FormField, Section } from "@courselit/components-library";
 import { AppDispatch, AppState } from "@courselit/state-management";
-import Breadcrumbs from "@mui/material/Breadcrumbs";
-import Button from "@mui/material/Button";
-import Grid from "@mui/material/Grid";
-import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
-import MuiLink from "@mui/material/Link";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { actionCreators } from "@courselit/state-management";
 import {
@@ -31,7 +25,7 @@ import {
     TOAST_MAIL_SENT,
 } from "../../../ui-config/strings";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
-import Link from "next/link";
+import { Breadcrumbs, Link, Button } from "@courselit/components-library";
 const { networkAction } = actionCreators;
 
 interface MailEditorProps {
@@ -165,94 +159,66 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
     }
 
     return (
-        <Section>
-            <Grid
-                container
-                direction="column"
-                component="form"
-                onSubmit={onSubmit}
-            >
-                <Grid item sx={{ mb: 2 }}>
-                    <Breadcrumbs aria-label="breakcrumb">
-                        <MuiLink
-                            href="/dashboard/mails"
-                            color="inherit"
-                            underline="hover"
-                            component={Link}
-                            sx={{ cursor: "pointer" }}
-                        >
-                            {PAGE_HEADER_ALL_MAILS}
-                        </MuiLink>
-                        <Typography color="text.primary">
-                            {PAGE_HEADER_EDIT_MAIL}
-                        </Typography>
-                    </Breadcrumbs>
-                </Grid>
-                <Grid item sx={{ mb: 2 }}>
-                    <Typography variant="h1">
-                        {PAGE_HEADER_EDIT_MAIL}
-                    </Typography>
-                </Grid>
-                <Grid item sx={{ mb: 2 }}>
-                    <TextField
-                        value={mail.to.join(", ")}
-                        multiline
-                        rows={2}
-                        fullWidth
-                        label={MAIL_TO_PLACEHOLDER}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            onChange(
-                                "to",
-                                e.target.value.split(
-                                    UIConstants.MAIL_RECIPIENTS_SPLIT_REGEX,
-                                ),
-                            )
+        <Form className="flex flex-col gap-4" onSubmit={onSubmit}>
+            <Breadcrumbs aria-label="breakcrumb">
+                <Link href="/dashboard/mails">{PAGE_HEADER_ALL_MAILS}</Link>
+                {PAGE_HEADER_EDIT_MAIL}
+            </Breadcrumbs>
+            <h1 className="text-4xl font-semibold mb-4">
+                {PAGE_HEADER_EDIT_MAIL}
+            </h1>
+            <FormField
+                component="textarea"
+                value={mail.to.join(", ")}
+                multiline
+                rows={2}
+                label={MAIL_TO_PLACEHOLDER}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    onChange(
+                        "to",
+                        e.target.value.split(
+                            UIConstants.MAIL_RECIPIENTS_SPLIT_REGEX,
+                        ),
+                    )
+                }
+                disabled={mail.published}
+                required
+            />
+            <FormField
+                value={mail.subject}
+                label={MAIL_SUBJECT_PLACEHOLDER}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    onChange("subject", e.target.value)
+                }
+                disabled={mail.published}
+            />
+            <FormField
+                component="textarea"
+                value={mail.body}
+                multiline
+                row={5}
+                label={MAIL_BODY_PLACEHOLDER}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    onChange("body", e.target.value)
+                }
+                disabled={mail.published}
+            />
+            {!mail.published && (
+                <div>
+                    <Button
+                        disabled={
+                            mail.to.length < 1 ||
+                            !mail.subject ||
+                            !mail.body ||
+                            sending
                         }
-                        disabled={mail.published}
-                    />
-                </Grid>
-                <Grid item sx={{ mb: 2 }}>
-                    <TextField
-                        value={mail.subject}
-                        fullWidth
-                        label={MAIL_SUBJECT_PLACEHOLDER}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            onChange("subject", e.target.value)
-                        }
-                        disabled={mail.published}
-                    />
-                </Grid>
-                <Grid item sx={{ mb: 2 }}>
-                    <TextField
-                        value={mail.body}
-                        multiline
-                        row={5}
-                        fullWidth
-                        label={MAIL_BODY_PLACEHOLDER}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            onChange("body", e.target.value)
-                        }
-                        disabled={mail.published}
-                    />
-                </Grid>
-                {!mail.published && (
-                    <Grid item>
-                        <Button
-                            variant="contained"
-                            disabled={
-                                mail.to.length < 1 ||
-                                !mail.subject ||
-                                !mail.body ||
-                                sending
-                            }
-                            type="submit"
-                        >
-                            {sending ? BTN_SENDING : BTN_SEND}
-                        </Button>
-                    </Grid>
-                )}
-            </Grid>
-        </Section>
+                        type="submit"
+                    >
+                        {sending ? BTN_SENDING : BTN_SEND}
+                    </Button>
+                </div>
+            )}
+        </Form>
     );
 }
 

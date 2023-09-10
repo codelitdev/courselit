@@ -163,10 +163,12 @@ export const updateLesson = async (
         | "downloadable"
         | "requiresEnrollment"
         | "type"
-    > & { id: string },
+    > & { id: string; lessonId: string },
     ctx: GQLContext,
 ) => {
     let lesson = await getLessonOrThrow(lessonData.id, ctx);
+    lessonData.lessonId = lessonData.id;
+    delete lessonData.id;
 
     lessonData.type = lesson.type;
     lessonValidator(lessonData);
@@ -198,11 +200,14 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
         course.lessons.splice(course.lessons.indexOf(lesson.lessonId), 1);
         await (course as any).save();
 
-        if (lesson.mediaId) {
-            await deleteMedia(lesson.mediaId);
+        if (lesson.media?.mediaId) {
+            await deleteMedia(lesson.media.mediaId);
         }
 
-        await lesson.remove();
+        await LessonModel.deleteOne({
+            _id: lesson._id,
+            domain: ctx.subdomain._id,
+        });
         return true;
     } catch (err: any) {
         throw new Error(err.message);

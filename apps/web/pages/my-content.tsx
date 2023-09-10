@@ -13,7 +13,6 @@ import { getBackendAddress, getPage } from "../ui-lib/utils";
 import type { Address, Auth, Page, Profile } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
 import { Section, Button } from "@courselit/components-library";
-import Link from "next/link";
 import { checkPermission } from "@courselit/utils";
 import { UIConstants } from "@courselit/common-models";
 import AppLoader from "../components/app-loader";
@@ -109,13 +108,14 @@ function Account({ auth, page, profile, address }: AccountProps) {
                                     </p>
                                 </div>
                                 <div className="flex justify-end">
-                                    <Link
-                                        href={`/course/${course.slug}/${course.courseId}`}
-                                    >
-                                        <Button component="link">
+                                    <div>
+                                        <Button
+                                            component="link"
+                                            href={`/course/${course.slug}/${course.courseId}`}
+                                        >
                                             {VISIT_COURSE_BUTTON}
                                         </Button>
-                                    </Link>
+                                    </div>
                                 </div>
                             </Section>
                         </div>

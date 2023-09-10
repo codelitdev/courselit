@@ -1,13 +1,5 @@
 import React from "react";
 import { Section } from "@courselit/components-library";
-import {
-    Button,
-    Checkbox,
-    Grid,
-    InputAdornment,
-    TextField,
-    Typography,
-} from "@mui/material";
 import { useEffect, useState } from "react";
 import {
     LESSON_QUIZ_ADD_QUESTION,
@@ -18,6 +10,13 @@ import {
 import { QuestionBuilder } from "./question-builder";
 import { Question, Quiz } from "@courselit/common-models";
 import { DEFAULT_PASSING_GRADE } from "../../../../../../ui-config/constants";
+import {
+    Checkbox,
+    Button,
+    Form,
+    FormField,
+} from "@courselit/components-library";
+import { FormEvent } from "react";
 
 interface QuizBuilderProps {
     content: Quiz;
@@ -103,18 +102,12 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
         ]);
 
     return (
-        <Grid container direction="column">
-            {questions.map((question: Question, index: number) => (
-                <Grid
-                    item
-                    sx={{
-                        marginBottom: 2,
-                    }}
-                    key={index}
-                >
-                    <Section>
+        <div className="flex flex-col gap-4">
+            <Form className="flex flex-col gap-4">
+                {questions.map((question: Question, index: number) => (
+                    <Section key={index}>
                         <QuestionBuilder
-                            details={questions[index]}
+                            details={question}
                             index={index}
                             removeOption={() => removeOption(index)}
                             setQuestionText={setQuestionText(index)}
@@ -124,59 +117,40 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
                             deleteQuestion={deleteQuestion}
                         />
                     </Section>
-                </Grid>
-            ))}
-            <Grid
-                item
-                sx={{
-                    marginBottom: 2,
-                }}
-            >
-                <Button onClick={addNewQuestion} variant="contained">
+                ))}
+            </Form>
+            <div>
+                <Button
+                    onClick={(e: FormEvent<HTMLInputElement>) => {
+                        e.preventDefault();
+                        addNewQuestion();
+                    }}
+                >
                     {LESSON_QUIZ_ADD_QUESTION}
                 </Button>
-            </Grid>
-            <Grid item>
-                <Grid container alignItems="center">
-                    <Grid item>
-                        <Checkbox
-                            checked={passingGradeRequired}
-                            onChange={(e) =>
-                                setPassingGradeRequired(e.target.checked)
-                            }
-                        />
-                    </Grid>
-                    <Grid item xs>
-                        <Typography>{LESSON_QUIZ_GRADED_TEXT}</Typography>
-                    </Grid>
-                    <Grid item>
-                        <TextField
-                            size="small"
-                            type="number"
-                            label={LESSON_QUIZ_PASSING_GRADE_LABEL}
-                            value={passingGradePercentage}
-                            onChange={(e) =>
-                                setPassingGradePercentage(
-                                    parseInt(e.target.value),
-                                )
-                            }
-                            InputLabelProps={{ shrink: true }}
-                            disabled={!passingGradeRequired}
-                            InputProps={{
-                                endAdornment: (
-                                    <InputAdornment position="end">
-                                        %
-                                    </InputAdornment>
-                                ),
-                                inputProps: {
-                                    min: 0,
-                                    max: 100,
-                                },
-                            }}
-                        />
-                    </Grid>
-                </Grid>
-            </Grid>
-        </Grid>
+            </div>
+            <Form className="flex justify-between items-center gap-2">
+                <div className="flex items-center gap-2">
+                    <Checkbox
+                        checked={passingGradeRequired}
+                        onChange={(value: boolean) =>
+                            setPassingGradeRequired(value)
+                        }
+                    />
+                    <p>{LESSON_QUIZ_GRADED_TEXT}</p>
+                </div>
+                <FormField
+                    type="number"
+                    label={LESSON_QUIZ_PASSING_GRADE_LABEL}
+                    value={passingGradePercentage}
+                    onChange={(e) =>
+                        setPassingGradePercentage(parseInt(e.target.value))
+                    }
+                    disabled={!passingGradeRequired}
+                    min={0}
+                    max={100}
+                />
+            </Form>
+        </div>
     );
 }

@@ -5,7 +5,6 @@ import {
     Select,
     TextEditor,
 } from "@courselit/components-library";
-import { Grid, Typography } from "@mui/material";
 import Settings from "./settings";
 import { Alignment } from "@courselit/common-models";
 
@@ -48,52 +47,44 @@ const AdminWidget = ({ settings, onChange }: AboutWidgetProps) => {
     }, [content, alignment, color, backgroundColor]);
 
     return (
-        <Grid container direction="column">
-            <Grid item sx={{ mb: 4 }}>
+        <div className="flex flex-col">
+            <div className="mb-4">
                 <AdminWidgetPanel title="Basic">
-                    <Grid item>
-                        <Typography variant="subtitle1">Text</Typography>
+                    <div>
+                        <p className="mb-1 font-medium">Text</p>
                         <TextEditor
                             initialContent={content}
                             onChange={(state: any) => setContent(state)}
                             showToolbar={false}
                         />
-                    </Grid>
+                    </div>
                 </AdminWidgetPanel>
-            </Grid>
-            <Grid item sx={{ mb: 4 }}>
+            </div>
+            <div className="mb-4">
                 <AdminWidgetPanel title="Design">
-                    <Grid item sx={{ mb: 2 }}>
-                        <ColorSelector
-                            title="Text color"
-                            value={color || "inherit"}
-                            onChange={(value?: string) => setColor(value)}
-                        />
-                    </Grid>
-                    <Grid item sx={{ mb: 2 }}>
-                        <ColorSelector
-                            title="Background color"
-                            value={backgroundColor || ""}
-                            onChange={(value?: string) =>
-                                setBackgroundColor(value)
-                            }
-                        />
-                    </Grid>
-                    <Grid item>
-                        <Select
-                            title="Alignment"
-                            value={alignment}
-                            options={[
-                                { label: "Left", value: "left" },
-                                { label: "Center", value: "center" },
-                                { label: "Right", value: "right" },
-                            ]}
-                            onChange={(value: Alignment) => setAlignment(value)}
-                        />
-                    </Grid>
+                    <ColorSelector
+                        title="Text color"
+                        value={color || "inherit"}
+                        onChange={(value?: string) => setColor(value)}
+                    />
+                    <ColorSelector
+                        title="Background color"
+                        value={backgroundColor || ""}
+                        onChange={(value?: string) => setBackgroundColor(value)}
+                    />
+                    <Select
+                        title="Alignment"
+                        value={alignment}
+                        options={[
+                            { label: "Left", value: "left" },
+                            { label: "Center", value: "center" },
+                            { label: "Right", value: "right" },
+                        ]}
+                        onChange={(value: Alignment) => setAlignment(value)}
+                    />
                 </AdminWidgetPanel>
-            </Grid>
-        </Grid>
+            </div>
+        </div>
     );
 };
 

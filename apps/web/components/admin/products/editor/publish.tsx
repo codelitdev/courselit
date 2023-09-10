@@ -1,9 +1,8 @@
 import React, { FormEvent, useEffect, useState } from "react";
-import { Section } from "@courselit/components-library";
+import { Form, Section, Button } from "@courselit/components-library";
 import useCourse from "./course-hook";
 import { connect } from "react-redux";
-import { Button, Grid, Typography } from "@mui/material";
-import { FetchBuilder } from "@courselit/utils";
+import { capitalize, FetchBuilder } from "@courselit/utils";
 import {
     networkAction,
     setAppMessage,
@@ -99,66 +98,41 @@ function Publish({ id, address, dispatch, loading }: PublishProps) {
 
     return (
         <Section>
-            <form onSubmit={updatePublishingDetails}>
-                <Grid container>
-                    <Grid item xs={12} sx={{ mb: 2 }}>
-                        <Grid
-                            container
-                            justifyContent="space-between"
-                            alignItems="center"
-                        >
-                            <Grid item>
-                                <Typography variant="h5">
-                                    {PUBLISH_TAB_STATUS_TITLE}
-                                </Typography>
-                                <Typography
-                                    variant="body1"
-                                    color="textSecondary"
-                                >
-                                    {PUBLISH_TAB_STATUS_SUBTITLE}
-                                </Typography>
-                            </Grid>
-                            <Grid item>
-                                <Button
-                                    onClick={togglePublishedStatus}
-                                    variant="outlined"
-                                    disabled={loading}
-                                >
-                                    {published ? BTN_UNPUBLISH : BTN_PUBLISH}
-                                </Button>
-                            </Grid>
-                        </Grid>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <Grid
-                            container
-                            justifyContent="space-between"
-                            alignItems="center"
-                        >
-                            <Grid item>
-                                <Typography variant="h5">
-                                    {PUBLISH_TAB_VISIBILITY_TITLE}
-                                </Typography>
-                                <Typography
-                                    variant="body1"
-                                    color="textSecondary"
-                                >
-                                    {PUBLISH_TAB_VISIBILITY_SUBTITLE}
-                                </Typography>
-                            </Grid>
-                            <Grid item>
-                                <Button
-                                    onClick={toggleVisibility}
-                                    variant="outlined"
-                                    disabled={loading || !published}
-                                >
-                                    {privacy}
-                                </Button>
-                            </Grid>
-                        </Grid>
-                    </Grid>
-                </Grid>
-            </form>
+            <Form
+                onSubmit={updatePublishingDetails}
+                className="flex flex-col gap-4"
+            >
+                <div className="flex justify-between items-center">
+                    <div>
+                        <h2>{PUBLISH_TAB_STATUS_TITLE}</h2>
+                        <p className="text-sm text-slate-400">
+                            {PUBLISH_TAB_STATUS_SUBTITLE}
+                        </p>
+                    </div>
+                    <Button
+                        onClick={togglePublishedStatus}
+                        variant="soft"
+                        disabled={loading}
+                    >
+                        {published ? BTN_UNPUBLISH : BTN_PUBLISH}
+                    </Button>
+                </div>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <h2>{PUBLISH_TAB_VISIBILITY_TITLE}</h2>
+                        <p className="text-sm text-slate-400">
+                            {PUBLISH_TAB_VISIBILITY_SUBTITLE}
+                        </p>
+                    </div>
+                    <Button
+                        onClick={toggleVisibility}
+                        variant="soft"
+                        disabled={loading || !published}
+                    >
+                        {capitalize(privacy)}
+                    </Button>
+                </div>
+            </Form>
         </Section>
     );
 }

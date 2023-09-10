@@ -82,13 +82,14 @@ const List = (props: ListProps) => {
                 ))}
             </div>
             {shouldShowLoadMoreButton && courses.length > 0 && (
-                <Button
-                    component="button"
-                    variant="soft"
-                    onClick={() => setOffset(offset + 1)}
-                >
-                    {BTN_LOAD_MORE}
-                </Button>
+                <div>
+                    <Button
+                        variant="soft"
+                        onClick={() => setOffset(offset + 1)}
+                    >
+                        {BTN_LOAD_MORE}
+                    </Button>
+                </div>
             )}
         </>
     );

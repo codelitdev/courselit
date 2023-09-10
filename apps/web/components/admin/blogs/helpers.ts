@@ -9,19 +9,16 @@ import { APP_MESSAGE_COURSE_DELETED } from "../../../ui-config/strings";
 
 interface DeleteProductProps {
     id: string;
-    setDeleteProductPopupOpened: (value: boolean) => void;
     backend: string;
     dispatch: AppDispatch;
     onDeleteComplete?: (...args: any[]) => void;
 }
 export const deleteProduct = async ({
     id,
-    setDeleteProductPopupOpened,
     backend,
     dispatch,
     onDeleteComplete,
 }: DeleteProductProps) => {
-    setDeleteProductPopupOpened(false);
     const query = `
     mutation {
       result: deleteCourse(id: "${id}")
@@ -43,6 +40,7 @@ export const deleteProduct = async ({
             // onDelete(position);
         }
     } catch (err: any) {
+        console.error(err);
         dispatch(setAppMessage(new AppMessage(err.message)));
     } finally {
         dispatch(networkAction(false));

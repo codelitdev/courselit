@@ -1,18 +1,21 @@
 import * as React from "react";
+import Section from "./section";
 
 interface AdminWidgetPanelProps {
     title?: string;
     children: React.ReactNode;
+    className?: string;
 }
 
 export default function AdminWidgetPanel({
     title,
     children,
+    className = "",
 }: AdminWidgetPanelProps) {
     return (
-        <div className="flex flex-col">
-            {title && <h2 className="font-bold mb-4">{title}</h2>}
+        <Section>
+            {title && <h2 className="text-lg font-semibold">{title}</h2>}
             {children}
-        </div>
+        </Section>
     );
 }

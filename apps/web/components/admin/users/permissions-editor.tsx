@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Grid, Typography, Checkbox } from "@mui/material";
-import { ExpandLess, ExpandMore } from "@courselit/icons";
 import {
     PERM_COURSE_MANAGE,
     PERM_COURSE_MANAGE_ANY,
@@ -22,7 +20,8 @@ import { actionCreators } from "@courselit/state-management";
 import { AppMessage } from "@courselit/common-models";
 import type { User, Auth, Address } from "@courselit/common-models";
 import { UIConstants } from "@courselit/common-models";
-import { IconButton } from "@courselit/components-library";
+import { Checkbox } from "@courselit/components-library";
+import { Section } from "@courselit/components-library";
 
 const { networkAction, setAppMessage } = actionCreators;
 const { permissions } = UIConstants;
@@ -67,15 +66,9 @@ function PermissionsEditor({
         setExpanded(!expanded);
     };
 
-    const savePermissions = async (
-        permission: string,
-        event: React.ChangeEvent<HTMLInputElement>,
-    ) => {
-        event.preventDefault();
-        const state = event.target.checked;
-
-        let newPermissions;
-        if (state) {
+    const savePermissions = async (permission: string, value: boolean) => {
+        let newPermissions: string[];
+        if (value) {
             newPermissions = [...activePermissions, permission];
         } else {
             newPermissions = activePermissions.filter(
@@ -120,39 +113,21 @@ function PermissionsEditor({
     };
 
     return (
-        <Grid container direction="column">
-            <Grid item container justifyContent="space-between">
-                <Grid item>
-                    <Typography variant="h4">{PERM_SECTION_HEADER}</Typography>
-                </Grid>
-                <Grid item>
-                    <IconButton onClick={toggleExpandedState} variant="soft">
-                        {expanded ? <ExpandLess /> : <ExpandMore />}
-                    </IconButton>
-                </Grid>
-            </Grid>
-            {expanded &&
-                Object.keys(permissionToCaptionMap).map((permission) => (
-                    <Grid
-                        item
-                        container
-                        direction="row"
-                        justifyContent="space-between"
-                        xs
-                        key={permission}
-                    >
-                        <Typography variant="subtitle1">
-                            {permissionToCaptionMap[permission]}
-                        </Typography>
-                        <Checkbox
-                            name={permission}
-                            disabled={networkCallUnderway}
-                            checked={activePermissions.includes(permission)}
-                            onChange={(e) => savePermissions(permission, e)}
-                        />
-                    </Grid>
-                ))}
-        </Grid>
+        <Section className="md:w-1/2" header={PERM_SECTION_HEADER}>
+            {Object.keys(permissionToCaptionMap).map((permission) => (
+                <div className="flex justify-between" key={permission}>
+                    <p>{permissionToCaptionMap[permission]}</p>
+                    <Checkbox
+                        name={permission}
+                        disabled={networkCallUnderway}
+                        checked={activePermissions.includes(permission)}
+                        onChange={(value: boolean) =>
+                            savePermissions(permission, value)
+                        }
+                    />
+                </div>
+            ))}
+        </Section>
     );
 }
 

@@ -1,49 +1,28 @@
 import React from "react";
-import { styled, Link as MuiLink } from "@mui/material";
-import Link from "next/link";
 import { useRouter } from "next/router";
 import Tab from "../models/Tab";
+import { Link } from "@courselit/components-library";
 
 interface TabsProps {
     tabs: Tab[];
 }
 
-const StyledUl = styled("ul")({
-    listStyle: "none",
-    margin: 0,
-    padding: 0,
-});
-
-const StyledLi = styled("li")(({ theme }: { theme: any }) => ({
-    float: "left",
-    marginRight: theme.spacing(2),
-}));
-
 function Tabs({ tabs }: TabsProps) {
     const router = useRouter();
 
     return (
-        <StyledUl>
+        <ul className="flex gap-2">
             {tabs.map((tab: Tab) => (
-                <StyledLi key={tab.text}>
-                    <MuiLink
-                        variant="h5"
-                        color="inherit"
-                        sx={{
-                            cursor: "pointer",
-                            textDecoration:
-                                router.asPath === tab.url
-                                    ? "underline"
-                                    : "none",
-                        }}
-                        href={tab.url}
-                        component={Link}
-                    >
-                        {tab.text}
-                    </MuiLink>
-                </StyledLi>
+                <li
+                    key={tab.text}
+                    className={`text-xl font-medium ${
+                        router.asPath === tab.url ? "underline" : "no-underline"
+                    }`}
+                >
+                    <Link href={tab.url}>{tab.text}</Link>
+                </li>
             ))}
-        </StyledUl>
+        </ul>
     );
 }
 

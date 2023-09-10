@@ -1,5 +1,4 @@
 import React, { ReactNode } from "react";
-import { Box, Grid } from "@mui/material";
 import WidgetByName from "./widget-by-name";
 import AppToast from "../../../app-toast";
 import { WidgetInstance } from "@courselit/common-models";
@@ -46,31 +45,11 @@ const EditableWidget = ({
 }) => {
     if (editing) {
         return (
-            <Box
+            <div
                 onClick={() => onEditClick && onEditClick(item.widgetId)}
-                sx={{
-                    position: "relative",
-                    "&:hover": {
-                        cursor: editing ? "pointer" : "default",
-                    },
-                    "&:after": {
-                        content: '""',
-                        position: "absolute",
-                        width: 1,
-                        height: 1,
-                        top: 0,
-                        left: 0,
-                        background: "rgba(0,0,0,0.2)",
-                        opacity: 0,
-                        transition: "all 0.5s",
-                    },
-                    "&:hover:after": {
-                        opacity: 1,
-                    },
-                    "&:hover > .lol": {
-                        display: "flex",
-                    },
-                }}
+                className={`relative ${
+                    editing ? "cursor-pointer" : "cursor-default"
+                } after:content-[''] after:absolute after:w-full after:h-full after:top-0 after:left-0 after:bg-black/30 after:opacity-0 hover:after:opacity-100 group`}
             >
                 <WidgetByName
                     name={item.name}
@@ -79,58 +58,42 @@ const EditableWidget = ({
                     id={`widget${item._id}`}
                     editing={editing}
                 />
-                <Grid
-                    className="lol"
-                    container
-                    justifyContent="space-evenly"
-                    sx={{
-                        display: "none",
-                        position: "absolute",
-                        bottom: -16,
-                        zIndex: 2,
-                    }}
-                >
+                <div className="w-full justify-evenly hidden group-hover:flex absolute bottom-[-16px] z-10">
                     {allowsUpwardMovement && (
-                        <Grid item>
-                            <Button
-                                component="button"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onMoveWidgetUp(index);
-                                }}
-                            >
-                                <ArrowUpward /> Move up
-                            </Button>
-                        </Grid>
+                        <Button
+                            component="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onMoveWidgetUp(index);
+                            }}
+                        >
+                            <ArrowUpward /> Move up
+                        </Button>
                     )}
                     {allowsWidgetAddition && (
-                        <Grid item>
-                            <Button
-                                component="button"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onAddWidgetBelow(index);
-                                }}
-                            >
-                                Add widget below{" "}
-                            </Button>
-                        </Grid>
+                        <Button
+                            component="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onAddWidgetBelow(index);
+                            }}
+                        >
+                            Add widget below{" "}
+                        </Button>
                     )}
                     {allowsDownwardMovement && (
-                        <Grid item>
-                            <Button
-                                component="button"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onMoveWidgetDown(index);
-                                }}
-                            >
-                                Move down <ArrowDownward />
-                            </Button>
-                        </Grid>
+                        <Button
+                            component="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onMoveWidgetDown(index);
+                            }}
+                        >
+                            Move down <ArrowDownward />
+                        </Button>
                     )}
-                </Grid>
-            </Box>
+                </div>
+            </div>
         );
     }
 
@@ -188,7 +151,7 @@ const Template = (props: TemplateProps) => {
         ),
     );
     return (
-        <Grid container direction="column">
+        <div className="flex flex-col">
             {header && (
                 <EditableWidget
                     item={header}
@@ -203,26 +166,16 @@ const Template = (props: TemplateProps) => {
                 />
             )}
             {childrenOnTop && (
-                <Grid
-                    item
-                    container
-                    direction="column"
-                    sx={{ minHeight: "80vh" }}
-                >
-                    <Grid item>{children}</Grid>
+                <div className="flex flex-col min-h-[80vh]">
+                    {children}
                     {pageWidgets}
-                </Grid>
+                </div>
             )}
             {!childrenOnTop && (
-                <Grid
-                    item
-                    container
-                    direction="column"
-                    sx={{ minHeight: "80vh" }}
-                >
+                <div className="flex flex-col min-h-[80vh]">
                     {pageWidgets}
-                    <Grid item>{children}</Grid>
-                </Grid>
+                    {children}
+                </div>
             )}
             {footer && (
                 <EditableWidget
@@ -234,7 +187,7 @@ const Template = (props: TemplateProps) => {
                 />
             )}
             <AppToast />
-        </Grid>
+        </div>
     );
 };
 

@@ -2,6 +2,7 @@ import React from "react";
 import widgets from "../../../../ui-config/widgets";
 import { connect } from "react-redux";
 import type { AppState, AppDispatch } from "@courselit/state-management";
+import { COMPONENT_MISSING_SUFFIX } from "../../../../ui-config/strings";
 
 interface WidgetByNameProps {
     id: string;
@@ -22,7 +23,7 @@ const WidgetByName = ({
     pageData,
     editing = false,
 }: WidgetByNameProps) => {
-    if (!widgets[name]) return <>{name} component is not found.</>;
+    if (!widgets[name]) return <>{`${name} ${COMPONENT_MISSING_SUFFIX}`}</>;
 
     return React.createElement(widgets[name].widget, {
         name,
