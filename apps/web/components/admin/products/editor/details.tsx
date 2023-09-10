@@ -6,7 +6,7 @@ import {
     TextEditorEmptyDoc,
     Button,
     Form,
-    FormField
+    FormField,
 } from "@courselit/components-library";
 import useCourse from "./course-hook";
 import { FetchBuilder } from "@courselit/utils";
@@ -28,7 +28,6 @@ import {
 } from "../../../../ui-config/strings";
 import { connect } from "react-redux";
 import { AppDispatch, AppState } from "@courselit/state-management";
-import { Grid, TextField } from "@mui/material";
 import { MIMETYPE_IMAGE } from "../../../../ui-config/constants";
 
 interface DetailsProps {
@@ -113,50 +112,41 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
 
     return (
         <Section>
-             <Form onSubmit={updateDetails}
-                className="flex flex-col gap-4">
-                        <FormField
-                            required
-                            label="Title"
-                            name="title"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                        />
-                        <TextEditor
-                            initialContent={description}
-                            onChange={(state: Record<string, unknown>) => {
-                                setDescription(state);
-                            }}
-                            refresh={refresh}
-                        />
-                        <MediaSelector
-                            title={FORM_FIELD_FEATURED_IMAGE}
-                            src={
-                                (featuredImage && featuredImage.thumbnail) || ""
-                            }
-                            srcTitle={
-                                (featuredImage &&
-                                    featuredImage.originalFileName) ||
-                                ""
-                            }
-                            onSelection={(media?: Media) => {
-                                media && setFeaturedImage(media || null);
-                            }}
-                            mimeTypesToShow={[...MIMETYPE_IMAGE]}
-                            access="public"
-                            strings={{}}
-                            auth={auth}
-                            profile={profile}
-                            dispatch={dispatch}
-                            address={address}
-                        />
-                    <div>
-                    <Button
-                        type="submit"
-                    >
-                        {BUTTON_SAVE}
-                    </Button>
-                    </div>
+            <Form onSubmit={updateDetails} className="flex flex-col gap-4">
+                <FormField
+                    required
+                    label="Title"
+                    name="title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                />
+                <TextEditor
+                    initialContent={description}
+                    onChange={(state: Record<string, unknown>) => {
+                        setDescription(state);
+                    }}
+                    refresh={refresh}
+                />
+                <MediaSelector
+                    title={FORM_FIELD_FEATURED_IMAGE}
+                    src={(featuredImage && featuredImage.thumbnail) || ""}
+                    srcTitle={
+                        (featuredImage && featuredImage.originalFileName) || ""
+                    }
+                    onSelection={(media?: Media) => {
+                        media && setFeaturedImage(media || null);
+                    }}
+                    mimeTypesToShow={[...MIMETYPE_IMAGE]}
+                    access="public"
+                    strings={{}}
+                    auth={auth}
+                    profile={profile}
+                    dispatch={dispatch}
+                    address={address}
+                />
+                <div>
+                    <Button type="submit">{BUTTON_SAVE}</Button>
+                </div>
             </Form>
         </Section>
     );

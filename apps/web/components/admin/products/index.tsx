@@ -16,7 +16,13 @@ import { AppMessage } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
 import Product from "./product";
-import { Link, Button, Table, TableHead, TableBody } from '@courselit/components-library';
+import {
+    Link,
+    Button,
+    Table,
+    TableHead,
+    TableBody,
+} from "@courselit/components-library";
 
 const { networkAction, setAppMessage } = actionCreators;
 
@@ -38,9 +44,8 @@ const Index = ({ loading, address, dispatch }: IndexProps) => {
     }, []);
 
     useEffect(() => {
-        console.log(`coursesPaginationOffset`, coursesPaginationOffset)
         loadCreatorCourses();
-    }, [coursesPaginationOffset])
+    }, [coursesPaginationOffset]);
 
     useEffect(() => {
         loadCreatorCourses();
@@ -98,8 +103,8 @@ const Index = ({ loading, address, dispatch }: IndexProps) => {
             const response = await fetch.exec();
             if (response.courses) {
                 setCreatorCourses([...response.courses]);
-                if (response.courses.length === 0){
-                    setEndReached(true)
+                if (response.courses.length === 0) {
+                    setEndReached(true);
                 }
             }
         } catch (err: any) {
@@ -124,70 +129,52 @@ const Index = ({ loading, address, dispatch }: IndexProps) => {
 
     return (
         <div className="flex flex-col">
-                <div
-                    className="flex justify-between items-center mb-8"
-                >
+            <div className="flex justify-between items-center mb-8">
                 <h1 className="text-4xl font-semibold mb-4">
-                            {MANAGE_COURSES_PAGE_HEADING}
+                    {MANAGE_COURSES_PAGE_HEADING}
                 </h1>
-                        <div>
-                        <Link href="/dashboard/product/new">
-
-                            <Button>
-                                {BTN_NEW_PRODUCT}
-                            </Button>
-                        </Link>
-                        </div>
+                <div>
+                    <Link href="/dashboard/product/new">
+                        <Button>{BTN_NEW_PRODUCT}</Button>
+                    </Link>
                 </div>
-                    <Table 
-                        aria-label="Products"
-                        >
-                        <TableHead>
-                                <td>
-                                    {PRODUCTS_TABLE_HEADER_NAME}
-                                </td>
-                                <td>
-                                    {PRODUCTS_TABLE_HEADER_TYPE}
-                                </td>
-                                <td align="right">
-                                    {PRODUCTS_TABLE_HEADER_STATUS}
-                                </td>
-                                <td align="right">
-                                    {PRODUCTS_TABLE_HEADER_STUDENTS}
-                                </td>
-                                <td align="right">
-                                    {PRODUCTS_TABLE_HEADER_SALES}
-                                </td>
-                                <td align="right">
-                                    {PRODUCTS_TABLE_HEADER_ACTIONS}
-                                </td>
-                        </TableHead>
-                        <TableBody
-                            loading={loading}
-                            endReached={endReached}
-                            page={coursesPaginationOffset}
-                            onPageChange={(value: number) => {
-                                setCoursesPaginationOffset(value)
-                                }}>
-                            {creatorCourses.map(
-                                (
-                                    product: Course & {
-                                        published: boolean;
-                                        sales: number;
-                                        customers: number;
-                                    },
-                                    index: number,
-                                ) => (
-                                    <Product
-                                        key={product.courseId}
-                                        details={product}
-                                        position={index}
-                                        onDelete={onDelete}
-                                    />
-                                ),
-                            )}
-                        </TableBody>
-                    </Table>
+            </div>
+            <Table aria-label="Products">
+                <TableHead>
+                    <td>{PRODUCTS_TABLE_HEADER_NAME}</td>
+                    <td>{PRODUCTS_TABLE_HEADER_TYPE}</td>
+                    <td align="right">{PRODUCTS_TABLE_HEADER_STATUS}</td>
+                    <td align="right">{PRODUCTS_TABLE_HEADER_STUDENTS}</td>
+                    <td align="right">{PRODUCTS_TABLE_HEADER_SALES}</td>
+                    <td align="right">{PRODUCTS_TABLE_HEADER_ACTIONS}</td>
+                </TableHead>
+                <TableBody
+                    loading={loading}
+                    endReached={endReached}
+                    page={coursesPaginationOffset}
+                    onPageChange={(value: number) => {
+                        setCoursesPaginationOffset(value);
+                    }}
+                >
+                    {creatorCourses.map(
+                        (
+                            product: Course & {
+                                published: boolean;
+                                sales: number;
+                                customers: number;
+                            },
+                            index: number,
+                        ) => (
+                            <Product
+                                key={product.courseId}
+                                details={product}
+                                position={index}
+                                onDelete={onDelete}
+                            />
+                        ),
+                    )}
+                </TableBody>
+            </Table>
         </div>
     );
 };

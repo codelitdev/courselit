@@ -6,7 +6,7 @@ import {
     TextEditorEmptyDoc,
     Form,
     FormField,
-    Button
+    Button,
 } from "@courselit/components-library";
 import useCourse from "./course-hook";
 import { FetchBuilder } from "@courselit/utils";
@@ -109,47 +109,39 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
 
     return (
         <Section>
-            <Form onSubmit={updateDetails}
-                className="flex flex-col gap-4">
-                        <FormField
-                            required
-                            label="Title"
-                            name="title"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                        />
-                        <TextEditor
-                            initialContent={description}
-                            refresh={refreshDetails}
-                            onChange={(state: any) => setDescription(state)}
-                        />
-                        <MediaSelector
-                            title={FORM_FIELD_FEATURED_IMAGE}
-                            src={
-                                (featuredImage && featuredImage.thumbnail) || ""
-                            }
-                            srcTitle={
-                                (featuredImage &&
-                                    featuredImage.originalFileName) ||
-                                ""
-                            }
-                            onSelection={(media?: Media) => {
-                                media && setFeaturedImage(media);
-                            }}
-                            mimeTypesToShow={[...MIMETYPE_IMAGE]}
-                            access="public"
-                            strings={{}}
-                            auth={auth}
-                            profile={profile}
-                            dispatch={dispatch}
-                            address={address}
-                        />
-                    <div>
-                    <Button 
-                        type="submit">
-                        {BUTTON_SAVE}
-                    </Button>
-                    </div>
+            <Form onSubmit={updateDetails} className="flex flex-col gap-4">
+                <FormField
+                    required
+                    label="Title"
+                    name="title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                />
+                <TextEditor
+                    initialContent={description}
+                    refresh={refreshDetails}
+                    onChange={(state: any) => setDescription(state)}
+                />
+                <MediaSelector
+                    title={FORM_FIELD_FEATURED_IMAGE}
+                    src={(featuredImage && featuredImage.thumbnail) || ""}
+                    srcTitle={
+                        (featuredImage && featuredImage.originalFileName) || ""
+                    }
+                    onSelection={(media?: Media) => {
+                        media && setFeaturedImage(media);
+                    }}
+                    mimeTypesToShow={[...MIMETYPE_IMAGE]}
+                    access="public"
+                    strings={{}}
+                    auth={auth}
+                    profile={profile}
+                    dispatch={dispatch}
+                    address={address}
+                />
+                <div>
+                    <Button type="submit">{BUTTON_SAVE}</Button>
+                </div>
             </Form>
         </Section>
     );

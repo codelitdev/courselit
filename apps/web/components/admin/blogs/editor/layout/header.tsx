@@ -1,9 +1,13 @@
-import React, { useState } from "react";
-import { Breadcrumbs } from "@mui/material";
+import React from "react";
 import dynamic from "next/dynamic";
 import useCourse from "../course-hook";
 import { useRouter } from "next/router";
-import { MenuItem, Menu2, Link } from "@courselit/components-library";
+import {
+    MenuItem,
+    Menu2,
+    Link,
+    Breadcrumbs,
+} from "@courselit/components-library";
 import {
     DELETE_PRODUCT_POPUP_HEADER,
     DELETE_PRODUCT_POPUP_TEXT,
@@ -41,7 +45,7 @@ function BlogHeader({ id, breadcrumbs, address, dispatch }: BlogHeaderProps) {
     return (
         <div className="flex flex-col">
             {breadcrumbs && (
-                    <div className="mb-4">
+                <div className="mb-4">
                     <Breadcrumbs aria-label="product-breadcrumbs">
                         {breadcrumbs.map((crumb: Breadcrumb) =>
                             crumb.url ? (
@@ -49,51 +53,44 @@ function BlogHeader({ id, breadcrumbs, address, dispatch }: BlogHeaderProps) {
                                     {crumb.text}
                                 </Link>
                             ) : (
-                                <li key={crumb.text}>
-                                    {crumb.text}
-                                </li>
+                                <li key={crumb.text}>{crumb.text}</li>
                             ),
                         )}
                     </Breadcrumbs>
-                    </div>
-            )}
-                <div
-                    className="flex justify-between items-center"
-                >
-                    <h1 
-                        className="text-4xl font-semibold mb-4">{course.title}</h1>
-                    <div>
-                        <Menu2 icon={<MoreVert />} variant="soft">
-                            <MenuItem>
-                                <Link
-                                    href={`/blog/${course.slug}/${course.courseId}`}
-                                >
-                                    {MENU_BLOG_VISIT}
-                                </Link>
-                            </MenuItem>
-                            <MenuItem
-                                component="dialog"
-                                title={
-                                    DELETE_PRODUCT_POPUP_HEADER
-                                }
-                                triggerChildren={
-                                    PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT
-                                    }
-                                description={DELETE_PRODUCT_POPUP_TEXT}
-                                onClick={() =>
-                                    deleteProduct({
-                                        id: course!.id as string,
-                                        backend: address.backend,
-                                        dispatch,
-                                        onDeleteComplete: () => {
-                                            router.replace(`/dashboard/blogs`);
-                                        },
-                                    })
-                                }
-                            ></MenuItem>
-                        </Menu2>
-                    </div>
                 </div>
+            )}
+            <div className="flex justify-between items-center">
+                <h1 className="text-4xl font-semibold mb-4">{course.title}</h1>
+                <div>
+                    <Menu2 icon={<MoreVert />} variant="soft">
+                        <MenuItem>
+                            <Link
+                                href={`/blog/${course.slug}/${course.courseId}`}
+                            >
+                                {MENU_BLOG_VISIT}
+                            </Link>
+                        </MenuItem>
+                        <MenuItem
+                            component="dialog"
+                            title={DELETE_PRODUCT_POPUP_HEADER}
+                            triggerChildren={
+                                PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT
+                            }
+                            description={DELETE_PRODUCT_POPUP_TEXT}
+                            onClick={() =>
+                                deleteProduct({
+                                    id: course!.id as string,
+                                    backend: address.backend,
+                                    dispatch,
+                                    onDeleteComplete: () => {
+                                        router.replace(`/dashboard/blogs`);
+                                    },
+                                })
+                            }
+                        ></MenuItem>
+                    </Menu2>
+                </div>
+            </div>
         </div>
     );
 }

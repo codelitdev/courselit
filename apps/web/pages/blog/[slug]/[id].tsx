@@ -4,7 +4,6 @@ import {
     getBackendAddress,
     getPage,
 } from "../../../ui-lib/utils";
-import { Grid } from "@mui/material";
 import Head from "next/head";
 import { FetchBuilder } from "@courselit/utils";
 import type { SiteInfo, Address, Course, Page } from "@courselit/common-models";
@@ -35,7 +34,7 @@ const Post = ({ siteInfo, address, post, page }: PostProps) => {
             childrenOnTop={true}
         >
             {post && (
-                <Grid container direction="column" sx={{ minHeight: "80vh" }}>
+                <div className="flex flex-col h-[80vh] gap-4">
                     <Head>
                         <meta
                             property="og:url"
@@ -59,13 +58,15 @@ const Post = ({ siteInfo, address, post, page }: PostProps) => {
                             />
                         )}
                     </Head>
-                    <Grid item sx={{ mb: 2, p: 2 }}>
+                    <div className="flex flex-col gap-4 p-4">
                         <Article course={post} options={articleOptions} />
-                    </Grid>
-                    <Grid item sx={{ p: 2 }}>
-                        <Link href="/blog">{BACK_TO_BLOG}</Link>
-                    </Grid>
-                </Grid>
+                        <div className="">
+                            <Link href="/blog" className="hover:underline">
+                                {BACK_TO_BLOG}
+                            </Link>
+                        </div>
+                    </div>
+                </div>
             )}
         </BaseLayout>
     );

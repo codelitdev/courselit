@@ -40,7 +40,7 @@ export const deleteProduct = async ({
             // onDelete(position);
         }
     } catch (err: any) {
-        console.error(err)
+        console.error(err);
         dispatch(setAppMessage(new AppMessage(err.message)));
     } finally {
         dispatch(networkAction(false));

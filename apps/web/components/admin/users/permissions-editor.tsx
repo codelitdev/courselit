@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { ExpandLess, ExpandMore } from "@courselit/icons";
 import {
     PERM_COURSE_MANAGE,
     PERM_COURSE_MANAGE_ANY,
@@ -21,7 +20,7 @@ import { actionCreators } from "@courselit/state-management";
 import { AppMessage } from "@courselit/common-models";
 import type { User, Auth, Address } from "@courselit/common-models";
 import { UIConstants } from "@courselit/common-models";
-import { IconButton, Checkbox } from "@courselit/components-library";
+import { Checkbox } from "@courselit/components-library";
 import { Section } from "@courselit/components-library";
 
 const { networkAction, setAppMessage } = actionCreators;
@@ -67,10 +66,7 @@ function PermissionsEditor({
         setExpanded(!expanded);
     };
 
-    const savePermissions = async (
-        permission: string,
-        value: boolean
-    ) => {
+    const savePermissions = async (permission: string, value: boolean) => {
         let newPermissions: string[];
         if (value) {
             newPermissions = [...activePermissions, permission];
@@ -118,21 +114,19 @@ function PermissionsEditor({
 
     return (
         <Section className="md:w-1/2" header={PERM_SECTION_HEADER}>
-                {Object.keys(permissionToCaptionMap).map((permission) => (
-                    <div className="flex justify-between"
-                        key={permission}
-                    >
-                        <p>
-                            {permissionToCaptionMap[permission]}
-                        </p>
-                        <Checkbox
-                            name={permission}
-                            disabled={networkCallUnderway}
-                            checked={activePermissions.includes(permission)}
-                            onChange={(value: boolean) => savePermissions(permission, value)}
-                        />
-                    </div>
-                ))}
+            {Object.keys(permissionToCaptionMap).map((permission) => (
+                <div className="flex justify-between" key={permission}>
+                    <p>{permissionToCaptionMap[permission]}</p>
+                    <Checkbox
+                        name={permission}
+                        disabled={networkCallUnderway}
+                        checked={activePermissions.includes(permission)}
+                        onChange={(value: boolean) =>
+                            savePermissions(permission, value)
+                        }
+                    />
+                </div>
+            ))}
         </Section>
     );
 }

@@ -16,11 +16,11 @@ export default function Content({ id }: EditorProps) {
     return (
         <div className="flex flex-col gap-4">
             {course && (
-                    <>
+                <>
                     {[COURSE_TYPE_COURSE, COURSE_TYPE_DOWNLOAD].includes(
                         course!.type!.toLowerCase(),
                     ) && <LessonsList id={id} />}
-                    </>
+                </>
             )}
         </div>
     );

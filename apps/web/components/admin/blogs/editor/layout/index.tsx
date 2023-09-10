@@ -22,12 +22,9 @@ export default function ProductEditorLayout({
     return (
         <BaseLayout title={MANAGE_COURSES_PAGE_HEADING}>
             <div className="flex flex-col">
-                <BlogHeader 
-                    id={id as string} 
-                    breadcrumbs={breadcrumbs} />
+                <BlogHeader id={id as string} breadcrumbs={breadcrumbs} />
                 <div className="mb-4">
-                <Tabs 
-                    tabs={generateTabs(id as string)} />
+                    <Tabs tabs={generateTabs(id as string)} />
                 </div>
                 {children}
             </div>

@@ -1,6 +1,6 @@
-import React from 'react';
-import { Indicator, Root } from '@radix-ui/react-checkbox';
-import { Check } from '@courselit/icons';
+import React from "react";
+import { Indicator, Root } from "@radix-ui/react-checkbox";
+import { Check } from "@courselit/icons";
 
 interface CheckboxProps {
     checked: boolean;
@@ -15,10 +15,10 @@ export default function Checkbox({ checked, onChange, style }: CheckboxProps) {
             checked={checked}
             onCheckedChange={onChange}
             style={{ ...style }}
-            >
-            <Indicator className='text-black'>
+        >
+            <Indicator className="text-black">
                 <Check />
             </Indicator>
         </Root>
-    )
+    );
 }

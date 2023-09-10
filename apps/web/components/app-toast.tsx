@@ -2,7 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 import { actionCreators } from "@courselit/state-management";
 import type { AppDispatch, AppState } from "@courselit/state-management";
-import { Toast } from '@courselit/components-library';
+import { Toast } from "@courselit/components-library";
 
 const { clearAppMessage } = actionCreators;
 
@@ -24,8 +24,6 @@ interface AppToastProps {
 
 const AppToast = (props: AppToastProps) => {
     const { message, dispatch } = props;
-    console.log(message);
-    const action = message && message.action;
 
     /*
     const handleClose: any = (_: Event | SyntheticEvent, reason: string) => {
@@ -58,28 +56,12 @@ const AppToast = (props: AppToastProps) => {
         return actionButtonsArray;
     };
     */
-    return <Toast
-        message={message}
-        dispatch={dispatch}
-        clearMessageAction={clearAppMessage}
-        />
-
     return (
-        <>
-            {message && (
-                <Snackbar
-                    anchorOrigin={{
-                        vertical: "bottom",
-                        horizontal: "left",
-                    }}
-                    open={message.open}
-                    autoHideDuration={6000}
-                    onClose={handleClose}
-                    message={<span>{message.message}</span>}
-                    action={getActionButtonsArray()}
-                />
-            )}
-        </>
+        <Toast
+            message={message}
+            dispatch={dispatch}
+            clearMessageAction={clearAppMessage}
+        />
     );
 };
 

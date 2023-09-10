@@ -55,7 +55,7 @@ export default function FormField({
     ...componentProps
 }: FormFieldProps) {
     const controlClasses =
-        "flex w-full border border-slate-300 hover:border-slate-400 rounded py-1 px-2 outline-none focus:border-slate-600";
+        "flex w-full border border-slate-300 hover:border-slate-400 rounded py-1 px-2 outline-none focus:border-slate-600 disabled:pointer-events-none";
     const Component = component;
 
     return (
@@ -69,18 +69,15 @@ export default function FormField({
                         </Message>
                     ))}
             </div>
-            <div
-                className={controlClasses}
-            >
-            <Control asChild
-            >
+            <div className={controlClasses}>
+                <Control asChild>
                     <Component
                         type={type}
-                        className="outline-none"
+                        className="outline-none w-full"
                         {...componentProps}
                     />
-            </Control>
-            {endIcon}
+                </Control>
+                {endIcon}
             </div>
         </Field>
     );

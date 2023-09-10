@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface SectionProps {
     className?: string;
@@ -11,12 +11,8 @@ const Section = ({ className = "", children, header }: SectionProps) => {
         <section
             className={`flex flex-col border rounded border-slate-200 p-2 ${className}`}
         >
-            {header &&
-                <h2 className="text-xl font-medium mb-4">{header}</h2>
-            }
-            <div className="flex flex-col gap-2">
-                {children}
-            </div>
+            {header && <h2 className="text-xl font-medium mb-4">{header}</h2>}
+            <div className="flex flex-col gap-2">{children}</div>
         </section>
     );
 };

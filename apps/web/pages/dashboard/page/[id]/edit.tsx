@@ -8,8 +8,5 @@ export default function EditPage({}: EditPageProps) {
     const router = useRouter();
     const { id, redirectTo } = router.query;
 
-    return <PageEditor 
-        id={id as string} 
-        redirectTo={redirectTo}
-        />;
+    return <PageEditor id={id as string} redirectTo={redirectTo} />;
 }

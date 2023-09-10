@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { Address, AppMessage } from "@courselit/common-models";
-import { Form, FormField, Section, Select, Link, Button } from "@courselit/components-library";
+import {
+    Form,
+    FormField,
+    Section,
+    Select,
+    Link,
+    Button,
+} from "@courselit/components-library";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import { useRouter } from "next/router";
@@ -73,61 +80,54 @@ function NewProduct({
 
     return (
         <Section>
-            <div
-                className="flex flex-col">
+            <div className="flex flex-col">
                 <h1 className="text-4xl font-semibold mb-4">
-                            {BTN_NEW_PRODUCT}
+                    {BTN_NEW_PRODUCT}
                 </h1>
-                    <Form onSubmit={createCourse}
-                        className="flex flex-col gap-4">
-                                <FormField
-                                    required
-                                    label="Title"
-                                    name="title"
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                    placeholder={FORM_NEW_PRODUCT_TITLE_PLC}
-                                />
-                                <Select
-                                    title={FORM_NEW_PRODUCT_TYPE}
-                                    value={type}
-                                    onChange={(e: string) => setType(e)}
-                                    options={[
-                                        {
-                                            label: capitalize(
-                                                COURSE_TYPE_COURSE,
-                                            ),
-                                            value: COURSE_TYPE_COURSE,
-                                            sublabel:
-                                                FORM_NEW_PRODUCT_MENU_COURSE_SUBTITLE,
-                                        },
-                                        {
-                                            label: capitalize(
-                                                COURSE_TYPE_DOWNLOAD,
-                                            ),
-                                            value: COURSE_TYPE_DOWNLOAD,
-                                            sublabel:
-                                                FORM_NEW_PRODUCT_MENU_DOWNLOADS_SUBTITLE,
-                                        },
-                                    ]}
-                                />
-                            <div className="flex gap-2">
-                                <Button
-                                    disabled={
-                                        !title ||
-                                        !type ||
-                                        (!!title && !!type && loading)
-                                    }
-                                    onClick={createCourse}
-                                    sx={{ mr: 1 }}
-                                >
-                                    {BTN_CONTINUE}
-                                </Button>
-                                <Link href={`/dashboard/products`}>
-                                    <Button variant="soft">{BUTTON_CANCEL_TEXT}</Button>
-                                </Link>
-                            </div>
-                    </Form>
+                <Form onSubmit={createCourse} className="flex flex-col gap-4">
+                    <FormField
+                        required
+                        label="Title"
+                        name="title"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder={FORM_NEW_PRODUCT_TITLE_PLC}
+                    />
+                    <Select
+                        title={FORM_NEW_PRODUCT_TYPE}
+                        value={type}
+                        onChange={(e: string) => setType(e)}
+                        options={[
+                            {
+                                label: capitalize(COURSE_TYPE_COURSE),
+                                value: COURSE_TYPE_COURSE,
+                                sublabel: FORM_NEW_PRODUCT_MENU_COURSE_SUBTITLE,
+                            },
+                            {
+                                label: capitalize(COURSE_TYPE_DOWNLOAD),
+                                value: COURSE_TYPE_DOWNLOAD,
+                                sublabel:
+                                    FORM_NEW_PRODUCT_MENU_DOWNLOADS_SUBTITLE,
+                            },
+                        ]}
+                    />
+                    <div className="flex gap-2">
+                        <Button
+                            disabled={
+                                !title ||
+                                !type ||
+                                (!!title && !!type && loading)
+                            }
+                            onClick={createCourse}
+                            sx={{ mr: 1 }}
+                        >
+                            {BTN_CONTINUE}
+                        </Button>
+                        <Link href={`/dashboard/products`}>
+                            <Button variant="soft">{BUTTON_CANCEL_TEXT}</Button>
+                        </Link>
+                    </div>
+                </Form>
             </div>
         </Section>
     );

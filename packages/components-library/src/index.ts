@@ -31,7 +31,7 @@ import Toast from "./toast";
 import Switch from "./switch";
 import Checkbox from "./checkbox";
 import Tabs from "./tabs";
-import Table, {TableHead, TableBody, TableRow} from "./table";
+import Table, { TableHead, TableBody, TableRow } from "./table";
 import Avatar from "./avatar";
 import Breadcrumbs from "./breadcrumbs";
 
@@ -71,5 +71,5 @@ export {
     TableBody,
     TableRow,
     Avatar,
-    Breadcrumbs
+    Breadcrumbs,
 };

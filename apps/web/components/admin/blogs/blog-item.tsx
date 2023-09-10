@@ -11,7 +11,7 @@ import { MoreVert } from "@courselit/icons";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import type { SiteInfo, Address } from "@courselit/common-models";
 import { connect } from "react-redux";
-import { Chip, Image, Menu2, MenuItem, Link } from "@courselit/components-library";
+import { Chip, Menu2, MenuItem, Link } from "@courselit/components-library";
 import { deleteProduct } from "./helpers";
 import { TableRow } from "@courselit/components-library";
 
@@ -37,20 +37,15 @@ function BlogItem({
         <TableRow key={product.courseId}>
             <td className="py-4">
                 <Link href={`/dashboard/blog/${product.courseId}/details`}>
-                                <p>{product.title}</p>
+                    <p>{product.title}</p>
                 </Link>
             </td>
             <td align="right">
-                <Chip
-                    className={
-                        product.published ? "!bg-black" : ""
-                    }
-                >
-                    {
-                        product.published
-                            ? PRODUCT_STATUS_PUBLISHED
-                            : PRODUCT_STATUS_DRAFT
-                    }</Chip>
+                <Chip className={product.published ? "!bg-black" : ""}>
+                    {product.published
+                        ? PRODUCT_STATUS_PUBLISHED
+                        : PRODUCT_STATUS_DRAFT}
+                </Chip>
             </td>
             <td align="right">
                 <Menu2 icon={<MoreVert />} variant="soft">

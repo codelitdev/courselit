@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { styled } from "@mui/system";
 import { connect } from "react-redux";
 import {
     PAYMENT_METHOD_PAYPAL,
@@ -8,7 +7,6 @@ import {
     PAYMENT_METHOD_NONE,
     MIMETYPE_IMAGE,
 } from "../../ui-config/constants";
-import { TextField, Typography, Grid, capitalize } from "@mui/material";
 import {
     SITE_SETTINGS_TITLE,
     SITE_SETTINGS_SUBTITLE,
@@ -32,7 +30,7 @@ import {
     SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY,
     BTN_EDIT_SITE,
 } from "../../ui-config/strings";
-import { FetchBuilder } from "@courselit/utils";
+import { FetchBuilder, capitalize } from "@courselit/utils";
 import { decode, encode } from "base-64";
 import { AppMessage, Profile } from "@courselit/common-models";
 import type { SiteInfo, Address, Auth } from "@courselit/common-models";
@@ -45,41 +43,11 @@ import {
     Tabs,
     Form,
     FormField,
-    Button
+    Button,
+    Link,
 } from "@courselit/components-library";
 
 const { networkAction, newSiteInfoAvailable, setAppMessage } = actionCreators;
-
-const PREFIX = "Settings";
-
-const classes = {
-    formControl: `${PREFIX}-formControl`,
-    section: `${PREFIX}-section`,
-    header: `${PREFIX}-header`,
-    sectionContent: `${PREFIX}-sectionContent`,
-    saveButton: `${PREFIX}-saveButton`,
-};
-
-const StyledGrid = styled(Grid)(({ theme }: { theme: any }) => ({
-    [`& .${classes.formControl}`]: {
-        minWidth: "100%",
-        margin: "1em 0em",
-    },
-
-    [`& .${classes.section}`]: {
-        marginBottom: theme.spacing(4),
-    },
-
-    [`& .${classes.header}`]: {
-        marginBottom: theme.spacing(2),
-    },
-
-    [`& .${classes.sectionContent}`]: {},
-
-    [`& .${classes.saveButton}`]: {
-        marginTop: theme.spacing(4),
-    },
-}));
 
 interface SettingsProps {
     siteinfo: SiteInfo;
@@ -399,284 +367,247 @@ const Settings = (props: SettingsProps) => {
     return (
         <div>
             <div className="flex justify-between items-baseline">
-            <h1 className="text-4xl font-semibold mb-4">
-                {SITE_SETTINGS_PAGE_HEADING}
-            </h1>
-            <div>
-                <Button
-                href={`/dashboard/page/homepage/edit?redirectTo=/dashboard/settings`}
-                component="link"
-                >
-                {BTN_EDIT_SITE}
-                </Button>
-            </div>
-            </div>
-        <Tabs items={[SITE_SETTINGS_SECTION_GENERAL, SITE_SETTINGS_SECTION_PAYMENT, SITE_CUSTOMISATIONS_SETTING_HEADER]}>
-                        <Form onSubmit={handleSettingsSubmit}
-                            className="flex flex-col gap-4 pt-4">
-                                    <FormField
-                                        label={SITE_SETTINGS_TITLE}
-                                        name="title"
-                                        value={newSettings.title || ""}
-                                        onChange={onChangeData}
-                                        required
-                                    />
-                                    <FormField
-                                        label={SITE_SETTINGS_SUBTITLE}
-                                        name="subtitle"
-                                        value={newSettings.subtitle || ""}
-                                        onChange={onChangeData}
-                                    />
-                                    <MediaSelector
-                                        auth={props.auth}
-                                        profile={props.profile}
-                                        dispatch={props.dispatch}
-                                        address={props.address}
-                                        title={SITE_SETTINGS_LOGO}
-                                        src={
-                                            (newSettings.logo &&
-                                                newSettings.logo.thumbnail) ||
-                                            (props.siteinfo.logo &&
-                                                props.siteinfo.logo.thumbnail)
-                                        }
-                                        srcTitle={
-                                            (newSettings.logo &&
-                                                newSettings.logo
-                                                    .originalFileName) ||
-                                            (props.siteinfo.logo &&
-                                                props.siteinfo.logo
-                                                    .originalFileName)
-                                        }
-                                        onSelection={onChangeData}
-                                        mimeTypesToShow={[...MIMETYPE_IMAGE]}
-                                        access="public"
-                                        strings={{}}
-                                    />
-                                    <div>
-                                    <Button
-                                        type="submit"
-                                        value={BUTTON_SAVE}
-                                        color="primary"
-                                        disabled={
-                                            JSON.stringify({
-                                                title: settings.title,
-                                                subtitle: settings.subtitle,
-                                                logo: settings.logo,
-                                            }) ===
-                                                JSON.stringify({
-                                                    title: newSettings.title,
-                                                    subtitle:
-                                                        newSettings.subtitle,
-                                                    logo: newSettings.logo,
-                                                }) ||
-                                            !newSettings.title ||
-                                            props.networkAction
-                                        }
-                                    >
-                                        {BUTTON_SAVE}
-                                    </Button>
-                                    </div>
-                        </Form>
-                        <Form onSubmit={handlePaymentSettingsSubmit}
-                            className="flex flex-col gap-4 pt-4">
-                                    <SingleSelect
-                                        title={SITE_SETTINGS_CURRENCY}
-                                        options={currencies.map((currency) => ({
-                                            label: currency.Currency,
-                                            value:
-                                                currency.AlphabeticCode || "",
-                                        }))}
-                                        value={
-                                            newSettings.currencyISOCode?.toUpperCase() ||
-                                            ""
-                                        }
-                                        onChange={(value) =>
-                                            setNewSettings(
-                                                Object.assign({}, newSettings, {
-                                                    currencyISOCode: value,
-                                                }),
-                                            )
-                                        }
-                                    />
-                                    <SingleSelect
-                                        title={
-                                            SITE_ADMIN_SETTINGS_PAYMENT_METHOD
-                                        }
-                                        value={
-                                            newSettings.paymentMethod ||
-                                            PAYMENT_METHOD_NONE
-                                        }
-                                        options={[
-                                            {
-                                                label: SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL,
-                                                value: PAYMENT_METHOD_NONE,
-                                            },
-                                            {
-                                                label: capitalize(
-                                                    PAYMENT_METHOD_STRIPE.toLowerCase(),
-                                                ),
-                                                value: PAYMENT_METHOD_STRIPE,
-                                            },
-                                        ]}
-                                        onChange={(value) =>
-                                            setNewSettings(
-                                                Object.assign({}, newSettings, {
-                                                    paymentMethod: value,
-                                                }),
-                                            )
-                                        }
-                                    />
-
-                                {newSettings.paymentMethod ===
-                                    PAYMENT_METHOD_STRIPE && (
-                                    <>
-                                        <FormField
-                                            label={
-                                                SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT
-                                            }
-                                            name="stripePublishableKey"
-                                            value={
-                                                newSettings.stripePublishableKey ||
-                                                ""
-                                            }
-                                            onChange={onChangeData}
-                                        />
-                                        <FormField
-                                            label={
-                                                SITE_ADMIN_SETTINGS_STRIPE_SECRET
-                                            }
-                                            name="stripeSecret"
-                                            type="password"
-                                            value={
-                                                newSettings.stripeSecret || ""
-                                            }
-                                            onChange={onChangeData}
-                                            sx={{ mb: 2 }}
-                                            autoComplete="off"
-                                        />
-                                                <Typography variant="subtitle2">
-                                                    {
-                                                        HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK
-                                                    }
-                                                </Typography>
-                                                <Typography
-                                                    variant="body2"
-                                                    color="textSecondary"
-                                                >
-                                                    {
-                                                        SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK
-                                                    }
-                                                </Typography>
-                                                <Typography>
-                                                    <a
-                                                        href={`${props.address.backend}/api/payment/webhook`}
-                                                    >
-                                                        {`${props.address.backend}/api/payment/webhook`}
-                                                    </a>
-                                                </Typography>
-                                                </>
-                                )}
-                                {newSettings.paymentMethod ===
-                                    PAYMENT_METHOD_PAYPAL && (
-                                        <TextField
-                                            variant="outlined"
-                                            label={
-                                                SITE_ADMIN_SETTINGS_PAYPAL_SECRET
-                                            }
-                                            fullWidth
-                                            margin="normal"
-                                            name="paypalSecret"
-                                            type="password"
-                                            value={
-                                                newSettings.paypalSecret || ""
-                                            }
-                                            onChange={onChangeData}
-                                            disabled={true}
-                                        />
-                                )}
-                                {newSettings.paymentMethod ===
-                                    PAYMENT_METHOD_PAYTM && (
-                                        <TextField
-                                            variant="outlined"
-                                            label={
-                                                SITE_ADMIN_SETTINGS_PAYTM_SECRET
-                                            }
-                                            fullWidth
-                                            margin="normal"
-                                            name="paytmSecret"
-                                            type="password"
-                                            value={
-                                                newSettings.paytmSecret || ""
-                                            }
-                                            onChange={onChangeData}
-                                            disabled={true}
-                                        />
-                                )}
-                                <div>
-                                    <Button
-                                        type="submit"
-                                        value={BUTTON_SAVE}
-                                        disabled={
-                                            JSON.stringify(
-                                                getPaymentSettings(),
-                                            ) ===
-                                            JSON.stringify(
-                                                getPaymentSettings(true),
-                                            )
-                                        }
-                                    >
-                                        {BUTTON_SAVE}
-                                    </Button>
-                                </div>
-                        </Form>
-                        <Form onSubmit={handleCodeInjectionSettingsSubmit}
-                            className="flex flex-col gap-4 pt-4">
-                                    <FormField
-                                        component="textarea"
-                                        label={
-                                            SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD
-                                        }
-                                        name="codeInjectionHead"
-                                        value={
-                                            newSettings.codeInjectionHead || ""
-                                        }
-                                        onChange={onChangeData}
-                                        multiline
-                                        rows={10}
-                                    />
-                                    <FormField
-                                        component="textarea"
-                                        label={
-                                            SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY
-                                        }
-                                        name="codeInjectionBody"
-                                        value={
-                                            newSettings.codeInjectionBody || ""
-                                        }
-                                        onChange={onChangeData}
-                                        multiline
-                                        rows={10}
-                                    />
-                                <div>
-                                    <Button
-                                        type="submit"
-                                        value={BUTTON_SAVE}
-                                        color="primary"
-                                        variant="outlined"
-                                        disabled={
-                                            (settings.codeInjectionHead ===
-                                                newSettings.codeInjectionHead &&
-                                                settings.codeInjectionBody ===
-                                                    newSettings.codeInjectionBody) ||
-                                            props.networkAction
-                                        }
-                                    >
-                                        {BUTTON_SAVE}
-                                    </Button>
-                                </div>
-                        </Form>
-        </Tabs>
+                <h1 className="text-4xl font-semibold mb-4">
+                    {SITE_SETTINGS_PAGE_HEADING}
+                </h1>
+                <div>
+                    <Button
+                        href={`/dashboard/page/homepage/edit?redirectTo=/dashboard/settings`}
+                        component="link"
+                    >
+                        {BTN_EDIT_SITE}
+                    </Button>
                 </div>
+            </div>
+            <Tabs
+                items={[
+                    SITE_SETTINGS_SECTION_GENERAL,
+                    SITE_SETTINGS_SECTION_PAYMENT,
+                    SITE_CUSTOMISATIONS_SETTING_HEADER,
+                ]}
+            >
+                <Form
+                    onSubmit={handleSettingsSubmit}
+                    className="flex flex-col gap-4 pt-4"
+                >
+                    <FormField
+                        label={SITE_SETTINGS_TITLE}
+                        name="title"
+                        value={newSettings.title || ""}
+                        onChange={onChangeData}
+                        required
+                    />
+                    <FormField
+                        label={SITE_SETTINGS_SUBTITLE}
+                        name="subtitle"
+                        value={newSettings.subtitle || ""}
+                        onChange={onChangeData}
+                    />
+                    <MediaSelector
+                        auth={props.auth}
+                        profile={props.profile}
+                        dispatch={props.dispatch}
+                        address={props.address}
+                        title={SITE_SETTINGS_LOGO}
+                        src={
+                            (newSettings.logo && newSettings.logo.thumbnail) ||
+                            (props.siteinfo.logo &&
+                                props.siteinfo.logo.thumbnail)
+                        }
+                        srcTitle={
+                            (newSettings.logo &&
+                                newSettings.logo.originalFileName) ||
+                            (props.siteinfo.logo &&
+                                props.siteinfo.logo.originalFileName)
+                        }
+                        onSelection={onChangeData}
+                        mimeTypesToShow={[...MIMETYPE_IMAGE]}
+                        access="public"
+                        strings={{}}
+                    />
+                    <div>
+                        <Button
+                            type="submit"
+                            value={BUTTON_SAVE}
+                            color="primary"
+                            disabled={
+                                JSON.stringify({
+                                    title: settings.title,
+                                    subtitle: settings.subtitle,
+                                    logo: settings.logo,
+                                }) ===
+                                    JSON.stringify({
+                                        title: newSettings.title,
+                                        subtitle: newSettings.subtitle,
+                                        logo: newSettings.logo,
+                                    }) ||
+                                !newSettings.title ||
+                                props.networkAction
+                            }
+                        >
+                            {BUTTON_SAVE}
+                        </Button>
+                    </div>
+                </Form>
+                <Form
+                    onSubmit={handlePaymentSettingsSubmit}
+                    className="flex flex-col gap-4 pt-4"
+                >
+                    <SingleSelect
+                        title={SITE_SETTINGS_CURRENCY}
+                        options={currencies.map((currency) => ({
+                            label: currency.Currency,
+                            value: currency.AlphabeticCode || "",
+                        }))}
+                        value={newSettings.currencyISOCode?.toUpperCase() || ""}
+                        onChange={(value) =>
+                            setNewSettings(
+                                Object.assign({}, newSettings, {
+                                    currencyISOCode: value,
+                                }),
+                            )
+                        }
+                    />
+                    <SingleSelect
+                        title={SITE_ADMIN_SETTINGS_PAYMENT_METHOD}
+                        value={newSettings.paymentMethod || PAYMENT_METHOD_NONE}
+                        options={[
+                            {
+                                label: SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL,
+                                value: PAYMENT_METHOD_NONE,
+                            },
+                            {
+                                label: capitalize(
+                                    PAYMENT_METHOD_STRIPE.toLowerCase(),
+                                ),
+                                value: PAYMENT_METHOD_STRIPE,
+                            },
+                        ]}
+                        onChange={(value) =>
+                            setNewSettings(
+                                Object.assign({}, newSettings, {
+                                    paymentMethod: value,
+                                }),
+                            )
+                        }
+                    />
+
+                    {newSettings.paymentMethod === PAYMENT_METHOD_STRIPE && (
+                        <>
+                            <FormField
+                                label={
+                                    SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT
+                                }
+                                name="stripePublishableKey"
+                                value={newSettings.stripePublishableKey || ""}
+                                onChange={onChangeData}
+                            />
+                            <FormField
+                                label={SITE_ADMIN_SETTINGS_STRIPE_SECRET}
+                                name="stripeSecret"
+                                type="password"
+                                value={newSettings.stripeSecret || ""}
+                                onChange={onChangeData}
+                                sx={{ mb: 2 }}
+                                autoComplete="off"
+                            />
+                            <div className="flex flex-col gap-2">
+                                <p className="font-medium">
+                                    {
+                                        HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK
+                                    }
+                                </p>
+                                <p className="text-slate-600">
+                                    {
+                                        SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK
+                                    }
+                                </p>
+                                <p>
+                                    <Link
+                                        href={`${props.address.backend}/api/payment/webhook`}
+                                        className="hover:underline"
+                                    >
+                                        {`${props.address.backend}/api/payment/webhook`}
+                                    </Link>
+                                </p>
+                            </div>
+                        </>
+                    )}
+                    {newSettings.paymentMethod === PAYMENT_METHOD_PAYPAL && (
+                        <FormField
+                            label={SITE_ADMIN_SETTINGS_PAYPAL_SECRET}
+                            name="paypalSecret"
+                            type="password"
+                            value={newSettings.paypalSecret || ""}
+                            onChange={onChangeData}
+                            disabled={true}
+                        />
+                    )}
+                    {newSettings.paymentMethod === PAYMENT_METHOD_PAYTM && (
+                        <FormField
+                            label={SITE_ADMIN_SETTINGS_PAYTM_SECRET}
+                            name="paytmSecret"
+                            type="password"
+                            value={newSettings.paytmSecret || ""}
+                            onChange={onChangeData}
+                            disabled={true}
+                        />
+                    )}
+                    <div>
+                        <Button
+                            type="submit"
+                            value={BUTTON_SAVE}
+                            disabled={
+                                JSON.stringify(getPaymentSettings()) ===
+                                JSON.stringify(getPaymentSettings(true))
+                            }
+                        >
+                            {BUTTON_SAVE}
+                        </Button>
+                    </div>
+                </Form>
+                <Form
+                    onSubmit={handleCodeInjectionSettingsSubmit}
+                    className="flex flex-col gap-4 pt-4"
+                >
+                    <FormField
+                        component="textarea"
+                        label={SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD}
+                        name="codeInjectionHead"
+                        value={newSettings.codeInjectionHead || ""}
+                        onChange={onChangeData}
+                        multiline
+                        rows={10}
+                    />
+                    <FormField
+                        component="textarea"
+                        label={SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY}
+                        name="codeInjectionBody"
+                        value={newSettings.codeInjectionBody || ""}
+                        onChange={onChangeData}
+                        multiline
+                        rows={10}
+                    />
+                    <div>
+                        <Button
+                            type="submit"
+                            value={BUTTON_SAVE}
+                            color="primary"
+                            variant="outlined"
+                            disabled={
+                                (settings.codeInjectionHead ===
+                                    newSettings.codeInjectionHead &&
+                                    settings.codeInjectionBody ===
+                                        newSettings.codeInjectionBody) ||
+                                props.networkAction
+                            }
+                        >
+                            {BUTTON_SAVE}
+                        </Button>
+                    </div>
+                </Form>
+            </Tabs>
+        </div>
     );
 };
 

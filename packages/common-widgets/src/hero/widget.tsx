@@ -124,7 +124,7 @@ export default function Widget({
                             </div>
                         )}
                         {buttonAction && buttonCaption && (
-                            <div className="flex">
+                            <div>
                                 <Button
                                     href={buttonAction}
                                     component="link"

@@ -98,46 +98,40 @@ function Publish({ id, address, dispatch, loading }: PublishProps) {
 
     return (
         <Section>
-            <Form onSubmit={updatePublishingDetails}
-                className="flex flex-col gap-4">
-                        <div
-                            className="flex justify-between items-center"
-                        >
-                            <div>
-                            <h2>
-                                    {PUBLISH_TAB_STATUS_TITLE}
-                            </h2>
-                            <p className="text-sm text-slate-400">
-                                    {PUBLISH_TAB_STATUS_SUBTITLE}
-                            </p>
-                            </div>
-                                <Button
-                                    onClick={togglePublishedStatus}
-                                    variant="soft"
-                                    disabled={loading}
-                                >
-                                    {published ? BTN_UNPUBLISH : BTN_PUBLISH}
-                                </Button>
-                        </div>
-                        <div
-                            className="flex justify-between items-center"
-                        >
-                            <div>
-                            <h2>
-                                    {PUBLISH_TAB_VISIBILITY_TITLE}
-                            </h2>
-                            <p className="text-sm text-slate-400">
-                                    {PUBLISH_TAB_VISIBILITY_SUBTITLE}
-                            </p>
-                            </div>
-                                <Button
-                                    onClick={toggleVisibility}
-                                    variant="soft"
-                                    disabled={loading}
-                                >
-                                    {capitalize(privacy)}
-                                </Button>
-                        </div>
+            <Form
+                onSubmit={updatePublishingDetails}
+                className="flex flex-col gap-4"
+            >
+                <div className="flex justify-between items-center">
+                    <div>
+                        <h2>{PUBLISH_TAB_STATUS_TITLE}</h2>
+                        <p className="text-sm text-slate-400">
+                            {PUBLISH_TAB_STATUS_SUBTITLE}
+                        </p>
+                    </div>
+                    <Button
+                        onClick={togglePublishedStatus}
+                        variant="soft"
+                        disabled={loading}
+                    >
+                        {published ? BTN_UNPUBLISH : BTN_PUBLISH}
+                    </Button>
+                </div>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <h2>{PUBLISH_TAB_VISIBILITY_TITLE}</h2>
+                        <p className="text-sm text-slate-400">
+                            {PUBLISH_TAB_VISIBILITY_SUBTITLE}
+                        </p>
+                    </div>
+                    <Button
+                        onClick={toggleVisibility}
+                        variant="soft"
+                        disabled={loading}
+                    >
+                        {capitalize(privacy)}
+                    </Button>
+                </div>
             </Form>
         </Section>
     );

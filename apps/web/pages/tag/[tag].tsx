@@ -3,7 +3,6 @@ import {
     HEADER_TAG_SECTION,
 } from "../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
-import { Grid, Typography } from "@mui/material";
 import { getBackendAddress, getPage } from "../../ui-lib/utils";
 import dynamic from "next/dynamic";
 import { Course, Page } from "@courselit/common-models";
@@ -47,26 +46,16 @@ function Posts(props: PostsProps) {
             title={HEADER_BLOG_POSTS_SECTION}
             layout={props.page.layout}
         >
-            <Grid
-                container
-                sx={{
-                    padding: 2,
-                    minHeight: "80vh",
-                }}
-            >
-                <Grid item sx={{ mb: 2 }}>
-                    <Typography variant="h2">
-                        {`${HEADER_TAG_SECTION} '${tag}'`}
-                    </Typography>
-                </Grid>
-                <Grid item>
-                    <Items
-                        showLoadMoreButton={true}
-                        generateQuery={generateQueryWithTag}
-                        initialItems={props.courses}
-                    />
-                </Grid>
-            </Grid>
+            <div className="flex flex-col p-4">
+                <h1 className="text-4xl font-semibold mb-4">
+                    {`${HEADER_TAG_SECTION} '${tag}'`}
+                </h1>
+                <Items
+                    showLoadMoreButton={true}
+                    generateQuery={generateQueryWithTag}
+                    initialItems={props.courses}
+                />
+            </div>
         </BaseLayout>
     );
 }

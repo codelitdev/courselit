@@ -1,5 +1,10 @@
 import { Address, AppMessage } from "@courselit/common-models";
-import { Button, Form, FormField, Section } from "@courselit/components-library";
+import {
+    Button,
+    Form,
+    FormField,
+    Section,
+} from "@courselit/components-library";
 import {
     actionCreators,
     AppDispatch,
@@ -106,23 +111,20 @@ function SectionEditor({
 
     return (
         <Section>
-        <div className="flex flex-col">
+            <div className="flex flex-col">
                 <h1 className="text-4xl font-semibold mb-4">
-                        {section ? EDIT_SECTION_HEADER : NEW_SECTION_HEADER}
+                    {section ? EDIT_SECTION_HEADER : NEW_SECTION_HEADER}
                 </h1>
-                    <Form onSubmit={updateGroup} className="flex flex-col gap-4">
-                        <FormField
-                            label={LABEL_GROUP_NAME}
-                            name="Section name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            required
-                        />
-                            <div className="flex gap-2">
-                        <Button
-                            disabled={!name || loading}
-                            type="submit"
-                        >
+                <Form onSubmit={updateGroup} className="flex flex-col gap-4">
+                    <FormField
+                        label={LABEL_GROUP_NAME}
+                        name="Section name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                    />
+                    <div className="flex gap-2">
+                        <Button disabled={!name || loading} type="submit">
                             {BTN_CONTINUE}
                         </Button>
                         {course.courseId && (
@@ -132,8 +134,8 @@ function SectionEditor({
                                 <Button>{POPUP_CANCEL_ACTION}</Button>
                             </Link>
                         )}
-                        </div>
-                    </Form>
+                    </div>
+                </Form>
             </div>
         </Section>
     );

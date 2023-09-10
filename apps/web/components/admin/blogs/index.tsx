@@ -1,11 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-    Address,
-    AppMessage,
-    Auth,
-    Course,
-    Profile,
-} from "@courselit/common-models";
+import { Address, AppMessage, Course } from "@courselit/common-models";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import {
     networkAction,
@@ -24,12 +18,7 @@ import {
 } from "../../../ui-config/strings";
 import dynamic from "next/dynamic";
 import { MoreVert } from "@courselit/icons";
-import {
-    MenuItem,
-    Menu2,
-    Button,
-    Link
-} from "@courselit/components-library";
+import { MenuItem, Menu2, Button, Link } from "@courselit/components-library";
 import { Table } from "@courselit/components-library";
 import { TableHead } from "@courselit/components-library";
 import { TableBody } from "@courselit/components-library";
@@ -55,7 +44,7 @@ const Index = ({ loading, dispatch, address }: IndexProps) => {
 
     useEffect(() => {
         loadBlogs();
-    }, [coursesPaginationOffset])
+    }, [coursesPaginationOffset]);
 
     const loadBlogs = async () => {
         const query = `
@@ -85,8 +74,8 @@ const Index = ({ loading, dispatch, address }: IndexProps) => {
             const response = await fetch.exec();
             if (response.courses) {
                 setCreatorCourses([...response.courses]);
-                if (response.courses.length === 0){
-                    setEndReached(true)
+                if (response.courses.length === 0) {
+                    setEndReached(true);
                 }
             }
         } catch (err: any) {
@@ -103,77 +92,68 @@ const Index = ({ loading, dispatch, address }: IndexProps) => {
 
     return (
         <div className="flex flex-col">
-                <div className="flex justify-between items-center mb-8"
-                >
+            <div className="flex justify-between items-center mb-8">
                 <h1 className="text-4xl font-semibold mb-4">
-                            {MANAGE_BLOG_PAGE_HEADING}
+                    {MANAGE_BLOG_PAGE_HEADING}
                 </h1>
-                        <div
-                            className="flex items-center gap-4">
-                                <Link href="/dashboard/blog/new">
-                                    <Button>
-                                        {BTN_NEW_BLOG}
-                                    </Button>
-                                </Link>
-                                <Menu2 icon={<MoreVert />} variant="soft">
-                                    <MenuItem>
-                                        <Link
-                                            href={`/dashboard/page/blog/edit?redirectTo=/dashboard/blogs`}
-                                        >
-                                            {
-                                                PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE
-                                            }
-                                        </Link>
-                                    </MenuItem>
-                                </Menu2>
-                        </div>
+                <div className="flex items-center gap-4">
+                    <Link href="/dashboard/blog/new">
+                        <Button>{BTN_NEW_BLOG}</Button>
+                    </Link>
+                    <Menu2 icon={<MoreVert />} variant="soft">
+                        <MenuItem>
+                            <Link
+                                href={`/dashboard/page/blog/edit?redirectTo=/dashboard/blogs`}
+                            >
+                                {PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE}
+                            </Link>
+                        </MenuItem>
+                    </Menu2>
                 </div>
-                    <Table aria-label="Products">
-                        <TableHead className="border-0 border-b border-slate-200">
-                                <td>{BLOG_TABLE_HEADER_NAME}</td>
-                                <td align="right">
-                                    {PRODUCTS_TABLE_HEADER_STATUS}
-                                </td>
-                                <td align="right">
-                                    {PRODUCTS_TABLE_HEADER_ACTIONS}
-                                </td>
-                        </TableHead>
-                        <TableBody
-                            loading={loading}
-                            endReached={endReached}
-                            page={coursesPaginationOffset}
-                            onPageChange={(value: number) => {
-                                setCoursesPaginationOffset(value)
-                                }}>
-                            {creatorCourses.map(
-                                (
-                                    product: Course & {
-                                        published: boolean;
-                                    },
-                                    index: number,
-                                ) => (
-                                    <BlogItem
-                                        key={product.courseId}
-                                        details={product}
-                                        position={index}
-                                        onDelete={onDelete}
-                                    />
-                                ),
-                            )}
-                        </TableBody>
-                    </Table>
+            </div>
+            <Table aria-label="Products">
+                <TableHead className="border-0 border-b border-slate-200">
+                    <td>{BLOG_TABLE_HEADER_NAME}</td>
+                    <td align="right">{PRODUCTS_TABLE_HEADER_STATUS}</td>
+                    <td align="right">{PRODUCTS_TABLE_HEADER_ACTIONS}</td>
+                </TableHead>
+                <TableBody
+                    loading={loading}
+                    endReached={endReached}
+                    page={coursesPaginationOffset}
+                    onPageChange={(value: number) => {
+                        setCoursesPaginationOffset(value);
+                    }}
+                >
+                    {creatorCourses.map(
+                        (
+                            product: Course & {
+                                published: boolean;
+                            },
+                            index: number,
+                        ) => (
+                            <BlogItem
+                                key={product.courseId}
+                                details={product}
+                                position={index}
+                                onDelete={onDelete}
+                            />
+                        ),
+                    )}
+                </TableBody>
+            </Table>
             {creatorCourses.length > 0 && (
-                    <div className="flex justify-center">
-                        <Button
-                            variant="soft"
-                            onClick={() =>
-                                setCoursesPaginationOffset(
-                                    coursesPaginationOffset + 1,
-                                )
-                            }
-                        >
-                            {LOAD_MORE_TEXT}
-                        </Button>
+                <div className="flex justify-center">
+                    <Button
+                        variant="soft"
+                        onClick={() =>
+                            setCoursesPaginationOffset(
+                                coursesPaginationOffset + 1,
+                            )
+                        }
+                    >
+                        {LOAD_MORE_TEXT}
+                    </Button>
                 </div>
             )}
         </div>

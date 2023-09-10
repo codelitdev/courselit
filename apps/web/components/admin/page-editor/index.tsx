@@ -30,7 +30,6 @@ import { useRouter } from "next/router";
 import {
     canAccessDashboard,
     generateFontString,
-    createMuiTheme,
     moveMemberUp,
     moveMemberDown,
 } from "../../../ui-lib/utils";
@@ -41,7 +40,7 @@ import widgets from "../../../ui-config/widgets";
 import PagesList from "./pages-list";
 import { Sync, CheckCircled } from "@courselit/icons";
 import AppToast from "../../app-toast";
-import { Button, CircularProgress, Link } from "@courselit/components-library";
+import { Button, CircularProgress } from "@courselit/components-library";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
@@ -78,7 +77,7 @@ function PageEditor({
     dispatch,
     loading,
     theme,
-    redirectTo
+    redirectTo,
 }: PageEditorProps) {
     const [pages, setPages] = useState([]);
     const [page, setPage] = useState<Partial<Page>>({});
@@ -100,7 +99,6 @@ function PageEditor({
     );
 
     const fontString = generateFontString(draftTypefaces);
-    const muiTheme = createMuiTheme(draftTypefaces, theme);
 
     useEffect(() => {
         loadDraftTypefaces();
@@ -459,18 +457,18 @@ function PageEditor({
                     <div className="flex justify-end items-center gap-2">
                         {loading && <Sync />}
                         {!loading && <CheckCircled />}
-                            <Button 
-                                variant="soft"
-                                component="link"
-                                href={
-                                    redirectTo ||
-                                    (page.type === "product"
-                                        ? `/dashboard/product/${page.entityId}/content`
-                                        : "/dashboard/products")
-                                }
-                                >
-                                {EDIT_PAGE_BUTTON_DONE}
-                            </Button>
+                        <Button
+                            variant="soft"
+                            component="link"
+                            href={
+                                redirectTo ||
+                                (page.type === "product"
+                                    ? `/dashboard/product/${page.entityId}/content`
+                                    : "/dashboard/products")
+                            }
+                        >
+                            {EDIT_PAGE_BUTTON_DONE}
+                        </Button>
                         <Button onClick={onPublish} sx={{ color: "white" }}>
                             {EDIT_PAGE_BUTTON_UPDATE}
                         </Button>

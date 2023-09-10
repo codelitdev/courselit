@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import { Address, AppMessage } from "@courselit/common-models";
-import { Section, Form, FormField, Button } from "@courselit/components-library";
+import {
+    Section,
+    Form,
+    FormField,
+    Button,
+} from "@courselit/components-library";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import { useRouter } from "next/router";
@@ -62,35 +67,29 @@ function NewBlog({ address, dispatch, networkAction: loading }: NewBlogProps) {
 
     return (
         <Section>
-            <div
-                className="flex flex-col">
-                <h1 className="text-4xl font-semibold mb-4">
-                            {BTN_NEW_BLOG}
-                </h1>
-                    <Form onSubmit={createCourse}
-                        className="flex flex-col gap-4">
-                                <FormField
-                                    required
-                                    label="Title"
-                                    name="title"
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                    placeholder={FORM_NEW_PRODUCT_TITLE_PLC}
-                                />
-                            <div className="flex gap-2">
-                                <Button
-                                    disabled={!title || (!!title && loading)}
-                                    onClick={createCourse}
-                                >
-                                    {BTN_CONTINUE}
-                                </Button>
-                                <Link href={`/dashboard/blogs`} legacyBehavior>
-                                    <Button variant="soft">
-                                        {BUTTON_CANCEL_TEXT}
-                                    </Button>
-                                </Link>
-                            </div>
-                    </Form>
+            <div className="flex flex-col">
+                <h1 className="text-4xl font-semibold mb-4">{BTN_NEW_BLOG}</h1>
+                <Form onSubmit={createCourse} className="flex flex-col gap-4">
+                    <FormField
+                        required
+                        label="Title"
+                        name="title"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder={FORM_NEW_PRODUCT_TITLE_PLC}
+                    />
+                    <div className="flex gap-2">
+                        <Button
+                            disabled={!title || (!!title && loading)}
+                            onClick={createCourse}
+                        >
+                            {BTN_CONTINUE}
+                        </Button>
+                        <Link href={`/dashboard/blogs`} legacyBehavior>
+                            <Button variant="soft">{BUTTON_CANCEL_TEXT}</Button>
+                        </Link>
+                    </div>
+                </Form>
             </div>
         </Section>
     );

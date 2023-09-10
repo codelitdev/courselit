@@ -10,7 +10,12 @@ import {
 import { QuestionBuilder } from "./question-builder";
 import { Question, Quiz } from "@courselit/common-models";
 import { DEFAULT_PASSING_GRADE } from "../../../../../../ui-config/constants";
-import { Checkbox, Button, Form, FormField } from "@courselit/components-library"
+import {
+    Checkbox,
+    Button,
+    Form,
+    FormField,
+} from "@courselit/components-library";
 import { FormEvent } from "react";
 
 interface QuizBuilderProps {
@@ -99,8 +104,8 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
     return (
         <div className="flex flex-col gap-4">
             <Form className="flex flex-col gap-4">
-            {questions.map((question: Question, index: number) => (
-                    <Section>
+                {questions.map((question: Question, index: number) => (
+                    <Section key={index}>
                         <QuestionBuilder
                             details={question}
                             index={index}
@@ -112,39 +117,40 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
                             deleteQuestion={deleteQuestion}
                         />
                     </Section>
-            ))}
+                ))}
             </Form>
-                <div>
-                <Button onClick={(e: FormEvent<HTMLInputElement>) => {
-                    e.preventDefault();
-                    addNewQuestion()}}>
+            <div>
+                <Button
+                    onClick={(e: FormEvent<HTMLInputElement>) => {
+                        e.preventDefault();
+                        addNewQuestion();
+                    }}
+                >
                     {LESSON_QUIZ_ADD_QUESTION}
                 </Button>
+            </div>
+            <Form className="flex justify-between items-center gap-2">
+                <div className="flex items-center gap-2">
+                    <Checkbox
+                        checked={passingGradeRequired}
+                        onChange={(value: boolean) =>
+                            setPassingGradeRequired(value)
+                        }
+                    />
+                    <p>{LESSON_QUIZ_GRADED_TEXT}</p>
                 </div>
-                <Form className="flex justify-between items-center gap-2">
-                        <div className="flex items-center gap-2">
-                        <Checkbox
-                            checked={passingGradeRequired}
-                            onChange={(value: boolean) =>
-                                setPassingGradeRequired(value)
-                            }
-                        />
-                        <p>{LESSON_QUIZ_GRADED_TEXT}</p>
-                        </div>
-                        <FormField
-                            type="number"
-                            label={LESSON_QUIZ_PASSING_GRADE_LABEL}
-                            value={passingGradePercentage}
-                            onChange={(e) =>
-                                setPassingGradePercentage(
-                                    parseInt(e.target.value),
-                                )
-                            }
-                            disabled={!passingGradeRequired}
-                            min={0}
-                            max={100}
-                        />
-                </Form>
+                <FormField
+                    type="number"
+                    label={LESSON_QUIZ_PASSING_GRADE_LABEL}
+                    value={passingGradePercentage}
+                    onChange={(e) =>
+                        setPassingGradePercentage(parseInt(e.target.value))
+                    }
+                    disabled={!passingGradeRequired}
+                    min={0}
+                    max={100}
+                />
+            </Form>
         </div>
     );
 }

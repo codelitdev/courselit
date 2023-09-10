@@ -1,5 +1,4 @@
 import { capitalize, FetchBuilder } from "@courselit/utils";
-import { Grid, Typography } from "@mui/material";
 import { getBackendAddress, getPage } from "../../ui-lib/utils";
 import dynamic from "next/dynamic";
 import { Course, Page } from "@courselit/common-models";
@@ -36,26 +35,15 @@ function Posts(props: PostsProps) {
 
     return (
         <BaseLayout title={path} layout={props.page.layout}>
-            <Grid
-                container
-                direction="column"
-                sx={{
-                    padding: 2,
-                    minHeight: "80vh",
-                }}
-            >
-                <Grid item sx={{ mb: 2 }}>
-                    <Typography variant="h2">{path}</Typography>
-                </Grid>
-                <Grid item>
-                    <Items
-                        showLoadMoreButton={true}
-                        generateQuery={generateQuery}
-                        initialItems={props.courses}
-                        posts={true}
-                    />
-                </Grid>
-            </Grid>
+            <div className="flex flex-col p-4 gap-4">
+                <h1 className="text-4xl font-semibold">{path}</h1>
+                <Items
+                    showLoadMoreButton={true}
+                    generateQuery={generateQuery}
+                    initialItems={props.courses}
+                    posts={true}
+                />
+            </div>
         </BaseLayout>
     );
 }

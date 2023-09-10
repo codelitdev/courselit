@@ -24,7 +24,7 @@ import {
     MenuItem,
     Link,
     Chip,
-    TableRow
+    TableRow,
 } from "@courselit/components-library";
 
 function Product({
@@ -81,22 +81,17 @@ function Product({
         <TableRow key={product.courseId}>
             <td className="py-4">
                 <Link href={`/dashboard/product/${product.courseId}/reports`}>
-                                <p>{product.title}</p>
+                    <p>{product.title}</p>
                 </Link>
             </td>
             <td>
-                                <p>{capitalize( product.type)}</p>
+                <p>{capitalize(product.type)}</p>
             </td>
             <td align="right">
-                <Chip
-                    className={
-                        product.published ? "!bg-black" : ""
-                        }>
-                    {
-                        product.published
-                            ? PRODUCT_STATUS_PUBLISHED
-                            : PRODUCT_STATUS_DRAFT
-                    }
+                <Chip className={product.published ? "!bg-black" : ""}>
+                    {product.published
+                        ? PRODUCT_STATUS_PUBLISHED
+                        : PRODUCT_STATUS_DRAFT}
                 </Chip>
             </td>
             <td align="right">{product.customers}</td>

@@ -14,36 +14,29 @@ import {
     //USER_TABLE_HEADER_NAME_NAME,
     TOOLTIP_USER_PAGE_SEND_MAIL,
 } from "../../../ui-config/strings";
-import { 
-    checkPermission, 
-    //exportToCsv, 
-    FetchBuilder 
+import {
+    checkPermission,
+    //exportToCsv,
+    FetchBuilder,
 } from "@courselit/utils";
 import { connect } from "react-redux";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
-import {
-    Profile,
-    User,
-    Auth,
-    Address,
-    State,
-    AppMessage,
-} from "@courselit/common-models";
+import { User, Address, State, AppMessage } from "@courselit/common-models";
 import { ThunkDispatch } from "redux-thunk";
 import { AnyAction } from "redux";
-import { 
-    Tooltip, 
-    Select as SingleSelect, 
+import {
+    Tooltip,
+    Select as SingleSelect,
     IconButton,
     Table,
     TableHead,
     TableBody,
     TableRow,
-    Avatar, 
+    Avatar,
     Link,
     Form,
-    FormField
+    FormField,
 } from "@courselit/components-library";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 //import { CSVLink } from "react-csv";
@@ -56,19 +49,17 @@ const { networkAction } = actionCreators;
 const { permissions } = UIConstants;
 
 interface UserManagerProps {
-    auth: Auth;
     address: Address;
     dispatch: AppDispatch;
-    profile: Profile;
     featureFlags: string[];
+    loading: boolean;
 }
 
 const UsersManager = ({
-    auth,
     address,
     dispatch,
-    profile,
     featureFlags,
+    loading,
 }: UserManagerProps) => {
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -87,9 +78,7 @@ const UsersManager = ({
         loadUsersCount();
     }, [rowsPerPage, type, searchEmailHook]);
 
-    const handlePageChange = (
-        newPage: number,
-    ) => {
+    const handlePageChange = (newPage: number) => {
         setPage(newPage);
     };
 
@@ -333,63 +322,64 @@ const UsersManager = ({
 
     return (
         <div className="flex flex-col">
-                <h1 className="text-4xl font-semibold mb-4">
-                            {USERS_MANAGER_PAGE_HEADING}
-                </h1>
-                <div className="flex items-start justify-between gap-2 mb-4">
-                    <Form
-                        onSubmit={searchByEmail}
-                        className="flex gap-2 items-start"
-                    >
-                        <FormField
-                            type="email"
-                            label="Search by email"
-                            onChange={(e) => setSearchEmail(e.target.value)}
-                            value={searchEmail}
-                            required
-                            endIcon={
-                                searchEmail ? (
-                                        <>
-                                        <IconButton 
-                                            type="submit"
-                                            className="hidden"></IconButton>
-                                        <IconButton
-                                            aria-label="clear email search box"
-                                            variant="soft"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                setSearchEmail("");
-                                                searchByEmail();
-                                            }}
-                                        >
-                                            <Cancel />
-                                        </IconButton>
-                                        </>
-                                ) : null
-                            }
-                        />
-                        <SingleSelect
-                            title={USER_FILTER_PERMISSION}
-                            onChange={handleUserTypeChange}
-                            value={type}
-                            options={[
-                                { label: USER_TYPE_ALL, value: "" },
-                                {
-                                    label: USER_TYPE_CUSOMER,
-                                    value: USER_TYPE_CUSOMER,
-                                },
-                                {
-                                    label: USER_TYPE_TEAM,
-                                    value: USER_TYPE_TEAM,
-                                },
-                                {
-                                    label: USER_TYPE_SUBSCRIBER,
-                                    value: USER_TYPE_SUBSCRIBER,
-                                },
-                            ]}
-                        />
-                    </Form>
-                    {/*
+            <h1 className="text-4xl font-semibold mb-4">
+                {USERS_MANAGER_PAGE_HEADING}
+            </h1>
+            <div className="flex items-start justify-between gap-2 mb-4">
+                <Form
+                    onSubmit={searchByEmail}
+                    className="flex gap-2 items-start"
+                >
+                    <FormField
+                        type="email"
+                        label="Search by email"
+                        onChange={(e) => setSearchEmail(e.target.value)}
+                        value={searchEmail}
+                        required
+                        endIcon={
+                            searchEmail ? (
+                                <>
+                                    <IconButton
+                                        type="submit"
+                                        className="hidden"
+                                    ></IconButton>
+                                    <IconButton
+                                        aria-label="clear email search box"
+                                        variant="soft"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            setSearchEmail("");
+                                            searchByEmail();
+                                        }}
+                                    >
+                                        <Cancel />
+                                    </IconButton>
+                                </>
+                            ) : null
+                        }
+                    />
+                    <SingleSelect
+                        title={USER_FILTER_PERMISSION}
+                        onChange={handleUserTypeChange}
+                        value={type}
+                        options={[
+                            { label: USER_TYPE_ALL, value: "" },
+                            {
+                                label: USER_TYPE_CUSOMER,
+                                value: USER_TYPE_CUSOMER,
+                            },
+                            {
+                                label: USER_TYPE_TEAM,
+                                value: USER_TYPE_TEAM,
+                            },
+                            {
+                                label: USER_TYPE_SUBSCRIBER,
+                                value: USER_TYPE_SUBSCRIBER,
+                            },
+                        ]}
+                    />
+                </Form>
+                {/*
                         <CSVLink
                             filename={"users-courselit.csv"}
                             headers={[
@@ -418,87 +408,83 @@ const UsersManager = ({
                             {EXPORT_CSV}
                         </CSVLink>
                         */}
-                    {featureFlags.includes("mail") && (
-                        <Tooltip title={TOOLTIP_USER_PAGE_SEND_MAIL}>
-                            <IconButton 
-                                onClick={createMail}
-                                variant="soft">
-                                <Mail />
-                            </IconButton>
-                        </Tooltip>
-                    )}
-                </div>
-                    <Table aria-label="Users">
-                        <TableHead>
-                                <td>{USER_TABLE_HEADER_NAME}</td>
-                                <td align="right">Type</td>
-                                <td align="right">
-                                    {USER_TABLE_HEADER_JOINED}
-                                </td>
-                                <td align="right">
-                                    {USER_TABLE_HEADER_LAST_ACTIVE}
-                                </td>
-                        </TableHead>
-                        <TableBody
-                            count={count}
-                            page={page}
-                            onPageChange={handlePageChange}
-                            rowsPerPage={rowsPerPage}
-                            onRowsPerPageChange={handleRowsPerPageChange}
+                {featureFlags.includes("mail") && (
+                    <Tooltip title={TOOLTIP_USER_PAGE_SEND_MAIL}>
+                        <IconButton onClick={createMail} variant="soft">
+                            <Mail />
+                        </IconButton>
+                    </Tooltip>
+                )}
+            </div>
+            <Table aria-label="Users">
+                <TableHead>
+                    <td>{USER_TABLE_HEADER_NAME}</td>
+                    <td align="right">Type</td>
+                    <td align="right">{USER_TABLE_HEADER_JOINED}</td>
+                    <td align="right">{USER_TABLE_HEADER_LAST_ACTIVE}</td>
+                </TableHead>
+                <TableBody
+                    count={count}
+                    page={page}
+                    onPageChange={handlePageChange}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={handleRowsPerPageChange}
+                    loading={loading}
+                >
+                    {users.map((user) => (
+                        <TableRow
+                            key={user.email}
+                            sx={{
+                                "&:last-child td, &:last-child th": {
+                                    border: 0,
+                                },
+                            }}
                         >
-                            {users.map((user) => (
-                                <TableRow
-                                    key={user.email}
-                                    sx={{
-                                        "&:last-child td, &:last-child th": {
-                                            border: 0,
-                                        },
-                                    }}
-                                >
-                                    <td className="py-2">
-                                        <div className="flex items-center gap-2"
+                            <td className="py-2">
+                                <div className="flex items-center gap-2">
+                                    <Avatar
+                                        fallbackText={(user.name
+                                            ? user.name.charAt(0)
+                                            : user.email.charAt(0)
+                                        ).toUpperCase()}
+                                    />
+                                    <div>
+                                        <Link
+                                            href={`/dashboard/users/${user.userId}`}
                                         >
-                                            <Avatar 
-                                                fallbackText={(user.name ? user.name.charAt(0) : user.email.charAt(0)).toUpperCase()} />
-                                            <div>
-                                                    <Link
-                                                        href={`/dashboard/users/${user.userId}`}
-                                                    >
-                                                    <span className="font-medium">
-                                                            {user.name
-                                                                ? user.name
-                                                                : user.email}
-                                                    </span>
-                                                    </Link>
-                                                    <div className="text-sm text-slate-600">
-                                                        {user.email}
-                                                    </div>
-                                            </div>
+                                            <span className="font-medium">
+                                                {user.name
+                                                    ? user.name
+                                                    : user.email}
+                                            </span>
+                                        </Link>
+                                        <div className="text-sm text-slate-600">
+                                            {user.email}
                                         </div>
-                                    </td>
-                                    <td align="right">
-                                        {getUserType(user)}
-                                    </td>
-                                    <td align="right">
-                                        {user.createdAt
-                                            ? new Date(
-                                                  +user.createdAt,
-                                              ).toLocaleDateString()
-                                            : ""}
-                                    </td>
-                                    <td align="right">
-                                        {user.updatedAt !== user.createdAt
-                                            ? user.updatedAt
-                                                ? new Date(
-                                                      +user.updatedAt,
-                                                  ).toLocaleDateString()
-                                                : ""
-                                            : ""}
-                                    </td>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                                    </div>
+                                </div>
+                            </td>
+                            <td align="right">{getUserType(user)}</td>
+                            <td align="right">
+                                {user.createdAt
+                                    ? new Date(
+                                          +user.createdAt,
+                                      ).toLocaleDateString()
+                                    : ""}
+                            </td>
+                            <td align="right">
+                                {user.updatedAt !== user.createdAt
+                                    ? user.updatedAt
+                                        ? new Date(
+                                              +user.updatedAt,
+                                          ).toLocaleDateString()
+                                        : ""
+                                    : ""}
+                            </td>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
         </div>
     );
 };
@@ -508,6 +494,7 @@ const mapStateToProps = (state: AppState) => ({
     address: state.address,
     profile: state.profile,
     featureFlags: state.featureFlags,
+    loading: state.networkAction,
 });
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({

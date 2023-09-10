@@ -13,14 +13,13 @@ function Tabs({ tabs }: TabsProps) {
     return (
         <ul className="flex gap-2">
             {tabs.map((tab: Tab) => (
-                <li 
+                <li
                     key={tab.text}
-                    className={`text-xl font-medium ${router.asPath === tab.url ? "underline" : "no-underline"}`}>
-                    <Link
-                        href={tab.url}
-                    >
-                        {tab.text}
-                    </Link>
+                    className={`text-xl font-medium ${
+                        router.asPath === tab.url ? "underline" : "no-underline"
+                    }`}
+                >
+                    <Link href={tab.url}>{tab.text}</Link>
                 </li>
             ))}
         </ul>

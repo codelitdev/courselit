@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
 import {
     SWITCH_ACCOUNT_ACTIVE,
-    ENROLLED_COURSES_HEADER,
+    //ENROLLED_COURSES_HEADER,
     USERS_MANAGER_PAGE_HEADING,
     PAGE_HEADER_EDIT_USER,
     USER_BASIC_DETAILS_HEADER,
@@ -12,20 +12,17 @@ import {
 import { FetchBuilder } from "@courselit/utils";
 import { AppMessage } from "@courselit/common-models";
 import PermissionsEditor from "./permissions-editor";
-import type { Address, Auth, Course, User } from "@courselit/common-models";
+import type { Address, User } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
-import { Link, Section, Switch, Breadcrumbs } from '@courselit/components-library';
+import {
+    Link,
+    Section,
+    Switch,
+    Breadcrumbs,
+} from "@courselit/components-library";
 
 const { networkAction, setAppMessage } = actionCreators;
-
-const PREFIX = "Details";
-
-const classes = {
-    container: `${PREFIX}-container`,
-    enrolledCourseItem: `${PREFIX}-enrolledCourseItem`,
-    fullHeight: `${PREFIX}-fullHeight`,
-};
 
 interface DetailsProps {
     userId: string;
@@ -140,57 +137,53 @@ const Details = ({ userId, address, dispatch }: DetailsProps) => {
         }
     };
 
-    if (!userData) { return null; }
+    if (!userData) {
+        return null;
+    }
 
     return (
-                <div
-                    className="flex flex-col gap-4"
+        <div className="flex flex-col gap-4">
+            <Breadcrumbs aria-label="breakcrumb">
+                <Link href="/dashboard/users">
+                    {USERS_MANAGER_PAGE_HEADING}
+                </Link>
+
+                <p>{PAGE_HEADER_EDIT_USER}</p>
+            </Breadcrumbs>
+            <h1 className="text-4xl font-semibold mb-4">
+                {userData.name ? userData.name : userData.email}
+            </h1>
+            <div className="flex gap-2">
+                <Section
+                    className="md:w-1/2"
+                    header={USER_BASIC_DETAILS_HEADER}
                 >
-                        <Breadcrumbs aria-label="breakcrumb">
-                            <Link href="/dashboard/users">
-                                    {USERS_MANAGER_PAGE_HEADING}
-                            </Link>
-
-                            <p>
-                                {PAGE_HEADER_EDIT_USER}
-                            </p>
-                        </Breadcrumbs>
-                        <h1 className="text-4xl font-semibold mb-4">
-                            {userData.name ? userData.name : userData.email}
-                        </h1>
-                    <div className="flex gap-2">
-                                <Section className="md:w-1/2" header={USER_BASIC_DETAILS_HEADER}>
-                                <div className="flex items-center justify-between">
-                                    <p>{USER_NAME_SUBHEADER}</p>
-                                    <p>
-                                        {userData.name || '--'} 
-                                    </p>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <p>{USER_EMAIL_SUBHEADER}</p>
-                                    <p>
-                                        
-                                    <Link href={`mailto:${userData.email}`}>
-                                        {userData.email}
-                                    </Link>
-                                    </p>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    {SWITCH_ACCOUNT_ACTIVE}
-                                    <Switch
-                                        type="checkbox"
-                                        name="active"
-                                        checked={userData.active}
-                                        onChange={(value) =>
-                                            toggleActiveState(value)
-                                        }
-                                    />
-                                </div>
-                                </Section>
-                                <PermissionsEditor user={userData} />
+                    <div className="flex items-center justify-between">
+                        <p>{USER_NAME_SUBHEADER}</p>
+                        <p>{userData.name || "--"}</p>
                     </div>
+                    <div className="flex items-center justify-between">
+                        <p>{USER_EMAIL_SUBHEADER}</p>
+                        <p>
+                            <Link href={`mailto:${userData.email}`}>
+                                {userData.email}
+                            </Link>
+                        </p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                        {SWITCH_ACCOUNT_ACTIVE}
+                        <Switch
+                            type="checkbox"
+                            name="active"
+                            checked={userData.active}
+                            onChange={(value) => toggleActiveState(value)}
+                        />
+                    </div>
+                </Section>
+                <PermissionsEditor user={userData} />
+            </div>
 
-                    {/*
+            {/*
                     {userData.purchases && userData.purchases.length > 0 && (
                         <Grid item>
                                 <Typography variant="h6">
@@ -213,7 +206,7 @@ const Details = ({ userId, address, dispatch }: DetailsProps) => {
                         </Grid>
                     )}
                     */}
-                </div>
+        </div>
     );
 };
 

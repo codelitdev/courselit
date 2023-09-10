@@ -10,7 +10,14 @@ import useCourse from "../course-hook";
 import { Add, MoreVert } from "@courselit/icons";
 import { Course, Lesson } from "@courselit/common-models";
 import { useRouter } from "next/router";
-import { Section, Link, LessonIcon, Button, Menu2, MenuItem } from "@courselit/components-library";
+import {
+    Section,
+    Link,
+    LessonIcon,
+    Button,
+    Menu2,
+    MenuItem,
+} from "@courselit/components-library";
 import {
     actionCreators,
     AppDispatch,
@@ -27,47 +34,50 @@ interface LessonSectionProps {
 }
 
 function LessonSection({ group, course, onGroupDelete }: LessonSectionProps) {
-
     return (
         <Section>
             <div className="flex flex-col gap-4">
-                    <div className="flex justify-between items-center"
-                    >
-                        <h2 className="font-medium">{group.name}</h2>
-                        <Menu2 icon={<MoreVert />} variant="soft">
-                            <MenuItem>
-                                <Link href={                                            `/dashboard/product/${course.courseId}/section/${group.id}`}>
-                                    {EDIT_SECTION_HEADER}
-                                </Link>
-                            </MenuItem>
-                            <MenuItem
-                                component="dialog"
-                                title={DELETE_SECTION_HEADER}
-                                triggerChildren={DELETE_SECTION_HEADER}
-                                onClick={() => onGroupDelete(group.id, course.id)}
-                            />
-                        </Menu2>
-                    </div>
-                    <div>
-                {course.lessons
-                    .filter((lesson: Lesson) => lesson.groupId === group.id)
-                    .sort((a: any, b: any) => a.groupRank - b.groupRank)
-                    .map((lesson: Lesson) => (
-                        <div className="flex items-center gap-2" key={lesson.lessonId}>
+                <div className="flex justify-between items-center">
+                    <h2 className="font-medium">{group.name}</h2>
+                    <Menu2 icon={<MoreVert />} variant="soft">
+                        <MenuItem>
+                            <Link
+                                href={`/dashboard/product/${course.courseId}/section/${group.id}`}
+                            >
+                                {EDIT_SECTION_HEADER}
+                            </Link>
+                        </MenuItem>
+                        <MenuItem
+                            component="dialog"
+                            title={DELETE_SECTION_HEADER}
+                            triggerChildren={DELETE_SECTION_HEADER}
+                            onClick={() => onGroupDelete(group.id, course.id)}
+                        />
+                    </Menu2>
+                </div>
+                <div>
+                    {course.lessons
+                        .filter((lesson: Lesson) => lesson.groupId === group.id)
+                        .sort((a: any, b: any) => a.groupRank - b.groupRank)
+                        .map((lesson: Lesson) => (
+                            <div
+                                className="flex items-center gap-2"
+                                key={lesson.lessonId}
+                            >
                                 <LessonIcon type={lesson.type} />
-                                    <Link
-                                        href={`/dashboard/product/${course.courseId}/section/${group.id}/lesson/${lesson.lessonId}`}
-                                    >
-                                        {lesson.title}
-                                    </Link>
-                        </div>
-                    ))}
-                    </div>
+                                <Link
+                                    href={`/dashboard/product/${course.courseId}/section/${group.id}/lesson/${lesson.lessonId}`}
+                                >
+                                    {lesson.title}
+                                </Link>
+                            </div>
+                        ))}
+                </div>
                 <div>
                     <Link
                         href={`/dashboard/product/${course.courseId}/section/${group.id}/lesson/new`}
                     >
-                        <Button variant="soft" >
+                        <Button variant="soft">
                             <Add />
                             {BUTTON_NEW_LESSON_TEXT}
                         </Button>
@@ -89,7 +99,6 @@ function LessonsList({ id, dispatch, address }: LessonsProps) {
     const router = useRouter();
 
     const removeGroup = async (groupId: string, courseId: string) => {
-        console.log(groupId, courseId)
         const mutation = `
         mutation {
             removeGroup(
@@ -109,8 +118,15 @@ function LessonsList({ id, dispatch, address }: LessonsProps) {
             dispatch(actionCreators.networkAction(true));
             const response = await fetch.exec();
             if (response.removeGroup?.courseId) {
-                dispatch(actionCreators.setAppMessage(new AppMessage(LESSON_GROUP_DELETED)));
-                course.groups.splice(course.groups.findIndex(group => group.id ===groupId), 1)
+                dispatch(
+                    actionCreators.setAppMessage(
+                        new AppMessage(LESSON_GROUP_DELETED),
+                    ),
+                );
+                course.groups.splice(
+                    course.groups.findIndex((group) => group.id === groupId),
+                    1,
+                );
             }
         } catch (err: any) {
             dispatch(actionCreators.setAppMessage(new AppMessage(err.message)));
@@ -125,17 +141,20 @@ function LessonsList({ id, dispatch, address }: LessonsProps) {
 
     return (
         <div className="flex flex-col gap-4">
-            {course.groups.map((group: Record<string, unknown>) => (
-                    <LessonSection 
-                        group={group} 
-                        course={course} 
+            {course.groups.map(
+                (group: Record<string, unknown>, index: number) => (
+                    <LessonSection
+                        group={group}
+                        course={course}
                         onGroupDelete={removeGroup}
-                        />
-            ))}
+                        key={index}
+                    />
+                ),
+            )}
             <div>
-            <Link href={`/dashboard/product/${id}/section/new`}>
-                <Button>{BUTTON_NEW_GROUP_TEXT}</Button>
-            </Link>
+                <Link href={`/dashboard/product/${id}/section/new`}>
+                    <Button>{BUTTON_NEW_GROUP_TEXT}</Button>
+                </Link>
             </div>
         </div>
     );

@@ -1,6 +1,11 @@
 import React, { FormEvent, useEffect, useState } from "react";
 import { Address, AppMessage, SiteInfo } from "@courselit/common-models";
-import { FormField, Section, Form, Button } from "@courselit/components-library";
+import {
+    FormField,
+    Section,
+    Form,
+    Button,
+} from "@courselit/components-library";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import {
     networkAction,
@@ -111,43 +116,40 @@ function Pricing({ id, siteinfo, address, dispatch }: PricingProps) {
 
     return (
         <Section>
-             <Form onSubmit={updatePricing}
-                className="flex flex-col gap-4">
-                        <Select
-                            value={costType}
-                            title={PRICING_DROPDOWN}
-                            onChange={(val: string) => {
-                                setCostType(val);
-                            }}
-                            options={options}
-                        />
-                    {PRICING_PAID === costType && (
-                            <FormField
-                                required
-                                label="Cost"
-                                name="title"
-                                value={cost}
-                                type="number"
-                                step="0.1"
-                                onChange={(e) =>
-                                    setCost(+e.target.value as number)
-                                }
-                            />
-                    )}
-                        <div>
-                        <Button
-                            type="submit"
-                            disabled={
-                                !course ||
-                                (costType === PRICING_PAID &&
-                                    (!cost || course.cost === cost)) ||
-                                (costType !== PRICING_PAID &&
-                                    costType === course.costType?.toLowerCase())
-                            }
-                        >
-                            {BUTTON_SAVE}
-                        </Button>
-                        </div>
+            <Form onSubmit={updatePricing} className="flex flex-col gap-4">
+                <Select
+                    value={costType}
+                    title={PRICING_DROPDOWN}
+                    onChange={(val: string) => {
+                        setCostType(val);
+                    }}
+                    options={options}
+                />
+                {PRICING_PAID === costType && (
+                    <FormField
+                        required
+                        label="Cost"
+                        name="title"
+                        value={cost}
+                        type="number"
+                        step="0.1"
+                        onChange={(e) => setCost(+e.target.value as number)}
+                    />
+                )}
+                <div>
+                    <Button
+                        type="submit"
+                        disabled={
+                            !course ||
+                            (costType === PRICING_PAID &&
+                                (!cost || course.cost === cost)) ||
+                            (costType !== PRICING_PAID &&
+                                costType === course.costType?.toLowerCase())
+                        }
+                    >
+                        {BUTTON_SAVE}
+                    </Button>
+                </div>
             </Form>
         </Section>
     );

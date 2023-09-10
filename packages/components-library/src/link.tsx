@@ -14,22 +14,26 @@ export default function Link({
     children,
     openInSameTab,
     style,
-    className = ""
+    className = "",
 }: LinkProps) {
-    const isInternal = href.startsWith("/");
+    const isInternal = href && href.startsWith("/");
 
     return isInternal ? (
-        <NextLink href={href} style={{ flexGrow: 1, ...style }}>
-            <span className={`hover:underline ${className}`}>
-            {children}
+        <NextLink 
+            href={href} 
+            >
+            <span 
+                style={{ ...style }}
+                className={className}>
+                {children}
             </span>
         </NextLink>
     ) : (
         <a
             href={href}
+            style={{ ...style }}
             target={openInSameTab ? "_self" : "_blank"}
-            style={{ flexGrow: 1, ...style }}
-            className={`hover:underline ${className}`}
+            className={className}
         >
             {children}
         </a>

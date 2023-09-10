@@ -43,11 +43,12 @@ const Button = React.forwardRef((props: ButtonProps, forwardedRef: any) => {
 
     if (component === "link") {
         return (
-           <Link
-                href={props.href}>
+            <Link 
+                href={props.href}
+                className={`${commonClasses} ${className}`}
+                style={{ ...style }}
+                >
                 <span
-                    className={`${commonClasses} ${className}`}
-                    style={{ ...style }}
                     ref={forwardedRef}
                     {...other}
                 >
