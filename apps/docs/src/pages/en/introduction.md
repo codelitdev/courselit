@@ -6,18 +6,13 @@ layout: ../../layouts/MainLayout.astro
 
 ## What is CourseLit?
 
-CourseLit is a **learning management system** (aka LMS) for everyone who wants to build and sell courses (or digital downloads) on her own branded website.
+CourseLit is a **Learning Management System** for modern day creators who want to sell courses and digital downloads from their own websites.
 
-## Key Features
+## Features
 
--   **Course Authoring**: Use text, images, videos, downloadable files to create full featured courses.
--   **Student Management**: Track your students' progress, restrict access to the platform and more.
--   **Integrated Blogs**: Blog on the same website where your courses are hosted.
--   **Payment integration**: Collect payments by integrating Stripe.
--   **Page Builder**: Customize your website and product pages to your heart's content.
--   **Third Party Integrations**: Integrate analytics, chatbots etc., by injecting third party code snippets.
--   **Self-hosted**: Host CourseLit on your own server to claim total data ownership.
--   **Open Source**: Read and modify the source code to build your own variations.
+CourseLit has got everything you'd ever need to successfully run your online teaching business.
+
+See all the features [here](/en/features).
 
 ## Try CourseLit
 
@@ -25,9 +20,9 @@ Visit <a href="https://courselit.app" target="_blank">courselit.app</a> to use t
 
 ## Self Hosting
 
-CourseLit is an open-source LMS and can be hosted on a server where you control everything. If data ownership is at center of your business, self-hosting CourseLit is a way to go.
+CourseLit is an open-source LMS and can be hosted on a server where you control everything. If data ownership is at the center of your business, self-hosting CourseLit is a way to go.
 
-Follow [our guide](/en/self-hosting) for full, step by step instructions for hosting CourseLit on your server.
+Follow [our guide](/en/self-hosting/introduction) for full, step by step instructions for hosting CourseLit on your server.
 
 ## Join Our Community
 

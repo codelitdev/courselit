@@ -24,6 +24,7 @@ export interface Domain {
     featureFlags: string[];
     typefaces: Typeface[];
     draftTypefaces: Typeface[];
+    firstRun: boolean;
 }
 
 export const defaultTypeface: Typeface = {
@@ -51,6 +52,7 @@ const DomainSchema = new mongoose.Schema<Domain>(
             default: [defaultTypeface],
         },
         draftTypefaces: { type: [TypefaceSchema], default: [defaultTypeface] },
+        firstRun: { type: Boolean, required: true, default: false },
     },
     {
         timestamps: true,

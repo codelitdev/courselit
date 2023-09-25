@@ -157,8 +157,8 @@ export default function AdminWidget({
                 </AdminWidgetPanel>
             </div>
             <div className="mb-4">
-                <Form>
-                    <AdminWidgetPanel title="Call to action">
+                <AdminWidgetPanel title="Call to action">
+                    <Form>
                         <FormField
                             label="Button Text"
                             value={buttonCaption}
@@ -169,22 +169,22 @@ export default function AdminWidget({
                             value={buttonAction}
                             onChange={(e) => setButtonAction(e.target.value)}
                         />
-                        <ColorSelector
-                            title="Button color"
-                            value={buttonBackground || "inherit"}
-                            onChange={(value?: string) =>
-                                setButtonBackground(value)
-                            }
-                        />
-                        <ColorSelector
-                            title="Button text color"
-                            value={buttonForeground || "inherit"}
-                            onChange={(value?: string) =>
-                                setButtonForeground(value)
-                            }
-                        />
-                    </AdminWidgetPanel>
-                </Form>
+                    </Form>
+                    <ColorSelector
+                        title="Button color"
+                        value={buttonBackground || "inherit"}
+                        onChange={(value?: string) =>
+                            setButtonBackground(value)
+                        }
+                    />
+                    <ColorSelector
+                        title="Button text color"
+                        value={buttonForeground || "inherit"}
+                        onChange={(value?: string) =>
+                            setButtonForeground(value)
+                        }
+                    />
+                </AdminWidgetPanel>
             </div>
             <div className="mb-4">
                 <AdminWidgetPanel title="Design">

@@ -19,12 +19,8 @@ export default function Link({
     const isInternal = href && href.startsWith("/");
 
     return isInternal ? (
-        <NextLink 
-            href={href} 
-            >
-            <span 
-                style={{ ...style }}
-                className={className}>
+        <NextLink href={href}>
+            <span style={{ ...style }} className={className}>
                 {children}
             </span>
         </NextLink>

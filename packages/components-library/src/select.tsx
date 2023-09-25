@@ -38,6 +38,10 @@ export default function Select({
                 disabled={disabled}
                 className="border border-slate-300 hover:border-slate-400 py-1 px-2 rounded"
             >
+                <option disabled selected value="">
+                    {" "}
+                    -- select an option --{" "}
+                </option>
                 {options.map((option: Option) => (
                     <option
                         value={option.value}

@@ -1,7 +1,7 @@
 ---
-title: Self Hosting CourseLit
-description: Hosting CourseLit on your own server
-layout: ../../layouts/MainLayout.astro
+title: CourseLit Self Hosting Guide
+description: CourseLit Self Hosting Guide
+layout: ../../../layouts/MainLayout.astro
 ---
 
 We offer two ways to self-host CourseLit, which are as follows.
@@ -19,7 +19,7 @@ To quickly spin up an instance of CourseLit on Vercel, click the following butto
 
 ## Hosting on a VPS using Docker
 
-We offer a Docker image which you can easily host in any environment where Docker is supported. We recommend [docker-compose](https://docs.docker.com/compose/) for hosting CourseLit.
+If you want to harness the full capabilities of CourseLit, you can deploy it via Docker. We recommend [docker-compose](https://docs.docker.com/compose/) for hosting CourseLit.
 
 Run the following commands in order.
 
@@ -172,6 +172,12 @@ docker compose up
 ```
 
 That's it! You now have a fully functioning LMS powered by CourseLit.
+
+## Hosted version
+
+If this is too technical for you to handle, CourseLit's hosted version is available at [CourseLit.app](https://courselit.app).
+
+It is managed by the team behind CourseLit. We will take care of everything, just come with your team and content.
 
 ## Stuck somewhere?
 
