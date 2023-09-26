@@ -78,6 +78,18 @@ async function initSharedWidgets(ctx: GQLContext) {
             shared: true,
             deleteable: false,
             widgetId: generateUniqueId(),
+            settings: {
+                links: [
+                    { label: "Courses", href: "/courses" },
+                    { label: "Blog", href: "/blog" },
+                ],
+                appBarBackground: "#000000",
+                loginBtnBgColor: "#ffffff",
+                loginBtnColor: "#000000",
+                linkColor: "#ffffff",
+                linkAlignment: "right",
+                logoColor: "#ffffff",
+            },
         };
         subdomainChanged = true;
     }

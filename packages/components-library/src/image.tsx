@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import NextImage from "next/legacy/image";
 
 interface ImgProps {

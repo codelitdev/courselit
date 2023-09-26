@@ -21,22 +21,22 @@ export default function Widget({
     },
 }: WidgetProps<Settings>) {
     const hasHeroGraphic = youtubeLink || (media && media.mediaId);
-    let direction: "row" | "row-reverse";
+    let direction: "md:!flex-row" | "md:!flex-row-reverse";
     switch (alignment) {
         case "left":
-            direction = "row";
+            direction = "md:!flex-row";
             break;
         case "right":
-            direction = "row-reverse";
+            direction = "md:!flex-row-reverse";
             break;
         default:
-            direction = "row";
+            direction = "md:!flex-row";
     }
 
     return (
         <div className={`${style === "card" ? "p-4" : "p-0"}`}>
             <div
-                className="flex justify-between items-center p-4"
+                className={`flex gap-2 justify-between items-center p-4 flex-col ${direction}`}
                 style={{
                     backgroundColor:
                         style === "card"
@@ -44,7 +44,6 @@ export default function Widget({
                             : backgroundColor,
                     color: foregroundColor,
                     borderRadius: style === "card" ? 2 : 0,
-                    flexDirection: direction,
                 }}
             >
                 {hasHeroGraphic && (
@@ -81,18 +80,10 @@ export default function Widget({
                                 className="w-full text-center"
                                 style={{
                                     borderRadius: `${mediaRadius}px`,
+                                    width: "100%",
                                 }}
                             >
-                                <Image
-                                    src={media && media.file}
-                                    width={1}
-                                    height={{
-                                        xs: 224,
-                                        sm: 352,
-                                        md: 214,
-                                        lg: 286,
-                                    }}
-                                />
+                                <Image src={media.file} />
                             </div>
                         )}
                     </div>
@@ -124,7 +115,7 @@ export default function Widget({
                             </div>
                         )}
                         {buttonAction && buttonCaption && (
-                            <div>
+                            <div className="flex">
                                 <Button
                                     href={buttonAction}
                                     component="link"

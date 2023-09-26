@@ -31,7 +31,6 @@ const Toast = ({ message, dispatch, clearMessageAction }: ToastProps) => {
     const action = message && message.action;
 
     const handleClose: any = (_: Event | SyntheticEvent, reason: string) => {
-        console.log("Reason", reason);
         if (reason === "clickaway") {
             return;
         }

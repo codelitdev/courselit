@@ -101,12 +101,13 @@ export default async function verifyDomain(
             domain = await DomainModel.create({
                 name: domainNameForSingleTenancy,
                 email: process.env.SUPER_ADMIN_EMAIL,
+                firstRun: true,
             });
         }
     }
 
-    if (!domain!.settings) {
-        domain!.settings = {};
+    if (domain!.firstRun) {
+        domain!.firstRun = false;
         await createUser({
             domain: domain!,
             email: domain!.email,

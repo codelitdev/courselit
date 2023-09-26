@@ -123,7 +123,7 @@ export default function Widget({
 
     return (
         <section
-            className="flex flex-col p-4"
+            className="flex flex-col p-4 gap-4"
             style={{
                 backgroundColor,
                 color: foregroundColor,

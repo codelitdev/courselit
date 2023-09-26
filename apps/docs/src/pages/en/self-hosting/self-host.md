@@ -1,7 +1,7 @@
 ---
-title: Self Hosting CourseLit
-description: Hosting CourseLit on your own server
-layout: ../../layouts/MainLayout.astro
+title: CourseLit Self Hosting Guide
+description: CourseLit Self Hosting Guide
+layout: ../../../layouts/MainLayout.astro
 ---
 
 We offer two ways to self-host CourseLit, which are as follows.
@@ -13,13 +13,13 @@ We offer two ways to self-host CourseLit, which are as follows.
 
 To quickly spin up an instance of CourseLit on Vercel, click the following button.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fcodelitdev%2Fcourselit&env=DB_CONNECTION_STRING,JWT_SECRET,SUPER_ADMIN_EMAIL,EMAIL_USER,EMAIL_PASS,EMAIL_HOST,EMAIL_FROM&envDescription=Configuration%20for%20your%20app&project-name=courselit&root-directory=apps%2Fweb&build-command=cd+..%2F+%26%26+git+checkout+workspace-based-resolution+%26%26+NODE_OPTIONS%3D--openssl-legacy-provider+yarn+build)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fcodelitdev%2Fcourselit&env=DB_CONNECTION_STRING,JWT_SECRET,SUPER_ADMIN_EMAIL,EMAIL_USER,EMAIL_PASS,EMAIL_HOST,EMAIL_FROM&envDescription=Configuration%20for%20your%20app&project-name=courselit&root-directory=apps%2Fweb&build-command=cd+..%2F+%26%26+NODE_OPTIONS%3D--openssl-legacy-provider+yarn+build)
 
 > Note: File uploads will not work if you choose this method as this functionality is provided by our other product [MediaLit](https://github.com/codelitdev/medialit) which cannot be hosted on a serverless platforms like Vercel.
 
 ## Hosting on a VPS using Docker
 
-We offer a Docker image which you can easily host in any environment where Docker is supported. We recommend [docker-compose](https://docs.docker.com/compose/) for hosting CourseLit.
+If you want to harness the full capabilities of CourseLit, you can deploy it via Docker. We recommend [docker-compose](https://docs.docker.com/compose/) for hosting CourseLit.
 
 Run the following commands in order.
 
@@ -172,6 +172,12 @@ docker compose up
 ```
 
 That's it! You now have a fully functioning LMS powered by CourseLit.
+
+## Hosted version
+
+If this is too technical for you to handle, CourseLit's hosted version is available at [CourseLit.app](https://courselit.app).
+
+It is managed by the team behind CourseLit. We will take care of everything, just come with your team and content.
 
 ## Stuck somewhere?
 

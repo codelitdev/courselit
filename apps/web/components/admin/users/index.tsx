@@ -27,7 +27,7 @@ import { ThunkDispatch } from "redux-thunk";
 import { AnyAction } from "redux";
 import {
     Tooltip,
-    Select as SingleSelect,
+    Select,
     IconButton,
     Table,
     TableHead,
@@ -40,7 +40,7 @@ import {
 } from "@courselit/components-library";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 //import { CSVLink } from "react-csv";
-import { Cancel } from "@courselit/icons";
+import { Cancel, Search } from "@courselit/icons";
 import { useRouter } from "next/router";
 import { UIConstants } from "@courselit/common-models";
 import { Mail } from "@courselit/icons";
@@ -338,11 +338,17 @@ const UsersManager = ({
                         required
                         endIcon={
                             searchEmail ? (
-                                <>
+                                <span className="flex gap-2">
                                     <IconButton
                                         type="submit"
-                                        className="hidden"
-                                    ></IconButton>
+                                        variant="soft"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            searchByEmail();
+                                        }}
+                                    >
+                                        <Search />
+                                    </IconButton>
                                     <IconButton
                                         aria-label="clear email search box"
                                         variant="soft"
@@ -354,31 +360,31 @@ const UsersManager = ({
                                     >
                                         <Cancel />
                                     </IconButton>
-                                </>
+                                </span>
                             ) : null
                         }
                     />
-                    <SingleSelect
-                        title={USER_FILTER_PERMISSION}
-                        onChange={handleUserTypeChange}
-                        value={type}
-                        options={[
-                            { label: USER_TYPE_ALL, value: "" },
-                            {
-                                label: USER_TYPE_CUSOMER,
-                                value: USER_TYPE_CUSOMER,
-                            },
-                            {
-                                label: USER_TYPE_TEAM,
-                                value: USER_TYPE_TEAM,
-                            },
-                            {
-                                label: USER_TYPE_SUBSCRIBER,
-                                value: USER_TYPE_SUBSCRIBER,
-                            },
-                        ]}
-                    />
                 </Form>
+                <Select
+                    title={USER_FILTER_PERMISSION}
+                    onChange={handleUserTypeChange}
+                    value={type}
+                    options={[
+                        { label: USER_TYPE_ALL, value: "" },
+                        {
+                            label: USER_TYPE_CUSOMER,
+                            value: USER_TYPE_CUSOMER,
+                        },
+                        {
+                            label: USER_TYPE_TEAM,
+                            value: USER_TYPE_TEAM,
+                        },
+                        {
+                            label: USER_TYPE_SUBSCRIBER,
+                            value: USER_TYPE_SUBSCRIBER,
+                        },
+                    ]}
+                />
                 {/*
                         <CSVLink
                             filename={"users-courselit.csv"}

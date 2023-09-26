@@ -74,11 +74,12 @@ export default function Widget({ state, settings }: WidgetProps) {
                         backgroundColor: settings.loginBtnBgColor,
                     }}
                 >
-                    {settings.links.map((link) => (
-                        <MenuItem key={link.href}>
-                            <AppLink href={link.href}>{link.label}</AppLink>
-                        </MenuItem>
-                    ))}
+                    {settings.links &&
+                        (settings.links as Link[]).map((link: Link) => (
+                            <MenuItem key={link.href}>
+                                <AppLink href={link.href}>{link.label}</AppLink>
+                            </MenuItem>
+                        ))}
                     {state.profile.fetched &&
                         checkPermission(state.profile.permissions, [
                             UIConstants.permissions.enrollInCourse,

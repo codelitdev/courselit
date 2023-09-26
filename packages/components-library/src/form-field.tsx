@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import {
     Control,
     CustomMatcher,
@@ -41,7 +41,7 @@ export interface FormFieldProps {
     [key: string]: any;
     name?: string;
     className?: string;
-    endIcon?: string;
+    endIcon?: React.ReactNode;
 }
 
 export default function FormField({
