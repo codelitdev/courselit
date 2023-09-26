@@ -38,7 +38,7 @@ CourseLit supports eight types of lessons, which are as follows.
 
 7. Quiz
 
-    For quizzing your students. You can create graded and non-graded quizzes. 
+    For quizzing your students. You can create graded and non-graded quizzes.
 
     See the [guide to add a quiz](/en/lessons/add-quiz).
 

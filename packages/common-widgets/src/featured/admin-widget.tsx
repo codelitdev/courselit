@@ -167,6 +167,7 @@ export default function AdminWidget({
                                     sublabel: capitalize(product.type),
                                 }))}
                             onChange={addProduct}
+                            defaultMessage={"Select a product"}
                         />
                         <ul className="flex flex-col gap-4">
                             {products.map((product: string) => {

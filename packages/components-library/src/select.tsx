@@ -13,6 +13,7 @@ interface SelectProps {
     value: string | number;
     title: string;
     disabled?: boolean;
+    defaultMessage?: string;
 }
 
 export default function Select({
@@ -21,6 +22,7 @@ export default function Select({
     value,
     title,
     disabled,
+    defaultMessage,
 }: SelectProps) {
     const id = `${title.split(" ").join().toLowerCase()}`;
 
@@ -38,10 +40,12 @@ export default function Select({
                 disabled={disabled}
                 className="border border-slate-300 hover:border-slate-400 py-1 px-2 rounded"
             >
-                <option disabled selected value="">
-                    {" "}
-                    -- select an option --{" "}
-                </option>
+                {defaultMessage && (
+                    <option disabled selected value="">
+                        {" "}
+                        {defaultMessage}{" "}
+                    </option>
+                )}
                 {options.map((option: Option) => (
                     <option
                         value={option.value}
