@@ -17,10 +17,14 @@ export default function Link({
     className = "",
 }: LinkProps) {
     const isInternal = href && href.startsWith("/");
+    const fullClasses = `${className}`;
 
     return isInternal ? (
         <NextLink href={href}>
-            <span style={{ ...style }} className={className}>
+            <span 
+                style={{ ...style }} 
+                className={fullClasses}
+            >
                 {children}
             </span>
         </NextLink>
@@ -29,7 +33,7 @@ export default function Link({
             href={href}
             style={{ ...style }}
             target={openInSameTab ? "_self" : "_blank"}
-            className={className}
+            className={fullClasses}
         >
             {children}
         </a>
