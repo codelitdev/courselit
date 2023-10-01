@@ -6,6 +6,7 @@ import {
     Image,
     Link,
     TextRenderer,
+    TextEditorEmptyDoc,
 } from "@courselit/components-library";
 import { ENROLL_BUTTON_TEXT, FREE_COST } from "../../ui-config/strings";
 import { AppState } from "@courselit/state-management";
@@ -92,7 +93,7 @@ const Article = (props: ArticleProps) => {
                     json={
                         course.description
                             ? JSON.parse(course.description)
-                            : { type: "doc" }
+                            : TextEditorEmptyDoc
                     }
                 />
             </div>

@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { Renderer } from "@courselit/text-editor";
 
 interface RendererProps {
@@ -6,5 +6,9 @@ interface RendererProps {
 }
 
 export default function TextRenderer({ json }: RendererProps) {
-    return <Renderer json={json} fontFamily={"inherit"} />;
+    return (
+        <div className="text-editor">
+            <Renderer json={json} fontFamily={"inherit"} />
+        </div>
+    );
 }

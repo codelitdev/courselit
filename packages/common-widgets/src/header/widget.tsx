@@ -1,10 +1,14 @@
 import React from "react";
 import Settings, { Link } from "./settings";
-import { Image, Menu2, Link as AppLink } from "@courselit/components-library";
+import {
+    Image,
+    Menu2,
+    Link as AppLink,
+    MenuItem,
+} from "@courselit/components-library";
 import { Menu as MenuIcon, Person } from "@courselit/icons";
 import { State, UIConstants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
-import { MenuItem, Link as AppLink } from "@courselit/components-library";
 
 interface WidgetProps {
     settings: Settings;
@@ -19,7 +23,7 @@ export default function Widget({ state, settings }: WidgetProps) {
                 backgroundColor: settings.appBarBackground,
             }}
         >
-            <AppLink href="/">
+            <AppLink href="/" className="!no-underline">
                 <div className="flex items-center mr-2">
                     {state.siteinfo.logo && (
                         <div className="mr-2">
@@ -58,9 +62,7 @@ export default function Widget({ state, settings }: WidgetProps) {
                                 }}
                                 key={index}
                             >
-                                <AppLink href={link.href}>
-                                    {link.label}
-                                </AppLink>
+                                <AppLink href={link.href}>{link.label}</AppLink>
                             </span>
                         ))}
                 </div>
@@ -106,9 +108,10 @@ export default function Widget({ state, settings }: WidgetProps) {
                             UIConstants.permissions.viewAnyMedia,
                         ]) && (
                             <MenuItem>
-                                <AppLink 
+                                <AppLink
                                     href={"/dashboard/products"}
-                                    className="!no-underline">
+                                    className="!no-underline"
+                                >
                                     Dashboard
                                 </AppLink>
                             </MenuItem>

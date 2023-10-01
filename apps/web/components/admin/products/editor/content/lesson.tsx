@@ -52,6 +52,7 @@ import {
     Form,
     FormField,
     Switch,
+    TextEditorEmptyDoc,
 } from "@courselit/components-library";
 import { QuizBuilder } from "./quiz-builder";
 
@@ -90,9 +91,8 @@ const LessonEditor = ({
     const router = useRouter();
     const [refresh, setRefresh] = useState(0);
     const [content, setContent] = useState<{ value: string }>({ value: "" });
-    const [textContent, setTextContent] = useState<Record<string, unknown>>({
-        type: "doc",
-    });
+    const [textContent, setTextContent] =
+        useState<typeof TextEditorEmptyDoc>(TextEditorEmptyDoc);
     const [quizContent, setQuizContent] = useState<Partial<Quiz>>({});
     const [loading, setLoading] = useState(false);
     const [c1, setC1] = useState({

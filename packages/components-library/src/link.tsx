@@ -21,10 +21,7 @@ export default function Link({
 
     return isInternal ? (
         <NextLink href={href}>
-            <span 
-                style={{ ...style }} 
-                className={fullClasses}
-            >
+            <span style={{ ...style }} className={fullClasses}>
                 {children}
             </span>
         </NextLink>

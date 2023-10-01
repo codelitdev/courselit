@@ -87,7 +87,8 @@ function PageEditor({
     const [draftTypefaces, setDraftTypefaces] = useState([]);
     const [leftPaneContent, setLeftPaneContent] =
         useState<LeftPaneContent>("none");
-    const [primaryFontFamily, setPrimaryFontFamily] = useState("Roboto, sans-serif");
+    const [primaryFontFamily, setPrimaryFontFamily] =
+        useState("Roboto, sans-serif");
 
     const router = useRouter();
     const debouncedSave = useCallback(
@@ -132,7 +133,7 @@ function PageEditor({
             )[0]?.typeface;
             setPrimaryFontFamily(pFontFamily);
         }
-    }, [draftTypefaces])
+    }, [draftTypefaces]);
 
     const onItemClick = (widgetId: string) => {
         setLayout([...layout]);
