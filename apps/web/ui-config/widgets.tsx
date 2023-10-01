@@ -13,7 +13,6 @@ import {
 
 function loadWidgets(): Record<string, any> {
     const widgets: Record<string, Widget> = {};
-    //console.log(Grid.widget)
 
     // Add common widgets to CourseLit
     widgets[RichText.metadata.name] = RichText;

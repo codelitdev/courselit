@@ -102,7 +102,7 @@ const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
     });
 
     const onChangeFunc = (data: any) => {
-        onChange(data.helpers.getJSON());
+        setTimeout(() => onChange(data.helpers.getJSON()), 0);
     };
 
     return (
@@ -112,8 +112,8 @@ const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
                     manager={manager}
                     state={state}
                     onChange={(data) => {
-                        onChangeFunc(data);
                         onChangeRemirror(data);
+                        onChangeFunc(data);
                     }}
                     editable={editable}
                     {...rest}

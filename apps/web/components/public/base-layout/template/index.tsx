@@ -151,7 +151,7 @@ const Template = (props: TemplateProps) => {
         ),
     );
     return (
-        <div className="flex flex-col">
+        <div className="flex flex-col font-primary">
             {header && (
                 <EditableWidget
                     item={header}

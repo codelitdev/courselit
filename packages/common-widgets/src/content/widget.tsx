@@ -45,7 +45,6 @@ export default function Widget({
 
     useEffect(() => {
         if (product.courseId) {
-            console.log(product);
             loadCourse(product.courseId as string);
         }
     }, [product]);
@@ -150,7 +149,7 @@ export default function Widget({
                 )}
             </div>
             {!course && (
-                <div className="flex flex-col">
+                <div className="flex flex-col items-center">
                     <CircularProgress />
                 </div>
             )}

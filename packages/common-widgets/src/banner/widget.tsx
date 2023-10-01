@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useState } from "react";
+import React, { FormEvent, useState } from "react";
 import { AppMessage, Media, WidgetProps } from "@courselit/common-models";
 import {
     Image,
@@ -13,6 +13,7 @@ import { setAppMessage } from "@courselit/state-management/dist/action-creators"
 import { FetchBuilder } from "@courselit/utils";
 import { DEFAULT_FAILURE_MESSAGE, DEFAULT_SUCCESS_MESSAGE } from "./constants";
 import Settings from "./settings";
+import { TextEditorEmptyDoc } from "@courselit/components-library";
 
 export default function Widget({
     settings: {
@@ -52,6 +53,25 @@ export default function Widget({
             },
         ],
     };
+
+    const actualDescription = description
+        ? JSON.stringify({ type: "doc" }) === JSON.stringify(description) ||
+          JSON.stringify({
+              type: "doc",
+              content: [
+                  {
+                      type: "paragraph",
+                      attrs: { dir: null, ignoreBidiAutoUpdate: null },
+                  },
+              ],
+          }) === JSON.stringify(description)
+            ? product.description
+                ? JSON.parse(product.description as string)
+                : undefined
+            : description
+        : product.description
+        ? JSON.parse(product.description as string)
+        : undefined;
 
     let direction: any;
     switch (alignment) {
@@ -116,10 +136,6 @@ export default function Widget({
         }
     };
 
-    useEffect(() => {
-        console.log("Product", product, featuredImage, state);
-    }, [product]);
-
     return (
         <section
             className={`flex flex-col space-between ${direction}`}
@@ -169,7 +185,7 @@ export default function Widget({
                                     : product.title)}
                         </h1>
                     </div>
-                    {(description || product.description) && (
+                    {actualDescription && (
                         <div
                             className={`pb-4 ${
                                 textAlignment === "center"
@@ -177,15 +193,7 @@ export default function Widget({
                                     : "text-left"
                             }`}
                         >
-                            <TextRenderer
-                                json={
-                                    description ||
-                                    (product.description &&
-                                        JSON.parse(
-                                            product.description as string,
-                                        ))
-                                }
-                            />
+                            <TextRenderer json={actualDescription} />
                         </div>
                     )}
                     {type === "product" && product.costType === "email" && (

@@ -34,7 +34,7 @@ const Post = ({ siteInfo, address, post, page }: PostProps) => {
             childrenOnTop={true}
         >
             {post && (
-                <div className="flex flex-col h-[80vh] gap-4">
+                <div className="flex flex-col h-[80vh] gap-4 mb-8">
                     <Head>
                         <meta
                             property="og:url"

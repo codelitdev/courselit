@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { WysiwygEditor as TextEditor } from "@courselit/text-editor";
 export { emptyDoc } from "@courselit/text-editor";
 
@@ -18,13 +18,15 @@ export default function Editor({
     refresh,
 }: WysiwygEditorProps) {
     return (
-        <TextEditor
-            initialContent={initialContent}
-            onChange={onChange}
-            showToolbar={showToolbar}
-            editable={editable}
-            refresh={refresh}
-            fontFamily={"inherit"}
-        />
+        <div className="text-editor">
+            <TextEditor
+                initialContent={initialContent}
+                onChange={onChange}
+                showToolbar={showToolbar}
+                editable={editable}
+                refresh={refresh}
+                fontFamily={"inherit"}
+            />
+        </div>
     );
 }

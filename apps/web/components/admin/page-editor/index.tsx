@@ -87,6 +87,8 @@ function PageEditor({
     const [draftTypefaces, setDraftTypefaces] = useState([]);
     const [leftPaneContent, setLeftPaneContent] =
         useState<LeftPaneContent>("none");
+    const [primaryFontFamily, setPrimaryFontFamily] =
+        useState("Roboto, sans-serif");
 
     const router = useRouter();
     const debouncedSave = useCallback(
@@ -123,6 +125,15 @@ function PageEditor({
             debouncedSave(page.pageId, layout);
         }
     }, [layout]);
+
+    useEffect(() => {
+        if (draftTypefaces.length) {
+            const pFontFamily = draftTypefaces.filter(
+                (x) => x.section === "default",
+            )[0]?.typeface;
+            setPrimaryFontFamily(pFontFamily);
+        }
+    }, [draftTypefaces]);
 
     const onItemClick = (widgetId: string) => {
         setLayout([...layout]);
@@ -495,6 +506,12 @@ function PageEditor({
                             onMoveWidgetUp={onMoveWidgetUp}
                         />
                     )}
+                    <style jsx global>{`
+                        :root {
+                            --primary-font: ${primaryFontFamily}, sans-serif;
+                            --secondary-font: ${primaryFontFamily}, sans-serif;
+                        }
+                    `}</style>
                 </div>
             </div>
             <AppToast />

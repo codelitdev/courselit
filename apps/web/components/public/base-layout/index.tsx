@@ -21,9 +21,14 @@ const MasterLayout = ({
     siteInfo,
     children,
     layout,
+    typefaces,
     pageData = {},
     childrenOnTop = false,
 }: MasterLayoutProps) => {
+    const primaryFontFamily = typefaces.filter(
+        (x) => x.section === "default",
+    )[0]?.typeface;
+
     return (
         <>
             <Head>
@@ -48,6 +53,12 @@ const MasterLayout = ({
             >
                 {children}
             </Template>
+            <style jsx global>{`
+                :root {
+                    --primary-font: ${primaryFontFamily}, sans-serif;
+                    --secondary-font: ${primaryFontFamily}, sans-serif;
+                }
+            `}</style>
         </>
     );
 };

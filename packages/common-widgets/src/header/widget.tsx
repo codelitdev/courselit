@@ -1,11 +1,14 @@
 import React from "react";
 import Settings, { Link } from "./settings";
-import { Image, Menu2, Link as AppLink } from "@courselit/components-library";
+import {
+    Image,
+    Menu2,
+    Link as AppLink,
+    MenuItem,
+} from "@courselit/components-library";
 import { Menu as MenuIcon, Person } from "@courselit/icons";
 import { State, UIConstants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
-import NextLink from "next/link";
-import { MenuItem } from "@courselit/components-library";
 
 interface WidgetProps {
     settings: Settings;
@@ -20,7 +23,7 @@ export default function Widget({ state, settings }: WidgetProps) {
                 backgroundColor: settings.appBarBackground,
             }}
         >
-            <NextLink href="/">
+            <AppLink href="/" className="!no-underline">
                 <div className="flex items-center mr-2">
                     {state.siteinfo.logo && (
                         <div className="mr-2">
@@ -41,7 +44,7 @@ export default function Widget({ state, settings }: WidgetProps) {
                         {state.siteinfo.title}
                     </p>
                 </div>
-            </NextLink>
+            </AppLink>
             <div
                 className={`flex grow ${
                     settings.linkAlignment === "right"
@@ -59,9 +62,7 @@ export default function Widget({ state, settings }: WidgetProps) {
                                 }}
                                 key={index}
                             >
-                                <NextLink href={link.href}>
-                                    {link.label}
-                                </NextLink>
+                                <AppLink href={link.href}>{link.label}</AppLink>
                             </span>
                         ))}
                 </div>
@@ -107,7 +108,10 @@ export default function Widget({ state, settings }: WidgetProps) {
                             UIConstants.permissions.viewAnyMedia,
                         ]) && (
                             <MenuItem>
-                                <AppLink href={"/dashboard/products"}>
+                                <AppLink
+                                    href={"/dashboard/products"}
+                                    className="!no-underline"
+                                >
                                     Dashboard
                                 </AppLink>
                             </MenuItem>
