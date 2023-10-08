@@ -23,6 +23,7 @@ interface ProductHeaderProps {
 }
 
 export default function ProductHeader({ id, breadcrumbs }: ProductHeaderProps) {
+    const linkClasses = "flex w-full";
     const course = useCourse(id);
 
     if (!course) {
@@ -48,13 +49,17 @@ export default function ProductHeader({ id, breadcrumbs }: ProductHeaderProps) {
                 <h1 className="text-4xl font-semibold mb-4">{course.title}</h1>
                 <Menu2 icon={<MoreVert />} variant="soft">
                     <MenuItem>
-                        <Link href={`/p/${course.pageId}`}>
+                        <Link
+                            className="flex w-full"
+                            href={`/p/${course.pageId}`}
+                        >
                             {VIEW_PAGE_MENU_ITEM}
                         </Link>
                     </MenuItem>
                     <MenuItem>
                         <Link
                             href={`/dashboard/page/${course.pageId}/edit?redirectTo=/dashboard/product/${course.courseId}/content`}
+                            className="flex w-full"
                         >
                             {EDIT_PAGE_MENU_ITEM}
                         </Link>

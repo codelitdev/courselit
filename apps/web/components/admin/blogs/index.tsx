@@ -104,6 +104,7 @@ const Index = ({ loading, dispatch, address }: IndexProps) => {
                         <MenuItem>
                             <Link
                                 href={`/dashboard/page/blog/edit?redirectTo=/dashboard/blogs`}
+                                className="flex w-full"
                             >
                                 {PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE}
                             </Link>

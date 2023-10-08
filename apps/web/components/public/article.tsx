@@ -42,7 +42,7 @@ const Article = (props: ArticleProps) => {
                             <p className="font-medium">{course.creatorName}</p>
                         </Link>
                         <p className="font-light text-sm">
-                            {formattedLocaleDate(course.updatedAt)}
+                            {formattedLocaleDate(course.updatedAt, "long")}
                         </p>
                     </div>
                 )}

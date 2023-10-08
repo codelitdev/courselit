@@ -10,6 +10,7 @@ import {
     MAIL_TABLE_HEADER_RECEPIENTS,
     MAIL_TABLE_HEADER_SENDER,
     MAIL_SENDER_YOU,
+    MAIL_TABLE_HEADER_SENT_ON,
 } from "../../../ui-config/strings";
 import { connect } from "react-redux";
 import { FetchBuilder } from "@courselit/utils";
@@ -26,6 +27,7 @@ import {
     TableBody,
     TableRow,
 } from "@courselit/components-library";
+import { formattedLocaleDate } from "../../../ui-lib/utils";
 const { networkAction } = actionCreators;
 
 interface MailsProps {
@@ -90,7 +92,8 @@ function Mails({
                         userId,
                         email,
                         name
-                    }
+                    },
+                    updatedAt
                 },
                 count: getMailsCount
             }`;
@@ -187,6 +190,7 @@ function Mails({
                         <td align="right">{MAIL_TABLE_HEADER_SENDER}</td>
                         <td align="right">{MAIL_TABLE_HEADER_RECEPIENTS}</td>
                         <td align="right">{MAIL_TABLE_HEADER_STATUS}</td>
+                        <td align="right">{MAIL_TABLE_HEADER_SENT_ON}</td>
                     </TableHead>
                     <TableBody
                         count={count}
@@ -207,6 +211,7 @@ function Mails({
                                 <td align="right">
                                     <Link
                                         href={`/dashboard/users/${mail.user.userId}`}
+                                        className="flex justify-end items-center"
                                     >
                                         {mail.user.name || mail.user.email}
                                         {mail.user.userId ===
@@ -223,6 +228,11 @@ function Mails({
                                         <Chip className="!bg-black">Sent</Chip>
                                     )}
                                     {!mail.published && <Chip>Draft</Chip>}
+                                </td>
+                                <td align="right">
+                                    {mail.published
+                                        ? formattedLocaleDate(mail.updatedAt)
+                                        : ""}
                                 </td>
                             </TableRow>
                         ))}
