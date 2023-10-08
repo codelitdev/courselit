@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { Link } from "@courselit/components-library";
 import Settings from "./settings";
 import { State } from "@courselit/common-models";

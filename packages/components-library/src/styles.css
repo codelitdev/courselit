@@ -14,4 +14,8 @@
     :is(ol) {
         @apply list-decimal;
     }
+
+    :is(p, h1, h2, h3) {
+        @apply mb-4
+    }
 }
