@@ -23,7 +23,6 @@ interface ProductHeaderProps {
 }
 
 export default function ProductHeader({ id, breadcrumbs }: ProductHeaderProps) {
-    const linkClasses = "flex w-full";
     const course = useCourse(id);
 
     if (!course) {
