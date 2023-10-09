@@ -16,6 +16,9 @@ interface WidgetProps {
 }
 
 export default function Widget({ state, settings }: WidgetProps) {
+    const linkClasses = "flex w-full";
+    console.log(state.siteinfo);
+
     return (
         <header
             className="flex items-center p-4"
@@ -29,9 +32,9 @@ export default function Widget({ state, settings }: WidgetProps) {
                         <div className="mr-2">
                             <Image
                                 src={state.siteinfo.logo.file}
-                                height={{ xs: 32, lg: 36 }}
-                                width={{ xs: 32, lg: 36 }}
                                 borderRadius={2}
+                                width="w-[32px]"
+                                height="h-[32px]"
                             />
                         </div>
                     )}
@@ -78,7 +81,12 @@ export default function Widget({ state, settings }: WidgetProps) {
                     {settings.links &&
                         (settings.links as Link[]).map((link: Link) => (
                             <MenuItem key={link.href}>
-                                <AppLink href={link.href}>{link.label}</AppLink>
+                                <AppLink
+                                    className={linkClasses}
+                                    href={link.href}
+                                >
+                                    {link.label}
+                                </AppLink>
                             </MenuItem>
                         ))}
                     {state.profile.fetched &&
@@ -86,14 +94,19 @@ export default function Widget({ state, settings }: WidgetProps) {
                             UIConstants.permissions.enrollInCourse,
                         ]) && (
                             <MenuItem>
-                                <AppLink href={"/my-content"}>
+                                <AppLink
+                                    className={linkClasses}
+                                    href={"/my-content"}
+                                >
                                     My content
                                 </AppLink>
                             </MenuItem>
                         )}
                     {!state.auth.guest && (
                         <MenuItem>
-                            <AppLink href={"/profile"}>Profile</AppLink>
+                            <AppLink className={linkClasses} href={"/profile"}>
+                                Profile
+                            </AppLink>
                         </MenuItem>
                     )}
                     {state.profile.fetched &&
@@ -110,14 +123,17 @@ export default function Widget({ state, settings }: WidgetProps) {
                             <MenuItem>
                                 <AppLink
                                     href={"/dashboard/products"}
-                                    className="!no-underline"
+                                    className={linkClasses}
                                 >
                                     Dashboard
                                 </AppLink>
                             </MenuItem>
                         )}
                     <MenuItem>
-                        <AppLink href={state.auth.guest ? "/login" : "/logout"}>
+                        <AppLink
+                            className={linkClasses}
+                            href={state.auth.guest ? "/login" : "/logout"}
+                        >
                             {state.auth.guest ? "Login" : "Logout"}
                         </AppLink>
                     </MenuItem>
@@ -136,14 +152,19 @@ export default function Widget({ state, settings }: WidgetProps) {
                             UIConstants.permissions.enrollInCourse,
                         ]) && (
                             <MenuItem>
-                                <AppLink href={"/my-content"}>
+                                <AppLink
+                                    href={"/my-content"}
+                                    className={linkClasses}
+                                >
                                     My content
                                 </AppLink>
                             </MenuItem>
                         )}
                     {!state.auth.guest && (
                         <MenuItem>
-                            <AppLink href={"/profile"}>Profile</AppLink>
+                            <AppLink href={"/profile"} className={linkClasses}>
+                                Profile
+                            </AppLink>
                         </MenuItem>
                     )}
                     {state.profile.fetched &&
@@ -158,13 +179,19 @@ export default function Widget({ state, settings }: WidgetProps) {
                             UIConstants.permissions.viewAnyMedia,
                         ]) && (
                             <MenuItem>
-                                <AppLink href={"/dashboard/products"}>
+                                <AppLink
+                                    href={"/dashboard/products"}
+                                    className={linkClasses}
+                                >
                                     Dashboard
                                 </AppLink>
                             </MenuItem>
                         )}
                     <MenuItem>
-                        <AppLink href={state.auth.guest ? "/login" : "/logout"}>
+                        <AppLink
+                            href={state.auth.guest ? "/login" : "/logout"}
+                            className={linkClasses}
+                        >
                             {state.auth.guest ? "Login" : "Logout"}
                         </AppLink>
                     </MenuItem>

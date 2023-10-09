@@ -13,10 +13,11 @@ interface ImgProps {
     width?: any;
     borderRadius?: number;
     noDefaultImage?: boolean;
+    className?: string;
 }
 
 // Copied from: https://github.com/vercel/next.js/blob/canary/examples/image-component/pages/shimmer.js
-const shimmer = (w: number, h: number) => `
+const shimmer = (w: number | `${number}%`, h: number | "auto") => `
 <svg width="${w}" height="${h}" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
   <defs>
     <linearGradient id="g">
@@ -41,10 +42,12 @@ const Image = (props: ImgProps) => {
         alt,
         defaultImage,
         loading = "lazy",
-        height = 200,
         sizes = "100vw",
-        borderRadius,
+        borderRadius = "8px",
         noDefaultImage = false,
+        className = "",
+        width = "w-full",
+        height = "h-auto",
     } = props;
     const source = src || defaultImage || "/courselit_backdrop.webp";
 
@@ -54,24 +57,19 @@ const Image = (props: ImgProps) => {
 
     return (
         <div
-            className="relative overflow-hidden"
-            style={{
-                height,
-                borderRadius: borderRadius || "8px",
-            }}
+            className={`relative ${width} ${height} aspect-video overflow-hidden ${className}`}
+            style={{ borderRadius }}
         >
-            {/* @ts-ignore */}
             <NextImage
-                layout="fill"
-                objectFit="cover"
                 src={source}
                 placeholder="blur"
                 blurDataURL={`data:image/svg+xml;base64,${toBase64(
-                    shimmer(700, 475),
+                    shimmer("100%", "auto"),
                 )}`}
                 alt={alt}
                 priority={loading === "eager" ? true : false}
                 sizes={sizes}
+                layout="fill"
             />
         </div>
     );

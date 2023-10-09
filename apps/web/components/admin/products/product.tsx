@@ -101,13 +101,17 @@ function Product({
             <td align="right">
                 <Menu2 icon={<MoreVert />} variant="soft">
                     <MenuItem>
-                        <Link href={`/p/${product.pageId}`}>
+                        <Link
+                            href={`/p/${product.pageId}`}
+                            className="flex w-full"
+                        >
                             {VIEW_PAGE_MENU_ITEM}
                         </Link>
                     </MenuItem>
                     <MenuItem>
                         <Link
                             href={`/dashboard/page/${product.pageId}/edit?redirectTo=/dashboard/products`}
+                            className="flex w-full"
                         >
                             {PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE}
                         </Link>

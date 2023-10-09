@@ -6,10 +6,13 @@ const { permissions } = UIConstants;
 
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-export const formattedLocaleDate = (epochString: Date) =>
+export const formattedLocaleDate = (
+    epochString: Date,
+    monthFormat?: "short" | "long",
+) =>
     new Date(Number(epochString)).toLocaleString("en-US", {
         year: "numeric",
-        month: "long",
+        month: monthFormat || "short",
         day: "numeric",
     });
 

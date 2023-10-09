@@ -403,6 +403,7 @@ export const MAIL_TABLE_HEADER_RECEPIENTS = "No. of recipients";
 export const MAIL_SENDER_YOU = "You";
 export const MAIL_TABLE_HEADER_SENDER = "Sender";
 export const MAIL_TABLE_HEADER_STATUS = "Status";
+export const MAIL_TABLE_HEADER_SENT_ON = "Sent on";
 export const TOOLTIP_USER_PAGE_SEND_MAIL = "Send mail to the current selection";
 export const EDIT_PAGE_BUTTON_FONTS = "Fonts";
 export const EDIT_PAGE_HEADER_ALL_PAGES = "Pages";

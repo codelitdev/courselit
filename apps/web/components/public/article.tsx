@@ -42,20 +42,21 @@ const Article = (props: ArticleProps) => {
                             <p className="font-medium">{course.creatorName}</p>
                         </Link>
                         <p className="font-light text-sm">
-                            {formattedLocaleDate(course.updatedAt)}
+                            {formattedLocaleDate(course.updatedAt, "long")}
                         </p>
                     </div>
                 )}
             </header>
             {course.featuredImage && (
-                <div className="mt-4 mb-8">
-                    <Image
-                        alt={course.featuredImage.caption}
-                        src={course.featuredImage.file!}
-                        loading="eager"
-                        sizes="80vw"
-                        height={360}
-                    />
+                <div className="flex justify-center">
+                    <div className="mt-4 mb-8 w-full md:max-w-screen-md">
+                        <Image
+                            alt={course.featuredImage.caption}
+                            src={course.featuredImage.file!}
+                            loading="eager"
+                            sizes="50vw"
+                        />
+                    </div>
                 </div>
             )}
             {options.showEnrollmentArea &&

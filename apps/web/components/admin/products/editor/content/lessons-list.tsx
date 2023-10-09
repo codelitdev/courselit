@@ -43,6 +43,7 @@ function LessonSection({ group, course, onGroupDelete }: LessonSectionProps) {
                         <MenuItem>
                             <Link
                                 href={`/dashboard/product/${course.courseId}/section/${group.id}`}
+                                className="flex w-full"
                             >
                                 {EDIT_SECTION_HEADER}
                             </Link>

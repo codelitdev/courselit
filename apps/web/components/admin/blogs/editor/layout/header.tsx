@@ -66,6 +66,7 @@ function BlogHeader({ id, breadcrumbs, address, dispatch }: BlogHeaderProps) {
                         <MenuItem>
                             <Link
                                 href={`/blog/${course.slug}/${course.courseId}`}
+                                className="flex w-full"
                             >
                                 {MENU_BLOG_VISIT}
                             </Link>

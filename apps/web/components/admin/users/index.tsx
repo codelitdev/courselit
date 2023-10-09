@@ -44,6 +44,7 @@ import { Cancel, Search } from "@courselit/icons";
 import { useRouter } from "next/router";
 import { UIConstants } from "@courselit/common-models";
 import { Mail } from "@courselit/icons";
+import { formattedLocaleDate } from "../../../ui-lib/utils";
 
 const { networkAction } = actionCreators;
 const { permissions } = UIConstants;
@@ -385,35 +386,6 @@ const UsersManager = ({
                         },
                     ]}
                 />
-                {/*
-                        <CSVLink
-                            filename={"users-courselit.csv"}
-                            headers={[
-                                USER_TABLE_HEADER_EMAIL,
-                                USER_TABLE_HEADER_NAME_NAME,
-                                USER_TABLE_HEADER_JOINED,
-                                USER_TABLE_HEADER_LAST_ACTIVE,
-                            ]}
-                            data={users.map((user) => [
-                                user.email,
-                                user.name,
-                                user.createdAt
-                                    ? new Date(
-                                          +user.createdAt,
-                                      ).toLocaleDateString()
-                                    : "",
-                                user.updatedAt !== user.createdAt
-                                    ? user.updatedAt
-                                        ? new Date(
-                                              +user.updatedAt,
-                                          ).toLocaleDateString()
-                                        : ""
-                                    : "",
-                            ])}
-                        >
-                            {EXPORT_CSV}
-                        </CSVLink>
-                        */}
                 {featureFlags.includes("mail") && (
                     <Tooltip title={TOOLTIP_USER_PAGE_SEND_MAIL}>
                         <IconButton onClick={createMail} variant="soft">
@@ -473,17 +445,13 @@ const UsersManager = ({
                             <td align="right">{getUserType(user)}</td>
                             <td align="right">
                                 {user.createdAt
-                                    ? new Date(
-                                          +user.createdAt,
-                                      ).toLocaleDateString()
+                                    ? formattedLocaleDate(user.createdAt)
                                     : ""}
                             </td>
                             <td align="right">
                                 {user.updatedAt !== user.createdAt
                                     ? user.updatedAt
-                                        ? new Date(
-                                              +user.updatedAt,
-                                          ).toLocaleDateString()
+                                        ? formattedLocaleDate(user.updatedAt)
                                         : ""
                                     : ""}
                             </td>

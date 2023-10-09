@@ -128,33 +128,40 @@ export default function AdminWidget({
                 </Form>
             </div>
             <div className="mb-4">
-                <AdminWidgetPanel title="Media">
-                    <MediaSelector
-                        title=""
-                        src={media && media.thumbnail}
-                        srcTitle={media && media.originalFileName}
-                        dispatch={dispatch}
-                        auth={auth}
-                        profile={profile}
-                        address={address}
-                        onSelection={(media: Media) => {
-                            if (media) {
-                                setMedia(media);
-                            }
-                        }}
-                        strings={{}}
-                        access="public"
-                    />
-                    <Select
-                        title="alignment"
-                        value={alignment}
-                        options={[
-                            { label: "Left", value: "left" },
-                            { label: "Right", value: "right" },
-                        ]}
-                        onChange={(value) => setAlignment(value)}
-                    />
-                </AdminWidgetPanel>
+                <Form>
+                    <AdminWidgetPanel title="Media">
+                        <FormField
+                            label="YouTube Video Link"
+                            value={youtubeLink}
+                            onChange={(e) => setYoutubeLink(e.target.value)}
+                        />
+                        <MediaSelector
+                            title=""
+                            src={media && media.thumbnail}
+                            srcTitle={media && media.originalFileName}
+                            dispatch={dispatch}
+                            auth={auth}
+                            profile={profile}
+                            address={address}
+                            onSelection={(media: Media) => {
+                                if (media) {
+                                    setMedia(media);
+                                }
+                            }}
+                            strings={{}}
+                            access="public"
+                        />
+                        <Select
+                            title="alignment"
+                            value={alignment}
+                            options={[
+                                { label: "Left", value: "left" },
+                                { label: "Right", value: "right" },
+                            ]}
+                            onChange={(value) => setAlignment(value)}
+                        />
+                    </AdminWidgetPanel>
+                </Form>
             </div>
             <div className="mb-4">
                 <AdminWidgetPanel title="Call to action">
