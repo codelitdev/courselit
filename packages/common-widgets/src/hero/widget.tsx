@@ -36,7 +36,7 @@ export default function Widget({
     return (
         <div className={`${style === "card" ? "p-4" : "p-0"}`}>
             <div
-                className={`flex gap-2 justify-between items-center p-4 flex-col ${direction}`}
+                className={`flex gap-4 justify-between items-center p-4 flex-col ${direction}`}
                 style={{
                     backgroundColor:
                         style === "card"
@@ -48,7 +48,7 @@ export default function Widget({
             >
                 {hasHeroGraphic && (
                     <div
-                        className={`sm:w-full sm:mb-2 sm:pr-0 sm:pl-0 md:w-1/2 md:mb-0 ${
+                        className={`w-full sm:mb-2 sm:pr-0 sm:pl-0 md:w-1/2 md:mb-0 ${
                             hasHeroGraphic && alignment === "right"
                                 ? "md:pl-1"
                                 : "md:pl-0"
@@ -59,20 +59,16 @@ export default function Widget({
                         }`}
                     >
                         {youtubeLink && (
-                            <div
-                                className="relative overflow-hidden"
-                                style={{
-                                    paddingBottom: "56.25%",
-                                    borderRadius: `${mediaRadius}px`,
-                                }}
-                            >
-                                <iframe
-                                    className="related left-0 top-0 w-full h-full"
-                                    src={`https://www.youtube.com/embed/${youtubeLink}`}
-                                    frameBorder="0"
-                                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                                    allowFullScreen
-                                />
+                            <div className="flex justify-center">
+                                <div className="w-full relative h-0 overflow-hidden rounded-md pb-[56.25%]">
+                                    <iframe
+                                        src={`https://www.youtube.com/embed/${youtubeLink}`}
+                                        frameBorder="0"
+                                        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                        className="absolute top-0 left-0 w-full h-full"
+                                    />
+                                </div>
                             </div>
                         )}
                         {!youtubeLink && media && media.mediaId && (
@@ -89,7 +85,7 @@ export default function Widget({
                     </div>
                 )}
                 <div
-                    className={`sm:w-full ${
+                    className={`w-full ${
                         hasHeroGraphic ? "md:w-1/2" : "md:w-full"
                     } sm:pr-0 sm:pl-0 ${
                         hasHeroGraphic && alignment === "right"

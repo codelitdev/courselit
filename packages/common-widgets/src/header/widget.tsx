@@ -17,6 +17,7 @@ interface WidgetProps {
 
 export default function Widget({ state, settings }: WidgetProps) {
     const linkClasses = "flex w-full";
+    console.log(state.siteinfo);
 
     return (
         <header
@@ -31,9 +32,9 @@ export default function Widget({ state, settings }: WidgetProps) {
                         <div className="mr-2">
                             <Image
                                 src={state.siteinfo.logo.file}
-                                height={{ xs: 32, lg: 36 }}
-                                width={{ xs: 32, lg: 36 }}
                                 borderRadius={2}
+                                width="w-[32px]"
+                                height="h-[32px]"
                             />
                         </div>
                     )}

@@ -144,7 +144,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
                 <Dialog2
                     title={strings.dialogTitle || "Select media"}
                     trigger={
-                        <Button component="button">
+                        <Button component="button" variant="soft">
                             {strings.buttonCaption || "Select media"}
                         </Button>
                     }

@@ -48,14 +48,15 @@ const Article = (props: ArticleProps) => {
                 )}
             </header>
             {course.featuredImage && (
-                <div className="mt-4 mb-8">
-                    <Image
-                        alt={course.featuredImage.caption}
-                        src={course.featuredImage.file!}
-                        loading="eager"
-                        sizes="80vw"
-                        height={360}
-                    />
+                <div className="flex justify-center">
+                    <div className="mt-4 mb-8 w-full md:max-w-screen-md">
+                        <Image
+                            alt={course.featuredImage.caption}
+                            src={course.featuredImage.file!}
+                            loading="eager"
+                            sizes="50vw"
+                        />
+                    </div>
                 </div>
             )}
             {options.showEnrollmentArea &&

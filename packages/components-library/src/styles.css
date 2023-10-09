@@ -7,8 +7,8 @@
         @apply underline text-blue-600 hover:text-blue-800 visited:text-purple-600;
     }
 
-    :is(ul) {
-        @apply list-disc;
+    :is(ul, ol) {
+        @apply list-disc ml-6;
     }
 
     :is(ol) {

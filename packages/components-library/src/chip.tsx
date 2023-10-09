@@ -10,7 +10,7 @@ const Chip = React.forwardRef(
     ({ children, style, className }: ChipProps, forwardedRef: any) => {
         return (
             <span
-                className={`text-xs text-white bg-slate-400 rounded px-2 py-1 ${className}`}
+                className={`text-xs text-slate-500 border-[1px] border-slate-500 rounded px-[4px] py-[2px] ${className}`}
                 style={{ ...style }}
             >
                 {children}
