@@ -6,13 +6,13 @@ import { responses } from "../../../config/strings";
 import jwtStrategy from "../../../lib/jwt";
 import connectDb from "../../../middlewares/connect-db";
 import verifyDomain from "../../../middlewares/verify-domain";
-import verifyJwt from "../../../middlewares/verify-jwt";
 import ApiRequest from "../../../models/ApiRequest";
 import CourseModel, { Course } from "../../../models/Course";
 import { getPaymentMethod } from "../../../payments";
 import PurchaseModel from "../../../models/Purchase";
 import finalizePurchase from "../../../lib/finalize-purchase";
 import { error } from "../../../services/logger";
+import setUserFromSession from "../../../middlewares/set-user-from-session";
 
 const { transactionSuccess, transactionFailed, transactionInitiated } =
     constants;
@@ -35,7 +35,7 @@ export default nc<NextApiRequest, NextApiResponse>({
     .use(passport.initialize())
     .use(connectDb)
     .use(verifyDomain)
-    .use(verifyJwt(passport))
+    .use(setUserFromSession)
     .post(initiateHandler);
 
 async function initiateHandler(req: ApiRequest, res: NextApiResponse) {

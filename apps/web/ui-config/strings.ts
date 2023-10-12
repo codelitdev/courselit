@@ -107,9 +107,16 @@ export const DELETE_COURSE_POPUP_HEADER = "Delete course?";
 export const POPUP_OK_ACTION = "Delete";
 export const POPUP_CANCEL_ACTION = "Cancel";
 export const LOGIN_SECTION_HEADER = "Sign In";
-export const LOGIN_SECTION_BUTTON = "Sign in";
 export const LABEL_GROUP_NAME = "Name";
-export const BTN_LOGIN = "Email me a sign in link";
+export const BTN_LOGIN = "Continue";
+export const BTN_LOGIN_NO_CODE = "Resend";
+export const LOGIN_FORM_LABEL =
+    "Enter your email to sign in or create an account";
+export const LOGIN_NO_CODE = "Did not get the code?";
+export const BTN_LOGIN_GET_CODE = "Get code";
+export const BTN_LOGIN_CODE_INTIMATION =
+    "An email with the code has been sent to";
+export const LOGIN_FORM_DISCLAIMER = "By submitting, you accept the ";
 export const SIGNUP_SECTION_HEADER = "Create an account";
 export const SIGNUP_SECTION_BUTTON = "Join";
 export const MEDIA_MANAGER_PAGE_HEADING = "Media";

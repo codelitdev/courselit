@@ -2100,6 +2100,7 @@ __metadata:
     mongodb: ^4.4.1
     mongoose: ^7.4.2
     next: 13.4.11
+    next-auth: ^4.23.2
     next-connect: ^0.12.2
     nodemailer: ^6.7.2
     passport: ^0.6.0
@@ -3288,6 +3289,13 @@ __metadata:
   dependencies:
     svgmoji: ^3.2.0
   checksum: 122c2a1509cde12b31de5a08dacfb338c222ab3970467221cf0b4073ca32c3751dbd9bde65f1a73c6d0e067f34dab261be3e94a112a1c2d4713fe3e3dbf313a7
+  languageName: node
+  linkType: hard
+
+"@panva/hkdf@npm:^1.0.2":
+  version: 1.1.1
+  resolution: "@panva/hkdf@npm:1.1.1"
+  checksum: f0dd12903751d8792420353f809ed3c7de860cf506399759fff5f59f7acfef8a77e2b64012898cee7e5b047708fa0bd91dff5ef55a502bf8ea11aad9842160da
   languageName: node
   linkType: hard
 
@@ -11131,6 +11139,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jose@npm:^4.11.4, jose@npm:^4.15.1":
+  version: 4.15.2
+  resolution: "jose@npm:4.15.2"
+  checksum: 8f0cab1eef31243abe14a935b2b330cd95f10f9b69808fd642088ae5000e50e566664934537d2c6413ab2f6b54acd8265a5033da05157aa1260c5f1d7e57fab0
+  languageName: node
+  linkType: hard
+
 "joycon@npm:^3.0.1":
   version: 3.1.1
   resolution: "joycon@npm:3.1.1"
@@ -12778,6 +12793,31 @@ __metadata:
   languageName: node
   linkType: hard
 
+"next-auth@npm:^4.23.2":
+  version: 4.23.2
+  resolution: "next-auth@npm:4.23.2"
+  dependencies:
+    "@babel/runtime": ^7.20.13
+    "@panva/hkdf": ^1.0.2
+    cookie: ^0.5.0
+    jose: ^4.11.4
+    oauth: ^0.9.15
+    openid-client: ^5.4.0
+    preact: ^10.6.3
+    preact-render-to-string: ^5.1.19
+    uuid: ^8.3.2
+  peerDependencies:
+    next: ^12.2.5 || ^13
+    nodemailer: ^6.6.5
+    react: ^17.0.2 || ^18
+    react-dom: ^17.0.2 || ^18
+  peerDependenciesMeta:
+    nodemailer:
+      optional: true
+  checksum: 4820fdc8d9f066afd2dfe64012d7aba727fd7b82fec3a94e85ea5c1651cb4bf532d8742bfd253d9910055833f00c1c8f8f17212661f7648ecff4dd1f3e002e80
+  languageName: node
+  linkType: hard
+
 "next-connect@npm:^0.12.2":
   version: 0.12.2
   resolution: "next-connect@npm:0.12.2"
@@ -13061,10 +13101,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"oauth@npm:^0.9.15":
+  version: 0.9.15
+  resolution: "oauth@npm:0.9.15"
+  checksum: 957c0d8d85300398dcb0e293953650c0fc3facc795bee8228238414f19f59cef5fd4ee8d17a972c142924c10c5f6ec50ef80f77f4a6cc6e3c98f9d22c027801c
+  languageName: node
+  linkType: hard
+
 "object-assign@npm:^4.0.1, object-assign@npm:^4.1.0, object-assign@npm:^4.1.1":
   version: 4.1.1
   resolution: "object-assign@npm:4.1.1"
   checksum: fcc6e4ea8c7fe48abfbb552578b1c53e0d194086e2e6bbbf59e0a536381a292f39943c6e9628af05b5528aa5e3318bb30d6b2e53cadaf5b8fe9e12c4b69af23f
+  languageName: node
+  linkType: hard
+
+"object-hash@npm:^2.2.0":
+  version: 2.2.0
+  resolution: "object-hash@npm:2.2.0"
+  checksum: 55ba841e3adce9c4f1b9b46b41983eda40f854e0d01af2802d3ae18a7085a17168d6b81731d43fdf1d6bcbb3c9f9c56d22c8fea992203ad90a38d7d919bc28f1
   languageName: node
   linkType: hard
 
@@ -13162,6 +13216,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"oidc-token-hash@npm:^5.0.3":
+  version: 5.0.3
+  resolution: "oidc-token-hash@npm:5.0.3"
+  checksum: 35fa19aea9ff2c509029ec569d74b778c8a215b92bd5e6e9bc4ebbd7ab035f44304ff02430a6397c3fb7c1d15ebfa467807ca0bcd31d06ba610b47798287d303
+  languageName: node
+  linkType: hard
+
 "on-exit-leak-free@npm:^2.1.0":
   version: 2.1.0
   resolution: "on-exit-leak-free@npm:2.1.0"
@@ -13214,6 +13275,18 @@ __metadata:
     is-inside-container: ^1.0.0
     is-wsl: ^2.2.0
   checksum: 3993c0f61d51fed8ac290e99c9c3cf45d3b6cfb3e2aa2b74cafd312c3486c22fd81df16ac8f3ab91dd8a4e3e729a16fc2480cfc406c4833416cf908acf1ae7c9
+  languageName: node
+  linkType: hard
+
+"openid-client@npm:^5.4.0":
+  version: 5.6.0
+  resolution: "openid-client@npm:5.6.0"
+  dependencies:
+    jose: ^4.15.1
+    lru-cache: ^6.0.0
+    object-hash: ^2.2.0
+    oidc-token-hash: ^5.0.3
+  checksum: 414fe43c5aac07d8b8f5ea52ef1812374ff28140910977a1360781284b09d4a03c916d910017bf15003d602d859b3dcf9857d1dfe6f61508c8f5c52de334e6ea
   languageName: node
   linkType: hard
 
@@ -13739,6 +13812,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"preact-render-to-string@npm:^5.1.19":
+  version: 5.2.6
+  resolution: "preact-render-to-string@npm:5.2.6"
+  dependencies:
+    pretty-format: ^3.8.0
+  peerDependencies:
+    preact: ">=10"
+  checksum: be8d5d8fb502d422c503e68af7bcccb6facd942f3ae9a4d093ebe3f1d4f0b15c540624bdac434d53a2a8e8fb7afa4606383414e937c40933ca43445470a026ff
+  languageName: node
+  linkType: hard
+
 "preact-render-to-string@npm:^5.2.0":
   version: 5.2.4
   resolution: "preact-render-to-string@npm:5.2.4"
@@ -13747,6 +13831,13 @@ __metadata:
   peerDependencies:
     preact: ">=10"
   checksum: cb29e280174bb4e8a77be454b927dfa35f2672d9bf2eb11d6634208b076d81508a35d53a38a5dfee7676fc48be2c1e0db2e83fca955f7016ce5ed844f35d92b4
+  languageName: node
+  linkType: hard
+
+"preact@npm:^10.6.3":
+  version: 10.18.1
+  resolution: "preact@npm:10.18.1"
+  checksum: 691030149fdbd026cac7c07147756f48c6cb8cdea6a8af8c0f383e4c31f5bce48cdc751e4bccf8826560a0d2db77ada401c0308f2bcae2961d16972c26c95607
   languageName: node
   linkType: hard
 

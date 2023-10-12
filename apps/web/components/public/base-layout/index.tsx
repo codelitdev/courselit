@@ -2,8 +2,14 @@ import React, { ReactNode } from "react";
 import { connect } from "react-redux";
 import Head from "next/head";
 import Template from "./template";
-import type { AppState } from "@courselit/state-management";
+import {
+    actionCreators,
+    AppDispatch,
+    AppState,
+} from "@courselit/state-management";
 import type { Theme, Typeface, WidgetInstance } from "@courselit/common-models";
+import { useSession } from "next-auth/react";
+import { useEffect } from "react";
 
 interface MasterLayoutProps {
     title: string;
@@ -14,6 +20,7 @@ interface MasterLayoutProps {
     childrenOnTop?: boolean;
     typefaces: Typeface[];
     theme: Theme;
+    dispatch: AppDispatch;
 }
 
 const MasterLayout = ({
@@ -22,12 +29,25 @@ const MasterLayout = ({
     children,
     layout,
     typefaces,
+    dispatch,
     pageData = {},
     childrenOnTop = false,
 }: MasterLayoutProps) => {
+    const { status } = useSession();
+
     const primaryFontFamily = typefaces.filter(
         (x) => x.section === "default",
     )[0]?.typeface;
+
+    useEffect(() => {
+        if (status === "authenticated") {
+            dispatch(actionCreators.signedIn());
+            dispatch(actionCreators.authChecked());
+        }
+        if (status === "unauthenticated") {
+            dispatch(actionCreators.authChecked());
+        }
+    }, [status]);
 
     return (
         <>
@@ -71,4 +91,6 @@ const mapStateToProps = (state: AppState) => ({
     theme: state.theme,
 });
 
-export default connect(mapStateToProps)(MasterLayout);
+const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
+
+export default connect(mapStateToProps, mapDispatchToProps)(MasterLayout);

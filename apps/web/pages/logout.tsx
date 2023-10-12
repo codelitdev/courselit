@@ -1,10 +1,8 @@
-import { useEffect } from "react";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
 import { actionCreators } from "@courselit/state-management";
 import type { State, Address } from "@courselit/common-models";
-import { AppMessage } from "@courselit/common-models";
-import { UNABLE_TO_LOGOUT } from "../ui-config/strings";
+import { signOut, useSession } from "next-auth/react";
 
 interface LogoutProps {
     dispatch: any;
@@ -13,20 +11,18 @@ interface LogoutProps {
 
 const Logout = ({ dispatch }: LogoutProps) => {
     const router = useRouter();
-    const { setAppMessage, signedOut } = actionCreators;
-    useEffect(() => {
-        logout();
-    }, []);
+    const { signedOut } = actionCreators;
+    const { status } = useSession();
 
-    const logout = async () => {
-        const response = await fetch("/api/auth/logout");
-        if (response.status === 200) {
-            dispatch(signedOut());
-            router.replace("/");
-        } else {
-            dispatch(setAppMessage(new AppMessage(UNABLE_TO_LOGOUT)));
-        }
-    };
+    if (status === "authenticated") {
+        signOut();
+        dispatch(signedOut());
+        router.replace("/");
+    }
+
+    if (status === "unauthenticated") {
+        router.replace("/");
+    }
 
     return <div></div>;
 };
@@ -41,10 +37,3 @@ const mapDispatchToProps = (dispatch: any) => ({
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Logout);
-
-// export async function getServerSideProps(context: any) {
-//     const { req } = context;
-//     const address = getBackendAddress(req.headers);
-//     await fetch(`${address}/api/auth/logout`);
-//     return { props: {} };
-// }

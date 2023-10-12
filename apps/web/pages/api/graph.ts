@@ -7,10 +7,10 @@ import { graphql } from "graphql";
 import jwtStrategy from "../../lib/jwt";
 import ApiRequest from "../../models/ApiRequest";
 import connectDb from "../../middlewares/connect-db";
-import constants from "../../config/constants";
 import { error } from "../../services/logger";
 import { responses } from "../../config/strings";
 import { getAddress } from "../../lib/utils";
+import setUserFromSession from "../../middlewares/set-user-from-session";
 
 passport.use(jwtStrategy);
 
@@ -31,13 +31,7 @@ export default nc<NextApiRequest, NextApiResponse>({
     .use(passport.initialize())
     .use(connectDb)
     .use(verifyDomain)
-    .use((req: NextApiRequest, res: NextApiResponse, next: any) => {
-        if (req.cookies[constants.jwtTokenCookieName]) {
-            passport.authenticate("jwt", { session: false })(req, res, next);
-        } else {
-            next();
-        }
-    })
+    .use(setUserFromSession)
     .post(async (req: ApiRequest, res: NextApiResponse) => {
         if (!req.body.hasOwnProperty("query")) {
             res.status(400).json({ error: "Query is missing" });

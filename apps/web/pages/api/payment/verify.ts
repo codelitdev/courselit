@@ -4,8 +4,8 @@ import passport from "passport";
 import { responses } from "../../../config/strings";
 import jwtStrategy from "../../../lib/jwt";
 import connectDb from "../../../middlewares/connect-db";
+import setUserFromSession from "../../../middlewares/set-user-from-session";
 import verifyDomain from "../../../middlewares/verify-domain";
-import verifyJwt from "../../../middlewares/verify-jwt";
 import ApiRequest from "../../../models/ApiRequest";
 import PurchaseModel, { Purchase } from "../../../models/Purchase";
 import { error } from "../../../services/logger";
@@ -28,7 +28,7 @@ export default nc<NextApiRequest, NextApiResponse>({
     .use(passport.initialize())
     .use(connectDb)
     .use(verifyDomain)
-    .use(verifyJwt(passport))
+    .use(setUserFromSession)
     .post(verifyHandler);
 
 async function verifyHandler(req: ApiRequest, res: NextApiResponse) {

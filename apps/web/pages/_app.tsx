@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import "../styles/globals.css";
 import "@courselit/common-widgets/styles.css";
 import "@courselit/components-library/styles.css";
@@ -15,46 +15,40 @@ import { useRouter } from "next/router";
 import "remirror/styles/all.css";
 import { getBackendAddress } from "../ui-lib/utils";
 import FontsInjector from "../components/public/fonts-injector";
+import { SessionProvider } from "next-auth/react";
 
 type CourseLitProps = AppProps & {};
 
-function MyApp({ Component, pageProps }: CourseLitProps) {
-    const [mounted, setMounted] = useState(false);
+function MyApp({
+    Component,
+    pageProps: { session, ...pageProps },
+}: CourseLitProps) {
+    //const [mounted, setMounted] = useState(false);
     const store = useStore();
     const router = useRouter();
 
+    /*
     useEffect(() => {
         setMounted(true);
-        checkForSession();
     }, []);
-
-    const checkForSession = async () => {
-        const response = await fetch("/api/auth/user", {
-            method: "POST",
-            credentials: "same-origin",
-        });
-        if (response.status === 200) {
-            (store.dispatch as ThunkDispatch<State, null, AnyAction>)(
-                actionCreators.signedIn(),
-            );
-        }
-        (store.dispatch as ThunkDispatch<State, null, AnyAction>)(
-            actionCreators.authChecked(),
-        );
-    };
+    */
 
     return (
-        <Provider store={store}>
-            <div
-                style={{
-                    visibility: !mounted ? "hidden" : "visible",
-                }}
-            >
-                <Component {...pageProps} />
-            </div>
-            <CodeInjector router={router} />
-            <FontsInjector router={router} />
-        </Provider>
+        <SessionProvider session={session}>
+            <Provider store={store}>
+                <div
+                    style={
+                        {
+                            //visibility: !mounted ? "hidden" : "visible",
+                        }
+                    }
+                >
+                    <Component {...pageProps} />
+                </div>
+                <CodeInjector router={router} />
+                <FontsInjector router={router} />
+            </Provider>
+        </SessionProvider>
     );
 }
 

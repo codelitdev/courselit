@@ -1,141 +1,171 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
     BTN_LOGIN,
-    ERROR_SIGNIN_VERIFYING_LINK,
     LOGIN_SECTION_HEADER,
-    ERROR_SIGNIN_GENERATING_LINK,
-    SIGNIN_SUCCESS_PREFIX,
-    LOGIN_SECTION_EMAIL_INVALID,
+    BTN_LOGIN_GET_CODE,
+    BTN_LOGIN_CODE_INTIMATION,
+    LOGIN_NO_CODE,
+    BTN_LOGIN_NO_CODE,
+    LOGIN_FORM_LABEL,
+    LOGIN_FORM_DISCLAIMER,
+    LOADING,
 } from "../ui-config/strings";
 import { useRouter } from "next/router";
 import type { Address, Auth, State } from "@courselit/common-models";
 import { AppMessage } from "@courselit/common-models";
 import { connect } from "react-redux";
-import { actionCreators } from "@courselit/state-management";
-import type { ThunkDispatch } from "redux-thunk";
-import type { AnyAction } from "redux";
+import { AppDispatch } from "@courselit/state-management";
 import BaseLayout from "../components/public/base-layout";
 import { getBackendAddress, getPage } from "../ui-lib/utils";
 import { Form, FormField, FormSubmit } from "@courselit/components-library";
+import { signIn, useSession } from "next-auth/react";
+import { FormEvent } from "react";
+import { setAppMessage } from "@courselit/state-management/dist/action-creators";
+import Link from "next/link";
 
 interface LoginProps {
+    email: string;
+    error: any;
     address: Address;
     auth: Auth;
-    dispatch: any;
+    dispatch: AppDispatch;
     progress: boolean;
     page: {
         layout: Record<string, unknown>[];
     };
 }
 
-const Login = ({ address, auth, dispatch, progress, page }: LoginProps) => {
+const LoginNext = ({ page, dispatch }: LoginProps) => {
+    const [showCode, setShowCode] = useState(false);
     const [email, setEmail] = useState("");
+    const [code, setCode] = useState("");
+    const { data: session, status } = useSession();
     const router = useRouter();
-    const { token, redirect } = router.query;
-    const { signedIn, networkAction, setAppMessage } = actionCreators;
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        if (!auth.guest) {
-            const { query } = router;
-            query.redirect
-                ? router.push(`${query.redirect}`)
-                : router.push("/");
-        }
-    });
+    if (status === "authenticated") {
+        router.replace("/");
+    }
 
-    useEffect(() => {
-        if (!router.isReady) return;
-        if (token) {
-            signIn();
-        }
-    }, [router.isReady]);
-
-    const signIn = async () => {
+    const requestCode = async function (e: FormEvent) {
+        e.preventDefault();
+        const url = `/api/auth/code/generate?email=${encodeURIComponent(
+            email,
+        )}`;
         try {
-            dispatch(networkAction(true));
-            const response = await fetch(`/api/auth/login?token=${token}`);
-
-            if (response.status === 200) {
-                (dispatch as ThunkDispatch<State, {}, AnyAction>)(signedIn());
+            setLoading(true);
+            const response = await fetch(url);
+            const resp = await response.json();
+            if (response.ok) {
+                setShowCode(true);
             } else {
-                dispatch(
-                    setAppMessage(new AppMessage(ERROR_SIGNIN_VERIFYING_LINK)),
-                );
+                dispatch(setAppMessage(new AppMessage(resp.error)));
             }
-        } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
-    const requestMagicLink = async (e: Event) => {
+    const signInUser = async function (e: FormEvent) {
         e.preventDefault();
-
         try {
-            dispatch(networkAction(true));
-            let response = await fetch("/api/auth/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    email,
-                    redirect,
-                }),
+            setLoading(true);
+            const response = await signIn("credentials", {
+                email,
+                code,
+                redirect: false,
             });
-
-            if (response.status === 200) {
-                response = await response.json();
-                dispatch(
-                    setAppMessage(
-                        new AppMessage(`${SIGNIN_SUCCESS_PREFIX} ${email}`),
-                    ),
-                );
-                setEmail("");
-            } else {
-                dispatch(
-                    setAppMessage(new AppMessage(ERROR_SIGNIN_GENERATING_LINK)),
-                );
+            if (response.error) {
+                setError(response.error);
             }
-        } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
     return (
         <BaseLayout title={LOGIN_SECTION_HEADER} layout={page.layout}>
-            <Form onSubmit={requestMagicLink}>
-                <div className="p-4">
-                    <h1 className="text-4xl font-semibold mb-4">
-                        {LOGIN_SECTION_HEADER}
-                    </h1>
-                    <div className="mb-4">
-                        <FormField
-                            type="email"
-                            value={email}
-                            variant="outlined"
-                            label="Email"
-                            fullWidth
-                            margin="normal"
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            messages={[
-                                {
-                                    match: "typeMismatch",
-                                    text: LOGIN_SECTION_EMAIL_INVALID,
-                                },
-                            ]}
-                        />
-                    </div>
-                    <FormSubmit
-                        text={BTN_LOGIN}
-                        disabled={progress || !email}
-                    />
+            <div className="flex justify-center grow items-center">
+                <div className="flex flex-col">
+                    {error && (
+                        <div className="bg-red-500 text-white px-2 py-1 rounded-md mb-4">
+                            <p>{error}</p>
+                        </div>
+                    )}
+                    {!showCode && (
+                        <div>
+                            <p className="mb-4">{LOGIN_FORM_LABEL}</p>
+                            <Form
+                                onSubmit={requestCode}
+                                className="flex flex-col gap-4"
+                            >
+                                <FormField
+                                    type="email"
+                                    value={email}
+                                    placeholder="Enter your email"
+                                    required={true}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                />
+
+                                <p className="text-center text-xs text-slate-500">
+                                    {LOGIN_FORM_DISCLAIMER}
+                                    <Link href="/p/terms">
+                                        <span className="underline">Terms</span>
+                                    </Link>
+                                </p>
+                                <div className="flex justify-center">
+                                    <FormSubmit
+                                        text={
+                                            loading
+                                                ? LOADING
+                                                : BTN_LOGIN_GET_CODE
+                                        }
+                                        disabled={loading}
+                                    />
+                                </div>
+                            </Form>
+                        </div>
+                    )}
+                    {showCode && (
+                        <div>
+                            <p className="mb-4">
+                                {BTN_LOGIN_CODE_INTIMATION} {email}
+                            </p>
+                            <Form
+                                className="flex flex-col gap-4 mb-4"
+                                onSubmit={signInUser}
+                            >
+                                <FormField
+                                    type="text"
+                                    value={code}
+                                    placeholder="Code"
+                                    required={true}
+                                    onChange={(e) => setCode(e.target.value)}
+                                />
+                                <div className="flex justify-center">
+                                    <FormSubmit
+                                        text={loading ? LOADING : BTN_LOGIN}
+                                        disabled={loading}
+                                    />
+                                </div>
+                            </Form>
+                            <div className="flex justify-center items-center gap-1 text-sm">
+                                <p className="text-slate-500">
+                                    {LOGIN_NO_CODE}
+                                </p>
+                                <button
+                                    onClick={requestCode}
+                                    className="underline"
+                                    disabled={loading}
+                                >
+                                    {loading ? LOADING : BTN_LOGIN_NO_CODE}
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
-            </Form>
+            </div>
         </BaseLayout>
     );
 };
@@ -150,7 +180,7 @@ const mapDispatchToProps = (dispatch: any) => ({
     dispatch: dispatch,
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(Login);
+export default connect(mapStateToProps, mapDispatchToProps)(LoginNext);
 
 export async function getServerSideProps(context: any) {
     const { req } = context;
