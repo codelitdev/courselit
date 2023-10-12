@@ -5,12 +5,12 @@ import { responses } from "../../../config/strings";
 import jwtStrategy from "../../../lib/jwt";
 import connectDb from "../../../middlewares/connect-db";
 import verifyDomain from "../../../middlewares/verify-domain";
-import verifyJwt from "../../../middlewares/verify-jwt";
 import ApiRequest from "../../../models/ApiRequest";
 import { error } from "../../../services/logger";
 import * as medialitService from "../../../services/medialit";
 import { UIConstants as constants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
+import setUserFromSession from "../../../middlewares/set-user-from-session";
 
 passport.use(jwtStrategy);
 
@@ -29,7 +29,7 @@ export default nc<NextApiRequest, NextApiResponse>({
     .use(passport.initialize())
     .use(connectDb)
     .use(verifyDomain)
-    .use(verifyJwt(passport))
+    .use(setUserFromSession)
     .post(getPresignedUrlHandler);
 
 async function getPresignedUrlHandler(req: ApiRequest, res: NextApiResponse) {

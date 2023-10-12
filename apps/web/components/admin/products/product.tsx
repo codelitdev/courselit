@@ -88,7 +88,13 @@ function Product({
                 <p>{capitalize(product.type)}</p>
             </td>
             <td align="right">
-                <Chip className={product.published ? "!bg-black" : ""}>
+                <Chip
+                    className={
+                        product.published
+                            ? "!bg-black text-white !border-black"
+                            : ""
+                    }
+                >
                     {product.published
                         ? PRODUCT_STATUS_PUBLISHED
                         : PRODUCT_STATUS_DRAFT}

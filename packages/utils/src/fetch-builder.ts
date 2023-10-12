@@ -79,7 +79,6 @@ class Fetch {
 class FetchBuilder {
     private url = "";
     private payload: any;
-    private token = "";
     private isGraphQLEndpoint = false;
     private httpMethod = "POST";
     private headers = {};
@@ -91,11 +90,6 @@ class FetchBuilder {
 
     setPayload(payload: unknown) {
         this.payload = payload;
-        return this;
-    }
-
-    setAuthToken(token: string) {
-        this.token = token;
         return this;
     }
 

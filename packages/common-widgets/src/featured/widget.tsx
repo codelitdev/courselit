@@ -89,7 +89,10 @@ export default function Widget({
             {productItems.length > 0 && (
                 <div className="flex flex-wrap gap-[1%]">
                     {productItems.map((course: Course, index: number) => (
-                        <div className="basis-full md:basis-[49.5%] lg:basis-[32.6666%] mb-6">
+                        <div
+                            key={course.courseId}
+                            className="basis-full md:basis-[49.5%] lg:basis-[32.6666%] mb-6"
+                        >
                             <CourseItem
                                 course={course}
                                 siteInfo={state.siteinfo}

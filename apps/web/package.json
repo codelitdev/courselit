@@ -28,6 +28,7 @@
         "mongodb": "^4.4.1",
         "mongoose": "^7.4.2",
         "next": "13.4.11",
+        "next-auth": "^4.23.2",
         "next-connect": "^0.12.2",
         "nodemailer": "^6.7.2",
         "passport": "^0.6.0",

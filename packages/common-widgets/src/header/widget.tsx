@@ -17,7 +17,6 @@ interface WidgetProps {
 
 export default function Widget({ state, settings }: WidgetProps) {
     const linkClasses = "flex w-full";
-    console.log(state.siteinfo);
 
     return (
         <header

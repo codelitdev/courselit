@@ -1,20 +1,12 @@
 import React, { ReactNode, useEffect } from "react";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
-import {
-    Rocket,
-    Text,
-    Person,
-    Mail,
-    //Desktop,
-    Settings,
-} from "@courselit/icons";
+import { Rocket, Text, Person, Mail, Settings } from "@courselit/icons";
 import {
     CREATOR_AREA_PAGE_TITLE,
     SIDEBAR_MENU_BLOGS,
     SIDEBAR_MENU_PRODUCTS,
     SIDEBAR_MENU_SETTINGS,
-    //SIDEBAR_MENU_SITE,
     SIDEBAR_MENU_USERS,
     SIDEBAR_MENU_MAILS,
 } from "../../ui-config/strings";
@@ -27,7 +19,12 @@ import Auth from "../../ui-models/auth";
 import SiteInfo from "../../ui-models/site-info";
 import { UIConstants as constants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
-import { AppState } from "@courselit/state-management";
+import {
+    actionCreators,
+    AppDispatch,
+    AppState,
+} from "@courselit/state-management";
+import { useSession } from "next-auth/react";
 const { permissions } = constants;
 
 const getSidebarMenuItems = (profile: Profile, featureFlags: string[]) => {
@@ -94,6 +91,7 @@ interface BaseLayoutProps {
     children: ReactNode;
     title: string;
     featureFlags: string[];
+    dispatch: AppDispatch;
 }
 
 const BaseLayoutAdmin = ({
@@ -103,7 +101,9 @@ const BaseLayoutAdmin = ({
     children,
     title,
     featureFlags,
+    dispatch,
 }: BaseLayoutProps) => {
+    const { status } = useSession();
     const router = useRouter();
 
     useEffect(() => {
@@ -113,10 +113,15 @@ const BaseLayoutAdmin = ({
     }, [profile.fetched]);
 
     useEffect(() => {
-        if (auth.checked && auth.guest) {
+        if (status === "authenticated") {
+            dispatch(actionCreators.signedIn());
+            dispatch(actionCreators.authChecked());
+        }
+        if (status === "unauthenticated") {
+            dispatch(actionCreators.authChecked());
             router.push(`/login?redirect=${router.asPath}`);
         }
-    }, [auth.checked]);
+    }, [status]);
 
     const items = getSidebarMenuItems(profile, featureFlags);
 
@@ -159,4 +164,6 @@ const mapStateToProps = (state: AppState) => ({
     featureFlags: state.featureFlags,
 });
 
-export default connect(mapStateToProps)(BaseLayoutAdmin);
+const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
+
+export default connect(mapStateToProps, mapDispatchToProps)(BaseLayoutAdmin);
