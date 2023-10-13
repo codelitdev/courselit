@@ -2,17 +2,15 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import schema from "../../graphql";
 import verifyDomain from "../../middlewares/verify-domain";
 import nc from "next-connect";
-import passport from "passport";
 import { graphql } from "graphql";
-import jwtStrategy from "../../lib/jwt";
 import ApiRequest from "../../models/ApiRequest";
 import connectDb from "../../middlewares/connect-db";
 import { error } from "../../services/logger";
 import { responses } from "../../config/strings";
 import { getAddress } from "../../lib/utils";
-import setUserFromSession from "../../middlewares/set-user-from-session";
-
-passport.use(jwtStrategy);
+import { getServerSession } from "next-auth";
+import { authOptions } from "./auth/[...nextauth]";
+import User from "../../models/User";
 
 export default nc<NextApiRequest, NextApiResponse>({
     onError: (err, req, res, next) => {
@@ -28,10 +26,25 @@ export default nc<NextApiRequest, NextApiResponse>({
         res.status(404).end("Not found");
     },
 })
-    .use(passport.initialize())
     .use(connectDb)
     .use(verifyDomain)
-    .use(setUserFromSession)
+    .use(async (req: ApiRequest, res: NextApiResponse, next: any) => {
+        const session = await getServerSession(req, res, authOptions);
+
+        if (session) {
+            const user = await User.findOne({
+                email: session.user.email,
+                domain: req.subdomain._id,
+                active: true,
+            });
+
+            if (user) {
+                req.user = user;
+            }
+        }
+
+        next();
+    })
     .post(async (req: ApiRequest, res: NextApiResponse) => {
         if (!req.body.hasOwnProperty("query")) {
             res.status(400).json({ error: "Query is missing" });

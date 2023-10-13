@@ -12,19 +12,19 @@ export default async function setUserFromSession(
     const session = await getServerSession(req, res, authOptions);
 
     if (session) {
-        try {
-            const user = await User.findOne({
-                email: session.user.email,
-                domain: req.subdomain._id,
-                active: true,
-            });
-            if (user) {
-                req.user = user;
-            }
-        } catch (e: any) {
-            next();
-        }
-    }
+        const user = await User.findOne({
+            email: session.user.email,
+            domain: req.subdomain._id,
+            active: true,
+        });
 
-    next();
+        if (user) {
+            req.user = user;
+            next();
+        } else {
+            return res.status(401).json({});
+        }
+    } else {
+        return res.status(401).json({});
+    }
 }

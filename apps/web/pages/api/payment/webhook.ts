@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import nc from "next-connect";
-import passport from "passport";
 import constants from "../../../config/constants";
 import finalizePurchase from "../../../lib/finalize-purchase";
 import connectDb from "../../../middlewares/connect-db";
@@ -24,7 +23,6 @@ export default nc<NextApiRequest, NextApiResponse>({
     },
     attachParams: true,
 })
-    .use(passport.initialize())
     .use(connectDb)
     .use(verifyDomain)
     .post(webhookHandler);

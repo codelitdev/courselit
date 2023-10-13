@@ -24,16 +24,12 @@
         "draft-js": "^0.11.7",
         "graphql": "^16.4.0",
         "graphql-type-json": "^0.3.2",
-        "jsonwebtoken": "^9.0.0",
         "mongodb": "^4.4.1",
         "mongoose": "^7.4.2",
         "next": "13.4.11",
         "next-auth": "^4.23.2",
         "next-connect": "^0.12.2",
         "nodemailer": "^6.7.2",
-        "passport": "^0.6.0",
-        "passport-jwt": "^4.0.0",
-        "passport-magic-link": "^2.1.0",
         "pug": "^3.0.2",
         "react": "^18.2.0",
         "react-csv": "^2.2.2",
@@ -50,8 +46,6 @@
         "@types/draft-js": "^0.11.9",
         "@types/node": "17.0.21",
         "@types/nodemailer": "^6.4.4",
-        "@types/passport": "^1.0.7",
-        "@types/passport-jwt": "^3.0.6",
         "@types/pug": "^2.0.6",
         "@types/react": "17.0.39",
         "@types/react-redux": "^7.1.23",
@@ -69,8 +63,5 @@
     "engines": {
         "yarn": "~3.2.0"
     },
-    "engineStrict": true,
-    "resolutions": {
-        "passport-magic-link/jsonwebtoken": "^9.0.0"
-    }
+    "engineStrict": true
 }

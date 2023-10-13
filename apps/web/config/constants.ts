@@ -12,16 +12,6 @@ export default {
             process.env.NODE_ENV === "test" ? "test" : "app"
         }`,
 
-    routePrefix:
-        process.env.NODE_ENV === "production"
-            ? process.env.API_PREFIX || "/api"
-            : "",
-
-    // password related config
-    jwtSecret: process.env.JWT_SECRET,
-    jwtExpire: process.env.JWT_EXPIRES_IN || "1d",
-    jwtTokenCookieName: process.env.JWT_COOKIE_NAME || "access_token",
-
     // product types
     course: "course",
     download: "download",

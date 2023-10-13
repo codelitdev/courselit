@@ -10,9 +10,12 @@ services:
       # listed under the PORTS block.
       - PORT=${PORT:-80}
 
-      # This string will be used as a salt to hash the JWT tokens. It is recommended
-      # that you set a random string as its value.
-      - JWT_SECRET=som3_rand0m_$tring
+      # This string is used by the authentication framework to secure the JWT. 
+      # It is IMPORTANT that you set a random string as its value. 
+      #
+      # You can use the following command to generate a secure random string.
+      # openssl rand -base64 32
+      - NEXTAUTH_SECRET=som3_rand0m_$tring
 
       # In production, replace the following with the connection string of a cloud 
       # hosted instance of MongoDB.

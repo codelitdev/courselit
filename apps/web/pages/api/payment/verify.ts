@@ -1,16 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import nc from "next-connect";
-import passport from "passport";
 import { responses } from "../../../config/strings";
-import jwtStrategy from "../../../lib/jwt";
 import connectDb from "../../../middlewares/connect-db";
 import setUserFromSession from "../../../middlewares/set-user-from-session";
 import verifyDomain from "../../../middlewares/verify-domain";
 import ApiRequest from "../../../models/ApiRequest";
 import PurchaseModel, { Purchase } from "../../../models/Purchase";
 import { error } from "../../../services/logger";
-
-passport.use(jwtStrategy);
 
 export default nc<NextApiRequest, NextApiResponse>({
     onError: (err, req, res, next) => {
@@ -25,7 +21,6 @@ export default nc<NextApiRequest, NextApiResponse>({
     },
     attachParams: true,
 })
-    .use(passport.initialize())
     .use(connectDb)
     .use(verifyDomain)
     .use(setUserFromSession)

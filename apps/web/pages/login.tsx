@@ -18,10 +18,11 @@ import { AppDispatch } from "@courselit/state-management";
 import BaseLayout from "../components/public/base-layout";
 import { getBackendAddress, getPage } from "../ui-lib/utils";
 import { Form, FormField, FormSubmit } from "@courselit/components-library";
-import { signIn, useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { FormEvent } from "react";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import Link from "next/link";
+import { useEffect } from "react";
 
 interface LoginProps {
     email: string;
@@ -35,18 +36,31 @@ interface LoginProps {
     };
 }
 
-const LoginNext = ({ page, dispatch }: LoginProps) => {
+const Login = ({ page, auth, dispatch }: LoginProps) => {
     const [showCode, setShowCode] = useState(false);
     const [email, setEmail] = useState("");
     const [code, setCode] = useState("");
-    const { data: session, status } = useSession();
     const router = useRouter();
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
-    if (status === "authenticated") {
-        router.replace("/");
-    }
+    useEffect(() => {
+        if (!auth.guest) {
+            const { query } = router;
+            query.redirect
+                ? router.push(`${query.redirect}`)
+                : router.push("/");
+        }
+    });
+
+    useEffect(() => {
+        if (!auth.guest) {
+            const { query } = router;
+            query.redirect
+                ? router.push(`${query.redirect}`)
+                : router.push("/");
+        }
+    });
 
     const requestCode = async function (e: FormEvent) {
         e.preventDefault();
@@ -86,7 +100,7 @@ const LoginNext = ({ page, dispatch }: LoginProps) => {
 
     return (
         <BaseLayout title={LOGIN_SECTION_HEADER} layout={page.layout}>
-            <div className="flex justify-center grow items-center">
+            <div className="flex justify-center grow items-center px-4">
                 <div className="flex flex-col">
                     {error && (
                         <div className="bg-red-500 text-white px-2 py-1 rounded-md mb-4">
@@ -180,7 +194,7 @@ const mapDispatchToProps = (dispatch: any) => ({
     dispatch: dispatch,
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(LoginNext);
+export default connect(mapStateToProps, mapDispatchToProps)(Login);
 
 export async function getServerSideProps(context: any) {
     const { req } = context;

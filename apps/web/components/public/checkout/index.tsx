@@ -22,7 +22,7 @@ const CheckoutExternal = (props: CheckoutExternalProps) => {
     const { paymentMethod } = props.siteInfo;
 
     return (
-        <>
+        <div className="flex justify-end">
             {course.cost === 0 && <Free course={course} />}
             {course.cost !== 0 && (
                 <>
@@ -33,7 +33,7 @@ const CheckoutExternal = (props: CheckoutExternalProps) => {
                     {paymentMethod === PAYMENT_METHOD_PAYPAL && <></>}
                 </>
             )}
-        </>
+        </div>
     );
 };
 
