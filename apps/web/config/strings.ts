@@ -4,21 +4,11 @@
 import { UIConstants } from "@courselit/common-models";
 
 export const responses = {
-    // passportjs responses
     error: "Error",
-    user_created: "User created",
-    not_logged_in: "Not logged in",
-    passport_js_unauthorized: "Unauthorized",
-    name_required: "Name field is required",
-    email_or_passwd_invalid: "Email or password is invalid",
-    auth_user_not_found: "No account was found with this email id",
-    email_already_registered: "This email is already registered",
     domain_missing: "Domain is missing",
     domain_doesnt_exist: "Domain does not exist",
     domain_super_admin_email_missing:
         "SUPER_ADMIN_EMAIL environment variable is not defined",
-    cross_domain_access_prohibited: "Invalid credentials",
-    locked: "Account locked",
     not_valid_subscription: "No valid subscription found",
     sign_in_mail_prefix: "Sign in to ",
     sign_in_mail_body: "Click the following link to sign in.",

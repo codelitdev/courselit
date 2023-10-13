@@ -14,7 +14,7 @@ The app will be available at http://localhost:3000
 
 ### Environment variables
 
-**JWT_SECRET**
+**NEXTAUTH_SECRET**
 
 A random string to use as a secret to sign the JWT tokens the API generates. Required parameter. No default value.
 

@@ -2,10 +2,6 @@
  * This file provides application wide constants.
  */
 
-// Constants for auth related functionalities
-export const JWT_COOKIE_NAME = "access_token";
-export const USERID_COOKIE_NAME = "email";
-
 // Constants that represent types from the server
 export const LESSON_TYPE_TEXT = "text";
 export const LESSON_TYPE_AUDIO = "audio";

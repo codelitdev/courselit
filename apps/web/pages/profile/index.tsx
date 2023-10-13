@@ -32,6 +32,7 @@ import { AppMessage } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
 import BaseLayout from "../../components/public/base-layout";
 import { useRouter } from "next/router";
+import { FormEvent } from "react";
 
 interface ProfileProps {
     profile: Profile;
@@ -98,7 +99,9 @@ function ProfileIndex({
         }
     };
 
-    const saveDetails = async () => {
+    const saveDetails = async (e: FormEvent) => {
+        e.preventDefault();
+
         const mutation = `
           mutation {
             user: updateUser(userData: {

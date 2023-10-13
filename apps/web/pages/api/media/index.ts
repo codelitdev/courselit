@@ -1,8 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import nc from "next-connect";
-import passport from "passport";
 import { responses } from "../../../config/strings";
-import jwtStrategy from "../../../lib/jwt";
 import connectDb from "../../../middlewares/connect-db";
 import verifyDomain from "../../../middlewares/verify-domain";
 import ApiRequest from "../../../models/ApiRequest";
@@ -11,8 +9,6 @@ import * as medialitService from "../../../services/medialit";
 import { UIConstants as constants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
 import setUserFromSession from "../../../middlewares/set-user-from-session";
-
-passport.use(jwtStrategy);
 
 export default nc<NextApiRequest, NextApiResponse>({
     onError: (err, req, res, next) => {
@@ -27,7 +23,6 @@ export default nc<NextApiRequest, NextApiResponse>({
     },
     attachParams: true,
 })
-    .use(passport.initialize())
     .use(connectDb)
     .use(verifyDomain)
     .use(setUserFromSession)

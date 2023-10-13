@@ -16,7 +16,6 @@ import {
     VISIT_COURSE_BUTTON,
     PURCHASE_ID_HEADER,
 } from "../../ui-config/strings";
-import Link from "next/link";
 import dynamic from "next/dynamic";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { Address, AppMessage, Auth } from "@courselit/common-models";
@@ -40,7 +39,7 @@ const PurchaseStatus = (props: PurchaseStatusProps) => {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const { id, source } = router.query;
-    const courseLink = source || "";
+    const courseLink: string = (source as string) || "";
     const { dispatch, address } = props;
 
     useEffect(() => {
@@ -83,9 +82,9 @@ const PurchaseStatus = (props: PurchaseStatusProps) => {
                         {TRANSACTION_STATUS_SUCCESS}
                     </h3>
                     <p className="mb-2">{TRANSACTION_STATUS_SUCCESS_DETAILS}</p>
-                    <Link href={courseLink} legacyBehavior>
-                        <Button component="link">{VISIT_COURSE_BUTTON}</Button>
-                    </Link>
+                    <Button component="link" href={courseLink}>
+                        {VISIT_COURSE_BUTTON}
+                    </Button>
                 </div>
             )}
             {status === TRANSACTION_INITIATED && (
@@ -122,9 +121,9 @@ const PurchaseStatus = (props: PurchaseStatusProps) => {
                     <p className="text-sm mb-8">
                         {PURCHASE_ID_HEADER}: {id}
                     </p>
-                    <Link href={courseLink} legacyBehavior>
-                        <Button component="link">{VISIT_COURSE_BUTTON}</Button>
-                    </Link>
+                    <Button component="link" href={courseLink}>
+                        {VISIT_COURSE_BUTTON}
+                    </Button>
                 </div>
             )}
         </>
