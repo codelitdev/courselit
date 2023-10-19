@@ -1,4 +1,3 @@
-import { EditorState, convertFromRaw } from "draft-js";
 import { decode } from "base-64";
 import { responses } from "../config/strings";
 import constants from "../config/constants";
@@ -50,40 +49,6 @@ export const checkOwnershipWithoutModel = <
 export const validateOffset = (offset?: number) => {
     if (!offset || offset < 1) throw new Error(responses.invalid_offset);
 };
-
-export const extractPlainTextFromDraftJS = (
-    encodedEditorStateString: string,
-    characters: number,
-) => {
-    try {
-        const editorState = EditorState.createWithContent(
-            convertFromRaw(JSON.parse(decode(encodedEditorStateString))),
-        );
-        const descriptInPlainText = editorState
-            .getCurrentContent()
-            .getPlainText();
-        const firstSentence = descriptInPlainText.split(/\./);
-        return `${firstSentence[0]}.`;
-    } catch (err) {
-        return "";
-    }
-};
-
-// export const checkAdminOrSelf = (userID, GraphQLContext) => {
-//   const isSelf = userID === GraphQLContext.user.id;
-//   const isAdmin = GraphQLContext.user.isAdmin;
-//   const isActionAllowed = isSelf || isAdmin;
-//   if (!isActionAllowed) {
-//     throw new Error(strings.responses.action_not_allowed);
-//   }
-// };
-
-// // export const checkIfItemExists = async (Model, id) => {
-// //   const item = await Model.findById(id);
-// //   if (!item) throw new Error(strings.responses.item_not_found);
-
-// //   return item;
-// // };
 
 const validateMongooseTextSearchQuery = (query: any) => {
     if (typeof query !== "object") {

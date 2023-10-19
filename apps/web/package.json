@@ -21,7 +21,6 @@
         "archiver": "^5.3.1",
         "base-64": "^1.0.0",
         "cookie": "^0.4.2",
-        "draft-js": "^0.11.7",
         "graphql": "^16.4.0",
         "graphql-type-json": "^0.3.2",
         "mongodb": "^4.4.1",
@@ -43,7 +42,6 @@
     "devDependencies": {
         "@types/bcryptjs": "^2.4.2",
         "@types/cookie": "^0.4.1",
-        "@types/draft-js": "^0.11.9",
         "@types/node": "17.0.21",
         "@types/nodemailer": "^6.4.4",
         "@types/pug": "^2.0.6",
