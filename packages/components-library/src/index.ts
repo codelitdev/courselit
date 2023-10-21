@@ -34,6 +34,7 @@ import Tabs from "./tabs";
 import Table, { TableHead, TableBody, TableRow } from "./table";
 import Avatar from "./avatar";
 import Breadcrumbs from "./breadcrumbs";
+import Popover from "./popover";
 
 export {
     PriceTag,
@@ -72,4 +73,5 @@ export {
     TableRow,
     Avatar,
     Breadcrumbs,
+    Popover,
 };

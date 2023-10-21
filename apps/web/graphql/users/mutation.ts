@@ -1,8 +1,10 @@
-import { GraphQLNonNull } from "graphql";
+import { GraphQLList, GraphQLNonNull, GraphQLString } from "graphql";
 import types from "./types";
-import { updateUser } from "./logic";
+import { updateUser, createSegment, deleteSegment } from "./logic";
+import type { UserSegment } from "../../models/UserSegment";
+import { GraphQLJSONObject } from "graphql-type-json";
 
-export default {
+const mutations = {
     updateUser: {
         type: types.userType,
         args: {
@@ -13,4 +15,34 @@ export default {
         resolve: async (_: any, { userData }: any, context: any) =>
             updateUser(userData, context),
     },
+    createSegment: {
+        type: new GraphQLList(types.userSegment),
+        args: {
+            segmentData: {
+                type: new GraphQLNonNull(types.createSegmentInput),
+            },
+        },
+        resolve: async (
+            _: any,
+            {
+                segmentData,
+            }: { segmentData: Pick<UserSegment, "name" | "filter"> },
+            context: any,
+        ) => createSegment(segmentData, context),
+    },
+    deleteSegment: {
+        type: new GraphQLList(types.userSegment),
+        args: {
+            segmentId: {
+                type: new GraphQLNonNull(GraphQLString),
+            },
+        },
+        resolve: async (
+            _: any,
+            { segmentId }: { segmentId: string },
+            context: any,
+        ) => deleteSegment(segmentId, context),
+    },
 };
+
+export default mutations;

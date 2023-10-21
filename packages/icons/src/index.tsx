@@ -33,3 +33,5 @@ export { ChevronUpIcon as ExpandLess } from "@radix-ui/react-icons";
 export { CheckIcon as Check } from "@radix-ui/react-icons";
 export { QuestionMarkCircledIcon as Help } from "@radix-ui/react-icons";
 export { CrossCircledIcon as Cancel } from "@radix-ui/react-icons";
+export { DotFilledIcon as Dot } from "@radix-ui/react-icons";
+export { InfoCircledIcon as Info } from "@radix-ui/react-icons";

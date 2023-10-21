@@ -10,6 +10,7 @@ import {
     GraphQLEnumType,
 } from "graphql";
 import constants from "../../config/constants";
+import { GraphQLJSONObject } from "graphql-type-json";
 
 const { userTypeTeam, userTypeCustomer, userTypeNewsletterSubscriber } =
     constants;
@@ -51,6 +52,14 @@ const userUpdateInput = new GraphQLInputObjectType({
     },
 });
 
+const createSegmentInput = new GraphQLInputObjectType({
+    name: "CreateSegmentInput",
+    fields: {
+        name: { type: new GraphQLNonNull(GraphQLString) },
+        filter: { type: new GraphQLNonNull(GraphQLJSONObject) },
+    },
+});
+
 const userGroupType = new GraphQLEnumType({
     name: "UserGroupType",
     values: {
@@ -87,10 +96,35 @@ const userPurchaseInput = new GraphQLObjectType({
     },
 });
 
+const userFilter = new GraphQLObjectType({
+    name: "UserFilter",
+    fields: {
+        emails: { type: GraphQLJSONObject },
+        products: { type: GraphQLJSONObject },
+        lastActive: { type: GraphQLJSONObject },
+        signedUp: { type: GraphQLJSONObject },
+        tags: { type: GraphQLJSONObject },
+        permissions: { type: GraphQLJSONObject },
+        subscribedToUpdates: { type: GraphQLBoolean },
+    },
+});
+
+const userSegment = new GraphQLObjectType({
+    name: "UserSegment",
+    fields: {
+        segmentId: { type: new GraphQLNonNull(GraphQLString) },
+        name: { type: new GraphQLNonNull(GraphQLString) },
+        filter: { type: new GraphQLNonNull(userFilter) },
+    },
+});
+
 export default {
     userType,
     userUpdateInput,
     userSearchInput,
     usersSummaryType,
     userPurchaseInput,
+    userSegment,
+    userFilter,
+    createSegmentInput,
 };

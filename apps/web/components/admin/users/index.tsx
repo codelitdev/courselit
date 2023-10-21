@@ -13,6 +13,7 @@ import {
     //USER_TABLE_HEADER_EMAIL,
     //USER_TABLE_HEADER_NAME_NAME,
     TOOLTIP_USER_PAGE_SEND_MAIL,
+    USER_FILTER_BTN_LABEL,
 } from "../../../ui-config/strings";
 import {
     checkPermission,
@@ -37,6 +38,7 @@ import {
     Link,
     Form,
     FormField,
+    Popover,
 } from "@courselit/components-library";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 //import { CSVLink } from "react-csv";
@@ -45,6 +47,7 @@ import { useRouter } from "next/router";
 import { UIConstants } from "@courselit/common-models";
 import { Mail } from "@courselit/icons";
 import { formattedLocaleDate } from "../../../ui-lib/utils";
+import FilterEditor from "./filter-editor";
 
 const { networkAction } = actionCreators;
 const { permissions } = UIConstants;
@@ -69,6 +72,8 @@ const UsersManager = ({
     const [searchEmail, setSearchEmail] = useState("");
     const [searchEmailHook, setSearchEmailHook] = useState(0);
     const [count, setCount] = useState(0);
+    const [filters, setFilters] = useState([]);
+    const [filterOpen, setFilterOpen] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -326,7 +331,7 @@ const UsersManager = ({
             <h1 className="text-4xl font-semibold mb-4">
                 {USERS_MANAGER_PAGE_HEADING}
             </h1>
-            <div className="flex items-start justify-between gap-2 mb-4">
+            <div className="flex items-end gap-2 mb-4">
                 <Form
                     onSubmit={searchByEmail}
                     className="flex gap-2 items-start"
@@ -386,6 +391,18 @@ const UsersManager = ({
                         },
                     ]}
                 />
+                <Popover
+                    open={filterOpen}
+                    setOpen={setFilterOpen}
+                    title={USER_FILTER_BTN_LABEL}
+                >
+                    <FilterEditor
+                        dismissPopover={(filter) => {
+                            setFilters([...filters, filter]);
+                            setFilterOpen(false);
+                        }}
+                    />
+                </Popover>
                 {featureFlags.includes("mail") && (
                     <Tooltip title={TOOLTIP_USER_PAGE_SEND_MAIL}>
                         <IconButton onClick={createMail} variant="soft">

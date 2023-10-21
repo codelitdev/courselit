@@ -4,7 +4,7 @@ interface ButtonProps {
     children: React.ReactNode;
     className?: string;
     onClick?: (...args: any[]) => any;
-    variant?: "soft" | "classic";
+    variant?: "soft" | "classic" | "transparent";
     style?: Record<string, string>;
     [x: string]: any;
 }
@@ -24,9 +24,14 @@ export default function IconButton(props: ButtonProps) {
     if (variant === "classic") {
         commonClasses +=
             " bg-black text-white hover:!text-white hover:!bg-slate-500 active:!bg-slate-600 disabled:bg-slate-300";
-    } else {
+    }
+    if (variant === "soft") {
         commonClasses +=
             " bg-slate-100 text-black hover:!bg-slate-200 active:!bg-slate-300 disabled:text-slate-300";
+    }
+    if (variant === "transparent") {
+        commonClasses +=
+            " text-black hover:!bg-slate-200 active:!bg-slate-300 disabled:text-slate-300";
     }
 
     return (

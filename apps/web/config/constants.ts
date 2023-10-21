@@ -88,6 +88,10 @@ export default {
     downLoadLinkExpiresInDays: 2,
     downLoadLinkLength: 128,
 
+    // mail types
+    mailBroadcast: "broadcast",
+    mailSequence: "sequence",
+
     // acceptable currency codes for payments
     currencyISOCodes: [
         "afn",

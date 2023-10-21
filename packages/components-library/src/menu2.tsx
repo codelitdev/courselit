@@ -2,13 +2,11 @@ import * as React from "react";
 import {
     Arrow,
     Content,
-    Item,
     Portal,
     Root,
     Trigger,
 } from "@radix-ui/react-dropdown-menu";
 import IconButton from "./icon-button";
-import { Person } from "@courselit/icons";
 
 interface MenuProps {
     icon: React.ReactNode;

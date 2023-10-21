@@ -17,6 +17,7 @@ import { Progress } from "../../models/Progress";
 import { initMandatoryPages } from "../pages/logic";
 import { Domain } from "../../models/Domain";
 import { checkPermission } from "@courselit/utils";
+import UserSegmentModel, { UserSegment } from "../../models/UserSegment";
 
 const removeAdminFieldsFromUserObject = ({
     id,
@@ -308,4 +309,65 @@ export async function createUser({
     }
 
     return user;
+}
+
+export async function getSegments(ctx: GQLContext): Promise<UserSegment[]> {
+    checkIfAuthenticated(ctx);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const segments = await UserSegmentModel.find({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+    });
+
+    return segments;
+}
+
+export async function createSegment(
+    segmentData: Pick<UserSegment, "name" | "filter">,
+    ctx: GQLContext,
+): Promise<UserSegment[]> {
+    checkIfAuthenticated(ctx);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    await UserSegmentModel.create({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+        name: segmentData.name,
+        filter: segmentData.filter,
+    });
+
+    const segments = await UserSegmentModel.find({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+    });
+
+    return segments;
+}
+
+export async function deleteSegment(
+    segmentId: string,
+    ctx: GQLContext,
+): Promise<UserSegment[]> {
+    checkIfAuthenticated(ctx);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    await UserSegmentModel.deleteOne({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+        segmentId,
+    });
+
+    const segments = await UserSegmentModel.find({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+    });
+
+    return segments;
 }
