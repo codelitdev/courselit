@@ -52,13 +52,6 @@ const userUpdateInput = new GraphQLInputObjectType({
     },
 });
 
-const createSegmentInput = new GraphQLInputObjectType({
-    name: "CreateSegmentInput",
-    fields: {
-        name: { type: new GraphQLNonNull(GraphQLString) },
-        filter: { type: new GraphQLNonNull(GraphQLJSONObject) },
-    },
-});
 
 const userGroupType = new GraphQLEnumType({
     name: "UserGroupType",
@@ -99,13 +92,17 @@ const userPurchaseInput = new GraphQLObjectType({
 const userFilter = new GraphQLObjectType({
     name: "UserFilter",
     fields: {
-        emails: { type: GraphQLJSONObject },
-        products: { type: GraphQLJSONObject },
-        lastActive: { type: GraphQLJSONObject },
-        signedUp: { type: GraphQLJSONObject },
-        tags: { type: GraphQLJSONObject },
-        permissions: { type: GraphQLJSONObject },
-        subscribedToUpdates: { type: GraphQLBoolean },
+        name: { type: GraphQLString },
+        condition: { type: GraphQLString },
+        value: { type: GraphQLString }
+    },
+});
+
+const createSegmentInput = new GraphQLInputObjectType({
+    name: "CreateSegmentInput",
+    fields: {
+        name: { type: new GraphQLNonNull(GraphQLString) },
+        filters: { type: new GraphQLNonNull(GraphQLString) },
     },
 });
 
@@ -114,7 +111,7 @@ const userSegment = new GraphQLObjectType({
     fields: {
         segmentId: { type: new GraphQLNonNull(GraphQLString) },
         name: { type: new GraphQLNonNull(GraphQLString) },
-        filter: { type: new GraphQLNonNull(userFilter) },
+        filters: { type: new GraphQLList(userFilter) },
     },
 });
 

@@ -18,6 +18,7 @@ import { initMandatoryPages } from "../pages/logic";
 import { Domain } from "../../models/Domain";
 import { checkPermission } from "@courselit/utils";
 import UserSegmentModel, { UserSegment } from "../../models/UserSegment";
+import convertFiltersToDBConditions from "../../lib/convert-filters-to-db-conditions";
 
 const removeAdminFieldsFromUserObject = ({
     id,
@@ -326,19 +327,23 @@ export async function getSegments(ctx: GQLContext): Promise<UserSegment[]> {
 }
 
 export async function createSegment(
-    segmentData: Pick<UserSegment, "name" | "filter">,
+    segmentData: { name: string, filters: string },
     ctx: GQLContext,
 ): Promise<UserSegment[]> {
+    console.log(segmentData)
     checkIfAuthenticated(ctx);
     if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
         throw new Error(responses.action_not_allowed);
     }
 
+    const filters = JSON.parse(segmentData.filters); 
+
     await UserSegmentModel.create({
         domain: ctx.subdomain._id,
         userId: ctx.user.userId,
         name: segmentData.name,
-        filter: segmentData.filter,
+        filters: filters,
+        dbFilters: convertFiltersToDBConditions(filters)
     });
 
     const segments = await UserSegmentModel.find({

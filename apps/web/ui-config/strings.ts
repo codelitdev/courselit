@@ -261,6 +261,8 @@ export const USER_FILTER_EMAIL_NOT_CONTAINS = "Does not contain";
 export const USER_FILTER_CANCEL_BTN = "Cancel";
 export const USER_FILTER_APPLY_BTN = "Apply";
 export const USER_FILTER_SAVE = "Save new segment";
+export const USER_FILTER_SAVE_DESCRIPTION = "You can access the saved segments from the segment dropdown";
+export const USER_FILTER_NEW_SEGMENT_NAME = "Segment name";
 export const PERM_COURSE_MANAGE = "Create content";
 export const PERM_COURSE_MANAGE_ANY = "Manage all content";
 export const PERM_COURSE_PUBLISH = "Publish content";
@@ -301,7 +303,7 @@ export const USER_TYPE_TEAM = "Team";
 export const USER_TYPE_CUSOMER = "Customer";
 export const USER_TYPE_ALL = "Everyone";
 export const USER_TYPE_SUBSCRIBER = "Subscriber";
-export const USER_SEGMENT_DROPDOWN_LABEL = "Segment";
+export const USER_SEGMENT_DROPDOWN_LABEL = "Segments";
 export const USER_TYPE_TOOLTIP =
     "Segregate users based on their roles. Audience users are the ones who can enroll in courses. Team users are the ones who have admin rights.";
 export const DIALOG_DONE_BUTTON = "Done";

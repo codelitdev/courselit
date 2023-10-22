@@ -34,7 +34,7 @@ const queries = {
         resolve: (_: any, { searchData }: any, context: GQLContext) =>
             getUsersCount(searchData, context),
     },
-    getSegments: {
+    segments: {
         type: new GraphQLList(types.userSegment),
         resolve: (_: any, __: any, context: GQLContext) => getSegments(context),
     },

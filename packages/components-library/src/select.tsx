@@ -40,6 +40,7 @@ export default function Select({
     defaultMessage,
     variant = "with-label",
 }: SelectProps) {
+    console.log(options)
     return (
         <Root>
             <Trigger asChild>

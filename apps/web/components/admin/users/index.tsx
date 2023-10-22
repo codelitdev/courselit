@@ -6,7 +6,6 @@ import {
     USER_TABLE_HEADER_LAST_ACTIVE,
     USER_TYPE_TEAM,
     USER_TYPE_CUSOMER,
-    USER_FILTER_PERMISSION,
     USER_TYPE_ALL,
     //EXPORT_CSV,
     USER_TYPE_SUBSCRIBER,
@@ -14,6 +13,8 @@ import {
     //USER_TABLE_HEADER_NAME_NAME,
     TOOLTIP_USER_PAGE_SEND_MAIL,
     USER_FILTER_BTN_LABEL,
+    USER_SEGMENT_DROPDOWN_LABEL,
+    USER_FILTER_SAVE,
 } from "../../../ui-config/strings";
 import {
     checkPermission,
@@ -40,16 +41,19 @@ import {
     FormField,
     Popover,
 } from "@courselit/components-library";
-import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 //import { CSVLink } from "react-csv";
 import { Cancel, Search } from "@courselit/icons";
 import { useRouter } from "next/router";
 import { UIConstants } from "@courselit/common-models";
 import { Mail } from "@courselit/icons";
 import { formattedLocaleDate } from "../../../ui-lib/utils";
-import FilterEditor from "./filter-editor";
+import dynamic from "next/dynamic";
+import Filter from "../../../ui-models/filter";
+import FilterSave from "./filter-save";
+const FilterChip = dynamic(() => import("./filter-chip"))
+const FilterEditor = dynamic(() => import("./filter-editor"))
 
-const { networkAction } = actionCreators;
+const { networkAction, setAppMessage } = actionCreators;
 const { permissions } = UIConstants;
 
 interface UserManagerProps {
@@ -72,9 +76,15 @@ const UsersManager = ({
     const [searchEmail, setSearchEmail] = useState("");
     const [searchEmailHook, setSearchEmailHook] = useState(0);
     const [count, setCount] = useState(0);
-    const [filters, setFilters] = useState([]);
+    const [filters, setFilters] = useState<Filter[]>([]);
     const [filterOpen, setFilterOpen] = useState(false);
+    const [segmentSaveOpen, setSegmentSaveOpen] = useState(false)
+    const [segments, setSegments] = useState([
+        {label: "Everyone", value: ""}
+    ]);
+    const [activeSegment, setActiveSegment] = useState("");
     const router = useRouter();
+    const { segmentId, page: routerPage, filters: routerFilters } = router.query;
 
     useEffect(() => {
         loadUsers();
@@ -84,8 +94,23 @@ const UsersManager = ({
         loadUsersCount();
     }, [rowsPerPage, type, searchEmailHook]);
 
+    useEffect(() => {
+        if (routerFilters) {
+            setFilters(JSON.parse(atob(routerFilters)))
+        }
+        if (routerPage) {
+            setPage(parseInt(routerPage as string || '1'))
+        }
+        if (segmentId) {
+            setActiveSegment(segmentId as string)
+        }
+    }, [segmentId, routerPage, routerFilters])
+
     const handlePageChange = (newPage: number) => {
-        setPage(newPage);
+        // setPage(newPage);
+        router.replace({
+            query: { ...router.query, page: newPage }
+        })
     };
 
     const handleRowsPerPageChange = (
@@ -180,7 +205,16 @@ const UsersManager = ({
                     count: getUsersCount(searchData: {
                         offset: ${page},
                         type: ${type.toUpperCase()}
-                    })
+                    }),
+                    segments {
+                        name,
+                        filters {
+                            name,
+                            condition,
+                            value
+                        },
+                        segmentId
+                    }
                 }
             `
                 : searchEmail
@@ -189,14 +223,32 @@ const UsersManager = ({
                     count: getUsersCount(searchData: {
                         offset: ${page}
                         email: "${searchEmail}"
-                    }) 
+                    }), 
+                    segments {
+                        name,
+                        filters {
+                            name,
+                            condition,
+                            value
+                        },
+                        segmentId
+                    }
                 }
             `
                 : `
                 query {
                     count: getUsersCount(searchData: {
                         offset: ${page}
-                    })
+                    }),
+                    segments {
+                        name,
+                        filters {
+                            name,
+                            condition,
+                            value
+                        },
+                        segmentId
+                    }
                 }
             `;
 
@@ -212,6 +264,14 @@ const UsersManager = ({
             const response = await fetch.exec();
             if (response.count) {
                 setCount(response.count);
+            }
+            if (response.segments) {
+                const segs = response.segments.map(segment => ({
+                    label: segment.name,
+                    value: segment.name
+                    }));
+                console.log(segs)
+                setSegments([...segments, ...segs])
             }
         } catch (err) {
             dispatch(setAppMessage(new AppMessage(err.message)));
@@ -326,6 +386,18 @@ const UsersManager = ({
         exportToCsv(users.map((user) => Object.values(user)));
     };
 
+    const onFilterRemove = (index: number) => {
+        filters.splice(index, 1)
+        // setFilters([...filters])
+        router.replace({
+            query: {...router.query, filters: btoa(JSON.stringify([...filters]))}
+        })
+    }
+
+    useEffect(() => {
+        console.log(filters)
+    }, [filters])
+
     return (
         <div className="flex flex-col">
             <h1 className="text-4xl font-semibold mb-4">
@@ -371,26 +443,15 @@ const UsersManager = ({
                         }
                     />
                 </Form>
+                {segments.length > 0  &&
                 <Select
-                    title={USER_FILTER_PERMISSION}
+                    title={USER_SEGMENT_DROPDOWN_LABEL}
                     onChange={handleUserTypeChange}
-                    value={type}
-                    options={[
-                        { label: USER_TYPE_ALL, value: "" },
-                        {
-                            label: USER_TYPE_CUSOMER,
-                            value: USER_TYPE_CUSOMER,
-                        },
-                        {
-                            label: USER_TYPE_TEAM,
-                            value: USER_TYPE_TEAM,
-                        },
-                        {
-                            label: USER_TYPE_SUBSCRIBER,
-                            value: USER_TYPE_SUBSCRIBER,
-                        },
-                    ]}
-                />
+                    value={""}
+                    options={
+                        segments
+                    }
+                />}
                 <Popover
                     open={filterOpen}
                     setOpen={setFilterOpen}
@@ -398,7 +459,12 @@ const UsersManager = ({
                 >
                     <FilterEditor
                         dismissPopover={(filter) => {
-                            setFilters([...filters, filter]);
+                            if (filter) {
+                                // setFilters([...filters, filter]);
+                                router.replace({
+                                    query: {...router.query, filters: btoa(JSON.stringify([...filters, filter]))}
+                                })
+                            }
                             setFilterOpen(false);
                         }}
                     />
@@ -411,6 +477,23 @@ const UsersManager = ({
                     </Tooltip>
                 )}
             </div>
+            {filters.length > 0 && 
+                <div className="flex gap-1 mb-2">
+                    {filters.map((filter, index) => <FilterChip 
+                        onRemove={onFilterRemove}
+                        key={index}
+                        filter={filter} />)}
+                    <Popover
+                        open={segmentSaveOpen}
+                        setOpen={setSegmentSaveOpen}
+                        title={USER_FILTER_SAVE}>
+                        <FilterSave 
+                            filters={filters}
+                            dismissPopover={(value, segments) => {
+                                setSegmentSaveOpen(value)
+                                }} />
+                    </Popover>
+                </div>}
             <Table aria-label="Users">
                 <TableHead>
                     <td>{USER_TABLE_HEADER_NAME}</td>
