@@ -35,6 +35,7 @@ import Table, { TableHead, TableBody, TableRow } from "./table";
 import Avatar from "./avatar";
 import Breadcrumbs from "./breadcrumbs";
 import Popover from "./popover";
+import ScrollArea from "./scrollarea";
 
 export {
     PriceTag,
@@ -74,4 +75,5 @@ export {
     Avatar,
     Breadcrumbs,
     Popover,
+    ScrollArea,
 };

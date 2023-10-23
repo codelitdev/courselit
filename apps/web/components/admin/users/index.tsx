@@ -6,15 +6,13 @@ import {
     USER_TABLE_HEADER_LAST_ACTIVE,
     USER_TYPE_TEAM,
     USER_TYPE_CUSOMER,
-    USER_TYPE_ALL,
     //EXPORT_CSV,
-    USER_TYPE_SUBSCRIBER,
     //USER_TABLE_HEADER_EMAIL,
     //USER_TABLE_HEADER_NAME_NAME,
     TOOLTIP_USER_PAGE_SEND_MAIL,
     USER_FILTER_BTN_LABEL,
-    USER_SEGMENT_DROPDOWN_LABEL,
     USER_FILTER_SAVE,
+    USER_FILTER_LABEL_DEFAULT,
 } from "../../../ui-config/strings";
 import {
     checkPermission,
@@ -29,7 +27,6 @@ import { ThunkDispatch } from "redux-thunk";
 import { AnyAction } from "redux";
 import {
     Tooltip,
-    Select,
     IconButton,
     Table,
     TableHead,
@@ -42,16 +39,18 @@ import {
     Popover,
 } from "@courselit/components-library";
 //import { CSVLink } from "react-csv";
-import { Cancel, Search } from "@courselit/icons";
+import { Search } from "@courselit/icons";
 import { useRouter } from "next/router";
 import { UIConstants } from "@courselit/common-models";
 import { Mail } from "@courselit/icons";
 import { formattedLocaleDate } from "../../../ui-lib/utils";
 import dynamic from "next/dynamic";
 import Filter from "../../../ui-models/filter";
-import FilterSave from "./filter-save";
-const FilterChip = dynamic(() => import("./filter-chip"))
-const FilterEditor = dynamic(() => import("./filter-editor"))
+import Segment from "../../../ui-models/segment";
+const FilterChip = dynamic(() => import("./filter-chip"));
+const FilterSave = dynamic(() => import("./filter-save"));
+const SegmentEditor = dynamic(() => import("./segment-editor"));
+const FilterEditor = dynamic(() => import("./filter-editor"));
 
 const { networkAction, setAppMessage } = actionCreators;
 const { permissions } = UIConstants;
@@ -78,39 +77,55 @@ const UsersManager = ({
     const [count, setCount] = useState(0);
     const [filters, setFilters] = useState<Filter[]>([]);
     const [filterOpen, setFilterOpen] = useState(false);
-    const [segmentSaveOpen, setSegmentSaveOpen] = useState(false)
-    const [segments, setSegments] = useState([
-        {label: "Everyone", value: ""}
-    ]);
+    const [segmentSaveOpen, setSegmentSaveOpen] = useState(false);
+    const defaultSegment: Segment = {
+        name: USER_FILTER_LABEL_DEFAULT,
+        filters: [],
+        segmentId: "",
+    };
+    const [segments, setSegments] = useState<Segment[]>([defaultSegment]);
     const [activeSegment, setActiveSegment] = useState("");
     const router = useRouter();
-    const { segmentId, page: routerPage, filters: routerFilters } = router.query;
+    const [segmentSelectOpen, setSegmentSelectOpen] = useState(false);
+    const {
+        segmentId,
+        page: routerPage,
+        filters: routerFilters,
+    } = router.query;
 
     useEffect(() => {
         loadUsers();
-    }, [page, rowsPerPage, type, searchEmailHook]);
+    }, [page, rowsPerPage, filters, searchEmailHook]);
 
     useEffect(() => {
         loadUsersCount();
-    }, [rowsPerPage, type, searchEmailHook]);
+    }, [rowsPerPage, filters, searchEmailHook]);
 
     useEffect(() => {
         if (routerFilters) {
-            setFilters(JSON.parse(atob(routerFilters)))
+            setFilters(JSON.parse(atob(routerFilters)));
         }
         if (routerPage) {
-            setPage(parseInt(routerPage as string || '1'))
+            setPage(parseInt((routerPage as string) || "1"));
         }
         if (segmentId) {
-            setActiveSegment(segmentId as string)
+            setActiveSegment(segmentId as string);
         }
-    }, [segmentId, routerPage, routerFilters])
+    }, [segmentId, routerPage, routerFilters]);
+
+    /*
+    useEffect(() => {
+        if (activeSegment) {
+            const segmnt = segments.filter(segment => segment.value === activeSegment)
+            setFilters(segmnt[0]?.filters)
+        }
+    }, [segments])
+    */
 
     const handlePageChange = (newPage: number) => {
-        // setPage(newPage);
         router.replace({
-            query: { ...router.query, page: newPage }
-        })
+            query: { ...router.query, page: newPage },
+        });
     };
 
     const handleRowsPerPageChange = (
@@ -122,30 +137,12 @@ const UsersManager = ({
 
     const loadUsers = async () => {
         const query =
-            type !== ""
+            filters.length !== 0
                 ? `
                 query {
                     users: getUsers(searchData: {
-                        type: ${type.toUpperCase()}
+                        filters: ${JSON.stringify(JSON.stringify(filters))}
                         offset: ${page},
-                        rowsPerPage: ${rowsPerPage}
-                    }) {
-                        id,
-                        name,
-                        userId,
-                        email,
-                        permissions,
-                        createdAt,
-                        updatedAt
-                    },
-                }
-            `
-                : searchEmail
-                ? `
-                query {
-                    users: getUsers(searchData: {
-                        offset: ${page}
-                        email: "${searchEmail}",
                         rowsPerPage: ${rowsPerPage}
                     }) {
                         id,
@@ -199,31 +196,13 @@ const UsersManager = ({
 
     const loadUsersCount = async () => {
         const query =
-            type !== ""
+            filters.length !== 0
                 ? `
                 query {
                     count: getUsersCount(searchData: {
+                        filters: ${JSON.stringify(JSON.stringify(filters))},
                         offset: ${page},
-                        type: ${type.toUpperCase()}
                     }),
-                    segments {
-                        name,
-                        filters {
-                            name,
-                            condition,
-                            value
-                        },
-                        segmentId
-                    }
-                }
-            `
-                : searchEmail
-                ? `
-                query {
-                    count: getUsersCount(searchData: {
-                        offset: ${page}
-                        email: "${searchEmail}"
-                    }), 
                     segments {
                         name,
                         filters {
@@ -266,12 +245,7 @@ const UsersManager = ({
                 setCount(response.count);
             }
             if (response.segments) {
-                const segs = response.segments.map(segment => ({
-                    label: segment.name,
-                    value: segment.name
-                    }));
-                console.log(segs)
-                setSegments([...segments, ...segs])
+                mapSegments(response.segments);
             }
         } catch (err) {
             dispatch(setAppMessage(new AppMessage(err.message)));
@@ -280,6 +254,10 @@ const UsersManager = ({
                 networkAction(false),
             );
         }
+    };
+
+    const mapSegments = (segments: Segment[]) => {
+        setSegments([defaultSegment, ...segments]);
     };
 
     const createMail = async () => {
@@ -367,19 +345,64 @@ const UsersManager = ({
         return types.join(", ");
     };
 
-    const handleUserTypeChange = (value: string) => {
+    const resetView = () => {
         setSearchEmail("");
-        setType(value);
         setUsers([]);
         setPage(1);
+        setCount(0);
+        delete router.query.page;
+        router.replace({
+            query: { ...router.query },
+        });
+    };
+
+    const handleSegmentChange = (segmentId: string) => {
+        if (segmentId === activeSegment) return;
+
+        resetView();
+
+        if (segmentId) {
+            router.replace({
+                query: {
+                    ...router.query,
+                    segmentId,
+                    filters: btoa(
+                        JSON.stringify(
+                            segments.filter(
+                                (segment) => segment.segmentId === segmentId,
+                            )[0].filters,
+                        ),
+                    ),
+                },
+            });
+        } else {
+            delete router.query.segmentId;
+            delete router.query.filters;
+            setActiveSegment("");
+            setFilters([]);
+            router.replace({
+                query: {
+                    ...router.query,
+                },
+            });
+        }
     };
 
     const searchByEmail = async (e?: FormEvent) => {
         e && e.preventDefault();
-        setUsers([]);
-        setPage(1);
-        setType("");
-        setSearchEmailHook(searchEmailHook + 1);
+        //setUsers([]);
+        //setPage(1);
+        //setType("");
+        //setSearchEmailHook(searchEmailHook + 1);
+        resetView();
+        setFilters([
+            ...filters,
+            {
+                name: "email",
+                condition: "Contains",
+                value: searchEmail,
+            },
+        ]);
     };
 
     const exportData = () => {
@@ -387,16 +410,14 @@ const UsersManager = ({
     };
 
     const onFilterRemove = (index: number) => {
-        filters.splice(index, 1)
-        // setFilters([...filters])
+        filters.splice(index, 1);
         router.replace({
-            query: {...router.query, filters: btoa(JSON.stringify([...filters]))}
-        })
-    }
-
-    useEffect(() => {
-        console.log(filters)
-    }, [filters])
+            query: {
+                ...router.query,
+                filters: btoa(JSON.stringify([...filters])),
+            },
+        });
+    };
 
     return (
         <div className="flex flex-col">
@@ -427,43 +448,57 @@ const UsersManager = ({
                                     >
                                         <Search />
                                     </IconButton>
-                                    <IconButton
-                                        aria-label="clear email search box"
-                                        variant="soft"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            setSearchEmail("");
-                                            searchByEmail();
-                                        }}
-                                    >
-                                        <Cancel />
-                                    </IconButton>
                                 </span>
                             ) : null
                         }
                     />
                 </Form>
-                {segments.length > 0  &&
-                <Select
-                    title={USER_SEGMENT_DROPDOWN_LABEL}
-                    onChange={handleUserTypeChange}
-                    value={""}
-                    options={
-                        segments
+                <Popover
+                    open={segmentSelectOpen}
+                    setOpen={setSegmentSelectOpen}
+                    title={
+                        segments.filter(
+                            (segment) => segment.segmentId === activeSegment,
+                        )[0]?.name
                     }
-                />}
+                >
+                    <SegmentEditor
+                        segments={segments}
+                        selectedSegment={activeSegment}
+                        dismissPopover={({
+                            selectedSegment,
+                            segments,
+                            cancelled,
+                        }) => {
+                            if (!cancelled) {
+                                if (segments && segments.length) {
+                                    mapSegments(segments);
+                                }
+                                handleSegmentChange(selectedSegment);
+                            }
+                            setSegmentSelectOpen(false);
+                        }}
+                    />
+                </Popover>
                 <Popover
                     open={filterOpen}
                     setOpen={setFilterOpen}
                     title={USER_FILTER_BTN_LABEL}
                 >
                     <FilterEditor
-                        dismissPopover={(filter) => {
+                        dismissPopover={(filter: Filter) => {
                             if (filter) {
-                                // setFilters([...filters, filter]);
                                 router.replace({
-                                    query: {...router.query, filters: btoa(JSON.stringify([...filters, filter]))}
-                                })
+                                    query: {
+                                        ...router.query,
+                                        filters: btoa(
+                                            JSON.stringify([
+                                                ...filters,
+                                                filter,
+                                            ]),
+                                        ),
+                                    },
+                                });
                             }
                             setFilterOpen(false);
                         }}
@@ -477,27 +512,36 @@ const UsersManager = ({
                     </Tooltip>
                 )}
             </div>
-            {filters.length > 0 && 
-                <div className="flex gap-1 mb-2">
-                    {filters.map((filter, index) => <FilterChip 
-                        onRemove={onFilterRemove}
-                        key={index}
-                        filter={filter} />)}
+            {filters.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-2">
+                    {filters.map((filter, index) => (
+                        <FilterChip
+                            onRemove={onFilterRemove}
+                            key={index}
+                            index={index}
+                            filter={filter}
+                        />
+                    ))}
                     <Popover
                         open={segmentSaveOpen}
                         setOpen={setSegmentSaveOpen}
-                        title={USER_FILTER_SAVE}>
-                        <FilterSave 
+                        title={USER_FILTER_SAVE}
+                    >
+                        <FilterSave
                             filters={filters}
-                            dismissPopover={(value, segments) => {
-                                setSegmentSaveOpen(value)
-                                }} />
+                            dismissPopover={(segments?: Segment[]) => {
+                                if (segments && segments.length) {
+                                    mapSegments(segments);
+                                }
+                                setSegmentSaveOpen(false);
+                            }}
+                        />
                     </Popover>
-                </div>}
+                </div>
+            )}
             <Table aria-label="Users">
                 <TableHead>
                     <td>{USER_TABLE_HEADER_NAME}</td>
-                    <td align="right">Type</td>
                     <td align="right">{USER_TABLE_HEADER_JOINED}</td>
                     <td align="right">{USER_TABLE_HEADER_LAST_ACTIVE}</td>
                 </TableHead>
@@ -542,7 +586,6 @@ const UsersManager = ({
                                     </div>
                                 </div>
                             </td>
-                            <td align="right">{getUserType(user)}</td>
                             <td align="right">
                                 {user.createdAt
                                     ? formattedLocaleDate(user.createdAt)

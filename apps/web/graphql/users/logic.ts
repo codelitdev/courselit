@@ -145,10 +145,11 @@ const updateCoursesForCreatorName = async (creatorId, creatorName) => {
 type UserGroupType = "team" | "customer" | "subscriber";
 
 interface SearchData {
-    searchText?: string;
+    //searchText?: string;
     offset?: number;
-    type?: UserGroupType;
-    email?: string;
+    //type?: UserGroupType;
+    //email?: string;
+    filters?: string;
 }
 
 interface GetUsersParams {
@@ -173,6 +174,7 @@ export const getUsers = async ({
     }
 
     const searchUsers = makeModelTextSearchable(UserModel);
+    console.log(searchData);
     const query = buildQueryFromSearchData(ctx.subdomain._id, searchData);
     const users = await searchUsers(
         {
@@ -205,8 +207,20 @@ export const getUsersCount = async (
     return await UserModel.countDocuments(query);
 };
 
-const buildQueryFromSearchData = (domain, searchData: SearchData = {}) => {
-    const query: Record<string, unknown> = { domain };
+const buildQueryFromSearchData = (
+    domain,
+    searchData: SearchData = {},
+): Record<string, unknown> => {
+    console.log(searchData);
+    if (searchData.filters) {
+        const filters = convertFiltersToDBConditions(
+            JSON.parse(searchData.filters),
+        );
+        filters["$and"].push({ domain });
+        console.log(JSON.stringify(filters));
+        return filters;
+    }
+    /*
     if (searchData.searchText) query.$text = { $search: searchData.searchText };
     if (searchData.type) {
         addFilterToQueryBasedOnUserGroup(query, searchData.type);
@@ -214,8 +228,9 @@ const buildQueryFromSearchData = (domain, searchData: SearchData = {}) => {
     if (searchData.email) {
         query.email = new RegExp(searchData.email);
     }
+    */
 
-    return query;
+    return { domain };
 };
 
 const addFilterToQueryBasedOnUserGroup = (
@@ -327,23 +342,22 @@ export async function getSegments(ctx: GQLContext): Promise<UserSegment[]> {
 }
 
 export async function createSegment(
-    segmentData: { name: string, filters: string },
+    segmentData: { name: string; filters: string },
     ctx: GQLContext,
 ): Promise<UserSegment[]> {
-    console.log(segmentData)
+    //console.log(segmentData);
     checkIfAuthenticated(ctx);
     if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
         throw new Error(responses.action_not_allowed);
     }
 
-    const filters = JSON.parse(segmentData.filters); 
+    const filters = JSON.parse(segmentData.filters);
 
     await UserSegmentModel.create({
         domain: ctx.subdomain._id,
         userId: ctx.user.userId,
         name: segmentData.name,
         filters: filters,
-        dbFilters: convertFiltersToDBConditions(filters)
     });
 
     const segments = await UserSegmentModel.find({

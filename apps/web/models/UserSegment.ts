@@ -8,7 +8,6 @@ export interface UserSegment {
     segmentId: string;
     name: string;
     filters: UserFilter[];
-    dbFilters: Record<string, unknown>
 }
 
 const UserSegmentSchema = new mongoose.Schema<UserSegment>({
@@ -17,7 +16,6 @@ const UserSegmentSchema = new mongoose.Schema<UserSegment>({
     segmentId: { type: String, required: true, default: generateUniqueId },
     name: { type: String, required: true },
     filters: [UserFilterSchema],
-    dbFilters: mongoose.Schema.Types.Mixed 
 });
 
 export default mongoose.models.UserSegment ||

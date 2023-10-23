@@ -30,7 +30,7 @@ export default function Popover({
                 </div>
             </Trigger>
             <Portal>
-                <Content className="min-w-[180px] bg-white rounded p-1 shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)]">
+                <Content className="min-w-[180px] bg-white rounded shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)]">
                     {children}
                     <Close className="rounded-full h-[16px] w-[16px] inline-flex items-center justify-center absolute top-[5px] right-[5px] hover:bg-slate-100 focus:shadow-[0_0_0_1px] focus:bg-slate-100 outline-none cursor-default">
                         <Cross />

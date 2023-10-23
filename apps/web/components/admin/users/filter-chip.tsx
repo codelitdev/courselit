@@ -14,6 +14,7 @@ export default function FilterChip({
     onRemove,
 }: FilterChipProps) {
     const { name, condition, value } = filter;
+
     return (
         <div className="text-sm flex flex-wrap py-[2px] px-[4px] items-center rounded bg-slate-200">
             <div>

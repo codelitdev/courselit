@@ -52,7 +52,7 @@ const userUpdateInput = new GraphQLInputObjectType({
     },
 });
 
-
+/*
 const userGroupType = new GraphQLEnumType({
     name: "UserGroupType",
     values: {
@@ -61,15 +61,17 @@ const userGroupType = new GraphQLEnumType({
         SUBSCRIBER: { value: userTypeNewsletterSubscriber },
     },
 });
+*/
 
 const userSearchInput = new GraphQLInputObjectType({
     name: "UserSearchInput",
     fields: {
-        searchText: { type: GraphQLString },
-        type: { type: userGroupType },
-        email: { type: GraphQLString },
+        //searchText: { type: GraphQLString },
+        //type: { type: userGroupType },
+        //email: { type: GraphQLString },
         offset: { type: GraphQLInt },
         rowsPerPage: { type: GraphQLInt },
+        filters: { type: GraphQLString },
     },
 });
 
@@ -94,7 +96,7 @@ const userFilter = new GraphQLObjectType({
     fields: {
         name: { type: GraphQLString },
         condition: { type: GraphQLString },
-        value: { type: GraphQLString }
+        value: { type: GraphQLString },
     },
 });
 

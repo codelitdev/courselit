@@ -1,15 +1,21 @@
 import React, { useState, ChangeEvent } from "react";
 import { Form, FormField, FormSubmit } from "@courselit/components-library";
 import Filter from "../../../ui-models/filter";
-import { BUTTON_SAVE, USER_FILTER_NEW_SEGMENT_NAME, USER_FILTER_SAVE_DESCRIPTION } from "../../../ui-config/strings";
+import Segment from "../../../ui-models/segment";
+import {
+    BUTTON_SAVE,
+    USER_FILTER_NEW_SEGMENT_NAME,
+    USER_FILTER_SAVE_DESCRIPTION,
+} from "../../../ui-config/strings";
 import { FormEvent } from "react";
 import { FetchBuilder } from "@courselit/utils";
-import { AppDispatch, AppState } from "@courselit/state-management";
+import type { AppDispatch, AppState } from "@courselit/state-management";
 import { connect } from "react-redux";
 import { Address, AppMessage } from "@courselit/common-models";
-import { ThunkDispatch } from "redux-thunk";
+import type { ThunkDispatch } from "redux-thunk";
 import { actionCreators } from "@courselit/state-management";
-import { AnyAction } from "redux";
+import type { AnyAction } from "redux";
+import PopoverDescription from "./popover-description";
 
 const { networkAction, setAppMessage } = actionCreators;
 
@@ -17,23 +23,20 @@ interface FilterSaveProps {
     filters: Filter[];
     address: Address;
     dispatch: AppDispatch;
-    dismissPopover: (val: boolean, segments: {
-        name: string,
-        filters: Filter[]
-        }) => void;
+    dismissPopover: (segments?: Segment[]) => void;
 }
 
 function FilterSave({
     filters,
     address,
     dispatch,
-    dismissPopover
+    dismissPopover,
 }: FilterSaveProps) {
     const [name, setName] = useState("");
 
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        const mutation =`
+        const mutation = `
                 mutation {
                     segments: createSegment(
                         segmentData: {
@@ -46,7 +49,8 @@ function FilterSave({
                            name,
                            condition,
                            value
-                       }
+                       },
+                       segmentId
                     }
                 }
             `;
@@ -61,7 +65,9 @@ function FilterSave({
             );
             const response = await fetch.exec();
             if (response.segments) {
-                console.log(response.segments)
+                dismissPopover(response.segments);
+            } else {
+                dismissPopover();
             }
         } catch (err) {
             dispatch(setAppMessage(new AppMessage(err.message)));
@@ -69,25 +75,29 @@ function FilterSave({
             (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
                 networkAction(false),
             );
-            dismissPopover(true)
         }
-    }
+    };
 
     return (
-        <div className="max-w-[180px] p-1">
-            <p className="text-xs text-slate-500 mb-2">{USER_FILTER_SAVE_DESCRIPTION}</p>
-       <Form className="flex flex-col gap-2" onSubmit={onSubmit}>
-        <FormField 
-            value={name}
-            label={USER_FILTER_NEW_SEGMENT_NAME}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
-            onSubmit={onSubmit} />
-            <div className="flex justify-end">
-            <FormSubmit text={BUTTON_SAVE} className="" />
-            </div>
-       </Form>
-       </div>
-    )
+        <div className="max-w-[180px] p-2">
+            <PopoverDescription>
+                {USER_FILTER_SAVE_DESCRIPTION}
+            </PopoverDescription>
+            <Form className="flex flex-col gap-2 mt-2" onSubmit={onSubmit}>
+                <FormField
+                    value={name}
+                    label={USER_FILTER_NEW_SEGMENT_NAME}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        setName(e.target.value)
+                    }
+                    onSubmit={onSubmit}
+                />
+                <div className="flex justify-end">
+                    <FormSubmit text={BUTTON_SAVE} />
+                </div>
+            </Form>
+        </div>
+    );
 }
 
 const mapStateToProps = (state: AppState) => ({
