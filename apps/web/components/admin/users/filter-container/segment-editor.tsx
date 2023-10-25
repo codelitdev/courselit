@@ -13,8 +13,8 @@ import {
     USER_DELETE_SEGMENT_DESCRIPTION,
     USER_SEGMENT_DESCRIPTION,
     USER_SEGMENT_DROPDOWN_LABEL,
-} from "../../../ui-config/strings";
-import Segment from "../../../ui-models/segment";
+} from "@ui-config/strings";
+import Segment from "@ui-models/segment";
 import PopoverDescription from "./popover-description";
 import PopoverHeader from "./popover-header";
 import type { AnyAction } from "redux";
@@ -52,13 +52,16 @@ function SegmentEditor({
                     segments: deleteSegment(
                         segmentId: "${activeSegment.segmentId}",
                     ) {
-                       name,
-                       filters {
-                           name,
-                           condition,
-                           value
-                       },
-                       segmentId
+                        name,
+                        filter {
+                            aggregator,
+                            filters {
+                                name,
+                                condition,
+                                value
+                            },
+                        }
+                        segmentId
                     }
                 }
             `;
@@ -153,6 +156,15 @@ function SegmentEditor({
                     <PopoverDescription>{`${USER_DELETE_SEGMENT_DESCRIPTION}"${activeSegment.name}"?`}</PopoverDescription>
                     <div className="flex justify-between mt-4">
                         <Button
+                            name="delete"
+                            onClick={(e: MouseEvent) => {
+                                e.preventDefault();
+                                deleteSegment();
+                            }}
+                        >
+                            {POPUP_OK_ACTION}
+                        </Button>
+                        <Button
                             name="cancel"
                             variant="soft"
                             onClick={(e: MouseEvent) => {
@@ -164,15 +176,6 @@ function SegmentEditor({
                             }}
                         >
                             {POPUP_CANCEL_ACTION}
-                        </Button>
-                        <Button
-                            name="delete"
-                            onClick={(e: MouseEvent) => {
-                                e.preventDefault();
-                                deleteSegment();
-                            }}
-                        >
-                            {POPUP_OK_ACTION}
                         </Button>
                     </div>
                 </div>

@@ -35,3 +35,4 @@ export { QuestionMarkCircledIcon as Help } from "@radix-ui/react-icons";
 export { CrossCircledIcon as Cancel } from "@radix-ui/react-icons";
 export { DotFilledIcon as Dot } from "@radix-ui/react-icons";
 export { InfoCircledIcon as Info } from "@radix-ui/react-icons";
+export { PieChartIcon as PieChart } from "@radix-ui/react-icons";

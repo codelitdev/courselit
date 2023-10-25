@@ -1,12 +1,19 @@
-import { UserFilter } from "../models/UserFilter";
+import { UserFilterWithAggregator } from "../models/UserFilter";
 
-export default function convertFiltersToDBConditions(filters: UserFilter[]): {
-    $and: Record<string, unknown>[];
-} {
+export default function convertFiltersToDBConditions({
+    aggregator = "or",
+    filters,
+}: UserFilterWithAggregator):
+    | {
+          $and: Record<string, unknown>[];
+      }
+    | {
+          $or: Record<string, unknown>[];
+      }
+    | {} {
     const dbFilters = [];
 
     for (let filter of filters) {
-        console.log(filter);
         const { name, condition, value } = filter;
         if (name === "email") {
             const emailCondition = { email: undefined };
@@ -25,5 +32,5 @@ export default function convertFiltersToDBConditions(filters: UserFilter[]): {
         }
     }
 
-    return { $and: dbFilters };
+    return dbFilters.length ? { [`$${aggregator}`]: dbFilters } : {};
 }

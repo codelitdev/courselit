@@ -21,17 +21,18 @@ import {
     USER_FILTER_EMAIL_CONTAINS,
     USER_FILTER_EMAIL_IS_EXACTLY,
     USER_FILTER_EMAIL_NOT_CONTAINS,
-} from "../../../ui-config/strings";
-import Filter from "../../../ui-models/filter";
+} from "@ui-config/strings";
+import Filter from "@ui-models/filter";
 import PopoverHeader from "./popover-header";
 
 function EmailFilterEditor({ onApply }: { onApply: (...args: any[]) => any }) {
     const [condition, setCondition] = useState(USER_FILTER_EMAIL_IS_EXACTLY);
     const [value, setValue] = useState("");
 
-    const onSubmit = (e: FormEvent) => {
+    const onSubmit = (e: any) => {
         e.preventDefault();
-        if (value) {
+        const buttonName = e.nativeEvent.submitter.name;
+        if (buttonName === "apply") {
             onApply({ condition, value });
         } else {
             onApply();
@@ -70,17 +71,10 @@ function EmailFilterEditor({ onApply }: { onApply: (...args: any[]) => any }) {
                 onChange={(event: FormEvent) => setValue(event.target.value)}
             />
             <div className="flex justify-between">
-                <Button
-                    name="cancel"
-                    variant="soft"
-                    onClick={(e: FormEvent) => {
-                        e.preventDefault();
-                        onApply();
-                    }}
-                >
+                <FormSubmit name="apply" text={USER_FILTER_APPLY_BTN} />
+                <Button name="cancel" variant="soft">
                     {POPUP_CANCEL_ACTION}
                 </Button>
-                <FormSubmit text={USER_FILTER_APPLY_BTN} />
             </div>
         </Form>
     );

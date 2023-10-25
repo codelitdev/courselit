@@ -19,6 +19,8 @@ import { Domain } from "../../models/Domain";
 import { checkPermission } from "@courselit/utils";
 import UserSegmentModel, { UserSegment } from "../../models/UserSegment";
 import convertFiltersToDBConditions from "../../lib/convert-filters-to-db-conditions";
+import mongoose from "mongoose";
+import { UserFilterWithAggregator } from "../../models/UserFilter";
 
 const removeAdminFieldsFromUserObject = ({
     id,
@@ -145,10 +147,7 @@ const updateCoursesForCreatorName = async (creatorId, creatorName) => {
 type UserGroupType = "team" | "customer" | "subscriber";
 
 interface SearchData {
-    //searchText?: string;
     offset?: number;
-    //type?: UserGroupType;
-    //email?: string;
     filters?: string;
 }
 
@@ -174,8 +173,8 @@ export const getUsers = async ({
     }
 
     const searchUsers = makeModelTextSearchable(UserModel);
-    console.log(searchData);
     const query = buildQueryFromSearchData(ctx.subdomain._id, searchData);
+    console.log(query);
     const users = await searchUsers(
         {
             offset: noPagination ? 1 : searchData.offset,
@@ -208,29 +207,17 @@ export const getUsersCount = async (
 };
 
 const buildQueryFromSearchData = (
-    domain,
+    domain: mongoose.Types.ObjectId,
     searchData: SearchData = {},
 ): Record<string, unknown> => {
-    console.log(searchData);
+    let filters = {};
     if (searchData.filters) {
-        const filters = convertFiltersToDBConditions(
-            JSON.parse(searchData.filters),
+        const filtersWithAggregator: UserFilterWithAggregator = JSON.parse(
+            searchData.filters,
         );
-        filters["$and"].push({ domain });
-        console.log(JSON.stringify(filters));
-        return filters;
+        filters = convertFiltersToDBConditions(filtersWithAggregator);
     }
-    /*
-    if (searchData.searchText) query.$text = { $search: searchData.searchText };
-    if (searchData.type) {
-        addFilterToQueryBasedOnUserGroup(query, searchData.type);
-    }
-    if (searchData.email) {
-        query.email = new RegExp(searchData.email);
-    }
-    */
-
-    return { domain };
+    return { domain, ...filters };
 };
 
 const addFilterToQueryBasedOnUserGroup = (
@@ -342,22 +329,21 @@ export async function getSegments(ctx: GQLContext): Promise<UserSegment[]> {
 }
 
 export async function createSegment(
-    segmentData: { name: string; filters: string },
+    segmentData: { name: string; filter: string },
     ctx: GQLContext,
 ): Promise<UserSegment[]> {
-    //console.log(segmentData);
     checkIfAuthenticated(ctx);
     if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
         throw new Error(responses.action_not_allowed);
     }
 
-    const filters = JSON.parse(segmentData.filters);
+    const filter: UserFilterWithAggregator = JSON.parse(segmentData.filter);
 
     await UserSegmentModel.create({
         domain: ctx.subdomain._id,
         userId: ctx.user.userId,
         name: segmentData.name,
-        filters: filters,
+        filter,
     });
 
     const segments = await UserSegmentModel.find({

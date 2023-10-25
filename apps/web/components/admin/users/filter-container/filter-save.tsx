@@ -1,12 +1,12 @@
 import React, { useState, ChangeEvent } from "react";
 import { Form, FormField, FormSubmit } from "@courselit/components-library";
-import Filter from "../../../ui-models/filter";
-import Segment from "../../../ui-models/segment";
+import Filter from "@ui-models/filter";
+import Segment from "@ui-models/segment";
 import {
     BUTTON_SAVE,
     USER_FILTER_NEW_SEGMENT_NAME,
     USER_FILTER_SAVE_DESCRIPTION,
-} from "../../../ui-config/strings";
+} from "@ui-config/strings";
 import { FormEvent } from "react";
 import { FetchBuilder } from "@courselit/utils";
 import type { AppDispatch, AppState } from "@courselit/state-management";
@@ -16,11 +16,13 @@ import type { ThunkDispatch } from "redux-thunk";
 import { actionCreators } from "@courselit/state-management";
 import type { AnyAction } from "redux";
 import PopoverDescription from "./popover-description";
+import FilterAggregator from "@ui-models/filter-aggregator";
 
 const { networkAction, setAppMessage } = actionCreators;
 
 interface FilterSaveProps {
     filters: Filter[];
+    aggregator: FilterAggregator;
     address: Address;
     dispatch: AppDispatch;
     dismissPopover: (segments?: Segment[]) => void;
@@ -28,6 +30,7 @@ interface FilterSaveProps {
 
 function FilterSave({
     filters,
+    aggregator,
     address,
     dispatch,
     dismissPopover,
@@ -41,14 +44,22 @@ function FilterSave({
                     segments: createSegment(
                         segmentData: {
                             name: "${name}",
-                            filters: ${JSON.stringify(JSON.stringify(filters))}
+                            filter: ${JSON.stringify(
+                                JSON.stringify({
+                                    aggregator,
+                                    filters,
+                                }),
+                            )}
                         } 
                     ) {
                        name,
-                       filters {
-                           name,
-                           condition,
-                           value
+                       filter {
+                           aggregator,
+                           filters {
+                               name,
+                               condition,
+                               value
+                           }
                        },
                        segmentId
                     }
@@ -92,7 +103,7 @@ function FilterSave({
                     }
                     onSubmit={onSubmit}
                 />
-                <div className="flex justify-end">
+                <div className="flex">
                     <FormSubmit text={BUTTON_SAVE} />
                 </div>
             </Form>

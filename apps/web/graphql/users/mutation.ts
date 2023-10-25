@@ -24,9 +24,7 @@ const mutations = {
         },
         resolve: async (
             _: any,
-            {
-                segmentData,
-            }: { segmentData: Pick<UserSegment, "name" | "filter"> },
+            { segmentData }: { segmentData: { name: string; filter: string } },
             context: any,
         ) => createSegment(segmentData, context),
     },

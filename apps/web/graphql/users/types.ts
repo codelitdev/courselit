@@ -12,8 +12,18 @@ import {
 import constants from "../../config/constants";
 import { GraphQLJSONObject } from "graphql-type-json";
 
+/*
 const { userTypeTeam, userTypeCustomer, userTypeNewsletterSubscriber } =
     constants;
+*/
+
+const aggregator = new GraphQLEnumType({
+    name: "FilterAggregator",
+    values: {
+        and: { value: "and" },
+        or: { value: "or" },
+    },
+});
 
 const progress = new GraphQLObjectType({
     name: "Progress",
@@ -104,7 +114,15 @@ const createSegmentInput = new GraphQLInputObjectType({
     name: "CreateSegmentInput",
     fields: {
         name: { type: new GraphQLNonNull(GraphQLString) },
-        filters: { type: new GraphQLNonNull(GraphQLString) },
+        filter: { type: new GraphQLNonNull(GraphQLString) },
+    },
+});
+
+const filter = new GraphQLObjectType({
+    name: "Filter",
+    fields: {
+        aggregator: { type: new GraphQLNonNull(GraphQLString) },
+        filters: { type: new GraphQLList(userFilter) },
     },
 });
 
@@ -113,7 +131,8 @@ const userSegment = new GraphQLObjectType({
     fields: {
         segmentId: { type: new GraphQLNonNull(GraphQLString) },
         name: { type: new GraphQLNonNull(GraphQLString) },
-        filters: { type: new GraphQLList(userFilter) },
+        //filters: { type: new GraphQLList(userFilter) },
+        filter: { type: filter },
     },
 });
 

@@ -264,6 +264,9 @@ export const USER_FILTER_SAVE_DESCRIPTION =
     "You can access the saved segments from the Segments dropdown";
 export const USER_SEGMENT_DESCRIPTION = "Separate users into distinct groups.";
 export const USER_FILTER_LABEL_DEFAULT = "Everyone";
+export const USER_FILTER_AGGREGATOR_HEADER = "Match";
+export const USER_FILTER_AGGREGATOR_ALL = "All";
+export const USER_FILTER_AGGREGATOR_ANY = "Any";
 export const USER_DELETE_SEGMENT = "Delete Segment";
 export const USER_DELETE_SEGMENT_DESCRIPTION =
     "Are you sure you want to delete ";
@@ -305,8 +308,6 @@ export const USER_TABLE_HEADER_JOINED = "Joined";
 export const USER_TABLE_HEADER_LAST_ACTIVE = "Last login";
 export const USER_TABLE_HEADER_EMAIL = "Email";
 export const USER_TABLE_HEADER_NAME_NAME = "Name";
-export const USER_TYPE_TEAM = "Team";
-export const USER_TYPE_CUSOMER = "Customer";
 export const USER_SEGMENT_DROPDOWN_LABEL = "Segments";
 export const USER_TYPE_TOOLTIP =
     "Segregate users based on their roles. Audience users are the ones who can enroll in courses. Team users are the ones who have admin rights.";

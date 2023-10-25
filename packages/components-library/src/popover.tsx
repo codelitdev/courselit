@@ -8,11 +8,12 @@ import {
     Trigger,
 } from "@radix-ui/react-popover";
 import { ReactNode, useState } from "react";
+import Button from "./button";
 
 interface PopoverProps {
     open: boolean;
     setOpen: (val: boolean) => void;
-    title: string;
+    title: ReactNode | string;
     children: ReactNode;
 }
 
@@ -25,9 +26,7 @@ export default function Popover({
     return (
         <Root open={open} onOpenChange={setOpen}>
             <Trigger asChild>
-                <div className="cursor-pointer flex border border-slate-300 hover:border-slate-400 rounded py-1 px-2 outline-none focus:border-slate-600 disabled:pointer-events-none">
-                    {title}
-                </div>
+                <Button variant="soft">{title}</Button>
             </Trigger>
             <Portal>
                 <Content className="min-w-[180px] bg-white rounded shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)]">

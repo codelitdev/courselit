@@ -1,7 +1,13 @@
 import Filter from "./filter";
+import { FilterAggregator } from "./filter-aggregator";
+
+interface SegmentFilter {
+    aggregator: FilterAggregator;
+    filters: Filter[];
+}
 
 export default interface Segment {
     name: string;
-    filters: Filter[];
+    filter: SegmentFilter;
     segmentId: string;
 }

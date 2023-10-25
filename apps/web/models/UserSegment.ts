@@ -1,5 +1,9 @@
 import mongoose from "mongoose";
-import UserFilterSchema, { UserFilter } from "./UserFilter";
+import UserFilterSchema, {
+    UserFilter,
+    UserFilterWithAggregator,
+    UserFilterWithAggregatorSchema,
+} from "./UserFilter";
 import { generateUniqueId } from "@courselit/utils";
 
 export interface UserSegment {
@@ -8,6 +12,7 @@ export interface UserSegment {
     segmentId: string;
     name: string;
     filters: UserFilter[];
+    filter: UserFilterWithAggregator;
 }
 
 const UserSegmentSchema = new mongoose.Schema<UserSegment>({
@@ -16,6 +21,7 @@ const UserSegmentSchema = new mongoose.Schema<UserSegment>({
     segmentId: { type: String, required: true, default: generateUniqueId },
     name: { type: String, required: true },
     filters: [UserFilterSchema],
+    filter: UserFilterWithAggregatorSchema,
 });
 
 export default mongoose.models.UserSegment ||

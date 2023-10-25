@@ -12,4 +12,19 @@ const UserFilterSchema = new mongoose.Schema<UserFilter>({
     value: { type: String, required: true },
 });
 
+export interface UserFilterWithAggregator {
+    aggregator: "and" | "or";
+    filters: UserFilter[];
+}
+
+export const UserFilterWithAggregatorSchema =
+    new mongoose.Schema<UserFilterWithAggregator>({
+        aggregator: {
+            type: String,
+            required: true,
+            enum: ["and", "or"],
+        },
+        filters: [UserFilterSchema],
+    });
+
 export default UserFilterSchema;
