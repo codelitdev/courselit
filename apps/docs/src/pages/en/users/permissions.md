@@ -29,7 +29,7 @@ If they have any of the following permissions, they are categorised as a `Team` 
 -   Manage all files
 -   Edit site
 -   Edit settings
--   Edit users
+-   Manage users
 
 ## Stuck somewhere?
 

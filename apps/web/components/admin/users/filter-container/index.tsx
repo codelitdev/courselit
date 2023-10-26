@@ -1,4 +1,5 @@
 import {
+    Button,
     Form,
     FormField,
     IconButton,
@@ -96,7 +97,8 @@ function FilterContainer({
                             filters {
                                 name,
                                 condition,
-                                value
+                                value,
+                                valueLabel
                             },
                         }
                     segmentId
@@ -325,6 +327,13 @@ function FilterContainer({
                             filter={filter}
                         />
                     ))}
+                    <Button
+                        onClick={() => setInternalFilters([])}
+                        variant="soft"
+                        className="mx-2"
+                    >
+                        Clear filters
+                    </Button>
                     <Popover
                         open={segmentSaveOpen}
                         setOpen={setSegmentSaveOpen}

@@ -6,7 +6,8 @@
             "@components/*": ["./components/*"],
             "@ui-config/*": ["./ui-config/*"],
             "@ui-models/*": ["./ui-models/*"],
-            "@ui-lib/*": ["./ui-lib/*"]
+            "@ui-lib/*": ["./ui-lib/*"],
+            "@config/*": ["./config/*"]
         }
     },
     "include": [

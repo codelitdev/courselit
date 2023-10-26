@@ -92,6 +92,17 @@ export default {
     mailBroadcast: "broadcast",
     mailSequence: "sequence",
 
+    // user filters
+    userFilters: [
+        "email",
+        "product",
+        "lastActive",
+        "signedUp",
+        "subscription",
+        //"tagged",
+        "permission",
+    ],
+
     // acceptable currency codes for payments
     currencyISOCodes: [
         "afn",

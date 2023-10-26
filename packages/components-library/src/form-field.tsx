@@ -36,7 +36,8 @@ export interface FormFieldProps {
         | "range"
         | "submit"
         | "text"
-        | "url";
+        | "url"
+        | "date";
     messages?: MessageItem[];
     [key: string]: any;
     name?: string;

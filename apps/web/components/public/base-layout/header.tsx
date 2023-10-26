@@ -10,7 +10,7 @@ interface HeaderProps {
 
 const Header = ({ onMenuClick }: HeaderProps) => {
     return (
-        <header className="flex w-full p-4 z-10 justify-between bg-white/80 backdrop-blur-md">
+        <header className="flex w-full z-10 justify-between">
             {onMenuClick && (
                 <IconButton
                     className="px-2 md:!hidden"

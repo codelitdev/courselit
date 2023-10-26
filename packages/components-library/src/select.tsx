@@ -68,34 +68,38 @@ export default function Select({
                             )}
                         </div>
                     )}
-                    <RadioGroup
-                        value={value as string}
-                        onValueChange={onChange}
-                    >
-                        {options.map((option: Option) => (
-                            <RadioItem
-                                value={option.value as string}
-                                key={option.value}
-                                disabled={option.disabled || false}
-                                className="text-medium leading-none rounded-[3px] flex items-center h-8 px-2 py-2 relative pl-6 select-none outline-none data-[disabled]:text-slate-200 data-[disabled]:pointer-events-none hover:bg-slate-200"
-                            >
-                                <ItemIndicator className="absolute left-0 w-[25px] inline-flex items-center justify-center">
-                                    <Dot />
-                                </ItemIndicator>
-                                <div className="w-full flex items-center justify-between">
-                                    <div>{option.label}</div>
-                                    {option.sublabel && (
-                                        <div className="text-sm text-slate-500">
-                                            <Tooltip title={option.sublabel}>
-                                                <Info />
-                                            </Tooltip>
-                                        </div>
-                                    )}
-                                </div>
-                            </RadioItem>
-                        ))}
-                    </RadioGroup>
-                    <Arrow className="border-slate-300 fill-white" />
+                    <ScrollArea>
+                        <RadioGroup
+                            value={value as string}
+                            onValueChange={onChange}
+                        >
+                            {options.map((option: Option) => (
+                                <RadioItem
+                                    value={option.value as string}
+                                    key={option.value}
+                                    disabled={option.disabled || false}
+                                    className="text-medium leading-none rounded-[3px] flex items-center h-8 px-2 py-2 relative pl-6 select-none outline-none data-[disabled]:text-slate-200 data-[disabled]:pointer-events-none hover:bg-slate-200"
+                                >
+                                    <ItemIndicator className="absolute left-0 w-[25px] inline-flex items-center justify-center">
+                                        <Dot />
+                                    </ItemIndicator>
+                                    <div className="w-full flex items-center justify-between">
+                                        <div>{option.label}</div>
+                                        {option.sublabel && (
+                                            <div className="text-sm text-slate-500">
+                                                <Tooltip
+                                                    title={option.sublabel}
+                                                >
+                                                    <Info />
+                                                </Tooltip>
+                                            </div>
+                                        )}
+                                    </div>
+                                </RadioItem>
+                            ))}
+                        </RadioGroup>
+                        <Arrow className="border-slate-300 fill-white" />
+                    </ScrollArea>
                 </Content>
             </Portal>
         </Root>

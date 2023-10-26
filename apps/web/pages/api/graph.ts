@@ -12,6 +12,18 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "./auth/[...nextauth]";
 import User from "../../models/User";
 
+async function updateLastActive(user: any) {
+    const dateNow = new Date();
+    dateNow.setUTCHours(0, 0, 0, 0);
+    const userLastActiveDate = new Date(user.updatedAt);
+    userLastActiveDate.setUTCHours(0, 0, 0, 0);
+
+    if (dateNow.getTime() > userLastActiveDate.getTime()) {
+        user.updatedAt = new Date();
+        await user.save();
+    }
+}
+
 export default nc<NextApiRequest, NextApiResponse>({
     onError: (err, req, res, next) => {
         if (err.message.indexOf(responses.domain_doesnt_exist) === -1) {
@@ -39,6 +51,7 @@ export default nc<NextApiRequest, NextApiResponse>({
             });
 
             if (user) {
+                updateLastActive(user);
                 req.user = user;
             }
         }

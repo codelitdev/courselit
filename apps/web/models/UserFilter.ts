@@ -1,15 +1,24 @@
 import mongoose from "mongoose";
+import UserFilterType from "./UserFilterType";
+import constants from "@config/constants";
+const { userFilters } = constants;
 
 export interface UserFilter {
-    name: string;
+    name: UserFilterType;
     condition: string;
     value: string;
+    valueLabel?: string;
 }
 
 const UserFilterSchema = new mongoose.Schema<UserFilter>({
-    name: { type: String, required: true },
+    name: {
+        type: String,
+        required: true,
+        enum: userFilters,
+    },
     condition: { type: String, required: true },
     value: { type: String, required: true },
+    valueLabel: { type: String },
 });
 
 export interface UserFilterWithAggregator {

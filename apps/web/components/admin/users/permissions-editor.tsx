@@ -1,34 +1,23 @@
 import React, { useEffect, useState } from "react";
 import {
-    PERM_COURSE_MANAGE,
-    PERM_COURSE_MANAGE_ANY,
-    PERM_COURSE_PUBLISH,
-    PERM_ENROLL_IN_COURSE,
-    PERM_MEDIA_MANAGE,
-    PERM_MEDIA_MANAGE_ANY,
-    PERM_MEDIA_VIEW_ANY,
-    PERM_MEDIA_UPLOAD,
     PERM_SECTION_HEADER,
-    PERM_SETTINGS,
-    PERM_USERS,
-    PERM_SITE,
-} from "../../../ui-config/strings";
+    USER_PERMISSION_AREA_SUBTEXT,
+} from "@ui-config/strings";
 import { connect } from "react-redux";
 import { FetchBuilder } from "@courselit/utils";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
 import { AppMessage } from "@courselit/common-models";
-import type { User, Auth, Address } from "@courselit/common-models";
-import { UIConstants } from "@courselit/common-models";
+import type { User, Address } from "@courselit/common-models";
 import { Checkbox } from "@courselit/components-library";
 import { Section } from "@courselit/components-library";
+import permissionToCaptionMap from "./permissions-to-caption-map";
+import DocumentationLink from "@components/public/documentation-link";
 
 const { networkAction, setAppMessage } = actionCreators;
-const { permissions } = UIConstants;
 
 interface PermissionsEditorProps {
     user: User;
-    auth: Auth;
     address: Address;
     dispatch: AppDispatch;
     networkAction: boolean;
@@ -36,35 +25,15 @@ interface PermissionsEditorProps {
 
 function PermissionsEditor({
     user,
-    auth,
     address,
     dispatch,
     networkAction: networkCallUnderway,
 }: PermissionsEditorProps) {
     const [activePermissions, setActivePermissions] = useState<string[]>([]);
-    const [expanded, setExpanded] = useState<boolean>(false);
-
-    const permissionToCaptionMap = {
-        [permissions.manageCourse]: PERM_COURSE_MANAGE,
-        [permissions.manageAnyCourse]: PERM_COURSE_MANAGE_ANY,
-        [permissions.publishCourse]: PERM_COURSE_PUBLISH,
-        [permissions.enrollInCourse]: PERM_ENROLL_IN_COURSE,
-        [permissions.viewAnyMedia]: PERM_MEDIA_VIEW_ANY,
-        [permissions.uploadMedia]: PERM_MEDIA_UPLOAD,
-        [permissions.manageMedia]: PERM_MEDIA_MANAGE,
-        [permissions.manageAnyMedia]: PERM_MEDIA_MANAGE_ANY,
-        [permissions.manageSite]: PERM_SITE,
-        [permissions.manageSettings]: PERM_SETTINGS,
-        [permissions.manageUsers]: PERM_USERS,
-    };
 
     useEffect(() => {
         setActivePermissions(user.permissions);
     }, [user]);
-
-    const toggleExpandedState = () => {
-        setExpanded(!expanded);
-    };
 
     const savePermissions = async (permission: string, value: boolean) => {
         let newPermissions: string[];
@@ -113,7 +82,16 @@ function PermissionsEditor({
     };
 
     return (
-        <Section className="md:w-1/2" header={PERM_SECTION_HEADER}>
+        <Section
+            className="md:w-1/2"
+            header={PERM_SECTION_HEADER}
+            subtext={
+                <span>
+                    {USER_PERMISSION_AREA_SUBTEXT}{" "}
+                    <DocumentationLink path="/en/users/permissions/" />.
+                </span>
+            }
+        >
             {Object.keys(permissionToCaptionMap).map((permission) => (
                 <div className="flex justify-between" key={permission}>
                     <p>{permissionToCaptionMap[permission]}</p>
@@ -132,7 +110,6 @@ function PermissionsEditor({
 }
 
 const mapStateToProps = (state: AppState) => ({
-    auth: state.auth,
     address: state.address,
     networkAction: state.networkAction,
 });

@@ -104,9 +104,10 @@ const userPurchaseInput = new GraphQLObjectType({
 const userFilter = new GraphQLObjectType({
     name: "UserFilter",
     fields: {
-        name: { type: GraphQLString },
-        condition: { type: GraphQLString },
-        value: { type: GraphQLString },
+        name: { type: new GraphQLNonNull(GraphQLString) },
+        condition: { type: new GraphQLNonNull(GraphQLString) },
+        value: { type: new GraphQLNonNull(GraphQLString) },
+        valueLabel: { type: GraphQLString },
     },
 });
 
@@ -131,12 +132,11 @@ const userSegment = new GraphQLObjectType({
     fields: {
         segmentId: { type: new GraphQLNonNull(GraphQLString) },
         name: { type: new GraphQLNonNull(GraphQLString) },
-        //filters: { type: new GraphQLList(userFilter) },
         filter: { type: filter },
     },
 });
 
-export default {
+const userTypes = {
     userType,
     userUpdateInput,
     userSearchInput,
@@ -146,3 +146,5 @@ export default {
     userFilter,
     createSegmentInput,
 };
+
+export default userTypes;

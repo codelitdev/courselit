@@ -58,7 +58,8 @@ function SegmentEditor({
                             filters {
                                 name,
                                 condition,
-                                value
+                                value,
+                                valueLabel
                             },
                         }
                         segmentId

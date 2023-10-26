@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
-import UserFilterSchema, {
-    UserFilter,
+import {
     UserFilterWithAggregator,
     UserFilterWithAggregatorSchema,
 } from "./UserFilter";
@@ -11,7 +10,6 @@ export interface UserSegment {
     userId: string;
     segmentId: string;
     name: string;
-    filters: UserFilter[];
     filter: UserFilterWithAggregator;
 }
 
@@ -20,7 +18,6 @@ const UserSegmentSchema = new mongoose.Schema<UserSegment>({
     userId: { type: String, required: true },
     segmentId: { type: String, required: true, default: generateUniqueId },
     name: { type: String, required: true },
-    filters: [UserFilterSchema],
     filter: UserFilterWithAggregatorSchema,
 });
 

@@ -13,8 +13,8 @@ interface ScrollAreaProps {
 
 export default function ScrollArea({ children }: ScrollAreaProps) {
     return (
-        <Root className="h-[225px]">
-            <Viewport className="w-full h-full">{children}</Viewport>
+        <Root className="h-[225px] overflow-hidden">
+            <Viewport className="w-full h-full rounded">{children}</Viewport>
             <Scrollbar
                 className="flex select-none touch-none p-0.5 bg-slate-100 transition-colors duration-[160ms] ease-out hover:bg-slate-200 data-[orientation=vertical]:w-2.5 data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:h-2.5"
                 orientation="vertical"
