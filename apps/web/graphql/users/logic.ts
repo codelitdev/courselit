@@ -174,7 +174,6 @@ export const getUsers = async ({
 
     const searchUsers = makeModelTextSearchable(UserModel);
     const query = buildQueryFromSearchData(ctx.subdomain._id, searchData);
-    console.log(query);
     const users = await searchUsers(
         {
             offset: noPagination ? 1 : searchData.offset,

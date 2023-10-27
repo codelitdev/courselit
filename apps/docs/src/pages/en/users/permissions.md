@@ -4,32 +4,61 @@ description: User permissions
 layout: ../../../layouts/MainLayout.astro
 ---
 
-CourseLit offers a powerful user permissions system so that you can control who can do what in your school.
+CourseLit offers a powerful permissions system so that you can control who can do what in your school.
 
 You can bring your entire team including designers, content creators, editors etc. and provide fine-grained access to them.
 
 Following is how it looks (indicated in the red box).
 
-![User's permission editor](/assets/users/user-permission-editor.png)
+![User's permission editor](/assets/users/user-permissions-editor.png)
 
-## Team and Customer users
+## Understanding permissions
 
-If the user has the following permission, they are categorised as a `Customer`.
+Let take a moment to understand what all permissions are available and what aspect of CourseLit they control.
 
--   Enroll in courses
+-   **Manage products**
 
-If they have any of the following permissions, they are categorised as a `Team` member.
+    Create/update/delete your products.
 
--   Create content
--   Manage all content
--   Publish content
--   View files
--   Upload files
--   Manage files
--   Manage all files
--   Edit site
--   Edit settings
--   Manage users
+-   **Manage all products**
+
+    Create/update/delete any product in the school. This includes products created by other creators in the school.
+
+-   **Manage blog**
+
+    Create/update/delete new any blog posts.
+
+-   **Buy products**
+
+    Purchase products from the school.
+
+-   **Manage pages**
+
+    Update any page in the school.
+
+-   **Manage settings**
+
+    Update school wide settings like payments integration etc.
+
+-   **Manage users**
+
+    Access/update school's users.
+
+-   **View files**
+
+    Access school's files like images, videos, PDFs etc.
+
+-   **Upload files**
+
+    Upload media assets like images, videos, PDFs etc.
+
+-   **Manage files**
+
+    Update/delete your media assets
+
+-   **Manage all files**
+
+    Update/delete any media asset. This includes media uploaded by other creators in the school.
 
 ## Stuck somewhere?
 
