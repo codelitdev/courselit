@@ -1,4 +1,3 @@
-import { decode } from "base-64";
 import { responses } from "../config/strings";
 import constants from "../config/constants";
 import mongoose from "mongoose";
