@@ -4,7 +4,7 @@ description: Page blocks
 layout: ../../../layouts/MainLayout.astro
 ---
 
-Every page in CourseLit is made up of various blocks, stacked in a top to down fashion. Each block serves a unique purpose and can be customized.
+Every page in CourseLit is made up of various blocks, stacked in a top to bottom fashion. Each block serves a unique purpose and can be customized.
 
 The following screenshot shows [Header](/en/pages/header), [Banner](/en/pages/banner), [Content](/en/pages/content) and [Grid](/en/pages/grid) blocks in action. Different blocks are highlighted in different colors.
 

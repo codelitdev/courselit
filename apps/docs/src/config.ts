@@ -93,6 +93,8 @@ export const SIDEBAR: Sidebar = {
             { text: "Introduction", link: "en/users/introduction" },
             { text: "Manage users", link: "en/users/manage" },
             { text: "User permissions", link: "en/users/permissions" },
+            { text: "Filter users", link: "en/users/filters" },
+            { text: "Segment users", link: "en/users/segments" },
         ],
         "Self hosting": [
             { text: "Why self host?", link: "en/self-hosting/introduction" },

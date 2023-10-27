@@ -303,10 +303,7 @@ export const getCourses = async ({
         id: x.id,
         title: x.title,
         cost: x.cost,
-        description: extractPlainTextFromDraftJS(
-            x.description,
-            blogPostSnippetLength,
-        ),
+        description: x.description,
         type: x.type,
         creatorName: x.creatorName,
         updatedAt: x.updatedAt,

@@ -44,7 +44,7 @@ const CourseItem = (props: CourseItemProps) => {
                     </h3>
                 )}
                 <h3 className="text-lg font-semibold">{course.title}</h3>
-                <p>{course.description}</p>
+                {/*<p>{course.description}</p>*/}
                 {!(course.type === "BLOG") && (
                     <PriceTag
                         cost={course.cost}

@@ -71,11 +71,6 @@ export default {
     // limits
     mediaRecordsPerPage: 10,
 
-    // user types
-    userTypeTeam: "team",
-    userTypeCustomer: "customer",
-    userTypeNewsletterSubscriber: "subscriber",
-
     // page types
     product: "product",
     site: "site",
@@ -87,6 +82,21 @@ export default {
     // Download links settings
     downLoadLinkExpiresInDays: 2,
     downLoadLinkLength: 128,
+
+    // mail types
+    mailBroadcast: "broadcast",
+    mailSequence: "sequence",
+
+    // user filters
+    userFilters: [
+        "email",
+        "product",
+        "lastActive",
+        "signedUp",
+        "subscription",
+        //"tagged",
+        "permission",
+    ],
 
     // acceptable currency codes for payments
     currencyISOCodes: [

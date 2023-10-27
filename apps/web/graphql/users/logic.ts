@@ -7,16 +7,15 @@ import {
 } from "../../lib/graphql";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
-const {
-    permissions,
-    userTypeCustomer,
-    userTypeTeam,
-    userTypeNewsletterSubscriber,
-} = constants;
+const { permissions } = constants;
 import { Progress } from "../../models/Progress";
 import { initMandatoryPages } from "../pages/logic";
 import { Domain } from "../../models/Domain";
 import { checkPermission } from "@courselit/utils";
+import UserSegmentModel, { UserSegment } from "../../models/UserSegment";
+import convertFiltersToDBConditions from "../../lib/convert-filters-to-db-conditions";
+import mongoose from "mongoose";
+import { UserFilterWithAggregator } from "../../models/UserFilter";
 
 const removeAdminFieldsFromUserObject = ({
     id,
@@ -143,10 +142,8 @@ const updateCoursesForCreatorName = async (creatorId, creatorName) => {
 type UserGroupType = "team" | "customer" | "subscriber";
 
 interface SearchData {
-    searchText?: string;
     offset?: number;
-    type?: UserGroupType;
-    email?: string;
+    filters?: string;
 }
 
 interface GetUsersParams {
@@ -203,39 +200,18 @@ export const getUsersCount = async (
     return await UserModel.countDocuments(query);
 };
 
-const buildQueryFromSearchData = (domain, searchData: SearchData = {}) => {
-    const query: Record<string, unknown> = { domain };
-    if (searchData.searchText) query.$text = { $search: searchData.searchText };
-    if (searchData.type) {
-        addFilterToQueryBasedOnUserGroup(query, searchData.type);
-    }
-    if (searchData.email) {
-        query.email = new RegExp(searchData.email);
-    }
-
-    return query;
-};
-
-const addFilterToQueryBasedOnUserGroup = (
-    query: Record<string, unknown>,
-    type: UserGroupType,
+const buildQueryFromSearchData = (
+    domain: mongoose.Types.ObjectId,
+    searchData: SearchData = {},
 ): Record<string, unknown> => {
-    if (type === userTypeTeam) {
-        const allPerms = Object.values(constants.permissions);
-        const indexOfEnrollCoursePermission = allPerms.indexOf(
-            constants.permissions.enrollInCourse,
+    let filters = {};
+    if (searchData.filters) {
+        const filtersWithAggregator: UserFilterWithAggregator = JSON.parse(
+            searchData.filters,
         );
-        allPerms.splice(indexOfEnrollCoursePermission, 1);
-        query.permissions = {
-            $in: [...allPerms],
-        };
-    } else if (type === userTypeCustomer) {
-        query.permissions = { $in: [constants.permissions.enrollInCourse] };
-    } else if (type === userTypeNewsletterSubscriber) {
-        query.subscribedToUpdates = true;
+        filters = convertFiltersToDBConditions(filtersWithAggregator);
     }
-
-    return query;
+    return { domain, ...filters };
 };
 
 export const recordProgress = async ({
@@ -308,4 +284,67 @@ export async function createUser({
     }
 
     return user;
+}
+
+export async function getSegments(ctx: GQLContext): Promise<UserSegment[]> {
+    checkIfAuthenticated(ctx);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const segments = await UserSegmentModel.find({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+    });
+
+    return segments;
+}
+
+export async function createSegment(
+    segmentData: { name: string; filter: string },
+    ctx: GQLContext,
+): Promise<UserSegment[]> {
+    checkIfAuthenticated(ctx);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const filter: UserFilterWithAggregator = JSON.parse(segmentData.filter);
+
+    await UserSegmentModel.create({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+        name: segmentData.name,
+        filter,
+    });
+
+    const segments = await UserSegmentModel.find({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+    });
+
+    return segments;
+}
+
+export async function deleteSegment(
+    segmentId: string,
+    ctx: GQLContext,
+): Promise<UserSegment[]> {
+    checkIfAuthenticated(ctx);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    await UserSegmentModel.deleteOne({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+        segmentId,
+    });
+
+    const segments = await UserSegmentModel.find({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+    });
+
+    return segments;
 }

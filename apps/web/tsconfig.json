@@ -3,7 +3,11 @@
     "compilerOptions": {
         "plugins": [{ "name": "next" }],
         "paths": {
-            "@components/*": ["./components/*"]
+            "@components/*": ["./components/*"],
+            "@ui-config/*": ["./ui-config/*"],
+            "@ui-models/*": ["./ui-models/*"],
+            "@ui-lib/*": ["./ui-lib/*"],
+            "@config/*": ["./config/*"]
         }
     },
     "include": [

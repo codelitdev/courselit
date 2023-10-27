@@ -70,11 +70,11 @@ const ComponentScaffold = ({ items, children }: ComponentScaffoldProps) => {
 
     return (
         <div className="flex">
-            <div className="fixed w-full border-0 border-b border-slate-200">
+            <div className="fixed flex w-full p-4 h-[64px] items-center border-0 border-b border-slate-200 bg-white/80 backdrop-blur-md">
                 <Header onMenuClick={() => setOpen(true)} />
             </div>
-            <div className="flex h-screen pt-[70px] w-full">
-                <div className="hidden md:!flex overflow-x-hidden overflow-y-auto w-[240px] max-h-screen border border-r border-slate-200">
+            <div className="flex h-screen pt-[64px] w-full">
+                <div className="hidden md:!flex overflow-x-hidden overflow-y-auto w-[240px] max-h-screen border-r border-slate-200">
                     {drawer}
                 </div>
                 <main className="w-full p-4 max-h-screen overflow-y-auto scroll-smooth">

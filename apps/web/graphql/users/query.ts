@@ -5,10 +5,10 @@ import {
     GraphQLNonNull,
 } from "graphql";
 import types from "./types";
-import { getUser, getUsers, getUsersCount } from "./logic";
+import { getUser, getUsers, getUsersCount, getSegments } from "./logic";
 import GQLContext from "../../models/GQLContext";
 
-export default {
+const queries = {
     getUser: {
         type: types.userType,
         args: {
@@ -34,4 +34,10 @@ export default {
         resolve: (_: any, { searchData }: any, context: GQLContext) =>
             getUsersCount(searchData, context),
     },
+    segments: {
+        type: new GraphQLList(types.userSegment),
+        resolve: (_: any, __: any, context: GQLContext) => getSegments(context),
+    },
 };
+
+export default queries;

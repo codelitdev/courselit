@@ -7,12 +7,7 @@ import {
     GraphQLInt,
     GraphQLList,
     GraphQLInputObjectType,
-    GraphQLEnumType,
 } from "graphql";
-import constants from "../../config/constants";
-
-const { userTypeTeam, userTypeCustomer, userTypeNewsletterSubscriber } =
-    constants;
 
 const progress = new GraphQLObjectType({
     name: "Progress",
@@ -51,23 +46,15 @@ const userUpdateInput = new GraphQLInputObjectType({
     },
 });
 
-const userGroupType = new GraphQLEnumType({
-    name: "UserGroupType",
-    values: {
-        TEAM: { value: userTypeTeam },
-        CUSTOMER: { value: userTypeCustomer },
-        SUBSCRIBER: { value: userTypeNewsletterSubscriber },
-    },
-});
-
 const userSearchInput = new GraphQLInputObjectType({
     name: "UserSearchInput",
     fields: {
-        searchText: { type: GraphQLString },
-        type: { type: userGroupType },
-        email: { type: GraphQLString },
+        //searchText: { type: GraphQLString },
+        //type: { type: userGroupType },
+        //email: { type: GraphQLString },
         offset: { type: GraphQLInt },
         rowsPerPage: { type: GraphQLInt },
+        filters: { type: GraphQLString },
     },
 });
 
@@ -87,10 +74,50 @@ const userPurchaseInput = new GraphQLObjectType({
     },
 });
 
-export default {
+const userFilter = new GraphQLObjectType({
+    name: "UserFilter",
+    fields: {
+        name: { type: new GraphQLNonNull(GraphQLString) },
+        condition: { type: new GraphQLNonNull(GraphQLString) },
+        value: { type: new GraphQLNonNull(GraphQLString) },
+        valueLabel: { type: GraphQLString },
+    },
+});
+
+const createSegmentInput = new GraphQLInputObjectType({
+    name: "CreateSegmentInput",
+    fields: {
+        name: { type: new GraphQLNonNull(GraphQLString) },
+        filter: { type: new GraphQLNonNull(GraphQLString) },
+    },
+});
+
+const filter = new GraphQLObjectType({
+    name: "Filter",
+    fields: {
+        aggregator: { type: new GraphQLNonNull(GraphQLString) },
+        filters: { type: new GraphQLList(userFilter) },
+    },
+});
+
+const userSegment = new GraphQLObjectType({
+    name: "UserSegment",
+    fields: {
+        segmentId: { type: new GraphQLNonNull(GraphQLString) },
+        name: { type: new GraphQLNonNull(GraphQLString) },
+        filter: { type: filter },
+    },
+});
+
+const userTypes = {
     userType,
     userUpdateInput,
     userSearchInput,
     usersSummaryType,
     userPurchaseInput,
+    userSegment,
+    userFilter,
+    createSegmentInput,
 };
+
+export default userTypes;
