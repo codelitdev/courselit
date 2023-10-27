@@ -1,8 +1,6 @@
 import { GraphQLList, GraphQLNonNull, GraphQLString } from "graphql";
 import types from "./types";
 import { updateUser, createSegment, deleteSegment } from "./logic";
-import type { UserSegment } from "../../models/UserSegment";
-import { GraphQLJSONObject } from "graphql-type-json";
 
 const mutations = {
     updateUser: {

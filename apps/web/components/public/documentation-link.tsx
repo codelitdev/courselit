@@ -14,6 +14,7 @@ export default function DocumentationLink({
         <a
             className="underline"
             target="_blank"
+            rel="noopener noreferrer"
             href={`https://docs.courselit.app${path}`}
         >
             {text}

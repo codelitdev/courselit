@@ -43,16 +43,17 @@ const UsersManager = ({ address, dispatch, loading }: UserManagerProps) => {
     const [filters, setFilters] = useState<Filter[]>([]);
     const [filtersAggregator, setFiltersAggregator] =
         useState<FilterAggregator>("or");
-    const [activeSegment, setActiveSegment] = useState("");
     const [count, setCount] = useState(0);
     const router = useRouter();
 
+    /*
     const handleRowsPerPageChange = (
         e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => {
         setRowsPerPage(parseInt(e.target.value, 10));
         setPage(1);
     };
+    */
 
     const loadUsers = useCallback(async () => {
         const query =
@@ -209,7 +210,6 @@ const UsersManager = ({ address, dispatch, loading }: UserManagerProps) => {
     const onFilterChange = useCallback(({ filters, aggregator, segmentId }) => {
         setFilters(filters);
         setFiltersAggregator(aggregator);
-        setActiveSegment(segmentId);
         setPage(1);
     }, []);
 

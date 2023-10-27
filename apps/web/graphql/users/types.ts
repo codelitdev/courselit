@@ -7,23 +7,7 @@ import {
     GraphQLInt,
     GraphQLList,
     GraphQLInputObjectType,
-    GraphQLEnumType,
 } from "graphql";
-import constants from "../../config/constants";
-import { GraphQLJSONObject } from "graphql-type-json";
-
-/*
-const { userTypeTeam, userTypeCustomer, userTypeNewsletterSubscriber } =
-    constants;
-*/
-
-const aggregator = new GraphQLEnumType({
-    name: "FilterAggregator",
-    values: {
-        and: { value: "and" },
-        or: { value: "or" },
-    },
-});
 
 const progress = new GraphQLObjectType({
     name: "Progress",
@@ -61,17 +45,6 @@ const userUpdateInput = new GraphQLInputObjectType({
         subscribedToUpdates: { type: GraphQLBoolean },
     },
 });
-
-/*
-const userGroupType = new GraphQLEnumType({
-    name: "UserGroupType",
-    values: {
-        TEAM: { value: userTypeTeam },
-        CUSTOMER: { value: userTypeCustomer },
-        SUBSCRIBER: { value: userTypeNewsletterSubscriber },
-    },
-});
-*/
 
 const userSearchInput = new GraphQLInputObjectType({
     name: "UserSearchInput",

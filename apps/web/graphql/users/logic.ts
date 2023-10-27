@@ -7,12 +7,7 @@ import {
 } from "../../lib/graphql";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
-const {
-    permissions,
-    userTypeCustomer,
-    userTypeTeam,
-    userTypeNewsletterSubscriber,
-} = constants;
+const { permissions } = constants;
 import { Progress } from "../../models/Progress";
 import { initMandatoryPages } from "../pages/logic";
 import { Domain } from "../../models/Domain";
@@ -217,28 +212,6 @@ const buildQueryFromSearchData = (
         filters = convertFiltersToDBConditions(filtersWithAggregator);
     }
     return { domain, ...filters };
-};
-
-const addFilterToQueryBasedOnUserGroup = (
-    query: Record<string, unknown>,
-    type: UserGroupType,
-): Record<string, unknown> => {
-    if (type === userTypeTeam) {
-        const allPerms = Object.values(constants.permissions);
-        const indexOfEnrollCoursePermission = allPerms.indexOf(
-            constants.permissions.enrollInCourse,
-        );
-        allPerms.splice(indexOfEnrollCoursePermission, 1);
-        query.permissions = {
-            $in: [...allPerms],
-        };
-    } else if (type === userTypeCustomer) {
-        query.permissions = { $in: [constants.permissions.enrollInCourse] };
-    } else if (type === userTypeNewsletterSubscriber) {
-        query.subscribedToUpdates = true;
-    }
-
-    return query;
 };
 
 export const recordProgress = async ({

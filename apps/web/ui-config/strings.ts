@@ -246,6 +246,7 @@ export const PERM_SECTION_HEADER = "Permissions";
 export const USER_BASIC_DETAILS_HEADER = "Basic details";
 export const USER_EMAIL_SUBHEADER = "Email";
 export const USER_NAME_SUBHEADER = "Name";
+export const USER_FILTER_CLEAR = "Clear filters";
 export const USER_FILTER_DROPDOWN_LABEL = "Add filter";
 export const USER_FILTER_BTN_LABEL = "Filters";
 export const USER_FILTER_CATEGORY_EMAIL = "Email";

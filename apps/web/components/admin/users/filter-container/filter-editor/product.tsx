@@ -34,7 +34,6 @@ function ProductFilterEditor({
 }: ProductFilterEditorProps) {
     const [condition, setCondition] = useState(USER_FILTER_PRODUCT_HAS);
     const [value, setValue] = useState("");
-    const [loading, setLoading] = useState(false);
     const [products, setProducts] = useState<
         Pick<Course, "title" | "courseId">[]
     >([]);
@@ -55,15 +54,12 @@ function ProductFilterEditor({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            setLoading(true);
             const response = await fetch.exec();
             if (response.courses) {
                 setProducts([...response.courses]);
             }
         } catch (err: any) {
             dispatch(setAppMessage(new AppMessage(err.message)));
-        } finally {
-            setLoading(false);
         }
     }, [address.backend, dispatch]);
 

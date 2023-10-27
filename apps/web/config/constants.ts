@@ -71,11 +71,6 @@ export default {
     // limits
     mediaRecordsPerPage: 10,
 
-    // user types
-    userTypeTeam: "team",
-    userTypeCustomer: "customer",
-    userTypeNewsletterSubscriber: "subscriber",
-
     // page types
     product: "product",
     site: "site",

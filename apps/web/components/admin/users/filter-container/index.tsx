@@ -16,6 +16,7 @@ import {
     USER_FILTER_AGGREGATOR_ANY,
     USER_FILTER_AGGREGATOR_HEADER,
     USER_FILTER_BTN_LABEL,
+    USER_FILTER_CLEAR,
     USER_FILTER_LABEL_DEFAULT,
     USER_FILTER_SAVE,
 } from "@ui-config/strings";
@@ -328,11 +329,14 @@ function FilterContainer({
                         />
                     ))}
                     <Button
-                        onClick={() => setInternalFilters([])}
+                        onClick={() => {
+                            setInternalFilters([]);
+                            setActiveSegment("");
+                        }}
                         variant="soft"
                         className="mx-2"
                     >
-                        Clear filters
+                        {USER_FILTER_CLEAR}
                     </Button>
                     <Popover
                         open={segmentSaveOpen}
