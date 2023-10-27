@@ -106,7 +106,5 @@ export default function convertFiltersToDBConditions({
         }
     }
 
-    console.log(dbFilters);
-
     return dbFilters.length ? { [`$${aggregator}`]: dbFilters } : {};
 }
