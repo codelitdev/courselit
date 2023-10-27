@@ -1,3 +1,4 @@
+import React, { ReactNode } from "react";
 import { Cross } from "@courselit/icons";
 import {
     Arrow,
@@ -7,7 +8,6 @@ import {
     Root,
     Trigger,
 } from "@radix-ui/react-popover";
-import { ReactNode, useState } from "react";
 import Button from "./button";
 
 interface PopoverProps {
