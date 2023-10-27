@@ -109,7 +109,7 @@ function SegmentEditor({
                         </PopoverHeader>
                         <PopoverDescription>
                             {USER_SEGMENT_DESCRIPTION}{" "}
-                            <DocumentationLink path="/en/users/segment" />
+                            <DocumentationLink path="/en/users/segments" />
                         </PopoverDescription>
                         <ul className="mt-2">
                             {segments.map((segment) => (
