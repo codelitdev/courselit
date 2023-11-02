@@ -63,7 +63,7 @@ export default nc<NextApiRequest, NextApiResponse>({
             res.status(400).json({ error: "Query is missing" });
         }
 
-        const source = req.body.query;
+        const { query, variables } = req.body.query;
         const hostname = req.headers["host"] || "";
         const protocol = req.headers["x-forwarded-proto"];
         const contextValue = {
@@ -73,9 +73,10 @@ export default nc<NextApiRequest, NextApiResponse>({
         };
         const response = await graphql({
             schema,
-            source,
+            source: query || req.body.query,
             rootValue: null,
             contextValue,
+            variableValues: variables,
         });
         return res.status(200).json(response);
     });

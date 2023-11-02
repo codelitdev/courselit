@@ -5,7 +5,14 @@ import {
     GraphQLNonNull,
 } from "graphql";
 import types from "./types";
-import { getUser, getUsers, getUsersCount, getSegments } from "./logic";
+import {
+    getUser,
+    getUsers,
+    getUsersCount,
+    getSegments,
+    getTagsWithDetails,
+    getTags,
+} from "./logic";
 import GQLContext from "../../models/GQLContext";
 
 const queries = {
@@ -37,6 +44,14 @@ const queries = {
     segments: {
         type: new GraphQLList(types.userSegment),
         resolve: (_: any, __: any, context: GQLContext) => getSegments(context),
+    },
+    tags: {
+        type: new GraphQLList(GraphQLString),
+        resolve: (_: any, __: any, ctx: any) => getTags(ctx),
+    },
+    tagsWithDetails: {
+        type: new GraphQLList(types.tagWithDetails),
+        resolve: (_: any, __: any, ctx: any) => getTagsWithDetails(ctx),
     },
 };
 

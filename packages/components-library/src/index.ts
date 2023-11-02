@@ -36,6 +36,7 @@ import Avatar from "./avatar";
 import Breadcrumbs from "./breadcrumbs";
 import Popover from "./popover";
 import ScrollArea from "./scrollarea";
+import ComboBox from "./combo-box";
 
 export {
     PriceTag,
@@ -76,4 +77,5 @@ export {
     Breadcrumbs,
     Popover,
     ScrollArea,
+    ComboBox,
 };

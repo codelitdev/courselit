@@ -7,6 +7,4 @@ export default interface User {
     userId: number;
     bio: string;
     permissions: string[];
-    createdAt: Date;
-    updatedAt: Date;
 }

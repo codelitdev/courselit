@@ -38,6 +38,16 @@ export const LOAD_MORE_TEXT = "Load more";
 export const MANAGE_MEDIA_BUTTON_TEXT = "Insert media";
 export const MANAGE_COURSES_PAGE_HEADING = "Products";
 export const USERS_MANAGER_PAGE_HEADING = "Users";
+export const USERS_TAG_HEADER = "Tags";
+export const TAG_TABLE_HEADER_NAME = "Tag name";
+export const BTN_NEW_TAG = "New tag";
+export const TAG_TABLE_HEADER_SUBS_COUNT = "Subscribers count";
+export const TAGS_TABLE_CONTEXT_MENU_DELETE_PRODUCT = "Delete";
+export const TAGS_TABLE_CONTEXT_MENU_UNTAG = "Untag users";
+export const UNTAG_POPUP_DESC =
+    "This will remove the tag from all the users tagged with this tag. The users will remain in the system.";
+export const UNTAG_POPUP_HEADER = "Untag users tagged with";
+export const DELETE_TAG_POPUP_HEADER = "Delete tag";
 export const NEW_COURSE_PAGE_HEADING = "Add course";
 export const EDIT_COURSE_PAGE_HEADING = "Edit course";
 export const MEDIA_MANAGER_DIALOG_TITLE = "Add media";
