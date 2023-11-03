@@ -12,6 +12,7 @@ import {
 import { AppDispatch, AppState } from "@courselit/state-management";
 import {
     BTN_NEW_TAG,
+    DELETE_TAG_POPUP_DESC,
     DELETE_TAG_POPUP_HEADER,
     PRODUCTS_TABLE_HEADER_ACTIONS,
     TAGS_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
@@ -159,7 +160,9 @@ function Tags({ address, dispatch }: TagsProps) {
                     {USERS_TAG_HEADER}
                 </h1>
                 <div>
-                    <Button>{BTN_NEW_TAG}</Button>
+                    <Button component="link" href="/dashboard/users/tags/new">
+                        {BTN_NEW_TAG}
+                    </Button>
                 </div>
             </div>
             <Table aria-label="Tags">
@@ -186,12 +189,11 @@ function Tags({ address, dispatch }: TagsProps) {
                                     ></MenuItem>
                                     <MenuItem
                                         component="dialog"
-                                        title={
+                                        title={`${DELETE_TAG_POPUP_HEADER} "${tag.tag}"`}
+                                        triggerChildren={
                                             TAGS_TABLE_CONTEXT_MENU_DELETE_PRODUCT
                                         }
-                                        triggerChildren={
-                                            DELETE_TAG_POPUP_HEADER
-                                        }
+                                        description={DELETE_TAG_POPUP_DESC}
                                         onClick={() => deleteTag(tag.tag)}
                                     ></MenuItem>
                                 </Menu2>

@@ -50,7 +50,7 @@ const mutations = {
         type: new GraphQLList(GraphQLString),
         args: {
             tags: {
-                type: new GraphQLNonNull(GraphQLString),
+                type: new GraphQLList(new GraphQLNonNull(GraphQLString)),
             },
         },
         resolve: async (_: any, { tags }: { tags: string[] }, context: any) =>

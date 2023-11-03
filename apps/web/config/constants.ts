@@ -94,7 +94,7 @@ export default {
         "lastActive",
         "signedUp",
         "subscription",
-        //"tagged",
+        "tag",
         "permission",
     ],
 

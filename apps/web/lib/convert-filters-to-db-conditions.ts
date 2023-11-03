@@ -104,6 +104,18 @@ export default function convertFiltersToDBConditions({
             }
             dbFilters.push(signedUpCondition);
         }
+        if (name === "tag") {
+            const tagCondition = { tags: undefined };
+            if (condition === "Has") {
+                tagCondition.tags = value;
+            }
+            if (condition === "Does not have") {
+                tagCondition.tags = {
+                    $not: { $regex: value },
+                };
+            }
+            dbFilters.push(tagCondition);
+        }
     }
 
     return dbFilters.length ? { [`$${aggregator}`]: dbFilters } : {};

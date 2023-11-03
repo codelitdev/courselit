@@ -5,6 +5,7 @@ import {
     USER_FILTER_CATEGORY_PRODUCT,
     USER_FILTER_CATEGORY_SIGNED_UP,
     USER_FILTER_CATEGORY_SUBSCRIPTION,
+    USER_FILTER_CATEGORY_TAGGED,
 } from "@ui-config/strings";
 import Filter from "@ui-models/filter";
 
@@ -14,6 +15,7 @@ const categoriesMap: Record<Filter["name"], string> = {
     lastActive: USER_FILTER_CATEGORY_LAST_ACTIVE,
     signedUp: USER_FILTER_CATEGORY_SIGNED_UP,
     subscription: USER_FILTER_CATEGORY_SUBSCRIPTION,
+    tag: USER_FILTER_CATEGORY_TAGGED,
     permission: USER_FILTER_CATEGORY_PERMISSION,
 };
 

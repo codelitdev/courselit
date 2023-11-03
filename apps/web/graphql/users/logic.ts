@@ -417,6 +417,7 @@ export const getTagsWithDetails = async (ctx: GQLContext) => {
                 _id: 0,
             },
         },
+        { $sort: { count: -1 } },
     ]);
 
     return tagsWithUsersCount;

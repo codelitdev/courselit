@@ -11,6 +11,7 @@ const PermissionFilterEditor = dynamic(() => import("./permission"));
 const ProductFilterEditor = dynamic(() => import("./product"));
 const EmailFilterEditor = dynamic(() => import("./email"));
 const SubscriptionFilterEditor = dynamic(() => import("./subscription"));
+const TaggedFilterEditor = dynamic(() => import("./tagged"));
 
 interface FilterEditorProps {
     dismissPopover: (filter: Filter) => void;
@@ -63,6 +64,9 @@ export default function FilterEditor({ dismissPopover }: FilterEditorProps) {
             )}
             {activeCategory && activeCategory === "permission" && (
                 <PermissionFilterEditor onApply={changeFilter} />
+            )}
+            {activeCategory && activeCategory === "tag" && (
+                <TaggedFilterEditor onApply={changeFilter} />
             )}
         </div>
     );

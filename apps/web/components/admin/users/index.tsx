@@ -4,6 +4,7 @@ import {
     USER_TABLE_HEADER_JOINED,
     USERS_MANAGER_PAGE_HEADING,
     USER_TABLE_HEADER_LAST_ACTIVE,
+    BTN_MANAGE_TAGS,
 } from "../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";
@@ -19,6 +20,7 @@ import {
     TableRow,
     Avatar,
     Link,
+    Button,
 } from "@courselit/components-library";
 import { useRouter } from "next/router";
 import { formattedLocaleDate } from "@ui-lib/utils";
@@ -215,9 +217,20 @@ const UsersManager = ({ address, dispatch, loading }: UserManagerProps) => {
 
     return (
         <div className="flex flex-col">
-            <h1 className="text-4xl font-semibold mb-4">
-                {USERS_MANAGER_PAGE_HEADING}
-            </h1>
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-4xl font-semibold mb-4">
+                    {USERS_MANAGER_PAGE_HEADING}
+                </h1>
+                <div>
+                    <Button
+                        component="link"
+                        variant="soft"
+                        href="/dashboard/users/tags"
+                    >
+                        {BTN_MANAGE_TAGS}
+                    </Button>
+                </div>
+            </div>
             <div className="mb-4">
                 <FilterContainer onChange={onFilterChange} />
             </div>
