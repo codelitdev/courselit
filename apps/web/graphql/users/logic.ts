@@ -354,7 +354,7 @@ export async function deleteSegment(
 export const getTags = async (ctx: GQLContext) => {
     checkIfAuthenticated(ctx);
 
-    if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
         throw new Error(responses.action_not_allowed);
     }
 
@@ -369,7 +369,7 @@ export const getTags = async (ctx: GQLContext) => {
 export const getTagsWithDetails = async (ctx: GQLContext) => {
     checkIfAuthenticated(ctx);
 
-    if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
         throw new Error(responses.action_not_allowed);
     }
 
@@ -426,7 +426,7 @@ export const getTagsWithDetails = async (ctx: GQLContext) => {
 export const addTags = async (tags: string[], ctx: GQLContext) => {
     checkIfAuthenticated(ctx);
 
-    if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
         throw new Error(responses.action_not_allowed);
     }
 
@@ -443,7 +443,7 @@ export const addTags = async (tags: string[], ctx: GQLContext) => {
 export const deleteTag = async (tag: string, ctx: GQLContext) => {
     checkIfAuthenticated(ctx);
 
-    if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
         throw new Error(responses.action_not_allowed);
     }
 
@@ -462,7 +462,7 @@ export const deleteTag = async (tag: string, ctx: GQLContext) => {
 export const untagUsers = async (tag: string, ctx: GQLContext) => {
     checkIfAuthenticated(ctx);
 
-    if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
         throw new Error(responses.action_not_allowed);
     }
 
