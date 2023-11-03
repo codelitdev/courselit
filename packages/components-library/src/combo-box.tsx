@@ -1,11 +1,5 @@
 import { Content, Portal, Root, Trigger } from "@radix-ui/react-popover";
-import {
-    ChangeEvent,
-    FormEvent,
-    useCallback,
-    useEffect,
-    useState,
-} from "react";
+import { ChangeEvent, useState } from "react";
 import Form from "./form";
 import IconButton from "./icon-button";
 import { Cross } from "@courselit/icons";
