@@ -1,51 +1,48 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { FetchBuilder } from "@courselit/utils";
-import {
-    POPUP_CANCEL_ACTION,
-    USER_FILTER_APPLY_BTN,
-    USER_FILTER_CATEGORY_PRODUCT,
-    USER_FILTER_PRODUCT_DOES_NOT_HAVE,
-    USER_FILTER_PRODUCT_DROPDOWN_LABEL,
-    USER_FILTER_PRODUCT_HAS,
-} from "@ui-config/strings";
-import { AppDispatch, AppState } from "@courselit/state-management";
-import { connect } from "react-redux";
-import PopoverHeader from "../popover-header";
+import { Address, AppMessage } from "@courselit/common-models";
 import {
     Button,
     Form,
     FormSubmit,
     Select,
 } from "@courselit/components-library";
-import { Address, AppMessage, Course } from "@courselit/common-models";
+import { AppDispatch, AppState } from "@courselit/state-management";
+import { FetchBuilder } from "@courselit/utils";
+import {
+    POPUP_CANCEL_ACTION,
+    USER_FILTER_APPLY_BTN,
+    USER_FILTER_CATEGORY_TAGGED,
+    USER_FILTER_PRODUCT_DOES_NOT_HAVE,
+    USER_FILTER_PRODUCT_HAS,
+    USER_FILTER_TAGGED_DROPDOWN_LABEL,
+} from "@ui-config/strings";
+import React, { useState } from "react";
+import { useCallback } from "react";
+import { useMemo } from "react";
+import { connect } from "react-redux";
+import PopoverHeader from "../popover-header";
 import { actionCreators } from "@courselit/state-management";
+import { useEffect } from "react";
 const { setAppMessage } = actionCreators;
 
-interface ProductFilterEditorProps {
+interface TaggedFilterEditorProps {
     onApply: (...args: any[]) => any;
     address: Address;
     dispatch: AppDispatch;
 }
 
-function ProductFilterEditor({
+function TaggedFilterEditor({
     onApply,
     address,
     dispatch,
-}: ProductFilterEditorProps) {
+}: TaggedFilterEditorProps) {
     const [condition, setCondition] = useState(USER_FILTER_PRODUCT_HAS);
     const [value, setValue] = useState("");
-    const [products, setProducts] = useState<
-        Pick<Course, "title" | "courseId">[]
-    >([]);
+    const [tags, setTags] = useState([]);
 
-    const loadCreatorCourses = useCallback(async () => {
+    const getTags = useCallback(async () => {
         const query = `
-            query { courses: getCoursesAsAdmin(
-                offset: 1
-              ) {
-                title,
-                courseId,
-              }
+            query {
+                tags
             }
         `;
         const fetch = new FetchBuilder()
@@ -55,52 +52,48 @@ function ProductFilterEditor({
             .build();
         try {
             const response = await fetch.exec();
-            if (response.courses) {
-                setProducts([...response.courses]);
+            if (response.tags) {
+                setTags(response.tags);
             }
-        } catch (err: any) {
+        } catch (err) {
             dispatch(setAppMessage(new AppMessage(err.message)));
         }
     }, [address.backend, dispatch]);
 
     useEffect(() => {
-        loadCreatorCourses();
-    }, [loadCreatorCourses]);
+        getTags();
+    }, [getTags]);
 
     const onSubmit = (e: any) => {
         e.preventDefault();
         const buttonName = e.nativeEvent.submitter.name;
         if (buttonName === "apply") {
-            onApply({
-                condition,
-                value,
-                valueLabel: products.find((x) => x.courseId === value).title,
-            });
+            onApply({ condition, value });
         } else {
             onApply();
         }
     };
 
-    const productOptions = useMemo(() => {
+    const tagOptions = useMemo(() => {
         const options: { label: string; value: string; disabled?: boolean }[] =
-            products.map((product) => ({
-                label: product.title,
-                value: product.courseId,
+            tags.map((tag) => ({
+                label: tag,
+                value: tag,
             }));
         options.unshift({
-            label: USER_FILTER_PRODUCT_DROPDOWN_LABEL,
+            label: USER_FILTER_TAGGED_DROPDOWN_LABEL,
             value: "",
             disabled: true,
         });
         return options;
-    }, [products]);
+    }, [tags]);
 
     return (
         <Form
             className="flex flex-col gap-2 p-2 max-w-[180px]"
             onSubmit={onSubmit}
         >
-            <PopoverHeader>{USER_FILTER_CATEGORY_PRODUCT}</PopoverHeader>
+            <PopoverHeader>{USER_FILTER_CATEGORY_TAGGED}</PopoverHeader>
             <Select
                 value={condition}
                 onChange={setCondition}
@@ -117,7 +110,7 @@ function ProductFilterEditor({
                 ]}
             />
             <Select
-                options={productOptions}
+                options={tagOptions}
                 value={value}
                 title=""
                 variant="without-label"
@@ -145,7 +138,4 @@ const mapDispatchToProps = (dispatch: AppDispatch) => ({
     dispatch: dispatch,
 });
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps,
-)(ProductFilterEditor);
+export default connect(mapStateToProps, mapDispatchToProps)(TaggedFilterEditor);

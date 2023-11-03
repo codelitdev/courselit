@@ -89,6 +89,7 @@ const checkForInvalidPermissions = (user) => {
 export const updateUser = async (userData: any, ctx: GQLContext) => {
     checkIfAuthenticated(ctx);
     const { id } = userData;
+    console.log(userData);
 
     const hasPermissionToManageUser = checkPermission(ctx.user.permissions, [
         permissions.manageUsers,
@@ -107,11 +108,12 @@ export const updateUser = async (userData: any, ctx: GQLContext) => {
             continue;
         }
 
-        if (
-            !["bio", "name", "subscribedToUpdates"].includes(key) &&
-            id === ctx.user.id
-        ) {
+        if (!["subscribedToUpdates"].includes(key) && id === ctx.user.id) {
             throw new Error(responses.action_not_allowed);
+        }
+
+        if (key === "tags") {
+            addTags(userData["tags"], ctx);
         }
 
         user[key] = userData[key];
@@ -348,3 +350,126 @@ export async function deleteSegment(
 
     return segments;
 }
+
+export const getTags = async (ctx: GQLContext) => {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    if (!ctx.subdomain.tags) {
+        ctx.subdomain.tags = [];
+        await (ctx.subdomain as any).save();
+    }
+
+    return ctx.subdomain.tags;
+};
+
+export const getTagsWithDetails = async (ctx: GQLContext) => {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const tagsWithUsersCount = await UserModel.aggregate([
+        { $unwind: "$tags" },
+        {
+            $match: {
+                tags: { $in: ctx.subdomain.tags },
+                domain: ctx.subdomain._id,
+            },
+        },
+        {
+            $group: {
+                _id: "$tags",
+                count: { $sum: 1 },
+            },
+        },
+        {
+            $project: {
+                tag: "$_id",
+                count: 1,
+                _id: 0,
+            },
+        },
+        {
+            $unionWith: {
+                coll: "domains",
+                pipeline: [
+                    { $match: { _id: ctx.subdomain._id } },
+                    { $unwind: "$tags" },
+                    { $project: { tag: "$tags", _id: 0 } },
+                ],
+            },
+        },
+        {
+            $group: {
+                _id: "$tag",
+                count: { $sum: "$count" },
+            },
+        },
+        {
+            $project: {
+                tag: "$_id",
+                count: 1,
+                _id: 0,
+            },
+        },
+        { $sort: { count: -1 } },
+    ]);
+
+    return tagsWithUsersCount;
+};
+
+export const addTags = async (tags: string[], ctx: GQLContext) => {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    for (let tag of tags) {
+        if (!ctx.subdomain.tags.includes(tag)) {
+            ctx.subdomain.tags.push(tag);
+        }
+    }
+    await (ctx.subdomain as any).save();
+
+    return ctx.subdomain.tags;
+};
+
+export const deleteTag = async (tag: string, ctx: GQLContext) => {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    await UserModel.updateMany(
+        { domain: ctx.subdomain._id },
+        { $pull: { tags: tag } },
+    );
+    const tagIndex = ctx.subdomain.tags.indexOf(tag);
+    ctx.subdomain.tags.splice(tagIndex, 1);
+
+    await (ctx.subdomain as any).save();
+
+    return getTagsWithDetails(ctx);
+};
+
+export const untagUsers = async (tag: string, ctx: GQLContext) => {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    await UserModel.updateMany(
+        { domain: ctx.subdomain._id },
+        { $pull: { tags: tag } },
+    );
+
+    return getTagsWithDetails(ctx);
+};

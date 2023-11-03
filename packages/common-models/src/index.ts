@@ -30,3 +30,4 @@ export type { default as WidgetDefaultSettings } from "./widget-default-settings
 export type { LessonType } from "./lesson-type";
 export type { Mail } from "./mail";
 export type { Typeface } from "./typeface";
+export type { default as UserWithAdminFields } from "./user-with-admin-fields";

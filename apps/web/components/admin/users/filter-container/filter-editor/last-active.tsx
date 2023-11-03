@@ -74,7 +74,11 @@ export default function LastActiveFilterEditor({
                 }
             />
             <div className="flex justify-between">
-                <FormSubmit name="apply" text={USER_FILTER_APPLY_BTN} />
+                <FormSubmit
+                    disabled={!value}
+                    name="apply"
+                    text={USER_FILTER_APPLY_BTN}
+                />
                 <Button name="cancel" variant="soft">
                     {POPUP_CANCEL_ACTION}
                 </Button>

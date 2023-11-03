@@ -227,10 +227,7 @@ function FilterContainer({
                             cancelled,
                         }) => {
                             if (!cancelled) {
-                                if (
-                                    receivedSegments &&
-                                    receivedSegments.length
-                                ) {
+                                if (receivedSegments) {
                                     mapSegments(receivedSegments);
                                 }
                                 const selectedSeg = segments.find(

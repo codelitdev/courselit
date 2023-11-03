@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
 import {
     SWITCH_ACCOUNT_ACTIVE,
-    //ENROLLED_COURSES_HEADER,
     USERS_MANAGER_PAGE_HEADING,
     PAGE_HEADER_EDIT_USER,
     USER_BASIC_DETAILS_HEADER,
@@ -12,7 +11,7 @@ import {
 import { FetchBuilder } from "@courselit/utils";
 import { AppMessage } from "@courselit/common-models";
 import PermissionsEditor from "./permissions-editor";
-import type { Address, User } from "@courselit/common-models";
+import type { Address, UserWithAdminFields } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
 import {
@@ -20,7 +19,9 @@ import {
     Section,
     Switch,
     Breadcrumbs,
+    ComboBox,
 } from "@courselit/components-library";
+import { useCallback } from "react";
 
 const { networkAction, setAppMessage } = actionCreators;
 
@@ -31,18 +32,43 @@ interface DetailsProps {
 }
 
 const Details = ({ userId, address, dispatch }: DetailsProps) => {
-    const [userData, setUserData] = useState<User>();
+    const [userData, setUserData] = useState<UserWithAdminFields>();
     const [enrolledCourses, setEnrolledCourses] = useState([]);
+    const [tags, setTags] = useState([]);
 
     useEffect(() => {
         getUserDetails();
     }, [userId]);
 
+    const getTags = useCallback(async () => {
+        const query = `
+    query {
+        tags
+    }
+    `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload(query)
+            .setIsGraphQLEndpoint(true)
+            .build();
+        try {
+            dispatch(networkAction(true));
+            const response = await fetch.exec();
+            if (response.tags) {
+                setTags(response.tags);
+            }
+        } catch (err) {
+        } finally {
+            dispatch(networkAction(false));
+        }
+    }, [address.backend, dispatch]);
+
     useEffect(() => {
         if (userData) {
             getEnrolledCourses();
         }
-    }, []);
+        getTags();
+    }, [getTags]);
 
     const getUserDetails = async () => {
         const query = `
@@ -56,7 +82,8 @@ const Details = ({ userId, address, dispatch }: DetailsProps) => {
             userId,
             purchases {
                courseId 
-            }
+            },
+            tags
          }
     }
     `;
@@ -115,13 +142,55 @@ const Details = ({ userId, address, dispatch }: DetailsProps) => {
         name,
         active,
         permissions,
-        userId
+        userId,
+        tags
       }
     }
     `;
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
             .setPayload(mutation)
+            .setIsGraphQLEndpoint(true)
+            .build();
+        try {
+            dispatch(networkAction(true));
+            const response = await fetch.exec();
+            if (response.user) {
+                setUserData(response.user);
+            }
+        } catch (err: any) {
+            dispatch(setAppMessage(new AppMessage(err.message)));
+        } finally {
+            dispatch(networkAction(false));
+        }
+    };
+
+    const updateTags = async (tags: string[]) => {
+        const mutation = `
+    mutation UpdateTags($id: ID!, $tags: [String]!) {
+      user: updateUser(userData: {
+          id: $id,
+          tags: $tags
+        }) { 
+        id,
+        email,
+        name,
+        active,
+        permissions,
+        userId,
+        tags
+      }
+    }
+    `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload({
+                query: mutation,
+                variables: {
+                    id: userData.id,
+                    tags,
+                },
+            })
             .setIsGraphQLEndpoint(true)
             .build();
         try {
@@ -179,6 +248,11 @@ const Details = ({ userId, address, dispatch }: DetailsProps) => {
                             onChange={(value) => toggleActiveState(value)}
                         />
                     </div>
+                    <ComboBox
+                        options={tags}
+                        selectedOptions={new Set(userData.tags)}
+                        onChange={updateTags}
+                    />
                 </Section>
                 <PermissionsEditor user={userData} />
             </div>

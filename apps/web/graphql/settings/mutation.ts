@@ -7,7 +7,7 @@ import {
 } from "./logic";
 import { Typeface } from "@courselit/common-models";
 
-export default {
+const mutations = {
     updateSiteInfo: {
         type: types.domain,
         args: {
@@ -48,3 +48,5 @@ export default {
         ) => updateDraftTypefaces(typefaces, context),
     },
 };
+
+export default mutations;

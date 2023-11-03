@@ -8,6 +8,9 @@ const {
     leadDownload: download,
 } = constants;
 
+const leads = [website, newsletter, download] as const;
+type Lead = (typeof leads)[number];
+
 export interface User {
     _id: mongoose.Types.ObjectId;
     domain: mongoose.Types.ObjectId;
@@ -21,7 +24,8 @@ export interface User {
     createdAt: Date;
     updatedAt: Date;
     subscribedToUpdates: boolean;
-    lead: typeof website | typeof newsletter | typeof download;
+    lead: Lead;
+    tags?: string[];
 }
 
 const UserSchema = new mongoose.Schema<User>(
@@ -41,6 +45,7 @@ const UserSchema = new mongoose.Schema<User>(
             enum: [website, newsletter, download],
             default: website,
         },
+        tags: [String],
     },
     {
         timestamps: true,

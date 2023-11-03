@@ -31,6 +31,7 @@ const userType = new GraphQLObjectType({
         subscribedToUpdates: { type: GraphQLBoolean },
         createdAt: { type: GraphQLString },
         updatedAt: { type: GraphQLString },
+        tags: { type: new GraphQLList(GraphQLString) },
     },
 });
 
@@ -43,15 +44,13 @@ const userUpdateInput = new GraphQLInputObjectType({
         bio: { type: GraphQLString },
         permissions: { type: new GraphQLList(GraphQLString) },
         subscribedToUpdates: { type: GraphQLBoolean },
+        tags: { type: new GraphQLList(GraphQLString) },
     },
 });
 
 const userSearchInput = new GraphQLInputObjectType({
     name: "UserSearchInput",
     fields: {
-        //searchText: { type: GraphQLString },
-        //type: { type: userGroupType },
-        //email: { type: GraphQLString },
         offset: { type: GraphQLInt },
         rowsPerPage: { type: GraphQLInt },
         filters: { type: GraphQLString },
@@ -109,6 +108,14 @@ const userSegment = new GraphQLObjectType({
     },
 });
 
+const tagWithDetails = new GraphQLObjectType({
+    name: "TagWithDetails",
+    fields: {
+        tag: { type: new GraphQLNonNull(GraphQLString) },
+        count: { type: new GraphQLNonNull(GraphQLString) },
+    },
+});
+
 const userTypes = {
     userType,
     userUpdateInput,
@@ -118,6 +125,7 @@ const userTypes = {
     userSegment,
     userFilter,
     createSegmentInput,
+    tagWithDetails,
 };
 
 export default userTypes;

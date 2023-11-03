@@ -89,9 +89,11 @@ const domain = new GraphQLObjectType({
     },
 });
 
-export default {
+const types = {
     siteUpdateType,
     sitePaymentUpdateType,
     domain,
     typefaceInputType,
 };
+
+export default types;

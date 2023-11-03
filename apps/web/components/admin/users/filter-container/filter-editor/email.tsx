@@ -67,7 +67,11 @@ export default function EmailFilterEditor({ onApply }: EmailFilterEditorProps) {
                 onChange={(event: FormEvent) => setValue(event.target.value)}
             />
             <div className="flex justify-between">
-                <FormSubmit name="apply" text={USER_FILTER_APPLY_BTN} />
+                <FormSubmit
+                    disabled={!value}
+                    name="apply"
+                    text={USER_FILTER_APPLY_BTN}
+                />
                 <Button name="cancel" variant="soft">
                     {POPUP_CANCEL_ACTION}
                 </Button>

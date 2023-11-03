@@ -1,6 +1,13 @@
 import { GraphQLList, GraphQLNonNull, GraphQLString } from "graphql";
 import types from "./types";
-import { updateUser, createSegment, deleteSegment } from "./logic";
+import {
+    updateUser,
+    createSegment,
+    deleteSegment,
+    addTags,
+    deleteTag,
+    untagUsers,
+} from "./logic";
 
 const mutations = {
     updateUser: {
@@ -38,6 +45,36 @@ const mutations = {
             { segmentId }: { segmentId: string },
             context: any,
         ) => deleteSegment(segmentId, context),
+    },
+    addTags: {
+        type: new GraphQLList(GraphQLString),
+        args: {
+            tags: {
+                type: new GraphQLList(new GraphQLNonNull(GraphQLString)),
+            },
+        },
+        resolve: async (_: any, { tags }: { tags: string[] }, context: any) =>
+            addTags(tags, context),
+    },
+    deleteTag: {
+        type: new GraphQLList(types.tagWithDetails),
+        args: {
+            name: {
+                type: new GraphQLNonNull(GraphQLString),
+            },
+        },
+        resolve: async (_: any, { name }: { name: string }, context: any) =>
+            deleteTag(name, context),
+    },
+    untagUsers: {
+        type: new GraphQLList(types.tagWithDetails),
+        args: {
+            name: {
+                type: new GraphQLNonNull(GraphQLString),
+            },
+        },
+        resolve: async (_: any, { name }: { name: string }, context: any) =>
+            untagUsers(name, context),
     },
 };
 
