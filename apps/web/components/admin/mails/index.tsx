@@ -54,8 +54,8 @@ function Mails({
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [broadcastCount, setBroadcastCount] = useState(0);
-    const [sequenceCount, setSequenceCount] = useState(0);
-    const [mails, setMails] = useState([]);
+    const [_, setSequenceCount] = useState(0);
+    const [__, setMails] = useState([]);
     const [broadcasts, setBroadcasts] = useState<
         Pick<Sequence, "sequenceId" | "title" | "emails">[]
     >([]);
@@ -234,6 +234,7 @@ function Mails({
         }
     };
 
+    /*
     const createSequence = async () => {
         const mutation = `
             mutation {
@@ -265,6 +266,7 @@ function Mails({
             );
         }
     };
+    */
 
     const createBroadcast = async () => {
         const mutation = `

@@ -1,5 +1,5 @@
 import { OngoingSequence } from "@courselit/common-models";
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const OngoingSequenceSchema: Schema = new Schema<
     OngoingSequence & { domain: mongoose.Schema.Types.ObjectId }

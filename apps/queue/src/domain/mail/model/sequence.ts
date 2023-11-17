@@ -1,4 +1,4 @@
-import mongoose, { Document } from "mongoose";
+import mongoose from "mongoose";
 import { Constants, Sequence } from "@courselit/common-models";
 import EmailSchema from "./email";
 import { UserFilterWithAggregatorSchema } from "./user-filter";

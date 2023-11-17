@@ -1,5 +1,5 @@
 import { User } from "@courselit/common-models";
-import mongoose, { Document } from "mongoose";
+import mongoose from "mongoose";
 
 export type UserWithDomain = User & {
     domain: mongoose.Schema.Types.ObjectId;

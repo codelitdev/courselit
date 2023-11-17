@@ -1,7 +1,6 @@
 import {
     GraphQLBoolean,
     GraphQLFloat,
-    GraphQLInt,
     GraphQLNonNull,
     GraphQLString,
 } from "graphql";
@@ -19,7 +18,6 @@ import {
 } from "./logic";
 import types from "./types";
 import userTypes from "../users/types";
-import { SequenceType } from "@courselit/common-models";
 
 const mutations = {
     createSubscription: {

@@ -47,7 +47,6 @@ interface MailEditorProps {
 }
 
 function MailEditor({ id, address, dispatch }: MailEditorProps) {
-    const [sending, setSending] = useState(false);
     const [filters, setFilters] = useState<UserFilter[]>([]);
     const [filtersAggregator, setFiltersAggregator] =
         useState<UserFilterAggregator>("or");
@@ -261,7 +260,6 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
 
         try {
             dispatch(networkAction(true));
-            setSending(true);
             const response = await fetcher.exec();
             if (response.sequence) {
                 const { sequence } = response;
@@ -272,7 +270,6 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
             dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
             dispatch(networkAction(false));
-            setSending(false);
             setConfirmationDialogOpen(false);
         }
     };
