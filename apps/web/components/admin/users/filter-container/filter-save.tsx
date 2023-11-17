@@ -1,6 +1,5 @@
 import React, { useState, ChangeEvent } from "react";
 import { Form, FormField, FormSubmit } from "@courselit/components-library";
-import Filter from "@ui-models/filter";
 import Segment from "@ui-models/segment";
 import {
     BUTTON_SAVE,
@@ -11,18 +10,22 @@ import { FormEvent } from "react";
 import { FetchBuilder } from "@courselit/utils";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { connect } from "react-redux";
-import { Address, AppMessage } from "@courselit/common-models";
+import {
+    Address,
+    AppMessage,
+    UserFilter,
+    UserFilterAggregator,
+} from "@courselit/common-models";
 import type { ThunkDispatch } from "redux-thunk";
 import { actionCreators } from "@courselit/state-management";
 import type { AnyAction } from "redux";
 import PopoverDescription from "./popover-description";
-import FilterAggregator from "@ui-models/filter-aggregator";
 
 const { networkAction, setAppMessage } = actionCreators;
 
 interface FilterSaveProps {
-    filters: Filter[];
-    aggregator: FilterAggregator;
+    filters: UserFilter[];
+    aggregator: UserFilterAggregator;
     address: Address;
     dispatch: AppDispatch;
     dismissPopover: (segments?: Segment[]) => void;

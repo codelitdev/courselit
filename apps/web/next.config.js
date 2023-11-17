@@ -10,7 +10,12 @@ const nextConfig = {
         ignoreBuildErrors: true,
     },
     images: {
-        domains: [cdn],
+        domains: [
+            cdn,
+            "medialit.sgp1.cdn.digitaloceanspaces.com",
+            "courselit-test.sgp1.cdn.digitaloceanspaces.com",
+            "medialit-prod.s3.ap-southeast-1.amazonaws.com",
+        ],
     },
 };
 

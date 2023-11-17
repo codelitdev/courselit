@@ -1,3 +1,4 @@
+import React, { useEffect, useCallback, useMemo } from "react";
 import {
     Button,
     Form,
@@ -20,16 +21,18 @@ import {
     USER_FILTER_LABEL_DEFAULT,
     USER_FILTER_SAVE,
 } from "@ui-config/strings";
-import Filter from "@ui-models/filter";
-import type FilterAggregator from "@ui-models/filter-aggregator";
 import Segment from "@ui-models/segment";
 import SegmentEditor from "./segment-editor";
 import { AnyAction } from "redux";
-import { Address, AppMessage, State } from "@courselit/common-models";
+import {
+    Address,
+    AppMessage,
+    State,
+    UserFilter,
+    UserFilterAggregator,
+    UserFilterWithAggregator,
+} from "@courselit/common-models";
 import { actionCreators } from "@courselit/state-management";
-import { useEffect } from "react";
-import { useCallback } from "react";
-import { useMemo } from "react";
 import dynamic from "next/dynamic";
 import { PieChart, Search, Settings } from "@courselit/icons";
 import { FormEvent } from "react";
@@ -44,21 +47,29 @@ interface FilterContainerProps {
         filters,
         aggregator,
         segmentId,
+        count,
     }: {
-        filters: Filter[];
-        aggregator: FilterAggregator;
+        filters: UserFilter[];
+        aggregator: UserFilterAggregator;
         segmentId: string;
+        count: number;
     }) => void;
     address: Address;
     dispatch: AppDispatch;
+    filter?: UserFilterWithAggregator;
+    disabled?: boolean;
 }
 
 function FilterContainer({
     onChange,
     address,
     dispatch,
+    filter,
+    disabled = false,
 }: FilterContainerProps) {
-    const [internalFilters, setInternalFilters] = useState<Filter[]>([]);
+    const [internalFilters, setInternalFilters] = useState<UserFilter[]>(
+        filter?.filters || [],
+    );
     const defaultSegment: Segment = useMemo(
         () => ({
             name: USER_FILTER_LABEL_DEFAULT,
@@ -72,7 +83,7 @@ function FilterContainer({
     );
     const [segments, setSegments] = useState<Segment[]>([defaultSegment]);
     const [internalAggregator, setInternalAggregator] =
-        useState<FilterAggregator>("or");
+        useState<UserFilterAggregator>(filter?.aggregator || "or");
     const [activeSegment, setActiveSegment] = useState("");
     const [segmentSelectOpen, setSegmentSelectOpen] = useState(false);
     const [count, setCount] = useState(0);
@@ -164,6 +175,12 @@ function FilterContainer({
             const response = await fetch.exec();
             if (typeof response.count !== "undefined") {
                 setCount(response.count);
+                onChange({
+                    filters: [...internalFilters],
+                    aggregator: internalAggregator,
+                    segmentId: activeSegment,
+                    count: response.count,
+                });
             }
         } catch (err) {
             dispatch(setAppMessage(new AppMessage(err.message)));
@@ -179,26 +196,25 @@ function FilterContainer({
     const searchByEmail = useCallback(
         async (e?: FormEvent) => {
             e && e.preventDefault();
-            setInternalFilters([
+            const newFilters = [
                 ...internalFilters,
                 {
                     name: "email",
                     condition: "Contains",
                     value: searchEmail,
                 },
-            ]);
+            ];
+            setInternalFilters(newFilters);
+            onChange({
+                filters: newFilters,
+                aggregator: internalAggregator,
+                segmentId: activeSegment,
+                count,
+            });
             setSearchEmail("");
         },
         [searchEmail, internalFilters],
     );
-
-    useEffect(() => {
-        onChange({
-            filters: internalFilters,
-            aggregator: internalAggregator,
-            segmentId: activeSegment,
-        });
-    }, [internalFilters, internalAggregator, activeSegment, onChange]);
 
     return (
         <div className="flex flex-col gap-2">
@@ -217,6 +233,7 @@ function FilterContainer({
                             }
                         </span>
                     }
+                    disabled={disabled}
                 >
                     <SegmentEditor
                         segments={segments}
@@ -241,6 +258,12 @@ function FilterContainer({
                                     selectedSeg.filter.aggregator,
                                 );
                                 setActiveSegment(selectedSegment);
+                                onChange({
+                                    filters: [...selectedSeg.filter.filters],
+                                    aggregator: selectedSeg.filter.aggregator,
+                                    segmentId: selectedSegment,
+                                    count,
+                                });
                             }
                             setSegmentSelectOpen(false);
                         }}
@@ -255,14 +278,19 @@ function FilterContainer({
                             {USER_FILTER_BTN_LABEL}
                         </span>
                     }
+                    disabled={disabled}
                 >
                     <FilterEditor
-                        dismissPopover={(filter: Filter) => {
+                        dismissPopover={(filter: UserFilter) => {
                             if (filter) {
-                                setInternalFilters([
-                                    ...internalFilters,
-                                    filter,
-                                ]);
+                                const newFilters = [...internalFilters, filter];
+                                setInternalFilters(newFilters);
+                                onChange({
+                                    filters: newFilters,
+                                    aggregator: internalAggregator,
+                                    segmentId: activeSegment,
+                                    count,
+                                });
                             }
                             setFilterOpen(false);
                         }}
@@ -279,6 +307,7 @@ function FilterContainer({
                         required
                         placeholder="Search by email"
                         className="grow"
+                        disabled={disabled}
                         endIcon={
                             searchEmail ? (
                                 <span className="flex gap-2">
@@ -306,7 +335,16 @@ function FilterContainer({
                 <div className="flex flex-wrap gap-1 mb-2">
                     <Select
                         value={internalAggregator}
-                        onChange={setInternalAggregator}
+                        disabled={disabled}
+                        onChange={(value) => {
+                            setInternalAggregator(value);
+                            onChange({
+                                filters: [...internalFilters],
+                                aggregator: value,
+                                segmentId: activeSegment,
+                                count,
+                            });
+                        }}
                         options={[
                             { label: USER_FILTER_AGGREGATOR_ANY, value: "or" },
                             { label: USER_FILTER_AGGREGATOR_ALL, value: "and" },
@@ -319,38 +357,55 @@ function FilterContainer({
                             onRemove={(index: number) => {
                                 internalFilters.splice(index, 1);
                                 setInternalFilters([...internalFilters]);
+                                onChange({
+                                    filters: [...internalFilters],
+                                    aggregator: internalAggregator,
+                                    segmentId: activeSegment,
+                                    count,
+                                });
                             }}
                             key={index}
                             index={index}
                             filter={filter}
+                            disabled={disabled}
                         />
                     ))}
-                    <Button
-                        onClick={() => {
-                            setInternalFilters([]);
-                            setActiveSegment("");
-                        }}
-                        variant="soft"
-                        className="mx-2"
-                    >
-                        {USER_FILTER_CLEAR}
-                    </Button>
-                    <Popover
-                        open={segmentSaveOpen}
-                        setOpen={setSegmentSaveOpen}
-                        title={USER_FILTER_SAVE}
-                    >
-                        <FilterSave
-                            filters={internalFilters}
-                            aggregator={internalAggregator}
-                            dismissPopover={(segments?: Segment[]) => {
-                                if (segments && segments.length) {
-                                    mapSegments(segments);
-                                }
-                                setSegmentSaveOpen(false);
-                            }}
-                        />
-                    </Popover>
+                    {!disabled && (
+                        <>
+                            <Button
+                                onClick={() => {
+                                    setInternalFilters([]);
+                                    setActiveSegment("");
+                                    onChange({
+                                        filters: [],
+                                        aggregator: "or",
+                                        segmentId: "",
+                                        count,
+                                    });
+                                }}
+                                variant="soft"
+                                className="mx-2"
+                            >
+                                {USER_FILTER_CLEAR}
+                            </Button>
+                            <Popover
+                                open={segmentSaveOpen}
+                                setOpen={setSegmentSaveOpen}
+                                title={USER_FILTER_SAVE}
+                            >
+                                <FilterSave
+                                    filters={internalFilters}
+                                    aggregator={internalAggregator}
+                                    dismissPopover={(segments?: Segment[]) => {
+                                        if (segments && segments.length) {
+                                            mapSegments(segments);
+                                        }
+                                        setSegmentSaveOpen(false);
+                                    }}
+                                />
+                            </Popover>
+                        </>
+                    )}
                 </div>
             )}
         </div>

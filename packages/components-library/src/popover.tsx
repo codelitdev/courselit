@@ -15,6 +15,7 @@ interface PopoverProps {
     setOpen: (val: boolean) => void;
     title: ReactNode | string;
     children: ReactNode;
+    disabled: boolean;
 }
 
 export default function Popover({
@@ -22,11 +23,14 @@ export default function Popover({
     setOpen,
     title,
     children,
+    disabled = false,
 }: PopoverProps) {
     return (
         <Root open={open} onOpenChange={setOpen}>
             <Trigger asChild>
-                <Button variant="soft">{title}</Button>
+                <Button disabled={disabled} variant="soft">
+                    {title}
+                </Button>
             </Trigger>
             <Portal>
                 <Content className="min-w-[180px] bg-white rounded shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)]">

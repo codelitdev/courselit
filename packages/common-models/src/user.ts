@@ -4,7 +4,7 @@ export default interface User {
     name: string;
     purchases: string[];
     active: boolean;
-    userId: number;
+    userId: string;
     bio: string;
     permissions: string[];
 }

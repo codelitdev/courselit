@@ -117,6 +117,7 @@ const tagWithDetails = new GraphQLObjectType({
 });
 
 const userTypes = {
+    filter,
     userType,
     userUpdateInput,
     userSearchInput,

@@ -1,4 +1,10 @@
-import { GraphQLBoolean, GraphQLNonNull, GraphQLString } from "graphql";
+import {
+    GraphQLBoolean,
+    GraphQLFloat,
+    GraphQLInt,
+    GraphQLNonNull,
+    GraphQLString,
+} from "graphql";
 import GQLContext from "../../models/GQLContext";
 import {
     createSubscription,
@@ -6,11 +12,16 @@ import {
     updateMail,
     sendMail,
     sendCourseOverMail,
+    createSequence,
+    createBroadcast,
+    updateBroadcast,
+    toggleEmailPublishStatus,
 } from "./logic";
-import types from "./types.ts";
-import userTypes from "../users/types.ts";
+import types from "./types";
+import userTypes from "../users/types";
+import { SequenceType } from "@courselit/common-models";
 
-export default {
+const mutations = {
     createSubscription: {
         type: GraphQLBoolean,
         args: {
@@ -32,6 +43,74 @@ export default {
             { searchData }: { searchData: any },
             context: GQLContext,
         ) => createMail(searchData, context),
+    },
+    createSequence: {
+        type: types.sequence,
+        args: {},
+        resolve: async (_: any, {}: {}, context: GQLContext) =>
+            createSequence(context),
+    },
+    createBroadcast: {
+        type: types.sequence,
+        args: {},
+        resolve: async (_: any, {}: {}, context: GQLContext) =>
+            createBroadcast(context),
+    },
+    updateBroadcast: {
+        type: types.sequence,
+        args: {
+            sequenceId: { type: new GraphQLNonNull(GraphQLString) },
+            title: { type: GraphQLString },
+            filter: { type: GraphQLString },
+            templateId: { type: GraphQLString },
+            content: { type: GraphQLString },
+            delayInMillis: { type: GraphQLFloat },
+        },
+        resolve: async (
+            _: any,
+            {
+                sequenceId,
+                filter,
+                title,
+                templateId,
+                content,
+                delayInMillis,
+            }: {
+                sequenceId: string;
+                filter?: string;
+                title?: string;
+                templateId?: string;
+                content?: string;
+                delayInMillis?: number;
+            },
+            context: GQLContext,
+        ) =>
+            updateBroadcast({
+                ctx: context,
+                sequenceId,
+                filter,
+                title,
+                templateId,
+                content,
+                delayInMillis,
+            }),
+    },
+    toggleEmailPublishStatus: {
+        type: types.sequence,
+        args: {
+            sequenceId: { type: new GraphQLNonNull(GraphQLString) },
+            emailId: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: async (
+            _: any,
+            { sequenceId, emailId }: { sequenceId: string; emailId: string },
+            context: GQLContext,
+        ) =>
+            toggleEmailPublishStatus({
+                ctx: context,
+                sequenceId,
+                emailId,
+            }),
     },
     updateMail: {
         type: types.mail,
@@ -74,3 +153,4 @@ export default {
         ) => sendCourseOverMail(courseId, email, context),
     },
 };
+export default mutations;

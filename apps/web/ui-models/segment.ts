@@ -1,13 +1,7 @@
-import Filter from "./filter";
-import { FilterAggregator } from "./filter-aggregator";
-
-interface SegmentFilter {
-    aggregator: FilterAggregator;
-    filters: Filter[];
-}
+import { UserFilterWithAggregator } from "@courselit/common-models";
 
 export default interface Segment {
     name: string;
-    filter: SegmentFilter;
+    filter: UserFilterWithAggregator;
     segmentId: string;
 }

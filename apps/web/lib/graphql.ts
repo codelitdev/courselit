@@ -66,6 +66,7 @@ interface SearchOptions {
     sortByColumn?: string;
     sortOrder?: 1 | -1;
 }
+// TODO: simplify this
 export const makeModelTextSearchable =
     (Model: any) =>
     async (searchData: SearchData, options: SearchOptions = {}) => {
@@ -76,7 +77,7 @@ export const makeModelTextSearchable =
 
         validateSearchInput(searchData, checkIfRequestIsAuthenticated);
 
-        const query = Model.find(searchData.query);
+        const query = Model.find(searchData.query).lean();
         if (itemsPerPage !== Infinity) {
             query.skip(offset * itemsPerPage).limit(itemsPerPage);
         }

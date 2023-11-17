@@ -1,9 +1,7 @@
 import mongoose from "mongoose";
-import {
-    UserFilterWithAggregator,
-    UserFilterWithAggregatorSchema,
-} from "./UserFilter";
+import { UserFilterWithAggregatorSchema } from "./UserFilter";
 import { generateUniqueId } from "@courselit/utils";
+import { UserFilterWithAggregator } from "@courselit/common-models";
 
 export interface UserSegment {
     domain: mongoose.Types.ObjectId;

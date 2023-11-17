@@ -1,9 +1,9 @@
-import * as React from "react";
+import React, { ReactNode } from "react";
 import { Submit } from "@radix-ui/react-form";
 import Button from "./button";
 
 interface FormSubmitProps {
-    text: string;
+    text: ReactNode;
     [key: string]: any;
 }
 

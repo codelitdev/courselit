@@ -15,6 +15,7 @@ export const responses = {
     sign_in_link_text: "Sign in",
 
     // graphql responses
+    past_date: "Date cannot be in the past",
     invalid_permission: "Invalid permission",
     user_not_found: "User not found.",
     request_not_authenticated: "Request not authenticated",
