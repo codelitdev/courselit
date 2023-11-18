@@ -29,7 +29,11 @@ export async function processOngoingSequences(): Promise<void> {
             });
 
         for (const ongoingSequence of dueOngoingSequences) {
-            await processOngoingSequence(ongoingSequence);
+            try {
+                await processOngoingSequence(ongoingSequence);
+            } catch (err: any) {
+                logger.error(err);
+            }
         }
 
         await new Promise((resolve) => setTimeout(resolve, 60 * 1000));
@@ -61,17 +65,13 @@ async function processOngoingSequence(ongoingSequence: OngoingSequence) {
         return await cleanUpResources(ongoingSequence);
     }
 
-    try {
-        await attemptMailSending({
-            creator,
-            user,
-            sequence,
-            ongoingSequence,
-        });
-        await updateOngoingSequence({ ongoingSequence, sequence });
-    } catch (err: any) {
-        logger.error(err);
-    }
+    await attemptMailSending({
+        creator,
+        user,
+        sequence,
+        ongoingSequence,
+    });
+    await updateOngoingSequence({ ongoingSequence, sequence });
 }
 
 async function cleanUpResources(

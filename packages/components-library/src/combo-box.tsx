@@ -90,11 +90,6 @@ export default function ComboBox({
                         <Form
                             onSubmit={(e) => {
                                 e.preventDefault();
-                                console.log(
-                                    "form",
-                                    text,
-                                    internalSelectedOptions,
-                                );
                                 onOptionAdd();
                             }}
                         >

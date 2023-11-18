@@ -197,7 +197,6 @@ export async function getSequence(
     if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
         throw new Error(responses.action_not_allowed);
     }
-    console.log(sequence);
 
     return sequence;
 }
@@ -272,7 +271,6 @@ export async function getBroadcasts({
     }
 
     const searchSequences = makeModelTextSearchable(SequenceModel);
-    console.log(offset);
     const broadcasts: Pick<Sequence, "sequenceId" | "title" | "emails">[] =
         await searchSequences(
             {
@@ -418,7 +416,6 @@ async function addRuleToSendLater({
     sequence: Sequence;
     ctx: GQLContext;
 }) {
-    console.log("addRuleToSendLater");
     await Rule.create({
         domain: ctx.subdomain._id,
         event: Constants.eventTypes[4],

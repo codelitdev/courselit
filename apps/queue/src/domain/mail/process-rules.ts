@@ -3,6 +3,7 @@ import OngoingSequence from "./model/ongoing-sequence";
 import SequenceModel, { AdminSequence } from "./model/sequence";
 import User from "./model/user";
 import convertFiltersToDBConditions from "./convert-filters-to-db-conditions";
+import { logger } from "../../logger";
 
 export async function processRules() {
     while (true) {
@@ -16,7 +17,11 @@ export async function processRules() {
         }).lean();
 
         for (const rule of rules) {
-            processRule(rule);
+            try {
+                await processRule(rule);
+            } catch (err: any) {
+                logger.error(err);
+            }
         }
 
         await new Promise((resolve) => setTimeout(resolve, 60 * 1000));
@@ -35,9 +40,23 @@ async function processRule(rule: Rule) {
             sequenceId,
         });
         if (sequence) {
-            await addBroadcastToOngoingSequence(sequence);
-            sequence.report.broadcast.lockedAt = new Date();
-            await (sequence as any).save();
+            await Promise.all([
+                addBroadcastToOngoingSequence(sequence),
+                (async () => {
+                    sequence.report = {
+                        broadcast: {
+                            lockedAt: new Date(),
+                            sentAt: null,
+                        },
+                        sequence: {
+                            subscribers: [],
+                            unsubscribers: [],
+                            failed: [],
+                        },
+                    };
+                    await (sequence as any).save();
+                })(),
+            ]);
             await RuleModel.updateOne(
                 { ruleId: rule.ruleId },
                 { active: false },
