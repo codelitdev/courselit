@@ -37,6 +37,7 @@ export interface FormFieldProps {
         | "submit"
         | "text"
         | "url"
+        | "datetime-local"
         | "date";
     messages?: MessageItem[];
     [key: string]: any;

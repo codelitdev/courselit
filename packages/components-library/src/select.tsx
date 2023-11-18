@@ -43,7 +43,7 @@ export default function Select({
 }: SelectProps) {
     return (
         <Root>
-            <Trigger asChild>
+            <Trigger disabled={disabled} asChild>
                 <div className="cursor-pointer">
                     {variant !== "without-label" && (
                         <div className="mb-1 font-medium">{title}</div>

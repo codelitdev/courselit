@@ -1,3 +1,4 @@
+import { UserFilter } from "@courselit/common-models";
 import {
     USER_FILTER_CATEGORY_EMAIL,
     USER_FILTER_CATEGORY_LAST_ACTIVE,
@@ -7,9 +8,8 @@ import {
     USER_FILTER_CATEGORY_SUBSCRIPTION,
     USER_FILTER_CATEGORY_TAGGED,
 } from "@ui-config/strings";
-import Filter from "@ui-models/filter";
 
-const categoriesMap: Record<Filter["name"], string> = {
+const categoriesMap: Record<UserFilter["name"], string> = {
     email: USER_FILTER_CATEGORY_EMAIL,
     product: USER_FILTER_CATEGORY_PRODUCT,
     lastActive: USER_FILTER_CATEGORY_LAST_ACTIVE,

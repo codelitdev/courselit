@@ -4,6 +4,7 @@
  * a 401 etc.
  */
 
+// TODO: remove this dependency
 import Router from "next/router";
 import { debuglog } from "util";
 

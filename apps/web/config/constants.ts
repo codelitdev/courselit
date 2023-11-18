@@ -84,19 +84,7 @@ export default {
     downLoadLinkLength: 128,
 
     // mail types
-    mailBroadcast: "broadcast",
-    mailSequence: "sequence",
-
-    // user filters
-    userFilters: [
-        "email",
-        "product",
-        "lastActive",
-        "signedUp",
-        "subscription",
-        "tag",
-        "permission",
-    ],
+    mailTypes: ["broadcast", "sequence"],
 
     // acceptable currency codes for payments
     currencyISOCodes: [

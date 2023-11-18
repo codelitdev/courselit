@@ -3,19 +3,21 @@ import { Cross } from "@courselit/icons";
 import { capitalize } from "@courselit/utils";
 import { USER_FILTER_CHIP_TOOLTIP } from "@ui-config/strings";
 import { useMemo } from "react";
-import Filter from "@ui-models/filter";
 import permissionToCaptionMap from "../permissions-to-caption-map";
+import { UserFilter as Filter } from "@courselit/common-models";
 
 interface FilterChipProps {
     filter: Filter;
     index: number;
     onRemove: (index: number) => void;
+    disabled?: boolean;
 }
 
 export default function FilterChip({
     filter,
     index,
     onRemove,
+    disabled = false,
 }: FilterChipProps) {
     const { name, condition, value, valueLabel } = filter;
 
@@ -39,11 +41,16 @@ export default function FilterChip({
                     <span className="font-medium"> {displayedValue}</span>
                 )}
             </div>
-            <IconButton variant="transparent" onClick={() => onRemove(index)}>
-                <Tooltip title={USER_FILTER_CHIP_TOOLTIP}>
-                    <Cross />
-                </Tooltip>
-            </IconButton>
+            {!disabled && (
+                <IconButton
+                    variant="transparent"
+                    onClick={() => onRemove(index)}
+                >
+                    <Tooltip title={USER_FILTER_CHIP_TOOLTIP}>
+                        <Cross />
+                    </Tooltip>
+                </IconButton>
+            )}
         </div>
     );
 }

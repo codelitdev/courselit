@@ -4,7 +4,7 @@ const transport = pino.transport({
     target: "pino-mongodb",
     options: {
         uri: process.env.DB_CONNECTION_STRING,
-        collection: "queue-logs",
+        collection: "queue_logs",
     },
 });
 

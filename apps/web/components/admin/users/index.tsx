@@ -10,7 +10,14 @@ import { FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
-import { User, Address, State, AppMessage } from "@courselit/common-models";
+import {
+    User,
+    Address,
+    State,
+    AppMessage,
+    UserFilter,
+    UserFilterAggregator,
+} from "@courselit/common-models";
 import { ThunkDispatch } from "redux-thunk";
 import { AnyAction } from "redux";
 import {
@@ -24,8 +31,6 @@ import {
 } from "@courselit/components-library";
 import { useRouter } from "next/router";
 import { formattedLocaleDate } from "@ui-lib/utils";
-import Filter from "@ui-models/filter";
-import type FilterAggregator from "@ui-models/filter-aggregator";
 import FilterContainer from "./filter-container";
 import { useCallback } from "react";
 
@@ -42,9 +47,9 @@ const UsersManager = ({ address, dispatch, loading }: UserManagerProps) => {
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [users, setUsers] = useState<User[]>([]);
-    const [filters, setFilters] = useState<Filter[]>([]);
+    const [filters, setFilters] = useState<UserFilter[]>([]);
     const [filtersAggregator, setFiltersAggregator] =
-        useState<FilterAggregator>("or");
+        useState<UserFilterAggregator>("or");
     const [count, setCount] = useState(0);
     const router = useRouter();
 

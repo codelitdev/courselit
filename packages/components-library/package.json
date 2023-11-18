@@ -7,7 +7,7 @@
         "components",
         "courselit"
     ],
-    "author": "Rajat Saxena <social@rajats.xyz>",
+    "author": "Team CourseLit <hi@codelit.dev>",
     "homepage": "https://github.com/codelitdev/courselit#readme",
     "license": "MIT",
     "types": "dist/index.d.ts",

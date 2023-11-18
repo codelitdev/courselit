@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { ScrollArea } from "@courselit/components-library";
 import { USER_FILTER_DROPDOWN_LABEL } from "@ui-config/strings";
-import Filter from "@ui-models/filter";
 import PopoverHeader from "../popover-header";
 import dynamic from "next/dynamic";
 import categoriesMap from "./categories-map";
@@ -12,6 +11,7 @@ const ProductFilterEditor = dynamic(() => import("./product"));
 const EmailFilterEditor = dynamic(() => import("./email"));
 const SubscriptionFilterEditor = dynamic(() => import("./subscription"));
 const TaggedFilterEditor = dynamic(() => import("./tagged"));
+import { UserFilter as Filter } from "@courselit/common-models";
 
 interface FilterEditorProps {
     dismissPopover: (filter: Filter) => void;

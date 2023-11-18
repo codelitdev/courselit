@@ -28,13 +28,13 @@ import { setAppMessage } from "@courselit/state-management/dist/action-creators"
 import { Breadcrumbs, Link, Button } from "@courselit/components-library";
 const { networkAction } = actionCreators;
 
-interface MailEditorProps {
+interface BroadcastEditorProps {
     id: string;
     address: Address;
     dispatch: AppDispatch;
 }
 
-function MailEditor({ id, address, dispatch }: MailEditorProps) {
+function BroadcastEditor({ id, address, dispatch }: BroadcastEditor) {
     const [mail, setMail] = useState<Mail>({
         mailId: null,
         to: "",
@@ -231,4 +231,4 @@ const mapDispatchToProps = (dispatch: AppDispatch) => ({
     dispatch,
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(MailEditor);
+export default connect(mapStateToProps, mapDispatchToProps)(BroadcastEditor);

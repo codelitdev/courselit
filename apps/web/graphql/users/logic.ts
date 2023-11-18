@@ -11,11 +11,13 @@ const { permissions } = constants;
 import { Progress } from "../../models/Progress";
 import { initMandatoryPages } from "../pages/logic";
 import { Domain } from "../../models/Domain";
-import { checkPermission } from "@courselit/utils";
+import {
+    checkPermission,
+    convertFiltersToDBConditions,
+} from "@courselit/utils";
 import UserSegmentModel, { UserSegment } from "../../models/UserSegment";
-import convertFiltersToDBConditions from "../../lib/convert-filters-to-db-conditions";
 import mongoose from "mongoose";
-import { UserFilterWithAggregator } from "../../models/UserFilter";
+import { UserFilterWithAggregator } from "@courselit/common-models";
 
 const removeAdminFieldsFromUserObject = ({
     id,
