@@ -91,7 +91,6 @@ const checkForInvalidPermissions = (user) => {
 export const updateUser = async (userData: any, ctx: GQLContext) => {
     checkIfAuthenticated(ctx);
     const { id } = userData;
-    console.log(userData);
 
     const hasPermissionToManageUser = checkPermission(ctx.user.permissions, [
         permissions.manageUsers,

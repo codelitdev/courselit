@@ -1989,6 +1989,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@courselit/queue@workspace:apps/queue"
   dependencies:
+    "@courselit/common-models": "workspace:^"
     "@types/express": ^4.17.17
     "@types/nodemailer": ^6.4.8
     mongoose: ^8.0.0
