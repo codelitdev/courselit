@@ -17,6 +17,10 @@ const transporter = nodemailer.createTransport({
     },
 });
 
+const sequenceBounceLimit = process.env.SEQUENCE_BOUNCE_LIMIT
+    ? +process.env.SEQUENCE_BOUNCE_LIMIT
+    : 3;
+
 export async function processOngoingSequences(): Promise<void> {
     while (true) {
         const currentTime = new Date().getTime();
@@ -25,7 +29,7 @@ export async function processOngoingSequences(): Promise<void> {
         const dueOngoingSequences: OngoingSequence[] =
             await OngoingSequenceModel.find({
                 nextEmailScheduledTime: { $lt: currentTime },
-                retryCount: { $lt: +process.env.SEQUENCE_BOUNCE_LIMIT },
+                retryCount: { $lt: sequenceBounceLimit },
             });
 
         for (const ongoingSequence of dueOngoingSequences) {
@@ -134,7 +138,7 @@ async function attemptMailSending({
         });
     } catch (err: any) {
         ongoingSequence.retryCount++;
-        if (ongoingSequence.retryCount >= +process.env.SEQUENCE_BOUNCE_LIMIT) {
+        if (ongoingSequence.retryCount >= sequenceBounceLimit) {
             sequence.report.sequence.failed = [
                 ...sequence.report.sequence.failed,
                 ongoingSequence.userId,
