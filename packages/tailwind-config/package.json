@@ -1,6 +1,6 @@
 {
     "name": "tailwind-config",
-    "version": "0.6.1",
+    "version": "0.6.2",
     "description": "Tailwind config for CourseLit",
     "author": "Rajat Saxena <hi@rajatsaxena.dev>",
     "homepage": "https://github.com/codelitdev/courselit#readme",
