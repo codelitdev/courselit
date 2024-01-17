@@ -32,11 +32,15 @@ import Switch from "./switch";
 import Checkbox from "./checkbox";
 import Tabs from "./tabs";
 import Table, { TableHead, TableBody, TableRow } from "./table";
-import Avatar from "./avatar";
 import Breadcrumbs from "./breadcrumbs";
 import Popover from "./popover";
 import ScrollArea from "./scrollarea";
 import ComboBox from "./combo-box";
+export { Button as Button2 } from "./components/ui/button";
+
+export * from "./menu";
+export * from "./components/ui/avatar";
+export * from "./drawer";
 
 export {
     PriceTag,
@@ -73,7 +77,6 @@ export {
     TableHead,
     TableBody,
     TableRow,
-    Avatar,
     Breadcrumbs,
     Popover,
     ScrollArea,

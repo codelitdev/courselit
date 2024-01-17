@@ -8,6 +8,6 @@ export default defineConfig((options: Options) => ({
     dts: true,
     minify: true,
     clean: true,
-    external: ["react", "next/link", "next/legacy/image"],
+    external: ["react", "next/link", "next/legacy/image", "next/navigation"],
     ...options,
 }));

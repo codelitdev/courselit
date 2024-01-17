@@ -3,6 +3,8 @@ import { WidgetDefaultSettings } from "@courselit/common-models";
 export interface Link {
     label: string;
     href: string;
+    isButton?: boolean;
+    isPrimary?: boolean;
 }
 
 export default interface Settings extends WidgetDefaultSettings {
@@ -12,5 +14,8 @@ export default interface Settings extends WidgetDefaultSettings {
     loginBtnColor: string;
     loginBtnBgColor: string;
     linkColor: string;
-    linkAlignment: "left" | "right";
+    linkAlignment: "left" | "right" | "center";
+    showLoginControl: boolean;
+    linkFontWeight: "font-normal" | "font-light" | "font-bold";
+    spacingBetweenLinks: number;
 }
