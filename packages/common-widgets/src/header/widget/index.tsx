@@ -2,13 +2,11 @@ import React from "react";
 import Settings, { Link } from "../settings";
 import {
     Image,
-    Menu2,
     Link as AppLink,
-    MenuItem,
     Menu,
     Button2,
 } from "@courselit/components-library";
-import { Menu as MenuIcon, Person } from "@courselit/icons";
+import { Person } from "@courselit/icons";
 import { State, UIConstants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
 import { MenuItem2 } from "@courselit/components-library";
