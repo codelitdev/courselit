@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Edit } from "@courselit/icons";
+import { Edit, Help } from "@courselit/icons";
 import { Link } from "../settings";
 import {
     Button,
@@ -8,6 +8,8 @@ import {
     IconButton,
     Section,
 } from "@courselit/components-library";
+import { Checkbox } from "@courselit/components-library";
+import { Tooltip } from "@courselit/components-library";
 
 interface LinkEditorProps {
     link: Link;
@@ -23,6 +25,10 @@ export default function LinkEditor({
 }: LinkEditorProps) {
     const [label, setLabel] = useState(link.label);
     const [href, setHref] = useState(link.href);
+    const [isPrimary, setIsPrimary] = useState<boolean>(
+        link.isPrimary || false,
+    );
+    const [isButton, setIsButton] = useState<boolean>(link.isButton || false);
     const [editing, setEditing] = useState(false);
 
     const updateLink = () => {
@@ -30,6 +36,8 @@ export default function LinkEditor({
             onChange(index, {
                 label,
                 href,
+                isButton,
+                isPrimary,
             });
             setEditing(false);
         }
@@ -54,19 +62,36 @@ export default function LinkEditor({
                 </div>
             )}
             {editing && (
-                <Form className="flex flex-col">
+                <Form className="flex flex-col gap-2 mb-4">
                     <FormField
                         label="Label"
                         value={label}
                         onChange={(e) => setLabel(e.target.value)}
-                        className="mb-2"
                     />
                     <FormField
                         label="URL"
                         value={href}
                         onChange={(e) => setHref(e.target.value)}
-                        className="mb-2"
                     />
+                    <div className="flex justify-between">
+                        <p>Show as button</p>
+                        <Checkbox
+                            checked={isButton}
+                            onChange={(value: boolean) => setIsButton(value)}
+                        />
+                    </div>
+                    <div className="flex justify-between">
+                        <div className="flex grow items-center gap-1">
+                            <p>Primary control</p>
+                            <Tooltip title="On the desktop, this link appears in the right corner">
+                                <Help />
+                            </Tooltip>
+                        </div>
+                        <Checkbox
+                            checked={isPrimary}
+                            onChange={(value: boolean) => setIsPrimary(value)}
+                        />
+                    </div>
                     <div className="flex gap-2 justify-end">
                         <Button
                             component="button"
@@ -76,7 +101,7 @@ export default function LinkEditor({
                             Delete
                         </Button>
                         <Button onClick={updateLink} component="button">
-                            Done
+                            Save
                         </Button>
                     </div>
                 </Form>
