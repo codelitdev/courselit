@@ -1,6 +1,6 @@
 {
     "name": "@courselit/web",
-    "version": "0.42.1",
+    "version": "0.42.2",
     "private": true,
     "scripts": {
         "dev": "next dev",
@@ -35,7 +35,7 @@
         "react-dom": "^18.2.0",
         "react-redux": "^8.1.2",
         "remirror": "^2.0.9",
-        "sharp": "^0.30.6",
+        "sharp": "^0.33.2",
         "slugify": "^1.6.5",
         "stripe": "^8.219.0"
     },
