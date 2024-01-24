@@ -44,6 +44,7 @@ interface Strings {
     popupOKAction?: string;
     deleteMediaButton?: string;
     publiclyAvailable?: string;
+    removeButtonCaption?: string;
 }
 
 interface MediaSelectorProps {
@@ -55,9 +56,11 @@ interface MediaSelectorProps {
     src: string;
     srcTitle: string;
     onSelection: (...args: any[]) => void;
+    onRemove: (...args: any[]) => void;
     mimeTypesToShow?: string[];
     access?: Access;
     strings: Strings;
+    mediaId?: string;
 }
 
 const MediaSelector = (props: MediaSelectorProps) => {
@@ -133,6 +136,30 @@ const MediaSelector = (props: MediaSelectorProps) => {
         }
     };
 
+    const removeFile = async () => {
+        try {
+            setUploading(true);
+            const fetch = new FetchBuilder()
+                .setUrl(`${address.backend}/api/media/${props.mediaId}`)
+                .setHttpMethod("DELETE")
+                .setIsGraphQLEndpoint(false)
+                .build();
+            const response = await fetch.exec();
+            console.log(response);
+            if (response.message !== "success") {
+                throw new Error(response.message);
+            }
+            if (props.onRemove) {
+                props.onRemove();
+            }
+        } catch (err: any) {
+            dispatch(setAppMessage(new AppMessage(err.message)));
+        } finally {
+            setUploading(false);
+            setDialogOpened(false);
+        }
+    };
+
     return (
         <div className="flex items-center gap-4">
             <h4>{title}</h4>
@@ -140,51 +167,60 @@ const MediaSelector = (props: MediaSelectorProps) => {
                 <Image src={src} height={64} width={64} />
                 <p className="text-xs">{srcTitle}</p>
             </div>
-            <div>
-                <Dialog2
-                    title={strings.dialogTitle || "Select media"}
-                    trigger={
-                        <Button component="button" variant="soft">
-                            {strings.buttonCaption || "Select media"}
-                        </Button>
-                    }
-                    open={dialogOpened}
-                    onOpenChange={setDialogOpened}
-                    okButton={
-                        <Button
-                            component="button"
-                            onClick={uploadFile}
-                            disabled={
-                                !selectedFile || (selectedFile && uploading)
-                            }
-                        >
-                            {uploading
-                                ? strings.uploading || "Uploading"
-                                : strings.uploadButtonText || "Upload"}
-                        </Button>
-                    }
-                >
-                    {error && <div>{error}</div>}
-                    <Form encType="multipart/form-data">
-                        <FormField
-                            label={""}
-                            ref={fileInput}
-                            type="file"
-                            onChange={(e: any) =>
-                                setSelectedFile(e.target.files[0])
-                            }
-                            messages={[
-                                {
-                                    match: "valueMissing",
-                                    text: "File is required",
-                                },
-                            ]}
-                            className="mt-4"
-                            required
-                        />
-                    </Form>
-                </Dialog2>
-            </div>
+            {props.mediaId && (
+                <Button onClick={removeFile} disabled={uploading}>
+                    {uploading
+                        ? "Working..."
+                        : strings.removeButtonCaption || "Remove media"}
+                </Button>
+            )}
+            {!props.mediaId && (
+                <div>
+                    <Dialog2
+                        title={strings.dialogTitle || "Select media"}
+                        trigger={
+                            <Button component="button" variant="soft">
+                                {strings.buttonCaption || "Select media"}
+                            </Button>
+                        }
+                        open={dialogOpened}
+                        onOpenChange={setDialogOpened}
+                        okButton={
+                            <Button
+                                component="button"
+                                onClick={uploadFile}
+                                disabled={
+                                    !selectedFile || (selectedFile && uploading)
+                                }
+                            >
+                                {uploading
+                                    ? strings.uploading || "Uploading"
+                                    : strings.uploadButtonText || "Upload"}
+                            </Button>
+                        }
+                    >
+                        {error && <div>{error}</div>}
+                        <Form encType="multipart/form-data">
+                            <FormField
+                                label={""}
+                                ref={fileInput}
+                                type="file"
+                                onChange={(e: any) =>
+                                    setSelectedFile(e.target.files[0])
+                                }
+                                messages={[
+                                    {
+                                        match: "valueMissing",
+                                        text: "File is required",
+                                    },
+                                ]}
+                                className="mt-4"
+                                required
+                            />
+                        </Form>
+                    </Dialog2>
+                </div>
+            )}
         </div>
     );
 };

@@ -1,15 +1,21 @@
-import type {
+import {
     Alignment,
     Media,
     WidgetDefaultSettings,
 } from "@courselit/common-models";
 
+interface ItemAction {
+    label: string;
+    href: string;
+}
+
 export interface Item {
     title: string;
-    description?: Record<string, unknown>;
-    buttonCaption?: string;
-    buttonAction?: string;
-    media?: Media;
+    price: string;
+    description: Record<string, unknown>;
+    features: string;
+    action: ItemAction;
+    primary: boolean;
 }
 
 export default interface Settings extends WidgetDefaultSettings {
@@ -17,17 +23,13 @@ export default interface Settings extends WidgetDefaultSettings {
     description?: Record<string, unknown>;
     headerAlignment: Alignment;
     itemsAlignment: Alignment;
-    buttonCaption?: string;
-    buttonAction?: string;
-    buttonBackground?: string;
-    buttonForeground?: string;
     backgroundColor?: string;
     foregroundColor?: string;
     items?: Item[];
     horizontalPadding: number;
     verticalPadding: number;
-    itemBackgroundColor?: string;
-    itemForegroundColor?: string;
-    itemBorderColor?: string;
-    itemBorderRadius?: number;
+    buttonBackground?: string;
+    buttonForeground?: string;
+    primaryButtonBackground?: string;
+    cardBorderColor?: string;
 }

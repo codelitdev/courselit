@@ -93,7 +93,7 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
     };
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 mb-4">
             <AdminWidgetPanel title="Links">
                 {links &&
                     links.map((link, index) => (

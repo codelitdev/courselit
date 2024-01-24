@@ -1,4 +1,4 @@
-import type {
+import {
     Alignment,
     Media,
     WidgetDefaultSettings,
@@ -6,10 +6,7 @@ import type {
 
 export interface Item {
     title: string;
-    description?: Record<string, unknown>;
-    buttonCaption?: string;
-    buttonAction?: string;
-    media?: Media;
+    description: Record<string, unknown>;
 }
 
 export default interface Settings extends WidgetDefaultSettings {
@@ -17,17 +14,9 @@ export default interface Settings extends WidgetDefaultSettings {
     description?: Record<string, unknown>;
     headerAlignment: Alignment;
     itemsAlignment: Alignment;
-    buttonCaption?: string;
-    buttonAction?: string;
-    buttonBackground?: string;
-    buttonForeground?: string;
     backgroundColor?: string;
     foregroundColor?: string;
     items?: Item[];
     horizontalPadding: number;
     verticalPadding: number;
-    itemBackgroundColor?: string;
-    itemForegroundColor?: string;
-    itemBorderColor?: string;
-    itemBorderRadius?: number;
 }

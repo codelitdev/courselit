@@ -1,7 +1,7 @@
 import React from "react";
 import { WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
-import { Image, TextRenderer, Button } from "@courselit/components-library";
+import { Image, TextRenderer, Button2 } from "@courselit/components-library";
 
 export default function Widget({
     settings: {
@@ -18,6 +18,15 @@ export default function Widget({
         buttonForeground,
         style = "normal",
         mediaRadius = 0,
+        horizontalPadding,
+        verticalPadding,
+        secondaryButtonAction,
+        secondaryButtonCaption,
+        secondaryButtonBackground,
+        secondaryButtonForeground,
+        titleFontSize,
+        descriptionFontSize,
+        contentAlignment,
     },
 }: WidgetProps<Settings>) {
     const hasHeroGraphic = youtubeLink || (media && media.mediaId);
@@ -34,17 +43,15 @@ export default function Widget({
     }
 
     return (
-        <div className={`${style === "card" ? "p-4" : "p-0"}`}>
+        <section
+            className={`py-[${verticalPadding}px]`}
+            style={{
+                backgroundColor,
+                color: foregroundColor,
+            }}
+        >
             <div
-                className={`flex gap-4 justify-between items-center p-4 flex-col ${direction}`}
-                style={{
-                    backgroundColor:
-                        style === "card"
-                            ? backgroundColor || "#eee"
-                            : backgroundColor,
-                    color: foregroundColor,
-                    borderRadius: style === "card" ? 2 : 0,
-                }}
+                className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%] gap-4 ${direction}`}
             >
                 {hasHeroGraphic && (
                     <div
@@ -97,11 +104,29 @@ export default function Widget({
                             : "md:pl-0"
                     }`}
                 >
-                    <div className="flex flex-col">
-                        <h2 className="mb-4 text-4xl">{title}</h2>
+                    <div
+                        className={`flex flex-col justify-center ${
+                            hasHeroGraphic
+                                ? ""
+                                : contentAlignment === "center"
+                                ? "items-center"
+                                : "items-start"
+                        }`}
+                    >
+                        <h2
+                            className={`mb-4 font-bold text-${titleFontSize}xl `}
+                        >
+                            {title}
+                        </h2>
                         {description && (
                             <div
                                 className={`${
+                                    descriptionFontSize === 0
+                                        ? "text-lg"
+                                        : descriptionFontSize === 1
+                                        ? "text-xl"
+                                        : `text-${descriptionFontSize}xl`
+                                } ${
                                     buttonAction && buttonCaption
                                         ? "mb-8"
                                         : "mb-0"
@@ -110,23 +135,42 @@ export default function Widget({
                                 <TextRenderer json={description} />
                             </div>
                         )}
-                        {buttonAction && buttonCaption && (
-                            <div className="flex">
-                                <Button
+                        <div className="flex flex-col md:!flex-row gap-2">
+                            {buttonAction && buttonCaption && (
+                                <Button2
                                     href={buttonAction}
                                     component="link"
                                     style={{
                                         backgroundColor: buttonBackground,
                                         color: buttonForeground,
                                     }}
+                                    className="min-w-[200px]"
+                                    size="lg"
                                 >
                                     {buttonCaption}
-                                </Button>
-                            </div>
-                        )}
+                                </Button2>
+                            )}
+                            {secondaryButtonAction &&
+                                secondaryButtonCaption && (
+                                    <Button2
+                                        href={secondaryButtonAction}
+                                        component="link"
+                                        style={{
+                                            backgroundColor:
+                                                secondaryButtonBackground,
+                                            color: secondaryButtonForeground,
+                                        }}
+                                        className="min-w-[200px]"
+                                        variant="secondary"
+                                        size="lg"
+                                    >
+                                        {secondaryButtonCaption}
+                                    </Button2>
+                                )}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
     );
 }

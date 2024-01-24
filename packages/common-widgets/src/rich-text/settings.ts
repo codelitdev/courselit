@@ -8,4 +8,6 @@ export default interface Settings extends WidgetDefaultSettings {
     alignment: Alignment | "right";
     color?: string;
     backgroundColor?: string;
+    horizontalPadding: number;
+    verticalPadding: number;
 }

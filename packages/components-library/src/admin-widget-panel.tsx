@@ -13,7 +13,7 @@ export default function AdminWidgetPanel({
     className = "",
 }: AdminWidgetPanelProps) {
     return (
-        <Section>
+        <Section className={className}>
             {title && <h2 className="text-lg font-semibold">{title}</h2>}
             {children}
         </Section>

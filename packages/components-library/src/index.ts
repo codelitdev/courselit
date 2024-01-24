@@ -36,11 +36,17 @@ import Breadcrumbs from "./breadcrumbs";
 import Popover from "./popover";
 import ScrollArea from "./scrollarea";
 import ComboBox from "./combo-box";
-export { Button as Button2 } from "./components/ui/button";
+import ContentPaddingSelector from "./content-padding-selector";
+import PageBuilderSlider from "./page-builder-slider";
+import PageBuilderPropertyHeader from "./page-builder-property-header";
 
+export { Button as Button2 } from "./components/ui/button";
 export * from "./menu";
 export * from "./components/ui/avatar";
 export * from "./drawer";
+export * from "./components/ui/accordion";
+export * from "./components/ui/slider";
+export * from "./components/ui/card";
 
 export {
     PriceTag,
@@ -81,4 +87,7 @@ export {
     Popover,
     ScrollArea,
     ComboBox,
+    ContentPaddingSelector,
+    PageBuilderSlider,
+    PageBuilderPropertyHeader,
 };

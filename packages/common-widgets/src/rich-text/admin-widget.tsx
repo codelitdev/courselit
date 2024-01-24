@@ -7,6 +7,7 @@ import {
 } from "@courselit/components-library";
 import Settings from "./settings";
 import { Alignment } from "@courselit/common-models";
+import { ContentPaddingSelector } from "@courselit/components-library";
 
 export interface AboutWidgetProps {
     onChange: (...args: any[]) => void;
@@ -36,6 +37,12 @@ const AdminWidget = ({ settings, onChange }: AboutWidgetProps) => {
         settings.backgroundColor,
     );
     const [color, setColor] = useState(settings.color);
+    const [horizontalPadding, setHorizontalPadding] = useState<number>(
+        settings.horizontalPadding || 100,
+    );
+    const [verticalPadding, setVerticalPadding] = useState<number>(
+        settings.verticalPadding || 16,
+    );
 
     useEffect(() => {
         onChange({
@@ -43,47 +50,64 @@ const AdminWidget = ({ settings, onChange }: AboutWidgetProps) => {
             alignment,
             color,
             backgroundColor,
+            horizontalPadding,
+            verticalPadding,
         });
-    }, [content, alignment, color, backgroundColor]);
+    }, [
+        content,
+        alignment,
+        color,
+        backgroundColor,
+        horizontalPadding,
+        verticalPadding,
+    ]);
 
     return (
-        <div className="flex flex-col">
-            <div className="mb-4">
-                <AdminWidgetPanel title="Basic">
-                    <div>
-                        <p className="mb-1 font-medium">Text</p>
-                        <TextEditor
-                            initialContent={content}
-                            onChange={(state: any) => setContent(state)}
-                            showToolbar={false}
-                        />
-                    </div>
-                </AdminWidgetPanel>
-            </div>
-            <div className="mb-4">
-                <AdminWidgetPanel title="Design">
-                    <ColorSelector
-                        title="Text color"
-                        value={color || "inherit"}
-                        onChange={(value?: string) => setColor(value)}
+        <div className="flex flex-col gap-4 mb-4">
+            <AdminWidgetPanel title="Basic">
+                <div>
+                    <p className="mb-1 font-medium">Text</p>
+                    <TextEditor
+                        initialContent={content}
+                        onChange={(state: any) => setContent(state)}
+                        showToolbar={false}
                     />
-                    <ColorSelector
-                        title="Background color"
-                        value={backgroundColor || ""}
-                        onChange={(value?: string) => setBackgroundColor(value)}
-                    />
-                    <Select
-                        title="Alignment"
-                        value={alignment}
-                        options={[
-                            { label: "Left", value: "left" },
-                            { label: "Center", value: "center" },
-                            { label: "Right", value: "right" },
-                        ]}
-                        onChange={(value: Alignment) => setAlignment(value)}
-                    />
-                </AdminWidgetPanel>
-            </div>
+                </div>
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Design">
+                <ColorSelector
+                    title="Text color"
+                    value={color || "inherit"}
+                    onChange={(value?: string) => setColor(value)}
+                />
+                <ColorSelector
+                    title="Background color"
+                    value={backgroundColor || ""}
+                    onChange={(value?: string) => setBackgroundColor(value)}
+                />
+                <Select
+                    title="Alignment"
+                    value={alignment}
+                    options={[
+                        { label: "Left", value: "left" },
+                        { label: "Center", value: "center" },
+                        { label: "Right", value: "right" },
+                    ]}
+                    onChange={(value: Alignment) => setAlignment(value)}
+                />
+                <ContentPaddingSelector
+                    className="mb-2"
+                    value={horizontalPadding}
+                    min={50}
+                    onChange={setHorizontalPadding}
+                />
+                <ContentPaddingSelector
+                    variant="vertical"
+                    className="mb-2"
+                    value={verticalPadding}
+                    onChange={setVerticalPadding}
+                />
+            </AdminWidgetPanel>
         </div>
     );
 };

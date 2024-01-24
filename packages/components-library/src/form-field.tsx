@@ -6,6 +6,11 @@ import {
     Label,
     Message,
 } from "@radix-ui/react-form";
+import { Input } from "./components/ui/input";
+import { Textarea } from "./components/ui/textarea";
+import Tooltip from "./tooltip";
+import { Help } from "@courselit/icons";
+import PageBuilderPropertyHeader from "./page-builder-property-header";
 
 interface MessageItem {
     text: string;
@@ -44,6 +49,7 @@ export interface FormFieldProps {
     name?: string;
     className?: string;
     endIcon?: React.ReactNode;
+    tooltip?: string;
 }
 
 export default function FormField({
@@ -54,24 +60,28 @@ export default function FormField({
     name,
     className = "",
     endIcon,
+    tooltip,
     ...componentProps
 }: FormFieldProps) {
-    const controlClasses =
-        "flex w-full border border-slate-300 hover:border-slate-400 rounded py-1 px-2 outline-none focus:border-slate-600 disabled:pointer-events-none";
-    const Component = component;
+    const Component = component === "input" ? Input : Textarea;
 
     return (
         <Field className={`flex flex-col ${className}`} name={name}>
             <div className="flex items-baseline justify-between">
-                {label && <Label className="mb-1 font-medium">{label}</Label>}
+                {label && (
+                    <PageBuilderPropertyHeader
+                        label={label}
+                        tooltip={tooltip}
+                    />
+                )}
                 {messages &&
                     messages.map((message) => (
-                        <Message className="text-xs" match={message.match}>
+                        <Message className="text-xs mb-1" match={message.match}>
                             {message.text}
                         </Message>
                     ))}
             </div>
-            <div className={controlClasses}>
+            <div>
                 <Control asChild>
                     <Component
                         type={type}

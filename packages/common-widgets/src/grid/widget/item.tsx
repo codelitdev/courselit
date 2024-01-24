@@ -1,13 +1,28 @@
 import React from "react";
 import { Item } from "../settings";
-import { TextRenderer, Image, Button } from "@courselit/components-library";
+import {
+    TextRenderer,
+    Image,
+    Button,
+    Card,
+    CardContent,
+} from "@courselit/components-library";
 import { Alignment } from "@courselit/common-models";
+import { CardHeader } from "@courselit/components-library";
+import { CardTitle } from "@courselit/components-library";
+import { CardFooter } from "@courselit/components-library";
+import { Button2 } from "@courselit/components-library";
+import { Link } from "@courselit/components-library";
 
 interface ItemmProps {
     item: Item;
     buttonBackground?: string;
     buttonForeground?: string;
     alignment: Alignment;
+    backgroundColor?: string;
+    foregroundColor?: string;
+    borderColor?: string;
+    borderRadius?: number;
 }
 
 export default function Itemm({
@@ -15,47 +30,72 @@ export default function Itemm({
     buttonBackground,
     buttonForeground,
     alignment,
+    backgroundColor,
+    foregroundColor,
+    borderColor,
+    borderRadius,
 }: ItemmProps) {
     return (
-        <div>
-            {media && media.file && (
-                <div className="mb-4">
-                    <Image
-                        src={media && media.file}
-                        loading="lazy"
-                        sizes="40vw"
-                        noDefaultImage={true}
-                    />
-                </div>
-            )}
-            <article
-                className={`flex flex-col ${
-                    alignment === "center" ? "items-center" : "items-start"
-                }`}
-            >
-                <h3 className="text-3xl mb-2">{title}</h3>
-                {description && (
-                    <div
-                        className={`mb-2 ${
-                            alignment === "center" ? "text-center" : "text-left"
-                        }`}
-                    >
-                        <TextRenderer json={description} />
+        <Card
+            className="h-full flex flex-col"
+            style={{
+                backgroundColor,
+                color: foregroundColor,
+                borderColor,
+                borderRadius,
+            }}
+        >
+            <CardHeader>
+                <CardTitle
+                    className={`${alignment === "center" ? "text-center" : ""}`}
+                >
+                    {title}
+                </CardTitle>
+                {media && media.file && (
+                    <div className="mb-4">
+                        <Image
+                            src={media && media.file}
+                            loading="lazy"
+                            sizes="40vw"
+                            noDefaultImage={true}
+                        />
                     </div>
                 )}
-                {buttonAction && buttonCaption && (
-                    <Button
-                        href={buttonAction}
-                        component="link"
-                        style={{
-                            backgroundColor: buttonBackground,
-                            color: buttonForeground,
-                        }}
-                    >
-                        {buttonCaption}
-                    </Button>
-                )}
-            </article>
-        </div>
+            </CardHeader>
+            <CardContent className="grow">
+                <article
+                    className={`flex flex-col ${
+                        alignment === "center" ? "items-center" : "items-start"
+                    }`}
+                >
+                    {description && (
+                        <div
+                            className={`mb-2 ${
+                                alignment === "center"
+                                    ? "text-center"
+                                    : "text-left"
+                            }`}
+                        >
+                            <TextRenderer json={description} />
+                        </div>
+                    )}
+                </article>
+            </CardContent>
+            {buttonAction && buttonCaption && (
+                <CardFooter>
+                    <Link href={buttonAction} className="w-full">
+                        <Button2
+                            className="w-full"
+                            style={{
+                                backgroundColor: buttonBackground,
+                                color: buttonForeground,
+                            }}
+                        >
+                            {buttonCaption}
+                        </Button2>
+                    </Link>
+                </CardFooter>
+            )}
+        </Card>
     );
 }

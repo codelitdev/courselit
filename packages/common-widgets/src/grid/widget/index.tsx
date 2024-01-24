@@ -3,6 +3,8 @@ import { WidgetProps } from "@courselit/common-models";
 import Settings, { Item } from "../settings";
 import { TextRenderer, Button } from "@courselit/components-library";
 import Itemm from "./item";
+import { Button2 } from "@courselit/components-library";
+import { Link } from "@courselit/components-library";
 
 export default function Widget({
     settings: {
@@ -16,51 +18,61 @@ export default function Widget({
         buttonForeground,
         backgroundColor,
         foregroundColor,
+        horizontalPadding,
+        verticalPadding,
         items,
+        itemBackgroundColor,
+        itemForegroundColor,
+        itemBorderColor,
+        itemBorderRadius,
     },
 }: WidgetProps<Settings>) {
     return (
         <section
-            className="flex flex-col p-4"
+            className={`py-[${verticalPadding}px]`}
             style={{
                 backgroundColor,
                 color: foregroundColor,
             }}
         >
             <div
-                className={`flex flex-col ${
-                    headerAlignment === "center"
-                        ? "items-center"
-                        : "items-start"
-                }`}
+                className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%]`}
             >
-                <h2 className="text-4xl mb-4">{title}</h2>
-                {description && (
-                    <div
-                        className={`mb-4 ${
-                            headerAlignment === "center"
-                                ? "text-center"
-                                : "text-left"
-                        }`}
-                    >
-                        <TextRenderer json={description} />
-                    </div>
-                )}
-                {buttonAction && buttonCaption && (
-                    <Button
-                        href={buttonAction}
-                        component="link"
-                        style={{
-                            backgroundColor: buttonBackground,
-                            color: buttonForeground,
-                        }}
-                        className="mb-6"
-                    >
-                        {buttonCaption}
-                    </Button>
-                )}
-            </div>
-            {items && items.length > 0 && (
+                <div
+                    className={`flex flex-col ${
+                        headerAlignment === "center"
+                            ? "items-center"
+                            : "items-start"
+                    }`}
+                >
+                    <h2 className="text-4xl mb-4">{title}</h2>
+                    {description && (
+                        <div
+                            className={`mb-4 ${
+                                headerAlignment === "center"
+                                    ? "text-center"
+                                    : "text-left"
+                            }`}
+                        >
+                            <TextRenderer json={description} />
+                        </div>
+                    )}
+                    {buttonAction && buttonCaption && (
+                        <Link href={buttonAction} className="mb-12">
+                            <Button2
+                                style={{
+                                    backgroundColor: buttonBackground,
+                                    color: buttonForeground,
+                                }}
+                            >
+                                {buttonCaption}
+                            </Button2>
+                        </Link>
+                    )}
+                </div>
+                {items && items.length > 0 && (
+                    <>
+                        {/*
                 <div className="flex flex-wrap gap-[1%]">
                     {items.map((item: Item, index: number) => (
                         <div className="basis-full md:basis-[49.5%] lg:basis-[32.6666%] mb-6">
@@ -70,11 +82,41 @@ export default function Widget({
                                 buttonBackground={buttonBackground}
                                 buttonForeground={buttonForeground}
                                 alignment={itemsAlignment}
+                                backgroundColor={itemBackgroundColor}
+                                foregroundColor={itemForegroundColor}
+                                borderColor={itemBorderColor}
+                                borderRadius={itemBorderRadius}
                             />
                         </div>
                     ))}
                 </div>
-            )}
+                    */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {items.map((item: Item, index: number) => (
+                                <div className="flex flex-col">
+                                    <div className="h-full">
+                                        <Itemm
+                                            item={item}
+                                            key={index}
+                                            buttonBackground={buttonBackground}
+                                            buttonForeground={buttonForeground}
+                                            alignment={itemsAlignment}
+                                            backgroundColor={
+                                                itemBackgroundColor
+                                            }
+                                            foregroundColor={
+                                                itemForegroundColor
+                                            }
+                                            borderColor={itemBorderColor}
+                                            borderRadius={itemBorderRadius}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                )}
+            </div>
         </section>
     );
 }

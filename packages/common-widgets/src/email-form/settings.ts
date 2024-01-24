@@ -11,4 +11,6 @@ export default interface Settings {
     alignment?: Alignment | "right";
     successMessage?: string;
     failureMessage?: string;
+    horizontalPadding: number;
+    verticalPadding: number;
 }
