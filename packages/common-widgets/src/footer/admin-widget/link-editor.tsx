@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Edit, Help } from "@courselit/icons";
+import { Edit } from "@courselit/icons";
 import { Link } from "../settings";
 import {
     Button,
