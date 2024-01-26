@@ -2,6 +2,7 @@ import React from "react";
 import { WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
 import { Image, TextRenderer, Button2 } from "@courselit/components-library";
+import { Link } from "@courselit/components-library";
 
 export default function Widget({
     settings: {
@@ -137,35 +138,35 @@ export default function Widget({
                         )}
                         <div className="flex flex-col md:!flex-row gap-2">
                             {buttonAction && buttonCaption && (
-                                <Button2
-                                    href={buttonAction}
-                                    component="link"
-                                    style={{
-                                        backgroundColor: buttonBackground,
-                                        color: buttonForeground,
-                                    }}
-                                    className="min-w-[200px]"
-                                    size="lg"
-                                >
-                                    {buttonCaption}
-                                </Button2>
+                                <Link href={buttonAction}>
+                                    <Button2
+                                        style={{
+                                            backgroundColor: buttonBackground,
+                                            color: buttonForeground,
+                                        }}
+                                        className="min-w-[200px]"
+                                        size="lg"
+                                    >
+                                        {buttonCaption}
+                                    </Button2>
+                                </Link>
                             )}
                             {secondaryButtonAction &&
                                 secondaryButtonCaption && (
-                                    <Button2
-                                        href={secondaryButtonAction}
-                                        component="link"
-                                        style={{
-                                            backgroundColor:
-                                                secondaryButtonBackground,
-                                            color: secondaryButtonForeground,
-                                        }}
-                                        className="min-w-[200px]"
-                                        variant="secondary"
-                                        size="lg"
-                                    >
-                                        {secondaryButtonCaption}
-                                    </Button2>
+                                    <Link href={secondaryButtonAction}>
+                                        <Button2
+                                            style={{
+                                                backgroundColor:
+                                                    secondaryButtonBackground,
+                                                color: secondaryButtonForeground,
+                                            }}
+                                            className="min-w-[200px]"
+                                            variant="secondary"
+                                            size="lg"
+                                        >
+                                            {secondaryButtonCaption}
+                                        </Button2>
+                                    </Link>
                                 )}
                         </div>
                     </div>

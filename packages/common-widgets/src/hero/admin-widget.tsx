@@ -14,20 +14,16 @@ import {
     MediaSelector,
     Select,
     TextEditor,
+    Form,
+    FormField,
+    ContentPaddingSelector,
+    Accordion,
+    AccordionItem,
+    AccordionTrigger,
+    AccordionContent,
+    PageBuilderSlider,
+    PageBuilderPropertyHeader,
 } from "@courselit/components-library";
-import { Form } from "@courselit/components-library";
-import { FormField } from "@courselit/components-library";
-import { ContentPaddingSelector } from "@courselit/components-library";
-import { Accordion } from "@courselit/components-library";
-import { AccordionItem } from "@courselit/components-library";
-import { AccordionTrigger } from "@courselit/components-library";
-import { AccordionContent } from "@courselit/components-library";
-import { Slider } from "@courselit/components-library";
-import { Button2 } from "@courselit/components-library";
-import { PageBuilderSlider } from "@courselit/components-library";
-import { Tooltip } from "@courselit/components-library";
-import { Help } from "@courselit/icons";
-import { PageBuilderPropertyHeader } from "@courselit/components-library";
 
 interface AdminWidgetProps {
     name: string;

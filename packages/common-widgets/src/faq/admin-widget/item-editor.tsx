@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Item } from "../settings";
 import {
-    MediaSelector,
     TextEditor,
     Button,
     Form,
@@ -9,7 +8,7 @@ import {
     Tooltip,
     AdminWidgetPanel,
 } from "@courselit/components-library";
-import { Address, Auth, Media, Profile } from "@courselit/common-models";
+import { Address, Auth, Profile } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
 
 interface ItemProps {
@@ -25,13 +24,9 @@ interface ItemProps {
 
 export default function ItemEditor({
     item,
-    index,
     onChange,
     onDelete,
-    address,
     dispatch,
-    auth,
-    profile,
 }: ItemProps) {
     const [title, setTitle] = useState(item.title);
     const [description, setDescription] = useState(item.description);

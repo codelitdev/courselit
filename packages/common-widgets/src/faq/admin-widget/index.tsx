@@ -11,7 +11,6 @@ import {
     Button,
     Form,
     FormField,
-    Slider,
 } from "@courselit/components-library";
 import { ContentPaddingSelector } from "@courselit/components-library";
 

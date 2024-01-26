@@ -73,7 +73,7 @@ export default function Widget({
                             width: "100%",
                         }}
                     >
-                        <Image borderRadius={0} />
+                        <Image src="" borderRadius={0} />
                     </div>
                 )}
             </div>

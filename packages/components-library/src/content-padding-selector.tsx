@@ -3,7 +3,7 @@ import PageBuilderSlider from "./page-builder-slider";
 interface ContentPaddingProps {
     value: number;
     onChange: (padding: number) => void;
-    className: string;
+    className?: string;
     min?: number;
     max?: number;
     variant?: "vertical" | "horizontal";

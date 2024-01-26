@@ -1,8 +1,4 @@
-import {
-    Alignment,
-    Media,
-    WidgetDefaultSettings,
-} from "@courselit/common-models";
+import { Alignment, WidgetDefaultSettings } from "@courselit/common-models";
 
 interface ItemAction {
     label: string;
@@ -15,7 +11,7 @@ export interface Item {
     description: Record<string, unknown>;
     features: string;
     action: ItemAction;
-    primary: boolean;
+    primary?: boolean;
 }
 
 export default interface Settings extends WidgetDefaultSettings {

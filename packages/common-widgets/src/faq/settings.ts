@@ -1,8 +1,4 @@
-import {
-    Alignment,
-    Media,
-    WidgetDefaultSettings,
-} from "@courselit/common-models";
+import { Alignment, WidgetDefaultSettings } from "@courselit/common-models";
 
 export interface Item {
     title: string;

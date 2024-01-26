@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import Image from "../image";
 import {
     Address,
@@ -56,7 +56,7 @@ interface MediaSelectorProps {
     src: string;
     srcTitle: string;
     onSelection: (...args: any[]) => void;
-    onRemove: (...args: any[]) => void;
+    onRemove?: (...args: any[]) => void;
     mimeTypesToShow?: string[];
     access?: Access;
     strings: Strings;

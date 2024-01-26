@@ -12,6 +12,8 @@ import { FormField } from "@courselit/components-library";
 import { Form } from "@courselit/components-library";
 import { Tooltip } from "@courselit/components-library";
 import { Help } from "@courselit/icons";
+import { ContentPaddingSelector } from "@courselit/components-library";
+import { PageBuilderSlider } from "@courselit/components-library";
 
 interface AdminWidgetProps {
     settings: Settings;
@@ -47,6 +49,12 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
     const [spacingBetweenLinks, setSpacingBetweenLinks] = useState<
         number | undefined
     >(settings.spacingBetweenLinks || 16);
+    const [horizontalPadding, setHorizontalPadding] = useState<number>(
+        settings.horizontalPadding || 100,
+    );
+    const [verticalPadding, setVerticalPadding] = useState<number>(
+        settings.verticalPadding || 8,
+    );
 
     useEffect(() => {
         onChange({
@@ -60,6 +68,8 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
             showLoginControl,
             linkFontWeight,
             spacingBetweenLinks,
+            verticalPadding,
+            horizontalPadding,
         });
     }, [
         links,
@@ -72,6 +82,8 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
         showLoginControl,
         linkFontWeight,
         spacingBetweenLinks,
+        verticalPadding,
+        horizontalPadding,
     ]);
 
     const onLinkChanged = (index: number, link: Link) => {
@@ -178,6 +190,24 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                         }
                     />
                 </Form>
+                <PageBuilderSlider
+                    title="Space between links"
+                    value={spacingBetweenLinks}
+                    max={64}
+                    min={16}
+                    onChange={setSpacingBetweenLinks}
+                />
+                <ContentPaddingSelector
+                    value={horizontalPadding}
+                    min={50}
+                    onChange={setHorizontalPadding}
+                />
+                <ContentPaddingSelector
+                    variant="vertical"
+                    value={verticalPadding}
+                    max={32}
+                    onChange={setVerticalPadding}
+                />
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Other settings">
                 <div className="flex justify-between">

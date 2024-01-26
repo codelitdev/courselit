@@ -3,16 +3,15 @@ import { Item } from "../settings";
 import {
     TextRenderer,
     Image,
-    Button,
     Card,
     CardContent,
+    CardHeader,
+    CardTitle,
+    CardFooter,
+    Button2,
+    Link,
 } from "@courselit/components-library";
 import { Alignment } from "@courselit/common-models";
-import { CardHeader } from "@courselit/components-library";
-import { CardTitle } from "@courselit/components-library";
-import { CardFooter } from "@courselit/components-library";
-import { Button2 } from "@courselit/components-library";
-import { Link } from "@courselit/components-library";
 
 interface ItemmProps {
     item: Item;

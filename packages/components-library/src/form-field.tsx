@@ -1,15 +1,7 @@
 import React from "react";
-import {
-    Control,
-    CustomMatcher,
-    Field,
-    Label,
-    Message,
-} from "@radix-ui/react-form";
+import { Control, CustomMatcher, Field, Message } from "@radix-ui/react-form";
 import { Input } from "./components/ui/input";
 import { Textarea } from "./components/ui/textarea";
-import Tooltip from "./tooltip";
-import { Help } from "@courselit/icons";
 import PageBuilderPropertyHeader from "./page-builder-property-header";
 
 interface MessageItem {
