@@ -11,9 +11,8 @@ import {
     Button,
     Form,
     FormField,
-    ContentPaddingSelector,
 } from "@courselit/components-library";
-import { Slider } from "@courselit/components-library";
+import { ContentPaddingSelector } from "@courselit/components-library";
 
 export interface AdminWidgetProps {
     settings: Settings;
@@ -47,7 +46,7 @@ export default function AdminWidget({
                 content: [
                     {
                         type: "text",
-                        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                        text: "Optional text goes here. You can use rich text here.",
                     },
                 ],
             },
@@ -71,32 +70,21 @@ export default function AdminWidget({
         title: "Item",
         description: dummyItemDescription,
     };
-    const [title, setTitle] = useState(settings.title || "Grid");
+    const [title, setTitle] = useState(settings.title || "FAQs");
     const [description, setDescription] = useState(
         settings.description || dummyDescription,
     );
-    const [buttonAction, setButtonAction] = useState(settings.buttonAction);
-    const [buttonCaption, setButtonCaption] = useState(settings.buttonCaption);
     const [backgroundColor, setBackgroundColor] = useState(
         settings.backgroundColor,
     );
     const [foregroundColor, setForegroundColor] = useState(
         settings.foregroundColor,
     );
-    const [buttonBackground, setButtonBackground] = useState(
-        settings.buttonBackground,
-    );
-    const [buttonForeground, setButtonForeground] = useState(
-        settings.buttonForeground,
-    );
     const [items, setItems] = useState<Item[]>(
         settings.items || [dummyItem, dummyItem, dummyItem],
     );
     const [headerAlignment, setHeaderAlignment] = useState<Alignment>(
         settings.headerAlignment || "center",
-    );
-    const [itemsAlignment, setItemsAlignment] = useState<Alignment>(
-        settings.itemsAlignment || "center",
     );
     const [itemBeingEditedIndex, setItemBeingEditedIndex] = useState(-1);
     const [horizontalPadding, setHorizontalPadding] = useState<number>(
@@ -105,38 +93,17 @@ export default function AdminWidget({
     const [verticalPadding, setVerticalPadding] = useState<number>(
         settings.verticalPadding || 16,
     );
-    const [itemBackgroundColor, setItemBackgroundColor] = useState(
-        settings.itemBackgroundColor,
-    );
-    const [itemForegroundColor, setItemForegroundColor] = useState(
-        settings.itemForegroundColor,
-    );
-    const [itemBorderColor, setItemBorderColor] = useState(
-        settings.itemBorderColor,
-    );
-    const [itemBorderRadius, setItemBorderRadius] = useState(
-        settings.itemBorderRadius || 8,
-    );
 
     const onSettingsChanged = () =>
         onChange({
             title,
             description,
             headerAlignment,
-            buttonAction,
-            buttonCaption,
             backgroundColor,
             foregroundColor,
-            buttonBackground,
-            buttonForeground,
             items,
-            itemsAlignment,
             horizontalPadding,
             verticalPadding,
-            itemBackgroundColor,
-            itemForegroundColor,
-            itemBorderColor,
-            itemBorderRadius,
         });
 
     useEffect(() => {
@@ -145,20 +112,11 @@ export default function AdminWidget({
         title,
         description,
         headerAlignment,
-        buttonAction,
-        buttonCaption,
         backgroundColor,
         foregroundColor,
-        buttonBackground,
-        buttonForeground,
         items,
-        itemsAlignment,
         horizontalPadding,
         verticalPadding,
-        itemBackgroundColor,
-        itemForegroundColor,
-        itemBorderColor,
-        itemBorderRadius,
     ]);
 
     const onItemChange = (newItemData: Item) => {
@@ -212,49 +170,15 @@ export default function AdminWidget({
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                     />
+                    <div>
+                        <p className="mb-1 font-medium">Description</p>
+                        <TextEditor
+                            initialContent={description}
+                            onChange={(state: any) => setDescription(state)}
+                            showToolbar={false}
+                        />
+                    </div>
                 </Form>
-                <div>
-                    <p className="mb-1 font-medium">Description</p>
-                    <TextEditor
-                        initialContent={description}
-                        onChange={(state: any) => setDescription(state)}
-                        showToolbar={false}
-                    />
-                </div>
-                <Select
-                    title="Header alignment"
-                    value={headerAlignment}
-                    options={[
-                        { label: "Left", value: "left" },
-                        { label: "Center", value: "center" },
-                    ]}
-                    onChange={(value: Alignment) => setHeaderAlignment(value)}
-                />
-            </AdminWidgetPanel>
-            <AdminWidgetPanel title="Call to action">
-                <Form>
-                    <FormField
-                        label="Button Text"
-                        value={buttonCaption}
-                        onChange={(e) => setButtonCaption(e.target.value)}
-                    />
-                    <FormField
-                        label="Button Action"
-                        value={buttonAction}
-                        onChange={(e) => setButtonAction(e.target.value)}
-                        fullWidth
-                    />
-                </Form>
-                <ColorSelector
-                    title="Button color"
-                    value={buttonBackground || "inherit"}
-                    onChange={(value?: string) => setButtonBackground(value)}
-                />
-                <ColorSelector
-                    title="Button text color"
-                    value={buttonForeground || "inherit"}
-                    onChange={(value?: string) => setButtonForeground(value)}
-                />
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Items">
                 <ul className="flex flex-col gap-2">
@@ -276,15 +200,6 @@ export default function AdminWidget({
                         Add new item
                     </Button>
                 </div>
-                <Select
-                    title="Items alignment"
-                    value={itemsAlignment}
-                    options={[
-                        { label: "Left", value: "left" },
-                        { label: "Center", value: "center" },
-                    ]}
-                    onChange={(value: Alignment) => setItemsAlignment(value)}
-                />
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Design">
                 <ColorSelector
@@ -297,20 +212,14 @@ export default function AdminWidget({
                     value={foregroundColor || "inherit"}
                     onChange={(value?: string) => setForegroundColor(value)}
                 />
-                <ColorSelector
-                    title="Item background color"
-                    value={itemBackgroundColor || "inherit"}
-                    onChange={(value?: string) => setItemBackgroundColor(value)}
-                />
-                <ColorSelector
-                    title="Item text color"
-                    value={itemForegroundColor || "inherit"}
-                    onChange={(value?: string) => setItemForegroundColor(value)}
-                />
-                <ColorSelector
-                    title="Item border color"
-                    value={itemBorderColor || "inherit"}
-                    onChange={(value?: string) => setItemBorderColor(value)}
+                <Select
+                    title="Header alignment"
+                    value={headerAlignment}
+                    options={[
+                        { label: "Left", value: "left" },
+                        { label: "Center", value: "center" },
+                    ]}
+                    onChange={(value: Alignment) => setHeaderAlignment(value)}
                 />
                 <ContentPaddingSelector
                     className="mb-2"
@@ -324,20 +233,6 @@ export default function AdminWidget({
                     value={verticalPadding}
                     onChange={setVerticalPadding}
                 />
-                <div className={`flex flex-col gap-2`}>
-                    <div className="flex grow items-center gap-1">
-                        <h2 className="mb-1 font-medium">Item border radius</h2>
-                    </div>
-                    <Slider
-                        value={[itemBorderRadius]}
-                        max={40}
-                        min={0}
-                        onValueChange={(value: number[]) => {
-                            console.log(value);
-                            setItemBorderRadius(value[0]);
-                        }}
-                    />
-                </div>
             </AdminWidgetPanel>
         </div>
     );

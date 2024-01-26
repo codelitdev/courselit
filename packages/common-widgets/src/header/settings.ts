@@ -18,4 +18,6 @@ export default interface Settings extends WidgetDefaultSettings {
     showLoginControl: boolean;
     linkFontWeight: "font-normal" | "font-light" | "font-bold";
     spacingBetweenLinks: number;
+    horizontalPadding: number;
+    verticalPadding: number;
 }

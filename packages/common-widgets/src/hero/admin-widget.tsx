@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import type { Address, Auth, Media, Profile } from "@courselit/common-models";
+import type {
+    Address,
+    Alignment,
+    Auth,
+    Media,
+    Profile,
+} from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
 import Settings from "./settings";
 import {
@@ -8,9 +14,16 @@ import {
     MediaSelector,
     Select,
     TextEditor,
+    Form,
+    FormField,
+    ContentPaddingSelector,
+    Accordion,
+    AccordionItem,
+    AccordionTrigger,
+    AccordionContent,
+    PageBuilderSlider,
+    PageBuilderPropertyHeader,
 } from "@courselit/components-library";
-import { Form } from "@courselit/components-library";
-import { FormField } from "@courselit/components-library";
 
 interface AdminWidgetProps {
     name: string;
@@ -70,6 +83,33 @@ export default function AdminWidget({
     );
     const [media, setMedia] = useState<Partial<Media>>(settings.media || {});
     const [style, setStyle] = useState(settings.style || "normal");
+    const [horizontalPadding, setHorizontalPadding] = useState<number>(
+        settings.horizontalPadding || 100,
+    );
+    const [verticalPadding, setVerticalPadding] = useState<number>(
+        settings.verticalPadding || 16,
+    );
+    const [secondaryButtonAction, setSecondaryButtonAction] = useState(
+        settings.secondaryButtonAction,
+    );
+    const [secondaryButtonCaption, setSecondaryButtonCaption] = useState(
+        settings.secondaryButtonCaption,
+    );
+    const [secondaryButtonBackground, setSecondaryButtonBackground] = useState(
+        settings.secondaryButtonBackground,
+    );
+    const [secondaryButtonForeground, setSecondaryButtonForeground] = useState(
+        settings.secondaryButtonForeground,
+    );
+    const [titleFontSize, setTitleFontSize] = useState(
+        settings.titleFontSize || 4,
+    );
+    const [descriptionFontSize, setDescriptionFontSize] = useState(
+        settings.descriptionFontSize || 0,
+    );
+    const [contentAlignment, setContentAlignment] = useState<Alignment>(
+        settings.contentAlignment || "center",
+    );
 
     const onSettingsChanged = () =>
         onChange({
@@ -86,6 +126,15 @@ export default function AdminWidget({
             buttonBackground,
             buttonForeground,
             mediaRadius: mediaBorderRadius,
+            horizontalPadding,
+            verticalPadding,
+            secondaryButtonAction,
+            secondaryButtonCaption,
+            secondaryButtonBackground,
+            secondaryButtonForeground,
+            titleFontSize,
+            descriptionFontSize,
+            contentAlignment,
         });
 
     useEffect(() => {
@@ -104,118 +153,209 @@ export default function AdminWidget({
         buttonForeground,
         media,
         mediaBorderRadius,
+        horizontalPadding,
+        verticalPadding,
+        secondaryButtonAction,
+        secondaryButtonCaption,
+        secondaryButtonBackground,
+        secondaryButtonForeground,
+        titleFontSize,
+        descriptionFontSize,
+        contentAlignment,
     ]);
 
     return (
-        <div className="flex flex-col">
-            <div className="mb-4">
+        <div className="flex flex-col gap-4 mb-4">
+            <AdminWidgetPanel title="Basic">
                 <Form>
-                    <AdminWidgetPanel title="Basic">
-                        <FormField
-                            label="Title"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                        />
-                        <div>
-                            <p className="mb-1 font-medium">Description</p>
-                            <TextEditor
-                                initialContent={description}
-                                onChange={(state: any) => setDescription(state)}
-                                showToolbar={false}
-                            />
-                        </div>
-                    </AdminWidgetPanel>
+                    <FormField
+                        label="Title"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                    />
                 </Form>
-            </div>
-            <div className="mb-4">
+                <div>
+                    <p className="mb-1 font-medium">Description</p>
+                    <TextEditor
+                        initialContent={description}
+                        onChange={(state: any) => setDescription(state)}
+                        showToolbar={false}
+                    />
+                </div>
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Media">
                 <Form>
-                    <AdminWidgetPanel title="Media">
-                        <FormField
-                            label="YouTube Video Link"
-                            value={youtubeLink}
-                            onChange={(e) => setYoutubeLink(e.target.value)}
-                        />
-                        <MediaSelector
-                            title=""
-                            src={media && media.thumbnail}
-                            srcTitle={media && media.originalFileName}
-                            dispatch={dispatch}
-                            auth={auth}
-                            profile={profile}
-                            address={address}
-                            onSelection={(media: Media) => {
-                                if (media) {
-                                    setMedia(media);
+                    <FormField
+                        label="YouTube Video Link"
+                        placeholder="Just enter the video id after ?v= in the URL"
+                        value={youtubeLink}
+                        onChange={(e) => setYoutubeLink(e.target.value)}
+                    />
+                </Form>
+                <PageBuilderPropertyHeader
+                    label="Upload media"
+                    tooltip="This will be overridden if you have provided a YouTube video id above"
+                />
+                <MediaSelector
+                    title=""
+                    src={media && media.thumbnail}
+                    srcTitle={media && media.originalFileName}
+                    dispatch={dispatch}
+                    auth={auth}
+                    profile={profile}
+                    address={address}
+                    onSelection={(media: Media) => {
+                        if (media) {
+                            setMedia(media);
+                        }
+                    }}
+                    onRemove={() => {
+                        setMedia({});
+                    }}
+                    strings={{}}
+                    access="public"
+                    mediaId={media && media.mediaId}
+                />
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Calls to action">
+                <Accordion type="single" collapsible>
+                    <AccordionItem value="primary">
+                        <AccordionTrigger>Primary button</AccordionTrigger>
+                        <AccordionContent className="flex flex-col gap-4">
+                            <Form className="flex flex-col gap-4">
+                                <FormField
+                                    label="Button Text"
+                                    value={buttonCaption}
+                                    onChange={(e) =>
+                                        setButtonCaption(e.target.value)
+                                    }
+                                />
+                                <FormField
+                                    label="Button Action"
+                                    value={buttonAction}
+                                    onChange={(e) =>
+                                        setButtonAction(e.target.value)
+                                    }
+                                />
+                            </Form>
+                            <ColorSelector
+                                title="Button color"
+                                value={buttonBackground || "inherit"}
+                                onChange={(value?: string) =>
+                                    setButtonBackground(value)
                                 }
-                            }}
-                            strings={{}}
-                            access="public"
-                        />
-                        <Select
-                            title="alignment"
-                            value={alignment}
-                            options={[
-                                { label: "Left", value: "left" },
-                                { label: "Right", value: "right" },
-                            ]}
-                            onChange={(value) => setAlignment(value)}
-                        />
-                    </AdminWidgetPanel>
-                </Form>
-            </div>
-            <div className="mb-4">
-                <AdminWidgetPanel title="Call to action">
-                    <Form>
-                        <FormField
-                            label="Button Text"
-                            value={buttonCaption}
-                            onChange={(e) => setButtonCaption(e.target.value)}
-                        />
-                        <FormField
-                            label="Button Action"
-                            value={buttonAction}
-                            onChange={(e) => setButtonAction(e.target.value)}
-                        />
-                    </Form>
-                    <ColorSelector
-                        title="Button color"
-                        value={buttonBackground || "inherit"}
-                        onChange={(value?: string) =>
-                            setButtonBackground(value)
-                        }
-                    />
-                    <ColorSelector
-                        title="Button text color"
-                        value={buttonForeground || "inherit"}
-                        onChange={(value?: string) =>
-                            setButtonForeground(value)
-                        }
-                    />
-                </AdminWidgetPanel>
-            </div>
-            <div className="mb-4">
-                <AdminWidgetPanel title="Design">
-                    <ColorSelector
-                        title="Background color"
-                        value={backgroundColor || "inherit"}
-                        onChange={(value?: string) => setBackgroundColor(value)}
-                    />
-                    <ColorSelector
-                        title="Text color"
-                        value={foregroundColor || "inherit"}
-                        onChange={(value?: string) => setForegroundColor(value)}
-                    />
-                    <Select
-                        title="Style"
-                        value={style}
-                        options={[
-                            { label: "Normal", value: "normal" },
-                            { label: "Card", value: "card" },
-                        ]}
-                        onChange={(value: "normal" | "card") => setStyle(value)}
-                    />
-                </AdminWidgetPanel>
-            </div>
+                            />
+                            <ColorSelector
+                                title="Button text color"
+                                value={buttonForeground || "inherit"}
+                                onChange={(value?: string) =>
+                                    setButtonForeground(value)
+                                }
+                            />
+                        </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="secondary">
+                        <AccordionTrigger>Secondary button</AccordionTrigger>
+                        <AccordionContent className="flex flex-col gap-4">
+                            <Form className="flex flex-col gap-4">
+                                <FormField
+                                    label="Button Text"
+                                    value={secondaryButtonCaption}
+                                    onChange={(e) =>
+                                        setSecondaryButtonCaption(
+                                            e.target.value,
+                                        )
+                                    }
+                                />
+                                <FormField
+                                    label="Button Action"
+                                    value={secondaryButtonAction}
+                                    onChange={(e) =>
+                                        setSecondaryButtonAction(e.target.value)
+                                    }
+                                />
+                            </Form>
+                            <ColorSelector
+                                title="Button color"
+                                value={secondaryButtonBackground || "inherit"}
+                                onChange={(value?: string) =>
+                                    setSecondaryButtonBackground(value)
+                                }
+                            />
+                            <ColorSelector
+                                title="Button text color"
+                                value={secondaryButtonForeground || "inherit"}
+                                onChange={(value?: string) =>
+                                    setSecondaryButtonForeground(value)
+                                }
+                            />
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Design">
+                <Select
+                    title="Content alignment"
+                    value={contentAlignment}
+                    options={[
+                        { label: "Left", value: "left" },
+                        { label: "Center", value: "center" },
+                    ]}
+                    onChange={(value: Alignment) => setContentAlignment(value)}
+                />
+                <Select
+                    title="Media alignment"
+                    value={alignment}
+                    options={[
+                        { label: "Left", value: "left" },
+                        { label: "Right", value: "right" },
+                    ]}
+                    onChange={(value) => setAlignment(value)}
+                />
+                <ColorSelector
+                    title="Background color"
+                    value={backgroundColor || "inherit"}
+                    onChange={(value?: string) => setBackgroundColor(value)}
+                />
+                <ColorSelector
+                    title="Text color"
+                    value={foregroundColor || "inherit"}
+                    onChange={(value?: string) => setForegroundColor(value)}
+                />
+                <Select
+                    title="Style"
+                    value={style}
+                    options={[
+                        { label: "Normal", value: "normal" },
+                        { label: "Card", value: "card" },
+                    ]}
+                    onChange={(value: "normal" | "card") => setStyle(value)}
+                />
+                <ContentPaddingSelector
+                    value={horizontalPadding}
+                    min={50}
+                    onChange={setHorizontalPadding}
+                />
+                <ContentPaddingSelector
+                    variant="vertical"
+                    value={verticalPadding}
+                    onChange={setVerticalPadding}
+                />
+                <PageBuilderSlider
+                    title="Title font size"
+                    min={4}
+                    max={8}
+                    value={titleFontSize}
+                    onChange={setTitleFontSize}
+                />
+                <PageBuilderSlider
+                    title="Description font size"
+                    min={0}
+                    max={6}
+                    value={descriptionFontSize}
+                    onChange={setDescriptionFontSize}
+                />
+            </AdminWidgetPanel>
         </div>
     );
 }

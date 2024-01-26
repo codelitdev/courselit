@@ -1,4 +1,8 @@
-import { Media, WidgetDefaultSettings } from "@courselit/common-models";
+import {
+    Alignment,
+    Media,
+    WidgetDefaultSettings,
+} from "@courselit/common-models";
 
 export default interface Settings extends WidgetDefaultSettings {
     title?: string;
@@ -9,9 +13,18 @@ export default interface Settings extends WidgetDefaultSettings {
     buttonForeground?: string;
     media?: Media;
     youtubeLink?: string;
-    alignment?: "left" | "right";
+    alignment?: Alignment | "right";
     backgroundColor?: string;
     foregroundColor?: string;
     style: "card" | "normal";
     mediaRadius?: number;
+    horizontalPadding: number;
+    verticalPadding: number;
+    secondaryButtonCaption?: string;
+    secondaryButtonAction?: string;
+    secondaryButtonBackground?: string;
+    secondaryButtonForeground?: string;
+    titleFontSize?: number;
+    descriptionFontSize?: number;
+    contentAlignment?: Alignment;
 }

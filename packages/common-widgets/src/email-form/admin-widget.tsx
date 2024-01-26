@@ -8,6 +8,7 @@ import {
     Select,
     Form,
     FormField,
+    ContentPaddingSelector,
 } from "@courselit/components-library";
 import {
     DEFAULT_BTN_TEXT,
@@ -48,6 +49,12 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
         settings.btnForegroundColor,
     );
     const [alignment, setAlignment] = useState(settings.alignment || "left");
+    const [horizontalPadding, setHorizontalPadding] = useState<number>(
+        settings.horizontalPadding || 100,
+    );
+    const [verticalPadding, setVerticalPadding] = useState<number>(
+        settings.verticalPadding || 16,
+    );
 
     useEffect(() => {
         onChange({
@@ -61,6 +68,8 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
             alignment,
             successMessage,
             failureMessage,
+            horizontalPadding,
+            verticalPadding,
         });
     }, [
         title,
@@ -73,91 +82,99 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
         alignment,
         successMessage,
         failureMessage,
+        horizontalPadding,
+        verticalPadding,
     ]);
 
     return (
-        <div className="flex flex-col">
-            <div className="mb-4">
+        <div className="flex flex-col gap-4 mb-4">
+            <AdminWidgetPanel title="Basic">
                 <Form>
-                    <AdminWidgetPanel title="Basic">
-                        <FormField
-                            label="Title"
-                            value={title}
-                            placeholder={DEFAULT_TITLE}
-                            onChange={(e) => setTitle(e.target.value)}
-                        />
-                        <FormField
-                            label="Subtitle"
-                            value={subtitle}
-                            onChange={(e) => setSubtitle(e.target.value)}
-                        />
-                        <FormField
-                            label="Success message"
-                            value={successMessage}
-                            placeholder={DEFAULT_SUCCESS_MESSAGE}
-                            onChange={(e) => setSuccessMessage(e.target.value)}
-                        />
-                        <FormField
-                            label="Failure message"
-                            value={failureMessage}
-                            placeholder={DEFAULT_FAILURE_MESSAGE}
-                            onChange={(e) => setFailureMessage(e.target.value)}
-                        />
-                    </AdminWidgetPanel>
+                    <FormField
+                        label="Title"
+                        value={title}
+                        placeholder={DEFAULT_TITLE}
+                        onChange={(e) => setTitle(e.target.value)}
+                    />
+                    <FormField
+                        label="Subtitle"
+                        value={subtitle}
+                        onChange={(e) => setSubtitle(e.target.value)}
+                    />
+                    <FormField
+                        label="Success message"
+                        value={successMessage}
+                        placeholder={DEFAULT_SUCCESS_MESSAGE}
+                        onChange={(e) => setSuccessMessage(e.target.value)}
+                    />
+                    <FormField
+                        label="Failure message"
+                        value={failureMessage}
+                        placeholder={DEFAULT_FAILURE_MESSAGE}
+                        onChange={(e) => setFailureMessage(e.target.value)}
+                    />
                 </Form>
-            </div>
-            <div className="mb-4">
-                <Form>
-                    <AdminWidgetPanel title="Call to action">
-                        <FormField
-                            label="Button text"
-                            value={btnText}
-                            placeholder={DEFAULT_BTN_TEXT}
-                            onChange={(e) => setBtnText(e.target.value)}
-                        />
-                        <ColorSelector
-                            title="Button color"
-                            value={btnBackgroundColor || "inherit"}
-                            onChange={(value?: string) =>
-                                setBtnBackgroundColor(value)
-                            }
-                        />
-                        <ColorSelector
-                            title="Button text"
-                            value={btnForegroundColor || "inherit"}
-                            onChange={(value?: string) =>
-                                setBtnForegroundColor(value)
-                            }
-                        />
-                    </AdminWidgetPanel>
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Call to action">
+                <Form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                    }}
+                >
+                    <FormField
+                        label="Button text"
+                        value={btnText}
+                        placeholder={DEFAULT_BTN_TEXT}
+                        onChange={(e) => setBtnText(e.target.value)}
+                    />
                 </Form>
-            </div>
-            <div className="mb-4">
-                <AdminWidgetPanel title="Design">
-                    <ColorSelector
-                        title="Text color"
-                        value={foregroundColor || "inherit"}
-                        onChange={(value?: string) => setForegroundColor(value)}
-                    />
-                    <ColorSelector
-                        title="Background color"
-                        value={backgroundColor || "inherit"}
-                        onChange={(value?: string) => setBackgroundColor(value)}
-                    />
-                    <Select
-                        value={alignment}
-                        title="Alignment"
-                        onChange={(value: Settings["alignment"]) =>
-                            setAlignment(value)
-                        }
-                        options={[
-                            { label: "Left", value: "left" },
-                            { label: "Center", value: "center" },
-                            { label: "Right", value: "right" },
-                        ]}
-                    />
-                </AdminWidgetPanel>
-            </div>
+                <ColorSelector
+                    title="Button color"
+                    value={btnBackgroundColor || "inherit"}
+                    onChange={(value?: string) => setBtnBackgroundColor(value)}
+                />
+                <ColorSelector
+                    title="Button text"
+                    value={btnForegroundColor || "inherit"}
+                    onChange={(value?: string) => setBtnForegroundColor(value)}
+                />
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Design">
+                <ColorSelector
+                    title="Text color"
+                    value={foregroundColor || "inherit"}
+                    onChange={(value?: string) => setForegroundColor(value)}
+                />
+                <ColorSelector
+                    title="Background color"
+                    value={backgroundColor || "inherit"}
+                    onChange={(value?: string) => setBackgroundColor(value)}
+                />
+                <Select
+                    value={alignment}
+                    title="Alignment"
+                    onChange={(value: Settings["alignment"]) =>
+                        setAlignment(value)
+                    }
+                    options={[
+                        { label: "Left", value: "left" },
+                        { label: "Center", value: "center" },
+                        { label: "Right", value: "right" },
+                    ]}
+                />
+                <ContentPaddingSelector
+                    className="mb-2"
+                    value={horizontalPadding}
+                    min={50}
+                    onChange={setHorizontalPadding}
+                />
+                <ContentPaddingSelector
+                    variant="vertical"
+                    className="mb-2"
+                    value={verticalPadding}
+                    onChange={setVerticalPadding}
+                />
+            </AdminWidgetPanel>
         </div>
     );
 }

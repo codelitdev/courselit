@@ -9,6 +9,9 @@ import {
     Hero,
     Grid,
     Content,
+    Faq,
+    Pricing,
+    Media,
 } from "@courselit/common-widgets";
 
 function loadWidgets(): Record<string, any> {
@@ -21,6 +24,9 @@ function loadWidgets(): Record<string, any> {
     widgets[Hero.metadata.name] = Hero;
     widgets[Grid.metadata.name] = Grid;
     widgets[Content.metadata.name] = Content;
+    widgets[Faq.metadata.name] = Faq;
+    widgets[Pricing.metadata.name] = Pricing;
+    widgets[Media.metadata.name] = Media;
     widgets[Footer.metadata.name] = Object.assign({}, Footer, { shared: true });
     widgets[Header.metadata.name] = Object.assign({}, Header, { shared: true });
     widgets[EmailForm.metadata.name] = Object.assign({}, EmailForm, {

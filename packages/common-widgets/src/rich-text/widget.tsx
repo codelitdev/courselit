@@ -4,21 +4,34 @@ import type { WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
 
 const Widget = ({
-    settings: { text, alignment, backgroundColor, color },
+    settings: {
+        text,
+        alignment,
+        backgroundColor,
+        color,
+        horizontalPadding,
+        verticalPadding,
+    },
 }: WidgetProps<Settings>) => {
     if (!text) return <></>;
 
     return (
-        <div
-            className="p-4"
+        <section
+            className={`py-[${verticalPadding}px]`}
             style={{
                 backgroundColor,
                 color,
-                textAlign: alignment,
             }}
         >
-            <TextRenderer json={text} />
-        </div>
+            <div
+                className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%]`}
+                style={{
+                    textAlign: alignment,
+                }}
+            >
+                <TextRenderer json={text} />
+            </div>
+        </section>
     );
 };
 

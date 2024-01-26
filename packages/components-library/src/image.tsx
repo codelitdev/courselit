@@ -43,7 +43,6 @@ const Image = (props: ImgProps) => {
         defaultImage,
         loading = "lazy",
         sizes = "100vw",
-        borderRadius = "8px",
         noDefaultImage = false,
         className = "",
         width = "w-full",
@@ -58,7 +57,6 @@ const Image = (props: ImgProps) => {
     return (
         <div
             className={`relative ${width} ${height} aspect-video overflow-hidden ${className}`}
-            style={{ borderRadius }}
         >
             <NextImage
                 src={source}

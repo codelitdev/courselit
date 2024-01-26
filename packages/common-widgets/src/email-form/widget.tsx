@@ -15,6 +15,7 @@ import { Button } from "@courselit/components-library";
 import { Form } from "@courselit/components-library";
 import { FormField } from "@courselit/components-library";
 import { FormSubmit } from "@courselit/components-library";
+import { Button2 } from "@courselit/components-library";
 
 export interface WidgetProps {
     settings: Settings;
@@ -34,6 +35,8 @@ const Widget = ({
         alignment = "left",
         successMessage,
         failureMessage,
+        verticalPadding,
+        horizontalPadding,
     },
     state,
     dispatch,
@@ -90,20 +93,24 @@ const Widget = ({
     };
 
     return (
-        <Form onSubmit={onSubmit}>
-            <div
-                className="flex flex-col p-4"
+        <section
+            className={`py-[${verticalPadding}px]`}
+            style={{
+                backgroundColor,
+                color: foregroundColor,
+            }}
+        >
+            <Form
+                onSubmit={onSubmit}
+                className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%]`}
                 style={{
-                    backgroundColor,
-                    color: foregroundColor,
                     alignItems: justifyContent,
                 }}
             >
                 <h2 className="text-4xl mb-4">{title || DEFAULT_TITLE}</h2>
                 {subtitle && <h3 className="mb-4">{subtitle}</h3>}
-                <div className="mb-4">
+                <div className="flex gap-2 items-end">
                     <FormField
-                        label="Email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Enter your email"
@@ -117,17 +124,26 @@ const Widget = ({
                             { match: "typeMismatch", text: "Invalid email" },
                         ]}
                     />
+                    <Button2
+                        style={{
+                            backgroundColor: btnBackgroundColor,
+                            color: btnForegroundColor,
+                        }}
+                        disabled={state.networkAction}
+                        type="submit"
+                    >
+                        {btnText || DEFAULT_BTN_TEXT}
+                    </Button2>
                 </div>
-                <FormSubmit
+                {/* <FormSubmit
                     style={{
                         backgroundColor: btnBackgroundColor,
                         color: btnForegroundColor,
                     }}
                     disabled={state.networkAction}
-                    text={btnText || DEFAULT_BTN_TEXT}
-                />
-            </div>
-        </Form>
+                /> */}
+            </Form>
+        </section>
     );
 };
 

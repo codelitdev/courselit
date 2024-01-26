@@ -9,34 +9,62 @@ export interface WidgetProps {
 }
 
 const Widget = ({
-    settings: { backgroundColor, textColor },
+    settings: {
+        backgroundColor,
+        foregroundColor,
+        verticalPadding,
+        horizontalPadding,
+        sections,
+        titleFontSize,
+        sectionHeaderFontSize,
+    },
     state,
 }: WidgetProps) => {
     const linkProps = {
-        color: textColor,
+        color: foregroundColor,
         textDecoration: "none",
     };
 
     return (
-        <div
-            className="flex justify-between p-4"
+        <footer
+            className={`py-[${verticalPadding}px]`}
             style={{
-                backgroundColor: backgroundColor,
-                color: textColor,
+                backgroundColor,
+                color: foregroundColor,
             }}
         >
-            <p>
-                © {state.siteinfo.title} {new Date().getFullYear()}
-            </p>
-            <div className="flex flex-col items-end">
-                <Link href="/p/terms" style={linkProps}>
-                    Terms of Use
-                </Link>
-                <Link href="/p/privacy" style={linkProps}>
-                    Privacy Policy
-                </Link>
+            <div
+                className={`flex flex-col lg:justify-between lg:!flex-row px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%] gap-4`}
+            >
+                <div className="flex flex-col">
+                    <h2 className={`text-${titleFontSize}xl mb-4 font-bold`}>
+                        {state.siteinfo.title}
+                    </h2>
+                </div>
+                <div className="flex flex-col lg:!flex-row gap-8">
+                    {sections.map((section, index) => (
+                        <div className="flex flex-col">
+                            <h2
+                                className={`text-lg mb-4 ${sectionHeaderFontSize}`}
+                            >
+                                {section.name}
+                            </h2>
+                            <div className="flex flex-col gap-2">
+                                {section.links.map((link, index) => (
+                                    <Link
+                                        key={index}
+                                        href={link.href}
+                                        {...linkProps}
+                                    >
+                                        {link.label}
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
-        </div>
+        </footer>
     );
 };
 

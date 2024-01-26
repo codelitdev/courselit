@@ -18,18 +18,21 @@ interface WidgetProps {
 }
 
 export default function Widget({ state, settings }: WidgetProps) {
+    const { verticalPadding, horizontalPadding } = settings;
     const linkClasses = "flex w-full";
 
     return (
         <header
-            className="sticky border-b top-0 z-10 bg-white/75 backdrop-blur"
+            className={`sticky border-b top-0 z-10 bg-white/75 backdrop-blur py-[${verticalPadding}px]`}
             style={{
                 backgroundColor: settings.appBarBackground,
             }}
         >
-            <div className="flex m-auto p-4 justify-between items-center">
+            <div
+                className={`flex m-auto px-4 justify-between items-center px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%]`}
+            >
                 <AppLink href="/" className="!no-underline">
-                    <div className="flex items-center mr-2">
+                    <div className="flex items-center">
                         {state.siteinfo.logo && (
                             <div className="mr-2">
                                 <Image
@@ -51,7 +54,7 @@ export default function Widget({ state, settings }: WidgetProps) {
                     </div>
                 </AppLink>
                 <div
-                    className={`hidden px-2 lg:!flex lg:!grow lg:!items-center ${
+                    className={`hidden px-4 lg:!flex lg:!grow lg:!items-center ${
                         settings.linkAlignment === "right"
                             ? "justify-end"
                             : settings.linkAlignment === "center"
