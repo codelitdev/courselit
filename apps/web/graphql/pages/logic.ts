@@ -83,12 +83,7 @@ async function initSharedWidgets(ctx: GQLContext) {
                     { label: "Courses", href: "/courses" },
                     { label: "Blog", href: "/blog" },
                 ],
-                appBarBackground: "#000000",
-                loginBtnBgColor: "#ffffff",
-                loginBtnColor: "#000000",
-                linkColor: "#ffffff",
-                linkAlignment: "right",
-                logoColor: "#ffffff",
+                showLoginControl: true,
             },
         };
         subdomainChanged = true;
@@ -99,6 +94,17 @@ async function initSharedWidgets(ctx: GQLContext) {
             shared: true,
             deleteable: false,
             widgetId: generateUniqueId(),
+            settings: {
+                sections: [
+                    {
+                        name: "Legal",
+                        links: [
+                            { label: "Terms of use", href: "/p/terms" },
+                            { label: "Privacy policy", href: "/p/privacy" },
+                        ],
+                    },
+                ],
+            },
         };
         subdomainChanged = true;
     }

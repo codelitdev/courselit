@@ -7,13 +7,21 @@ import {
     Select,
     Button,
     Checkbox,
+    FormField,
+    Form,
+    Tooltip,
+    ContentPaddingSelector,
+    PageBuilderSlider,
 } from "@courselit/components-library";
-import { FormField } from "@courselit/components-library";
-import { Form } from "@courselit/components-library";
-import { Tooltip } from "@courselit/components-library";
 import { Help } from "@courselit/icons";
-import { ContentPaddingSelector } from "@courselit/components-library";
-import { PageBuilderSlider } from "@courselit/components-library";
+import {
+    verticalPadding as defaultVerticalPadding,
+    horizontalPadding as defaultHorizontalPadding,
+    spacingBetweenLinks as defaultSpacingBetweenLinks,
+    linkFontWeight as defaultLinkFontWeight,
+    linkAlignment as defaultLinkAlignment,
+    showLoginControl as defaultShowLoginControl,
+} from "../defaults";
 
 interface AdminWidgetProps {
     settings: Settings;
@@ -38,22 +46,22 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
         settings.linkColor,
     );
     const [linkAlignment, setLinkAlignment] = useState(
-        settings.linkAlignment || "left",
+        settings.linkAlignment || defaultLinkAlignment,
     );
     const [showLoginControl, setShowLoginControl] = useState<
         boolean | undefined
-    >(settings.showLoginControl || true);
+    >(settings.showLoginControl || defaultShowLoginControl);
     const [linkFontWeight, setLinkFontWeight] = useState(
-        settings.linkFontWeight || "font-normal",
+        settings.linkFontWeight || defaultLinkFontWeight,
     );
     const [spacingBetweenLinks, setSpacingBetweenLinks] = useState<
         number | undefined
-    >(settings.spacingBetweenLinks || 16);
+    >(settings.spacingBetweenLinks || defaultSpacingBetweenLinks);
     const [horizontalPadding, setHorizontalPadding] = useState<number>(
-        settings.horizontalPadding || 100,
+        settings.horizontalPadding || defaultHorizontalPadding,
     );
     const [verticalPadding, setVerticalPadding] = useState<number>(
-        settings.verticalPadding || 8,
+        settings.verticalPadding || defaultVerticalPadding,
     );
 
     useEffect(() => {

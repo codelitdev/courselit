@@ -5,12 +5,19 @@ import {
     Link as AppLink,
     Menu,
     Button2,
+    MenuItem2,
 } from "@courselit/components-library";
 import { Person } from "@courselit/icons";
 import { State, UIConstants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
-import { MenuItem2 } from "@courselit/components-library";
 import { MobileNav } from "./mobile-nav";
+import {
+    verticalPadding as defaultVerticalPadding,
+    horizontalPadding as defaultHorizontalPadding,
+    linkAlignment as defaultLinkAlignment,
+    spacingBetweenLinks as defaultSpacingBetweenLinks,
+    linkFontWeight as defaultLinkFontWeight,
+} from "../defaults";
 
 interface WidgetProps {
     settings: Settings;
@@ -20,16 +27,24 @@ interface WidgetProps {
 export default function Widget({ state, settings }: WidgetProps) {
     const { verticalPadding, horizontalPadding } = settings;
     const linkClasses = "flex w-full";
+    const linkAlignment = settings.linkAlignment || defaultLinkAlignment;
+    const spacingBetweenLinks =
+        settings.spacingBetweenLinks || defaultSpacingBetweenLinks;
+    const linkFontWeight = settings.linkFontWeight || defaultLinkFontWeight;
 
     return (
         <header
-            className={`sticky border-b top-0 z-10 bg-white/75 backdrop-blur py-[${verticalPadding}px]`}
+            className={`sticky border-b top-0 z-10 bg-white/75 backdrop-blur py-[${
+                verticalPadding || defaultVerticalPadding
+            }px]`}
             style={{
                 backgroundColor: settings.appBarBackground,
             }}
         >
             <div
-                className={`flex m-auto px-4 justify-between items-center px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%]`}
+                className={`flex m-auto px-4 justify-between items-center px-4 w-full mx-auto lg:max-w-[${
+                    horizontalPadding || defaultHorizontalPadding
+                }%]`}
             >
                 <AppLink href="/" className="!no-underline">
                     <div className="flex items-center">
@@ -55,14 +70,14 @@ export default function Widget({ state, settings }: WidgetProps) {
                 </AppLink>
                 <div
                     className={`hidden px-4 lg:!flex lg:!grow lg:!items-center ${
-                        settings.linkAlignment === "right"
+                        linkAlignment === "right"
                             ? "justify-end"
-                            : settings.linkAlignment === "center"
+                            : linkAlignment === "center"
                             ? "justify-center"
                             : "justify-start"
                     }`}
                     style={{
-                        gap: `${settings.spacingBetweenLinks}px`,
+                        gap: `${spacingBetweenLinks}px`,
                     }}
                 >
                     {settings.links &&
@@ -77,7 +92,7 @@ export default function Widget({ state, settings }: WidgetProps) {
                                 >
                                     <AppLink
                                         href={link.href}
-                                        className={`${settings.linkFontWeight}`}
+                                        className={`${linkFontWeight}`}
                                     >
                                         {link.isButton && (
                                             <Button2
@@ -206,65 +221,6 @@ export default function Widget({ state, settings }: WidgetProps) {
                             </MenuItem2>
                         </Menu>
                     )}
-                    {/* <Menu2
-                        icon={<Person />}
-                        style={{
-                            color: settings.loginBtnColor,
-                            backgroundColor: settings.loginBtnBgColor,
-                        }}
-                    >
-                        {state.profile.fetched &&
-                            checkPermission(state.profile.permissions, [
-                                UIConstants.permissions.enrollInCourse,
-                            ]) && (
-                                <MenuItem>
-                                    <AppLink
-                                        href={"/my-content"}
-                                        className={linkClasses}
-                                    >
-                                        My content
-                                    </AppLink>
-                                </MenuItem>
-                            )}
-                        {!state.auth.guest && (
-                            <MenuItem>
-                                <AppLink
-                                    href={"/profile"}
-                                    className={linkClasses}
-                                >
-                                    Profile
-                                </AppLink>
-                            </MenuItem>
-                        )}
-                        {state.profile.fetched &&
-                            checkPermission(state.profile.permissions, [
-                                UIConstants.permissions.manageCourse,
-                                UIConstants.permissions.manageAnyCourse,
-                                UIConstants.permissions.manageMedia,
-                                UIConstants.permissions.manageAnyMedia,
-                                UIConstants.permissions.manageSite,
-                                UIConstants.permissions.manageSettings,
-                                UIConstants.permissions.manageUsers,
-                                UIConstants.permissions.viewAnyMedia,
-                            ]) && (
-                                <MenuItem>
-                                    <AppLink
-                                        href={"/dashboard/products"}
-                                        className={linkClasses}
-                                    >
-                                        Dashboard
-                                    </AppLink>
-                                </MenuItem>
-                            )}
-                        <MenuItem>
-                            <AppLink
-                                href={state.auth.guest ? "/login" : "/logout"}
-                                className={linkClasses}
-                            >
-                                {state.auth.guest ? "Login" : "Logout"}
-                            </AppLink>
-                        </MenuItem>
-                    </Menu2> */}
                     <MobileNav
                         title={state.siteinfo.title}
                         logo={state.siteinfo.logo}
@@ -273,8 +229,8 @@ export default function Widget({ state, settings }: WidgetProps) {
                         linkColor={settings.linkColor}
                         btnBgColor={settings.loginBtnBgColor}
                         btnColor={settings.loginBtnColor}
-                        linkFontWeight={settings.linkFontWeight}
-                        spacingBetweenLinks={settings.spacingBetweenLinks}
+                        linkFontWeight={linkFontWeight}
+                        spacingBetweenLinks={spacingBetweenLinks}
                     />
                 </div>
             </div>

@@ -7,17 +7,23 @@ import {
     IconButton,
     PageBuilderSlider,
     Select,
+    ContentPaddingSelector,
+    Accordion,
+    AccordionItem,
+    AccordionTrigger,
+    AccordionContent,
+    Form,
+    FormField,
 } from "@courselit/components-library";
 import { Link, Section } from "../settings";
-import { ContentPaddingSelector } from "@courselit/components-library";
-import { Accordion } from "@courselit/components-library";
-import { AccordionItem } from "@courselit/components-library";
-import { AccordionTrigger } from "@courselit/components-library";
-import { AccordionContent } from "@courselit/components-library";
-import { Form } from "@courselit/components-library";
-import { FormField } from "@courselit/components-library";
 import { Check } from "@courselit/icons";
 import LinkEditor from "./link-editor";
+import {
+    horizontalPadding as defaultHorizontalPadding,
+    verticalPadding as defaultVerticalPadding,
+    titleFontSize as defaultTitleFontSize,
+    sectionHeaderFontSize as defaultSectionHeaderFontSize,
+} from "../defaults";
 
 export interface AdminWidgetProps {
     onChange: (...args: any[]) => void;
@@ -25,18 +31,7 @@ export interface AdminWidgetProps {
 }
 
 export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
-    const defaultSections: Section[] = [
-        {
-            name: "Legal",
-            links: [
-                { label: "Terms of use", href: "/p/terms" },
-                { label: "Privacy policy", href: "/p/privacy" },
-            ],
-        },
-    ];
-    const [sections, setSections] = useState<Section[]>(
-        settings.sections || defaultSections,
-    );
+    const [sections, setSections] = useState<Section[]>(settings.sections);
     const [backgroundColor, setBackgroundColor] = useState(
         settings.backgroundColor,
     );
@@ -44,19 +39,19 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
         settings.foregroundColor,
     );
     const [horizontalPadding, setHorizontalPadding] = useState<number>(
-        settings.horizontalPadding || 100,
+        settings.horizontalPadding || defaultHorizontalPadding,
     );
     const [verticalPadding, setVerticalPadding] = useState<number>(
-        settings.verticalPadding || 16,
+        settings.verticalPadding || defaultVerticalPadding,
     );
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [sectionName, setSectionName] = useState("");
     const [sectionBeingEdited, setSectionBeingEdited] = useState(-1);
     const [titleFontSize, setTitleFontSize] = useState(
-        settings.titleFontSize || 2,
+        settings.titleFontSize || defaultTitleFontSize,
     );
     const [sectionHeaderFontSize, setSectionHeaderFontSize] = useState(
-        settings.sectionHeaderFontSize || "font-semibold",
+        settings.sectionHeaderFontSize || defaultSectionHeaderFontSize,
     );
 
     useEffect(() => {

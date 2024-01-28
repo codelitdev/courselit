@@ -35,7 +35,7 @@ export function MobileNav({
         <Drawer
             open={open}
             setOpen={setOpen}
-            trigger={<MenuButton color={color} />}
+            trigger={<MenuButton color={color} backgroundColor={btnBgColor} />}
             side="right"
         >
             <AppLink
@@ -102,11 +102,20 @@ export function MobileNav({
     );
 }
 
-function MenuButton({ color }: { color: string }) {
+function MenuButton({
+    color,
+    backgroundColor = "inherit",
+}: {
+    color: string;
+    backgroundColor: string;
+}) {
     return (
         <Button2
             variant="ghost"
-            className="mr-2 px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 lg:!hidden"
+            className="px-2 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 lg:!hidden"
+            style={{
+                backgroundColor,
+            }}
         >
             <svg
                 strokeWidth="1.5"
