@@ -1,8 +1,28 @@
 import React from "react";
 import { WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
-import { Image, TextRenderer, Button2 } from "@courselit/components-library";
-import { Link } from "@courselit/components-library";
+import {
+    Image,
+    TextRenderer,
+    Button2,
+    Link,
+} from "@courselit/components-library";
+import {
+    verticalPadding as defaultVerticalPadding,
+    horizontalPadding as defaultHorizontalPadding,
+} from "./defaults";
+
+const twRoundedMap = {
+    "0": "rounded-none",
+    "1": "rounded-sm",
+    "2": "rounded",
+    "3": "rounded-md",
+    "4": "rounded-lg",
+    "5": "rounded-xl",
+    "6": "rounded-2xl",
+    "7": "rounded-3xl",
+    "8": "rounded-full",
+};
 
 export default function Widget({
     settings: {
@@ -18,9 +38,9 @@ export default function Widget({
         buttonBackground,
         buttonForeground,
         style = "normal",
-        mediaRadius = 0,
-        horizontalPadding,
-        verticalPadding,
+        mediaRadius = 2,
+        horizontalPadding = defaultHorizontalPadding,
+        verticalPadding = defaultVerticalPadding,
         secondaryButtonAction,
         secondaryButtonCaption,
         secondaryButtonBackground,
@@ -28,6 +48,7 @@ export default function Widget({
         titleFontSize,
         descriptionFontSize,
         contentAlignment,
+        cssId,
     },
 }: WidgetProps<Settings>) {
     const hasHeroGraphic = youtubeLink || (media && media.mediaId);
@@ -50,13 +71,14 @@ export default function Widget({
                 backgroundColor,
                 color: foregroundColor,
             }}
+            id={cssId}
         >
             <div
                 className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%] gap-4 ${direction}`}
             >
                 {hasHeroGraphic && (
                     <div
-                        className={`w-full sm:mb-2 sm:pr-0 sm:pl-0 md:w-1/2 md:mb-0 ${
+                        className={`w-full sm:mb-2 sm:pr-0 sm:pl-0 md:w-1/2 md:mb-0 flex items-center ${
                             hasHeroGraphic && alignment === "right"
                                 ? "md:pl-1"
                                 : "md:pl-0"
@@ -67,8 +89,10 @@ export default function Widget({
                         }`}
                     >
                         {youtubeLink && (
-                            <div className="flex justify-center">
-                                <div className="w-full relative h-0 overflow-hidden rounded-md pb-[56.25%]">
+                            <div className="flex justify-center grow">
+                                <div
+                                    className={`w-full relative h-0 overflow-hidden pb-[56.25%] ${twRoundedMap[mediaRadius]}`}
+                                >
                                     <iframe
                                         src={`https://www.youtube.com/embed/${youtubeLink}`}
                                         frameBorder="0"
@@ -81,11 +105,7 @@ export default function Widget({
                         )}
                         {!youtubeLink && media && media.mediaId && (
                             <div
-                                className="w-full text-center"
-                                style={{
-                                    borderRadius: `${mediaRadius}px`,
-                                    width: "100%",
-                                }}
+                                className={`w-full text-center overflow-hidden ${twRoundedMap[mediaRadius]}`}
                             >
                                 <Image src={media.file} />
                             </div>
@@ -107,10 +127,8 @@ export default function Widget({
                 >
                     <div
                         className={`flex flex-col justify-center ${
-                            hasHeroGraphic
-                                ? ""
-                                : contentAlignment === "center"
-                                ? "items-center"
+                            contentAlignment === "center"
+                                ? "items-center text-center"
                                 : "items-start"
                         }`}
                     >

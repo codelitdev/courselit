@@ -12,7 +12,12 @@ import {
     Form,
     FormField,
     ContentPaddingSelector,
+    CssIdField,
 } from "@courselit/components-library";
+import {
+    verticalPadding as defaultVerticalPadding,
+    horizontalPadding as defaultHorizontalPadding,
+} from "../defaults";
 
 export interface AdminWidgetProps {
     settings: Settings;
@@ -99,10 +104,10 @@ export default function AdminWidget({
     );
     const [itemBeingEditedIndex, setItemBeingEditedIndex] = useState(-1);
     const [horizontalPadding, setHorizontalPadding] = useState<number>(
-        settings.horizontalPadding || 100,
+        settings.horizontalPadding || defaultHorizontalPadding,
     );
     const [verticalPadding, setVerticalPadding] = useState<number>(
-        settings.verticalPadding || 16,
+        settings.verticalPadding || defaultVerticalPadding,
     );
     const [buttonBackground, setButtonBackground] = useState(
         settings.buttonBackground,
@@ -116,6 +121,7 @@ export default function AdminWidget({
     const [cardBorderColor, setCardBorderColor] = useState(
         settings.cardBorderColor,
     );
+    const [cssId, setCssId] = useState(settings.cssId);
 
     const onSettingsChanged = () =>
         onChange({
@@ -131,6 +137,7 @@ export default function AdminWidget({
             buttonForeground,
             primaryButtonBackground,
             cardBorderColor,
+            cssId,
         });
 
     useEffect(() => {
@@ -148,6 +155,7 @@ export default function AdminWidget({
         buttonForeground,
         primaryButtonBackground,
         cardBorderColor,
+        cssId,
     ]);
 
     const onItemChange = (newItemData: Item) => {
@@ -286,6 +294,9 @@ export default function AdminWidget({
                     value={verticalPadding}
                     onChange={setVerticalPadding}
                 />
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Advanced">
+                <CssIdField value={cssId} onChange={setCssId} />
             </AdminWidgetPanel>
         </div>
     );

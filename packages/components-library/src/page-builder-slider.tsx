@@ -21,13 +21,18 @@ export default function PageBuilderSlider({
 }) {
     return (
         <div className={`flex flex-col gap-2 ${className}`}>
-            <div className="flex grow items-center gap-1">
-                <h2 className="mb-1 font-medium">{title}</h2>
-                {tooltip && (
-                    <Tooltip title={tooltip}>
-                        <Help />
-                    </Tooltip>
-                )}
+            <div className="flex justify-between items-center">
+                <div className="flex items-center gap-1">
+                    <h2 className="mb-1 font-medium">{title}</h2>
+                    {tooltip && (
+                        <Tooltip title={tooltip}>
+                            <Help />
+                        </Tooltip>
+                    )}
+                </div>
+                <p className="text-xs bg-gray-100 p-1 rounded border">
+                    {value}
+                </p>
             </div>
             <Slider
                 value={[value]}

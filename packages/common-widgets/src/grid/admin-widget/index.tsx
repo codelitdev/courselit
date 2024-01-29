@@ -12,8 +12,13 @@ import {
     Form,
     FormField,
     ContentPaddingSelector,
+    CssIdField,
+    PageBuilderSlider,
 } from "@courselit/components-library";
-import { Slider } from "@courselit/components-library";
+import {
+    verticalPadding as defaultVerticalPadding,
+    horizontalPadding as defaultHorizontalPadding,
+} from "../defaults";
 
 export interface AdminWidgetProps {
     settings: Settings;
@@ -100,10 +105,10 @@ export default function AdminWidget({
     );
     const [itemBeingEditedIndex, setItemBeingEditedIndex] = useState(-1);
     const [horizontalPadding, setHorizontalPadding] = useState<number>(
-        settings.horizontalPadding || 100,
+        settings.horizontalPadding || defaultHorizontalPadding,
     );
     const [verticalPadding, setVerticalPadding] = useState<number>(
-        settings.verticalPadding || 16,
+        settings.verticalPadding || defaultVerticalPadding,
     );
     const [itemBackgroundColor, setItemBackgroundColor] = useState(
         settings.itemBackgroundColor,
@@ -117,6 +122,7 @@ export default function AdminWidget({
     const [itemBorderRadius, setItemBorderRadius] = useState(
         settings.itemBorderRadius || 8,
     );
+    const [cssId, setCssId] = useState(settings.cssId);
 
     const onSettingsChanged = () =>
         onChange({
@@ -137,6 +143,7 @@ export default function AdminWidget({
             itemForegroundColor,
             itemBorderColor,
             itemBorderRadius,
+            cssId,
         });
 
     useEffect(() => {
@@ -159,6 +166,7 @@ export default function AdminWidget({
         itemForegroundColor,
         itemBorderColor,
         itemBorderRadius,
+        cssId,
     ]);
 
     const onItemChange = (newItemData: Item) => {
@@ -322,22 +330,19 @@ export default function AdminWidget({
                     variant="vertical"
                     className="mb-2"
                     value={verticalPadding}
+                    min={32}
                     onChange={setVerticalPadding}
                 />
-                <div className={`flex flex-col gap-2`}>
-                    <div className="flex grow items-center gap-1">
-                        <h2 className="mb-1 font-medium">Item border radius</h2>
-                    </div>
-                    <Slider
-                        value={[itemBorderRadius]}
-                        max={40}
-                        min={0}
-                        onValueChange={(value: number[]) => {
-                            console.log(value);
-                            setItemBorderRadius(value[0]);
-                        }}
-                    />
-                </div>
+                <PageBuilderSlider
+                    title="Item border radius"
+                    max={40}
+                    min={0}
+                    value={itemBorderRadius}
+                    onChange={setItemBorderRadius}
+                />
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Advanced">
+                <CssIdField value={cssId} onChange={setCssId} />
             </AdminWidgetPanel>
         </div>
     );

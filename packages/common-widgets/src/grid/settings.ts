@@ -30,4 +30,5 @@ export default interface Settings extends WidgetDefaultSettings {
     itemForegroundColor?: string;
     itemBorderColor?: string;
     itemBorderRadius?: number;
+    cssId?: string;
 }

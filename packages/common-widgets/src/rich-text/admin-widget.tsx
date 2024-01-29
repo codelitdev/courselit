@@ -4,10 +4,15 @@ import {
     ColorSelector,
     Select,
     TextEditor,
+    ContentPaddingSelector,
 } from "@courselit/components-library";
 import Settings from "./settings";
 import { Alignment } from "@courselit/common-models";
-import { ContentPaddingSelector } from "@courselit/components-library";
+import {
+    verticalPadding as defaultVerticalPadding,
+    horizontalPadding as defaultHorizontalPadding,
+} from "./defaults";
+import { CssIdField } from "@courselit/components-library";
 
 export interface AboutWidgetProps {
     onChange: (...args: any[]) => void;
@@ -38,11 +43,12 @@ const AdminWidget = ({ settings, onChange }: AboutWidgetProps) => {
     );
     const [color, setColor] = useState(settings.color);
     const [horizontalPadding, setHorizontalPadding] = useState<number>(
-        settings.horizontalPadding || 100,
+        settings.horizontalPadding || defaultHorizontalPadding,
     );
     const [verticalPadding, setVerticalPadding] = useState<number>(
-        settings.verticalPadding || 16,
+        settings.verticalPadding || defaultVerticalPadding,
     );
+    const [cssId, setCssId] = useState(settings.cssId);
 
     useEffect(() => {
         onChange({
@@ -52,6 +58,7 @@ const AdminWidget = ({ settings, onChange }: AboutWidgetProps) => {
             backgroundColor,
             horizontalPadding,
             verticalPadding,
+            cssId,
         });
     }, [
         content,
@@ -60,6 +67,7 @@ const AdminWidget = ({ settings, onChange }: AboutWidgetProps) => {
         backgroundColor,
         horizontalPadding,
         verticalPadding,
+        cssId,
     ]);
 
     return (
@@ -107,6 +115,9 @@ const AdminWidget = ({ settings, onChange }: AboutWidgetProps) => {
                     value={verticalPadding}
                     onChange={setVerticalPadding}
                 />
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Advanced">
+                <CssIdField value={cssId} onChange={setCssId} />
             </AdminWidgetPanel>
         </div>
     );

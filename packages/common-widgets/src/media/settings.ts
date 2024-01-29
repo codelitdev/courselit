@@ -7,4 +7,5 @@ export default interface Settings extends WidgetDefaultSettings {
     mediaRadius?: number;
     horizontalPadding: number;
     verticalPadding: number;
+    cssId?: string;
 }

@@ -12,6 +12,10 @@ import {
     TextRenderer,
 } from "@courselit/components-library";
 import { Check } from "@courselit/icons";
+import {
+    verticalPadding as defaultVerticalPadding,
+    horizontalPadding as defaultHorizontalPadding,
+} from "./defaults";
 
 export default function Widget({
     settings: {
@@ -21,12 +25,13 @@ export default function Widget({
         backgroundColor,
         foregroundColor,
         items,
-        horizontalPadding,
-        verticalPadding,
+        horizontalPadding = defaultHorizontalPadding,
+        verticalPadding = defaultVerticalPadding,
         buttonBackground,
         buttonForeground,
         primaryButtonBackground,
         cardBorderColor,
+        cssId,
     },
 }: WidgetProps<Settings>) {
     return (
@@ -36,6 +41,7 @@ export default function Widget({
                 backgroundColor,
                 color: foregroundColor,
             }}
+            id={cssId}
         >
             <div
                 className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%]`}

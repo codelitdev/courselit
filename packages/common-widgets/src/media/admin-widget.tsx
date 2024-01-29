@@ -17,7 +17,12 @@ import {
     ContentPaddingSelector,
     PageBuilderPropertyHeader,
     PageBuilderSlider,
+    CssIdField,
 } from "@courselit/components-library";
+import {
+    verticalPadding as defaultVerticalPadding,
+    horizontalPadding as defaultHorizontalPadding,
+} from "./defaults";
 
 interface AdminWidgetProps {
     name: string;
@@ -47,11 +52,12 @@ export default function AdminWidget({
     );
     const [media, setMedia] = useState<Partial<Media>>(settings.media || {});
     const [horizontalPadding, setHorizontalPadding] = useState<number>(
-        settings.horizontalPadding || 100,
+        settings.horizontalPadding || defaultHorizontalPadding,
     );
     const [verticalPadding, setVerticalPadding] = useState<number>(
-        settings.verticalPadding || 16,
+        settings.verticalPadding || defaultVerticalPadding,
     );
+    const [cssId, setCssId] = useState(settings.cssId);
 
     const onSettingsChanged = () =>
         onChange({
@@ -61,6 +67,7 @@ export default function AdminWidget({
             mediaRadius: mediaBorderRadius,
             horizontalPadding,
             verticalPadding,
+            cssId,
         });
 
     useEffect(() => {
@@ -72,6 +79,7 @@ export default function AdminWidget({
         mediaBorderRadius,
         horizontalPadding,
         verticalPadding,
+        cssId,
     ]);
 
     return (
@@ -133,6 +141,9 @@ export default function AdminWidget({
                     max={8}
                     onChange={setMediaBorderRadius}
                 />
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Advanced">
+                <CssIdField value={cssId} onChange={setCssId} />
             </AdminWidgetPanel>
         </div>
     );

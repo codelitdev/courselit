@@ -2,6 +2,10 @@ import React from "react";
 import { TextRenderer } from "@courselit/components-library";
 import type { WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
+import {
+    verticalPadding as defaultVerticalPadding,
+    horizontalPadding as defaultHorizontalPadding,
+} from "./defaults";
 
 const Widget = ({
     settings: {
@@ -9,8 +13,9 @@ const Widget = ({
         alignment,
         backgroundColor,
         color,
-        horizontalPadding,
-        verticalPadding,
+        horizontalPadding = defaultHorizontalPadding,
+        verticalPadding = defaultVerticalPadding,
+        cssId,
     },
 }: WidgetProps<Settings>) => {
     if (!text) return <></>;
@@ -22,6 +27,7 @@ const Widget = ({
                 backgroundColor,
                 color,
             }}
+            id={cssId}
         >
             <div
                 className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%]`}

@@ -13,4 +13,5 @@ export default interface Settings {
     failureMessage?: string;
     horizontalPadding: number;
     verticalPadding: number;
+    cssId?: string;
 }

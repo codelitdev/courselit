@@ -2,6 +2,10 @@ import React from "react";
 import { WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
 import { Image } from "@courselit/components-library";
+import {
+    verticalPadding as defaultVerticalPadding,
+    horizontalPadding as defaultHorizontalPadding,
+} from "./defaults";
 
 const twRoundedMap = {
     "0": "rounded-none",
@@ -21,8 +25,9 @@ export default function Widget({
         youtubeLink,
         backgroundColor,
         mediaRadius = 0,
-        horizontalPadding,
-        verticalPadding,
+        horizontalPadding = defaultHorizontalPadding,
+        verticalPadding = defaultVerticalPadding,
+        cssId,
     },
 }: WidgetProps<Settings>) {
     const hasHeroGraphic = youtubeLink || (media && media.mediaId);
@@ -33,6 +38,7 @@ export default function Widget({
             style={{
                 backgroundColor,
             }}
+            id={cssId}
         >
             <div
                 className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%] gap-4`}
