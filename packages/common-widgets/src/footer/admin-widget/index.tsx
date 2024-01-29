@@ -31,7 +31,17 @@ export interface AdminWidgetProps {
 }
 
 export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
-    const [sections, setSections] = useState<Section[]>(settings.sections);
+    const [sections, setSections] = useState<Section[]>(
+        settings.sections || [
+            {
+                name: "Legal",
+                links: [
+                    { label: "Terms of use", href: "/p/terms" },
+                    { label: "Privacy policy", href: "/p/privacy" },
+                ],
+            },
+        ],
+    );
     const [backgroundColor, setBackgroundColor] = useState(
         settings.backgroundColor,
     );
