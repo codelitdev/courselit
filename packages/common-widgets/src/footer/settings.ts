@@ -31,4 +31,5 @@ export default interface Settings extends WidgetDefaultSettings {
     titleFontSize?: number;
     sectionHeaderFontSize: "font-normal" | "font-semibold" | "font-medium";
     socials?: Socials;
+    socialIconsSize?: number;
 }

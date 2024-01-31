@@ -24,6 +24,7 @@ import {
     titleFontSize as defaultTitleFontSize,
     sectionHeaderFontSize as defaultSectionHeaderFontSize,
     socials as defaultSocials,
+    socialIconsSize as defaultSocialIconsSize,
 } from "../defaults";
 
 export interface AdminWidgetProps {
@@ -67,6 +68,9 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
     const [socials, setSocials] = useState<Socials>(
         settings.socials || defaultSocials,
     );
+    const [socialIconsSize, setSocialIconsSize] = useState(
+        settings.socialIconsSize || defaultSocialIconsSize,
+    );
 
     useEffect(() => {
         onChange({
@@ -78,6 +82,7 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
             titleFontSize,
             sectionHeaderFontSize,
             socials,
+            socialIconsSize,
         });
     }, [
         sections,
@@ -88,6 +93,7 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
         titleFontSize,
         sectionHeaderFontSize,
         socials,
+        socialIconsSize,
     ]);
 
     const addNewSection = () => {
@@ -260,17 +266,7 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                 </Button>
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Social media">
-                <Form>
-                    <FormField
-                        label="Facebook"
-                        value={socials.facebook}
-                        onChange={(e) => setSocial("facebook", e.target.value)}
-                    />
-                    <FormField
-                        label="Facebook"
-                        value={socials.facebook}
-                        onChange={(e) => setSocial("facebook", e.target.value)}
-                    />
+                <Form className="flex flex-col gap-2">
                     <FormField
                         label="Facebook"
                         value={socials.facebook}
@@ -319,6 +315,18 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                     value={backgroundColor || "inherit"}
                     onChange={(value?: string) => setBackgroundColor(value)}
                 />
+                <Select
+                    title="Section headers font weight"
+                    value={sectionHeaderFontSize}
+                    options={[
+                        { label: "Normal", value: "font-normal" },
+                        { label: "Bold", value: "font-medium" },
+                        { label: "Bolder", value: "font-semibold" },
+                    ]}
+                    onChange={(
+                        value: "font-semibold" | "font-normal" | "font-medium",
+                    ) => setSectionHeaderFontSize(value)}
+                />
                 <ContentPaddingSelector
                     value={horizontalPadding}
                     min={50}
@@ -336,17 +344,12 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                     value={titleFontSize}
                     onChange={setTitleFontSize}
                 />
-                <Select
-                    title="Section headers font weight"
-                    value={sectionHeaderFontSize}
-                    options={[
-                        { label: "Normal", value: "font-normal" },
-                        { label: "Bold", value: "font-medium" },
-                        { label: "Bolder", value: "font-semibold" },
-                    ]}
-                    onChange={(
-                        value: "font-semibold" | "font-normal" | "font-medium",
-                    ) => setSectionHeaderFontSize(value)}
+                <PageBuilderSlider
+                    title="Social icons size"
+                    min={16}
+                    max={48}
+                    value={socialIconsSize}
+                    onChange={setSocialIconsSize}
                 />
             </AdminWidgetPanel>
         </div>

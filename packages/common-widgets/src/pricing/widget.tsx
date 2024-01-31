@@ -107,7 +107,10 @@ export default function Widget({
                                         ?.split(",")
                                         .map((x) => x.trim())
                                         .map((feature) => (
-                                            <div className="flex items-center gap-2">
+                                            <div
+                                                className="flex items-center gap-2"
+                                                key={feature}
+                                            >
                                                 {/* <svg
                                             className="w-4 h-4 text-green-500"
                                             viewBox="0 0 20 20"
