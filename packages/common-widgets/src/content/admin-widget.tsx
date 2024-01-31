@@ -9,7 +9,13 @@ import {
     TextEditor,
     Form,
     FormField,
+    ContentPaddingSelector,
+    CssIdField,
 } from "@courselit/components-library";
+import {
+    verticalPadding as defaultVerticalPadding,
+    horizontalPadding as defaultHorizontalPadding,
+} from "./defaults";
 
 interface AdminWidgetProps {
     settings: Settings;
@@ -33,6 +39,13 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
     const [badgeForegroundColor, setBadgeForegroundColor] = useState(
         settings.badgeForegroundColor,
     );
+    const [horizontalPadding, setHorizontalPadding] = useState<number>(
+        settings.horizontalPadding || defaultHorizontalPadding,
+    );
+    const [verticalPadding, setVerticalPadding] = useState<number>(
+        settings.verticalPadding || defaultVerticalPadding,
+    );
+    const [cssId, setCssId] = useState(settings.cssId);
 
     useEffect(() => {
         onChange({
@@ -43,6 +56,9 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
             foregroundColor,
             badgeBackgroundColor,
             badgeForegroundColor,
+            horizontalPadding,
+            verticalPadding,
+            cssId,
         });
     }, [
         title,
@@ -52,68 +68,78 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
         foregroundColor,
         badgeBackgroundColor,
         badgeForegroundColor,
+        horizontalPadding,
+        verticalPadding,
+        cssId,
     ]);
 
     return (
-        <div className="flex flex-col">
-            <div className="mb-4">
+        <div className="flex flex-col gap-4 mb-4">
+            <AdminWidgetPanel title="Header">
                 <Form>
-                    <AdminWidgetPanel title="Header">
-                        <FormField
-                            label="Title"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                        />
-                        <div>
-                            <p className="mb-1 font-medium">Description</p>
-                            <TextEditor
-                                initialContent={description}
-                                onChange={(state: any) => setDescription(state)}
-                                showToolbar={false}
-                            />
-                        </div>
-                        <Select
-                            title="Header alignment"
-                            value={headerAlignment}
-                            options={[
-                                { label: "Left", value: "left" },
-                                { label: "Center", value: "center" },
-                            ]}
-                            onChange={(value: Alignment) =>
-                                setHeaderAlignment(value)
-                            }
-                        />
-                    </AdminWidgetPanel>
+                    <FormField
+                        label="Title"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                    />
                 </Form>
-            </div>
-            <div className="mb-4">
-                <AdminWidgetPanel title="Design">
-                    <ColorSelector
-                        title="Background color"
-                        value={backgroundColor || "inherit"}
-                        onChange={(value?: string) => setBackgroundColor(value)}
+                <div>
+                    <p className="mb-1 font-medium">Description</p>
+                    <TextEditor
+                        initialContent={description}
+                        onChange={(state: any) => setDescription(state)}
+                        showToolbar={false}
                     />
-                    <ColorSelector
-                        title="Text color"
-                        value={foregroundColor || "inherit"}
-                        onChange={(value?: string) => setForegroundColor(value)}
-                    />
-                    <ColorSelector
-                        title="Badge color"
-                        value={badgeBackgroundColor || "inherit"}
-                        onChange={(value?: string) =>
-                            setBadgeBackgroundColor(value)
-                        }
-                    />
-                    <ColorSelector
-                        title="Badge text color"
-                        value={badgeForegroundColor || "inherit"}
-                        onChange={(value?: string) =>
-                            setBadgeForegroundColor(value)
-                        }
-                    />
-                </AdminWidgetPanel>
-            </div>
+                </div>
+                <Select
+                    title="Header alignment"
+                    value={headerAlignment}
+                    options={[
+                        { label: "Left", value: "left" },
+                        { label: "Center", value: "center" },
+                    ]}
+                    onChange={(value: Alignment) => setHeaderAlignment(value)}
+                />
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Design">
+                <ColorSelector
+                    title="Background color"
+                    value={backgroundColor || "inherit"}
+                    onChange={(value?: string) => setBackgroundColor(value)}
+                />
+                <ColorSelector
+                    title="Text color"
+                    value={foregroundColor || "inherit"}
+                    onChange={(value?: string) => setForegroundColor(value)}
+                />
+                <ColorSelector
+                    title="Badge color"
+                    value={badgeBackgroundColor || "inherit"}
+                    onChange={(value?: string) =>
+                        setBadgeBackgroundColor(value)
+                    }
+                />
+                <ColorSelector
+                    title="Badge text color"
+                    value={badgeForegroundColor || "inherit"}
+                    onChange={(value?: string) =>
+                        setBadgeForegroundColor(value)
+                    }
+                />
+                <ContentPaddingSelector
+                    value={horizontalPadding}
+                    min={50}
+                    onChange={setHorizontalPadding}
+                />
+                <ContentPaddingSelector
+                    variant="vertical"
+                    value={verticalPadding}
+                    onChange={setVerticalPadding}
+                />
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Advanced">
+                <CssIdField value={cssId} onChange={setCssId} />
+            </AdminWidgetPanel>
         </div>
     );
 }

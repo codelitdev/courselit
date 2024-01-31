@@ -21,23 +21,25 @@ const getDomainBasedOnCustomDomain = async (
     return await DomainModel.findOne({ customDomain, deleted: false });
 };
 
-const getDomain = async ({
-    hostName,
-    domainName,
-}: {
-    hostName: string;
-    domainName: string;
-}): Promise<Domain | null> => {
-    const domainBoundToLiveWebsite = new RegExp(`${process.env.DOMAIN}$`);
+const getDomain = async (hostName: string): Promise<Domain | null> => {
+    const isProduction = process.env.NODE_ENV === "production";
+    const isSubdomain = hostName.endsWith(`.${process.env.DOMAIN}`);
+    console.log(
+        "getDomain:1",
+        isProduction,
+        isSubdomain,
+        hostName,
+        process.env.DOMAIN,
+    );
 
-    if (
-        process.env.NODE_ENV === "production" &&
-        !domainBoundToLiveWebsite.test(hostName)
-    ) {
-        return await getDomainBasedOnCustomDomain(hostName);
-    } else {
-        return await getDomainBasedOnSubdomain(domainName);
+    if (isProduction && (hostName === process.env.DOMAIN || !isSubdomain)) {
+        console.log("getDomain:2", "getDomainBasedOnCustomDomain");
+        return getDomainBasedOnCustomDomain(hostName);
     }
+
+    console.log("getDomain:2", "getDomainBasedOnSubdomain");
+    const [subdomain] = hostName?.split(".");
+    return getDomainBasedOnSubdomain(subdomain);
 };
 
 const hasValidSubscription = async (email: string): Promise<boolean> => {
@@ -62,22 +64,20 @@ export default async function verifyDomain(
     let domain: Domain | null;
 
     if (process.env.MULTITENANT === "true") {
-        const domainName = req.headers.host?.split(".")[0];
+        const { host } = req.headers;
 
-        if (!domainName) {
+        if (!host) {
             throw new Error(responses.domain_missing);
         }
 
-        domain = await getDomain({
-            hostName: req.headers.host || "",
-            domainName,
-        });
+        domain = await getDomain(host);
 
         if (!domain) {
             return res.status(404).json({
-                message: `${responses.domain_doesnt_exist}: ${domainName}`,
+                message: `${responses.domain_doesnt_exist}: ${host?.split(
+                    ".",
+                )[0]}`,
             });
-            //throw new Error(`${responses.domain_doesnt_exist}: ${domainName}`);
         }
 
         const validSubscription = await hasValidSubscription(domain.email);
@@ -85,7 +85,6 @@ export default async function verifyDomain(
             return res
                 .status(404)
                 .json({ message: responses.not_valid_subscription });
-            //throw new Error(responses.not_valid_subscription);
         }
     } else {
         domain = await DomainModel.findOne({

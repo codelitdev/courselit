@@ -20,8 +20,21 @@ export default function Link({
     onClick,
 }: LinkProps) {
     const isInternal = href && href.startsWith("/");
-    const fullClasses = `${className}`;
+    const isInPageNavigation = href && href.startsWith("#");
     const router = useRouter();
+
+    if (isInPageNavigation) {
+        return (
+            <a
+                href={href}
+                style={{ ...style }}
+                className={className}
+                onClick={onClick}
+            >
+                {children}
+            </a>
+        );
+    }
 
     return isInternal ? (
         <NextLink
@@ -33,7 +46,7 @@ export default function Link({
                     onClick();
                 }
             }}
-            className={fullClasses}
+            className={className}
         >
             {children}
         </NextLink>
@@ -41,7 +54,7 @@ export default function Link({
         <a
             href={href}
             style={{ ...style }}
-            className={fullClasses}
+            className={className}
             onClick={(e) => {
                 e.preventDefault();
 

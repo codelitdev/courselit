@@ -18,6 +18,15 @@ import {
     LessonIcon,
     TextRenderer,
 } from "@courselit/components-library";
+import {
+    verticalPadding as defaultVerticalPadding,
+    horizontalPadding as defaultHorizontalPadding,
+} from "./defaults";
+import { Badge } from "@courselit/components-library";
+import { Accordion } from "@courselit/components-library";
+import { AccordionItem } from "@courselit/components-library";
+import { AccordionTrigger } from "@courselit/components-library";
+import { AccordionContent } from "@courselit/components-library";
 
 interface CourseWithGroups extends Course {
     groups: Group[];
@@ -33,6 +42,9 @@ export default function Widget({
         foregroundColor,
         badgeBackgroundColor,
         badgeForegroundColor,
+        horizontalPadding = defaultHorizontalPadding,
+        verticalPadding = defaultVerticalPadding,
+        cssId,
     },
     state,
     dispatch,
@@ -122,78 +134,95 @@ export default function Widget({
 
     return (
         <section
-            className="flex flex-col p-4 gap-4"
+            className={`py-[${verticalPadding}px]`}
             style={{
                 backgroundColor,
                 color: foregroundColor,
             }}
+            id={cssId}
         >
             <div
-                className={`flex flex-col mb-4 ${
-                    headerAlignment === "center"
-                        ? "items-center"
-                        : "items-start"
-                }`}
+                className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%] gap-4`}
             >
-                <h2 className="mb-4 text-4xl">{title}</h2>
-                {description && (
-                    <div
-                        className={`${
-                            headerAlignment === "center"
-                                ? "text-center"
-                                : "text-left"
-                        }`}
-                    >
-                        <TextRenderer json={description} />
+                <div
+                    className={`flex flex-col mb-4 ${
+                        headerAlignment === "center"
+                            ? "items-center"
+                            : "items-start"
+                    }`}
+                >
+                    <h2 className="mb-4 text-4xl">{title}</h2>
+                    {description && (
+                        <div
+                            className={`${
+                                headerAlignment === "center"
+                                    ? "text-center"
+                                    : "text-left"
+                            }`}
+                        >
+                            <TextRenderer json={description} />
+                        </div>
+                    )}
+                </div>
+                {!course && (
+                    <div className="flex flex-col items-center">
+                        <CircularProgress />
                     </div>
                 )}
-            </div>
-            {!course && (
-                <div className="flex flex-col items-center">
-                    <CircularProgress />
-                </div>
-            )}
-            {Object.keys(formattedCourse).map((group, index) => (
-                <div key={index} className="flex flex-col">
-                    <div className="flex items-center gap-2 mb-4">
-                        <h3 className="text-2xl">{group}</h3>
-                        <Chip
-                            style={{
-                                color: badgeForegroundColor,
-                                backgroundColor: badgeBackgroundColor,
-                            }}
-                        >
-                            {`${formattedCourse[group].length} lessons`}
-                        </Chip>
-                    </div>
-                    {formattedCourse[group].map((lesson: Lesson) => (
-                        <div
-                            className="flex items-center gap-2"
-                            key={lesson.lessonId}
-                        >
-                            <LessonIcon type={lesson.type as LessonType} />
-                            <Link
-                                href={`/course/${course.slug}/${course.courseId}/${lesson.lessonId}`}
-                                style={{
-                                    color: foregroundColor,
-                                }}
-                            >
-                                {lesson.title}
-                            </Link>
-                            {!lesson.requiresEnrollment && (
-                                <Chip
-                                    style={{
-                                        color: badgeForegroundColor,
-                                        backgroundColor: badgeBackgroundColor,
-                                    }}
-                                >
-                                    Preview
-                                </Chip>
-                            )}
-                        </div>
+                <Accordion type="single" collapsible>
+                    {Object.keys(formattedCourse).map((group, index) => (
+                        <AccordionItem value={group} key={index}>
+                            <AccordionTrigger>
+                                <div className="flex grow justify-between mr-2">
+                                    <p>{group}</p>
+                                    <Badge
+                                        style={{
+                                            color: badgeForegroundColor,
+                                            backgroundColor:
+                                                badgeBackgroundColor,
+                                        }}
+                                    >
+                                        {`${formattedCourse[group].length} lessons`}
+                                    </Badge>
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                                {formattedCourse[group].map(
+                                    (lesson: Lesson) => (
+                                        <div
+                                            className="flex items-center gap-2 py-2 px-2 hover:bg-gray-100 rounded"
+                                            key={lesson.lessonId}
+                                        >
+                                            <LessonIcon
+                                                type={lesson.type as LessonType}
+                                            />
+                                            <Link
+                                                href={`/course/${course.slug}/${course.courseId}/${lesson.lessonId}`}
+                                                style={{
+                                                    color: foregroundColor,
+                                                }}
+                                            >
+                                                {lesson.title}
+                                            </Link>
+                                            {!lesson.requiresEnrollment && (
+                                                <Chip
+                                                    style={{
+                                                        color: badgeForegroundColor,
+                                                        backgroundColor:
+                                                            badgeBackgroundColor,
+                                                    }}
+                                                >
+                                                    Preview
+                                                </Chip>
+                                            )}
+                                        </div>
+                                    ),
+                                )}
+                            </AccordionContent>
+                        </AccordionItem>
                     ))}
-                </div>
-            ))}
+                </Accordion>
+            </div>
         </section>
     );
 }

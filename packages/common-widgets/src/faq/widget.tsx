@@ -1,11 +1,17 @@
 import React from "react";
 import { WidgetProps } from "@courselit/common-models";
 import Settings, { Item } from "./settings";
-import { TextRenderer } from "@courselit/components-library";
-import { Accordion } from "@courselit/components-library";
-import { AccordionItem } from "@courselit/components-library";
-import { AccordionTrigger } from "@courselit/components-library";
-import { AccordionContent } from "@courselit/components-library";
+import {
+    TextRenderer,
+    Accordion,
+    AccordionItem,
+    AccordionTrigger,
+    AccordionContent,
+} from "@courselit/components-library";
+import {
+    verticalPadding as defaultVerticalPadding,
+    horizontalPadding as defaultHorizontalPadding,
+} from "./defaults";
 
 export default function Widget({
     settings: {
@@ -15,8 +21,9 @@ export default function Widget({
         backgroundColor,
         foregroundColor,
         items,
-        horizontalPadding,
-        verticalPadding,
+        horizontalPadding = defaultHorizontalPadding,
+        verticalPadding = defaultVerticalPadding,
+        cssId,
     },
 }: WidgetProps<Settings>) {
     return (
@@ -26,6 +33,7 @@ export default function Widget({
                 backgroundColor,
                 color: foregroundColor,
             }}
+            id={cssId}
         >
             <div
                 className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%]`}

@@ -10,6 +10,7 @@ import {
 } from "@courselit/components-library";
 import { Address, Auth, Profile } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
+import { Checkbox } from "@courselit/components-library";
 
 interface ItemProps {
     item: Item;
@@ -33,6 +34,7 @@ export default function ItemEditor({
     const [price, setPrice] = useState(item.price);
     const [features, setFeatures] = useState(item.features);
     const [action, setAction] = useState(item.action);
+    const [primary, setPrimary] = useState(item.primary);
 
     const itemChanged = () =>
         onChange({
@@ -41,6 +43,7 @@ export default function ItemEditor({
             price,
             features,
             action,
+            primary,
         });
 
     return (
@@ -69,6 +72,15 @@ export default function ItemEditor({
                     value={features}
                     onChange={(e) => setFeatures(e.target.value)}
                 />
+                <div className="flex justify-between">
+                    <div className="flex grow items-center gap-1">
+                        <p className="font-medium">Is recommended</p>
+                    </div>
+                    <Checkbox
+                        checked={primary}
+                        onChange={(value: boolean) => setPrimary(value)}
+                    />
+                </div>
                 <div className="flex flex-col gap-2">
                     <h2 className="text-lg font-medium">Call to action</h2>
                     <FormField

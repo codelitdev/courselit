@@ -9,13 +9,16 @@ import {
     Form,
     FormField,
     ContentPaddingSelector,
+    CssIdField,
 } from "@courselit/components-library";
 import {
     DEFAULT_BTN_TEXT,
     DEFAULT_FAILURE_MESSAGE,
     DEFAULT_SUCCESS_MESSAGE,
     DEFAULT_TITLE,
-} from "./constants";
+    verticalPadding as defaultVerticalPadding,
+    horizontalPadding as defaultHorizontalPadding,
+} from "./defaults";
 
 interface AdminWidgetProps {
     name: string;
@@ -50,11 +53,12 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
     );
     const [alignment, setAlignment] = useState(settings.alignment || "left");
     const [horizontalPadding, setHorizontalPadding] = useState<number>(
-        settings.horizontalPadding || 100,
+        settings.horizontalPadding || defaultHorizontalPadding,
     );
     const [verticalPadding, setVerticalPadding] = useState<number>(
-        settings.verticalPadding || 16,
+        settings.verticalPadding || defaultVerticalPadding,
     );
+    const [cssId, setCssId] = useState(settings.cssId);
 
     useEffect(() => {
         onChange({
@@ -70,6 +74,7 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
             failureMessage,
             horizontalPadding,
             verticalPadding,
+            cssId,
         });
     }, [
         title,
@@ -84,6 +89,7 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
         failureMessage,
         horizontalPadding,
         verticalPadding,
+        cssId,
     ]);
 
     return (
@@ -174,6 +180,9 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                     value={verticalPadding}
                     onChange={setVerticalPadding}
                 />
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Advanced">
+                <CssIdField value={cssId} onChange={setCssId} />
             </AdminWidgetPanel>
         </div>
     );

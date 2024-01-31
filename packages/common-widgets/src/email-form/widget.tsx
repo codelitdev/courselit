@@ -11,11 +11,11 @@ import {
     DEFAULT_TITLE,
 } from "./constants";
 import type { AppState, AppDispatch } from "@courselit/state-management";
-import { Button } from "@courselit/components-library";
-import { Form } from "@courselit/components-library";
-import { FormField } from "@courselit/components-library";
-import { FormSubmit } from "@courselit/components-library";
-import { Button2 } from "@courselit/components-library";
+import { Form, FormField, Button2 } from "@courselit/components-library";
+import {
+    verticalPadding as defaultVerticalPadding,
+    horizontalPadding as defaultHorizontalPadding,
+} from "./defaults";
 
 export interface WidgetProps {
     settings: Settings;
@@ -35,8 +35,9 @@ const Widget = ({
         alignment = "left",
         successMessage,
         failureMessage,
-        verticalPadding,
-        horizontalPadding,
+        horizontalPadding = defaultHorizontalPadding,
+        verticalPadding = defaultVerticalPadding,
+        cssId,
     },
     state,
     dispatch,
@@ -99,6 +100,7 @@ const Widget = ({
                 backgroundColor,
                 color: foregroundColor,
             }}
+            id={cssId}
         >
             <Form
                 onSubmit={onSubmit}

@@ -27,4 +27,5 @@ export default interface Settings extends WidgetDefaultSettings {
     titleFontSize?: number;
     descriptionFontSize?: number;
     contentAlignment?: Alignment;
+    cssId?: string;
 }

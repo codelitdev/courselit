@@ -49,11 +49,11 @@ const Widget = ({
                         {state.siteinfo.title}
                     </h2>
                 </div>
-                <div className="flex flex-col lg:!flex-row gap-8">
+                <div className="flex flex-col flex-wrap lg:!flex-row gap-8">
                     {sections &&
                         sections.length > 0 &&
                         sections.map((section, index) => (
-                            <div className="flex flex-col">
+                            <div className="flex flex-col lg:max-w-[100px]">
                                 <h2
                                     className={`text-lg mb-4 ${sectionHeaderFontSize}`}
                                 >

@@ -39,6 +39,7 @@ import ComboBox from "./combo-box";
 import ContentPaddingSelector from "./content-padding-selector";
 import PageBuilderSlider from "./page-builder-slider";
 import PageBuilderPropertyHeader from "./page-builder-property-header";
+import CssIdField from "./css-id-field";
 
 export { Button as Button2 } from "./components/ui/button";
 export * from "./menu";
@@ -47,6 +48,7 @@ export * from "./drawer";
 export * from "./components/ui/accordion";
 export * from "./components/ui/slider";
 export * from "./components/ui/card";
+export * from "./components/ui/badge";
 
 export {
     PriceTag,
@@ -90,4 +92,5 @@ export {
     ContentPaddingSelector,
     PageBuilderSlider,
     PageBuilderPropertyHeader,
+    CssIdField,
 };

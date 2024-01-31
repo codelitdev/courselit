@@ -1,10 +1,23 @@
 import React from "react";
 import { WidgetProps } from "@courselit/common-models";
 import Settings, { Item } from "../settings";
-import { TextRenderer, Button } from "@courselit/components-library";
+import {
+    TextRenderer,
+    Button,
+    Button2,
+    Link,
+} from "@courselit/components-library";
 import Itemm from "./item";
-import { Button2 } from "@courselit/components-library";
-import { Link } from "@courselit/components-library";
+import {
+    verticalPadding as defaultVerticalPadding,
+    horizontalPadding as defaultHorizontalPadding,
+    columns as defaultColumns,
+} from "../defaults";
+
+const twGridColsMap = {
+    2: "grid-cols-2",
+    3: "grid-cols-3",
+};
 
 export default function Widget({
     settings: {
@@ -18,13 +31,15 @@ export default function Widget({
         buttonForeground,
         backgroundColor,
         foregroundColor,
-        horizontalPadding,
-        verticalPadding,
+        horizontalPadding = defaultHorizontalPadding,
+        verticalPadding = defaultVerticalPadding,
         items,
         itemBackgroundColor,
         itemForegroundColor,
         itemBorderColor,
         itemBorderRadius,
+        cssId,
+        columns = defaultColumns,
     },
 }: WidgetProps<Settings>) {
     return (
@@ -34,6 +49,7 @@ export default function Widget({
                 backgroundColor,
                 color: foregroundColor,
             }}
+            id={cssId}
         >
             <div
                 className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%]`}
@@ -91,7 +107,9 @@ export default function Widget({
                     ))}
                 </div>
                     */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div
+                            className={`grid grid-cols-1 md:grid-cols-2 lg:${twGridColsMap[columns]} gap-4`}
+                        >
                             {items.map((item: Item, index: number) => (
                                 <div className="flex flex-col">
                                     <div className="h-full">

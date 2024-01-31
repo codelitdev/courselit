@@ -12,9 +12,15 @@ import {
     Form,
     FormField,
     CircularProgress,
+    CssIdField,
 } from "@courselit/components-library";
 import { Delete } from "@courselit/icons";
 import { Alignment } from "@courselit/common-models";
+import {
+    verticalPadding as defaultVerticalPadding,
+    horizontalPadding as defaultHorizontalPadding,
+} from "./defaults";
+import { ContentPaddingSelector } from "@courselit/components-library";
 
 interface AdminWidgetProps {
     settings: Settings;
@@ -58,6 +64,13 @@ export default function AdminWidget({
     const [headerAlignment, setHeaderAlignment] = useState<Alignment>(
         settings.headerAlignment || "left",
     );
+    const [horizontalPadding, setHorizontalPadding] = useState<number>(
+        settings.horizontalPadding || defaultHorizontalPadding,
+    );
+    const [verticalPadding, setVerticalPadding] = useState<number>(
+        settings.verticalPadding || defaultVerticalPadding,
+    );
+    const [cssId, setCssId] = useState(settings.cssId);
 
     useEffect(() => {
         onChange({
@@ -67,8 +80,21 @@ export default function AdminWidget({
             color,
             products,
             headerAlignment,
+            horizontalPadding,
+            verticalPadding,
+            cssId,
         });
-    }, [products, title, description, backgroundColor, color, headerAlignment]);
+    }, [
+        products,
+        title,
+        description,
+        backgroundColor,
+        color,
+        headerAlignment,
+        horizontalPadding,
+        verticalPadding,
+        cssId,
+    ]);
 
     useEffect(() => {
         loadPublishedProducts();
@@ -112,105 +138,108 @@ export default function AdminWidget({
     };
 
     return (
-        <div className="flex flex-col">
-            <div className="mb-4">
+        <div className="flex flex-col gap-4 mb-4">
+            <AdminWidgetPanel title="Header">
                 <Form>
-                    <AdminWidgetPanel title="Header">
-                        <FormField
-                            value={title}
-                            label="Title"
-                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                setTitle(e.target.value)
-                            }
-                        />
-                        <div>
-                            <p className="mb-1 font-medium">Description</p>
-                            <TextEditor
-                                initialContent={description}
-                                onChange={(state: any) => setDescription(state)}
-                                showToolbar={false}
-                            />
-                        </div>
-                        <Select
-                            title="Header alignment"
-                            value={headerAlignment}
-                            options={[
-                                { label: "Left", value: "left" },
-                                { label: "Center", value: "center" },
-                            ]}
-                            onChange={(value: Alignment) =>
-                                setHeaderAlignment(value)
-                            }
-                        />
-                    </AdminWidgetPanel>
+                    <FormField
+                        value={title}
+                        label="Title"
+                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            setTitle(e.target.value)
+                        }
+                    />
                 </Form>
-            </div>
+                <div>
+                    <p className="mb-1 font-medium">Description</p>
+                    <TextEditor
+                        initialContent={description}
+                        onChange={(state: any) => setDescription(state)}
+                        showToolbar={false}
+                    />
+                </div>
+                <Select
+                    title="Header alignment"
+                    value={headerAlignment}
+                    options={[
+                        { label: "Left", value: "left" },
+                        { label: "Center", value: "center" },
+                    ]}
+                    onChange={(value: Alignment) => setHeaderAlignment(value)}
+                />
+            </AdminWidgetPanel>
             {!productsLoaded && (
                 <div className="flex justify-center mb-4">
                     <CircularProgress />
                 </div>
             )}
             {productsLoaded && (
-                <div className="mb-4">
-                    <AdminWidgetPanel title="Products">
-                        <Select
-                            title="Select a product"
-                            value={""}
-                            options={allProducts
-                                .filter(
-                                    (product) =>
-                                        !products.includes(product.courseId),
-                                )
-                                .map((product) => ({
-                                    label: product.title,
-                                    value: product.courseId,
-                                    sublabel: capitalize(product.type),
-                                }))}
-                            onChange={addProduct}
-                            defaultMessage={"Select a product"}
-                        />
-                        <ul className="flex flex-col gap-4">
-                            {products.map((product: string) => {
-                                const productItem = allProducts.filter(
-                                    (productItem) =>
-                                        productItem.courseId === product,
-                                )[0];
-                                if (!productItem) return <></>;
-                                return (
-                                    <li
-                                        className="flex justify-between"
-                                        key={productItem.courseId}
+                <AdminWidgetPanel title="Products">
+                    <Select
+                        title="Select a product"
+                        value={""}
+                        options={allProducts
+                            .filter(
+                                (product) =>
+                                    !products.includes(product.courseId),
+                            )
+                            .map((product) => ({
+                                label: product.title,
+                                value: product.courseId,
+                                sublabel: capitalize(product.type),
+                            }))}
+                        onChange={addProduct}
+                        defaultMessage={"Select a product"}
+                    />
+                    <ul className="flex flex-col gap-4">
+                        {products.map((product: string) => {
+                            const productItem = allProducts.filter(
+                                (productItem) =>
+                                    productItem.courseId === product,
+                            )[0];
+                            if (!productItem) return <></>;
+                            return (
+                                <li
+                                    className="flex justify-between"
+                                    key={productItem.courseId}
+                                >
+                                    <p>{productItem.title}</p>
+                                    <IconButton
+                                        onClick={() => removeProduct(product)}
+                                        variant="soft"
                                     >
-                                        <p>{productItem.title}</p>
-                                        <IconButton
-                                            onClick={() =>
-                                                removeProduct(product)
-                                            }
-                                            variant="soft"
-                                        >
-                                            <Delete />
-                                        </IconButton>
-                                    </li>
-                                );
-                            })}
-                        </ul>
-                    </AdminWidgetPanel>
-                </div>
-            )}
-            <div className="mb-4">
-                <AdminWidgetPanel title="Design">
-                    <ColorSelector
-                        title="Background color"
-                        value={backgroundColor || "inherit"}
-                        onChange={(value?: string) => setBackgroundColor(value)}
-                    />
-                    <ColorSelector
-                        title="Color"
-                        value={color || "inherit"}
-                        onChange={(value?: string) => setColor(value)}
-                    />
+                                        <Delete />
+                                    </IconButton>
+                                </li>
+                            );
+                        })}
+                    </ul>
                 </AdminWidgetPanel>
-            </div>
+            )}
+            <AdminWidgetPanel title="Design">
+                <ColorSelector
+                    title="Background color"
+                    value={backgroundColor || "inherit"}
+                    onChange={(value?: string) => setBackgroundColor(value)}
+                />
+                <ColorSelector
+                    title="Color"
+                    value={color || "inherit"}
+                    onChange={(value?: string) => setColor(value)}
+                />
+                <ContentPaddingSelector
+                    value={horizontalPadding}
+                    min={50}
+                    onChange={setHorizontalPadding}
+                />
+                <ContentPaddingSelector
+                    variant="vertical"
+                    value={verticalPadding}
+                    onChange={setVerticalPadding}
+                />
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Advanced">
+                <CssIdField value={cssId} onChange={setCssId} />
+            </AdminWidgetPanel>
         </div>
     );
 }

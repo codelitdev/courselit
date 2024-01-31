@@ -12,6 +12,16 @@ import {
     TextRenderer,
 } from "@courselit/components-library";
 import { Check } from "@courselit/icons";
+import {
+    verticalPadding as defaultVerticalPadding,
+    horizontalPadding as defaultHorizontalPadding,
+    columns as defaultColumns,
+} from "./defaults";
+
+const twGridColsMap = {
+    2: "grid-cols-2",
+    3: "grid-cols-3",
+};
 
 export default function Widget({
     settings: {
@@ -21,12 +31,14 @@ export default function Widget({
         backgroundColor,
         foregroundColor,
         items,
-        horizontalPadding,
-        verticalPadding,
+        horizontalPadding = defaultHorizontalPadding,
+        verticalPadding = defaultVerticalPadding,
         buttonBackground,
         buttonForeground,
         primaryButtonBackground,
         cardBorderColor,
+        cssId,
+        columns = defaultColumns,
     },
 }: WidgetProps<Settings>) {
     return (
@@ -36,6 +48,7 @@ export default function Widget({
                 backgroundColor,
                 color: foregroundColor,
             }}
+            id={cssId}
         >
             <div
                 className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%]`}
@@ -61,7 +74,9 @@ export default function Widget({
                     )}
                 </div>
                 {items && items.length > 0 && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div
+                        className={`grid grid-cols-1 md:grid-cols-2 lg:${twGridColsMap[columns]} gap-4`}
+                    >
                         {items.map((item) => (
                             <Card
                                 className="h-full flex flex-col"

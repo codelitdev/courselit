@@ -23,7 +23,12 @@ import {
     AccordionContent,
     PageBuilderSlider,
     PageBuilderPropertyHeader,
+    CssIdField,
 } from "@courselit/components-library";
+import {
+    verticalPadding as defaultVerticalPadding,
+    horizontalPadding as defaultHorizontalPadding,
+} from "./defaults";
 
 interface AdminWidgetProps {
     name: string;
@@ -84,10 +89,10 @@ export default function AdminWidget({
     const [media, setMedia] = useState<Partial<Media>>(settings.media || {});
     const [style, setStyle] = useState(settings.style || "normal");
     const [horizontalPadding, setHorizontalPadding] = useState<number>(
-        settings.horizontalPadding || 100,
+        settings.horizontalPadding || defaultHorizontalPadding,
     );
     const [verticalPadding, setVerticalPadding] = useState<number>(
-        settings.verticalPadding || 16,
+        settings.verticalPadding || defaultVerticalPadding,
     );
     const [secondaryButtonAction, setSecondaryButtonAction] = useState(
         settings.secondaryButtonAction,
@@ -110,6 +115,7 @@ export default function AdminWidget({
     const [contentAlignment, setContentAlignment] = useState<Alignment>(
         settings.contentAlignment || "center",
     );
+    const [cssId, setCssId] = useState(settings.cssId);
 
     const onSettingsChanged = () =>
         onChange({
@@ -135,6 +141,7 @@ export default function AdminWidget({
             titleFontSize,
             descriptionFontSize,
             contentAlignment,
+            cssId,
         });
 
     useEffect(() => {
@@ -162,6 +169,7 @@ export default function AdminWidget({
         titleFontSize,
         descriptionFontSize,
         contentAlignment,
+        cssId,
     ]);
 
     return (
@@ -355,6 +363,9 @@ export default function AdminWidget({
                     value={descriptionFontSize}
                     onChange={setDescriptionFontSize}
                 />
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Advanced">
+                <CssIdField value={cssId} onChange={setCssId} />
             </AdminWidgetPanel>
         </div>
     );
