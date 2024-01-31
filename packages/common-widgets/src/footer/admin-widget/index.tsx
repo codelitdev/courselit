@@ -15,7 +15,7 @@ import {
     Form,
     FormField,
 } from "@courselit/components-library";
-import { Link, Section } from "../settings";
+import { Link, Section, Socials } from "../settings";
 import { Check } from "@courselit/icons";
 import LinkEditor from "./link-editor";
 import {
@@ -23,6 +23,7 @@ import {
     verticalPadding as defaultVerticalPadding,
     titleFontSize as defaultTitleFontSize,
     sectionHeaderFontSize as defaultSectionHeaderFontSize,
+    socials as defaultSocials,
 } from "../defaults";
 
 export interface AdminWidgetProps {
@@ -63,6 +64,9 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
     const [sectionHeaderFontSize, setSectionHeaderFontSize] = useState(
         settings.sectionHeaderFontSize || defaultSectionHeaderFontSize,
     );
+    const [socials, setSocials] = useState<Socials>(
+        settings.socials || defaultSocials,
+    );
 
     useEffect(() => {
         onChange({
@@ -73,6 +77,7 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
             verticalPadding,
             titleFontSize,
             sectionHeaderFontSize,
+            socials,
         });
     }, [
         sections,
@@ -82,6 +87,7 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
         verticalPadding,
         titleFontSize,
         sectionHeaderFontSize,
+        socials,
     ]);
 
     const addNewSection = () => {
@@ -132,6 +138,12 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
         const newSections = [...sections];
         newSections[sectionIndex].links.push(link);
         setSections(newSections);
+    };
+
+    const setSocial = (key: keyof Socials, value: string) => {
+        const newSocials = { ...socials };
+        newSocials[key] = value;
+        setSocials(newSocials);
     };
 
     return (
@@ -246,6 +258,55 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                 >
                     Add new link
                 </Button>
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Social media">
+                <Form>
+                    <FormField
+                        label="Facebook"
+                        value={socials.facebook}
+                        onChange={(e) => setSocial("facebook", e.target.value)}
+                    />
+                    <FormField
+                        label="Facebook"
+                        value={socials.facebook}
+                        onChange={(e) => setSocial("facebook", e.target.value)}
+                    />
+                    <FormField
+                        label="Facebook"
+                        value={socials.facebook}
+                        onChange={(e) => setSocial("facebook", e.target.value)}
+                    />
+                    <FormField
+                        label="Twitter"
+                        value={socials.twitter}
+                        onChange={(e) => setSocial("twitter", e.target.value)}
+                    />
+                    <FormField
+                        label="Instagram"
+                        value={socials.instagram}
+                        onChange={(e) => setSocial("instagram", e.target.value)}
+                    />
+                    <FormField
+                        label="YouTube"
+                        value={socials.youtube}
+                        onChange={(e) => setSocial("youtube", e.target.value)}
+                    />
+                    <FormField
+                        label="Linkedin"
+                        value={socials.linkedin}
+                        onChange={(e) => setSocial("linkedin", e.target.value)}
+                    />
+                    <FormField
+                        label="Discord"
+                        value={socials.discord}
+                        onChange={(e) => setSocial("discord", e.target.value)}
+                    />
+                    <FormField
+                        label="Github"
+                        value={socials.github}
+                        onChange={(e) => setSocial("github", e.target.value)}
+                    />
+                </Form>
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Design">
                 <ColorSelector

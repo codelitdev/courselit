@@ -29,4 +29,5 @@ export default interface Settings extends WidgetDefaultSettings {
     primaryButtonBackground?: string;
     cardBorderColor?: string;
     cssId?: string;
+    columns?: number;
 }

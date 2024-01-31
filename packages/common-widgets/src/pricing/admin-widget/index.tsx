@@ -17,7 +17,9 @@ import {
 import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
+    columns as defaultColumns,
 } from "../defaults";
+import { PageBuilderSlider } from "@courselit/components-library";
 
 export interface AdminWidgetProps {
     settings: Settings;
@@ -122,6 +124,7 @@ export default function AdminWidget({
         settings.cardBorderColor,
     );
     const [cssId, setCssId] = useState(settings.cssId);
+    const [columns, setColumns] = useState(settings.columns || defaultColumns);
 
     const onSettingsChanged = () =>
         onChange({
@@ -138,6 +141,7 @@ export default function AdminWidget({
             primaryButtonBackground,
             cardBorderColor,
             cssId,
+            columns,
         });
 
     useEffect(() => {
@@ -156,6 +160,7 @@ export default function AdminWidget({
         primaryButtonBackground,
         cardBorderColor,
         cssId,
+        columns,
     ]);
 
     const onItemChange = (newItemData: Item) => {
@@ -293,6 +298,13 @@ export default function AdminWidget({
                     className="mb-2"
                     value={verticalPadding}
                     onChange={setVerticalPadding}
+                />
+                <PageBuilderSlider
+                    title="Columns"
+                    min={2}
+                    max={3}
+                    value={columns}
+                    onChange={setColumns}
                 />
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Advanced">

@@ -22,6 +22,11 @@ import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
 } from "./defaults";
+import { Badge } from "@courselit/components-library";
+import { Accordion } from "@courselit/components-library";
+import { AccordionItem } from "@courselit/components-library";
+import { AccordionTrigger } from "@courselit/components-library";
+import { AccordionContent } from "@courselit/components-library";
 
 interface CourseWithGroups extends Course {
     groups: Group[];
@@ -164,48 +169,59 @@ export default function Widget({
                         <CircularProgress />
                     </div>
                 )}
-                {Object.keys(formattedCourse).map((group, index) => (
-                    <div key={index} className="flex flex-col">
-                        <div className="flex items-center gap-2 mb-4">
-                            <h3 className="text-2xl">{group}</h3>
-                            <Chip
-                                style={{
-                                    color: badgeForegroundColor,
-                                    backgroundColor: badgeBackgroundColor,
-                                }}
-                            >
-                                {`${formattedCourse[group].length} lessons`}
-                            </Chip>
-                        </div>
-                        {formattedCourse[group].map((lesson: Lesson) => (
-                            <div
-                                className="flex items-center gap-2"
-                                key={lesson.lessonId}
-                            >
-                                <LessonIcon type={lesson.type as LessonType} />
-                                <Link
-                                    href={`/course/${course.slug}/${course.courseId}/${lesson.lessonId}`}
-                                    style={{
-                                        color: foregroundColor,
-                                    }}
-                                >
-                                    {lesson.title}
-                                </Link>
-                                {!lesson.requiresEnrollment && (
-                                    <Chip
+                <Accordion type="single" collapsible>
+                    {Object.keys(formattedCourse).map((group, index) => (
+                        <AccordionItem value={group} key={index}>
+                            <AccordionTrigger>
+                                <div className="flex grow justify-between mr-2">
+                                    <p>{group}</p>
+                                    <Badge
                                         style={{
                                             color: badgeForegroundColor,
                                             backgroundColor:
                                                 badgeBackgroundColor,
                                         }}
                                     >
-                                        Preview
-                                    </Chip>
+                                        {`${formattedCourse[group].length} lessons`}
+                                    </Badge>
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                                {formattedCourse[group].map(
+                                    (lesson: Lesson) => (
+                                        <div
+                                            className="flex items-center gap-2 py-2 px-2 hover:bg-gray-100 rounded"
+                                            key={lesson.lessonId}
+                                        >
+                                            <LessonIcon
+                                                type={lesson.type as LessonType}
+                                            />
+                                            <Link
+                                                href={`/course/${course.slug}/${course.courseId}/${lesson.lessonId}`}
+                                                style={{
+                                                    color: foregroundColor,
+                                                }}
+                                            >
+                                                {lesson.title}
+                                            </Link>
+                                            {!lesson.requiresEnrollment && (
+                                                <Chip
+                                                    style={{
+                                                        color: badgeForegroundColor,
+                                                        backgroundColor:
+                                                            badgeBackgroundColor,
+                                                    }}
+                                                >
+                                                    Preview
+                                                </Chip>
+                                            )}
+                                        </div>
+                                    ),
                                 )}
-                            </div>
-                        ))}
-                    </div>
-                ))}
+                            </AccordionContent>
+                        </AccordionItem>
+                    ))}
+                </Accordion>
             </div>
         </section>
     );

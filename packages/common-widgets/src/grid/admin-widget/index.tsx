@@ -18,6 +18,7 @@ import {
 import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
+    columns as defaultColumns,
 } from "../defaults";
 
 export interface AdminWidgetProps {
@@ -123,6 +124,7 @@ export default function AdminWidget({
         settings.itemBorderRadius || 8,
     );
     const [cssId, setCssId] = useState(settings.cssId);
+    const [columns, setColumns] = useState(settings.columns || defaultColumns);
 
     const onSettingsChanged = () =>
         onChange({
@@ -144,6 +146,7 @@ export default function AdminWidget({
             itemBorderColor,
             itemBorderRadius,
             cssId,
+            columns,
         });
 
     useEffect(() => {
@@ -167,6 +170,7 @@ export default function AdminWidget({
         itemBorderColor,
         itemBorderRadius,
         cssId,
+        columns,
     ]);
 
     const onItemChange = (newItemData: Item) => {
@@ -253,16 +257,6 @@ export default function AdminWidget({
                         fullWidth
                     />
                 </Form>
-                <ColorSelector
-                    title="Button color"
-                    value={buttonBackground || "inherit"}
-                    onChange={(value?: string) => setButtonBackground(value)}
-                />
-                <ColorSelector
-                    title="Button text color"
-                    value={buttonForeground || "inherit"}
-                    onChange={(value?: string) => setButtonForeground(value)}
-                />
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Items">
                 <ul className="flex flex-col gap-2">
@@ -320,6 +314,16 @@ export default function AdminWidget({
                     value={itemBorderColor || "inherit"}
                     onChange={(value?: string) => setItemBorderColor(value)}
                 />
+                <ColorSelector
+                    title="CTA button background color"
+                    value={buttonBackground || "inherit"}
+                    onChange={(value?: string) => setButtonBackground(value)}
+                />
+                <ColorSelector
+                    title="CTA button text color"
+                    value={buttonForeground || "inherit"}
+                    onChange={(value?: string) => setButtonForeground(value)}
+                />
                 <ContentPaddingSelector
                     className="mb-2"
                     value={horizontalPadding}
@@ -339,6 +343,13 @@ export default function AdminWidget({
                     min={0}
                     value={itemBorderRadius}
                     onChange={setItemBorderRadius}
+                />
+                <PageBuilderSlider
+                    title="Columns"
+                    min={2}
+                    max={3}
+                    value={columns}
+                    onChange={setColumns}
                 />
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Advanced">

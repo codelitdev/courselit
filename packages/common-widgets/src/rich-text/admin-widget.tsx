@@ -5,12 +5,14 @@ import {
     Select,
     TextEditor,
     ContentPaddingSelector,
+    PageBuilderSlider,
 } from "@courselit/components-library";
 import Settings from "./settings";
 import { Alignment } from "@courselit/common-models";
 import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
+    fontSize as defaultFontSize,
 } from "./defaults";
 import { CssIdField } from "@courselit/components-library";
 
@@ -49,6 +51,9 @@ const AdminWidget = ({ settings, onChange }: AboutWidgetProps) => {
         settings.verticalPadding || defaultVerticalPadding,
     );
     const [cssId, setCssId] = useState(settings.cssId);
+    const [fontSize, setFontSize] = useState(
+        settings.fontSize || defaultFontSize,
+    );
 
     useEffect(() => {
         onChange({
@@ -59,6 +64,7 @@ const AdminWidget = ({ settings, onChange }: AboutWidgetProps) => {
             horizontalPadding,
             verticalPadding,
             cssId,
+            fontSize,
         });
     }, [
         content,
@@ -68,6 +74,7 @@ const AdminWidget = ({ settings, onChange }: AboutWidgetProps) => {
         horizontalPadding,
         verticalPadding,
         cssId,
+        fontSize,
     ]);
 
     return (
@@ -114,6 +121,13 @@ const AdminWidget = ({ settings, onChange }: AboutWidgetProps) => {
                     className="mb-2"
                     value={verticalPadding}
                     onChange={setVerticalPadding}
+                />
+                <PageBuilderSlider
+                    title="Title font size"
+                    min={1}
+                    max={12}
+                    value={fontSize}
+                    onChange={setFontSize}
                 />
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Advanced">

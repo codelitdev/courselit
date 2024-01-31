@@ -10,6 +10,16 @@ export interface Section {
     links: Link[];
 }
 
+export interface Socials {
+    facebook?: string;
+    twitter?: string;
+    instagram?: string;
+    linkedin?: string;
+    youtube?: string;
+    discord?: string;
+    github?: string;
+}
+
 export default interface Settings extends WidgetDefaultSettings {
     foregroundColor?: string;
     backgroundColor?: string;
@@ -20,4 +30,5 @@ export default interface Settings extends WidgetDefaultSettings {
     verticalPadding: number;
     titleFontSize?: number;
     sectionHeaderFontSize: "font-normal" | "font-semibold" | "font-medium";
+    socials?: Socials;
 }

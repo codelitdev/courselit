@@ -11,4 +11,5 @@ export default interface Settings extends WidgetDefaultSettings {
     horizontalPadding: number;
     verticalPadding: number;
     cssId?: string;
+    fontSize?: number;
 }
