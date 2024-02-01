@@ -19,8 +19,8 @@ import {
 } from "./defaults";
 
 const twGridColsMap = {
-    2: "grid-cols-2",
-    3: "grid-cols-3",
+    2: "lg:grid-cols-2",
+    3: "lg:grid-cols-3",
 };
 
 export default function Widget({
@@ -75,7 +75,7 @@ export default function Widget({
                 </div>
                 {items && items.length > 0 && (
                     <div
-                        className={`grid grid-cols-1 md:grid-cols-2 lg:${twGridColsMap[columns]} gap-4`}
+                        className={`grid grid-cols-1 md:grid-cols-2 ${twGridColsMap[columns]} gap-4`}
                     >
                         {items.map((item) => (
                             <Card
