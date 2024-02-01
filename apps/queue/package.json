@@ -1,6 +1,6 @@
 {
     "name": "@courselit/queue",
-    "version": "0.11.4",
+    "version": "0.11.5",
     "private": true,
     "packageManager": "yarn@3.2.0",
     "scripts": {
