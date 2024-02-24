@@ -128,10 +128,7 @@ function NewApikey({
                 )}
                 {!apikey && (
                     <div className="flex gap-2">
-                        <Button
-                            disabled={!name || (!!name && loading)}
-                            sx={{ mr: 1 }}
-                        >
+                        <Button disabled={!name || loading} sx={{ mr: 1 }}>
                             {APIKEY_NEW_BTN_CAPTION}
                         </Button>
                         <Link href={`/dashboard/products`}>

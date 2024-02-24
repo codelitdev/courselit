@@ -55,7 +55,7 @@ export default nc<NextApiRequest, NextApiResponse>({
         }
 
         try {
-            const user = await createUser({
+            await createUser({
                 domain: req.subdomain!,
                 email: email,
                 lead: constants.leadApi,

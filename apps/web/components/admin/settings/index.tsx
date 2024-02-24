@@ -75,7 +75,6 @@ interface SettingsProps {
 const Settings = (props: SettingsProps) => {
     const [settings, setSettings] = useState<Partial<SiteInfo>>({});
     const [newSettings, setNewSettings] = useState<Partial<SiteInfo>>({});
-    const [apikeyEndReached, setApikeyEndReached] = useState(false);
     const [apikeyPage, setApikeyPage] = useState(1);
     const [apikeys, setApikeys] = useState([]);
 
