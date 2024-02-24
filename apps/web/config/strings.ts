@@ -93,11 +93,13 @@ export const responses = {
     email_delivery_failed_for_all_recipients:
         "Email delivery failed for all recipients",
     courses_cannot_be_downloaded: "A course cannot be offered as a download.",
+    apikey_already_exists: "Apikey with that name already exists",
 
     // api responses
     digital_download_no_files:
         "This digital download is empty. Please contact the creator.",
     download_link_expired: "The download link has expired",
+    user_already_exists: "The user already exists",
 };
 
 export const internal = {

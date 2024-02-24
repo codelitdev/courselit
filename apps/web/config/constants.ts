@@ -62,6 +62,7 @@ export default {
     leadWebsite: "website",
     leadNewsletter: "newsletter",
     leadDownload: "download",
+    leadApi: "api",
 
     // log levels
     severityError: "error",

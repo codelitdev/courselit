@@ -10,6 +10,7 @@ import type GQLContext from "../../models/GQLContext";
 import DomainModel, { Domain } from "../../models/Domain";
 import { checkPermission } from "@courselit/utils";
 import { Typeface } from "@courselit/common-models";
+import ApikeyModel, { ApiKey } from "@models/ApiKey";
 
 const { permissions } = constants;
 
@@ -145,4 +146,63 @@ export const updatePaymentInfo = async (
     await domain.save();
 
     return domain;
+};
+
+export const getApikeys = async (ctx: GQLContext) => {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const apikeys: ApiKey[] = await ApikeyModel.find(
+        { domain: ctx.subdomain._id },
+        {
+            name: 1,
+            keyId: 1,
+            createdAt: 1,
+        },
+    );
+
+    return apikeys;
+};
+
+export const addApikey = async (name: string, ctx: GQLContext) => {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const existingApikey = await ApikeyModel.findOne({
+        name,
+        domain: ctx.subdomain._id,
+    });
+
+    if (existingApikey) {
+        throw new Error(responses.apikey_already_exists);
+    }
+
+    const apikey: ApiKey = await ApikeyModel.create({
+        name,
+        domain: ctx.subdomain._id,
+    });
+
+    return {
+        name: apikey.name,
+        keyId: apikey.keyId,
+        key: apikey.key,
+    };
+};
+
+export const removeApikey = async (keyId: string, ctx: GQLContext) => {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    await ApikeyModel.deleteOne({ keyId, domain: ctx.subdomain._id });
+
+    return true;
 };

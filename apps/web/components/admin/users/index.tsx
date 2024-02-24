@@ -77,7 +77,6 @@ const UsersManager = ({ address, dispatch, loading }: UserManagerProps) => {
                         offset: ${page},
                         rowsPerPage: ${rowsPerPage}
                     }) {
-                        id,
                         name,
                         userId,
                         email,
@@ -101,7 +100,6 @@ const UsersManager = ({ address, dispatch, loading }: UserManagerProps) => {
                         offset: ${page},
                         rowsPerPage: ${rowsPerPage}
                     }) {
-                        id,
                         name,
                         userId,
                         email,

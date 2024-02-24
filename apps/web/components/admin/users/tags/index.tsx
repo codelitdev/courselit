@@ -174,7 +174,9 @@ function Tags({ address, dispatch }: TagsProps) {
                 <TableBody loading={loading}>
                     {tags.map((tag) => (
                         <TableRow key={tag.tag}>
-                            <td className="py-2">{tag.tag}</td>
+                            <td className="py-2 max-w-[200px] overflow-y-auto">
+                                {tag.tag}
+                            </td>
                             <td align="right">{tag.count}</td>
                             <td align="right">
                                 <Menu2 icon={<MoreVert />} variant="soft">

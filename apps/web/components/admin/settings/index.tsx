@@ -6,7 +6,7 @@ import {
     PAYMENT_METHOD_STRIPE,
     PAYMENT_METHOD_NONE,
     MIMETYPE_IMAGE,
-} from "../../ui-config/constants";
+} from "../../../ui-config/constants";
 import {
     SITE_SETTINGS_TITLE,
     SITE_SETTINGS_SUBTITLE,
@@ -29,14 +29,22 @@ import {
     SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL,
     SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY,
     BTN_EDIT_SITE,
-} from "../../ui-config/strings";
+    SITE_APIKEYS_SETTING_HEADER,
+    APIKEY_NEW_BUTTON,
+    APIKEY_EXISTING_HEADER,
+    APIKEY_EXISTING_TABLE_HEADER_CREATED,
+    APIKEY_EXISTING_TABLE_HEADER_NAME,
+    APIKEY_REMOVE_BTN,
+    APIKEY_REMOVE_DIALOG_HEADER,
+    APIKYE_REMOVE_DIALOG_DESC,
+} from "../../../ui-config/strings";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import { decode, encode } from "base-64";
 import { AppMessage, Profile } from "@courselit/common-models";
 import type { SiteInfo, Address, Auth } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
-import currencies from "../../data/iso4217.json";
+import currencies from "../../../data/iso4217.json";
 import {
     Select as SingleSelect,
     MediaSelector,
@@ -45,6 +53,11 @@ import {
     FormField,
     Button,
     Link,
+    Table,
+    TableHead,
+    TableBody,
+    TableRow,
+    Dialog2,
 } from "@courselit/components-library";
 
 const { networkAction, newSiteInfoAvailable, setAppMessage } = actionCreators;
@@ -56,11 +69,15 @@ interface SettingsProps {
     dispatch: (...args: any[]) => void;
     address: Address;
     networkAction: boolean;
+    loading: boolean;
 }
 
 const Settings = (props: SettingsProps) => {
     const [settings, setSettings] = useState<Partial<SiteInfo>>({});
     const [newSettings, setNewSettings] = useState<Partial<SiteInfo>>({});
+    const [apikeyEndReached, setApikeyEndReached] = useState(false);
+    const [apikeyPage, setApikeyPage] = useState(1);
+    const [apikeys, setApikeys] = useState([]);
 
     const fetch = new FetchBuilder()
         .setUrl(`${props.address.backend}/api/graph`)
@@ -112,6 +129,11 @@ const Settings = (props: SettingsProps) => {
                         codeInjectionHead,
                         codeInjectionBody
                     }
+                },
+                apikeys: getApikeys {
+                    name,
+                    keyId,
+                    createdAt
                 }
             }`;
         try {
@@ -119,6 +141,9 @@ const Settings = (props: SettingsProps) => {
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
+            }
+            if (response.apikeys) {
+                setApikeys(response.apikeys);
             }
         } catch (e) {}
     };
@@ -364,6 +389,28 @@ const Settings = (props: SettingsProps) => {
             : settings.paytmSecret,
     });
 
+    const removeApikey = async (keyId: string) => {
+        const query = `
+            mutation {
+                removed: removeApikey(keyId: "${keyId}")
+            }
+        `;
+        try {
+            const fetchRequest = fetch.setPayload(query).build();
+            props.dispatch(networkAction(true));
+            await fetchRequest.exec();
+            setApikeys(
+                apikeys.filter(
+                    (item: Record<string, unknown>) => item.keyId !== keyId,
+                ),
+            );
+        } catch (e: any) {
+            props.dispatch(setAppMessage(new AppMessage(e.message)));
+        } finally {
+            props.dispatch(networkAction(false));
+        }
+    };
+
     return (
         <div>
             <div className="flex justify-between items-baseline">
@@ -384,6 +431,7 @@ const Settings = (props: SettingsProps) => {
                     SITE_SETTINGS_SECTION_GENERAL,
                     SITE_SETTINGS_SECTION_PAYMENT,
                     SITE_CUSTOMISATIONS_SETTING_HEADER,
+                    SITE_APIKEYS_SETTING_HEADER,
                 ]}
             >
                 <Form
@@ -606,6 +654,72 @@ const Settings = (props: SettingsProps) => {
                         </Button>
                     </div>
                 </Form>
+                <div className="flex flex-col gap-4 pt-4">
+                    <div className="flex justify-between">
+                        <h2 className="text-lg font-semibold">
+                            {APIKEY_EXISTING_HEADER}
+                        </h2>
+                        <Link href="/dashboard/settings/apikeys/new">
+                            <Button>{APIKEY_NEW_BUTTON}</Button>
+                        </Link>
+                    </div>
+                    <Table aria-label="API keys" className="mb-4">
+                        <TableHead className="border-0 border-b border-slate-200">
+                            <td>{APIKEY_EXISTING_TABLE_HEADER_NAME}</td>
+                            <td>{APIKEY_EXISTING_TABLE_HEADER_CREATED}</td>
+                            <td align="right"> </td>
+                        </TableHead>
+                        <TableBody
+                            loading={props.loading}
+                            endReached={true}
+                            page={apikeyPage}
+                            onPageChange={(value: number) => {
+                                setApikeyPage(value);
+                            }}
+                        >
+                            {apikeys.map(
+                                (
+                                    item: Record<string, unknown>,
+                                    index: number,
+                                ) => (
+                                    <TableRow key={item.name as string}>
+                                        <td className="py-4">{item.name}</td>
+                                        <td>
+                                            {new Date(
+                                                item.createdAt as number,
+                                            ).toLocaleDateString()}
+                                        </td>
+                                        <td align="right">
+                                            <Dialog2
+                                                title={
+                                                    APIKEY_REMOVE_DIALOG_HEADER
+                                                }
+                                                trigger={
+                                                    <Button variant="soft">
+                                                        {APIKEY_REMOVE_BTN}
+                                                    </Button>
+                                                }
+                                                okButton={
+                                                    <Button
+                                                        onClick={() =>
+                                                            removeApikey(
+                                                                item.keyId,
+                                                            )
+                                                        }
+                                                    >
+                                                        {APIKEY_REMOVE_BTN}
+                                                    </Button>
+                                                }
+                                            >
+                                                {APIKYE_REMOVE_DIALOG_DESC}
+                                            </Dialog2>
+                                        </td>
+                                    </TableRow>
+                                ),
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
             </Tabs>
         </div>
     );
@@ -617,6 +731,7 @@ const mapStateToProps = (state: AppState) => ({
     address: state.address,
     networkAction: state.networkAction,
     profile: state.profile,
+    loading: state.networkAction,
 });
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({

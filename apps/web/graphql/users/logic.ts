@@ -251,7 +251,10 @@ export async function createUser({
 }: {
     domain: Domain;
     email: string;
-    lead?: typeof constants.leadWebsite | typeof constants.leadNewsletter;
+    lead?:
+        | typeof constants.leadWebsite
+        | typeof constants.leadNewsletter
+        | typeof constants.leadApi;
     superAdmin?: boolean;
 }): Promise<User> {
     const newUser: Partial<User> = {

@@ -177,6 +177,7 @@ export const COURSE_TYPE_COURSE = "Course";
 export const COURSE_CREATOR_PREFIX = "By";
 export const APP_MESSAGE_SETTINGS_SAVED = "Settings saved";
 export const ENROLLED_COURSES_HEADER = "Enrolled courses";
+export const SITE_APIKEYS_SETTING_HEADER = "API Keys";
 export const SITE_CUSTOMISATIONS_SETTING_HEADER = "Code Injection";
 export const SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD =
     "Code Injection in <head>";
@@ -480,3 +481,19 @@ export const COMPONENT_MISSING_SUFFIX = "component is not found.";
 export const LESSON_GROUP_DELETED = "Section deleted";
 export const USER_PERMISSION_AREA_SUBTEXT =
     "Control what actions this user can perform in your school.";
+export const APIKEY_NEW_BUTTON = "New API key";
+export const APIKEY_EXISTING_HEADER = "Your API keys";
+export const APIKEY_EXISTING_TABLE_HEADER_CREATED = "Created";
+export const APIKEY_EXISTING_TABLE_HEADER_NAME = "Name";
+export const APIKEY_NEW_HEADER = "Create new key";
+export const APIKEY_NEW_LABEL = "Name";
+export const APIKEY_NEW_BTN_CAPTION = "Create";
+export const APIKEY_NEW_GENERATED_KEY_HEADER = "Your new API key";
+export const APIKEY_NEW_GENERATED_KEY_DESC =
+    "Please copy it and store it securely. You won't be able to see it again.";
+export const APIKEY_NEW_GENERATED_KEY_COPIED = "Copied to clipboard";
+export const APIKEY_REMOVE_BTN = "Remove";
+export const APIKEY_REMOVE_DIALOG_HEADER = "Remove API Key";
+export const APIKYE_REMOVE_DIALOG_DESC =
+    "If you are using this key in your application, removing it will break the integration. There is no going back if you remove it.";
+export const USER_TAGS_SUBHEADER = "Tags";
