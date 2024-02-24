@@ -5,6 +5,7 @@ import {
     GraphQLNonNull,
     GraphQLList,
     GraphQLInt,
+    GraphQLFloat,
 } from "graphql";
 import mediaTypes from "../media/types";
 import { getMedia } from "../media/logic";
@@ -89,11 +90,39 @@ const domain = new GraphQLObjectType({
     },
 });
 
+const apikeyType = new GraphQLObjectType({
+    name: "Apikey",
+    fields: {
+        name: { type: new GraphQLNonNull(GraphQLString) },
+        keyId: { type: new GraphQLNonNull(GraphQLString) },
+        createdAt: { type: GraphQLFloat },
+    },
+});
+
+const newApikeyType = new GraphQLObjectType({
+    name: "NewApikey",
+    fields: {
+        name: { type: new GraphQLNonNull(GraphQLString) },
+        keyId: { type: new GraphQLNonNull(GraphQLString) },
+        key: { type: new GraphQLNonNull(GraphQLString) },
+    },
+});
+
+const apikeyUpdateInput = new GraphQLInputObjectType({
+    name: "ApikeyUpdateInput",
+    fields: {
+        name: { type: new GraphQLNonNull(GraphQLString) },
+    },
+});
+
 const types = {
     siteUpdateType,
     sitePaymentUpdateType,
     domain,
     typefaceInputType,
+    apikeyType,
+    apikeyUpdateInput,
+    newApikeyType,
 };
 
 export default types;

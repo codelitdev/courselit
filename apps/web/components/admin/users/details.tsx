@@ -7,6 +7,7 @@ import {
     USER_BASIC_DETAILS_HEADER,
     USER_EMAIL_SUBHEADER,
     USER_NAME_SUBHEADER,
+    USER_TAGS_SUBHEADER,
 } from "../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
 import { AppMessage } from "@courselit/common-models";
@@ -248,11 +249,14 @@ const Details = ({ userId, address, dispatch }: DetailsProps) => {
                             onChange={(value) => toggleActiveState(value)}
                         />
                     </div>
-                    <ComboBox
-                        options={tags}
-                        selectedOptions={new Set(userData.tags)}
-                        onChange={updateTags}
-                    />
+                    <div className="flex flex-col gap-2">
+                        <p>{USER_TAGS_SUBHEADER}</p>
+                        <ComboBox
+                            options={tags}
+                            selectedOptions={new Set(userData.tags)}
+                            onChange={updateTags}
+                        />
+                    </div>
                 </Section>
                 <PermissionsEditor user={userData} />
             </div>

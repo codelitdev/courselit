@@ -1,9 +1,16 @@
-import { GraphQLList, GraphQLNonNull } from "graphql";
+import {
+    GraphQLBoolean,
+    GraphQLList,
+    GraphQLNonNull,
+    GraphQLString,
+} from "graphql";
 import types from "./types";
 import {
     updateSiteInfo,
     updatePaymentInfo,
     updateDraftTypefaces,
+    removeApikey,
+    addApikey,
 } from "./logic";
 import { Typeface } from "@courselit/common-models";
 
@@ -46,6 +53,22 @@ const mutations = {
             { typefaces }: { typefaces: Typeface[] },
             context: any,
         ) => updateDraftTypefaces(typefaces, context),
+    },
+    addApikey: {
+        type: types.newApikeyType,
+        args: {
+            name: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: async (_: any, { name }: { name: string }, context: any) =>
+            addApikey(name, context),
+    },
+    removeApikey: {
+        type: new GraphQLNonNull(GraphQLBoolean),
+        args: {
+            keyId: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: async (_: any, { keyId }: { keyId: string }, context: any) =>
+            removeApikey(keyId, context),
     },
 };
 

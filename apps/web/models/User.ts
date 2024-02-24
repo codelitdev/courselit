@@ -6,9 +6,10 @@ const {
     leadWebsite: website,
     leadNewsletter: newsletter,
     leadDownload: download,
+    leadApi: api,
 } = constants;
 
-const leads = [website, newsletter, download] as const;
+const leads = [website, newsletter, download, api] as const;
 type Lead = (typeof leads)[number];
 
 export interface User {
@@ -42,7 +43,7 @@ const UserSchema = new mongoose.Schema<User>(
         lead: {
             type: String,
             required: true,
-            enum: [website, newsletter, download],
+            enum: [website, newsletter, download, api],
             default: website,
         },
         tags: [String],
