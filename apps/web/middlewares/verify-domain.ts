@@ -1,5 +1,4 @@
 import DomainModel, { Domain } from "../models/Domain";
-import Subscriber from "../models/Subscriber";
 import { responses } from "../config/strings";
 import constants from "../config/constants";
 import { isSubscriptionValid } from "../lib/utils";
@@ -24,36 +23,13 @@ const getDomainBasedOnCustomDomain = async (
 const getDomain = async (hostName: string): Promise<Domain | null> => {
     const isProduction = process.env.NODE_ENV === "production";
     const isSubdomain = hostName.endsWith(`.${process.env.DOMAIN}`);
-    console.log(
-        "getDomain:1",
-        isProduction,
-        isSubdomain,
-        hostName,
-        process.env.DOMAIN,
-    );
 
     if (isProduction && (hostName === process.env.DOMAIN || !isSubdomain)) {
-        console.log("getDomain:2", "getDomainBasedOnCustomDomain");
         return getDomainBasedOnCustomDomain(hostName);
     }
 
-    console.log("getDomain:2", "getDomainBasedOnSubdomain");
     const [subdomain] = hostName?.split(".");
     return getDomainBasedOnSubdomain(subdomain);
-};
-
-const hasValidSubscription = async (email: string): Promise<boolean> => {
-    const subscriber = await Subscriber.findOne({ email });
-
-    if (!subscriber) {
-        return false;
-    }
-
-    if (!isSubscriptionValid(subscriber.subscriptionEndsAfter)) {
-        return false;
-    }
-
-    return true;
 };
 
 export default async function verifyDomain(
@@ -80,8 +56,28 @@ export default async function verifyDomain(
             });
         }
 
-        const validSubscription = await hasValidSubscription(domain.email);
-        if (!validSubscription) {
+        try {
+            if (!process.env.SUBSCRIPTION_APP_ENDPOINT) {
+                throw new Error("Subscription app endpoint is missing");
+            }
+
+            const response = await fetch(
+                `${process.env.SUBSCRIPTION_APP_ENDPOINT}/school/${domain.name}/verify`,
+            );
+            if (response.ok) {
+                const data = await response.json();
+                if (!data) {
+                    return res
+                        .status(404)
+                        .json({ message: responses.not_valid_subscription });
+                }
+            } else {
+                return res
+                    .status(404)
+                    .json({ message: responses.not_valid_subscription });
+            }
+        } catch (err: any) {
+            console.error(err);
             return res
                 .status(404)
                 .json({ message: responses.not_valid_subscription });
