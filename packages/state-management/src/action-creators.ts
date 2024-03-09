@@ -69,7 +69,7 @@ export function refreshUserProfile(): ThunkAction<
                 .build();
             const response = await fetch.exec();
             dispatch(networkAction(false));
-            dispatch(updateProfile(response.profile));
+            dispatch(updateProfile(response?.profile));
         } finally {
             dispatch(networkAction(false));
         }
