@@ -49,12 +49,15 @@ async function authorize({
 }) {
     await connectToDatabase();
 
-    const verificationToken = await VerificationToken.findOneAndDelete({
+    const tokenFilter = {
         email,
         domain,
-        code: hashCode(code),
+        code: hashCode(+code),
         timestamp: { $gt: Date.now() },
-    });
+    };
+    const verificationToken =
+        await VerificationToken.findOneAndDelete(tokenFilter);
+    console.log(tokenFilter, verificationToken); // eslint-disable-line no-console
     if (!verificationToken) {
         throw new Error("Invalid code");
     }
