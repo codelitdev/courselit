@@ -1,7 +1,7 @@
 import DomainModel, { Domain } from "../models/Domain";
 import { responses } from "../config/strings";
 import constants from "../config/constants";
-import { isSubscriptionValid } from "../lib/utils";
+import { isDateInFuture } from "../lib/utils";
 import { NextApiResponse } from "next";
 import ApiRequest from "../models/ApiRequest";
 import { createUser } from "../graphql/users/logic";
@@ -56,31 +56,42 @@ export default async function verifyDomain(
             });
         }
 
-        try {
-            if (!process.env.SUBSCRIPTION_APP_ENDPOINT) {
-                throw new Error("Subscription app endpoint is missing");
-            }
+        if (
+            !domain.checkSubscriptionStatusAfter ||
+            (domain.checkSubscriptionStatusAfter &&
+                !isDateInFuture(domain.checkSubscriptionStatusAfter))
+        ) {
+            try {
+                if (!process.env.SUBSCRIPTION_APP_ENDPOINT) {
+                    throw new Error("Subscription app endpoint is missing");
+                }
 
-            const response = await fetch(
-                `${process.env.SUBSCRIPTION_APP_ENDPOINT}/school/${domain.name}/verify`,
-            );
-            if (response.ok) {
-                const data = await response.json();
-                if (!data) {
+                const response = await fetch(
+                    `${process.env.SUBSCRIPTION_APP_ENDPOINT}/school/${domain.name}/verify`,
+                );
+                if (response.ok) {
+                    const data = await response.json();
+                    if (!data) {
+                        return res.status(404).json({
+                            message: responses.not_valid_subscription,
+                        });
+                    }
+                } else {
                     return res
                         .status(404)
                         .json({ message: responses.not_valid_subscription });
                 }
-            } else {
+            } catch (err: any) {
+                console.error(err);
                 return res
                     .status(404)
                     .json({ message: responses.not_valid_subscription });
             }
-        } catch (err: any) {
-            console.error(err);
-            return res
-                .status(404)
-                .json({ message: responses.not_valid_subscription });
+
+            const currentDate = new Date();
+            const dateAfter24Hours = new Date(currentDate.getTime() + 86400000);
+            domain.checkSubscriptionStatusAfter = dateAfter24Hours;
+            await (domain as any).save();
         }
     } else {
         domain = await DomainModel.findOne({
