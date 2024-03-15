@@ -14,7 +14,7 @@ interface LinkProps {
 export default function Link({
     href,
     children,
-    openInSameTab,
+    openInSameTab = true,
     style,
     className = "",
     onClick,

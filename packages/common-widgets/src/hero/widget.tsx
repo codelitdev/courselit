@@ -133,7 +133,9 @@ export default function Widget({
                         }`}
                     >
                         <h2
-                            className={`mb-4 font-bold text-${titleFontSize}xl `}
+                            className={`mb-4 font-bold lg:text-${titleFontSize}xl text-${Math.ceil(
+                                titleFontSize * 0.66,
+                            )}xl`}
                         >
                             {title}
                         </h2>
@@ -141,10 +143,14 @@ export default function Widget({
                             <div
                                 className={`${
                                     descriptionFontSize === 0
-                                        ? "text-lg"
+                                        ? "text-base"
                                         : descriptionFontSize === 1
-                                        ? "text-xl"
-                                        : `text-${descriptionFontSize}xl`
+                                        ? "text-lg lg:text-xl"
+                                        : `text-${
+                                              descriptionFontSize - 1 === 1
+                                                  ? ""
+                                                  : descriptionFontSize - 1
+                                          }xl lg:text-${descriptionFontSize}xl`
                                 } ${
                                     buttonAction && buttonCaption
                                         ? "mb-8"
