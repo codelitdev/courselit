@@ -35,14 +35,18 @@ function Posts(props: PostsProps) {
 
     return (
         <BaseLayout title={path} layout={props.page.layout}>
-            <div className="flex flex-col p-4 gap-4">
-                <h1 className="text-4xl font-semibold">{path}</h1>
-                <Items
-                    showLoadMoreButton={true}
-                    generateQuery={generateQuery}
-                    initialItems={props.courses}
-                    posts={true}
-                />
+            <div className="mx-auto lg:max-w-[1200px] w-full">
+                <div className="flex flex-col p-4 gap-4">
+                    <h1 className="text-4xl font-semibold my-4 lg:my-8">
+                        {path}
+                    </h1>
+                    <Items
+                        showLoadMoreButton={true}
+                        generateQuery={generateQuery}
+                        initialItems={props.courses}
+                        posts={true}
+                    />
+                </div>
             </div>
         </BaseLayout>
     );

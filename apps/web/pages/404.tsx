@@ -22,9 +22,9 @@ function Custom404({ address }: { address: Address }) {
 
     return (
         <BaseLayout title={PAGE_TITLE_404} layout={layout}>
-            <div className="flex flex-col gap-4 h-screen justify-center items-center">
+            <div className="flex flex-col gap-4 h-screen justify-center items-center mx-auto lg:max-w-[1200px] w-full">
                 <Cross />
-                <h1 className="text-4xl font-semibold mb-4">
+                <h1 className="text-4xl font-semibold my-4 lg:my-8">
                     {PAGE_TITLE_404}
                 </h1>
             </div>

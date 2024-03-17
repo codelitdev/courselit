@@ -138,138 +138,149 @@ export default function Widget({
 
     return (
         <section
-            className={`flex flex-col space-between ${direction}`}
             style={{
-                flexDirection: direction,
-                alignItems: !verticalLayout ? "center" : "",
                 backgroundColor,
             }}
         >
-            {featuredImage && (
+            <div
+                style={{
+                    flexDirection: direction,
+                    alignItems: !verticalLayout ? "center" : "",
+                }}
+                className={`flex flex-col space-between ${direction} mx-auto lg:max-w-[1200px]`}
+            >
+                {featuredImage && (
+                    <div
+                        className={`p-4 text-center ${
+                            verticalLayout ? "md:w-full" : "w-full md:w-1/2"
+                        }`}
+                    >
+                        <Image src={featuredImage.file} />
+                    </div>
+                )}
                 <div
                     className={`p-4 text-center ${
                         verticalLayout ? "md:w-full" : "w-full md:w-1/2"
                     }`}
+                    style={{ color }}
                 >
-                    <Image src={featuredImage.file} />
-                </div>
-            )}
-            <div
-                className={`p-4 text-center ${
-                    verticalLayout ? "md:w-full" : "w-full md:w-1/2"
-                }`}
-                style={{ color }}
-            >
-                <div
-                    className={`flex flex-col ${
-                        textAlignment === "center"
-                            ? "items-center"
-                            : "items-start"
-                    }`}
-                >
-                    {type !== "site" && (
-                        <div className="pb-1">
-                            <PriceTag
-                                cost={product.cost as number}
-                                freeCostCaption="FREE"
-                                currencyISOCode={state.siteinfo.currencyISOCode}
-                            />
-                        </div>
-                    )}
-                    <div className="pb-1">
-                        <h1 className="text-4xl mb-4">
-                            {/* @ts-ignore */}
-                            {title ||
-                                (type === "site"
-                                    ? state.siteinfo.title
-                                    : product.title)}
-                        </h1>
-                    </div>
-                    {actualDescription && (
-                        <div
-                            className={`pb-4 ${
-                                textAlignment === "center"
-                                    ? "text-center"
-                                    : "text-left"
-                            }`}
-                        >
-                            <TextRenderer json={actualDescription} />
-                        </div>
-                    )}
-                    {type === "product" && product.costType === "email" && (
-                        <div>
-                            {((editing && showEditingView === 1) ||
-                                success) && (
-                                <TextRenderer
-                                    json={
-                                        successMessage || defaultSuccessMessage
+                    <div
+                        className={`flex flex-col ${
+                            textAlignment === "center"
+                                ? "items-center"
+                                : "items-start"
+                        }`}
+                    >
+                        {type !== "site" && (
+                            <div className="pb-1">
+                                <PriceTag
+                                    cost={product.cost as number}
+                                    freeCostCaption="FREE"
+                                    currencyISOCode={
+                                        state.siteinfo.currencyISOCode
                                     }
                                 />
-                            )}
-                            {(!editing || (editing && showEditingView === 0)) &&
-                                !success && (
-                                    <Form
-                                        className="flex flex-col"
-                                        onSubmit={onSubmit}
-                                    >
-                                        <div className="mb-4">
-                                            <FormField
-                                                label="Email"
-                                                value={email}
-                                                onChange={(e) =>
-                                                    setEmail(e.target.value)
-                                                }
-                                                placeholder="Enter your email"
-                                                type="email"
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <Button
-                                                style={{
-                                                    backgroundColor:
-                                                        buttonBackground,
-                                                    color: buttonForeground,
-                                                }}
-                                                type="submit"
-                                                disabled={state.networkAction}
-                                                component="button"
-                                            >
-                                                {buttonCaption ||
-                                                    "Get for free"}
-                                            </Button>
-                                        </div>
-                                    </Form>
-                                )}
+                            </div>
+                        )}
+                        <div className="pb-1">
+                            <h1 className="text-4xl mb-4">
+                                {/* @ts-ignore */}
+                                {title ||
+                                    (type === "site"
+                                        ? state.siteinfo.title
+                                        : product.title)}
+                            </h1>
                         </div>
-                    )}
-                    {type === "product" &&
-                        ["paid", "free"].includes(
-                            product.costType as string,
-                        ) && (
+                        {actualDescription && (
+                            <div
+                                className={`pb-4 ${
+                                    textAlignment === "center"
+                                        ? "text-center"
+                                        : "text-left"
+                                }`}
+                            >
+                                <TextRenderer json={actualDescription} />
+                            </div>
+                        )}
+                        {type === "product" && product.costType === "email" && (
+                            <div>
+                                {((editing && showEditingView === 1) ||
+                                    success) && (
+                                    <TextRenderer
+                                        json={
+                                            successMessage ||
+                                            defaultSuccessMessage
+                                        }
+                                    />
+                                )}
+                                {(!editing ||
+                                    (editing && showEditingView === 0)) &&
+                                    !success && (
+                                        <Form
+                                            className="flex flex-col"
+                                            onSubmit={onSubmit}
+                                        >
+                                            <div className="mb-4">
+                                                <FormField
+                                                    label="Email"
+                                                    value={email}
+                                                    onChange={(e) =>
+                                                        setEmail(e.target.value)
+                                                    }
+                                                    placeholder="Enter your email"
+                                                    type="email"
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <Button
+                                                    style={{
+                                                        backgroundColor:
+                                                            buttonBackground,
+                                                        color: buttonForeground,
+                                                    }}
+                                                    type="submit"
+                                                    disabled={
+                                                        state.networkAction
+                                                    }
+                                                    component="button"
+                                                >
+                                                    {buttonCaption ||
+                                                        "Get for free"}
+                                                </Button>
+                                            </div>
+                                        </Form>
+                                    )}
+                            </div>
+                        )}
+                        {type === "product" &&
+                            ["paid", "free"].includes(
+                                product.costType as string,
+                            ) && (
+                                <Button
+                                    href={`/checkout/${product.courseId}`}
+                                    component="link"
+                                    style={{
+                                        backgroundColor: buttonBackground,
+                                        color: buttonForeground,
+                                    }}
+                                >
+                                    {buttonCaption || "Buy now"}
+                                </Button>
+                            )}
+                        {type === "site" && buttonAction && (
                             <Button
-                                href={`/checkout/${product.courseId}`}
                                 component="link"
+                                href={buttonAction}
                                 style={{
                                     backgroundColor: buttonBackground,
                                     color: buttonForeground,
                                 }}
                             >
-                                {buttonCaption || "Buy now"}
+                                {buttonCaption || "Set a URL"}
                             </Button>
                         )}
-                    {type === "site" && buttonAction && (
-                        <Button
-                            component="link"
-                            href={buttonAction}
-                            style={{
-                                backgroundColor: buttonBackground,
-                                color: buttonForeground,
-                            }}
-                        >
-                            {buttonCaption || "Set a URL"}
-                        </Button>
-                    )}
+                    </div>
                 </div>
             </div>
         </section>

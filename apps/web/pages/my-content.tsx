@@ -79,8 +79,8 @@ function Account({ auth, page, profile, address }: AccountProps) {
 
     return (
         <BaseLayout layout={page.layout} title={MY_CONTENT_HEADER}>
-            <div className="flex flex-col min-h-screen">
-                <h1 className="text-4xl font-semibold mb-4 p-4">
+            <div className="flex flex-col min-h-screen mx-auto lg:max-w-[1200px] w-full">
+                <h1 className="text-4xl font-semibold p-4 my-4 lg:my-8">
                     {MY_CONTENT_HEADER}
                 </h1>
                 {!loaded && (

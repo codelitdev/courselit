@@ -46,13 +46,15 @@ const Widget = ({
             }}
             id={cssId}
         >
-            <div
-                className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%] ${twFontSize[fontSize]}`}
-                style={{
-                    textAlign: alignment,
-                }}
-            >
-                <TextRenderer json={text} />
+            <div className="mx-auto lg:max-w-[1200px]">
+                <div
+                    className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%] ${twFontSize[fontSize]}`}
+                    style={{
+                        textAlign: alignment,
+                    }}
+                >
+                    <TextRenderer json={text} />
+                </div>
             </div>
         </section>
     );

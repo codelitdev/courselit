@@ -38,8 +38,8 @@ const Courses = (props: CoursesProps) => {
 
     return (
         <BaseLayout title={path} layout={props.page.layout}>
-            <div className="flex flex-col p-4">
-                <h1 className="text-4xl font-semibold mb-4">{path}</h1>
+            <div className="flex flex-col p-4 mx-auto lg:max-w-[1200px]">
+                <h1 className="text-4xl font-semibold my-4 lg:my-8">{path}</h1>
                 <Items
                     showLoadMoreButton={true}
                     generateQuery={generateQuery}

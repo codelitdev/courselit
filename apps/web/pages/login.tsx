@@ -100,7 +100,7 @@ const Login = ({ page, auth, dispatch }: LoginProps) => {
 
     return (
         <BaseLayout title={LOGIN_SECTION_HEADER} layout={page.layout}>
-            <div className="flex justify-center grow items-center px-4">
+            <div className="flex justify-center grow items-center px-4 mx-auto lg:max-w-[1200px] w-full">
                 <div className="flex flex-col">
                     {error && (
                         <div className="bg-red-500 text-white px-2 py-1 rounded-md mb-4">

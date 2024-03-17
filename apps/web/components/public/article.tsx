@@ -35,9 +35,9 @@ const Article = (props: ArticleProps) => {
     return (
         <div className="flex flex-col">
             <header>
-                <h1 className="text-4xl font-semibold mb-4">{course.title}</h1>
+                <h1 className="text-4xl font-semibold mb-8">{course.title}</h1>
                 {options.showAttribution && (
-                    <div className="flex flex-col mb-4">
+                    <div className="flex flex-col mb-8">
                         <Link href={`/profile/${course.creatorId}`}>
                             <p className="font-medium">{course.creatorName}</p>
                         </Link>

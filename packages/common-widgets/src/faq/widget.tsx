@@ -35,45 +35,55 @@ export default function Widget({
             }}
             id={cssId}
         >
-            <div
-                className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%]`}
-            >
+            <div className="mx-auto lg:max-w-[1200px]">
                 <div
-                    className={`flex flex-col ${
-                        headerAlignment === "center"
-                            ? "items-center"
-                            : "items-start"
-                    }`}
+                    className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%]`}
                 >
-                    <h2 className="text-4xl mb-4">{title}</h2>
-                    {description && (
-                        <div
-                            className={`mb-4 ${
-                                headerAlignment === "center"
-                                    ? "text-center"
-                                    : "text-left"
-                            }`}
-                        >
-                            <TextRenderer json={description} />
+                    <div
+                        className={`flex flex-col ${
+                            headerAlignment === "center"
+                                ? "items-center"
+                                : "items-start"
+                        }`}
+                    >
+                        <h2 className="text-4xl mb-4">{title}</h2>
+                        {description && (
+                            <div
+                                className={`mb-4 ${
+                                    headerAlignment === "center"
+                                        ? "text-center"
+                                        : "text-left"
+                                }`}
+                            >
+                                <TextRenderer json={description} />
+                            </div>
+                        )}
+                    </div>
+                    {items && items.length > 0 && (
+                        <div className="flex flex-wrap gap-[1%]">
+                            <Accordion
+                                type="single"
+                                collapsible
+                                className="w-full"
+                            >
+                                {items.map((item: Item, index: number) => (
+                                    <AccordionItem
+                                        value={`${item.title}-${index}`}
+                                    >
+                                        <AccordionTrigger>
+                                            {item.title}
+                                        </AccordionTrigger>
+                                        <AccordionContent>
+                                            <TextRenderer
+                                                json={item.description}
+                                            />
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                ))}
+                            </Accordion>
                         </div>
                     )}
                 </div>
-                {items && items.length > 0 && (
-                    <div className="flex flex-wrap gap-[1%]">
-                        <Accordion type="single" collapsible className="w-full">
-                            {items.map((item: Item, index: number) => (
-                                <AccordionItem value={`${item.title}-${index}`}>
-                                    <AccordionTrigger>
-                                        {item.title}
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        <TextRenderer json={item.description} />
-                                    </AccordionContent>
-                                </AccordionItem>
-                            ))}
-                        </Accordion>
-                    </div>
-                )}
             </div>
         </section>
     );

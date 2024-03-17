@@ -41,93 +41,61 @@ export default function Widget({ state, settings }: WidgetProps) {
                 backgroundColor: settings.appBarBackground,
             }}
         >
-            <div
-                className={`flex m-auto px-4 justify-between items-center px-4 w-full mx-auto lg:max-w-[${
-                    horizontalPadding || defaultHorizontalPadding
-                }%]`}
-            >
-                <AppLink href="/" className="!no-underline">
-                    <div className="flex items-center">
-                        {state.siteinfo.logo && (
-                            <div className="mr-2">
-                                <Image
-                                    src={state.siteinfo.logo.file}
-                                    borderRadius={2}
-                                    width="w-[32px]"
-                                    height="h-[32px]"
-                                />
-                            </div>
-                        )}
-                        <p
-                            style={{
-                                color: settings.logoColor || "inherit",
-                            }}
-                            className="font-bold text-xl md:text-2xl"
-                        >
-                            {state.siteinfo.title}
-                        </p>
-                    </div>
-                </AppLink>
+            <div className="mx-auto lg:max-w-[1200px]">
                 <div
-                    className={`hidden px-4 lg:!flex lg:!grow lg:!items-center ${
-                        linkAlignment === "right"
-                            ? "justify-end"
-                            : linkAlignment === "center"
-                            ? "justify-center"
-                            : "justify-start"
-                    }`}
-                    style={{
-                        gap: `${spacingBetweenLinks}px`,
-                    }}
+                    className={`flex m-auto px-4 justify-between items-center px-4 w-full mx-auto lg:max-w-[${
+                        horizontalPadding || defaultHorizontalPadding
+                    }%]`}
                 >
-                    {settings.links &&
-                        (settings.links as Link[])
-                            .filter((x) => !x.isPrimary)
-                            .map((link: Link, index) => (
-                                <span
-                                    style={{
-                                        color: settings.linkColor || "inherit",
-                                    }}
-                                    key={index}
-                                >
-                                    <AppLink
-                                        href={link.href}
-                                        className={`${linkFontWeight}`}
-                                    >
-                                        {link.isButton && (
-                                            <Button2
-                                                size="sm"
-                                                style={{
-                                                    background:
-                                                        settings.loginBtnBgColor,
-                                                    color: settings.loginBtnColor,
-                                                    font: "unset",
-                                                    fontSize: "unset",
-                                                }}
-                                            >
-                                                {link.label}
-                                            </Button2>
-                                        )}
-                                        {!link.isButton && link.label}
-                                    </AppLink>
-                                </span>
-                            ))}
-                </div>
-                <div className="flex gap-2 items-center">
-                    {settings.links && (
-                        <div className="lg:!block hidden">
-                            {settings.links
-                                .filter((x) => x.isPrimary)
+                    <AppLink href="/" className="!no-underline">
+                        <div className="flex items-center">
+                            {state.siteinfo.logo && (
+                                <div className="mr-2">
+                                    <Image
+                                        src={state.siteinfo.logo.file}
+                                        borderRadius={2}
+                                        width="w-[32px]"
+                                        height="h-[32px]"
+                                    />
+                                </div>
+                            )}
+                            <p
+                                style={{
+                                    color: settings.logoColor || "inherit",
+                                }}
+                                className="font-bold text-xl md:text-2xl"
+                            >
+                                {state.siteinfo.title}
+                            </p>
+                        </div>
+                    </AppLink>
+                    <div
+                        className={`hidden px-4 lg:!flex lg:!grow lg:!items-center ${
+                            linkAlignment === "right"
+                                ? "justify-end"
+                                : linkAlignment === "center"
+                                ? "justify-center"
+                                : "justify-start"
+                        }`}
+                        style={{
+                            gap: `${spacingBetweenLinks}px`,
+                        }}
+                    >
+                        {settings.links &&
+                            (settings.links as Link[])
+                                .filter((x) => !x.isPrimary)
                                 .map((link: Link, index) => (
                                     <span
-                                        className="mr-2"
                                         style={{
                                             color:
                                                 settings.linkColor || "inherit",
                                         }}
                                         key={index}
                                     >
-                                        <AppLink href={link.href}>
+                                        <AppLink
+                                            href={link.href}
+                                            className={`${linkFontWeight}`}
+                                        >
                                             {link.isButton && (
                                                 <Button2
                                                     size="sm"
@@ -146,92 +114,130 @@ export default function Widget({ state, settings }: WidgetProps) {
                                         </AppLink>
                                     </span>
                                 ))}
-                        </div>
-                    )}
-                    {settings.showLoginControl && (
-                        <Menu
-                            trigger={
-                                <Button2
-                                    variant="ghost"
-                                    className="relative h-8 w-8 rounded-full"
-                                    style={{
-                                        color: settings.loginBtnColor,
-                                        backgroundColor:
-                                            settings.loginBtnBgColor,
-                                    }}
-                                >
-                                    <div>
-                                        <Person />
-                                    </div>
-                                </Button2>
-                            }
-                        >
-                            {state.profile.fetched &&
-                                checkPermission(state.profile.permissions, [
-                                    UIConstants.permissions.enrollInCourse,
-                                ]) && (
+                    </div>
+                    <div className="flex gap-2 items-center">
+                        {settings.links && (
+                            <div className="lg:!block hidden">
+                                {settings.links
+                                    .filter((x) => x.isPrimary)
+                                    .map((link: Link, index) => (
+                                        <span
+                                            className="mr-2"
+                                            style={{
+                                                color:
+                                                    settings.linkColor ||
+                                                    "inherit",
+                                            }}
+                                            key={index}
+                                        >
+                                            <AppLink href={link.href}>
+                                                {link.isButton && (
+                                                    <Button2
+                                                        size="sm"
+                                                        style={{
+                                                            background:
+                                                                settings.loginBtnBgColor,
+                                                            color: settings.loginBtnColor,
+                                                            font: "unset",
+                                                            fontSize: "unset",
+                                                        }}
+                                                    >
+                                                        {link.label}
+                                                    </Button2>
+                                                )}
+                                                {!link.isButton && link.label}
+                                            </AppLink>
+                                        </span>
+                                    ))}
+                            </div>
+                        )}
+                        {settings.showLoginControl && (
+                            <Menu
+                                trigger={
+                                    <Button2
+                                        variant="ghost"
+                                        className="relative h-8 w-8 rounded-full"
+                                        style={{
+                                            color: settings.loginBtnColor,
+                                            backgroundColor:
+                                                settings.loginBtnBgColor,
+                                        }}
+                                    >
+                                        <div>
+                                            <Person />
+                                        </div>
+                                    </Button2>
+                                }
+                            >
+                                {state.profile.fetched &&
+                                    checkPermission(state.profile.permissions, [
+                                        UIConstants.permissions.enrollInCourse,
+                                    ]) && (
+                                        <MenuItem2>
+                                            <AppLink
+                                                href={"/my-content"}
+                                                className={linkClasses}
+                                            >
+                                                My content
+                                            </AppLink>
+                                        </MenuItem2>
+                                    )}
+                                {!state.auth.guest && (
                                     <MenuItem2>
                                         <AppLink
-                                            href={"/my-content"}
+                                            href={"/profile"}
                                             className={linkClasses}
                                         >
-                                            My content
+                                            Profile
                                         </AppLink>
                                     </MenuItem2>
                                 )}
-                            {!state.auth.guest && (
+                                {state.profile.fetched &&
+                                    checkPermission(state.profile.permissions, [
+                                        UIConstants.permissions.manageCourse,
+                                        UIConstants.permissions.manageAnyCourse,
+                                        UIConstants.permissions.manageMedia,
+                                        UIConstants.permissions.manageAnyMedia,
+                                        UIConstants.permissions.manageSite,
+                                        UIConstants.permissions.manageSettings,
+                                        UIConstants.permissions.manageUsers,
+                                        UIConstants.permissions.viewAnyMedia,
+                                    ]) && (
+                                        <MenuItem2>
+                                            <AppLink
+                                                href={"/dashboard/products"}
+                                                className={linkClasses}
+                                            >
+                                                Dashboard
+                                            </AppLink>
+                                        </MenuItem2>
+                                    )}
                                 <MenuItem2>
                                     <AppLink
-                                        href={"/profile"}
+                                        href={
+                                            state.auth.guest
+                                                ? "/login"
+                                                : "/logout"
+                                        }
                                         className={linkClasses}
                                     >
-                                        Profile
+                                        {state.auth.guest ? "Login" : "Logout"}
                                     </AppLink>
                                 </MenuItem2>
-                            )}
-                            {state.profile.fetched &&
-                                checkPermission(state.profile.permissions, [
-                                    UIConstants.permissions.manageCourse,
-                                    UIConstants.permissions.manageAnyCourse,
-                                    UIConstants.permissions.manageMedia,
-                                    UIConstants.permissions.manageAnyMedia,
-                                    UIConstants.permissions.manageSite,
-                                    UIConstants.permissions.manageSettings,
-                                    UIConstants.permissions.manageUsers,
-                                    UIConstants.permissions.viewAnyMedia,
-                                ]) && (
-                                    <MenuItem2>
-                                        <AppLink
-                                            href={"/dashboard/products"}
-                                            className={linkClasses}
-                                        >
-                                            Dashboard
-                                        </AppLink>
-                                    </MenuItem2>
-                                )}
-                            <MenuItem2>
-                                <AppLink
-                                    href={
-                                        state.auth.guest ? "/login" : "/logout"
-                                    }
-                                    className={linkClasses}
-                                >
-                                    {state.auth.guest ? "Login" : "Logout"}
-                                </AppLink>
-                            </MenuItem2>
-                        </Menu>
-                    )}
-                    <MobileNav
-                        title={state.siteinfo.title}
-                        logo={state.siteinfo.logo}
-                        color={settings.loginBtnColor}
-                        links={settings.links}
-                        linkColor={settings.linkColor}
-                        btnBgColor={settings.loginBtnBgColor}
-                        btnColor={settings.loginBtnColor}
-                        linkFontWeight={linkFontWeight}
-                        spacingBetweenLinks={spacingBetweenLinks}
-                    />
+                            </Menu>
+                        )}
+                        <MobileNav
+                            title={state.siteinfo.title}
+                            logo={state.siteinfo.logo}
+                            color={settings.loginBtnColor}
+                            links={settings.links}
+                            linkColor={settings.linkColor}
+                            btnBgColor={settings.loginBtnBgColor}
+                            btnColor={settings.loginBtnColor}
+                            linkFontWeight={linkFontWeight}
+                            spacingBetweenLinks={spacingBetweenLinks}
+                        />
+                    </div>
                 </div>
             </div>
         </header>

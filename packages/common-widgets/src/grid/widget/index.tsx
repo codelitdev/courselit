@@ -51,44 +51,45 @@ export default function Widget({
             }}
             id={cssId}
         >
-            <div
-                className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%]`}
-            >
+            <div className="mx-auto lg:max-w-[1200px]">
                 <div
-                    className={`flex flex-col ${
-                        headerAlignment === "center"
-                            ? "items-center"
-                            : "items-start"
-                    }`}
+                    className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%]`}
                 >
-                    <h2 className="text-4xl mb-4">{title}</h2>
-                    {description && (
-                        <div
-                            className={`mb-4 ${
-                                headerAlignment === "center"
-                                    ? "text-center"
-                                    : "text-left"
-                            }`}
-                        >
-                            <TextRenderer json={description} />
-                        </div>
-                    )}
-                    {buttonAction && buttonCaption && (
-                        <Link href={buttonAction} className="mb-12">
-                            <Button2
-                                style={{
-                                    backgroundColor: buttonBackground,
-                                    color: buttonForeground,
-                                }}
+                    <div
+                        className={`flex flex-col ${
+                            headerAlignment === "center"
+                                ? "items-center"
+                                : "items-start"
+                        }`}
+                    >
+                        <h2 className="text-4xl mb-4">{title}</h2>
+                        {description && (
+                            <div
+                                className={`mb-4 ${
+                                    headerAlignment === "center"
+                                        ? "text-center"
+                                        : "text-left"
+                                }`}
                             >
-                                {buttonCaption}
-                            </Button2>
-                        </Link>
-                    )}
-                </div>
-                {items && items.length > 0 && (
-                    <>
-                        {/*
+                                <TextRenderer json={description} />
+                            </div>
+                        )}
+                        {buttonAction && buttonCaption && (
+                            <Link href={buttonAction} className="mb-12">
+                                <Button2
+                                    style={{
+                                        backgroundColor: buttonBackground,
+                                        color: buttonForeground,
+                                    }}
+                                >
+                                    {buttonCaption}
+                                </Button2>
+                            </Link>
+                        )}
+                    </div>
+                    {items && items.length > 0 && (
+                        <>
+                            {/*
                 <div className="flex flex-wrap gap-[1%]">
                     {items.map((item: Item, index: number) => (
                         <div className="basis-full md:basis-[49.5%] lg:basis-[32.6666%] mb-6">
@@ -107,33 +108,38 @@ export default function Widget({
                     ))}
                 </div>
                     */}
-                        <div
-                            className={`grid grid-cols-1 md:grid-cols-2 ${twGridColsMap[columns]} gap-4`}
-                        >
-                            {items.map((item: Item, index: number) => (
-                                <div className="flex flex-col">
-                                    <div className="h-full">
-                                        <Itemm
-                                            item={item}
-                                            key={index}
-                                            buttonBackground={buttonBackground}
-                                            buttonForeground={buttonForeground}
-                                            alignment={itemsAlignment}
-                                            backgroundColor={
-                                                itemBackgroundColor
-                                            }
-                                            foregroundColor={
-                                                itemForegroundColor
-                                            }
-                                            borderColor={itemBorderColor}
-                                            borderRadius={itemBorderRadius}
-                                        />
+                            <div
+                                className={`grid grid-cols-1 md:grid-cols-2 ${twGridColsMap[columns]} gap-4`}
+                            >
+                                {items.map((item: Item, index: number) => (
+                                    <div className="flex flex-col">
+                                        <div className="h-full">
+                                            <Itemm
+                                                item={item}
+                                                key={index}
+                                                buttonBackground={
+                                                    buttonBackground
+                                                }
+                                                buttonForeground={
+                                                    buttonForeground
+                                                }
+                                                alignment={itemsAlignment}
+                                                backgroundColor={
+                                                    itemBackgroundColor
+                                                }
+                                                foregroundColor={
+                                                    itemForegroundColor
+                                                }
+                                                borderColor={itemBorderColor}
+                                                borderRadius={itemBorderRadius}
+                                            />
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
-                    </>
-                )}
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </div>
             </div>
         </section>
     );

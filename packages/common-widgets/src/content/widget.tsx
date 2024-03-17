@@ -141,87 +141,91 @@ export default function Widget({
             }}
             id={cssId}
         >
-            <div
-                className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%] gap-4`}
-            >
+            <div className="mx-auto lg:max-w-[1200px]">
                 <div
-                    className={`flex flex-col mb-4 ${
-                        headerAlignment === "center"
-                            ? "items-center"
-                            : "items-start"
-                    }`}
+                    className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%] gap-4`}
                 >
-                    <h2 className="mb-4 text-4xl">{title}</h2>
-                    {description && (
-                        <div
-                            className={`${
-                                headerAlignment === "center"
-                                    ? "text-center"
-                                    : "text-left"
-                            }`}
-                        >
-                            <TextRenderer json={description} />
+                    <div
+                        className={`flex flex-col mb-4 ${
+                            headerAlignment === "center"
+                                ? "items-center"
+                                : "items-start"
+                        }`}
+                    >
+                        <h2 className="mb-4 text-4xl">{title}</h2>
+                        {description && (
+                            <div
+                                className={`${
+                                    headerAlignment === "center"
+                                        ? "text-center"
+                                        : "text-left"
+                                }`}
+                            >
+                                <TextRenderer json={description} />
+                            </div>
+                        )}
+                    </div>
+                    {!course && (
+                        <div className="flex flex-col items-center">
+                            <CircularProgress />
                         </div>
                     )}
-                </div>
-                {!course && (
-                    <div className="flex flex-col items-center">
-                        <CircularProgress />
-                    </div>
-                )}
-                <Accordion type="single" collapsible>
-                    {Object.keys(formattedCourse).map((group, index) => (
-                        <AccordionItem value={group} key={index}>
-                            <AccordionTrigger>
-                                <div className="flex grow justify-between mr-2">
-                                    <p>{group}</p>
-                                    <Badge
-                                        style={{
-                                            color: badgeForegroundColor,
-                                            backgroundColor:
-                                                badgeBackgroundColor,
-                                        }}
-                                    >
-                                        {`${formattedCourse[group].length} lessons`}
-                                    </Badge>
-                                </div>
-                            </AccordionTrigger>
-                            <AccordionContent>
-                                {formattedCourse[group].map(
-                                    (lesson: Lesson) => (
-                                        <div
-                                            className="flex items-center gap-2 py-2 px-2 hover:bg-gray-100 rounded"
-                                            key={lesson.lessonId}
+                    <Accordion type="single" collapsible>
+                        {Object.keys(formattedCourse).map((group, index) => (
+                            <AccordionItem value={group} key={index}>
+                                <AccordionTrigger>
+                                    <div className="flex grow justify-between mr-2">
+                                        <p>{group}</p>
+                                        <Badge
+                                            style={{
+                                                color: badgeForegroundColor,
+                                                backgroundColor:
+                                                    badgeBackgroundColor,
+                                            }}
                                         >
-                                            <LessonIcon
-                                                type={lesson.type as LessonType}
-                                            />
-                                            <Link
-                                                href={`/course/${course.slug}/${course.courseId}/${lesson.lessonId}`}
-                                                style={{
-                                                    color: foregroundColor,
-                                                }}
+                                            {`${formattedCourse[group].length} lessons`}
+                                        </Badge>
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                    {formattedCourse[group].map(
+                                        (lesson: Lesson) => (
+                                            <div
+                                                className="flex items-center gap-2 py-2 px-2 hover:bg-gray-100 rounded"
+                                                key={lesson.lessonId}
                                             >
-                                                {lesson.title}
-                                            </Link>
-                                            {!lesson.requiresEnrollment && (
-                                                <Chip
+                                                <LessonIcon
+                                                    type={
+                                                        lesson.type as LessonType
+                                                    }
+                                                />
+                                                <Link
+                                                    href={`/course/${course.slug}/${course.courseId}/${lesson.lessonId}`}
                                                     style={{
-                                                        color: badgeForegroundColor,
-                                                        backgroundColor:
-                                                            badgeBackgroundColor,
+                                                        color: foregroundColor,
                                                     }}
                                                 >
-                                                    Preview
-                                                </Chip>
-                                            )}
-                                        </div>
-                                    ),
-                                )}
-                            </AccordionContent>
-                        </AccordionItem>
-                    ))}
-                </Accordion>
+                                                    {lesson.title}
+                                                </Link>
+                                                {!lesson.requiresEnrollment && (
+                                                    <Chip
+                                                        style={{
+                                                            color: badgeForegroundColor,
+                                                            backgroundColor:
+                                                                badgeBackgroundColor,
+                                                        }}
+                                                    >
+                                                        Preview
+                                                    </Chip>
+                                                )}
+                                            </div>
+                                        ),
+                                    )}
+                                </AccordionContent>
+                            </AccordionItem>
+                        ))}
+                    </Accordion>
+                </div>
             </div>
         </section>
     );

@@ -28,30 +28,32 @@ function CheckoutProduct({ page, product, siteInfo }: CheckoutProductProps) {
 
     return (
         <BaseLayout layout={page.layout} title={CHECKOUT_PAGE_TITLE}>
-            <div className="flex flex-col p-4">
-                <h1 className="text-4xl font-semibold mb-4">
-                    {CHECKOUT_PAGE_TITLE}
-                </h1>
-                {!product && <>...</>}
-                {product && (
-                    <Section className="p-2">
-                        <h2 className="text-2xl mb-4">{product.title}</h2>
-                        <div className="flex font-semibold justify-between mb-8">
-                            <p>{CHECKOUT_PAGE_TOTAL}</p>
-                            <PriceTag
-                                cost={product.cost as number}
-                                freeCostCaption={FREE_COURSES_TEXT}
-                                currencyISOCode={
-                                    siteInfo.currencyISOCode as string
-                                }
-                            />
-                        </div>
-                        {router.query.id && <PurchaseStatus />}
-                        {!router.query.id && (
-                            <Checkout course={product as Course} />
-                        )}
-                    </Section>
-                )}
+            <div className="mx-auto lg:max-w-[1200px] w-full">
+                <div className="flex flex-col p-4 ">
+                    <h1 className="text-4xl font-semibold my-4 lg:my-8">
+                        {CHECKOUT_PAGE_TITLE}
+                    </h1>
+                    {!product && <>...</>}
+                    {product && (
+                        <Section className="p-2">
+                            <h2 className="text-2xl mb-4">{product.title}</h2>
+                            <div className="flex font-semibold justify-between mb-8">
+                                <p>{CHECKOUT_PAGE_TOTAL}</p>
+                                <PriceTag
+                                    cost={product.cost as number}
+                                    freeCostCaption={FREE_COURSES_TEXT}
+                                    currencyISOCode={
+                                        siteInfo.currencyISOCode as string
+                                    }
+                                />
+                            </div>
+                            {router.query.id && <PurchaseStatus />}
+                            {!router.query.id && (
+                                <Checkout course={product as Course} />
+                            )}
+                        </Section>
+                    )}
+                </div>
             </div>
         </BaseLayout>
     );

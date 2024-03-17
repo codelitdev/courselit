@@ -34,7 +34,7 @@ const Post = ({ siteInfo, address, post, page }: PostProps) => {
             childrenOnTop={true}
         >
             {post && (
-                <div className="flex flex-col min-h-[80vh] gap-4 mb-8">
+                <div className="flex flex-col min-h-[80vh] gap-4 mb-8 lg:max-w-[640px] mx-auto">
                     <Head>
                         <meta
                             property="og:url"
@@ -58,7 +58,7 @@ const Post = ({ siteInfo, address, post, page }: PostProps) => {
                             />
                         )}
                     </Head>
-                    <div className="flex flex-col gap-4 p-4">
+                    <div className="flex flex-col gap-4 p-4 mt-8">
                         <Article course={post} options={articleOptions} />
                         <div className="">
                             <Link href="/blog" className="hover:underline">

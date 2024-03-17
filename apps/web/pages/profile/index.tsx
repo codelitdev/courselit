@@ -163,60 +163,68 @@ function ProfileIndex({
 
     return (
         <BaseLayout layout={page.layout} title={PROFILE_PAGE_HEADER}>
-            <div className="flex flex-col p-4 gap-4">
-                <h1 className="text-4xl font-semibold">
-                    {PROFILE_PAGE_HEADER}
-                </h1>
-                <Form onSubmit={saveDetails}>
-                    <Section header={PROFILE_SECTION_DETAILS}>
-                        <FormField
-                            value={profile.email}
-                            label={PROFILE_SECTION_DETAILS_EMAIL}
-                            onChange={(event) => setName(event.target.value)}
-                            disabled={true}
-                        />
-
-                        <FormField
-                            name="name"
-                            value={name}
-                            label={PROFILE_SECTION_DETAILS_NAME}
-                            onChange={(event) => setName(event.target.value)}
-                        />
-                        <FormField
-                            name="bio"
-                            value={bio}
-                            onChange={(event) => setBio(event.target.value)}
-                            label={PROFILE_SECTION_DETAILS_BIO}
-                            multiline={true}
-                            maxRows={5}
-                        />
-                        <div>
-                            <Button
-                                onClick={saveDetails}
-                                disabled={
-                                    bio === (user && user.bio) &&
-                                    name === (user && user.name)
+            <div className="mx-auto lg:max-w-[1200px] w-full">
+                <div className="flex flex-col p-4 gap-4">
+                    <h1 className="text-4xl font-semibold my-4 lg:my-8">
+                        {PROFILE_PAGE_HEADER}
+                    </h1>
+                    <Form onSubmit={saveDetails}>
+                        <Section header={PROFILE_SECTION_DETAILS}>
+                            <FormField
+                                value={profile.email}
+                                label={PROFILE_SECTION_DETAILS_EMAIL}
+                                onChange={(event) =>
+                                    setName(event.target.value)
                                 }
-                            >
-                                {BUTTON_SAVE}
-                            </Button>
+                                disabled={true}
+                            />
+
+                            <FormField
+                                name="name"
+                                value={name}
+                                label={PROFILE_SECTION_DETAILS_NAME}
+                                onChange={(event) =>
+                                    setName(event.target.value)
+                                }
+                            />
+                            <FormField
+                                name="bio"
+                                value={bio}
+                                onChange={(event) => setBio(event.target.value)}
+                                label={PROFILE_SECTION_DETAILS_BIO}
+                                multiline={true}
+                                maxRows={5}
+                            />
+                            <div>
+                                <Button
+                                    onClick={saveDetails}
+                                    disabled={
+                                        bio === (user && user.bio) &&
+                                        name === (user && user.name)
+                                    }
+                                >
+                                    {BUTTON_SAVE}
+                                </Button>
+                            </div>
+                        </Section>
+                    </Form>
+                    <Section header={PROFILE_EMAIL_PREFERENCES}>
+                        <div className="flex justify-between">
+                            <p>
+                                {
+                                    PROFILE_EMAIL_PREFERENCES_NEWSLETTER_OPTION_TEXT
+                                }
+                            </p>
+                            <Checkbox
+                                disabled={networkActionState}
+                                checked={subscribedToUpdates}
+                                onChange={(value: boolean) =>
+                                    saveEmailPreference(value)
+                                }
+                            />
                         </div>
                     </Section>
-                </Form>
-                <Section header={PROFILE_EMAIL_PREFERENCES}>
-                    <div className="flex justify-between">
-                        <p>
-                            {PROFILE_EMAIL_PREFERENCES_NEWSLETTER_OPTION_TEXT}
-                        </p>
-                        <Checkbox
-                            disabled={networkActionState}
-                            checked={subscribedToUpdates}
-                            onChange={(value: boolean) =>
-                                saveEmailPreference(value)
-                            }
-                        />
-                    </div>
-                </Section>
+                </div>
             </div>
         </BaseLayout>
     );

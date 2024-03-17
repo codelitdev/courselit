@@ -167,7 +167,7 @@ const publicCoursesType = new GraphQLObjectType({
         title: { type: new GraphQLNonNull(GraphQLString) },
         costType: { type: courseCostType },
         cost: { type: new GraphQLNonNull(GraphQLFloat) },
-        description: { type: new GraphQLNonNull(GraphQLString) },
+        description: { type: GraphQLString },
         type: { type: new GraphQLNonNull(courseTypeFilters) },
         creatorName: { type: GraphQLString },
         updatedAt: { type: new GraphQLNonNull(GraphQLString) },

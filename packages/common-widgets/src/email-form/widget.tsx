@@ -102,49 +102,54 @@ const Widget = ({
             }}
             id={cssId}
         >
-            <Form
-                onSubmit={onSubmit}
-                className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%]`}
-                style={{
-                    alignItems: justifyContent,
-                }}
-            >
-                <h2 className="text-4xl mb-4">{title || DEFAULT_TITLE}</h2>
-                {subtitle && <h3 className="mb-4">{subtitle}</h3>}
-                <div className="flex gap-2 items-end">
-                    <FormField
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Enter your email"
-                        type="email"
-                        required
-                        messages={[
-                            {
-                                match: "valueMissing",
-                                text: "Your email is required",
-                            },
-                            { match: "typeMismatch", text: "Invalid email" },
-                        ]}
-                    />
-                    <Button2
-                        style={{
-                            backgroundColor: btnBackgroundColor,
-                            color: btnForegroundColor,
-                        }}
-                        disabled={state.networkAction}
-                        type="submit"
-                    >
-                        {btnText || DEFAULT_BTN_TEXT}
-                    </Button2>
-                </div>
-                {/* <FormSubmit
+            <div className="mx-auto lg:max-w-[1200px]">
+                <Form
+                    onSubmit={onSubmit}
+                    className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%]`}
+                    style={{
+                        alignItems: justifyContent,
+                    }}
+                >
+                    <h2 className="text-4xl mb-4">{title || DEFAULT_TITLE}</h2>
+                    {subtitle && <h3 className="mb-4">{subtitle}</h3>}
+                    <div className="flex gap-2 items-end">
+                        <FormField
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Enter your email"
+                            type="email"
+                            required
+                            messages={[
+                                {
+                                    match: "valueMissing",
+                                    text: "Your email is required",
+                                },
+                                {
+                                    match: "typeMismatch",
+                                    text: "Invalid email",
+                                },
+                            ]}
+                        />
+                        <Button2
+                            style={{
+                                backgroundColor: btnBackgroundColor,
+                                color: btnForegroundColor,
+                            }}
+                            disabled={state.networkAction}
+                            type="submit"
+                        >
+                            {btnText || DEFAULT_BTN_TEXT}
+                        </Button2>
+                    </div>
+                    {/* <FormSubmit
                     style={{
                         backgroundColor: btnBackgroundColor,
                         color: btnForegroundColor,
                     }}
                     disabled={state.networkAction}
                 /> */}
-            </Form>
+                </Form>
+            </div>
         </section>
     );
 };

@@ -84,38 +84,42 @@ export default function Widget({
             }}
             id={cssId}
         >
-            <div
-                className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%] gap-4`}
-            >
+            <div className="mx-auto lg:max-w-[1200px]">
                 <div
-                    className="flex flex-col mb-4"
-                    style={{
-                        alignItems:
-                            headerAlignment === "center"
-                                ? "center"
-                                : "flex-start",
-                    }}
+                    className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%] gap-4`}
                 >
-                    <h2 className="text-4xl mb-4">{title}</h2>
-                    {description && <TextRenderer json={description} />}
-                </div>
-                {productItems.length > 0 && (
-                    <div className="flex flex-wrap gap-[1%]">
-                        {productItems.map((course: Course, index: number) => (
-                            <div
-                                key={course.courseId}
-                                className="basis-full md:basis-[49.5%] lg:basis-[32.6666%] mb-6"
-                            >
-                                <CourseItem
-                                    course={course}
-                                    siteInfo={state.siteinfo}
-                                    freeCostCaption={"FREE"}
-                                    key={index}
-                                />
-                            </div>
-                        ))}
+                    <div
+                        className="flex flex-col mb-4"
+                        style={{
+                            alignItems:
+                                headerAlignment === "center"
+                                    ? "center"
+                                    : "flex-start",
+                        }}
+                    >
+                        <h2 className="text-4xl mb-4">{title}</h2>
+                        {description && <TextRenderer json={description} />}
                     </div>
-                )}
+                    {productItems.length > 0 && (
+                        <div className="flex flex-wrap gap-[1%]">
+                            {productItems.map(
+                                (course: Course, index: number) => (
+                                    <div
+                                        key={course.courseId}
+                                        className="basis-full md:basis-[49.5%] lg:basis-[32.6666%] mb-6"
+                                    >
+                                        <CourseItem
+                                            course={course}
+                                            siteInfo={state.siteinfo}
+                                            freeCostCaption={"FREE"}
+                                            key={index}
+                                        />
+                                    </div>
+                                ),
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
         </section>
     );

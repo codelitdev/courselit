@@ -46,15 +46,17 @@ function Posts(props: PostsProps) {
             title={HEADER_BLOG_POSTS_SECTION}
             layout={props.page.layout}
         >
-            <div className="flex flex-col p-4">
-                <h1 className="text-4xl font-semibold mb-4">
-                    {`${HEADER_TAG_SECTION} '${tag}'`}
-                </h1>
-                <Items
-                    showLoadMoreButton={true}
-                    generateQuery={generateQueryWithTag}
-                    initialItems={props.courses}
-                />
+            <div className="mx-auto lg:max-w-[1200px] w-full">
+                <div className="flex flex-col p-4">
+                    <h1 className="text-4xl font-semibold my-4 lg:my-8">
+                        {`${HEADER_TAG_SECTION} '${tag}'`}
+                    </h1>
+                    <Items
+                        showLoadMoreButton={true}
+                        generateQuery={generateQueryWithTag}
+                        initialItems={props.courses}
+                    />
+                </div>
             </div>
         </BaseLayout>
     );
