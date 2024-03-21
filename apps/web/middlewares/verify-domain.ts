@@ -67,7 +67,7 @@ export default async function verifyDomain(
                 }
 
                 const response = await fetch(
-                    `${process.env.SUBSCRIPTION_APP_ENDPOINT}/school/${domain.name}/verify`,
+                    `${process.env.SUBSCRIPTION_APP_ENDPOINT}/school/verify?domain=${domain.name}`,
                 );
                 if (response.ok) {
                     const data = await response.json();
