@@ -326,6 +326,16 @@ export const createPage = async ({
         throw new Error(responses.action_not_allowed);
     }
 
+    const existingPage = await PageModel.findOne({
+        domain: ctx.subdomain._id,
+        pageId,
+        type: site,
+    });
+
+    if (existingPage) {
+        throw new Error(responses.page_exists);
+    }
+
     const page: Page = await PageModel.create({
         domain: ctx.subdomain._id,
         pageId,

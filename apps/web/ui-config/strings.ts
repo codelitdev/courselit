@@ -400,6 +400,7 @@ export const PUBLISH_TAB_VISIBILITY_TITLE = "Visibility";
 export const PUBLISH_TAB_VISIBILITY_SUBTITLE =
     "The product stays hidden and can only be accessed by a direct URL.";
 export const PAGE_TITLE_EDIT_PAGE = "Edit";
+export const PAGE_TITLE_VIEW_PAGE = "View";
 export const PAGE_HEADER_EDIT_PAGE = "Edit page";
 export const EDIT_PAGE_MENU_ITEM = "Edit page";
 export const VIEW_PAGE_MENU_ITEM = "View page";

@@ -4,7 +4,8 @@ import { TableRow } from "@courselit/components-library";
 import { TableHead } from "@courselit/components-library";
 import { Table } from "@courselit/components-library";
 import { Button, Link } from "@courselit/components-library";
-import { MoreVert } from "@courselit/icons";
+import { View } from "@courselit/icons";
+import { Edit, MoreVert } from "@courselit/icons";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import {
     networkAction,
@@ -21,6 +22,7 @@ import {
     PAGES_TABLE_HEADER_NAME,
     PAGE_TABLE_CONTEXT_MENU_DELETE,
     PAGE_TITLE_EDIT_PAGE,
+    PAGE_TITLE_VIEW_PAGE,
 } from "@ui-config/strings";
 import { useEffect, useState } from "react";
 import { connect } from "react-redux";
@@ -116,42 +118,58 @@ const Index = ({ loading, address, dispatch }: IndexProps) => {
                     <td align="right">{PAGES_TABLE_HEADER_ACTIONS}</td>
                 </TableHead>
                 <TableBody>
-                    {pages.map((page) => (
-                        <TableRow key={page.pageId}>
-                            <td className="py-4">
-                                <p>{page.name}</p>
-                            </td>
-                            <td align="right">
-                                <div className="flex items-center justify-end gap-2">
-                                    <Link
-                                        href={`/dashboard/page/${page.pageId}/edit?redirectTo=/dashboard/pages`}
-                                    >
-                                        <Button variant="soft">
-                                            {PAGE_TITLE_EDIT_PAGE}
-                                        </Button>
-                                    </Link>
-                                    {page.deleteable && (
-                                        <Menu2
-                                            icon={<MoreVert />}
-                                            variant="soft"
+                    {pages
+                        .sort((a) => (a.deleteable ? 1 : -1))
+                        .map((page) => (
+                            <TableRow key={page.pageId}>
+                                <td className="py-4">
+                                    <p>{page.name}</p>
+                                </td>
+                                <td align="right">
+                                    <div className="flex items-center justify-end gap-2">
+                                        <Link
+                                            href={`${address.frontend}/p/${page.pageId}`}
+                                            openInSameTab={false}
                                         >
-                                            <MenuItem
-                                                component="dialog"
-                                                title={DELETE_PAGE_POPUP_HEADER}
-                                                triggerChildren={
-                                                    PAGE_TABLE_CONTEXT_MENU_DELETE
-                                                }
-                                                description={
-                                                    DELETE_PAGE_POPUP_TEXT
-                                                }
-                                                onClick={() => deletePage(page)}
-                                            ></MenuItem>
-                                        </Menu2>
-                                    )}
-                                </div>
-                            </td>
-                        </TableRow>
-                    ))}
+                                            <Button variant="soft">
+                                                <View />
+                                                {PAGE_TITLE_VIEW_PAGE}
+                                            </Button>
+                                        </Link>
+                                        <Link
+                                            href={`/dashboard/page/${page.pageId}/edit?redirectTo=/dashboard/pages`}
+                                        >
+                                            <Button variant="soft">
+                                                <Edit />
+                                                {PAGE_TITLE_EDIT_PAGE}
+                                            </Button>
+                                        </Link>
+                                        {page.deleteable && (
+                                            <Menu2
+                                                icon={<MoreVert />}
+                                                variant="soft"
+                                            >
+                                                <MenuItem
+                                                    component="dialog"
+                                                    title={
+                                                        DELETE_PAGE_POPUP_HEADER
+                                                    }
+                                                    triggerChildren={
+                                                        PAGE_TABLE_CONTEXT_MENU_DELETE
+                                                    }
+                                                    description={
+                                                        DELETE_PAGE_POPUP_TEXT
+                                                    }
+                                                    onClick={() =>
+                                                        deletePage(page)
+                                                    }
+                                                ></MenuItem>
+                                            </Menu2>
+                                        )}
+                                    </div>
+                                </td>
+                            </TableRow>
+                        ))}
                 </TableBody>
             </Table>
         </div>

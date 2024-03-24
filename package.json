@@ -41,7 +41,7 @@
   },
   "engineStrict": true,
   "lint-staged": {
-    "*.{ts,tsx}": "eslint --cache --fix packages apps/docs apps/web/pages apps/web/components",
+    "*.{ts,tsx}": "eslint --quiet --cache --fix packages apps/docs apps/web/pages apps/web/components",
     "*.{ts,tsx,js,css,md}": "prettier --write packages apps docs *.md"
   }
 }
