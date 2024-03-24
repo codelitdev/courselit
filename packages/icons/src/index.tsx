@@ -46,3 +46,4 @@ export { DiscordLogoIcon as Discord } from "@radix-ui/react-icons";
 export { FacebookIcon as Facebook } from "./facebook-icon";
 export { YoutubeIcon as Youtube } from "./youtube-icon";
 export { ClipboardIcon as Clipboard } from "@radix-ui/react-icons";
+export { GlobeIcon as Globe } from "@radix-ui/react-icons";

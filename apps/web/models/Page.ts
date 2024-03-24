@@ -11,8 +11,9 @@ export interface Page {
     layout: Widget[];
     draftLayout: Widget[];
     type: typeof product | typeof site | typeof blogPage;
-    creatorId: String;
+    creatorId: string;
     entityId?: string;
+    deleteable: boolean;
 }
 
 const PageSchema = new mongoose.Schema<Page>({
@@ -29,6 +30,7 @@ const PageSchema = new mongoose.Schema<Page>({
     layout: { type: [WidgetSchema], default: [] },
     draftLayout: { type: [WidgetSchema], default: [] },
     entityId: { type: String },
+    deleteable: { type: Boolean, required: true, default: false },
 });
 
 PageSchema.index(

@@ -9,13 +9,13 @@ import {
     SIDEBAR_MENU_SETTINGS,
     SIDEBAR_MENU_USERS,
     SIDEBAR_MENU_MAILS,
+    SIDEBAR_MENU_PAGES,
 } from "../../ui-config/strings";
 import AppLoader from "../app-loader";
 import Head from "next/head";
 import { canAccessDashboard } from "../../ui-lib/utils";
 import RouteBasedComponentScaffold from "../public/scaffold";
 import type Profile from "../../ui-models/profile";
-import Auth from "../../ui-models/auth";
 import SiteInfo from "../../ui-models/site-info";
 import { UIConstants as constants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
@@ -25,6 +25,7 @@ import {
     AppState,
 } from "@courselit/state-management";
 import { useSession } from "next-auth/react";
+import { Globe } from "@courselit/icons";
 const { permissions } = constants;
 
 const getSidebarMenuItems = (profile: Profile, featureFlags: string[]) => {
@@ -63,15 +64,13 @@ const getSidebarMenuItems = (profile: Profile, featureFlags: string[]) => {
         }
     }
 
-    /*
     if (profile.permissions.includes(permissions.manageSite)) {
         items.push({
-            label: SIDEBAR_MENU_SITE,
-            href: "/dashboard/design",
-            icon: <Desktop />,
+            label: SIDEBAR_MENU_PAGES,
+            href: "/dashboard/pages",
+            icon: <Globe />,
         });
     }
-    */
 
     if (profile.permissions.includes(permissions.manageSettings)) {
         items.push({
@@ -85,7 +84,6 @@ const getSidebarMenuItems = (profile: Profile, featureFlags: string[]) => {
 };
 
 interface BaseLayoutProps {
-    auth: Auth;
     profile: Profile;
     siteInfo: SiteInfo;
     children: ReactNode;
@@ -95,7 +93,6 @@ interface BaseLayoutProps {
 }
 
 const BaseLayoutAdmin = ({
-    auth,
     profile,
     siteInfo,
     children,
@@ -157,7 +154,6 @@ const BaseLayoutAdmin = ({
 };
 
 const mapStateToProps = (state: AppState) => ({
-    auth: state.auth,
     profile: state.profile,
     siteInfo: state.siteinfo,
     address: state.address,

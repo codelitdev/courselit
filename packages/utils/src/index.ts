@@ -7,3 +7,4 @@ export { default as checkPermission } from "./check-permissions";
 export { default as getGraphQLQueryFields } from "./get-graphql-query-fields";
 export { default as getGraphQLQueryStringFromObject } from "./get-graphql-query-string-from-object";
 export { default as convertFiltersToDBConditions } from "./convert-filters-to-db-conditions";
+export { default as slugify } from "@sindresorhus/slugify";

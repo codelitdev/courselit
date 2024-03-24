@@ -195,23 +195,30 @@ export const savePage = async (
     return getPageResponse(page!, ctx);
 };
 
-export const getPages = async (ctx: GQLContext) => {
+export const getPages = async (
+    ctx: GQLContext,
+    type: typeof product | typeof site | typeof blogPage,
+) => {
     checkIfAuthenticated(ctx);
     if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
         throw new Error(responses.action_not_allowed);
     }
 
-    const pages: Page[] = await PageModel.find(
-        {
-            domain: ctx.subdomain._id,
-        },
-        {
-            pageId: 1,
-            name: 1,
-            type: 1,
-            entityId: 1,
-        },
-    );
+    const filter: Record<string, unknown> = {
+        domain: ctx.subdomain._id,
+    };
+
+    if (type) {
+        filter.type = type;
+    }
+
+    const pages: Page[] = await PageModel.find(filter, {
+        pageId: 1,
+        name: 1,
+        type: 1,
+        entityId: 1,
+        deleteable: 1,
+    });
 
     return pages;
 };
@@ -303,4 +310,58 @@ export const initMandatoryPages = async (domain: Domain, user: User) => {
             draftLayout: [],
         },
     ]);
+};
+
+export const createPage = async ({
+    context: ctx,
+    name,
+    pageId,
+}: {
+    context: GQLContext;
+    name: string;
+    pageId: string;
+}): Promise<Partial<Page>> => {
+    checkIfAuthenticated(ctx);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const page: Page = await PageModel.create({
+        domain: ctx.subdomain._id,
+        pageId,
+        type: site,
+        creatorId: ctx.user.userId,
+        name,
+        entityId: ctx.subdomain.name,
+        deleteable: true,
+        layout: [
+            {
+                name: Header.metadata.name,
+                deleteable: false,
+                shared: true,
+            },
+            {
+                name: Footer.metadata.name,
+                deleteable: false,
+                shared: true,
+            },
+        ],
+    });
+
+    return page;
+};
+
+export const deletePage = async (ctx: GQLContext, id: string) => {
+    checkIfAuthenticated(ctx);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    await PageModel.deleteOne({
+        domain: ctx.subdomain._id,
+        deleteable: true,
+        pageId: id,
+    });
+
+    return true;
 };
