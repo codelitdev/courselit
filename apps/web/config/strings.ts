@@ -59,6 +59,7 @@ export const responses = {
     theme_not_installed: "The theme is not installed",
     invalid_layout: "Invalid layout",
     destination_dont_exist: "Destination does not exist",
+    page_exists: "A page with the URL already exists",
     invalid_format: "Invalid format",
     no_thumbnail: "No thumbnail available",
     file_size_exceeded: "File size exceeded",

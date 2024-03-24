@@ -35,3 +35,6 @@ report*.json
 
 # OS specific files
 .DS_Store
+
+# Dev tools files
+.eslintcache

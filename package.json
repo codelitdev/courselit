@@ -21,7 +21,8 @@
     "build": "yarn workspaces foreach -t --exclude @courselit/docs run build",
     "clean": "yarn workspaces foreach run clean",
     "publish": "yarn workspaces foreach --no-private npm publish",
-    "dev": "yarn workspace @courselit/web dev"
+    "dev": "yarn workspace @courselit/web dev",
+    "prepare": "husky"
   },
   "packageManager": "yarn@3.2.0",
   "devDependencies": {
@@ -31,10 +32,16 @@
     "eslint-plugin-react": "^7.29.4",
     "eslint-plugin-react-hooks": "^4.5.0",
     "eslint-plugin-unused-imports": "^2.0.0",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
     "prettier": "^3.0.2"
   },
   "engines": {
     "yarn": "~3.2.0"
   },
-  "engineStrict": true
+  "engineStrict": true,
+  "lint-staged": {
+    "*.{ts,tsx}": "eslint --quiet --cache --fix packages apps/docs apps/web/pages apps/web/components",
+    "*.{ts,tsx,js,css,md}": "prettier --write packages apps docs *.md"
+  }
 }

@@ -7,8 +7,6 @@ import {
     GraphQLString,
 } from "graphql";
 import { GraphQLJSONObject } from "graphql-type-json";
-import constants from "../../config/constants";
-const { product, site } = constants;
 
 const page = new GraphQLObjectType({
     name: "Page",
@@ -20,6 +18,7 @@ const page = new GraphQLObjectType({
         layout: { type: new GraphQLList(GraphQLJSONObject) },
         draftLayout: { type: new GraphQLList(GraphQLJSONObject) },
         pageData: { type: GraphQLJSONObject },
+        deleteable: { type: new GraphQLNonNull(GraphQLBoolean) },
     },
 });
 

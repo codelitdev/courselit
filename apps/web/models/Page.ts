@@ -11,25 +11,32 @@ export interface Page {
     layout: Widget[];
     draftLayout: Widget[];
     type: typeof product | typeof site | typeof blogPage;
-    creatorId: String;
+    creatorId: string;
     entityId?: string;
+    deleteable: boolean;
 }
 
-const PageSchema = new mongoose.Schema<Page>({
-    domain: { type: mongoose.Schema.Types.ObjectId, required: true },
-    pageId: { type: String, required: true },
-    type: {
-        type: String,
-        required: true,
-        enum: [product, site, blogPage],
-        default: product,
+const PageSchema = new mongoose.Schema<Page>(
+    {
+        domain: { type: mongoose.Schema.Types.ObjectId, required: true },
+        pageId: { type: String, required: true },
+        type: {
+            type: String,
+            required: true,
+            enum: [product, site, blogPage],
+            default: product,
+        },
+        creatorId: { type: String, required: true },
+        name: { type: String, required: true },
+        layout: { type: [WidgetSchema], default: [] },
+        draftLayout: { type: [WidgetSchema], default: [] },
+        entityId: { type: String },
+        deleteable: { type: Boolean, required: true, default: false },
     },
-    creatorId: { type: String, required: true },
-    name: { type: String, required: true },
-    layout: { type: [WidgetSchema], default: [] },
-    draftLayout: { type: [WidgetSchema], default: [] },
-    entityId: { type: String },
-});
+    {
+        timestamps: true,
+    },
+);
 
 PageSchema.index(
     {

@@ -37,7 +37,6 @@ import Template from "../../public/base-layout/template";
 import dynamic from "next/dynamic";
 import Head from "next/head";
 import widgets from "../../../ui-config/widgets";
-import PagesList from "./pages-list";
 import { Sync, CheckCircled } from "@courselit/icons";
 import AppToast from "../../app-toast";
 import { Button, CircularProgress } from "@courselit/components-library";
@@ -61,13 +60,7 @@ interface PageEditorProps {
     redirectTo?: string;
 }
 
-type LeftPaneContent =
-    | "fonts"
-    | "pages"
-    | "themes"
-    | "editor"
-    | "widgets"
-    | "none";
+type LeftPaneContent = "fonts" | "themes" | "editor" | "widgets" | "none";
 
 function PageEditor({
     id,
@@ -433,9 +426,6 @@ function PageEditor({
                     saveDraftTypefaces={saveDraftTypefaces}
                 />
             )}
-            {leftPaneContent === "pages" && (
-                <PagesList pages={pages} onClose={onClose} />
-            )}
         </>
     );
 
@@ -448,14 +438,6 @@ function PageEditor({
             <div className="fixed w-full border-0 border-b border-slate-200 z-10">
                 <header className="flex w-full p-4 justify-between bg-white/80 backdrop-blur-md">
                     <div className="flex gap-2">
-                        <Button
-                            onClick={() => {
-                                setLeftPaneContent("pages");
-                            }}
-                            variant="soft"
-                        >
-                            {page.name}
-                        </Button>
                         <Button
                             onClick={() => {
                                 setLeftPaneContent("fonts");

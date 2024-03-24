@@ -8,4 +8,5 @@ export default interface Page {
     layout: WidgetInstance[];
     entityId?: string;
     pageData?: Record<string, unknown>;
+    deleteable: boolean;
 }

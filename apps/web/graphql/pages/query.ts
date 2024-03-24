@@ -1,7 +1,18 @@
-import { GraphQLList, GraphQLString } from "graphql";
+import { GraphQLEnumType, GraphQLList, GraphQLString } from "graphql";
 import GQLContext from "../../models/GQLContext";
 import { getPage, getPages } from "./logic";
 import types from "./types";
+import constants from "../../config/constants";
+const { product, site, blogPage } = constants;
+
+const pageType = new GraphQLEnumType({
+    name: "PageType",
+    values: {
+        [product.toUpperCase()]: { value: product },
+        [site.toUpperCase()]: { value: site },
+        [blogPage.toUpperCase()]: { value: blogPage },
+    },
+});
 
 export default {
     getPage: {
@@ -16,6 +27,15 @@ export default {
     },
     getPages: {
         type: new GraphQLList(types.page),
-        resolve: (_: any, __: any, ctx: GQLContext) => getPages(ctx),
+        args: {
+            type: {
+                type: pageType,
+            },
+        },
+        resolve: (
+            _: any,
+            { type }: { type?: typeof product | typeof site | typeof blogPage },
+            ctx: GQLContext,
+        ) => getPages(ctx, type),
     },
 };
