@@ -128,7 +128,11 @@ const Index = ({ loading, address, dispatch }: IndexProps) => {
                                 <td align="right">
                                     <div className="flex items-center justify-end gap-2">
                                         <Link
-                                            href={`${address.frontend}/p/${page.pageId}`}
+                                            href={`${address.frontend}${
+                                                page.pageId === "homepage"
+                                                    ? ""
+                                                    : `/p/${page.pageId}`
+                                            }`}
                                             openInSameTab={false}
                                         >
                                             <Button variant="soft">
