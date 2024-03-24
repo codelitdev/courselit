@@ -77,6 +77,9 @@ export default {
     site: "site",
     blogPage: "blog",
 
+    // default pages
+    defaultPages: ["homepage", "terms", "privacy", "blog"],
+
     // typography
     typeface: "Roboto",
 

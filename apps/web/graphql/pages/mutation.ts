@@ -2,6 +2,8 @@ import { GraphQLBoolean, GraphQLNonNull, GraphQLString } from "graphql";
 import GQLContext from "../../models/GQLContext";
 import { savePage, createPage, deletePage } from "./logic";
 import types from "./types";
+import constants from "../../config/constants";
+const { defaultPages } = constants;
 
 export default {
     savePage: {
@@ -37,7 +39,10 @@ export default {
                 type: new GraphQLNonNull(GraphQLString),
             },
         },
-        resolve: async (_: any, { id }: { id: string }, context: GQLContext) =>
-            deletePage(context, id),
+        resolve: async (
+            _: any,
+            { id }: { id: (typeof defaultPages)[number] },
+            context: GQLContext,
+        ) => deletePage(context, id),
     },
 };

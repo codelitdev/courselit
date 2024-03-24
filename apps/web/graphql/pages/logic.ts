@@ -9,7 +9,7 @@ import { checkPermission, generateUniqueId } from "@courselit/utils";
 import { Footer, Header } from "@courselit/common-widgets";
 import { User } from "@courselit/common-models";
 import { Domain } from "../../models/Domain";
-const { product, site, blogPage, permissions } = constants;
+const { product, site, blogPage, permissions, defaultPages } = constants;
 
 export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
     await initSharedWidgets(ctx);
@@ -227,7 +227,7 @@ export const initMandatoryPages = async (domain: Domain, user: User) => {
     await PageModel.insertMany<Page>([
         {
             domain: domain._id,
-            pageId: "homepage",
+            pageId: defaultPages[0],
             type: site,
             creatorId: user.userId,
             name: "Home page",
@@ -248,7 +248,7 @@ export const initMandatoryPages = async (domain: Domain, user: User) => {
         },
         {
             domain: domain._id,
-            pageId: "privacy",
+            pageId: defaultPages[2],
             type: site,
             creatorId: user.userId,
             name: "Privacy policy",
@@ -269,7 +269,7 @@ export const initMandatoryPages = async (domain: Domain, user: User) => {
         },
         {
             domain: domain._id,
-            pageId: "terms",
+            pageId: defaultPages[1],
             type: site,
             creatorId: user.userId,
             name: "Terms of Service",
@@ -290,7 +290,7 @@ export const initMandatoryPages = async (domain: Domain, user: User) => {
         },
         {
             domain: domain._id,
-            pageId: "blog",
+            pageId: defaultPages[3],
             type: blogPage,
             creatorId: user.userId,
             name: "Blog",
@@ -361,9 +361,16 @@ export const createPage = async ({
     return page;
 };
 
-export const deletePage = async (ctx: GQLContext, id: string) => {
+export const deletePage = async (
+    ctx: GQLContext,
+    id: (typeof defaultPages)[number],
+) => {
     checkIfAuthenticated(ctx);
     if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    if (defaultPages.includes(id)) {
         throw new Error(responses.action_not_allowed);
     }
 
