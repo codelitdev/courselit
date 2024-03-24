@@ -511,3 +511,5 @@ export const DELETE_PAGE_POPUP_TEXT =
     "This is an irreversible action and all the data related to this page will be deleted.";
 export const PAGE_TABLE_CONTEXT_MENU_DELETE = "Delete";
 export const APP_MESSAGE_PAGE_DELETED = "Page deleted";
+export const NEW_PAGE_FORM_WARNING =
+    "These settings cannot be changed later on, so proceed with caution.";

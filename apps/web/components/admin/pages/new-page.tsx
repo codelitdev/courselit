@@ -11,6 +11,7 @@ import {
 import {
     BTN_CONTINUE,
     BUTTON_CANCEL_TEXT,
+    NEW_PAGE_FORM_WARNING,
     NEW_PAGE_HEADING,
     NEW_PAGE_NAME_PLC,
     NEW_PAGE_URL_LABEL,
@@ -24,6 +25,7 @@ import {
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
 import { useRouter } from "next/router";
+import { Info } from "@courselit/icons";
 
 interface NewPageProps {
     address: Address;
@@ -98,6 +100,10 @@ const NewPage = ({
                         onChange={(e) => setPageId(e.target.value)}
                         placeholder={NEW_PAGE_URL_PLC}
                     />
+                    <p className="text-slate-500 text-xs flex items-center gap-1">
+                        <Info />
+                        {NEW_PAGE_FORM_WARNING}
+                    </p>
                     <div className="flex gap-2">
                         <Button
                             disabled={
