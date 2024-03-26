@@ -68,7 +68,11 @@ export default function FormField({
                 )}
                 {messages &&
                     messages.map((message) => (
-                        <Message className="text-xs mb-1" match={message.match}>
+                        <Message
+                            key={message.text}
+                            className="text-xs mb-1"
+                            match={message.match}
+                        >
                             {message.text}
                         </Message>
                     ))}

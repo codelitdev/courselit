@@ -56,9 +56,7 @@ export default function Dialog2({
                             </Button>
                         </Close>
                         <Close asChild>
-                            {okButton ? (
-                                okButton
-                            ) : (
+                            {okButton || (
                                 <Button component="button" onClick={onClick}>
                                     {okButtonCaption || "Ok"}
                                 </Button>

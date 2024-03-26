@@ -4,11 +4,16 @@ import { Content, List, Root, Trigger } from "@radix-ui/react-tabs";
 interface TabsProps {
     items: string[];
     children: ReactNode;
+    selected?: string;
 }
 
-export default function Tabs({ items, children }: TabsProps) {
+export default function Tabs({ items, children, selected }: TabsProps) {
+    const defaultValue = selected
+        ? items.find((item) => item === selected)
+        : items[0];
+
     return (
-        <Root className="flex flex-col w-full" defaultValue={items[0]}>
+        <Root className="flex flex-col w-full" defaultValue={defaultValue}>
             <List className="shrink-0 flex border-b border-slate-200">
                 {items.map((item) => (
                     <Trigger

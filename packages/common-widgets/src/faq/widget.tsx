@@ -68,6 +68,7 @@ export default function Widget({
                             >
                                 {items.map((item: Item, index: number) => (
                                     <AccordionItem
+                                        key={item.title}
                                         value={`${item.title}-${index}`}
                                     >
                                         <AccordionTrigger>

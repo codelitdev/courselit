@@ -1,7 +1,6 @@
-import React, { SyntheticEvent } from "react";
-import { Cross as Close, Cross } from "@courselit/icons";
+import { SyntheticEvent } from "react";
+import { Cross } from "@courselit/icons";
 import IconButton from "./icon-button";
-import Button from "./button";
 import {
     Action as ToastAction,
     Root,
@@ -28,8 +27,6 @@ interface ToastProps {
 }
 
 const Toast = ({ message, dispatch, clearMessageAction }: ToastProps) => {
-    const action = message && message.action;
-
     const handleClose: any = (_: Event | SyntheticEvent, reason: string) => {
         if (reason === "clickaway") {
             return;
@@ -38,22 +35,22 @@ const Toast = ({ message, dispatch, clearMessageAction }: ToastProps) => {
         dispatch(clearMessageAction());
     };
 
-    const getActionButtonsArray = () => {
-        const actionButtonsArray = [
-            <IconButton key="close" onClick={handleClose}>
-                <Close />
-            </IconButton>,
-        ];
-        if (action) {
-            actionButtonsArray.unshift(
-                <Button key="action" onClick={message.action!.cb}>
-                    {message.action!.text}
-                </Button>,
-            );
-        }
+    // const getActionButtonsArray = () => {
+    //     const actionButtonsArray = [
+    //         <IconButton key="close" onClick={handleClose}>
+    //             <Close />
+    //         </IconButton>,
+    //     ];
+    //     if (action) {
+    //         actionButtonsArray.unshift(
+    //             <Button key="action" onClick={message.action!.cb}>
+    //                 {message.action!.text}
+    //             </Button>,
+    //         );
+    //     }
 
-        return actionButtonsArray;
-    };
+    //     return actionButtonsArray;
+    // };
 
     if (!message) {
         return null;

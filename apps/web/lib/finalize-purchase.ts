@@ -1,8 +1,13 @@
 import CourseModel, { Course } from "../models/Course";
 import { Progress } from "../models/Progress";
 import UserModel, { User } from "../models/User";
+import { recordActivity } from "./record-activity";
 
-export default async (userId: string, courseId: string) => {
+export default async (
+    userId: string,
+    courseId: string,
+    purchaseId?: string,
+) => {
     const user: User | null = await UserModel.findOne({ userId });
     const course: Course | null = await CourseModel.findOne({ courseId });
 
@@ -23,5 +28,15 @@ export default async (userId: string, courseId: string) => {
             course.sales += course.cost;
             await (course as any).save();
         }
+        await recordActivity({
+            domain: user.domain,
+            userId: user.userId,
+            type: "enrolled",
+            entityId: course.courseId,
+            metadata: {
+                cost: course.cost,
+                purchaseId,
+            },
+        });
     }
 };

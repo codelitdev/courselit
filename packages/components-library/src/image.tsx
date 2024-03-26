@@ -65,7 +65,7 @@ const Image = (props: ImgProps) => {
                     shimmer("100%", "auto"),
                 )}`}
                 alt={alt}
-                priority={loading === "eager" ? true : false}
+                priority={loading === "eager"}
                 sizes={sizes}
                 layout="fill"
             />

@@ -145,7 +145,6 @@ const MediaSelector = (props: MediaSelectorProps) => {
                 .setIsGraphQLEndpoint(false)
                 .build();
             const response = await fetch.exec();
-            console.log(response);
             if (response.message !== "success") {
                 throw new Error(response.message);
             }

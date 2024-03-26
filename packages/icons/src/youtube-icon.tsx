@@ -1,8 +1,8 @@
-import * as React from "react";
 import { IconProps } from "@radix-ui/react-icons/dist/types";
+import { forwardRef } from "react";
 
-export const YoutubeIcon = React.forwardRef<SVGSVGElement, IconProps>(
-    ({ color = "currentColor", ...props }, forwardedRef) => {
+export const YoutubeIcon = forwardRef<SVGSVGElement, IconProps>(
+    ({ ...props }, forwardedRef) => {
         return (
             <svg
                 xmlns="http://www.w3.org/2000/svg"

@@ -9,7 +9,6 @@ import {
     ItemIndicator,
     Arrow,
 } from "@radix-ui/react-dropdown-menu";
-import * as React from "react";
 import Tooltip from "./tooltip";
 import ScrollArea from "./scrollarea";
 
@@ -38,7 +37,6 @@ export default function Select({
     title,
     subtitle,
     disabled,
-    defaultMessage,
     variant = "with-label",
 }: SelectProps) {
     return (
@@ -105,38 +103,38 @@ export default function Select({
         </Root>
     );
 
-    return (
-        <div className="flex flex-col">
-            <label htmlFor="select" className="mb-1 font-medium">
-                {title}
-            </label>
-            <select
-                id="select"
-                value={value}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                    onChange(e.target.value)
-                }
-                disabled={disabled}
-                className="border border-slate-300 hover:border-slate-400 py-1 px-2 rounded"
-            >
-                {defaultMessage && (
-                    <option disabled selected value="">
-                        {" "}
-                        {defaultMessage}{" "}
-                    </option>
-                )}
-                {options.map((option: Option) => (
-                    <option
-                        value={option.value}
-                        key={option.value}
-                        disabled={option.disabled || false}
-                        className="p-2"
-                    >
-                        {option.label}{" "}
-                        {option.sublabel ? `(${option.sublabel})` : ""}
-                    </option>
-                ))}
-            </select>
-        </div>
-    );
+    // return (
+    //     <div className="flex flex-col">
+    //         <label htmlFor="select" className="mb-1 font-medium">
+    //             {title}
+    //         </label>
+    //         <select
+    //             id="select"
+    //             value={value}
+    //             onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+    //                 onChange(e.target.value)
+    //             }
+    //             disabled={disabled}
+    //             className="border border-slate-300 hover:border-slate-400 py-1 px-2 rounded"
+    //         >
+    //             {defaultMessage && (
+    //                 <option disabled selected value="">
+    //                     {" "}
+    //                     {defaultMessage}{" "}
+    //                 </option>
+    //             )}
+    //             {options.map((option: Option) => (
+    //                 <option
+    //                     value={option.value}
+    //                     key={option.value}
+    //                     disabled={option.disabled || false}
+    //                     className="p-2"
+    //                 >
+    //                     {option.label}{" "}
+    //                     {option.sublabel ? `(${option.sublabel})` : ""}
+    //                 </option>
+    //             ))}
+    //         </select>
+    //     </div>
+    // );
 }

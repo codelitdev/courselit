@@ -37,23 +37,24 @@ async function webhookHandler(req: ApiRequest, res: NextApiResponse) {
             orderId: purchaseId,
         });
 
-        if (purchaseRecord) {
-            purchaseRecord.status = transactionSuccess;
-            await (purchaseRecord as any).save();
-
-            await finalizePurchase(
-                purchaseRecord.purchasedBy,
-                purchaseRecord.courseId,
-            );
-
-            res.status(200).json({
-                message: "success",
-            });
-        } else {
-            res.status(200).json({
+        if (!purchaseRecord) {
+            return res.status(200).json({
                 message: "fail",
             });
         }
+
+        purchaseRecord.status = transactionSuccess;
+        await (purchaseRecord as any).save();
+
+        await finalizePurchase(
+            purchaseRecord.purchasedBy,
+            purchaseRecord.courseId,
+            purchaseRecord.orderId,
+        );
+
+        res.status(200).json({
+            message: "success",
+        });
     } else {
         res.status(200).json({
             message: "fail",

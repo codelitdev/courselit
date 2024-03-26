@@ -4,7 +4,7 @@ import "./styles.css";
 
 import PriceTag from "./pricetag";
 import Section from "./section";
-import WidgetHelpers from "./widget-helpers";
+// import WidgetHelpers from "./widget-helpers";
 import CourseItem from "./course-item";
 import Image from "./image";
 import Select from "./select";
@@ -53,7 +53,7 @@ export * from "./components/ui/badge";
 export {
     PriceTag,
     Section,
-    WidgetHelpers,
+    // WidgetHelpers,
     CourseItem,
     Image,
     Select,

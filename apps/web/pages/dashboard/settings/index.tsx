@@ -1,5 +1,6 @@
 import dynamic from "next/dynamic";
 import { SITE_SETTINGS_PAGE_HEADING } from "../../../ui-config/strings";
+import { useRouter } from "next/router";
 
 const BaseLayout = dynamic(
     () => import("../../../components/admin/base-layout"),
@@ -7,9 +8,12 @@ const BaseLayout = dynamic(
 const Settings = dynamic(() => import("../../../components/admin/settings"));
 
 export default function SiteUsers() {
+    const router = useRouter();
+    const { tab } = router.query;
+
     return (
         <BaseLayout title={SITE_SETTINGS_PAGE_HEADING}>
-            <Settings />
+            <Settings selectedTab={tab} />
         </BaseLayout>
     );
 }

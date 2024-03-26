@@ -28,7 +28,6 @@ import {
     BUTTON_SAVE,
     SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL,
     SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY,
-    BTN_EDIT_SITE,
     SITE_APIKEYS_SETTING_HEADER,
     APIKEY_NEW_BUTTON,
     APIKEY_EXISTING_HEADER,
@@ -70,6 +69,11 @@ interface SettingsProps {
     address: Address;
     networkAction: boolean;
     loading: boolean;
+    selectedTab:
+        | typeof SITE_SETTINGS_SECTION_GENERAL
+        | typeof SITE_SETTINGS_SECTION_PAYMENT
+        | typeof SITE_CUSTOMISATIONS_SETTING_HEADER
+        | typeof SITE_APIKEYS_SETTING_HEADER;
 }
 
 const Settings = (props: SettingsProps) => {
@@ -77,6 +81,14 @@ const Settings = (props: SettingsProps) => {
     const [newSettings, setNewSettings] = useState<Partial<SiteInfo>>({});
     const [apikeyPage, setApikeyPage] = useState(1);
     const [apikeys, setApikeys] = useState([]);
+    const selectedTab = [
+        SITE_SETTINGS_SECTION_GENERAL,
+        SITE_SETTINGS_SECTION_PAYMENT,
+        SITE_CUSTOMISATIONS_SETTING_HEADER,
+        SITE_APIKEYS_SETTING_HEADER,
+    ].includes(props.selectedTab)
+        ? props.selectedTab
+        : SITE_SETTINGS_SECTION_GENERAL;
 
     const fetch = new FetchBuilder()
         .setUrl(`${props.address.backend}/api/graph`)
@@ -416,14 +428,6 @@ const Settings = (props: SettingsProps) => {
                 <h1 className="text-4xl font-semibold mb-4">
                     {SITE_SETTINGS_PAGE_HEADING}
                 </h1>
-                <div>
-                    <Button
-                        href={`/dashboard/page/homepage/edit?redirectTo=/dashboard/settings`}
-                        component="link"
-                    >
-                        {BTN_EDIT_SITE}
-                    </Button>
-                </div>
             </div>
             <Tabs
                 items={[
@@ -432,6 +436,7 @@ const Settings = (props: SettingsProps) => {
                     SITE_CUSTOMISATIONS_SETTING_HEADER,
                     SITE_APIKEYS_SETTING_HEADER,
                 ]}
+                selected={selectedTab}
             >
                 <Form
                     onSubmit={handleSettingsSubmit}

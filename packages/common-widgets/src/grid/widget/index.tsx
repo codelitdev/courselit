@@ -1,12 +1,6 @@
-import React from "react";
 import { WidgetProps } from "@courselit/common-models";
 import Settings, { Item } from "../settings";
-import {
-    TextRenderer,
-    Button,
-    Button2,
-    Link,
-} from "@courselit/components-library";
+import { TextRenderer, Button2, Link } from "@courselit/components-library";
 import Itemm from "./item";
 import {
     verticalPadding as defaultVerticalPadding,
@@ -111,12 +105,14 @@ export default function Widget({
                             <div
                                 className={`grid grid-cols-1 md:grid-cols-2 ${twGridColsMap[columns]} gap-4`}
                             >
-                                {items.map((item: Item, index: number) => (
-                                    <div className="flex flex-col">
+                                {items.map((item: Item) => (
+                                    <div
+                                        key={item.title}
+                                        className="flex flex-col"
+                                    >
                                         <div className="h-full">
                                             <Itemm
                                                 item={item}
-                                                key={index}
                                                 buttonBackground={
                                                     buttonBackground
                                                 }

@@ -1,7 +1,15 @@
 import React, { ReactNode, useEffect } from "react";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
-import { Rocket, Text, Person, Mail, Settings } from "@courselit/icons";
+import {
+    Rocket,
+    Text,
+    Person,
+    Mail,
+    Settings,
+    Home,
+    Globe,
+} from "@courselit/icons";
 import {
     CREATOR_AREA_PAGE_TITLE,
     SIDEBAR_MENU_BLOGS,
@@ -10,6 +18,7 @@ import {
     SIDEBAR_MENU_USERS,
     SIDEBAR_MENU_MAILS,
     SIDEBAR_MENU_PAGES,
+    SIDEBAR_MENU_DASHBOARD,
 } from "../../ui-config/strings";
 import AppLoader from "../app-loader";
 import Head from "next/head";
@@ -25,11 +34,16 @@ import {
     AppState,
 } from "@courselit/state-management";
 import { useSession } from "next-auth/react";
-import { Globe } from "@courselit/icons";
 const { permissions } = constants;
 
 const getSidebarMenuItems = (profile: Profile, featureFlags: string[]) => {
-    const items = [];
+    const items = [
+        {
+            label: SIDEBAR_MENU_DASHBOARD,
+            href: "/dashboard",
+            icon: <Home />,
+        },
+    ];
 
     if (
         checkPermission(profile.permissions, [

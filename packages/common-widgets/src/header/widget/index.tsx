@@ -205,7 +205,7 @@ export default function Widget({ state, settings }: WidgetProps) {
                                     ]) && (
                                         <MenuItem2>
                                             <AppLink
-                                                href={"/dashboard/products"}
+                                                href={"/dashboard"}
                                                 className={linkClasses}
                                             >
                                                 Dashboard

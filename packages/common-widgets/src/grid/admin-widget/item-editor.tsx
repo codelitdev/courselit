@@ -25,7 +25,6 @@ interface ItemProps {
 
 export default function ItemEditor({
     item,
-    index,
     onChange,
     onDelete,
     address,

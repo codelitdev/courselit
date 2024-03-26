@@ -192,6 +192,7 @@ export default function AdminWidget({
                 <ul className="flex flex-col gap-2">
                     {items.map((item: Item, index: number) => (
                         <li
+                            key={item.title}
                             onClick={() => {
                                 hideActionButtons(true, {
                                     selectedItem: index,
