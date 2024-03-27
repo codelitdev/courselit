@@ -52,7 +52,7 @@ export async function createSubscription(
             await recordActivity({
                 domain: ctx.subdomain!._id,
                 userId: dbUser.userId,
-                type: "newsletter-subscribed",
+                type: "newsletter_subscribed",
             });
         }
     } catch (e: any) {

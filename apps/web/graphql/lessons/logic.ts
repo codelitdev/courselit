@@ -297,7 +297,7 @@ export const markLessonCompleted = async (
     await recordActivity({
         domain: ctx.subdomain._id,
         userId: ctx.user.userId,
-        type: "lesson-completed",
+        type: "lesson_completed",
         entityId: lesson.lessonId,
         metadata: {
             courseId: lesson.courseId,

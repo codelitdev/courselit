@@ -293,7 +293,7 @@ export async function createUser({
     await recordActivity({
         domain: domain._id,
         userId: user.userId,
-        type: "user-created",
+        type: "user_created",
     });
 
     return user;
