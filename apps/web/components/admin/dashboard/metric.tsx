@@ -99,12 +99,6 @@ const Metric = ({
 
         getData();
     }, [internalDuration]);
-    const data2 = [
-        { name: "Page A", uv: 400, pv: 2400, amt: 2400 },
-        { name: "Page B", uv: 800, pv: 2600, amt: 2600 },
-        { name: "Page B", uv: 300, pv: 2600, amt: 2600 },
-        { name: "Page B", uv: 700, pv: 2600, amt: 2600 },
-    ];
 
     return (
         <Card>

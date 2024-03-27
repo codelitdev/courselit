@@ -1,6 +1,4 @@
-import {
-    GraphQLEnumType,
-} from "graphql";
+import { GraphQLEnumType } from "graphql";
 import GQLContext from "../../models/GQLContext";
 import { getActivities } from "./logic";
 import types from "./types";
