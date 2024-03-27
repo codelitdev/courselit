@@ -10,7 +10,7 @@ export interface Activity {
     entityId?: string;
     metadata?: Record<string, any>;
     createdAt?: Date;
-    updatedAt?: Date;
+    updatedAt: Date;
 }
 
 const ActivitySchema = new mongoose.Schema<Activity>(
@@ -25,6 +25,8 @@ const ActivitySchema = new mongoose.Schema<Activity>(
         timestamps: true,
     },
 );
+
+ActivitySchema.index({ domain: 1, type: 1 });
 
 export default mongoose.models.Activity ||
     mongoose.model("Activity", ActivitySchema);
