@@ -27,6 +27,7 @@ import finalizePurchase from "../../lib/finalize-purchase";
 import SequenceModel, { AdminSequence } from "@models/Sequence";
 import OngoingSequence from "@models/OngoingSequence";
 import Rule from "@models/Rule";
+import { recordActivity } from "../../lib/record-activity";
 
 const { permissions, mailTypes } = constants;
 type SequenceType = (typeof mailTypes)[number];
@@ -42,10 +43,16 @@ export async function createSubscription(
         });
 
         if (!dbUser) {
-            await createUser({
+            dbUser = await createUser({
                 domain: ctx.subdomain!,
                 email: email,
                 lead: constants.leadNewsletter,
+            });
+
+            await recordActivity({
+                domain: ctx.subdomain!._id,
+                userId: dbUser.userId,
+                type: "newsletter-subscribed",
             });
         }
     } catch (e: any) {

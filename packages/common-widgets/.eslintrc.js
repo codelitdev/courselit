@@ -1,13 +1,20 @@
 module.exports = {
-    extends: ["standard", "plugin:react/recommended", "prettier"],
-    plugins: ["react-hooks"],
-    ignorePatterns: ["dist/**/*.js"],
-    rules: {
-        "react-hooks/rules-of-hooks": "error",
+    env: {
+        browser: true,
     },
-    settings: {
-        react: {
-            version: "detect",
-        },
+    extends: [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@typescript-eslint/stylistic",
+        "plugin:react/recommended",
+        "prettier",
+    ],
+    plugins: ["react-hooks"],
+    ignorePatterns: ["src/components/ui/**", "dist/**", "tailwind.config.js"],
+    rules: {
+        "react/react-in-jsx-scope": "off",
+        "react-hooks/rules-of-hooks": "error",
+        "@typescript-eslint/no-explicit-any": "warn",
+        "react/display-name": "off",
     },
 };

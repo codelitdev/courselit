@@ -29,7 +29,7 @@
     "eslint": "^8.14.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-react": "^7.29.4",
+    "eslint-plugin-react": "^7.34.1",
     "eslint-plugin-react-hooks": "^4.5.0",
     "eslint-plugin-unused-imports": "^2.0.0",
     "husky": "^9.0.11",
@@ -41,7 +41,7 @@
   },
   "engineStrict": true,
   "lint-staged": {
-    "*.{ts,tsx}": "eslint --quiet --cache --fix packages apps/docs apps/web/pages apps/web/components",
-    "*.{ts,tsx,js,css,md}": "prettier --write packages apps docs *.md"
+    "*.{ts,tsx,js,css,md}": "prettier --write packages apps docs *.md",
+    "*.{ts,tsx}": "eslint --quiet --cache --fix packages apps/docs apps/web/pages apps/web/components"
   }
 }

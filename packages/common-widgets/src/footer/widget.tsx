@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "@courselit/components-library";
 import Settings from "./settings";
 import { State } from "@courselit/common-models";
@@ -124,8 +123,11 @@ const Widget = ({
                     <div className="flex flex-col flex-wrap lg:!flex-row gap-8">
                         {sections &&
                             sections.length > 0 &&
-                            sections.map((section, index) => (
-                                <div className="flex flex-col lg:max-w-[100px]">
+                            sections.map((section) => (
+                                <div
+                                    key={section.name}
+                                    className="flex flex-col lg:max-w-[100px]"
+                                >
                                     <h2
                                         className={`text-lg mb-4 ${sectionHeaderFontSize}`}
                                     >

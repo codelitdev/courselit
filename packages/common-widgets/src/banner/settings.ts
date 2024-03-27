@@ -1,9 +1,5 @@
 import { Alignment } from "@courselit/common-models";
-import {
-    PageTypeProduct,
-    PageTypeSite,
-    WidgetDefaultSettings,
-} from "@courselit/common-models";
+import { WidgetDefaultSettings } from "@courselit/common-models";
 
 export default interface Settings extends WidgetDefaultSettings {
     productId?: string;

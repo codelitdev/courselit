@@ -37,7 +37,7 @@ export default function Widget({
         foregroundColor,
         buttonBackground,
         buttonForeground,
-        style = "normal",
+        // style = "normal",
         mediaRadius = 2,
         horizontalPadding = defaultHorizontalPadding,
         verticalPadding = defaultVerticalPadding,

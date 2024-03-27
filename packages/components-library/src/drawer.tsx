@@ -1,8 +1,9 @@
+import { ReactNode } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "./components/ui/sheet";
 
 interface DrawerProps {
-    trigger: React.ReactNode;
-    children: React.ReactNode;
+    trigger: ReactNode;
+    children: ReactNode;
     side?: "left" | "right" | "top" | "bottom";
     open: boolean;
     setOpen: (open: boolean) => void;

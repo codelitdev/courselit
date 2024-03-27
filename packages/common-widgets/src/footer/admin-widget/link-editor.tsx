@@ -47,10 +47,7 @@ export default function LinkEditor({
             {!editing && (
                 <div className="flex justify-between items-center">
                     <h2>{label}</h2>
-                    <IconButton
-                        variant="soft"
-                        onClick={(e) => setEditing(true)}
-                    >
+                    <IconButton variant="soft" onClick={() => setEditing(true)}>
                         <Edit />
                     </IconButton>
                 </div>

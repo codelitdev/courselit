@@ -1,9 +1,21 @@
 module.exports = {
-    extends: ["standard", "plugin:react/recommended", "prettier"],
+    env: {
+        browser: true,
+    },
+    extends: [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@typescript-eslint/stylistic",
+        "plugin:react/recommended",
+        "prettier",
+    ],
     plugins: ["react-hooks"],
-    ignorePatterns: ["dist/**/*.js"],
+    ignorePatterns: ["src/components/ui/**", "dist/**", "tailwind.config.js"],
     rules: {
+        "react/react-in-jsx-scope": "off",
         "react-hooks/rules-of-hooks": "error",
+        "@typescript-eslint/no-explicit-any": "warn",
+        "react/display-name": "off",
     },
     settings: {
         react: {

@@ -1,6 +1,5 @@
-import React from "react";
 import { WidgetProps } from "@courselit/common-models";
-import Settings, { Item } from "./settings";
+import Settings from "./settings";
 import {
     Button2,
     Card,
@@ -80,6 +79,7 @@ export default function Widget({
                         >
                             {items.map((item) => (
                                 <Card
+                                    key={item.title}
                                     className="h-full flex flex-col w-full"
                                     style={{
                                         backgroundColor,

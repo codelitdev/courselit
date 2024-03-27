@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -5,8 +6,8 @@ import {
 } from "./components/ui/dropdown-menu";
 
 interface MenuProps {
-    trigger: React.ReactNode;
-    children: React.ReactNode;
+    trigger: ReactNode;
+    children: ReactNode;
 }
 
 export function Menu({ trigger, children }: MenuProps) {

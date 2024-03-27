@@ -90,6 +90,28 @@ export default {
     // mail types
     mailTypes: ["broadcast", "sequence"],
 
+    // activity types
+    activityTypes: [
+        "enrolled",
+        "purchased",
+        "lesson_started",
+        "lesson_completed",
+        "course_completed",
+        "quiz_attempted",
+        "quiz_passed",
+        "video_started",
+        "video_finished",
+        "certificate_issued",
+        "certificate_downloaded",
+        "reviewed",
+        "newsletter_subscribed",
+        "newsletter_unsubscribed",
+        "user_created",
+    ],
+
+    // durations
+    analyticsDurations: ["7d", "30d", "90d", "1y", "lifetime"],
+
     // acceptable currency codes for payments
     currencyISOCodes: [
         "afn",

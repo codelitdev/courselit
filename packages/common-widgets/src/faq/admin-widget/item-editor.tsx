@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Item } from "../settings";
 import {
     TextEditor,
@@ -22,12 +22,7 @@ interface ItemProps {
     profile: Profile;
 }
 
-export default function ItemEditor({
-    item,
-    onChange,
-    onDelete,
-    dispatch,
-}: ItemProps) {
+export default function ItemEditor({ item, onChange, onDelete }: ItemProps) {
     const [title, setTitle] = useState(item.title);
     const [description, setDescription] = useState(item.description);
 

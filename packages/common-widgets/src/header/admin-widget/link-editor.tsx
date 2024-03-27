@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Edit, Help } from "@courselit/icons";
 import { Link } from "../settings";
 import {
@@ -6,7 +6,6 @@ import {
     Form,
     FormField,
     IconButton,
-    Section,
 } from "@courselit/components-library";
 import { Checkbox } from "@courselit/components-library";
 import { Tooltip } from "@courselit/components-library";
@@ -53,10 +52,7 @@ export default function LinkEditor({
             {!editing && (
                 <div className="flex justify-between items-center">
                     <h2>{label}</h2>
-                    <IconButton
-                        variant="soft"
-                        onClick={(e) => setEditing(true)}
-                    >
+                    <IconButton variant="soft" onClick={() => setEditing(true)}>
                         <Edit />
                     </IconButton>
                 </div>

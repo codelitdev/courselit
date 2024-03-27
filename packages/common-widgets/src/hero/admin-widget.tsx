@@ -69,6 +69,7 @@ export default function AdminWidget({
     );
     const [buttonAction, setButtonAction] = useState(settings.buttonAction);
     const [buttonCaption, setButtonCaption] = useState(settings.buttonCaption);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [mediaBorderRadius, setMediaBorderRadius] = useState(
         settings.mediaRadius,
     );

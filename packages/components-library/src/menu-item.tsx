@@ -1,11 +1,11 @@
-import * as React from "react";
 import { Item } from "@radix-ui/react-dropdown-menu";
 import Dialog2 from "./dialog2";
+import { ReactNode, forwardRef } from "react";
 
 interface DialogMenuItemProps {
     component: "dialog";
-    triggerChildren: React.ReactNode;
-    children: React.ReactNode;
+    triggerChildren: ReactNode;
+    children: ReactNode;
     onSelect: (...args: any[]) => void;
     onOpenChange: (...args: any[]) => void;
     title: string;
@@ -18,12 +18,13 @@ interface DialogMenuItemProps {
 
 interface ButtonMenuItemProps {
     component: "button";
-    children: React.ReactNode;
+    children: ReactNode;
 }
 
 type MenuItemProps = ButtonMenuItemProps | DialogMenuItemProps;
 
-const MenuItem = React.forwardRef((props: MenuItemProps, forwardedRef: any) => {
+// eslint-disable-next-line react/display-name
+const MenuItem = forwardRef((props: MenuItemProps, forwardedRef: any) => {
     if (isButton(props)) {
         const { children, ...otherProps } = props;
         return (

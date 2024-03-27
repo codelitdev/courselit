@@ -9,6 +9,7 @@ import courses from "./courses";
 import lessons from "./lessons";
 import pages from "./pages";
 import mails from "./mails";
+import activities from "./activities";
 
 export default new graphql.GraphQLSchema({
     query: new graphql.GraphQLObjectType({
@@ -23,6 +24,7 @@ export default new graphql.GraphQLSchema({
             ...widgets.queries,
             ...pages.queries,
             ...mails.queries,
+            ...activities.queries,
         },
     }),
     mutation: new graphql.GraphQLObjectType({
@@ -37,6 +39,7 @@ export default new graphql.GraphQLSchema({
             ...widgets.mutations,
             ...pages.mutations,
             ...mails.mutations,
+            ...activities.mutations,
         },
     }),
 });

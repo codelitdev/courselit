@@ -4,7 +4,7 @@ import "./styles.css";
 
 import PriceTag from "./pricetag";
 import Section from "./section";
-import WidgetHelpers from "./widget-helpers";
+// import WidgetHelpers from "./widget-helpers";
 import CourseItem from "./course-item";
 import Image from "./image";
 import Select from "./select";
@@ -49,11 +49,12 @@ export * from "./components/ui/accordion";
 export * from "./components/ui/slider";
 export * from "./components/ui/card";
 export * from "./components/ui/badge";
+export * from "./components/ui/skeleton";
 
 export {
     PriceTag,
     Section,
-    WidgetHelpers,
+    // WidgetHelpers,
     CourseItem,
     Image,
     Select,

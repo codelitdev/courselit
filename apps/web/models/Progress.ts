@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 export interface Progress {
     courseId: string;
     completedLessons: string[];
-    downloaded: boolean;
+    downloaded?: boolean;
 }
 
 const ProgressSchema = new mongoose.Schema<Progress>(

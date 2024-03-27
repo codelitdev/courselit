@@ -1,4 +1,4 @@
-import React, { FormEvent, useState } from "react";
+import { FormEvent, useState } from "react";
 import { AppMessage, Media, WidgetProps } from "@courselit/common-models";
 import {
     Image,
@@ -13,7 +13,6 @@ import { setAppMessage } from "@courselit/state-management/dist/action-creators"
 import { FetchBuilder } from "@courselit/utils";
 import { DEFAULT_FAILURE_MESSAGE, DEFAULT_SUCCESS_MESSAGE } from "./constants";
 import Settings from "./settings";
-import { TextEditorEmptyDoc } from "@courselit/components-library";
 
 export default function Widget({
     settings: {
@@ -184,7 +183,6 @@ export default function Widget({
                         )}
                         <div className="pb-1">
                             <h1 className="text-4xl mb-4">
-                                {/* @ts-ignore */}
                                 {title ||
                                     (type === "site"
                                         ? state.siteinfo.title
