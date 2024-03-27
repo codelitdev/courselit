@@ -93,21 +93,24 @@ export default {
     // activity types
     activityTypes: [
         "enrolled",
-        "lesson-started",
-        "lesson-completed",
-        "course-completed",
-        "quiz-attempted",
-        "quiz-passed",
         "purchased",
-        "video-started",
-        "video-finished",
-        "certificate-issued",
-        "certificate-downloaded",
+        "lesson_started",
+        "lesson_completed",
+        "course_completed",
+        "quiz_attempted",
+        "quiz_passed",
+        "video_started",
+        "video_finished",
+        "certificate_issued",
+        "certificate_downloaded",
         "reviewed",
-        "newsletter-subscribed",
-        "newsletter-unsubscribed",
-        "user-created",
+        "newsletter_subscribed",
+        "newsletter_unsubscribed",
+        "user_created",
     ],
+
+    // durations
+    analyticsDurations: ["7d", "30d", "90d", "1y", "lifetime"],
 
     // acceptable currency codes for payments
     currencyISOCodes: [

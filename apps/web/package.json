@@ -34,6 +34,7 @@
         "react-csv": "^2.2.2",
         "react-dom": "^18.2.0",
         "react-redux": "^8.1.2",
+        "recharts": "^2.12.3",
         "remirror": "^2.0.9",
         "sharp": "^0.33.2",
         "slugify": "^1.6.5",

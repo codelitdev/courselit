@@ -33,10 +33,18 @@ export default async (
             userId: user.userId,
             type: "enrolled",
             entityId: course.courseId,
-            metadata: {
-                cost: course.cost,
-                purchaseId,
-            },
         });
+        if (course.cost > 0) {
+            await recordActivity({
+                domain: user.domain,
+                userId: user.userId,
+                type: "purchased",
+                entityId: course.courseId,
+                metadata: {
+                    cost: course.cost,
+                    purchaseId,
+                },
+            });
+        }
     }
 };

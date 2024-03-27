@@ -18,6 +18,7 @@ import {
 import UserSegmentModel, { UserSegment } from "../../models/UserSegment";
 import mongoose from "mongoose";
 import { UserFilterWithAggregator } from "@courselit/common-models";
+import { recordActivity } from "../../lib/record-activity";
 
 const removeAdminFieldsFromUserObject = ({
     id,
@@ -288,6 +289,12 @@ export async function createUser({
     if (superAdmin) {
         await initMandatoryPages(domain, user);
     }
+
+    await recordActivity({
+        domain: domain._id,
+        userId: user.userId,
+        type: "user-created",
+    });
 
     return user;
 }

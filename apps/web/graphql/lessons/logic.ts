@@ -22,6 +22,7 @@ import { recordProgress } from "../users/logic";
 import { Quiz } from "@courselit/common-models";
 import LessonEvaluation from "../../models/LessonEvaluation";
 import { checkPermission } from "@courselit/utils";
+import { recordActivity } from "../../lib/record-activity";
 
 const { permissions, quiz } = constants;
 
@@ -291,6 +292,16 @@ export const markLessonCompleted = async (
         lessonId,
         courseId: lesson.courseId,
         user: ctx.user,
+    });
+
+    await recordActivity({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+        type: "lesson-completed",
+        entityId: lesson.lessonId,
+        metadata: {
+            courseId: lesson.courseId,
+        },
     });
 
     return true;

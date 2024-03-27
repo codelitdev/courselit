@@ -9,6 +9,8 @@ export interface Activity {
     type: ActivityType;
     entityId?: string;
     metadata?: Record<string, any>;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
 const ActivitySchema = new mongoose.Schema<Activity>(
