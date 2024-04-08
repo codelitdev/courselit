@@ -1,16 +1,16 @@
-import { Dot, ExpandMore, Info } from "@courselit/icons";
+import * as React from "react";
+
 import {
-    Root,
-    Trigger,
-    Portal,
-    Content,
-    RadioGroup,
-    RadioItem,
-    ItemIndicator,
-    Arrow,
-} from "@radix-ui/react-dropdown-menu";
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Info } from "@courselit/icons";
 import Tooltip from "./tooltip";
-import ScrollArea from "./scrollarea";
 
 interface Option {
     label: string;
@@ -30,7 +30,7 @@ interface SelectProps {
     variant?: "with-label" | "without-label";
 }
 
-export default function Select({
+export default function CustomSelect({
     options,
     onChange,
     value,
@@ -40,101 +40,58 @@ export default function Select({
     variant = "with-label",
 }: SelectProps) {
     return (
-        <Root>
-            <Trigger disabled={disabled} asChild>
-                <div className="cursor-pointer">
-                    {variant !== "without-label" && (
-                        <div className="mb-1 font-medium">{title}</div>
-                    )}
-                    <div className="flex justify-between items-center gap-2 border border-slate-300 hover:border-slate-400 rounded py-1 px-2 outline-none focus:border-slate-600 disabled:pointer-events-none">
+        <div>
+            {variant !== "without-label" && (
+                <div className="mb-1 font-medium">{title}</div>
+            )}
+            <Select value={value as string} onValueChange={onChange}>
+                <SelectTrigger className="w-full" disabled={disabled}>
+                    <SelectValue placeholder="Select a duration">
+                        {" "}
                         {options.filter((x) => x.value === value)[0]?.label}
-                        <ExpandMore />
-                    </div>
-                </div>
-            </Trigger>
-            <Portal>
-                <Content className="min-w-[180px] bg-white rounded shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)]">
-                    {(subtitle || variant === "without-label") && (
-                        <div className="mb-2 px-2">
-                            {variant === "without-label" && (
-                                <div className="font-medium mb-1">{title}</div>
-                            )}
-                            {subtitle && (
-                                <div className="text-sm text-slate-500">
-                                    {subtitle}
+                    </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="min-w-[180px]">
+                    <SelectGroup className="min-w-[180px]">
+                        <SelectLabel>
+                            {(subtitle || variant === "without-label") && (
+                                <div>
+                                    {variant === "without-label" && (
+                                        <div>{title}</div>
+                                    )}
+                                    {subtitle && (
+                                        <div className="text-sm text-slate-500">
+                                            {subtitle}
+                                        </div>
+                                    )}
                                 </div>
                             )}
-                        </div>
-                    )}
-                    <ScrollArea>
-                        <RadioGroup
-                            value={value as string}
-                            onValueChange={onChange}
-                        >
-                            {options.map((option: Option) => (
-                                <RadioItem
-                                    value={option.value as string}
-                                    key={option.value}
-                                    disabled={option.disabled || false}
-                                    className="text-medium leading-none rounded-[3px] flex items-center h-8 px-2 py-2 relative pl-6 select-none outline-none data-[disabled]:text-slate-200 data-[disabled]:pointer-events-none hover:bg-slate-200"
-                                >
-                                    <ItemIndicator className="absolute left-0 w-[25px] inline-flex items-center justify-center">
-                                        <Dot />
-                                    </ItemIndicator>
-                                    <div className="w-full flex items-center justify-between">
-                                        <div>{option.label}</div>
-                                        {option.sublabel && (
-                                            <div className="text-sm text-slate-500">
-                                                <Tooltip
-                                                    title={option.sublabel}
-                                                >
-                                                    <Info />
-                                                </Tooltip>
-                                            </div>
-                                        )}
-                                    </div>
-                                </RadioItem>
-                            ))}
-                        </RadioGroup>
-                        <Arrow className="border-slate-300 fill-white" />
-                    </ScrollArea>
-                </Content>
-            </Portal>
-        </Root>
-    );
+                        </SelectLabel>
 
-    // return (
-    //     <div className="flex flex-col">
-    //         <label htmlFor="select" className="mb-1 font-medium">
-    //             {title}
-    //         </label>
-    //         <select
-    //             id="select"
-    //             value={value}
-    //             onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-    //                 onChange(e.target.value)
-    //             }
-    //             disabled={disabled}
-    //             className="border border-slate-300 hover:border-slate-400 py-1 px-2 rounded"
-    //         >
-    //             {defaultMessage && (
-    //                 <option disabled selected value="">
-    //                     {" "}
-    //                     {defaultMessage}{" "}
-    //                 </option>
-    //             )}
-    //             {options.map((option: Option) => (
-    //                 <option
-    //                     value={option.value}
-    //                     key={option.value}
-    //                     disabled={option.disabled || false}
-    //                     className="p-2"
-    //                 >
-    //                     {option.label}{" "}
-    //                     {option.sublabel ? `(${option.sublabel})` : ""}
-    //                 </option>
-    //             ))}
-    //         </select>
-    //     </div>
-    // );
+                        {options.map((option: Option) => (
+                            <SelectItem
+                                value={option.value as string}
+                                key={option.value}
+                                disabled={option.disabled || false}
+                            >
+                                <div className="w-full flex gap-2 items-center justify-between">
+                                    <div>{option.label}</div>
+                                    {option.sublabel && (
+                                        <div className="text-sm text-slate-500">
+                                            <Tooltip
+                                                title={option.sublabel}
+                                                side="right"
+                                            >
+                                                <Info />
+                                            </Tooltip>
+                                        </div>
+                                    )}
+                                </div>
+                            </SelectItem>
+                        ))}
+                    </SelectGroup>
+                </SelectContent>
+            </Select>
+        </div>
+    );
 }

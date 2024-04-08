@@ -7,7 +7,7 @@ import Section from "./section";
 // import WidgetHelpers from "./widget-helpers";
 import CourseItem from "./course-item";
 import Image from "./image";
-import Select from "./select";
+// import Select from "./select.tsx.notused";
 import Link from "./link";
 import MediaSelector from "./media-selector";
 import TextEditor, { emptyDoc as TextEditorEmptyDoc } from "./text-editor";
@@ -24,7 +24,6 @@ import CircularProgress from "./circular-progress";
 import Menu2 from "./menu2";
 import MenuItem from "./menu-item";
 import Dialog2 from "./dialog2";
-import Tooltip from "./tooltip";
 import Chip from "./chip";
 import Modal from "./modal";
 import Toast from "./toast";
@@ -40,6 +39,8 @@ import ContentPaddingSelector from "./content-padding-selector";
 import PageBuilderSlider from "./page-builder-slider";
 import PageBuilderPropertyHeader from "./page-builder-property-header";
 import CssIdField from "./css-id-field";
+import Select from "./select";
+import Tooltip from "./tooltip";
 
 export { Button as Button2 } from "./components/ui/button";
 export * from "./menu";
@@ -50,6 +51,7 @@ export * from "./components/ui/slider";
 export * from "./components/ui/card";
 export * from "./components/ui/badge";
 export * from "./components/ui/skeleton";
+// export * from "./components/ui/select"
 
 export {
     PriceTag,
@@ -58,6 +60,7 @@ export {
     CourseItem,
     Image,
     Select,
+    // Select1,
     Link,
     MediaSelector,
     TextEditor,
