@@ -1,37 +1,30 @@
 import { Sequence } from "@courselit/common-models";
-import SequenceModel, { AdminSequence } from "./model/sequence";
+import { AdminSequence } from "./model/sequence";
 import OngoingSequenceModel, {
     OngoingSequence,
 } from "./model/ongoing-sequence";
-import nodemailer from "nodemailer";
-import UserModel, { UserWithDomain } from "./model/user";
-import { logger } from "../../logger";
-import rule from "./model/rule";
-
-const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: +(process.env.EMAIL_PORT || 587),
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    },
-});
-
-const sequenceBounceLimit = process.env.SEQUENCE_BOUNCE_LIMIT
-    ? +process.env.SEQUENCE_BOUNCE_LIMIT
-    : 3;
+import { UserWithDomain } from "./model/user";
+import { logger } from "../logger";
+import { sequenceBounceLimit } from "../constants";
+import {
+    deleteOngoingSequence,
+    getDueOngoingSequences,
+    getSequence,
+    getUser,
+    removeRuleForBroadcast,
+    updateSequenceSentAt,
+} from "./queries";
+import { sendMail } from "../mail";
 
 export async function processOngoingSequences(): Promise<void> {
+    // eslint-disable-next-line no-constant-condition
     while (true) {
-        const currentTime = new Date().getTime();
-        console.log(`Starting process of ongoing sequence at ${currentTime}`);
+        // eslint-disable-next-line no-console
+        console.log(
+            `Starting process of ongoing sequence at ${new Date().toDateString()}`,
+        );
 
-        const dueOngoingSequences: OngoingSequence[] =
-            await OngoingSequenceModel.find({
-                nextEmailScheduledTime: { $lt: currentTime },
-                retryCount: { $lt: sequenceBounceLimit },
-            });
-
+        const dueOngoingSequences = await getDueOngoingSequences();
         for (const ongoingSequence of dueOngoingSequences) {
             try {
                 await processOngoingSequence(ongoingSequence);
@@ -46,23 +39,11 @@ export async function processOngoingSequences(): Promise<void> {
 
 async function processOngoingSequence(ongoingSequence: OngoingSequence) {
     const [sequence, user, creator] = await Promise.all([
-        SequenceModel.findOne({
-            sequenceId: ongoingSequence.sequenceId,
-        }).lean<AdminSequence | null>(),
-        UserModel.findOne({
-            userId: ongoingSequence.userId,
-            active: true,
-        }).lean<UserWithDomain | null>(),
-        SequenceModel.findOne({ sequenceId: ongoingSequence.sequenceId })
-            .lean<AdminSequence | null>()
-            .then((sequence) =>
-                sequence
-                    ? UserModel.findOne({
-                          userId: sequence.creatorId,
-                          active: true,
-                      }).lean<UserWithDomain | null>()
-                    : null,
-            ),
+        getSequence(ongoingSequence.sequenceId),
+        getUser(ongoingSequence.userId),
+        getSequence(ongoingSequence.sequenceId).then((sequence) =>
+            sequence ? getUser(sequence.creatorId) : null,
+        ),
     ]);
 
     if (!sequence || !user || !creator) {
@@ -82,10 +63,7 @@ async function cleanUpResources(
     ongoingSequence: OngoingSequence,
     completed?: boolean,
 ) {
-    // update sequence sentAt if no records are found in ongoing sequences for this sequence
-    await OngoingSequenceModel.deleteOne({
-        sequenceId: ongoingSequence.sequenceId,
-    });
+    await deleteOngoingSequence(ongoingSequence.sequenceId);
     if (completed) {
         await updateSequenceReports(ongoingSequence.sequenceId);
     }
@@ -97,25 +75,15 @@ async function updateSequenceReports(sequenceId: string) {
             sequenceId,
         });
     if (remainingOngoingSequencesWithSameSequenceId.length === 0) {
-        const sequence: AdminSequence | null = await SequenceModel.findOne({
-            sequenceId,
-        });
+        const sequence = await getSequence(sequenceId);
         if (!sequence) {
             return;
         }
         if (sequence.type === "broadcast") {
-            await removeRuleForBroadcast(sequence);
-            sequence.report.broadcast.sentAt = new Date();
-            await (sequence as any).save();
+            await removeRuleForBroadcast(sequence.sequenceId);
+            await updateSequenceSentAt(sequence.sequenceId);
         }
     }
-}
-
-async function removeRuleForBroadcast(sequence: AdminSequence) {
-    await rule.deleteOne({
-        event: "date:occurred",
-        "data.sequenceId": sequence.sequenceId,
-    });
 }
 
 async function attemptMailSending({
@@ -130,7 +98,7 @@ async function attemptMailSending({
     ongoingSequence: OngoingSequence;
 }) {
     try {
-        await transporter.sendMail({
+        await sendMail({
             from: creator!.email,
             to: user.email,
             subject: sequence.emails[0].subject,
@@ -144,9 +112,7 @@ async function attemptMailSending({
                 ongoingSequence.userId,
             ];
             await (sequence as any).save();
-            await OngoingSequenceModel.deleteOne({
-                sequenceId: ongoingSequence.sequenceId,
-            });
+            await deleteOngoingSequence(ongoingSequence.sequenceId);
         } else {
             await ongoingSequence.save();
         }

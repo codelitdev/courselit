@@ -87,9 +87,6 @@ export default {
     downLoadLinkExpiresInDays: 2,
     downLoadLinkLength: 128,
 
-    // mail types
-    mailTypes: ["broadcast", "sequence"],
-
     // activity types
     activityTypes: [
         "enrolled",

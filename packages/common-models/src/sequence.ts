@@ -2,21 +2,24 @@ import { Email } from "./email";
 import { SequenceReport } from "./sequence-report";
 import { SequenceType } from "./sequence-type";
 import { UserFilterWithAggregator } from "./user-filter-with-aggregator";
+import { Constants } from ".";
+import { SequenceStatus } from "./sequence-status";
 
-interface BroadcastSettings {
-    filter: UserFilterWithAggregator;
-}
-
-interface SequenceSettings {
-    excludeFilter: UserFilterWithAggregator;
+interface From {
+    name: string;
+    email?: string;
 }
 
 export interface Sequence {
     sequenceId: string;
     type: SequenceType;
-    title: string;
+    title?: string;
     emails: Email[];
     report: SequenceReport;
-    broadcastSettings: BroadcastSettings;
-    sequenceSettings: SequenceSettings;
+    from: From;
+    filter: UserFilterWithAggregator;
+    excludeFilter: UserFilterWithAggregator;
+    trigger: (typeof Constants.eventTypes)[number];
+    status: SequenceStatus;
+    data: Record<string, unknown>;
 }

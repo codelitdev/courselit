@@ -204,35 +204,35 @@ function Mails({
         //loadSequenceCount("sequence");
     }, []);
 
-    const createMail = async () => {
-        const mutation = `
-            mutation {
-                mail: createMail {
-                    mailId
-                }
-            }
-        `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(mutation)
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                networkAction(true),
-            );
-            const response = await fetch.exec();
-            if (response.mail && response.mail.mailId) {
-                router.push(`/dashboard/mails/${response.mail.mailId}/edit`);
-            }
-        } catch (err) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
-        } finally {
-            (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                networkAction(false),
-            );
-        }
-    };
+    // const createMail = async () => {
+    //     const mutation = `
+    //         mutation {
+    //             mail: createMail {
+    //                 mailId
+    //             }
+    //         }
+    //     `;
+    //     const fetch = new FetchBuilder()
+    //         .setUrl(`${address.backend}/api/graph`)
+    //         .setPayload(mutation)
+    //         .setIsGraphQLEndpoint(true)
+    //         .build();
+    //     try {
+    //         (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
+    //             networkAction(true),
+    //         );
+    //         const response = await fetch.exec();
+    //         if (response.mail && response.mail.mailId) {
+    //             router.push(`/dashboard/mails/${response.mail.mailId}/edit`);
+    //         }
+    //     } catch (err) {
+    //         dispatch(setAppMessage(new AppMessage(err.message)));
+    //     } finally {
+    //         (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
+    //             networkAction(false),
+    //         );
+    //     }
+    // };
 
     /*
     const createSequence = async () => {
@@ -271,7 +271,7 @@ function Mails({
     const createBroadcast = async () => {
         const mutation = `
         mutation {
-            sequence: createBroadcast {
+            sequence: createSequence(type: BROADCAST) {
                 sequenceId
             }
         }

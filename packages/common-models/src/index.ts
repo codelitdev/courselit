@@ -37,6 +37,7 @@ export type { Action } from "./action";
 export type { Rule } from "./rule";
 export type { Sequence } from "./sequence";
 export type { SequenceReport } from "./sequence-report";
+export type { SequenceStatus } from "./sequence-status";
 export type { Email } from "./email";
 export type { EmailTemplate } from "./email-template";
 export type { SequenceType } from "./sequence-type";

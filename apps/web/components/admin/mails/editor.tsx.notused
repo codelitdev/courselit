@@ -34,7 +34,7 @@ interface BroadcastEditorProps {
     dispatch: AppDispatch;
 }
 
-function BroadcastEditor({ id, address, dispatch }: BroadcastEditor) {
+function BroadcastEditor({ id, address, dispatch }: BroadcastEditorProps) {
     const [mail, setMail] = useState<Mail>({
         mailId: null,
         to: "",

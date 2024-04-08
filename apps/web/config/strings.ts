@@ -95,6 +95,7 @@ export const responses = {
         "Email delivery failed for all recipients",
     courses_cannot_be_downloaded: "A course cannot be offered as a download.",
     apikey_already_exists: "Apikey with that name already exists",
+    sequence_details_missing: "Some sequence details are missing",
 
     // api responses
     digital_download_no_files:
@@ -113,4 +114,7 @@ export const internal = {
     invalid_cloud_storage_settings: "Cloud storage settings are invalid",
     domain_not_specified: "Domain is not specified",
     default_group_name: "First section",
+    default_email_broadcast_subject: "New broadcast",
+    default_email_sequence_subject: "First email",
+    default_email_content: "Replace this with actual content.",
 };

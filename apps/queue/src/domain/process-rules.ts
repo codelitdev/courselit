@@ -3,17 +3,20 @@ import OngoingSequence from "./model/ongoing-sequence";
 import SequenceModel, { AdminSequence } from "./model/sequence";
 import User from "./model/user";
 import convertFiltersToDBConditions from "./convert-filters-to-db-conditions";
-import { logger } from "../../logger";
+import { logger } from "../logger";
 
 export async function processRules() {
+    // eslint-disable-next-line no-constant-condition
     while (true) {
-        const currentTime = new Date().getTime();
-        console.log(`Starting process of rules at ${currentTime}`);
+        const currentTime = new Date();
+        // eslint-disable-next-line no-console
+        console.log(
+            `Starting process of rules at ${currentTime.toDateString()}`,
+        );
 
         const rules: Rule[] = await RuleModel.find({
             event: "date:occurred",
-            "data.dateInMillis": { $lt: new Date().getTime() },
-            active: true,
+            dateInMillis: { $lt: currentTime.getTime() },
         }).lean();
 
         for (const rule of rules) {
@@ -29,48 +32,43 @@ export async function processRules() {
 }
 
 async function processRule(rule: Rule) {
-    const {
+    const { domain, sequenceId } = rule;
+    const sequence: AdminSequence | null = await SequenceModel.findOne({
         domain,
-        action,
-        data: { sequenceId },
-    } = rule;
-    if (action === "seq:start") {
-        const sequence: AdminSequence | null = await SequenceModel.findOne({
-            domain,
-            sequenceId,
-        });
-        if (sequence) {
-            await Promise.all([
-                addBroadcastToOngoingSequence(sequence),
-                (async () => {
-                    sequence.report = {
-                        broadcast: {
-                            lockedAt: new Date(),
-                            sentAt: null,
-                        },
-                        sequence: {
-                            subscribers: [],
-                            unsubscribers: [],
-                            failed: [],
-                        },
-                    };
-                    await (sequence as any).save();
-                })(),
-            ]);
-            await RuleModel.updateOne(
-                { ruleId: rule.ruleId },
-                { active: false },
-            );
-        }
+        sequenceId,
+    });
+
+    if (!sequence) {
+        return;
     }
+
+    await Promise.all([
+        addBroadcastToOngoingSequence(sequence),
+        (async () => {
+            sequence.report = {
+                broadcast: {
+                    lockedAt: new Date(),
+                    sentAt: null,
+                },
+                sequence: {
+                    subscribers: [],
+                    unsubscribers: [],
+                    failed: [],
+                },
+            };
+            await (sequence as any).save();
+        })(),
+    ]);
+    await RuleModel.updateOne({ ruleId: rule.ruleId }, { active: false });
 }
 
 async function addBroadcastToOngoingSequence(sequence: AdminSequence) {
     const query = {
         domain: sequence.domain,
-        ...convertFiltersToDBConditions(sequence.broadcastSettings.filter),
+        ...convertFiltersToDBConditions(sequence.filter),
     };
     const allUsers = await User.find(query);
+    // eslint-disable-next-line no-console
     console.log(
         `Adding ${allUsers.length} users to ongoing sequence`,
         JSON.stringify(query),

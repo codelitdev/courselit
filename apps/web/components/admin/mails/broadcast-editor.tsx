@@ -83,16 +83,14 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                         delayInMillis,
                         published
                     },
-                    broadcastSettings {
-                        filter {
-                            aggregator,
-                            filters {
-                                name,
-                                condition,
-                                value,
-                                valueLabel
-                            },
-                        }
+                    filter {
+                        aggregator,
+                        filters {
+                            name,
+                            condition,
+                            value,
+                            valueLabel
+                        },
                     },
                     report {
                         broadcast {
@@ -120,11 +118,9 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                 if (sequence.emails[0].delayInMillis) {
                     setShowScheduleInput(true);
                 }
-                if (sequence.broadcastSettings.filter) {
-                    setFilters(sequence.broadcastSettings.filter.filters);
-                    setFiltersAggregator(
-                        sequence.broadcastSettings.filter.aggregator,
-                    );
+                if (sequence.filter) {
+                    setFilters(sequence.filter.filters);
+                    setFiltersAggregator(sequence.filter.aggregator);
                 }
                 setReport(sequence.report);
             }
@@ -143,21 +139,15 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
     // TODO: debounce this
     const saveSequence = useCallback(async () => {
         const mutation = `
-        mutation updateBroadcast(
+        mutation updateSequence(
             $sequenceId: String!,
             $title: String,
             $filter: String,
-            $templateId: String,
-            $content: String,
-            $delayInMillis: Float,
         ) {
-            mail: updateBroadcast(
+            mail: updateSequence(
                 sequenceId: $sequenceId,
                 title: $title,
                 filter: $filter,
-                templateId: $templateId,
-                content: $content,
-                delayInMillis: $delayInMillis,
             ) {
                 sequenceId,
                 title,
@@ -169,16 +159,14 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                     delayInMillis,
                     published
                 },
-                broadcastSettings {
-                    filter {
-                        aggregator,
-                        filters {
-                            name,
-                            condition,
-                            value,
-                            valueLabel
-                        },
-                    }
+                filter {
+                    aggregator,
+                    filters {
+                        name,
+                        condition,
+                        value,
+                        valueLabel
+                    },
                 }
             }
         }`;
@@ -240,8 +228,8 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
         }
 
         const mutation = `
-        mutation ($sequenceId: String!, $emailId: String!) {
-            sequence: toggleEmailPublishStatus(sequenceId: $sequenceId, emailId: $emailId) {
+        mutation ($sequenceId: String!) {
+            sequence: startSequence(sequenceId: $sequenceId) {
                 emails {
                     published
                 }

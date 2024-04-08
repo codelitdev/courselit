@@ -16,7 +16,8 @@
         "**/*.ts",
         "**/*.tsx",
         ".next/types/**/*.ts",
-        "additional.d.ts"
+        "additional.d.ts",
+        "components/admin/mails/editor.tsx.notused"
     ],
     "exclude": ["node_modules"]
 }

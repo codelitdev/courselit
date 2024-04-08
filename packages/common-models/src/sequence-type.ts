@@ -1,1 +1,3 @@
-export type SequenceType = "broadcast" | "sequence";
+import { Constants } from ".";
+
+export type SequenceType = (typeof Constants.mailTypes)[number];

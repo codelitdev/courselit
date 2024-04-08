@@ -10,10 +10,10 @@ export default function convertFiltersToDBConditions({
     | {
           $or: Record<string, unknown>[];
       }
-    | {} {
+    | Record<string, unknown> {
     const dbFilters = [];
 
-    for (let filter of filters) {
+    for (const filter of filters) {
         const { name, condition, value } = filter;
         if (name === "email") {
             const emailCondition: { email: unknown } = { email: undefined };
