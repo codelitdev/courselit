@@ -514,3 +514,4 @@ export const APP_MESSAGE_PAGE_DELETED = "Page deleted";
 export const NEW_PAGE_FORM_WARNING =
     "These settings cannot be changed later on, so proceed with caution.";
 export const DASHBOARD_PAGE_HEADER = "Welcome";
+export const DASHBOARD_SELECT_HEADER = "Duration";

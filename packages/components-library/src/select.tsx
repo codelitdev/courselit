@@ -28,6 +28,7 @@ interface SelectProps {
     disabled?: boolean;
     defaultMessage?: string;
     variant?: "with-label" | "without-label";
+    placeholderMessage?: string;
 }
 
 export default function CustomSelect({
@@ -38,6 +39,7 @@ export default function CustomSelect({
     subtitle,
     disabled,
     variant = "with-label",
+    placeholderMessage = "Select a value",
 }: SelectProps) {
     return (
         <div>
@@ -46,7 +48,7 @@ export default function CustomSelect({
             )}
             <Select value={value as string} onValueChange={onChange}>
                 <SelectTrigger className="w-full" disabled={disabled}>
-                    <SelectValue placeholder="Select a duration">
+                    <SelectValue placeholder={placeholderMessage}>
                         {" "}
                         {options.filter((x) => x.value === value)[0]?.label}
                     </SelectValue>
