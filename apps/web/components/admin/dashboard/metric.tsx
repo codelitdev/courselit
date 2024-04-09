@@ -116,7 +116,7 @@ const Metric = ({
                                 { label: "30d", value: "30d" },
                                 { label: "90d", value: "90d" },
                                 { label: "1y", value: "1y" },
-                                { label: "lifetime", value: "lifetime" },
+                                { label: "Lifetime", value: "lifetime" },
                             ]}
                             variant="without-label"
                             title={DASHBOARD_SELECT_HEADER}
