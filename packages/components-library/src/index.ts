@@ -7,7 +7,6 @@ import Section from "./section";
 // import WidgetHelpers from "./widget-helpers";
 import CourseItem from "./course-item";
 import Image from "./image";
-// import Select from "./select.tsx.notused";
 import Link from "./link";
 import MediaSelector from "./media-selector";
 import TextEditor, { emptyDoc as TextEditorEmptyDoc } from "./text-editor";
@@ -51,7 +50,6 @@ export * from "./components/ui/slider";
 export * from "./components/ui/card";
 export * from "./components/ui/badge";
 export * from "./components/ui/skeleton";
-// export * from "./components/ui/select"
 
 export {
     PriceTag,
@@ -60,7 +58,6 @@ export {
     CourseItem,
     Image,
     Select,
-    // Select1,
     Link,
     MediaSelector,
     TextEditor,

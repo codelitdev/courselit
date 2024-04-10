@@ -87,11 +87,6 @@ function ProductFilterEditor({
                 label: product.title,
                 value: product.courseId,
             }));
-        // options.unshift({
-        //     label: USER_FILTER_PRODUCT_DROPDOWN_LABEL,
-        //     value: "",
-        //     disabled: true,
-        // });
         return options;
     }, [products]);
 
