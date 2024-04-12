@@ -14,12 +14,12 @@ export async function processRules() {
             `Starting process of rules at ${currentTime.toDateString()}`,
         );
 
-        const rules: Rule[] = await RuleModel.find({
+        const dueRules: Rule[] = await RuleModel.find({
             event: "date:occurred",
             dateInMillis: { $lt: currentTime.getTime() },
         }).lean();
 
-        for (const rule of rules) {
+        for (const rule of dueRules) {
             try {
                 await processRule(rule);
             } catch (err: any) {
@@ -42,24 +42,21 @@ async function processRule(rule: Rule) {
         return;
     }
 
-    await Promise.all([
-        addBroadcastToOngoingSequence(sequence),
-        (async () => {
-            sequence.report = {
-                broadcast: {
-                    lockedAt: new Date(),
-                    sentAt: null,
-                },
-                sequence: {
-                    subscribers: [],
-                    unsubscribers: [],
-                    failed: [],
-                },
-            };
-            await (sequence as any).save();
-        })(),
-    ]);
-    await RuleModel.updateOne({ ruleId: rule.ruleId }, { active: false });
+    await addBroadcastToOngoingSequence(sequence),
+        (sequence.report = {
+            broadcast: {
+                lockedAt: new Date(),
+                sentAt: null,
+            },
+            sequence: {
+                subscribers: [],
+                unsubscribers: [],
+                failed: [],
+            },
+        });
+    await (sequence as any).save();
+
+    await RuleModel.deleteOne({ ruleId: rule.ruleId });
 }
 
 async function addBroadcastToOngoingSequence(sequence: AdminSequence) {
@@ -77,8 +74,9 @@ async function addBroadcastToOngoingSequence(sequence: AdminSequence) {
         domain: sequence.domain,
         sequenceId: sequence.sequenceId,
         userId: user.userId,
-        nextEmailId: sequence.emails[0].emailId,
+        // nextEmailId: sequence.emails[0].emailId,
         nextEmailScheduledTime: new Date().getTime(),
     }));
     await OngoingSequence.insertMany(ongoingSequences);
+    sequence.entrants = allUsers.map((user) => user.userId);
 }

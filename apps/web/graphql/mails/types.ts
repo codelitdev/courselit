@@ -148,6 +148,7 @@ const sequence = new GraphQLObjectType({
         status: { type: GraphQLString },
         trigger: { type: sequenceTrigger },
         data: { type: GraphQLJSONObject },
+        emailsOrder: { type: new GraphQLList(GraphQLString) },
     },
 });
 
@@ -177,5 +178,6 @@ const types = {
     sequenceType,
     sequenceList,
     sequenceTrigger,
+    sequenceEmailActionType,
 };
 export default types;

@@ -1,4 +1,4 @@
-import { Sequence } from "@courselit/common-models";
+import { Email, Sequence } from "@courselit/common-models";
 import { AdminSequence } from "./model/sequence";
 import OngoingSequenceModel, {
     OngoingSequence,
@@ -50,12 +50,24 @@ async function processOngoingSequence(ongoingSequence: OngoingSequence) {
         return await cleanUpResources(ongoingSequence);
     }
 
+    const emailsOrderArray = Array.from(sequence.emailsOrder);
+    const nextEmailId = emailsOrderArray.find(
+        (id) => !ongoingSequence.sentEmailIds.includes(id),
+    );
+
+    const email = sequence.emails.find(
+        (email) => email.emailId === nextEmailId,
+    );
+
     await attemptMailSending({
         creator,
         user,
         sequence,
         ongoingSequence,
+        email,
     });
+
+    ongoingSequence.sentEmailIds.push(nextEmailId);
     await updateOngoingSequence({ ongoingSequence, sequence });
 }
 
@@ -91,20 +103,29 @@ async function attemptMailSending({
     user,
     sequence,
     ongoingSequence,
+    email,
 }: {
     creator: UserWithDomain;
     user: UserWithDomain;
     sequence: AdminSequence;
     ongoingSequence: OngoingSequence;
+    email: Email;
 }) {
+    const from = sequence.from
+        ? sequence.from.name
+        : `${creator.email} <${creator.email}>`;
+    const to = user.email;
+    const subject = email.subject;
+    const content = email.content;
     try {
         await sendMail({
-            from: creator!.email,
-            to: user.email,
-            subject: sequence.emails[0].subject,
-            html: sequence.emails[0].content,
+            from,
+            to,
+            subject,
+            html: content,
         });
     } catch (err: any) {
+        console.error(err);
         ongoingSequence.retryCount++;
         if (ongoingSequence.retryCount >= sequenceBounceLimit) {
             sequence.report.sequence.failed = [
@@ -127,38 +148,63 @@ async function updateOngoingSequence({
     ongoingSequence: OngoingSequence;
     sequence: AdminSequence;
 }) {
-    const { nextEmailId, nextEmailScheduledTime } = getNextEmailWithTime(
+    const nextEmailScheduledTime = getNextEmailScheduledTime(
         sequence,
         ongoingSequence,
     );
-    if (!nextEmailId) {
+    if (!nextEmailScheduledTime) {
         return await cleanUpResources(ongoingSequence, true);
+    } else {
+        ongoingSequence.nextEmailScheduledTime = nextEmailScheduledTime;
+        await ongoingSequence.save();
     }
-    ongoingSequence.nextEmailId = nextEmailId;
-    ongoingSequence.nextEmailScheduledTime = nextEmailScheduledTime;
-    await ongoingSequence.save();
 }
 
-function getNextEmailWithTime(
+// function getNextEmailWithTime(
+//     sequence: Sequence,
+//     ongoingSequence: OngoingSequence,
+// ) {
+//     const { emails } = sequence;
+//     const currentIndex = sequence.emailsOrder.findIndex(
+//         (emailId) => emailId === ongoingSequence.nextEmailId,
+//     );
+//     if (currentIndex === -1) {
+//         throw new Error(
+//             `Email with id ${ongoingSequence.nextEmailId} not found in sequence ${sequence.sequenceId}`,
+//         );
+//     }
+//     const nextIndex = currentIndex + 1;
+//     if (nextIndex >= emails.length) {
+//         return { nextEmailId: undefined, nextEmailScheduledTime: undefined };
+//     }
+//     const nextEmail = emails[nextIndex];
+//     const nextEmailScheduledTime = new Date(
+//         ongoingSequence.nextEmailScheduledTime + nextEmail.delayInMillis,
+//     ).getTime();
+//     return { nextEmailId: nextEmail.emailId, nextEmailScheduledTime };
+// }
+
+function getNextEmailScheduledTime(
     sequence: Sequence,
     ongoingSequence: OngoingSequence,
-) {
-    const { emails } = sequence;
-    const currentIndex = emails.findIndex(
-        (email) => email.emailId === ongoingSequence.nextEmailId,
+): number | undefined {
+    const nextEmailId = sequence.emailsOrder.find(
+        (id) =>
+            !ongoingSequence.sentEmailIds.includes(id) &&
+            sequence.emails.find(
+                (email) => email.emailId === id && email.published,
+            ),
     );
-    if (currentIndex === -1) {
-        throw new Error(
-            `Email with id ${ongoingSequence.nextEmailId} not found in sequence ${sequence.sequenceId}`,
-        );
+    if (!nextEmailId) {
+        return;
     }
-    const nextIndex = currentIndex + 1;
-    if (nextIndex >= emails.length) {
-        return { nextEmailId: undefined, nextEmailScheduledTime: undefined };
-    }
-    const nextEmail = emails[nextIndex];
+
+    const email = sequence.emails.find(
+        (email) => email.emailId === nextEmailId,
+    );
     const nextEmailScheduledTime = new Date(
-        ongoingSequence.nextEmailScheduledTime + nextEmail.delayInMillis,
+        ongoingSequence.nextEmailScheduledTime + email.delayInMillis,
     ).getTime();
-    return { nextEmailId: nextEmail.emailId, nextEmailScheduledTime };
+
+    return nextEmailScheduledTime;
 }

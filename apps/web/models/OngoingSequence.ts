@@ -7,10 +7,13 @@ const OngoingSequenceSchema: Schema = new Schema<
     domain: { type: mongoose.Schema.Types.ObjectId, required: true },
     sequenceId: { type: String, required: true, index: true },
     userId: { type: String, required: true },
-    nextEmailId: { type: String },
+    // nextEmailId: { type: String },
     nextEmailScheduledTime: { type: Number, required: true },
     retryCount: { type: Number, required: true, default: 0 },
+    sentEmailIds: { type: [String] },
 });
+
+OngoingSequenceSchema.index({ sequenceId: 1, userId: 1 }, { unique: true });
 
 export default mongoose.models.OngoingSequence ||
     mongoose.model("OngoingSequence", OngoingSequenceSchema);

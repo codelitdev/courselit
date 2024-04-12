@@ -13,7 +13,6 @@ const EmailSchema = new mongoose.Schema<Email>({
     action: new mongoose.Schema({
         type: {
             type: String,
-            required: true,
             enum: Constants.emailActionTypes,
         },
         data: { type: mongoose.Schema.Types.Mixed },

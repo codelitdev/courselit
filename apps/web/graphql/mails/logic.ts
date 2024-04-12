@@ -11,7 +11,7 @@ import {
 import { responses, internal } from "../../config/strings";
 import mongoose from "mongoose";
 import SearchData from "./models/search-data";
-import { checkPermission } from "@courselit/utils";
+import { checkPermission, generateUniqueId } from "@courselit/utils";
 import { Constants, Email, Sequence } from "@courselit/common-models";
 import { send } from "../../services/mail";
 import CourseModel, { Course } from "@models/Course";
@@ -108,14 +108,16 @@ export async function createSequence(
     }
 
     try {
+        const emailId = generateUniqueId();
         const sequenceObj: Partial<AdminSequence> = {
             domain: ctx.subdomain._id,
             type,
             status: Constants.sequenceStatus[0],
-            title: "",
+            title: " ",
             creatorId: ctx.user.userId,
             emails: [
                 {
+                    emailId,
                     content: internal.default_email_content,
                     subject:
                         type === "broadcast"
@@ -129,6 +131,7 @@ export async function createSequence(
                 type === "broadcast"
                     ? Constants.eventTypes[4]
                     : Constants.eventTypes[2],
+            emailsOrder: [emailId],
         };
         const sequence = await SequenceModel.create(sequenceObj);
         return sequence;
@@ -274,6 +277,7 @@ export async function updateSequence({
     trigger,
     filter,
     data,
+    emailsOrder,
 }: {
     ctx: GQLContext;
     sequenceId: string;
@@ -283,6 +287,7 @@ export async function updateSequence({
     fromName?: string;
     trigger?: (typeof Constants.eventTypes)[number];
     data?: string;
+    emailsOrder?: string[];
 }): Promise<AdminSequence | null> {
     checkIfAuthenticated(ctx);
 
@@ -297,6 +302,16 @@ export async function updateSequence({
 
     if (broadcastPublished(sequence)) {
         return sequence;
+    }
+
+    if (emailsOrder) {
+        if (
+            sequence.emails.length !== emailsOrder.length ||
+            !areAllEmailIdsValid(emailsOrder, sequence.emails)
+        ) {
+            throw new Error(responses.invalid_emails_order);
+        }
+        sequence.emailsOrder = emailsOrder;
     }
 
     if (filter) {
@@ -495,7 +510,7 @@ export async function startSequence({
     }
 
     if (sequence.type === "sequence") {
-        if (!sequence.title || !sequence.from.name || !sequence.trigger) {
+        if (!sequence.title || !sequence.trigger || !sequence.from?.name) {
             throw new Error(`${responses.sequence_details_missing}: basics`);
         }
         if (
@@ -515,19 +530,15 @@ export async function startSequence({
         ) {
             throw new Error(`${responses.sequence_details_missing}: trigger`);
         }
+        if (!sequence.emails.some((email) => email.published)) {
+            throw new Error(responses.no_published_emails);
+        }
     }
 
     if (sequence.type === "broadcast") {
         if (!sequence.filter) {
             throw new Error(`${responses.sequence_details_missing}: filter`);
         }
-        // if (sequence.emails[0].delayInMillis === 0) {
-        //     sequence.report = {
-        //         broadcast: {
-        //             lockedAt: new Date(),
-        //         },
-        //     };
-        // }
     }
 
     await addRuleToSendLater({ sequence, ctx });
@@ -843,4 +854,132 @@ async function createTemplateAndSendMail({
         subject: `Thank you for signing up for ${course.title}`,
         body: emailBody,
     });
+}
+
+export async function addMailToSequence(
+    ctx: GQLContext,
+    sequenceId: string,
+): Promise<AdminSequence | null> {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const sequence: AdminSequence = await SequenceModel.findOne({
+        sequenceId,
+        domain: ctx.subdomain._id,
+    });
+
+    if (sequence.type === "broadcast") {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const lastEmail = sequence.emails.find(
+        (email) =>
+            email.emailId ===
+            sequence.emailsOrder[sequence.emailsOrder.length - 1],
+    );
+
+    const emailId = generateUniqueId();
+    const oneDayInMillis = 86400000;
+    const email = {
+        emailId,
+        content: internal.default_email_content,
+        subject: internal.default_email_sequence_subject,
+        delayInMillis: oneDayInMillis,
+    };
+
+    sequence.emails.push(email);
+    sequence.emailsOrder.push(emailId);
+
+    await (sequence as any).save();
+
+    return sequence;
+}
+
+export async function updateMailInSequence({
+    ctx,
+    sequenceId,
+    emailId,
+    subject,
+    content,
+    previewText,
+    delayInMillis,
+    actionType,
+    actionData,
+    templateId,
+    published,
+}: {
+    ctx: GQLContext;
+    sequenceId: string;
+    emailId: string;
+    subject?: string;
+    content?: string;
+    previewText?: string;
+    delayInMillis?: number;
+    actionType?: (typeof Constants.emailActionTypes)[number];
+    actionData?: Record<string, unknown>;
+    templateId?: string;
+    published?: boolean;
+}): Promise<AdminSequence | null> {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const sequence: AdminSequence = await SequenceModel.findOne({
+        sequenceId,
+        domain: ctx.subdomain._id,
+    });
+
+    if (broadcastPublished(sequence)) {
+        return sequence;
+    }
+
+    const email = sequence.emails.find(
+        (email: Email) => email.emailId === emailId,
+    );
+
+    if (subject) {
+        email.subject = subject;
+    }
+    if (content) {
+        email.content = content;
+    }
+    if (previewText) {
+        email.previewText = previewText;
+    }
+    if (delayInMillis) {
+        email.delayInMillis = delayInMillis;
+    }
+    if (templateId) {
+        email.templateId = templateId;
+    }
+    if (published) {
+        email.published = published;
+    }
+    if (actionType) {
+        if (!email.action) {
+            email.action = {};
+        }
+        email.action.type = actionType;
+    }
+    if (actionData) {
+        if (!email.action) {
+            email.action = {};
+        }
+        email.action.data = actionData;
+    }
+
+    await (sequence as any).save();
+
+    return sequence;
+}
+
+function areAllEmailIdsValid(emailsOrder: string[], emails: Partial<Email>[]) {
+    return emailsOrder.every((emailId) =>
+        emails.some((email) => email.emailId === emailId),
+    );
 }

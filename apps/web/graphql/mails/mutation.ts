@@ -1,6 +1,7 @@
 import {
     GraphQLBoolean,
     GraphQLFloat,
+    GraphQLList,
     GraphQLNonNull,
     GraphQLString,
 } from "graphql";
@@ -17,6 +18,8 @@ import {
     toggleEmailPublishStatus,
     updateSequence,
     startSequence,
+    addMailToSequence,
+    updateMailInSequence,
 } from "./logic";
 import types from "./types";
 import { Constants } from "@courselit/common-models";
@@ -54,6 +57,17 @@ const mutations = {
             { type }: { type: (typeof Constants.mailTypes)[number] },
             context: GQLContext,
         ) => createSequence(context, type),
+    },
+    addMailToSequence: {
+        type: types.sequence,
+        args: {
+            sequenceId: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: async (
+            _: any,
+            { sequenceId }: { sequenceId: string },
+            context: GQLContext,
+        ) => addMailToSequence(context, sequenceId),
     },
     // createBroadcast: {
     //     type: types.sequence,
@@ -110,6 +124,7 @@ const mutations = {
             trigger: { type: types.sequenceTrigger },
             filter: { type: GraphQLString },
             data: { type: GraphQLString },
+            emailsOrder: { type: new GraphQLList(GraphQLString) },
         },
         resolve: async (
             _: any,
@@ -121,6 +136,7 @@ const mutations = {
                 trigger,
                 filter,
                 data,
+                emailsOrder,
             }: {
                 sequenceId: string;
                 title?: string;
@@ -129,6 +145,7 @@ const mutations = {
                 trigger?: (typeof Constants.eventTypes)[number];
                 filter?: string;
                 data?: string;
+                emailsOrder?: string[];
             },
             context: GQLContext,
         ) =>
@@ -141,6 +158,58 @@ const mutations = {
                 trigger,
                 filter,
                 data,
+                emailsOrder,
+            }),
+    },
+    updateMailInSequence: {
+        type: types.sequence,
+        args: {
+            sequenceId: { type: new GraphQLNonNull(GraphQLString) },
+            emailId: { type: new GraphQLNonNull(GraphQLString) },
+            subject: { type: GraphQLString },
+            content: { type: GraphQLString },
+            previewText: { type: GraphQLString },
+            delayInMillis: { type: GraphQLFloat },
+            templateId: { type: GraphQLString },
+            actionType: { type: types.sequenceEmailActionType },
+            actionData: { type: GraphQLString },
+        },
+        resolve: async (
+            _: any,
+            {
+                sequenceId,
+                emailId,
+                subject,
+                content,
+                previewText,
+                delayInMillis,
+                templateId,
+                actionType,
+                actionData,
+            }: {
+                sequenceId: string;
+                emailId: string;
+                subject?: string;
+                content?: string;
+                previewText?: string;
+                delayInMillis?: number;
+                templateId?: string;
+                actionType?: (typeof Constants.emailActionTypes)[number];
+                actionData: Record<string, unknown>;
+            },
+            context: GQLContext,
+        ) =>
+            updateMailInSequence({
+                ctx: context,
+                sequenceId,
+                emailId,
+                subject,
+                content,
+                previewText,
+                delayInMillis,
+                templateId,
+                actionType,
+                actionData,
             }),
     },
     startSequence: {

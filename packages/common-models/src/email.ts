@@ -8,8 +8,8 @@ export interface Email {
     previewText?: string;
     delayInMillis: number;
     published: boolean;
-    action?: {
-        type: (typeof emailActionTypes)[number];
-        data: Record<string, unknown>;
+    action: {
+        type?: (typeof emailActionTypes)[number];
+        data?: Record<string, unknown>;
     };
 }

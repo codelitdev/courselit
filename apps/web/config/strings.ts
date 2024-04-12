@@ -96,6 +96,8 @@ export const responses = {
     courses_cannot_be_downloaded: "A course cannot be offered as a download.",
     apikey_already_exists: "Apikey with that name already exists",
     sequence_details_missing: "Some sequence details are missing",
+    invalid_emails_order: "Invalid emails order",
+    no_published_emails: "No published emails",
 
     // api responses
     digital_download_no_files:

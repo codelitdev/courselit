@@ -22,4 +22,6 @@ export interface Sequence {
     trigger: (typeof Constants.eventTypes)[number];
     status: SequenceStatus;
     data: Record<string, unknown>;
+    emailsOrder: string[];
+    entrants: string[];
 }

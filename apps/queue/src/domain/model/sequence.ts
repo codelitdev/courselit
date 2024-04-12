@@ -33,6 +33,8 @@ const SequenceSchema = new mongoose.Schema<AdminSequence>({
         enum: Constants.sequenceStatus,
     },
     data: mongoose.Schema.Types.Mixed,
+    emailsOrder: [String],
+    entrants: [String],
 });
 
 export default mongoose.models.Sequence ||
