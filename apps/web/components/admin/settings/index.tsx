@@ -45,7 +45,7 @@ import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
 import currencies from "../../../data/iso4217.json";
 import {
-    Select as SingleSelect,
+    Select,
     MediaSelector,
     Tabs,
     Form,
@@ -505,11 +505,11 @@ const Settings = (props: SettingsProps) => {
                     onSubmit={handlePaymentSettingsSubmit}
                     className="flex flex-col gap-4 pt-4"
                 >
-                    <SingleSelect
+                    <Select
                         title={SITE_SETTINGS_CURRENCY}
                         options={currencies.map((currency) => ({
                             label: currency.Currency,
-                            value: currency.AlphabeticCode || "",
+                            value: currency.AlphabeticCode,
                         }))}
                         value={newSettings.currencyISOCode?.toUpperCase() || ""}
                         onChange={(value) =>
@@ -520,14 +520,10 @@ const Settings = (props: SettingsProps) => {
                             )
                         }
                     />
-                    <SingleSelect
+                    <Select
                         title={SITE_ADMIN_SETTINGS_PAYMENT_METHOD}
                         value={newSettings.paymentMethod || PAYMENT_METHOD_NONE}
                         options={[
-                            {
-                                label: SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL,
-                                value: PAYMENT_METHOD_NONE,
-                            },
                             {
                                 label: capitalize(
                                     PAYMENT_METHOD_STRIPE.toLowerCase(),
@@ -541,6 +537,9 @@ const Settings = (props: SettingsProps) => {
                                     paymentMethod: value,
                                 }),
                             )
+                        }
+                        placeholderMessage={
+                            SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL
                         }
                     />
 
