@@ -98,8 +98,8 @@ const sequenceBroadcastReport = new GraphQLObjectType({
     },
 });
 
-const sequenceTrigger = new GraphQLEnumType({
-    name: "SequenceTrigger",
+const sequenceTriggerType = new GraphQLEnumType({
+    name: "SequenceTriggerType",
     values: {
         TAG_ADDED: { value: Constants.eventTypes[0] },
         TAG_REMOVED: { value: Constants.eventTypes[1] },
@@ -130,6 +130,14 @@ const sequenceEmailFrom = new GraphQLObjectType({
     fields: {
         name: { type: new GraphQLNonNull(GraphQLString) },
         email: { type: GraphQLString },
+    },
+});
+
+const sequenceTrigger = new GraphQLObjectType({
+    name: "SequenceTrigger",
+    fields: {
+        type: { type: sequenceTriggerType },
+        data: { type: GraphQLString },
     },
 });
 
@@ -178,6 +186,7 @@ const types = {
     sequenceType,
     sequenceList,
     sequenceTrigger,
+    sequenceTriggerType,
     sequenceEmailActionType,
 };
 export default types;

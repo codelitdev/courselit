@@ -24,6 +24,6 @@ export async function sendMail({
         await transporter.sendMail({ from, to, subject, html });
     } else {
         // eslint-disable-next-line no-console
-        console.log("Mail sent", from, to, subject, html);
+        console.log("Mail sent", from, to, subject, html, new Date());
     }
 }

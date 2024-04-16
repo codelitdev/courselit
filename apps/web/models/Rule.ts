@@ -20,6 +20,7 @@ const RuleSchema = new mongoose.Schema<
     },
     sequenceId: { type: String, required: true },
     dateInMillis: { type: Number },
+    eventData: { type: String },
 });
 
 export default mongoose.models.Rule || mongoose.model("Rule", RuleSchema);

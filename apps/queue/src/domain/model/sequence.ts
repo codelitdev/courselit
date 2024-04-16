@@ -14,6 +14,11 @@ const EmailFromSchema = new mongoose.Schema({
     email: { type: String },
 });
 
+const TriggerSchema = new mongoose.Schema({
+    type: { type: String, required: true, enum: Constants.eventTypes },
+    data: { type: String },
+});
+
 const SequenceSchema = new mongoose.Schema<AdminSequence>({
     domain: { type: mongoose.Schema.Types.ObjectId, required: true },
     sequenceId: { type: String, required: true, unique: true },
@@ -25,14 +30,13 @@ const SequenceSchema = new mongoose.Schema<AdminSequence>({
     from: EmailFromSchema,
     filter: UserFilterWithAggregatorSchema,
     excludeFilter: UserFilterWithAggregatorSchema,
-    trigger: { type: String, required: true, enum: Constants.eventTypes },
+    trigger: TriggerSchema,
     status: {
         type: String,
         required: true,
         default: Constants.sequenceStatus[0],
         enum: Constants.sequenceStatus,
     },
-    data: mongoose.Schema.Types.Mixed,
     emailsOrder: [String],
     entrants: [String],
 });

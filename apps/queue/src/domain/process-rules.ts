@@ -16,7 +16,7 @@ export async function processRules() {
 
         const dueRules: Rule[] = await RuleModel.find({
             event: "date:occurred",
-            dateInMillis: { $lt: currentTime.getTime() },
+            eventDateInMillis: { $lt: currentTime.getTime() },
         }).lean();
 
         for (const rule of dueRules) {

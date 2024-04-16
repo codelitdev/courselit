@@ -2,30 +2,29 @@ import constants from "@config/constants";
 import GQLContext from "@models/GQLContext";
 import UserModel, { User } from "@models/User";
 import { error } from "../../services/logger";
-import { createUser, getUsers } from "../users/logic";
+import { createUser } from "../users/logic";
 import MailModel, { Mail } from "@models/Mail";
 import {
     checkIfAuthenticated,
     makeModelTextSearchable,
 } from "../../lib/graphql";
 import { responses, internal } from "../../config/strings";
-import mongoose from "mongoose";
 import SearchData from "./models/search-data";
 import { checkPermission, generateUniqueId } from "@courselit/utils";
 import { Constants, Email, Sequence } from "@courselit/common-models";
-import { send } from "../../services/mail";
 import CourseModel, { Course } from "@models/Course";
-import DownloadLinkModel from "@models/DownloadLink";
-import pug from "pug";
-import digitalDownloadTemplate from "../../templates/download-link";
 import finalizePurchase from "../../lib/finalize-purchase";
 import SequenceModel, { AdminSequence } from "@models/Sequence";
-import OngoingSequence from "@models/OngoingSequence";
-import Rule from "@models/Rule";
 import { recordActivity } from "../../lib/record-activity";
+import { isDateInFuture } from "../../lib/utils";
+import {
+    addRule,
+    areAllEmailIdsValid,
+    buildQueryFromSearchData,
+    removeRule,
+} from "./helpers";
 
-const { permissions, mailTypes } = constants;
-type SequenceType = (typeof mailTypes)[number];
+const { permissions } = constants;
 
 export async function createSubscription(
     email: string,
@@ -127,10 +126,12 @@ export async function createSequence(
                     published: false,
                 },
             ],
-            trigger:
-                type === "broadcast"
-                    ? Constants.eventTypes[4]
-                    : Constants.eventTypes[2],
+            trigger: {
+                type:
+                    type === "broadcast"
+                        ? Constants.eventTypes[4]
+                        : Constants.eventTypes[2],
+            },
             emailsOrder: [emailId],
         };
         const sequence = await SequenceModel.create(sequenceObj);
@@ -274,7 +275,8 @@ export async function updateSequence({
     title,
     fromName,
     fromEmail,
-    trigger,
+    triggerType,
+    triggerData,
     filter,
     data,
     emailsOrder,
@@ -285,7 +287,8 @@ export async function updateSequence({
     title?: string;
     fromEmail?: string;
     fromName?: string;
-    trigger?: (typeof Constants.eventTypes)[number];
+    triggerType?: (typeof Constants.eventTypes)[number];
+    triggerData?: string;
     data?: string;
     emailsOrder?: string[];
 }): Promise<AdminSequence | null> {
@@ -339,11 +342,21 @@ export async function updateSequence({
         }
         sequence.from.name = fromName;
     }
-    if (trigger) {
-        sequence.trigger = trigger;
+    if (triggerType) {
+        if (!sequence.trigger) {
+            sequence.trigger = {
+                type: triggerType,
+            };
+        }
+        sequence.trigger.type = triggerType;
     }
-    if (data) {
-        sequence.data = JSON.parse(data);
+    if (triggerData) {
+        if (!sequence.trigger) {
+            sequence.trigger = {
+                type: Constants.eventTypes[2],
+            };
+        }
+        sequence.trigger.data = triggerData;
     }
 
     await (sequence as any).save();
@@ -396,7 +409,7 @@ export async function getSequenceCount({
     type,
 }: {
     ctx: GQLContext;
-    type: SequenceType;
+    type: (typeof Constants.mailTypes)[number];
 }): Promise<number> {
     checkIfAuthenticated(ctx);
 
@@ -413,72 +426,72 @@ export async function getSequenceCount({
 const broadcastPublished = (sequence: AdminSequence): boolean =>
     sequence.type === "broadcast" && sequence.emails[0].published;
 
-export async function toggleEmailPublishStatus({
-    ctx,
-    sequenceId,
-    emailId,
-}: {
-    ctx: GQLContext;
-    sequenceId: string;
-    emailId: string;
-}): Promise<boolean> {
-    checkIfAuthenticated(ctx);
+// export async function toggleEmailPublishStatus({
+//     ctx,
+//     sequenceId,
+//     emailId,
+// }: {
+//     ctx: GQLContext;
+//     sequenceId: string;
+//     emailId: string;
+// }): Promise<boolean> {
+//     checkIfAuthenticated(ctx);
 
-    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
-        throw new Error(responses.action_not_allowed);
-    }
+//     if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+//         throw new Error(responses.action_not_allowed);
+//     }
 
-    const sequence = await SequenceModel.findOne({
-        domain: ctx.subdomain._id,
-        sequenceId,
-    });
-    if (!sequence) {
-        return false;
-    }
+//     const sequence = await SequenceModel.findOne({
+//         domain: ctx.subdomain._id,
+//         sequenceId,
+//     });
+//     if (!sequence) {
+//         return false;
+//     }
 
-    const email = sequence.emails.find(
-        (email: Email) => email.emailId === emailId,
-    );
-    if (!email) {
-        return false;
-    }
+//     const email = sequence.emails.find(
+//         (email: Email) => email.emailId === emailId,
+//     );
+//     if (!email) {
+//         return false;
+//     }
 
-    if (sequence.type === "broadcast" && sequence.report?.broadcast?.lockedAt) {
-        return false;
-    }
+//     if (sequence.type === "broadcast" && sequence.report?.broadcast?.lockedAt) {
+//         return false;
+//     }
 
-    if (email.delayInMillis && email.delayInMillis < new Date().getTime()) {
-        throw new Error(responses.past_date);
-    }
+//     if (email.delayInMillis && email.delayInMillis < new Date().getTime()) {
+//         throw new Error(responses.past_date);
+//     }
 
-    email.published = !email.published;
+//     email.published = !email.published;
 
-    await sequence.save();
+//     await sequence.save();
 
-    if (sequence.type === "broadcast") {
-        if (email.published) {
-            if (email.delayInMillis) {
-                await addRuleToSendLater({ sequence, ctx });
-            } else {
-                await Promise.all([
-                    addBroadcastToOngoingSequence({ sequence, ctx }),
-                    (async () => {
-                        sequence.report = {
-                            broadcast: {
-                                lockedAt: new Date(),
-                            },
-                        };
-                        await (sequence as any).save();
-                    })(),
-                ]);
-            }
-        } else {
-            await removeRuleToSendLater({ sequence, ctx });
-        }
-    }
+//     if (sequence.type === "broadcast") {
+//         if (email.published) {
+//             if (email.delayInMillis) {
+//                 await addRuleToSendLater({ sequence, ctx });
+//             } else {
+//                 await Promise.all([
+//                     addBroadcastToOngoingSequence({ sequence, ctx }),
+//                     (async () => {
+//                         sequence.report = {
+//                             broadcast: {
+//                                 lockedAt: new Date(),
+//                             },
+//                         };
+//                         await (sequence as any).save();
+//                     })(),
+//                 ]);
+//             }
+//         } else {
+//             await removeRuleToSendLater({ sequence, ctx });
+//         }
+//     }
 
-    return sequence;
-}
+//     return sequence;
+// }
 
 export async function startSequence({
     ctx,
@@ -502,11 +515,11 @@ export async function startSequence({
     }
 
     if (
-        [Constants.sequenceStatus[1], Constants.sequenceStatus[3]].includes(
-            sequence.status as "active" | "completed",
+        ![Constants.sequenceStatus[0], Constants.sequenceStatus[2]].includes(
+            sequence.status as "draft" | "paused",
         )
     ) {
-        throw new Error(responses.mail_already_sent);
+        throw new Error(responses.sequence_already_started);
     }
 
     if (sequence.type === "sequence") {
@@ -520,13 +533,13 @@ export async function startSequence({
                 Constants.eventTypes[2],
                 Constants.eventTypes[3],
             ].includes(
-                sequence.trigger as
+                sequence.trigger.type as
                     | (typeof Constants.eventTypes)[0]
                     | (typeof Constants.eventTypes)[1]
                     | (typeof Constants.eventTypes)[2]
                     | (typeof Constants.eventTypes)[3],
             ) &&
-            !sequence.data?.name
+            !sequence.trigger?.data
         ) {
             throw new Error(`${responses.sequence_details_missing}: trigger`);
         }
@@ -541,7 +554,7 @@ export async function startSequence({
         }
     }
 
-    await addRuleToSendLater({ sequence, ctx });
+    await addRule({ sequence, ctx });
 
     sequence.status = Constants.sequenceStatus[1];
     await (sequence as any).save();
@@ -565,65 +578,49 @@ export async function pauseSequence({
         throw new Error(responses.item_not_found);
     }
 
-    await removeRuleToSendLater({ sequence, ctx });
+    if (sequence.status !== Constants.sequenceStatus[1]) {
+        throw new Error(responses.sequence_not_active);
+    }
+
+    if (
+        sequence.type === "broadcast" &&
+        (sequence.report?.broadcast?.lockedAt ||
+            !isDateInFuture(sequence.emails[0].delayInMillis))
+    ) {
+        throw new Error(responses.mail_already_sent);
+    }
+
+    await removeRule({ sequence, ctx });
+    sequence.status = Constants.sequenceStatus[2];
+    await (sequence as any).save();
 
     return sequence;
 }
 
-async function addBroadcastToOngoingSequence({
-    sequence,
-    ctx,
-}: {
-    sequence: Sequence;
-    ctx: GQLContext;
-}) {
-    const allUsers = await getUsers({
-        searchData: {
-            filters: JSON.stringify(sequence.filter),
-        },
-        ctx,
-        noPagination: true,
-        hasMailPermissions: true,
-    });
-    const ongoingSequences = allUsers.map((user) => ({
-        domain: ctx.subdomain._id,
-        sequenceId: sequence.sequenceId,
-        userId: user.userId,
-        nextEmailId: sequence.emails[0].emailId,
-        nextEmailScheduledTime: new Date().getTime(),
-    }));
-    await OngoingSequence.insertMany(ongoingSequences);
-}
-
-async function addRuleToSendLater({
-    sequence,
-    ctx,
-}: {
-    sequence: Sequence;
-    ctx: GQLContext;
-}) {
-    await Rule.create({
-        domain: ctx.subdomain._id,
-        event: sequence.trigger,
-        sequenceId: sequence.sequenceId,
-        dateInMillis: sequence.emails[0].delayInMillis,
-    });
-}
-
-async function removeRuleToSendLater({
-    sequence,
-    ctx,
-}: {
-    sequence: Sequence;
-    ctx: GQLContext;
-}) {
-    await Rule.deleteMany({
-        domain: ctx.subdomain._id,
-        event: Constants.eventTypes[4],
-        action: Constants.actionTypes[2],
-        "data.sequenceId": sequence.sequenceId,
-    });
-}
+// async function addBroadcastToOngoingSequence({
+//     sequence,
+//     ctx,
+// }: {
+//     sequence: Sequence;
+//     ctx: GQLContext;
+// }) {
+//     const allUsers = await getUsers({
+//         searchData: {
+//             filters: JSON.stringify(sequence.filter),
+//         },
+//         ctx,
+//         noPagination: true,
+//         hasMailPermissions: true,
+//     });
+//     const ongoingSequences = allUsers.map((user) => ({
+//         domain: ctx.subdomain._id,
+//         sequenceId: sequence.sequenceId,
+//         userId: user.userId,
+//         nextEmailId: sequence.emails[0].emailId,
+//         nextEmailScheduledTime: new Date().getTime(),
+//     }));
+//     await OngoingSequence.insertMany(ongoingSequences);
+// }
 
 export async function getMails(
     searchData: SearchData = {},
@@ -666,20 +663,6 @@ export async function getMailsCount(
     const query = buildQueryFromSearchData(ctx.subdomain._id, searchData);
     return await MailModel.countDocuments(query);
 }
-
-const buildQueryFromSearchData = (
-    domain: mongoose.Types.ObjectId,
-    searchData: SearchData = {},
-    creatorId: string,
-) => {
-    const query: Record<string, unknown> = { domain };
-    if (searchData.creatorId) {
-        query.creatorId = searchData.creatorId;
-    }
-    if (searchData.searchText) query.$text = { $search: searchData.searchText };
-
-    return query;
-};
 
 // export async function updateMail(
 //     mailData: Pick<Mail, "mailId" | "to" | "subject" | "body"> = {},
@@ -736,57 +719,57 @@ const buildQueryFromSearchData = (
 // const removeEmptyMembers = (arr: string[]) =>
 //     arr.filter((x) => x.trim() !== "");
 
-function isNotUndefined(mail: Mail | null): mail is Mail {
-    return !!mail;
-}
+// function isNotUndefined(mail: Mail | null): mail is Mail {
+//     return !!mail;
+// }
 
-export async function sendMail(mailId: string, ctx: GQLContext): Promise<Mail> {
-    checkIfAuthenticated(ctx);
+// export async function sendMail(mailId: string, ctx: GQLContext): Promise<Mail> {
+//     checkIfAuthenticated(ctx);
 
-    let mail: Mail | null = await MailModel.findOne({
-        mailId: mailId,
-        domain: ctx.subdomain._id,
-    });
+//     let mail: Mail | null = await MailModel.findOne({
+//         mailId: mailId,
+//         domain: ctx.subdomain._id,
+//     });
 
-    if (!isNotUndefined(mail)) {
-        throw new Error(responses.item_not_found);
-    }
+//     if (!isNotUndefined(mail)) {
+//         throw new Error(responses.item_not_found);
+//     }
 
-    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
-        throw new Error(responses.action_not_allowed);
-    }
+//     if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+//         throw new Error(responses.action_not_allowed);
+//     }
 
-    if (mail.published) {
-        throw new Error(responses.mail_already_sent);
-    }
+//     if (mail.published) {
+//         throw new Error(responses.mail_already_sent);
+//     }
 
-    if (!mail.to || !mail.subject || !mail.body) {
-        throw new Error(responses.invalid_mail);
-    }
+//     if (!mail.to || !mail.subject || !mail.body) {
+//         throw new Error(responses.invalid_mail);
+//     }
 
-    const from = `${ctx.subdomain.settings.title || ctx.subdomain.name} ${
-        ctx.user.email
-    }`;
+//     const from = `${ctx.subdomain.settings.title || ctx.subdomain.name} ${
+//         ctx.user.email
+//     }`;
 
-    await send({
-        from,
-        to: mail.to,
-        subject: mail.subject,
-        body: mail.body,
-    });
+//     await send({
+//         from,
+//         to: mail.to,
+//         subject: mail.subject,
+//         body: mail.body,
+//     });
 
-    mail.published = true;
-    try {
-        await (mail as any).save();
+//     mail.published = true;
+//     try {
+//         await (mail as any).save();
 
-        return mail;
-    } catch (e: any) {
-        error(e.message, {
-            stack: e.stack,
-        });
-        throw new Error(responses.internal_error);
-    }
-}
+//         return mail;
+//     } catch (e: any) {
+//         error(e.message, {
+//             stack: e.stack,
+//         });
+//         throw new Error(responses.internal_error);
+//     }
+// }
 
 export async function sendCourseOverMail(
     courseId: string,
@@ -827,35 +810,6 @@ export async function sendCourseOverMail(
     return true;
 }
 
-async function createTemplateAndSendMail({
-    course,
-    ctx,
-    user,
-}: {
-    course: Course;
-    ctx: GQLContext;
-    user: User;
-}) {
-    const downloadLink = await DownloadLinkModel.create({
-        domain: ctx.subdomain!._id,
-        courseId: course.courseId,
-        userId: user.userId,
-    });
-
-    const emailBody = pug.render(digitalDownloadTemplate, {
-        downloadLink: `${ctx.address}/api/download/${downloadLink.token}`,
-        loginLink: `${ctx.address}/login`,
-        courseName: course.title,
-        name: course.creatorName || ctx.subdomain.settings.title || "",
-    });
-
-    await send({
-        to: [user.email],
-        subject: `Thank you for signing up for ${course.title}`,
-        body: emailBody,
-    });
-}
-
 export async function addMailToSequence(
     ctx: GQLContext,
     sequenceId: string,
@@ -882,7 +836,7 @@ export async function addMailToSequence(
     );
 
     const emailId = generateUniqueId();
-    const oneDayInMillis = 86400000;
+    const oneDayInMillis = 120000; // 86400000;
     const email = {
         emailId,
         content: internal.default_email_content,
@@ -957,7 +911,7 @@ export async function updateMailInSequence({
     if (templateId) {
         email.templateId = templateId;
     }
-    if (published) {
+    if (typeof published === "boolean") {
         email.published = published;
     }
     if (actionType) {
@@ -976,10 +930,4 @@ export async function updateMailInSequence({
     await (sequence as any).save();
 
     return sequence;
-}
-
-function areAllEmailIdsValid(emailsOrder: string[], emails: Partial<Email>[]) {
-    return emailsOrder.every((emailId) =>
-        emails.some((email) => email.emailId === emailId),
-    );
 }

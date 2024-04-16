@@ -10,6 +10,11 @@ interface From {
     email?: string;
 }
 
+interface Trigger {
+    type: (typeof Constants.eventTypes)[number];
+    data?: string;
+}
+
 export interface Sequence {
     sequenceId: string;
     type: SequenceType;
@@ -19,9 +24,8 @@ export interface Sequence {
     from: From;
     filter: UserFilterWithAggregator;
     excludeFilter: UserFilterWithAggregator;
-    trigger: (typeof Constants.eventTypes)[number];
+    trigger: Trigger;
     status: SequenceStatus;
-    data: Record<string, unknown>;
     emailsOrder: string[];
     entrants: string[];
 }

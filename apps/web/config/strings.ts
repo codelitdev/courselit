@@ -98,6 +98,8 @@ export const responses = {
     sequence_details_missing: "Some sequence details are missing",
     invalid_emails_order: "Invalid emails order",
     no_published_emails: "No published emails",
+    sequence_not_active: "Sequence not active",
+    sequence_already_started: "Sequence already started",
 
     // api responses
     digital_download_no_files:

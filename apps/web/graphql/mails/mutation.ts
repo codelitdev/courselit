@@ -15,11 +15,12 @@ import {
     createSequence,
     // createBroadcast,
     // updateBroadcast,
-    toggleEmailPublishStatus,
+    // toggleEmailPublishStatus,
     updateSequence,
     startSequence,
     addMailToSequence,
     updateMailInSequence,
+    pauseSequence,
 } from "./logic";
 import types from "./types";
 import { Constants } from "@courselit/common-models";
@@ -121,7 +122,8 @@ const mutations = {
             title: { type: GraphQLString },
             fromName: { type: GraphQLString },
             fromEmail: { type: GraphQLString },
-            trigger: { type: types.sequenceTrigger },
+            triggerType: { type: types.sequenceTriggerType },
+            triggerData: { type: GraphQLString },
             filter: { type: GraphQLString },
             data: { type: GraphQLString },
             emailsOrder: { type: new GraphQLList(GraphQLString) },
@@ -133,7 +135,8 @@ const mutations = {
                 title,
                 fromName,
                 fromEmail,
-                trigger,
+                triggerType,
+                triggerData,
                 filter,
                 data,
                 emailsOrder,
@@ -142,7 +145,8 @@ const mutations = {
                 title?: string;
                 fromName?: string;
                 fromEmail?: string;
-                trigger?: (typeof Constants.eventTypes)[number];
+                triggerType?: (typeof Constants.eventTypes)[number];
+                triggerData?: string;
                 filter?: string;
                 data?: string;
                 emailsOrder?: string[];
@@ -155,7 +159,8 @@ const mutations = {
                 title,
                 fromName,
                 fromEmail,
-                trigger,
+                triggerType,
+                triggerData,
                 filter,
                 data,
                 emailsOrder,
@@ -173,6 +178,7 @@ const mutations = {
             templateId: { type: GraphQLString },
             actionType: { type: types.sequenceEmailActionType },
             actionData: { type: GraphQLString },
+            published: { type: GraphQLBoolean },
         },
         resolve: async (
             _: any,
@@ -186,6 +192,7 @@ const mutations = {
                 templateId,
                 actionType,
                 actionData,
+                published,
             }: {
                 sequenceId: string;
                 emailId: string;
@@ -195,7 +202,8 @@ const mutations = {
                 delayInMillis?: number;
                 templateId?: string;
                 actionType?: (typeof Constants.emailActionTypes)[number];
-                actionData: Record<string, unknown>;
+                actionData?: Record<string, unknown>;
+                published?: boolean;
             },
             context: GQLContext,
         ) =>
@@ -210,6 +218,7 @@ const mutations = {
                 templateId,
                 actionType,
                 actionData,
+                published,
             }),
     },
     startSequence: {
@@ -227,23 +236,38 @@ const mutations = {
                 sequenceId,
             }),
     },
-    toggleEmailPublishStatus: {
+    pauseSequence: {
         type: types.sequence,
         args: {
             sequenceId: { type: new GraphQLNonNull(GraphQLString) },
-            emailId: { type: new GraphQLNonNull(GraphQLString) },
         },
         resolve: async (
             _: any,
-            { sequenceId, emailId }: { sequenceId: string; emailId: string },
+            { sequenceId }: { sequenceId: string },
             context: GQLContext,
         ) =>
-            toggleEmailPublishStatus({
+            pauseSequence({
                 ctx: context,
                 sequenceId,
-                emailId,
             }),
     },
+    // toggleEmailPublishStatus: {
+    //     type: types.sequence,
+    //     args: {
+    //         sequenceId: { type: new GraphQLNonNull(GraphQLString) },
+    //         emailId: { type: new GraphQLNonNull(GraphQLString) },
+    //     },
+    //     resolve: async (
+    //         _: any,
+    //         { sequenceId, emailId }: { sequenceId: string; emailId: string },
+    //         context: GQLContext,
+    //     ) =>
+    //         toggleEmailPublishStatus({
+    //             ctx: context,
+    //             sequenceId,
+    //             emailId,
+    //         }),
+    // },
     // updateMail: {
     //     type: types.mail,
     //     args: {
