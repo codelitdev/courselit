@@ -1,11 +1,5 @@
 import RuleModel from "@models/Rule";
-import {
-    Course,
-    Email,
-    Rule,
-    Sequence,
-    User,
-} from "@courselit/common-models";
+import { Course, Email, Rule, Sequence, User } from "@courselit/common-models";
 import GQLContext from "@models/GQLContext";
 import mongoose from "mongoose";
 import SearchData from "./models/search-data";
