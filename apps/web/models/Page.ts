@@ -1,19 +1,14 @@
 import mongoose from "mongoose";
-import WidgetSchema, { Widget } from "./Widget";
+import WidgetSchema from "./Widget";
 import constants from "../config/constants";
+import { WidgetInstance, Page as PublicPage } from "@courselit/common-models";
 const { product, site, blogPage } = constants;
 
-export interface Page {
+export interface Page extends PublicPage {
     id: mongoose.Types.ObjectId;
     domain: mongoose.Types.ObjectId;
-    pageId: string;
-    name: string;
-    layout: Widget[];
-    draftLayout: Widget[];
-    type: typeof product | typeof site | typeof blogPage;
+    draftLayout: WidgetInstance[];
     creatorId: string;
-    entityId?: string;
-    deleteable: boolean;
 }
 
 const PageSchema = new mongoose.Schema<Page>(

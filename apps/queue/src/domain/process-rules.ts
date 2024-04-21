@@ -1,9 +1,11 @@
 import RuleModel, { RuleWithDomain as Rule } from "./model/rule";
 import OngoingSequence from "./model/ongoing-sequence";
 import SequenceModel, { AdminSequence } from "./model/sequence";
-import User from "./model/user";
+import UserModel from "./model/user";
 import convertFiltersToDBConditions from "./convert-filters-to-db-conditions";
 import { logger } from "../logger";
+import { User } from "@courselit/common-models";
+import mongoose from "mongoose";
 
 export async function processRules() {
     // eslint-disable-next-line no-constant-condition
@@ -60,11 +62,12 @@ async function processRule(rule: Rule) {
 }
 
 async function addBroadcastToOngoingSequence(sequence: AdminSequence) {
-    const query = {
+    const query: Partial<User & { domain: mongoose.Schema.Types.ObjectId }> = {
         domain: sequence.domain,
         ...convertFiltersToDBConditions(sequence.filter),
+        subscribedToUpdates: true,
     };
-    const allUsers = await User.find(query);
+    const allUsers = await UserModel.find(query);
     // eslint-disable-next-line no-console
     console.log(
         `Adding ${allUsers.length} users to ongoing sequence`,

@@ -1,10 +1,17 @@
+import { Constants } from ".";
+import { Progress } from "./progress";
+
 export default interface User {
-    id: string;
-    email: string;
-    name: string;
-    purchases: string[];
-    active: boolean;
     userId: string;
-    bio: string;
+    email: string;
+    active: boolean;
+    name?: string;
+    purchases: Progress[];
+    bio?: string;
     permissions: string[];
+    createdAt: Date;
+    updatedAt: Date;
+    subscribedToUpdates: boolean;
+    lead: (typeof Constants.leads)[number];
+    tags?: string[];
 }

@@ -13,6 +13,7 @@ import {
     getUser,
     removeRuleForBroadcast,
     updateSequenceSentAt,
+    getDomain,
 } from "./queries";
 import { sendMail } from "../mail";
 
@@ -38,37 +39,69 @@ export async function processOngoingSequences(): Promise<void> {
 }
 
 async function processOngoingSequence(ongoingSequence: OngoingSequence) {
-    const [sequence, user, creator] = await Promise.all([
-        getSequence(ongoingSequence.sequenceId),
+    const domain = await getDomain(ongoingSequence.domain);
+    // if domain.quota or domain.quota.mail is not defined, return
+    if (!domain || !domain.quota || !domain.quota.mail) {
+        console.log(`Domain or domain quota not found for "${domain.name}"`); // eslint-disable-line no-console
+        return;
+    }
+    if (
+        domain.quota.mail.dailyCount >= domain.quota.mail.daily ||
+        domain.quota.mail.monthlyCount >= domain.quota.mail.monthly
+    ) {
+        console.log(`Domain quota exceeded for "${domain.name}"`); // eslint-disable-line no-console
+        return;
+    }
+
+    const sequence = await getSequence(ongoingSequence.sequenceId);
+    const [user, creator] = await Promise.all([
         getUser(ongoingSequence.userId),
-        getSequence(ongoingSequence.sequenceId).then((sequence) =>
-            sequence ? getUser(sequence.creatorId) : null,
-        ),
+        sequence ? getUser(sequence.creatorId) : null,
     ]);
 
     if (!sequence || !user || !creator) {
         return await cleanUpResources(ongoingSequence);
     }
 
-    const emailsOrderArray = Array.from(sequence.emailsOrder);
-    const nextEmailId = emailsOrderArray.find(
-        (id) => !ongoingSequence.sentEmailIds.includes(id),
-    );
-
-    const email = sequence.emails.find(
-        (email) => email.emailId === nextEmailId,
-    );
+    const nextPublishedEmail = getNextPublishedEmail(sequence, ongoingSequence);
 
     await attemptMailSending({
         creator,
         user,
         sequence,
         ongoingSequence,
-        email,
+        email: nextPublishedEmail,
     });
 
-    ongoingSequence.sentEmailIds.push(nextEmailId);
-    await updateOngoingSequence({ ongoingSequence, sequence });
+    ongoingSequence.sentEmailIds.push(nextPublishedEmail.emailId);
+    await domain.incrementEmailCount();
+    const nextEmail = getNextPublishedEmail(sequence, ongoingSequence);
+    if (!nextEmail) {
+        return await cleanUpResources(ongoingSequence, true);
+    } else {
+        ongoingSequence.nextEmailScheduledTime = new Date(
+            ongoingSequence.nextEmailScheduledTime + nextEmail.delayInMillis,
+        ).getTime();
+        await ongoingSequence.save();
+    }
+}
+
+function getNextPublishedEmail(
+    sequence: Sequence,
+    ongoingSequence: OngoingSequence,
+) {
+    let nextPublishedEmail = null;
+    const sentEmailIdsSet = new Set(ongoingSequence.sentEmailIds);
+    for (const mailId of sequence.emailsOrder) {
+        const email = sequence.emails.find(
+            (email) => email.emailId === mailId && email.published,
+        );
+        if (email && !sentEmailIdsSet.has(email.emailId)) {
+            nextPublishedEmail = email;
+            break;
+        }
+    }
+    return nextPublishedEmail;
 }
 
 async function cleanUpResources(
@@ -139,72 +172,4 @@ async function attemptMailSending({
         }
         throw err;
     }
-}
-
-async function updateOngoingSequence({
-    ongoingSequence,
-    sequence,
-}: {
-    ongoingSequence: OngoingSequence;
-    sequence: AdminSequence;
-}) {
-    const nextEmailScheduledTime = getNextEmailScheduledTime(
-        sequence,
-        ongoingSequence,
-    );
-    if (!nextEmailScheduledTime) {
-        return await cleanUpResources(ongoingSequence, true);
-    } else {
-        ongoingSequence.nextEmailScheduledTime = nextEmailScheduledTime;
-        await ongoingSequence.save();
-    }
-}
-
-// function getNextEmailWithTime(
-//     sequence: Sequence,
-//     ongoingSequence: OngoingSequence,
-// ) {
-//     const { emails } = sequence;
-//     const currentIndex = sequence.emailsOrder.findIndex(
-//         (emailId) => emailId === ongoingSequence.nextEmailId,
-//     );
-//     if (currentIndex === -1) {
-//         throw new Error(
-//             `Email with id ${ongoingSequence.nextEmailId} not found in sequence ${sequence.sequenceId}`,
-//         );
-//     }
-//     const nextIndex = currentIndex + 1;
-//     if (nextIndex >= emails.length) {
-//         return { nextEmailId: undefined, nextEmailScheduledTime: undefined };
-//     }
-//     const nextEmail = emails[nextIndex];
-//     const nextEmailScheduledTime = new Date(
-//         ongoingSequence.nextEmailScheduledTime + nextEmail.delayInMillis,
-//     ).getTime();
-//     return { nextEmailId: nextEmail.emailId, nextEmailScheduledTime };
-// }
-
-function getNextEmailScheduledTime(
-    sequence: Sequence,
-    ongoingSequence: OngoingSequence,
-): number | undefined {
-    const nextEmailId = sequence.emailsOrder.find(
-        (id) =>
-            !ongoingSequence.sentEmailIds.includes(id) &&
-            sequence.emails.find(
-                (email) => email.emailId === id && email.published,
-            ),
-    );
-    if (!nextEmailId) {
-        return;
-    }
-
-    const email = sequence.emails.find(
-        (email) => email.emailId === nextEmailId,
-    );
-    const nextEmailScheduledTime = new Date(
-        ongoingSequence.nextEmailScheduledTime + email.delayInMillis,
-    ).getTime();
-
-    return nextEmailScheduledTime;
 }

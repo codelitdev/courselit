@@ -23,6 +23,7 @@ import {
     buildQueryFromSearchData,
     removeRule,
 } from "./helpers";
+import { triggerSequences } from "../../lib/trigger-sequences";
 
 const { permissions } = constants;
 
@@ -41,6 +42,11 @@ export async function createSubscription(
                 domain: ctx.subdomain!,
                 email: email,
                 lead: constants.leadNewsletter,
+            });
+
+            await triggerSequences({
+                user: dbUser,
+                event: Constants.eventTypes[3],
             });
 
             await recordActivity({
@@ -531,13 +537,11 @@ export async function startSequence({
                 Constants.eventTypes[0],
                 Constants.eventTypes[1],
                 Constants.eventTypes[2],
-                Constants.eventTypes[3],
             ].includes(
                 sequence.trigger.type as
                     | (typeof Constants.eventTypes)[0]
                     | (typeof Constants.eventTypes)[1]
-                    | (typeof Constants.eventTypes)[2]
-                    | (typeof Constants.eventTypes)[3],
+                    | (typeof Constants.eventTypes)[2],
             ) &&
             !sequence.trigger?.data
         ) {
@@ -930,4 +934,46 @@ export async function updateMailInSequence({
     await (sequence as any).save();
 
     return sequence;
+}
+
+export async function getSequences({
+    ctx,
+    type,
+    offset = 1,
+    itemsPerPage,
+}: {
+    ctx: GQLContext;
+    type: (typeof Constants.mailTypes)[number];
+    offset: number;
+    itemsPerPage?: number;
+}): Promise<AdminSequence | null> {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    if ((itemsPerPage && itemsPerPage < 1) || offset < 1) {
+        throw new Error(responses.invalid_input);
+    }
+
+    const PaginatedSequenceModel = makeModelTextSearchable(SequenceModel);
+    const query = {
+        domain: ctx.subdomain._id,
+        type,
+    };
+    const sequences = await PaginatedSequenceModel(
+        {
+            query,
+            offset,
+            graphQLContext: ctx,
+        },
+        {
+            itemsPerPage: itemsPerPage || constants.itemsPerPage,
+            sortByColumn: "updatedAt",
+            sortOrder: -1,
+        },
+    );
+
+    return sequences;
 }

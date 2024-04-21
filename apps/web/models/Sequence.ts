@@ -36,32 +36,37 @@ const TriggerSchema = new mongoose.Schema({
     data: { type: String },
 });
 
-const SequenceSchema = new mongoose.Schema<AdminSequence>({
-    domain: { type: mongoose.Schema.Types.ObjectId, required: true },
-    sequenceId: {
-        type: String,
-        required: true,
-        default: generateUniqueId,
-        unique: true,
+const SequenceSchema = new mongoose.Schema<AdminSequence>(
+    {
+        domain: { type: mongoose.Schema.Types.ObjectId, required: true },
+        sequenceId: {
+            type: String,
+            required: true,
+            default: generateUniqueId,
+            unique: true,
+        },
+        type: { type: String, required: true, enum: Constants.mailTypes },
+        title: { type: String, default: "" },
+        emails: [EmailSchema],
+        creatorId: { type: String, required: true },
+        report: SequenceReportSchema,
+        from: EmailFromSchema,
+        filter: UserFilterWithAggregatorSchema,
+        excludeFilter: UserFilterWithAggregatorSchema,
+        trigger: TriggerSchema,
+        status: {
+            type: String,
+            required: true,
+            default: Constants.sequenceStatus[0],
+            enum: Constants.sequenceStatus,
+        },
+        emailsOrder: [String],
+        entrants: [String],
     },
-    type: { type: String, required: true, enum: Constants.mailTypes },
-    title: { type: String, default: "" },
-    emails: [EmailSchema],
-    creatorId: { type: String, required: true },
-    report: SequenceReportSchema,
-    from: EmailFromSchema,
-    filter: UserFilterWithAggregatorSchema,
-    excludeFilter: UserFilterWithAggregatorSchema,
-    trigger: TriggerSchema,
-    status: {
-        type: String,
-        required: true,
-        default: Constants.sequenceStatus[0],
-        enum: Constants.sequenceStatus,
+    {
+        timestamps: true,
     },
-    emailsOrder: [String],
-    entrants: [String],
-});
+);
 
 export default mongoose.models.Sequence ||
     mongoose.model("Sequence", SequenceSchema);

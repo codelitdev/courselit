@@ -46,3 +46,5 @@ export type { UserFilterType } from "./user-filter-type";
 export type { UserFilterWithAggregator } from "./user-filter-with-aggregator";
 export type { UserFilterAggregator } from "./user-filter-aggregator";
 export type { OngoingSequence } from "./ongoing-sequence";
+export type { Domain } from "./domain";
+export type { Progress } from "./progress";

@@ -30,3 +30,4 @@ export const sequenceStatus = [
     "paused",
     "completed",
 ] as const;
+export const leads = ["website", "newsletter", "download", "api"] as const;

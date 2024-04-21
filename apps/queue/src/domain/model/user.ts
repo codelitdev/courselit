@@ -3,8 +3,6 @@ import mongoose from "mongoose";
 
 export type UserWithDomain = User & {
     domain: mongoose.Schema.Types.ObjectId;
-    subscribedToUpdates: boolean;
-    tags: string[];
 };
 
 const UserSchema = new mongoose.Schema<UserWithDomain>(

@@ -5,6 +5,8 @@ import OngoingSequenceModel, {
 import SequenceModel, { AdminSequence } from "./model/sequence";
 import UserModel, { UserWithDomain } from "./model/user";
 import RuleModel from "./model/rule";
+import mongoose from "mongoose";
+import DomainModel from "./model/domain";
 
 export async function getDueOngoingSequences(): Promise<OngoingSequence[]> {
     const currentTime = new Date().getTime();
@@ -27,6 +29,7 @@ export async function getUser(userId: string): Promise<UserWithDomain | null> {
     return await UserModel.findOne({
         userId,
         active: true,
+        subscribedToUpdates: true,
     }).lean<UserWithDomain | null>();
 }
 
@@ -46,4 +49,8 @@ export async function updateSequenceSentAt(sequenceId: string): Promise<any> {
         { sequenceId },
         { $set: { "report.broadcast.sentAt": new Date() } },
     );
+}
+
+export async function getDomain(id: mongoose.Schema.Types.ObjectId) {
+    return await DomainModel.findById(id);
 }

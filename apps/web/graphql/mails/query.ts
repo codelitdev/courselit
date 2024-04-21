@@ -12,6 +12,7 @@ import {
     getMailsCount,
     getSequence,
     getSequenceCount,
+    getSequences,
 } from "./logic";
 import SearchData from "./models/search-data";
 import GQLContext from "../../models/GQLContext";
@@ -77,6 +78,27 @@ const queries = {
             { sequenceId }: { sequenceId: string },
             context: GQLContext,
         ) => getSequence(context, sequenceId),
+    },
+    getSequences: {
+        type: new GraphQLList(types.sequence),
+        args: {
+            type: { type: new GraphQLNonNull(types.sequenceType) },
+            offset: { type: GraphQLInt },
+            itemsPerPage: { type: GraphQLInt },
+        },
+        resolve: (
+            _: any,
+            {
+                type,
+                offset,
+                itemsPerPage,
+            }: {
+                type: SequenceType;
+                offset: number;
+                itemsPerPage: number;
+            },
+            context: GQLContext,
+        ) => getSequences({ ctx: context, type, offset, itemsPerPage }),
     },
     getSequenceCount: {
         type: new GraphQLNonNull(GraphQLInt),

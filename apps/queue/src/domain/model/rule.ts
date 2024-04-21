@@ -13,7 +13,8 @@ const RuleSchema = new mongoose.Schema<RuleWithDomain>({
         index: true,
     },
     sequenceId: { type: String, required: true },
-    dateInMillis: { type: Number },
+    eventDateInMillis: { type: Number },
+    eventData: { type: String },
 });
 
 export default mongoose.models.Rule || mongoose.model("Rule", RuleSchema);
