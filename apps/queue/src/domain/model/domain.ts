@@ -1,5 +1,6 @@
 import { Domain as PublicDomain } from "@courselit/common-models";
 import mongoose from "mongoose";
+import SettingsSchema from "./site-info";
 
 export interface Domain extends PublicDomain {
     _id: mongoose.Types.ObjectId;
@@ -8,6 +9,7 @@ export interface Domain extends PublicDomain {
 const DomainSchema = new mongoose.Schema<Domain>(
     {
         name: { type: String, required: true, unique: true },
+        settings: SettingsSchema,
         quota: new mongoose.Schema<Domain["quota"]>({
             mail: new mongoose.Schema<Domain["quota"]["mail"]>({
                 daily: { type: Number, default: 0 },

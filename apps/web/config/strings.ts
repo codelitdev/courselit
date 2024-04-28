@@ -106,6 +106,7 @@ export const responses = {
         "This digital download is empty. Please contact the creator.",
     download_link_expired: "The download link has expired",
     user_already_exists: "The user already exists",
+    mailing_address_too_short: "Mailing address is too short",
 };
 
 export const internal = {

@@ -37,6 +37,5 @@ export default {
         backend: "",
         frontend: "",
     },
-    featureFlags: [],
     typefaces: [],
 };

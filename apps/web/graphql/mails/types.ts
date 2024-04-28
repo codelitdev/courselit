@@ -177,6 +177,24 @@ const sequenceInput = new GraphQLInputObjectType({
     },
 });
 
+const mailRequestStatusStatus = new GraphQLEnumType({
+    name: "MailRequestStatusStatus",
+    values: {
+        PENDING: { value: Constants.mailRequestStatus[0] },
+        APPROVED: { value: Constants.mailRequestStatus[1] },
+        REJECTED: { value: Constants.mailRequestStatus[2] },
+    },
+});
+
+const mailRequestStatus = new GraphQLObjectType({
+    name: "MailRequestStatus",
+    fields: {
+        status: { type: mailRequestStatusStatus },
+        message: { type: GraphQLString },
+        reason: { type: GraphQLString },
+    },
+});
+
 const types = {
     mail,
     mailUpdate,
@@ -188,5 +206,6 @@ const types = {
     sequenceTrigger,
     sequenceTriggerType,
     sequenceEmailActionType,
+    mailRequestStatus,
 };
 export default types;

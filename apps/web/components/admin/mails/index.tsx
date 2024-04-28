@@ -3,6 +3,7 @@ import {
     Address,
     AppMessage,
     Constants,
+    Domain,
     Profile,
     Sequence,
     SequenceType,
@@ -31,25 +32,25 @@ import {
     TableBody,
     TableRow,
     Tabs,
+    Card,
+    CardHeader,
+    CardDescription,
+    CardContent,
+    CardFooter,
+    CardTitle,
 } from "@courselit/components-library";
 import { AnyAction } from "redux";
+import RequestForm from "./request-form";
 const { networkAction } = actionCreators;
 
 interface MailsProps {
     address: Address;
     profile: Profile;
     dispatch: AppDispatch;
-    featureFlags: string[];
     loading: boolean;
 }
 
-function Mails({
-    address,
-    profile,
-    dispatch,
-    featureFlags,
-    loading,
-}: MailsProps) {
+function Mails({ address, dispatch, loading }: MailsProps) {
     const [broadcastPage, setBroadcastPage] = useState(1);
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -59,6 +60,7 @@ function Mails({
     const [broadcasts, setBroadcasts] = useState<
         Pick<Sequence, "sequenceId" | "title" | "emails">[]
     >([]);
+    const [siteInfo, setSiteInfo] = useState<Domain>();
     const router = useRouter();
 
     const handleBroadcastPageChange = (newPage: number) => {
@@ -77,12 +79,40 @@ function Mails({
         setPage(0);
     };
     */
-
     useEffect(() => {
-        if (!featureFlags.includes("mail")) {
-            router.replace("/dashboard");
-        }
-    }, [featureFlags, router]);
+        const getSiteInfo = async () => {
+            const query = `
+            query {
+                siteInfo: getSiteInfo {
+                    quota {
+                        mail {
+                            daily,
+                            monthly
+                        }
+                    },
+                    settings {
+                        mailingAddress
+                    }
+                }
+            }`;
+
+            const fetcher = fetch.setPayload({ query }).build();
+
+            try {
+                dispatch(networkAction(true));
+                const response = await fetcher.exec();
+                if (response.siteInfo) {
+                    setSiteInfo(response.siteInfo);
+                }
+            } catch (e: any) {
+                dispatch(setAppMessage(new AppMessage(e.message)));
+            } finally {
+                dispatch(networkAction(false));
+            }
+        };
+
+        getSiteInfo();
+    }, []);
 
     const loadBroadcasts = async () => {
         const query = `
@@ -300,6 +330,62 @@ function Mails({
         }
     };
 
+    if ((siteInfo && !siteInfo?.quota) || !siteInfo?.settings?.mailingAddress) {
+        return (
+            <div className="flex flex-col">
+                <h1 className="text-4xl font-semibold mb-8">
+                    {PAGE_HEADER_ALL_MAILS}
+                </h1>
+                <div className="flex flex-col gap-4 mb-8">
+                    <h2 className="text-2xl font-semibold">
+                        Before you start!
+                    </h2>
+                    <p className="text-slate-500">
+                        There a few things you need to do in order to start
+                        sending marketing emails.
+                    </p>
+                </div>
+                {!siteInfo?.settings?.mailingAddress && (
+                    <Card className="mb-8">
+                        <CardHeader>
+                            <CardTitle>Set your mailing address</CardTitle>
+                            <CardDescription>
+                                We need this in order to comply with the
+                                CAN-SPAM Act.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardFooter>
+                            <div className="w-[120px]">
+                                <Button
+                                    component="link"
+                                    href={`/dashboard/settings?tab=Mails`}
+                                >
+                                    Go to settings
+                                </Button>
+                            </div>
+                        </CardFooter>
+                    </Card>
+                )}
+                {!siteInfo?.quota?.mail && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Request access</CardTitle>
+                            <CardDescription>
+                                Please fill in the form to request access to the
+                                mailing feature. We need to review your use case
+                                so as to keep our services clean.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <RequestForm />
+                        </CardContent>
+                    </Card>
+                )}
+                <div></div>
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-col">
             <div className="flex justify-between items-center mb-8">
@@ -377,8 +463,6 @@ function Mails({
 
 const mapStateToProps = (state: AppState) => ({
     address: state.address,
-    profile: state.profile,
-    featureFlags: state.featureFlags,
     loading: state.networkAction,
 });
 

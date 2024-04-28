@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import { EmailTemplate as PublicEmailTemplate } from "@courselit/common-models";
-import { generateUniqueId } from "@courselit/utils";
 
 interface EmailTemplate extends PublicEmailTemplate {
     domain: mongoose.Schema.Types.ObjectId;
@@ -9,7 +8,7 @@ interface EmailTemplate extends PublicEmailTemplate {
 
 const EmailTemplateSchema = new mongoose.Schema<EmailTemplate>({
     domain: { type: mongoose.Schema.Types.ObjectId, required: true },
-    templateId: { type: String, required: true, default: generateUniqueId },
+    templateId: { type: String, required: true },
     title: { type: String, required: true },
     creatorId: { type: String, required: true },
     content: { type: String, required: true },

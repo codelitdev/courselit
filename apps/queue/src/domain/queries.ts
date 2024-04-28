@@ -7,6 +7,8 @@ import UserModel, { UserWithDomain } from "./model/user";
 import RuleModel from "./model/rule";
 import mongoose from "mongoose";
 import DomainModel from "./model/domain";
+import { EmailTemplate } from "@courselit/common-models";
+import emailTemplate from "./model/email-template";
 
 export async function getDueOngoingSequences(): Promise<OngoingSequence[]> {
     const currentTime = new Date().getTime();
@@ -53,4 +55,8 @@ export async function updateSequenceSentAt(sequenceId: string): Promise<any> {
 
 export async function getDomain(id: mongoose.Schema.Types.ObjectId) {
     return await DomainModel.findById(id);
+}
+
+export async function getTemplate(id: string): Promise<EmailTemplate | null> {
+    return await emailTemplate.find({ templateId: id }).lean();
 }

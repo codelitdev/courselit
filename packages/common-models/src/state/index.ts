@@ -12,6 +12,5 @@ export default interface State {
     profile: Profile;
     address: Address;
     theme: Theme;
-    featureFlags: string[];
     typefaces: Typeface[];
 }

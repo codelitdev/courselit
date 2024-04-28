@@ -2007,6 +2007,7 @@ __metadata:
     "@types/nodemailer": ^6.4.8
     bullmq: ^4.14.0
     express: ^4.18.2
+    liquidjs: ^10.11.1
     mongoose: ^8.0.0
     nodemailer: ^6.9.2
     pino: ^8.14.1
@@ -8720,6 +8721,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"commander@npm:^10.0.0":
+  version: 10.0.1
+  resolution: "commander@npm:10.0.1"
+  checksum: 436901d64a818295803c1996cd856621a74f30b9f9e28a588e726b2b1670665bccd7c1a77007ebf328729f0139838a88a19265858a0fa7a8728c4656796db948
+  languageName: node
+  linkType: hard
+
 "commander@npm:^4.0.0":
   version: 4.1.1
   resolution: "commander@npm:4.1.1"
@@ -13285,6 +13293,18 @@ __metadata:
   bin:
     lint-staged: bin/lint-staged.js
   checksum: 031718ad3f839475fb1d41bda34bab4330f25814175808169daa2686ff026e5a667a25c95fdf3cd46dac72f9af2c98852565bb62d920992f5e2d3f730c279760
+  languageName: node
+  linkType: hard
+
+"liquidjs@npm:^10.11.1":
+  version: 10.11.1
+  resolution: "liquidjs@npm:10.11.1"
+  dependencies:
+    commander: ^10.0.0
+  bin:
+    liquid: bin/liquid.js
+    liquidjs: bin/liquid.js
+  checksum: 7e4980455c05fc732b21852fc98d5db7f3b6dae4507d7ed9d1ced615c72c7325875dd6b6e67a69b37aa26ab7e3909f6540e68a95c298b1e937f8a19e01afc146
   languageName: node
   linkType: hard
 

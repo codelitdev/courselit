@@ -31,3 +31,4 @@ export const sequenceStatus = [
     "completed",
 ] as const;
 export const leads = ["website", "newsletter", "download", "api"] as const;
+export const mailRequestStatus = ["pending", "approved", "rejected"] as const;

@@ -8,6 +8,7 @@ import types from "./types";
 import {
     getBroadcasts,
     getMail,
+    getMailRequestStatus,
     getMails,
     getMailsCount,
     getSequence,
@@ -110,6 +111,11 @@ const queries = {
             { type }: { type: SequenceType },
             context: GQLContext,
         ) => getSequenceCount({ ctx: context, type }),
+    },
+    getMailRequest: {
+        type: types.mailRequestStatus,
+        resolve: (_: any, {}: {}, context: GQLContext) =>
+            getMailRequestStatus(context),
     },
 };
 

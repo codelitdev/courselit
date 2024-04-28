@@ -180,6 +180,14 @@ export const COURSE_CREATOR_PREFIX = "By";
 export const APP_MESSAGE_SETTINGS_SAVED = "Settings saved";
 export const ENROLLED_COURSES_HEADER = "Enrolled courses";
 export const SITE_APIKEYS_SETTING_HEADER = "API Keys";
+export const SITE_MAILS_HEADER = "Mails";
+export const SITE_MAILING_ADDRESS_SETTING_HEADER = "Mailing Address";
+export const SITE_MAILING_ADDRESS_SETTING_EXPLANATION =
+    "This is required in order to comply with the CAN-SPAM Act.";
+export const MAIL_REQUEST_RECEIVED =
+    "Your request is updated. We will get back to you shortly.";
+export const MAIL_REQUEST_FORM_SUBMIT_INITIAL_REQUEST_TEXT = "Request access";
+export const MAIL_REQUEST_FORM_SUBMIT_UPDATE_REQUEST_TEXT = "Update reason";
 export const SITE_CUSTOMISATIONS_SETTING_HEADER = "Code Injection";
 export const SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD =
     "Code Injection in <head>";
@@ -514,3 +522,6 @@ export const APP_MESSAGE_PAGE_DELETED = "Page deleted";
 export const NEW_PAGE_FORM_WARNING =
     "These settings cannot be changed later on, so proceed with caution.";
 export const DASHBOARD_PAGE_HEADER = "Welcome";
+export const MAIL_REQUEST_FORM_REASON_FIELD = "Reason";
+export const MAIL_REQUEST_FORM_REASON_PLACEHOLDER =
+    "Please be as detailed as possible. This will help us review your application better.";

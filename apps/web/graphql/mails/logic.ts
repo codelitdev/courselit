@@ -24,6 +24,9 @@ import {
     removeRule,
 } from "./helpers";
 import { triggerSequences } from "../../lib/trigger-sequences";
+import MailRequestStatusModel, {
+    MailRequestStatus,
+} from "@models/MailRequestStatus";
 
 const { permissions } = constants;
 
@@ -427,6 +430,47 @@ export async function getSequenceCount({
         domain: ctx.subdomain._id,
         type,
     });
+}
+
+export async function getMailRequestStatus(
+    ctx: GQLContext,
+): Promise<MailRequestStatus | undefined> {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    return await MailRequestStatusModel.findOne({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+    });
+}
+
+export async function updateMailRequest(ctx: GQLContext, reason: string) {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    let mailRequestStatus = await MailRequestStatusModel.findOne({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+    });
+
+    if (mailRequestStatus) {
+        mailRequestStatus.reason = reason;
+        await mailRequestStatus.save();
+    } else {
+        mailRequestStatus = await MailRequestStatusModel.create({
+            domain: ctx.subdomain._id,
+            userId: ctx.user.userId,
+            reason,
+        });
+    }
+
+    return mailRequestStatus;
 }
 
 const broadcastPublished = (sequence: AdminSequence): boolean =>

@@ -12,4 +12,5 @@ export default interface SiteInfo {
     stripeSecret?: string;
     paypalSecret?: string;
     paytmSecret?: string;
+    mailingAddress?: string;
 }

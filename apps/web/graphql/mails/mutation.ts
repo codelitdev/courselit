@@ -21,6 +21,7 @@ import {
     addMailToSequence,
     updateMailInSequence,
     pauseSequence,
+    updateMailRequest,
 } from "./logic";
 import types from "./types";
 import { Constants } from "@courselit/common-models";
@@ -307,6 +308,17 @@ const mutations = {
             { courseId, email }: { courseId: string; email: string },
             context: GQLContext,
         ) => sendCourseOverMail(courseId, email, context),
+    },
+    updateMailRequest: {
+        type: types.mailRequestStatus,
+        args: {
+            reason: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: async (
+            _: any,
+            { reason }: { reason: string },
+            context: GQLContext,
+        ) => updateMailRequest(context, reason),
     },
 };
 export default mutations;

@@ -1,4 +1,4 @@
-import { Email, Sequence } from "@courselit/common-models";
+import { Domain, Email, Sequence } from "@courselit/common-models";
 import { AdminSequence } from "./model/sequence";
 import OngoingSequenceModel, {
     OngoingSequence,
@@ -14,8 +14,27 @@ import {
     removeRuleForBroadcast,
     updateSequenceSentAt,
     getDomain,
+    getTemplate,
 } from "./queries";
 import { sendMail } from "../mail";
+import { Liquid } from "liquidjs";
+import { Queue, Worker } from "bullmq";
+import redis from "../redis";
+const liquidEngine = new Liquid();
+const sequenceQueue = new Queue("sequence");
+
+new Worker(
+    "sequence",
+    async (job) => {
+        const ongoingSequence = job.data;
+        try {
+            await processOngoingSequence(ongoingSequence);
+        } catch (err: any) {
+            logger.error(err);
+        }
+    },
+    { connection: redis },
+);
 
 export async function processOngoingSequences(): Promise<void> {
     // eslint-disable-next-line no-constant-condition
@@ -27,11 +46,13 @@ export async function processOngoingSequences(): Promise<void> {
 
         const dueOngoingSequences = await getDueOngoingSequences();
         for (const ongoingSequence of dueOngoingSequences) {
-            try {
-                await processOngoingSequence(ongoingSequence);
-            } catch (err: any) {
-                logger.error(err);
-            }
+            sequenceQueue.add("sequence", ongoingSequence);
+            // try {
+            //     await processOngoingSequence(ongoingSequence);
+            // } catch (err: any) {
+            //     console.error(err)
+            //     logger.error(err);
+            // }
         }
 
         await new Promise((resolve) => setTimeout(resolve, 60 * 1000));
@@ -40,9 +61,13 @@ export async function processOngoingSequences(): Promise<void> {
 
 async function processOngoingSequence(ongoingSequence: OngoingSequence) {
     const domain = await getDomain(ongoingSequence.domain);
-    // if domain.quota or domain.quota.mail is not defined, return
-    if (!domain || !domain.quota || !domain.quota.mail) {
-        console.log(`Domain or domain quota not found for "${domain.name}"`); // eslint-disable-line no-console
+    if (
+        !domain ||
+        !domain.quota ||
+        !domain.quota.mail ||
+        !domain.settings?.mailingAddress
+    ) {
+        console.log(`Invalid domain settings for "${domain.name}"`, domain); // eslint-disable-line no-console
         return;
     }
     if (
@@ -66,6 +91,7 @@ async function processOngoingSequence(ongoingSequence: OngoingSequence) {
     const nextPublishedEmail = getNextPublishedEmail(sequence, ongoingSequence);
 
     await attemptMailSending({
+        domain,
         creator,
         user,
         sequence,
@@ -137,19 +163,50 @@ async function attemptMailSending({
     sequence,
     ongoingSequence,
     email,
+    domain,
 }: {
     creator: UserWithDomain;
     user: UserWithDomain;
     sequence: AdminSequence;
     ongoingSequence: OngoingSequence;
     email: Email;
+    domain: Domain;
 }) {
     const from = sequence.from
         ? sequence.from.name
         : `${creator.email} <${creator.email}>`;
     const to = user.email;
     const subject = email.subject;
-    const content = email.content;
+    const unsubscribeLink = `https://${
+        domain.customDomain
+            ? `${domain.customDomain}`
+            : `${domain.name}.${process.env.DOMAIN}`
+    }/api/unsubscribe/${user.userId}`;
+    const templatePayload = {
+        subscriber: {
+            email: user.email,
+            name: user.name,
+            tags: user.tags,
+        },
+        address: domain.settings.mailingAddress,
+        unsubscribe_link: unsubscribeLink,
+    };
+    // const content = email.content;
+    let content = await liquidEngine.parseAndRender(
+        email.content,
+        templatePayload,
+    );
+    if (email.templateId) {
+        const template = await getTemplate(email.templateId);
+        if (template) {
+            content = await liquidEngine.parseAndRender(
+                template.content,
+                Object.assign({}, templatePayload, {
+                    content: content,
+                }),
+            );
+        }
+    }
     try {
         await sendMail({
             from,

@@ -108,7 +108,6 @@ export default async function verifyDomain(
                 name: domainNameForSingleTenancy,
                 email: process.env.SUPER_ADMIN_EMAIL,
                 firstRun: true,
-                featureFlags: ["mail"],
                 quota: {
                     mail: {
                         daily: 1000000,

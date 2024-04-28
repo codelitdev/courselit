@@ -29,7 +29,6 @@ const DomainSchema = new mongoose.Schema<Domain>(
         settings: SettingsSchema,
         theme: ThemeSchema,
         sharedWidgets: { type: mongoose.Schema.Types.Mixed, default: {} },
-        featureFlags: { type: [String] },
         typefaces: {
             type: [TypefaceSchema],
             default: [defaultTypeface],
