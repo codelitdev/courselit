@@ -533,3 +533,4 @@ export const DASHBOARD_PAGE_HEADER = "Welcome";
 export const MAIL_REQUEST_FORM_REASON_FIELD = "Reason";
 export const MAIL_REQUEST_FORM_REASON_PLACEHOLDER =
     "Please be as detailed as possible. This will help us review your application better.";
+export const DASHBOARD_SELECT_HEADER = "Duration";

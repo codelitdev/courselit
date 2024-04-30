@@ -21,6 +21,7 @@ import {
     XAxis,
     YAxis,
 } from "recharts";
+import { DASHBOARD_SELECT_HEADER } from "@ui-config/strings";
 const { analyticsDurations, activityTypes } = constants;
 
 type Duration = (typeof analyticsDurations)[number];
@@ -115,10 +116,10 @@ const Metric = ({
                                 { label: "30d", value: "30d" },
                                 { label: "90d", value: "90d" },
                                 { label: "1y", value: "1y" },
-                                { label: "lifetime", value: "lifetime" },
+                                { label: "Lifetime", value: "lifetime" },
                             ]}
                             variant="without-label"
-                            title={"duration"}
+                            title={DASHBOARD_SELECT_HEADER}
                         />
                     </div>
                 </div>

@@ -80,11 +80,6 @@ function TaggedFilterEditor({
                 label: tag,
                 value: tag,
             }));
-        options.unshift({
-            label: USER_FILTER_TAGGED_DROPDOWN_LABEL,
-            value: "",
-            disabled: true,
-        });
         return options;
     }, [tags]);
 
@@ -115,6 +110,7 @@ function TaggedFilterEditor({
                 title=""
                 variant="without-label"
                 onChange={setValue}
+                placeholderMessage={USER_FILTER_TAGGED_DROPDOWN_LABEL}
             />
             <div className="flex justify-between">
                 <FormSubmit

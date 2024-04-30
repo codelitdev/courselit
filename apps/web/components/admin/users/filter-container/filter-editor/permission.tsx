@@ -44,11 +44,6 @@ export default function PermissionFilterEditor({
             label: permissionToCaptionMap[permission],
             value: permission,
         }));
-    options.unshift({
-        label: USER_FILTER_PERMISSION_DROPDOWN_LABEL,
-        value: "",
-        disabled: true,
-    });
 
     return (
         <Form
@@ -77,6 +72,7 @@ export default function PermissionFilterEditor({
                 title=""
                 variant="without-label"
                 onChange={setValue}
+                placeholderMessage={USER_FILTER_PERMISSION_DROPDOWN_LABEL}
             />
             <div className="flex justify-between">
                 <FormSubmit
