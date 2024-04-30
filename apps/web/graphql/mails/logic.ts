@@ -287,7 +287,6 @@ export async function updateSequence({
     triggerType,
     triggerData,
     filter,
-    data,
     emailsOrder,
 }: {
     ctx: GQLContext;
@@ -298,7 +297,6 @@ export async function updateSequence({
     fromName?: string;
     triggerType?: (typeof Constants.eventTypes)[number];
     triggerData?: string;
-    data?: string;
     emailsOrder?: string[];
 }): Promise<AdminSequence | null> {
     checkIfAuthenticated(ctx);

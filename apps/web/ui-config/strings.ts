@@ -467,11 +467,13 @@ export const ERROR_DELAY_EMPTY = "Scheduled date is not in the future";
 export const FORM_MAIL_SCHEDULE_TIME_LABEL = "Send on";
 export const BTN_SENDING = "Sending";
 export const MAIL_SUBJECT_PLACEHOLDER = "Subject";
+export const MAIL_PREVIEW_TITLE = "Preview Text";
 export const COMPOSE_SEQUENCE_FORM_TITLE = "Sequence name";
 export const COMPOSE_SEQUENCE_ENTRANCE_CONDITION_DATA =
     "Entrance condition data";
 export const COMPOSE_SEQUENCE_FORM_FROM = "From";
 export const COMPOSE_SEQUENCE_ENTRANCE_CONDITION = "Entrance condition";
+export const COMPOSE_SEQUENCE_EDIT_DELAY = "Delay";
 export const MAIL_TO_PLACEHOLDER = "To";
 export const MAIL_BODY_PLACEHOLDER = "Mail content";
 export const PAGE_HEADER_ALL_MAILS = "Mails";
@@ -534,3 +536,4 @@ export const MAIL_REQUEST_FORM_REASON_FIELD = "Reason";
 export const MAIL_REQUEST_FORM_REASON_PLACEHOLDER =
     "Please be as detailed as possible. This will help us review your application better.";
 export const DASHBOARD_SELECT_HEADER = "Duration";
+export const DELETE_EMAIL_MENU = "Delete";

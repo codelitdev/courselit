@@ -423,12 +423,8 @@ function Mails({ address, dispatch, loading, selectedTab }: MailsProps) {
                     setTab(tab);
                 }}
             >
-                <SequencesList
-                    type={Constants.mailTypes[0].toUpperCase() as SequenceType}
-                />
-                <SequencesList
-                    type={Constants.mailTypes[1].toUpperCase() as SequenceType}
-                />
+                <SequencesList type={Constants.mailTypes[0] as SequenceType} />
+                <SequencesList type={Constants.mailTypes[1] as SequenceType} />
             </Tabs>
         </div>
     );

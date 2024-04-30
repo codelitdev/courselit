@@ -2070,6 +2070,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.18.0
     "@typescript-eslint/parser": ^5.18.0
     eslint: ^8.12.0
+    liquidjs: ^10.12.0
     rimraf: ^4.1.1
     tsup: 6.6.0
     typescript: ^5.1.6
@@ -13317,6 +13318,18 @@ __metadata:
     liquid: bin/liquid.js
     liquidjs: bin/liquid.js
   checksum: 7e4980455c05fc732b21852fc98d5db7f3b6dae4507d7ed9d1ced615c72c7325875dd6b6e67a69b37aa26ab7e3909f6540e68a95c298b1e937f8a19e01afc146
+  languageName: node
+  linkType: hard
+
+"liquidjs@npm:^10.12.0":
+  version: 10.12.0
+  resolution: "liquidjs@npm:10.12.0"
+  dependencies:
+    commander: ^10.0.0
+  bin:
+    liquid: bin/liquid.js
+    liquidjs: bin/liquid.js
+  checksum: ad4bec9e07e19d147eb25e04b0a4d943dbeee4082329a8ee837a8bd51568c16544fef743f7c0493a363f7a5e0e9c98c5d0423994318475961fda6d2a922a3fe6
   languageName: node
   linkType: hard
 

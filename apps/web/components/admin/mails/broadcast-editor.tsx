@@ -279,7 +279,9 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
     return (
         <div className="flex flex-col gap-4">
             <Breadcrumbs aria-label="breakcrumb">
-                <Link href="/dashboard/mails">{PAGE_HEADER_ALL_MAILS}</Link>
+                <Link href="/dashboard/mails?tab=Broadcasts">
+                    {PAGE_HEADER_ALL_MAILS}
+                </Link>
                 {PAGE_HEADER_EDIT_MAIL}
             </Breadcrumbs>
             <h1 className="text-4xl font-semibold mb-4">

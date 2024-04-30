@@ -2,6 +2,7 @@ import {
     Address,
     AppMessage,
     Constants,
+    Course,
 } from "@courselit/common-models";
 import {
     Breadcrumbs,
@@ -9,7 +10,15 @@ import {
     FormField,
     Link,
     Select,
+    Button,
+    Menu2,
+    MenuItem,
+    FormSubmit,
+    Skeleton,
 } from "@courselit/components-library";
+import { Pause } from "@courselit/icons";
+import { Play } from "@courselit/icons";
+import { Add, MoreVert } from "@courselit/icons";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import {
     networkAction,
@@ -21,6 +30,7 @@ import {
     COMPOSE_SEQUENCE_ENTRANCE_CONDITION_DATA,
     COMPOSE_SEQUENCE_FORM_FROM,
     COMPOSE_SEQUENCE_FORM_TITLE,
+    DELETE_EMAIL_MENU,
     PAGE_HEADER_ALL_MAILS,
     PAGE_HEADER_EDIT_SEQUENCE,
 } from "@ui-config/strings";
@@ -38,20 +48,38 @@ interface SequenceEditorProps {
     id: string;
     address: Address;
     dispatch: AppDispatch;
+    loading: boolean;
 }
 
-const SequenceEditor = ({ id, address, dispatch }: SequenceEditorProps) => {
+interface TagWithDetails {
+    tag: string;
+}
+
+const SequenceEditor = ({
+    id,
+    address,
+    dispatch,
+    loading,
+}: SequenceEditorProps) => {
     const [title, setTitle] = useState("");
     const [from, setFrom] = useState("");
-    const [fromEmail, setFromEmail] = useState("email@mg.courselit.app");
+    const [fromEmail, setFromEmail] = useState("");
     const [triggerType, setTriggerType] = useState("SUBSCRIBER_ADDED");
     const [triggerData, setTriggerData] = useState("");
-    const [triggerDataOptions, setTriggerDataOptions] = useState([]);
     const [emails, setEmails] = useState([]);
     const [loaded, setLoaded] = useState(false);
+    const [sequence, setSequence] = useState(null);
+    const [tags, setTags] = useState<TagWithDetails[]>([]);
+    const [products, setProducts] = useState<
+        Pick<Course, "title" | "courseId">[]
+    >([]);
+    const [emailsOrder, setEmailsOrder] = useState<string[]>([]);
+    const [status, setStatus] = useState(null);
 
     const onSubmit = async (e: FormEvent, sendLater: boolean = false) => {
         e.preventDefault();
+
+        await updateSequence();
     };
 
     const fetch = useMemo(
@@ -81,7 +109,9 @@ const SequenceEditor = ({ id, address, dispatch }: SequenceEditorProps) => {
                     from {
                         name,
                         email
-                    }
+                    },
+                    emailsOrder,
+                    status
                 }
             }`;
 
@@ -94,12 +124,15 @@ const SequenceEditor = ({ id, address, dispatch }: SequenceEditorProps) => {
             const response = await fetcher.exec();
             if (response.sequence) {
                 const { sequence } = response;
+                setSequence(sequence);
                 setTitle(sequence.title);
                 setTriggerType(sequence.trigger?.type);
                 setTriggerData(sequence.trigger?.data);
                 setFrom(sequence.from?.name);
                 setFromEmail(sequence.from?.email);
                 setEmails(sequence.emails);
+                setEmailsOrder(sequence.emailsOrder);
+                setStatus(sequence.status);
             }
         } catch (e: any) {
             dispatch(setAppMessage(new AppMessage(e.message)));
@@ -113,93 +146,534 @@ const SequenceEditor = ({ id, address, dispatch }: SequenceEditorProps) => {
         loadSequence();
     }, [loadSequence]);
 
+    useEffect(() => {
+        if (
+            (triggerType === "TAG_ADDED" || triggerType === "TAG_REMOVED") &&
+            tags.length === 0
+        ) {
+            getTags();
+        }
+        if (triggerType === "PRODUCT_PURCHASED" && products.length === 0) {
+            getProducts();
+        }
+    }, [triggerType]);
+
+    const getTags = useCallback(async () => {
+        const query = `
+            query {
+                tags: tagsWithDetails {
+                    tag,
+                    count
+                }
+            }
+        `;
+        const fetcher = fetch.setPayload(query).build();
+        try {
+            dispatch(networkAction(true));
+            const response = await fetcher.exec();
+            if (response.tags) {
+                setTags(response.tags);
+            }
+        } catch (err) {
+        } finally {
+            dispatch(networkAction(false));
+            setLoaded(false);
+        }
+    }, [dispatch, fetch]);
+
+    const getProducts = useCallback(async () => {
+        const query = `
+            query { courses: getCoursesAsAdmin(
+                offset: 1
+              ) {
+                title,
+                courseId,
+              }
+            }
+        `;
+        const fetcher = fetch.setPayload(query).build();
+        try {
+            const response = await fetcher.exec();
+            if (response.courses) {
+                setProducts([...response.courses]);
+            }
+        } catch (err: any) {
+            dispatch(setAppMessage(new AppMessage(err.message)));
+        }
+    }, [dispatch, fetch]);
+
+    const addMailToSequence = useCallback(async () => {
+        const query = `
+            mutation AddMailToSequence($sequenceId: String!) {
+                sequence: addMailToSequence(sequenceId: $sequenceId) {
+                    sequenceId,
+                    title,
+                    emails {
+                        emailId,
+                        subject,
+                        delayInMillis,
+                        published
+                    },
+                    trigger {
+                        type,
+                        data
+                    },
+                    from {
+                        name,
+                        email
+                    },
+                    emailsOrder,
+                    status
+                }
+            }`;
+
+        const fetcher = fetch
+            .setPayload({ query, variables: { sequenceId: id } })
+            .build();
+
+        try {
+            dispatch(networkAction(true));
+            const response = await fetcher.exec();
+            if (response.sequence) {
+                const { sequence } = response;
+                setSequence(sequence);
+                setTitle(sequence.title);
+                setTriggerType(sequence.trigger?.type);
+                setTriggerData(sequence.trigger?.data);
+                setFrom(sequence.from?.name);
+                setFromEmail(sequence.from?.email);
+                setEmails(sequence.emails);
+                setEmailsOrder(sequence.emailsOrder);
+                setStatus(sequence.status);
+            }
+        } catch (e: any) {
+            dispatch(setAppMessage(new AppMessage(e.message)));
+        } finally {
+            dispatch(networkAction(false));
+            setLoaded(true);
+        }
+    }, [dispatch, fetch, id]);
+
+    const updateSequence = useCallback(async () => {
+        const query = `
+            mutation UpdateSequence(
+                $sequenceId: String!
+                $title: String!
+                $fromName: String!
+                $fromEmail: String!
+                $triggerType: SequenceTriggerType!
+                $triggerData: String
+                $emailsOrder: [String!]
+            ) {
+                sequence: updateSequence(
+                    sequenceId: $sequenceId
+                    title: $title,
+                    fromName: $fromName,
+                    fromEmail: $fromEmail,
+                    triggerType: $triggerType,
+                    triggerData: $triggerData,
+                    emailsOrder: $emailsOrder
+                ) {
+                    sequenceId,
+                    title,
+                    emails {
+                        emailId,
+                        subject,
+                        delayInMillis,
+                        published
+                    },
+                    trigger {
+                        type,
+                        data
+                    },
+                    from {
+                        name,
+                        email
+                    },
+                    emailsOrder,
+                    status
+                }
+            }`;
+
+        const fetcher = fetch
+            .setPayload({
+                query,
+                variables: {
+                    sequenceId: id,
+                    title,
+                    fromName: from,
+                    fromEmail,
+                    triggerType,
+                    triggerData,
+                    emailsOrder,
+                },
+            })
+            .build();
+
+        try {
+            dispatch(networkAction(true));
+            const response = await fetcher.exec();
+            if (response.sequence) {
+                const { sequence } = response;
+                setSequence(sequence);
+                setTitle(sequence.title);
+                setTriggerType(sequence.trigger?.type);
+                setTriggerData(sequence.trigger?.data);
+                setFrom(sequence.from?.name);
+                setFromEmail(sequence.from?.email);
+                setEmails(sequence.emails);
+                setEmailsOrder(sequence.emailsOrder);
+                setStatus(sequence.status);
+            }
+        } catch (e: any) {
+            dispatch(setAppMessage(new AppMessage(e.message)));
+        } finally {
+            dispatch(networkAction(false));
+            setLoaded(true);
+        }
+    }, [
+        dispatch,
+        fetch,
+        id,
+        title,
+        from,
+        fromEmail,
+        triggerType,
+        triggerData,
+        emailsOrder,
+    ]);
+
+    const startSequence = useCallback(
+        async (action: "start" | "pause") => {
+            const query =
+                action === "start"
+                    ? `
+            mutation StartSequence(
+                $sequenceId: String!
+            ) {
+                sequence: startSequence(
+                    sequenceId: $sequenceId
+                ) {
+                    sequenceId,
+                    title,
+                    emails {
+                        emailId,
+                        subject,
+                        delayInMillis,
+                        published
+                    },
+                    trigger {
+                        type,
+                        data
+                    },
+                    from {
+                        name,
+                        email
+                    },
+                    emailsOrder,
+                    status
+                }
+            }`
+                    : `
+            mutation PauseSequence(
+                $sequenceId: String!
+            ) {
+                sequence: pauseSequence(
+                    sequenceId: $sequenceId
+                ) {
+                    sequenceId,
+                    title,
+                    emails {
+                        emailId,
+                        subject,
+                        delayInMillis,
+                        published
+                    },
+                    trigger {
+                        type,
+                        data
+                    },
+                    from {
+                        name,
+                        email
+                    },
+                    emailsOrder,
+                    status
+                }
+            }`;
+
+            const fetcher = fetch
+                .setPayload({
+                    query,
+                    variables: {
+                        sequenceId: id,
+                    },
+                })
+                .build();
+
+            try {
+                dispatch(networkAction(true));
+                const response = await fetcher.exec();
+                if (response.sequence) {
+                    const { sequence } = response;
+                    setSequence(sequence);
+                    setTitle(sequence.title);
+                    setTriggerType(sequence.trigger?.type);
+                    setTriggerData(sequence.trigger?.data);
+                    setFrom(sequence.from?.name);
+                    setFromEmail(sequence.from?.email);
+                    setEmails(sequence.emails);
+                    setEmailsOrder(sequence.emailsOrder);
+                    setStatus(sequence.status);
+                }
+            } catch (e: any) {
+                dispatch(setAppMessage(new AppMessage(e.message)));
+            } finally {
+                dispatch(networkAction(false));
+                setLoaded(true);
+            }
+        },
+        [dispatch, fetch, id],
+    );
+
     return (
         <div className="flex flex-col gap-4">
             <Breadcrumbs aria-label="breakcrumb">
-                <Link href="/dashboard/mails">{PAGE_HEADER_ALL_MAILS}</Link>
+                <Link href="/dashboard/mails?tab=Sequences">
+                    {PAGE_HEADER_ALL_MAILS}
+                </Link>
                 {PAGE_HEADER_EDIT_SEQUENCE}
             </Breadcrumbs>
-            <h1 className="text-4xl font-semibold mb-4">
-                {PAGE_HEADER_EDIT_SEQUENCE}
-            </h1>
-            <Form className="flex flex-col gap-4 mb-8" onSubmit={onSubmit}>
-                <FormField
-                    value={title}
-                    label={COMPOSE_SEQUENCE_FORM_TITLE}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                        setTitle(e.target.value)
-                    }
-                />
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-4xl font-semibold mb-4">
+                    {PAGE_HEADER_EDIT_SEQUENCE}
+                </h1>
                 <div className="flex gap-2">
+                    {status === Constants.sequenceStatus}
+                    {[
+                        Constants.sequenceStatus[0],
+                        Constants.sequenceStatus[2],
+                    ].includes(status) && (
+                        <Button
+                            disabled={loading}
+                            onClick={() => startSequence("start")}
+                        >
+                            <Play /> Start
+                        </Button>
+                    )}
+                    {status === Constants.sequenceStatus[1] && (
+                        <Button
+                            variant="soft"
+                            disabled={loading}
+                            onClick={() => startSequence("pause")}
+                        >
+                            <Pause /> Pause
+                        </Button>
+                    )}
+                    {/*
+                    <Button onClick={() => createSequence()}>
+                        {BTN_NEW_SEQUENCE}
+                    </Button>
+                    */}
+                </div>
+            </div>
+            {!sequence && (
+                <div className="flex flex-col gap-4 mb-8">
+                    <div className="flex flex-col gap-2">
+                        <Skeleton className="h-3 w-full" />
+                        <Skeleton className="h-6 w-full" />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                        <Skeleton className="h-3 w-full" />
+                        <Skeleton className="h-6 w-full" />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                        <Skeleton className="h-3 w-full" />
+                        <Skeleton className="h-6 w-full" />
+                    </div>
+                </div>
+            )}
+            {sequence && (
+                <Form className="flex flex-col gap-4 mb-8" onSubmit={onSubmit}>
+                    <FormField
+                        value={title}
+                        label={COMPOSE_SEQUENCE_FORM_TITLE}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            setTitle(e.target.value)
+                        }
+                    />
                     <FormField
                         value={from}
                         label={COMPOSE_SEQUENCE_FORM_FROM}
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
                             setFrom(e.target.value)
                         }
-                        className="w-1/2"
+                    />
+                    {/* <div className="flex gap-2">
+                    <FormField
+                        value={from}
+                        label={COMPOSE_SEQUENCE_FORM_FROM}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            setFrom(e.target.value)
+                        }
                     />
                     <div className="w-1/2 self-end">
                         <Select
                             value={fromEmail}
-                            onChange={() => {}}
+                            onChange={(value: string) => setFromEmail(value)}
                             title=""
                             options={[
                                 {
                                     label: "email@mg.courselit.app",
                                     value: "email@mg.courselit.app",
                                 },
+                                {
+                                    label: "Use your custom domain (soon)",
+                                    value: "Custom",
+                                    disabled: true
+                                }
                             ]}
                         />
                     </div>
-                </div>
-                <Select
-                    value={triggerType}
-                    onChange={(value: string) => setTriggerType(value)}
-                    title={COMPOSE_SEQUENCE_ENTRANCE_CONDITION}
-                    options={[
-                        {
-                            label: "Tag added",
-                            value: "TAG_ADDED",
-                        },
-                        {
-                            label: "Tag removed",
-                            value: "TAG_REMOVED",
-                        },
-                        {
-                            label: "Product purchased",
-                            value: "PRODUCT_PURCHASED",
-                        },
-                        {
-                            label: "Subscriber added",
-                            value: "SUBSCRIBER_ADDED",
-                        },
-                    ]}
-                />
-                {triggerType !== Constants.eventTypes[3] && (
+                </div> */}
                     <Select
-                        value={triggerData}
-                        onChange={(value: string) => setTriggerData(value)}
-                        title={COMPOSE_SEQUENCE_ENTRANCE_CONDITION_DATA}
-                        options={triggerDataOptions}
+                        value={triggerType}
+                        onChange={(value: string) => setTriggerType(value)}
+                        title={COMPOSE_SEQUENCE_ENTRANCE_CONDITION}
+                        options={[
+                            {
+                                label: "Tag added",
+                                value: "TAG_ADDED",
+                            },
+                            {
+                                label: "Tag removed",
+                                value: "TAG_REMOVED",
+                            },
+                            {
+                                label: "Product purchased",
+                                value: "PRODUCT_PURCHASED",
+                            },
+                            {
+                                label: "Subscriber added",
+                                value: "SUBSCRIBER_ADDED",
+                            },
+                        ]}
                     />
-                )}
-            </Form>
-            <div>
-                <h2 className="font-semibold">Emails</h2>
-                {emails.map((email) => (
-                    <div key={email.emailId} className="flex gap-4">
-                        {email.subject}
+                    {triggerType !== "SUBSCRIBER_ADDED" && (
+                        <Select
+                            value={triggerData}
+                            onChange={(value: string) => setTriggerData(value)}
+                            title={COMPOSE_SEQUENCE_ENTRANCE_CONDITION_DATA}
+                            options={
+                                triggerType === "TAG_ADDED" ||
+                                triggerType === "TAG_REMOVED"
+                                    ? tags.map((tag) => ({
+                                          label: tag.tag,
+                                          value: tag.tag,
+                                      }))
+                                    : triggerType === "PRODUCT_PURCHASED"
+                                    ? products.map((product) => ({
+                                          label: product.title,
+                                          value: product.courseId,
+                                      }))
+                                    : []
+                            }
+                        />
+                    )}
+                    <div className="flex justify-between">
+                        <FormSubmit
+                            text="Save"
+                            loading={loading}
+                            disabled={
+                                loading ||
+                                title === "" ||
+                                from === "" ||
+                                fromEmail === "" ||
+                                triggerType === "" ||
+                                (triggerType !== "SUBSCRIBER_ADDED" &&
+                                    !triggerData) ||
+                                (sequence.title === title &&
+                                    sequence.from?.name === from &&
+                                    sequence.from?.email === fromEmail &&
+                                    sequence.trigger?.type === triggerType &&
+                                    sequence.trigger?.data === triggerData)
+                            }
+                        />
                     </div>
-                ))}
+                </Form>
+            )}
+            <div className="flex flex-col gap-2">
+                <h2 className="font-semibold">Emails</h2>
+                <div className="flex flex-col gap-2 mb-2">
+                    {!sequence && (
+                        <div className="flex flex-col gap-2">
+                            <div className="flex gap-2 items-center">
+                                <Skeleton className="h-8 w-[100px]" />
+                                <Skeleton className="h-8 w-full" />
+                                <Skeleton className="h-8 w-8" />
+                            </div>
+                            <div className="flex gap-2 items-center">
+                                <Skeleton className="h-8 w-[100px]" />
+                                <Skeleton className="h-8 w-full" />
+                                <Skeleton className="h-8 w-8" />
+                            </div>
+                        </div>
+                    )}
+                    {sequence &&
+                        emails.map((email) => (
+                            <div
+                                key={email.emailId}
+                                className="flex gap-2 items-center"
+                            >
+                                <div className="bg-slate-100 rounded px-3 py-1 text-slate-600 font-semibold text-sm">
+                                    {Math.round(
+                                        email.delayInMillis /
+                                            (1000 * 60 * 60 * 24),
+                                    )}{" "}
+                                    day
+                                </div>
+                                <Link
+                                    href={`/dashboard/mails/sequence/${id}/${email.emailId}/edit`}
+                                    style={{
+                                        flex: "1",
+                                    }}
+                                >
+                                    <div className="hover:bg-slate-100 rounded px-3 py-1 text-slate-600">
+                                        {email.subject}
+                                    </div>
+                                </Link>
+                                <Menu2 icon={<MoreVert />} variant="soft">
+                                    <MenuItem
+                                        component="dialog"
+                                        title={DELETE_EMAIL_MENU}
+                                        triggerChildren={DELETE_EMAIL_MENU}
+                                        onClick={() => {}}
+                                    />
+                                </Menu2>
+                            </div>
+                        ))}
+                </div>
+                {!sequence && <Skeleton className="h-8 w-[100px]" />}
+                {sequence && (
+                    <div>
+                        <Button
+                            variant="soft"
+                            onClick={addMailToSequence}
+                            disabled={loading}
+                        >
+                            <Add />
+                            New mail
+                        </Button>
+                    </div>
+                )}
             </div>
         </div>
     );
 };
 
 const mapStateToProps = (state: AppState) => ({
-    auth: state.auth,
     address: state.address,
+    loading: state.networkAction,
 });
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({

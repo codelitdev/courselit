@@ -1,6 +1,7 @@
 import {
     Address,
     AppMessage,
+    Constants,
     Sequence,
     SequenceType,
 } from "@courselit/common-models";
@@ -17,7 +18,7 @@ import {
     networkAction,
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
-import { FetchBuilder } from "@courselit/utils";
+import { FetchBuilder, capitalize } from "@courselit/utils";
 import {
     MAIL_TABLE_HEADER_STATUS,
     MAIL_TABLE_HEADER_SUBJECT,
@@ -42,7 +43,7 @@ const SequencesList = ({
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [count, setCount] = useState(0);
     const [sequences, setSequences] = useState<
-        Pick<Sequence, "sequenceId" | "title" | "emails">[]
+        Pick<Sequence, "sequenceId" | "title" | "emails" | "status">[]
     >([]);
 
     const handlePageChange = (newPage: number) => {
@@ -73,7 +74,8 @@ const SequencesList = ({
                         subject,
                         published
                     }
-                    title
+                    title,
+                    status
                 },
             }`;
 
@@ -82,7 +84,7 @@ const SequencesList = ({
                 query,
                 variables: {
                     page,
-                    type,
+                    type: type.toUpperCase(),
                 },
             })
             .build();
@@ -110,7 +112,7 @@ const SequencesList = ({
             .setPayload({
                 query,
                 variables: {
-                    type,
+                    type: type.toUpperCase(),
                 },
             })
             .build();
@@ -144,22 +146,48 @@ const SequencesList = ({
                     <TableRow key={broadcast.sequenceId}>
                         <td className="py-4">
                             <Link
-                                href={`/dashboard/mails/broadcast/${broadcast.sequenceId}/edit`}
+                                href={`/dashboard/mails/${type}/${broadcast.sequenceId}/edit`}
                                 className="flex"
                             >
-                                {broadcast.emails[0].subject === " "
-                                    ? "--"
-                                    : broadcast.emails[0].subject}
+                                {type === "broadcast" &&
+                                    (broadcast.emails[0].subject === " "
+                                        ? "--"
+                                        : broadcast.emails[0].subject)}
+                                {type === "sequence" && broadcast.title}
                             </Link>
                         </td>
                         <td align="right">
-                            {broadcast.emails[0].published && (
-                                <Chip className="!bg-black text-white !border-black">
-                                    Sent
-                                </Chip>
+                            {type === "broadcast" && (
+                                <>
+                                    {broadcast.emails[0].published && (
+                                        <Chip className="!bg-black text-white !border-black">
+                                            Sent
+                                        </Chip>
+                                    )}
+                                    {!broadcast.emails[0].published && (
+                                        <Chip>Draft</Chip>
+                                    )}
+                                </>
                             )}
-                            {!broadcast.emails[0].published && (
-                                <Chip>Draft</Chip>
+                            {type === "sequence" && (
+                                <>
+                                    {[
+                                        Constants.sequenceStatus[0],
+                                        Constants.sequenceStatus[2],
+                                    ].includes(
+                                        broadcast.status as "draft" | "paused",
+                                    ) && (
+                                        <Chip>
+                                            {capitalize(broadcast.status)}
+                                        </Chip>
+                                    )}
+                                    {broadcast.status ===
+                                        Constants.sequenceStatus[1] && (
+                                        <Chip className="!bg-black text-white !border-black">
+                                            {capitalize(broadcast.status)}
+                                        </Chip>
+                                    )}
+                                </>
                             )}
                         </td>
                     </TableRow>

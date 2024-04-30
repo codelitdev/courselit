@@ -126,7 +126,6 @@ const mutations = {
             triggerType: { type: types.sequenceTriggerType },
             triggerData: { type: GraphQLString },
             filter: { type: GraphQLString },
-            data: { type: GraphQLString },
             emailsOrder: { type: new GraphQLList(GraphQLString) },
         },
         resolve: async (
@@ -139,7 +138,6 @@ const mutations = {
                 triggerType,
                 triggerData,
                 filter,
-                data,
                 emailsOrder,
             }: {
                 sequenceId: string;
@@ -149,7 +147,6 @@ const mutations = {
                 triggerType?: (typeof Constants.eventTypes)[number];
                 triggerData?: string;
                 filter?: string;
-                data?: string;
                 emailsOrder?: string[];
             },
             context: GQLContext,
@@ -163,7 +160,6 @@ const mutations = {
                 triggerType,
                 triggerData,
                 filter,
-                data,
                 emailsOrder,
             }),
     },
