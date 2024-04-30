@@ -500,7 +500,7 @@ const Settings = (props: SettingsProps) => {
                     SITE_CUSTOMISATIONS_SETTING_HEADER,
                     SITE_APIKEYS_SETTING_HEADER,
                 ]}
-                selected={selectedTab}
+                defaultValue={selectedTab}
             >
                 <Form
                     onSubmit={handleSettingsSubmit}

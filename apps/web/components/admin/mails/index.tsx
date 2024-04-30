@@ -11,10 +11,10 @@ import {
 import { AppDispatch, AppState } from "@courselit/state-management";
 import {
     BTN_NEW_MAIL,
-    MAIL_TABLE_HEADER_STATUS,
     PAGE_HEADER_ALL_MAILS,
-    MAIL_TABLE_HEADER_SUBJECT,
-    PAGE_PLACEHOLDER_MAIL,
+    BROADCASTS,
+    SEQUENCES,
+    BTN_NEW_SEQUENCE,
     //BTN_NEW_SEQUENCE,
 } from "../../../ui-config/strings";
 import { connect } from "react-redux";
@@ -24,13 +24,7 @@ import { setAppMessage } from "@courselit/state-management/dist/action-creators"
 import { useRouter } from "next/router";
 import { ThunkDispatch } from "redux-thunk";
 import {
-    Link,
-    Chip,
     Button,
-    Table,
-    TableHead,
-    TableBody,
-    TableRow,
     Tabs,
     Card,
     CardHeader,
@@ -41,6 +35,7 @@ import {
 } from "@courselit/components-library";
 import { AnyAction } from "redux";
 import RequestForm from "./request-form";
+import SequencesList from "./sequences-list";
 const { networkAction } = actionCreators;
 
 interface MailsProps {
@@ -48,9 +43,12 @@ interface MailsProps {
     profile: Profile;
     dispatch: AppDispatch;
     loading: boolean;
+    selectedTab: typeof BROADCASTS | typeof SEQUENCES;
 }
 
-function Mails({ address, dispatch, loading }: MailsProps) {
+type MailsTab = typeof BROADCASTS | typeof SEQUENCES;
+
+function Mails({ address, dispatch, loading, selectedTab }: MailsProps) {
     const [broadcastPage, setBroadcastPage] = useState(1);
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -62,6 +60,11 @@ function Mails({ address, dispatch, loading }: MailsProps) {
     >([]);
     const [siteInfo, setSiteInfo] = useState<Domain>();
     const router = useRouter();
+    const [tab, setTab] = useState<MailsTab>(
+        [BROADCASTS, SEQUENCES].includes(selectedTab)
+            ? selectedTab
+            : BROADCASTS,
+    );
 
     const handleBroadcastPageChange = (newPage: number) => {
         setBroadcastPage(newPage);
@@ -71,14 +74,6 @@ function Mails({ address, dispatch, loading }: MailsProps) {
         .setUrl(`${address.backend}/api/graph`)
         .setIsGraphQLEndpoint(true);
 
-    /*
-    const handleRowsPerPageChange = (
-        e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-    ) => {
-        setRowsPerPage(parseInt(e.target.value, 10));
-        setPage(0);
-    };
-    */
     useEffect(() => {
         const getSiteInfo = async () => {
             const query = `
@@ -151,46 +146,46 @@ function Mails({ address, dispatch, loading }: MailsProps) {
         }
     };
 
-    const loadMails = async () => {
-        const query = `
-            query {
-                mails: getMails(searchData: {
-                    offset: ${page},
-                    rowsPerPage: ${rowsPerPage}
-                }) {
-                    mailId,
-                    to,
-                    subject,
-                    body,
-                    published,
-                    user {
-                        userId,
-                        email,
-                        name
-                    },
-                    updatedAt
-                },
-                count: getMailsCount
-            }`;
+    // const loadMails = async () => {
+    //     const query = `
+    //         query {
+    //             mails: getMails(searchData: {
+    //                 offset: ${page},
+    //                 rowsPerPage: ${rowsPerPage}
+    //             }) {
+    //                 mailId,
+    //                 to,
+    //                 subject,
+    //                 body,
+    //                 published,
+    //                 user {
+    //                     userId,
+    //                     email,
+    //                     name
+    //                 },
+    //                 updatedAt
+    //             },
+    //             count: getMailsCount
+    //         }`;
 
-        const fetcher = fetch.setPayload(query).build();
+    //     const fetcher = fetch.setPayload(query).build();
 
-        try {
-            dispatch(networkAction(true));
-            const response = await fetcher.exec();
-            if (response.mails) {
-                setMails(response.mails);
-            }
-        } catch (e: any) {
-            dispatch(setAppMessage(new AppMessage(e.message)));
-        } finally {
-            dispatch(networkAction(false));
-        }
-    };
+    //     try {
+    //         dispatch(networkAction(true));
+    //         const response = await fetcher.exec();
+    //         if (response.mails) {
+    //             setMails(response.mails);
+    //         }
+    //     } catch (e: any) {
+    //         dispatch(setAppMessage(new AppMessage(e.message)));
+    //     } finally {
+    //         dispatch(networkAction(false));
+    //     }
+    // };
 
-    useEffect(() => {
-        loadMails();
-    }, [page, rowsPerPage]);
+    // useEffect(() => {
+    //     loadMails();
+    // }, [page, rowsPerPage]);
 
     useEffect(() => {
         loadBroadcasts();
@@ -298,17 +293,24 @@ function Mails({ address, dispatch, loading }: MailsProps) {
     };
     */
 
-    const createBroadcast = async () => {
+    const createSequence = async (type: SequenceType) => {
         const mutation = `
-        mutation {
-            sequence: createSequence(type: BROADCAST) {
+        mutation createSequence(
+            $type: SequenceType!
+        ) {
+            sequence: createSequence(type: $type) {
                 sequenceId
             }
         }
     `;
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
-            .setPayload(mutation)
+            .setPayload({
+                query: mutation,
+                variables: {
+                    type,
+                },
+            })
             .setIsGraphQLEndpoint(true)
             .build();
         try {
@@ -318,7 +320,9 @@ function Mails({ address, dispatch, loading }: MailsProps) {
             const response = await fetch.exec();
             if (response.sequence && response.sequence.sequenceId) {
                 router.push(
-                    `/dashboard/mails/broadcast/${response.sequence.sequenceId}/edit`,
+                    `/dashboard/mails/${
+                        tab === BROADCASTS ? "broadcast" : "sequence"
+                    }/${response.sequence.sequenceId}/edit`,
                 );
             }
         } catch (err) {
@@ -327,6 +331,15 @@ function Mails({ address, dispatch, loading }: MailsProps) {
             (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
                 networkAction(false),
             );
+        }
+    };
+
+    const onPrimaryButtonClick = () => {
+        if (tab === BROADCASTS) {
+            createSequence("BROADCAST");
+        } else if (tab === SEQUENCES) {
+            createSequence("SEQUENCE");
+        } else {
         }
     };
 
@@ -393,8 +406,8 @@ function Mails({ address, dispatch, loading }: MailsProps) {
                     {PAGE_HEADER_ALL_MAILS}
                 </h1>
                 <div className="flex gap-2">
-                    <Button onClick={() => createBroadcast()}>
-                        {BTN_NEW_MAIL}
+                    <Button onClick={onPrimaryButtonClick}>
+                        {tab === BROADCASTS ? BTN_NEW_MAIL : BTN_NEW_SEQUENCE}
                     </Button>
                     {/*
                     <Button onClick={() => createSequence()}>
@@ -403,59 +416,19 @@ function Mails({ address, dispatch, loading }: MailsProps) {
                     */}
                 </div>
             </div>
-            <Tabs items={["Broadcasts"]}>
-                <div>
-                    {broadcasts.length === 0 && (
-                        <div className="flex justify-center">
-                            {PAGE_PLACEHOLDER_MAIL}
-                        </div>
-                    )}
-                    {broadcasts.length > 0 && (
-                        <Table aria-label="Broadcasts" className="w-full mt-4">
-                            <TableHead>
-                                <td>{MAIL_TABLE_HEADER_SUBJECT}</td>
-                                <td align="right">
-                                    {MAIL_TABLE_HEADER_STATUS}
-                                </td>
-                            </TableHead>
-                            <TableBody
-                                count={broadcastCount}
-                                page={broadcastPage}
-                                onPageChange={handleBroadcastPageChange}
-                                loading={loading}
-                            >
-                                {broadcasts.map((broadcast) => (
-                                    <TableRow key={broadcast.sequenceId}>
-                                        <td className="py-4">
-                                            <Link
-                                                href={`/dashboard/mails/broadcast/${broadcast.sequenceId}/edit`}
-                                                className="flex"
-                                            >
-                                                {broadcast.emails[0].subject ===
-                                                " "
-                                                    ? "--"
-                                                    : broadcast.emails[0]
-                                                          .subject}
-                                            </Link>
-                                        </td>
-                                        <td align="right">
-                                            {broadcast.emails[0].published && (
-                                                <Chip className="!bg-black text-white !border-black">
-                                                    Sent
-                                                </Chip>
-                                            )}
-                                            {!broadcast.emails[0].published && (
-                                                <Chip>Draft</Chip>
-                                            )}
-                                        </td>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    )}
-                </div>
-                <div>Sequences</div>
-                <div>Template</div>
+            <Tabs
+                items={[BROADCASTS, SEQUENCES]}
+                value={tab}
+                onChange={(tab: MailsTab) => {
+                    setTab(tab);
+                }}
+            >
+                <SequencesList
+                    type={Constants.mailTypes[0].toUpperCase() as SequenceType}
+                />
+                <SequencesList
+                    type={Constants.mailTypes[1].toUpperCase() as SequenceType}
+                />
             </Tabs>
         </div>
     );
