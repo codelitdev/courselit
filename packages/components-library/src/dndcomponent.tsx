@@ -1,4 +1,4 @@
-import React, { Key, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
 import { DragHandle } from "@courselit/icons";
 import {
@@ -26,14 +26,14 @@ export function SortableItem({
     id,
     Renderer,
     rendererProps,
-    // ...rest
-}: {
+} // ...rest
+: {
     id: number;
     Renderer: any;
     // [x: string]: any;
     rendererProps: Record<string, unknown>;
 }) {
-    console.log("props ", id, Renderer, rendererProps);
+    // console.log("props ", id, Renderer, rendererProps);
     const {
         attributes,
         listeners,
@@ -77,9 +77,9 @@ const DndComponent = ({
     onChange: any;
     Renderer: any;
 }) => {
-    const [activeId, setActiveId] = useState(null);
+    // const [activeId, setActiveId] = useState(null);
     const [data, setData] = useState(items);
-    console.log("items dndcomp ", data);
+    // console.log("items dndcomp ", data);
 
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -102,12 +102,12 @@ const DndComponent = ({
     );
 
     const findPositionOfItems = (id: number) =>
-        data.findIndex((item: { link: { id: number } }) => item.link.id === id);
+        data.findIndex((item: { id: number }) => item.id === id);
 
-    function handleDragStart(event: { active: any }) {
-        const { active } = event;
-        setActiveId(active.id);
-    }
+    // function handleDragStart(event: { active: any }) {
+    //     const { active } = event;
+    //     setActiveId(active.id);
+    // }
 
     const handleDragEnd = (event: { active: any; over: any }) => {
         const { active, over } = event;
@@ -122,7 +122,7 @@ const DndComponent = ({
 
     useEffect(() => {
         if (onChange) {
-            console.log("items onChange", data);
+            // console.log("items onChange", data);
             onChange(data);
         }
     }, [data]);
@@ -131,18 +131,17 @@ const DndComponent = ({
         <DndContext
             sensors={sensors}
             collisionDetection={closestCorners}
-            onDragStart={handleDragStart}
+            // onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
         >
             <SortableContext
-                items={data.map((item: { link: { id: any } }) => item.link.id)}
+                items={data.map((item: { id: any }) => item.id)}
                 strategy={verticalListSortingStrategy}
             >
-                {data.map((item: any, index: any) => (
+                {data.map((item: any) => (
                     <SortableItem
-                        key={item.link.id}
-                        id={item.link.id}
-                        // {...item}
+                        key={item.id}
+                        id={item.id}
                         rendererProps={item}
                         Renderer={Renderer}
                     />

@@ -91,7 +91,7 @@ function LessonSection({ group, course, onGroupDelete }: LessonSectionProps) {
                         // }))}
                         Renderer={reorderLessonList}
                         onChange={(items: any) => {
-                            console.log("dnd items", items);
+                            // console.log("dnd items", items);
                             // setUpdatedLinks(items);
                         }}
                     />

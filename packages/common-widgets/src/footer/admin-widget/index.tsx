@@ -210,8 +210,8 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                                     }),
                                 )}
                                 Renderer={LinkEditor}
-                                onChange={(items: any) => {
-                                    console.log("dnd items", items);
+                                onChange={() => {
+                                    // console.log("dnd items", items);
                                     // setUpdatedLinks(items);
                                 }}
                             />
@@ -280,8 +280,8 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                         onDelete: onLinkDeleted,
                     }))}
                     Renderer={sections1}
-                    onChange={(items: any) => {
-                        console.log("dnd items", items);
+                    onChange={() => {
+                        // console.log("dnd items", items);
                         // setUpdatedLinks(items);
                     }}
                 />
@@ -334,8 +334,8 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                                             }),
                                         )}
                                         Renderer={LinkEditor}
-                                        onChange={(items: any) => {
-                                            console.log("dnd items", items);
+                                        onChange={() => {
+                                            // console.log("dnd items", items);
                                             // setUpdatedLinks(items);
                                         }}
                                     />

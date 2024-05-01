@@ -48,7 +48,7 @@ export default function LinkEditor({
         setEditing(false);
     };
 
-    console.log("linkEditor", label);
+    // console.log("linkEditor", label);
     return (
         <>
             {!editing && (
