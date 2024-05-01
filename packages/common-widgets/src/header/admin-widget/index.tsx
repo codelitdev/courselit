@@ -22,6 +22,9 @@ import {
     linkAlignment as defaultLinkAlignment,
     showLoginControl as defaultShowLoginControl,
 } from "../defaults";
+import { v4 as uuidv4 } from "uuid";
+import { DndComponent } from "@courselit/components-library";
+import { generateUniqueId } from "@courselit/utils";
 
 interface AdminWidgetProps {
     settings: Settings;
@@ -30,6 +33,11 @@ interface AdminWidgetProps {
 
 export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
     const [links, setLinks] = useState(settings.links || []);
+    console.log("links", links);
+
+    const [updatedLinks, setUpdatedLinks] = useState<any>([]);
+    console.log("updatedLinks", updatedLinks);
+
     const [appBarBackground, setAppBarBackground] = useState<
         string | undefined
     >(settings.appBarBackground);
@@ -95,6 +103,7 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
     ]);
 
     const onLinkChanged = (index: number, link: Link) => {
+        console.log("onLinkChanged",index, link)
         links[index] = link;
         setLinks([...links]);
     };
@@ -108,13 +117,64 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
         const link: Link = {
             label: "Link",
             href: "https://courselit.app",
+            id: generateUniqueId(),
         };
         setLinks([...links, link]);
     };
 
+    // function SideBarNavLinks() {
+    //     return (
+    //         links &&
+    //         links.map((link, index) => (
+    //             // console.log("map link - ",link),
+    //             <div key={`${link.label}-${link.href}-${index}`}>
+    //                 <LinkEditor
+    //                     link={link}
+    //                     index={index}
+    //                     key={`${link.label}-${link.href}-${index}`}
+    //                     onChange={onLinkChanged}
+    //                     onDelete={onLinkDeleted}
+    //                 />
+    //             </div>
+    //         ))
+    //     );
+    // }
+    // SideBarNavLinks()
+
+    function updatedNavLinks() {
+        updatedLinks &&
+            updatedLinks.map((link, index) =>
+                console.log("updatedNavLinks", link.link.label),
+                // <div key={`${link.label}-${link.href}-${index}`}>
+                //     <LinkEditor
+                //         link={link}
+                //         index={index}
+                //         key={`${link.label}-${link.href}-${index}`}
+                //         onChange={onLinkChanged}
+                //         onDelete={onLinkDeleted}
+                //     />
+                // </div>
+            );
+    }
+    updatedNavLinks();
+
     return (
         <div className="flex flex-col gap-4 mb-4">
             <AdminWidgetPanel title="Links">
+                {links && <DndComponent
+                    items={links.map((link: Link, index: number) => ({
+                        link: link,
+                        index: index,
+                        onChange: onLinkChanged,
+                        onDelete: onLinkDeleted,
+                    }))}
+                    
+                    Renderer={LinkEditor}
+                    onChange={(items: any) => {
+                        console.log("dnd items", items);
+                        setLinks(items.map((item)=>item.link));
+                    }}
+                /> } 
                 {links &&
                     links.map((link, index) => (
                         <div key={`${link.label}-${link.href}-${index}`}>

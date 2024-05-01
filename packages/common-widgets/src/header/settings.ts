@@ -5,6 +5,7 @@ export interface Link {
     href: string;
     isButton?: boolean;
     isPrimary?: boolean;
+    id: string;
 }
 
 export default interface Settings extends WidgetDefaultSettings {

@@ -26,6 +26,8 @@ import {
     socials as defaultSocials,
     socialIconsSize as defaultSocialIconsSize,
 } from "../defaults";
+import { DndComponent } from "@courselit/components-library";
+import { generateUniqueId } from "@courselit/utils";
 
 export interface AdminWidgetProps {
     onChange: (...args: any[]) => void;
@@ -38,9 +40,18 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
             {
                 name: "Legal",
                 links: [
-                    { label: "Terms of use", href: "/p/terms" },
-                    { label: "Privacy policy", href: "/p/privacy" },
+                    {
+                        label: "Terms of use",
+                        href: "/p/terms",
+                        id: generateUniqueId(),
+                    },
+                    {
+                        label: "Privacy policy",
+                        href: "/p/privacy",
+                        id: generateUniqueId(),
+                    },
                 ],
+                id: generateUniqueId(),
             },
         ],
     );
@@ -105,8 +116,10 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                 {
                     label: "Link",
                     href: "https://courselit.app",
+                    id: generateUniqueId(),
                 },
             ],
+            id: generateUniqueId(),
         };
         setSections([...sections, section]);
     };
@@ -140,6 +153,7 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
         const link: Link = {
             label: "Link",
             href: "https://courselit.app",
+            id: generateUniqueId(),
         };
         const newSections = [...sections];
         newSections[sectionIndex].links.push(link);
@@ -152,9 +166,125 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
         setSocials(newSocials);
     };
 
+    function sections1() {
+        return (
+            <Accordion type="single" collapsible className="w-full">
+                {sections.map((section, sectionIndex) => (
+                    <AccordionItem
+                        value={`${section.name}-${sectionIndex}`}
+                        key={section.name || `${section.name}-${sectionIndex}`}
+                    >
+                        <AccordionTrigger>
+                            {section.name || "[empty]"}
+                        </AccordionTrigger>
+                        <AccordionContent className="flex flex-col gap-4">
+                            <Form
+                                className="flex gap-2 items-end"
+                                onSubmit={renameSection(sectionIndex)}
+                            >
+                                <FormField
+                                    label="Section header"
+                                    value={
+                                        sectionBeingEdited === sectionIndex
+                                            ? sectionName
+                                            : section.name
+                                    }
+                                    onChange={(e) => {
+                                        setSectionBeingEdited(sectionIndex);
+                                        setSectionName(e.target.value);
+                                    }}
+                                    className="w-full px-[4px]"
+                                />
+                                <IconButton>
+                                    <Check />
+                                </IconButton>
+                            </Form>
+                            <h3 className="mb-1 font-medium">Links</h3>
+                            <DndComponent
+                                items={section.links.map(
+                                    (link: Link, index: number) => ({
+                                        link: link,
+                                        index: index,
+                                        onChange: onLinkChanged,
+                                        onDelete: onLinkDeleted,
+                                    }),
+                                )}
+                                Renderer={LinkEditor}
+                                onChange={(items: any) => {
+                                    console.log("dnd items", items);
+                                    // setUpdatedLinks(items);
+                                }}
+                            />
+                            {section.links &&
+                                section.links.map((link, index) => (
+                                    <div
+                                        key={`${link.label}-${link.href}-${index}`}
+                                    >
+                                        <LinkEditor
+                                            link={link}
+                                            index={index}
+                                            sectionIndex={sectionIndex}
+                                            key={`${link.label}-${link.href}-${index}`}
+                                            onChange={onLinkChanged}
+                                            onDelete={onLinkDeleted}
+                                        />
+                                    </div>
+                                ))}
+                            <div className="flex justify-end">
+                                <Button
+                                    onClick={() => addNewLink(sectionIndex)}
+                                    fullWidth
+                                >
+                                    Add new link
+                                </Button>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button
+                                    onClick={() => {
+                                        if (confirmDelete) {
+                                            const newSections = [...sections];
+                                            newSections.splice(sectionIndex, 1);
+                                            setSections(newSections);
+                                            setConfirmDelete(false);
+                                        } else {
+                                            setConfirmDelete(true);
+                                        }
+                                    }}
+                                >
+                                    {confirmDelete ? "Sure?" : "Delete section"}
+                                </Button>
+                                {confirmDelete && (
+                                    <Button
+                                        onClick={() => setConfirmDelete(false)}
+                                        variant="secondary"
+                                    >
+                                        Cancel
+                                    </Button>
+                                )}
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                ))}
+            </Accordion>
+        );
+    }
+
     return (
         <div className="flex flex-col gap-4 mb-4">
             <AdminWidgetPanel title="Sections">
+                <DndComponent
+                    items={sections.map((link, index: number) => ({
+                        link: link,
+                        index: index,
+                        onChange: onLinkChanged,
+                        onDelete: onLinkDeleted,
+                    }))}
+                    Renderer={sections1}
+                    onChange={(items: any) => {
+                        console.log("dnd items", items);
+                        // setUpdatedLinks(items);
+                    }}
+                />
                 {sections && (
                     <Accordion type="single" collapsible className="w-full">
                         {sections.map((section, sectionIndex) => (
@@ -194,6 +324,21 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                                         </IconButton>
                                     </Form>
                                     <h3 className="mb-1 font-medium">Links</h3>
+                                    <DndComponent
+                                        items={section.links.map(
+                                            (link: Link, index: number) => ({
+                                                link: link,
+                                                index: index,
+                                                onChange: onLinkChanged,
+                                                onDelete: onLinkDeleted,
+                                            }),
+                                        )}
+                                        Renderer={LinkEditor}
+                                        onChange={(items: any) => {
+                                            console.log("dnd items", items);
+                                            // setUpdatedLinks(items);
+                                        }}
+                                    />
                                     {section.links &&
                                         section.links.map((link, index) => (
                                             <div

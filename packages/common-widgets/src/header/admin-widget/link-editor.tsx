@@ -37,6 +37,7 @@ export default function LinkEditor({
                 href,
                 isButton,
                 isPrimary,
+                id: link.id,
             });
             setEditing(false);
         }
@@ -47,6 +48,7 @@ export default function LinkEditor({
         setEditing(false);
     };
 
+    console.log("linkEditor", label);
     return (
         <>
             {!editing && (

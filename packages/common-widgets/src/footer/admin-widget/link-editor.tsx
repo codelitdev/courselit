@@ -32,6 +32,7 @@ export default function LinkEditor({
             onChange(sectionIndex, index, {
                 label,
                 href,
+                id: link.id,
             });
             setEditing(false);
         }

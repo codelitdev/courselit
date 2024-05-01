@@ -3,11 +3,13 @@ import { WidgetDefaultSettings } from "@courselit/common-models";
 export interface Link {
     label: string;
     href: string;
+    id: string;
 }
 
 export interface Section {
     name: string;
     links: Link[];
+    id: string;
 }
 
 export interface Socials {

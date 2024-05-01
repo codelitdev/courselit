@@ -17,6 +17,7 @@ import {
     Button,
     Menu2,
     MenuItem,
+    DndComponent,
 } from "@courselit/components-library";
 import {
     actionCreators,
@@ -34,6 +35,21 @@ interface LessonSectionProps {
 }
 
 function LessonSection({ group, course, onGroupDelete }: LessonSectionProps) {
+    function reorderLessonList() {
+        return course.lessons
+            .filter((lesson: Lesson) => lesson.groupId === group.id)
+            .sort((a: any, b: any) => a.groupRank - b.groupRank)
+            .map((lesson: Lesson) => (
+                <div className="flex items-center gap-2" key={lesson.lessonId}>
+                    <LessonIcon type={lesson.type} />
+                    <Link
+                        href={`/dashboard/product/${course.courseId}/section/${group.id}/lesson/${lesson.lessonId}`}
+                    >
+                        {lesson.title}
+                    </Link>
+                </div>
+            ));
+    }
     return (
         <Section>
             <div className="flex flex-col gap-4">
@@ -57,6 +73,28 @@ function LessonSection({ group, course, onGroupDelete }: LessonSectionProps) {
                     </Menu2>
                 </div>
                 <div>
+                    <DndComponent
+                        items={course.lessons
+                            .filter(
+                                (lesson: Lesson) => lesson.groupId === group.id,
+                            )
+                            .sort((a: any, b: any) => a.groupRank - b.groupRank)
+                            .map((lesson: Lesson, index: number) => ({
+                                link: lesson,
+                                index: index,
+                            }))}
+                        // items={course.lessons.map((link, index: number) => ({
+                        //     link: link,
+                        //     index: index,
+                        //     // onChange: onLinkChanged,
+                        //     // onDelete: onLinkDeleted,
+                        // }))}
+                        Renderer={reorderLessonList}
+                        onChange={(items: any) => {
+                            console.log("dnd items", items);
+                            // setUpdatedLinks(items);
+                        }}
+                    />
                     {course.lessons
                         .filter((lesson: Lesson) => lesson.groupId === group.id)
                         .sort((a: any, b: any) => a.groupRank - b.groupRank)

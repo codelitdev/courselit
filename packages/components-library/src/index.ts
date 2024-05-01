@@ -40,6 +40,7 @@ import PageBuilderPropertyHeader from "./page-builder-property-header";
 import CssIdField from "./css-id-field";
 import Select from "./select";
 import Tooltip from "./tooltip";
+import DndComponent from "./dndcomponent";
 
 export { Button as Button2 } from "./components/ui/button";
 export * from "./menu";
@@ -94,4 +95,5 @@ export {
     PageBuilderSlider,
     PageBuilderPropertyHeader,
     CssIdField,
+    DndComponent
 };
