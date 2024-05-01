@@ -87,7 +87,8 @@ const SequenceMailEditor = ({
                         subject,
                         delayInMillis,
                         published,
-                        content
+                        content,
+                        previewText,
                     },
                     trigger {
                         type,
@@ -135,7 +136,7 @@ const SequenceMailEditor = ({
 
     const updateMail = useCallback(async () => {
         const query = `
-            query UpdateMail(
+            mutation UpdateMail(
                 $sequenceId: String!
                 $emailId: String!
                 $subject: String
@@ -218,7 +219,17 @@ const SequenceMailEditor = ({
         } finally {
             dispatch(networkAction(false));
         }
-    }, [dispatch, fetch, sequenceId]);
+    }, [
+        dispatch,
+        fetch,
+        sequenceId,
+        email,
+        subject,
+        content,
+        delay,
+        published,
+        previewText,
+    ]);
 
     return (
         <div className="flex flex-col gap-4">
@@ -237,7 +248,7 @@ const SequenceMailEditor = ({
                 </h1>
                 <div className="flex gap-2">
                     <Button
-                        onClick={() => {}}
+                        onClick={updateMail}
                         disabled={
                             !subject ||
                             !content ||
@@ -257,7 +268,7 @@ const SequenceMailEditor = ({
                 </div>
             </div>
             <div>
-                <Form className="flex flex-col gap-4 mb-8" onSubmit={() => {}}>
+                <Form className="flex flex-col gap-4 mb-8">
                     <div className="flex gap-8">
                         <FormField
                             type="number"
@@ -269,6 +280,7 @@ const SequenceMailEditor = ({
                             }
                             endIcon={<span>days</span>}
                             className="w-1/2"
+                            tooltip="The delay in days after which the email will be sent after the last mail."
                         />
                         <div className="w-1/2 self-end">
                             <Select
@@ -303,6 +315,7 @@ const SequenceMailEditor = ({
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
                             setPreviewText(e.target.value)
                         }
+                        tooltip="This text will be shown in the email client before opening the email."
                     />
                     <div className="flex gap-2">
                         <div className="flex flex-col w-1/5">
@@ -355,7 +368,7 @@ const SequenceMailEditor = ({
                             <FormField
                                 component="textarea"
                                 value={content}
-                                label={"Editor"}
+                                label={"Mail content"}
                                 multiline="true"
                                 rows={17}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) =>

@@ -121,5 +121,6 @@ export const internal = {
     default_group_name: "First section",
     default_email_broadcast_subject: "New broadcast",
     default_email_sequence_subject: "First email",
-    default_email_content: "Replace this with actual content.",
+    default_email_content:
+        "<p>Replace this with actual content.</p>\n<p>You can use <b>HTML</b>.</p>\n<p>We also support <a href='https://shopify.github.io/liquid/'>Liquid</a>.</p>\n<br>\n<p>Our mailing address is:</p>\n<p>{{ address }}</p>\n<a href=\"{{ unsubscribe_link}}\">Unsubscribe</a>",
 };
