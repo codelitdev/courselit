@@ -17,8 +17,9 @@ import {
 } from "@courselit/utils";
 import UserSegmentModel, { UserSegment } from "../../models/UserSegment";
 import mongoose from "mongoose";
-import { UserFilterWithAggregator } from "@courselit/common-models";
+import { Constants, UserFilterWithAggregator } from "@courselit/common-models";
 import { recordActivity } from "../../lib/record-activity";
+import { triggerSequences } from "../../lib/trigger-sequences";
 
 const removeAdminFieldsFromUserObject = ({
     id,
@@ -249,6 +250,7 @@ export async function createUser({
     email,
     lead,
     superAdmin = false,
+    subscribedToUpdates = true,
 }: {
     domain: Domain;
     email: string;
@@ -257,6 +259,7 @@ export async function createUser({
         | typeof constants.leadNewsletter
         | typeof constants.leadApi;
     superAdmin?: boolean;
+    subscribedToUpdates?: boolean;
 }): Promise<User> {
     const newUser: Partial<User> = {
         domain: domain._id,
@@ -265,6 +268,7 @@ export async function createUser({
         purchases: [],
         permissions: [],
         lead: lead || constants.leadWebsite,
+        subscribedToUpdates,
     };
     if (superAdmin) {
         newUser.permissions = [
@@ -295,6 +299,19 @@ export async function createUser({
         userId: user.userId,
         type: "user_created",
     });
+
+    if (user.subscribedToUpdates) {
+        await triggerSequences({
+            user,
+            event: Constants.eventTypes[3],
+        });
+
+        await recordActivity({
+            domain: domain!._id,
+            userId: user.userId,
+            type: "newsletter_subscribed",
+        });
+    }
 
     return user;
 }

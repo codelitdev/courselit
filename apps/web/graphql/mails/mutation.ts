@@ -22,6 +22,7 @@ import {
     updateMailInSequence,
     pauseSequence,
     updateMailRequest,
+    deleteMailFromSequence,
 } from "./logic";
 import types from "./types";
 import { Constants } from "@courselit/common-models";
@@ -70,6 +71,18 @@ const mutations = {
             { sequenceId }: { sequenceId: string },
             context: GQLContext,
         ) => addMailToSequence(context, sequenceId),
+    },
+    deleteMailFromSequence: {
+        type: types.sequence,
+        args: {
+            sequenceId: { type: new GraphQLNonNull(GraphQLString) },
+            emailId: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: async (
+            _: any,
+            { sequenceId, emailId }: { sequenceId: string; emailId: string },
+            context: GQLContext,
+        ) => deleteMailFromSequence({ ctx: context, sequenceId, emailId }),
     },
     // createBroadcast: {
     //     type: types.sequence,

@@ -100,13 +100,15 @@ export const responses = {
     no_published_emails: "No published emails",
     sequence_not_active: "Sequence not active",
     sequence_already_started: "Sequence already started",
+    mailing_address_too_short: "Mailing address is too short",
+    mandatory_tags_missing: "Mandatory tags are missing",
+    cannot_delete_last_email: "Cannot delete the last email in the sequence",
 
     // api responses
     digital_download_no_files:
         "This digital download is empty. Please contact the creator.",
     download_link_expired: "The download link has expired",
     user_already_exists: "The user already exists",
-    mailing_address_too_short: "Mailing address is too short",
 };
 
 export const internal = {

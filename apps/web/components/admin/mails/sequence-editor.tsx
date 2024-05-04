@@ -30,6 +30,7 @@ import {
     COMPOSE_SEQUENCE_ENTRANCE_CONDITION_DATA,
     COMPOSE_SEQUENCE_FORM_FROM,
     COMPOSE_SEQUENCE_FORM_TITLE,
+    COMPOSE_SEQUENCE_FROM_PLC,
     DELETE_EMAIL_MENU,
     PAGE_HEADER_ALL_MAILS,
     PAGE_HEADER_EDIT_SEQUENCE,
@@ -260,7 +261,6 @@ const SequenceEditor = ({
                 $sequenceId: String!
                 $title: String!
                 $fromName: String!
-                $fromEmail: String!
                 $triggerType: SequenceTriggerType!
                 $triggerData: String
                 $emailsOrder: [String!]
@@ -269,7 +269,6 @@ const SequenceEditor = ({
                     sequenceId: $sequenceId
                     title: $title,
                     fromName: $fromName,
-                    fromEmail: $fromEmail,
                     triggerType: $triggerType,
                     triggerData: $triggerData,
                     emailsOrder: $emailsOrder
@@ -436,6 +435,73 @@ const SequenceEditor = ({
         [dispatch, fetch, id],
     );
 
+    const deleteMail = useCallback(
+        async ({ emailId }: { emailId: string }) => {
+            const query = `
+        mutation DeleteMailFromSequence(
+            $sequenceId: String!
+            $emailId: String!
+        ) {
+            sequence: deleteMailFromSequence(
+                sequenceId: $sequenceId,
+                emailId: $emailId
+            ) {
+                sequenceId,
+                title,
+                emails {
+                    emailId,
+                    subject,
+                    delayInMillis,
+                    published
+                },
+                trigger {
+                    type,
+                    data
+                },
+                from {
+                    name,
+                    email
+                },
+                emailsOrder,
+                status
+            }
+        }`;
+
+            const fetcher = fetch
+                .setPayload({
+                    query,
+                    variables: {
+                        sequenceId: id,
+                        emailId,
+                    },
+                })
+                .build();
+
+            try {
+                dispatch(networkAction(true));
+                const response = await fetcher.exec();
+                if (response.sequence) {
+                    const { sequence } = response;
+                    setSequence(sequence);
+                    setTitle(sequence.title);
+                    setTriggerType(sequence.trigger?.type);
+                    setTriggerData(sequence.trigger?.data);
+                    setFrom(sequence.from?.name);
+                    setFromEmail(sequence.from?.email);
+                    setEmails(sequence.emails);
+                    setEmailsOrder(sequence.emailsOrder);
+                    setStatus(sequence.status);
+                }
+            } catch (e: any) {
+                dispatch(setAppMessage(new AppMessage(e.message)));
+            } finally {
+                dispatch(networkAction(false));
+                setLoaded(true);
+            }
+        },
+        [dispatch, fetch, id],
+    );
+
     return (
         <div className="flex flex-col gap-4">
             <Breadcrumbs aria-label="breakcrumb">
@@ -508,6 +574,7 @@ const SequenceEditor = ({
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
                             setFrom(e.target.value)
                         }
+                        placeholder={COMPOSE_SEQUENCE_FROM_PLC}
                     />
                     {/* <div className="flex gap-2">
                     <FormField
@@ -638,7 +705,13 @@ const SequenceEditor = ({
                                         flex: "1",
                                     }}
                                 >
-                                    <div className="hover:bg-slate-100 rounded px-3 py-1 text-slate-600">
+                                    <div
+                                        className={`hover:bg-slate-100 rounded px-3 py-1 text-slate-600 ${
+                                            email.published
+                                                ? ""
+                                                : "text-slate-400"
+                                        }`}
+                                    >
                                         {email.subject}
                                     </div>
                                 </Link>
@@ -647,7 +720,11 @@ const SequenceEditor = ({
                                         component="dialog"
                                         title={DELETE_EMAIL_MENU}
                                         triggerChildren={DELETE_EMAIL_MENU}
-                                        onClick={() => {}}
+                                        onClick={() =>
+                                            deleteMail({
+                                                emailId: email.emailId,
+                                            })
+                                        }
                                     />
                                 </Menu2>
                             </div>

@@ -472,6 +472,7 @@ export const COMPOSE_SEQUENCE_FORM_TITLE = "Sequence name";
 export const COMPOSE_SEQUENCE_ENTRANCE_CONDITION_DATA =
     "Entrance condition data";
 export const COMPOSE_SEQUENCE_FORM_FROM = "From";
+export const COMPOSE_SEQUENCE_FROM_PLC = "John Wick";
 export const COMPOSE_SEQUENCE_ENTRANCE_CONDITION = "Entrance condition";
 export const COMPOSE_SEQUENCE_EDIT_DELAY = "Delay";
 export const MAIL_TO_PLACEHOLDER = "To";
@@ -529,6 +530,7 @@ export const DELETE_PAGE_POPUP_TEXT =
     "This is an irreversible action and all the data related to this page will be deleted.";
 export const PAGE_TABLE_CONTEXT_MENU_DELETE = "Delete";
 export const APP_MESSAGE_PAGE_DELETED = "Page deleted";
+export const APP_MESSAGE_MAIL_DELETED = "Mail deleted";
 export const NEW_PAGE_FORM_WARNING =
     "These settings cannot be changed later on, so proceed with caution.";
 export const DASHBOARD_PAGE_HEADER = "Welcome";

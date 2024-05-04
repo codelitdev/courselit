@@ -7,6 +7,7 @@ import DownloadLinkModel from "@models/DownloadLink";
 import pug from "pug";
 import digitalDownloadTemplate from "../../templates/download-link";
 import { send } from "../../services/mail";
+import { responses } from "@config/strings";
 
 export function areAllEmailIdsValid(
     emailsOrder: string[],
@@ -48,7 +49,7 @@ export async function removeRule({
 }) {
     await RuleModel.deleteMany({
         domain: ctx.subdomain._id,
-        event: sequence.trigger.type,
+        // event: sequence.trigger.type,
         sequenceId: sequence.sequenceId,
     });
 }
@@ -67,7 +68,7 @@ export const buildQueryFromSearchData = (
     return query;
 };
 
-async function createTemplateAndSendMail({
+export async function createTemplateAndSendMail({
     course,
     ctx,
     user,
@@ -94,4 +95,23 @@ async function createTemplateAndSendMail({
         subject: `Thank you for signing up for ${course.title}`,
         body: emailBody,
     });
+}
+
+export function validateEmail(emailContent: string, templateContent?: string) {
+    const unsubscribeRegex = /{{\s*unsubscribe_link\s*}}/;
+    const addressRegex = /{{\s*address\s*}}/;
+    if (
+        !unsubscribeRegex.test(emailContent) ||
+        !addressRegex.test(emailContent)
+    ) {
+        throw new Error(responses.mandatory_tags_missing);
+    }
+
+    if (
+        templateContent &&
+        (!unsubscribeRegex.test(templateContent) ||
+            !addressRegex.test(templateContent))
+    ) {
+        throw new Error(responses.mandatory_tags_missing);
+    }
 }

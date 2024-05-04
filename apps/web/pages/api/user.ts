@@ -49,8 +49,12 @@ export default nc<NextApiRequest, NextApiResponse>({
         next();
     })
     .post(async (req: ApiRequest, res: NextApiResponse) => {
-        const { email } = req.body;
+        const { email, subscribedToUpdates } = req.body;
         if (!email) {
+            return res.status(400).json({ error: "Bad request" });
+        }
+
+        if (subscribedToUpdates && typeof subscribedToUpdates !== "boolean") {
             return res.status(400).json({ error: "Bad request" });
         }
 
@@ -59,6 +63,7 @@ export default nc<NextApiRequest, NextApiResponse>({
                 domain: req.subdomain!,
                 email: email,
                 lead: constants.leadApi,
+                subscribedToUpdates,
             });
 
             return res.status(200).json({

@@ -24,7 +24,7 @@ export async function getSequence(
 ): Promise<AdminSequence | null> {
     return await SequenceModel.findOne({
         sequenceId,
-    }).lean<AdminSequence | null>();
+    });
 }
 
 export async function getUser(userId: string): Promise<UserWithDomain | null> {

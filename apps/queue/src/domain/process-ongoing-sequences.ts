@@ -20,15 +20,16 @@ import { sendMail } from "../mail";
 import { Liquid } from "liquidjs";
 import { Queue, Worker } from "bullmq";
 import redis from "../redis";
+import mongoose from "mongoose";
 const liquidEngine = new Liquid();
 const sequenceQueue = new Queue("sequence");
 
 new Worker(
     "sequence",
     async (job) => {
-        const ongoingSequence = job.data;
+        const ongoingSequenceId = job.data;
         try {
-            await processOngoingSequence(ongoingSequence);
+            await processOngoingSequence(ongoingSequenceId);
         } catch (err: any) {
             logger.error(err);
         }
@@ -46,20 +47,22 @@ export async function processOngoingSequences(): Promise<void> {
 
         const dueOngoingSequences = await getDueOngoingSequences();
         for (const ongoingSequence of dueOngoingSequences) {
-            sequenceQueue.add("sequence", ongoingSequence);
-            // try {
-            //     await processOngoingSequence(ongoingSequence);
-            // } catch (err: any) {
-            //     console.error(err)
-            //     logger.error(err);
-            // }
+            sequenceQueue.add("sequence", ongoingSequence.id);
         }
 
         await new Promise((resolve) => setTimeout(resolve, 60 * 1000));
     }
 }
 
-async function processOngoingSequence(ongoingSequence: OngoingSequence) {
+async function processOngoingSequence(
+    ongoingSequenceId: mongoose.Types.ObjectId,
+) {
+    const ongoingSequence =
+        await OngoingSequenceModel.findById(ongoingSequenceId);
+    if (!ongoingSequence) {
+        return;
+    }
+
     const domain = await getDomain(ongoingSequence.domain);
     if (
         !domain ||

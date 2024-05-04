@@ -15,15 +15,15 @@ import { Constants, Email, Sequence } from "@courselit/common-models";
 import CourseModel, { Course } from "@models/Course";
 import finalizePurchase from "../../lib/finalize-purchase";
 import SequenceModel, { AdminSequence } from "@models/Sequence";
-import { recordActivity } from "../../lib/record-activity";
 import { isDateInFuture } from "../../lib/utils";
 import {
     addRule,
     areAllEmailIdsValid,
     buildQueryFromSearchData,
+    createTemplateAndSendMail,
     removeRule,
+    validateEmail,
 } from "./helpers";
-import { triggerSequences } from "../../lib/trigger-sequences";
 import MailRequestStatusModel, {
     MailRequestStatus,
 } from "@models/MailRequestStatus";
@@ -45,17 +45,6 @@ export async function createSubscription(
                 domain: ctx.subdomain!,
                 email: email,
                 lead: constants.leadNewsletter,
-            });
-
-            await triggerSequences({
-                user: dbUser,
-                event: Constants.eventTypes[3],
-            });
-
-            await recordActivity({
-                domain: ctx.subdomain!._id,
-                userId: dbUser.userId,
-                type: "newsletter_subscribed",
             });
         }
     } catch (e: any) {
@@ -856,6 +845,46 @@ export async function sendCourseOverMail(
     return true;
 }
 
+export async function deleteMailFromSequence({
+    ctx,
+    sequenceId,
+    emailId,
+}: {
+    ctx: GQLContext;
+    sequenceId: string;
+    emailId: string;
+}): Promise<AdminSequence | null> {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const sequence: AdminSequence = await SequenceModel.findOne({
+        sequenceId,
+        domain: ctx.subdomain._id,
+    });
+
+    if (sequence.type === "broadcast") {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    if (sequence.emails.length === 1) {
+        throw new Error(responses.cannot_delete_last_email);
+    }
+
+    sequence.emails = sequence.emails.filter(
+        (email) => email.emailId !== emailId,
+    );
+    sequence.emailsOrder = sequence.emailsOrder.filter(
+        (emailId) => emailId !== emailId,
+    );
+
+    await (sequence as any).save();
+
+    return sequence;
+}
+
 export async function addMailToSequence(
     ctx: GQLContext,
     sequenceId: string,
@@ -972,6 +1001,8 @@ export async function updateMailInSequence({
         }
         email.action.data = actionData;
     }
+
+    validateEmail(email.content);
 
     await (sequence as any).save();
 
