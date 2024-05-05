@@ -7,7 +7,7 @@ import UserModel, { UserWithDomain } from "./model/user";
 import RuleModel from "./model/rule";
 import mongoose from "mongoose";
 import DomainModel from "./model/domain";
-import { EmailTemplate } from "@courselit/common-models";
+import { Constants, EmailTemplate } from "@courselit/common-models";
 import emailTemplate from "./model/email-template";
 
 export async function getDueOngoingSequences(): Promise<OngoingSequence[]> {
@@ -41,7 +41,7 @@ export async function deleteOngoingSequence(sequenceId: string): Promise<any> {
 
 export async function removeRuleForBroadcast(sequenceId: string) {
     await RuleModel.deleteOne({
-        event: "date:occurred",
+        event: Constants.eventTypes[4],
         "data.sequenceId": sequenceId,
     });
 }

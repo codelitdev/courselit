@@ -318,9 +318,9 @@ export async function updateSequence({
     }
     if (title) {
         sequence.title = title;
-        if (sequence.type === "broadcast") {
-            sequence.emails[0].subject = title;
-        }
+        // if (sequence.type === "broadcast") {
+        //     sequence.emails[0].subject = title;
+        // }
     }
     if (fromEmail) {
         if (!sequence.from) {
@@ -461,7 +461,12 @@ export async function updateMailRequest(ctx: GQLContext, reason: string) {
 }
 
 const broadcastPublished = (sequence: AdminSequence): boolean =>
-    sequence.type === "broadcast" && sequence.emails[0].published;
+    sequence.type === "broadcast" &&
+    [Constants.sequenceStatus[1], Constants.sequenceStatus[3]].includes(
+        sequence.status as
+            | (typeof Constants.sequenceStatus)[1]
+            | (typeof Constants.sequenceStatus)[3],
+    );
 
 // export async function toggleEmailPublishStatus({
 //     ctx,
@@ -559,6 +564,10 @@ export async function startSequence({
         throw new Error(responses.sequence_already_started);
     }
 
+    if (!sequence.emails.some((email) => email.published)) {
+        throw new Error(responses.no_published_emails);
+    }
+
     if (sequence.type === "sequence") {
         if (!sequence.title || !sequence.trigger || !sequence.from?.name) {
             throw new Error(`${responses.sequence_details_missing}: basics`);
@@ -577,9 +586,6 @@ export async function startSequence({
             !sequence.trigger?.data
         ) {
             throw new Error(`${responses.sequence_details_missing}: trigger`);
-        }
-        if (!sequence.emails.some((email) => email.published)) {
-            throw new Error(responses.no_published_emails);
         }
     }
 
@@ -911,7 +917,8 @@ export async function addMailToSequence(
     );
 
     const emailId = generateUniqueId();
-    const oneDayInMillis = 120000; // 86400000;
+    const oneDayInMillis =
+        +process.env.SEQUENCE_DELAY_BETWEEN_MAILS || 86400000;
     const email = {
         emailId,
         content: internal.default_email_content,
@@ -980,7 +987,7 @@ export async function updateMailInSequence({
     if (previewText) {
         email.previewText = previewText;
     }
-    if (delayInMillis) {
+    if (typeof delayInMillis === "number") {
         email.delayInMillis = delayInMillis;
     }
     if (templateId) {

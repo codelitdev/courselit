@@ -12,6 +12,7 @@ import { FetchBuilder } from "@courselit/utils";
 import {
     Address,
     AppMessage,
+    Constants,
     SequenceReport,
     UserFilter,
     UserFilterAggregator,
@@ -26,7 +27,6 @@ import {
     ERROR_DELAY_EMPTY,
     ERROR_SUBJECT_EMPTY,
     FORM_MAIL_SCHEDULE_TIME_LABEL,
-    MAIL_BODY_PLACEHOLDER,
     MAIL_SUBJECT_PLACEHOLDER,
     PAGE_HEADER_ALL_MAILS,
     PAGE_HEADER_EDIT_MAIL,
@@ -38,6 +38,8 @@ import { useCallback } from "react";
 import { useMemo } from "react";
 import { PaperPlane, Clock } from "@courselit/icons";
 import { Dialog2 } from "@courselit/components-library";
+import { isDateInFuture } from "../../../lib/utils";
+import { MailEditorAndPreview } from "./mail-editor-and-preview";
 const { networkAction } = actionCreators;
 
 interface MailEditorProps {
@@ -60,6 +62,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
     const [filteredUsersCount, setFilteredUsersCount] = useState(0);
     const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
     const [report, setReport] = useState<SequenceReport>();
+    const [status, setStatus] = useState(null);
 
     const fetch = useMemo(
         () =>
@@ -97,7 +100,8 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                             lockedAt,
                             sentAt
                         }
-                    }
+                    },
+                    status
                 }
             }`;
 
@@ -115,14 +119,12 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                 setDelay(sequence.emails[0].delayInMillis);
                 setEmailId(sequence.emails[0].emailId);
                 setPublished(sequence.emails[0].published);
-                if (sequence.emails[0].delayInMillis) {
-                    setShowScheduleInput(true);
-                }
                 if (sequence.filter) {
                     setFilters(sequence.filter.filters);
                     setFiltersAggregator(sequence.filter.aggregator);
                 }
                 setReport(sequence.report);
+                setStatus(sequence.status);
             }
         } catch (e: any) {
             dispatch(setAppMessage(new AppMessage(e.message)));
@@ -138,16 +140,32 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
 
     // TODO: debounce this
     const saveSequence = useCallback(async () => {
+        if (!emailId) {
+            return;
+        }
+
         const mutation = `
         mutation updateSequence(
             $sequenceId: String!,
+            $emailId: String!,
             $title: String,
             $filter: String,
+            $content: String,
+            $delayInMillis: Float,
         ) {
-            mail: updateSequence(
+            sequence: updateSequence(
                 sequenceId: $sequenceId,
                 title: $title,
                 filter: $filter,
+            ) {
+                sequenceId,
+            },
+            mail: updateMailInSequence(
+                sequenceId: $sequenceId,
+                emailId: $emailId,
+                subject: $title,
+                content: $content,
+                delayInMillis: $delayInMillis, 
             ) {
                 sequenceId,
                 title,
@@ -168,7 +186,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                         valueLabel
                     },
                 }
-            }
+            },
         }`;
 
         const fetcher = fetch
@@ -176,15 +194,15 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                 query: mutation,
                 variables: {
                     sequenceId: id,
+                    emailId,
+                    title: subject,
                     filter: JSON.stringify({
                         aggregator: filtersAggregator,
                         filters,
                     }),
-                    title: subject,
                     //templateId: $templateId,
                     content,
                     delayInMillis: delay,
-                    //published: $published,
                 },
             })
             .build();
@@ -206,6 +224,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
         subject,
         filters,
         id,
+        emailId,
     ]);
 
     useEffect(() => {
@@ -228,11 +247,46 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
         }
 
         const mutation = `
-        mutation ($sequenceId: String!) {
+        mutation (
+            $sequenceId: String!
+            $emailId: String!
+            $delayInMillis: Float
+        ) {
+            updateMailInSequence(
+                sequenceId: $sequenceId
+                emailId: $emailId
+                delayInMillis: $delayInMillis
+                published: true
+            ) {
+                sequenceId,
+            }
             sequence: startSequence(sequenceId: $sequenceId) {
+                sequenceId,
+                title,
                 emails {
+                    emailId,
+                    templateId,
+                    content,
+                    subject,
+                    delayInMillis,
                     published
-                }
+                },
+                filter {
+                    aggregator,
+                    filters {
+                        name,
+                        condition,
+                        value,
+                        valueLabel
+                    },
+                },
+                report {
+                    broadcast {
+                        lockedAt,
+                        sentAt
+                    }
+                },
+                status
             }
         }`;
 
@@ -241,7 +295,8 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                 query: mutation,
                 variables: {
                     sequenceId: id,
-                    emailId: emailId,
+                    emailId,
+                    delayInMillis: sendLater ? delay : 0,
                 },
             })
             .build();
@@ -251,14 +306,95 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
             const response = await fetcher.exec();
             if (response.sequence) {
                 const { sequence } = response;
-                dispatch(setAppMessage(new AppMessage(TOAST_MAIL_SENT)));
+                setSubject(sequence.emails[0].subject);
+                setContent(sequence.emails[0].content);
+                setDelay(sequence.emails[0].delayInMillis);
+                setEmailId(sequence.emails[0].emailId);
                 setPublished(sequence.emails[0].published);
+                if (sequence.filter) {
+                    setFilters(sequence.filter.filters);
+                    setFiltersAggregator(sequence.filter.aggregator);
+                }
+                setReport(sequence.report);
+                setStatus(sequence.status);
+                setShowScheduleInput(false);
+                dispatch(setAppMessage(new AppMessage(TOAST_MAIL_SENT)));
             }
         } catch (e: any) {
             dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
             dispatch(networkAction(false));
             setConfirmationDialogOpen(false);
+        }
+    };
+
+    const cancelSending = async () => {
+        const mutation = `
+            mutation PauseSequence(
+                $sequenceId: String!
+            ) {
+                sequence: pauseSequence(
+                    sequenceId: $sequenceId
+                ) {
+                    sequenceId,
+                    title,
+                    emails {
+                        emailId,
+                        templateId,
+                        content,
+                        subject,
+                        delayInMillis,
+                        published
+                    },
+                    filter {
+                        aggregator,
+                        filters {
+                            name,
+                            condition,
+                            value,
+                            valueLabel
+                        },
+                    },
+                    report {
+                        broadcast {
+                            lockedAt,
+                            sentAt
+                        }
+                    },
+                    status
+                }
+            }`;
+
+        const fetcher = fetch
+            .setPayload({
+                query: mutation,
+                variables: {
+                    sequenceId: id,
+                },
+            })
+            .build();
+
+        try {
+            dispatch(networkAction(true));
+            const response = await fetcher.exec();
+            if (response.sequence) {
+                const { sequence } = response;
+                setSubject(sequence.emails[0].subject);
+                setContent(sequence.emails[0].content);
+                setDelay(sequence.emails[0].delayInMillis);
+                setEmailId(sequence.emails[0].emailId);
+                setPublished(sequence.emails[0].published);
+                if (sequence.filter) {
+                    setFilters(sequence.filter.filters);
+                    setFiltersAggregator(sequence.filter.aggregator);
+                }
+                setReport(sequence.report);
+                setStatus(sequence.status);
+            }
+        } catch (e: any) {
+            dispatch(setAppMessage(new AppMessage(e.message)));
+        } finally {
+            dispatch(networkAction(false));
         }
     };
 
@@ -269,8 +405,11 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
     };
 
     const isPublished = useMemo(() => {
-        return published;
-    }, [published, delay]);
+        return [
+            Constants.sequenceStatus[1],
+            Constants.sequenceStatus[3],
+        ].includes(status);
+    }, [status]);
 
     if (!loaded) {
         return null;
@@ -304,7 +443,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                         setSubject(e.target.value)
                     }
                 />
-                <FormField
+                {/* <FormField
                     component="textarea"
                     value={content}
                     disabled={isPublished}
@@ -314,6 +453,11 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                     onChange={(e: ChangeEvent<HTMLInputElement>) =>
                         setContent(e.target.value)
                     }
+                /> */}
+                <MailEditorAndPreview
+                    content={content}
+                    onChange={setContent}
+                    disabled={isPublished}
                 />
                 {showScheduleInput && (
                     <FormField
@@ -349,70 +493,89 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                     />
                     */
                 )}
-                <div className="flex gap-2">
-                    {!published && delay === 0 && !showScheduleInput && (
-                        <Dialog2
-                            open={confirmationDialogOpen}
-                            onOpenChange={setConfirmationDialogOpen}
-                            title={`${DIALOG_SEND_HEADER} to ${filteredUsersCount} contacts?`}
-                            trigger={
-                                <Button>
-                                    <div className="flex items-center gap-2">
-                                        <PaperPlane />
-                                        {BTN_SEND}
-                                    </div>
+                {[
+                    Constants.sequenceStatus[0],
+                    Constants.sequenceStatus[2],
+                ].includes(status) && (
+                    <div className="flex gap-2">
+                        {!showScheduleInput && (
+                            <div className="flex gap-2">
+                                <Dialog2
+                                    open={confirmationDialogOpen}
+                                    onOpenChange={setConfirmationDialogOpen}
+                                    title={`${DIALOG_SEND_HEADER} to ${filteredUsersCount} contacts?`}
+                                    trigger={
+                                        <Button>
+                                            <div className="flex items-center gap-2">
+                                                <PaperPlane />
+                                                {BTN_SEND}
+                                            </div>
+                                        </Button>
+                                    }
+                                    onClick={onSubmit}
+                                />
+                                <Button
+                                    variant={
+                                        showScheduleInput ? "classic" : "soft"
+                                    }
+                                    className="gap-2"
+                                    onClick={(
+                                        e: ChangeEvent<HTMLInputElement>,
+                                    ) => {
+                                        setShowScheduleInput(true);
+                                    }}
+                                >
+                                    <Clock />
+                                    {BTN_SCHEDULE}
                                 </Button>
-                            }
-                            onClick={onSubmit}
-                        />
-                    )}
-                    {!published && !showScheduleInput && (
-                        <Button
-                            variant={showScheduleInput ? "classic" : "soft"}
-                            className="gap-2"
-                            onClick={(e: ChangeEvent<HTMLInputElement>) => {
-                                setShowScheduleInput(true);
-                            }}
-                        >
-                            <Clock />
-                            {BTN_SCHEDULE}
-                        </Button>
-                    )}
-                    {!published && showScheduleInput && (
-                        <>
-                            <Dialog2
-                                title={`${DIALOG_SEND_HEADER} to ${filteredUsersCount} contacts?`}
-                                open={confirmationDialogOpen}
-                                onOpenChange={setConfirmationDialogOpen}
-                                trigger={
-                                    <Button>
-                                        <div className="flex items-center gap-2">
-                                            <Clock />
-                                            {BTN_SCHEDULE}
-                                        </div>
-                                    </Button>
-                                }
-                                onClick={(e) => onSubmit(e, true)}
-                            />
-                            <Button
-                                variant="soft"
-                                onClick={(e: ChangeEvent<HTMLInputElement>) => {
-                                    e.preventDefault();
-                                    setShowScheduleInput(false);
-                                    setDelay(0);
-                                }}
-                            >
-                                {BUTTON_CANCEL_TEXT}
-                            </Button>
-                        </>
-                    )}
-                    {published && delay > 0 && !report?.broadcast?.lockedAt && (
-                        <Button variant="soft">
+                            </div>
+                        )}
+                        {showScheduleInput && (
+                            <>
+                                <Dialog2
+                                    title={`${DIALOG_SEND_HEADER} to ${filteredUsersCount} contacts?`}
+                                    open={confirmationDialogOpen}
+                                    onOpenChange={setConfirmationDialogOpen}
+                                    trigger={
+                                        <Button>
+                                            <div className="flex items-center gap-2">
+                                                <Clock />
+                                                {BTN_SCHEDULE}
+                                            </div>
+                                        </Button>
+                                    }
+                                    onClick={(e) => onSubmit(e, true)}
+                                />
+                                <Button
+                                    variant="soft"
+                                    onClick={(
+                                        e: ChangeEvent<HTMLInputElement>,
+                                    ) => {
+                                        e.preventDefault();
+                                        setShowScheduleInput(false);
+                                        setDelay(0);
+                                    }}
+                                >
+                                    {BUTTON_CANCEL_TEXT}
+                                </Button>
+                            </>
+                        )}
+                    </div>
+                )}
+            </Form>
+            {status === Constants.sequenceStatus[1] &&
+                isDateInFuture(new Date(delay)) &&
+                !report?.broadcast?.lockedAt && (
+                    <div>
+                        <p className="flex items-center gap-2 text-sm mb-4 font-semibold text-slate-600">
+                            <Clock /> Scheduled for{" "}
+                            {new Date(delay).toLocaleString()}
+                        </p>
+                        <Button variant="soft" onClick={cancelSending}>
                             {BUTTON_CANCEL_SCHEDULED_MAIL}
                         </Button>
-                    )}
-                </div>
-            </Form>
+                    </div>
+                )}
         </div>
     );
 }

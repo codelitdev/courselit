@@ -19,7 +19,7 @@ const RuleSchema = new mongoose.Schema<
         index: true,
     },
     sequenceId: { type: String, required: true },
-    dateInMillis: { type: Number },
+    eventDateInMillis: { type: Number },
     eventData: { type: String },
 });
 

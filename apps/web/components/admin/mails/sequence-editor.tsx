@@ -515,7 +515,6 @@ const SequenceEditor = ({
                     {PAGE_HEADER_EDIT_SEQUENCE}
                 </h1>
                 <div className="flex gap-2">
-                    {status === Constants.sequenceStatus}
                     {[
                         Constants.sequenceStatus[0],
                         Constants.sequenceStatus[2],

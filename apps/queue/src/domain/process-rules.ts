@@ -4,7 +4,7 @@ import SequenceModel, { AdminSequence } from "./model/sequence";
 import UserModel from "./model/user";
 import convertFiltersToDBConditions from "./convert-filters-to-db-conditions";
 import { logger } from "../logger";
-import { User } from "@courselit/common-models";
+import { Constants, User } from "@courselit/common-models";
 import mongoose from "mongoose";
 
 export async function processRules() {
@@ -17,7 +17,7 @@ export async function processRules() {
         );
 
         const dueRules: Rule[] = await RuleModel.find({
-            event: "date:occurred",
+            event: Constants.eventTypes[4],
             eventDateInMillis: { $lt: currentTime.getTime() },
         }).lean();
 

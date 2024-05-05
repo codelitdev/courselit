@@ -12,7 +12,7 @@ import {
     networkAction,
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
-import { renderEmailContent, FetchBuilder } from "@courselit/utils";
+import { FetchBuilder } from "@courselit/utils";
 import {
     BUTTON_SAVE,
     COMPOSE_SEQUENCE_EDIT_DELAY,
@@ -24,6 +24,7 @@ import {
 } from "@ui-config/strings";
 import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { connect } from "react-redux";
+import { MailEditorAndPreview } from "./mail-editor-and-preview";
 
 interface SequenceMailEditorProps {
     address: Address;
@@ -45,7 +46,7 @@ const SequenceMailEditor = ({
     const [subject, setSubject] = useState<string>("");
     const [previewText, setPreviewText] = useState<string>("");
     const [content, setContent] = useState<string>("");
-    const [emailRendered, setEmailRendered] = useState<string>("");
+    // const [emailRendered, setEmailRendered] = useState<string>("");
     const [email, setEmail] = useState(null);
     const [published, setPublished] = useState<"unpublished" | "published">(
         null,
@@ -59,22 +60,22 @@ const SequenceMailEditor = ({
         [address.backend],
     );
 
-    const renderEmail = async () => {
-        if (!content) return;
-        const emailContent = await renderEmailContent(content, {
-            subscriber: {
-                email: "USER_EMAIL",
-                name: "USER_NAME",
-            },
-            address: "MAILING_ADDRESS",
-            unsubscribe_link: "UNSUBSCRIBE_LINK",
-        });
-        setEmailRendered(emailContent);
-    };
+    // const renderEmail = async () => {
+    //     if (!content) return;
+    //     const emailContent = await renderEmailContent(content, {
+    //         subscriber: {
+    //             email: "USER_EMAIL",
+    //             name: "USER_NAME",
+    //         },
+    //         address: "MAILING_ADDRESS",
+    //         unsubscribe_link: "UNSUBSCRIBE_LINK",
+    //     });
+    //     setEmailRendered(emailContent);
+    // };
 
-    useEffect(() => {
-        renderEmail();
-    }, [content]);
+    // useEffect(() => {
+    //     renderEmail();
+    // }, [content]);
 
     const loadSequence = useCallback(async () => {
         const query = `
@@ -317,7 +318,11 @@ const SequenceMailEditor = ({
                         }
                         tooltip="This text will be shown in the email client before opening the email."
                     />
-                    <div className="flex gap-2">
+                    <MailEditorAndPreview
+                        content={content}
+                        onChange={setContent}
+                    />
+                    {/* <div className="flex gap-2">
                         <div className="flex flex-col w-1/5">
                             <h3 className="text-lg font-semibold">Variables</h3>
                             <div className="flex flex-col gap-4 border border-gray-200 rounded w-full h-[360px] p-2">
@@ -384,7 +389,7 @@ const SequenceMailEditor = ({
                                 className="border border-gray-200 rounded w-full h-[360px]"
                             />
                         </div>
-                    </div>
+                    </div> */}
                 </Form>
             </div>
         </div>

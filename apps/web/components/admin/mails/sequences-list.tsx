@@ -25,6 +25,7 @@ import {
 } from "@ui-config/strings";
 import { useEffect, useState } from "react";
 import { connect } from "react-redux";
+import { isDateInFuture } from "../../../lib/utils";
 
 interface SequencesListProps {
     address: Address;
@@ -72,7 +73,8 @@ const SequencesList = ({
                     sequenceId,
                     emails {
                         subject,
-                        published
+                        published,
+                        delayInMillis
                     }
                     title,
                     status
@@ -159,14 +161,32 @@ const SequencesList = ({
                         <td align="right">
                             {type === "broadcast" && (
                                 <>
-                                    {broadcast.emails[0].published && (
-                                        <Chip className="!bg-black text-white !border-black">
-                                            Sent
-                                        </Chip>
-                                    )}
-                                    {!broadcast.emails[0].published && (
-                                        <Chip>Draft</Chip>
-                                    )}
+                                    {broadcast.status ===
+                                        Constants.sequenceStatus[1] &&
+                                        !isDateInFuture(
+                                            new Date(
+                                                broadcast.emails[0].delayInMillis,
+                                            ),
+                                        ) && (
+                                            <Chip className="!bg-black text-white !border-black">
+                                                Sent
+                                            </Chip>
+                                        )}
+                                    {broadcast.status ===
+                                        Constants.sequenceStatus[1] &&
+                                        isDateInFuture(
+                                            new Date(
+                                                broadcast.emails[0].delayInMillis,
+                                            ),
+                                        ) && <Chip>Scheduled</Chip>}
+                                    {[
+                                        Constants.sequenceStatus[0],
+                                        Constants.sequenceStatus[2],
+                                    ].includes(
+                                        broadcast.status as
+                                            | (typeof Constants.sequenceStatus)[0]
+                                            | (typeof Constants.sequenceStatus)[2],
+                                    ) && <Chip>Draft</Chip>}
                                 </>
                             )}
                             {type === "sequence" && (

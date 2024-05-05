@@ -218,7 +218,6 @@ async function attemptMailSending({
             html: content,
         });
     } catch (err: any) {
-        console.error(err);
         ongoingSequence.retryCount++;
         if (ongoingSequence.retryCount >= sequenceBounceLimit) {
             sequence.report.sequence.failed = [
