@@ -910,11 +910,11 @@ export async function addMailToSequence(
         throw new Error(responses.action_not_allowed);
     }
 
-    const lastEmail = sequence.emails.find(
-        (email) =>
-            email.emailId ===
-            sequence.emailsOrder[sequence.emailsOrder.length - 1],
-    );
+    // const lastEmail = sequence.emails.find(
+    //     (email) =>
+    //         email.emailId ===
+    //         sequence.emailsOrder[sequence.emailsOrder.length - 1],
+    // );
 
     const emailId = generateUniqueId();
     const oneDayInMillis =

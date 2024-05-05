@@ -7,6 +7,7 @@ import { Constants, User as PublicUser } from "@courselit/common-models";
 export interface User extends PublicUser {
     _id: mongoose.Types.ObjectId;
     domain: mongoose.Types.ObjectId;
+    unsubscribeToken: string;
 }
 
 const UserSchema = new mongoose.Schema<User>(
@@ -27,6 +28,11 @@ const UserSchema = new mongoose.Schema<User>(
             default: Constants.leads[0],
         },
         tags: [String],
+        unsubscribeToken: {
+            type: String,
+            required: true,
+            default: generateUniqueId,
+        },
     },
     {
         timestamps: true,

@@ -109,6 +109,8 @@ export const responses = {
         "This digital download is empty. Please contact the creator.",
     download_link_expired: "The download link has expired",
     user_already_exists: "The user already exists",
+    unsubscribe_success:
+        "Sorry to see you go. You have been unsubscribed from our mailing list.",
 };
 
 export const internal = {

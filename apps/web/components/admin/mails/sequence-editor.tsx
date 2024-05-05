@@ -68,7 +68,7 @@ const SequenceEditor = ({
     const [triggerType, setTriggerType] = useState("SUBSCRIBER_ADDED");
     const [triggerData, setTriggerData] = useState("");
     const [emails, setEmails] = useState([]);
-    const [loaded, setLoaded] = useState(false);
+    // const [loaded, setLoaded] = useState(false);
     const [sequence, setSequence] = useState(null);
     const [tags, setTags] = useState<TagWithDetails[]>([]);
     const [products, setProducts] = useState<
@@ -139,7 +139,7 @@ const SequenceEditor = ({
             dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
             dispatch(networkAction(false));
-            setLoaded(true);
+            // setLoaded(true);
         }
     }, [dispatch, fetch, id]);
 
@@ -178,7 +178,7 @@ const SequenceEditor = ({
         } catch (err) {
         } finally {
             dispatch(networkAction(false));
-            setLoaded(false);
+            // setLoaded(false);
         }
     }, [dispatch, fetch]);
 
@@ -251,7 +251,7 @@ const SequenceEditor = ({
             dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
             dispatch(networkAction(false));
-            setLoaded(true);
+            // setLoaded(true);
         }
     }, [dispatch, fetch, id]);
 
@@ -328,7 +328,7 @@ const SequenceEditor = ({
             dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
             dispatch(networkAction(false));
-            setLoaded(true);
+            // setLoaded(true);
         }
     }, [
         dispatch,
@@ -429,7 +429,7 @@ const SequenceEditor = ({
                 dispatch(setAppMessage(new AppMessage(e.message)));
             } finally {
                 dispatch(networkAction(false));
-                setLoaded(true);
+                // setLoaded(true);
             }
         },
         [dispatch, fetch, id],
@@ -496,7 +496,7 @@ const SequenceEditor = ({
                 dispatch(setAppMessage(new AppMessage(e.message)));
             } finally {
                 dispatch(networkAction(false));
-                setLoaded(true);
+                // setLoaded(true);
             }
         },
         [dispatch, fetch, id],

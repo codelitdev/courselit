@@ -176,7 +176,7 @@ async function attemptMailSending({
     domain: Domain;
 }) {
     const from = sequence.from
-        ? sequence.from.name
+        ? `${sequence.from.name} <${creator.email}>`
         : `${creator.email} <${creator.email}>`;
     const to = user.email;
     const subject = email.subject;
@@ -184,7 +184,7 @@ async function attemptMailSending({
         domain.customDomain
             ? `${domain.customDomain}`
             : `${domain.name}.${process.env.DOMAIN}`
-    }/api/unsubscribe/${user.userId}`;
+    }/api/unsubscribe/${user.unsubscribeToken}`;
     const templatePayload = {
         subscriber: {
             email: user.email,

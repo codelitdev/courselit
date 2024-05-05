@@ -41,7 +41,7 @@ const SequencesList = ({
     type,
 }: SequencesListProps) => {
     const [page, setPage] = useState(1);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    // const [rowsPerPage, setRowsPerPage] = useState(10);
     const [count, setCount] = useState(0);
     const [sequences, setSequences] = useState<
         Pick<Sequence, "sequenceId" | "title" | "emails" | "status">[]
