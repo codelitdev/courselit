@@ -95,12 +95,22 @@ export const responses = {
         "Email delivery failed for all recipients",
     courses_cannot_be_downloaded: "A course cannot be offered as a download.",
     apikey_already_exists: "Apikey with that name already exists",
+    sequence_details_missing: "Some sequence details are missing",
+    invalid_emails_order: "Invalid emails order",
+    no_published_emails: "No published emails",
+    sequence_not_active: "Sequence not active",
+    sequence_already_started: "Sequence already started",
+    mailing_address_too_short: "Mailing address is too short",
+    mandatory_tags_missing: "Mandatory tags are missing",
+    cannot_delete_last_email: "Cannot delete the last email in the sequence",
 
     // api responses
     digital_download_no_files:
         "This digital download is empty. Please contact the creator.",
     download_link_expired: "The download link has expired",
     user_already_exists: "The user already exists",
+    unsubscribe_success:
+        "Sorry to see you go. You have been unsubscribed from our mailing list.",
 };
 
 export const internal = {
@@ -113,4 +123,8 @@ export const internal = {
     invalid_cloud_storage_settings: "Cloud storage settings are invalid",
     domain_not_specified: "Domain is not specified",
     default_group_name: "First section",
+    default_email_broadcast_subject: "New broadcast",
+    default_email_sequence_subject: "First email",
+    default_email_content:
+        "<p>Replace this with actual content.</p>\n<p>You can use <b>HTML</b>.</p>\n<p>We also support <a href='https://shopify.github.io/liquid/'>Liquid</a>.</p>\n<br>\n<p>Our mailing address is:</p>\n<p>{{ address }}</p>\n<a href=\"{{ unsubscribe_link}}\">Unsubscribe</a>",
 };

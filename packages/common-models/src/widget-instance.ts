@@ -3,5 +3,5 @@ export default interface WidgetInstance {
     name: string;
     deleteable: boolean;
     shared: boolean;
-    settings: Record<string, unknown>;
+    settings?: Record<string, unknown>;
 }

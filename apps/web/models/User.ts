@@ -1,32 +1,13 @@
 import { generateUniqueId } from "@courselit/utils";
 import mongoose from "mongoose";
-import ProgressSchema, { Progress } from "./Progress";
-import constants from "../config/constants";
-const {
-    leadWebsite: website,
-    leadNewsletter: newsletter,
-    leadDownload: download,
-    leadApi: api,
-} = constants;
+import ProgressSchema from "./Progress";
 
-const leads = [website, newsletter, download, api] as const;
-type Lead = (typeof leads)[number];
+import { Constants, User as PublicUser } from "@courselit/common-models";
 
-export interface User {
+export interface User extends PublicUser {
     _id: mongoose.Types.ObjectId;
     domain: mongoose.Types.ObjectId;
-    userId: string;
-    email: string;
-    active: boolean;
-    name?: string;
-    purchases: Progress[];
-    bio?: string;
-    permissions: string[];
-    createdAt: Date;
-    updatedAt: Date;
-    subscribedToUpdates: boolean;
-    lead: Lead;
-    tags?: string[];
+    unsubscribeToken: string;
 }
 
 const UserSchema = new mongoose.Schema<User>(
@@ -43,10 +24,15 @@ const UserSchema = new mongoose.Schema<User>(
         lead: {
             type: String,
             required: true,
-            enum: [website, newsletter, download, api],
-            default: website,
+            enum: Constants.leads,
+            default: Constants.leads[0],
         },
         tags: [String],
+        unsubscribeToken: {
+            type: String,
+            required: true,
+            default: generateUniqueId,
+        },
     },
     {
         timestamps: true,

@@ -1,7 +1,9 @@
 import CourseModel, { Course } from "../models/Course";
 import { Progress } from "../models/Progress";
 import UserModel, { User } from "../models/User";
+import { triggerSequences } from "./trigger-sequences";
 import { recordActivity } from "./record-activity";
+import { Constants } from "@courselit/common-models";
 
 export default async (
     userId: string,
@@ -28,6 +30,11 @@ export default async (
             course.sales += course.cost;
             await (course as any).save();
         }
+        await triggerSequences({
+            user,
+            event: Constants.eventTypes[2],
+            data: course.courseId,
+        });
         await recordActivity({
             domain: user.domain,
             userId: user.userId,

@@ -1,7 +1,7 @@
 import express from "express";
-import { addMailJob } from "../domain/mail/handler";
+import { addMailJob } from "../domain/handler";
 import { logger } from "../logger";
-import { MailJob } from "../domain/mail/model/mail-job";
+import { MailJob } from "../domain/model/mail-job";
 
 const router = express.Router();
 

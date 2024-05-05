@@ -1,10 +1,9 @@
 import Media from "./media";
-import { Typeface } from "./typeface";
 
 export default interface SiteInfo {
-    title: string;
-    subtitle: string;
-    logo: Media;
+    title?: string;
+    subtitle?: string;
+    logo?: Media;
     currencyISOCode?: string;
     paymentMethod?: string;
     stripePublishableKey?: string;
@@ -13,6 +12,5 @@ export default interface SiteInfo {
     stripeSecret?: string;
     paypalSecret?: string;
     paytmSecret?: string;
-    typefaces: Typeface[];
-    draftTypefaces: Typeface[];
+    mailingAddress?: string;
 }

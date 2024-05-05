@@ -36,6 +36,9 @@ import {
     APIKEY_REMOVE_BTN,
     APIKEY_REMOVE_DIALOG_HEADER,
     APIKYE_REMOVE_DIALOG_DESC,
+    SITE_MAILS_HEADER,
+    SITE_MAILING_ADDRESS_SETTING_HEADER,
+    SITE_MAILING_ADDRESS_SETTING_EXPLANATION,
 } from "../../../ui-config/strings";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import { decode, encode } from "base-64";
@@ -72,6 +75,7 @@ interface SettingsProps {
     selectedTab:
         | typeof SITE_SETTINGS_SECTION_GENERAL
         | typeof SITE_SETTINGS_SECTION_PAYMENT
+        | typeof SITE_MAILS_HEADER
         | typeof SITE_CUSTOMISATIONS_SETTING_HEADER
         | typeof SITE_APIKEYS_SETTING_HEADER;
 }
@@ -84,6 +88,7 @@ const Settings = (props: SettingsProps) => {
     const selectedTab = [
         SITE_SETTINGS_SECTION_GENERAL,
         SITE_SETTINGS_SECTION_PAYMENT,
+        SITE_MAILS_HEADER,
         SITE_CUSTOMISATIONS_SETTING_HEADER,
         SITE_APIKEYS_SETTING_HEADER,
     ].includes(props.selectedTab)
@@ -138,7 +143,8 @@ const Settings = (props: SettingsProps) => {
                         paymentMethod,
                         stripePublishableKey,
                         codeInjectionHead,
-                        codeInjectionBody
+                        codeInjectionBody,
+                        mailingAddress
                     }
                 },
                 apikeys: getApikeys {
@@ -235,7 +241,8 @@ const Settings = (props: SettingsProps) => {
                         paymentMethod,
                         stripePublishableKey,
                         codeInjectionHead,
-                        codeInjectionBody
+                        codeInjectionBody,
+                        mailingAddress
                     }
                 }
             }`;
@@ -289,7 +296,62 @@ const Settings = (props: SettingsProps) => {
                     paymentMethod,
                     stripePublishableKey,
                     codeInjectionHead,
-                    codeInjectionBody
+                    codeInjectionBody,
+                    mailingAddress,
+                }
+            }
+        }`;
+
+        try {
+            const fetchRequest = fetch.setPayload(query).build();
+            props.dispatch(networkAction(true));
+            const response = await fetchRequest.exec();
+            if (response.settings.settings) {
+                setSettingsState(response.settings.settings);
+                props.dispatch(
+                    setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)),
+                );
+            }
+        } catch (e: any) {
+            props.dispatch(setAppMessage(new AppMessage(e.message)));
+        } finally {
+            props.dispatch(networkAction(false));
+        }
+    };
+
+    const handleMailsSettingsSubmit = async (
+        event: React.FormEvent<HTMLFormElement>,
+    ) => {
+        event.preventDefault();
+
+        if (!newSettings.mailingAddress) {
+            return;
+        }
+
+        const query = `
+        mutation {
+            settings: updateSiteInfo(siteData: {
+                mailingAddress: "${newSettings.mailingAddress}"
+            }) {
+                settings {
+                    title,
+                    subtitle,
+                    logo {
+                        mediaId,
+                        originalFileName,
+                        mimeType,
+                        size,
+                        access,
+                        file,
+                        thumbnail,
+                        caption
+                    },
+                    currencyISOCode,
+                    paymentMethod,
+                    stripePublishableKey,
+                    codeInjectionHead,
+                    codeInjectionBody,
+                    mailingAddress,
                 }
             }
         }`;
@@ -357,7 +419,8 @@ const Settings = (props: SettingsProps) => {
                         paymentMethod,
                         stripePublishableKey,
                         codeInjectionHead,
-                        codeInjectionBody
+                        codeInjectionBody,
+                        mailingAddress,
                     }
                 }
             }`;
@@ -433,10 +496,11 @@ const Settings = (props: SettingsProps) => {
                 items={[
                     SITE_SETTINGS_SECTION_GENERAL,
                     SITE_SETTINGS_SECTION_PAYMENT,
+                    SITE_MAILS_HEADER,
                     SITE_CUSTOMISATIONS_SETTING_HEADER,
                     SITE_APIKEYS_SETTING_HEADER,
                 ]}
-                selected={selectedTab}
+                defaultValue={selectedTab}
             >
                 <Form
                     onSubmit={handleSettingsSubmit}
@@ -611,6 +675,47 @@ const Settings = (props: SettingsProps) => {
                             disabled={
                                 JSON.stringify(getPaymentSettings()) ===
                                 JSON.stringify(getPaymentSettings(true))
+                            }
+                        >
+                            {BUTTON_SAVE}
+                        </Button>
+                    </div>
+                </Form>
+                <Form
+                    onSubmit={handleMailsSettingsSubmit}
+                    className="flex flex-col gap-4 pt-4"
+                >
+                    <FormField
+                        component="textarea"
+                        label={SITE_MAILING_ADDRESS_SETTING_HEADER}
+                        name="mailingAddress"
+                        value={newSettings.mailingAddress || ""}
+                        onChange={onChangeData}
+                        multiline
+                        rows={5}
+                    />
+                    <p className="text-xs text-slate-500">
+                        {SITE_MAILING_ADDRESS_SETTING_EXPLANATION}
+                    </p>
+                    {/* <FormField
+                        component="textarea"
+                        label={SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY}
+                        name="codeInjectionBody"
+                        value={newSettings.codeInjectionBody || ""}
+                        onChange={onChangeData}
+                        multiline
+                        rows={10}
+                    /> */}
+                    <div>
+                        <Button
+                            type="submit"
+                            value={BUTTON_SAVE}
+                            color="primary"
+                            variant="outlined"
+                            disabled={
+                                settings.mailingAddress ===
+                                    newSettings.mailingAddress ||
+                                props.networkAction
                             }
                         >
                             {BUTTON_SAVE}

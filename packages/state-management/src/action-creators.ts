@@ -13,8 +13,6 @@ import {
     CLEAR_MESSAGE,
     THEME_AVAILABLE,
     SET_ADDRESS,
-    //WIDGETS_DATA_AVAILABLE,
-    FEATURE_FLAGS_AVAILABLE,
     TYPEFACES_AVAILABLE,
 } from "./action-types";
 import { FetchBuilder } from "@courselit/utils";
@@ -127,7 +125,6 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
                         styles,
                         url
                     },
-                    featureFlags,
                     typefaces {
                         section,
                         typeface,
@@ -146,7 +143,6 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
             if (response && response.site) {
                 dispatch(newSiteInfoAvailable(response.site.settings));
                 dispatch(themeAvailable(response.site.theme));
-                dispatch(featureFlagsAvailable(response.site.featureFlags));
                 dispatch(typefacesAvailable(response.site.typefaces));
             }
         } catch (err) {
@@ -175,10 +171,6 @@ export function themeAvailable(theme: Theme) {
 
 export function updateBackend(host: string): AnyAction {
     return { type: SET_ADDRESS, address: getAddress(host) };
-}
-
-export function featureFlagsAvailable(fFlags: string[]): AnyAction {
-    return { type: FEATURE_FLAGS_AVAILABLE, fFlags };
 }
 
 export function typefacesAvailable(typefaces: Typeface[]): AnyAction {

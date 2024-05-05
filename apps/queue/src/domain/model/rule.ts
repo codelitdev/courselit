@@ -12,9 +12,9 @@ const RuleSchema = new mongoose.Schema<RuleWithDomain>({
         enum: Constants.eventTypes,
         index: true,
     },
-    action: { type: String, required: true, enum: Constants.actionTypes },
-    data: { type: mongoose.Schema.Types.Mixed, default: {} },
-    active: { type: Boolean, default: true, index: true },
+    sequenceId: { type: String, required: true },
+    eventDateInMillis: { type: Number },
+    eventData: { type: String },
 });
 
 export default mongoose.models.Rule || mongoose.model("Rule", RuleSchema);

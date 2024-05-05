@@ -77,7 +77,7 @@ export default function FormField({
                         </Message>
                     ))}
             </div>
-            <div>
+            <div className="flex items-center gap-2">
                 <Control asChild>
                     <Component
                         type={type}

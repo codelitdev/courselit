@@ -1,6 +1,3 @@
-export type Event =
-    | "tag:add"
-    | "tag:remove"
-    | "product:purchase"
-    | "subscriber:add"
-    | "date:occurred";
+import { Constants } from ".";
+
+export type Event = (typeof Constants.eventTypes)[number];

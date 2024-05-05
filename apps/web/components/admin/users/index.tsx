@@ -39,7 +39,6 @@ const { networkAction, setAppMessage } = actionCreators;
 interface UserManagerProps {
     address: Address;
     dispatch: AppDispatch;
-    featureFlags: string[];
     loading: boolean;
 }
 

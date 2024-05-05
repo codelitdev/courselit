@@ -180,6 +180,16 @@ export const COURSE_CREATOR_PREFIX = "By";
 export const APP_MESSAGE_SETTINGS_SAVED = "Settings saved";
 export const ENROLLED_COURSES_HEADER = "Enrolled courses";
 export const SITE_APIKEYS_SETTING_HEADER = "API Keys";
+export const SITE_MAILS_HEADER = "Mails";
+export const BROADCASTS = "Broadcasts";
+export const SEQUENCES = "Sequences";
+export const SITE_MAILING_ADDRESS_SETTING_HEADER = "Mailing Address";
+export const SITE_MAILING_ADDRESS_SETTING_EXPLANATION =
+    "This is required in order to comply with the CAN-SPAM Act.";
+export const MAIL_REQUEST_RECEIVED =
+    "Your request is updated. We will get back to you shortly.";
+export const MAIL_REQUEST_FORM_SUBMIT_INITIAL_REQUEST_TEXT = "Request access";
+export const MAIL_REQUEST_FORM_SUBMIT_UPDATE_REQUEST_TEXT = "Update reason";
 export const SITE_CUSTOMISATIONS_SETTING_HEADER = "Code Injection";
 export const SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD =
     "Code Injection in <head>";
@@ -448,6 +458,7 @@ export const COURSE_STUDENT_SEARCH_BY_TEXT = "Search student";
 export const COURSE_STUDENT_NO_RECORDS = "No student found";
 export const QUESTION_BUILDER_DELETE_TOOLTIP = "Delete question";
 export const PAGE_HEADER_EDIT_MAIL = "Compose mail";
+export const PAGE_HEADER_EDIT_SEQUENCE = "Compose sequence";
 export const BTN_SEND = "Send";
 export const DIALOG_SEND_HEADER = "Send mail";
 export const BTN_SCHEDULE = "Schedule";
@@ -456,6 +467,14 @@ export const ERROR_DELAY_EMPTY = "Scheduled date is not in the future";
 export const FORM_MAIL_SCHEDULE_TIME_LABEL = "Send on";
 export const BTN_SENDING = "Sending";
 export const MAIL_SUBJECT_PLACEHOLDER = "Subject";
+export const MAIL_PREVIEW_TITLE = "Preview Text";
+export const COMPOSE_SEQUENCE_FORM_TITLE = "Sequence name";
+export const COMPOSE_SEQUENCE_ENTRANCE_CONDITION_DATA =
+    "Entrance condition data";
+export const COMPOSE_SEQUENCE_FORM_FROM = "From";
+export const COMPOSE_SEQUENCE_FROM_PLC = "John Wick";
+export const COMPOSE_SEQUENCE_ENTRANCE_CONDITION = "Entrance condition";
+export const COMPOSE_SEQUENCE_EDIT_DELAY = "Delay";
 export const MAIL_TO_PLACEHOLDER = "To";
 export const MAIL_BODY_PLACEHOLDER = "Mail content";
 export const PAGE_HEADER_ALL_MAILS = "Mails";
@@ -467,7 +486,7 @@ export const SIDEBAR_MENU_PRODUCTS = "Products";
 export const SIDEBAR_MENU_DASHBOARD = "Home";
 export const SIDEBAR_MENU_BLOGS = "Blogs";
 export const PAGE_HEADER_EDIT_USER = "Edit user";
-export const TOAST_MAIL_SENT = "Mail sent";
+export const TOAST_MAIL_SENT = "Mail scheduled to be sent";
 export const PAGE_PLACEHOLDER_MAIL = "Your mails will show up here";
 export const BTN_NEW_MAIL = "New broadcast";
 export const BTN_NEW_SEQUENCE = "New sequence";
@@ -511,7 +530,12 @@ export const DELETE_PAGE_POPUP_TEXT =
     "This is an irreversible action and all the data related to this page will be deleted.";
 export const PAGE_TABLE_CONTEXT_MENU_DELETE = "Delete";
 export const APP_MESSAGE_PAGE_DELETED = "Page deleted";
+export const APP_MESSAGE_MAIL_DELETED = "Mail deleted";
 export const NEW_PAGE_FORM_WARNING =
     "These settings cannot be changed later on, so proceed with caution.";
 export const DASHBOARD_PAGE_HEADER = "Welcome";
+export const MAIL_REQUEST_FORM_REASON_FIELD = "Reason";
+export const MAIL_REQUEST_FORM_REASON_PLACEHOLDER =
+    "Please be as detailed as possible. This will help us review your application better.";
 export const DASHBOARD_SELECT_HEADER = "Duration";
+export const DELETE_EMAIL_MENU = "Delete";

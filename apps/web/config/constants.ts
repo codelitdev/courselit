@@ -87,9 +87,6 @@ export default {
     downLoadLinkExpiresInDays: 2,
     downLoadLinkLength: 128,
 
-    // mail types
-    mailTypes: ["broadcast", "sequence"],
-
     // activity types
     activityTypes: [
         "enrolled",
@@ -111,6 +108,9 @@ export default {
 
     // durations
     analyticsDurations: ["7d", "30d", "90d", "1y", "lifetime"],
+
+    // mails
+    minMailingAddressLength: 10,
 
     // acceptable currency codes for payments
     currencyISOCodes: [

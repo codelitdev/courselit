@@ -67,18 +67,34 @@ export const updateSiteInfo = async (
         return null;
     }
 
+    if (!domain.settings) {
+        domain.settings = {};
+    }
+
     for (const key of Object.keys(siteData)) {
         domain.settings[key] = siteData[key];
     }
 
-    if (!domain.settings.title || !domain.settings.title.trim()) {
-        throw new Error(responses.school_title_not_set);
-    }
+    validateSiteInfo(domain);
 
     await (domain as any).save();
 
     return domain;
 };
+
+function validateSiteInfo(domain: Domain) {
+    if (!domain.settings.title || !domain.settings.title.trim()) {
+        throw new Error(responses.school_title_not_set);
+    }
+
+    if (
+        domain.settings.mailingAddress &&
+        domain.settings.mailingAddress.trim().length <
+            constants.minMailingAddressLength
+    ) {
+        throw new Error(responses.mailing_address_too_short);
+    }
+}
 
 export const updateDraftTypefaces = async (
     typefaces: Typeface[],

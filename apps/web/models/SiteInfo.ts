@@ -1,22 +1,8 @@
-import { Media } from "@courselit/common-models";
+import { SiteInfo } from "@courselit/common-models";
 import mongoose from "mongoose";
 import MediaSchema from "./Media";
 
-export interface Settings {
-    title?: string;
-    subtitle?: string;
-    logo?: Media;
-    currencyISOCode?: string;
-    paymentMethod?: string;
-    stripePublishableKey?: string;
-    codeInjectionHead?: string;
-    codeInjectionBody?: string;
-    stripeSecret?: string;
-    paytmSecret?: string;
-    paypalSecret?: string;
-}
-
-const SettingsSchema = new mongoose.Schema<Settings>({
+const SettingsSchema = new mongoose.Schema<SiteInfo>({
     title: { type: String },
     subtitle: { type: String },
     logo: MediaSchema,
@@ -28,6 +14,7 @@ const SettingsSchema = new mongoose.Schema<Settings>({
     stripeSecret: { type: String },
     paytmSecret: { type: String },
     paypalSecret: { type: String },
+    mailingAddress: { type: String },
 });
 
 export default SettingsSchema;

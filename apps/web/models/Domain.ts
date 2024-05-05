@@ -1,32 +1,13 @@
 import mongoose from "mongoose";
-import SettingsSchema, { Settings } from "./SiteInfo";
-import { Theme, ThemeSchema } from "./Theme";
-import TypefaceSchema, { Typeface } from "./Typeface";
-import { Widget } from "./Widget";
+import SettingsSchema from "./SiteInfo";
+import { ThemeSchema } from "./Theme";
+import TypefaceSchema from "./Typeface";
 import constants from "../config/constants";
+import { Domain as PublicDomain, Typeface } from "@courselit/common-models";
 const { typeface } = constants;
 
-interface SharedWidgets {
-    [x: string]: Widget;
-}
-
-export interface Domain {
+export interface Domain extends PublicDomain {
     _id: mongoose.Types.ObjectId;
-    name: string;
-    customDomain: string;
-    email: string;
-    deleted: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-    settings: Settings;
-    theme: Theme;
-    sharedWidgets: SharedWidgets;
-    featureFlags: string[];
-    typefaces: Typeface[];
-    draftTypefaces: Typeface[];
-    firstRun: boolean;
-    tags: string[];
-    checkSubscriptionStatusAfter: Date;
 }
 
 export const defaultTypeface: Typeface = {
@@ -48,7 +29,6 @@ const DomainSchema = new mongoose.Schema<Domain>(
         settings: SettingsSchema,
         theme: ThemeSchema,
         sharedWidgets: { type: mongoose.Schema.Types.Mixed, default: {} },
-        featureFlags: { type: [String] },
         typefaces: {
             type: [TypefaceSchema],
             default: [defaultTypeface],
@@ -57,6 +37,16 @@ const DomainSchema = new mongoose.Schema<Domain>(
         firstRun: { type: Boolean, required: true, default: false },
         tags: { type: [String], default: [] },
         checkSubscriptionStatusAfter: { type: Date },
+        quota: new mongoose.Schema<Domain["quota"]>({
+            mail: new mongoose.Schema<Domain["quota"]["mail"]>({
+                daily: { type: Number, default: 0 },
+                monthly: { type: Number, default: 0 },
+                dailyCount: { type: Number, default: 0 },
+                monthlyCount: { type: Number, default: 0 },
+                lastDailyCountUpdate: { type: Date, default: Date.now },
+                lastMonthlyCountUpdate: { type: Date, default: Date.now },
+            }),
+        }),
     },
     {
         timestamps: true,
