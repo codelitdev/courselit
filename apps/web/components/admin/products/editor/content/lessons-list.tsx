@@ -8,7 +8,7 @@ import {
 } from "../../../../../ui-config/strings";
 import useCourse from "../course-hook";
 import { Add, MoreVert } from "@courselit/icons";
-import { Course, Lesson } from "@courselit/common-models";
+import { Course, Lesson, Address, AppMessage } from "@courselit/common-models";
 import { useRouter } from "next/router";
 import {
     Section,
@@ -17,7 +17,7 @@ import {
     Button,
     Menu2,
     MenuItem,
-    DndComponent,
+    DragAndDrop,
 } from "@courselit/components-library";
 import {
     actionCreators,
@@ -25,31 +25,81 @@ import {
     AppState,
 } from "@courselit/state-management";
 import { connect } from "react-redux";
-import { Address, AppMessage } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
 
 interface LessonSectionProps {
     group: Record<string, unknown>;
-    course: Partial<Course>;
+    course: Partial<Course> & {
+        lessons: Lesson[];
+    };
     onGroupDelete: (groupId: string, courseId: string) => void;
+    address: any;
+    dispatch: any;
 }
 
-function LessonSection({ group, course, onGroupDelete }: LessonSectionProps) {
-    function reorderLessonList() {
-        return course.lessons
-            .filter((lesson: Lesson) => lesson.groupId === group.id)
-            .sort((a: any, b: any) => a.groupRank - b.groupRank)
-            .map((lesson: Lesson) => (
-                <div className="flex items-center gap-2" key={lesson.lessonId}>
-                    <LessonIcon type={lesson.type} />
-                    <Link
-                        href={`/dashboard/product/${course.courseId}/section/${group.id}/lesson/${lesson.lessonId}`}
-                    >
-                        {lesson.title}
-                    </Link>
-                </div>
-            ));
-    }
+function LessonItem({
+    lesson,
+    courseId,
+    groupId,
+}: {
+    lesson: Lesson;
+    courseId: string;
+    groupId: string;
+}) {
+    return (
+        <div className="flex items-center gap-2" key={lesson.lessonId}>
+            <LessonIcon type={lesson.type} />
+            <Link
+                href={`/dashboard/product/${courseId}/section/${groupId}/lesson/${lesson.lessonId}`}
+            >
+                {lesson.title}
+            </Link>
+        </div>
+    );
+}
+
+function LessonSection({
+    group,
+    course,
+    onGroupDelete,
+    address,
+    dispatch,
+}: LessonSectionProps) {
+    const updateGroup = async (lessonsOrder: string[]) => {
+        const mutation = `
+        mutation UpdateGroup ($id: ID!, $courseId: ID!, $lessonsOrder: [String]!) {
+            updateGroup(
+                id: $id,
+                courseId: $courseId,
+                lessonsOrder: $lessonsOrder
+            ) {
+               courseId,
+               title
+            }
+        }
+        `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload({
+                query: mutation,
+                variables: {
+                    id: group.id,
+                    courseId: course.id,
+                    lessonsOrder,
+                },
+            })
+            .setIsGraphQLEndpoint(true)
+            .build();
+        try {
+            dispatch(actionCreators.networkAction(true));
+            const response = await fetch.exec();
+        } catch (err: any) {
+            dispatch(actionCreators.setAppMessage(new AppMessage(err.message)));
+        } finally {
+            dispatch(actionCreators.networkAction(false));
+        }
+    };
+
     return (
         <Section>
             <div className="flex flex-col gap-4">
@@ -73,44 +123,30 @@ function LessonSection({ group, course, onGroupDelete }: LessonSectionProps) {
                     </Menu2>
                 </div>
                 <div>
-                    <DndComponent
+                    <DragAndDrop
                         items={course.lessons
                             .filter(
                                 (lesson: Lesson) => lesson.groupId === group.id,
                             )
-                            .sort((a: any, b: any) => a.groupRank - b.groupRank)
-                            .map((lesson: Lesson, index: number) => ({
-                                link: lesson,
-                                index: index,
+                            .sort(
+                                (a: any, b: any) =>
+                                    group.lessonsOrder.indexOf(a.lessonId) -
+                                    group.lessonsOrder.indexOf(b.lessonId),
+                            )
+                            .map((lesson: Lesson) => ({
+                                id: lesson.lessonId,
+                                lesson,
                             }))}
-                        // items={course.lessons.map((link, index: number) => ({
-                        //     link: link,
-                        //     index: index,
-                        //     // onChange: onLinkChanged,
-                        //     // onDelete: onLinkDeleted,
-                        // }))}
-                        Renderer={reorderLessonList}
+                        Renderer={LessonItem}
+                        key={JSON.stringify(course.lessons)}
                         onChange={(items: any) => {
-                            // console.log("dnd items", items);
-                            // setUpdatedLinks(items);
+                            const newLessonsOrder: any = items.map(
+                                (item: { lesson: { lessonId: any } }) =>
+                                    item.lesson.lessonId,
+                            );
+                            updateGroup(newLessonsOrder);
                         }}
                     />
-                    {course.lessons
-                        .filter((lesson: Lesson) => lesson.groupId === group.id)
-                        .sort((a: any, b: any) => a.groupRank - b.groupRank)
-                        .map((lesson: Lesson) => (
-                            <div
-                                className="flex items-center gap-2"
-                                key={lesson.lessonId}
-                            >
-                                <LessonIcon type={lesson.type} />
-                                <Link
-                                    href={`/dashboard/product/${course.courseId}/section/${group.id}/lesson/${lesson.lessonId}`}
-                                >
-                                    {lesson.title}
-                                </Link>
-                            </div>
-                        ))}
                 </div>
                 <div>
                     <Link
@@ -187,6 +223,8 @@ function LessonsList({ id, dispatch, address }: LessonsProps) {
                         course={course}
                         onGroupDelete={removeGroup}
                         key={index}
+                        address={address}
+                        dispatch={dispatch}
                     />
                 ),
             )}

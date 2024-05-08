@@ -78,6 +78,7 @@ const CourseSchema = new mongoose.Schema<Course>(
                 },
                 rank: { type: Number, required: true },
                 collapsed: { type: Boolean, required: true, default: true },
+                lessonsOrder: { type: [String] },
             },
         ],
         sales: { type: Number, required: true, default: 0.0 },

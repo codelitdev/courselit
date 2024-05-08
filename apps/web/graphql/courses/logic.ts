@@ -422,6 +422,7 @@ export const updateGroup = async ({
     name,
     rank,
     collapsed,
+    lessonsOrder,
     ctx,
 }) => {
     const course = await getCourseOrThrow(courseId, ctx);
@@ -440,6 +441,18 @@ export const updateGroup = async ({
 
     if (rank) {
         $set["groups.$.rank"] = rank;
+    }
+
+    if (
+        lessonsOrder &&
+        lessonsOrder.every((lessonId) => course.lessons.includes(lessonId)) &&
+        lessonsOrder.every((lessonId) =>
+            course.groups
+                .find((group) => group.id === id)
+                .lessonsOrder.includes(lessonId),
+        )
+    ) {
+        $set["groups.$.lessonsOrder"] = lessonsOrder;
     }
 
     if (typeof collapsed === "boolean") {

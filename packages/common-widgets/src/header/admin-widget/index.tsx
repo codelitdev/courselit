@@ -22,7 +22,7 @@ import {
     linkAlignment as defaultLinkAlignment,
     showLoginControl as defaultShowLoginControl,
 } from "../defaults";
-import { DndComponent } from "@courselit/components-library";
+import { DragAndDrop } from "@courselit/components-library";
 import { generateUniqueId } from "@courselit/utils";
 
 interface AdminWidgetProps {
@@ -32,11 +32,6 @@ interface AdminWidgetProps {
 
 export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
     const [links, setLinks] = useState(settings.links || []);
-    // console.log("links", links);
-
-    // const [updatedLinks, setUpdatedLinks] = useState<any>([]);
-    // console.log("updatedLinks", updatedLinks);
-
     const [appBarBackground, setAppBarBackground] = useState<
         string | undefined
     >(settings.appBarBackground);
@@ -102,7 +97,6 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
     ]);
 
     const onLinkChanged = (index: number, link: Link) => {
-        // console.log("onLinkChanged",index, link)
         links[index] = link;
         setLinks([...links]);
     };
@@ -124,10 +118,10 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
     return (
         <div className="flex flex-col gap-4 mb-4">
             <AdminWidgetPanel title="Links">
-                <DndComponent
+                <DragAndDrop
                     items={links.map((link: Link, index: number) => ({
                         link,
-                        index: index,
+                        index,
                         id: link.id || generateUniqueId(),
                         onChange: onLinkChanged,
                         onDelete: onLinkDeleted,
@@ -143,18 +137,6 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                         }
                     }}
                 />
-                {links &&
-                    links.map((link, index) => (
-                        <div key={`${link.label}-${link.href}-${index}`}>
-                            <LinkEditor
-                                link={link}
-                                index={index}
-                                key={`${link.label}-${link.href}-${index}`}
-                                onChange={onLinkChanged}
-                                onDelete={onLinkDeleted}
-                            />
-                        </div>
-                    ))}
                 <div className="flex justify-end">
                     <Button onClick={addNewLink} fullWidth>
                         Add new link

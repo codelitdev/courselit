@@ -26,14 +26,11 @@ export function SortableItem({
     id,
     Renderer,
     rendererProps,
-} // ...rest
-: {
+}: {
     id: number;
     Renderer: any;
-    // [x: string]: any;
     rendererProps: Record<string, unknown>;
 }) {
-    // console.log("props ", id, Renderer, rendererProps);
     const {
         attributes,
         listeners,
@@ -54,7 +51,7 @@ export function SortableItem({
             ref={setNodeRef}
             style={style}
             className={clsx(
-                "p-1 flex flex-col text-black w-[200px]",
+                "flex flex-col text-black",
                 isDragging && "opacity-50",
             )}
         >
@@ -68,7 +65,7 @@ export function SortableItem({
     );
 }
 
-const DndComponent = ({
+const DragAndDrop = ({
     items,
     onChange,
     Renderer,
@@ -77,9 +74,7 @@ const DndComponent = ({
     onChange: any;
     Renderer: any;
 }) => {
-    // const [activeId, setActiveId] = useState(null);
     const [data, setData] = useState(items);
-    // console.log("items dndcomp ", data);
 
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -104,11 +99,6 @@ const DndComponent = ({
     const findPositionOfItems = (id: number) =>
         data.findIndex((item: { id: number }) => item.id === id);
 
-    // function handleDragStart(event: { active: any }) {
-    //     const { active } = event;
-    //     setActiveId(active.id);
-    // }
-
     const handleDragEnd = (event: { active: any; over: any }) => {
         const { active, over } = event;
 
@@ -122,7 +112,6 @@ const DndComponent = ({
 
     useEffect(() => {
         if (onChange) {
-            // console.log("items onChange", data);
             onChange(data);
         }
     }, [data]);
@@ -131,7 +120,6 @@ const DndComponent = ({
         <DndContext
             sensors={sensors}
             collisionDetection={closestCorners}
-            // onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
         >
             <SortableContext
@@ -151,4 +139,4 @@ const DndComponent = ({
     );
 };
 
-export default DndComponent;
+export default DragAndDrop;

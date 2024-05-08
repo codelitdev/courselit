@@ -62,6 +62,7 @@ const courseGroupType = new GraphQLObjectType({
         rank: { type: new GraphQLNonNull(GraphQLInt) },
         name: { type: new GraphQLNonNull(GraphQLString) },
         collapsed: { type: new GraphQLNonNull(GraphQLBoolean) },
+        lessonsOrder: { type: new GraphQLList(GraphQLString) },
     },
 });
 
