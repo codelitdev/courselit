@@ -18,11 +18,11 @@ import {
 } from "./queries";
 import { sendMail } from "../mail";
 import { Liquid } from "liquidjs";
-import { Queue, Worker } from "bullmq";
+import { Worker } from "bullmq";
 import redis from "../redis";
 import mongoose from "mongoose";
+import sequenceQueue from "./sequence-queue";
 const liquidEngine = new Liquid();
-const sequenceQueue = new Queue("sequence");
 
 new Worker(
     "sequence",
