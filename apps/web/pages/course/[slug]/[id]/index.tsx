@@ -81,7 +81,6 @@ export function generateSideBarItems(
 const CourseViewer = (props: CourseProps) => {
     const { course, profile } = props;
     let key = 0;
-
     return (
         <>
             <Head>
@@ -157,7 +156,8 @@ export async function getServerSideProps({ query, req }: any) {
         groups {
           id,
           name,
-          rank
+          rank,
+          lessonsOrder
         },
         lessons {
           lessonId,
@@ -184,9 +184,13 @@ export async function getServerSideProps({ query, req }: any) {
         if (post) {
             const lessonsOrderedByGroups: Record<string, unknown> = {};
             for (const group of post.groups) {
-                lessonsOrderedByGroups[group.name] = post.lessons.filter(
-                    (lesson: Lesson) => lesson.groupId === group.id,
-                );
+                lessonsOrderedByGroups[group.name] = post.lessons
+                    .filter((lesson: Lesson) => lesson.groupId === group.id)
+                    .sort(
+                        (a: any, b: any) =>
+                            group.lessonsOrder.indexOf(a.lessonId) -
+                            group.lessonsOrder.indexOf(b.lessonId),
+                    );
             }
 
             const courseGroupedByLessons = {

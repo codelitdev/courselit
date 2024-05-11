@@ -33,8 +33,8 @@ interface LessonSectionProps {
         lessons: Lesson[];
     };
     onGroupDelete: (groupId: string, courseId: string) => void;
-    address: any;
-    dispatch: any;
+    address: Address;
+    dispatch: AppDispatch;
 }
 
 function LessonItem({
