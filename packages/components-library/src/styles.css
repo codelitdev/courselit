@@ -18,6 +18,12 @@
     :is(p, h1, h2, h3) {
         @apply mb-4;
     }
+
+    .remirror-theme {
+        div > p:last-of-type {
+            @apply mb-0;
+        }
+    }
 }
 
 @layer base {

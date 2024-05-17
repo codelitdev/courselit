@@ -9,6 +9,7 @@ import { checkPermission, generateUniqueId } from "@courselit/utils";
 import { Footer, Header } from "@courselit/common-widgets";
 import { User } from "@courselit/common-models";
 import { Domain } from "../../models/Domain";
+import { homePageTemplate } from "./page-templates";
 const { product, site, blogPage, permissions, defaultPages } = constants;
 
 export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
@@ -80,10 +81,31 @@ async function initSharedWidgets(ctx: GQLContext) {
             widgetId: generateUniqueId(),
             settings: {
                 links: [
-                    { label: "Courses", href: "/courses" },
-                    { label: "Blog", href: "/blog" },
+                    {
+                        label: "Courses",
+                        href: "/courses",
+                        isButton: false,
+                        isPrimary: false,
+                    },
+                    {
+                        label: "Blog",
+                        href: "/blog",
+                        isButton: false,
+                        isPrimary: false,
+                    },
+                    {
+                        label: "Start learning",
+                        href: "/courses",
+                        isButton: true,
+                        isPrimary: true,
+                    },
                 ],
+                linkAlignment: "center",
                 showLoginControl: true,
+                linkFontWeight: "font-normal",
+                spacingBetweenLinks: 16,
+                verticalPadding: 16,
+                horizontalPadding: 100,
             },
         };
         subdomainChanged = true;
@@ -95,6 +117,8 @@ async function initSharedWidgets(ctx: GQLContext) {
             deleteable: false,
             widgetId: generateUniqueId(),
             settings: {
+                textColor: "#f8f1f1",
+                backgroundColor: "#000000",
                 sections: [
                     {
                         name: "Legal",
@@ -104,6 +128,21 @@ async function initSharedWidgets(ctx: GQLContext) {
                         ],
                     },
                 ],
+                foregroundColor: "#ffffff",
+                horizontalPadding: 100,
+                verticalPadding: 88,
+                titleFontSize: 2,
+                sectionHeaderFontSize: "font-semibold",
+                socials: {
+                    facebook: "",
+                    twitter: "https://twitter.com/courselit",
+                    instagram: "",
+                    youtube: "",
+                    linkedin: "",
+                    discord: "",
+                    github: "https://github.com/codelitdev/courselit",
+                },
+                socialIconsSize: 24,
             },
         };
         subdomainChanged = true;
@@ -114,6 +153,11 @@ async function initSharedWidgets(ctx: GQLContext) {
             shared: true,
             deleteable: true,
             widgetId: generateUniqueId(),
+            settings: {
+                backgroundColor: "#f5f5f5",
+                alignment: "center",
+                verticalPadding: 88,
+            },
         };
         subdomainChanged = true;
     }
@@ -238,6 +282,7 @@ export const initMandatoryPages = async (domain: Domain, user: User) => {
                     deleteable: false,
                     shared: true,
                 },
+                ...homePageTemplate,
                 {
                     name: Footer.metadata.name,
                     deleteable: false,
