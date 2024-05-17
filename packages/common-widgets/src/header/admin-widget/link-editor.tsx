@@ -37,6 +37,7 @@ export default function LinkEditor({
                 href,
                 isButton,
                 isPrimary,
+                id: link.id,
             });
             setEditing(false);
         }
@@ -50,7 +51,7 @@ export default function LinkEditor({
     return (
         <>
             {!editing && (
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center w-full">
                     <h2>{label}</h2>
                     <IconButton variant="soft" onClick={() => setEditing(true)}>
                         <Edit />

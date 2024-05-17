@@ -4,6 +4,8 @@ import {
     GraphQLID,
     GraphQLString,
     GraphQLInt,
+    GraphQLList,
+    GraphQLObjectType,
 } from "graphql";
 import types from "./types";
 import {
@@ -97,10 +99,13 @@ export default {
             collapsed: {
                 type: GraphQLBoolean,
             },
+            lessonsOrder: {
+                type: new GraphQLList(GraphQLString),
+            },
         },
         resolve: async (
             _: unknown,
-            { id, courseId, name, rank, collapsed },
+            { id, courseId, name, rank, collapsed, lessonsOrder },
             context,
         ) =>
             updateGroup({
@@ -109,6 +114,7 @@ export default {
                 name,
                 rank,
                 collapsed,
+                lessonsOrder,
                 ctx: context,
             }),
     },

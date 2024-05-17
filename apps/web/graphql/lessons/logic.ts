@@ -147,6 +147,10 @@ export const createLesson = async (
         });
 
         course.lessons.push(lesson.lessonId);
+        const group = course.groups.find(
+            (group) => group._id === lessonData.groupId,
+        );
+        group.lessonsOrder.push(lesson.lessonId);
         await (course as any).save();
 
         return lesson;

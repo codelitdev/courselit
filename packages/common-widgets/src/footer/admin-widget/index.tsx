@@ -26,6 +26,8 @@ import {
     socials as defaultSocials,
     socialIconsSize as defaultSocialIconsSize,
 } from "../defaults";
+import { DragAndDrop } from "@courselit/components-library";
+import { generateUniqueId } from "@courselit/utils";
 
 export interface AdminWidgetProps {
     onChange: (...args: any[]) => void;
@@ -38,9 +40,18 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
             {
                 name: "Legal",
                 links: [
-                    { label: "Terms of use", href: "/p/terms" },
-                    { label: "Privacy policy", href: "/p/privacy" },
+                    {
+                        label: "Terms of use",
+                        href: "/p/terms",
+                        id: generateUniqueId(),
+                    },
+                    {
+                        label: "Privacy policy",
+                        href: "/p/privacy",
+                        id: generateUniqueId(),
+                    },
                 ],
+                id: generateUniqueId(),
             },
         ],
     );
@@ -105,8 +116,10 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                 {
                     label: "Link",
                     href: "https://courselit.app",
+                    id: generateUniqueId(),
                 },
             ],
+            id: generateUniqueId(),
         };
         setSections([...sections, section]);
     };
@@ -140,6 +153,7 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
         const link: Link = {
             label: "Link",
             href: "https://courselit.app",
+            id: generateUniqueId(),
         };
         const newSections = [...sections];
         newSections[sectionIndex].links.push(link);
@@ -194,21 +208,41 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                                         </IconButton>
                                     </Form>
                                     <h3 className="mb-1 font-medium">Links</h3>
-                                    {section.links &&
-                                        section.links.map((link, index) => (
-                                            <div
-                                                key={`${link.label}-${link.href}-${index}`}
-                                            >
-                                                <LinkEditor
-                                                    link={link}
-                                                    index={index}
-                                                    sectionIndex={sectionIndex}
-                                                    key={`${link.label}-${link.href}-${index}`}
-                                                    onChange={onLinkChanged}
-                                                    onDelete={onLinkDeleted}
-                                                />
-                                            </div>
-                                        ))}
+                                    <DragAndDrop
+                                        items={section.links.map(
+                                            (link: Link, index: number) => ({
+                                                link,
+                                                index,
+                                                sectionIndex,
+                                                id:
+                                                    link.id ||
+                                                    generateUniqueId(),
+                                                onChange: onLinkChanged,
+                                                onDelete: onLinkDeleted,
+                                            }),
+                                        )}
+                                        Renderer={LinkEditor}
+                                        key={JSON.stringify(section.links)}
+                                        onChange={(items: any) => {
+                                            const newLinks = [
+                                                ...items.map(
+                                                    (item) => item.link,
+                                                ),
+                                            ];
+                                            if (
+                                                JSON.stringify(newLinks) !==
+                                                JSON.stringify(section.links)
+                                            ) {
+                                                const newSections = [
+                                                    ...sections,
+                                                ];
+                                                newSections[
+                                                    sectionIndex
+                                                ].links = newLinks;
+                                                setSections(newSections);
+                                            }
+                                        }}
+                                    />
                                     <div className="flex justify-end">
                                         <Button
                                             onClick={() =>
@@ -262,7 +296,7 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                     disabled={sections.length >= 5}
                     fullWidth
                 >
-                    Add new link
+                    Add new section
                 </Button>
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Social media">

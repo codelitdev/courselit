@@ -46,7 +46,8 @@ export default function useCourse(id: string):
                     groups {
                         id,
                         name,
-                        rank
+                        rank,
+                        lessonsOrder
                     },
                     courseId,
                     cost,

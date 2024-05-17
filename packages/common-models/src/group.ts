@@ -3,4 +3,5 @@ export default interface Group {
     name: string;
     rank: number;
     collapsed: boolean;
+    lessonsOrder: string[];
 }

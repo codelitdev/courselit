@@ -22,6 +22,8 @@ import {
     linkAlignment as defaultLinkAlignment,
     showLoginControl as defaultShowLoginControl,
 } from "../defaults";
+import { DragAndDrop } from "@courselit/components-library";
+import { generateUniqueId } from "@courselit/utils";
 
 interface AdminWidgetProps {
     settings: Settings;
@@ -108,6 +110,7 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
         const link: Link = {
             label: "Link",
             href: "https://courselit.app",
+            id: generateUniqueId(),
         };
         setLinks([...links, link]);
     };
@@ -115,18 +118,25 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
     return (
         <div className="flex flex-col gap-4 mb-4">
             <AdminWidgetPanel title="Links">
-                {links &&
-                    links.map((link, index) => (
-                        <div key={`${link.label}-${link.href}-${index}`}>
-                            <LinkEditor
-                                link={link}
-                                index={index}
-                                key={`${link.label}-${link.href}-${index}`}
-                                onChange={onLinkChanged}
-                                onDelete={onLinkDeleted}
-                            />
-                        </div>
-                    ))}
+                <DragAndDrop
+                    items={links.map((link: Link, index: number) => ({
+                        link,
+                        index,
+                        id: link.id || generateUniqueId(),
+                        onChange: onLinkChanged,
+                        onDelete: onLinkDeleted,
+                    }))}
+                    Renderer={LinkEditor}
+                    key={JSON.stringify(links)}
+                    onChange={(items: any) => {
+                        const newLinks = [...items.map((item) => item.link)];
+                        if (
+                            JSON.stringify(newLinks) !== JSON.stringify(links)
+                        ) {
+                            setLinks(newLinks);
+                        }
+                    }}
+                />
                 <div className="flex justify-end">
                     <Button onClick={addNewLink} fullWidth>
                         Add new link
