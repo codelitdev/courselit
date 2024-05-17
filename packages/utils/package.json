@@ -1,6 +1,6 @@
 {
     "name": "@courselit/utils",
-    "version": "0.46.1",
+    "version": "0.47.2",
     "description": "Utilities for CourseLit",
     "author": "Team CourseLit <hi@codelit.dev>",
     "homepage": "https://github.com/codelitdev/courselit#readme",
@@ -38,7 +38,8 @@
     },
     "dependencies": {
         "@courselit/common-models": "workspace:^",
-        "@sindresorhus/slugify": "^2.2.1"
+        "@sindresorhus/slugify": "^2.2.1",
+        "liquidjs": "^10.12.0"
     },
     "peerDependencies": {
         "next": "*"

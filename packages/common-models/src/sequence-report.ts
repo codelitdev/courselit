@@ -1,15 +1,15 @@
 interface SequenceReportInternal {
-    subscribers: string[];
-    unsubscribers: string[];
-    failed: string[];
+    subscribers?: string[];
+    unsubscribers?: string[];
+    failed?: string[];
 }
 
 interface BroadcastReport {
-    lockedAt: Date;
-    sentAt: Date;
+    lockedAt?: Date;
+    sentAt?: Date;
 }
 
 export interface SequenceReport {
-    broadcast: BroadcastReport;
-    sequence: SequenceReportInternal;
+    broadcast?: BroadcastReport;
+    sequence?: SequenceReportInternal;
 }

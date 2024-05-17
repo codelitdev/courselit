@@ -4,7 +4,7 @@ import { PAGE_HEADER_EDIT_MAIL } from "../../../../ui-config/strings";
 import dynamic from "next/dynamic";
 
 const MailEditor = dynamic(
-    () => import("../../../../components/admin/mails/editor"),
+    () => import("../../../../components/admin/mails/editor.tsx.notused"),
 );
 const BaseLayout = dynamic(
     () => import("../../../../components/admin/base-layout"),

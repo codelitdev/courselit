@@ -1,13 +1,13 @@
 import mongoose from "mongoose";
-import { EmailTemplate } from "@courselit/common-models";
+import { EmailTemplate as PublicEmailTemplate } from "@courselit/common-models";
 import { generateUniqueId } from "@courselit/utils";
 
-interface AdminEmailTemplate extends EmailTemplate {
+interface EmailTemplate extends PublicEmailTemplate {
     domain: mongoose.Schema.Types.ObjectId;
     creatorId: string;
 }
 
-const EmailTemplateSchema = new mongoose.Schema<AdminEmailTemplate>({
+const EmailTemplateSchema = new mongoose.Schema<EmailTemplate>({
     domain: { type: mongoose.Schema.Types.ObjectId, required: true },
     templateId: { type: String, required: true, default: generateUniqueId },
     title: { type: String, required: true },

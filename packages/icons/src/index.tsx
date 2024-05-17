@@ -50,3 +50,5 @@ export { GlobeIcon as Globe } from "@radix-ui/react-icons";
 export { EyeOpenIcon as View } from "@radix-ui/react-icons";
 export { HomeIcon as Home } from "@radix-ui/react-icons";
 export { DragHandleDots2Icon as DragHandle } from "@radix-ui/react-icons";
+export { PlayIcon as Play } from "@radix-ui/react-icons";
+export { PauseIcon as Pause } from "@radix-ui/react-icons";

@@ -46,6 +46,7 @@ const siteUpdateType = new GraphQLInputObjectType({
         logo: { type: mediaTypes.mediaInputType },
         codeInjectionHead: { type: GraphQLString },
         codeInjectionBody: { type: GraphQLString },
+        mailingAddress: { type: GraphQLString },
     },
 });
 
@@ -75,6 +76,26 @@ const siteType = new GraphQLObjectType({
         stripePublishableKey: { type: GraphQLString },
         codeInjectionHead: { type: GraphQLString },
         codeInjectionBody: { type: GraphQLString },
+        mailingAddress: { type: GraphQLString },
+    },
+});
+
+const mailQuota = new GraphQLObjectType({
+    name: "MailQuota",
+    fields: {
+        daily: { type: GraphQLInt },
+        monthly: { type: GraphQLInt },
+        dailyCount: { type: GraphQLInt },
+        monthlyCount: { type: GraphQLInt },
+        lastDailyCountUpdate: { type: GraphQLFloat },
+        lastMonthlyCountUpdate: { type: GraphQLFloat },
+    },
+});
+
+const quota = new GraphQLObjectType({
+    name: "Quota",
+    fields: {
+        mail: { type: mailQuota },
     },
 });
 
@@ -84,9 +105,9 @@ const domain = new GraphQLObjectType({
         name: { type: new GraphQLNonNull(GraphQLString) },
         settings: { type: siteType },
         theme: { type: designTypes.themeType },
-        featureFlags: { type: new GraphQLList(GraphQLString) },
         typefaces: { type: new GraphQLList(typefaceType) },
         draftTypefaces: { type: new GraphQLList(typefaceType) },
+        quota: { type: quota },
     },
 });
 

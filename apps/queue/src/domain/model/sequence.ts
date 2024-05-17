@@ -9,6 +9,16 @@ export interface AdminSequence extends Sequence {
     creatorId: string;
 }
 
+const EmailFromSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    email: { type: String },
+});
+
+const TriggerSchema = new mongoose.Schema({
+    type: { type: String, required: true, enum: Constants.eventTypes },
+    data: { type: String },
+});
+
 const SequenceSchema = new mongoose.Schema<AdminSequence>({
     domain: { type: mongoose.Schema.Types.ObjectId, required: true },
     sequenceId: { type: String, required: true, unique: true },
@@ -17,12 +27,18 @@ const SequenceSchema = new mongoose.Schema<AdminSequence>({
     emails: [EmailSchema],
     creatorId: { type: String, required: true },
     report: SequenceReportSchema,
-    broadcastSettings: {
-        filter: UserFilterWithAggregatorSchema,
+    from: EmailFromSchema,
+    filter: UserFilterWithAggregatorSchema,
+    excludeFilter: UserFilterWithAggregatorSchema,
+    trigger: TriggerSchema,
+    status: {
+        type: String,
+        required: true,
+        default: Constants.sequenceStatus[0],
+        enum: Constants.sequenceStatus,
     },
-    sequenceSettings: {
-        excludeFilter: UserFilterWithAggregatorSchema,
-    },
+    emailsOrder: [String],
+    entrants: [String],
 });
 
 export default mongoose.models.Sequence ||

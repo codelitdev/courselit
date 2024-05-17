@@ -36,7 +36,7 @@ import {
 import { useSession } from "next-auth/react";
 const { permissions } = constants;
 
-const getSidebarMenuItems = (profile: Profile, featureFlags: string[]) => {
+const getSidebarMenuItems = (profile: Profile) => {
     const items = [
         {
             label: SIDEBAR_MENU_DASHBOARD,
@@ -69,13 +69,11 @@ const getSidebarMenuItems = (profile: Profile, featureFlags: string[]) => {
             href: "/dashboard/users",
             icon: <Person />,
         });
-        if (featureFlags.includes("mail")) {
-            items.push({
-                label: SIDEBAR_MENU_MAILS,
-                href: "/dashboard/mails",
-                icon: <Mail />,
-            });
-        }
+        items.push({
+            label: SIDEBAR_MENU_MAILS,
+            href: "/dashboard/mails",
+            icon: <Mail />,
+        });
     }
 
     if (profile.permissions.includes(permissions.manageSite)) {
@@ -102,7 +100,6 @@ interface BaseLayoutProps {
     siteInfo: SiteInfo;
     children: ReactNode;
     title: string;
-    featureFlags: string[];
     dispatch: AppDispatch;
 }
 
@@ -111,7 +108,6 @@ const BaseLayoutAdmin = ({
     siteInfo,
     children,
     title,
-    featureFlags,
     dispatch,
 }: BaseLayoutProps) => {
     const { status } = useSession();
@@ -134,7 +130,7 @@ const BaseLayoutAdmin = ({
         }
     }, [status]);
 
-    const items = getSidebarMenuItems(profile, featureFlags);
+    const items = getSidebarMenuItems(profile);
 
     return profile.fetched && canAccessDashboard(profile) ? (
         <>
@@ -171,7 +167,6 @@ const mapStateToProps = (state: AppState) => ({
     profile: state.profile,
     siteInfo: state.siteinfo,
     address: state.address,
-    featureFlags: state.featureFlags,
 });
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });

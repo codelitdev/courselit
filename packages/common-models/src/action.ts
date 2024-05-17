@@ -1,6 +1,3 @@
-export type Action =
-    | "tag:add"
-    | "tag:remove"
-    | "seq:start"
-    | "seq:remove"
-    | "date:delay";
+import { Constants } from ".";
+
+export type Action = (typeof Constants.actionTypes)[number];

@@ -12,8 +12,6 @@ import {
     CLEAR_MESSAGE,
     THEME_AVAILABLE,
     SET_ADDRESS,
-    //WIDGETS_DATA_AVAILABLE,
-    FEATURE_FLAGS_AVAILABLE,
     TYPEFACES_AVAILABLE,
 } from "./action-types";
 import { HYDRATE } from "next-redux-wrapper";
@@ -149,17 +147,6 @@ function widgetsDataReducer(state = initialState.widgetsData, action: Action) {
     }
 }
 */
-function featureFlagsReducer(
-    state = initialState.featureFlags,
-    action: Action,
-) {
-    switch (action.type) {
-        case FEATURE_FLAGS_AVAILABLE:
-            return action.fFlags;
-        default:
-            return state;
-    }
-}
 
 function typefacesReducer(state = initialState.typefaces, action: Action) {
     switch (action.type) {
@@ -178,7 +165,6 @@ const appReducers = combineReducers({
     message: messageReducer,
     theme: themeReducer,
     address: addressReducer,
-    featureFlags: featureFlagsReducer,
     typefaces: typefacesReducer,
     //widgetsData: widgetsDataReducer,
 });
