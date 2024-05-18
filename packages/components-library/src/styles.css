@@ -20,7 +20,7 @@
     }
 
     .remirror-theme {
-        div > p:last-of-type {
+        :is(div) > p:last-of-type {
             @apply mb-0;
         }
     }

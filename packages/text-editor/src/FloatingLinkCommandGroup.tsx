@@ -34,7 +34,7 @@ function useLinkShortcut() {
         LinkExtension,
         "onShortcut",
         useCallback(
-            (props: any) => {
+            (props) => {
                 if (!isEditing) {
                     setIsEditing(true);
                 }
@@ -215,7 +215,6 @@ const FloatingLinkToolbar = () => {
                 positioner="always"
                 placement="bottom"
                 enabled={isEditing}
-                renderOutsideEditor
             >
                 <DelayAutoFocusInput
                     style={{ zIndex: 20 }}

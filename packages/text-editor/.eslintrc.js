@@ -1,7 +1,16 @@
 module.exports = {
-    extends: ["plugin:react/recommended", "prettier"],
+    env: {
+        browser: true,
+    },
+    extends: [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@typescript-eslint/stylistic",
+        "plugin:react/recommended",
+        "prettier",
+    ],
     plugins: ["react-hooks"],
-    ignorePatterns: ["dist/**/*.js"],
+    ignorePatterns: ["dist/**"],
     rules: {
         "react-hooks/rules-of-hooks": "error",
     },

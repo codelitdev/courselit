@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import React, { useEffect, FC, PropsWithChildren, useCallback } from "react";
 import {
     PlaceholderExtension,
@@ -27,7 +28,7 @@ import { oneDark } from "@codemirror/theme-one-dark";
 import { basicSetup } from "codemirror";
 
 export interface WysiwygEditorProps extends Partial<ReactEditorProps> {
-    onChange: (...args: any[]) => void;
+    onChange: (...args: unknown[]) => void;
     showToolbar?: boolean;
     editable?: boolean;
     refresh?: number;
@@ -101,7 +102,7 @@ const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
         onError,
     });
 
-    const onChangeFunc = (data: any) => {
+    const onChangeFunc = (data) => {
         setTimeout(() => onChange(data.helpers.getJSON()), 0);
     };
 
@@ -129,8 +130,10 @@ const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
     );
 };
 
+// eslint-disable-next-line  @typescript-eslint/no-explicit-any
 (WysiwygEditor as any).getPlainText = (doc: any) =>
     getTextContentFromSlice(doc);
+// eslint-disable-next-line  @typescript-eslint/no-explicit-any
 (WysiwygEditor as any).emptyDoc = emptyDoc;
 
 export default WysiwygEditor;
