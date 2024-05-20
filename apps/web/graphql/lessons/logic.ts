@@ -142,7 +142,6 @@ export const createLesson = async (
             creatorId: ctx.user._id, // TODO: refactor this
             courseId: course.courseId,
             groupId: lessonData.groupId,
-            groupRank: -1,
             requiresEnrollment: lessonData.requiresEnrollment,
         });
 
@@ -235,7 +234,6 @@ export const getAllLessons = async (course: Course, ctx: GQLContext) => {
             requiresEnrollment: 1,
             courseId: 1,
             groupId: 1,
-            groupRank: 1,
         },
     );
 

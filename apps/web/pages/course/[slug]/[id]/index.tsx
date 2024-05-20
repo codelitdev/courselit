@@ -165,7 +165,6 @@ export async function getServerSideProps({ query, req }: any) {
           requiresEnrollment,
           courseId,
           groupId,
-          groupRank
         },
         tags,
         firstLesson

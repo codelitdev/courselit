@@ -26,7 +26,6 @@ export interface Lesson {
     requiresEnrollment: boolean;
     published: boolean;
     groupId: string;
-    groupRank: number;
 }
 
 const LessonSchema = new mongoose.Schema<Lesson>({
@@ -46,7 +45,6 @@ const LessonSchema = new mongoose.Schema<Lesson>({
     requiresEnrollment: { type: Boolean, default: true },
     published: { type: Boolean, required: true, default: false },
     groupId: { type: String, required: true },
-    groupRank: { type: Number, required: true },
 });
 
 export default mongoose.models.Lesson || mongoose.model("Lesson", LessonSchema);

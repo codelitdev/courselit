@@ -71,7 +71,7 @@ function validateMediaContent(lessonData: LessonValidatorProps) {
     }
 }
 
-type GroupLessonItem = Pick<Lesson, "lessonId" | "groupId" | "groupRank">;
+type GroupLessonItem = Pick<Lesson, "lessonId" | "groupId">;
 export const getGroupedLessons = async (
     courseId: string,
     domainId: mongoose.Types.ObjectId,
@@ -89,7 +89,6 @@ export const getGroupedLessons = async (
         },
         {
             lessonId: 1,
-            groupRank: 1,
             groupId: 1,
         },
     );
@@ -104,7 +103,8 @@ export const getGroupedLessons = async (
                 )
                 .sort(
                     (a: GroupLessonItem, b: GroupLessonItem) =>
-                        a.groupRank - b.groupRank,
+                        group.lessonsOrder.indexOf(a.lessonId) -
+                        group.lessonsOrder.indexOf(b.lessonId),
                 ),
         );
     }
