@@ -75,7 +75,6 @@ export default function Widget({
                         groupId,
                         lessonId,
                         type,
-                        groupRank,
                         requiresEnrollment
                     },
                     groups {
@@ -126,7 +125,11 @@ export default function Widget({
             course.groups.map((group) => {
                 formattedCourse[group.name] = course.lessons
                     .filter((lesson: Lesson) => lesson.groupId === group.id)
-                    .sort((a: any, b: any) => a.groupRank - b.groupRank);
+                    .sort(
+                        (a: any, b: any) =>
+                            group.lessonsOrder.indexOf(a.lessonId) -
+                            group.lessonsOrder.indexOf(b.lessonId),
+                    );
             });
             setFormattedCourse(formattedCourse);
         }

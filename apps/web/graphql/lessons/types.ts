@@ -76,7 +76,6 @@ const lessonMetaType = new GraphQLObjectType({
         },
         courseId: { type: new GraphQLNonNull(GraphQLID) },
         groupId: { type: new GraphQLNonNull(GraphQLID) },
-        groupRank: { type: new GraphQLNonNull(GraphQLID) },
     },
 });
 
