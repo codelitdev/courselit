@@ -35,7 +35,8 @@ export interface FormFieldProps {
         | "text"
         | "url"
         | "datetime-local"
-        | "date";
+        | "date"
+        | "password";
     messages?: MessageItem[];
     [key: string]: any;
     name?: string;
