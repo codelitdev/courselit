@@ -197,6 +197,8 @@ export const savePage = async (
             page.draftLayout = [];
         }
         ctx.subdomain.typefaces = ctx.subdomain.draftTypefaces;
+        ctx.subdomain.sharedWidgets = ctx.subdomain.draftSharedWidgets;
+        ctx.subdomain.draftSharedWidgets = {};
     } else if ("layout" in pageData) {
         try {
             let layout;
@@ -207,17 +209,18 @@ export const savePage = async (
             }
             for (let widget of layout) {
                 if (widget.shared && widget.widgetId) {
-                    ctx.subdomain.sharedWidgets[widget.name] = Object.assign(
-                        {},
-                        ctx.subdomain.sharedWidgets[widget.name],
-                        widget,
-                    );
+                    ctx.subdomain.draftSharedWidgets[widget.name] =
+                        Object.assign(
+                            {},
+                            ctx.subdomain.draftSharedWidgets[widget.name],
+                            widget,
+                        );
                     widget.settings = undefined;
                 }
             }
-            (ctx.subdomain as any).markModified("sharedWidgets");
+            (ctx.subdomain as any).markModified("draftSharedWidgets");
             await (ctx.subdomain as any).save();
-            page!.draftLayout = layout;
+            page.draftLayout = layout;
         } catch (err: any) {
             throw new Error(err.message);
         }

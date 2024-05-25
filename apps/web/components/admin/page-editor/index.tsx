@@ -7,7 +7,7 @@ import {
     Typeface,
     WidgetInstance,
 } from "@courselit/common-models";
-import type { Address, Auth, Profile } from "@courselit/common-models";
+import type { Address, Auth, Media, Profile } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import {
     networkAction,
@@ -25,6 +25,7 @@ import {
     EDIT_PAGE_BUTTON_UPDATE,
     PAGE_TITLE_EDIT_PAGE,
     EDIT_PAGE_BUTTON_FONTS,
+    EDIT_PAGE_BUTTON_SEO,
 } from "../../../ui-config/strings";
 import { useRouter } from "next/router";
 import {
@@ -40,6 +41,7 @@ import widgets from "../../../ui-config/widgets";
 import { Sync, CheckCircled } from "@courselit/icons";
 import AppToast from "../../app-toast";
 import { Button, CircularProgress } from "@courselit/components-library";
+import SeoEditor from "./seo-editor";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
@@ -60,7 +62,13 @@ interface PageEditorProps {
     redirectTo?: string;
 }
 
-type LeftPaneContent = "fonts" | "themes" | "editor" | "widgets" | "none";
+type LeftPaneContent =
+    | "fonts"
+    | "themes"
+    | "editor"
+    | "widgets"
+    | "seo"
+    | "none";
 
 function PageEditor({
     id,
@@ -145,7 +153,19 @@ function PageEditor({
                     type,
                     layout,
                     draftLayout,
-                    pageData
+                    pageData,
+                    description,
+                    socialImage {
+                        mediaId,
+                        originalFileName,
+                        mimeType,
+                        size,
+                        access,
+                        file,
+                        thumbnail,
+                        caption
+                    },
+                    robotsAllowed,
                 }
             }
         `;
@@ -191,7 +211,19 @@ function PageEditor({
                 entityId,
                 layout,
                 draftLayout,
-                pageData
+                pageData,
+                description,
+                socialImage {
+                    mediaId,
+                    originalFileName,
+                    mimeType,
+                    size,
+                    access,
+                    file,
+                    thumbnail,
+                    caption
+                },
+                robotsAllowed,
             }
         }
         `;
@@ -284,7 +316,19 @@ function PageEditor({
                     entityId,
                     layout,
                     draftLayout,
-                    pageData
+                    pageData,
+                    description,
+                    socialImage {
+                        mediaId,
+                        originalFileName,
+                        mimeType,
+                        size,
+                        access,
+                        file,
+                        thumbnail,
+                        caption
+                    },
+                    robotsAllowed,
                 }
             }
         `;
@@ -398,6 +442,52 @@ function PageEditor({
         }
     };
 
+    const savePageSEO = async ({
+        name,
+        description,
+        socialImage,
+        robotsAllowed,
+    }: {
+        name: string;
+        description: string;
+        socialImage: Media | {};
+        robotsAllowed: boolean;
+    }) => {
+        const query = `
+            mutation {
+                site: updateDraftTypefaces(
+                    typefaces: ${getGraphQLQueryStringFromObject(newTypefaces)} 
+                ) {
+                    draftTypefaces {
+                        section,
+                        typeface,
+                        fontWeights,
+                        fontSize,
+                        lineHeight,
+                        letterSpacing,
+                        case
+                    },
+                }
+            }
+        `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload(query)
+            .setIsGraphQLEndpoint(true)
+            .build();
+        try {
+            dispatch(networkAction(true));
+            const response = await fetch.exec();
+            if (response.site) {
+                setDraftTypefaces(response.site.draftTypefaces);
+            }
+        } catch (err: any) {
+            dispatch(setAppMessage(new AppMessage(err.message)));
+        } finally {
+            dispatch(networkAction(false));
+        }
+    };
+
     const onAddWidgetBelow = (index: number) => {
         setSelectedWidgetIndex(index);
         setLeftPaneContent("widgets");
@@ -426,6 +516,16 @@ function PageEditor({
                     saveDraftTypefaces={saveDraftTypefaces}
                 />
             )}
+            {leftPaneContent === "seo" && (
+                <SeoEditor
+                    title={page.name || ""}
+                    description={page.description || ""}
+                    robotsAllowed={page.robotsAllowed || true}
+                    socialImage={page.socialImage || {}}
+                    onClose={(e) => setLeftPaneContent("none")}
+                    onSave={savePage}
+                />
+            )}
         </>
     );
 
@@ -445,6 +545,14 @@ function PageEditor({
                             variant="soft"
                         >
                             {EDIT_PAGE_BUTTON_FONTS}
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setLeftPaneContent("seo");
+                            }}
+                            variant="soft"
+                        >
+                            {EDIT_PAGE_BUTTON_SEO}
                         </Button>
                     </div>
                     <div className="flex justify-end items-center gap-2">

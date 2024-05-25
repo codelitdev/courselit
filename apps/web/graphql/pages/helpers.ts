@@ -3,8 +3,11 @@ import CourseModel, { Course } from "../../models/Course";
 import GQLContext from "../../models/GQLContext";
 import { Page } from "../../models/Page";
 
-export async function getPageResponse(page: Page, ctx: GQLContext) {
-    let layout = page.layout.map((widget) =>
+export async function getPageResponse(
+    page: Page,
+    ctx: GQLContext,
+): Promise<Partial<Page>> {
+    const layout = page.layout.map((widget) =>
         widget.shared
             ? Object.assign({}, ctx.subdomain.sharedWidgets[widget.name], {
                   widgetId: widget.widgetId,
@@ -19,6 +22,16 @@ export async function getPageResponse(page: Page, ctx: GQLContext) {
               )
             : {};
 
+    const sharedWidgetsToDraftSharedWidgets = (widget) =>
+        widget.shared
+            ? Object.assign(
+                  {},
+                  ctx.subdomain.draftSharedWidgets[widget.name] ||
+                      ctx.subdomain.sharedWidgets[widget.name],
+                  { widgetId: widget.widgetId },
+              )
+            : widget;
+
     return {
         pageId: page.pageId,
         name: page.name,
@@ -28,17 +41,12 @@ export async function getPageResponse(page: Page, ctx: GQLContext) {
         layout,
         draftLayout: page.draftLayout
             ? page.draftLayout.length
-                ? page.draftLayout.map((widget) =>
-                      widget.shared
-                          ? Object.assign(
-                                {},
-                                ctx.subdomain.sharedWidgets[widget.name],
-                                { widgetId: widget.widgetId },
-                            )
-                          : widget,
-                  )
-                : layout
+                ? page.draftLayout.map(sharedWidgetsToDraftSharedWidgets)
+                : layout.map(sharedWidgetsToDraftSharedWidgets)
             : undefined,
+        description: page.description,
+        socialImage: page.socialImage,
+        robotsAllowed: page.robotsAllowed,
     };
 }
 

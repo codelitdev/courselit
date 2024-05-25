@@ -1,3 +1,4 @@
+import Media from "./media";
 import type { Product, Site } from "./page-type";
 import WidgetInstance from "./widget-instance";
 
@@ -9,4 +10,7 @@ export default interface Page {
     entityId?: string;
     pageData?: Record<string, unknown>;
     deleteable: boolean;
+    description?: string;
+    socialImage?: Media;
+    robotsAllowed?: boolean;
 }

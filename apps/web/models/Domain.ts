@@ -28,12 +28,22 @@ const DomainSchema = new mongoose.Schema<Domain>(
         deleted: { type: Boolean, required: true, default: false },
         settings: SettingsSchema,
         theme: ThemeSchema,
-        sharedWidgets: { type: mongoose.Schema.Types.Mixed, default: {} },
+        sharedWidgets: {
+            type: mongoose.Schema.Types.Mixed,
+            default: {},
+        },
+        draftSharedWidgets: {
+            type: mongoose.Schema.Types.Mixed,
+            default: {},
+        },
         typefaces: {
             type: [TypefaceSchema],
             default: [defaultTypeface],
         },
-        draftTypefaces: { type: [TypefaceSchema], default: [defaultTypeface] },
+        draftTypefaces: {
+            type: [TypefaceSchema],
+            default: [defaultTypeface],
+        },
         firstRun: { type: Boolean, required: true, default: false },
         tags: { type: [String], default: [] },
         checkSubscriptionStatusAfter: { type: Date },
