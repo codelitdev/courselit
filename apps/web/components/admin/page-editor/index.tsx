@@ -144,10 +144,7 @@ function PageEditor({
     const onPublish = async () => {
         const mutation = `
             mutation {
-                page: savePage(pageData: {
-                    pageId: "${id}",
-                    publish: true
-                }) {
+                page: publish(pageId: "${id}") {
                     pageId,
                     name,
                     type,
@@ -306,7 +303,7 @@ function PageEditor({
 
         const mutation = `
             mutation {
-                page: savePage(pageData: {
+                page: updatePage(pageData: {
                     pageId: "${pageId}",
                     layout: ${JSON.stringify(JSON.stringify(layout))}
                 }) {

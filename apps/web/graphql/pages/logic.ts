@@ -177,7 +177,7 @@ interface Published {
     publish: boolean;
 }
 
-export const savePage = async (
+export const updatePage = async (
     pageData: Draft | Published,
     ctx: GQLContext,
 ): Promise<Partial<Page> | null> => {
@@ -191,15 +191,7 @@ export const savePage = async (
         domain: ctx.subdomain._id,
     });
 
-    if ("publish" in pageData) {
-        if (page && page.draftLayout.length) {
-            page.layout = page.draftLayout;
-            page.draftLayout = [];
-        }
-        ctx.subdomain.typefaces = ctx.subdomain.draftTypefaces;
-        ctx.subdomain.sharedWidgets = ctx.subdomain.draftSharedWidgets;
-        ctx.subdomain.draftSharedWidgets = {};
-    } else if ("layout" in pageData) {
+    if ("layout" in pageData) {
         try {
             let layout;
             try {
@@ -227,9 +219,6 @@ export const savePage = async (
     }
 
     try {
-        if ("publish" in pageData) {
-            await (ctx.subdomain as any).save();
-        }
         await (page as any).save();
     } catch (e: any) {
         // We want to safely ignore the error where `__v` property does not
@@ -238,6 +227,33 @@ export const savePage = async (
             throw new Error(e.message);
         }
     }
+
+    return getPageResponse(page!, ctx);
+};
+
+export const publish = async (
+    pageId: string,
+    ctx: GQLContext,
+): Promise<Partial<Page> | null> => {
+    checkIfAuthenticated(ctx);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
+        throw new Error(responses.action_not_allowed);
+    }
+    const page: Page | null = await PageModel.findOne({
+        pageId,
+        domain: ctx.subdomain._id,
+    });
+
+    if (page && page.draftLayout.length) {
+        page.layout = page.draftLayout;
+        page.draftLayout = [];
+    }
+    ctx.subdomain.typefaces = ctx.subdomain.draftTypefaces;
+    ctx.subdomain.sharedWidgets = ctx.subdomain.draftSharedWidgets;
+    ctx.subdomain.draftSharedWidgets = {};
+
+    await (ctx.subdomain as any).save();
+    await (page as any).save();
 
     return getPageResponse(page!, ctx);
 };
