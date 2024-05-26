@@ -81,7 +81,16 @@ function PageEditor({
     redirectTo,
 }: PageEditorProps) {
     const [pages, setPages] = useState([]);
-    const [page, setPage] = useState<Partial<Page>>({});
+    const [page, setPage] = useState<
+        Partial<
+            Page & {
+                draftTitle?: string;
+                draftDescription?: string;
+                draftSocialImage?: Media;
+                draftRobotsAllowed?: boolean;
+            }
+        >
+    >({});
     const [layout, setLayout] = useState<Partial<WidgetInstance>[]>([]);
     const [selectedWidget, setSelectedWidget] = useState<string>();
     const [selectedWidgetIndex, setSelectedWidgetIndex] = useState<number>(-1);
@@ -95,7 +104,7 @@ function PageEditor({
     const debouncedSave = useCallback(
         debounce(
             async (pageId: string, layout: Record<string, unknown>[]) =>
-                await savePage(pageId, layout),
+                await savePage({ pageId, layout }),
             DEBOUNCE_TIME,
         ),
         [],
@@ -151,6 +160,7 @@ function PageEditor({
                     layout,
                     draftLayout,
                     pageData,
+                    title,
                     description,
                     socialImage {
                         mediaId,
@@ -163,10 +173,23 @@ function PageEditor({
                         caption
                     },
                     robotsAllowed,
+                    draftTitle,
+                    draftDescription,
+                    draftSocialImage {
+                        mediaId,
+                        originalFileName,
+                        mimeType,
+                        size,
+                        access,
+                        file,
+                        thumbnail,
+                        caption
+                    },
+                    draftRobotsAllowed,
                 }
             }
         `;
-        await fetchPage(mutation);
+        await fetchPage({ query: mutation });
     };
 
     const loadPages = async () => {
@@ -209,6 +232,7 @@ function PageEditor({
                 layout,
                 draftLayout,
                 pageData,
+                title,
                 description,
                 socialImage {
                     mediaId,
@@ -221,10 +245,23 @@ function PageEditor({
                     caption
                 },
                 robotsAllowed,
+                draftTitle,
+                draftDescription,
+                draftSocialImage {
+                    mediaId,
+                    originalFileName,
+                    mimeType,
+                    size,
+                    access,
+                    file,
+                    thumbnail,
+                    caption
+                },
+                draftRobotsAllowed,
             }
         }
         `;
-        await fetchPage(query, true);
+        await fetchPage({ query, refreshLayout: true });
     };
 
     const loadDraftTypefaces = async () => {
@@ -265,10 +302,18 @@ function PageEditor({
         setLeftPaneContent("editor");
     };
 
-    const fetchPage = async (query: string, refreshLayout: boolean = false) => {
+    const fetchPage = async ({
+        query,
+        variables,
+        refreshLayout = false,
+    }: {
+        query: string;
+        refreshLayout?: boolean;
+        variables?: Record<string, unknown>;
+    }) => {
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
+            .setPayload({ query, variables })
             .setIsGraphQLEndpoint(true)
             .build();
         try {
@@ -295,18 +340,42 @@ function PageEditor({
         }
     };
 
-    const savePage = async (
-        pageId: string,
-        layout: Record<string, unknown>[],
-    ) => {
-        if (!pageId || !layout || !layout.length) return;
+    const savePage = async ({
+        pageId,
+        layout,
+        title,
+        description,
+        socialImage,
+        robotsAllowed,
+    }: {
+        pageId: string;
+        layout?: Record<string, unknown>[];
+        title?: string;
+        description?: string;
+        socialImage?: Media | {};
+        robotsAllowed?: boolean;
+    }) => {
+        if (!pageId) {
+            return;
+        }
 
         const mutation = `
-            mutation {
-                page: updatePage(pageData: {
-                    pageId: "${pageId}",
-                    layout: ${JSON.stringify(JSON.stringify(layout))}
-                }) {
+            mutation updatePage(
+                $pageId: String!,
+                $layout: String,
+                $title: String,
+                $description: String,
+                $socialImage: MediaInput,
+                $robotsAllowed: Boolean
+            ) {
+                page: updatePage(
+                    pageId: $pageId,
+                    layout: $layout,
+                    title: $title,
+                    description: $description,
+                    socialImage: $socialImage,
+                    robotsAllowed: $robotsAllowed
+                ) {
                     pageId,
                     name,
                     type,
@@ -314,6 +383,7 @@ function PageEditor({
                     layout,
                     draftLayout,
                     pageData,
+                    title,
                     description,
                     socialImage {
                         mediaId,
@@ -326,10 +396,33 @@ function PageEditor({
                         caption
                     },
                     robotsAllowed,
+                    draftTitle,
+                    draftDescription,
+                    draftSocialImage {
+                        mediaId,
+                        originalFileName,
+                        mimeType,
+                        size,
+                        access,
+                        file,
+                        thumbnail,
+                        caption
+                    },
+                    draftRobotsAllowed,
                 }
             }
         `;
-        await fetchPage(mutation);
+        await fetchPage({
+            query: mutation,
+            variables: {
+                pageId,
+                layout: JSON.stringify(layout),
+                title,
+                description,
+                socialImage,
+                robotsAllowed,
+            },
+        });
     };
 
     const onWidgetSettingsChanged = (
@@ -353,7 +446,7 @@ function PageEditor({
         );
         layout.splice(widgetIndex, 1);
         setLayout(layout);
-        await savePage(page.pageId!, layout);
+        await savePage({ pageId: page.pageId!, layout });
     };
 
     const addWidget = async (name: string) => {
@@ -373,7 +466,7 @@ function PageEditor({
         //setShowWidgetSelector(false);
         onItemClick(widgetId);
         setLeftPaneContent("editor");
-        await savePage(page.pageId!, [...layout]);
+        await savePage({ pageId: page.pageId!, layout: [...layout] });
     };
 
     const onClose = () => {
@@ -439,52 +532,6 @@ function PageEditor({
         }
     };
 
-    const savePageSEO = async ({
-        name,
-        description,
-        socialImage,
-        robotsAllowed,
-    }: {
-        name: string;
-        description: string;
-        socialImage: Media | {};
-        robotsAllowed: boolean;
-    }) => {
-        const query = `
-            mutation {
-                site: updateDraftTypefaces(
-                    typefaces: ${getGraphQLQueryStringFromObject(newTypefaces)} 
-                ) {
-                    draftTypefaces {
-                        section,
-                        typeface,
-                        fontWeights,
-                        fontSize,
-                        lineHeight,
-                        letterSpacing,
-                        case
-                    },
-                }
-            }
-        `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            dispatch(networkAction(true));
-            const response = await fetch.exec();
-            if (response.site) {
-                setDraftTypefaces(response.site.draftTypefaces);
-            }
-        } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
-        } finally {
-            dispatch(networkAction(false));
-        }
-    };
-
     const onAddWidgetBelow = (index: number) => {
         setSelectedWidgetIndex(index);
         setLeftPaneContent("widgets");
@@ -515,12 +562,40 @@ function PageEditor({
             )}
             {leftPaneContent === "seo" && (
                 <SeoEditor
-                    title={page.name || ""}
-                    description={page.description || ""}
-                    robotsAllowed={page.robotsAllowed || true}
-                    socialImage={page.socialImage || {}}
+                    title={page.draftTitle || page.title || ""}
+                    description={
+                        page.draftDescription || page.description || ""
+                    }
+                    robotsAllowed={
+                        typeof page.draftRobotsAllowed === "boolean"
+                            ? page.draftRobotsAllowed
+                            : typeof page.robotsAllowed === "boolean"
+                            ? page.robotsAllowed
+                            : true
+                    }
+                    socialImage={
+                        page.draftSocialImage || page.socialImage || {}
+                    }
                     onClose={(e) => setLeftPaneContent("none")}
-                    onSave={savePage}
+                    onSave={({
+                        title,
+                        description,
+                        socialImage,
+                        robotsAllowed,
+                    }: {
+                        title: string;
+                        description: string;
+                        socialImage: Media | {};
+                        robotsAllowed: boolean;
+                    }) =>
+                        savePage({
+                            pageId: page.pageId!,
+                            title,
+                            description,
+                            socialImage,
+                            robotsAllowed,
+                        })
+                    }
                 />
             )}
         </>

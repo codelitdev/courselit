@@ -34,7 +34,9 @@ export default function Widget({ state, settings }: WidgetProps) {
 
     return (
         <header
-            className={`sticky border-b top-0 z-10 bg-white/75 backdrop-blur py-[${
+            className={`sticky ${
+                !settings.appBarBackground ? "border-b" : ""
+            } top-0 z-10 bg-white/75 backdrop-blur py-[${
                 verticalPadding || defaultVerticalPadding
             }px]`}
             style={{

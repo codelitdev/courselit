@@ -10,6 +10,7 @@ export default interface Page {
     entityId?: string;
     pageData?: Record<string, unknown>;
     deleteable: boolean;
+    title?: string;
     description?: string;
     socialImage?: Media;
     robotsAllowed?: boolean;

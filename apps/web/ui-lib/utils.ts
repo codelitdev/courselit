@@ -62,17 +62,31 @@ export const getPage = async (backend: string, id?: string) => {
         ? `
     query {
         page: getPage(id: "${id}") {
-            name,
+            title,
             layout,
             pageData,
+            description,
+            socialImage {
+                file,
+                caption, 
+                mimeType
+            },
+            robotsAllowed,
         }
     }
     `
         : `
     query {
         page: getPage {
-            name,
+            title,
             layout,
+            description,
+            socialImage {
+                file,
+                caption,
+                mimeType
+            },
+            robotsAllowed,
         }
     }
     `;

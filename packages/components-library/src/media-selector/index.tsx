@@ -107,6 +107,9 @@ const MediaSelector = (props: MediaSelectorProps) => {
         });
         if (res.status === 200) {
             const media = await res.json();
+            if (media) {
+                delete media.group;
+            }
             return media;
         } else {
             res = await res.json();

@@ -44,9 +44,14 @@ export async function getPageResponse(
                 ? page.draftLayout.map(sharedWidgetsToDraftSharedWidgets)
                 : layout.map(sharedWidgetsToDraftSharedWidgets)
             : undefined,
+        title: page.title,
         description: page.description,
         socialImage: page.socialImage,
         robotsAllowed: page.robotsAllowed,
+        draftTitle: page.draftTitle,
+        draftDescription: page.draftDescription,
+        draftSocialImage: page.draftSocialImage,
+        draftRobotsAllowed: page.draftRobotsAllowed,
     };
 }
 

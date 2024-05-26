@@ -4,17 +4,50 @@ import { updatePage, createPage, deletePage, publish } from "./logic";
 import types from "./types";
 import constants from "../../config/constants";
 const { defaultPages } = constants;
+import mediaTypes from "../media/types";
+import { Media } from "@courselit/common-models";
+const { mediaInputType } = mediaTypes;
 
 export default {
     updatePage: {
         type: types.page,
         args: {
-            pageData: {
-                type: new GraphQLNonNull(types.pageInputType),
-            },
+            pageId: { type: new GraphQLNonNull(GraphQLString) },
+            layout: { type: GraphQLString },
+            title: { type: GraphQLString },
+            description: { type: GraphQLString },
+            socialImage: { type: mediaInputType },
+            robotsAllowed: { type: GraphQLBoolean },
         },
-        resolve: async (_: any, { pageData }: any, context: GQLContext) =>
-            updatePage(pageData, context),
+        resolve: async (
+            _: any,
+            {
+                pageId,
+                layout,
+                title,
+                description,
+                socialImage,
+                robotsAllowed,
+            }: {
+                context: GQLContext;
+                pageId: string;
+                layout?: string;
+                title?: string;
+                description?: string;
+                socialImage?: Media;
+                robotsAllowed?: boolean;
+            },
+            context: GQLContext,
+        ) =>
+            updatePage({
+                context,
+                pageId,
+                layout,
+                title,
+                description,
+                socialImage,
+                robotsAllowed,
+            }),
     },
     publish: {
         type: types.page,

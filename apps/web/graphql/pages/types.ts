@@ -21,9 +21,14 @@ const page = new GraphQLObjectType({
         draftLayout: { type: new GraphQLList(GraphQLJSONObject) },
         pageData: { type: GraphQLJSONObject },
         deleteable: { type: new GraphQLNonNull(GraphQLBoolean) },
+        title: { type: GraphQLString },
         description: { type: GraphQLString },
         socialImage: { type: mediaType },
         robotsAllowed: { type: GraphQLBoolean },
+        draftTitle: { type: GraphQLString },
+        draftDescription: { type: GraphQLString },
+        draftSocialImage: { type: mediaType },
+        draftRobotsAllowed: { type: GraphQLBoolean },
     },
 });
 
@@ -32,7 +37,6 @@ const pageInputType = new GraphQLInputObjectType({
     fields: {
         pageId: { type: new GraphQLNonNull(GraphQLString) },
         layout: { type: GraphQLString },
-        publish: { type: GraphQLBoolean },
     },
 });
 

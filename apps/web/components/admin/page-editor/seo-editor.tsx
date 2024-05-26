@@ -18,7 +18,7 @@ import {
     SEO_FORM_SOCIAL_IMAGE_LABEL,
     SEO_FORM_SOCIAL_IMAGE_TOOLTIP,
 } from "@ui-config/strings";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 import { connect } from "react-redux";
 import { Cross as Close } from "@courselit/icons";
 
@@ -32,6 +32,7 @@ function SeoEditor({
     profile,
     address,
     onClose,
+    onSave,
 }: {
     title: string;
     description: string;
@@ -42,15 +43,26 @@ function SeoEditor({
     profile: Profile;
     address: Address;
     onClose: (...args: any[]) => void;
+    onSave: (...args: any[]) => void;
 }) {
-    const [name, setName] = useState(title || "");
-    const [innerDescription, setInnerDescription] = useState(description || "");
-    const [innerRobotsAllowed, setInnerRobotsAllowed] = useState(
-        robotsAllowed || true,
-    );
-    const [innerSocialImage, setInnerSocialImage] = useState<Partial<Media>>(
-        socialImage || {},
-    );
+    const [name, setName] = useState(title);
+    const [innerDescription, setInnerDescription] = useState(description);
+    const [innerRobotsAllowed, setInnerRobotsAllowed] = useState(robotsAllowed);
+    const [innerSocialImage, setInnerSocialImage] =
+        useState<Partial<Media>>(socialImage);
+
+    const onSubmit = (e: FormEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+
+        onSave({
+            title: name,
+            description: innerDescription,
+            socialImage: Object.keys(innerSocialImage).length
+                ? innerSocialImage
+                : null,
+            robotsAllowed: innerRobotsAllowed,
+        });
+    };
 
     return (
         <div className="flex flex-col">
@@ -60,7 +72,7 @@ function SeoEditor({
                     <Close fontSize="small" />
                 </IconButton>
             </div>
-            <Form className="flex flex-col p-2 gap-4">
+            <Form className="flex flex-col p-2 gap-4" onSubmit={onSubmit}>
                 <FormField
                     required
                     label={SEO_FORM_NAME_LABEL}
