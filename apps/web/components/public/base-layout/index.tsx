@@ -64,6 +64,8 @@ const MasterLayout = ({
         <>
             <Head>
                 <title>{title || siteInfo.title}</title>
+                <meta property="og:title" content={title || siteInfo.title} />
+                <meta name="twitter:title" content={title || siteInfo.title} />
                 <link
                     rel="icon"
                     href={
@@ -79,7 +81,11 @@ const MasterLayout = ({
                 {description && (
                     <>
                         <meta name="description" content={description} />
-                        <meta name="og:description" content={description} />
+                        <meta property="og:description" content={description} />
+                        <meta
+                            name="twitter:description"
+                            content={description}
+                        />
                     </>
                 )}
                 {!robotsAllowed && <meta name="robots" content="noindex" />}
