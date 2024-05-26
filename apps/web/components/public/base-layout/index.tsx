@@ -7,7 +7,12 @@ import {
     AppDispatch,
     AppState,
 } from "@courselit/state-management";
-import type { Theme, Typeface, WidgetInstance } from "@courselit/common-models";
+import type {
+    Media,
+    Theme,
+    Typeface,
+    WidgetInstance,
+} from "@courselit/common-models";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 
@@ -21,6 +26,9 @@ interface MasterLayoutProps {
     typefaces: Typeface[];
     theme: Theme;
     dispatch: AppDispatch;
+    description: string;
+    socialImage: Media;
+    robotsAllowed: boolean;
 }
 
 const MasterLayout = ({
@@ -32,6 +40,9 @@ const MasterLayout = ({
     dispatch,
     pageData = {},
     childrenOnTop = false,
+    description,
+    socialImage,
+    robotsAllowed = true,
 }: MasterLayoutProps) => {
     const { status } = useSession();
 
@@ -63,8 +74,37 @@ const MasterLayout = ({
                 />
                 <meta
                     name="viewport"
-                    content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
+                    content="initial-scale=1, width=device-width, shrink-to-fit=no"
                 />
+                {description && (
+                    <>
+                        <meta name="description" content={description} />
+                        <meta name="og:description" content={description} />
+                    </>
+                )}
+                {!robotsAllowed && <meta name="robots" content="noindex" />}
+                {socialImage && (
+                    <>
+                        <meta property="og:image" content={socialImage.file} />
+                        <meta
+                            name="twitter:card"
+                            content="summary_large_image"
+                        />
+                        <meta name="twitter:image" content={socialImage.file} />
+                        {socialImage.caption && (
+                            <>
+                                <meta
+                                    property="og:image:alt"
+                                    content={socialImage.caption}
+                                />
+                                <meta
+                                    name="twitter:image:alt"
+                                    content={socialImage.caption}
+                                />
+                            </>
+                        )}
+                    </>
+                )}
             </Head>
             <Template
                 layout={layout}

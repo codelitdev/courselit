@@ -17,6 +17,7 @@ export interface Domain {
     settings: SiteInfo;
     theme: Theme;
     sharedWidgets: SharedWidgets;
+    draftSharedWidgets: SharedWidgets;
     typefaces: Typeface[];
     draftTypefaces: Typeface[];
     firstRun: boolean;

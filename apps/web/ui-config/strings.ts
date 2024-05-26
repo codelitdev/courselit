@@ -498,6 +498,14 @@ export const MAIL_TABLE_HEADER_STATUS = "Status";
 export const MAIL_TABLE_HEADER_SENT_ON = "Sent on";
 export const TOOLTIP_USER_PAGE_SEND_MAIL = "Send mail to the current selection";
 export const EDIT_PAGE_BUTTON_FONTS = "Fonts";
+export const EDIT_PAGE_BUTTON_SEO = "SEO";
+export const SEO_FORM_NAME_LABEL = "Title";
+export const SEO_FORM_DESC_LABEL = "Description";
+export const SEO_FORM_ROBOTS_LABEL = "Search engine visibility";
+export const SEO_FORM_SOCIAL_IMAGE_LABEL = "Social card image";
+export const SEO_FORM_SOCIAL_IMAGE_TOOLTIP =
+    "While sharing this page on social media like Twitter or Facebook, this image will be used.";
+export const EDIT_PAGE_SEO_HEADER = "SEO";
 export const EDIT_PAGE_HEADER_ALL_PAGES = "Pages";
 export const LOGIN_SECTION_EMAIL_INVALID = "Invalid email";
 export const COMPONENT_MISSING_SUFFIX = "component is not found.";

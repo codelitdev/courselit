@@ -7,7 +7,7 @@ import {
     Typeface,
     WidgetInstance,
 } from "@courselit/common-models";
-import type { Address, Auth, Profile } from "@courselit/common-models";
+import type { Address, Auth, Media, Profile } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import {
     networkAction,
@@ -25,6 +25,7 @@ import {
     EDIT_PAGE_BUTTON_UPDATE,
     PAGE_TITLE_EDIT_PAGE,
     EDIT_PAGE_BUTTON_FONTS,
+    EDIT_PAGE_BUTTON_SEO,
 } from "../../../ui-config/strings";
 import { useRouter } from "next/router";
 import {
@@ -40,6 +41,7 @@ import widgets from "../../../ui-config/widgets";
 import { Sync, CheckCircled } from "@courselit/icons";
 import AppToast from "../../app-toast";
 import { Button, CircularProgress } from "@courselit/components-library";
+import SeoEditor from "./seo-editor";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
@@ -60,7 +62,13 @@ interface PageEditorProps {
     redirectTo?: string;
 }
 
-type LeftPaneContent = "fonts" | "themes" | "editor" | "widgets" | "none";
+type LeftPaneContent =
+    | "fonts"
+    | "themes"
+    | "editor"
+    | "widgets"
+    | "seo"
+    | "none";
 
 function PageEditor({
     id,
@@ -73,7 +81,16 @@ function PageEditor({
     redirectTo,
 }: PageEditorProps) {
     const [pages, setPages] = useState([]);
-    const [page, setPage] = useState<Partial<Page>>({});
+    const [page, setPage] = useState<
+        Partial<
+            Page & {
+                draftTitle?: string;
+                draftDescription?: string;
+                draftSocialImage?: Media;
+                draftRobotsAllowed?: boolean;
+            }
+        >
+    >({});
     const [layout, setLayout] = useState<Partial<WidgetInstance>[]>([]);
     const [selectedWidget, setSelectedWidget] = useState<string>();
     const [selectedWidgetIndex, setSelectedWidgetIndex] = useState<number>(-1);
@@ -87,7 +104,7 @@ function PageEditor({
     const debouncedSave = useCallback(
         debounce(
             async (pageId: string, layout: Record<string, unknown>[]) =>
-                await savePage(pageId, layout),
+                await savePage({ pageId, layout }),
             DEBOUNCE_TIME,
         ),
         [],
@@ -136,20 +153,43 @@ function PageEditor({
     const onPublish = async () => {
         const mutation = `
             mutation {
-                page: savePage(pageData: {
-                    pageId: "${id}",
-                    publish: true
-                }) {
+                page: publish(pageId: "${id}") {
                     pageId,
                     name,
                     type,
                     layout,
                     draftLayout,
-                    pageData
+                    pageData,
+                    title,
+                    description,
+                    socialImage {
+                        mediaId,
+                        originalFileName,
+                        mimeType,
+                        size,
+                        access,
+                        file,
+                        thumbnail,
+                        caption
+                    },
+                    robotsAllowed,
+                    draftTitle,
+                    draftDescription,
+                    draftSocialImage {
+                        mediaId,
+                        originalFileName,
+                        mimeType,
+                        size,
+                        access,
+                        file,
+                        thumbnail,
+                        caption
+                    },
+                    draftRobotsAllowed,
                 }
             }
         `;
-        await fetchPage(mutation);
+        await fetchPage({ query: mutation });
     };
 
     const loadPages = async () => {
@@ -191,11 +231,37 @@ function PageEditor({
                 entityId,
                 layout,
                 draftLayout,
-                pageData
+                pageData,
+                title,
+                description,
+                socialImage {
+                    mediaId,
+                    originalFileName,
+                    mimeType,
+                    size,
+                    access,
+                    file,
+                    thumbnail,
+                    caption
+                },
+                robotsAllowed,
+                draftTitle,
+                draftDescription,
+                draftSocialImage {
+                    mediaId,
+                    originalFileName,
+                    mimeType,
+                    size,
+                    access,
+                    file,
+                    thumbnail,
+                    caption
+                },
+                draftRobotsAllowed,
             }
         }
         `;
-        await fetchPage(query, true);
+        await fetchPage({ query, refreshLayout: true });
     };
 
     const loadDraftTypefaces = async () => {
@@ -236,10 +302,18 @@ function PageEditor({
         setLeftPaneContent("editor");
     };
 
-    const fetchPage = async (query: string, refreshLayout: boolean = false) => {
+    const fetchPage = async ({
+        query,
+        variables,
+        refreshLayout = false,
+    }: {
+        query: string;
+        refreshLayout?: boolean;
+        variables?: Record<string, unknown>;
+    }) => {
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
+            .setPayload({ query, variables })
             .setIsGraphQLEndpoint(true)
             .build();
         try {
@@ -266,29 +340,89 @@ function PageEditor({
         }
     };
 
-    const savePage = async (
-        pageId: string,
-        layout: Record<string, unknown>[],
-    ) => {
-        if (!pageId || !layout || !layout.length) return;
+    const savePage = async ({
+        pageId,
+        layout,
+        title,
+        description,
+        socialImage,
+        robotsAllowed,
+    }: {
+        pageId: string;
+        layout?: Record<string, unknown>[];
+        title?: string;
+        description?: string;
+        socialImage?: Media | {};
+        robotsAllowed?: boolean;
+    }) => {
+        if (!pageId) {
+            return;
+        }
 
         const mutation = `
-            mutation {
-                page: savePage(pageData: {
-                    pageId: "${pageId}",
-                    layout: ${JSON.stringify(JSON.stringify(layout))}
-                }) {
+            mutation updatePage(
+                $pageId: String!,
+                $layout: String,
+                $title: String,
+                $description: String,
+                $socialImage: MediaInput,
+                $robotsAllowed: Boolean
+            ) {
+                page: updatePage(
+                    pageId: $pageId,
+                    layout: $layout,
+                    title: $title,
+                    description: $description,
+                    socialImage: $socialImage,
+                    robotsAllowed: $robotsAllowed
+                ) {
                     pageId,
                     name,
                     type,
                     entityId,
                     layout,
                     draftLayout,
-                    pageData
+                    pageData,
+                    title,
+                    description,
+                    socialImage {
+                        mediaId,
+                        originalFileName,
+                        mimeType,
+                        size,
+                        access,
+                        file,
+                        thumbnail,
+                        caption
+                    },
+                    robotsAllowed,
+                    draftTitle,
+                    draftDescription,
+                    draftSocialImage {
+                        mediaId,
+                        originalFileName,
+                        mimeType,
+                        size,
+                        access,
+                        file,
+                        thumbnail,
+                        caption
+                    },
+                    draftRobotsAllowed,
                 }
             }
         `;
-        await fetchPage(mutation);
+        await fetchPage({
+            query: mutation,
+            variables: {
+                pageId,
+                layout: JSON.stringify(layout),
+                title,
+                description,
+                socialImage,
+                robotsAllowed,
+            },
+        });
     };
 
     const onWidgetSettingsChanged = (
@@ -312,7 +446,7 @@ function PageEditor({
         );
         layout.splice(widgetIndex, 1);
         setLayout(layout);
-        await savePage(page.pageId!, layout);
+        await savePage({ pageId: page.pageId!, layout });
     };
 
     const addWidget = async (name: string) => {
@@ -332,7 +466,7 @@ function PageEditor({
         //setShowWidgetSelector(false);
         onItemClick(widgetId);
         setLeftPaneContent("editor");
-        await savePage(page.pageId!, [...layout]);
+        await savePage({ pageId: page.pageId!, layout: [...layout] });
     };
 
     const onClose = () => {
@@ -426,6 +560,44 @@ function PageEditor({
                     saveDraftTypefaces={saveDraftTypefaces}
                 />
             )}
+            {leftPaneContent === "seo" && (
+                <SeoEditor
+                    title={page.draftTitle || page.title || ""}
+                    description={
+                        page.draftDescription || page.description || ""
+                    }
+                    robotsAllowed={
+                        typeof page.draftRobotsAllowed === "boolean"
+                            ? page.draftRobotsAllowed
+                            : typeof page.robotsAllowed === "boolean"
+                            ? page.robotsAllowed
+                            : true
+                    }
+                    socialImage={
+                        page.draftSocialImage || page.socialImage || {}
+                    }
+                    onClose={(e) => setLeftPaneContent("none")}
+                    onSave={({
+                        title,
+                        description,
+                        socialImage,
+                        robotsAllowed,
+                    }: {
+                        title: string;
+                        description: string;
+                        socialImage: Media | {};
+                        robotsAllowed: boolean;
+                    }) =>
+                        savePage({
+                            pageId: page.pageId!,
+                            title,
+                            description,
+                            socialImage,
+                            robotsAllowed,
+                        })
+                    }
+                />
+            )}
         </>
     );
 
@@ -445,6 +617,14 @@ function PageEditor({
                             variant="soft"
                         >
                             {EDIT_PAGE_BUTTON_FONTS}
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setLeftPaneContent("seo");
+                            }}
+                            variant="soft"
+                        >
+                            {EDIT_PAGE_BUTTON_SEO}
                         </Button>
                     </div>
                     <div className="flex justify-end items-center gap-2">
