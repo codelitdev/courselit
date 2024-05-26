@@ -1,6 +1,6 @@
 {
     "name": "@courselit/common-widgets",
-    "version": "0.49.1",
+    "version": "0.49.2",
     "description": "A collection of common widgets for CourseLit LMS",
     "keywords": [
         "widgets",
