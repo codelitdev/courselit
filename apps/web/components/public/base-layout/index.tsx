@@ -60,12 +60,16 @@ const MasterLayout = ({
         }
     }, [status]);
 
+    const siteTitle = title || siteInfo.title;
+    const siteDescription = description || siteInfo.subtitle;
+    const siteImage = socialImage || siteInfo.logo;
+
     return (
         <>
             <Head>
-                <title>{title || siteInfo.title}</title>
-                <meta property="og:title" content={title || siteInfo.title} />
-                <meta name="twitter:title" content={title || siteInfo.title} />
+                <title>{siteTitle}</title>
+                <meta property="og:title" content={siteTitle} />
+                <meta name="twitter:title" content={siteTitle} />
                 <link
                     rel="icon"
                     href={
@@ -78,34 +82,37 @@ const MasterLayout = ({
                     name="viewport"
                     content="initial-scale=1, width=device-width, shrink-to-fit=no"
                 />
-                {description && (
+                {siteDescription && (
                     <>
-                        <meta name="description" content={description} />
-                        <meta property="og:description" content={description} />
+                        <meta name="description" content={siteDescription} />
+                        <meta
+                            property="og:description"
+                            content={siteDescription}
+                        />
                         <meta
                             name="twitter:description"
-                            content={description}
+                            content={siteDescription}
                         />
                     </>
                 )}
                 {!robotsAllowed && <meta name="robots" content="noindex" />}
-                {socialImage && (
+                {siteImage && (
                     <>
-                        <meta property="og:image" content={socialImage.file} />
+                        <meta property="og:image" content={siteImage.file} />
                         <meta
                             name="twitter:card"
                             content="summary_large_image"
                         />
-                        <meta name="twitter:image" content={socialImage.file} />
-                        {socialImage.caption && (
+                        <meta name="twitter:image" content={siteImage.file} />
+                        {siteImage.caption && (
                             <>
                                 <meta
                                     property="og:image:alt"
-                                    content={socialImage.caption}
+                                    content={siteImage.caption}
                                 />
                                 <meta
                                     name="twitter:image:alt"
-                                    content={socialImage.caption}
+                                    content={siteImage.caption}
                                 />
                             </>
                         )}
