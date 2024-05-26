@@ -1,10 +1,6 @@
 import { connect } from "react-redux";
 import { getBackendAddress, getPage } from "../ui-lib/utils";
-import {
-    type SiteInfo,
-    type State,
-    type Page,
-} from "@courselit/common-models";
+import { type SiteInfo, type State, type Page } from "@courselit/common-models";
 import BaseLayout from "../components/public/base-layout";
 
 interface IndexProps {
