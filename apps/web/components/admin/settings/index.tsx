@@ -60,6 +60,7 @@ import {
     TableBody,
     TableRow,
     Dialog2,
+    PageBuilderPropertyHeader,
 } from "@courselit/components-library";
 
 const { networkAction, newSiteInfoAvailable, setAppMessage } = actionCreators;
@@ -519,12 +520,16 @@ const Settings = (props: SettingsProps) => {
                         value={newSettings.subtitle || ""}
                         onChange={onChangeData}
                     />
+
+                    <PageBuilderPropertyHeader
+                        label={SITE_SETTINGS_LOGO}
+                    />
                     <MediaSelector
                         auth={props.auth}
                         profile={props.profile}
                         dispatch={props.dispatch}
                         address={props.address}
-                        title={SITE_SETTINGS_LOGO}
+                        title=""
                         src={
                             (newSettings.logo && newSettings.logo.thumbnail) ||
                             (props.siteinfo.logo &&

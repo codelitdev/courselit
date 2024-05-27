@@ -1,4 +1,4 @@
-import React from "react";
+import { ChangeEvent, useState } from "react";
 import Image from "../image";
 import {
     Address,
@@ -15,8 +15,7 @@ import { FetchBuilder } from "@courselit/utils";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import Form from "../form";
 import FormField from "../form-field";
-
-const { useState } = React;
+import React from "react";
 
 interface Strings {
     buttonCaption?: string;
@@ -75,6 +74,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
     const [uploadData, setUploadData] = useState(defaultUploadData);
     const fileInput: React.RefObject<HTMLInputElement> = React.createRef();
     const [selectedFile, setSelectedFile] = useState();
+    const [caption, setCaption] = useState("");
     const { strings, dispatch, address, src, title, srcTitle } = props;
 
     const onSelection = (media: Media) => {
@@ -92,7 +92,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
 
     const uploadToServer = async (presignedUrl: string): Promise<Media> => {
         const fD = new FormData();
-        fD.append("caption", uploadData.caption);
+        fD.append("caption", (uploadData.caption = caption));
         fD.append("access", uploadData.public ? "public" : "private");
         fD.append("file", selectedFile);
 
@@ -199,7 +199,10 @@ const MediaSelector = (props: MediaSelectorProps) => {
                         }
                     >
                         {error && <div>{error}</div>}
-                        <Form encType="multipart/form-data">
+                        <Form
+                            encType="multipart/form-data"
+                            className="flex flex-col gap-4"
+                        >
                             <FormField
                                 label={""}
                                 ref={fileInput}
@@ -213,8 +216,19 @@ const MediaSelector = (props: MediaSelectorProps) => {
                                         text: "File is required",
                                     },
                                 ]}
-                                className="mt-4"
+                                className="mt-2"
                                 required
+                            />
+                            <FormField
+                                component="textarea"
+                                label={"Caption"}
+                                name="caption"
+                                value={caption}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                    setCaption(e.target.value)
+                                }
+                                multiline
+                                rows={5}
                             />
                         </Form>
                     </Dialog2>
