@@ -47,7 +47,7 @@
         }
 
         :is(pre) {
-            @apply !w-full;
+            @apply lg:!w-full;
 
             :is(code) {
                 @apply !bg-transparent !px-0 !py-0 !rounded-none !border-none !text-base;
