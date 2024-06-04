@@ -132,6 +132,8 @@ const MediaSelector = (props: MediaSelectorProps) => {
             dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
             setUploading(false);
+            setSelectedFile(null);
+            setCaption("")
             setDialogOpened(false);
         }
     };
@@ -220,7 +222,6 @@ const MediaSelector = (props: MediaSelectorProps) => {
                                 required
                             />
                             <FormField
-                                component="textarea"
                                 label={"Caption"}
                                 name="caption"
                                 value={caption}
@@ -229,6 +230,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
                                 }
                                 multiline
                                 rows={5}
+                                disabled={selectedFile && uploading}
                             />
                         </Form>
                     </Dialog2>
