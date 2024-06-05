@@ -1,4 +1,4 @@
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import Image from "../image";
 import {
     Address,
@@ -73,7 +73,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
     };
     const [uploadData, setUploadData] = useState(defaultUploadData);
     const fileInput: React.RefObject<HTMLInputElement> = React.createRef();
-    const [selectedFile, setSelectedFile] = useState();
+    const [selectedFile, setSelectedFile] = useState<any>();
     const [caption, setCaption] = useState("");
     const { strings, dispatch, address, src, title, srcTitle } = props;
 
@@ -89,6 +89,13 @@ const MediaSelector = (props: MediaSelectorProps) => {
         const response = await fetch.exec();
         return response.url;
     };
+
+    useEffect(() => {
+        if (!dialogOpened) {
+            setSelectedFile(undefined);
+            setCaption("")
+        }
+    }, [dialogOpened]);
 
     const uploadToServer = async (presignedUrl: string): Promise<Media> => {
         const fD = new FormData();
@@ -133,7 +140,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
         } finally {
             setUploading(false);
             setSelectedFile(null);
-            setCaption("")
+            setCaption("");
             setDialogOpened(false);
         }
     };
@@ -160,6 +167,10 @@ const MediaSelector = (props: MediaSelectorProps) => {
             setDialogOpened(false);
         }
     };
+
+    console.log("selectedFile", selectedFile);
+    console.log("selectedFile name", selectedFile?.name);
+    console.log("selectedFile caption", caption);
 
     return (
         <div className="flex items-center gap-4">
@@ -218,6 +229,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
                                         text: "File is required",
                                     },
                                 ]}
+                                disabled={selectedFile && uploading}
                                 className="mt-2"
                                 required
                             />
