@@ -5,7 +5,6 @@ import {
     createIFrameHandler,
     createLinkHandler,
     Doc,
-    Heading,
     MarkMap,
     RemirrorRenderer,
     TextHandler,
@@ -13,6 +12,7 @@ import {
 } from "@remirror/react";
 import { RemirrorJSON } from "@remirror/core-types";
 import { CodeMirrorRenderer } from "./code-mirror-renderer";
+import { createId } from "../create-id";
 
 const typeMap: MarkMap = {
     blockquote: "blockquote",
@@ -22,7 +22,7 @@ const typeMap: MarkMap = {
     codeMirror: CodeMirrorRenderer,
     doc: Doc,
     hardBreak: "br",
-    heading: Heading,
+    // heading: Heading,
     horizontalRule: "hr",
     iframe: createIFrameHandler(),
     image: "img",
@@ -32,6 +32,21 @@ const typeMap: MarkMap = {
     text: TextHandler,
     taskList: "ul",
     taskListItem: "li",
+    heading: ({ node, children }) => {
+        if (!node.content) {
+            return null;
+        }
+
+        let textContent = "";
+        for (const child of node.content) {
+            textContent += child.text;
+        }
+        const id = createId(textContent);
+        const HeadingTag =
+            `h${node.attrs.level}` as keyof JSX.IntrinsicElements;
+
+        return <HeadingTag id={id}>{children}</HeadingTag>;
+    },
 };
 
 const markMap: MarkMap = {
