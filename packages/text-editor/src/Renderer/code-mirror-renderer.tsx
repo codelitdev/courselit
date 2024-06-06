@@ -23,8 +23,7 @@ export const CodeMirrorRenderer: FC<{
                 borderRadius: "8px",
                 padding: "16px",
                 overflowX: "auto",
-                width: "calc(100vw - 32px)",
-                // whiteSpace: 'pre-wrap'
+                whiteSpace: "pre-wrap",
             }}
         >
             <code>{children}</code>

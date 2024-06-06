@@ -13,7 +13,7 @@ export default interface Settings extends WidgetDefaultSettings {
     color?: string;
     buttonBackground?: string;
     buttonForeground?: string;
-    successMessage?: string;
+    successMessage?: Record<string, unknown>;
     failureMessage?: string;
-    editingViewShowSuccess: 1 | 0;
+    editingViewShowSuccess: "1" | "0";
 }

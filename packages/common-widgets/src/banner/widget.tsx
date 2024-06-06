@@ -92,7 +92,7 @@ export default function Widget({
     const verticalLayout = ["top", "bottom"].includes(alignment);
     const showEditingView =
         typeof editingViewShowSuccess === "undefined"
-            ? 0
+            ? "0"
             : editingViewShowSuccess;
     const featuredImage: Media =
         type === "site"
@@ -202,7 +202,7 @@ export default function Widget({
                         )}
                         {type === "product" && product.costType === "email" && (
                             <div>
-                                {((editing && showEditingView === 1) ||
+                                {((editing && showEditingView === "1") ||
                                     success) && (
                                     <TextRenderer
                                         json={
@@ -212,7 +212,7 @@ export default function Widget({
                                     />
                                 )}
                                 {(!editing ||
-                                    (editing && showEditingView === 0)) &&
+                                    (editing && showEditingView === "0")) &&
                                     !success && (
                                         <Form
                                             className="flex flex-col"

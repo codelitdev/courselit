@@ -96,6 +96,7 @@ const Article = (props: ArticleProps) => {
                             ? JSON.parse(course.description)
                             : TextEditorEmptyDoc
                     }
+                    showTableOfContent={true}
                 />
             </div>
             {/*

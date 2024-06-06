@@ -9,6 +9,8 @@
         }
 
         :is(ul, ol) {
+            @apply mb-4;
+
             :is(p) {
                 @apply !mb-0;
             }
@@ -32,14 +34,32 @@
 
         :is(h1) {
             @apply text-4xl font-semibold mb-5 mt-12;
+            color: inherit;
         }
 
         :is(h2) {
             @apply text-3xl font-semibold mb-4 mt-12;
+            color: inherit;
         }
 
         :is(h3) {
             @apply text-2xl font-semibold mb-3 mt-12;
+            color: inherit;
+        }
+
+        :is(h4) {
+            @apply text-xl font-semibold mb-2 mt-12;
+            color: inherit;
+        }
+
+        :is(h5) {
+            @apply text-lg font-semibold mb-1 mt-12;
+            color: inherit;
+        }
+
+        :is(h6) {
+            @apply text-base font-semibold mb-1 mt-12;
+            color: inherit;
         }
 
         :is(div) > p:last-of-type {
@@ -47,8 +67,6 @@
         }
 
         :is(pre) {
-            @apply lg:!w-full;
-
             :is(code) {
                 @apply !bg-transparent !px-0 !py-0 !rounded-none !border-none !text-base;
             }

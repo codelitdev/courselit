@@ -6,7 +6,7 @@ import {
 
 export default interface Settings extends WidgetDefaultSettings {
     title?: string;
-    description?: string;
+    description?: Record<string, unknown>;
     buttonCaption?: string;
     buttonAction?: string;
     buttonBackground?: string;
