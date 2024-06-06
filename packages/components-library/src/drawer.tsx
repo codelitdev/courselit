@@ -7,6 +7,7 @@ interface DrawerProps {
     side?: "left" | "right" | "top" | "bottom";
     open: boolean;
     setOpen: (open: boolean) => void;
+    style?: string;
 }
 
 export function Drawer({
@@ -15,13 +16,22 @@ export function Drawer({
     side = "left",
     open,
     setOpen,
+    style,
 }: DrawerProps) {
     return (
         <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
                 <span>{trigger}</span>
             </SheetTrigger>
-            <SheetContent side={side}>{children}</SheetContent>
+                <SheetContent
+                    side={side}
+                    style={{
+                        backgroundColor: style,
+                        border: 0,
+                    }}
+                >
+                    {children}
+                </SheetContent>
         </Sheet>
     );
 }

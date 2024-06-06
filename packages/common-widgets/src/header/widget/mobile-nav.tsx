@@ -18,6 +18,8 @@ export function MobileNav({
     btnColor,
     linkFontWeight,
     spacingBetweenLinks,
+    appBarBackground,
+    logoColor,
 }: {
     title: string;
     logo: Media;
@@ -28,77 +30,89 @@ export function MobileNav({
     btnColor: string;
     linkFontWeight: "font-normal" | "font-bold" | "font-light";
     spacingBetweenLinks: number;
+    appBarBackground: string;
+    logoColor: string;
 }) {
     const [open, setOpen] = useState(false);
 
     return (
-        <Drawer
-            open={open}
-            setOpen={setOpen}
-            trigger={<MenuButton color={color} backgroundColor={btnBgColor} />}
-            side="right"
-        >
-            <AppLink
-                href="/"
-                onClick={() => {
-                    setOpen(false);
-                }}
+            <Drawer
+                open={open}
+                setOpen={setOpen}
+                trigger={
+                    <MenuButton color={color} backgroundColor={btnBgColor} />
+                }
+                side="right"
+                style={appBarBackground}
             >
-                <div className="flex items-center mb-4">
-                    {logo && (
-                        <div className="mr-2">
-                            <Image
-                                src={logo.file}
-                                borderRadius={2}
-                                width="w-[32px]"
-                                height="h-[32px]"
-                            />
-                        </div>
-                    )}
-                    <span className="font-bold text-xl">{title}</span>
-                </div>
-            </AppLink>
-            <ul
-                className="flex flex-col"
-                style={{
-                    gap: `${spacingBetweenLinks}px`,
-                }}
-            >
-                {links &&
-                    (links as Link[]).map((link: Link, index) => (
+                <AppLink
+                    href="/"
+                    onClick={() => {
+                        setOpen(false);
+                    }}
+                >
+                    <div className="flex items-center mb-4">
+                        {logo && (
+                            <div className="mr-2">
+                                <Image
+                                    src={logo.file}
+                                    borderRadius={2}
+                                    width="w-[32px]"
+                                    height="h-[32px]"
+                                />
+                            </div>
+                        )}
                         <span
-                            className="mr-2"
+                            className="font-bold text-xl"
                             style={{
-                                color: linkColor || "inherit",
+                                color: logoColor || "inherit",
                             }}
-                            key={index}
                         >
-                            <AppLink
-                                href={link.href}
-                                className={`${linkFontWeight}`}
-                                onClick={() => {
-                                    setOpen(false);
-                                }}
-                            >
-                                {link.isButton && (
-                                    <Button2
-                                        size="sm"
-                                        style={{
-                                            background: btnBgColor,
-                                            color: btnColor,
-                                            font: "unset",
-                                            fontSize: "unset",
-                                        }}
-                                    >
-                                        {link.label}
-                                    </Button2>
-                                )}
-                                {!link.isButton && link.label}
-                            </AppLink>
+                            {title}
                         </span>
-                    ))}
-            </ul>
-        </Drawer>
+                    </div>
+                </AppLink>
+                <ul
+                    className="flex flex-col"
+                    style={{
+                        gap: `${spacingBetweenLinks}px`,
+                    }}
+                >
+                    {links &&
+                        (links as Link[]).map((link: Link, index) => (
+                            <span
+                                className="mr-2"
+                                style={{
+                                    color: linkColor || "inherit",
+                                }}
+                                key={index}
+                            >
+                                <AppLink
+                                    href={link.href}
+                                    className={`${linkFontWeight}`}
+                                    onClick={() => {
+                                        setOpen(false);
+                                    }}
+                                >
+                                    {link.isButton && (
+                                        <Button2
+                                            size="sm"
+                                            style={{
+                                                background: btnBgColor,
+                                                color: btnColor,
+                                                font: "unset",
+                                                fontSize: "unset",
+                                            }}
+                                        >
+                                            {link.label}
+                                        </Button2>
+                                    )}
+                                    {!link.isButton && link.label}
+                                </AppLink>
+                            </span>
+                        ))}
+                </ul>
+            </Drawer>
     );
 }
 
