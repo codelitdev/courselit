@@ -49,9 +49,6 @@
         "codemirror": "^6.0.1",
         "remirror": "^2.0.39"
     },
-    "resolutions": {
-        "prosemirror-model": "1.19.3"
-    },
     "devDependencies": {
         "@types/node": "^18.8.0",
         "eslint": "^8.57.0",
