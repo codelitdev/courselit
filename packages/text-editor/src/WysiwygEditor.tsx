@@ -1,12 +1,6 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import React, { useEffect, FC, PropsWithChildren, useCallback } from "react";
 import {
-    PlaceholderExtension,
-    wysiwygPreset,
-    ImageExtension,
-} from "remirror/extensions";
-import { TableExtension } from "@remirror/extension-react-tables";
-import {
     EditorComponent,
     Remirror,
     TableComponents,
@@ -17,15 +11,11 @@ import { AllStyledComponent } from "@remirror/styles/emotion";
 import { RemirrorContentType } from "@remirror/core-types";
 import { getTextContentFromSlice } from "@remirror/core";
 import { InvalidContentHandler } from "remirror";
-
 import BubbleMenu from "./BubbleMenu";
 import Toolbar from "./Toolbar";
 import { ReactEditorProps } from "./types";
 import emptyDoc from "./empty-doc";
-import { CodeMirrorExtension } from "@remirror/extension-codemirror6";
-import { languages } from "@codemirror/language-data";
-import { oneDark } from "@codemirror/theme-one-dark";
-import { basicSetup } from "codemirror";
+import { getExtensions } from "./extensions";
 
 export interface WysiwygEditorProps extends Partial<ReactEditorProps> {
     onChange: (...args: unknown[]) => void;
@@ -65,23 +55,11 @@ const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
         );
     }, [refresh]);
 
-    const wysiwygPresetArrayWithoutImageExtension = wysiwygPreset().filter(
-        (extension) => extension instanceof ImageExtension !== true,
-    );
+    // const wysiwygPresetArrayWithoutImageExtension = wysiwygPreset().filter(
+    //     (extension) => extension instanceof ImageExtension !== true,
+    // );
 
-    const extensions = useCallback(
-        () => [
-            new PlaceholderExtension({ placeholder }),
-            new TableExtension(),
-            new ImageExtension({ enableResizing: true }),
-            new CodeMirrorExtension({
-                languages: languages,
-                extensions: [basicSetup, oneDark],
-            }),
-            ...wysiwygPresetArrayWithoutImageExtension,
-        ],
-        [placeholder],
-    );
+    const extensions = useCallback(getExtensions(placeholder), [placeholder]);
 
     const onError: InvalidContentHandler = useCallback(
         ({ json, invalidContent, transformers }) => {
