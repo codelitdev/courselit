@@ -13,10 +13,10 @@ import { actionCreators } from "@courselit/state-management";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import {
     Link,
-    CircularProgress,
     Chip,
     LessonIcon,
     TextRenderer,
+    Skeleton,
 } from "@courselit/components-library";
 import {
     verticalPadding as defaultVerticalPadding,
@@ -80,7 +80,8 @@ export default function Widget({
                     groups {
                         id,
                         name,
-                        rank
+                        rank,
+                        lessonsOrder
                     },
                     courseId,
                     cost,
@@ -169,8 +170,17 @@ export default function Widget({
                         )}
                     </div>
                     {!course && (
-                        <div className="flex flex-col items-center">
-                            <CircularProgress />
+                        <div className="flex flex-col gap-2">
+                            {[1, 2, 3, 4].map((item) => (
+                                <div key={item}>
+                                    <div className="flex gap-2 items-center mb-2">
+                                        <Skeleton className="h-8 w-full" />
+                                        <Skeleton className="h-6 w-[100px] rounded-[300px]" />
+                                        <Skeleton className="h-6 w-6" />
+                                    </div>
+                                    <hr className="w-full" />
+                                </div>
+                            ))}
                         </div>
                     )}
                     <Accordion type="single" collapsible>
