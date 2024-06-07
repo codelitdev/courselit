@@ -521,9 +521,7 @@ const Settings = (props: SettingsProps) => {
                         onChange={onChangeData}
                     />
 
-                    <PageBuilderPropertyHeader
-                        label={SITE_SETTINGS_LOGO}
-                    />
+                    <PageBuilderPropertyHeader label={SITE_SETTINGS_LOGO} />
                     <MediaSelector
                         auth={props.auth}
                         profile={props.profile}

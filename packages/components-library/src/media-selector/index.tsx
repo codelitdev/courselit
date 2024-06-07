@@ -93,7 +93,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
     useEffect(() => {
         if (!dialogOpened) {
             setSelectedFile(undefined);
-            setCaption("")
+            setCaption("");
         }
     }, [dialogOpened]);
 
@@ -139,7 +139,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
             dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
             setUploading(false);
-            setSelectedFile(null);
+            setSelectedFile(undefined);
             setCaption("");
             setDialogOpened(false);
         }
@@ -167,10 +167,6 @@ const MediaSelector = (props: MediaSelectorProps) => {
             setDialogOpened(false);
         }
     };
-
-    console.log("selectedFile", selectedFile);
-    console.log("selectedFile name", selectedFile?.name);
-    console.log("selectedFile caption", caption);
 
     return (
         <div className="flex items-center gap-4">
