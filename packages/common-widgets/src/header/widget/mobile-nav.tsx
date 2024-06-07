@@ -49,6 +49,7 @@ export function MobileNav({
                         <div className="mr-2">
                             <Image
                                 src={logo.file}
+                                alt={logo.caption}
                                 borderRadius={2}
                                 width="w-[32px]"
                                 height="h-[32px]"

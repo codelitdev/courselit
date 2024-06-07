@@ -214,6 +214,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
                         <Form
                             encType="multipart/form-data"
                             className="flex flex-col gap-4"
+                            onSubmit={uploadFile}
                         >
                             <FormField
                                 label={""}

@@ -53,6 +53,7 @@ export default function Itemm({
                 {media && media.file && (
                     <div className="mb-4">
                         <Image
+                            alt={media && media.caption}
                             src={media && media.file}
                             loading="lazy"
                             sizes="40vw"

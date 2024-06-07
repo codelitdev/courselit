@@ -54,6 +54,7 @@ export default function Widget({ state, settings }: WidgetProps) {
                             {state.siteinfo.logo && (
                                 <div className="mr-2">
                                     <Image
+                                        alt={state.siteinfo.logo.caption}
                                         src={state.siteinfo.logo.file}
                                         borderRadius={2}
                                         width="w-[32px]"

@@ -530,21 +530,20 @@ const Settings = (props: SettingsProps) => {
                         dispatch={props.dispatch}
                         address={props.address}
                         title=""
-                        src={
-                            (newSettings.logo && newSettings.logo.thumbnail) ||
-                            (props.siteinfo.logo &&
-                                props.siteinfo.logo.thumbnail)
-                        }
-                        srcTitle={
-                            (newSettings.logo &&
-                                newSettings.logo.originalFileName) ||
-                            (props.siteinfo.logo &&
-                                props.siteinfo.logo.originalFileName)
-                        }
+                        src={newSettings.logo?.thumbnail}
+                        srcTitle={newSettings.logo?.originalFileName}
                         onSelection={onChangeData}
                         mimeTypesToShow={[...MIMETYPE_IMAGE]}
                         access="public"
                         strings={{}}
+                        mediaId={newSettings.logo?.mediaId}
+                        onRemove={() => {
+                            setNewSettings(
+                                Object.assign({}, newSettings, {
+                                    logo: {},
+                                }),
+                            );
+                        }}
                     />
                     <div>
                         <Button

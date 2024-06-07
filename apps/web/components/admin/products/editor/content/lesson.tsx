@@ -505,6 +505,14 @@ const LessonEditor = ({
                             profile={profile}
                             dispatch={dispatch}
                             address={address}
+                            mediaId={lesson.media?.mediaId}
+                            onRemove={() => {
+                                setLesson(
+                                    Object.assign({}, lesson, {
+                                        media: {},
+                                    }),
+                                );
+                            }}
                         />
                     )}
                     {lesson.type.toLowerCase() === LESSON_TYPE_TEXT && (
