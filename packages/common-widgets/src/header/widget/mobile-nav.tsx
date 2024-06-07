@@ -43,7 +43,10 @@ export function MobileNav({
                     <MenuButton color={color} backgroundColor={btnBgColor} />
                 }
                 side="right"
-                style={appBarBackground}
+                style={{
+                    backgroundColor: appBarBackground,
+                    borderLeft: appBarBackground ? "0px" : "1px solid white",
+                }}
             >
                 <AppLink
                     href="/"

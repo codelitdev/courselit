@@ -7,7 +7,7 @@ interface DrawerProps {
     side?: "left" | "right" | "top" | "bottom";
     open: boolean;
     setOpen: (open: boolean) => void;
-    style?: string;
+    style?: React.CSSProperties;
 }
 
 export function Drawer({
@@ -23,15 +23,12 @@ export function Drawer({
             <SheetTrigger asChild>
                 <span>{trigger}</span>
             </SheetTrigger>
-                <SheetContent
-                    side={side}
-                    style={{
-                        backgroundColor: style,
-                        border: 0,
-                    }}
-                >
-                    {children}
-                </SheetContent>
+            <SheetContent
+                side={side}
+                style={style}
+            >
+                {children}
+            </SheetContent>
         </Sheet>
     );
 }
