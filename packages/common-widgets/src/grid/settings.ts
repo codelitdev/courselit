@@ -9,7 +9,7 @@ export interface Item {
     description?: Record<string, unknown>;
     buttonCaption?: string;
     buttonAction?: string;
-    media?: Media;
+    media?: Partial<Media>;
 }
 
 export default interface Settings extends WidgetDefaultSettings {
