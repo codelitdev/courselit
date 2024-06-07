@@ -154,7 +154,10 @@ export default function Widget({
                             verticalLayout ? "md:w-full" : "w-full md:w-1/2"
                         }`}
                     >
-                        <Image src={featuredImage.file} />
+                        <Image
+                            src={featuredImage.file}
+                            alt={featuredImage.caption}
+                        />
                     </div>
                 )}
                 <div

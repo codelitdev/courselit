@@ -68,7 +68,10 @@ export default function Widget({
                                         width: "100%",
                                     }}
                                 >
-                                    <Image src={media.file} />
+                                    <Image
+                                        src={media.file}
+                                        alt={media.caption}
+                                    />
                                 </div>
                             )}
                         </div>

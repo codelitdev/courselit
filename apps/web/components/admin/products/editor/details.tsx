@@ -143,6 +143,10 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
                     profile={profile}
                     dispatch={dispatch}
                     address={address}
+                    mediaId={featuredImage?.mediaId}
+                    onRemove={() => {
+                        setFeaturedImage({});
+                    }}
                 />
                 <div>
                     <Button type="submit">{BUTTON_SAVE}</Button>

@@ -130,11 +130,17 @@ function LessonSection({
                             )
                             .sort(
                                 (a: any, b: any) =>
-                                    group.lessonsOrder.indexOf(a.lessonId) -
-                                    group.lessonsOrder.indexOf(b.lessonId),
+                                    (group.lessonsOrder as any[]).indexOf(
+                                        a.lessonId,
+                                    ) -
+                                    (group.lessonsOrder as any[]).indexOf(
+                                        b.lessonId,
+                                    ),
                             )
                             .map((lesson: Lesson) => ({
                                 id: lesson.lessonId,
+                                courseId: course.courseId,
+                                groupId: lesson.groupId,
                                 lesson,
                             }))}
                         Renderer={LessonItem}
