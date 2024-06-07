@@ -1,6 +1,6 @@
 {
     "name": "@courselit/state-management",
-    "version": "0.50.1",
+    "version": "0.51.0",
     "description": "Redux based state management for CourseLit",
     "author": "Rajat Saxena <hi@rajatsaxena.dev>",
     "homepage": "https://github.com/codelitdev/courselit#readme",
