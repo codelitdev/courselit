@@ -119,6 +119,7 @@ const Settings = (props: SettingsProps) => {
                 codeInjectionBody: settings.codeInjectionBody
                     ? encode(settings.codeInjectionBody)
                     : "",
+                mailingAddress: settings.mailingAddress || "",
             }),
         );
     }, [settings]);
@@ -186,6 +187,7 @@ const Settings = (props: SettingsProps) => {
             stripePublishableKey: settingsResponse.stripePublishableKey || "",
             codeInjectionHead: settingsResponse.codeInjectionHead || "",
             codeInjectionBody: settingsResponse.codeInjectionBody || "",
+            mailingAddress: settingsResponse.mailingAddress || "",
         };
         setSettings(
             Object.assign({}, settings, settingsResponseWithNullsRemoved),

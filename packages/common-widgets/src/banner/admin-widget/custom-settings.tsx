@@ -62,9 +62,9 @@ export default function CustomSettings({
     const [failureMessage, setFailureMessage] = useState(
         settings.failureMessage || DEFAULT_FAILURE_MESSAGE,
     );
-    const [editingViewShowSuccess, setEditingViewShowSuccess] = useState<1 | 0>(
-        settings.editingViewShowSuccess || 0,
-    );
+    const [editingViewShowSuccess, setEditingViewShowSuccess] = useState<
+        "1" | "0"
+    >(settings.editingViewShowSuccess || "0");
     const type = Object.keys(pageData).length === 0 ? "site" : "product";
 
     useEffect(() => {
@@ -183,10 +183,10 @@ export default function CustomSettings({
                                     title="Editing view"
                                     value={editingViewShowSuccess}
                                     options={[
-                                        { label: "Before submit", value: 0 },
-                                        { label: "After submit", value: 1 },
+                                        { label: "Before submit", value: "0" },
+                                        { label: "After submit", value: "1" },
                                     ]}
-                                    onChange={(value: 1 | 0) =>
+                                    onChange={(value: "1" | "0") =>
                                         setEditingViewShowSuccess(value)
                                     }
                                 />

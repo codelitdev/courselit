@@ -32,3 +32,9 @@ export const sequenceStatus = [
 ] as const;
 export const leads = ["website", "newsletter", "download", "api"] as const;
 export const mailRequestStatus = ["pending", "approved", "rejected"] as const;
+export const pageNames = {
+    home: "Home page",
+    terms: "Terms of Service",
+    privacy: "Privacy policy",
+    blog: "Blog",
+};

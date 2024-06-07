@@ -1,6 +1,6 @@
 {
     "name": "@courselit/text-editor",
-    "version": "0.25.2",
+    "version": "0.27.1",
     "description": "A text editor based on Remirror",
     "keywords": [
         "text editor",
@@ -40,7 +40,7 @@
     },
     "dependencies": {
         "@codemirror/language-data": "^6.5.1",
-        "@codemirror/state": "^6.4.1",
+        "@codemirror/state": "6.2.1",
         "@codemirror/theme-one-dark": "^6.1.2",
         "@remirror/extension-codemirror6": "^1.0.13",
         "@remirror/pm": "^2.0.8",

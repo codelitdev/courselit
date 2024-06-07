@@ -3,25 +3,89 @@
 @tailwind utilities;
 
 .text-editor {
-    :is(a) {
-        @apply underline text-blue-600 hover:text-blue-800 visited:text-purple-600;
-    }
-
-    :is(ul, ol) {
-        @apply list-disc ml-6;
-    }
-
-    :is(ol) {
-        @apply list-decimal;
-    }
-
-    :is(p, h1, h2, h3) {
-        @apply mb-4;
-    }
-
     .remirror-theme {
+        :is(a) {
+            @apply underline;
+        }
+
+        :is(ul, ol) {
+            @apply mb-4;
+
+            :is(p) {
+                @apply !mb-0;
+            }
+        }
+
+        :is(ul) {
+            @apply list-disc ml-6;
+        }
+
+        :is(ol) {
+            @apply list-decimal ml-6;
+        }
+
+        :is(ol) {
+            @apply list-decimal;
+        }
+
+        :is(p) {
+            @apply text-base leading-loose mb-4;
+        }
+
+        :is(h1) {
+            @apply text-4xl font-semibold mb-5 mt-12;
+            color: inherit;
+        }
+
+        :is(h2) {
+            @apply text-3xl font-semibold mb-4 mt-12;
+            color: inherit;
+        }
+
+        :is(h3) {
+            @apply text-2xl font-semibold mb-3 mt-12;
+            color: inherit;
+        }
+
+        :is(h4) {
+            @apply text-xl font-semibold mb-2 mt-12;
+            color: inherit;
+        }
+
+        :is(h5) {
+            @apply text-lg font-semibold mb-1 mt-12;
+            color: inherit;
+        }
+
+        :is(h6) {
+            @apply text-base font-semibold mb-1 mt-12;
+            color: inherit;
+        }
+
         :is(div) > p:last-of-type {
             @apply mb-0;
+        }
+
+        :is(pre) {
+            :is(code) {
+                @apply !bg-transparent !px-0 !py-0 !rounded-none !border-none !text-base;
+            }
+        }
+
+        :is(blockquote) {
+            @apply italic border-l-4 border-slate-200 text-slate-500 pl-2;
+
+            :is(p) {
+                @apply !mb-0;
+            }
+        }
+
+        :is(code) {
+            @apply bg-gray-100 px-1 py-0.5 rounded border border-gray-200;
+        }
+
+        :is(img) {
+            @apply !w-full !h-auto mb-4 !rounded mt-2;
         }
     }
 }

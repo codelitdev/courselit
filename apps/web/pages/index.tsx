@@ -1,17 +1,22 @@
 import { connect } from "react-redux";
 import { getBackendAddress, getPage } from "../ui-lib/utils";
-import type { SiteInfo, State, Page, Typeface } from "@courselit/common-models";
+import { type SiteInfo, type State, type Page } from "@courselit/common-models";
 import BaseLayout from "../components/public/base-layout";
 
 interface IndexProps {
     siteinfo: SiteInfo;
     page: Page;
-    typefaces: Typeface[];
 }
 
-const Index = ({ siteinfo, page, typefaces }: IndexProps) => {
+const Index = ({ siteinfo, page }: IndexProps) => {
     return (
-        <BaseLayout title={siteinfo.subtitle} layout={page.layout}></BaseLayout>
+        <BaseLayout
+            title={page.title}
+            layout={page.layout}
+            description={page.description || siteinfo.subtitle}
+            socialImage={page.socialImage}
+            robotsAllowed={page.robotsAllowed}
+        />
     );
 };
 

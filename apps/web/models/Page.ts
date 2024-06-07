@@ -1,7 +1,12 @@
 import mongoose from "mongoose";
 import WidgetSchema from "./Widget";
 import constants from "../config/constants";
-import { WidgetInstance, Page as PublicPage } from "@courselit/common-models";
+import {
+    WidgetInstance,
+    Page as PublicPage,
+    Media,
+} from "@courselit/common-models";
+import MediaSchema from "./Media";
 const { product, site, blogPage } = constants;
 
 export interface Page extends PublicPage {
@@ -9,6 +14,10 @@ export interface Page extends PublicPage {
     domain: mongoose.Types.ObjectId;
     draftLayout: WidgetInstance[];
     creatorId: string;
+    draftTitle?: string;
+    draftDescription?: string;
+    draftSocialImage?: Media;
+    draftRobotsAllowed?: boolean;
 }
 
 const PageSchema = new mongoose.Schema<Page>(
@@ -27,6 +36,14 @@ const PageSchema = new mongoose.Schema<Page>(
         draftLayout: { type: [WidgetSchema], default: [] },
         entityId: { type: String },
         deleteable: { type: Boolean, required: true, default: false },
+        title: { type: String },
+        description: String,
+        socialImage: MediaSchema,
+        robotsAllowed: { type: Boolean, default: true },
+        draftTitle: String,
+        draftDescription: String,
+        draftSocialImage: MediaSchema,
+        draftRobotsAllowed: Boolean,
     },
     {
         timestamps: true,

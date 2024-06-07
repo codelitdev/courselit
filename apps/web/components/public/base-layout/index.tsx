@@ -7,7 +7,12 @@ import {
     AppDispatch,
     AppState,
 } from "@courselit/state-management";
-import type { Theme, Typeface, WidgetInstance } from "@courselit/common-models";
+import type {
+    Media,
+    Theme,
+    Typeface,
+    WidgetInstance,
+} from "@courselit/common-models";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 
@@ -21,6 +26,9 @@ interface MasterLayoutProps {
     typefaces: Typeface[];
     theme: Theme;
     dispatch: AppDispatch;
+    description: string;
+    socialImage: Media;
+    robotsAllowed: boolean;
 }
 
 const MasterLayout = ({
@@ -32,6 +40,9 @@ const MasterLayout = ({
     dispatch,
     pageData = {},
     childrenOnTop = false,
+    description,
+    socialImage,
+    robotsAllowed = true,
 }: MasterLayoutProps) => {
     const { status } = useSession();
 
@@ -49,10 +60,16 @@ const MasterLayout = ({
         }
     }, [status]);
 
+    const siteTitle = title || siteInfo.title;
+    const siteDescription = description || siteInfo.subtitle;
+    const siteImage = socialImage || siteInfo.logo;
+
     return (
         <>
             <Head>
-                <title>{title || siteInfo.title}</title>
+                <title>{siteTitle}</title>
+                <meta property="og:title" content={siteTitle} />
+                <meta name="twitter:title" content={siteTitle} />
                 <link
                     rel="icon"
                     href={
@@ -63,8 +80,44 @@ const MasterLayout = ({
                 />
                 <meta
                     name="viewport"
-                    content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
+                    content="initial-scale=1, width=device-width, shrink-to-fit=no"
                 />
+                {siteDescription && (
+                    <>
+                        <meta name="description" content={siteDescription} />
+                        <meta
+                            property="og:description"
+                            content={siteDescription}
+                        />
+                        <meta
+                            name="twitter:description"
+                            content={siteDescription}
+                        />
+                    </>
+                )}
+                {!robotsAllowed && <meta name="robots" content="noindex" />}
+                {siteImage && (
+                    <>
+                        <meta property="og:image" content={siteImage.file} />
+                        <meta
+                            name="twitter:card"
+                            content="summary_large_image"
+                        />
+                        <meta name="twitter:image" content={siteImage.file} />
+                        {siteImage.caption && (
+                            <>
+                                <meta
+                                    property="og:image:alt"
+                                    content={siteImage.caption}
+                                />
+                                <meta
+                                    name="twitter:image:alt"
+                                    content={siteImage.caption}
+                                />
+                            </>
+                        )}
+                    </>
+                )}
             </Head>
             <Template
                 layout={layout}

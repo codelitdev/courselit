@@ -7,10 +7,11 @@ import constants from "../../config/constants";
 import Course from "../../models/Course";
 import { checkPermission, generateUniqueId } from "@courselit/utils";
 import { Footer, Header } from "@courselit/common-widgets";
-import { User } from "@courselit/common-models";
+import { Media, User, Constants } from "@courselit/common-models";
 import { Domain } from "../../models/Domain";
 import { homePageTemplate } from "./page-templates";
 const { product, site, blogPage, permissions, defaultPages } = constants;
+const { pageNames } = Constants;
 
 export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
     await initSharedWidgets(ctx);
@@ -36,9 +37,17 @@ export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
                 pageId: 1,
                 layout: 1,
                 name: 1,
+                title: 1,
+                description: 1,
+                socialImage: 1,
+                robotsAllowed: 1,
                 type: 1,
                 entityId: 1,
                 draftLayout: 1,
+                draftTitle: 1,
+                draftDescription: 1,
+                draftSocialImage: 1,
+                draftRobotsAllowed: 1,
             },
         );
         if (!page) return;
@@ -56,6 +65,10 @@ export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
                 name: 1,
                 type: 1,
                 entityId: 1,
+                title: 1,
+                description: 1,
+                socialImage: 1,
+                robotsAllowed: 1,
             },
         );
         if (!page) return;
@@ -167,21 +180,23 @@ async function initSharedWidgets(ctx: GQLContext) {
     }
 }
 
-interface Draft {
+export const updatePage = async ({
+    context: ctx,
+    pageId,
+    layout: inputLayout,
+    title,
+    description,
+    socialImage,
+    robotsAllowed,
+}: {
+    context: GQLContext;
     pageId: string;
-    layout: string;
-}
-
-interface Published {
-    pageId: string;
-    publish: boolean;
-}
-
-export const savePage = async (
-    pageData: Draft | Published,
-    ctx: GQLContext,
-): Promise<Partial<Page> | null> => {
-    const { pageId } = pageData;
+    layout?: string;
+    title?: string;
+    description?: string;
+    socialImage?: Media;
+    robotsAllowed?: boolean;
+}): Promise<Partial<Page> | null> => {
     checkIfAuthenticated(ctx);
     if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
         throw new Error(responses.action_not_allowed);
@@ -191,42 +206,46 @@ export const savePage = async (
         domain: ctx.subdomain._id,
     });
 
-    if ("publish" in pageData) {
-        if (page && page.draftLayout.length) {
-            page.layout = page.draftLayout;
-            page.draftLayout = [];
-        }
-        ctx.subdomain.typefaces = ctx.subdomain.draftTypefaces;
-    } else if ("layout" in pageData) {
+    if (inputLayout) {
         try {
             let layout;
             try {
-                layout = JSON.parse(pageData.layout);
+                layout = JSON.parse(inputLayout);
             } catch (err) {
                 throw new Error(responses.invalid_layout);
             }
             for (let widget of layout) {
                 if (widget.shared && widget.widgetId) {
-                    ctx.subdomain.sharedWidgets[widget.name] = Object.assign(
-                        {},
-                        ctx.subdomain.sharedWidgets[widget.name],
-                        widget,
-                    );
+                    ctx.subdomain.draftSharedWidgets[widget.name] =
+                        Object.assign(
+                            {},
+                            ctx.subdomain.draftSharedWidgets[widget.name],
+                            widget,
+                        );
                     widget.settings = undefined;
                 }
             }
-            (ctx.subdomain as any).markModified("sharedWidgets");
+            (ctx.subdomain as any).markModified("draftSharedWidgets");
             await (ctx.subdomain as any).save();
-            page!.draftLayout = layout;
+            page.draftLayout = layout;
         } catch (err: any) {
             throw new Error(err.message);
         }
     }
+    if (title) {
+        page.draftTitle = title;
+    }
+    if (description) {
+        page.draftDescription = description;
+    }
+    if (socialImage) {
+        page.draftSocialImage = socialImage;
+    }
+    if (typeof robotsAllowed === "boolean") {
+        page.draftRobotsAllowed = robotsAllowed;
+    }
 
     try {
-        if ("publish" in pageData) {
-            await (ctx.subdomain as any).save();
-        }
         await (page as any).save();
     } catch (e: any) {
         // We want to safely ignore the error where `__v` property does not
@@ -235,6 +254,53 @@ export const savePage = async (
             throw new Error(e.message);
         }
     }
+
+    return getPageResponse(page!, ctx);
+};
+
+export const publish = async (
+    pageId: string,
+    ctx: GQLContext,
+): Promise<Partial<Page> | null> => {
+    checkIfAuthenticated(ctx);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
+        throw new Error(responses.action_not_allowed);
+    }
+    const page: Page | null = await PageModel.findOne({
+        pageId,
+        domain: ctx.subdomain._id,
+    });
+
+    if (!page) {
+        return null;
+    }
+
+    if (page.draftLayout.length) {
+        page.layout = page.draftLayout;
+        page.draftLayout = [];
+    }
+    if (page.draftTitle) {
+        page.title = page.draftTitle;
+        page.draftTitle = undefined;
+    }
+    if (page.draftDescription) {
+        page.description = page.draftDescription;
+        page.draftDescription = undefined;
+    }
+    if (page.draftSocialImage) {
+        page.socialImage = page.draftSocialImage;
+        page.draftSocialImage = undefined;
+    }
+    if (page.draftRobotsAllowed) {
+        page.robotsAllowed = page.draftRobotsAllowed;
+        page.draftRobotsAllowed = undefined;
+    }
+    ctx.subdomain.typefaces = ctx.subdomain.draftTypefaces;
+    ctx.subdomain.sharedWidgets = ctx.subdomain.draftSharedWidgets;
+    ctx.subdomain.draftSharedWidgets = {};
+
+    await (ctx.subdomain as any).save();
+    await (page as any).save();
 
     return getPageResponse(page!, ctx);
 };
@@ -274,7 +340,7 @@ export const initMandatoryPages = async (domain: Domain, user: User) => {
             pageId: defaultPages[0],
             type: site,
             creatorId: user.userId,
-            name: "Home page",
+            name: pageNames.home,
             entityId: domain.name,
             layout: [
                 {
@@ -296,7 +362,7 @@ export const initMandatoryPages = async (domain: Domain, user: User) => {
             pageId: defaultPages[2],
             type: site,
             creatorId: user.userId,
-            name: "Privacy policy",
+            name: pageNames.privacy,
             entityId: domain.name,
             layout: [
                 {
@@ -317,7 +383,7 @@ export const initMandatoryPages = async (domain: Domain, user: User) => {
             pageId: defaultPages[1],
             type: site,
             creatorId: user.userId,
-            name: "Terms of Service",
+            name: pageNames.terms,
             entityId: domain.name,
             layout: [
                 {
@@ -338,7 +404,7 @@ export const initMandatoryPages = async (domain: Domain, user: User) => {
             pageId: defaultPages[3],
             type: blogPage,
             creatorId: user.userId,
-            name: "Blog",
+            name: pageNames.blog,
             entityId: domain.name,
             layout: [
                 {

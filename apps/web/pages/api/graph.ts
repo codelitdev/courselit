@@ -12,6 +12,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "./auth/[...nextauth]";
 import User from "../../models/User";
 
+export const config = {
+    api: {
+        bodyParser: {
+            sizeLimit: "3mb",
+        },
+    },
+};
+
 async function updateLastActive(user: any) {
     const dateNow = new Date();
     dateNow.setUTCHours(0, 0, 0, 0);

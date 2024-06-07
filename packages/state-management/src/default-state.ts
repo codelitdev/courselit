@@ -9,6 +9,7 @@ export default {
         logo: {
             file: "",
             thumbnail: "",
+            caption: "",
         },
         currencyISOCode: "",
         paymentMethod: "",

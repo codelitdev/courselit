@@ -111,7 +111,8 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
                         title,
                         subtitle,
                         logo {
-                            file
+                            file,
+                            caption
                         },
                         currencyISOCode,
                         paymentMethod,
