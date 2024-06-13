@@ -45,8 +45,8 @@ export function MobileNav({
                 side="right"
                 style={{
                     backgroundColor: appBarBackground,
-                    borderLeft: appBarBackground ? "0px" : "1px solid white",
                 }}
+                className={appBarBackground ? "border-l-0" : ""}
             >
                 <AppLink
                     href="/"

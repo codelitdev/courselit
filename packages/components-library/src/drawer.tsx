@@ -8,6 +8,7 @@ interface DrawerProps {
     open: boolean;
     setOpen: (open: boolean) => void;
     style?: React.CSSProperties;
+    className?: string;
 }
 
 export function Drawer({
@@ -17,6 +18,7 @@ export function Drawer({
     open,
     setOpen,
     style,
+    className,
 }: DrawerProps) {
     return (
         <Sheet open={open} onOpenChange={setOpen}>
@@ -26,6 +28,7 @@ export function Drawer({
             <SheetContent
                 side={side}
                 style={style}
+                className={className}
             >
                 {children}
             </SheetContent>
