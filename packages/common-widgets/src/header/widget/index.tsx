@@ -240,7 +240,6 @@ export default function Widget({ state, settings }: WidgetProps) {
                             spacingBetweenLinks={spacingBetweenLinks}
                             appBarBackground={settings.appBarBackground}
                             logoColor={settings.logoColor}
-
                         />
                     </div>
                 </div>
