@@ -36,7 +36,7 @@ export default function ItemEditor({
     const [description, setDescription] = useState(item.description);
     const [buttonCaption, setButtonCaption] = useState(item.buttonCaption);
     const [buttonAction, setButtonAction] = useState(item.buttonAction);
-    const [media, setMedia] = useState<Media>(item.media);
+    const [media, setMedia] = useState<Partial<Media>>(item.media);
 
     const itemChanged = () =>
         onChange({
@@ -89,6 +89,10 @@ export default function ItemEditor({
                         }}
                         strings={{}}
                         access="public"
+                        mediaId={media?.mediaId}
+                        onRemove={() => {
+                            setMedia({});
+                        }}
                     />
                     <div className="flex justify-between">
                         <Tooltip title="Delete">

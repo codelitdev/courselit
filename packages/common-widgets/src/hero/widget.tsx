@@ -108,7 +108,10 @@ export default function Widget({
                                 <div
                                     className={`w-full text-center overflow-hidden ${twRoundedMap[mediaRadius]}`}
                                 >
-                                    <Image src={media.file} />
+                                    <Image
+                                        src={media.file}
+                                        alt={media.caption}
+                                    />
                                 </div>
                             )}
                         </div>

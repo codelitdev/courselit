@@ -35,6 +35,7 @@ const CourseItem = (props: CourseItemProps) => {
                         }
                         loading={thumbnailLoading}
                         sizes="40vw"
+                        alt={course.featuredImage?.caption}
                     />
                 </div>
                 {course.type !== "BLOG" && (
