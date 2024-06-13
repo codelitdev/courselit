@@ -239,6 +239,8 @@ export default function Widget({ state, settings }: WidgetProps) {
                             btnColor={settings.loginBtnColor}
                             linkFontWeight={linkFontWeight}
                             spacingBetweenLinks={spacingBetweenLinks}
+                            appBarBackground={settings.appBarBackground}
+                            logoColor={settings.logoColor}
                         />
                     </div>
                 </div>
