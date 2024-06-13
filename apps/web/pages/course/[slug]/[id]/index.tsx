@@ -12,7 +12,7 @@ import {
     SIDEBAR_TEXT_COURSE_ABOUT,
 } from "../../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
-import type { AppState } from "@courselit/state-management";
+import { AppState, AppDispatch, actionCreators, } from "@courselit/state-management";
 import {
     Address,
     Course,
@@ -25,6 +25,9 @@ import RouteBasedComponentScaffold, {
 } from "@components/public/scaffold";
 import Article from "@components/public/article";
 import { Link, Button } from "@courselit/components-library";
+import { useSession } from "next-auth/react";
+import { useEffect } from "react";
+import { useRouter } from "next/router";
 
 interface CourseProps {
     course: any;
@@ -32,6 +35,7 @@ interface CourseProps {
     siteInfo: SiteInfo;
     address: Address;
     error: string;
+    dispatch: AppDispatch;
 }
 
 export function generateSideBarItems(
@@ -79,8 +83,22 @@ export function generateSideBarItems(
 }
 
 const CourseViewer = (props: CourseProps) => {
-    const { course, profile } = props;
+    const { status } = useSession();
+    const router = useRouter();
+    const { course, profile, dispatch } = props;
     let key = 0;
+
+    useEffect(() => {
+        if (status === "authenticated") {
+            dispatch(actionCreators.signedIn());
+            dispatch(actionCreators.authChecked());
+        }
+        if (status === "unauthenticated") {
+            dispatch(actionCreators.authChecked());
+            router.push(`/login?redirect=${router.asPath}`);
+        }
+    }, [status]);
+
     return (
         <>
             <Head>
@@ -229,4 +247,5 @@ const mapStateToProps = (state: AppState) => ({
     address: state.address,
 });
 
-export default connect(mapStateToProps)(CourseViewer);
+const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
+export default connect(mapStateToProps, mapDispatchToProps)(CourseViewer);
