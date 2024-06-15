@@ -11,11 +11,11 @@ import {
 } from "../ui-config/strings";
 import { getBackendAddress, getPage } from "../ui-lib/utils";
 import type { Address, Auth, Page, Profile } from "@courselit/common-models";
-import { FetchBuilder } from "@courselit/utils";
-import { Section, Button } from "@courselit/components-library";
-import { checkPermission } from "@courselit/utils";
+import { FetchBuilder, checkPermission } from "@courselit/utils";
+import { Section, Button2 } from "@courselit/components-library";
 import { UIConstants } from "@courselit/common-models";
 import AppLoader from "../components/app-loader";
+import Link from "next/link";
 
 interface AccountProps {
     auth: Auth;
@@ -109,12 +109,13 @@ function Account({ auth, page, profile, address }: AccountProps) {
                                 </div>
                                 <div className="flex justify-end">
                                     <div>
-                                        <Button
-                                            component="link"
+                                        <Link
                                             href={`/course/${course.slug}/${course.courseId}`}
                                         >
-                                            {VISIT_COURSE_BUTTON}
-                                        </Button>
+                                            <Button2>
+                                                {VISIT_COURSE_BUTTON}
+                                            </Button2>
+                                        </Link>
                                     </div>
                                 </div>
                             </Section>

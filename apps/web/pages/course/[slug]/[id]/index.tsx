@@ -12,7 +12,11 @@ import {
     SIDEBAR_TEXT_COURSE_ABOUT,
 } from "../../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
-import { AppState, AppDispatch, actionCreators, } from "@courselit/state-management";
+import {
+    AppState,
+    AppDispatch,
+    actionCreators,
+} from "@courselit/state-management";
 import {
     Address,
     Course,
@@ -24,7 +28,7 @@ import RouteBasedComponentScaffold, {
     ComponentScaffoldMenuItem,
 } from "@components/public/scaffold";
 import Article from "@components/public/article";
-import { Link, Button } from "@courselit/components-library";
+import { Link, Button2 } from "@courselit/components-library";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
@@ -142,10 +146,10 @@ const CourseViewer = (props: CourseProps) => {
                             <Link
                                 href={`/course/${course.slug}/${course.courseId}/${course.firstLesson}`}
                             >
-                                <Button component="button">
+                                <Button2 className="flex gap-1 items-center">
                                     {COURSE_PROGRESS_START}
                                     <ArrowRight />
-                                </Button>
+                                </Button2>
                             </Link>
                         </div>
                     )}

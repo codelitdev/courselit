@@ -7,13 +7,13 @@ import {
     Link,
     TextRenderer,
     TextEditorEmptyDoc,
+    Button2,
 } from "@courselit/components-library";
 import { ENROLL_BUTTON_TEXT, FREE_COST } from "../../ui-config/strings";
 import { AppState } from "@courselit/state-management";
 import { Course, Profile, SiteInfo } from "@courselit/common-models";
 import { UIConstants as constants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
-import { Button } from "@courselit/components-library";
 
 const { permissions } = constants;
 
@@ -82,9 +82,7 @@ const Article = (props: ArticleProps) => {
                                     textDecoration: "none",
                                 }}
                             >
-                                <Button component="button">
-                                    {ENROLL_BUTTON_TEXT}
-                                </Button>
+                                <Button2>{ENROLL_BUTTON_TEXT}</Button2>
                             </Link>
                         </div>
                     </div>

@@ -36,86 +36,84 @@ export function MobileNav({
     const [open, setOpen] = useState(false);
 
     return (
-            <Drawer
-                open={open}
-                setOpen={setOpen}
-                trigger={
-                    <MenuButton color={color} backgroundColor={btnBgColor} />
-                }
-                side="right"
-                style={{
-                    backgroundColor: appBarBackground,
+        <Drawer
+            open={open}
+            setOpen={setOpen}
+            trigger={<MenuButton color={color} backgroundColor={btnBgColor} />}
+            side="right"
+            style={{
+                backgroundColor: appBarBackground,
+            }}
+            className={appBarBackground ? "border-l-0" : ""}
+        >
+            <AppLink
+                href="/"
+                onClick={() => {
+                    setOpen(false);
                 }}
-                className={appBarBackground ? "border-l-0" : ""}
             >
-                <AppLink
-                    href="/"
-                    onClick={() => {
-                        setOpen(false);
-                    }}
-                >
-                    <div className="flex items-center mb-4">
-                        {logo && (
-                            <div className="mr-2">
-                                <Image
-                                    src={logo.file}
-                                    borderRadius={2}
-                                    width="w-[32px]"
-                                    height="h-[32px]"
-                                />
-                            </div>
-                        )}
+                <div className="flex items-center mb-4">
+                    {logo && (
+                        <div className="mr-2">
+                            <Image
+                                src={logo.file}
+                                borderRadius={2}
+                                width="w-[32px]"
+                                height="h-[32px]"
+                            />
+                        </div>
+                    )}
+                    <span
+                        className="font-bold text-xl"
+                        style={{
+                            color: logoColor || "inherit",
+                        }}
+                    >
+                        {title}
+                    </span>
+                </div>
+            </AppLink>
+            <ul
+                className="flex flex-col"
+                style={{
+                    gap: `${spacingBetweenLinks}px`,
+                }}
+            >
+                {links &&
+                    (links as Link[]).map((link: Link, index) => (
                         <span
-                            className="font-bold text-xl"
+                            className="mr-2"
                             style={{
-                                color: logoColor || "inherit",
+                                color: linkColor || "inherit",
                             }}
+                            key={index}
                         >
-                            {title}
-                        </span>
-                    </div>
-                </AppLink>
-                <ul
-                    className="flex flex-col"
-                    style={{
-                        gap: `${spacingBetweenLinks}px`,
-                    }}
-                >
-                    {links &&
-                        (links as Link[]).map((link: Link, index) => (
-                            <span
-                                className="mr-2"
-                                style={{
-                                    color: linkColor || "inherit",
+                            <AppLink
+                                href={link.href}
+                                className={`${linkFontWeight}`}
+                                onClick={() => {
+                                    setOpen(false);
                                 }}
-                                key={index}
                             >
-                                <AppLink
-                                    href={link.href}
-                                    className={`${linkFontWeight}`}
-                                    onClick={() => {
-                                        setOpen(false);
-                                    }}
-                                >
-                                    {link.isButton && (
-                                        <Button2
-                                            size="sm"
-                                            style={{
-                                                background: btnBgColor,
-                                                color: btnColor,
-                                                font: "unset",
-                                                fontSize: "unset",
-                                            }}
-                                        >
-                                            {link.label}
-                                        </Button2>
-                                    )}
-                                    {!link.isButton && link.label}
-                                </AppLink>
-                            </span>
-                        ))}
-                </ul>
-            </Drawer>
+                                {link.isButton && (
+                                    <Button2
+                                        size="sm"
+                                        style={{
+                                            background: btnBgColor,
+                                            color: btnColor,
+                                            font: "unset",
+                                            fontSize: "unset",
+                                        }}
+                                    >
+                                        {link.label}
+                                    </Button2>
+                                )}
+                                {!link.isButton && link.label}
+                            </AppLink>
+                        </span>
+                    ))}
+            </ul>
+        </Drawer>
     );
 }
 

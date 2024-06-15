@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Button } from "@courselit/components-library";
 import { ENROLL_BUTTON_TEXT } from "../../../ui-config/strings";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
@@ -9,6 +8,7 @@ import { AppMessage } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import { refreshUserProfile } from "@courselit/state-management/dist/action-creators";
+import { Button2 } from "@courselit/components-library";
 
 const { networkAction, setAppMessage } = actionCreators;
 
@@ -57,9 +57,9 @@ const Free = ({ course, dispatch, address }: FreeProps) => {
     };
 
     return (
-        <Button onClick={handleClick} component="button" disabled={disabled}>
+        <Button2 onClick={handleClick} disabled={disabled}>
             {ENROLL_BUTTON_TEXT}
-        </Button>
+        </Button2>
     );
 };
 
