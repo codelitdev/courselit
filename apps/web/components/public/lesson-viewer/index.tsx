@@ -40,6 +40,7 @@ import { isEnrolled } from "../../../ui-lib/utils";
 import LessonEmbedViewer from "./embed-viewer";
 import QuizViewer from "./quiz-viewer";
 import Head from "next/head";
+import { useSession } from "next-auth/react";
 
 const { networkAction } = actionCreators;
 
@@ -78,8 +79,20 @@ const LessonViewer = ({
     siteinfo,
     networkAction: loading,
 }: LessonViewerProps) => {
+    const { status } = useSession();
     const [lesson, setLesson] = useState<Lesson>();
     const router = useRouter();
+
+    useEffect(() => {
+        if (status === "authenticated") {
+            dispatch(actionCreators.signedIn());
+            dispatch(actionCreators.authChecked());
+        }
+        if (status === "unauthenticated") {
+            dispatch(actionCreators.authChecked());
+            router.push(`/login?redirect=${router.asPath}`);
+        }
+    }, [status]);
 
     useEffect(() => {
         if (lessonId) {
