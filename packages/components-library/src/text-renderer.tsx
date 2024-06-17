@@ -13,6 +13,7 @@ export default function TextRenderer({
     contentTableHeader = "Table of Contents",
 }: RendererProps) {
     let headings;
+
     try {
         headings = json && extractHeadings(json);
     } catch (err) {
@@ -24,7 +25,7 @@ export default function TextRenderer({
             <div className="flex-grow">
                 <Renderer json={json as any} fontFamily={"inherit"} />
             </div>
-            {showTableOfContent && headings && (
+            {showTableOfContent && headings.length > 0 && (
                 <nav className="lg:w-1/4">
                     {contentTableHeader && (
                         <h2 className="font-semibold mb-4">
