@@ -17,9 +17,9 @@ import { getBackendAddress, getPage } from "../../ui-lib/utils";
 import {
     Checkbox,
     Section,
-    Button,
     Form,
     FormField,
+    Button2,
 } from "@courselit/components-library";
 import type {
     Address,
@@ -196,7 +196,7 @@ function ProfileIndex({
                                 maxRows={5}
                             />
                             <div>
-                                <Button
+                                <Button2
                                     onClick={saveDetails}
                                     disabled={
                                         bio === (user && user.bio) &&
@@ -204,7 +204,7 @@ function ProfileIndex({
                                     }
                                 >
                                     {BUTTON_SAVE}
-                                </Button>
+                                </Button2>
                             </div>
                         </Section>
                     </Form>

@@ -20,7 +20,7 @@ import {
     ENROLL_IN_THE_COURSE,
     NOT_ENROLLED_HEADER,
 } from "../../../ui-config/strings";
-import { TextRenderer, Link, Button } from "@courselit/components-library";
+import { TextRenderer, Link, Button2 } from "@courselit/components-library";
 import type {
     Address,
     Lesson,
@@ -190,7 +190,7 @@ const LessonViewer = ({
                 </h1>
                 <p className="mb-4">{ENROLL_IN_THE_COURSE}</p>
                 <Link href={`/checkout/${router.query.id}`}>
-                    <Button component="button">{ENROLL_BUTTON_TEXT}</Button>
+                    <Button2>{ENROLL_BUTTON_TEXT}</Button2>
                 </Link>
             </div>
         );
@@ -309,10 +309,10 @@ const LessonViewer = ({
                     lesson.type && (
                     <div>
                         <Link href={lesson.media?.file}>
-                            <Button>
+                            <Button2 className="flex gap-1 items-center">
                                 <ArrowDownward />
                                 {lesson.media?.originalFileName}
-                            </Button>
+                            </Button2>
                         </Link>
                     </div>
                 )}
@@ -324,38 +324,40 @@ const LessonViewer = ({
                                     <Link
                                         href={`/course/${slug}/${lesson.courseId}`}
                                     >
-                                        <Button
-                                            component="button"
-                                            variant="soft"
+                                        <Button2
+                                            variant="secondary"
+                                            className="flex gap-1 items-center"
                                         >
-                                            <ArrowLeft />{" "}
+                                            <ArrowLeft />
                                             {COURSE_PROGRESS_INTRO}
-                                        </Button>
+                                        </Button2>
                                     </Link>
                                 )}
                                 {lesson.prevLesson && (
                                     <Link
                                         href={`/course/${slug}/${lesson.courseId}/${lesson.prevLesson}`}
                                     >
-                                        <Button
-                                            component="button"
-                                            variant="soft"
+                                        <Button2
+                                            variant="secondary"
+                                            className="flex gap-1 items-center"
                                         >
                                             <ArrowLeft /> {COURSE_PROGRESS_PREV}
-                                        </Button>
+                                        </Button2>
                                     </Link>
                                 )}
                             </div>
-                            <Button
-                                component="button"
+                            <Button2
                                 onClick={markCompleteAndNext}
                                 disabled={loading}
                             >
-                                {lesson.nextLesson
-                                    ? COURSE_PROGRESS_NEXT
-                                    : COURSE_PROGRESS_FINISH}
-                                {lesson.nextLesson ? <ArrowRight /> : undefined}
-                            </Button>
+                                {lesson.nextLesson ? (
+                                    <div className="flex gap-1 items-center">
+                                        {COURSE_PROGRESS_NEXT} <ArrowRight />
+                                    </div>
+                                ) : (
+                                    COURSE_PROGRESS_FINISH
+                                )}
+                            </Button2>
                         </div>
                     </div>
                 )}

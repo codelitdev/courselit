@@ -7,6 +7,8 @@ import {
     Button,
     Form,
     FormField,
+    Button2,
+    Link,
 } from "@courselit/components-library";
 import { actionCreators } from "@courselit/state-management";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
@@ -258,28 +260,28 @@ export default function Widget({
                             ["paid", "free"].includes(
                                 product.costType as string,
                             ) && (
-                                <Button
-                                    href={`/checkout/${product.courseId}`}
-                                    component="link"
+                                <Link href={`/checkout/${product.courseId}`}>
+                                    <Button2
+                                        style={{
+                                            backgroundColor: buttonBackground,
+                                            color: buttonForeground,
+                                        }}
+                                    >
+                                        {buttonCaption || "Buy now"}
+                                    </Button2>
+                                </Link>
+                            )}
+                        {type === "site" && buttonAction && (
+                            <Link href={buttonAction}>
+                                <Button2
                                     style={{
                                         backgroundColor: buttonBackground,
                                         color: buttonForeground,
                                     }}
                                 >
-                                    {buttonCaption || "Buy now"}
-                                </Button>
-                            )}
-                        {type === "site" && buttonAction && (
-                            <Button
-                                component="link"
-                                href={buttonAction}
-                                style={{
-                                    backgroundColor: buttonBackground,
-                                    color: buttonForeground,
-                                }}
-                            >
-                                {buttonCaption || "Set a URL"}
-                            </Button>
+                                    {buttonCaption || "Set a URL"}
+                                </Button2>
+                            </Link>
                         )}
                     </div>
                 </div>

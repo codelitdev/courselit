@@ -25,11 +25,7 @@ export function Drawer({
             <SheetTrigger asChild>
                 <span>{trigger}</span>
             </SheetTrigger>
-            <SheetContent
-                side={side}
-                style={style}
-                className={className}
-            >
+            <SheetContent side={side} style={style} className={className}>
                 {children}
             </SheetContent>
         </Sheet>
