@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Alignment } from "@courselit/common-models";
+import { Address, Alignment } from "@courselit/common-models";
 import { useEffect, useState } from "react";
 import Settings from "./settings";
 import {
@@ -20,8 +20,13 @@ import {
 interface AdminWidgetProps {
     settings: Settings;
     onChange: (...args: any[]) => void;
+    address: Address;
 }
-export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
+export default function AdminWidget({
+    settings,
+    onChange,
+    address,
+}: AdminWidgetProps) {
     const [title, setTitle] = useState(settings.title || "Content");
     const [description, setDescription] = useState(settings.description);
     const [headerAlignment, setHeaderAlignment] = useState<Alignment>(
@@ -89,6 +94,7 @@ export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
                         initialContent={description}
                         onChange={(state: any) => setDescription(state)}
                         showToolbar={false}
+                        url={address.backend}
                     />
                 </div>
                 <Select

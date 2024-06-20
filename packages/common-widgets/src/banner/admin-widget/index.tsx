@@ -19,6 +19,7 @@ export default function AdminWidget({
     settings,
     onChange,
     pageData,
+    address,
 }: AdminWidgetProps) {
     const customSettingsChanged = (customSettings: Settings) => {
         onChange(Object.assign({}, settings, customSettings));
@@ -30,6 +31,7 @@ export default function AdminWidget({
             settings={settings}
             onChange={customSettingsChanged}
             pageData={pageData}
+            address={address}
         />
     );
 }

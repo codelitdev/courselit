@@ -8,6 +8,7 @@ export interface WysiwygEditorProps {
     showToolbar?: boolean;
     editable?: boolean;
     refresh?: number;
+    url: string;
 }
 
 export default function Editor({
@@ -16,6 +17,7 @@ export default function Editor({
     showToolbar,
     editable,
     refresh,
+    url,
 }: WysiwygEditorProps) {
     return (
         <div className="text-editor">
@@ -26,6 +28,7 @@ export default function Editor({
                 editable={editable}
                 refresh={refresh}
                 fontFamily={"inherit"}
+                url={url}
             />
         </div>
     );

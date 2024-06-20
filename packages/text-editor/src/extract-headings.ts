@@ -5,7 +5,7 @@ import { createId } from "./create-id";
 
 export function extractHeadings(json: Record<string, unknown>) {
     const headings = [];
-    const manager = RemirrorManager.create(getExtensions("")());
+    const manager = RemirrorManager.create(getExtensions("", "")());
 
     const doc = Node.fromJSON(manager.schema as Schema, json);
     doc.descendants((node) => {

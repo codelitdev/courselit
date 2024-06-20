@@ -522,6 +522,7 @@ const LessonEditor = ({
                                 initialContent={textContent}
                                 refresh={refresh}
                                 onChange={(state: any) => setTextContent(state)}
+                                url={address.backend}
                             />
                         </div>
                     )}

@@ -9,7 +9,7 @@ import {
     Form,
     FormField,
 } from "@courselit/components-library";
-import { Alignment } from "@courselit/common-models";
+import { Address, Alignment } from "@courselit/common-models";
 import { DEFAULT_FAILURE_MESSAGE, DEFAULT_SUCCESS_MESSAGE } from "../constants";
 
 interface CustomSettingsProps {
@@ -17,12 +17,14 @@ interface CustomSettingsProps {
     settings: Settings;
     pageData: Record<string, unknown>;
     onChange: (...args: any[]) => void;
+    address: Address;
 }
 
 export default function CustomSettings({
     settings,
     onChange,
     pageData,
+    address,
 }: CustomSettingsProps) {
     const defaultSuccessMessage: Record<string, unknown> = {
         type: "doc",
@@ -121,6 +123,7 @@ export default function CustomSettings({
                                 initialContent={description}
                                 onChange={(state: any) => setDescription(state)}
                                 showToolbar={false}
+                                url={address.backend}
                             />
                         </div>
                     </AdminWidgetPanel>
@@ -169,6 +172,7 @@ export default function CustomSettings({
                                             setSuccessMessage(state)
                                         }
                                         showToolbar={false}
+                                        url={address.backend}
                                     />
                                 </div>
                                 <FormField

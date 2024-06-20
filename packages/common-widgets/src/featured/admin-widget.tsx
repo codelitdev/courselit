@@ -155,6 +155,7 @@ export default function AdminWidget({
                         initialContent={description}
                         onChange={(state: any) => setDescription(state)}
                         showToolbar={false}
+                        url={address.backend}
                     />
                 </div>
                 <Select

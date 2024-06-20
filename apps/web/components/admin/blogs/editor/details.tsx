@@ -121,6 +121,7 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
                     initialContent={description}
                     refresh={refreshDetails}
                     onChange={(state: any) => setDescription(state)}
+                    url={address.backend}
                 />
                 <MediaSelector
                     title={FORM_FIELD_FEATURED_IMAGE}

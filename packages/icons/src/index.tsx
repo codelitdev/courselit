@@ -52,4 +52,4 @@ export { HomeIcon as Home } from "@radix-ui/react-icons";
 export { DragHandleDots2Icon as DragHandle } from "@radix-ui/react-icons";
 export { PlayIcon as Play } from "@radix-ui/react-icons";
 export { PauseIcon as Pause } from "@radix-ui/react-icons";
-export { ExitIcon as Exit } from "@radix-ui/react-icons"
+export { ExitIcon as Exit } from "@radix-ui/react-icons";
