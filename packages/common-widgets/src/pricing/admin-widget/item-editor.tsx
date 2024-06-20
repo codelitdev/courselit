@@ -23,7 +23,12 @@ interface ItemProps {
     profile: Profile;
 }
 
-export default function ItemEditor({ item, onChange, onDelete }: ItemProps) {
+export default function ItemEditor({
+    item,
+    onChange,
+    onDelete,
+    address,
+}: ItemProps) {
     const [title, setTitle] = useState(item.title);
     const [description, setDescription] = useState(item.description);
     const [price, setPrice] = useState(item.price);
@@ -55,6 +60,7 @@ export default function ItemEditor({ item, onChange, onDelete }: ItemProps) {
                         initialContent={description}
                         onChange={(state: any) => setDescription(state)}
                         showToolbar={false}
+                        url={address.backend}
                     />
                 </div>
                 <FormField

@@ -23,6 +23,7 @@ export interface WysiwygEditorProps extends Partial<ReactEditorProps> {
     editable?: boolean;
     refresh?: number;
     fontFamily?: string;
+    url: string;
 }
 
 const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
@@ -35,6 +36,7 @@ const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
     editable = true,
     refresh,
     fontFamily,
+    url,
     ...rest
 }) => {
     const theme = {
@@ -59,7 +61,10 @@ const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
     //     (extension) => extension instanceof ImageExtension !== true,
     // );
 
-    const extensions = useCallback(getExtensions(placeholder), [placeholder]);
+    const extensions = useCallback(getExtensions(placeholder, url), [
+        placeholder,
+        url,
+    ]);
 
     const onError: InvalidContentHandler = useCallback(
         ({ json, invalidContent, transformers }) => {

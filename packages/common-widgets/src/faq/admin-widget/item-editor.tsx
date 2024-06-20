@@ -22,7 +22,12 @@ interface ItemProps {
     profile: Profile;
 }
 
-export default function ItemEditor({ item, onChange, onDelete }: ItemProps) {
+export default function ItemEditor({
+    item,
+    onChange,
+    onDelete,
+    address,
+}: ItemProps) {
     const [title, setTitle] = useState(item.title);
     const [description, setDescription] = useState(item.description);
 
@@ -47,6 +52,7 @@ export default function ItemEditor({ item, onChange, onDelete }: ItemProps) {
                             initialContent={description}
                             onChange={(state: any) => setDescription(state)}
                             showToolbar={false}
+                            url={address.backend}
                         />
                     </div>
                     <div className="flex justify-between">

@@ -62,6 +62,7 @@ export default function ItemEditor({
                             initialContent={description}
                             onChange={(state: any) => setDescription(state)}
                             showToolbar={false}
+                            url={address.backend}
                         />
                     </div>
                     <FormField

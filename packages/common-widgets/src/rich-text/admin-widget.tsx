@@ -8,7 +8,7 @@ import {
     PageBuilderSlider,
 } from "@courselit/components-library";
 import Settings from "./settings";
-import { Alignment } from "@courselit/common-models";
+import { Address, Alignment } from "@courselit/common-models";
 import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
@@ -19,9 +19,10 @@ import { CssIdField } from "@courselit/components-library";
 export interface AboutWidgetProps {
     onChange: (...args: any[]) => void;
     settings: Settings;
+    address: Address;
 }
 
-const AdminWidget = ({ settings, onChange }: AboutWidgetProps) => {
+const AdminWidget = ({ settings, onChange, address }: AboutWidgetProps) => {
     const dummyText: Record<string, unknown> = {
         type: "doc",
         content: [
@@ -86,6 +87,7 @@ const AdminWidget = ({ settings, onChange }: AboutWidgetProps) => {
                         initialContent={content}
                         onChange={(state: any) => setContent(state)}
                         showToolbar={false}
+                        url={address.backend}
                     />
                 </div>
             </AdminWidgetPanel>
