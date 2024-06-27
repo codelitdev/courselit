@@ -1,7 +1,7 @@
 {
     "name": "@courselit/docs",
     "type": "module",
-    "version": "0.28.7",
+    "version": "0.28.8",
     "private": true,
     "scripts": {
         "dev": "astro dev",
