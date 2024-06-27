@@ -1,10 +1,8 @@
 import { connect } from "react-redux";
 import {
-    formulateCourseUrl,
     getBackendAddress,
     getPage,
 } from "../../../ui-lib/utils";
-import Head from "next/head";
 import { FetchBuilder } from "@courselit/utils";
 import type { SiteInfo, Address, Course, Page } from "@courselit/common-models";
 import type { AppState } from "@courselit/state-management";
@@ -32,32 +30,10 @@ const Post = ({ siteInfo, address, post, page }: PostProps) => {
             title={post.title}
             layout={page.layout}
             childrenOnTop={true}
+            socialImage={post.featuredImage}
         >
             {post && (
                 <div className="flex flex-col min-h-[80vh] gap-4 mb-8 lg:max-w-[720px] w-full mx-auto">
-                    <Head>
-                        <meta
-                            property="og:url"
-                            content={formulateCourseUrl(post, address.frontend)}
-                        />
-                        <meta property="og:type" content="article" />
-                        <meta property="og:title" content={post.title} />
-                        {/** TODO: re-enable the following meta tag once SSR is supported */}
-                        {/* <meta
-              property="og:description"
-              content={getPostDescriptionSnippet(post.description)}
-            /> */}
-                        <meta property="og:author" content={post.creatorName} />
-                        {post.featuredImage && (
-                            <meta
-                                property="og:image"
-                                content={
-                                    post.featuredImage &&
-                                    post.featuredImage.thumbnail
-                                }
-                            />
-                        )}
-                    </Head>
                     <div className="flex flex-col gap-4 p-4 mt-8">
                         <Article course={post} options={articleOptions} />
                         <div className="">
