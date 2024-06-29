@@ -6,7 +6,7 @@ import verifyDomain from "../../../middlewares/verify-domain";
 import ApiRequest from "../../../models/ApiRequest";
 import { error } from "../../../services/logger";
 import * as medialitService from "../../../services/medialit";
-import { UIConstants as constants } from "@courselit/common-models";
+import constants from "@config/constants";
 import { checkPermission } from "@courselit/utils";
 import setUserFromSession from "../../../middlewares/set-user-from-session";
 
