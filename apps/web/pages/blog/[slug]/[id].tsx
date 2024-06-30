@@ -1,8 +1,5 @@
 import { connect } from "react-redux";
-import {
-    getBackendAddress,
-    getPage,
-} from "../../../ui-lib/utils";
+import { getBackendAddress, getPage } from "../../../ui-lib/utils";
 import { FetchBuilder } from "@courselit/utils";
 import type { SiteInfo, Address, Course, Page } from "@courselit/common-models";
 import type { AppState } from "@courselit/state-management";
