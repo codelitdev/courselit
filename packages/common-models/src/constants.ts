@@ -38,3 +38,4 @@ export const pageNames = {
     privacy: "Privacy policy",
     blog: "Blog",
 };
+export const dripType = ["relative-date", "exact-date"] as const;

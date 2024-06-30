@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
 import constants from "../config/constants";
 import { generateUniqueId } from "@courselit/utils";
-import type { Group, Media } from "@courselit/common-models";
+import { Constants, type Group, type Media } from "@courselit/common-models";
 import MediaSchema from "./Media";
+import EmailSchema from "./Email";
 const {
     course,
     download,
@@ -79,6 +80,16 @@ const CourseSchema = new mongoose.Schema<Course>(
                 rank: { type: Number, required: true },
                 collapsed: { type: Boolean, required: true, default: true },
                 lessonsOrder: { type: [String] },
+                drip: new mongoose.Schema<Group["drip"]>({
+                    type: {
+                        type: String,
+                        required: true,
+                        enum: Constants.dripType,
+                    },
+                    delayInMillis: { type: Number },
+                    dateInUTC: { type: Number },
+                    email: EmailSchema,
+                }),
             },
         ],
         sales: { type: Number, required: true, default: 0.0 },

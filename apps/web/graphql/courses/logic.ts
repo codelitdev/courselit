@@ -7,7 +7,6 @@ import { responses } from "../../config/strings";
 import {
     checkIfAuthenticated,
     validateOffset,
-    extractPlainTextFromDraftJS,
     checkOwnershipWithoutModel,
 } from "../../lib/graphql";
 import constants from "../../config/constants";
@@ -423,6 +422,7 @@ export const updateGroup = async ({
     rank,
     collapsed,
     lessonsOrder,
+    drip,
     ctx,
 }) => {
     const course = await getCourseOrThrow(courseId, ctx);

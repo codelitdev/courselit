@@ -127,6 +127,9 @@ export const POPUP_OK_ACTION = "Delete";
 export const POPUP_CANCEL_ACTION = "Cancel";
 export const LOGIN_SECTION_HEADER = "Sign In";
 export const LABEL_GROUP_NAME = "Name";
+export const LABEL_DRIP_EMAIL_SUBJECT = "Subject";
+export const LABEL_DRIP_DELAY = "Number of days after the last drip";
+export const LABEL_DRIP_DATE = "Date";
 export const BTN_LOGIN = "Continue";
 export const BTN_LOGIN_NO_CODE = "Resend";
 export const LOGIN_FORM_LABEL =
@@ -387,6 +390,7 @@ export const FORM_NEW_PRODUCT_MENU_COURSE_SUBTITLE =
 export const FORM_NEW_PRODUCT_MENU_DOWNLOADS_SUBTITLE =
     "Allow users to download file(s).";
 export const NEW_SECTION_HEADER = "New section";
+export const EDIT_SECTION_DRIP = "Drip";
 export const EDIT_SECTION_HEADER = "Edit section";
 export const DELETE_SECTION_HEADER = "Delete section";
 export const PRICING_HEADER = "Pricing";

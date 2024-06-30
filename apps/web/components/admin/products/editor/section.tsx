@@ -1,4 +1,9 @@
-import { Address, AppMessage } from "@courselit/common-models";
+import {
+    Address,
+    AppMessage,
+    Constants,
+    DripType,
+} from "@courselit/common-models";
 import {
     Button,
     Form,
@@ -13,16 +18,23 @@ import {
 import { FetchBuilder } from "@courselit/utils";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { connect } from "react-redux";
 import {
     BTN_CONTINUE,
+    EDIT_SECTION_DRIP,
     EDIT_SECTION_HEADER,
+    LABEL_DRIP_DATE,
+    LABEL_DRIP_DELAY,
+    LABEL_DRIP_EMAIL_SUBJECT,
     LABEL_GROUP_NAME,
     NEW_SECTION_HEADER,
     POPUP_CANCEL_ACTION,
 } from "../../../../ui-config/strings";
 import useCourse from "./course-hook";
+import { Select } from "@courselit/components-library";
+import { Checkbox } from "@courselit/components-library";
+import { MailEditorAndPreview } from "@components/admin/mails/mail-editor-and-preview";
 
 interface SectionEditorProps {
     id: string;
@@ -40,6 +52,12 @@ function SectionEditor({
     address,
 }: SectionEditorProps) {
     const [name, setName] = useState("");
+    const [type, setType] = useState<DripType>();
+    const [delay, setDelay] = useState(0);
+    const [date, setDate] = useState(Date.now());
+    const [notifyUsers, setNotifyUsers] = useState(false);
+    const [emailContent, setEmailContent] = useState("");
+    const [emailSubject, setEmailSubject] = useState("");
     const router = useRouter();
     const course = useCourse(id);
 
@@ -56,13 +74,14 @@ function SectionEditor({
 
     const updateGroup = async (e) => {
         e.preventDefault();
-        const mutation = section
+        const query = section
             ? `
-        mutation {
+        mutation updateGroup($id: ID!, $courseId: ID!, $name: String, $drip: DripInput) {
             course: updateGroup(
-                id: "${section}",
-                courseId: "${course.id}",
-                name: "${name}"
+                id: $id,
+                courseId: $courseId,
+                name: $name,
+                drip: $drip 
             ) {
                 courseId,
                 groups {
@@ -75,8 +94,8 @@ function SectionEditor({
         }
         `
             : `
-        mutation {
-            course: addGroup(id: "${course.id}", name: "${name}") {
+        mutation addGroup($courseId: ID!, $name: String!) {
+            course: addGroup(id: $courseId, name: $name) {
                 courseId,
                 groups {
                     id,
@@ -89,7 +108,29 @@ function SectionEditor({
     `;
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
-            .setPayload(mutation)
+            .setPayload({
+                query,
+                variables: section
+                    ? {
+                          id: section,
+                          courseId: course.id,
+                          name,
+                          drip: type
+                              ? {
+                                    type: type.toUpperCase().split("-")[0],
+                                    delayInMillis: delay,
+                                    dateInUTC: date,
+                                    notifyUsers,
+                                    emailSubject,
+                                    emailContent,
+                                }
+                              : undefined,
+                      }
+                    : {
+                          courseId: course.id,
+                          name,
+                      },
+            })
             .setIsGraphQLEndpoint(true)
             .build();
         try {
@@ -110,12 +151,12 @@ function SectionEditor({
     }
 
     return (
-        <Section>
-            <div className="flex flex-col">
-                <h1 className="text-4xl font-semibold mb-4">
-                    {section ? EDIT_SECTION_HEADER : NEW_SECTION_HEADER}
-                </h1>
-                <Form onSubmit={updateGroup} className="flex flex-col gap-4">
+        <div className="flex flex-col">
+            <h1 className="text-4xl font-semibold mb-4">
+                {section ? EDIT_SECTION_HEADER : NEW_SECTION_HEADER}
+            </h1>
+            <Form onSubmit={updateGroup} className="flex flex-col gap-4">
+                <Section>
                     <FormField
                         label={LABEL_GROUP_NAME}
                         name="Section name"
@@ -123,21 +164,111 @@ function SectionEditor({
                         onChange={(e) => setName(e.target.value)}
                         required
                     />
-                    <div className="flex gap-2">
-                        <Button disabled={!name || loading} type="submit">
-                            {BTN_CONTINUE}
-                        </Button>
-                        {course.courseId && (
-                            <Link
-                                href={`/dashboard/product/${course.courseId}/content`}
-                            >
-                                <Button>{POPUP_CANCEL_ACTION}</Button>
-                            </Link>
+                </Section>
+
+                <Section>
+                    <h2 className="text-xl font-medium mb-4">
+                        {EDIT_SECTION_DRIP}
+                    </h2>
+
+                    <div className="flex flex-col gap-4">
+                        <Select
+                            value={type}
+                            onChange={setType}
+                            title="Type"
+                            options={[
+                                {
+                                    label: "Drip by date",
+                                    value: Constants.dripType[1],
+                                },
+                                {
+                                    label: "Drip by days after the last drip",
+                                    value: Constants.dripType[0],
+                                },
+                            ]}
+                        />
+                        {type === Constants.dripType[1] && (
+                            <FormField
+                                value={new Date(
+                                    (date || new Date().getTime()) -
+                                        new Date().getTimezoneOffset() * 60000,
+                                )
+                                    .toISOString()
+                                    .slice(0, 16)}
+                                type="datetime-local"
+                                label={LABEL_DRIP_DATE}
+                                min={new Date().toISOString().slice(0, 16)}
+                                onChange={(
+                                    e: ChangeEvent<HTMLInputElement>,
+                                ) => {
+                                    const selectedDate = new Date(
+                                        e.target.value,
+                                    );
+                                    setDate(selectedDate.getTime());
+                                }}
+                            />
+                        )}
+                        {type === Constants.dripType[0] && (
+                            <FormField
+                                type="number"
+                                min={0}
+                                label={LABEL_DRIP_DELAY}
+                                name="delayInMillis"
+                                value={delay}
+                                onChange={(e) => setDelay(+e.target.value)}
+                                required
+                            />
+                        )}
+                        {type && (
+                            <>
+                                <h3 className="font-semibold">Notify users</h3>
+                                <div className="flex items-center gap-2 justify-between">
+                                    <p>
+                                        Send email notification to the users
+                                        when this section has dripped
+                                    </p>
+                                    <Checkbox
+                                        checked={notifyUsers}
+                                        onChange={(value: boolean) =>
+                                            setNotifyUsers(value)
+                                        }
+                                    />
+                                </div>
+                                {notifyUsers && (
+                                    <div>
+                                        <FormField
+                                            label={LABEL_DRIP_EMAIL_SUBJECT}
+                                            name="emailSubject"
+                                            value={emailSubject}
+                                            onChange={(e) =>
+                                                setEmailSubject(e.target.value)
+                                            }
+                                            required
+                                        />
+                                        <MailEditorAndPreview
+                                            content={emailContent}
+                                            onChange={setEmailContent}
+                                        />
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
-                </Form>
-            </div>
-        </Section>
+                </Section>
+                <div className="flex gap-2">
+                    <Button disabled={!name || loading} type="submit">
+                        {BTN_CONTINUE}
+                    </Button>
+                    {course.courseId && (
+                        <Link
+                            href={`/dashboard/product/${course.courseId}/content`}
+                        >
+                            <Button>{POPUP_CANCEL_ACTION}</Button>
+                        </Link>
+                    )}
+                </div>
+            </Form>
+        </div>
     );
 }
 
