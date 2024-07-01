@@ -459,6 +459,24 @@ export const updateGroup = async ({
         $set["groups.$.collapsed"] = collapsed;
     }
 
+    if (drip) {
+        $set["groups.$.drip.status"] = drip.status;
+        $set["groups.$.drip.type"] = drip.type;
+        $set["groups.$.drip.delayInMillis"] = drip.delayInMillis;
+        $set["groups.$.drip.dateInUTC"] = drip.dateInUTC;
+        if (drip.notifyUsers) {
+            if (!drip.emailContent || !drip.emailSubject) {
+                throw new Error(responses.invalid_drip_email);
+            }
+            $set["groups.$.drip.email"] = {
+                content: drip.emailContent,
+                subject: drip.emailSubject,
+                published: true,
+                delayInMillis: 0,
+            };
+        }
+    }
+
     return await CourseModel.findOneAndUpdate(
         {
             _id: course._id.toString(),

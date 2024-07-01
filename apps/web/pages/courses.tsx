@@ -38,13 +38,17 @@ const Courses = (props: CoursesProps) => {
 
     return (
         <BaseLayout title={path} layout={props.page.layout}>
-            <div className="flex flex-col p-4 mx-auto lg:max-w-[1200px]">
-                <h1 className="text-4xl font-semibold my-4 lg:my-8">{path}</h1>
-                <Items
-                    showLoadMoreButton={true}
-                    generateQuery={generateQuery}
-                    initialItems={props.courses}
-                />
+            <div className="mx-auto lg:max-w-[1200px] w-full">
+                <div className="flex flex-col p-4 gap-4">
+                    <h1 className="text-4xl font-semibold my-4 lg:my-8">
+                        {path}
+                    </h1>
+                    <Items
+                        showLoadMoreButton={true}
+                        generateQuery={generateQuery}
+                        initialItems={props.courses}
+                    />
+                </div>
             </div>
         </BaseLayout>
     );

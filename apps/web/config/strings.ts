@@ -103,6 +103,7 @@ export const responses = {
     mailing_address_too_short: "Mailing address is too short",
     mandatory_tags_missing: "Mandatory tags are missing",
     cannot_delete_last_email: "Cannot delete the last email in the sequence",
+    invalid_drip_email: "Drip email needs a subject and a body",
 
     // api responses
     digital_download_no_files:

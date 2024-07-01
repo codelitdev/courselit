@@ -1,11 +1,12 @@
 import { Address } from "@courselit/common-models";
-import { AppMessage, Course, Lesson } from "@courselit/common-models";
+import { AppMessage, Lesson } from "@courselit/common-models";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import {
     networkAction,
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
+import { Course } from "@models/Course";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
@@ -47,7 +48,17 @@ export default function useCourse(id: string):
                         id,
                         name,
                         rank,
-                        lessonsOrder
+                        lessonsOrder,
+                        drip {
+                            type,
+                            status,
+                            delayInMillis,
+                            dateInUTC,
+                            email {
+                                content,
+                                subject
+                            }
+                        }
                     },
                     courseId,
                     cost,

@@ -68,15 +68,30 @@ const dripTypeType = new GraphQLEnumType({
     },
 });
 
+const dripEmailInput = new GraphQLInputObjectType({
+    name: "DripEmailInput",
+    fields: {
+        content: { type: new GraphQLNonNull(GraphQLString) },
+        subject: { type: new GraphQLNonNull(GraphQLString) },
+    },
+});
+
+const dripEmail = new GraphQLObjectType({
+    name: "DripEmail",
+    fields: {
+        content: { type: new GraphQLNonNull(GraphQLString) },
+        subject: { type: new GraphQLNonNull(GraphQLString) },
+    },
+});
+
 const dripInputType = new GraphQLInputObjectType({
     name: "DripInput",
     fields: {
         type: { type: dripTypeType },
+        status: { type: GraphQLBoolean },
         delayInMillis: { type: GraphQLFloat },
         dateInUTC: { type: GraphQLFloat },
-        notifyUsers: { type: GraphQLBoolean },
-        emailSubject: { type: GraphQLString },
-        emailContent: { type: GraphQLString },
+        email: { type: dripEmailInput },
     },
 });
 
@@ -84,11 +99,10 @@ const dripType = new GraphQLObjectType({
     name: "Drip",
     fields: {
         type: { type: new GraphQLNonNull(dripTypeType) },
+        status: { type: new GraphQLNonNull(GraphQLBoolean) },
         delayInMillis: { type: GraphQLFloat },
         dateInUTC: { type: GraphQLFloat },
-        notifyUsers: { type: GraphQLBoolean },
-        emailSubject: { type: GraphQLString },
-        emailContent: { type: GraphQLString },
+        email: { type: dripEmail },
     },
 });
 

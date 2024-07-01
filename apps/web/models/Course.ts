@@ -86,6 +86,7 @@ const CourseSchema = new mongoose.Schema<Course>(
                         required: true,
                         enum: Constants.dripType,
                     },
+                    status: { type: Boolean, required: true, default: false },
                     delayInMillis: { type: Number },
                     dateInUTC: { type: Number },
                     email: EmailSchema,

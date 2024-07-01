@@ -9,6 +9,7 @@ import {
     Form,
     FormField,
     Section,
+    Switch,
 } from "@courselit/components-library";
 import {
     actionCreators,
@@ -22,6 +23,7 @@ import { ChangeEvent, useEffect, useState } from "react";
 import { connect } from "react-redux";
 import {
     BTN_CONTINUE,
+    DRIP_SECTION_STATUS,
     EDIT_SECTION_DRIP,
     EDIT_SECTION_HEADER,
     LABEL_DRIP_DATE,
@@ -52,9 +54,10 @@ function SectionEditor({
     address,
 }: SectionEditorProps) {
     const [name, setName] = useState("");
+    const [status, setStatus] = useState(true);
     const [type, setType] = useState<DripType>();
     const [delay, setDelay] = useState(0);
-    const [date, setDate] = useState(Date.now());
+    const [date, setDate] = useState<number>();
     const [notifyUsers, setNotifyUsers] = useState(false);
     const [emailContent, setEmailContent] = useState("");
     const [emailSubject, setEmailSubject] = useState("");
@@ -63,11 +66,26 @@ function SectionEditor({
 
     useEffect(() => {
         if (section && course && course.groups) {
-            const group = course.groups.filter(
-                (group) => group.id === section,
-            )[0];
+            const group = course.groups.find((group) => group.id === section);
             if (group) {
+                const type = group.drip?.type
+                    ? group.drip?.type ===
+                      Constants.dripType[0].split("-")[0].toUpperCase()
+                        ? Constants.dripType[0]
+                        : Constants.dripType[1]
+                    : undefined;
                 setName(group.name);
+                setType(type);
+                setDelay(group.drip?.delayInMillis);
+                setDate(group.drip?.dateInUTC);
+                setNotifyUsers(!!group.drip?.email);
+                setEmailContent(group.drip?.email?.content);
+                setEmailSubject(group.drip?.email?.subject);
+                setStatus(
+                    typeof group.drip?.status === "boolean"
+                        ? group.drip?.status
+                        : true,
+                );
             }
         }
     }, [course]);
@@ -88,7 +106,17 @@ function SectionEditor({
                     id,
                     name,
                     rank,
-                    collapsed
+                    collapsed,
+                    drip {
+                        type,
+                        status,
+                        delayInMillis,
+                        dateInUTC,
+                        email {
+                            content,
+                            subject
+                        }
+                    }
                 }
             }
         }
@@ -101,7 +129,17 @@ function SectionEditor({
                     id,
                     name,
                     rank,
-                    collapsed
+                    collapsed,
+                    drip {
+                        type,
+                        status,
+                        delayInMillis,
+                        dateInUTC,
+                        email {
+                            content,
+                            subject
+                        }
+                    }
                 }
             }
         }
@@ -117,12 +155,16 @@ function SectionEditor({
                           name,
                           drip: type
                               ? {
+                                    status,
                                     type: type.toUpperCase().split("-")[0],
                                     delayInMillis: delay,
                                     dateInUTC: date,
-                                    notifyUsers,
-                                    emailSubject,
-                                    emailContent,
+                                    email: notifyUsers
+                                        ? {
+                                              subject: emailSubject,
+                                              content: emailContent,
+                                          }
+                                        : undefined,
                                 }
                               : undefined,
                       }
@@ -172,6 +214,10 @@ function SectionEditor({
                     </h2>
 
                     <div className="flex flex-col gap-4">
+                        <div className="flex justify-between items-center">
+                            <p>{DRIP_SECTION_STATUS}</p>
+                            <Switch checked={status} onChange={setStatus} />
+                        </div>
                         <Select
                             value={type}
                             onChange={setType}
@@ -197,7 +243,12 @@ function SectionEditor({
                                     .slice(0, 16)}
                                 type="datetime-local"
                                 label={LABEL_DRIP_DATE}
-                                min={new Date().toISOString().slice(0, 16)}
+                                // min={new Date().toISOString().slice(0, 16)}
+                                min={
+                                    !date
+                                        ? new Date().toISOString().slice(0, 16)
+                                        : undefined
+                                }
                                 onChange={(
                                     e: ChangeEvent<HTMLInputElement>,
                                 ) => {

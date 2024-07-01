@@ -391,6 +391,7 @@ export const FORM_NEW_PRODUCT_MENU_DOWNLOADS_SUBTITLE =
     "Allow users to download file(s).";
 export const NEW_SECTION_HEADER = "New section";
 export const EDIT_SECTION_DRIP = "Drip";
+export const DRIP_SECTION_STATUS = "Enable drip";
 export const EDIT_SECTION_HEADER = "Edit section";
 export const DELETE_SECTION_HEADER = "Delete section";
 export const PRICING_HEADER = "Pricing";
