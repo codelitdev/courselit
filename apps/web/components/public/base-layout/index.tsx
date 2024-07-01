@@ -26,9 +26,9 @@ interface MasterLayoutProps {
     typefaces: Typeface[];
     theme: Theme;
     dispatch: AppDispatch;
-    description: string;
+    description?: string;
     socialImage: Media;
-    robotsAllowed: boolean;
+    robotsAllowed?: boolean;
 }
 
 const MasterLayout = ({

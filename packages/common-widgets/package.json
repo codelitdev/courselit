@@ -1,6 +1,6 @@
 {
     "name": "@courselit/common-widgets",
-    "version": "0.51.6",
+    "version": "0.51.8",
     "description": "A collection of common widgets for CourseLit LMS",
     "keywords": [
         "widgets",
@@ -36,9 +36,9 @@
         "url": "https://github.com/codelitdev/courselit/issues"
     },
     "peerDependencies": {
-        "next": "^14.0.4",
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0"
+        "next": "*",
+        "react": "*",
+        "react-dom": "*"
     },
     "devDependencies": {
         "@types/next": "^9.0.0",
