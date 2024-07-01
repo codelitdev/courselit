@@ -14,6 +14,7 @@ import {
     THEME_AVAILABLE,
     SET_ADDRESS,
     TYPEFACES_AVAILABLE,
+    CONFIG_AVAILABLE,
 } from "./action-types";
 import { FetchBuilder } from "@courselit/utils";
 import getAddress from "./utils/get-address";
@@ -27,6 +28,7 @@ import type {
 import { AppMessage } from "@courselit/common-models";
 import { ThunkAction } from "redux-thunk";
 import { AnyAction } from "redux";
+import { ServerConfig } from "@courselit/common-models";
 
 export function signedIn() {
     return async (dispatch: any) => {
@@ -152,6 +154,33 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
             dispatch(networkAction(false));
         }
     };
+}
+
+export function updateConfig(): ThunkAction<void, State, unknown, AnyAction> {
+    return async (dispatch: any, getState: () => State) => {
+        try {
+            dispatch(networkAction(true));
+
+            const fetch = new FetchBuilder()
+                .setUrl(`${getState().address.backend}/api/config`)
+                .setHttpMethod("GET")
+                .setIsGraphQLEndpoint(false)
+                .build();
+            const response = await fetch.exec();
+
+            if (response) {
+                dispatch(newConfigAvailable(response));
+            }
+        } catch (err) {
+            console.error(err); // eslint-disable-line no-console
+        } finally {
+            dispatch(networkAction(false));
+        }
+    };
+}
+
+export function newConfigAvailable(config: ServerConfig) {
+    return { type: CONFIG_AVAILABLE, config };
 }
 
 export function newSiteInfoAvailable(info: SiteInfo) {

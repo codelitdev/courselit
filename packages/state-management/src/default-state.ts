@@ -39,4 +39,5 @@ export default {
         frontend: "",
     },
     typefaces: [],
+    config: { turnstileSiteKey: "" },
 };

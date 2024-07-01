@@ -1,4 +1,4 @@
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useEffect, useState } from "react";
 import { AppMessage } from "@courselit/common-models";
 import Settings from "./settings";
 import { actionCreators } from "@courselit/state-management";
@@ -16,6 +16,7 @@ import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
 } from "./defaults";
+import Script from "next/script";
 
 export interface WidgetProps {
     settings: Settings;
@@ -43,6 +44,9 @@ const Widget = ({
     dispatch,
 }: WidgetProps) => {
     const [email, setEmail] = useState("");
+    const [turnstileToken, setTurnstileToken] = useState<string>("");
+    const [errorMessage, setErrorMessage] = useState<string>("");
+
     const justifyContent =
         alignment === "center"
             ? "center"
@@ -50,8 +54,32 @@ const Widget = ({
             ? "flex-end"
             : "flex-start";
 
+    useEffect(() => {
+        (window as any).turnstileCallback = async (token: string) => {
+            setTurnstileToken(token);
+        };
+    }, []);
+
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
+
+        if (state.config.turnstileSiteKey) {
+            const payload = JSON.stringify({ token: turnstileToken });
+
+            const verificationFetch = new FetchBuilder()
+                .setUrl(`${state.address.backend}/api/cloudflare`)
+                .setHeaders({
+                    "Content-Type": "application/json",
+                })
+                .setPayload(payload)
+                .setIsGraphQLEndpoint(false)
+                .build();
+            const response = await verificationFetch.exec();
+            if (!response.success) {
+                setErrorMessage("Could not verify that you are a human.");
+                return;
+            }
+        }
 
         const mutation = `
             mutation {
@@ -112,6 +140,9 @@ const Widget = ({
                 >
                     <h2 className="text-4xl mb-4">{title || DEFAULT_TITLE}</h2>
                     {subtitle && <h3 className="mb-4">{subtitle}</h3>}
+                    {errorMessage && (
+                        <div className="my-1 text-red-600">{errorMessage}</div>
+                    )}
                     <div className="flex gap-2 items-end">
                         <FormField
                             value={email}
@@ -130,12 +161,33 @@ const Widget = ({
                                 },
                             ]}
                         />
+
+                        {state.config.turnstileSiteKey && (
+                            <>
+                                <Script
+                                    src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+                                    async={true}
+                                    defer={true}
+                                    id="cloudflare-turnstile"
+                                ></Script>
+                                <span
+                                    className="cf-turnstile"
+                                    data-sitekey={state.config.turnstileSiteKey}
+                                    data-callback="turnstileCallback"
+                                />
+                            </>
+                        )}
+
                         <Button2
                             style={{
                                 backgroundColor: btnBackgroundColor,
                                 color: btnForegroundColor,
                             }}
-                            disabled={state.networkAction}
+                            disabled={
+                                state.networkAction ||
+                                (state.config.turnstileSiteKey &&
+                                    !turnstileToken)
+                            }
                             type="submit"
                         >
                             {btnText || DEFAULT_BTN_TEXT}

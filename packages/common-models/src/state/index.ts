@@ -1,6 +1,7 @@
 import Address from "../address";
 import Auth from "../auth";
 import Profile from "../profile";
+import { ServerConfig } from "../server-config";
 import SiteInfo from "../site-info";
 import Theme from "../theme";
 import { Typeface } from "../typeface";
@@ -13,4 +14,5 @@ export default interface State {
     address: Address;
     theme: Theme;
     typefaces: Typeface[];
+    config: ServerConfig;
 }
