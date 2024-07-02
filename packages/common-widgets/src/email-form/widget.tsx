@@ -55,10 +55,12 @@ const Widget = ({
             : "flex-start";
 
     useEffect(() => {
-        (window as any).turnstileCallback = async (token: string) => {
-            setTurnstileToken(token);
-        };
-    }, []);
+        if (state.config.turnstileSiteKey) {
+            (window as any).turnstileCallback = async (token: string) => {
+                setTurnstileToken(token);
+            };
+        }
+    }, [state.config.turnstileSiteKey]);
 
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
