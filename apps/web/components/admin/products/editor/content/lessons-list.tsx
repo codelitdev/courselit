@@ -8,12 +8,7 @@ import {
 } from "../../../../../ui-config/strings";
 import useCourse, { CourseFrontend } from "../course-hook";
 import { Add, MoreVert } from "@courselit/icons";
-import {
-    Lesson,
-    Address,
-    AppMessage,
-    Group,
-} from "@courselit/common-models";
+import { Lesson, Address, AppMessage, Group } from "@courselit/common-models";
 import { useRouter } from "next/router";
 import {
     Section,
