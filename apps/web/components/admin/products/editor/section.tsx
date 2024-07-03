@@ -76,11 +76,19 @@ function SectionEditor({
                     : undefined;
                 setName(group.name);
                 setType(type);
-                setDelay(group.drip?.delayInMillis);
+                setDelay(group.drip?.delayInMillis / 86400000);
                 setDate(group.drip?.dateInUTC);
                 setNotifyUsers(!!group.drip?.email);
-                setEmailContent(group.drip?.email?.content);
-                setEmailSubject(group.drip?.email?.subject);
+                setEmailContent(
+                    group.drip?.email?.content ||
+                        `Hi {{ subscriber.name }},
+                    \n<p>A new section is now available in <a href='${address.frontend}/course/${course.slug}/${course.courseId}'>${course.title}</a>.</p>
+                    \nCheers!`,
+                );
+                setEmailSubject(
+                    group.drip?.email?.subject ||
+                        `A new section is now avaiable in ${course.title}`,
+                );
                 setStatus(
                     typeof group.drip?.status === "boolean"
                         ? group.drip?.status
@@ -207,105 +215,113 @@ function SectionEditor({
                         required
                     />
                 </Section>
+                {section && (
+                    <Section>
+                        <h2 className="text-xl font-medium mb-4">
+                            {EDIT_SECTION_DRIP}
+                        </h2>
 
-                <Section>
-                    <h2 className="text-xl font-medium mb-4">
-                        {EDIT_SECTION_DRIP}
-                    </h2>
-
-                    <div className="flex flex-col gap-4">
-                        <div className="flex justify-between items-center">
-                            <p>{DRIP_SECTION_STATUS}</p>
-                            <Switch checked={status} onChange={setStatus} />
-                        </div>
-                        <Select
-                            value={type}
-                            onChange={setType}
-                            title="Type"
-                            options={[
-                                {
-                                    label: "Drip by date",
-                                    value: Constants.dripType[1],
-                                },
-                                {
-                                    label: "Drip by days after the last drip",
-                                    value: Constants.dripType[0],
-                                },
-                            ]}
-                        />
-                        {type === Constants.dripType[1] && (
-                            <FormField
-                                value={new Date(
-                                    (date || new Date().getTime()) -
-                                        new Date().getTimezoneOffset() * 60000,
-                                )
-                                    .toISOString()
-                                    .slice(0, 16)}
-                                type="datetime-local"
-                                label={LABEL_DRIP_DATE}
-                                // min={new Date().toISOString().slice(0, 16)}
-                                min={
-                                    !date
-                                        ? new Date().toISOString().slice(0, 16)
-                                        : undefined
-                                }
-                                onChange={(
-                                    e: ChangeEvent<HTMLInputElement>,
-                                ) => {
-                                    const selectedDate = new Date(
-                                        e.target.value,
-                                    );
-                                    setDate(selectedDate.getTime());
-                                }}
+                        <div className="flex flex-col gap-4">
+                            <div className="flex justify-between items-center">
+                                <p>{DRIP_SECTION_STATUS}</p>
+                                <Switch checked={status} onChange={setStatus} />
+                            </div>
+                            <Select
+                                value={type}
+                                onChange={setType}
+                                title="Type"
+                                options={[
+                                    {
+                                        label: "Drip by date",
+                                        value: Constants.dripType[1],
+                                    },
+                                    {
+                                        label: "Drip by days after the last drip",
+                                        value: Constants.dripType[0],
+                                    },
+                                ]}
                             />
-                        )}
-                        {type === Constants.dripType[0] && (
-                            <FormField
-                                type="number"
-                                min={0}
-                                label={LABEL_DRIP_DELAY}
-                                name="delayInMillis"
-                                value={delay}
-                                onChange={(e) => setDelay(+e.target.value)}
-                                required
-                            />
-                        )}
-                        {type && (
-                            <>
-                                <h3 className="font-semibold">Notify users</h3>
-                                <div className="flex items-center gap-2 justify-between">
-                                    <p>
-                                        Send email notification to the users
-                                        when this section has dripped
-                                    </p>
-                                    <Checkbox
-                                        checked={notifyUsers}
-                                        onChange={(value: boolean) =>
-                                            setNotifyUsers(value)
-                                        }
-                                    />
-                                </div>
-                                {notifyUsers && (
-                                    <div>
-                                        <FormField
-                                            label={LABEL_DRIP_EMAIL_SUBJECT}
-                                            name="emailSubject"
-                                            value={emailSubject}
-                                            onChange={(e) =>
-                                                setEmailSubject(e.target.value)
+                            {type === Constants.dripType[1] && (
+                                <FormField
+                                    value={new Date(
+                                        (date || new Date().getTime()) -
+                                            new Date().getTimezoneOffset() *
+                                                60000,
+                                    )
+                                        .toISOString()
+                                        .slice(0, 16)}
+                                    type="datetime-local"
+                                    label={LABEL_DRIP_DATE}
+                                    // min={new Date().toISOString().slice(0, 16)}
+                                    min={
+                                        !date
+                                            ? new Date()
+                                                  .toISOString()
+                                                  .slice(0, 16)
+                                            : undefined
+                                    }
+                                    onChange={(
+                                        e: ChangeEvent<HTMLInputElement>,
+                                    ) => {
+                                        const selectedDate = new Date(
+                                            e.target.value,
+                                        );
+                                        setDate(selectedDate.getTime());
+                                    }}
+                                />
+                            )}
+                            {type === Constants.dripType[0] && (
+                                <FormField
+                                    type="number"
+                                    min={0}
+                                    label={LABEL_DRIP_DELAY}
+                                    name="delayInMillis"
+                                    value={delay}
+                                    onChange={(e) => setDelay(+e.target.value)}
+                                    required
+                                />
+                            )}
+                            {type && (
+                                <>
+                                    <h3 className="font-semibold">
+                                        Notify users
+                                    </h3>
+                                    <div className="flex items-center gap-2 justify-between">
+                                        <p>
+                                            Send email notification to the users
+                                            when this section has dripped
+                                        </p>
+                                        <Checkbox
+                                            checked={notifyUsers}
+                                            onChange={(value: boolean) =>
+                                                setNotifyUsers(value)
                                             }
-                                            required
-                                        />
-                                        <MailEditorAndPreview
-                                            content={emailContent}
-                                            onChange={setEmailContent}
                                         />
                                     </div>
-                                )}
-                            </>
-                        )}
-                    </div>
-                </Section>
+                                    {notifyUsers && (
+                                        <div>
+                                            <FormField
+                                                label={LABEL_DRIP_EMAIL_SUBJECT}
+                                                name="emailSubject"
+                                                value={emailSubject}
+                                                onChange={(e) =>
+                                                    setEmailSubject(
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                required
+                                            />
+                                            <MailEditorAndPreview
+                                                content={emailContent}
+                                                onChange={setEmailContent}
+                                            />
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    </Section>
+                )}
                 <div className="flex gap-2">
                     <Button disabled={!name || loading} type="submit">
                         {BTN_CONTINUE}
@@ -314,7 +330,9 @@ function SectionEditor({
                         <Link
                             href={`/dashboard/product/${course.courseId}/content`}
                         >
-                            <Button>{POPUP_CANCEL_ACTION}</Button>
+                            <Button variant="soft">
+                                {POPUP_CANCEL_ACTION}
+                            </Button>
                         </Link>
                     )}
                 </div>

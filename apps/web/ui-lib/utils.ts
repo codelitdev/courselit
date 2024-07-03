@@ -1,4 +1,9 @@
-import type { Profile, Typeface } from "@courselit/common-models";
+import type {
+    Course,
+    Group,
+    Profile,
+    Typeface,
+} from "@courselit/common-models";
 import { checkPermission, FetchBuilder } from "@courselit/utils";
 import { UIConstants } from "@courselit/common-models";
 import { getProtocol } from "../lib/utils";
@@ -173,3 +178,7 @@ export function hashCode(code: number) {
         .update(`${code}${process.env.NEXTAUTH_SECRET}`)
         .digest("hex");
 }
+
+export const sortCourseGroups = (course: Course) => {
+    return course.groups.sort((a: Group, b: Group) => a.rank - b.rank);
+};

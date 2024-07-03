@@ -1,10 +1,10 @@
 import { connect } from "react-redux";
 import Head from "next/head";
 import {
-    formulateCourseUrl,
     getBackendAddress,
     isEnrolled,
     isLessonCompleted,
+    sortCourseGroups,
 } from "../../../../ui-lib/utils";
 import { ArrowRight, CheckCircled, Circle, Lock } from "@courselit/icons";
 import {
@@ -30,11 +30,16 @@ import RouteBasedComponentScaffold, {
 import Article from "@components/public/article";
 import { Link, Button2 } from "@courselit/components-library";
 import { useSession } from "next-auth/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
+export type CourseFrontend = Partial<Course> & {
+    groupOfLessons: Record<string, unknown>;
+    firstLesson: string;
+};
+
 interface CourseProps {
-    course: any;
+    course: CourseFrontend;
     profile: Profile;
     siteInfo: SiteInfo;
     address: Address;
@@ -43,7 +48,7 @@ interface CourseProps {
 }
 
 export function generateSideBarItems(
-    course: Course & { groupOfLessons: string[] },
+    course: CourseFrontend,
     profile: Profile,
 ): ComponentScaffoldMenuItem[] {
     if (!course) return [];
@@ -54,7 +59,7 @@ export function generateSideBarItems(
             href: `/course/${course.slug}/${course.courseId}`,
         },
     ];
-    for (const group of Object.keys(course.groupOfLessons as string[])) {
+    for (const group of Object.keys(course.groupOfLessons)) {
         lessons.push({
             label: group,
             icon: undefined,
@@ -89,8 +94,8 @@ export function generateSideBarItems(
 const CourseViewer = (props: CourseProps) => {
     const { status } = useSession();
     const router = useRouter();
-    const { course, profile, dispatch } = props;
-    let key = 0;
+    const { profile, dispatch, address } = props;
+    const [course, setCourse] = useState<CourseFrontend | null>(props.course);
 
     useEffect(() => {
         if (status === "authenticated") {
@@ -103,6 +108,87 @@ const CourseViewer = (props: CourseProps) => {
         }
     }, [status]);
 
+    useEffect(() => {
+        if (profile.fetched) {
+            loadCourse();
+        }
+    }, [profile]);
+
+    const loadCourse = async () => {
+        const graphQuery = `
+                query {
+                post: getCourse(id: "${props.course.courseId}") {
+                    title,
+                    description,
+                    featuredImage {
+                    file,
+                    caption
+                    },
+                    updatedAt,
+                    creatorName,
+                    creatorId,
+                    slug,
+                    cost,
+                    courseId,
+                    groups {
+                    id,
+                    name,
+                    rank,
+                    lessonsOrder
+                    },
+                    lessons {
+                    lessonId,
+                    title,
+                    requiresEnrollment,
+                    courseId,
+                    groupId,
+                    },
+                    tags,
+                    firstLesson
+                }
+                }
+            `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload(graphQuery)
+            .setIsGraphQLEndpoint(true)
+            .build();
+
+        try {
+            const response = await fetch.exec();
+            const { post } = response;
+            if (post) {
+                const lessonsOrderedByGroups: Record<string, unknown> = {};
+                for (const group of sortCourseGroups(post)) {
+                    lessonsOrderedByGroups[group.name] = post.lessons
+                        .filter((lesson: Lesson) => lesson.groupId === group.id)
+                        .sort(
+                            (a: any, b: any) =>
+                                group.lessonsOrder.indexOf(a.lessonId) -
+                                group.lessonsOrder.indexOf(b.lessonId),
+                        );
+                }
+
+                const courseGroupedByLessons: CourseFrontend = {
+                    title: post.title,
+                    description: post.description,
+                    featuredImage: post.featuredImage,
+                    updatedAt: post.updatedAt,
+                    creatorName: post.creatorName,
+                    creatorId: post.creatorId,
+                    slug: post.slug,
+                    cost: post.cost,
+                    courseId: post.courseId,
+                    groupOfLessons: lessonsOrderedByGroups,
+                    tags: post.tags,
+                    firstLesson: post.firstLesson,
+                };
+
+                setCourse(courseGroupedByLessons);
+            }
+        } catch (err: any) {}
+    };
+
     return (
         <>
             <Head>
@@ -113,16 +199,7 @@ const CourseViewer = (props: CourseProps) => {
                     name="viewport"
                     content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
                 />
-                <meta
-                    property="og:url"
-                    content={formulateCourseUrl(course, props.address.frontend)}
-                />
-                <meta property="og:type" content="article" />
                 <meta property="og:title" content={course.title} />
-                {/* <meta
-                    property="og:description"
-                    content={getPostDescriptionSnippet(course.description)}
-                /> */}
                 <meta property="og:author" content={course.creatorName} />
                 {course.featuredImage && (
                     <meta
@@ -138,7 +215,7 @@ const CourseViewer = (props: CourseProps) => {
             >
                 <div className="flex flex-col">
                     <Article
-                        course={course}
+                        course={course as Course}
                         options={{ showEnrollmentArea: true }}
                     />
                     {isEnrolled(course.courseId, profile) && (
@@ -204,7 +281,7 @@ export async function getServerSideProps({ query, req }: any) {
         const { post } = response;
         if (post) {
             const lessonsOrderedByGroups: Record<string, unknown> = {};
-            for (const group of post.groups) {
+            for (const group of sortCourseGroups(post)) {
                 lessonsOrderedByGroups[group.name] = post.lessons
                     .filter((lesson: Lesson) => lesson.groupId === group.id)
                     .sort(

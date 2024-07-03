@@ -3,17 +3,6 @@ import UserModel, { User } from "../models/User";
 import { triggerSequences } from "./trigger-sequences";
 import { recordActivity } from "./record-activity";
 import { Constants, Progress } from "@courselit/common-models";
-import { sortCourseGroups } from "./utils";
-
-function getAccessibleGroups(course: Course): string[] {
-    const accessibleGroups: string[] = [];
-    for (const group of sortCourseGroups(course)) {
-        if (!group.drip || !group.drip?.status) {
-            accessibleGroups.push(group.id);
-        }
-    }
-    return accessibleGroups;
-}
 
 export default async (
     userId: string,
@@ -33,7 +22,7 @@ export default async (
         user.purchases.push({
             courseId: course.courseId,
             completedLessons: [],
-            accessibleGroups: getAccessibleGroups(course),
+            accessibleGroups: [],
         });
         await (user as any).save();
         if (!course.customers.some((customer) => customer === user.userId)) {

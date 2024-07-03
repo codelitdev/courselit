@@ -74,7 +74,7 @@ export default {
                 type: new GraphQLNonNull(GraphQLID),
             },
             courseId: {
-                type: new GraphQLNonNull(GraphQLID),
+                type: new GraphQLNonNull(GraphQLString),
             },
         },
         resolve: async (_: unknown, { id, courseId }, context) =>

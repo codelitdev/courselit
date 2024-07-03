@@ -66,7 +66,7 @@ export const responses = {
     name_is_required: "Name is required",
     mimetype_is_required: "Mimetype is required",
     existing_group: "A group with that name exists",
-    group_not_empty: "The group has associated lessons",
+    group_not_empty: "This section has lessons. Delete them before proceeding",
     update_payment_method:
         "You need to set up a payment method to create paid content.",
     currency_iso_code_required:

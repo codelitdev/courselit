@@ -64,7 +64,7 @@ export default function Widget({
     const loadCourse = async (courseId: string) => {
         const query = `
             query {
-                course: getCourse(id: "${courseId}") {
+                course: getCourse(id: "${courseId}", asGuest: true) {
                     title,
                     description,
                     id,

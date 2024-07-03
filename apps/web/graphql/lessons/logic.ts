@@ -72,6 +72,30 @@ export const getLessonDetails = async (id: string, ctx: GQLContext) => {
         throw new Error(responses.item_not_found);
     }
 
+    const userProgress = ctx.user.purchases.find(
+        (purchase) => purchase.courseId === lesson.courseId,
+    );
+
+    if (!userProgress) {
+        throw new Error(responses.not_enrolled);
+    }
+
+    const course = await CourseModel.findOne({
+        courseId: lesson.courseId,
+        domain: ctx.subdomain._id,
+    });
+    if (!course) {
+        throw new Error(responses.item_not_found);
+    }
+    const group = course.groups.find((group) => group._id === lesson.groupId);
+    if (
+        group.drip &&
+        group.drip.status &&
+        userProgress.accessibleGroups.indexOf(lesson.groupId) === -1
+    ) {
+        throw new Error(responses.item_not_found);
+    }
+
     if (
         lesson.requiresEnrollment &&
         (!ctx.user ||

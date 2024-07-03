@@ -3,4 +3,6 @@ export interface Progress {
     completedLessons: string[];
     downloaded?: boolean;
     accessibleGroups: string[];
+    lastDripAt?: Date;
+    createdAt?: Date;
 }

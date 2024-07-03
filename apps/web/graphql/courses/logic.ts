@@ -1,7 +1,7 @@
 /**
  * Business logic for managing courses.
  */
-import CourseModel from "../../models/Course";
+import CourseModel, { Course } from "../../models/Course";
 import UserModel from "../../models/User";
 import { responses } from "../../config/strings";
 import {
@@ -21,11 +21,10 @@ import Lesson from "../../models/Lesson";
 import GQLContext from "../../models/GQLContext";
 import Filter from "./models/filter";
 import mongoose from "mongoose";
-import { Course, Group } from "@courselit/common-models";
+import { Constants, Group, Progress } from "@courselit/common-models";
 import { deleteAllLessons } from "../lessons/logic";
 import { deleteMedia } from "../../services/medialit";
 import PageModel from "../../models/Page";
-import { Progress } from "../../models/Progress";
 import { getPrevNextCursor } from "../lessons/helpers";
 import { checkPermission } from "@courselit/utils";
 import { error } from "../../services/logger";
@@ -36,7 +35,7 @@ export const getCourseOrThrow = async (
     id: mongoose.Types.ObjectId | undefined,
     ctx: GQLContext,
     courseId?: string,
-) => {
+): Promise<Course> => {
     checkIfAuthenticated(ctx);
 
     const query = courseId
@@ -73,8 +72,12 @@ export const getCourseOrThrow = async (
     return course;
 };
 
-export const getCourse = async (id: string, ctx: GQLContext) => {
-    const course = await CourseModel.findOne({
+export const getCourse = async (
+    id: string,
+    ctx: GQLContext,
+    asGuest: boolean = false,
+) => {
+    const course: Course = await CourseModel.findOne({
         courseId: id,
         domain: ctx.subdomain._id,
     });
@@ -83,25 +86,50 @@ export const getCourse = async (id: string, ctx: GQLContext) => {
         throw new Error(responses.item_not_found);
     }
 
-    if (ctx.user) {
-        if (
+    const accessibleGroups = course.groups.filter(
+        (group) => !group.drip || !group.drip?.status,
+    );
+
+    if (ctx.user && !asGuest) {
+        const isOwner =
             checkPermission(ctx.user.permissions, [
                 permissions.manageAnyCourse,
-            ]) ||
-            checkOwnershipWithoutModel(course, ctx)
-        ) {
+            ]) || checkOwnershipWithoutModel(course, ctx);
+
+        if (isOwner) {
             return course;
+        } else {
+            const userPurchase = ctx.user.purchases.find(
+                (purchase) => purchase.courseId === course.courseId,
+            );
+            if (userPurchase) {
+                for (let accessibleGroup of userPurchase.accessibleGroups) {
+                    const groupWithDrip = course.groups.find(
+                        (group) => group.id === accessibleGroup,
+                    );
+                    if (groupWithDrip) {
+                        accessibleGroups.push(groupWithDrip);
+                    }
+                }
+            }
         }
     }
 
     if (course.published) {
-        if ([constants.course, constants.download].includes(course.type)) {
+        if (
+            [constants.course, constants.download].includes(
+                course.type as
+                    | typeof constants.course
+                    | typeof constants.download,
+            )
+        ) {
             const { nextLesson } = await getPrevNextCursor(
                 course.courseId,
                 ctx.subdomain._id,
             );
-            course.firstLesson = nextLesson;
+            (course as any).firstLesson = nextLesson;
         }
+        course.groups = accessibleGroups;
         return course;
     } else {
         throw new Error(responses.item_not_found);
@@ -385,32 +413,51 @@ export const addGroup = async ({
     await course.groups.push({
         rank: maximumRank + 1000,
         name,
-    });
+    } as Group);
 
-    await course.save();
+    await (course as any).save();
 
     return course;
 };
 
-export const removeGroup = async (id, courseId, ctx) => {
-    const course = await getCourseOrThrow(courseId, ctx);
-    const group = course.groups.filter((group) => group._id.toString() === id);
+export const removeGroup = async (
+    id: string,
+    courseId: string,
+    ctx: GQLContext,
+) => {
+    const course = await getCourseOrThrow(undefined, ctx, courseId);
+    const group = course.groups.find((group) => group.id === id);
 
-    if (!group[0]) {
+    if (!group) {
         return course;
     }
 
     const countOfAssociatedLessons = await Lesson.countDocuments({
         courseId,
-        groupName: group.name,
+        groupId: group.id,
+        domain: ctx.subdomain._id,
     });
 
     if (countOfAssociatedLessons > 0) {
         throw new Error(responses.group_not_empty);
     }
 
-    await course.groups.pull({ _id: id });
-    await course.save();
+    await (course.groups as any).pull({ _id: id });
+    await (course as any).save();
+
+    await UserModel.updateMany(
+        {
+            domain: ctx.subdomain._id,
+        },
+        {
+            $pull: {
+                "purchases.$[elem].accessibleGroups": id,
+            },
+        },
+        {
+            arrayFilters: [{ "elem.courseId": courseId }],
+        },
+    );
 
     return course;
 };
@@ -462,18 +509,25 @@ export const updateGroup = async ({
     if (drip) {
         $set["groups.$.drip.status"] = drip.status;
         $set["groups.$.drip.type"] = drip.type;
-        $set["groups.$.drip.delayInMillis"] = drip.delayInMillis;
-        $set["groups.$.drip.dateInUTC"] = drip.dateInUTC;
-        if (drip.notifyUsers) {
-            if (!drip.emailContent || !drip.emailSubject) {
+        if (drip.type === Constants.dripType[0]) {
+            $set["groups.$.drip.delayInMillis"] = drip.delayInMillis * 86400000;
+            $set["groups.$.drip.dateInUTC"] = null;
+        } else {
+            $set["groups.$.drip.delayInMillis"] = null;
+            $set["groups.$.drip.dateInUTC"] = drip.dateInUTC;
+        }
+        if (drip.email) {
+            if (!drip.email.content || !drip.email.subject) {
                 throw new Error(responses.invalid_drip_email);
             }
             $set["groups.$.drip.email"] = {
-                content: drip.emailContent,
-                subject: drip.emailSubject,
+                content: drip.email.content,
+                subject: drip.email.subject,
                 published: true,
                 delayInMillis: 0,
             };
+        } else {
+            $set["groups.$.drip.email"] = null;
         }
     }
 

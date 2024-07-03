@@ -1,3 +1,4 @@
+import Group from "./group";
 import Media from "./media";
 
 export default interface Course {
@@ -17,4 +18,5 @@ export default interface Course {
     tags: string[];
     type: string;
     pageId?: string;
+    groups?: Group[];
 }

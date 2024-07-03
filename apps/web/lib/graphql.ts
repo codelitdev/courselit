@@ -28,7 +28,7 @@ export const checkOwnership =
     };
 
 export const checkOwnershipWithoutModel = <
-    T extends { creatorId: mongoose.Types.ObjectId },
+    T extends { creatorId: mongoose.Types.ObjectId | string },
 >(
     item: T | null,
     ctx: GQLContext,
