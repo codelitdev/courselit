@@ -116,13 +116,13 @@ const CourseViewer = (props: CourseProps) => {
 
     const loadCourse = async () => {
         const graphQuery = `
-                query {
+            query {
                 post: getCourse(id: "${props.course.courseId}") {
                     title,
                     description,
                     featuredImage {
-                    file,
-                    caption
+                        file,
+                        caption
                     },
                     updatedAt,
                     creatorName,
@@ -131,23 +131,23 @@ const CourseViewer = (props: CourseProps) => {
                     cost,
                     courseId,
                     groups {
-                    id,
-                    name,
-                    rank,
-                    lessonsOrder
+                        id,
+                        name,
+                        rank,
+                        lessonsOrder
                     },
                     lessons {
-                    lessonId,
-                    title,
-                    requiresEnrollment,
-                    courseId,
-                    groupId,
+                        lessonId,
+                        title,
+                        requiresEnrollment,
+                        courseId,
+                        groupId,
                     },
                     tags,
                     firstLesson
                 }
-                }
-            `;
+            }
+        `;
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
             .setPayload(graphQuery)
