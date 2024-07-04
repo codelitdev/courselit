@@ -17,12 +17,12 @@ import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
 import { Course } from "../../models/Course";
 import { deleteMedia } from "../../services/medialit";
-import { Progress } from "../../models/Progress";
 import { recordProgress } from "../users/logic";
-import { Quiz } from "@courselit/common-models";
+import { Progress, Quiz } from "@courselit/common-models";
 import LessonEvaluation from "../../models/LessonEvaluation";
 import { checkPermission } from "@courselit/utils";
 import { recordActivity } from "../../lib/record-activity";
+import mongoose from "mongoose";
 
 const { permissions, quiz } = constants;
 
@@ -72,30 +72,6 @@ export const getLessonDetails = async (id: string, ctx: GQLContext) => {
         throw new Error(responses.item_not_found);
     }
 
-    const userProgress = ctx.user.purchases.find(
-        (purchase) => purchase.courseId === lesson.courseId,
-    );
-
-    if (!userProgress) {
-        throw new Error(responses.not_enrolled);
-    }
-
-    const course = await CourseModel.findOne({
-        courseId: lesson.courseId,
-        domain: ctx.subdomain._id,
-    });
-    if (!course) {
-        throw new Error(responses.item_not_found);
-    }
-    const group = course.groups.find((group) => group._id === lesson.groupId);
-    if (
-        group.drip &&
-        group.drip.status &&
-        userProgress.accessibleGroups.indexOf(lesson.groupId) === -1
-    ) {
-        throw new Error(responses.item_not_found);
-    }
-
     if (
         lesson.requiresEnrollment &&
         (!ctx.user ||
@@ -104,6 +80,17 @@ export const getLessonDetails = async (id: string, ctx: GQLContext) => {
             ))
     ) {
         throw new Error(responses.not_enrolled);
+    }
+
+    if (await isPartOfDripGroup(lesson, ctx.subdomain._id)) {
+        if (
+            !ctx.user ||
+            ctx.user.purchases
+                .find((x) => x.courseId === lesson.courseId)
+                .accessibleGroups.indexOf(lesson.groupId) === -1
+        ) {
+            throw new Error(responses.item_not_found);
+        }
     }
 
     const { prevLesson, nextLesson } = await getPrevNextCursor(
@@ -120,6 +107,25 @@ export const getLessonDetails = async (id: string, ctx: GQLContext) => {
 
     return lesson;
 };
+
+async function isPartOfDripGroup(
+    lesson: Lesson,
+    domain: mongoose.Types.ObjectId,
+) {
+    const course = await CourseModel.findOne({
+        courseId: lesson.courseId,
+        domain,
+    });
+    if (!course) {
+        throw new Error(responses.item_not_found);
+    }
+    const group = course.groups.find((group) => group._id === lesson.groupId);
+    if (group.drip && group.drip.status) {
+        return true;
+    }
+
+    return false;
+}
 
 function removeCorrectAnswersProp(lesson: Lesson) {
     if (lesson.content && lesson.content.questions) {

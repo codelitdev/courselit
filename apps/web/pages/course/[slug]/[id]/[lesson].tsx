@@ -113,6 +113,10 @@ const Lesson = (props: LessonProps) => {
             {lesson && (
                 <LessonViewer lessonId={lesson as string} slug={course.slug} />
             )}
+            {/* <div className="h-full bg-red-100 relative">
+                <div className="bg-red-200 h-[1000px]"></div>
+                <div className="fixed bottom-0 bg-yellow-100 h-20 w-full"></div>
+            </div> */}
         </RouteBasedComponentScaffold>
     );
 };

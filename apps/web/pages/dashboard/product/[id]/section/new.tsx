@@ -1,13 +1,11 @@
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
-import { NEW_SECTION_HEADER } from "../../../../../ui-config/strings";
+import { NEW_SECTION_HEADER } from "@ui-config/strings";
 
-const BaseLayout = dynamic(
-    () => import("../../../../../components/admin/base-layout"),
-);
+const BaseLayout = dynamic(() => import("@components/admin/base-layout"));
 
 const SectionEditor = dynamic(
-    () => import("../../../../../components/admin/products/editor/section"),
+    () => import("@components/admin/products/editor/section"),
 );
 
 function NewSection({}) {

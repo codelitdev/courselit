@@ -85,7 +85,7 @@ export async function processDrip() {
                     );
 
                     const firstGroupWithDripEmailSet = course.groups.find(
-                        (group) => group.drip?.email,
+                        (group) => group.id === newGroupIds[0],
                     );
 
                     if (firstGroupWithDripEmailSet) {
@@ -104,7 +104,7 @@ export async function processDrip() {
                             to: user.email,
                             subject:
                                 firstGroupWithDripEmailSet.drip.email.subject,
-                            content: content,
+                            body: content,
                             from: `${creator.name || creator.email} <${
                                 creator.email
                             }>`,

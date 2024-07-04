@@ -104,7 +104,6 @@ const CourseViewer = (props: CourseProps) => {
         }
         if (status === "unauthenticated") {
             dispatch(actionCreators.authChecked());
-            router.push(`/login?redirect=${router.asPath}`);
         }
     }, [status]);
 
