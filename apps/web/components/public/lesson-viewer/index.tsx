@@ -90,7 +90,6 @@ const LessonViewer = ({
         }
         if (status === "unauthenticated") {
             dispatch(actionCreators.authChecked());
-            router.push(`/login?redirect=${router.asPath}`);
         }
     }, [status]);
 
@@ -197,7 +196,7 @@ const LessonViewer = ({
     }
 
     return (
-        <>
+        <div className="h-full">
             <Head>
                 <title>
                     {lesson.title} | {siteinfo.title}
@@ -215,154 +214,159 @@ const LessonViewer = ({
                     content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
                 />
             </Head>
-            <article className="flex flex-col">
-                <header>
-                    <h1 className="text-4xl font-semibold mb-4">
-                        {lesson.title}
-                    </h1>
-                </header>
-                {String.prototype.toUpperCase.call(LESSON_TYPE_VIDEO) ===
-                    lesson.type && (
-                    <div>
-                        <video
-                            controls
-                            controlsList="nodownload" // eslint-disable-line react/no-unknown-property
-                            key={lesson.lessonId}
-                            className="w-full rounded mb-2"
-                        >
-                            <source
-                                src={
-                                    lesson.media &&
-                                    (lesson.media.file as string)
-                                }
-                                type="video/mp4"
-                            />
-                            Your browser does not support the video tag.
-                        </video>
-                        <Caption
-                            text={
-                                lesson.media &&
-                                (lesson.media.caption ||
-                                    (lesson.media.originalFileName as string))
-                            }
-                        />
-                    </div>
-                )}
-                {String.prototype.toUpperCase.call(LESSON_TYPE_AUDIO) ===
-                    lesson.type && (
-                    <div>
-                        <audio
-                            controls
-                            controlsList="nodownload" // eslint-disable-line react/no-unknown-property
-                        >
-                            <source
-                                src={
-                                    lesson.media &&
-                                    (lesson.media.file as string)
-                                }
-                                type="audio/mpeg"
-                            />
-                            Your browser does not support the video tag.
-                        </audio>
-                        <Caption
-                            text={
-                                lesson.media && (lesson.media.caption as string)
-                            }
-                        />
-                    </div>
-                )}
-                {String.prototype.toUpperCase.call(LESSON_TYPE_PDF) ===
-                    lesson.type && (
-                    <div>
-                        <iframe
-                            frameBorder="0"
-                            width="100%"
-                            height="500"
-                            src={`${
-                                lesson.media && lesson.media.file
-                            }#view=fit`}
-                        ></iframe>
-                        <Caption
-                            text={
-                                lesson.media && (lesson.media.caption as string)
-                            }
-                        />
-                    </div>
-                )}
-                {String.prototype.toUpperCase.call(LESSON_TYPE_TEXT) ===
-                    lesson.type &&
-                    lesson.content && <TextRenderer json={lesson.content} />}
-                {String.prototype.toUpperCase.call(LESSON_TYPE_EMBED) ===
-                    lesson.type &&
-                    lesson.content && (
-                        <LessonEmbedViewer content={lesson.content} />
-                    )}
-                {String.prototype.toUpperCase.call(LESSON_TYPE_QUIZ) ===
-                    lesson.type &&
-                    lesson.content && (
-                        <QuizViewer
-                            lessonId={lesson.lessonId}
-                            content={lesson.content as Quiz}
-                        />
-                    )}
-                {String.prototype.toUpperCase.call(LESSON_TYPE_FILE) ===
-                    lesson.type && (
-                    <div>
-                        <Link href={lesson.media?.file}>
-                            <Button2 className="flex gap-1 items-center">
-                                <ArrowDownward />
-                                {lesson.media?.originalFileName}
-                            </Button2>
-                        </Link>
-                    </div>
-                )}
-                {isEnrolled(lesson.courseId, profile) && (
-                    <div className="fixed right-0 bottom-0 left-0">
-                        <div className="flex justify-end p-4">
-                            <div className="mr-2">
-                                {!lesson.prevLesson && (
-                                    <Link
-                                        href={`/course/${slug}/${lesson.courseId}`}
-                                    >
-                                        <Button2
-                                            variant="secondary"
-                                            className="flex gap-1 items-center"
-                                        >
-                                            <ArrowLeft />
-                                            {COURSE_PROGRESS_INTRO}
-                                        </Button2>
-                                    </Link>
-                                )}
-                                {lesson.prevLesson && (
-                                    <Link
-                                        href={`/course/${slug}/${lesson.courseId}/${lesson.prevLesson}`}
-                                    >
-                                        <Button2
-                                            variant="secondary"
-                                            className="flex gap-1 items-center"
-                                        >
-                                            <ArrowLeft /> {COURSE_PROGRESS_PREV}
-                                        </Button2>
-                                    </Link>
-                                )}
-                            </div>
-                            <Button2
-                                onClick={markCompleteAndNext}
-                                disabled={loading}
+            <div className="h-full">
+                <article className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[48rem] mx-auto">
+                    <header>
+                        <h1 className="text-4xl font-semibold mb-4">
+                            {lesson.title}
+                        </h1>
+                    </header>
+                    {String.prototype.toUpperCase.call(LESSON_TYPE_VIDEO) ===
+                        lesson.type && (
+                        <div>
+                            <video
+                                controls
+                                controlsList="nodownload" // eslint-disable-line react/no-unknown-property
+                                key={lesson.lessonId}
+                                className="w-full rounded mb-2"
                             >
-                                {lesson.nextLesson ? (
-                                    <div className="flex gap-1 items-center">
-                                        {COURSE_PROGRESS_NEXT} <ArrowRight />
-                                    </div>
-                                ) : (
-                                    COURSE_PROGRESS_FINISH
-                                )}
-                            </Button2>
+                                <source
+                                    src={
+                                        lesson.media &&
+                                        (lesson.media.file as string)
+                                    }
+                                    type="video/mp4"
+                                />
+                                Your browser does not support the video tag.
+                            </video>
+                            <Caption
+                                text={
+                                    lesson.media &&
+                                    (lesson.media.caption ||
+                                        (lesson.media
+                                            .originalFileName as string))
+                                }
+                            />
                         </div>
+                    )}
+                    {String.prototype.toUpperCase.call(LESSON_TYPE_AUDIO) ===
+                        lesson.type && (
+                        <div>
+                            <audio
+                                controls
+                                controlsList="nodownload" // eslint-disable-line react/no-unknown-property
+                            >
+                                <source
+                                    src={
+                                        lesson.media &&
+                                        (lesson.media.file as string)
+                                    }
+                                    type="audio/mpeg"
+                                />
+                                Your browser does not support the video tag.
+                            </audio>
+                            <Caption
+                                text={
+                                    lesson.media &&
+                                    (lesson.media.caption as string)
+                                }
+                            />
+                        </div>
+                    )}
+                    {String.prototype.toUpperCase.call(LESSON_TYPE_PDF) ===
+                        lesson.type && (
+                        <div>
+                            <iframe
+                                frameBorder="0"
+                                width="100%"
+                                height="500"
+                                src={`${
+                                    lesson.media && lesson.media.file
+                                }#view=fit`}
+                            ></iframe>
+                            <Caption
+                                text={
+                                    lesson.media &&
+                                    (lesson.media.caption as string)
+                                }
+                            />
+                        </div>
+                    )}
+                    {String.prototype.toUpperCase.call(LESSON_TYPE_TEXT) ===
+                        lesson.type &&
+                        lesson.content && (
+                            <TextRenderer json={lesson.content} />
+                        )}
+                    {String.prototype.toUpperCase.call(LESSON_TYPE_EMBED) ===
+                        lesson.type &&
+                        lesson.content && (
+                            <LessonEmbedViewer content={lesson.content} />
+                        )}
+                    {String.prototype.toUpperCase.call(LESSON_TYPE_QUIZ) ===
+                        lesson.type &&
+                        lesson.content && (
+                            <QuizViewer
+                                lessonId={lesson.lessonId}
+                                content={lesson.content as Quiz}
+                            />
+                        )}
+                    {String.prototype.toUpperCase.call(LESSON_TYPE_FILE) ===
+                        lesson.type && (
+                        <div>
+                            <Link href={lesson.media?.file}>
+                                <Button2 className="flex gap-1 items-center">
+                                    <ArrowDownward />
+                                    {lesson.media?.originalFileName}
+                                </Button2>
+                            </Link>
+                        </div>
+                    )}
+                </article>
+                {isEnrolled(lesson.courseId, profile) && (
+                    <div className="bg-white fixed bottom-0 left-0 w-full p-4 flex justify-end">
+                        <div className="mr-2">
+                            {!lesson.prevLesson && (
+                                <Link
+                                    href={`/course/${slug}/${lesson.courseId}`}
+                                >
+                                    <Button2
+                                        variant="secondary"
+                                        className="flex gap-1 items-center"
+                                    >
+                                        <ArrowLeft />
+                                        {COURSE_PROGRESS_INTRO}
+                                    </Button2>
+                                </Link>
+                            )}
+                            {lesson.prevLesson && (
+                                <Link
+                                    href={`/course/${slug}/${lesson.courseId}/${lesson.prevLesson}`}
+                                >
+                                    <Button2
+                                        variant="secondary"
+                                        className="flex gap-1 items-center"
+                                    >
+                                        <ArrowLeft /> {COURSE_PROGRESS_PREV}
+                                    </Button2>
+                                </Link>
+                            )}
+                        </div>
+                        <Button2
+                            onClick={markCompleteAndNext}
+                            disabled={loading}
+                        >
+                            {lesson.nextLesson ? (
+                                <div className="flex gap-1 items-center">
+                                    {COURSE_PROGRESS_NEXT} <ArrowRight />
+                                </div>
+                            ) : (
+                                COURSE_PROGRESS_FINISH
+                            )}
+                        </Button2>
                     </div>
                 )}
-            </article>
-        </>
+            </div>
+        </div>
     );
 };
 

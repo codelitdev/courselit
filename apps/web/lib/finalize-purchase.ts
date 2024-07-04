@@ -1,9 +1,8 @@
 import CourseModel, { Course } from "../models/Course";
-import { Progress } from "../models/Progress";
 import UserModel, { User } from "../models/User";
 import { triggerSequences } from "./trigger-sequences";
 import { recordActivity } from "./record-activity";
-import { Constants } from "@courselit/common-models";
+import { Constants, Progress } from "@courselit/common-models";
 
 export default async (
     userId: string,
@@ -23,6 +22,7 @@ export default async (
         user.purchases.push({
             courseId: course.courseId,
             completedLessons: [],
+            accessibleGroups: [],
         });
         await (user as any).save();
         if (!course.customers.some((customer) => customer === user.userId)) {

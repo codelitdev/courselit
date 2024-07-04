@@ -40,7 +40,7 @@ export function MailEditorAndPreview({
         <div className="flex gap-2">
             <div className="flex flex-col w-1/5">
                 <h3 className="text-lg font-semibold">Variables</h3>
-                <div className="flex flex-col gap-4 border border-gray-200 rounded w-full h-[360px] p-2">
+                <div className="flex flex-col gap-4 border border-gray-200 rounded w-full p-2 min-h-[360px]">
                     <p className="text-xs text-slate-500">
                         You can use the following variables in your content.
                     </p>
@@ -100,7 +100,7 @@ export function MailEditorAndPreview({
                 <iframe
                     srcDoc={emailRendered}
                     title="Preview"
-                    className="border border-gray-200 rounded w-full h-[360px]"
+                    className="border border-gray-200 rounded w-full min-h-[360px]"
                 />
             </div>
         </div>

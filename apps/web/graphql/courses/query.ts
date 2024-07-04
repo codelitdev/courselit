@@ -4,6 +4,7 @@ import {
     GraphQLNonNull,
     GraphQLList,
     GraphQLEnumType,
+    GraphQLBoolean,
 } from "graphql";
 import types from "./types";
 import {
@@ -35,9 +36,15 @@ export default {
             id: {
                 type: new GraphQLNonNull(GraphQLString),
             },
+            asGuest: {
+                type: GraphQLBoolean,
+            },
         },
-        resolve: (_: any, { id }: { id: string }, context: GQLContext) =>
-            getCourse(id, context),
+        resolve: (
+            _: any,
+            { id, asGuest }: { id: string; asGuest?: boolean },
+            context: GQLContext,
+        ) => getCourse(id, context, asGuest),
     },
     getCoursesAsAdmin: {
         type: new GraphQLList(types.adminCourseItemType),

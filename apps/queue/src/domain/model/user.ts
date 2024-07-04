@@ -1,5 +1,6 @@
 import { User } from "@courselit/common-models";
 import mongoose from "mongoose";
+import ProgressSchema from "./progress";
 
 export type UserWithDomain = User & {
     domain: mongoose.Schema.Types.ObjectId;
@@ -13,6 +14,7 @@ const UserSchema = new mongoose.Schema<UserWithDomain>(
         email: { type: String, required: true },
         active: { type: Boolean, required: true, default: true },
         name: { type: String, required: false },
+        purchases: [ProgressSchema],
         bio: { type: String },
         permissions: [String],
         subscribedToUpdates: { type: Boolean, default: true },

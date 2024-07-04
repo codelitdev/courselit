@@ -1,3 +1,4 @@
+import { LessonType } from "./lesson-type";
 import type Media from "./media";
 import type { Quiz } from "./quiz";
 import type { TextEditorContent } from "./text-editor-content";
@@ -5,7 +6,7 @@ import type { TextEditorContent } from "./text-editor-content";
 export default interface Lesson {
     lessonId: string;
     title: string;
-    type: string;
+    type: LessonType;
     content: Quiz | TextEditorContent | { value: string };
     requiresEnrollment: boolean;
     courseId: string;

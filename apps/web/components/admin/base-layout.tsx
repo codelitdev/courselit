@@ -24,9 +24,8 @@ import AppLoader from "../app-loader";
 import Head from "next/head";
 import { canAccessDashboard } from "../../ui-lib/utils";
 import RouteBasedComponentScaffold from "../public/scaffold";
-import type Profile from "../../ui-models/profile";
 import SiteInfo from "../../ui-models/site-info";
-import { UIConstants as constants } from "@courselit/common-models";
+import { UIConstants as constants, Profile } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
 import {
     actionCreators,

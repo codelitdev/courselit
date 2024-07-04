@@ -16,7 +16,7 @@ import {
     LESSON_CONTENT_EMBED_HEADER,
     LESSON_CONTENT_EMBED_PLACEHOLDER,
     BUTTON_SAVING,
-} from "../../../../../ui-config/strings";
+} from "@ui-config/strings";
 import {
     LESSON_TYPE_TEXT,
     LESSON_TYPE_AUDIO,
@@ -30,12 +30,22 @@ import {
     COURSE_TYPE_COURSE,
     COURSE_TYPE_DOWNLOAD,
     LESSON_TYPE_EMBED,
-} from "../../../../../ui-config/constants";
+} from "@ui-config/constants";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import { connect } from "react-redux";
-import { AppMessage, Media, Profile, Quiz } from "@courselit/common-models";
+import {
+    AppMessage,
+    Media,
+    Profile,
+    Quiz,
+} from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
-import type { Auth, Lesson, Address } from "@courselit/common-models";
+import type {
+    Auth,
+    Lesson,
+    Address,
+    TextEditorContent,
+} from "@courselit/common-models";
 import { actionCreators } from "@courselit/state-management";
 import { useRouter } from "next/router";
 import useCourse from "../course-hook";
@@ -80,13 +90,13 @@ const LessonEditor = ({
     const [lesson, setLesson] = useState<Lesson>({
         lessonId: "",
         title: "",
-        type: "",
+        type: "text",
         media: {},
         downloadable: false,
         requiresEnrollment: true,
         courseId,
         groupId: sectionId,
-        content: "",
+        content: TextEditorEmptyDoc as unknown as TextEditorContent,
     });
     const router = useRouter();
     const [refresh, setRefresh] = useState(0);
@@ -155,7 +165,7 @@ const LessonEditor = ({
                 switch (response.lesson.type.toLowerCase()) {
                     case LESSON_TYPE_TEXT:
                         setTextContent(
-                            response.lesson.content || { type: "doc" },
+                            response.lesson.content || TextEditorEmptyDoc,
                         );
                         setRefresh(refresh + 1);
                         break;
@@ -577,12 +587,11 @@ const LessonEditor = ({
                                 </Tooltip>
                             </div>
                             <Switch
-                                name="requiresEnrollment"
-                                checked={lesson.requiresEnrollment}
+                                checked={!lesson.requiresEnrollment}
                                 onChange={(value: boolean) => {
                                     setLesson(
                                         Object.assign({}, lesson, {
-                                            requiresEnrollment: value,
+                                            requiresEnrollment: !value,
                                         }),
                                     );
                                 }}

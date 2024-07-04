@@ -6,9 +6,9 @@ import {
     EDIT_SECTION_HEADER,
     LESSON_GROUP_DELETED,
 } from "../../../../../ui-config/strings";
-import useCourse from "../course-hook";
+import useCourse, { CourseFrontend } from "../course-hook";
 import { Add, MoreVert } from "@courselit/icons";
-import { Course, Lesson, Address, AppMessage } from "@courselit/common-models";
+import { Lesson, Address, AppMessage, Group } from "@courselit/common-models";
 import { useRouter } from "next/router";
 import {
     Section,
@@ -28,10 +28,8 @@ import { connect } from "react-redux";
 import { FetchBuilder } from "@courselit/utils";
 
 interface LessonSectionProps {
-    group: Record<string, unknown>;
-    course: Partial<Course> & {
-        lessons: Lesson[];
-    };
+    group: Group;
+    course: CourseFrontend;
     onGroupDelete: (groupId: string, courseId: string) => void;
     address: Address;
     dispatch: AppDispatch;
@@ -118,7 +116,9 @@ function LessonSection({
                             component="dialog"
                             title={DELETE_SECTION_HEADER}
                             triggerChildren={DELETE_SECTION_HEADER}
-                            onClick={() => onGroupDelete(group.id, course.id)}
+                            onClick={() =>
+                                onGroupDelete(group.id, course.courseId)
+                            }
                         />
                     </Menu2>
                 </div>
@@ -222,18 +222,16 @@ function LessonsList({ id, dispatch, address }: LessonsProps) {
 
     return (
         <div className="flex flex-col gap-4">
-            {course.groups.map(
-                (group: Record<string, unknown>, index: number) => (
-                    <LessonSection
-                        group={group}
-                        course={course}
-                        onGroupDelete={removeGroup}
-                        key={index}
-                        address={address}
-                        dispatch={dispatch}
-                    />
-                ),
-            )}
+            {course.groups.map((group) => (
+                <LessonSection
+                    group={group}
+                    course={course}
+                    onGroupDelete={removeGroup}
+                    key={group.id}
+                    address={address}
+                    dispatch={dispatch}
+                />
+            ))}
             <div>
                 <Link href={`/dashboard/product/${id}/section/new`}>
                     <Button>{BUTTON_NEW_GROUP_TEXT}</Button>

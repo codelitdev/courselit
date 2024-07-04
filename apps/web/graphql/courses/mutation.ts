@@ -5,7 +5,6 @@ import {
     GraphQLString,
     GraphQLInt,
     GraphQLList,
-    GraphQLObjectType,
 } from "graphql";
 import types from "./types";
 import {
@@ -75,7 +74,7 @@ export default {
                 type: new GraphQLNonNull(GraphQLID),
             },
             courseId: {
-                type: new GraphQLNonNull(GraphQLID),
+                type: new GraphQLNonNull(GraphQLString),
             },
         },
         resolve: async (_: unknown, { id, courseId }, context) =>
@@ -102,10 +101,13 @@ export default {
             lessonsOrder: {
                 type: new GraphQLList(GraphQLString),
             },
+            drip: {
+                type: types.dripInputType,
+            },
         },
         resolve: async (
             _: unknown,
-            { id, courseId, name, rank, collapsed, lessonsOrder },
+            { id, courseId, name, rank, collapsed, lessonsOrder, drip },
             context,
         ) =>
             updateGroup({
@@ -115,6 +117,7 @@ export default {
                 rank,
                 collapsed,
                 lessonsOrder,
+                drip,
                 ctx: context,
             }),
     },

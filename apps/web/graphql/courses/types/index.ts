@@ -16,6 +16,7 @@ import { getAllLessons } from "../../lessons/logic";
 import { getMedia } from "../../media/logic";
 import mediaTypes from "../../media/types";
 import { reports } from "./reports";
+import { Constants } from "@courselit/common-models";
 
 const { lessonMetaType } = lessonTypes;
 const {
@@ -55,6 +56,56 @@ const courseTypeFilters = new GraphQLEnumType({
     },
 });
 
+const dripTypeType = new GraphQLEnumType({
+    name: "DripTypeType",
+    values: {
+        [Constants.dripType[0].toUpperCase().split("-")[0]]: {
+            value: Constants.dripType[0],
+        },
+        [Constants.dripType[1].toUpperCase().split("-")[0]]: {
+            value: Constants.dripType[1],
+        },
+    },
+});
+
+const dripEmailInput = new GraphQLInputObjectType({
+    name: "DripEmailInput",
+    fields: {
+        content: { type: new GraphQLNonNull(GraphQLString) },
+        subject: { type: new GraphQLNonNull(GraphQLString) },
+    },
+});
+
+const dripEmail = new GraphQLObjectType({
+    name: "DripEmail",
+    fields: {
+        content: { type: new GraphQLNonNull(GraphQLString) },
+        subject: { type: new GraphQLNonNull(GraphQLString) },
+    },
+});
+
+const dripInputType = new GraphQLInputObjectType({
+    name: "DripInput",
+    fields: {
+        type: { type: dripTypeType },
+        status: { type: GraphQLBoolean },
+        delayInMillis: { type: GraphQLFloat },
+        dateInUTC: { type: GraphQLFloat },
+        email: { type: dripEmailInput },
+    },
+});
+
+const dripType = new GraphQLObjectType({
+    name: "Drip",
+    fields: {
+        type: { type: new GraphQLNonNull(dripTypeType) },
+        status: { type: new GraphQLNonNull(GraphQLBoolean) },
+        delayInMillis: { type: GraphQLFloat },
+        dateInUTC: { type: GraphQLFloat },
+        email: { type: dripEmail },
+    },
+});
+
 const courseGroupType = new GraphQLObjectType({
     name: "GroupType",
     fields: {
@@ -63,6 +114,7 @@ const courseGroupType = new GraphQLObjectType({
         name: { type: new GraphQLNonNull(GraphQLString) },
         collapsed: { type: new GraphQLNonNull(GraphQLBoolean) },
         lessonsOrder: { type: new GraphQLList(GraphQLString) },
+        drip: { type: dripType },
     },
 });
 
@@ -206,4 +258,6 @@ export default {
     publicCoursesType,
     enrolledCourses,
     reports,
+    dripType,
+    dripInputType,
 };

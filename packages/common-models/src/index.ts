@@ -48,3 +48,4 @@ export type { UserFilterAggregator } from "./user-filter-aggregator";
 export type { OngoingSequence } from "./ongoing-sequence";
 export type { Domain } from "./domain";
 export type { Progress } from "./progress";
+export type { Drip, DripType } from "./drip";
