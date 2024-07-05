@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Course, WidgetProps } from "@courselit/common-models";
-import { CourseItem, TextRenderer } from "@courselit/components-library";
+import {
+    CourseItem,
+    TextRenderer,
+    Skeleton,
+} from "@courselit/components-library";
 import { actionCreators } from "@courselit/state-management";
 import {
     FetchBuilder,
@@ -100,6 +104,34 @@ export default function Widget({
                         <h2 className="text-4xl mb-4">{title}</h2>
                         {description && <TextRenderer json={description} />}
                     </div>
+                    {productItems.length === 0 && (
+                        <div className="flex flex-wrap gap-[1%]">
+                            <div className="basis-full md:basis-[49.5%] lg:basis-[32.6666%] mb-6">
+                                <div className="mb-4">
+                                    <Skeleton className="h-[200px] lg:h-[220px] w-full mb-4" />
+                                    <Skeleton className="h-[16px] w-full mb-1" />
+                                    <Skeleton className="h-[20px] w-full mb-1" />
+                                    <Skeleton className="h-[18px] w-full" />
+                                </div>
+                            </div>
+                            <div className="basis-full md:basis-[49.5%] lg:basis-[32.6666%] mb-6">
+                                <div className="mb-4">
+                                    <Skeleton className="h-[200px] lg:h-[220px] w-full mb-4" />
+                                    <Skeleton className="h-[16px] w-full mb-1" />
+                                    <Skeleton className="h-[20px] w-full mb-1" />
+                                    <Skeleton className="h-[18px] w-full" />
+                                </div>
+                            </div>
+                            <div className="basis-full md:basis-[49.5%] lg:basis-[32.6666%] mb-6">
+                                <div className="mb-4">
+                                    <Skeleton className="h-[200px] lg:h-[220px] w-full mb-4" />
+                                    <Skeleton className="h-[16px] w-full mb-1" />
+                                    <Skeleton className="h-[20px] w-full mb-1" />
+                                    <Skeleton className="h-[18px] w-full" />
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     {productItems.length > 0 && (
                         <div className="flex flex-wrap gap-[1%]">
                             {productItems.map(
