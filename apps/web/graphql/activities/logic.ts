@@ -77,29 +77,31 @@ export const getActivities = async ({
 const calculatePastDate = (
     duration: (typeof analyticsDurations)[number],
     domain: Domain,
-) => {
-    const date = new Date();
+): Date => {
+    const today = new Date();
+    let result: Date = new Date(today.getTime());
+
     switch (duration) {
         case "7d":
-            date.setUTCDate(date.getUTCDate() - 7);
+            result.setUTCDate(result.getUTCDate() - 7);
             break;
         case "30d":
-            date.setUTCDate(date.getUTCDate() - 30);
+            result.setUTCDate(result.getUTCDate() - 30);
             break;
         case "90d":
-            date.setUTCDate(date.getUTCDate() - 90);
+            result.setUTCDate(result.getUTCDate() - 90);
             break;
         case "1y":
-            date.setUTCFullYear(date.getUTCFullYear() - 1);
+            result.setUTCFullYear(result.getUTCFullYear() - 1);
             break;
         case "lifetime":
-            date.setUTCFullYear(domain.createdAt.getUTCFullYear());
+            result = new Date(domain.createdAt);
             break;
         default:
             throw new Error("Invalid duration");
     }
 
-    return date;
+    return result;
 };
 
 const addValues = (obj) => {
