@@ -33,12 +33,7 @@ import {
 } from "@ui-config/constants";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import { connect } from "react-redux";
-import {
-    AppMessage,
-    Media,
-    Profile,
-    Quiz,
-} from "@courselit/common-models";
+import { AppMessage, Media, Profile, Quiz } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import type {
     Auth,
