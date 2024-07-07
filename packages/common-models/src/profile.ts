@@ -1,7 +1,4 @@
-interface Progress {
-    courseId: string;
-    completedLessons: string[];
-}
+import { Progress } from "./progress";
 
 export default interface Profile {
     name: string;

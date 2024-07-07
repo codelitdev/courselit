@@ -1,18 +1,30 @@
 import { useRouter } from "next/router";
 import RouteBasedComponentScaffold from "../../../../components/public/scaffold";
 import LessonViewer from "../../../../components/public/lesson-viewer";
-import { getServerSideProps, generateSideBarItems, CourseFrontend } from ".";
-import type { Address, Lesson, Profile } from "@courselit/common-models";
+import {
+    getServerSideProps,
+    generateSideBarItems,
+    CourseFrontend,
+    formatCourse,
+    graphQuery,
+} from ".";
+import type {
+    Address,
+    Lesson,
+    Profile,
+    SiteInfo,
+} from "@courselit/common-models";
 import { AppState } from "@courselit/state-management";
 import { connect } from "react-redux";
 import { useEffect, useState } from "react";
 import { FetchBuilder } from "@courselit/utils";
-import { sortCourseGroups } from "@ui-lib/utils";
+import Head from "next/head";
 
 interface LessonProps {
     course: CourseFrontend;
     profile: Profile;
     address: Address;
+    siteInfo: SiteInfo;
 }
 
 const Lesson = (props: LessonProps) => {
@@ -28,42 +40,12 @@ const Lesson = (props: LessonProps) => {
     }, [profile]);
 
     const loadCourse = async () => {
-        const graphQuery = `
-            query {
-                post: getCourse(id: "${props.course.courseId}") {
-                    title,
-                    description,
-                    featuredImage {
-                        file,
-                        caption
-                    },
-                    updatedAt,
-                    creatorName,
-                    creatorId,
-                    slug,
-                    cost,
-                    courseId,
-                    groups {
-                        id,
-                        name,
-                        rank,
-                        lessonsOrder
-                    },
-                    lessons {
-                        lessonId,
-                        title,
-                        requiresEnrollment,
-                        courseId,
-                        groupId,
-                    },
-                    tags,
-                    firstLesson
-                }
-            }
-        `;
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
-            .setPayload(graphQuery)
+            .setPayload({
+                query: graphQuery,
+                variables: { id: props.course.courseId },
+            })
             .setIsGraphQLEndpoint(true)
             .build();
 
@@ -71,33 +53,7 @@ const Lesson = (props: LessonProps) => {
             const response = await fetch.exec();
             const { post } = response;
             if (post) {
-                const lessonsOrderedByGroups: Record<string, unknown> = {};
-                for (const group of sortCourseGroups(post)) {
-                    lessonsOrderedByGroups[group.name] = post.lessons
-                        .filter((lesson: Lesson) => lesson.groupId === group.id)
-                        .sort(
-                            (a: any, b: any) =>
-                                group.lessonsOrder.indexOf(a.lessonId) -
-                                group.lessonsOrder.indexOf(b.lessonId),
-                        );
-                }
-
-                const courseGroupedByLessons: CourseFrontend = {
-                    title: post.title,
-                    description: post.description,
-                    featuredImage: post.featuredImage,
-                    updatedAt: post.updatedAt,
-                    creatorName: post.creatorName,
-                    creatorId: post.creatorId,
-                    slug: post.slug,
-                    cost: post.cost,
-                    courseId: post.courseId,
-                    groupOfLessons: lessonsOrderedByGroups,
-                    tags: post.tags,
-                    firstLesson: post.firstLesson,
-                };
-
-                setCourse(courseGroupedByLessons);
+                setCourse(formatCourse(post));
             }
         } catch (err: any) {}
     };
@@ -107,17 +63,38 @@ const Lesson = (props: LessonProps) => {
     }
 
     return (
-        <RouteBasedComponentScaffold
-            items={generateSideBarItems(course, profile)}
-        >
-            {lesson && (
-                <LessonViewer lessonId={lesson as string} slug={course.slug} />
-            )}
-            {/* <div className="h-full bg-red-100 relative">
-                <div className="bg-red-200 h-[1000px]"></div>
-                <div className="fixed bottom-0 bg-yellow-100 h-20 w-full"></div>
-            </div> */}
-        </RouteBasedComponentScaffold>
+        <>
+            <Head>
+                <title>
+                    {course.title} | {props.siteInfo.title}
+                </title>
+                <meta
+                    name="viewport"
+                    content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
+                />
+                <meta property="og:title" content={course.title} />
+                <meta property="og:author" content={course.creatorName} />
+                {course.featuredImage && (
+                    <meta
+                        property="og:image"
+                        content={
+                            course.featuredImage && course.featuredImage.file
+                        }
+                    />
+                )}
+            </Head>
+            <RouteBasedComponentScaffold
+                items={generateSideBarItems(course, profile)}
+                drawerWidth={360}
+            >
+                {lesson && (
+                    <LessonViewer
+                        lessonId={lesson as string}
+                        slug={course.slug}
+                    />
+                )}
+            </RouteBasedComponentScaffold>
+        </>
     );
 };
 

@@ -89,7 +89,7 @@ export const getLessonDetails = async (id: string, ctx: GQLContext) => {
                 .find((x) => x.courseId === lesson.courseId)
                 .accessibleGroups.indexOf(lesson.groupId) === -1
         ) {
-            throw new Error(responses.item_not_found);
+            throw new Error(responses.drip_not_released);
         }
     }
 
@@ -295,6 +295,8 @@ export const markLessonCompleted = async (
     lessonId: string,
     ctx: GQLContext,
 ) => {
+    checkIfAuthenticated(ctx);
+
     const lesson = await LessonModel.findOne<Lesson>({ lessonId });
     if (!lesson) {
         throw new Error(responses.item_not_found);
@@ -306,6 +308,16 @@ export const markLessonCompleted = async (
 
     if (enrolledItemIndex === -1) {
         throw new Error(responses.not_enrolled);
+    }
+
+    if (await isPartOfDripGroup(lesson, ctx.subdomain._id)) {
+        const groupIsNotInAccessibleGroups =
+            ctx.user.purchases
+                .find((x) => x.courseId === lesson.courseId)
+                .accessibleGroups.indexOf(lesson.groupId) === -1;
+        if (groupIsNotInAccessibleGroups) {
+            throw new Error(responses.drip_not_released);
+        }
     }
 
     if (lesson.type === quiz) {

@@ -55,7 +55,8 @@ export function refreshUserProfile(): ThunkAction<
           permissions,
           purchases {
             courseId,
-            completedLessons
+            completedLessons,
+            accessibleGroups
           }
         }
       }

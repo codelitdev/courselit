@@ -14,6 +14,7 @@ const progress = new GraphQLObjectType({
     fields: {
         courseId: { type: new GraphQLNonNull(GraphQLString) },
         completedLessons: { type: new GraphQLList(GraphQLString) },
+        accessibleGroups: { type: new GraphQLList(GraphQLString) },
     },
 });
 

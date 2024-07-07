@@ -339,6 +339,7 @@ export const GROUP_LESSON_ITEM_UNTITLED = "Untitled";
 export const SECTION_GROUP_HEADER = "Sections";
 export const ERROR_SIGNIN_GENERATING_LINK =
     "Error generating sign in link. Try again.";
+export const ERROR = "There seems to be a problem!";
 export const SIGNIN_SUCCESS_PREFIX = "A sign in link has been sent to";
 export const ERROR_SIGNIN_VERIFYING_LINK =
     "We were unable to sign you in. Please try again.";
