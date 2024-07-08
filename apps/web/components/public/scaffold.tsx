@@ -3,10 +3,7 @@ import Header from "./base-layout/header";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
 import { AppState } from "@courselit/state-management";
-import {
-    Chip,
-    Modal,
-} from "@courselit/components-library";
+import { Chip, Modal } from "@courselit/components-library";
 import AppToast from "@components/app-toast";
 
 export interface ComponentScaffoldMenuItem {
