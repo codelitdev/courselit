@@ -87,7 +87,7 @@ function SectionEditor({
                 );
                 setEmailSubject(
                     group.drip?.email?.subject ||
-                        `A new section is now avaiable in ${course.title}`,
+                        `A new section is now available in ${course.title}`,
                 );
                 setStatus(
                     typeof group.drip?.status === "boolean"

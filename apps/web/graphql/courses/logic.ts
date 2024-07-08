@@ -86,10 +86,6 @@ export const getCourse = async (
         throw new Error(responses.item_not_found);
     }
 
-    const accessibleGroups = course.groups.filter(
-        (group) => !group.drip || !group.drip?.status,
-    );
-
     if (ctx.user && !asGuest) {
         const isOwner =
             checkPermission(ctx.user.permissions, [
@@ -98,20 +94,6 @@ export const getCourse = async (
 
         if (isOwner) {
             return course;
-        } else {
-            const userPurchase = ctx.user.purchases.find(
-                (purchase) => purchase.courseId === course.courseId,
-            );
-            if (userPurchase) {
-                for (let accessibleGroup of userPurchase.accessibleGroups) {
-                    const groupWithDrip = course.groups.find(
-                        (group) => group.id === accessibleGroup,
-                    );
-                    if (groupWithDrip) {
-                        accessibleGroups.push(groupWithDrip);
-                    }
-                }
-            }
         }
     }
 
@@ -129,7 +111,7 @@ export const getCourse = async (
             );
             (course as any).firstLesson = nextLesson;
         }
-        course.groups = accessibleGroups;
+        // course.groups = accessibleGroups;
         return course;
     } else {
         throw new Error(responses.item_not_found);
