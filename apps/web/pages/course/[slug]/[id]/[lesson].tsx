@@ -28,10 +28,11 @@ interface LessonProps {
 }
 
 const Lesson = (props: LessonProps) => {
-    const { profile, address } = props;
+    const { profile, address, siteInfo } = props;
     const [course, setCourse] = useState<CourseFrontend | null>(props.course);
     const router = useRouter();
     const { lesson } = router.query;
+    const siteImage = course.featuredImage || siteInfo.logo;
 
     useEffect(() => {
         if (profile.fetched) {
@@ -65,23 +66,14 @@ const Lesson = (props: LessonProps) => {
     return (
         <>
             <Head>
-                <title>
-                    {course.title} | {props.siteInfo.title}
-                </title>
+                <title>{course.title}</title>
                 <meta
                     name="viewport"
                     content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
                 />
                 <meta property="og:title" content={course.title} />
                 <meta property="og:author" content={course.creatorName} />
-                {course.featuredImage && (
-                    <meta
-                        property="og:image"
-                        content={
-                            course.featuredImage && course.featuredImage.file
-                        }
-                    />
-                )}
+                <meta property="og:image" content={siteImage.file} />
             </Head>
             <RouteBasedComponentScaffold
                 items={generateSideBarItems(course, profile)}

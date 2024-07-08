@@ -197,20 +197,39 @@ export function generateSideBarItems(
                 label: lesson.title,
                 href: `/course/${course.slug}/${course.courseId}/${lesson.lessonId}`,
                 icon:
-                    lesson.requiresEnrollment &&
-                    !isEnrolled(course.courseId, profile) ? (
+                    profile && profile.userId ? (
+                        isEnrolled(course.courseId, profile) ? (
+                            isLessonCompleted({
+                                courseId: course.courseId,
+                                lessonId: lesson.lessonId,
+                                profile,
+                            }) ? (
+                                <CheckCircled />
+                            ) : (
+                                <Circle />
+                            )
+                        ) : lesson.requiresEnrollment ? (
+                            <Lock />
+                        ) : undefined
+                    ) : lesson.requiresEnrollment ? (
                         <Lock />
-                    ) : profile.userId ? (
-                        isLessonCompleted({
-                            courseId: course.courseId,
-                            lessonId: lesson.lessonId,
-                            profile,
-                        }) ? (
-                            <CheckCircled />
-                        ) : (
-                            <Circle />
-                        )
                     ) : undefined,
+                // lesson.requiresEnrollment && !isEnrolled(course.courseId, profile)
+                // ? <Lock />
+                // : profile.userId
+                //     ? (isLessonCompleted({
+                //         courseId: course.courseId,
+                //         lessonId: lesson.lessonId,
+                //         profile,
+                //     })
+                //         ? (
+                //             <CheckCircled />
+                //         )
+                //         : (
+                //             <Circle />
+                //         )
+                //     )
+                //     : undefined,
                 iconPlacementRight: true,
             });
         }

@@ -26,7 +26,7 @@ interface ArticleOptionsProps {
 }
 
 const Article = (props: ArticleProps) => {
-    const { course, options = { hideTitle: false }, profile } = props;
+    const { course, options = { hideTitle: false } } = props;
 
     return (
         <div className="flex flex-col">

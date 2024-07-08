@@ -180,3 +180,34 @@ export function evaluateLessonResult(content: Quiz, answers: number[][]) {
         score: userScoreInPercentage,
     };
 }
+
+export async function isPartOfDripGroup(
+    lesson: Lesson,
+    domain: mongoose.Types.ObjectId,
+) {
+    const course = await CourseModel.findOne({
+        courseId: lesson.courseId,
+        domain,
+    });
+    if (!course) {
+        throw new Error(responses.item_not_found);
+    }
+    const group = course.groups.find((group) => group._id === lesson.groupId);
+    if (group.drip && group.drip.status) {
+        return true;
+    }
+
+    return false;
+}
+
+export function removeCorrectAnswersProp(lesson: Lesson) {
+    if (lesson.content && lesson.content.questions) {
+        for (let question of lesson.content.questions as any[]) {
+            question.options = question.options.map((option: any) => ({
+                text: option.text,
+            }));
+        }
+    }
+
+    return lesson;
+}
