@@ -27,12 +27,14 @@ export const getActivities = async ({
     }
 
     const startFromDate = calculatePastDate(duration, ctx.subdomain);
+    console.log("startFromDate ===", startFromDate);
 
     let filter = {
         createdAt: { $gte: startFromDate },
         type,
         domain: ctx.subdomain._id,
     };
+
     const activities: Activity[] = await ActivityModel.find(filter);
 
     const points = activities.length
@@ -56,9 +58,19 @@ export const getActivities = async ({
     const pointsSortedByDate = {};
     while (date <= today) {
         const dateStr = date.toISOString().split("T")[0];
-        pointsSortedByDate[dateStr] = points[dateStr] || 0;
+        pointsSortedByDate[dateStr] = 0; // Initialize each date with 0
+        // pointsSortedByDate[dateStr] = points[dateStr] || 0;
         date.setUTCDate(date.getUTCDate() + 1);
     }
+
+    // Now, populate the actual counts from the activities
+    activities.forEach((activity) => {
+        const dateStr = new Date(activity.createdAt)
+            .toISOString()
+            .split("T")[0];
+        // Increment the count for each activity's date
+        pointsSortedByDate[dateStr] = (pointsSortedByDate[dateStr] || 0) + 1;
+    });
 
     const result = {
         count:
@@ -70,6 +82,8 @@ export const getActivities = async ({
             count: pointsSortedByDate[date],
         })),
     };
+
+    console.log("result ===", result);
 
     return result;
 };
