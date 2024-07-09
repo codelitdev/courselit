@@ -160,7 +160,9 @@ export function generateSideBarItems(
                 availableLabel =
                     daysUntilAvailable &&
                     !isGroupAccessibleToUser(course, profile, group)
-                        ? `Available ${daysUntilAvailable} days after enrollment`
+                        ? isEnrolled(course.courseId, profile)
+                            ? `Available in ${daysUntilAvailable} days`
+                            : `Available ${daysUntilAvailable} days after enrollment`
                         : "";
             } else {
                 const today = new Date();
@@ -214,22 +216,6 @@ export function generateSideBarItems(
                     ) : lesson.requiresEnrollment ? (
                         <Lock />
                     ) : undefined,
-                // lesson.requiresEnrollment && !isEnrolled(course.courseId, profile)
-                // ? <Lock />
-                // : profile.userId
-                //     ? (isLessonCompleted({
-                //         courseId: course.courseId,
-                //         lessonId: lesson.lessonId,
-                //         profile,
-                //     })
-                //         ? (
-                //             <CheckCircled />
-                //         )
-                //         : (
-                //             <Circle />
-                //         )
-                //     )
-                //     : undefined,
                 iconPlacementRight: true,
             });
         }

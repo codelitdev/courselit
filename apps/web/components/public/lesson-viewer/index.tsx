@@ -19,7 +19,12 @@ import {
     ENROLL_BUTTON_TEXT,
     NOT_ENROLLED_HEADER,
 } from "../../../ui-config/strings";
-import { TextRenderer, Link, Button2 } from "@courselit/components-library";
+import {
+    TextRenderer,
+    Link,
+    Button2,
+    Skeleton,
+} from "@courselit/components-library";
 import type {
     Address,
     Lesson,
@@ -180,6 +185,16 @@ const LessonViewer = ({
     return (
         <div className="h-full">
             <article className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[48rem] mx-auto">
+                {!lesson && !error && (
+                    <div className="flex flex-col">
+                        <Skeleton className="h-12 w-full mb-4" />
+                        <Skeleton className="h-4 w-full mb-2" />
+                        <Skeleton className="h-4 w-full mb-2" />
+                        <Skeleton className="h-4 w-full mb-2" />
+                        <Skeleton className="h-4 w-full mb-2" />
+                        <Skeleton className="h-4 w-8 mb-2" />
+                    </div>
+                )}
                 {error && (
                     <div className="flex flex-col ">
                         <h1 className="text-4xl font-semibold mb-4">
