@@ -38,7 +38,7 @@ Following are the shared page blocks.
 
 ## Next steps
 
-Now that you have learnt about page blocks, it is time to learn how to use those in your pages. See our [edit a page](/en/pages/edit-page) guide for details.
+Now that you have learnt about page blocks, it is time to learn how to use those in your pages. See our [edit a page](/en/pages/edit) guide for details.
 
 ## Stuck somewhere?
 
