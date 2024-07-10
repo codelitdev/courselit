@@ -14,6 +14,7 @@ import {
     wysiwygPreset,
 } from "remirror/extensions";
 import { CodeMirrorExtension } from "@remirror/extension-codemirror6";
+// @ts-ignore
 import { TableExtension } from "@remirror/extension-react-tables";
 import { languages } from "@codemirror/language-data";
 import { oneDark } from "@codemirror/theme-one-dark";

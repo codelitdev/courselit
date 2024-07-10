@@ -10,6 +10,7 @@ import {
     TextHandler,
     ThemeProvider,
 } from "@remirror/react";
+// @ts-ignore
 import { RemirrorJSON } from "@remirror/core-types";
 import { CodeMirrorRenderer } from "./code-mirror-renderer";
 import { createId } from "../create-id";
@@ -19,7 +20,8 @@ const typeMap: MarkMap = {
     bulletList: "ul",
     callout: Callout,
     codeBlock: CodeBlock,
-    // @ts-expect-error just do it
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     codeMirror: CodeMirrorRenderer,
     doc: Doc,
     hardBreak: "br",
@@ -33,7 +35,8 @@ const typeMap: MarkMap = {
     text: TextHandler,
     taskList: "ul",
     taskListItem: "li",
-    // @ts-expect-error just do it
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     heading: ({ node, children }) => {
         if (!node.content) {
             return null;

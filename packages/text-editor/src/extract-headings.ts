@@ -1,3 +1,4 @@
+// @ts-ignore
 import { Node, Schema } from "prosemirror-model";
 import { RemirrorManager } from "remirror";
 import { getExtensions } from "./extensions";

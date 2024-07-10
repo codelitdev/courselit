@@ -7,6 +7,7 @@ import {
     ThemeProvider,
     useRemirror,
 } from "@remirror/react";
+// @ts-ignore
 import { AllStyledComponent } from "@remirror/styles/emotion";
 import { RemirrorContentType } from "@remirror/core-types";
 import { getTextContentFromSlice } from "@remirror/core";
