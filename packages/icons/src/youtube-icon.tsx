@@ -4,7 +4,8 @@ import { forwardRef } from "react";
 export const YoutubeIcon = forwardRef<SVGSVGElement, IconProps>(
     ({ ...props }, forwardedRef) => {
         return (
-            // @ts-expect-error just do it
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="15"
