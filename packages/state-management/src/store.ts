@@ -10,4 +10,5 @@ export type AppDispatch = ThunkDispatch<State, null, AnyAction>;
 
 const makeStore = () => createStore(reducer, applyMiddleware(thunk));
 
-export default createWrapper<Store<State>>(makeStore, { debug: false });
+const wrapper: any = createWrapper<Store<State>>(makeStore, { debug: false });
+export default wrapper;

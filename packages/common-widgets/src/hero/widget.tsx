@@ -149,12 +149,14 @@ export default function Widget({
                                         descriptionFontSize === 0
                                             ? "text-base"
                                             : descriptionFontSize === 1
-                                            ? "text-lg lg:text-xl"
-                                            : `text-${
-                                                  descriptionFontSize - 1 === 1
-                                                      ? ""
-                                                      : descriptionFontSize - 1
-                                              }xl lg:text-${descriptionFontSize}xl`
+                                              ? "text-lg lg:text-xl"
+                                              : `text-${
+                                                    descriptionFontSize - 1 ===
+                                                    1
+                                                        ? ""
+                                                        : descriptionFontSize -
+                                                          1
+                                                }xl lg:text-${descriptionFontSize}xl`
                                     } ${
                                         buttonAction && buttonCaption
                                             ? "mb-8"

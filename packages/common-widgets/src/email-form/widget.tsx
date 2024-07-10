@@ -47,8 +47,8 @@ const Widget = ({
         alignment === "center"
             ? "center"
             : alignment === "right"
-            ? "flex-end"
-            : "flex-start";
+              ? "flex-end"
+              : "flex-start";
 
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();

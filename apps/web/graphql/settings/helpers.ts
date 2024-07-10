@@ -5,8 +5,8 @@ import { Settings as SiteInfo } from "../../models/SiteInfo";
 const { paypal, stripe, paytm, none } = constants;
 import currencies from "../../data/iso4217.json";
 
-const currencyISOCodes = currencies.map(
-    (currency) => currency.AlphabeticCode?.toLowerCase(),
+const currencyISOCodes = currencies.map((currency) =>
+    currency.AlphabeticCode?.toLowerCase(),
 );
 
 const verifyCurrencyISOCode = (isoCode: string) => {

@@ -1,5 +1,5 @@
 {
-    "extends": "tsconfig/node.json",
+    "extends": "../../packages/tsconfig/node.json",
     "exclude": ["dist", "build", "node_modules"],
     "compilerOptions": {
         "outDir": "./dist",

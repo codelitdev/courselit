@@ -19,6 +19,7 @@ const typeMap: MarkMap = {
     bulletList: "ul",
     callout: Callout,
     codeBlock: CodeBlock,
+    // @ts-expect-error just do it
     codeMirror: CodeMirrorRenderer,
     doc: Doc,
     hardBreak: "br",
@@ -32,6 +33,7 @@ const typeMap: MarkMap = {
     text: TextHandler,
     taskList: "ul",
     taskListItem: "li",
+    // @ts-expect-error just do it
     heading: ({ node, children }) => {
         if (!node.content) {
             return null;

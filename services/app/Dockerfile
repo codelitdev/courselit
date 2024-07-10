@@ -1,17 +1,8 @@
 FROM node:20-alpine as builder
-ENV NODE_ENV production
-
-RUN apk update
-
 WORKDIR /app
 
-# copy yarn specific files
-COPY package.json /app/package.json
-COPY .yarn /app/.yarn
-COPY yarn.lock /app/yarn.lock
-COPY .yarnrc.yml /app/.yarnrc.yml
-
 # copy project related files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/icons /app/packages/icons
 COPY packages/tailwind-config /app/packages/tailwind-config
 COPY packages/tsconfig /app/packages/tsconfig
@@ -23,25 +14,26 @@ COPY packages/text-editor /app/packages/text-editor
 COPY packages/utils /app/packages/utils
 COPY apps/web /app/apps/web
 
-RUN cd /app && echo 'Yarn version in builder' && yarn --version
-
 # Build all workspaces
-RUN yarn rebuild
-RUN yarn build
+RUN corepack enable && \
+    pnpm install && \
+    pnpm -r rebuild && \
+    pnpm -r build
 
 RUN ls /app/apps/web/.next
 
 # Production image
 FROM node:18-alpine as runner
-
-ENV NODE_ENV production
 WORKDIR /app
 
-# copy yarn specific files
+ENV NODE_ENV production
+
+# Copy pnpm specific files
 COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/.yarn ./.yarn
-COPY --from=builder /app/yarn.lock ./yarn.lock
-COPY --from=builder /app/.yarnrc.yml ./.yarnrc.yml
+COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
+
+# Enable corepack to use pnpm without installing it from the internet
+RUN corepack enable
 
 # copy project related files
 COPY --from=builder /app/packages/icons/package.json ./packages/icons/package.json
@@ -60,8 +52,8 @@ COPY --from=builder /app/packages/utils/package.json ./packages/utils/package.js
 COPY --from=builder /app/packages/utils/dist ./packages/utils/dist
 COPY --from=builder /app/apps/web ./apps/web
 
-RUN yarn workspaces focus --all --production 
+RUN corepack enable && pnpm install --prod
 
 ENV PORT ${PORT:-3000}
 
-CMD [ "yarn", "workspace", "@courselit/web", "start" ]
+CMD [ "pnpm", "--filter=@courselit/web", "start" ]

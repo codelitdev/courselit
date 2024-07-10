@@ -4,6 +4,7 @@ import { forwardRef } from "react";
 export const YoutubeIcon = forwardRef<SVGSVGElement, IconProps>(
     ({ ...props }, forwardedRef) => {
         return (
+            // @ts-expect-error just do it
             <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="15"

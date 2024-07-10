@@ -18,13 +18,10 @@
   "scripts": {
     "lint": "eslint packages apps/docs apps/web/pages apps/web/components",
     "prettier": "prettier --write packages apps docs *.md",
-    "build": "yarn workspaces foreach -t --exclude @courselit/docs run build",
-    "clean": "yarn workspaces foreach run clean",
-    "publish": "yarn workspaces foreach --no-private npm publish",
-    "dev": "yarn workspace @courselit/web dev",
-    "prepare": "husky"
+    "build": "pnpm -r --filter=!@courselit/docs run build",
+    "clean": "pnpm -r clean",
+    "dev": "pnpm --filter @courselit/web dev"
   },
-  "packageManager": "yarn@3.2.0",
   "devDependencies": {
     "eslint": "^8.14.0",
     "eslint-config-prettier": "^8.5.0",
@@ -35,9 +32,6 @@
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
     "prettier": "^3.0.2"
-  },
-  "engines": {
-    "yarn": "~3.2.0"
   },
   "engineStrict": true,
   "lint-staged": {

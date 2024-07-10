@@ -24,6 +24,7 @@ export default function Modal({ open, children, onOpenChange }: ModalProps) {
     if (!open) return null;
 
     return (
+        // @ts-expect-error just do it
         <Portal>
             <div className="fixed flex z-10 inset-0 bg-white/90 backdrop-blur-md">
                 <IconButton

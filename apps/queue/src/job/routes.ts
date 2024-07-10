@@ -1,9 +1,9 @@
-import express from "express";
+import express, { Router } from "express";
 import { addMailJob } from "../domain/handler";
 import { logger } from "../logger";
 import { MailJob } from "../domain/model/mail-job";
 
-const router = express.Router();
+const router: Router = express.Router();
 
 router.post("/mail", async (req: express.Request, res: express.Response) => {
     try {

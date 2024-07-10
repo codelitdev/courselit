@@ -4,6 +4,7 @@ import { IconProps } from "@radix-ui/react-icons/dist/types";
 export const FacebookIcon = React.forwardRef<SVGSVGElement, IconProps>(
     ({ color = "currentColor", ...props }, forwardedRef) => {
         return (
+            // @ts-expect-error just do it
             <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="15"

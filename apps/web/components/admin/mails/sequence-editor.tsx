@@ -638,11 +638,11 @@ const SequenceEditor = ({
                                           value: tag.tag,
                                       }))
                                     : triggerType === "PRODUCT_PURCHASED"
-                                    ? products.map((product) => ({
-                                          label: product.title,
-                                          value: product.courseId,
-                                      }))
-                                    : []
+                                      ? products.map((product) => ({
+                                            label: product.title,
+                                            value: product.courseId,
+                                        }))
+                                      : []
                             }
                         />
                     )}

@@ -50,9 +50,9 @@ export default async function verifyDomain(
 
         if (!domain) {
             return res.status(404).json({
-                message: `${responses.domain_doesnt_exist}: ${host?.split(
-                    ".",
-                )[0]}`,
+                message: `${responses.domain_doesnt_exist}: ${
+                    host?.split(".")[0]
+                }`,
             });
         }
 

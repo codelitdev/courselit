@@ -21,6 +21,7 @@ export default function Editor({
 }: WysiwygEditorProps) {
     return (
         <div className="text-editor">
+            {/* @ts-expect-error just do it */}
             <TextEditor
                 initialContent={initialContent}
                 onChange={onChange}

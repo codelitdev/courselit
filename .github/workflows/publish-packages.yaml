@@ -6,53 +6,53 @@ on:
       - '*'
 
 jobs:
-  publish-packages:
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout
-        uses: actions/checkout@v1
+  # publish-packages:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: checkout
+  #       uses: actions/checkout@v1
 
-      - name: Configure CI Git User
-        run: |
-          git config --global user.name 'Rajat Saxena'
-          git config --global user.email 'hi@sub.rajatsaxena.dev'
-          git remote set-url origin https://$GITHUB_ACTOR:$GITHUB_PAT@github.com/codelitdev/courselit
-        env:
-          GITHUB_PAT: ${{ secrets.PAT }}
+  #     - name: Configure CI Git User
+  #       run: |
+  #         git config --global user.name 'Rajat Saxena'
+  #         git config --global user.email 'hi@sub.rajatsaxena.dev'
+  #         git remote set-url origin https://$GITHUB_ACTOR:$GITHUB_PAT@github.com/codelitdev/courselit
+  #       env:
+  #         GITHUB_PAT: ${{ secrets.PAT }}
 
-      - name: Checkout and pull branch
-        run: |
-          LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
-          git checkout $LATEST_TAG
+  #     - name: Checkout and pull branch
+  #       run: |
+  #         LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+  #         git checkout $LATEST_TAG
 
-      - name: Install Packages
-        run: yarn install
+  #     - name: Install Packages
+  #       run: yarn install
 
-      - name: Authenticate with Registry
-        run: |
-          yarn npm logout
-          echo "npmAuthToken: $NPM_TOKEN" >> .yarnrc.yml
-          yarn npm whoami
-        env:
-          NPM_TOKEN: ${{ secrets.NPM }}
+  #     - name: Authenticate with Registry
+  #       run: |
+  #         yarn npm logout
+  #         echo "npmAuthToken: $NPM_TOKEN" >> .yarnrc.yml
+  #         yarn npm whoami
+  #       env:
+  #         NPM_TOKEN: ${{ secrets.NPM }}
 
-      - name: Build packages
-        run: |
-          yarn workspace @courselit/icons build
-          yarn workspace @courselit/common-models build
-          yarn workspace @courselit/utils build
-          yarn workspace @courselit/text-editor build
-          yarn workspace @courselit/state-management build
-          yarn workspace @courselit/components-library build
-          yarn workspace @courselit/common-widgets build
+  #     - name: Build packages
+  #       run: |
+  #         yarn workspace @courselit/icons build
+  #         yarn workspace @courselit/common-models build
+  #         yarn workspace @courselit/utils build
+  #         yarn workspace @courselit/text-editor build
+  #         yarn workspace @courselit/state-management build
+  #         yarn workspace @courselit/components-library build
+  #         yarn workspace @courselit/common-widgets build
 
-      - name: Publish package
-        run: |
-          yarn publish
-        env:
-          GH_TOKEN: ${{ secrets.PAT }}
-          GITHUB_TOKEN: ${{ secrets.PAT }}
-          NPM_TOKEN: ${{ secrets.NPM }}
+  #     - name: Publish package
+  #       run: |
+  #         yarn publish
+  #       env:
+  #         GH_TOKEN: ${{ secrets.PAT }}
+  #         GITHUB_TOKEN: ${{ secrets.PAT }}
+  #         NPM_TOKEN: ${{ secrets.NPM }}
 
   publish-docker-images:
     needs: publish-packages
