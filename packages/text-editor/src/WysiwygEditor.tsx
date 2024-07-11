@@ -9,7 +9,9 @@ import {
 } from "@remirror/react";
 // @ts-ignore
 import { AllStyledComponent } from "@remirror/styles/emotion";
+// @ts-ignore
 import { RemirrorContentType } from "@remirror/core-types";
+// @ts-ignore
 import { getTextContentFromSlice } from "@remirror/core";
 import { InvalidContentHandler } from "remirror";
 import BubbleMenu from "./BubbleMenu";
@@ -106,6 +108,7 @@ const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
                     {editable && showToolbar && <Toolbar />}
                     <EditorComponent />
                     <BubbleMenu />
+                    {/* @ts-ignore */}
                     <TableComponents />
                     {children}
                 </Remirror>
