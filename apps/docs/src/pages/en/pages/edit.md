@@ -24,9 +24,9 @@ A button to promote the changes from draft to the live page. By default, all the
 
 Select font for your school
 
-5. Page selector
+5. SEO selector
 
-Switch between pages to edit
+Add meta tag for your page
 
 ![CourseLit No-code Page Builder](/assets/pages/courselit-page-builder-controls.png)
 
@@ -40,7 +40,7 @@ Let's see how.
 
 ### To edit a website page
 
-From `Dashboard`, go to `Settings` and click on `Edit site` as shown below.
+From `Dashboard`, go to `Pages` and click on `Edit` as shown below.
 
 ![Edit home page](/assets/pages/edit-site-page.png)
 
