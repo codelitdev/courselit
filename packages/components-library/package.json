@@ -36,12 +36,12 @@
         "url": "https://github.com/codelitdev/courselit/issues"
     },
     "devDependencies": {
-        "@types/react": "^17.0.43",
+        "@types/react": "^18.3.3",
         "eslint": "^8.57.0",
         "rimraf": "^4.1.1",
         "tailwind-config": "workspace:^",
         "tsup": "6.6.0",
-        "typescript": "^5.1.6",
+        "typescript": "^5.5.3",
         "typescript-eslint": "^7.4.0"
     },
     "peerDependencies": {

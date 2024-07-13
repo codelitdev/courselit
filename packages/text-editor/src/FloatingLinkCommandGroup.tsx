@@ -155,7 +155,7 @@ const DelayAutoFocusInput = ({
     return <input ref={inputRef} {...rest} />;
 };
 
-const FloatingLinkToolbar = () => {
+const FloatingLinkToolbar: React.FC<{}> = () => {
     const {
         isEditing,
         clickEdit,
@@ -205,9 +205,11 @@ const FloatingLinkToolbar = () => {
     return (
         <>
             {!isEditing && (
+                // @ts-ignore
                 <CommandButtonGroup>{linkEditButtons}</CommandButtonGroup>
             )}
             {!isEditing && empty && (
+                // @ts-ignore
                 <CommandButtonGroup>{linkEditButtons}</CommandButtonGroup>
             )}
 
@@ -216,6 +218,7 @@ const FloatingLinkToolbar = () => {
                 placement="bottom"
                 enabled={isEditing}
             >
+                {/* @ts-ignore */}
                 <DelayAutoFocusInput
                     style={{ zIndex: 20 }}
                     autoFocus

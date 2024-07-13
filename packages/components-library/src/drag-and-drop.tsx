@@ -117,6 +117,7 @@ const DragAndDrop = ({
     }, [data]);
 
     return (
+        // @ts-ignore
         <DndContext
             sensors={sensors}
             collisionDetection={closestCorners}

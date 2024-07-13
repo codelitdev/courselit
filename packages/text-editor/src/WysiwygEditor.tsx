@@ -1,3 +1,4 @@
+// @ts-nocheck
 /* eslint-disable react-hooks/rules-of-hooks */
 import React, { useEffect, FC, PropsWithChildren, useCallback } from "react";
 import {

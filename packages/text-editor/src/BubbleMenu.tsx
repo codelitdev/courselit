@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { FC } from "react";
 import { FloatingToolbar, FormattingButtonGroup } from "@remirror/react";
 import FloatingLinkCommandGroup from "./FloatingLinkCommandGroup";

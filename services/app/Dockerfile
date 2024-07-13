@@ -31,6 +31,7 @@ ENV NODE_ENV production
 # Copy pnpm specific files
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 
 # Enable corepack to use pnpm without installing it from the internet
 RUN corepack enable

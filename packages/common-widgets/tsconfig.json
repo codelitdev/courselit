@@ -3,7 +3,7 @@
     "exclude": ["dist", "build", "node_modules"],
     "compilerOptions": {
         "outDir": "./dist",
-        "lib": ["dom"],
+        "lib": ["dom", "ES2015"],
         "strict": false
     },
     "include": ["src/**/*", "additional.d.ts"]

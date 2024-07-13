@@ -1,55 +1,161 @@
-export { ArrowLeftIcon as ArrowLeft } from "@radix-ui/react-icons";
-export { ArrowRightIcon as ArrowRight } from "@radix-ui/react-icons";
-export { ArrowDownIcon as ArrowDownward } from "@radix-ui/react-icons";
-export { ArrowUpIcon as ArrowUpward } from "@radix-ui/react-icons";
-export { Cross2Icon as Cross } from "@radix-ui/react-icons";
-export { TrashIcon as Delete } from "@radix-ui/react-icons";
-export { FileTextIcon as FileText } from "@radix-ui/react-icons";
-export { FileIcon as File } from "@radix-ui/react-icons";
-export { Link1Icon as Link } from "@radix-ui/react-icons";
-export { QuestionMarkIcon as QuestionMark } from "@radix-ui/react-icons";
-export { MixIcon as Quiz } from "@radix-ui/react-icons";
-export { SpeakerModerateIcon as Speaker } from "@radix-ui/react-icons";
-export { ReaderIcon as Text } from "@radix-ui/react-icons";
-export { VideoIcon as Video } from "@radix-ui/react-icons";
-export { HamburgerMenuIcon as Menu } from "@radix-ui/react-icons";
-export { Pencil1Icon as Edit } from "@radix-ui/react-icons";
-export { CircleIcon as Circle } from "@radix-ui/react-icons";
-export { CheckCircledIcon as CheckCircled } from "@radix-ui/react-icons";
-export { LockClosedIcon as Lock } from "@radix-ui/react-icons";
-export { StarFilledIcon as Star } from "@radix-ui/react-icons";
-export { UpdateIcon as Sync } from "@radix-ui/react-icons";
-export { PlusIcon as Add } from "@radix-ui/react-icons";
-export { ExclamationTriangleIcon as Warning } from "@radix-ui/react-icons";
-export { RocketIcon as Rocket } from "@radix-ui/react-icons";
-export { PersonIcon as Person } from "@radix-ui/react-icons";
-export { EnvelopeClosedIcon as Mail } from "@radix-ui/react-icons";
-export { DesktopIcon as Desktop } from "@radix-ui/react-icons";
-export { MixerVerticalIcon as Settings } from "@radix-ui/react-icons";
-export { DotsVerticalIcon as MoreVert } from "@radix-ui/react-icons";
-export { MagnifyingGlassIcon as Search } from "@radix-ui/react-icons";
-export { ChevronDownIcon as ExpandMore } from "@radix-ui/react-icons";
-export { ChevronUpIcon as ExpandLess } from "@radix-ui/react-icons";
-export { CheckIcon as Check } from "@radix-ui/react-icons";
-export { QuestionMarkCircledIcon as Help } from "@radix-ui/react-icons";
-export { CrossCircledIcon as Cancel } from "@radix-ui/react-icons";
-export { DotFilledIcon as Dot } from "@radix-ui/react-icons";
-export { InfoCircledIcon as Info } from "@radix-ui/react-icons";
-export { PieChartIcon as PieChart } from "@radix-ui/react-icons";
-export { PaperPlaneIcon as PaperPlane } from "@radix-ui/react-icons";
-export { ClockIcon as Clock } from "@radix-ui/react-icons";
-export { GitHubLogoIcon as Github } from "@radix-ui/react-icons";
-export { TwitterLogoIcon as Twitter } from "@radix-ui/react-icons";
-export { LinkedInLogoIcon as LinkedIn } from "@radix-ui/react-icons";
-export { InstagramLogoIcon as Instagram } from "@radix-ui/react-icons";
-export { DiscordLogoIcon as Discord } from "@radix-ui/react-icons";
+import { ArrowLeftIcon } from "@radix-ui/react-icons";
+export const ArrowLeft: React.FC<{}> = ArrowLeftIcon;
+
+import { ArrowRightIcon } from "@radix-ui/react-icons";
+export const ArrowRight: React.FC<{}> = ArrowRightIcon;
+
+import { ArrowDownIcon } from "@radix-ui/react-icons";
+export const ArrowDownward: React.FC<{}> = ArrowDownIcon;
+
+import { ArrowUpIcon } from "@radix-ui/react-icons";
+export const ArrowUpward: React.FC<{}> = ArrowUpIcon;
+
+import { Cross2Icon } from "@radix-ui/react-icons";
+export const Cross: React.FC<{}> = Cross2Icon;
+
+import { TrashIcon } from "@radix-ui/react-icons";
+export const Delete: React.FC<{}> = TrashIcon;
+
+import { FileTextIcon } from "@radix-ui/react-icons";
+export const FileText: React.FC<{}> = FileTextIcon;
+
+import { FileIcon } from "@radix-ui/react-icons";
+export const File: React.FC<{}> = FileIcon;
+
+import { Link1Icon } from "@radix-ui/react-icons";
+export const Link: React.FC<{}> = Link1Icon;
+
+import { QuestionMarkIcon } from "@radix-ui/react-icons";
+export const QuestionMark: React.FC<{}> = QuestionMarkIcon;
+
+import { MixIcon } from "@radix-ui/react-icons";
+export const Quiz: React.FC<{}> = MixIcon;
+
+import { SpeakerModerateIcon } from "@radix-ui/react-icons";
+export const Speaker: React.FC<{}> = SpeakerModerateIcon;
+
+import { ReaderIcon } from "@radix-ui/react-icons";
+export const Text: React.FC<{}> = ReaderIcon;
+
+import { VideoIcon } from "@radix-ui/react-icons";
+export const Video: React.FC<{}> = VideoIcon;
+
+import { HamburgerMenuIcon } from "@radix-ui/react-icons";
+export const Menu: React.FC<{}> = HamburgerMenuIcon;
+
+import { Pencil1Icon } from "@radix-ui/react-icons";
+export const Edit: React.FC<{}> = Pencil1Icon;
+
+import { CircleIcon } from "@radix-ui/react-icons";
+export const Circle: React.FC<{}> = CircleIcon;
+
+import { CheckCircledIcon } from "@radix-ui/react-icons";
+export const CheckCircled: React.FC<{}> = CheckCircledIcon;
+
+import { LockClosedIcon } from "@radix-ui/react-icons";
+export const Lock: React.FC<{}> = LockClosedIcon;
+
+import { StarFilledIcon } from "@radix-ui/react-icons";
+export const Star: React.FC<{}> = StarFilledIcon;
+
+import { UpdateIcon } from "@radix-ui/react-icons";
+export const Sync: React.FC<{}> = UpdateIcon;
+
+import { PlusIcon } from "@radix-ui/react-icons";
+export const Add: React.FC<{}> = PlusIcon;
+
+import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
+export const Warning: React.FC<{}> = ExclamationTriangleIcon;
+
+import { RocketIcon } from "@radix-ui/react-icons";
+export const Rocket: React.FC<{}> = RocketIcon;
+
+import { PersonIcon } from "@radix-ui/react-icons";
+export const Person: React.FC<{}> = PersonIcon;
+
+import { EnvelopeClosedIcon } from "@radix-ui/react-icons";
+export const Mail: React.FC<{}> = EnvelopeClosedIcon;
+
+import { DesktopIcon } from "@radix-ui/react-icons";
+export const Desktop: React.FC<{}> = DesktopIcon;
+
+import { MixerVerticalIcon } from "@radix-ui/react-icons";
+export const Settings: React.FC<{}> = MixerVerticalIcon;
+
+import { DotsVerticalIcon } from "@radix-ui/react-icons";
+export const MoreVert: React.FC<{}> = DotsVerticalIcon;
+
+import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
+export const Search: React.FC<{}> = MagnifyingGlassIcon;
+
+import { ChevronDownIcon } from "@radix-ui/react-icons";
+export const ExpandMore: React.FC<{}> = ChevronDownIcon;
+
+import { ChevronUpIcon } from "@radix-ui/react-icons";
+export const ExpandLess: React.FC<{}> = ChevronUpIcon;
+
+import { CheckIcon } from "@radix-ui/react-icons";
+export const Check: React.FC<{}> = CheckIcon;
+
+import { QuestionMarkCircledIcon } from "@radix-ui/react-icons";
+export const Help: React.FC<{}> = QuestionMarkCircledIcon;
+
+import { CrossCircledIcon } from "@radix-ui/react-icons";
+export const Cancel: React.FC<{}> = CrossCircledIcon;
+
+import { DotFilledIcon } from "@radix-ui/react-icons";
+export const Dot: React.FC<{}> = DotFilledIcon;
+
+import { InfoCircledIcon } from "@radix-ui/react-icons";
+export const Info: React.FC<{}> = InfoCircledIcon;
+
+import { PieChartIcon } from "@radix-ui/react-icons";
+export const PieChart: React.FC<{}> = PieChartIcon;
+
+import { PaperPlaneIcon } from "@radix-ui/react-icons";
+export const PaperPlane: React.FC<{}> = PaperPlaneIcon;
+
+import { ClockIcon } from "@radix-ui/react-icons";
+export const Clock: React.FC<{}> = ClockIcon;
+
+import { GitHubLogoIcon } from "@radix-ui/react-icons";
+export const Github: React.FC<{}> = GitHubLogoIcon;
+
+import { TwitterLogoIcon } from "@radix-ui/react-icons";
+export const Twitter: React.FC<{}> = TwitterLogoIcon;
+
+import { LinkedInLogoIcon } from "@radix-ui/react-icons";
+export const LinkedIn: React.FC<{}> = LinkedInLogoIcon;
+
+import { InstagramLogoIcon } from "@radix-ui/react-icons";
+export const Instagram: React.FC<{}> = InstagramLogoIcon;
+
+import { DiscordLogoIcon } from "@radix-ui/react-icons";
+export const Discord: React.FC<{}> = DiscordLogoIcon;
+
+import { ClipboardIcon } from "@radix-ui/react-icons";
+export const Clipboard: React.FC<{}> = ClipboardIcon;
+
+import { GlobeIcon } from "@radix-ui/react-icons";
+export const Globe: React.FC<{}> = GlobeIcon;
+
+import { EyeOpenIcon } from "@radix-ui/react-icons";
+export const View: React.FC<{}> = EyeOpenIcon;
+
+import { HomeIcon } from "@radix-ui/react-icons";
+export const Home: React.FC<{}> = HomeIcon;
+
+import { DragHandleDots2Icon } from "@radix-ui/react-icons";
+export const DragHandle: React.FC<{}> = DragHandleDots2Icon;
+
+import { PlayIcon } from "@radix-ui/react-icons";
+export const Play: React.FC<{}> = PlayIcon;
+
+import { PauseIcon } from "@radix-ui/react-icons";
+export const Pause: React.FC<{}> = PauseIcon;
+
+import { ExitIcon } from "@radix-ui/react-icons";
+export const Exit: React.FC<{}> = ExitIcon;
+
 export { FacebookIcon as Facebook } from "./facebook-icon";
 export { YoutubeIcon as Youtube } from "./youtube-icon";
-export { ClipboardIcon as Clipboard } from "@radix-ui/react-icons";
-export { GlobeIcon as Globe } from "@radix-ui/react-icons";
-export { EyeOpenIcon as View } from "@radix-ui/react-icons";
-export { HomeIcon as Home } from "@radix-ui/react-icons";
-export { DragHandleDots2Icon as DragHandle } from "@radix-ui/react-icons";
-export { PlayIcon as Play } from "@radix-ui/react-icons";
-export { PauseIcon as Pause } from "@radix-ui/react-icons";
-export { ExitIcon as Exit } from "@radix-ui/react-icons";

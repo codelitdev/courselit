@@ -55,7 +55,7 @@
         "@types/node": "^18.8.0",
         "eslint": "^8.57.0",
         "rimraf": "^4.1.1",
-        "typescript": "^5.4.5",
+        "typescript": "^5.5.3",
         "typescript-eslint": "^7.4.0"
     }
 }
