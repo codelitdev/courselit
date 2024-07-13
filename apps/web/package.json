@@ -38,6 +38,7 @@
         "remirror": "^2.0.9",
         "sharp": "^0.33.2",
         "slugify": "^1.6.5",
+        "tailwind-config": "workspace:^",
         "stripe": "^8.219.0"
     },
     "devDependencies": {
@@ -54,7 +55,6 @@
         "eslint-config-prettier": "^9.0.0",
         "postcss": "^8.4.27",
         "prettier": "^3.0.2",
-        "tailwind-config": "workspace:^",
         "tailwindcss": "^3.3.3",
         "typescript": "^5.5.3"
     },

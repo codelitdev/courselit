@@ -51,6 +51,7 @@ COPY --from=builder /app/packages/text-editor/package.json ./packages/text-edito
 COPY --from=builder /app/packages/text-editor/dist ./packages/text-editor/dist
 COPY --from=builder /app/packages/utils/package.json ./packages/utils/package.json 
 COPY --from=builder /app/packages/utils/dist ./packages/utils/dist
+COPY --from=builder /app/packages/tailwind-config ./packages/tailwind-config
 COPY --from=builder /app/apps/web ./apps/web
 
 RUN corepack enable && pnpm install --prod

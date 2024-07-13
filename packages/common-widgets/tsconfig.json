@@ -3,8 +3,11 @@
     "exclude": ["dist", "build", "node_modules"],
     "compilerOptions": {
         "outDir": "./dist",
-        "lib": ["dom", "ES2015"],
-        "strict": false
+        "lib": ["dom", "ES2016"],
+        "strict": false,
+        "paths": {
+            "react": ["./node_modules/@types/react"]
+        }
     },
     "include": ["src/**/*", "additional.d.ts"]
 }

@@ -41,13 +41,13 @@
         "react-dom": "*"
     },
     "devDependencies": {
+        "@types/react": "^18.3.3",
         "autoprefixer": "^10.4.14",
         "eslint": "^8.57.0",
         "eslint-plugin-n": "^15.2.0",
         "eslint-plugin-promise": "^6.0.0",
         "postcss": "^8.4.27",
         "rimraf": "^4.1.1",
-        "tailwind-config": "workspace:^",
         "tsup": "6.6.0",
         "typescript": "^5.5.3",
         "typescript-eslint": "^7.4.0"
@@ -58,6 +58,7 @@
         "@courselit/icons": "workspace:^",
         "@courselit/state-management": "workspace:^",
         "@courselit/utils": "workspace:^",
+        "tailwind-config": "workspace:^",
         "react-redux": "^8.1.2"
     },
     "gitHead": "e91494470733b09bc3e772a9079162a844b40d97"

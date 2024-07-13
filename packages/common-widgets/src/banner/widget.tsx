@@ -191,7 +191,7 @@ export default function Widget({
                                 {title ||
                                     (type === "site"
                                         ? state.siteinfo.title
-                                        : product.title)}
+                                        : product.title) as any}
                             </h1>
                         </div>
                         {actualDescription && (
