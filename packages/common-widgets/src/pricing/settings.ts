@@ -8,6 +8,7 @@ interface ItemAction {
 export interface Item {
     title: string;
     price: string;
+    priceYearly?: string;
     description: Record<string, unknown>;
     features: string;
     action: ItemAction;
@@ -27,7 +28,11 @@ export default interface Settings extends WidgetDefaultSettings {
     buttonBackground?: string;
     buttonForeground?: string;
     primaryButtonBackground?: string;
+    planTitleColor?: string;
     cardBorderColor?: string;
     cssId?: string;
     columns?: number;
+    pricingSwitcher?: boolean;
+    monthlyPriceCaption?: string;
+    yearlyPriceCaption?: string;
 }

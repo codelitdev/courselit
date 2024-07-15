@@ -32,6 +32,7 @@ export default function ItemEditor({
     const [title, setTitle] = useState(item.title);
     const [description, setDescription] = useState(item.description);
     const [price, setPrice] = useState(item.price);
+    const [priceYearly, setPriceYearly] = useState(item.priceYearly);
     const [features, setFeatures] = useState(item.features);
     const [action, setAction] = useState(item.action);
     const [primary, setPrimary] = useState(item.primary);
@@ -41,6 +42,7 @@ export default function ItemEditor({
             title,
             description,
             price,
+            priceYearly,
             features,
             action,
             primary,
@@ -67,6 +69,11 @@ export default function ItemEditor({
                     label="Price"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
+                />
+                <FormField
+                    label="Yearly price"
+                    value={priceYearly}
+                    onChange={(e) => setPriceYearly(e.target.value)}
                 />
                 <FormField
                     label="Features"
