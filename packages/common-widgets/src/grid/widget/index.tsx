@@ -87,10 +87,7 @@ export default function Widget({
                                 className={`grid grid-cols-1 md:grid-cols-2 ${twGridColsMap[columns]} gap-4`}
                             >
                                 {items.map((item, index) => (
-                                    <div
-                                        key={index}
-                                        className="flex flex-col"
-                                    >
+                                    <div key={index} className="flex flex-col">
                                         <div className="h-full">
                                             <Itemm
                                                 item={item}

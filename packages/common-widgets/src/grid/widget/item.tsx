@@ -25,7 +25,14 @@ interface ItemmProps {
 }
 
 export default function Itemm({
-    item: { title, description, buttonAction, buttonCaption, media, mediaAlignment },
+    item: {
+        title,
+        description,
+        buttonAction,
+        buttonCaption,
+        media,
+        mediaAlignment,
+    },
     buttonBackground,
     buttonForeground,
     alignment,
@@ -45,9 +52,19 @@ export default function Itemm({
             }}
         >
             <CardHeader>
-                <div className={`flex gap-4 ${media && media.file ? mediaAlignment && mediaAlignment === "top" ? "flex-col-reverse" : "flex-col " : "flex-col"}`}>
+                <div
+                    className={`flex gap-4 ${
+                        media && media.file
+                            ? mediaAlignment && mediaAlignment === "top"
+                                ? "flex-col-reverse"
+                                : "flex-col "
+                            : "flex-col"
+                    }`}
+                >
                     <CardTitle
-                        className={`${alignment === "center" ? "text-center" : ""}`}
+                        className={`${
+                            alignment === "center" ? "text-center" : ""
+                        }`}
                     >
                         {title}
                     </CardTitle>

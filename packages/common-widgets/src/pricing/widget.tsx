@@ -45,7 +45,7 @@ export default function Widget({
         yearlyPriceCaption,
     },
 }: WidgetProps<Settings>) {
-    const [pricing, setPricing] = useState<"monthly" | "yearly">("yearly")
+    const [pricing, setPricing] = useState<"monthly" | "yearly">("yearly");
 
     return (
         <section
@@ -82,18 +82,24 @@ export default function Widget({
                         {pricingSwitcher && (
                             <div className="flex items-center gap-2 mb-8 mt-4 text-lg w-full justify-center">
                                 <div className="flex-1 text-right">
-                                    <p className="break-all">{monthlyPriceCaption}</p>
+                                    <p className="break-all">
+                                        {monthlyPriceCaption}
+                                    </p>
                                 </div>
                                 <div className="mt-1">
-                                <Switch
-                                    checked={pricing === "yearly"}
-                                    onChange={(value: boolean) => {
-                                        setPricing(value ? "yearly" : "monthly")
-                                    }}
-                                />
+                                    <Switch
+                                        checked={pricing === "yearly"}
+                                        onChange={(value: boolean) => {
+                                            setPricing(
+                                                value ? "yearly" : "monthly",
+                                            );
+                                        }}
+                                    />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="break-all">{yearlyPriceCaption}</p>
+                                    <p className="break-all">
+                                        {yearlyPriceCaption}
+                                    </p>
                                 </div>
                             </div>
                         )}
@@ -113,18 +119,19 @@ export default function Widget({
                                     }}
                                 >
                                     <CardHeader>
-                                        <p 
+                                        <p
                                             className="font-semibold"
                                             style={{
-                                                color: planTitleColor
-                                            }}>
+                                                color: planTitleColor,
+                                            }}
+                                        >
                                             {item.title}
                                         </p>
                                         <CardTitle className="text-3xl">
-                                            {pricingSwitcher 
+                                            {pricingSwitcher
                                                 ? pricing === "yearly"
                                                     ? item.priceYearly
-                                                    : item.price 
+                                                    : item.price
                                                 : item.price}
                                         </CardTitle>
                                         <span
@@ -153,9 +160,12 @@ export default function Widget({
                                     </CardContent>
                                     <CardFooter>
                                         <Link
-                                            href={pricing === "yearly" && item.action.yearlyHref
-                                                ? item.action.yearlyHref
-                                                :item.action.href}
+                                            href={
+                                                pricing === "yearly" &&
+                                                item.action.yearlyHref
+                                                    ? item.action.yearlyHref
+                                                    : item.action.href
+                                            }
                                             className="w-full"
                                         >
                                             <Button2

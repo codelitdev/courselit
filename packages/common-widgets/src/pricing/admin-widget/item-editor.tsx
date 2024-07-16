@@ -25,7 +25,7 @@ export default function ItemEditor({
     onChange,
     onDelete,
     address,
-    pricingSwitcherEnabled = false
+    pricingSwitcherEnabled = false,
 }: ItemProps) {
     const [title, setTitle] = useState(item.title);
     const [description, setDescription] = useState(item.description);
@@ -69,12 +69,11 @@ export default function ItemEditor({
                     onChange={(e) => setPrice(e.target.value)}
                 />
                 {pricingSwitcherEnabled && (
-
-                <FormField
-                    label="Yearly price"
-                    value={priceYearly}
-                    onChange={(e) => setPriceYearly(e.target.value)}
-                />
+                    <FormField
+                        label="Yearly price"
+                        value={priceYearly}
+                        onChange={(e) => setPriceYearly(e.target.value)}
+                    />
                 )}
                 <FormField
                     label="Features"
@@ -115,7 +114,6 @@ export default function ItemEditor({
                         }
                     />
                     {pricingSwitcherEnabled && (
-
                         <FormField
                             label="Href (Yearly)"
                             value={action.yearlyHref}

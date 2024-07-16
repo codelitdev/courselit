@@ -68,42 +68,50 @@ export default function Widget({
     return (
         <section
             className={`py-[${verticalPadding}px]`}
-            style={style === "card" ? {} : {
-                backgroundColor,
-                color: foregroundColor,
-            }}
+            style={
+                style === "card"
+                    ? {}
+                    : {
+                          backgroundColor,
+                          color: foregroundColor,
+                      }
+            }
             id={cssId}
         >
-            <div
-                className="mx-auto lg:max-w-[1200px]"
-            >
+            <div className="mx-auto lg:max-w-[1200px]">
                 <div
                     className={clsx(
                         "w-full !mx-auto",
                         `lg:max-w-[${horizontalPadding}%]`,
-                        direction
+                        direction,
                     )}
                 >
                     <div
                         className={clsx(
                             "flex flex-col px-4 gap-4",
                             direction,
-                            style === "card" ? "mx-4 py-4 rounded-md" : ""
+                            style === "card" ? "mx-4 py-4 rounded-md" : "",
                         )}
-                        style={style === "card" ? {
-                            backgroundColor,
-                            color: foregroundColor,
-                        } : {}}
+                        style={
+                            style === "card"
+                                ? {
+                                      backgroundColor,
+                                      color: foregroundColor,
+                                  }
+                                : {}
+                        }
                     >
                         {hasHeroGraphic && (
                             <div
-                                className={`w-full sm:mb-2 sm:pr-0 sm:pl-0 md:w-1/2 md:mb-0 flex items-center ${hasHeroGraphic && alignment === "right"
-                                    ? "md:pl-1"
-                                    : "md:pl-0"
-                                    } ${hasHeroGraphic && alignment === "right"
+                                className={`w-full sm:mb-2 sm:pr-0 sm:pl-0 md:w-1/2 md:mb-0 flex items-center ${
+                                    hasHeroGraphic && alignment === "right"
                                         ? "md:pl-1"
                                         : "md:pl-0"
-                                    }`}
+                                } ${
+                                    hasHeroGraphic && alignment === "right"
+                                        ? "md:pl-1"
+                                        : "md:pl-0"
+                                }`}
                             >
                                 {youtubeLink && (
                                     <div className="flex justify-center grow">
@@ -134,21 +142,24 @@ export default function Widget({
                             </div>
                         )}
                         <div
-                            className={`w-full ${hasHeroGraphic ? "md:w-1/2" : "md:w-full"
-                                } sm:pr-0 sm:pl-0 ${hasHeroGraphic && alignment === "right"
+                            className={`w-full ${
+                                hasHeroGraphic ? "md:w-1/2" : "md:w-full"
+                            } sm:pr-0 sm:pl-0 ${
+                                hasHeroGraphic && alignment === "right"
                                     ? "md:pr-1"
                                     : "md:pr-0"
-                                } ${hasHeroGraphic && alignment === "left"
+                            } ${
+                                hasHeroGraphic && alignment === "left"
                                     ? "md:pl-1"
                                     : "md:pl-0"
-                                }`}
+                            }`}
                         >
                             <div
                                 className={clsx(
                                     "flex flex-col justify-center h-full",
                                     contentAlignment === "center"
                                         ? "items-center text-center"
-                                        : "items-start"
+                                        : "items-start",
                                 )}
                             >
                                 <h2
@@ -160,18 +171,24 @@ export default function Widget({
                                 </h2>
                                 {description && (
                                     <div
-                                        className={`${descriptionFontSize === 0
-                                            ? "text-base"
-                                            : descriptionFontSize === 1
+                                        className={`${
+                                            descriptionFontSize === 0
+                                                ? "text-base"
+                                                : descriptionFontSize === 1
                                                 ? "text-lg lg:text-xl"
-                                                : `text-${descriptionFontSize - 1 === 1
-                                                    ? ""
-                                                    : descriptionFontSize - 1
-                                                }xl lg:text-${descriptionFontSize}xl`
-                                            } ${buttonAction && buttonCaption
+                                                : `text-${
+                                                      descriptionFontSize -
+                                                          1 ===
+                                                      1
+                                                          ? ""
+                                                          : descriptionFontSize -
+                                                            1
+                                                  }xl lg:text-${descriptionFontSize}xl`
+                                        } ${
+                                            buttonAction && buttonCaption
                                                 ? "mb-8"
                                                 : "mb-0"
-                                            }`}
+                                        }`}
                                     >
                                         <TextRenderer json={description} />
                                     </div>
