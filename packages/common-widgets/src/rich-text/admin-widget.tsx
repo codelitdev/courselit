@@ -8,7 +8,7 @@ import {
     PageBuilderSlider,
 } from "@courselit/components-library";
 import Settings from "./settings";
-import { Address, Alignment } from "@courselit/common-models";
+import { Address, HorizontalAlignment } from "@courselit/common-models";
 import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
@@ -38,7 +38,7 @@ const AdminWidget = ({ settings, onChange, address }: AboutWidgetProps) => {
         ],
     };
     const [content, setContent] = useState(settings.text || dummyText);
-    const [alignment, setAlignment] = useState<Alignment | "right">(
+    const [alignment, setAlignment] = useState<HorizontalAlignment>(
         settings.alignment || "left",
     );
     const [backgroundColor, setBackgroundColor] = useState(
@@ -110,7 +110,9 @@ const AdminWidget = ({ settings, onChange, address }: AboutWidgetProps) => {
                         { label: "Center", value: "center" },
                         { label: "Right", value: "right" },
                     ]}
-                    onChange={(value: Alignment) => setAlignment(value)}
+                    onChange={(value: HorizontalAlignment) =>
+                        setAlignment(value)
+                    }
                 />
                 <ContentPaddingSelector
                     className="mb-2"

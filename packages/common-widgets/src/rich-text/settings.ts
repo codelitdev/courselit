@@ -1,11 +1,11 @@
 import type {
-    Alignment,
+    HorizontalAlignment,
     WidgetDefaultSettings,
 } from "@courselit/common-models";
 
 export default interface Settings extends WidgetDefaultSettings {
     text: Record<string, unknown>;
-    alignment: Alignment | "right";
+    alignment: HorizontalAlignment;
     color?: string;
     backgroundColor?: string;
     horizontalPadding: number;
