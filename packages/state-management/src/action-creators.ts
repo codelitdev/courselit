@@ -58,6 +58,16 @@ export function refreshUserProfile(): ThunkAction<
             completedLessons,
             accessibleGroups
           }
+           avatar {
+                mediaId,
+                originalFileName,
+                mimeType,
+                size,
+                access,
+                file,
+                thumbnail,
+                caption
+            },
         }
       }
       `;

@@ -1,8 +1,8 @@
 import { generateUniqueId } from "@courselit/utils";
 import mongoose from "mongoose";
 import ProgressSchema from "./Progress";
-
 import { Constants, User as PublicUser } from "@courselit/common-models";
+import MediaSchema from "./Media";
 
 export interface User extends PublicUser {
     _id: mongoose.Types.ObjectId;
@@ -33,6 +33,7 @@ const UserSchema = new mongoose.Schema<User>(
             required: true,
             default: generateUniqueId,
         },
+        avatar: MediaSchema,
     },
     {
         timestamps: true,

@@ -8,6 +8,8 @@ import {
     GraphQLList,
     GraphQLInputObjectType,
 } from "graphql";
+import mediaTypes from "../media/types";
+import { getMedia } from "../media/logic";
 
 const progress = new GraphQLObjectType({
     name: "Progress",
@@ -33,6 +35,10 @@ const userType = new GraphQLObjectType({
         createdAt: { type: GraphQLString },
         updatedAt: { type: GraphQLString },
         tags: { type: new GraphQLList(GraphQLString) },
+        avatar: {
+            type: mediaTypes.mediaType,
+            resolve: (user, _, __, ___) => getMedia(user.avatar),
+        },
     },
 });
 
@@ -46,6 +52,9 @@ const userUpdateInput = new GraphQLInputObjectType({
         permissions: { type: new GraphQLList(GraphQLString) },
         subscribedToUpdates: { type: GraphQLBoolean },
         tags: { type: new GraphQLList(GraphQLString) },
+        avatar: {
+            type: mediaTypes.mediaInputType,
+        },
     },
 });
 

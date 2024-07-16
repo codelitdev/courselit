@@ -20,10 +20,13 @@ import {
     Form,
     FormField,
     Button2,
+    PageBuilderPropertyHeader,
+    MediaSelector,
 } from "@courselit/components-library";
 import type {
     Address,
     Auth,
+    Media,
     Page,
     Profile,
     State,
@@ -53,7 +56,9 @@ function ProfileIndex({
 }: ProfileProps) {
     const [bio, setBio] = useState("");
     const [name, setName] = useState("");
-    const [user, setUser] = useState<Pick<Profile, "bio" | "name">>();
+    const [user, setUser] =
+        useState<Pick<Profile, "bio" | "name" | "avatar">>();
+    const [avatar, setAvatar] = useState<Partial<Media>>({});
     const [subscribedToUpdates, setSubscribedToUpdates] = useState(false);
     const { networkAction, refreshUserProfile, setAppMessage } = actionCreators;
     const router = useRouter();
@@ -76,7 +81,18 @@ function ProfileIndex({
           user: getUser(userId: "${userId}") {
             name,
             bio,
-            subscribedToUpdates
+            email,
+            subscribedToUpdates,
+            avatar {
+                mediaId,
+                originalFileName,
+                mimeType,
+                size,
+                access,
+                file,
+                thumbnail,
+                caption
+            },
           }
         }
       `;
@@ -92,6 +108,7 @@ function ProfileIndex({
                 setUser(response.user);
                 setName(response.user.name);
                 setBio(response.user.bio);
+                setAvatar(response.user.avatar);
                 setSubscribedToUpdates(response.user.subscribedToUpdates);
             }
         } catch (err: any) {
@@ -108,9 +125,38 @@ function ProfileIndex({
               id: "${profile.id}"
               name: "${name}",
               bio: "${bio}"
+              avatar:  ${
+                  avatar && avatar.mediaId
+                      ? `{
+                            mediaId: "${avatar.mediaId}",
+                            originalFileName: "${avatar.originalFileName}",
+                            mimeType: "${avatar.mimeType}",
+                            size: ${avatar.size},
+                            access: "${avatar.access}",
+                            file: ${
+                                avatar.access === "public"
+                                    ? `"${avatar.file}"`
+                                    : null
+                            },
+                            thumbnail: "${avatar.thumbnail}",
+                            caption: "${avatar.caption}"
+                        }`
+                      : null
+              } 
             }) {
               id,
-              bio
+              name,
+              bio,
+               avatar {
+                mediaId,
+                originalFileName,
+                mimeType,
+                size,
+                access,
+                file,
+                thumbnail,
+                caption
+              },
             }
           }
         `;
@@ -173,9 +219,7 @@ function ProfileIndex({
                             <FormField
                                 value={profile.email}
                                 label={PROFILE_SECTION_DETAILS_EMAIL}
-                                onChange={(event) =>
-                                    setName(event.target.value)
-                                }
+                                onChange={() => {}}
                                 disabled={true}
                             />
 
@@ -195,12 +239,36 @@ function ProfileIndex({
                                 multiline={true}
                                 maxRows={5}
                             />
-                            <div>
+
+                            <PageBuilderPropertyHeader label={"Avatar"} />
+                            <MediaSelector
+                                title=""
+                                auth={auth}
+                                profile={profile}
+                                dispatch={dispatch}
+                                address={address}
+                                mediaId={avatar?.mediaId}
+                                src={avatar?.thumbnail}
+                                srcTitle={avatar?.originalFileName}
+                                onSelection={(media?: Media) => {
+                                    if (media) {
+                                        setAvatar(media);
+                                    }
+                                }}
+                                onRemove={() => {
+                                    setAvatar({});
+                                }}
+                                access="public"
+                                strings={{}}
+                            />
+
+                            <div className="mt-2">
                                 <Button2
                                     onClick={saveDetails}
                                     disabled={
                                         bio === (user && user.bio) &&
-                                        name === (user && user.name)
+                                        name === (user && user.name) &&
+                                        avatar === (user && user.avatar)
                                     }
                                 >
                                     {BUTTON_SAVE}
