@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Settings, { Item } from "../settings";
 import ItemEditor from "./item-editor";
-import { Address, Auth, Profile, Alignment } from "@courselit/common-models";
-import { AppDispatch } from "@courselit/state-management";
+import { Address, Alignment } from "@courselit/common-models";
 import {
     AdminWidgetPanel,
     ColorSelector,
@@ -26,9 +25,6 @@ export interface AdminWidgetProps {
     settings: Settings;
     onChange: (...args: any[]) => void;
     address: Address;
-    dispatch: AppDispatch;
-    auth: Auth;
-    profile: Profile;
     hideActionButtons: (
         e: boolean,
         preservedStateAcrossRerender: Record<string, unknown>,
@@ -39,9 +35,6 @@ export interface AdminWidgetProps {
 export default function AdminWidget({
     settings,
     onChange,
-    auth,
-    profile,
-    dispatch,
     address,
     hideActionButtons,
     preservedStateAcrossRerender,
@@ -128,17 +121,17 @@ export default function AdminWidget({
         settings.cardBorderColor,
     );
     const [pricingSwitcher, setPricingSwitcher] = useState(
-        typeof settings.pricingSwitcher !== "undefined" 
+        typeof settings.pricingSwitcher !== "undefined"
             ? settings.pricingSwitcher
             : false,
     );
     const [cssId, setCssId] = useState(settings.cssId);
     const [columns, setColumns] = useState(settings.columns || defaultColumns);
     const [monthlyPriceCaption, setMonthlyPriceCaption] = useState(
-        settings.monthlyPriceCaption || "Monthly"
+        settings.monthlyPriceCaption || "Monthly",
     );
     const [yearlyPriceCaption, setYearlyPriceCaption] = useState(
-        settings.yearlyPriceCaption || "Yearly"
+        settings.yearlyPriceCaption || "Yearly",
     );
 
     const onSettingsChanged = () =>
@@ -188,7 +181,6 @@ export default function AdminWidget({
 
     const onItemChange = (newItemData: Item) => {
         items[itemBeingEditedIndex] = newItemData;
-        console.log(newItemData, itemBeingEditedIndex, [...items])
         setItems([...items]);
         setItemBeingEditedIndex(-1);
         hideActionButtons(false, {});
@@ -261,12 +253,16 @@ export default function AdminWidget({
                             <FormField
                                 label="Monthly price caption"
                                 value={monthlyPriceCaption}
-                                onChange={(e) => setMonthlyPriceCaption(e.target.value)}
+                                onChange={(e) =>
+                                    setMonthlyPriceCaption(e.target.value)
+                                }
                             />
                             <FormField
                                 label="Yearly price caption"
                                 value={yearlyPriceCaption}
-                                onChange={(e) => setYearlyPriceCaption(e.target.value)}
+                                onChange={(e) =>
+                                    setYearlyPriceCaption(e.target.value)
+                                }
                             />
                         </>
                     )}
