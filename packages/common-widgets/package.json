@@ -59,6 +59,7 @@
         "@courselit/icons": "workspace:^",
         "@courselit/state-management": "workspace:^",
         "@courselit/utils": "workspace:^",
+        "clsx": "^2.1.1",
         "react-redux": "^8.1.2"
     },
     "gitHead": "e91494470733b09bc3e772a9079162a844b40d97"

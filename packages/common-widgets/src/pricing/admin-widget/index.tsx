@@ -221,10 +221,8 @@ export default function AdminWidget({
                 index={itemBeingEditedIndex}
                 onChange={onItemChange}
                 onDelete={onDelete}
-                auth={auth}
-                profile={profile}
-                dispatch={dispatch}
                 address={address}
+                pricingSwitcherEnabled={pricingSwitcher}
             />
         );
     }

@@ -1,5 +1,5 @@
 import { WidgetProps } from "@courselit/common-models";
-import Settings, { Item } from "../settings";
+import Settings from "../settings";
 import { TextRenderer, Button2, Link } from "@courselit/components-library";
 import Itemm from "./item";
 import {
@@ -83,25 +83,6 @@ export default function Widget({
                     </div>
                     {items && items.length > 0 && (
                         <>
-                            {/*
-                <div className="flex flex-wrap gap-[1%]">
-                    {items.map((item: Item, index: number) => (
-                        <div className="basis-full md:basis-[49.5%] lg:basis-[32.6666%] mb-6">
-                            <Itemm
-                                item={item}
-                                key={index}
-                                buttonBackground={buttonBackground}
-                                buttonForeground={buttonForeground}
-                                alignment={itemsAlignment}
-                                backgroundColor={itemBackgroundColor}
-                                foregroundColor={itemForegroundColor}
-                                borderColor={itemBorderColor}
-                                borderRadius={itemBorderRadius}
-                            />
-                        </div>
-                    ))}
-                </div>
-                    */}
                             <div
                                 className={`grid grid-cols-1 md:grid-cols-2 ${twGridColsMap[columns]} gap-4`}
                             >

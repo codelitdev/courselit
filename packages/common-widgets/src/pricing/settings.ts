@@ -3,6 +3,7 @@ import { Alignment, WidgetDefaultSettings } from "@courselit/common-models";
 interface ItemAction {
     label: string;
     href: string;
+    yearlyHref?: string;
 }
 
 export interface Item {

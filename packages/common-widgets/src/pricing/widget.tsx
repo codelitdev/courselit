@@ -153,7 +153,9 @@ export default function Widget({
                                     </CardContent>
                                     <CardFooter>
                                         <Link
-                                            href={item.action.href}
+                                            href={pricing === "yearly" && item.action.yearlyHref
+                                                ? item.action.yearlyHref
+                                                :item.action.href}
                                             className="w-full"
                                         >
                                             <Button2
