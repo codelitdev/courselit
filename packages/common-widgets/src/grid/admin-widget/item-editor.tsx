@@ -8,8 +8,15 @@ import {
     FormField,
     Tooltip,
     AdminWidgetPanel,
+    Select,
 } from "@courselit/components-library";
-import { Address, Auth, Media, Profile } from "@courselit/common-models";
+import {
+    Address,
+    Auth,
+    Media,
+    Profile,
+    VerticalAlignment,
+} from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
 
 interface ItemProps {
@@ -37,6 +44,9 @@ export default function ItemEditor({
     const [buttonCaption, setButtonCaption] = useState(item.buttonCaption);
     const [buttonAction, setButtonAction] = useState(item.buttonAction);
     const [media, setMedia] = useState<Partial<Media>>(item.media);
+    const [mediaAlignment, setMediaAlignment] = useState<VerticalAlignment>(
+        item.mediaAlignment || "bottom",
+    );
 
     const itemChanged = () =>
         onChange({
@@ -45,6 +55,7 @@ export default function ItemEditor({
             buttonCaption,
             buttonAction,
             media,
+            mediaAlignment,
         });
 
     return (
@@ -94,6 +105,17 @@ export default function ItemEditor({
                         onRemove={() => {
                             setMedia({});
                         }}
+                    />
+                    <Select
+                        title="Media alignment"
+                        value={mediaAlignment}
+                        options={[
+                            { label: "Above title", value: "top" },
+                            { label: "Below title", value: "bottom" },
+                        ]}
+                        onChange={(value: VerticalAlignment) =>
+                            setMediaAlignment(value)
+                        }
                     />
                     <div className="flex justify-between">
                         <Tooltip title="Delete">

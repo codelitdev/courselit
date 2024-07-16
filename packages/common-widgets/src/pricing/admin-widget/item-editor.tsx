@@ -8,8 +8,7 @@ import {
     Tooltip,
     AdminWidgetPanel,
 } from "@courselit/components-library";
-import { Address, Auth, Profile } from "@courselit/common-models";
-import { AppDispatch } from "@courselit/state-management";
+import { Address } from "@courselit/common-models";
 import { Checkbox } from "@courselit/components-library";
 
 interface ItemProps {
@@ -18,9 +17,7 @@ interface ItemProps {
     onChange: (newItemData: Item) => void;
     onDelete: () => void;
     address: Address;
-    dispatch: AppDispatch;
-    auth: Auth;
-    profile: Profile;
+    pricingSwitcherEnabled?: boolean;
 }
 
 export default function ItemEditor({
@@ -28,10 +25,12 @@ export default function ItemEditor({
     onChange,
     onDelete,
     address,
+    pricingSwitcherEnabled = false,
 }: ItemProps) {
     const [title, setTitle] = useState(item.title);
     const [description, setDescription] = useState(item.description);
     const [price, setPrice] = useState(item.price);
+    const [priceYearly, setPriceYearly] = useState(item.priceYearly);
     const [features, setFeatures] = useState(item.features);
     const [action, setAction] = useState(item.action);
     const [primary, setPrimary] = useState(item.primary);
@@ -41,6 +40,7 @@ export default function ItemEditor({
             title,
             description,
             price,
+            priceYearly,
             features,
             action,
             primary,
@@ -68,6 +68,13 @@ export default function ItemEditor({
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
                 />
+                {pricingSwitcherEnabled && (
+                    <FormField
+                        label="Yearly price"
+                        value={priceYearly}
+                        onChange={(e) => setPriceYearly(e.target.value)}
+                    />
+                )}
                 <FormField
                     label="Features"
                     value={features}
@@ -106,6 +113,19 @@ export default function ItemEditor({
                             )
                         }
                     />
+                    {pricingSwitcherEnabled && (
+                        <FormField
+                            label="Href (Yearly)"
+                            value={action.yearlyHref}
+                            onChange={(e) =>
+                                setAction(
+                                    Object.assign({}, action, {
+                                        yearlyHref: e.target.value,
+                                    }),
+                                )
+                            }
+                        />
+                    )}
                 </div>
                 <div className="flex justify-between">
                     <Tooltip title="Delete">

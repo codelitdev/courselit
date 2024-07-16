@@ -26,7 +26,11 @@ export type { default as Media } from "./media";
 export type { Quiz } from "./quiz";
 export type { Question } from "./question";
 export type { TextEditorContent } from "./text-editor-content";
-export type { Alignment } from "./alignment";
+export type {
+    Alignment,
+    HorizontalAlignment,
+    VerticalAlignment,
+} from "./alignment";
 export type { default as WidgetDefaultSettings } from "./widget-default-settings";
 export type { LessonType } from "./lesson-type";
 export type { Mail } from "./mail";

@@ -1,6 +1,7 @@
 import type {
     Alignment,
     Media,
+    VerticalAlignment,
     WidgetDefaultSettings,
 } from "@courselit/common-models";
 
@@ -10,6 +11,7 @@ export interface Item {
     buttonCaption?: string;
     buttonAction?: string;
     media?: Partial<Media>;
+    mediaAlignment?: VerticalAlignment;
 }
 
 export default interface Settings extends WidgetDefaultSettings {

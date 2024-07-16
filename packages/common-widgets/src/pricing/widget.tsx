@@ -8,6 +8,7 @@ import {
     CardHeader,
     CardTitle,
     Link,
+    Switch,
     TextRenderer,
 } from "@courselit/components-library";
 import {
@@ -15,6 +16,7 @@ import {
     horizontalPadding as defaultHorizontalPadding,
     columns as defaultColumns,
 } from "./defaults";
+import { useState } from "react";
 
 const twGridColsMap = {
     2: "lg:grid-cols-2",
@@ -35,10 +37,16 @@ export default function Widget({
         buttonForeground,
         primaryButtonBackground,
         cardBorderColor,
+        planTitleColor,
         cssId,
         columns = defaultColumns,
+        pricingSwitcher = false,
+        monthlyPriceCaption,
+        yearlyPriceCaption,
     },
 }: WidgetProps<Settings>) {
+    const [pricing, setPricing] = useState<"monthly" | "yearly">("yearly");
+
     return (
         <section
             className={`py-[${verticalPadding}px]`}
@@ -71,14 +79,38 @@ export default function Widget({
                                 <TextRenderer json={description} />
                             </div>
                         )}
+                        {pricingSwitcher && (
+                            <div className="flex items-center gap-2 mb-8 mt-4 text-lg w-full justify-center">
+                                <div className="flex-1 text-right">
+                                    <p className="break-all">
+                                        {monthlyPriceCaption}
+                                    </p>
+                                </div>
+                                <div className="mt-1">
+                                    <Switch
+                                        checked={pricing === "yearly"}
+                                        onChange={(value: boolean) => {
+                                            setPricing(
+                                                value ? "yearly" : "monthly",
+                                            );
+                                        }}
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="break-all">
+                                        {yearlyPriceCaption}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                     {items && items.length > 0 && (
                         <div
                             className={`grid grid-cols-1 md:grid-cols-2 ${twGridColsMap[columns]} gap-4 justify-center items-stretch`}
                         >
-                            {items.map((item) => (
+                            {items.map((item, index) => (
                                 <Card
-                                    key={item.title}
+                                    key={index}
                                     className="flex flex-col w-full"
                                     style={{
                                         backgroundColor,
@@ -87,11 +119,20 @@ export default function Widget({
                                     }}
                                 >
                                     <CardHeader>
-                                        <p className="font-semibold">
+                                        <p
+                                            className="font-semibold"
+                                            style={{
+                                                color: planTitleColor,
+                                            }}
+                                        >
                                             {item.title}
                                         </p>
                                         <CardTitle className="text-3xl">
-                                            {item.price}
+                                            {pricingSwitcher
+                                                ? pricing === "yearly"
+                                                    ? item.priceYearly
+                                                    : item.price
+                                                : item.price}
                                         </CardTitle>
                                         <span
                                             className="text-sm"
@@ -119,7 +160,12 @@ export default function Widget({
                                     </CardContent>
                                     <CardFooter>
                                         <Link
-                                            href={item.action.href}
+                                            href={
+                                                pricing === "yearly" &&
+                                                item.action.yearlyHref
+                                                    ? item.action.yearlyHref
+                                                    : item.action.href
+                                            }
                                             className="w-full"
                                         >
                                             <Button2

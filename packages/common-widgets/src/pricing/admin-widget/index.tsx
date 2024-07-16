@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Settings, { Item } from "../settings";
 import ItemEditor from "./item-editor";
-import { Address, Auth, Profile, Alignment } from "@courselit/common-models";
-import { AppDispatch } from "@courselit/state-management";
+import { Address, Alignment } from "@courselit/common-models";
 import {
     AdminWidgetPanel,
     ColorSelector,
@@ -13,6 +12,7 @@ import {
     FormField,
     ContentPaddingSelector,
     CssIdField,
+    Checkbox,
 } from "@courselit/components-library";
 import {
     verticalPadding as defaultVerticalPadding,
@@ -25,9 +25,6 @@ export interface AdminWidgetProps {
     settings: Settings;
     onChange: (...args: any[]) => void;
     address: Address;
-    dispatch: AppDispatch;
-    auth: Auth;
-    profile: Profile;
     hideActionButtons: (
         e: boolean,
         preservedStateAcrossRerender: Record<string, unknown>,
@@ -38,9 +35,6 @@ export interface AdminWidgetProps {
 export default function AdminWidget({
     settings,
     onChange,
-    auth,
-    profile,
-    dispatch,
     address,
     hideActionButtons,
     preservedStateAcrossRerender,
@@ -120,11 +114,25 @@ export default function AdminWidget({
     const [primaryButtonBackground, setPrimaryButtonBackground] = useState(
         settings.primaryButtonBackground,
     );
+    const [planTitleColor, setPlanTitleColor] = useState(
+        settings.planTitleColor,
+    );
     const [cardBorderColor, setCardBorderColor] = useState(
         settings.cardBorderColor,
     );
+    const [pricingSwitcher, setPricingSwitcher] = useState(
+        typeof settings.pricingSwitcher !== "undefined"
+            ? settings.pricingSwitcher
+            : false,
+    );
     const [cssId, setCssId] = useState(settings.cssId);
     const [columns, setColumns] = useState(settings.columns || defaultColumns);
+    const [monthlyPriceCaption, setMonthlyPriceCaption] = useState(
+        settings.monthlyPriceCaption || "Monthly",
+    );
+    const [yearlyPriceCaption, setYearlyPriceCaption] = useState(
+        settings.yearlyPriceCaption || "Yearly",
+    );
 
     const onSettingsChanged = () =>
         onChange({
@@ -142,6 +150,10 @@ export default function AdminWidget({
             cardBorderColor,
             cssId,
             columns,
+            planTitleColor,
+            pricingSwitcher,
+            monthlyPriceCaption,
+            yearlyPriceCaption,
         });
 
     useEffect(() => {
@@ -161,6 +173,10 @@ export default function AdminWidget({
         cardBorderColor,
         cssId,
         columns,
+        planTitleColor,
+        pricingSwitcher,
+        monthlyPriceCaption,
+        yearlyPriceCaption,
     ]);
 
     const onItemChange = (newItemData: Item) => {
@@ -197,10 +213,8 @@ export default function AdminWidget({
                 index={itemBeingEditedIndex}
                 onChange={onItemChange}
                 onDelete={onDelete}
-                auth={auth}
-                profile={profile}
-                dispatch={dispatch}
                 address={address}
+                pricingSwitcherEnabled={pricingSwitcher}
             />
         );
     }
@@ -208,13 +222,13 @@ export default function AdminWidget({
     return (
         <div className="flex flex-col gap-4 mb-4">
             <AdminWidgetPanel title="Header">
-                <Form>
+                <Form className="flex flex-col gap-4">
                     <FormField
                         label="Title"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                     />
-                    <div>
+                    <div className="mb-4">
                         <p className="mb-1 font-medium">Description</p>
                         <TextEditor
                             initialContent={description}
@@ -223,13 +237,42 @@ export default function AdminWidget({
                             url={address.backend}
                         />
                     </div>
+                    <div className="flex justify-between">
+                        <div className="flex grow items-center gap-1">
+                            <p>Show pricing switcher</p>
+                        </div>
+                        <Checkbox
+                            checked={pricingSwitcher}
+                            onChange={(value: boolean) =>
+                                setPricingSwitcher(value)
+                            }
+                        />
+                    </div>
+                    {pricingSwitcher && (
+                        <>
+                            <FormField
+                                label="Monthly price caption"
+                                value={monthlyPriceCaption}
+                                onChange={(e) =>
+                                    setMonthlyPriceCaption(e.target.value)
+                                }
+                            />
+                            <FormField
+                                label="Yearly price caption"
+                                value={yearlyPriceCaption}
+                                onChange={(e) =>
+                                    setYearlyPriceCaption(e.target.value)
+                                }
+                            />
+                        </>
+                    )}
                 </Form>
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Plans">
                 <ul className="flex flex-col gap-2">
                     {items.map((item: Item, index: number) => (
                         <li
-                            key={item.title}
+                            key={index}
                             onClick={() => {
                                 hideActionButtons(true, {
                                     selectedItem: index,
@@ -279,6 +322,11 @@ export default function AdminWidget({
                     title="Card border color"
                     value={cardBorderColor || "inherit"}
                     onChange={(value?: string) => setCardBorderColor(value)}
+                />
+                <ColorSelector
+                    title="Plan title color"
+                    value={planTitleColor || "inherit"}
+                    onChange={(value?: string) => setPlanTitleColor(value)}
                 />
                 <Select
                     title="Header alignment"
