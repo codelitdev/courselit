@@ -10,6 +10,7 @@ import {
 import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
+    mediaAspectRatio as defaultMediaAspectRatio,
 } from "./defaults";
 import clsx from "clsx";
 
@@ -32,6 +33,7 @@ export default function Widget({
         buttonCaption,
         buttonAction,
         media,
+        mediaAspectRatio = defaultMediaAspectRatio,
         youtubeLink,
         alignment = "left",
         backgroundColor,
@@ -132,11 +134,32 @@ export default function Widget({
                                     <div
                                         className={`w-full text-center overflow-hidden ${twRoundedMap[mediaRadius]}`}
                                     >
-                                        <Image
-                                            src={media.file}
-                                            alt={media.caption}
-                                            className="!aspect-square"
-                                        />
+                                        {media.mimeType.split("/")[0] ===
+                                            "image" && (
+                                            <Image
+                                                src={media.file}
+                                                alt={media.caption}
+                                                className={`!${mediaAspectRatio}`}
+                                            />
+                                        )}
+                                        {media.mimeType.split("/")[0] ===
+                                            "video" && (
+                                            <video
+                                                controls
+                                                controlsList="nodownload" // eslint-disable-line react/no-unknown-property
+                                                className={clsx(
+                                                    "w-full rounded mb-2",
+                                                    mediaAspectRatio,
+                                                )}
+                                            >
+                                                <source
+                                                    src={media.file}
+                                                    type="video/mp4"
+                                                />
+                                                Your browser does not support
+                                                the video tag.
+                                            </video>
+                                        )}
                                     </div>
                                 )}
                             </div>

@@ -28,7 +28,9 @@ import {
 import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
+    mediaAspectRatio as defaultMediaAspectRatio,
 } from "./defaults";
+import { MediaAspectRatio } from "./types";
 
 interface AdminWidgetProps {
     name: string;
@@ -116,6 +118,9 @@ export default function AdminWidget({
     const [contentAlignment, setContentAlignment] = useState<Alignment>(
         settings.contentAlignment || "center",
     );
+    const [mediaAspectRatio, setMediaAspectRatio] = useState<MediaAspectRatio>(
+        settings.mediaAspectRatio || defaultMediaAspectRatio,
+    );
     const [cssId, setCssId] = useState(settings.cssId);
 
     const onSettingsChanged = () =>
@@ -126,6 +131,7 @@ export default function AdminWidget({
             buttonCaption,
             youtubeLink,
             media,
+            mediaAspectRatio,
             alignment,
             backgroundColor,
             foregroundColor,
@@ -160,6 +166,7 @@ export default function AdminWidget({
         buttonBackground,
         buttonForeground,
         media,
+        mediaAspectRatio,
         mediaBorderRadius,
         horizontalPadding,
         verticalPadding,
@@ -226,6 +233,23 @@ export default function AdminWidget({
                     access="public"
                     mediaId={media && media.mediaId}
                 />
+                {media && media.mediaId && (
+                    <Select
+                        title="Media aspect ratio"
+                        value={mediaAspectRatio}
+                        options={[
+                            {
+                                label: "16:9 (rectangle)",
+                                value: "aspect-video",
+                            },
+                            { label: "1:1 (square)", value: "aspect-square" },
+                            { label: "Auto", value: "aspect-auto" },
+                        ]}
+                        onChange={(value: MediaAspectRatio) =>
+                            setMediaAspectRatio(value)
+                        }
+                    />
+                )}
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Calls to action">
                 <Accordion type="single" collapsible>
