@@ -24,5 +24,5 @@ VERSION=$(grep -m1 '"version":' apps/web/package.json | cut -d'"' -f4)
 git add . 
 git commit -m v$VERSION
 git push
-git tag -a "v${VERSION}" -m "${VERSION}"
+git tag -a "v${VERSION}" -m "v${VERSION}"
 git push origin --tags 
