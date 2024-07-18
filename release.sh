@@ -1,5 +1,4 @@
 #!/bin/bash
-set -euo pipefail
 
 # Check if an argument is provided
 if [ $# -eq 0 ]; then
@@ -12,6 +11,8 @@ if [ "$1" != "patch" ] && [ "$1" != "minor" ]; then
     echo "Error: Invalid argument. Please use 'patch' or 'minor'."
     exit 1
 fi
+
+git checkout main
 
 # update the version
 yarn workspaces foreach version "$1"
