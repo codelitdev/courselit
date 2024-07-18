@@ -1,6 +1,6 @@
 {
     "name": "@courselit/web",
-    "version": "0.52.7",
+    "version": "0.52.8",
     "private": true,
     "scripts": {
         "dev": "next dev",
