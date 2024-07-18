@@ -194,7 +194,7 @@ export default function Widget({
                                 </h2>
                                 {description && (
                                     <div
-                                        className={`${
+                                        className={clsx(
                                             descriptionFontSize === 0
                                                 ? "text-base"
                                                 : descriptionFontSize === 1
@@ -206,12 +206,11 @@ export default function Widget({
                                                           ? ""
                                                           : descriptionFontSize -
                                                             1
-                                                  }xl lg:text-${descriptionFontSize}xl`
-                                        } ${
+                                                  }xl lg:text-${descriptionFontSize}xl`,
                                             buttonAction && buttonCaption
                                                 ? "mb-8"
-                                                : "mb-0"
-                                        }`}
+                                                : "mb-0",
+                                        )}
                                     >
                                         <TextRenderer json={description} />
                                     </div>

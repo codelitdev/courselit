@@ -127,7 +127,7 @@ const AdminWidget = ({ settings, onChange, address }: AboutWidgetProps) => {
                     onChange={setVerticalPadding}
                 />
                 <PageBuilderSlider
-                    title="Title font size"
+                    title="Font size"
                     min={1}
                     max={12}
                     value={fontSize}

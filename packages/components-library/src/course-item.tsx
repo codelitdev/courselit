@@ -26,7 +26,7 @@ const CourseItem = (props: CourseItemProps) => {
     return (
         <Link href={href}>
             <article className="flex flex-col">
-                <div className="mb-4">
+                <div className="mb-4 border rounded-md overflow-hidden">
                     <Image
                         src={
                             course.featuredImage &&
