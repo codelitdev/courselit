@@ -13,6 +13,7 @@ import {
     TextExtension,
     wysiwygPreset,
     BlockquoteExtension,
+    HardBreakExtension,
 } from "remirror/extensions";
 import { CodeMirrorExtension } from "@remirror/extension-codemirror6";
 import { TableExtension } from "@remirror/extension-react-tables";
@@ -110,5 +111,6 @@ export const getExtensions = (placeholder, url) => () => [
         extensions: [basicSetup, oneDark],
     }),
     new BlockquoteExtension(),
+    new HardBreakExtension(),
     ...wysiwygPresetArrayWithoutImageExtension,
 ];
