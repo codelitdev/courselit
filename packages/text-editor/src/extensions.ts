@@ -12,6 +12,7 @@ import {
     TaskListExtension,
     TextExtension,
     wysiwygPreset,
+    BlockquoteExtension,
 } from "remirror/extensions";
 import { CodeMirrorExtension } from "@remirror/extension-codemirror6";
 import { TableExtension } from "@remirror/extension-react-tables";
@@ -108,5 +109,6 @@ export const getExtensions = (placeholder, url) => () => [
         languages: languages,
         extensions: [basicSetup, oneDark],
     }),
+    new BlockquoteExtension(),
     ...wysiwygPresetArrayWithoutImageExtension,
 ];
