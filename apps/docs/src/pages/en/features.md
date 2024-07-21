@@ -30,6 +30,14 @@ Get a free website which you can customize using our powerful page builder.
         </a>
     </section>
     <section class="card">
+        <a href="/en/email-marketing/introduction">
+        <header>Email marketing and automation</header>
+        <p>
+Send broadcasts and email sequences to your audience.
+        </p>
+        </a>
+    </section>
+    <section class="card">
         <a href="/en/blog/introduction">
         <header>Blog</header>
         <p>

@@ -36,7 +36,7 @@ Following are the shared page blocks.
 2. [Newsletter signup](/en/pages/newsletter-signup)
 3. [Footer](/en/pages/footer)
 
-## Next steps
+## Next step
 
 Now that you have learnt about page blocks, it is time to learn how to use those in your pages. See our [edit a page](/en/pages/edit) guide for details.
 

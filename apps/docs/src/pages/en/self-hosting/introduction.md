@@ -6,7 +6,7 @@ layout: ../../../layouts/MainLayout.astro
 
 CourseLit is an open-source software and we make sure that hosting it is as easy as possible.
 
-If you can, please give us a star on [CourseLit's GitHub repo](https://github.com/codelitdev/courselit) so that it reaches more people.
+> ️Please give us a star ⭐️ on [GitHub](https://github.com/codelitdev/courselit), so that it reaches more people.
 
 ## Why self host?
 
