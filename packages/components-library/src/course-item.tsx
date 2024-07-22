@@ -26,31 +26,37 @@ const CourseItem = (props: CourseItemProps) => {
     return (
         <Link href={href}>
             <article className="flex flex-col">
-                <div className="mb-4 border rounded-md overflow-hidden">
-                    <Image
-                        src={
-                            course.featuredImage &&
-                            (course.featuredImage.file ||
-                                course.featuredImage.thumbnail)
-                        }
-                        loading={thumbnailLoading}
-                        sizes="40vw"
-                        alt={course.featuredImage?.caption}
-                    />
+                <div className="border rounded-md overflow-hidden shadow-sm p-2">
+                    <div className="m-2 border rounded-md overflow-hidden shadow-sm">
+                        <Image
+                            src={
+                                course.featuredImage &&
+                                (course.featuredImage.file ||
+                                    course.featuredImage.thumbnail)
+                            }
+                            loading={thumbnailLoading}
+                            sizes="40vw"
+                            alt={course.featuredImage?.caption}
+                        />
+                    </div>
+                    <div className="ml-2">
+                        {course.type !== "BLOG" && (
+                            <h3 className="font-thin text-xs">
+                                {course.type.toUpperCase()}
+                            </h3>
+                        )}
+                        <h3 className="text-lg font-semibold">
+                            {course.title}
+                        </h3>
+                        {!(course.type === "BLOG") && (
+                            <PriceTag
+                                cost={course.cost}
+                                freeCostCaption={freeCostCaption}
+                                currencyISOCode={siteInfo.currencyISOCode}
+                            />
+                        )}
+                    </div>
                 </div>
-                {course.type !== "BLOG" && (
-                    <h3 className="font-thin text-xs">
-                        {course.type.toUpperCase()}
-                    </h3>
-                )}
-                <h3 className="text-lg font-semibold">{course.title}</h3>
-                {!(course.type === "BLOG") && (
-                    <PriceTag
-                        cost={course.cost}
-                        freeCostCaption={freeCostCaption}
-                        currencyISOCode={siteInfo.currencyISOCode}
-                    />
-                )}
             </article>
         </Link>
     );
