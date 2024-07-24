@@ -1,3 +1,5 @@
+"use client";
+
 import React, { ChangeEvent, useEffect, useState } from "react";
 import type { Address } from "@courselit/common-models";
 import Settings from "./settings";

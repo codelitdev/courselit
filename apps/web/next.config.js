@@ -23,6 +23,10 @@ const nextConfig = {
     images: {
         remotePatterns,
     },
+    transpilePackages: [
+        "@courselit/common-widgets",
+        "@courselit/components-library",
+    ],
 };
 
 module.exports = nextConfig;

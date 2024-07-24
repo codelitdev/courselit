@@ -1,3 +1,5 @@
+"use client";
+
 /* eslint-disable react-hooks/rules-of-hooks */
 import React, { useEffect, FC, PropsWithChildren, useCallback } from "react";
 import {

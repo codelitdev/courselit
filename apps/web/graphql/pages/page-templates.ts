@@ -1,17 +1,9 @@
-import {
-    EmailForm,
-    Faq,
-    Grid,
-    Hero,
-    Media,
-    RichText,
-} from "@courselit/common-widgets";
 import { generateUniqueId } from "@courselit/utils";
 
 export const homePageTemplate = [
     {
         widgetId: generateUniqueId(),
-        name: RichText.metadata.name,
+        name: "rich-text",
         deleteable: true,
         shared: false,
         settings: {
@@ -49,7 +41,7 @@ export const homePageTemplate = [
     },
     {
         widgetId: generateUniqueId(),
-        name: Hero.metadata.name,
+        name: "hero",
         deleteable: true,
         shared: false,
         settings: {
@@ -94,7 +86,7 @@ export const homePageTemplate = [
     },
     {
         widgetId: generateUniqueId(),
-        name: Grid.metadata.name,
+        name: "grid",
         deleteable: true,
         shared: false,
         settings: {
@@ -199,7 +191,7 @@ export const homePageTemplate = [
     },
     {
         widgetId: generateUniqueId(),
-        name: Media.metadata.name,
+        name: "media",
         deleteable: true,
         shared: false,
         settings: {
@@ -226,7 +218,7 @@ export const homePageTemplate = [
     },
     {
         widgetId: generateUniqueId(),
-        name: Faq.metadata.name,
+        name: "faq",
         deleteable: true,
         shared: false,
         settings: {
@@ -321,13 +313,13 @@ export const homePageTemplate = [
     },
     {
         widgetId: generateUniqueId(),
-        name: EmailForm.metadata.name,
+        name: "newsletter-signup",
         deleteable: true,
         shared: true,
     },
     {
         widgetId: generateUniqueId(),
-        name: RichText.metadata.name,
+        name: "rich-text",
         deleteable: true,
         shared: false,
         settings: {
@@ -358,7 +350,7 @@ export const homePageTemplate = [
     },
     {
         widgetId: generateUniqueId(),
-        name: RichText.metadata.name,
+        name: "rich-text",
         deleteable: true,
         shared: false,
         settings: {

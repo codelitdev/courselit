@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import type { Address } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
