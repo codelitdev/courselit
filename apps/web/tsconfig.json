@@ -1,42 +1,28 @@
 {
-  "extends": "tsconfig/nextjs.json",
-  "compilerOptions": {
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "paths": {
-      "@components/*": [
-        "./components/*"
-      ],
-      "@ui-config/*": [
-        "./ui-config/*"
-      ],
-      "@ui-models/*": [
-        "./ui-models/*"
-      ],
-      "@ui-lib/*": [
-        "./ui-lib/*"
-      ],
-      "@config/*": [
-        "./config/*"
-      ],
-      "@models/*": [
-        "./models/*"
-      ]
+    "extends": "tsconfig/nextjs.json",
+    "compilerOptions": {
+        "plugins": [
+            {
+                "name": "next"
+            }
+        ],
+        "paths": {
+            "@components/*": ["./components/*"],
+            "@ui-config/*": ["./ui-config/*"],
+            "@ui-models/*": ["./ui-models/*"],
+            "@ui-lib/*": ["./ui-lib/*"],
+            "@config/*": ["./config/*"],
+            "@models/*": ["./models/*"]
+        },
+        "strictNullChecks": true
     },
-    "strictNullChecks": true
-  },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    "additional.d.ts",
-    "components/admin/mails/editor.tsx.notused"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+    "include": [
+        "next-env.d.ts",
+        "**/*.ts",
+        "**/*.tsx",
+        ".next/types/**/*.ts",
+        "additional.d.ts",
+        "components/admin/mails/editor.tsx.notused"
+    ],
+    "exclude": ["node_modules"]
 }
