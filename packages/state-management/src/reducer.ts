@@ -93,6 +93,7 @@ function profileReducer(state = initialState.profile, action: Action) {
                 bio: action.profile && action.profile.bio,
                 permissions:
                     (action.profile && action.profile.permissions) || [],
+                avatar: action.profile && action.profile.avatar,
             };
         case PROFILE_CLEAR:
             return initialState.profile;

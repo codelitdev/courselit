@@ -17,7 +17,11 @@ import {
 } from "@courselit/utils";
 import UserSegmentModel, { UserSegment } from "../../models/UserSegment";
 import mongoose from "mongoose";
-import { Constants, UserFilterWithAggregator } from "@courselit/common-models";
+import {
+    Constants,
+    Media,
+    UserFilterWithAggregator,
+} from "@courselit/common-models";
 import { recordActivity } from "../../lib/record-activity";
 import { triggerSequences } from "../../lib/trigger-sequences";
 
@@ -27,18 +31,21 @@ const removeAdminFieldsFromUserObject = ({
     userId,
     bio,
     email,
+    avatar,
 }: {
     id: string;
     name: string;
     userId: string;
     bio: string;
     email: string;
+    avatar: Media;
 }) => ({
     id,
     name,
     userId,
     bio,
     email,
+    avatar,
 });
 
 export const getUser = async (email = null, userId = null, ctx: GQLContext) => {
@@ -98,7 +105,7 @@ export const updateUser = async (userData: any, ctx: GQLContext) => {
         permissions.manageUsers,
     ]);
     if (!hasPermissionToManageUser) {
-        if (id !== ctx.user.id) {
+        if (id !== ctx.user._id) {
             throw new Error(responses.action_not_allowed);
         }
     }
@@ -111,7 +118,7 @@ export const updateUser = async (userData: any, ctx: GQLContext) => {
             continue;
         }
 
-        if (!["subscribedToUpdates"].includes(key) && id === ctx.user.id) {
+        if (!["subscribedToUpdates"].includes(key) && id === ctx.user._id) {
             throw new Error(responses.action_not_allowed);
         }
 

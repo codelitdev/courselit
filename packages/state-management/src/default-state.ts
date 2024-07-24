@@ -27,6 +27,11 @@ export default {
         bio: "",
         permissions: [],
         userId: "",
+        avatar: {
+            file: "",
+            thumbnail: "",
+            caption: "",
+        },
     },
     message: {
         open: false,

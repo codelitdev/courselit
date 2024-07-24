@@ -1,3 +1,4 @@
+import Media from "./media";
 import { Progress } from "./progress";
 
 export default interface Profile {
@@ -10,4 +11,5 @@ export default interface Profile {
     permissions: string[];
     userId: string;
     subscribedToUpdates: string;
+    avatar: Media;
 }
