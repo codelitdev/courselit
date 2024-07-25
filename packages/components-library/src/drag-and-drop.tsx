@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect } from "react";
 import { useState } from "react";
 import { DragHandle } from "@courselit/icons";

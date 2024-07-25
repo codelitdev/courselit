@@ -5,7 +5,7 @@
  */
 
 // TODO: remove this dependency
-import Router from "next/router";
+import Router from "next/navigation";
 import { debuglog } from "util";
 
 const debugLog = debuglog("fetch-builder");

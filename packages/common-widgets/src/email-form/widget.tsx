@@ -1,3 +1,5 @@
+"use client";
+
 import React, { FormEvent, useState } from "react";
 import { AppMessage } from "@courselit/common-models";
 import Settings from "./settings";

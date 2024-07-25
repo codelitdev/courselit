@@ -1,7 +1,11 @@
 {
     "extends": "tsconfig/nextjs.json",
     "compilerOptions": {
-        "plugins": [{ "name": "next" }],
+        "plugins": [
+            {
+                "name": "next"
+            }
+        ],
         "paths": {
             "@components/*": ["./components/*"],
             "@ui-config/*": ["./ui-config/*"],
@@ -9,7 +13,8 @@
             "@ui-lib/*": ["./ui-lib/*"],
             "@config/*": ["./config/*"],
             "@models/*": ["./models/*"]
-        }
+        },
+        "strictNullChecks": true
     },
     "include": [
         "next-env.d.ts",

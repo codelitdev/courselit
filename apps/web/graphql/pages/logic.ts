@@ -6,7 +6,6 @@ import { getPageResponse } from "./helpers";
 import constants from "../../config/constants";
 import Course from "../../models/Course";
 import { checkPermission, generateUniqueId } from "@courselit/utils";
-import { Footer, Header } from "@courselit/common-widgets";
 import { Media, User, Constants } from "@courselit/common-models";
 import { Domain } from "../../models/Domain";
 import { homePageTemplate } from "./page-templates";
@@ -344,13 +343,13 @@ export const initMandatoryPages = async (domain: Domain, user: User) => {
             entityId: domain.name,
             layout: [
                 {
-                    name: Header.metadata.name,
+                    name: "header",
                     deleteable: false,
                     shared: true,
                 },
                 ...homePageTemplate,
                 {
-                    name: Footer.metadata.name,
+                    name: "footer",
                     deleteable: false,
                     shared: true,
                 },
@@ -366,12 +365,12 @@ export const initMandatoryPages = async (domain: Domain, user: User) => {
             entityId: domain.name,
             layout: [
                 {
-                    name: Header.metadata.name,
+                    name: "header",
                     deleteable: false,
                     shared: true,
                 },
                 {
-                    name: Footer.metadata.name,
+                    name: "footer",
                     deleteable: false,
                     shared: true,
                 },
@@ -387,12 +386,12 @@ export const initMandatoryPages = async (domain: Domain, user: User) => {
             entityId: domain.name,
             layout: [
                 {
-                    name: Header.metadata.name,
+                    name: "header",
                     deleteable: false,
                     shared: true,
                 },
                 {
-                    name: Footer.metadata.name,
+                    name: "footer",
                     deleteable: false,
                     shared: true,
                 },
@@ -408,12 +407,12 @@ export const initMandatoryPages = async (domain: Domain, user: User) => {
             entityId: domain.name,
             layout: [
                 {
-                    name: Header.metadata.name,
+                    name: "header",
                     deleteable: false,
                     shared: true,
                 },
                 {
-                    name: Footer.metadata.name,
+                    name: "footer",
                     deleteable: false,
                     shared: true,
                 },
@@ -457,12 +456,12 @@ export const createPage = async ({
         deleteable: true,
         layout: [
             {
-                name: Header.metadata.name,
+                name: "header",
                 deleteable: false,
                 shared: true,
             },
             {
-                name: Footer.metadata.name,
+                name: "footer",
                 deleteable: false,
                 shared: true,
             },

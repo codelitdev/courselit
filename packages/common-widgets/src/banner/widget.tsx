@@ -1,3 +1,5 @@
+"use client";
+
 import { FormEvent, useState } from "react";
 import { AppMessage, Media, WidgetProps } from "@courselit/common-models";
 import {

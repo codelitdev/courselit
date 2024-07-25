@@ -1,33 +1,41 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import nc from "next-connect";
 import { responses } from "../../../config/strings";
-import connectDb from "../../../middlewares/connect-db";
-import setUserFromSession from "../../../middlewares/set-user-from-session";
-import verifyDomain from "../../../middlewares/verify-domain";
-import ApiRequest from "../../../models/ApiRequest";
 import PurchaseModel, { Purchase } from "../../../models/Purchase";
 import { error } from "../../../services/logger";
+import User from "@models/User";
+import DomainModel, { Domain } from "@models/Domain";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]";
 
-export default nc<NextApiRequest, NextApiResponse>({
-    onError: (err, req, res, next) => {
-        error(err.message, {
-            fileName: `/api/payment/verify.ts`,
-            stack: err.stack,
+export default async function handler(
+    req: NextApiRequest,
+    res: NextApiResponse,
+) {
+    if (req.method !== "POST") {
+        return res.status(405).json({ message: "Not allowed" });
+    }
+
+    const domain = await DomainModel.findOne<Domain>({
+        name: req.headers.domain,
+    });
+    if (!domain) {
+        return res.status(404).json({ message: "Domain not found" });
+    }
+
+    const session = await getServerSession(req, res, authOptions);
+
+    let user;
+    if (session) {
+        user = await User.findOne({
+            email: session.user!.email,
+            domain: domain._id,
+            active: true,
         });
-        res.status(500).json({ error: err.message });
-    },
-    onNoMatch: (req, res) => {
-        res.status(404).end("Not found");
-    },
-    attachParams: true,
-})
-    .use(connectDb)
-    .use(verifyDomain)
-    .use(setUserFromSession)
-    .post(verifyHandler);
+    }
 
-async function verifyHandler(req: ApiRequest, res: NextApiResponse) {
-    const { user } = req;
+    if (!user) {
+        return res.status(401).json({});
+    }
     const { purchaseId } = req.body;
 
     if (!purchaseId) {
@@ -47,7 +55,7 @@ async function verifyHandler(req: ApiRequest, res: NextApiResponse) {
             status: purchaseRecord.status,
         });
     } catch (err: any) {
-        console.error(err.message, err.stack); // eslint-disable-line no-console
+        error(err.message, { stack: err.stack });
         res.status(500).json({
             message: err.message,
         });

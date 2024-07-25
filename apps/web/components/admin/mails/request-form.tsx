@@ -1,3 +1,5 @@
+"use client";
+
 import { Address, AppMessage } from "@courselit/common-models";
 import { Form, FormField, FormSubmit } from "@courselit/components-library";
 import { AppDispatch, AppState } from "@courselit/state-management";

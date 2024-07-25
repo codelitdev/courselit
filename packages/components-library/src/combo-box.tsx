@@ -1,3 +1,5 @@
+"use client";
+
 import { Content, Portal, Root, Trigger } from "@radix-ui/react-popover";
 import { ChangeEvent, useState } from "react";
 import Form from "./form";

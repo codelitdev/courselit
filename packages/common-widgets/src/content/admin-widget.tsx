@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import { Address, Alignment } from "@courselit/common-models";
 import { useEffect, useState } from "react";
