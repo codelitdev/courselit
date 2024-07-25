@@ -110,7 +110,7 @@ export async function createSequence(
             domain: ctx.subdomain._id,
             type,
             status: Constants.sequenceStatus[0],
-            title: " ",
+            title: internal.default_email_sequence_name,
             creatorId: ctx.user.userId,
             emails: [
                 {

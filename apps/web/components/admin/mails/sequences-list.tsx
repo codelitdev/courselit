@@ -155,7 +155,10 @@ const SequencesList = ({
                                     (broadcast.emails[0].subject === " "
                                         ? "--"
                                         : broadcast.emails[0].subject)}
-                                {type === "sequence" && broadcast.title}
+                                {type === "sequence" &&
+                                    (broadcast.title === " "
+                                        ? "Untitled Sequence"
+                                        : broadcast.title)}
                             </Link>
                         </td>
                         <td align="right">
