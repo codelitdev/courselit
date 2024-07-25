@@ -5,7 +5,7 @@
         "outDir": "./dist",
         "lib": ["dom"],
         "strict": false,
-        "sourceMap": true 
+        "sourceMap": true
     },
     "include": ["src/**/*", "additional.d.ts"]
 }
