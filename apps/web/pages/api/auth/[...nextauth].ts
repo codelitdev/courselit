@@ -1,4 +1,3 @@
-// import nc from "next-connect";
 import { NextAuthOptions } from "next-auth";
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -8,27 +7,7 @@ import VerificationToken from "../../../models/VerificationToken";
 import connectToDatabase from "../../../services/db";
 import { hashCode } from "../../../ui-lib/utils";
 import { NextApiRequest, NextApiResponse } from "next";
-// import connectDb from "../../../middlewares/connect-db";
-// import verifyDomain from "../../../middlewares/verify-domain";
-// import { error } from "../../../services/logger";
-// import ApiRequest from "@models/ApiRequest";
 import DomainModel, { Domain } from "@models/Domain";
-
-// export default nc<NextApiRequest, NextApiResponse>({
-//     onError: (err, req, res, next) => {
-//         error(err.message, {
-//             fileName: `/api/auth/[...nextauth].ts`,
-//             stack: err.stack,
-//         });
-//         res.status(500).json({ error: err.message });
-//     },
-//     onNoMatch: (req, res) => {
-//         res.status(404).end("Page is not found");
-//     },
-// })
-//     .use(connectDb)
-//     .use(verifyDomain)
-//     .use(auth);
 
 export default async function handler(
     req: NextApiRequest,

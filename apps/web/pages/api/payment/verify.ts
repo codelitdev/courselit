@@ -1,34 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
-// import nc from "next-connect";
 import { responses } from "../../../config/strings";
-// import connectDb from "../../../middlewares/connect-db";
-// import setUserFromSession from "../../../middlewares/set-user-from-session";
-// import verifyDomain from "../../../middlewares/verify-domain";
-// import ApiRequest from "../../../models/ApiRequest";
 import PurchaseModel, { Purchase } from "../../../models/Purchase";
 import { error } from "../../../services/logger";
 import User from "@models/User";
 import DomainModel, { Domain } from "@models/Domain";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]";
-
-// export default nc<NextApiRequest, NextApiResponse>({
-//     onError: (err, req, res, next) => {
-//         error(err.message, {
-//             fileName: `/api/payment/verify.ts`,
-//             stack: err.stack,
-//         });
-//         res.status(500).json({ error: err.message });
-//     },
-//     onNoMatch: (req, res) => {
-//         res.status(404).end("Not found");
-//     },
-//     attachParams: true,
-// })
-//     .use(connectDb)
-//     .use(verifyDomain)
-//     .use(setUserFromSession)
-//     .post(verifyHandler);
 
 export default async function handler(
     req: NextApiRequest,

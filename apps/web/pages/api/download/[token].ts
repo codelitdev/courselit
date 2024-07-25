@@ -7,13 +7,9 @@ import {
     unlinkSync,
 } from "fs";
 import { NextApiRequest, NextApiResponse } from "next";
-// import nc from "next-connect";
 import path from "path";
 import { responses } from "../../../config/strings";
 import { getMedia } from "../../../graphql/media/logic";
-// import connectDb from "../../../middlewares/connect-db";
-// import verifyDomain from "../../../middlewares/verify-domain";
-// import ApiRequest from "../../../models/ApiRequest";
 import CourseModel, { Course } from "../../../models/Course";
 import DownloadLinkModel, { DownloadLink } from "../../../models/DownloadLink";
 import LessonModel, { Lesson } from "../../../models/Lesson";
@@ -22,27 +18,6 @@ import { Readable } from "node:stream";
 import archiver from "archiver";
 import UserModel, { User } from "@models/User";
 import DomainModel, { Domain } from "@models/Domain";
-
-// export default nc<NextApiRequest, NextApiResponse>({
-//     onError: (
-//         err: Error,
-//         req: NextApiResponse,
-//         res: NextApiResponse,
-//         next: any,
-//     ) => {
-//         error(err.message, {
-//             fileName: `/api/payment/initiate.ts`,
-//             stack: err.stack,
-//         });
-//         res.status(500).json({ error: err.message });
-//     },
-//     onNoMatch: (req: NextApiRequest, res: NextApiResponse) => {
-//         res.status(404).end("Not found");
-//     },
-//     attachParams: true,
-// })
-//     .use(connectDb)
-//     .get(downloadFiles);
 
 export default async function handler(
     req: NextApiRequest,
