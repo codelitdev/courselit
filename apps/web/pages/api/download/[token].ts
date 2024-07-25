@@ -1,4 +1,4 @@
-import { Media } from "@courselit/common-models";
+import { Media, Progress } from "@courselit/common-models";
 import {
     createReadStream,
     createWriteStream,
@@ -7,46 +7,62 @@ import {
     unlinkSync,
 } from "fs";
 import { NextApiRequest, NextApiResponse } from "next";
-import nc from "next-connect";
+// import nc from "next-connect";
 import path from "path";
 import { responses } from "../../../config/strings";
 import { getMedia } from "../../../graphql/media/logic";
-import connectDb from "../../../middlewares/connect-db";
-import verifyDomain from "../../../middlewares/verify-domain";
-import ApiRequest from "../../../models/ApiRequest";
+// import connectDb from "../../../middlewares/connect-db";
+// import verifyDomain from "../../../middlewares/verify-domain";
+// import ApiRequest from "../../../models/ApiRequest";
 import CourseModel, { Course } from "../../../models/Course";
 import DownloadLinkModel, { DownloadLink } from "../../../models/DownloadLink";
 import LessonModel, { Lesson } from "../../../models/Lesson";
 import { error } from "../../../services/logger";
 import { Readable } from "node:stream";
 import archiver from "archiver";
-import { Progress } from "../../../models/Progress";
-import UserModel, { User } from "../../../models/User";
+import UserModel, { User } from "@models/User";
+import DomainModel, { Domain } from "@models/Domain";
 
-export default nc<NextApiRequest, NextApiResponse>({
-    onError: (
-        err: Error,
-        req: NextApiResponse,
-        res: NextApiResponse,
-        next: any,
-    ) => {
-        error(err.message, {
-            fileName: `/api/payment/initiate.ts`,
-            stack: err.stack,
-        });
-        res.status(500).json({ error: err.message });
-    },
-    onNoMatch: (req: NextApiRequest, res: NextApiResponse) => {
-        res.status(404).end("Not found");
-    },
-    attachParams: true,
-})
-    .use(connectDb)
-    .use(verifyDomain)
-    .get(downloadFiles);
+// export default nc<NextApiRequest, NextApiResponse>({
+//     onError: (
+//         err: Error,
+//         req: NextApiResponse,
+//         res: NextApiResponse,
+//         next: any,
+//     ) => {
+//         error(err.message, {
+//             fileName: `/api/payment/initiate.ts`,
+//             stack: err.stack,
+//         });
+//         res.status(500).json({ error: err.message });
+//     },
+//     onNoMatch: (req: NextApiRequest, res: NextApiResponse) => {
+//         res.status(404).end("Not found");
+//     },
+//     attachParams: true,
+// })
+//     .use(connectDb)
+//     .get(downloadFiles);
 
-async function downloadFiles(req: ApiRequest, res: NextApiResponse) {
+export default async function handler(
+    req: NextApiRequest,
+    res: NextApiResponse,
+) {
+    if (req.method !== "GET") {
+        return res.status(405).json({ message: "Not allowed" });
+    }
+
+    const domain = await DomainModel.findOne<Domain>({
+        name: req.headers.domain,
+    });
+    if (!domain) {
+        return res.status(404).json({ message: "Domain not found" });
+    }
+
     const { token } = req.query;
+    if (!token) {
+        return res.status(400).json({ message: "Missing token" });
+    }
 
     const downloadLink: DownloadLink | null = await DownloadLinkModel.findOne({
         token,
@@ -60,7 +76,7 @@ async function downloadFiles(req: ApiRequest, res: NextApiResponse) {
     }
 
     const course: Course | null = await CourseModel.findOne({
-        domain: req.subdomain?._id,
+        domain: domain._id,
         courseId: downloadLink.courseId,
         published: true,
     });
@@ -71,7 +87,7 @@ async function downloadFiles(req: ApiRequest, res: NextApiResponse) {
     const allLessons: Lesson[] = await LessonModel.find(
         {
             courseId: course.courseId,
-            domain: req.subdomain!._id,
+            domain: domain._id,
         },
         {
             media: 1,
@@ -82,7 +98,7 @@ async function downloadFiles(req: ApiRequest, res: NextApiResponse) {
         return res.status(200).send(responses.digital_download_no_files);
     }
 
-    const targetDirectory = `/tmp/${req.subdomain?.name}/${token.substr(
+    const targetDirectory = `/tmp/${domain.name}/${(token as string).substr(
         0,
         16,
     )}-${Date.now()}`;

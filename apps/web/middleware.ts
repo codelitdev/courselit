@@ -1,20 +1,33 @@
-import "server-only";
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
-    // verifyDomainNative(request)
     const requestHeaders = request.headers;
     const backend = getBackendAddress(requestHeaders);
-    // console.log(request)
-    const response = await fetch(`${backend}/lol`);
+    try {
+        const response = await fetch(`${backend}/verify-domain`);
+
+        if (!response.ok) {
+            throw new Error();
+        }
+
+        const resp = await response.json();
+
+        requestHeaders.set("domain", resp.domain);
+
+        return NextResponse.next({
+            request: {
+                headers: requestHeaders,
+            },
+        });
+    } catch (err) {
+        return NextResponse.rewrite(new URL("/notfound", request.url));
+    }
 }
 
 export const config = {
-    matcher: ["/"],
+    matcher: ["/", "/api/:path*"],
 };
 
-export const getBackendAddress = (
-    headers: Headers,
-): `${string}://${string}` => {
+const getBackendAddress = (headers: Headers): `${string}://${string}` => {
     return `${headers.get("x-forwarded-proto")}://${headers.get("host")}`;
 };

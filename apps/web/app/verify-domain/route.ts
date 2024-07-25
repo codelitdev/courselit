@@ -3,8 +3,8 @@ import { responses } from "../../config/strings";
 import constants from "../../config/constants";
 import { isDateInFuture } from "../../lib/utils";
 import { createUser } from "../../graphql/users/logic";
-import { NextResponse } from "next/server";
 import { headers } from "next/headers";
+import connectToDatabase from "../../services/db";
 
 const { domainNameForSingleTenancy } = constants;
 
@@ -36,17 +36,26 @@ export async function GET(req: Request) {
     const headerList = headers();
     let domain: Domain | null;
 
+    await connectToDatabase();
+
     if (process.env.MULTITENANT === "true") {
         const host = headerList.get("host");
 
         if (!host) {
-            throw new Error(responses.domain_missing);
+            return Response.json(
+                {
+                    message: responses.domain_missing,
+                },
+                {
+                    status: 404,
+                },
+            );
         }
 
         domain = await getDomain(host);
 
         if (!domain) {
-            return NextResponse.json(
+            return Response.json(
                 {
                     message: `${responses.domain_doesnt_exist}: ${host?.split(
                         ".",
@@ -72,7 +81,7 @@ export async function GET(req: Request) {
                 if (response.ok) {
                     const data = await response.json();
                     if (!data) {
-                        return NextResponse.json(
+                        return Response.json(
                             {
                                 message: responses.not_valid_subscription,
                             },
@@ -80,14 +89,13 @@ export async function GET(req: Request) {
                         );
                     }
                 } else {
-                    return NextResponse.json(
+                    return Response.json(
                         { message: responses.not_valid_subscription },
                         { status: 404 },
                     );
                 }
             } catch (err: any) {
-                console.error(err);
-                return NextResponse.json(
+                return Response.json(
                     { message: responses.not_valid_subscription },
                     { status: 404 },
                 );
@@ -137,6 +145,5 @@ export async function GET(req: Request) {
         (domain! as any).save();
     }
 
-    req.subdomain = domain!;
-    return NextResponse.next();
+    return Response.json({ success: true, domain: domain!.name });
 }

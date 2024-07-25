@@ -1,4 +1,4 @@
-import nc from "next-connect";
+// import nc from "next-connect";
 import { NextAuthOptions } from "next-auth";
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -7,34 +7,44 @@ import User from "../../../models/User";
 import VerificationToken from "../../../models/VerificationToken";
 import connectToDatabase from "../../../services/db";
 import { hashCode } from "../../../ui-lib/utils";
-import { Domain } from "../../../models/Domain";
 import { NextApiRequest, NextApiResponse } from "next";
-import connectDb from "../../../middlewares/connect-db";
-import verifyDomain from "../../../middlewares/verify-domain";
-import { error } from "../../../services/logger";
-import ApiRequest from "@models/ApiRequest";
+// import connectDb from "../../../middlewares/connect-db";
+// import verifyDomain from "../../../middlewares/verify-domain";
+// import { error } from "../../../services/logger";
+// import ApiRequest from "@models/ApiRequest";
+import DomainModel, { Domain } from "@models/Domain";
 
-export default nc<NextApiRequest, NextApiResponse>({
-    onError: (err, req, res, next) => {
-        error(err.message, {
-            fileName: `/api/auth/[...nextauth].ts`,
-            stack: err.stack,
-        });
-        res.status(500).json({ error: err.message });
-    },
-    onNoMatch: (req, res) => {
-        res.status(404).end("Page is not found");
-    },
-})
-    .use(connectDb)
-    .use(verifyDomain)
-    .use(auth);
+// export default nc<NextApiRequest, NextApiResponse>({
+//     onError: (err, req, res, next) => {
+//         error(err.message, {
+//             fileName: `/api/auth/[...nextauth].ts`,
+//             stack: err.stack,
+//         });
+//         res.status(500).json({ error: err.message });
+//     },
+//     onNoMatch: (req, res) => {
+//         res.status(404).end("Page is not found");
+//     },
+// })
+//     .use(connectDb)
+//     .use(verifyDomain)
+//     .use(auth);
 
-async function auth(req: NextApiRequest, res: NextApiResponse) {
-    return await NextAuth(req, res, getAuthOptions(req));
+export default async function handler(
+    req: NextApiRequest,
+    res: NextApiResponse,
+) {
+    const domain = await DomainModel.findOne<Domain>({
+        name: req.headers.domain,
+    });
+    if (!domain) {
+        return res.status(404).json({ message: "Domain not found" });
+    }
+
+    return await NextAuth(req, res, getAuthOptions(domain));
 }
 
-const getAuthOptions = (req: ApiRequest) => ({
+const getAuthOptions = (domain: Domain) => ({
     ...authOptions,
     providers: [
         CredentialsProvider({
@@ -43,7 +53,7 @@ const getAuthOptions = (req: ApiRequest) => ({
             async authorize(credentials: any) {
                 const { email, code } = credentials;
 
-                return await authorize({ email, code, domain: req.subdomain });
+                return await authorize({ email, code, domain });
             },
         }),
     ],
@@ -55,7 +65,7 @@ export const authOptions: NextAuthOptions = {
         signIn: "/login",
     },
     callbacks: {
-        async redirect({ url, baseUrl }) {
+        async redirect({ url }) {
             return url;
         },
     },
