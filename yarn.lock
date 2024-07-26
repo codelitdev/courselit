@@ -336,6 +336,32 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@auth/core@npm:0.32.0":
+  version: 0.32.0
+  resolution: "@auth/core@npm:0.32.0"
+  dependencies:
+    "@panva/hkdf": ^1.1.1
+    "@types/cookie": 0.6.0
+    cookie: 0.6.0
+    jose: ^5.1.3
+    oauth4webapi: ^2.9.0
+    preact: 10.11.3
+    preact-render-to-string: 5.2.3
+  peerDependencies:
+    "@simplewebauthn/browser": ^9.0.1
+    "@simplewebauthn/server": ^9.0.2
+    nodemailer: ^6.8.0
+  peerDependenciesMeta:
+    "@simplewebauthn/browser":
+      optional: true
+    "@simplewebauthn/server":
+      optional: true
+    nodemailer:
+      optional: true
+  checksum: 62c9e363548c5ce3e80ac6932dda713982025e338cf5c5406fa377fe670aaca433071026e2442c074a64f44c89c7581aa402ababb7a7ed0dcd49dd06eccea45a
+  languageName: node
+  linkType: hard
+
 "@aws-crypto/ie11-detection@npm:^3.0.0":
   version: 3.0.0
   resolution: "@aws-crypto/ie11-detection@npm:3.0.0"
@@ -2163,7 +2189,7 @@ __metadata:
     mongodb: ^4.4.1
     mongoose: ^7.4.2
     next: ^14.2.0
-    next-auth: ^4.23.2
+    next-auth: beta
     nodemailer: ^6.7.2
     postcss: ^8.4.27
     prettier: ^3.0.2
@@ -2180,7 +2206,8 @@ __metadata:
     tailwind-config: "workspace:^"
     tailwindcss: ^3.3.3
     tsconfig: "workspace:^"
-    typescript: 4.6.2
+    typescript: ^5.5.4
+    zod: ^3.23.8
   languageName: unknown
   linkType: soft
 
@@ -3825,10 +3852,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@panva/hkdf@npm:^1.0.2":
-  version: 1.1.1
-  resolution: "@panva/hkdf@npm:1.1.1"
-  checksum: f0dd12903751d8792420353f809ed3c7de860cf506399759fff5f59f7acfef8a77e2b64012898cee7e5b047708fa0bd91dff5ef55a502bf8ea11aad9842160da
+"@panva/hkdf@npm:^1.1.1":
+  version: 1.2.1
+  resolution: "@panva/hkdf@npm:1.2.1"
+  checksum: a4a9d1812f88f02bc163b365524bbaa5239cc4711e5e7be1bda68dabae1c896cf1cd12520949b0925a6910733d1afcb25ab51fd3cf06f0f69aee988fffebf56e
   languageName: node
   linkType: hard
 
@@ -6480,6 +6507,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/cookie@npm:0.6.0":
+  version: 0.6.0
+  resolution: "@types/cookie@npm:0.6.0"
+  checksum: 5edce7995775b0b196b142883e4d4f71fd93c294eaec973670f1fa2540b70ea7390408ed513ddefef5fcb12a578100c76596e8f2a714b0c2ae9f70ee773f4510
+  languageName: node
+  linkType: hard
+
 "@types/cookie@npm:^0.4.1":
   version: 0.4.1
   resolution: "@types/cookie@npm:0.4.1"
@@ -9052,6 +9086,13 @@ __metadata:
   version: 0.5.0
   resolution: "cookie@npm:0.5.0"
   checksum: 1f4bd2ca5765f8c9689a7e8954183f5332139eb72b6ff783d8947032ec1fdf43109852c178e21a953a30c0dd42257828185be01b49d1eb1a67fd054ca588a180
+  languageName: node
+  linkType: hard
+
+"cookie@npm:0.6.0":
+  version: 0.6.0
+  resolution: "cookie@npm:0.6.0"
+  checksum: f56a7d32a07db5458e79c726b77e3c2eff655c36792f2b6c58d351fb5f61531e5b1ab7f46987150136e366c65213cbe31729e02a3eaed630c3bf7334635fb410
   languageName: node
   linkType: hard
 
@@ -13216,10 +13257,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jose@npm:^4.11.4, jose@npm:^4.15.1":
-  version: 4.15.2
-  resolution: "jose@npm:4.15.2"
-  checksum: 8f0cab1eef31243abe14a935b2b330cd95f10f9b69808fd642088ae5000e50e566664934537d2c6413ab2f6b54acd8265a5033da05157aa1260c5f1d7e57fab0
+"jose@npm:^5.1.3":
+  version: 5.6.3
+  resolution: "jose@npm:5.6.3"
+  checksum: c8722ba820b2d149728c0a80dec5d17029b1bcf68fa93eddcd348ec1eaca75588a4379b760fbf90197fb6f6fb115ce2565846c82e5335e5e542fd14248297831
   languageName: node
   linkType: hard
 
@@ -14915,28 +14956,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"next-auth@npm:^4.23.2":
-  version: 4.23.2
-  resolution: "next-auth@npm:4.23.2"
+"next-auth@npm:beta":
+  version: 5.0.0-beta.19
+  resolution: "next-auth@npm:5.0.0-beta.19"
   dependencies:
-    "@babel/runtime": ^7.20.13
-    "@panva/hkdf": ^1.0.2
-    cookie: ^0.5.0
-    jose: ^4.11.4
-    oauth: ^0.9.15
-    openid-client: ^5.4.0
-    preact: ^10.6.3
-    preact-render-to-string: ^5.1.19
-    uuid: ^8.3.2
+    "@auth/core": 0.32.0
   peerDependencies:
-    next: ^12.2.5 || ^13
+    "@simplewebauthn/browser": ^9.0.1
+    "@simplewebauthn/server": ^9.0.2
+    next: ^14 || ^15.0.0-0
     nodemailer: ^6.6.5
-    react: ^17.0.2 || ^18
-    react-dom: ^17.0.2 || ^18
+    react: ^18.2.0 || ^19.0.0-0
   peerDependenciesMeta:
+    "@simplewebauthn/browser":
+      optional: true
+    "@simplewebauthn/server":
+      optional: true
     nodemailer:
       optional: true
-  checksum: 4820fdc8d9f066afd2dfe64012d7aba727fd7b82fec3a94e85ea5c1651cb4bf532d8742bfd253d9910055833f00c1c8f8f17212661f7648ecff4dd1f3e002e80
+  checksum: 2584579e31cc1c8203e49631a70d72ac7e7566d7894f0b40f80c8b948b14491f4038ca975f5ee364fa23d98a965a218f73d03a5e348ec18fa29ce7cf5978629c
   languageName: node
   linkType: hard
 
@@ -15157,10 +15195,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"oauth@npm:^0.9.15":
-  version: 0.9.15
-  resolution: "oauth@npm:0.9.15"
-  checksum: 957c0d8d85300398dcb0e293953650c0fc3facc795bee8228238414f19f59cef5fd4ee8d17a972c142924c10c5f6ec50ef80f77f4a6cc6e3c98f9d22c027801c
+"oauth4webapi@npm:^2.9.0":
+  version: 2.11.1
+  resolution: "oauth4webapi@npm:2.11.1"
+  checksum: 2dd08803d7d0dfe201e33718358df0699d3fbfc3a10a647f77583c56c745b6a3e2029219e269acff853e8828d23e814e72eda7400af4de35076980cd0a68fd12
   languageName: node
   linkType: hard
 
@@ -15168,13 +15206,6 @@ __metadata:
   version: 4.1.1
   resolution: "object-assign@npm:4.1.1"
   checksum: fcc6e4ea8c7fe48abfbb552578b1c53e0d194086e2e6bbbf59e0a536381a292f39943c6e9628af05b5528aa5e3318bb30d6b2e53cadaf5b8fe9e12c4b69af23f
-  languageName: node
-  linkType: hard
-
-"object-hash@npm:^2.2.0":
-  version: 2.2.0
-  resolution: "object-hash@npm:2.2.0"
-  checksum: 55ba841e3adce9c4f1b9b46b41983eda40f854e0d01af2802d3ae18a7085a17168d6b81731d43fdf1d6bcbb3c9f9c56d22c8fea992203ad90a38d7d919bc28f1
   languageName: node
   linkType: hard
 
@@ -15347,13 +15378,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"oidc-token-hash@npm:^5.0.3":
-  version: 5.0.3
-  resolution: "oidc-token-hash@npm:5.0.3"
-  checksum: 35fa19aea9ff2c509029ec569d74b778c8a215b92bd5e6e9bc4ebbd7ab035f44304ff02430a6397c3fb7c1d15ebfa467807ca0bcd31d06ba610b47798287d303
-  languageName: node
-  linkType: hard
-
 "on-exit-leak-free@npm:^2.1.0":
   version: 2.1.0
   resolution: "on-exit-leak-free@npm:2.1.0"
@@ -15406,18 +15430,6 @@ __metadata:
     is-inside-container: ^1.0.0
     is-wsl: ^2.2.0
   checksum: 3993c0f61d51fed8ac290e99c9c3cf45d3b6cfb3e2aa2b74cafd312c3486c22fd81df16ac8f3ab91dd8a4e3e729a16fc2480cfc406c4833416cf908acf1ae7c9
-  languageName: node
-  linkType: hard
-
-"openid-client@npm:^5.4.0":
-  version: 5.6.0
-  resolution: "openid-client@npm:5.6.0"
-  dependencies:
-    jose: ^4.15.1
-    lru-cache: ^6.0.0
-    object-hash: ^2.2.0
-    oidc-token-hash: ^5.0.3
-  checksum: 414fe43c5aac07d8b8f5ea52ef1812374ff28140910977a1360781284b09d4a03c916d910017bf15003d602d859b3dcf9857d1dfe6f61508c8f5c52de334e6ea
   languageName: node
   linkType: hard
 
@@ -15912,14 +15924,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"preact-render-to-string@npm:^5.1.19":
-  version: 5.2.6
-  resolution: "preact-render-to-string@npm:5.2.6"
+"preact-render-to-string@npm:5.2.3":
+  version: 5.2.3
+  resolution: "preact-render-to-string@npm:5.2.3"
   dependencies:
     pretty-format: ^3.8.0
   peerDependencies:
     preact: ">=10"
-  checksum: be8d5d8fb502d422c503e68af7bcccb6facd942f3ae9a4d093ebe3f1d4f0b15c540624bdac434d53a2a8e8fb7afa4606383414e937c40933ca43445470a026ff
+  checksum: 6e46288d8956adde35b9fe3a21aecd9dea29751b40f0f155dea62f3896f27cb8614d457b32f48d33909d2da81135afcca6c55077520feacd7d15164d1371fb44
   languageName: node
   linkType: hard
 
@@ -15934,10 +15946,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"preact@npm:^10.6.3":
-  version: 10.18.1
-  resolution: "preact@npm:10.18.1"
-  checksum: 691030149fdbd026cac7c07147756f48c6cb8cdea6a8af8c0f383e4c31f5bce48cdc751e4bccf8826560a0d2db77ada401c0308f2bcae2961d16972c26c95607
+"preact@npm:10.11.3":
+  version: 10.11.3
+  resolution: "preact@npm:10.11.3"
+  checksum: 9387115aa0581e8226309e6456e9856f17dfc0e3d3e63f774de80f3d462a882ba7c60914c05942cb51d51e23e120dcfe904b8d392d46f29ad15802941fe7a367
   languageName: node
   linkType: hard
 
@@ -19177,16 +19189,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:4.6.2":
-  version: 4.6.2
-  resolution: "typescript@npm:4.6.2"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 8a44ed7e6f6c4cb1ebe8cf236ecda2fb119d84dcf0fbd77e707b2dfea1bbcfc4e366493a143513ce7f57203c75da9d4e20af6fe46de89749366351046be7577c
-  languageName: node
-  linkType: hard
-
 "typescript@npm:^4.6.0, typescript@npm:^4.6.3, typescript@npm:^4.8.4":
   version: 4.8.4
   resolution: "typescript@npm:4.8.4"
@@ -19207,6 +19209,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"typescript@npm:^5.5.4":
+  version: 5.5.4
+  resolution: "typescript@npm:5.5.4"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: b309040f3a1cd91c68a5a58af6b9fdd4e849b8c42d837b2c2e73f9a4f96a98c4f1ed398a9aab576ee0a4748f5690cf594e6b99dbe61de7839da748c41e6d6ca8
+  languageName: node
+  linkType: hard
+
 "typescript@patch:typescript@*#~builtin<compat/typescript>, typescript@patch:typescript@^5.0.4#~builtin<compat/typescript>, typescript@patch:typescript@^5.1.6#~builtin<compat/typescript>":
   version: 5.1.6
   resolution: "typescript@patch:typescript@npm%3A5.1.6#~builtin<compat/typescript>::version=5.1.6&hash=bda367"
@@ -19214,16 +19226,6 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 21e88b0a0c0226f9cb9fd25b9626fb05b4c0f3fddac521844a13e1f30beb8f14e90bd409a9ac43c812c5946d714d6e0dee12d5d02dfc1c562c5aacfa1f49b606
-  languageName: node
-  linkType: hard
-
-"typescript@patch:typescript@4.6.2#~builtin<compat/typescript>":
-  version: 4.6.2
-  resolution: "typescript@patch:typescript@npm%3A4.6.2#~builtin<compat/typescript>::version=4.6.2&hash=bda367"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 40b493a71747fb89fa70df104e2c4a5e284b43750af5bea024090a5261cefa387f7a9372411b13030f7bf5555cee4275443d08805642ae5c74ef76740854a4c7
   languageName: node
   linkType: hard
 
@@ -19244,6 +19246,16 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 2373c693f3b328f3b2387c3efafe6d257b057a142f9a79291854b14ff4d5367d3d730810aee981726b677ae0fd8329b23309da3b6aaab8263dbdccf1da07a3ba
+  languageName: node
+  linkType: hard
+
+"typescript@patch:typescript@^5.5.4#~builtin<compat/typescript>":
+  version: 5.5.4
+  resolution: "typescript@patch:typescript@npm%3A5.5.4#~builtin<compat/typescript>::version=5.5.4&hash=bda367"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: fc52962f31a5bcb716d4213bef516885e4f01f30cea797a831205fc9ef12b405a40561c40eae3127ab85ba1548e7df49df2bcdee6b84a94bfbe3a0d7eff16b14
   languageName: node
   linkType: hard
 
@@ -20108,6 +20120,13 @@ __metadata:
   version: 3.22.4
   resolution: "zod@npm:3.22.4"
   checksum: 80bfd7f8039b24fddeb0718a2ec7c02aa9856e4838d6aa4864335a047b6b37a3273b191ef335bf0b2002e5c514ef261ffcda5a589fb084a48c336ffc4cdbab7f
+  languageName: node
+  linkType: hard
+
+"zod@npm:^3.23.8":
+  version: 3.23.8
+  resolution: "zod@npm:3.23.8"
+  checksum: 15949ff82118f59c893dacd9d3c766d02b6fa2e71cf474d5aa888570c469dbf5446ac5ad562bb035bf7ac9650da94f290655c194f4a6de3e766f43febd432c5c
   languageName: node
   linkType: hard
 

@@ -5,8 +5,7 @@ import { UIConstants as constants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
 import User from "@models/User";
 import DomainModel, { Domain } from "@models/Domain";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]";
+import { auth } from "@/auth";
 
 export default async function handler(
     req: NextApiRequest,
@@ -23,7 +22,7 @@ export default async function handler(
         return res.status(404).json({ message: "Domain not found" });
     }
 
-    const session = await getServerSession(req, res, authOptions);
+    const session = await auth(req, res);
 
     let user;
     if (session) {
