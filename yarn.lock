@@ -2129,8 +2129,6 @@ __metadata:
     rimraf: ^4.1.1
     tsup: 6.6.0
     typescript: ^5.1.6
-  peerDependencies:
-    next: "*"
   languageName: unknown
   linkType: soft
 
