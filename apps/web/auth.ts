@@ -7,6 +7,7 @@ import User from "@models/User";
 import { createUser } from "./graphql/users/logic";
 import { hashCode } from "@ui-lib/utils";
 import DomainModel, { Domain } from "@models/Domain";
+import { error } from "./services/logger";
 
 export const { auth, signIn, signOut, handlers } = NextAuth({
     ...authConfig,
@@ -41,7 +42,10 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
                         timestamp: { $gt: Date.now() },
                     });
                 if (!verificationToken) {
-                    throw new Error("Invalid code");
+                    error(`Invalid code`, {
+                        email: email,
+                    });
+                    return null;
                 }
 
                 let user = await User.findOne({
