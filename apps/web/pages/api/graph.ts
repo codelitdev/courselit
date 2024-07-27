@@ -2,10 +2,9 @@ import type { NextApiRequest } from "next";
 import schema from "../../graphql";
 import { graphql } from "graphql";
 import { getAddress } from "../../lib/utils";
-import { getServerSession } from "next-auth";
-import { authOptions } from "./auth/[...nextauth]";
 import User from "@models/User";
 import DomainModel, { Domain } from "@models/Domain";
+import { auth } from "@/auth";
 
 export const config = {
     api: {
@@ -27,7 +26,10 @@ async function updateLastActive(user: any) {
     }
 }
 
-export default async function handler(req: NextApiRequest, res) {
+export default async function handler(
+    req: NextApiRequest,
+    res: NextApiResponse,
+) {
     if (req.method !== "POST") {
         return res.status(405).json({ message: "Not allowed" });
     }
@@ -39,7 +41,7 @@ export default async function handler(req: NextApiRequest, res) {
         return res.status(404).json({ message: "Domain not found" });
     }
 
-    const session = await getServerSession(req, res, authOptions);
+    const session = await auth(req, res);
 
     let user;
     if (session) {
