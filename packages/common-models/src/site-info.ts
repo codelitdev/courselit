@@ -13,4 +13,5 @@ export default interface SiteInfo {
     paypalSecret?: string;
     paytmSecret?: string;
     mailingAddress?: string;
+    hideCourseLitBranding?: boolean;
 }

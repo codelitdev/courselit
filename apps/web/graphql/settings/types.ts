@@ -6,6 +6,7 @@ import {
     GraphQLList,
     GraphQLInt,
     GraphQLFloat,
+    GraphQLBoolean,
 } from "graphql";
 import mediaTypes from "../media/types";
 import { getMedia } from "../media/logic";
@@ -38,30 +39,6 @@ const typefaceInputType = new GraphQLInputObjectType({
     },
 });
 
-const siteUpdateType = new GraphQLInputObjectType({
-    name: "SiteInfoUpdateInput",
-    fields: {
-        title: { type: GraphQLString },
-        subtitle: { type: GraphQLString },
-        logo: { type: mediaTypes.mediaInputType },
-        codeInjectionHead: { type: GraphQLString },
-        codeInjectionBody: { type: GraphQLString },
-        mailingAddress: { type: GraphQLString },
-    },
-});
-
-const sitePaymentUpdateType = new GraphQLInputObjectType({
-    name: "SitePaymentUpdateInput",
-    fields: {
-        currencyISOCode: { type: GraphQLString },
-        paymentMethod: { type: GraphQLString },
-        stripePublishableKey: { type: GraphQLString },
-        stripeSecret: { type: GraphQLString },
-        paytmSecret: { type: GraphQLString },
-        paypalSecret: { type: GraphQLString },
-    },
-});
-
 const siteType = new GraphQLObjectType({
     name: "SiteInfo",
     fields: {
@@ -77,6 +54,32 @@ const siteType = new GraphQLObjectType({
         codeInjectionHead: { type: GraphQLString },
         codeInjectionBody: { type: GraphQLString },
         mailingAddress: { type: GraphQLString },
+        hideCourseLitBranding: { type: GraphQLBoolean },
+    },
+});
+
+const siteUpdateType = new GraphQLInputObjectType({
+    name: "SiteInfoUpdateInput",
+    fields: {
+        title: { type: GraphQLString },
+        subtitle: { type: GraphQLString },
+        logo: { type: mediaTypes.mediaInputType },
+        codeInjectionHead: { type: GraphQLString },
+        codeInjectionBody: { type: GraphQLString },
+        mailingAddress: { type: GraphQLString },
+        hideCourseLitBranding: { type: GraphQLBoolean },
+    },
+});
+
+const sitePaymentUpdateType = new GraphQLInputObjectType({
+    name: "SitePaymentUpdateInput",
+    fields: {
+        currencyISOCode: { type: GraphQLString },
+        paymentMethod: { type: GraphQLString },
+        stripePublishableKey: { type: GraphQLString },
+        stripeSecret: { type: GraphQLString },
+        paytmSecret: { type: GraphQLString },
+        paypalSecret: { type: GraphQLString },
     },
 });
 

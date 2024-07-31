@@ -15,6 +15,7 @@ const SettingsSchema = new mongoose.Schema<SiteInfo>({
     paytmSecret: { type: String },
     paypalSecret: { type: String },
     mailingAddress: { type: String },
+    hideCourseLitBranding: {type: Boolean, default: false}
 });
 
 export default SettingsSchema;

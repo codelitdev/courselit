@@ -16,6 +16,8 @@ export default {
         stripePublishableKey: "",
         codeInjectionHead: "",
         codeInjectionBody: "",
+        mailingAddress: "",
+        hideCourseLitBranding: false,
     },
     networkAction: false,
     profile: {
