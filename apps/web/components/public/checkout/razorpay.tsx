@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Button2 } from "@courselit/components-library";
 import { ENROLL_BUTTON_TEXT } from "../../../ui-config/strings";
 import { connect } from "react-redux";
@@ -27,7 +27,6 @@ interface RazorpayProps {
 
 const RazorpayComp = (props: RazorpayProps) => {
     const { course, siteInfo, address, dispatch, profile } = props;
-    const [paymentTracker, setPaymentTracker] = useState();
     const router = useRouter();
 
     const verifySignature = async (response) => {
@@ -85,7 +84,6 @@ const RazorpayComp = (props: RazorpayProps) => {
             });
             dispatch(networkAction(false));
             if (response.status === "initiated") {
-                setPaymentTracker(response.paymentTracker);
                 // @ts-ignore
                 const rzp1 = new Razorpay({
                     name: course.title,
@@ -126,4 +124,4 @@ const mapStateToProps = (state: AppState) => ({
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
 
-export default connect(mapStateToProps)(RazorpayComp);
+export default connect(mapStateToProps, mapDispatchToProps)(RazorpayComp);
