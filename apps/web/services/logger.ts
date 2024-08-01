@@ -30,6 +30,7 @@ export const error = async (
     metadata?: {
         fileName?: string;
         stack?: Record<string, unknown>;
+        [x: string]: any;
     },
 ) => {
     await Log.create({

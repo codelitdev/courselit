@@ -1,12 +1,15 @@
 import { capitalize } from "../../lib/utils";
-import constants from "../../config/constants";
 import { responses } from "../../config/strings";
-import { Settings as SiteInfo } from "../../models/SiteInfo";
-const { paypal, stripe, paytm, none } = constants;
-import currencies from "../../data/iso4217.json";
+import currencies from "@/data/currencies.json";
+import {
+    Constants,
+    PaymentMethod,
+    SiteInfo,
+    UIConstants,
+} from "@courselit/common-models";
 
 const currencyISOCodes = currencies.map(
-    (currency) => currency.AlphabeticCode?.toLowerCase(),
+    (currency) => currency.isoCode?.toLowerCase(),
 );
 
 const verifyCurrencyISOCode = (isoCode: string) => {
@@ -38,7 +41,7 @@ export const checkForInvalidPaymentSettings = (
         return;
     }
 
-    if (![paypal, stripe, paytm, none].includes(siteInfo.paymentMethod)) {
+    if (!Constants.paymentMethods.includes(siteInfo.paymentMethod)) {
         return new Error(responses.invalid_payment_method);
     }
 };
@@ -50,21 +53,34 @@ export const checkForInvalidPaymentMethodSettings = (
         return;
     }
 
-    let failedPaymentMethod = undefined;
+    let failedPaymentMethod: PaymentMethod | undefined = undefined;
 
-    if (siteInfo.paymentMethod === paytm && !siteInfo.paytmSecret) {
-        failedPaymentMethod = paytm;
-    }
-
-    if (siteInfo.paymentMethod === paypal && !siteInfo.paypalSecret) {
-        failedPaymentMethod = paypal;
+    if (
+        siteInfo.paymentMethod === UIConstants.PAYMENT_METHOD_PAYTM &&
+        !siteInfo.paytmSecret
+    ) {
+        failedPaymentMethod = UIConstants.PAYMENT_METHOD_PAYTM;
     }
 
     if (
-        siteInfo.paymentMethod === stripe &&
-        !(siteInfo.stripeSecret && siteInfo.stripePublishableKey)
+        siteInfo.paymentMethod === UIConstants.PAYMENT_METHOD_PAYPAL &&
+        !siteInfo.paypalSecret
     ) {
-        failedPaymentMethod = stripe;
+        failedPaymentMethod = UIConstants.PAYMENT_METHOD_PAYPAL;
+    }
+
+    if (
+        siteInfo.paymentMethod === UIConstants.PAYMENT_METHOD_STRIPE &&
+        !(siteInfo.stripeSecret && siteInfo.stripeKey)
+    ) {
+        failedPaymentMethod = UIConstants.PAYMENT_METHOD_STRIPE;
+    }
+
+    if (
+        siteInfo.paymentMethod === UIConstants.PAYMENT_METHOD_RAZORPAY &&
+        !(siteInfo.razorpayKey && siteInfo.razorpaySecret)
+    ) {
+        failedPaymentMethod = UIConstants.PAYMENT_METHOD_RAZORPAY;
     }
 
     return failedPaymentMethod;

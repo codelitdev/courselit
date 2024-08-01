@@ -40,7 +40,7 @@ export const responses = {
     user_name_cant_be_null: "Name cannot be null",
     action_not_allowed: "You do not have rights to perform this action",
     invalid_input: "Invalid input",
-    stripe_invalid_settings: "Stripe configuration is invalid.",
+    payment_invalid_settings: "configuration is invalid.",
     unrecognised_currency_code: "Unrecognised currency code",
     only_admins_can_purchase:
         "Only admins can purchase courses on behalf of others",
