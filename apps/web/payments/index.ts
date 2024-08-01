@@ -1,10 +1,9 @@
-import constants from "../config/constants";
+import { SiteInfo, UIConstants } from "@courselit/common-models";
 import { internal, responses } from "../config/strings";
 import DomainModel, { Domain } from "../models/Domain";
-import { SiteInfo } from "../models/SiteInfo";
 import StripePayment from "./stripe-payment";
+import RazorpayPayment from "./razorpay-payment";
 
-const { paypal, stripe, paytm } = constants;
 const {
     error_unrecognised_payment_method: unrecognisedPaymentMethod,
     error_payment_method_not_implemented: notYetSupported,
@@ -22,11 +21,13 @@ export const getPaymentMethod = async (domainName: string) => {
     }
 
     switch (siteInfo.paymentMethod) {
-        case paypal:
+        case UIConstants.PAYMENT_METHOD_PAYPAL:
             throw new Error(notYetSupported);
-        case stripe:
+        case UIConstants.PAYMENT_METHOD_STRIPE:
             return await new StripePayment(siteInfo).setup();
-        case paytm:
+        case UIConstants.PAYMENT_METHOD_RAZORPAY:
+            return await new RazorpayPayment(siteInfo).setup();
+        case UIConstants.PAYMENT_METHOD_PAYTM:
             throw new Error(notYetSupported);
         default:
             throw new Error(unrecognisedPaymentMethod);

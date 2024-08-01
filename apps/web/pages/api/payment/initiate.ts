@@ -107,7 +107,7 @@ export default async function handler(
             paymentTracker,
         });
     } catch (err: any) {
-        error(err.message, { stack: err.stack }); // eslint-disable-line no-console
+        error(err.message, { stack: err.stack });
         res.status(500).json({
             status: transactionFailed,
             error: err.message,

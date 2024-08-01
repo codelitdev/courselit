@@ -53,3 +53,4 @@ export type { OngoingSequence } from "./ongoing-sequence";
 export type { Domain } from "./domain";
 export type { Progress } from "./progress";
 export type { Drip, DripType } from "./drip";
+export type { PaymentMethod } from "./payment-method";

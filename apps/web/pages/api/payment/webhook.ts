@@ -1,10 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import constants from "../../../config/constants";
-import finalizePurchase from "../../../lib/finalize-purchase";
-import PurchaseModel, { Purchase } from "../../../models/Purchase";
-import { getPaymentMethod } from "../../../payments";
+import constants from "@/config/constants";
+import finalizePurchase from "@/lib/finalize-purchase";
+import PurchaseModel, { Purchase } from "@/models/Purchase";
+import { getPaymentMethod } from "@/payments";
 const { transactionSuccess } = constants;
 import DomainModel, { Domain } from "@models/Domain";
+import { info } from "@/services/logger";
 
 export default async function handler(
     req: NextApiRequest,
@@ -13,6 +14,8 @@ export default async function handler(
     if (req.method !== "POST") {
         return res.status(405).json({ message: "Not allowed" });
     }
+
+    info(`POST /api/payment/webhook: domain detected: ${req.headers.domain}`);
 
     const domain = await DomainModel.findOne<Domain>({
         name: req.headers.domain,
@@ -37,6 +40,7 @@ export default async function handler(
         }
 
         purchaseRecord.status = transactionSuccess;
+        purchaseRecord.webhookPayload = body;
         await (purchaseRecord as any).save();
 
         await finalizePurchase(

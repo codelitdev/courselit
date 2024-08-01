@@ -159,7 +159,7 @@ export const updateCourse = async (
     }
 
     course = await validateCourse(course, ctx);
-    course = await course.save();
+    course = await (course as any).save();
     await PageModel.updateOne(
         { entityId: course.courseId, domain: ctx.subdomain._id },
         { $set: { name: course.title } },

@@ -1,3 +1,11 @@
+import {
+    PAYMENT_METHOD_NONE,
+    PAYMENT_METHOD_PAYPAL,
+    PAYMENT_METHOD_PAYTM,
+    PAYMENT_METHOD_RAZORPAY,
+    PAYMENT_METHOD_STRIPE,
+} from "./ui-constants";
+
 export const userFilters = [
     "email",
     "product",
@@ -39,3 +47,10 @@ export const pageNames = {
     blog: "Blog",
 };
 export const dripType = ["relative-date", "exact-date"] as const;
+export const paymentMethods = [
+    PAYMENT_METHOD_NONE,
+    PAYMENT_METHOD_PAYPAL,
+    PAYMENT_METHOD_PAYTM,
+    PAYMENT_METHOD_RAZORPAY,
+    PAYMENT_METHOD_STRIPE,
+] as const;

@@ -18,12 +18,6 @@ export const DRAFTJS_ENTITY_TYPE_IMAGE = "image";
 export const DRAFTJS_ENTITY_TYPE_VIDEO = "video";
 export const DRAFTJS_ENTITY_TYPE_AUDIO = "audio";
 
-// Payment methods
-export const PAYMENT_METHOD_STRIPE = "stripe";
-export const PAYMENT_METHOD_PAYPAL = "paypal";
-export const PAYMENT_METHOD_PAYTM = "paytm";
-export const PAYMENT_METHOD_NONE = "";
-
 // transaction statuses from backend
 export const TRANSACTION_INITIATED = "initiated";
 export const TRANSACTION_SUCCESS = "success";

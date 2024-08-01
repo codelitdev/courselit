@@ -50,15 +50,18 @@ function siteinfoReducer(state = initialState.siteinfo, action: Action) {
                     paymentMethod:
                         action.siteinfo.paymentMethod ||
                         initialState.siteinfo.paymentMethod,
-                    stripePublishableKey:
-                        action.siteinfo.stripePublishableKey ||
-                        initialState.siteinfo.stripePublishableKey,
+                    stripeKey:
+                        action.siteinfo.stripeKey ||
+                        initialState.siteinfo.stripeKey,
                     codeInjectionHead:
                         decode(action.siteinfo.codeInjectionHead) ||
                         initialState.siteinfo.codeInjectionHead,
                     codeInjectionBody:
                         decode(action.siteinfo.codeInjectionBody) ||
                         initialState.siteinfo.codeInjectionBody,
+                    razorpayKey:
+                        action.siteinfo.razorpayKey ||
+                        initialState.siteinfo.razorpayKey,
                 };
             } catch (e) {
                 return state;
