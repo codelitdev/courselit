@@ -363,7 +363,7 @@
         "name": "Jordanian Dinar",
         "isoCode": "JOD",
         "razorpay": true,
-        "stripe": true 
+        "stripe": true
     },
     {
         "name": "Japanese Yen",
@@ -652,7 +652,6 @@
         "isoCode": "SCR",
         "razorpay": true,
         "stripe": true
-
     },
     {
         "name": "Swedish krona",
@@ -688,13 +687,13 @@
         "name": "Surinam Dollar",
         "isoCode": "SRD",
         "razorpay": false,
-        "stripe": true 
+        "stripe": true
     },
     {
         "name": "Dobra",
         "isoCode": "STD",
         "razorpay": false,
-        "stripe": true 
+        "stripe": true
     },
     {
         "name": "South Sudanese pound",
@@ -724,13 +723,13 @@
         "name": "Somoni",
         "isoCode": "TJS",
         "razorpay": false,
-        "stripe": true 
+        "stripe": true
     },
     {
         "name": "Pa'anga",
         "isoCode": "TOP",
         "razorpay": false,
-        "stripe": true 
+        "stripe": true
     },
     {
         "name": "Tunisian Dinar",
