@@ -143,6 +143,7 @@ const BaseLayoutAdmin = ({
                 </title>
                 <link
                     rel="icon"
+                    type="image/x-icon"
                     href={
                         siteInfo.logo && siteInfo.logo.file
                             ? siteInfo.logo.file
