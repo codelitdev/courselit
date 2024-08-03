@@ -69,6 +69,7 @@ export const SIDEBAR: Sidebar = {
             { text: "Introduction", link: "en/email-marketing/introduction" },
             { text: "Requesting access to email marketing", link: "en/email-marketing/mail-access-request" },
             { text: "Broadcast mails", link: "en/email-marketing/broadcast-mails" },
+            { text: "Sequences (Campaigns)", link: "en/email-marketing/sequences" },
         ],
         Pages: [
             { text: "Introduction", link: "en/pages/introduction" },
