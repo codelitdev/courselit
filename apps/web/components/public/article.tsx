@@ -46,7 +46,7 @@ const Article = (props: ArticleProps) => {
                                     src={
                                         profile.avatar
                                             ? profile.avatar?.file
-                                            : "/favicon.ico"
+                                            : "/courselit_backdrop_square.webp"
                                     }
                                 />
                                 <AvatarFallback>

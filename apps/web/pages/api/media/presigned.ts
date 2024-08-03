@@ -38,7 +38,10 @@ export default async function handler(
     }
 
     if (
-        !checkPermission(user!.permissions, [constants.permissions.uploadMedia])
+        !checkPermission(user!.permissions, [
+            constants.permissions.manageMedia,
+            constants.permissions.manageAnyMedia,
+        ])
     ) {
         throw new Error(responses.action_not_allowed);
     }

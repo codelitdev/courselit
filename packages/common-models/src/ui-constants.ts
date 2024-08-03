@@ -47,8 +47,6 @@ export const permissions = {
     enrollInCourse: "course:enroll",
     manageMedia: "media:manage",
     manageAnyMedia: "media:manage_any",
-    uploadMedia: "media:upload",
-    viewAnyMedia: "media:view_any",
     manageSite: "site:manage",
     manageSettings: "setting:manage",
     manageUsers: "user:manage",

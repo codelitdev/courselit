@@ -39,8 +39,8 @@ export default async function handler(
 
     if (
         !checkPermission(user!.permissions, [
-            constants.permissions.manageAnyCourse,
-            constants.permissions.manageCourse,
+            constants.permissions.manageAnyMedia,
+            constants.permissions.manageMedia,
         ])
     ) {
         throw new Error(responses.action_not_allowed);

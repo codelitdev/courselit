@@ -204,7 +204,6 @@ export default function Widget({ state, settings }: WidgetProps) {
                                         UIConstants.permissions.manageSite,
                                         UIConstants.permissions.manageSettings,
                                         UIConstants.permissions.manageUsers,
-                                        UIConstants.permissions.viewAnyMedia,
                                     ]) && (
                                         <MenuItem2>
                                             <AppLink

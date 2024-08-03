@@ -55,7 +55,6 @@ export const canAccessDashboard = (profile: Profile) => {
         permissions.manageSite,
         permissions.manageSettings,
         permissions.manageUsers,
-        permissions.viewAnyMedia,
     ]);
 };
 
