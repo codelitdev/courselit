@@ -45,6 +45,7 @@ const Widget = ({
     dispatch,
 }: WidgetProps) => {
     const [email, setEmail] = useState("");
+    const [name, setName] = useState("");
     const justifyContent =
         alignment === "center"
             ? "center"
@@ -57,7 +58,7 @@ const Widget = ({
 
         const mutation = `
             mutation {
-                response: createSubscription(email: "${email}")
+                response: createSubscription(name: "${name}" email: "${email}")
             }
         `;
 
@@ -78,6 +79,7 @@ const Widget = ({
                         ),
                     ),
                 );
+                setName("");
                 setEmail("");
             } else {
                 dispatch(
@@ -115,6 +117,23 @@ const Widget = ({
                     <h2 className="text-4xl mb-4">{title || DEFAULT_TITLE}</h2>
                     {subtitle && <h3 className="mb-4">{subtitle}</h3>}
                     <div className="flex gap-2 items-end">
+                        <FormField
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Enter your name"
+                            type="text"
+                            required
+                            messages={[
+                                {
+                                    match: "valueMissing",
+                                    text: "Your name is required",
+                                },
+                                // {
+                                //     match: "typeMismatch",
+                                //     text: "Invalid email",
+                                // },
+                            ]}
+                        />
                         <FormField
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
