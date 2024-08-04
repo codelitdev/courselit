@@ -10,6 +10,7 @@ import {
     PROFILE_SECTION_DETAILS,
     PROFILE_EMAIL_PREFERENCES,
     PROFILE_EMAIL_PREFERENCES_NEWSLETTER_OPTION_TEXT,
+    PROFILE_SECTION_DISPLAY_PICTURE,
 } from "../../ui-config/strings";
 import { connect } from "react-redux";
 import { actionCreators } from "@courselit/state-management";
@@ -120,29 +121,12 @@ function ProfileIndex({
         e.preventDefault();
 
         const mutation = `
-          mutation {
+          mutation ($id: ID!, $name: String, $bio: String, $avatar: MediaInput) {
             user: updateUser(userData: {
-              id: "${profile.id}"
-              name: "${name}",
-              bio: "${bio}"
-              avatar:  ${
-                  avatar && avatar.mediaId
-                      ? `{
-                            mediaId: "${avatar.mediaId}",
-                            originalFileName: "${avatar.originalFileName}",
-                            mimeType: "${avatar.mimeType}",
-                            size: ${avatar.size},
-                            access: "${avatar.access}",
-                            file: ${
-                                avatar.access === "public"
-                                    ? `"${avatar.file}"`
-                                    : null
-                            },
-                            thumbnail: "${avatar.thumbnail}",
-                            caption: "${avatar.caption}"
-                        }`
-                      : null
-              } 
+              id: $id
+              name: $name,
+              bio: $bio
+              avatar: $avatar
             }) {
               id,
               name,
@@ -162,7 +146,12 @@ function ProfileIndex({
         `;
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
-            .setPayload(mutation)
+            .setPayload({ query: mutation, variables: {
+                id: profile.id,
+                name,
+                bio,
+                avatar: avatar || undefined
+            }})
             .setIsGraphQLEndpoint(true)
             .build();
 
@@ -181,10 +170,10 @@ function ProfileIndex({
     const saveEmailPreference = async function (state: boolean) {
         setSubscribedToUpdates(state);
         const mutation = `
-          mutation {
+          mutation ($id: ID!, $subscribedToUpdates: Boolean) {
             user: updateUser(userData: {
-              id: "${profile.id}"
-              subscribedToUpdates: ${state}
+              id: $id
+              subscribedToUpdates: $subscribedToUpdates 
             }) {
                 subscribedToUpdates
             }
@@ -192,7 +181,10 @@ function ProfileIndex({
         `;
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
-            .setPayload(mutation)
+            .setPayload({ query: mutation, variables: {
+                id: profile.id,
+                subscribedToUpdates: state
+            }})
             .setIsGraphQLEndpoint(true)
             .build();
 
@@ -240,7 +232,7 @@ function ProfileIndex({
                                 maxRows={5}
                             />
 
-                            <PageBuilderPropertyHeader label={"Avatar"} />
+                            <PageBuilderPropertyHeader label={PROFILE_SECTION_DISPLAY_PICTURE} />
                             <MediaSelector
                                 title=""
                                 auth={auth}

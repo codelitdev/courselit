@@ -7,22 +7,30 @@ export const info = async (
     message: string,
     metadata?: Record<string, unknown>,
 ) => {
-    await Log.create({
-        severity: severityInfo,
-        message,
-        metadata,
-    });
+    if (process.env.NODE_ENV === "production") {
+        await Log.create({
+            severity: severityInfo,
+            message,
+            metadata,
+        });
+    } else {
+        console.error(severityError, message, metadata)
+    }
 };
 
 export const warn = async (
     message: string,
     metadata?: Record<string, unknown>,
 ) => {
-    await Log.create({
-        severity: severityWarn,
-        message,
-        metadata,
-    });
+    if (process.env.NODE_ENV === "production") {
+        await Log.create({
+            severity: severityWarn,
+            message,
+            metadata,
+        });
+    } else {
+        console.error(severityError, message, metadata)
+    }
 };
 
 export const error = async (
@@ -33,9 +41,13 @@ export const error = async (
         [x: string]: any;
     },
 ) => {
-    await Log.create({
-        severity: severityError,
-        message,
-        metadata,
-    });
+    if (process.env.NODE_ENV === "production") {
+        await Log.create({
+            severity: severityError,
+            message,
+            metadata,
+        });
+    } else {
+        console.error(severityError, message, metadata)
+    }
 };

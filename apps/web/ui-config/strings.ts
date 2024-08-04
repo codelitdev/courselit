@@ -274,6 +274,7 @@ export const PROFILE_SECTION_DETAILS = "Personal details";
 export const PROFILE_SECTION_DETAILS_NAME = "Name";
 export const PROFILE_SECTION_DETAILS_EMAIL = "Email";
 export const PROFILE_SECTION_DETAILS_BIO = "Bio";
+export const PROFILE_SECTION_DISPLAY_PICTURE = "Profile photo";
 export const PROFILE_EMAIL_PREFERENCES_NEWSLETTER_OPTION_TEXT =
     "Receive newsletter and marketing emails";
 export const BTN_PUBLISH = "Publish";

@@ -6,6 +6,7 @@ import { checkPermission } from "@courselit/utils";
 import User from "@models/User";
 import DomainModel, { Domain } from "@models/Domain";
 import { auth } from "@/auth";
+import { error } from "@/services/logger";
 
 export default async function handler(
     req: NextApiRequest,
@@ -51,6 +52,9 @@ export default async function handler(
         );
         return res.status(200).json({ url: response });
     } catch (err: any) {
+        error(err.mssage, {
+            stack: err.stack
+        })
         return res.status(500).json({ error: err.message });
     }
 }
