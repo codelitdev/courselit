@@ -118,12 +118,12 @@ export const updateUser = async (userData: any, ctx: GQLContext) => {
             continue;
         }
 
-        if (
-            !["subscribedToUpdates"].includes(key) &&
-            id === ctx.user._id.toString()
-        ) {
-            throw new Error(responses.action_not_allowed);
-        }
+        // if (
+        //     !["subscribedToUpdates"].includes(key) &&
+        //     id === ctx.user._id.toString()
+        // ) {
+        //     throw new Error(responses.action_not_allowed);
+        // }
 
         if (key === "tags") {
             addTags(userData["tags"], ctx);
@@ -289,9 +289,7 @@ export async function createUser({
             constants.permissions.manageCourse,
             constants.permissions.manageAnyCourse,
             constants.permissions.publishCourse,
-            // TODO: replace media perms with course perms
             constants.permissions.manageMedia,
-            constants.permissions.manageAnyMedia,
             constants.permissions.manageSite,
             constants.permissions.manageSettings,
             constants.permissions.manageUsers,

@@ -199,8 +199,6 @@ export default function Widget({ state, settings }: WidgetProps) {
                                     checkPermission(state.profile.permissions, [
                                         UIConstants.permissions.manageCourse,
                                         UIConstants.permissions.manageAnyCourse,
-                                        UIConstants.permissions.manageMedia,
-                                        UIConstants.permissions.manageAnyMedia,
                                         UIConstants.permissions.manageSite,
                                         UIConstants.permissions.manageSettings,
                                         UIConstants.permissions.manageUsers,

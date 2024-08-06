@@ -39,10 +39,7 @@ export default async function handler(
     }
 
     if (
-        !checkPermission(user!.permissions, [
-            constants.permissions.manageMedia,
-            constants.permissions.manageAnyMedia,
-        ])
+        !checkPermission(user!.permissions, [constants.permissions.manageMedia])
     ) {
         throw new Error(responses.action_not_allowed);
     }
@@ -53,8 +50,8 @@ export default async function handler(
         return res.status(200).json({ url: response });
     } catch (err: any) {
         error(err.mssage, {
-            stack: err.stack
-        })
+            stack: err.stack,
+        });
         return res.status(500).json({ error: err.message });
     }
 }
