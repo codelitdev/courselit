@@ -14,7 +14,7 @@ export const info = async (
             metadata,
         });
     } else {
-        console.error(severityError, message, metadata)
+        console.error(severityError, message, metadata);
     }
 };
 
@@ -29,7 +29,7 @@ export const warn = async (
             metadata,
         });
     } else {
-        console.error(severityError, message, metadata)
+        console.error(severityError, message, metadata);
     }
 };
 
@@ -48,6 +48,6 @@ export const error = async (
             metadata,
         });
     } else {
-        console.error(severityError, message, metadata)
+        console.error(severityError, message, metadata);
     }
 };

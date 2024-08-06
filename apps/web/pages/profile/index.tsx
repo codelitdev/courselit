@@ -146,12 +146,15 @@ function ProfileIndex({
         `;
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
-            .setPayload({ query: mutation, variables: {
-                id: profile.id,
-                name,
-                bio,
-                avatar: avatar || undefined
-            }})
+            .setPayload({
+                query: mutation,
+                variables: {
+                    id: profile.id,
+                    name,
+                    bio,
+                    avatar: avatar || undefined,
+                },
+            })
             .setIsGraphQLEndpoint(true)
             .build();
 
@@ -181,10 +184,13 @@ function ProfileIndex({
         `;
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
-            .setPayload({ query: mutation, variables: {
-                id: profile.id,
-                subscribedToUpdates: state
-            }})
+            .setPayload({
+                query: mutation,
+                variables: {
+                    id: profile.id,
+                    subscribedToUpdates: state,
+                },
+            })
             .setIsGraphQLEndpoint(true)
             .build();
 
@@ -232,7 +238,9 @@ function ProfileIndex({
                                 maxRows={5}
                             />
 
-                            <PageBuilderPropertyHeader label={PROFILE_SECTION_DISPLAY_PICTURE} />
+                            <PageBuilderPropertyHeader
+                                label={PROFILE_SECTION_DISPLAY_PICTURE}
+                            />
                             <MediaSelector
                                 title=""
                                 auth={auth}
