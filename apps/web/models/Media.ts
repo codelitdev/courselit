@@ -11,7 +11,6 @@ const MediaSchema = new mongoose.Schema<MediaWithOwner>({
     mimeType: { type: String, required: true },
     size: { type: Number, required: true },
     access: { type: String, required: true, enum: [publicMedia, privateMedia] },
-    userId: { type: String, required: true },
     thumbnail: String,
     caption: String,
     file: String,

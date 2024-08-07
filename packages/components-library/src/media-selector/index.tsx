@@ -11,13 +11,13 @@ import {
 } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
 import Access from "./access";
-import Button from "../button";
 import Dialog2 from "../dialog2";
 import { FetchBuilder } from "@courselit/utils";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import Form from "../form";
 import FormField from "../form-field";
 import React from "react";
+import { Button2 } from "..";
 
 interface Strings {
     buttonCaption?: string;
@@ -62,6 +62,8 @@ interface MediaSelectorProps {
     access?: Access;
     strings: Strings;
     mediaId?: string;
+    type: "course" | "lesson" | "page" | "user" | "domain";
+    hidePreview?: boolean;
 }
 
 const MediaSelector = (props: MediaSelectorProps) => {
@@ -75,7 +77,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
     };
     const [uploadData, setUploadData] = useState(defaultUploadData);
     const fileInput: React.RefObject<HTMLInputElement> = React.createRef();
-    const [selectedFile, setSelectedFile] = useState<any>();
+    const [selectedFile, setSelectedFile] = useState();
     const [caption, setCaption] = useState("");
     const { strings, dispatch, address, src, title, srcTitle } = props;
 
@@ -110,7 +112,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
                 uploading: true,
             }),
         );
-        let res: any = await fetch(presignedUrl, {
+        const res = await fetch(presignedUrl, {
             method: "POST",
             body: fD,
         });
@@ -121,8 +123,8 @@ const MediaSelector = (props: MediaSelectorProps) => {
             }
             return media;
         } else {
-            res = await res.json();
-            throw new Error(res.error);
+            const resp = await res.json();
+            throw new Error(resp.error);
         }
     };
 
@@ -154,7 +156,9 @@ const MediaSelector = (props: MediaSelectorProps) => {
         try {
             setUploading(true);
             const fetch = new FetchBuilder()
-                .setUrl(`${address.backend}/api/media/${props.mediaId}`)
+                .setUrl(
+                    `${address.backend}/api/media/${props.mediaId}/${props.type}`,
+                )
                 .setHttpMethod("DELETE")
                 .setIsGraphQLEndpoint(false)
                 .build();
@@ -176,32 +180,33 @@ const MediaSelector = (props: MediaSelectorProps) => {
     return (
         <div className="flex items-center gap-4">
             <h4>{title}</h4>
-            <div className="flex flex-col gap-2">
-                <Image src={src} height={64} width={64} />
-                <p className="text-xs">{srcTitle}</p>
-            </div>
+            {!props.hidePreview && (
+                <div className="flex flex-col gap-2">
+                    <Image src={src} height={64} width={64} />
+                    <p className="text-xs">{srcTitle}</p>
+                </div>
+            )}
             {props.mediaId && (
-                <Button onClick={removeFile} disabled={uploading}>
+                <Button2 onClick={removeFile} disabled={uploading}>
                     {uploading
                         ? "Working..."
                         : strings.removeButtonCaption || "Remove media"}
-                </Button>
+                </Button2>
             )}
             {!props.mediaId && (
                 <div>
                     <Dialog2
                         title={strings.dialogTitle || "Select media"}
                         trigger={
-                            <Button component="button" variant="soft">
+                            <Button2>
                                 {strings.buttonCaption || "Select media"}
-                            </Button>
+                            </Button2>
                         }
                         open={dialogOpened}
                         onOpenChange={setDialogOpened}
                         okButton={
-                            <Button
-                                component="button"
-                                onClick={uploadFile}
+                            <Button2
+                                onClick={uploadFile as any}
                                 disabled={
                                     !selectedFile || (selectedFile && uploading)
                                 }
@@ -209,7 +214,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
                                 {uploading
                                     ? strings.uploading || "Uploading"
                                     : strings.uploadButtonText || "Upload"}
-                            </Button>
+                            </Button2>
                         }
                     >
                         {error && <div>{error}</div>}

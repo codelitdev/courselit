@@ -129,10 +129,6 @@ export const updateUser = async (userData: any, ctx: GQLContext) => {
             addTags(userData["tags"], ctx);
         }
 
-        if (key === "avatar") {
-            userData["avatar"].userId = user.userId;
-        }
-
         user[key] = userData[key];
     }
 

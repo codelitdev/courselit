@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { responses } from "../../../config/strings";
-import * as medialitService from "../../../services/medialit";
+import { responses } from "@/config/strings";
+import * as medialitService from "@/services/medialit";
 import { UIConstants as constants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
 import UserModel, { User } from "@models/User";
@@ -9,6 +9,10 @@ import { auth } from "@/auth";
 import CourseModel, { Course } from "@models/Course";
 import LessonModel, { Lesson } from "@models/Lesson";
 import PageModel, { Page } from "@models/Page";
+
+const types = ["course", "lesson", "page", "user", "domain"] as const;
+
+type MediaType = (typeof types)[number];
 
 export default async function handler(
     req: NextApiRequest,
@@ -40,8 +44,15 @@ export default async function handler(
         return res.status(401).json({});
     }
 
-    const { mediaId } = req.query;
-    if (!(await isActionAllowed(user, "user", mediaId as string, domain))) {
+    const { mediaId, type } = req.query;
+    if (!types.includes(type as MediaType)) {
+        return res.status(400).json({ message: "Bad request" });
+    }
+
+    if (
+        !(await isActionAllowed(user, type as any, mediaId as string, domain))
+    ) {
+        ("");
         return res.status(403).json({ message: responses.action_not_allowed });
     }
 
@@ -55,7 +66,7 @@ export default async function handler(
 
 async function isActionAllowed(
     user: User,
-    type: "course" | "lesson" | "page" | "user" | "domain",
+    type: MediaType,
     mediaId: string,
     domain: Domain,
 ) {

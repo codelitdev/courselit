@@ -213,7 +213,7 @@ const Settings = (props: SettingsProps) => {
             mutation {
                 settings: updateSiteInfo(siteData: {
                     title: "${newSettings.title}",
-                    subtitle: "${newSettings.subtitle}",
+                    subtitle: "${newSettings.subtitle || ""}",
                     logo: ${
                         newSettings.logo && newSettings.logo.mediaId
                             ? `{
@@ -584,6 +584,7 @@ const Settings = (props: SettingsProps) => {
                                 }),
                             );
                         }}
+                        type="domain"
                     />
                     <div>
                         <Button

@@ -23,6 +23,10 @@ import {
     Button2,
     PageBuilderPropertyHeader,
     MediaSelector,
+    Image,
+    Avatar,
+    AvatarFallback,
+    AvatarImage,
 } from "@courselit/components-library";
 import type {
     Address,
@@ -117,16 +121,62 @@ function ProfileIndex({
         }
     };
 
+    const updateProfilePic = async (media?: Media) => {
+        const mutation = `
+          mutation ($id: ID!, $avatar: MediaInput) {
+            user: updateUser(userData: {
+              id: $id
+              avatar: $avatar
+            }) {
+              id,
+              name,
+              bio,
+               avatar {
+                mediaId,
+                originalFileName,
+                mimeType,
+                size,
+                access,
+                file,
+                thumbnail,
+                caption
+              },
+            }
+          }
+        `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload({
+                query: mutation,
+                variables: {
+                    id: profile.id,
+                    avatar: media || null,
+                },
+            })
+            .setIsGraphQLEndpoint(true)
+            .build();
+
+        try {
+            dispatch(networkAction(true));
+            await fetch.exec();
+            dispatch(refreshUserProfile());
+            dispatch(setAppMessage(new AppMessage(APP_MESSAGE_CHANGES_SAVED)));
+        } catch (err: any) {
+            dispatch(setAppMessage(new AppMessage(err.message)));
+        } finally {
+            dispatch(networkAction(false));
+        }
+    };
+
     const saveDetails = async (e: FormEvent) => {
         e.preventDefault();
 
         const mutation = `
-          mutation ($id: ID!, $name: String, $bio: String, $avatar: MediaInput) {
+          mutation ($id: ID!, $name: String, $bio: String) {
             user: updateUser(userData: {
               id: $id
-              name: $name,
+              name: $name
               bio: $bio
-              avatar: $avatar
             }) {
               id,
               name,
@@ -152,7 +202,6 @@ function ProfileIndex({
                     id: profile.id,
                     name,
                     bio,
-                    avatar: avatar || undefined,
                 },
             })
             .setIsGraphQLEndpoint(true)
@@ -212,35 +261,23 @@ function ProfileIndex({
                     <h1 className="text-4xl font-semibold my-4 lg:my-8">
                         {PROFILE_PAGE_HEADER}
                     </h1>
-                    <Form onSubmit={saveDetails}>
-                        <Section header={PROFILE_SECTION_DETAILS}>
-                            <FormField
-                                value={profile.email}
-                                label={PROFILE_SECTION_DETAILS_EMAIL}
-                                onChange={() => {}}
-                                disabled={true}
-                            />
-
-                            <FormField
-                                name="name"
-                                value={name}
-                                label={PROFILE_SECTION_DETAILS_NAME}
-                                onChange={(event) =>
-                                    setName(event.target.value)
-                                }
-                            />
-                            <FormField
-                                name="bio"
-                                value={bio}
-                                onChange={(event) => setBio(event.target.value)}
-                                label={PROFILE_SECTION_DETAILS_BIO}
-                                multiline={true}
-                                maxRows={5}
-                            />
-
+                    <div className="flex flex-col lg:!flex-row gap-4">
+                        <Section className="w-full lg:!w-2/6 flex items-center">
                             <PageBuilderPropertyHeader
                                 label={PROFILE_SECTION_DISPLAY_PICTURE}
                             />
+                            <Avatar className="w-40 h-40 mb-4">
+                                <AvatarImage src={avatar?.file} />
+                                <AvatarFallback>
+                                    <Image
+                                        src="/courselit_backdrop_square.webp"
+                                        alt="profile pic"
+                                        sizes="16vw"
+                                        height="h-40"
+                                        width="w-40"
+                                    />
+                                </AvatarFallback>
+                            </Avatar>
                             <MediaSelector
                                 title=""
                                 auth={auth}
@@ -248,34 +285,69 @@ function ProfileIndex({
                                 dispatch={dispatch}
                                 address={address}
                                 mediaId={avatar?.mediaId}
-                                src={avatar?.thumbnail}
-                                srcTitle={avatar?.originalFileName}
+                                src={avatar?.thumbnail || ""}
+                                srcTitle={avatar?.originalFileName || ""}
                                 onSelection={(media?: Media) => {
                                     if (media) {
-                                        setAvatar(media);
+                                        updateProfilePic(media);
                                     }
                                 }}
                                 onRemove={() => {
-                                    setAvatar({});
+                                    updateProfilePic();
                                 }}
                                 access="public"
-                                strings={{}}
+                                strings={{
+                                    buttonCaption: "Upload a photo",
+                                    removeButtonCaption: "Remove photo",
+                                }}
+                                type="user"
+                                hidePreview={true}
                             />
-
-                            <div className="mt-2">
-                                <Button2
-                                    onClick={saveDetails}
-                                    disabled={
-                                        bio === (user && user.bio) &&
-                                        name === (user && user.name) &&
-                                        avatar === (user && user.avatar)
-                                    }
-                                >
-                                    {BUTTON_SAVE}
-                                </Button2>
-                            </div>
                         </Section>
-                    </Form>
+                        <Form
+                            onSubmit={saveDetails}
+                            className="w-full lg:!w-4/6"
+                        >
+                            <Section header={PROFILE_SECTION_DETAILS}>
+                                <FormField
+                                    value={profile.email}
+                                    label={PROFILE_SECTION_DETAILS_EMAIL}
+                                    onChange={() => {}}
+                                    disabled={true}
+                                />
+                                <FormField
+                                    name="name"
+                                    value={name}
+                                    label={PROFILE_SECTION_DETAILS_NAME}
+                                    onChange={(event) =>
+                                        setName(event.target.value)
+                                    }
+                                />
+                                <FormField
+                                    name="bio"
+                                    value={bio}
+                                    onChange={(event) =>
+                                        setBio(event.target.value)
+                                    }
+                                    label={PROFILE_SECTION_DETAILS_BIO}
+                                    multiline={true}
+                                    maxRows={5}
+                                />
+                                <div className="mt-2">
+                                    <Button2
+                                        onClick={saveDetails}
+                                        disabled={
+                                            bio === (user && user.bio) &&
+                                            name === (user && user.name) &&
+                                            avatar === (user && user.avatar)
+                                        }
+                                    >
+                                        {BUTTON_SAVE}
+                                    </Button2>
+                                </div>
+                            </Section>
+                        </Form>
+                    </div>
                     <Section header={PROFILE_EMAIL_PREFERENCES}>
                         <div className="flex justify-between">
                             <p>

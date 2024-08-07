@@ -17,7 +17,7 @@ const Todo = ({ siteinfo }) => {
             {(!siteinfo.title || (siteinfo.logo && !siteinfo.logo.file)) && (
                 <div className="flex flex-col border border-red-200 p-2 rounded-lg">
                     <h2 className="font-semibold mb-1">
-                        Basic details missing
+                        Basic details missing 💁‍♀️
                     </h2>
                     <p className="text-sm text-slate-500 mb-4">
                         Give your school a proper name, description and a logo.
@@ -35,7 +35,7 @@ const Todo = ({ siteinfo }) => {
             )}
             {(!siteinfo.currencyISOCode || !siteinfo.paymentMethod) && (
                 <div className="flex flex-col border border-red-200 p-2 rounded-lg">
-                    <h2 className="font-semibold mb-1">Start earning</h2>
+                    <h2 className="font-semibold mb-1">Start earning 💸</h2>
                     <p className="text-sm text-slate-500 mb-4">
                         Update your payment details to sell paid products.
                     </p>

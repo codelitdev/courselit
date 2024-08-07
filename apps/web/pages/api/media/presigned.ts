@@ -41,8 +41,9 @@ export default async function handler(
     if (
         !checkPermission(user!.permissions, [constants.permissions.manageMedia])
     ) {
-        throw new Error(responses.action_not_allowed);
+        return res.status(403).json({ message: responses.action_not_allowed });
     }
+
     try {
         let response = await medialitService.getPresignedUrlForUpload(
             domain.name,

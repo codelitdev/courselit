@@ -520,6 +520,7 @@ const LessonEditor = ({
                                     }),
                                 );
                             }}
+                            type="lesson"
                         />
                     )}
                     {lesson.type.toLowerCase() === LESSON_TYPE_TEXT && (
