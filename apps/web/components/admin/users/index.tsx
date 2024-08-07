@@ -272,14 +272,7 @@ const UsersManager = ({ address, dispatch, loading }: UserManagerProps) => {
                     loading={loading}
                 >
                     {users.map((user) => (
-                        <TableRow
-                            key={user.email}
-                            sx={{
-                                "&:last-child td, &:last-child th": {
-                                    border: 0,
-                                },
-                            }}
-                        >
+                        <TableRow key={user.email}>
                             <td className="py-2">
                                 <div className="flex items-center gap-2">
                                     <Avatar>
@@ -287,7 +280,7 @@ const UsersManager = ({ address, dispatch, loading }: UserManagerProps) => {
                                             src={
                                                 user.avatar
                                                     ? user.avatar?.file
-                                                    : "/favicon.ico"
+                                                    : "/courselit_backdrop_square.webp"
                                             }
                                         />
                                         <AvatarFallback>

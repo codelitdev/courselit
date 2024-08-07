@@ -147,7 +147,8 @@ const Login = ({ page, auth, dispatch }: LoginProps) => {
                     {showCode && (
                         <div>
                             <p className="mb-4">
-                                {BTN_LOGIN_CODE_INTIMATION} {email}
+                                {BTN_LOGIN_CODE_INTIMATION}{" "}
+                                <strong>{email}</strong>
                             </p>
                             <Form
                                 className="flex flex-col gap-4 mb-4"

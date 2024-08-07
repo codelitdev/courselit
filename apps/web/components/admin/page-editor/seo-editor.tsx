@@ -115,6 +115,7 @@ function SeoEditor({
                     strings={{}}
                     access="public"
                     mediaId={innerSocialImage && innerSocialImage.mediaId}
+                    type="page"
                 />
                 <div className="flex justify-between">
                     <PageBuilderPropertyHeader label={SEO_FORM_ROBOTS_LABEL} />

@@ -148,6 +148,7 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
                     onRemove={() => {
                         setFeaturedImage({});
                     }}
+                    type="course"
                 />
                 <div>
                     <Button type="submit">{BUTTON_SAVE}</Button>

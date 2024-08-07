@@ -140,8 +140,7 @@ export const LOGIN_FORM_LABEL =
     "Enter your email to sign in or create an account";
 export const LOGIN_NO_CODE = "Did not get the code?";
 export const BTN_LOGIN_GET_CODE = "Get code";
-export const BTN_LOGIN_CODE_INTIMATION =
-    "An email with the code has been sent to";
+export const BTN_LOGIN_CODE_INTIMATION = "Enter the code sent to";
 export const LOGIN_FORM_DISCLAIMER = "By submitting, you accept the ";
 export const SIGNUP_SECTION_HEADER = "Create an account";
 export const SIGNUP_SECTION_BUTTON = "Join";
@@ -275,6 +274,7 @@ export const PROFILE_SECTION_DETAILS = "Personal details";
 export const PROFILE_SECTION_DETAILS_NAME = "Name";
 export const PROFILE_SECTION_DETAILS_EMAIL = "Email";
 export const PROFILE_SECTION_DETAILS_BIO = "Bio";
+export const PROFILE_SECTION_DISPLAY_PICTURE = "Profile photo";
 export const PROFILE_EMAIL_PREFERENCES_NEWSLETTER_OPTION_TEXT =
     "Receive newsletter and marketing emails";
 export const BTN_PUBLISH = "Publish";
@@ -331,10 +331,8 @@ export const PERM_COURSE_MANAGE = "Manage products";
 export const PERM_COURSE_MANAGE_ANY = "Manage all products";
 export const PERM_COURSE_PUBLISH = "Manage blog";
 export const PERM_ENROLL_IN_COURSE = "Buy products";
-export const PERM_MEDIA_UPLOAD = "Upload files";
 export const PERM_MEDIA_MANAGE = "Manage files";
 export const PERM_MEDIA_MANAGE_ANY = "Manage all files";
-export const PERM_MEDIA_VIEW_ANY = "View files";
 export const PERM_SITE = "Manage pages";
 export const PERM_SETTINGS = "Manage settings";
 export const PERM_USERS = "Manage users";

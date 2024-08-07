@@ -50,12 +50,9 @@ export const canAccessDashboard = (profile: Profile) => {
     return checkPermission(profile.permissions, [
         permissions.manageCourse,
         permissions.manageAnyCourse,
-        permissions.manageMedia,
-        permissions.manageAnyMedia,
         permissions.manageSite,
         permissions.manageSettings,
         permissions.manageUsers,
-        permissions.viewAnyMedia,
     ]);
 };
 

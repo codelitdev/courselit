@@ -6,6 +6,7 @@ import { checkPermission } from "@courselit/utils";
 import User from "@models/User";
 import DomainModel, { Domain } from "@models/Domain";
 import { auth } from "@/auth";
+import { error } from "@/services/logger";
 
 export default async function handler(
     req: NextApiRequest,
@@ -38,16 +39,20 @@ export default async function handler(
     }
 
     if (
-        !checkPermission(user!.permissions, [constants.permissions.uploadMedia])
+        !checkPermission(user!.permissions, [constants.permissions.manageMedia])
     ) {
-        throw new Error(responses.action_not_allowed);
+        return res.status(403).json({ message: responses.action_not_allowed });
     }
+
     try {
         let response = await medialitService.getPresignedUrlForUpload(
             domain.name,
         );
         return res.status(200).json({ url: response });
     } catch (err: any) {
+        error(err.mssage, {
+            stack: err.stack,
+        });
         return res.status(500).json({ error: err.message });
     }
 }

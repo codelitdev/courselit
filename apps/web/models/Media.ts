@@ -3,7 +3,9 @@ import mongoose from "mongoose";
 import constants from "../config/constants";
 const { publicMedia, privateMedia } = constants;
 
-const MediaSchema = new mongoose.Schema<Media>({
+type MediaWithOwner = Media & { userId: string };
+
+const MediaSchema = new mongoose.Schema<MediaWithOwner>({
     mediaId: { type: String, required: true },
     originalFileName: { type: String, required: true },
     mimeType: { type: String, required: true },
