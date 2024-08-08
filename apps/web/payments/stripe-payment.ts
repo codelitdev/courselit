@@ -1,12 +1,10 @@
 import Payment, { InitiateProps } from "./payment";
 import { responses } from "../config/strings";
 import Stripe from "stripe";
-import constants from "../config/constants";
-import { SiteInfo } from "../models/SiteInfo";
+import { SiteInfo, UIConstants } from "@courselit/common-models";
 
-const { stripe } = constants;
 const {
-    stripe_invalid_settings: stripeInvalidSettings,
+    payment_invalid_settings: paymentInvalidSettings,
     currency_iso_not_set: currencyISONotSet,
 } = responses;
 
@@ -17,7 +15,7 @@ export default class StripePayment implements Payment {
 
     constructor(siteinfo: SiteInfo) {
         this.siteinfo = siteinfo;
-        this.name = stripe;
+        this.name = UIConstants.PAYMENT_METHOD_STRIPE;
     }
 
     async setup() {
@@ -25,11 +23,8 @@ export default class StripePayment implements Payment {
             throw new Error(currencyISONotSet);
         }
 
-        if (
-            !this.siteinfo.stripePublishableKey ||
-            !this.siteinfo.stripeSecret
-        ) {
-            throw new Error(stripeInvalidSettings);
+        if (!this.siteinfo.stripeKey || !this.siteinfo.stripeSecret) {
+            throw new Error(`${this.name} ${paymentInvalidSettings}`);
         }
 
         this.stripe = new Stripe(this.siteinfo.stripeSecret, {

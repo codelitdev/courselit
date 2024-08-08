@@ -145,5 +145,9 @@ export async function GET(req: Request) {
         (domain! as any).save();
     }
 
-    return Response.json({ success: true, domain: domain!.name });
+    return Response.json({
+        success: true,
+        domain: domain!.name,
+        logo: domain!.settings?.logo?.file,
+    });
 }

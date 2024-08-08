@@ -50,9 +50,9 @@ function siteinfoReducer(state = initialState.siteinfo, action: Action) {
                     paymentMethod:
                         action.siteinfo.paymentMethod ||
                         initialState.siteinfo.paymentMethod,
-                    stripePublishableKey:
-                        action.siteinfo.stripePublishableKey ||
-                        initialState.siteinfo.stripePublishableKey,
+                    stripeKey:
+                        action.siteinfo.stripeKey ||
+                        initialState.siteinfo.stripeKey,
                     codeInjectionHead:
                         decode(action.siteinfo.codeInjectionHead) ||
                         initialState.siteinfo.codeInjectionHead,
@@ -190,7 +190,7 @@ const reducer = (state = initialState, action: Action) => {
         }
 
         return nextState;
-    } else {
+    } else https://github.com/codelitdev/courselit/pull/466/conflict?name=packages%252Fstate-management%252Fsrc%252Freducer.ts&ancestor_oid=be9cb6efd3543df56a8a500fcf7e175240111be6&base_oid=6a8eacacdd912be149bfb9936119aa6b48ff2bd6&head_oid=13f7b106cec3104123a577120031e171f70d5e0c{
         return appReducers(state, action);
     }
 };

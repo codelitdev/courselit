@@ -1,4 +1,4 @@
-import { SiteInfo } from "@courselit/common-models";
+import { SiteInfo, Constants } from "@courselit/common-models";
 import mongoose from "mongoose";
 import MediaSchema from "./Media";
 
@@ -7,8 +7,8 @@ const SettingsSchema = new mongoose.Schema<SiteInfo>({
     subtitle: { type: String },
     logo: MediaSchema,
     currencyISOCode: { type: String, maxlength: 3 },
-    paymentMethod: { type: String },
-    stripePublishableKey: { type: String },
+    paymentMethod: { type: String, enum: Constants.paymentMethods },
+    stripeKey: { type: String },
     codeInjectionHead: { type: String },
     codeInjectionBody: { type: String },
     stripeSecret: { type: String },

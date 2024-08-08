@@ -4,7 +4,7 @@ import { AppState } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import { useRouter } from "next/router";
 import { connect } from "react-redux";
-import BaseLayout from "../../components/public/base-layout";
+import BaseLayout from "@/components/public/base-layout";
 import { FREE_COURSES_TEXT } from "../../ui-config/constants";
 import {
     CHECKOUT_PAGE_TITLE,
@@ -13,9 +13,9 @@ import {
 import { getBackendAddress, getPage } from "../../ui-lib/utils";
 import dynamic from "next/dynamic";
 const PurchaseStatus = dynamic(
-    () => import("../../components/public/purchase-status"),
+    () => import("@/components/public/purchase-status"),
 );
-const Checkout = dynamic(() => import("../../components/public/checkout"));
+const Checkout = dynamic(() => import("@/components/public/checkout"));
 
 interface CheckoutProductProps {
     page: Page;

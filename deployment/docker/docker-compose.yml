@@ -15,7 +15,7 @@ services:
       #
       # You can use the following command to generate a secure random string.
       # openssl rand -base64 32
-      - NEXTAUTH_SECRET=som3_rand0m_$tring
+      - AUTH_SECRET=som3_rand0m_$tring
 
       # In production, replace the following with the connection string of a cloud 
       # hosted instance of MongoDB.

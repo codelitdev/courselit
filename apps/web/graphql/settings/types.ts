@@ -76,10 +76,14 @@ const sitePaymentUpdateType = new GraphQLInputObjectType({
     fields: {
         currencyISOCode: { type: GraphQLString },
         paymentMethod: { type: GraphQLString },
-        stripePublishableKey: { type: GraphQLString },
+        stripeKey: { type: GraphQLString },
         stripeSecret: { type: GraphQLString },
+        stripeWebhookSecret: { type: GraphQLString },
         paytmSecret: { type: GraphQLString },
         paypalSecret: { type: GraphQLString },
+        razorpayKey: { type: GraphQLString },
+        razorpaySecret: { type: GraphQLString },
+        razorpayWebhookSecret: { type: GraphQLString },
     },
 });
 

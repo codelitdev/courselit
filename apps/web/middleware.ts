@@ -1,6 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
+import NextAuth from "next-auth";
+import { authConfig } from "./auth.config";
+import { getBackendAddress } from "@/lib/get-backend-address";
 
-export async function middleware(request: NextRequest) {
+const { auth } = NextAuth(authConfig);
+
+export default auth(async (request: NextRequest) => {
     const requestHeaders = request.headers;
     const backend = getBackendAddress(requestHeaders);
     try {
@@ -14,6 +19,34 @@ export async function middleware(request: NextRequest) {
 
         requestHeaders.set("domain", resp.domain);
 
+        if (request.nextUrl.pathname === "/favicon.ico") {
+            try {
+                if (resp.logo) {
+                    const response = await fetch(resp.logo);
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        return new NextResponse(blob, {
+                            headers: {
+                                "content-type": "image/webp",
+                            },
+                        });
+                    } else {
+                        return NextResponse.rewrite(
+                            new URL(`/default-favicon.ico`, request.url),
+                        );
+                    }
+                } else {
+                    return NextResponse.rewrite(
+                        new URL(`/default-favicon.ico`, request.url),
+                    );
+                }
+            } catch (err) {
+                return NextResponse.rewrite(
+                    new URL(`/default-favicon.ico`, request.url),
+                );
+            }
+        }
+
         return NextResponse.next({
             request: {
                 headers: requestHeaders,
@@ -22,12 +55,8 @@ export async function middleware(request: NextRequest) {
     } catch (err) {
         return NextResponse.rewrite(new URL("/notfound", request.url));
     }
-}
+});
 
 export const config = {
-    matcher: ["/", "/api/:path*"],
-};
-
-const getBackendAddress = (headers: Headers): `${string}://${string}` => {
-    return `${headers.get("x-forwarded-proto")}://${headers.get("host")}`;
+    matcher: ["/", "/favicon.ico", "/api/:path*"],
 };

@@ -127,7 +127,7 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
                         },
                         currencyISOCode,
                         paymentMethod,
-                        stripePublishableKey,
+                        stripeKey,
                         codeInjectionHead,
                         codeInjectionBody,
                         mailingAddress,

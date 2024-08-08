@@ -13,7 +13,7 @@ export default {
         },
         currencyISOCode: "",
         paymentMethod: "",
-        stripePublishableKey: "",
+        stripeKey: "",
         codeInjectionHead: "",
         codeInjectionBody: "",
         mailingAddress: "",

@@ -21,7 +21,8 @@ import type { AppDispatch, AppState } from "@courselit/state-management";
 import { Address, AppMessage, Auth } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
 import { actionCreators } from "@courselit/state-management";
-import { Button } from "@courselit/components-library";
+import { Button, Button2 } from "@courselit/components-library";
+import Link from "next/link";
 
 const { networkAction, setAppMessage } = actionCreators;
 
@@ -82,9 +83,9 @@ const PurchaseStatus = (props: PurchaseStatusProps) => {
                         {TRANSACTION_STATUS_SUCCESS}
                     </h3>
                     <p className="mb-2">{TRANSACTION_STATUS_SUCCESS_DETAILS}</p>
-                    <Button component="link" href={courseLink}>
-                        {VISIT_COURSE_BUTTON}
-                    </Button>
+                    <Link href={courseLink}>
+                        <Button2>{VISIT_COURSE_BUTTON}</Button2>
+                    </Link>
                 </div>
             )}
             {status === TRANSACTION_INITIATED && (
@@ -101,13 +102,12 @@ const PurchaseStatus = (props: PurchaseStatusProps) => {
                             <p className="text-sm mb-8">
                                 {PURCHASE_ID_HEADER}: {id}
                             </p>
-                            <Button
-                                component="button"
+                            <Button2
                                 onClick={getPaymentStatus}
                                 disabled={props.loading}
                             >
                                 {VERIFY_PAYMENT_BUTTON}
-                            </Button>
+                            </Button2>
                         </div>
                     )}
                 </>

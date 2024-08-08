@@ -1,5 +1,5 @@
 import { generateUniqueId } from "@courselit/utils";
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import constants from "../config/constants";
 const { transactionInitiated, transactionSuccess, transactionFailed } =
     constants;
@@ -20,6 +20,7 @@ export interface Purchase {
     paymentId?: string;
     discount?: string;
     remark?: number;
+    webhookPayload?: Record<string, unknown>;
 }
 
 const PurchaseSchema = new mongoose.Schema<Purchase>({
@@ -35,6 +36,7 @@ const PurchaseSchema = new mongoose.Schema<Purchase>({
     discount: { type: Number },
     status: { type: String, required: true, default: transactionInitiated },
     remark: { type: String },
+    webhookPayload: { type: Schema.Types.Mixed },
 });
 
 export default mongoose.models.Purchase ||

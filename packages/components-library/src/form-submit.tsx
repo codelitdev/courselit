@@ -1,6 +1,6 @@
 import React, { ReactNode } from "react";
 import { Submit } from "@radix-ui/react-form";
-import Button from "./button";
+import { Button2 } from ".";
 
 interface FormSubmitProps {
     text: ReactNode;
@@ -10,9 +10,7 @@ interface FormSubmitProps {
 export default function FormSubmit({ text, ...other }: FormSubmitProps) {
     return (
         <Submit asChild>
-            <Button component="button" {...other}>
-                {text}
-            </Button>
+            <Button2 {...other}>{text}</Button2>
         </Submit>
     );
 }

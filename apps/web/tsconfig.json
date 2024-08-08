@@ -12,7 +12,8 @@
             "@ui-models/*": ["./ui-models/*"],
             "@ui-lib/*": ["./ui-lib/*"],
             "@config/*": ["./config/*"],
-            "@models/*": ["./models/*"]
+            "@models/*": ["./models/*"],
+            "@/*": ["./*"]
         },
         "strictNullChecks": true
     },

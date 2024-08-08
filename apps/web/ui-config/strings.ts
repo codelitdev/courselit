@@ -89,6 +89,9 @@ export const SITE_SETTINGS_COURSELIT_BRANDING_SUB_CAPTION = `Hide "Powered by Co
 export const SITE_SETTINGS_CURRENCY = "Currency";
 export const SITE_SETTINGS_PAGE_HEADING = "Settings";
 export const SITE_ADMIN_SETTINGS_STRIPE_SECRET = "Stripe Secret Key";
+export const SITE_ADMIN_SETTINGS_RAZORPAY_SECRET = "Razorpay Secret Key";
+export const SITE_ADMIN_SETTINGS_RAZORPAY_WEBHOOK_SECRET =
+    "Razorpay Webhook Secret";
 export const SITE_ADMIN_SETTINGS_PAYPAL_SECRET = "Paypal Secret Key";
 export const SITE_ADMIN_SETTINGS_PAYTM_SECRET = "Paytm Secret Key";
 export const SITE_SETTINGS_SECTION_GENERAL = "Branding";
@@ -96,6 +99,7 @@ export const SITE_SETTINGS_SECTION_PAYMENT = "Payment";
 export const SITE_ADMIN_SETTINGS_PAYMENT_METHOD = "Payment Method";
 export const SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT =
     "Stripe Publishable Key";
+export const SITE_SETTINGS_RAZORPAY_KEY_TEXT = "Razorpay Key";
 export const SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL = "None";
 export const FREE_COST = "FREE";
 export const SIDEBAR_TEXT_COURSE_ABOUT = "Introduction";
@@ -557,3 +561,4 @@ export const MAIL_REQUEST_FORM_REASON_PLACEHOLDER =
     "Please be as detailed as possible. This will help us review your application better.";
 export const DASHBOARD_SELECT_HEADER = "Duration";
 export const DELETE_EMAIL_MENU = "Delete";
+export const LOGIN_SUCCESS = "Login successful. Redirecting...";
