@@ -570,7 +570,7 @@ const Settings = (props: SettingsProps) => {
                     <PageBuilderPropertyHeader
                         label={SITE_SETTINGS_COURSELIT_BRANDING_CAPTION}
                     />
-                    <div className="flex justify-between">
+                    <div className="flex justify-between text-[#8D8D8D]">
                         <p>{SITE_SETTINGS_COURSELIT_BRANDING_SUB_CAPTION}</p>
                         <Checkbox
                             disabled={props.networkAction}

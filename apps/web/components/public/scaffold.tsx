@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 import { AppState } from "@courselit/state-management";
 import { Chip, Modal } from "@courselit/components-library";
 import AppToast from "@components/app-toast";
+import { SiteInfo } from "@courselit/common-models";
 
 export interface ComponentScaffoldMenuItem {
     label: string;
@@ -20,12 +21,16 @@ interface ComponentScaffoldProps {
     items: (ComponentScaffoldMenuItem | Divider)[];
     children: ReactNode;
     drawerWidth?: number;
+    siteinfo: SiteInfo;
+    courseLitBranding?: boolean;
 }
 
 const ComponentScaffold = ({
     items,
     children,
     drawerWidth = 240,
+    siteinfo,
+    courseLitBranding,
 }: ComponentScaffoldProps) => {
     const [open, setOpen] = useState(false);
     const router = useRouter();
@@ -77,6 +82,12 @@ const ComponentScaffold = ({
                         </li>
                     ),
             )}
+
+            {!siteinfo.hideCourseLitBranding && courseLitBranding && (
+                <div className="w-[155px] h-9 p-2 mx-[55px] my-[10px] border rounded-md bg-[#FFFFFF] text-[#000000] text-sm flex items-center gap-1">
+                    Powered by <span className="font-semibold">CourseLit</span>
+                </div>
+            )}
         </ul>
     );
 
@@ -96,6 +107,7 @@ const ComponentScaffold = ({
                     {children}
                 </main>
             </div>
+
             <Modal
                 open={open}
                 onOpenChange={(status: boolean) => setOpen(status)}
@@ -107,6 +119,8 @@ const ComponentScaffold = ({
     );
 };
 
-const mapStateToProps = (state: AppState) => ({});
+const mapStateToProps = (state: AppState) => ({
+    siteinfo: state.siteinfo,
+});
 
 export default connect(mapStateToProps)(ComponentScaffold);

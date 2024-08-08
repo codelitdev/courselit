@@ -128,5 +128,7 @@ export const internal = {
     default_email_broadcast_subject: "New broadcast",
     default_email_sequence_subject: "First email",
     default_email_content:
-        "<p>Replace this with actual content.</p>\n<p>You can use <b>HTML</b>.</p>\n<p>We also support <a href='https://shopify.github.io/liquid/'>Liquid</a>.</p>\n<br>\n<p>Our mailing address is:</p>\n<p>{{ address }}</p>\n<a href=\"{{ unsubscribe_link}}\">Unsubscribe</a>",
+        "<p>Replace this with actual content.</p>\n<p>You can use <b>HTML</b>.</p>\n<p>We also support <a href='https://shopify.github.io/liquid/'>Liquid</a>.</p>\n<br>\n<p>Our mailing address is:</p>\n<p>{{ address }}</p>\n<a href=\"{{ unsubscribe_link }}\">Unsubscribe</a>\n<p><a href=\"{{ rewards_link }}\">Powered by CourseLit</a></p>",
 };
+
+// <p \"style="width: 155px; height: 9px; padding: 2px; margin: 10px 55px; border: 1px solid; border-radius: 5px; background-color: #FFFFFF; color: #000000; font-size: small; display: flex; align-items: center; gap: 1px;\"><a href=\"{{ rewards_link }}\">Powered by CourseLit</a></p>"
