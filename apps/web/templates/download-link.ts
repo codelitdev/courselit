@@ -19,6 +19,19 @@ html
             .cta:hover {
                 background-color: #060665;
             }
+            .courselit-branding {
+                width: 155px;
+                height: 9px;
+                padding: 2px;
+                border: 1px solid;
+                border-radius: 5px;
+                background-color: #FFFFFF;
+                color: #000000;
+                font-size: small;
+                display: flex;
+                align-items: center;
+                gap: 1px;
+            }
     body
         p   Thank you for signing up for #{courseName}.
         div(class="cta-container") 
@@ -31,6 +44,8 @@ html
         p 
             |   To access all of your content, 
             |   #[a(href=\`\${loginLink}\`) log in] here. 
+        div(class="courselit-branding")
+            | Powered by <span style="font-weight: bold;">CourseLit</span>       
 `;
 
 export default digitalDownloadTemplate;

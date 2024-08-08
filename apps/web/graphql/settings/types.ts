@@ -6,6 +6,7 @@ import {
     GraphQLList,
     GraphQLInt,
     GraphQLFloat,
+    GraphQLBoolean,
 } from "graphql";
 import mediaTypes from "../media/types";
 import { getMedia } from "../media/logic";
@@ -38,6 +39,25 @@ const typefaceInputType = new GraphQLInputObjectType({
     },
 });
 
+const siteType = new GraphQLObjectType({
+    name: "SiteInfo",
+    fields: {
+        title: { type: GraphQLString },
+        subtitle: { type: GraphQLString },
+        logo: {
+            type: mediaType,
+            resolve: (settings, _, __, ___) => getMedia(settings.logo),
+        },
+        currencyISOCode: { type: GraphQLString },
+        paymentMethod: { type: GraphQLString },
+        stripePublishableKey: { type: GraphQLString },
+        codeInjectionHead: { type: GraphQLString },
+        codeInjectionBody: { type: GraphQLString },
+        mailingAddress: { type: GraphQLString },
+        hideCourseLitBranding: { type: GraphQLBoolean },
+    },
+});
+
 const siteUpdateType = new GraphQLInputObjectType({
     name: "SiteInfoUpdateInput",
     fields: {
@@ -47,6 +67,7 @@ const siteUpdateType = new GraphQLInputObjectType({
         codeInjectionHead: { type: GraphQLString },
         codeInjectionBody: { type: GraphQLString },
         mailingAddress: { type: GraphQLString },
+        hideCourseLitBranding: { type: GraphQLBoolean },
     },
 });
 
@@ -63,25 +84,6 @@ const sitePaymentUpdateType = new GraphQLInputObjectType({
         razorpayKey: { type: GraphQLString },
         razorpaySecret: { type: GraphQLString },
         razorpayWebhookSecret: { type: GraphQLString },
-    },
-});
-
-const siteType = new GraphQLObjectType({
-    name: "SiteInfo",
-    fields: {
-        title: { type: GraphQLString },
-        subtitle: { type: GraphQLString },
-        logo: {
-            type: mediaType,
-            resolve: (settings, _, __, ___) => getMedia(settings.logo),
-        },
-        currencyISOCode: { type: GraphQLString },
-        paymentMethod: { type: GraphQLString },
-        stripeKey: { type: GraphQLString },
-        razorpayKey: { type: GraphQLString },
-        codeInjectionHead: { type: GraphQLString },
-        codeInjectionBody: { type: GraphQLString },
-        mailingAddress: { type: GraphQLString },
     },
 });
 

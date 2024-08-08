@@ -23,6 +23,7 @@ export function MailEditorAndPreview({
                 },
                 address: "MAILING_ADDRESS",
                 unsubscribe_link: "UNSUBSCRIBE_LINK",
+                rewards_link: "POWERED_BY_COURSELIT",
             });
             setEmailRendered(emailContent);
         } catch (e) {
@@ -58,7 +59,7 @@ export function MailEditorAndPreview({
                     </div>
                     <div>
                         <h4 className="font-semibold text-sm text-slate-600">
-                            {"{{ subscriber.name}}"}
+                            {"{{ subscriber.name }}"}
                         </h4>
                         <p className="text-sm text-slate-500">
                             The name of the subscriber
@@ -74,10 +75,18 @@ export function MailEditorAndPreview({
                     </div>
                     <div>
                         <h4 className="font-semibold text-sm text-slate-600">
-                            {"{{ unsubscribe_link}}"}
+                            {"{{ unsubscribe_link }}"}
                         </h4>
                         <p className="text-sm text-slate-500">
                             A link to unsubscribe from the marketing emails
+                        </p>
+                    </div>
+                    <div>
+                        <h4 className="font-semibold text-sm text-slate-600">
+                            {"{{ rewards_link }}"}
+                        </h4>
+                        <p className="text-sm text-slate-500">
+                            Your branding information
                         </p>
                     </div>
                 </div>

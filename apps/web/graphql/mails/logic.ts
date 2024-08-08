@@ -31,11 +31,13 @@ import MailRequestStatusModel, {
 const { permissions } = constants;
 
 export async function createSubscription(
+    name: string,
     email: string,
     ctx: GQLContext,
 ): Promise<boolean> {
     try {
         let dbUser: User | null = await UserModel.findOne({
+            name,
             email,
             domain: ctx.subdomain._id,
         });
@@ -43,6 +45,7 @@ export async function createSubscription(
         if (!dbUser) {
             dbUser = await createUser({
                 domain: ctx.subdomain!,
+                name: name,
                 email: email,
                 lead: constants.leadNewsletter,
             });

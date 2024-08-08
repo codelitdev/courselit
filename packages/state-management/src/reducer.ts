@@ -59,9 +59,12 @@ function siteinfoReducer(state = initialState.siteinfo, action: Action) {
                     codeInjectionBody:
                         decode(action.siteinfo.codeInjectionBody) ||
                         initialState.siteinfo.codeInjectionBody,
-                    razorpayKey:
-                        action.siteinfo.razorpayKey ||
-                        initialState.siteinfo.razorpayKey,
+                    mailingAddress:
+                        action.siteinfo.mailingAddress ||
+                        initialState.siteinfo.mailingAddress,
+                    hideCourseLitBranding:
+                        action.siteinfo.hideCourseLitBranding ||
+                        initialState.siteinfo.hideCourseLitBranding,
                 };
             } catch (e) {
                 return state;
@@ -188,6 +191,7 @@ const reducer = (state = initialState, action: Action) => {
 
         return nextState;
     } else {
+        //https:github.com/codelitdev/courselit/pull/466/conflict?name=packages%252Fstate-management%252Fsrc%252Freducer.ts&ancestor_oid=be9cb6efd3543df56a8a500fcf7e175240111be6&base_oid=6a8eacacdd912be149bfb9936119aa6b48ff2bd6&head_oid=13f7b106cec3104123a577120031e171f70d5e0c
         return appReducers(state, action);
     }
 };

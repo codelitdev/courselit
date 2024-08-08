@@ -35,7 +35,8 @@ import {
     SITE_MAILS_HEADER,
     SITE_MAILING_ADDRESS_SETTING_HEADER,
     SITE_MAILING_ADDRESS_SETTING_EXPLANATION,
-    SITE_SETTINGS_RAZORPAY_KEY_TEXT,
+    SITE_SETTINGS_COURSELIT_BRANDING_CAPTION,
+    SITE_SETTINGS_COURSELIT_BRANDING_SUB_CAPTION,
 } from "../../../ui-config/strings";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import { decode, encode } from "base-64";
@@ -58,6 +59,7 @@ import {
     TableRow,
     Dialog2,
     PageBuilderPropertyHeader,
+    Checkbox,
 } from "@courselit/components-library";
 
 const {
@@ -126,6 +128,7 @@ const Settings = (props: SettingsProps) => {
                     ? encode(settings.codeInjectionBody)
                     : "",
                 mailingAddress: settings.mailingAddress || "",
+                hideCourseLitBranding: settings.hideCourseLitBranding ?? false,
             }),
         );
     }, [settings]);
@@ -153,7 +156,8 @@ const Settings = (props: SettingsProps) => {
                         razorpayKey,
                         codeInjectionHead,
                         codeInjectionBody,
-                        mailingAddress
+                        mailingAddress,
+                        hideCourseLitBranding
                     }
                 },
                 apikeys: getApikeys {
@@ -196,6 +200,8 @@ const Settings = (props: SettingsProps) => {
             codeInjectionHead: settingsResponse.codeInjectionHead || "",
             codeInjectionBody: settingsResponse.codeInjectionBody || "",
             mailingAddress: settingsResponse.mailingAddress || "",
+            hideCourseLitBranding:
+                settingsResponse.hideCourseLitBranding ?? false,
         };
         setSettings(
             Object.assign({}, settings, settingsResponseWithNullsRemoved),
@@ -210,30 +216,12 @@ const Settings = (props: SettingsProps) => {
     ) => {
         event.preventDefault();
         const query = `
-            mutation {
+            mutation UpdateSiteInfo($title: String, $subtitle: String, $logo: MediaInput, $hideCourseLitBranding: Boolean){
                 settings: updateSiteInfo(siteData: {
-                    title: "${newSettings.title}",
-                    subtitle: "${newSettings.subtitle}",
-                    logo: ${
-                        newSettings.logo && newSettings.logo.mediaId
-                            ? `{
-                                mediaId: "${newSettings.logo.mediaId}",
-                                originalFileName: "${
-                                    newSettings.logo.originalFileName
-                                }",
-                                mimeType: "${newSettings.logo.mimeType}",
-                                size: ${newSettings.logo.size},
-                                access: "${newSettings.logo.access}",
-                                file: ${
-                                    newSettings.logo.access === "public"
-                                        ? `"${newSettings.logo.file}"`
-                                        : null
-                                },
-                                thumbnail: "${newSettings.logo.thumbnail}",
-                                caption: "${newSettings.logo.caption}"
-                            }`
-                            : null
-                    } 
+                    title: $title,
+                    subtitle: $subtitle,
+                    logo: $logo
+                    hideCourseLitBranding: $hideCourseLitBranding
                 }) {
                     settings {
                         title,
@@ -254,13 +242,41 @@ const Settings = (props: SettingsProps) => {
                         razorpayKey,
                         codeInjectionHead,
                         codeInjectionBody,
-                        mailingAddress
+                        mailingAddress,
+                        hideCourseLitBranding
                     }
                 }
             }`;
 
         try {
-            const fetchRequest = fetch.setPayload(query).build();
+            const fetchRequest = fetch
+                .setPayload({
+                    query,
+                    variables: {
+                        title: newSettings.title,
+                        subtitle: newSettings.subtitle,
+                        logo:
+                            newSettings.logo && newSettings.logo.mediaId
+                                ? {
+                                      mediaId: newSettings.logo.mediaId,
+                                      originalFileName:
+                                          newSettings.logo.originalFileName,
+                                      mimeType: newSettings.logo.mimeType,
+                                      size: newSettings.logo.size,
+                                      access: newSettings.logo.access,
+                                      file:
+                                          newSettings.logo.access === "public"
+                                              ? newSettings.logo.file
+                                              : null,
+                                      thumbnail: newSettings.logo?.thumbnail,
+                                      caption: newSettings.logo?.caption,
+                                  }
+                                : null,
+                        hideCourseLitBranding:
+                            newSettings.hideCourseLitBranding,
+                    },
+                })
+                .build();
             props.dispatch(networkAction(true));
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
@@ -311,6 +327,7 @@ const Settings = (props: SettingsProps) => {
                     codeInjectionHead,
                     codeInjectionBody,
                     mailingAddress,
+                    hideCourseLitBranding
                 }
             }
         }`;
@@ -366,6 +383,7 @@ const Settings = (props: SettingsProps) => {
                     codeInjectionHead,
                     codeInjectionBody,
                     mailingAddress,
+                    hideCourseLitBranding
                 }
             }
         }`;
@@ -443,6 +461,7 @@ const Settings = (props: SettingsProps) => {
                         codeInjectionHead,
                         codeInjectionBody,
                         mailingAddress,
+                        hideCourseLitBranding
                     }
                 }
             }`;
@@ -585,6 +604,24 @@ const Settings = (props: SettingsProps) => {
                             );
                         }}
                     />
+                    <PageBuilderPropertyHeader
+                        label={SITE_SETTINGS_COURSELIT_BRANDING_CAPTION}
+                    />
+                    <div className="flex justify-between text-[#8D8D8D]">
+                        <p>{SITE_SETTINGS_COURSELIT_BRANDING_SUB_CAPTION}</p>
+                        <Checkbox
+                            disabled={props.networkAction}
+                            checked={newSettings.hideCourseLitBranding}
+                            onChange={(value: boolean) => {
+                                setNewSettings(
+                                    Object.assign({}, newSettings, {
+                                        hideCourseLitBranding: value,
+                                    }),
+                                );
+                            }}
+                        />
+                    </div>
+
                     <div>
                         <Button
                             type="submit"
@@ -595,11 +632,15 @@ const Settings = (props: SettingsProps) => {
                                     title: settings.title,
                                     subtitle: settings.subtitle,
                                     logo: settings.logo,
+                                    hideCourseLitBranding:
+                                        settings.hideCourseLitBranding,
                                 }) ===
                                     JSON.stringify({
                                         title: newSettings.title,
                                         subtitle: newSettings.subtitle,
                                         logo: newSettings.logo,
+                                        hideCourseLitBranding:
+                                            newSettings.hideCourseLitBranding,
                                     }) ||
                                 !newSettings.title ||
                                 props.networkAction
@@ -609,6 +650,7 @@ const Settings = (props: SettingsProps) => {
                         </Button>
                     </div>
                 </Form>
+
                 <Form
                     onSubmit={handlePaymentSettingsSubmit}
                     className="flex flex-col gap-4 pt-4"
@@ -783,15 +825,6 @@ const Settings = (props: SettingsProps) => {
                     <p className="text-xs text-slate-500">
                         {SITE_MAILING_ADDRESS_SETTING_EXPLANATION}
                     </p>
-                    {/* <FormField
-                        component="textarea"
-                        label={SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY}
-                        name="codeInjectionBody"
-                        value={newSettings.codeInjectionBody || ""}
-                        onChange={onChangeData}
-                        multiline
-                        rows={10}
-                    /> */}
                     <div>
                         <Button
                             type="submit"
