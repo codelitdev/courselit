@@ -352,7 +352,7 @@ function PageEditor({
         layout?: Record<string, unknown>[];
         title?: string;
         description?: string;
-        socialImage?: Media | {};
+        socialImage?: Media | null;
         robotsAllowed?: boolean;
     }) => {
         if (!pageId) {
@@ -573,9 +573,7 @@ function PageEditor({
                             ? page.robotsAllowed
                             : true
                     }
-                    socialImage={
-                        page.draftSocialImage || page.socialImage || {}
-                    }
+                    socialImage={page.draftSocialImage || {}}
                     onClose={(e) => setLeftPaneContent("none")}
                     onSave={({
                         title,

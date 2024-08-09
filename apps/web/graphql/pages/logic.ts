@@ -237,7 +237,7 @@ export const updatePage = async ({
     if (description) {
         page.draftDescription = description;
     }
-    if (socialImage) {
+    if (typeof socialImage !== "undefined") {
         page.draftSocialImage = socialImage;
     }
     if (typeof robotsAllowed === "boolean") {
@@ -286,14 +286,12 @@ export const publish = async (
         page.description = page.draftDescription;
         page.draftDescription = undefined;
     }
-    if (page.draftSocialImage) {
-        page.socialImage = page.draftSocialImage;
-        page.draftSocialImage = undefined;
-    }
     if (page.draftRobotsAllowed) {
         page.robotsAllowed = page.draftRobotsAllowed;
         page.draftRobotsAllowed = undefined;
     }
+    page.socialImage = page.draftSocialImage;
+
     ctx.subdomain.typefaces = ctx.subdomain.draftTypefaces;
     ctx.subdomain.sharedWidgets = ctx.subdomain.draftSharedWidgets;
     ctx.subdomain.draftSharedWidgets = {};

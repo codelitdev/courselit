@@ -27,7 +27,7 @@ interface MasterLayoutProps {
     theme: Theme;
     dispatch: AppDispatch;
     description?: string;
-    socialImage: Media;
+    socialImage?: Media;
     robotsAllowed?: boolean;
 }
 

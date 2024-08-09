@@ -36,11 +36,13 @@ import {
     SITE_MAILING_ADDRESS_SETTING_HEADER,
     SITE_MAILING_ADDRESS_SETTING_EXPLANATION,
     SITE_SETTINGS_RAZORPAY_KEY_TEXT,
+    MEDIA_SELECTOR_UPLOAD_BTN_CAPTION,
+    MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
 } from "../../../ui-config/strings";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import { decode, encode } from "base-64";
 import { AppMessage, Profile, UIConstants } from "@courselit/common-models";
-import type { SiteInfo, Address, Auth } from "@courselit/common-models";
+import type { SiteInfo, Address, Auth, Media } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
 import currencies from "@/data/currencies.json";
@@ -213,27 +215,7 @@ const Settings = (props: SettingsProps) => {
             mutation {
                 settings: updateSiteInfo(siteData: {
                     title: "${newSettings.title}",
-                    subtitle: "${newSettings.subtitle}",
-                    logo: ${
-                        newSettings.logo && newSettings.logo.mediaId
-                            ? `{
-                                mediaId: "${newSettings.logo.mediaId}",
-                                originalFileName: "${
-                                    newSettings.logo.originalFileName
-                                }",
-                                mimeType: "${newSettings.logo.mimeType}",
-                                size: ${newSettings.logo.size},
-                                access: "${newSettings.logo.access}",
-                                file: ${
-                                    newSettings.logo.access === "public"
-                                        ? `"${newSettings.logo.file}"`
-                                        : null
-                                },
-                                thumbnail: "${newSettings.logo.thumbnail}",
-                                caption: "${newSettings.logo.caption}"
-                            }`
-                            : null
-                    } 
+                    subtitle: "${newSettings.subtitle || ""}",
                 }) {
                     settings {
                         title,
@@ -261,6 +243,60 @@ const Settings = (props: SettingsProps) => {
 
         try {
             const fetchRequest = fetch.setPayload(query).build();
+            props.dispatch(networkAction(true));
+            const response = await fetchRequest.exec();
+            if (response.settings.settings) {
+                setSettingsState(response.settings.settings);
+                props.dispatch(
+                    setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)),
+                );
+            }
+        } catch (e: any) {
+            props.dispatch(setAppMessage(new AppMessage(e.message)));
+        } finally {
+            props.dispatch(networkAction(false));
+        }
+    };
+
+    const saveLogo = async (media?: Media) => {
+        const query = `
+            mutation ($logo: MediaInput) {
+                settings: updateSiteInfo(siteData: {
+                    logo: $logo 
+                }) {
+                    settings {
+                        title,
+                        subtitle,
+                        logo {
+                            mediaId,
+                            originalFileName,
+                            mimeType,
+                            size,
+                            access,
+                            file,
+                            thumbnail,
+                            caption
+                        },
+                        currencyISOCode,
+                        paymentMethod,
+                        stripeKey,
+                        razorpayKey,
+                        codeInjectionHead,
+                        codeInjectionBody,
+                        mailingAddress
+                    }
+                }
+            }`;
+
+        try {
+            const fetchRequest = fetch
+                .setPayload({
+                    query,
+                    variables: {
+                        logo: media || null,
+                    },
+                })
+                .build();
             props.dispatch(networkAction(true));
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
@@ -545,70 +581,77 @@ const Settings = (props: SettingsProps) => {
                 ]}
                 defaultValue={selectedTab}
             >
-                <Form
-                    onSubmit={handleSettingsSubmit}
-                    className="flex flex-col gap-4 pt-4"
-                >
-                    <FormField
-                        label={SITE_SETTINGS_TITLE}
-                        name="title"
-                        value={newSettings.title || ""}
-                        onChange={onChangeData}
-                        required
-                    />
-                    <FormField
-                        label={SITE_SETTINGS_SUBTITLE}
-                        name="subtitle"
-                        value={newSettings.subtitle || ""}
-                        onChange={onChangeData}
-                    />
-
-                    <PageBuilderPropertyHeader label={SITE_SETTINGS_LOGO} />
-                    <MediaSelector
-                        auth={props.auth}
-                        profile={props.profile}
-                        dispatch={props.dispatch}
-                        address={props.address}
-                        title=""
-                        src={newSettings.logo?.thumbnail}
-                        srcTitle={newSettings.logo?.originalFileName}
-                        onSelection={onChangeData}
-                        mimeTypesToShow={[...MIMETYPE_IMAGE]}
-                        access="public"
-                        strings={{}}
-                        mediaId={newSettings.logo?.mediaId}
-                        onRemove={() => {
-                            setNewSettings(
-                                Object.assign({}, newSettings, {
-                                    logo: {},
-                                }),
-                            );
-                        }}
-                    />
-                    <div>
-                        <Button
-                            type="submit"
-                            value={BUTTON_SAVE}
-                            color="primary"
-                            disabled={
-                                JSON.stringify({
-                                    title: settings.title,
-                                    subtitle: settings.subtitle,
-                                    logo: settings.logo,
-                                }) ===
+                <div className="flex flex-col gap-4">
+                    <Form
+                        onSubmit={handleSettingsSubmit}
+                        className="flex flex-col gap-4 pt-4"
+                    >
+                        <FormField
+                            label={SITE_SETTINGS_TITLE}
+                            name="title"
+                            value={newSettings.title || ""}
+                            onChange={onChangeData}
+                            required
+                        />
+                        <FormField
+                            label={SITE_SETTINGS_SUBTITLE}
+                            name="subtitle"
+                            value={newSettings.subtitle || ""}
+                            onChange={onChangeData}
+                        />
+                        <div>
+                            <Button
+                                type="submit"
+                                value={BUTTON_SAVE}
+                                color="primary"
+                                disabled={
                                     JSON.stringify({
-                                        title: newSettings.title,
-                                        subtitle: newSettings.subtitle,
-                                        logo: newSettings.logo,
-                                    }) ||
-                                !newSettings.title ||
-                                props.networkAction
-                            }
-                        >
-                            {BUTTON_SAVE}
-                        </Button>
+                                        title: settings.title,
+                                        subtitle: settings.subtitle,
+                                        logo: settings.logo,
+                                    }) ===
+                                        JSON.stringify({
+                                            title: newSettings.title,
+                                            subtitle: newSettings.subtitle,
+                                            logo: newSettings.logo,
+                                        }) ||
+                                    !newSettings.title ||
+                                    props.networkAction
+                                }
+                            >
+                                {BUTTON_SAVE}
+                            </Button>
+                        </div>
+                    </Form>
+                    <div>
+                        <PageBuilderPropertyHeader label={SITE_SETTINGS_LOGO} />
+                        <MediaSelector
+                            auth={props.auth}
+                            profile={props.profile}
+                            dispatch={props.dispatch}
+                            address={props.address}
+                            title=""
+                            src={newSettings.logo?.thumbnail || ""}
+                            srcTitle={newSettings.logo?.originalFileName || ""}
+                            onSelection={(media: Media) => {
+                                if (media) {
+                                    saveLogo(media);
+                                }
+                            }}
+                            mimeTypesToShow={[...MIMETYPE_IMAGE]}
+                            access="public"
+                            strings={{
+                                buttonCaption:
+                                    MEDIA_SELECTOR_UPLOAD_BTN_CAPTION,
+                                removeButtonCaption:
+                                    MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
+                            }}
+                            mediaId={newSettings.logo?.mediaId}
+                            onRemove={() => saveLogo()}
+                            type="domain"
+                        />
                     </div>
-                </Form>
+                </div>
                 <Form
                     onSubmit={handlePaymentSettingsSubmit}
                     className="flex flex-col gap-4 pt-4"

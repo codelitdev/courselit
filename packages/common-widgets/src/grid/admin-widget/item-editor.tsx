@@ -107,6 +107,7 @@ export default function ItemEditor({
                         onRemove={() => {
                             setMedia({});
                         }}
+                        type="page"
                     />
                     <Select
                         title="Media alignment"

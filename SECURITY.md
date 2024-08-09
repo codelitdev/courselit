@@ -8,4 +8,4 @@ Use the application at your own risk. People who have worked on this project wil
 
 ## Reporting a vulnerability
 
-Please drop a mail at [hi@sub.rajatsaxena.dev](mailto:hi@sub.rajatsaxena.dev) or tweet at [@CourseLit](https://twitter.com/courselit). We will try to address it as soon as possible.
+Please drop a mail at [hi@codelit.dev](mailto:hi@codelit.dev) or tweet at [@CourseLit](https://twitter.com/courselit). We will try to address it as soon as possible.
