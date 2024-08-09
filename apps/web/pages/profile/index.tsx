@@ -11,6 +11,8 @@ import {
     PROFILE_EMAIL_PREFERENCES,
     PROFILE_EMAIL_PREFERENCES_NEWSLETTER_OPTION_TEXT,
     PROFILE_SECTION_DISPLAY_PICTURE,
+    MEDIA_SELECTOR_UPLOAD_BTN_CAPTION,
+    MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
 } from "../../ui-config/strings";
 import { connect } from "react-redux";
 import { actionCreators } from "@courselit/state-management";
@@ -297,8 +299,10 @@ function ProfileIndex({
                                 }}
                                 access="public"
                                 strings={{
-                                    buttonCaption: "Upload a photo",
-                                    removeButtonCaption: "Remove photo",
+                                    buttonCaption:
+                                        MEDIA_SELECTOR_UPLOAD_BTN_CAPTION,
+                                    removeButtonCaption:
+                                        MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
                                 }}
                                 type="user"
                                 hidePreview={true}

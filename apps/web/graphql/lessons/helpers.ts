@@ -14,10 +14,10 @@ type LessonValidatorProps = Pick<
 
 export const lessonValidator = (lessonData: LessonValidatorProps) => {
     validateTextContent(lessonData);
-    validateMediaContent(lessonData);
+    // validateMediaContent(lessonData);
 };
 
-function validateTextContent(lessonData: LessonValidatorProps) {
+export function validateTextContent(lessonData: LessonValidatorProps) {
     const content = lessonData.content ? JSON.parse(lessonData.content) : null;
 
     if ([text, embed].includes(lessonData.type)) {

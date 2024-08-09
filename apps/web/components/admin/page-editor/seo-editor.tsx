@@ -90,33 +90,6 @@ function SeoEditor({
                         setInnerDescription(e.target.value)
                     }
                 />
-                <PageBuilderPropertyHeader
-                    label={SEO_FORM_SOCIAL_IMAGE_LABEL}
-                    tooltip={SEO_FORM_SOCIAL_IMAGE_TOOLTIP}
-                />
-                <MediaSelector
-                    title=""
-                    src={innerSocialImage && innerSocialImage.thumbnail}
-                    srcTitle={
-                        innerSocialImage && innerSocialImage.originalFileName
-                    }
-                    dispatch={dispatch}
-                    auth={auth}
-                    profile={profile}
-                    address={address}
-                    onSelection={(media: Media) => {
-                        if (media) {
-                            setInnerSocialImage(media);
-                        }
-                    }}
-                    onRemove={() => {
-                        setInnerSocialImage({});
-                    }}
-                    strings={{}}
-                    access="public"
-                    mediaId={innerSocialImage && innerSocialImage.mediaId}
-                    type="page"
-                />
                 <div className="flex justify-between">
                     <PageBuilderPropertyHeader label={SEO_FORM_ROBOTS_LABEL} />
                     <Checkbox
@@ -140,6 +113,36 @@ function SeoEditor({
                     />
                 </div>
             </Form>
+            <div className="p-2">
+                <MediaSelector
+                    title={SEO_FORM_SOCIAL_IMAGE_LABEL}
+                    tooltip={SEO_FORM_SOCIAL_IMAGE_TOOLTIP}
+                    src={(innerSocialImage && innerSocialImage.thumbnail) || ""}
+                    srcTitle={
+                        (innerSocialImage &&
+                            innerSocialImage.originalFileName) ||
+                        ""
+                    }
+                    dispatch={dispatch}
+                    auth={auth}
+                    profile={profile}
+                    address={address}
+                    onSelection={(media: Media) => {
+                        if (media) {
+                            setInnerSocialImage(media);
+                            onSave({ socialImage: media });
+                        }
+                    }}
+                    onRemove={() => {
+                        setInnerSocialImage({});
+                        onSave({ socialImage: null });
+                    }}
+                    strings={{}}
+                    access="public"
+                    mediaId={innerSocialImage && innerSocialImage.mediaId}
+                    type="page"
+                />
+            </div>
         </div>
     );
 }

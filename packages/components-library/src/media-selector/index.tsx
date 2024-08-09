@@ -17,7 +17,7 @@ import { setAppMessage } from "@courselit/state-management/dist/action-creators"
 import Form from "../form";
 import FormField from "../form-field";
 import React from "react";
-import { Button2 } from "..";
+import { Button2, PageBuilderPropertyHeader } from "..";
 
 interface Strings {
     buttonCaption?: string;
@@ -64,6 +64,8 @@ interface MediaSelectorProps {
     mediaId?: string;
     type: "course" | "lesson" | "page" | "user" | "domain";
     hidePreview?: boolean;
+    tooltip?: string;
+    disabled?: boolean;
 }
 
 const MediaSelector = (props: MediaSelectorProps) => {
@@ -79,7 +81,16 @@ const MediaSelector = (props: MediaSelectorProps) => {
     const fileInput: React.RefObject<HTMLInputElement> = React.createRef();
     const [selectedFile, setSelectedFile] = useState();
     const [caption, setCaption] = useState("");
-    const { strings, dispatch, address, src, title, srcTitle } = props;
+    const {
+        strings,
+        dispatch,
+        address,
+        src,
+        title,
+        srcTitle,
+        tooltip,
+        disabled = false,
+    } = props;
 
     const onSelection = (media: Media) => {
         props.onSelection(media);
@@ -178,27 +189,43 @@ const MediaSelector = (props: MediaSelectorProps) => {
     };
 
     return (
-        <div className="flex items-center gap-4">
-            <h4>{title}</h4>
-            {!props.hidePreview && (
-                <div className="flex flex-col gap-2">
-                    <Image src={src} height={64} width={64} />
-                    <p className="text-xs">{srcTitle}</p>
-                </div>
-            )}
-            {props.mediaId && (
-                <Button2 onClick={removeFile} disabled={uploading}>
-                    {uploading
-                        ? "Working..."
-                        : strings.removeButtonCaption || "Remove media"}
-                </Button2>
-            )}
+        <div className="">
+            <PageBuilderPropertyHeader label={title} tooltip={tooltip} />
+            <div className="flex items-center gap-2">
+                {!props.hidePreview && (
+                    <div className="flex flex-col gap-2 items-center">
+                        <Image
+                            src={src}
+                            height="h-8"
+                            width="w-8"
+                            className="rounded-md"
+                        />
+                        <p className="text-xs">{srcTitle}</p>
+                    </div>
+                )}
+                {props.mediaId && (
+                    <Button2
+                        onClick={removeFile}
+                        disabled={uploading || disabled}
+                        size="sm"
+                        variant="secondary"
+                    >
+                        {uploading
+                            ? "Working..."
+                            : strings.removeButtonCaption || "Remove media"}
+                    </Button2>
+                )}
+            </div>
             {!props.mediaId && (
                 <div>
                     <Dialog2
                         title={strings.dialogTitle || "Select media"}
                         trigger={
-                            <Button2>
+                            <Button2
+                                size="sm"
+                                variant="secondary"
+                                disabled={disabled}
+                            >
                                 {strings.buttonCaption || "Select media"}
                             </Button2>
                         }

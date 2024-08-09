@@ -7,6 +7,7 @@ import {
     Form,
     FormField,
     Button,
+    PageBuilderPropertyHeader,
 } from "@courselit/components-library";
 import useCourse from "./course-hook";
 import { FetchBuilder } from "@courselit/utils";
@@ -18,6 +19,7 @@ import { Address, AppMessage, Auth, Profile } from "@courselit/common-models";
 import {
     APP_MESSAGE_COURSE_SAVED,
     BUTTON_SAVE,
+    COURSE_CONTENT_HEADER,
     FORM_FIELD_FEATURED_IMAGE,
 } from "../../../../ui-config/strings";
 import { connect } from "react-redux";
@@ -61,27 +63,7 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
                 updateCourse(courseData: {
                     id: "${course!.id}"
                     title: "${title}",
-                    description: ${JSON.stringify(JSON.stringify(description))},
-                    featuredImage: ${
-                        featuredImage.mediaId
-                            ? `{
-                            mediaId: "${featuredImage.mediaId}",
-                            originalFileName: "${
-                                featuredImage.originalFileName
-                            }",
-                            mimeType: "${featuredImage.mimeType}",
-                            size: ${featuredImage.size},
-                            access: "${featuredImage.access}",
-                            file: ${
-                                featuredImage.access === "public"
-                                    ? `"${featuredImage.file}"`
-                                    : null
-                            },
-                            thumbnail: "${featuredImage.thumbnail}",
-                            caption: "${featuredImage.caption}"
-                        }`
-                            : null
-                    } 
+                    description: ${JSON.stringify(JSON.stringify(description))}
                 }) {
                     id
                 }
@@ -107,22 +89,67 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
         }
     };
 
+    const saveFeaturedImage = async (media?: Media) => {
+        const mutation = `
+            mutation ($courseId: ID!, $media: MediaInput) {
+                updateCourse(courseData: {
+                    id: $courseId
+                    featuredImage: $media
+                }) {
+                    id
+                }
+            }
+        `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload({
+                query: mutation,
+                variables: {
+                    courseId: course?.id,
+                    media: media || null,
+                },
+            })
+            .setIsGraphQLEndpoint(true)
+            .build();
+        try {
+            dispatch(networkAction(true));
+            const response = await fetch.exec();
+            if (response.updateCourse) {
+                dispatch(
+                    setAppMessage(new AppMessage(APP_MESSAGE_COURSE_SAVED)),
+                );
+            }
+        } catch (err: any) {
+            dispatch(setAppMessage(new AppMessage(err.message)));
+        } finally {
+            dispatch(networkAction(false));
+        }
+    };
+
     return (
-        <Section>
-            <Form onSubmit={updateDetails} className="flex flex-col gap-4">
-                <FormField
-                    required
-                    label="Title"
-                    name="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                />
-                <TextEditor
-                    initialContent={description}
-                    refresh={refreshDetails}
-                    onChange={(state: any) => setDescription(state)}
-                    url={address.backend}
-                />
+        <div className="flex flex-col gap-4">
+            <Section>
+                <Form onSubmit={updateDetails} className="flex flex-col gap-4">
+                    <FormField
+                        required
+                        label="Title"
+                        name="title"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                    />
+                    <PageBuilderPropertyHeader label={COURSE_CONTENT_HEADER} />
+                    <TextEditor
+                        initialContent={description}
+                        refresh={refreshDetails}
+                        onChange={(state: any) => setDescription(state)}
+                        url={address.backend}
+                    />
+                    <div>
+                        <Button type="submit">{BUTTON_SAVE}</Button>
+                    </div>
+                </Form>
+            </Section>
+            <Section>
                 <MediaSelector
                     title={FORM_FIELD_FEATURED_IMAGE}
                     src={(featuredImage && featuredImage.thumbnail) || ""}
@@ -131,6 +158,7 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
                     }
                     onSelection={(media?: Media) => {
                         media && setFeaturedImage(media);
+                        saveFeaturedImage(media);
                     }}
                     mimeTypesToShow={[...MIMETYPE_IMAGE]}
                     access="public"
@@ -142,14 +170,12 @@ function Details({ id, address, dispatch, auth, profile }: DetailsProps) {
                     mediaId={(featuredImage && featuredImage.mediaId) || ""}
                     onRemove={() => {
                         setFeaturedImage({});
+                        saveFeaturedImage();
                     }}
                     type="course"
                 />
-                <div>
-                    <Button type="submit">{BUTTON_SAVE}</Button>
-                </div>
-            </Form>
-        </Section>
+            </Section>
+        </div>
     );
 }
 
