@@ -199,7 +199,7 @@ export const homePageTemplate = [
             type: "site",
             entityId: "demo",
             media: {
-                mediaId: "hvWJSmSgCqeyHVhKA0qU0wd3Gp0T-Lqv1_Dtd-21",
+                mediaId: "dM3L-CVOXLGv3XxsnRUd_D3SD-S5hCkuTzTx432L",
                 originalFileName: "Basics.jpg",
                 mimeType: "image/jpeg",
                 size: 113901,
