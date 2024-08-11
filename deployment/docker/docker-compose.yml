@@ -1,102 +1,117 @@
 version: "3"
 
 services:
-  app:
-    image: codelit/courselit-app:latest
-    environment:
-      - NODE_ENV=production
+    app:
+        image: codelit/courselit-app:latest
+        environment:
+            - NODE_ENV=production
 
-      # If you change the following port, do not forget to change the host port
-      # listed under the PORTS block.
-      - PORT=${PORT:-80}
+            # If you change the following port, do not forget to change the host port
+            # listed under the PORTS block.
+            - PORT=${PORT:-80}
 
-      # This string is used by the authentication framework to secure the JWT. 
-      # It is IMPORTANT that you set a random string as its value. 
-      #
-      # You can use the following command to generate a secure random string.
-      # openssl rand -base64 32
-      - NEXTAUTH_SECRET=som3_rand0m_$tring
+            # This following string is used by the authentication framework to secure the JWT.
+            # It is IMPORTANT that you set a random string as its value.
+            #
+            # You can use the following command to generate a secure random string.
+            # openssl rand -base64 32
+            - AUTH_SECRET=som3_rand0m_String
+            # This prevents the "Host must be trusted" error in next-auth
+            - AUTH_TRUST_HOST=true
 
-      # In production, replace the following with the connection string of a cloud 
-      # hosted instance of MongoDB.
-      - DB_CONNECTION_STRING=mongodb://root:example@mongo
+            # In production, replace the following with the connection string of a cloud
+            # hosted instance of MongoDB.
+            - DB_CONNECTION_STRING=mongodb://root:example@mongo
 
-      # CourseLit uses Magic links to provide login functionality. Hence, it requires
-      # access to the mail sending facility.
-      # If you do not provide the following values, the mails will be dumped on to
-      # the console and you will be on your own to make sense out of those mails.
-      - EMAIL_USER=${EMAIL_USER}
-      - EMAIL_PASS=${EMAIL_PASS}
-      - EMAIL_HOST=${EMAIL_HOST}
-      - EMAIL_FROM=${EMAIL_FROM}
+            # CourseLit uses Magic links to provide login functionality. Hence, it requires
+            # access to the mail sending facility.
+            # If you do not provide the following values, the mails will be dumped on to
+            # the console and you will be on your own to make sense out of those mails.
+            - EMAIL_USER=${EMAIL_USER}
+            - EMAIL_PASS=${EMAIL_PASS}
+            - EMAIL_HOST=${EMAIL_HOST}
+            - EMAIL_FROM=${EMAIL_FROM}
 
-      # CourseLit configures a super admin user when it boots up for the very first time
-      # The email that you provide here will become the identifier for that super admin.
-      - SUPER_ADMIN_EMAIL=${SUPER_ADMIN_EMAIL?'SUPER_ADMIN_EMAIL environment variable is not defined'}
+            # CourseLit configures a super admin user when it boots up for the very first time
+            # The email that you provide here will become the identifier for that super admin.
+            - SUPER_ADMIN_EMAIL=${SUPER_ADMIN_EMAIL?'SUPER_ADMIN_EMAIL environment variable is not defined'}
 
-      # For long running tasks like sending emails etc., the queue service can be
-      # enabled. For using the queue service, uncomment the following line and the
-      # queue block along with the redis block.
-      # - QUEUE_SERVER=http://queue
+            # For long running tasks like sending emails etc., the queue service can be
+            # enabled. For using the queue service, uncomment the following line and the
+            # queue block along with the redis block.
+            # - QUEUE_SERVER=http://queue
 
-    expose:
-      - "${PORT:-80}"
+            # File uploads
+            #
+            # CourseLit uses MediaLit (our another open-source software) to manage files on
+            # a AWS S3 compatible storage. MediaLit is available as a hosted service
+            # at https://medialit.cloud. You can self host it as well.
+            # - MEDIALIT_APIKEY=${MEDIALIT_APIKEY}
+            # - MEDIALIT_SERVER=https://api.medialit.cloud
+            #
+            # CourseLit is based on Next.js. Next.js has to be aware of all the remote servers
+            # where the images are going to be served from. If you are self hosting MediaLit, add
+            # the service's CDN URL below.
+            # - MEDIALIT_CDN=${MEDIALIT_CDN}
 
-    # Comment the following block if the proxy block is uncommented. 
-    ports:
-      - "${PORT:-80}:${PORT:-80}"
+        expose:
+            - "${PORT:-80}"
 
-    container_name: app 
-    restart: on-failure
+        # Comment the following block if the proxy block is uncommented.
+        ports:
+            - "${PORT:-80}:${PORT:-80}"
 
-  # This will be the database for CourseLit. While it is sufficient for the evaluation
-  # purposes, we highly recommend using a cloud based database like MongoDB Atlas
-  # for the production deployment.
-  #
-  mongo:
-      image: mongo
-      restart: always
-      environment:
-        MONGO_INITDB_ROOT_USERNAME: root
-        MONGO_INITDB_ROOT_PASSWORD: example
+        container_name: app
+        restart: on-failure
 
-  # If you need to serve CourseLit on HTTPS, uncomment the following block to
-  # enable the proxy server based on Caddy web server which comes with automatic
-  # SSL.
-  #
-  # proxy:
-  #   image: codelit/courselit-proxy:latest
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
-  #   volumes:
-  #     - "./Caddyfile:/etc/caddy/Caddyfile"
-  #   depends_on:
-  #     - app
-  #   container_name: proxy
-  #   restart: on-failure
+    # This will be the database for CourseLit. While it is sufficient for the evaluation
+    # purposes, we highly recommend using a cloud based database like MongoDB Atlas
+    # for the production deployment.
+    #
+    mongo:
+        image: mongo
+        restart: always
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: root
+            MONGO_INITDB_ROOT_PASSWORD: example
 
-  # CourseLit can perform long running tasks like sending mails etc., in the 
-  # background. To perform tasks in the background, it can use the following 
-  # service. Uncomment the following block to enable queues.
-  #
-  # queue:
-  #   image: codelit/courselit-queue:latest
-  #   environment:
-  #     - NODE_ENV=production
-  #     - DB_CONNECTION_STRING=mongodb://root:example@mongo
-  #     # The following settings are required to actually send mails.
-  #     - EMAIL_USER=${EMAIL_USER?'EMAIL_USER environment variable is not defined'}
-  #     - EMAIL_PASS=${EMAIL_PASS?'EMAIL_PASS environment variable is not defined'}
-  #     - EMAIL_HOST=${EMAIL_HOST?'EMAIL_HOST environment variable is not defined'}
-  #     - REDIS_HOST=redis
-  #   expose:
-  #     - "80"
-  #   restart: on-failure 
-  #   depends_on: 
-  #     - redis
-  # redis:
-  #   image: redis
-  #   expose:
-  #     - "6379"
-  #   restart: on-failure
+    # If you need to serve CourseLit on HTTPS, uncomment the following block to
+    # enable the proxy server based on Caddy web server which comes with automatic
+    # SSL.
+    #
+    # proxy:
+    #   image: codelit/courselit-proxy:latest
+    #   ports:
+    #     - "80:80"
+    #     - "443:443"
+    #   volumes:
+    #     - "./Caddyfile:/etc/caddy/Caddyfile"
+    #   depends_on:
+    #     - app
+    #   container_name: proxy
+    #   restart: on-failure
+
+    # CourseLit can perform long running tasks like sending mails etc., in the
+    # background. To perform tasks in the background, it can use the following
+    # service. Uncomment the following block to enable queues.
+    #
+    # queue:
+    #   image: codelit/courselit-queue:latest
+    #   environment:
+    #     - NODE_ENV=production
+    #     - DB_CONNECTION_STRING=mongodb://root:example@mongo
+    #     # The following settings are required to actually send mails.
+    #     - EMAIL_USER=${EMAIL_USER?'EMAIL_USER environment variable is not defined'}
+    #     - EMAIL_PASS=${EMAIL_PASS?'EMAIL_PASS environment variable is not defined'}
+    #     - EMAIL_HOST=${EMAIL_HOST?'EMAIL_HOST environment variable is not defined'}
+    #     - REDIS_HOST=redis
+    #   expose:
+    #     - "80"
+    #   restart: on-failure
+    #   depends_on:
+    #     - redis
+    # redis:
+    #   image: redis
+    #   expose:
+    #     - "6379"
+    #   restart: on-failure

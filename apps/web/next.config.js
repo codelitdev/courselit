@@ -5,6 +5,10 @@ const remotePatterns = [
         protocol: "https",
         hostname: "medialit-prod.s3.ap-southeast-1.amazonaws.com",
     },
+    {
+        protocol: "https",
+        hostname: "d27g932tzd9f7s.cloudfront.net",
+    },
 ];
 
 if (process.env.MEDIALIT_SERVER && process.env.MEDIALIT_CDN) {
