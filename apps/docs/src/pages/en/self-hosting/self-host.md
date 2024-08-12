@@ -37,6 +37,8 @@ SUPER_ADMIN_EMAIL=your@email.com docker compose up
 
 The email you specify here will be set as the super admin of your CourseLit instance.
 
+> **Troubleshooting**: If you are going to run this command multiple times, be aware that the super admin user will only be created once and with the email ID you provided the very first time. Hence, if you are not able to access the `/dashboard` route, it is most likely that the email you are using is not associated with the super admin account. Try removing the Docker containers by running `SUPER_ADMIN_EMAIL=your@email.com docker compose down` and start again.
+
 ##### 3. Test drive your CourseLit school
 
 Visit [http://localhost](http://localhost) to see your school. There won't be much to see at this point. You need to customise it.
