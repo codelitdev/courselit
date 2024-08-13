@@ -17,7 +17,7 @@ import { setAppMessage } from "@courselit/state-management/dist/action-creators"
 import Form from "../form";
 import FormField from "../form-field";
 import React from "react";
-import { Button2, PageBuilderPropertyHeader } from "..";
+import { Button2, PageBuilderPropertyHeader, Tooltip } from "..";
 
 interface Strings {
     buttonCaption?: string;
@@ -196,11 +196,13 @@ const MediaSelector = (props: MediaSelectorProps) => {
                     <div className="flex flex-col gap-2 items-center">
                         <Image
                             src={src}
-                            height="h-8"
-                            width="w-8"
+                            width="w-[32px]"
+                            height="h-[32px]"
                             className="rounded-md"
                         />
-                        <p className="text-xs">{srcTitle}</p>
+                        <Tooltip title={srcTitle}>
+                            <p className="text-xs w-12 truncate">{srcTitle}</p>
+                        </Tooltip>
                     </div>
                 )}
                 {props.mediaId && (
