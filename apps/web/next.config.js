@@ -20,6 +20,7 @@ if (process.env.MEDIALIT_SERVER && process.env.MEDIALIT_CDN) {
 }
 
 const nextConfig = {
+    output: "standalone",
     reactStrictMode: true,
     typescript: {
         ignoreBuildErrors: true,

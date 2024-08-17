@@ -1,8 +1,9 @@
-FROM node:20-alpine as builder
-ENV NODE_ENV production
+FROM node:20-alpine AS base
 
-RUN apk update
-
+# Install dependencies only when needed
+FROM base AS deps
+# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # copy yarn specific files
@@ -23,19 +24,30 @@ COPY packages/text-editor /app/packages/text-editor
 COPY packages/utils /app/packages/utils
 COPY apps/web /app/apps/web
 
+# Install dependencies based on the preferred package manager
+RUN corepack enable yarn
+RUN yarn install;
+
+FROM base as builder
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
 RUN cd /app && echo 'Yarn version in builder' && yarn --version
 
 # Build all workspaces
-RUN yarn rebuild
-RUN yarn build
-
-RUN ls /app/apps/web/.next
+RUN yarn run build
 
 # Production image
-FROM node:18-alpine as runner
+FROM base as runner
+WORKDIR /app
 
 ENV NODE_ENV production
-WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED 1
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
 # copy yarn specific files
 COPY --from=builder /app/package.json ./package.json
@@ -60,8 +72,17 @@ COPY --from=builder /app/packages/utils/package.json ./packages/utils/package.js
 COPY --from=builder /app/packages/utils/dist ./packages/utils/dist
 COPY --from=builder /app/apps/web ./apps/web
 
-RUN yarn workspaces focus --all --production 
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
 
-ENV PORT ${PORT:-3000}
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./.next/static
 
-CMD [ "yarn", "workspace", "@courselit/web", "start" ]
+# USER nextjs
+
+# # RUN yarn workspaces focus --all --production 
+
+# ENV PORT ${PORT:-3000}
+
+# # CMD [ "yarn", "workspace", "@courselit/web", "start" ]
+CMD HOSTNAME="0.0.0.0" node apps/web/server.js
