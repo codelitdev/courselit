@@ -32,9 +32,27 @@ FROM base as builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY --from=deps /app/package.json ./package.json
+COPY --from=deps /app/.yarnrc.yml ./.yarnrc.yml
+COPY --from=deps /app/yarn.lock ./yarn.lock
+# COPY --from=deps /app/.yarn ./.yarn
 
-RUN cd /app && echo 'Yarn version in builder' && yarn --version
+COPY . .
+# COPY --from=deps /app/ .
+# COPY --from=deps /app/package.json ./package.json
+# COPY --from=deps /app/.yarnrc.yml ./.yarnrc.yml
+# COPY --from=deps /app/yarn.lock ./yarn.lock
+# COPY --from=deps /app/.yarn ./.yarn
+# COPY --from=deps /app/packages/icons ./packages/icons
+# COPY --from=deps /app/packages/tailwind-config ./packages/tailwind-config
+# COPY --from=deps /app/packages/tsconfig ./packages/tsconfig
+# COPY --from=deps /app/packages/common-models ./packages/common-models
+# COPY --from=deps /app/packages/common-widgets ./packages/common-widgets
+# COPY --from=deps /app/packages/components-library ./packages/components-library
+# COPY --from=deps /app/packages/state-management ./packages/state-management
+# COPY --from=deps /app/packages/text-editor ./packages/text-editor
+# COPY --from=deps /app/packages/utils ./packages/utils
+# COPY --from=deps /app/apps/web ./apps/web
 
 # Build all workspaces
 RUN yarn run build
@@ -49,36 +67,39 @@ ENV NEXT_TELEMETRY_DISABLED 1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+
 # copy yarn specific files
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/.yarn ./.yarn
-COPY --from=builder /app/yarn.lock ./yarn.lock
-COPY --from=builder /app/.yarnrc.yml ./.yarnrc.yml
+# COPY --from=builder /app/package.json ./package.json
+# COPY --from=builder /app/.yarn ./.yarn
+# COPY --from=builder /app/yarn.lock ./yarn.lock
+# COPY --from=builder /app/.yarnrc.yml ./.yarnrc.yml
 
 # copy project related files
-COPY --from=builder /app/packages/icons/package.json ./packages/icons/package.json
-COPY --from=builder /app/packages/icons/dist ./packages/icons/dist
-COPY --from=builder /app/packages/common-models/package.json ./packages/common-models/package.json
-COPY --from=builder /app/packages/common-models/dist ./packages/common-models/dist
-COPY --from=builder /app/packages/common-widgets/package.json ./packages/common-widgets/package.json
-COPY --from=builder /app/packages/common-widgets/dist ./packages/common-widgets/dist
-COPY --from=builder /app/packages/components-library/package.json ./packages/components-library/package.json
-COPY --from=builder /app/packages/components-library/dist ./packages/components-library/dist
-COPY --from=builder /app/packages/state-management/package.json ./packages/state-management/package.json
-COPY --from=builder /app/packages/state-management/dist ./packages/state-management/dist
-COPY --from=builder /app/packages/text-editor/package.json ./packages/text-editor/package.json 
-COPY --from=builder /app/packages/text-editor/dist ./packages/text-editor/dist
-COPY --from=builder /app/packages/utils/package.json ./packages/utils/package.json 
-COPY --from=builder /app/packages/utils/dist ./packages/utils/dist
-COPY --from=builder /app/apps/web ./apps/web
+# COPY --from=builder /app/packages/icons/package.json ./packages/icons/package.json
+# COPY --from=builder /app/packages/icons/dist ./packages/icons/dist
+# COPY --from=builder /app/packages/common-models/package.json ./packages/common-models/package.json
+# COPY --from=builder /app/packages/common-models/dist ./packages/common-models/dist
+# COPY --from=builder /app/packages/common-widgets/package.json ./packages/common-widgets/package.json
+# COPY --from=builder /app/packages/common-widgets/dist ./packages/common-widgets/dist
+# COPY --from=builder /app/packages/components-library/package.json ./packages/components-library/package.json
+# COPY --from=builder /app/packages/components-library/dist ./packages/components-library/dist
+# COPY --from=builder /app/packages/state-management/package.json ./packages/state-management/package.json
+# COPY --from=builder /app/packages/state-management/dist ./packages/state-management/dist
+# COPY --from=builder /app/packages/text-editor/package.json ./packages/text-editor/package.json 
+# COPY --from=builder /app/packages/text-editor/dist ./packages/text-editor/dist
+# COPY --from=builder /app/packages/utils/package.json ./packages/utils/package.json 
+# COPY --from=builder /app/packages/utils/dist ./packages/utils/dist
+# COPY --from=builder /app/apps/web ./apps/web
 
 RUN mkdir .next
 RUN chown nextjs:nodejs .next
 
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
+# COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./.next/static
 
-# USER nextjs
+USER nextjs
 
 # # RUN yarn workspaces focus --all --production 
 
