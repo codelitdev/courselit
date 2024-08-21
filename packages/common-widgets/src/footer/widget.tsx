@@ -119,6 +119,19 @@ const Widget = ({
                                 </>
                             ))}
                         </div>
+                        {!state.siteinfo.hideCourseLitBranding && (
+                            <div className="w-[155px] h-9 p-2 border rounded-md bg-[#FFFFFF] text-[#000000] text-sm flex items-center gap-1">
+                                <Link
+                                    href={`https://courselit.app`}
+                                    openInSameTab={false}
+                                >
+                                    Powered by{" "}
+                                    <span className="font-semibold">
+                                        CourseLit
+                                    </span>
+                                </Link>
+                            </div>
+                        )}
                     </div>
                     <div className="flex flex-col flex-wrap lg:!flex-row gap-8">
                         {sections &&

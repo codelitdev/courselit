@@ -16,6 +16,8 @@ export default {
         stripeKey: "",
         codeInjectionHead: "",
         codeInjectionBody: "",
+        mailingAddress: "",
+        hideCourseLitBranding: false,
         razorpayKey: "",
     },
     networkAction: false,

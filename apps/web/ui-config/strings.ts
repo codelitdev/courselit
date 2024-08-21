@@ -86,6 +86,9 @@ export const SITE_SETTINGS_TITLE = "Title";
 export const SITE_SETTINGS_SUBTITLE = "Subtitle";
 export const SITE_SETTINGS_CURRENCY = "Currency";
 export const SITE_SETTINGS_LOGO = "Logo";
+export const SITE_SETTINGS_COURSELIT_BRANDING_CAPTION =
+    "Remove CourseLit branding";
+export const SITE_SETTINGS_COURSELIT_BRANDING_SUB_CAPTION = `Hide "Powered by CourseLit" on your CourseLit courses and site.`;
 export const SITE_SETTINGS_PAGE_HEADING = "Settings";
 export const MEDIA_SELECTOR_UPLOAD_BTN_CAPTION = "Upload a picture";
 export const MEDIA_SELECTOR_REMOVE_BTN_CAPTION = "Remove picture";

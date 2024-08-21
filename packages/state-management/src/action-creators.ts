@@ -130,6 +130,8 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
                         stripeKey,
                         codeInjectionHead,
                         codeInjectionBody,
+                        mailingAddress,
+                        hideCourseLitBranding,
                         razorpayKey,
                     },
                     theme {
