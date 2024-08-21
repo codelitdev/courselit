@@ -55,6 +55,7 @@ export default class StripePayment implements Payment {
             metadata: {
                 purchaseId,
             },
+            allow_promotion_codes: true,
         });
 
         return session.id;
