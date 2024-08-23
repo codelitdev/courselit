@@ -3,23 +3,12 @@
 const remotePatterns = [
     {
         protocol: "https",
-        hostname: "medialit-prod.s3.ap-southeast-1.amazonaws.com",
-    },
-    {
-        protocol: "https",
-        hostname: "d27g932tzd9f7s.cloudfront.net",
+        hostname: "**",
     },
 ];
 
-if (process.env.MEDIALIT_SERVER && process.env.MEDIALIT_CDN) {
-    for (const hostname of process.env.MEDIALIT_CDN.split(",")) {
-        remotePatterns.push({
-            hostname: hostname.trim(),
-        });
-    }
-}
-
 const nextConfig = {
+    output: "standalone",
     reactStrictMode: true,
     typescript: {
         ignoreBuildErrors: true,

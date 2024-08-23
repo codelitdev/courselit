@@ -59,4 +59,5 @@ export default auth(async (request: NextRequest) => {
 
 export const config = {
     matcher: ["/", "/favicon.ico", "/api/:path*"],
+    unstable_allowDynamic: ["/node_modules/next-auth/**"],
 };

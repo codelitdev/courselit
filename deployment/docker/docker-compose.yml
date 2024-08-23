@@ -48,11 +48,6 @@ services:
             # at https://medialit.cloud. You can self host it as well.
             # - MEDIALIT_APIKEY=${MEDIALIT_APIKEY}
             # - MEDIALIT_SERVER=https://api.medialit.cloud
-            #
-            # CourseLit is based on Next.js. Next.js has to be aware of all the remote servers
-            # where the images are going to be served from. If you are self hosting MediaLit, add
-            # the service's CDN URL below.
-            # - MEDIALIT_CDN=${MEDIALIT_CDN}
 
         expose:
             - "${PORT:-80}"
