@@ -6,6 +6,8 @@ layout: ../../../layouts/MainLayout.astro
 
 Sending timely emails to your audience keeps them engaged, which is why CourseLit includes a seamless integration solution for email marketing and automation.
 
+> The feature is currently in beta, which means you may encounter bugs. Please report them in our <a href="https://discord.com/invite/GR4bQsN" target="_blank">Discord</a> group if you run into any.
+
 ## Mailing Capabilities
 CourseLit offers two types of mails.
 

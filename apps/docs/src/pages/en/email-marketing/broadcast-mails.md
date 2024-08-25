@@ -6,6 +6,8 @@ layout: ../../../layouts/MainLayout.astro
 
 Broadcast emails are typically sent to your entire list or specific segments simultaneously, making them ideal for announcements, promotions, or updates.
 
+> The feature is currently in beta, which means you may encounter bugs. Please report them in our <a href="https://discord.com/invite/GR4bQsN" target="_blank">Discord</a> group if you run into any.
+
 > **Before you start**: If your school is hosted on [courselit.app](https://courselit.app), you need to get approved for sending marketing emails. [Request access here](/en/email-marketing/mail-access-request).
 
 ## Broadcasts Hub

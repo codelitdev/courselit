@@ -8,6 +8,8 @@ An email sequence (aka campaign) is a series of pre-scheduled emails designed to
 
 By strategically planning each email, you can provide valuable content, build trust, and encourage actions that align with your business goals.
 
+> The feature is currently in beta, which means you may encounter bugs. Please report them in our <a href="https://discord.com/invite/GR4bQsN" target="_blank">Discord</a> group if you run into any.
+
 > **Before you start**: If your school is hosted on [courselit.app](https://courselit.app), you need to get approved for sending marketing emails. [Request access here](/en/email-marketing/mail-access-request).
 
 ## Sequences Hub

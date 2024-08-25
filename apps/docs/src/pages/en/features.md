@@ -31,7 +31,7 @@ Get a free website which you can customize using our powerful page builder.
     </section>
     <section class="card">
         <a href="/en/email-marketing/introduction">
-        <header>Email marketing and automation</header>
+        <header>Email marketing and automation <span class="chip">Beta</span></header>
         <p>
 Send broadcasts and email sequences to your audience.
         </p>
