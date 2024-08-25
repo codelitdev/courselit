@@ -10,7 +10,7 @@ From the users list in the User's area, click on the user whose details you want
 
 ![Access user's details](/assets/users/access-user-details.gif)
 
-On the left side, you see user's basic details and on the right side you see CourseLit's [permissions editor](/en/users/persmissions) using which you can control what a user can do on your school.
+On the left side, you see user's basic details and on the right side you see CourseLit's [permissions editor](/en/users/permissions) using which you can control what a user can do on your school.
 
 If the user has not yet updated their name from their `Profile`, it will be indicated as `--`.
 

@@ -6,7 +6,7 @@ export const SITE = {
 
 export const OPEN_GRAPH = {
     image: {
-        src: "https://courselit.app/_next/image?url=%2Flogo.png&w=96&q=75",
+        src: "/favicon.svg",
         alt: "CourseLit open source learning management system logo",
     },
     twitter: "courselit",
@@ -65,6 +65,12 @@ export const SIDEBAR: Sidebar = {
             { text: "Set a price", link: "en/downloads/set-a-price" },
             { text: "Lead magnet", link: "en/downloads/lead-magnet" },
         ],
+        "Email marketing and automation": [
+            { text: "Introduction", link: "en/email-marketing/introduction" },
+            { text: "Requesting access to email marketing", link: "en/email-marketing/mail-access-request" },
+            { text: "Broadcast mails", link: "en/email-marketing/broadcast-mails" },
+            { text: "Sequences (Campaigns)", link: "en/email-marketing/sequences" },
+        ],
         Pages: [
             { text: "Introduction", link: "en/pages/introduction" },
             { text: "Page Blocks", link: "en/pages/blocks" },
@@ -75,7 +81,7 @@ export const SIDEBAR: Sidebar = {
             { text: "Banner", link: "en/pages/banner" },
             { text: "Hero", link: "en/pages/hero" },
             { text: "Grid", link: "en/pages/grid" },
-            { text: "Content", link: "en/pages/content" },
+            { text: "Curriculum", link: "en/pages/curriculum" },
             { text: "Newsletter signup", link: "en/pages/newsletter-signup" },
             { text: "Footer", link: "en/pages/footer" },
         ],

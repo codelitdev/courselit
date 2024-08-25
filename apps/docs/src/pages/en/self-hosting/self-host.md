@@ -4,10 +4,13 @@ description: CourseLit Self Hosting Guide
 layout: ../../../layouts/MainLayout.astro
 ---
 
+> **Before you self-host**: Although we believe in the power of hosting your own software, we still think that buying a subscription to [CourseLit](https://courselit.app) will save you a lot of time and money of maintaining your own CourseLit instance. Check out our [pricing](https://courselit.app/#pricing).
+
 We offer two ways to self-host CourseLit, which are as follows.
 
 1. On [Vercel](https://vercel.com).
 2. On a VPS using Docker.
+
 
 ## Hosting on Vercel
 
@@ -15,7 +18,7 @@ To quickly spin up an instance of CourseLit on Vercel, click the following butto
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fcodelitdev%2Fcourselit&env=DB_CONNECTION_STRING,AUTH_SECRET,SUPER_ADMIN_EMAIL,EMAIL_USER,EMAIL_PASS,EMAIL_HOST,EMAIL_FROM&envDescription=Configuration%20for%20your%20app&project-name=courselit&root-directory=apps%2Fweb&build-command=cd+..%2F+%26%26+NODE_OPTIONS%3D--openssl-legacy-provider+yarn+build)
 
-> Note: File uploads will not work if you choose this method as this functionality is provided by our other product [MediaLit](https://github.com/codelitdev/medialit) which cannot be hosted on a serverless platforms like Vercel.
+> Note: Certain essential features like file uploads, email automation and drip content will not work as these cannot run on a serverless platform like Vercel. However, you can make file uploads work by using the hosted instance of [MediaLit](https://medialit.cloud) (our open-source service for file uploads, which CourseLit uses under the hood) for free.
 
 ## Hosting on a VPS using Docker
 
