@@ -84,7 +84,7 @@ const ComponentScaffold = ({
             )}
 
             {!siteinfo.hideCourseLitBranding && courseLitBranding && (
-                <div className="w-[155px] h-9 p-2 mx-[50px] my-[10px] border rounded-md bg-[#FFFFFF] text-[#000000] text-sm flex items-center gap-1">
+                <div className="md:w-[155px] md:mx-[44px] lg:w-auto h-9 p-2 mx-[55px] my-[10px] border rounded-md bg-[#FFFFFF] text-[#000000] text-sm text-center">
                     <Link href={`https://courselit.app`} openInSameTab={false}>
                         Powered by{" "}
                         <span className="font-semibold">CourseLit</span>
