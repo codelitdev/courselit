@@ -19,19 +19,17 @@ html
             .cta:hover {
                 background-color: #060665;
             }
-            .courselit-branding-container {
-                width: 155px;
-                height: 20px;
-                margin-top: 48px;
-                padding: 8px 4px;
-                background-color: #FFFFFF;
-                border: 1px solid;
-                border-radius: 4px;
-                text-align: center;
+             .courselit-branding-container {
+                margin: 40px 0px;
             }
             .courselit-branding-cta {
                 text-decoration: none;
                 color: #000000;
+                padding: 10px;
+                background-color: #FFFFFF;
+                border: 1px solid;
+                border-radius: 4px;
+                text-align: center;
             }
     body
         p   To sign in to your school, click the following link.

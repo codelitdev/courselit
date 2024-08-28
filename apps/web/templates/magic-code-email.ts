@@ -4,18 +4,16 @@ html
     head
         style(type='text/css').     
             .courselit-branding-container {
-                width: 155px;
-                height: 20px;
-                margin-top: 48px;
-                padding: 8px 4px;
-                background-color: #FFFFFF;
-                border: 1px solid;
-                border-radius: 4px;
-                text-align: center;
+                margin: 40px 0px;
             }
             .courselit-branding-cta {
                 text-decoration: none;
                 color: #000000;
+                padding: 10px;
+                background-color: #FFFFFF;
+                border: 1px solid;
+                border-radius: 4px;
+                text-align: center;
             }
     body
         p   Your verification code is: #{code}
