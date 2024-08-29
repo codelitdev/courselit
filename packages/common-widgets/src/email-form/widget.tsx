@@ -116,7 +116,12 @@ const Widget = ({
                 >
                     <h2 className="text-4xl mb-4">{title || DEFAULT_TITLE}</h2>
                     {subtitle && <h3 className="mb-4">{subtitle}</h3>}
-                    <div className="flex gap-2 items-end">
+                    <div
+                        className="flex flex-col md:!flex-row gap-2 w-full"
+                        style={{
+                            justifyContent,
+                        }}
+                    >
                         <FormField
                             value={name}
                             onChange={(e) => setName(e.target.value)}
@@ -128,10 +133,6 @@ const Widget = ({
                                     match: "valueMissing",
                                     text: "Your name is required",
                                 },
-                                // {
-                                //     match: "typeMismatch",
-                                //     text: "Invalid email",
-                                // },
                             ]}
                         />
                         <FormField
@@ -162,13 +163,6 @@ const Widget = ({
                             {btnText || DEFAULT_BTN_TEXT}
                         </Button2>
                     </div>
-                    {/* <FormSubmit
-                    style={{
-                        backgroundColor: btnBackgroundColor,
-                        color: btnForegroundColor,
-                    }}
-                    disabled={state.networkAction}
-                /> */}
                 </Form>
             </div>
         </section>
