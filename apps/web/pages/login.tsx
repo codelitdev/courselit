@@ -9,6 +9,7 @@ import {
     LOGIN_FORM_LABEL,
     LOGIN_FORM_DISCLAIMER,
     LOADING,
+    LOGIN_SUCCESS,
 } from "../ui-config/strings";
 import { useRouter } from "next/router";
 import type { Address, Auth, State } from "@courselit/common-models";
@@ -90,8 +91,10 @@ const Login = ({ page, auth, dispatch }: LoginProps) => {
                 code,
                 redirect: false,
             });
-            if (response.error) {
-                setError(response.error);
+            if (response?.error) {
+                setError(`Can't sign you in at this time`);
+            } else {
+                dispatch(setAppMessage(new AppMessage(LOGIN_SUCCESS)));
             }
         } finally {
             setLoading(false);
@@ -144,7 +147,8 @@ const Login = ({ page, auth, dispatch }: LoginProps) => {
                     {showCode && (
                         <div>
                             <p className="mb-4">
-                                {BTN_LOGIN_CODE_INTIMATION} {email}
+                                {BTN_LOGIN_CODE_INTIMATION}{" "}
+                                <strong>{email}</strong>
                             </p>
                             <Form
                                 className="flex flex-col gap-4 mb-4"

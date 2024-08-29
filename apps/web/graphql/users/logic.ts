@@ -105,7 +105,7 @@ export const updateUser = async (userData: any, ctx: GQLContext) => {
         permissions.manageUsers,
     ]);
     if (!hasPermissionToManageUser) {
-        if (id !== ctx.user._id) {
+        if (id !== ctx.user._id.toString()) {
             throw new Error(responses.action_not_allowed);
         }
     }
@@ -118,9 +118,12 @@ export const updateUser = async (userData: any, ctx: GQLContext) => {
             continue;
         }
 
-        if (!["subscribedToUpdates"].includes(key) && id === ctx.user._id) {
-            throw new Error(responses.action_not_allowed);
-        }
+        // if (
+        //     !["subscribedToUpdates"].includes(key) &&
+        //     id === ctx.user._id.toString()
+        // ) {
+        //     throw new Error(responses.action_not_allowed);
+        // }
 
         if (key === "tags") {
             addTags(userData["tags"], ctx);
@@ -285,17 +288,16 @@ export async function createUser({
             constants.permissions.manageCourse,
             constants.permissions.manageAnyCourse,
             constants.permissions.publishCourse,
-            // TODO: replace media perms with course perms
             constants.permissions.manageMedia,
-            constants.permissions.manageAnyMedia,
-            constants.permissions.uploadMedia,
-            constants.permissions.viewAnyMedia,
             constants.permissions.manageSite,
             constants.permissions.manageSettings,
             constants.permissions.manageUsers,
         ];
     } else {
-        newUser.permissions = [constants.permissions.enrollInCourse];
+        newUser.permissions = [
+            constants.permissions.enrollInCourse,
+            constants.permissions.manageMedia,
+        ];
     }
     newUser.lead = lead;
     const user = await UserModel.create(newUser);

@@ -8,8 +8,7 @@ import finalizePurchase from "../../../lib/finalize-purchase";
 import { error } from "../../../services/logger";
 import User from "@models/User";
 import DomainModel, { Domain } from "@models/Domain";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]";
+import { auth } from "@/auth";
 
 const { transactionSuccess, transactionFailed, transactionInitiated } =
     constants;
@@ -29,7 +28,7 @@ export default async function handler(
         return res.status(404).json({ message: "Domain not found" });
     }
 
-    const session = await getServerSession(req, res, authOptions);
+    const session = await auth(req, res);
 
     let user;
     if (session) {
@@ -108,7 +107,7 @@ export default async function handler(
             paymentTracker,
         });
     } catch (err: any) {
-        error(err.message, { stack: err.stack }); // eslint-disable-line no-console
+        error(err.message, { stack: err.stack });
         res.status(500).json({
             status: transactionFailed,
             error: err.message,

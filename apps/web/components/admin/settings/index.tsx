@@ -3,19 +3,13 @@
 import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
 import {
-    PAYMENT_METHOD_PAYPAL,
-    PAYMENT_METHOD_PAYTM,
-    PAYMENT_METHOD_STRIPE,
-    PAYMENT_METHOD_NONE,
-    MIMETYPE_IMAGE,
-} from "../../../ui-config/constants";
-import {
     SITE_SETTINGS_TITLE,
     SITE_SETTINGS_SUBTITLE,
     SITE_SETTINGS_LOGO,
     SITE_SETTINGS_PAGE_HEADING,
     SITE_SETTINGS_CURRENCY,
     SITE_ADMIN_SETTINGS_STRIPE_SECRET,
+    SITE_ADMIN_SETTINGS_RAZORPAY_SECRET,
     SITE_ADMIN_SETTINGS_PAYPAL_SECRET,
     SITE_ADMIN_SETTINGS_PAYTM_SECRET,
     SITE_SETTINGS_SECTION_GENERAL,
@@ -41,14 +35,17 @@ import {
     SITE_MAILS_HEADER,
     SITE_MAILING_ADDRESS_SETTING_HEADER,
     SITE_MAILING_ADDRESS_SETTING_EXPLANATION,
+    SITE_SETTINGS_RAZORPAY_KEY_TEXT,
+    MEDIA_SELECTOR_UPLOAD_BTN_CAPTION,
+    MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
 } from "../../../ui-config/strings";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import { decode, encode } from "base-64";
-import { AppMessage, Profile } from "@courselit/common-models";
-import type { SiteInfo, Address, Auth } from "@courselit/common-models";
+import { AppMessage, Profile, UIConstants } from "@courselit/common-models";
+import type { SiteInfo, Address, Auth, Media } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
-import currencies from "../../../data/iso4217.json";
+import currencies from "@/data/currencies.json";
 import {
     Select,
     MediaSelector,
@@ -64,6 +61,15 @@ import {
     Dialog2,
     PageBuilderPropertyHeader,
 } from "@courselit/components-library";
+
+const {
+    PAYMENT_METHOD_PAYPAL,
+    PAYMENT_METHOD_PAYTM,
+    PAYMENT_METHOD_RAZORPAY,
+    PAYMENT_METHOD_STRIPE,
+    PAYMENT_METHOD_NONE,
+    MIMETYPE_IMAGE,
+} = UIConstants;
 
 const { networkAction, newSiteInfoAvailable, setAppMessage } = actionCreators;
 
@@ -114,7 +120,7 @@ const Settings = (props: SettingsProps) => {
                 logo: settings.logo,
                 currencyISOCode: settings.currencyISOCode,
                 paymentMethod: settings.paymentMethod,
-                stripePublishableKey: settings.stripePublishableKey,
+                stripeKey: settings.stripeKey,
                 codeInjectionHead: settings.codeInjectionHead
                     ? encode(settings.codeInjectionHead)
                     : "",
@@ -145,7 +151,8 @@ const Settings = (props: SettingsProps) => {
                         },
                         currencyISOCode,
                         paymentMethod,
-                        stripePublishableKey,
+                        stripeKey,
+                        razorpayKey,
                         codeInjectionHead,
                         codeInjectionBody,
                         mailingAddress
@@ -186,7 +193,8 @@ const Settings = (props: SettingsProps) => {
             logo: settingsResponse.logo,
             currencyISOCode: settingsResponse.currencyISOCode || "",
             paymentMethod: settingsResponse.paymentMethod || "",
-            stripePublishableKey: settingsResponse.stripePublishableKey || "",
+            stripeKey: settingsResponse.stripeKey || "",
+            razorpayKey: settingsResponse.razorpayKey || "",
             codeInjectionHead: settingsResponse.codeInjectionHead || "",
             codeInjectionBody: settingsResponse.codeInjectionBody || "",
             mailingAddress: settingsResponse.mailingAddress || "",
@@ -207,27 +215,7 @@ const Settings = (props: SettingsProps) => {
             mutation {
                 settings: updateSiteInfo(siteData: {
                     title: "${newSettings.title}",
-                    subtitle: "${newSettings.subtitle}",
-                    logo: ${
-                        newSettings.logo && newSettings.logo.mediaId
-                            ? `{
-                                mediaId: "${newSettings.logo.mediaId}",
-                                originalFileName: "${
-                                    newSettings.logo.originalFileName
-                                }",
-                                mimeType: "${newSettings.logo.mimeType}",
-                                size: ${newSettings.logo.size},
-                                access: "${newSettings.logo.access}",
-                                file: ${
-                                    newSettings.logo.access === "public"
-                                        ? `"${newSettings.logo.file}"`
-                                        : null
-                                },
-                                thumbnail: "${newSettings.logo.thumbnail}",
-                                caption: "${newSettings.logo.caption}"
-                            }`
-                            : null
-                    } 
+                    subtitle: "${newSettings.subtitle || ""}",
                 }) {
                     settings {
                         title,
@@ -244,7 +232,8 @@ const Settings = (props: SettingsProps) => {
                         },
                         currencyISOCode,
                         paymentMethod,
-                        stripePublishableKey,
+                        stripeKey,
+                        razorpayKey,
                         codeInjectionHead,
                         codeInjectionBody,
                         mailingAddress
@@ -254,6 +243,60 @@ const Settings = (props: SettingsProps) => {
 
         try {
             const fetchRequest = fetch.setPayload(query).build();
+            props.dispatch(networkAction(true));
+            const response = await fetchRequest.exec();
+            if (response.settings.settings) {
+                setSettingsState(response.settings.settings);
+                props.dispatch(
+                    setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)),
+                );
+            }
+        } catch (e: any) {
+            props.dispatch(setAppMessage(new AppMessage(e.message)));
+        } finally {
+            props.dispatch(networkAction(false));
+        }
+    };
+
+    const saveLogo = async (media?: Media) => {
+        const query = `
+            mutation ($logo: MediaInput) {
+                settings: updateSiteInfo(siteData: {
+                    logo: $logo 
+                }) {
+                    settings {
+                        title,
+                        subtitle,
+                        logo {
+                            mediaId,
+                            originalFileName,
+                            mimeType,
+                            size,
+                            access,
+                            file,
+                            thumbnail,
+                            caption
+                        },
+                        currencyISOCode,
+                        paymentMethod,
+                        stripeKey,
+                        razorpayKey,
+                        codeInjectionHead,
+                        codeInjectionBody,
+                        mailingAddress
+                    }
+                }
+            }`;
+
+        try {
+            const fetchRequest = fetch
+                .setPayload({
+                    query,
+                    variables: {
+                        logo: media || null,
+                    },
+                })
+                .build();
             props.dispatch(networkAction(true));
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
@@ -299,7 +342,8 @@ const Settings = (props: SettingsProps) => {
                     },
                     currencyISOCode,
                     paymentMethod,
-                    stripePublishableKey,
+                    stripeKey,
+                    razorpayKey,
                     codeInjectionHead,
                     codeInjectionBody,
                     mailingAddress,
@@ -353,7 +397,8 @@ const Settings = (props: SettingsProps) => {
                     },
                     currencyISOCode,
                     paymentMethod,
-                    stripePublishableKey,
+                    stripeKey,
+                    razorpayKey,
                     codeInjectionHead,
                     codeInjectionBody,
                     mailingAddress,
@@ -396,16 +441,23 @@ const Settings = (props: SettingsProps) => {
     ) => {
         event.preventDefault();
         const query = `
-            mutation {
+            mutation (
+                $currencyISOCode: String, 
+                $paymentMethod: String, 
+                $stripeKey: String,
+                $stripeSecret: String,
+                $razorpayKey: String,
+                $razorpaySecret: String,
+                $razorpayWebhookSecret: String
+            ) {
                 settings: updatePaymentInfo(siteData: {
-                    currencyISOCode: "${newSettings.currencyISOCode}",
-                    paymentMethod: "${newSettings.paymentMethod}",
-                    stripePublishableKey: "${newSettings.stripePublishableKey}"
-                    ${
-                        newSettings.stripeSecret
-                            ? `, stripeSecret: "${newSettings.stripeSecret}"`
-                            : ""
-                    }
+                    currencyISOCode: $currencyISOCode,
+                    paymentMethod: $paymentMethod,
+                    stripeKey: $stripeKey,
+                    stripeSecret: $stripeSecret,
+                    razorpayKey: $razorpayKey,
+                    razorpaySecret: $razorpaySecret,
+                    razorpayWebhookSecret: $razorpayWebhookSecret,
                 }) {
                     settings {
                         title,
@@ -422,7 +474,8 @@ const Settings = (props: SettingsProps) => {
                         },
                         currencyISOCode,
                         paymentMethod,
-                        stripePublishableKey,
+                        stripeKey,
+                        razorpayKey,
                         codeInjectionHead,
                         codeInjectionBody,
                         mailingAddress,
@@ -431,7 +484,21 @@ const Settings = (props: SettingsProps) => {
             }`;
 
         try {
-            const fetchRequest = fetch.setPayload(query).build();
+            const fetchRequest = fetch
+                .setPayload({
+                    query,
+                    variables: {
+                        currencyISOCode: newSettings.currencyISOCode,
+                        paymentMethod: newSettings.paymentMethod,
+                        stripeKey: newSettings.stripeKey,
+                        stripeSecret: newSettings.stripeSecret,
+                        razorpayKey: newSettings.razorpayKey,
+                        razorpaySecret: newSettings.razorpaySecret,
+                        razorpayWebhookSecret:
+                            newSettings.razorpayWebhookSecret,
+                    },
+                })
+                .build();
             props.dispatch(networkAction(true));
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
@@ -454,9 +521,7 @@ const Settings = (props: SettingsProps) => {
         paymentMethod: getNewSettings
             ? newSettings.paymentMethod
             : settings.paymentMethod,
-        stripePublishableKey: getNewSettings
-            ? newSettings.stripePublishableKey
-            : settings.stripePublishableKey,
+        stripeKey: getNewSettings ? newSettings.stripeKey : settings.stripeKey,
         stripeSecret: getNewSettings
             ? newSettings.stripeSecret
             : settings.stripeSecret,
@@ -466,6 +531,15 @@ const Settings = (props: SettingsProps) => {
         paytmSecret: getNewSettings
             ? newSettings.paytmSecret
             : settings.paytmSecret,
+        razorpayKey: getNewSettings
+            ? newSettings.razorpayKey
+            : settings.razorpayKey,
+        razorpaySecret: getNewSettings
+            ? newSettings.razorpaySecret
+            : settings.razorpaySecret,
+        razorpayWebhookSecret: getNewSettings
+            ? newSettings.razorpayWebhookSecret
+            : settings.razorpayWebhookSecret,
     });
 
     const removeApikey = async (keyId: string) => {
@@ -507,70 +581,77 @@ const Settings = (props: SettingsProps) => {
                 ]}
                 defaultValue={selectedTab}
             >
-                <Form
-                    onSubmit={handleSettingsSubmit}
-                    className="flex flex-col gap-4 pt-4"
-                >
-                    <FormField
-                        label={SITE_SETTINGS_TITLE}
-                        name="title"
-                        value={newSettings.title || ""}
-                        onChange={onChangeData}
-                        required
-                    />
-                    <FormField
-                        label={SITE_SETTINGS_SUBTITLE}
-                        name="subtitle"
-                        value={newSettings.subtitle || ""}
-                        onChange={onChangeData}
-                    />
-
-                    <PageBuilderPropertyHeader label={SITE_SETTINGS_LOGO} />
-                    <MediaSelector
-                        auth={props.auth}
-                        profile={props.profile}
-                        dispatch={props.dispatch}
-                        address={props.address}
-                        title=""
-                        src={newSettings.logo?.thumbnail}
-                        srcTitle={newSettings.logo?.originalFileName}
-                        onSelection={onChangeData}
-                        mimeTypesToShow={[...MIMETYPE_IMAGE]}
-                        access="public"
-                        strings={{}}
-                        mediaId={newSettings.logo?.mediaId}
-                        onRemove={() => {
-                            setNewSettings(
-                                Object.assign({}, newSettings, {
-                                    logo: {},
-                                }),
-                            );
-                        }}
-                    />
-                    <div>
-                        <Button
-                            type="submit"
-                            value={BUTTON_SAVE}
-                            color="primary"
-                            disabled={
-                                JSON.stringify({
-                                    title: settings.title,
-                                    subtitle: settings.subtitle,
-                                    logo: settings.logo,
-                                }) ===
+                <div className="flex flex-col gap-4">
+                    <Form
+                        onSubmit={handleSettingsSubmit}
+                        className="flex flex-col gap-4 pt-4"
+                    >
+                        <FormField
+                            label={SITE_SETTINGS_TITLE}
+                            name="title"
+                            value={newSettings.title || ""}
+                            onChange={onChangeData}
+                            required
+                        />
+                        <FormField
+                            label={SITE_SETTINGS_SUBTITLE}
+                            name="subtitle"
+                            value={newSettings.subtitle || ""}
+                            onChange={onChangeData}
+                        />
+                        <div>
+                            <Button
+                                type="submit"
+                                value={BUTTON_SAVE}
+                                color="primary"
+                                disabled={
                                     JSON.stringify({
-                                        title: newSettings.title,
-                                        subtitle: newSettings.subtitle,
-                                        logo: newSettings.logo,
-                                    }) ||
-                                !newSettings.title ||
-                                props.networkAction
-                            }
-                        >
-                            {BUTTON_SAVE}
-                        </Button>
+                                        title: settings.title,
+                                        subtitle: settings.subtitle,
+                                        logo: settings.logo,
+                                    }) ===
+                                        JSON.stringify({
+                                            title: newSettings.title,
+                                            subtitle: newSettings.subtitle,
+                                            logo: newSettings.logo,
+                                        }) ||
+                                    !newSettings.title ||
+                                    props.networkAction
+                                }
+                            >
+                                {BUTTON_SAVE}
+                            </Button>
+                        </div>
+                    </Form>
+                    <div>
+                        <PageBuilderPropertyHeader label={SITE_SETTINGS_LOGO} />
+                        <MediaSelector
+                            auth={props.auth}
+                            profile={props.profile}
+                            dispatch={props.dispatch}
+                            address={props.address}
+                            title=""
+                            src={newSettings.logo?.thumbnail || ""}
+                            srcTitle={newSettings.logo?.originalFileName || ""}
+                            onSelection={(media: Media) => {
+                                if (media) {
+                                    saveLogo(media);
+                                }
+                            }}
+                            mimeTypesToShow={[...MIMETYPE_IMAGE]}
+                            access="public"
+                            strings={{
+                                buttonCaption:
+                                    MEDIA_SELECTOR_UPLOAD_BTN_CAPTION,
+                                removeButtonCaption:
+                                    MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
+                            }}
+                            mediaId={newSettings.logo?.mediaId}
+                            onRemove={() => saveLogo()}
+                            type="domain"
+                        />
                     </div>
-                </Form>
+                </div>
                 <Form
                     onSubmit={handlePaymentSettingsSubmit}
                     className="flex flex-col gap-4 pt-4"
@@ -578,8 +659,8 @@ const Settings = (props: SettingsProps) => {
                     <Select
                         title={SITE_SETTINGS_CURRENCY}
                         options={currencies.map((currency) => ({
-                            label: currency.Currency,
-                            value: currency.AlphabeticCode,
+                            label: currency.name,
+                            value: currency.isoCode,
                         }))}
                         value={newSettings.currencyISOCode?.toUpperCase() || ""}
                         onChange={(value) =>
@@ -599,6 +680,24 @@ const Settings = (props: SettingsProps) => {
                                     PAYMENT_METHOD_STRIPE.toLowerCase(),
                                 ),
                                 value: PAYMENT_METHOD_STRIPE,
+                                disabled: currencies.some(
+                                    (x) =>
+                                        x.isoCode ===
+                                            newSettings.currencyISOCode?.toUpperCase() &&
+                                        !x.stripe,
+                                ),
+                            },
+                            {
+                                label: capitalize(
+                                    PAYMENT_METHOD_RAZORPAY.toLowerCase(),
+                                ),
+                                value: PAYMENT_METHOD_RAZORPAY,
+                                disabled: currencies.some(
+                                    (x) =>
+                                        x.isoCode ===
+                                            newSettings.currencyISOCode?.toUpperCase() &&
+                                        !x.razorpay,
+                                ),
                             },
                         ]}
                         onChange={(value) =>
@@ -619,8 +718,8 @@ const Settings = (props: SettingsProps) => {
                                 label={
                                     SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT
                                 }
-                                name="stripePublishableKey"
-                                value={newSettings.stripePublishableKey || ""}
+                                name="stripeKey"
+                                value={newSettings.stripeKey || ""}
                                 onChange={onChangeData}
                             />
                             <FormField
@@ -632,28 +731,52 @@ const Settings = (props: SettingsProps) => {
                                 sx={{ mb: 2 }}
                                 autoComplete="off"
                             />
-                            <div className="flex flex-col gap-2">
-                                <p className="font-medium">
-                                    {
-                                        HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK
-                                    }
-                                </p>
-                                <p className="text-slate-600">
-                                    {
-                                        SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK
-                                    }
-                                </p>
-                                <p>
-                                    <Link
-                                        href={`${props.address.backend}/api/payment/webhook`}
-                                        className="hover:underline"
-                                    >
-                                        {`${props.address.backend}/api/payment/webhook`}
-                                    </Link>
-                                </p>
-                            </div>
                         </>
                     )}
+                    {newSettings.paymentMethod === PAYMENT_METHOD_RAZORPAY && (
+                        <>
+                            <FormField
+                                label={SITE_SETTINGS_RAZORPAY_KEY_TEXT}
+                                name="razorpayKey"
+                                value={newSettings.razorpayKey || ""}
+                                onChange={onChangeData}
+                            />
+                            <FormField
+                                label={SITE_ADMIN_SETTINGS_RAZORPAY_SECRET}
+                                name="razorpaySecret"
+                                type="password"
+                                value={newSettings.razorpaySecret || ""}
+                                onChange={onChangeData}
+                                sx={{ mb: 2 }}
+                                autoComplete="off"
+                            />
+                            {/* <FormField
+                                label={SITE_ADMIN_SETTINGS_RAZORPAY_WEBHOOK_SECRET}
+                                name="razorpayWebhookSecret"
+                                type="password"
+                                value={newSettings.razorpayWebhookSecret || ""}
+                                onChange={onChangeData}
+                                sx={{ mb: 2 }}
+                                autoComplete="off"
+                            /> */}
+                        </>
+                    )}
+                    <div className="flex flex-col gap-2">
+                        <p className="font-medium">
+                            {HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK}
+                        </p>
+                        <p className="text-slate-600">
+                            {SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK}
+                        </p>
+                        <p>
+                            <Link
+                                href={`${props.address.backend}/api/payment/webhook`}
+                                className="hover:underline"
+                            >
+                                {`${props.address.backend}/api/payment/webhook`}
+                            </Link>
+                        </p>
+                    </div>
                     {newSettings.paymentMethod === PAYMENT_METHOD_PAYPAL && (
                         <FormField
                             label={SITE_ADMIN_SETTINGS_PAYPAL_SECRET}

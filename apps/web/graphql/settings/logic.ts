@@ -22,6 +22,8 @@ export const getSiteInfo = async (ctx: GQLContext) => {
         "settings.stripeSecret": 0,
         "settings.paytmSecret": 0,
         "settings.paypalSecret": 0,
+        "settings.razorpaySecret": 0,
+        "settings.razorpayWebhookSecret": 0,
     };
     const siteEditor =
         ctx.user &&
@@ -157,9 +159,9 @@ export const updatePaymentInfo = async (
 
     if (domain.settings.paymentMethod) {
         domain.settings.currencyISOCode =
-            domain.settings.currencyISOCode.toLowerCase();
+            domain.settings.currencyISOCode?.toLowerCase();
     }
-    await domain.save();
+    await (domain as any).save();
 
     return domain;
 };

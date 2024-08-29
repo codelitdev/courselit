@@ -1,15 +1,11 @@
 import React from "react";
 import { connect } from "react-redux";
-import {
-    PAYMENT_METHOD_PAYPAL,
-    PAYMENT_METHOD_PAYTM,
-    PAYMENT_METHOD_STRIPE,
-} from "../../../ui-config/constants";
 import dynamic from "next/dynamic";
-import { Course, SiteInfo } from "@courselit/common-models";
+import { Course, SiteInfo, UIConstants } from "@courselit/common-models";
 import { AppState } from "@courselit/state-management";
 
 const Stripe = dynamic(() => import("./stripe"));
+const Razorpay = dynamic(() => import("./razorpay"));
 const Free = dynamic(() => import("./free"));
 
 interface CheckoutExternalProps {
@@ -26,11 +22,18 @@ const CheckoutExternal = (props: CheckoutExternalProps) => {
             {course.cost === 0 && <Free course={course} />}
             {course.cost !== 0 && (
                 <>
-                    {paymentMethod === PAYMENT_METHOD_STRIPE && (
+                    {paymentMethod === UIConstants.PAYMENT_METHOD_STRIPE && (
                         <Stripe course={course} />
                     )}
-                    {paymentMethod === PAYMENT_METHOD_PAYTM && <></>}
-                    {paymentMethod === PAYMENT_METHOD_PAYPAL && <></>}
+                    {paymentMethod === UIConstants.PAYMENT_METHOD_RAZORPAY && (
+                        <Razorpay course={course} />
+                    )}
+                    {paymentMethod === UIConstants.PAYMENT_METHOD_PAYTM && (
+                        <></>
+                    )}
+                    {paymentMethod === UIConstants.PAYMENT_METHOD_PAYPAL && (
+                        <></>
+                    )}
                 </>
             )}
         </div>

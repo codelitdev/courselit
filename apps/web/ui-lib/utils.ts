@@ -50,12 +50,9 @@ export const canAccessDashboard = (profile: Profile) => {
     return checkPermission(profile.permissions, [
         permissions.manageCourse,
         permissions.manageAnyCourse,
-        permissions.manageMedia,
-        permissions.manageAnyMedia,
         permissions.manageSite,
         permissions.manageSettings,
         permissions.manageUsers,
-        permissions.viewAnyMedia,
     ]);
 };
 
@@ -175,7 +172,7 @@ export function generateUniquePasscode() {
 // Inspired from: https://github.com/nextauthjs/next-auth/blob/c4ad77b86762b7fd2e6362d8bf26c5953846774a/packages/next-auth/src/core/lib/utils.ts#L16
 export function hashCode(code: number) {
     return createHash("sha256")
-        .update(`${code}${process.env.NEXTAUTH_SECRET}`)
+        .update(`${code}${process.env.AUTH_SECRET}`)
         .digest("hex");
 }
 

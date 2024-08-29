@@ -6,6 +6,7 @@ import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
 } from "./defaults";
+import clsx from "clsx";
 
 const twRoundedMap = {
     "0": "rounded-none",
@@ -68,10 +69,29 @@ export default function Widget({
                                         width: "100%",
                                     }}
                                 >
-                                    <Image
-                                        src={media.file}
-                                        alt={media.caption}
-                                    />
+                                    {RegExp("image/").test(media.mimeType) && (
+                                        <Image
+                                            src={media.file}
+                                            alt={media.caption}
+                                        />
+                                    )}
+                                    {RegExp("video/").test(media.mimeType) && (
+                                        <video
+                                            controls
+                                            controlsList="nodownload" // eslint-disable-line react/no-unknown-property
+                                            className={clsx(
+                                                "w-full rounded mb-2",
+                                            )}
+                                            poster={media.thumbnail}
+                                        >
+                                            <source
+                                                src={media.file}
+                                                type="video/mp4"
+                                            />
+                                            Your browser does not support the
+                                            video tag.
+                                        </video>
+                                    )}
                                 </div>
                             )}
                         </div>

@@ -13,9 +13,10 @@ export default {
         },
         currencyISOCode: "",
         paymentMethod: "",
-        stripePublishableKey: "",
+        stripeKey: "",
         codeInjectionHead: "",
         codeInjectionBody: "",
+        razorpayKey: "",
     },
     networkAction: false,
     profile: {

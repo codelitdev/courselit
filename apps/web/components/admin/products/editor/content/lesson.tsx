@@ -9,7 +9,6 @@ import {
     CONTENT_URL_LABEL,
     LESSON_PREVIEW,
     DELETE_LESSON_POPUP_HEADER,
-    POPUP_CANCEL_ACTION,
     APP_MESSAGE_LESSON_DELETED,
     BUTTON_NEW_LESSON_TEXT,
     EDIT_LESSON_TEXT,
@@ -18,6 +17,8 @@ import {
     LESSON_CONTENT_EMBED_HEADER,
     LESSON_CONTENT_EMBED_PLACEHOLDER,
     BUTTON_SAVING,
+    MANAGE_COURSES_PAGE_HEADING,
+    BREADCRUMBS_EDIT_LESSON_COURSE_NAME,
 } from "@ui-config/strings";
 import {
     LESSON_TYPE_TEXT,
@@ -46,7 +47,7 @@ import type {
 import { actionCreators } from "@courselit/state-management";
 import { useRouter } from "next/router";
 import useCourse from "../course-hook";
-import { Help } from "@courselit/icons";
+import { Help, Info } from "@courselit/icons";
 import {
     Tooltip,
     Link,
@@ -60,6 +61,7 @@ import {
     FormField,
     Switch,
     TextEditorEmptyDoc,
+    Breadcrumbs,
 } from "@courselit/components-library";
 import { QuizBuilder } from "./quiz-builder";
 
@@ -198,26 +200,6 @@ const LessonEditor = ({
                     title: "${lesson.title}",
                     downloadable: ${lesson.downloadable},
                     content: ${formatContentForSending()},
-                    media: ${
-                        lesson.media && lesson.media.mediaId
-                            ? `{
-                                mediaId: "${lesson.media.mediaId}",
-                                originalFileName: "${
-                                    lesson.media.originalFileName
-                                }",
-                                mimeType: "${lesson.media.mimeType}",
-                                size: ${lesson.media.size || 0},
-                                access: "${lesson.media.access}",
-                                file: ${
-                                    lesson.media.access === "public"
-                                        ? `"${lesson.media.file}"`
-                                        : null
-                                },
-                                thumbnail: "${lesson.media.thumbnail}",
-                                caption: "${lesson.media.caption}"
-                            }`
-                            : null
-                    }, 
                     requiresEnrollment: ${lesson.requiresEnrollment}
                 }) {
                     lessonId
@@ -234,7 +216,46 @@ const LessonEditor = ({
             dispatch(networkAction(true));
             setLoading(true);
             await fetch.exec();
-            goBackLessonList();
+        } catch (err: any) {
+            dispatch(setAppMessage(new AppMessage(err.message)));
+        } finally {
+            dispatch(networkAction(false));
+            setLoading(false);
+        }
+    };
+
+    const saveMediaContent = async (media?: Media) => {
+        const query = `
+            mutation ($id: ID!, $media: MediaInput) {
+                lesson: updateLesson(lessonData: {
+                    id: $id
+                    media: $media
+                }) {
+                    lessonId
+                }
+            }
+        `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload({
+                query,
+                variables: {
+                    id: lesson.lessonId,
+                    media: media
+                        ? Object.assign({}, media, {
+                              file:
+                                  media.access === "public" ? media.file : null,
+                          })
+                        : null,
+                },
+            })
+            .setIsGraphQLEndpoint(true)
+            .build();
+
+        try {
+            dispatch(networkAction(true));
+            setLoading(true);
+            await fetch.exec();
         } catch (err: any) {
             dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
@@ -262,24 +283,6 @@ const LessonEditor = ({
                     downloadable: ${lesson.downloadable},
                     type: ${lesson.type.toUpperCase()},
                     content: ${formatContentForSending()},
-                    media: ${
-                        lesson.media && lesson.media.mediaId
-                            ? `{
-                        mediaId: "${lesson.media.mediaId}",
-                        originalFileName: "${lesson.media.originalFileName}",
-                        mimeType: "${lesson.media.mimeType}",
-                        size: ${lesson.media.size || 0},
-                        access: "${lesson.media.access}",
-                        file: ${
-                            lesson.media.access === "public"
-                                ? `"${lesson.media.file}"`
-                                : null
-                        },
-                        thumbnail: "${lesson.media.thumbnail}",
-                        caption: "${lesson.media.caption}"
-                    }`
-                            : null
-                    }, 
                     courseId: "${lesson.courseId}",
                     requiresEnrollment: ${lesson.requiresEnrollment},
                     groupId: "${lesson.groupId}"
@@ -297,8 +300,14 @@ const LessonEditor = ({
         try {
             dispatch(networkAction(true));
             setLoading(true);
-            await fetch.exec();
-            goBackLessonList();
+            const response = await fetch.exec();
+            if (response.lesson) {
+                setLesson(
+                    Object.assign({}, lesson, {
+                        lessonId: response.lesson.lessonId,
+                    }),
+                );
+            }
         } catch (err: any) {
             dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
@@ -370,9 +379,6 @@ const LessonEditor = ({
 
         return [...MIMETYPE_AUDIO, ...MIMETYPE_VIDEO, ...MIMETYPE_PDF];
     };
-
-    const goBackLessonList = () =>
-        router.replace(`/dashboard/product/${courseId}/content`);
 
     const selectOptions =
         course?.type === COURSE_TYPE_COURSE.toUpperCase()
@@ -452,179 +458,212 @@ const LessonEditor = ({
     }
 
     return (
-        <Section>
-            <div className="flex flex-col gap-4">
-                <h1 className="text-4xl font-semibold mb-4">
-                    {lessonId ? EDIT_LESSON_TEXT : BUTTON_NEW_LESSON_TEXT}
-                </h1>
-                <Form onSubmit={onLessonCreate} className="flex flex-col gap-4">
-                    {course?.type?.toLowerCase() === COURSE_TYPE_COURSE && (
-                        <FormField
-                            required
-                            label="Title"
-                            name="title"
-                            value={lesson.title}
-                            onChange={onLessonDetailsChange}
-                        />
-                    )}
-                    {course?.type?.toLowerCase() === COURSE_TYPE_COURSE && (
-                        <Select
-                            title={TYPE_DROPDOWN}
-                            value={lesson.type}
-                            options={selectOptions}
-                            onChange={(value) => {
-                                setLesson(
-                                    Object.assign({}, lesson, {
-                                        type: value,
-                                    }),
-                                );
-                            }}
-                            disabled={!!lesson.lessonId}
-                        />
-                    )}
-                    {![
-                        String.prototype.toUpperCase.call(LESSON_TYPE_TEXT),
-                        String.prototype.toUpperCase.call(LESSON_TYPE_QUIZ),
-                        String.prototype.toUpperCase.call(LESSON_TYPE_EMBED),
-                    ].includes(lesson.type) && (
-                        <MediaSelector
-                            title={CONTENT_URL_LABEL}
-                            src={(lesson.media && lesson.media.thumbnail) || ""}
-                            srcTitle={
-                                (lesson.media &&
-                                    lesson.media.originalFileName) ||
-                                ""
-                            }
-                            onSelection={(media?: Media) => {
-                                media &&
-                                    setLesson(
-                                        Object.assign({}, lesson, {
-                                            title:
-                                                lesson.title ||
-                                                media.originalFileName,
-                                            media,
-                                        }),
-                                    );
-                            }}
-                            mimeTypesToShow={getMimeTypesToShow()}
-                            strings={{}}
-                            auth={auth}
-                            profile={profile}
-                            dispatch={dispatch}
-                            address={address}
-                            mediaId={lesson.media?.mediaId}
-                            onRemove={() => {
-                                setLesson(
-                                    Object.assign({}, lesson, {
-                                        media: {},
-                                    }),
-                                );
-                            }}
-                        />
-                    )}
-                    {lesson.type.toLowerCase() === LESSON_TYPE_TEXT && (
-                        <div className="flex flex-col">
-                            <h2>{LESSON_CONTENT_HEADER}</h2>
-                            <TextEditor
-                                initialContent={textContent}
-                                refresh={refresh}
-                                onChange={(state: any) => setTextContent(state)}
-                                url={address.backend}
-                            />
-                        </div>
-                    )}
-                    {lesson.type.toLowerCase() === LESSON_TYPE_QUIZ && (
-                        <QuizBuilder
-                            content={quizContent}
-                            // key={JSON.stringify(quizContent)} // to discard state between re-renders
-                            onChange={(state: any) => setQuizContent(state)}
-                        />
-                    )}
-                    {lesson.type.toLowerCase() === LESSON_TYPE_EMBED && (
-                        <div className="flex flex-col">
+        <div className="flex flex-col gap-4">
+            <Breadcrumbs aria-label="lesson-breadcrumbs">
+                <Link href="/dashboard/products">
+                    {MANAGE_COURSES_PAGE_HEADING}
+                </Link>
+                <Link href={`/dashboard/product/${courseId}/content`}>
+                    {BREADCRUMBS_EDIT_LESSON_COURSE_NAME}
+                </Link>
+                {EDIT_LESSON_TEXT}
+            </Breadcrumbs>
+            <Section>
+                <div className="flex flex-col gap-4">
+                    <h1 className="text-4xl font-semibold mb-4">
+                        {lessonId ? EDIT_LESSON_TEXT : BUTTON_NEW_LESSON_TEXT}
+                    </h1>
+                    <Form
+                        onSubmit={onLessonCreate}
+                        className="flex flex-col gap-4"
+                    >
+                        {course?.type?.toLowerCase() === COURSE_TYPE_COURSE && (
                             <FormField
-                                label={LESSON_CONTENT_EMBED_HEADER}
-                                placeholder={LESSON_CONTENT_EMBED_PLACEHOLDER}
                                 required
-                                value={content.value}
-                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                    setContent({
-                                        value: e.target.value,
-                                    })
-                                }
+                                label="Title"
+                                name="title"
+                                value={lesson.title}
+                                onChange={onLessonDetailsChange}
                             />
-                        </div>
-                    )}
-                    {[
-                        LESSON_TYPE_VIDEO,
-                        LESSON_TYPE_AUDIO,
-                        LESSON_TYPE_PDF,
-                    ].includes(lesson.type) && (
-                        <div className="flex justify-between items-center">
-                            <h2>{DOWNLOADABLE_SWITCH}</h2>
-                            <Switch
-                                name="downloadable"
-                                checked={lesson.downloadable}
-                                onChange={(value: boolean) => {
+                        )}
+                        {course?.type?.toLowerCase() === COURSE_TYPE_COURSE && (
+                            <Select
+                                title={TYPE_DROPDOWN}
+                                value={lesson.type}
+                                options={selectOptions}
+                                onChange={(value) => {
                                     setLesson(
                                         Object.assign({}, lesson, {
-                                            downloadable: value,
+                                            type: value,
                                         }),
                                     );
                                 }}
+                                disabled={!!lesson.lessonId}
                             />
-                        </div>
-                    )}
-                    {lesson.type.toLowerCase() !== LESSON_TYPE_QUIZ && (
-                        <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-2">
-                                <h2>{LESSON_PREVIEW}</h2>
-                                <Tooltip title={LESSON_PREVIEW_TOOLTIP}>
-                                    <Help />
-                                </Tooltip>
+                        )}
+                        {lesson.type.toLowerCase() === LESSON_TYPE_TEXT && (
+                            <div className="flex flex-col">
+                                <h2>{LESSON_CONTENT_HEADER}</h2>
+                                <TextEditor
+                                    initialContent={textContent}
+                                    refresh={refresh}
+                                    onChange={(state: any) =>
+                                        setTextContent(state)
+                                    }
+                                    url={address.backend}
+                                />
                             </div>
-                            <Switch
-                                checked={!lesson.requiresEnrollment}
-                                onChange={(value: boolean) => {
-                                    setLesson(
-                                        Object.assign({}, lesson, {
-                                            requiresEnrollment: !value,
-                                        }),
-                                    );
-                                }}
+                        )}
+                        {lesson.type.toLowerCase() === LESSON_TYPE_QUIZ && (
+                            <QuizBuilder
+                                content={quizContent}
+                                onChange={(state: any) => setQuizContent(state)}
                             />
-                        </div>
-                    )}
-                    <div className="flex justify-between">
-                        <div className="flex gap-2">
-                            <Button
-                                type="submit"
-                                disabled={!lesson.title || loading}
-                                sx={{ mr: 1 }}
-                            >
-                                {loading ? BUTTON_SAVING : BUTTON_SAVE}
-                            </Button>
-                            {courseId && (
-                                <Link
-                                    href={`/dashboard/product/${courseId}/content`}
+                        )}
+                        {lesson.type.toLowerCase() === LESSON_TYPE_EMBED && (
+                            <div className="flex flex-col">
+                                <FormField
+                                    label={LESSON_CONTENT_EMBED_HEADER}
+                                    placeholder={
+                                        LESSON_CONTENT_EMBED_PLACEHOLDER
+                                    }
+                                    required
+                                    value={content.value}
+                                    onChange={(
+                                        e: ChangeEvent<HTMLInputElement>,
+                                    ) =>
+                                        setContent({
+                                            value: e.target.value,
+                                        })
+                                    }
+                                />
+                            </div>
+                        )}
+                        {[
+                            LESSON_TYPE_VIDEO,
+                            LESSON_TYPE_AUDIO,
+                            LESSON_TYPE_PDF,
+                        ].includes(lesson.type) && (
+                            <div className="flex justify-between items-center">
+                                <h2>{DOWNLOADABLE_SWITCH}</h2>
+                                <Switch
+                                    name="downloadable"
+                                    checked={lesson.downloadable}
+                                    onChange={(value: boolean) => {
+                                        setLesson(
+                                            Object.assign({}, lesson, {
+                                                downloadable: value,
+                                            }),
+                                        );
+                                    }}
+                                />
+                            </div>
+                        )}
+                        {lesson.type.toLowerCase() !== LESSON_TYPE_QUIZ && (
+                            <div className="flex justify-between items-center">
+                                <div className="flex items-center gap-2">
+                                    <h2>{LESSON_PREVIEW}</h2>
+                                    <Tooltip title={LESSON_PREVIEW_TOOLTIP}>
+                                        <Help />
+                                    </Tooltip>
+                                </div>
+                                <Switch
+                                    checked={!lesson.requiresEnrollment}
+                                    onChange={(value: boolean) => {
+                                        setLesson(
+                                            Object.assign({}, lesson, {
+                                                requiresEnrollment: !value,
+                                            }),
+                                        );
+                                    }}
+                                />
+                            </div>
+                        )}
+                        <div className="flex justify-between">
+                            <div className="flex gap-2">
+                                <Button
+                                    type="submit"
+                                    disabled={!lesson.title || loading}
+                                    sx={{ mr: 1 }}
                                 >
-                                    <Button variant="soft">
-                                        {POPUP_CANCEL_ACTION}
+                                    {loading ? BUTTON_SAVING : BUTTON_SAVE}
+                                </Button>
+                                {/* {courseId && (
+                                    <Link
+                                        href={`/dashboard/product/${courseId}/content`}
+                                    >
+                                        <Button variant="soft">
+                                            {POPUP_CANCEL_ACTION}
+                                        </Button>
+                                    </Link>
+                                )} */}
+                            </div>
+                            <Dialog2
+                                title={DELETE_LESSON_POPUP_HEADER}
+                                trigger={
+                                    <Button className="!bg-red-500">
+                                        {BUTTON_DELETE_LESSON_TEXT}
                                     </Button>
-                                </Link>
-                            )}
+                                }
+                                onClick={onLessonDelete}
+                            ></Dialog2>
                         </div>
-                        <Dialog2
-                            title={DELETE_LESSON_POPUP_HEADER}
-                            trigger={
-                                <Button>{BUTTON_DELETE_LESSON_TEXT}</Button>
+                    </Form>
+                </div>
+            </Section>
+            {![
+                String.prototype.toUpperCase.call(LESSON_TYPE_TEXT),
+                String.prototype.toUpperCase.call(LESSON_TYPE_QUIZ),
+                String.prototype.toUpperCase.call(LESSON_TYPE_EMBED),
+            ].includes(lesson.type) && (
+                <Section>
+                    <MediaSelector
+                        disabled={!lesson.lessonId}
+                        title={CONTENT_URL_LABEL}
+                        src={(lesson.media && lesson.media.thumbnail) || ""}
+                        srcTitle={
+                            (lesson.media && lesson.media.originalFileName) ||
+                            ""
+                        }
+                        onSelection={(media?: Media) => {
+                            if (media) {
+                                setLesson(
+                                    Object.assign({}, lesson, {
+                                        title:
+                                            lesson.title ||
+                                            media.originalFileName,
+                                        media,
+                                    }),
+                                );
+                                saveMediaContent(media);
                             }
-                            onClick={onLessonDelete}
-                        ></Dialog2>
-                    </div>
-                </Form>
-            </div>
-        </Section>
+                        }}
+                        mimeTypesToShow={getMimeTypesToShow()}
+                        strings={{}}
+                        auth={auth}
+                        profile={profile}
+                        dispatch={dispatch}
+                        address={address}
+                        mediaId={lesson.media?.mediaId}
+                        onRemove={() => {
+                            setLesson(
+                                Object.assign({}, lesson, {
+                                    media: {},
+                                }),
+                            );
+                            saveMediaContent();
+                        }}
+                        type="lesson"
+                    />
+                    {!(lesson.lessonId && lesson.title) && (
+                        <p className="text-sm text-slate-600 flex items-center gap-2">
+                            <Info />
+                            Set the title of the lesson to enable media upload
+                        </p>
+                    )}
+                </Section>
+            )}
+        </div>
     );
 };
 

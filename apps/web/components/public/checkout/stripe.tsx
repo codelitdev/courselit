@@ -25,7 +25,7 @@ interface StripeProps {
 
 const Stripe = (props: StripeProps) => {
     const { course, siteInfo, address, dispatch } = props;
-    const stripePromise = loadStripe(siteInfo.stripePublishableKey as string);
+    const stripePromise = loadStripe(siteInfo.stripeKey as string);
     const router = useRouter();
 
     const handleClick = async () => {

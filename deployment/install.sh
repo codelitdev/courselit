@@ -36,13 +36,13 @@ CONFIGHOME=/home/$USER/.config/${DOMAIN}
 
 function generate_config () {
 # Generate random username and password for database
-NEXTAUTH_SECRET=$(tr -dc 'a-z' </dev/urandom | head -c 10)
+AUTH_SECRET=$(tr -dc 'a-z' </dev/urandom | head -c 10)
 
 mkdir -p $CONFIGHOME
 
 cat > $CONFIGHOME/.env <<EOF
 DB_CONNECTION_STRING=replace-this-with-a-mongodb-connection-string
-NEXTAUTH_SECRET=$NEXTAUTH_SECRET
+AUTH_SECRET=$AUTH_SECRET
 TAG=latest
 
 # Email
