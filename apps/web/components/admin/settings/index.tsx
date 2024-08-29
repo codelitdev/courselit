@@ -604,7 +604,7 @@ const Settings = (props: SettingsProps) => {
                 ]}
                 defaultValue={selectedTab}
             >
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-8">
                     <Form
                         onSubmit={handleSettingsSubmit}
                         className="flex flex-col gap-4 pt-4"
@@ -623,24 +623,28 @@ const Settings = (props: SettingsProps) => {
                             onChange={onChangeData}
                         />
 
-                        <PageBuilderPropertyHeader
-                            label={SITE_SETTINGS_COURSELIT_BRANDING_CAPTION}
-                        />
-                        <div className="flex justify-between text-[#8D8D8D]">
-                            <p>
-                                {SITE_SETTINGS_COURSELIT_BRANDING_SUB_CAPTION}
-                            </p>
-                            <Checkbox
-                                disabled={props.networkAction}
-                                checked={newSettings.hideCourseLitBranding}
-                                onChange={(value: boolean) => {
-                                    setNewSettings(
-                                        Object.assign({}, newSettings, {
-                                            hideCourseLitBranding: value,
-                                        }),
-                                    );
-                                }}
+                        <div>
+                            <PageBuilderPropertyHeader
+                                label={SITE_SETTINGS_COURSELIT_BRANDING_CAPTION}
                             />
+                            <div className="flex justify-between text-[#8D8D8D]">
+                                <p className="text-sm">
+                                    {
+                                        SITE_SETTINGS_COURSELIT_BRANDING_SUB_CAPTION
+                                    }
+                                </p>
+                                <Checkbox
+                                    disabled={props.networkAction}
+                                    checked={newSettings.hideCourseLitBranding}
+                                    onChange={(value: boolean) => {
+                                        setNewSettings(
+                                            Object.assign({}, newSettings, {
+                                                hideCourseLitBranding: value,
+                                            }),
+                                        );
+                                    }}
+                                />
+                            </div>
                         </div>
 
                         <div>

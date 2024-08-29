@@ -6,7 +6,6 @@ import {
     Image,
     PriceTag,
     TextRenderer,
-    Button,
     Form,
     FormField,
     Button2,
@@ -222,7 +221,7 @@ export default function Widget({
                                     (editing && showEditingView === "0")) &&
                                     !success && (
                                         <Form
-                                            className="flex flex-col"
+                                            className="flex flex-col items-start"
                                             onSubmit={onSubmit}
                                         >
                                             <div className="mb-4">
@@ -238,7 +237,7 @@ export default function Widget({
                                                 />
                                             </div>
                                             <div>
-                                                <Button
+                                                <Button2
                                                     style={{
                                                         backgroundColor:
                                                             buttonBackground,
@@ -246,13 +245,13 @@ export default function Widget({
                                                     }}
                                                     type="submit"
                                                     disabled={
-                                                        state.networkAction
+                                                        state.networkAction ||
+                                                        !email
                                                     }
-                                                    component="button"
                                                 >
                                                     {buttonCaption ||
                                                         "Get for free"}
-                                                </Button>
+                                                </Button2>
                                             </div>
                                         </Form>
                                     )}
