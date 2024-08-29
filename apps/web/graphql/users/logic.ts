@@ -257,12 +257,14 @@ export const recordProgress = async ({
 
 export async function createUser({
     domain,
+    name,
     email,
     lead,
     superAdmin = false,
     subscribedToUpdates = true,
 }: {
     domain: Domain;
+    name?: string;
     email: string;
     lead?:
         | typeof constants.leadWebsite
@@ -273,6 +275,7 @@ export async function createUser({
 }): Promise<User> {
     const newUser: Partial<User> = {
         domain: domain._id,
+        name: name,
         email: email,
         active: true,
         purchases: [],
