@@ -48,7 +48,6 @@ export const SIDEBAR: Sidebar = {
         "Getting started": [
             { text: "What is CourseLit", link: "en/introduction" },
             { text: "Features", link: "en/features" },
-            // { text: 'Page 3', link: 'en/page-3' },
         ],
         "Online courses": [
             { text: "Introduction", link: "en/courses/introduction" },
@@ -67,9 +66,18 @@ export const SIDEBAR: Sidebar = {
         ],
         "Email marketing and automation": [
             { text: "Introduction", link: "en/email-marketing/introduction" },
-            { text: "Requesting access to email marketing", link: "en/email-marketing/mail-access-request" },
-            { text: "Broadcast mails", link: "en/email-marketing/broadcast-mails" },
-            { text: "Sequences (Campaigns)", link: "en/email-marketing/sequences" },
+            {
+                text: "Requesting access to email marketing",
+                link: "en/email-marketing/mail-access-request",
+            },
+            {
+                text: "Broadcast mails",
+                link: "en/email-marketing/broadcast-mails",
+            },
+            {
+                text: "Sequences (Campaigns)",
+                link: "en/email-marketing/sequences",
+            },
         ],
         Pages: [
             { text: "Introduction", link: "en/pages/introduction" },

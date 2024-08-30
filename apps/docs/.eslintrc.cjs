@@ -1,3 +1,4 @@
 module.exports = {
-    ignorePatterns: ["dist/**/*.js"],
+    // TODO: remove config.ts files from below
+    ignorePatterns: ["dist/**/*.js", "config.ts"],
 };
