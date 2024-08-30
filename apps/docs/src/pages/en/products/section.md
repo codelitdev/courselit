@@ -7,6 +7,7 @@ layout: ../../../layouts/MainLayout.astro
 A section is a logical grouping of lessons. It helps keep lessons structured and allows for the release of content in phases (called `Drip content`).
 
 ## Look and Feel
+
 Here’s how it looks on various parts of the platform.
 
 ### Sections in Product Viewer
@@ -23,7 +24,7 @@ Here’s how it looks on various parts of the platform.
 
 ## Add Section
 
-1. To add a new section, click on the `New section` button on the `Product > Content` screen. 
+1. To add a new section, click on the `New section` button on the `Product > Content` screen.
 
 ![Add Section](/assets/products/add-section.jpeg)
 
@@ -49,7 +50,7 @@ Here’s how it looks on various parts of the platform.
 
 You can release a section on a **specific date** or **after a certain number of days have elapsed since the time a student enrolls**.
 
-If drip configuration is enabled for a section, a student won't be able to access it until it has been "dripped" to them. 
+If drip configuration is enabled for a section, a student won't be able to access it until it has been "dripped" to them.
 
 ### Drip by Date
 
@@ -60,7 +61,7 @@ If drip configuration is enabled for a section, a student won't be able to acces
 2. Select the date on which this section will be dripped.
 3. Click `Continue` to save it.
 
-### Drip After a Certain Number of Days Since Enrollment 
+### Drip After a Certain Number of Days Since Enrollment
 
 1. If you want a section to be available to users after a certain number of days have elapsed since their enrollment in the course, this is the option you should opt for.
 

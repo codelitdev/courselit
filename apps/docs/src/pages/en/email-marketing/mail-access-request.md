@@ -10,7 +10,7 @@ We do this to keep the service safe and healthy for everyone.
 
 > If you are self-hosting CourseLit, you do not have to go through this process. All the emailing features are unlocked for you.
 
-## To request access 
+## To request access
 
 1. From the `Dashboard`, go to `Mails` to see the following screen.
 
@@ -18,7 +18,7 @@ We do this to keep the service safe and healthy for everyone.
 
 2. The first step is to set your mailing address. This is required to comply with the [CAN-SPAM](https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business) act.
 
-Click on the `Go to settings` button and you will be taken to a screen where you can enter your mailing address as shown below. Enter your mailing address and click save. 
+Click on the `Go to settings` button and you will be taken to a screen where you can enter your mailing address as shown below. Enter your mailing address and click save.
 
 ![Set mailing address](/assets/emails/set-mailing-address.png)
 

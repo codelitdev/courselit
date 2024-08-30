@@ -22,21 +22,21 @@ From the `Dashboard`, go to `Mails` to land on the `Broadcasts` hub. Here you wi
 
 2. Let's get acquainted with the interface. In the following image, we have demarcated all the sections. To see the description of a section, notice its number in the screenshot and find its description below.
 
-    - 1. **User Filters**: To select the users.
-    - 2. **Total Selected Users**: The total number of selected users as per the applied filters.
-    - 3. **Subject**: The email subject goes here.
-    - 4. **Variables**: [Liquid](https://liquidjs.com/) templating variables that are available for you to use in your email body.
-    - 5. **Email Compose Window**: Email content goes here. 
-    - 6. **Email Preview**: Live email preview.
-        > During the preview, the Liquid variables will be displayed as placeholders. The actual values will be replaced when sending the actual mail.
-    - 7. **Send Button**: Sends the email immediately.
-    - 8. **Schedule Button**: Lets you schedule an email for later.
+    -   1. **User Filters**: To select the users.
+    -   2. **Total Selected Users**: The total number of selected users as per the applied filters.
+    -   3. **Subject**: The email subject goes here.
+    -   4. **Variables**: [Liquid](https://liquidjs.com/) templating variables that are available for you to use in your email body.
+    -   5. **Email Compose Window**: Email content goes here.
+    -   6. **Email Preview**: Live email preview.
+            > During the preview, the Liquid variables will be displayed as placeholders. The actual values will be replaced when sending the actual mail.
+    -   7. **Send Button**: Sends the email immediately.
+    -   8. **Schedule Button**: Lets you schedule an email for later.
 
     ![Broadcast Compose](/assets/emails/compose-broadcast.jpeg)
 
 3. Compose your email.
 
-4. If you are not yet ready to send the email or schedule it, you can simply go back to the Broadcasts hub by clicking on the `Mails` breadcrumb (located at the top of the page). 
+4. If you are not yet ready to send the email or schedule it, you can simply go back to the Broadcasts hub by clicking on the `Mails` breadcrumb (located at the top of the page).
 
     > Your changes are saved in real time, so you won't lose anything. You can always come back to your draft emails.
 
