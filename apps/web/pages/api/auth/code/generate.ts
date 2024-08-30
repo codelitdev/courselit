@@ -28,9 +28,11 @@ export default async function handler(
     }
     const code = generateUniquePasscode();
 
+    const sanitizedEmail = (email as string).toLowerCase();
+
     await VerificationToken.create({
         domain: domain.name,
-        email,
+        email: sanitizedEmail,
         code: hashCode(code),
         timestamp: Date.now() + 1000 * 60 * 5,
     });
@@ -38,7 +40,7 @@ export default async function handler(
     try {
         const emailBody = pug.render(MagicCodeEmailTemplate, { code });
         await send({
-            to: [<string>email],
+            to: [sanitizedEmail],
             subject: `${responses.sign_in_mail_prefix} ${req.headers["host"]}`,
             body: emailBody,
         });
