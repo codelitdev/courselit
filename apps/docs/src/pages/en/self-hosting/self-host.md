@@ -11,7 +11,6 @@ We offer two ways to self-host CourseLit, which are as follows.
 1. On [Vercel](https://vercel.com).
 2. On a VPS using Docker.
 
-
 ## Hosting on Vercel
 
 To quickly spin up an instance of CourseLit on Vercel, click the following button.
