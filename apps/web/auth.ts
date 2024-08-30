@@ -32,35 +32,36 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
                     return null;
                 }
 
-                const { email, code }: any = parsedCredentials.data;
+                const { email, code } = parsedCredentials.data;
+                const sanitizedEmail = email.toLowerCase();
 
                 const verificationToken =
                     await VerificationToken.findOneAndDelete({
-                        email,
+                        email: sanitizedEmail,
                         domain: domain.name,
                         code: hashCode(+code),
                         timestamp: { $gt: Date.now() },
                     });
                 if (!verificationToken) {
                     error(`Invalid code`, {
-                        email: email,
+                        email: sanitizedEmail,
                     });
                     return null;
                 }
 
                 let user = await User.findOne({
                     domain: domain._id,
-                    email,
+                    email: sanitizedEmail,
                 });
                 if (!user) {
                     user = await createUser({
                         domain,
-                        email,
+                        email: sanitizedEmail,
                     });
                 }
                 return {
                     id: user.userId,
-                    email,
+                    email: sanitizedEmail,
                     name: user.name,
                 };
             },

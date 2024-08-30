@@ -36,9 +36,9 @@ export async function createSubscription(
     ctx: GQLContext,
 ): Promise<boolean> {
     try {
+        const sanitizedEmail = email.toLowerCase();
         let dbUser: User | null = await UserModel.findOne({
-            name,
-            email,
+            email: sanitizedEmail,
             domain: ctx.subdomain._id,
         });
 
@@ -46,7 +46,7 @@ export async function createSubscription(
             dbUser = await createUser({
                 domain: ctx.subdomain!,
                 name: name,
-                email: email,
+                email: sanitizedEmail,
                 lead: constants.leadNewsletter,
             });
         }
