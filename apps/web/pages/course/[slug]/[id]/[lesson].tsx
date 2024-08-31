@@ -78,7 +78,7 @@ const Lesson = (props: LessonProps) => {
             <RouteBasedComponentScaffold
                 items={generateSideBarItems(course, profile)}
                 drawerWidth={360}
-                courseLitBranding={true}
+                showCourseLitBranding={true}
             >
                 {lesson && (
                     <LessonViewer

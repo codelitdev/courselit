@@ -22,7 +22,7 @@ interface ComponentScaffoldProps {
     children: ReactNode;
     drawerWidth?: number;
     siteinfo: SiteInfo;
-    courseLitBranding?: boolean;
+    showCourseLitBranding?: boolean;
 }
 
 const ComponentScaffold = ({
@@ -30,7 +30,7 @@ const ComponentScaffold = ({
     children,
     drawerWidth = 240,
     siteinfo,
-    courseLitBranding,
+    showCourseLitBranding,
 }: ComponentScaffoldProps) => {
     const [open, setOpen] = useState(false);
     const router = useRouter();
@@ -83,7 +83,7 @@ const ComponentScaffold = ({
                     ),
             )}
 
-            {!siteinfo.hideCourseLitBranding && courseLitBranding && (
+            {!siteinfo.hideCourseLitBranding && showCourseLitBranding && (
                 <Link href={`https://courselit.app`} openInSameTab={false}>
                     <div className="md:w-[155px] md:mx-[44px] lg:w-auto h-9 p-2 mx-[55px] my-[10px] border rounded-md bg-[#FFFFFF] text-[#000000] text-sm text-center">
                         Powered by{" "}

@@ -43,12 +43,13 @@ html
         p 
             |   To access all of your content, 
             |   #[a(href=\`\${loginLink}\`) log in] here.
-        div(class="courselit-branding-container")
-            a(
-                href="https://courselit.app"
-                target="_blank"
-                class="courselit-branding-cta"
-            ) Powered by <strong> CourseLit </strong>
+        if !hideCourseLitBranding
+            div(class="courselit-branding-container")
+                a(
+                    href="https://courselit.app"
+                    target="_blank"
+                    class="courselit-branding-cta"
+                ) Powered by <strong> CourseLit </strong>
 `;
 
 export default digitalDownloadTemplate;

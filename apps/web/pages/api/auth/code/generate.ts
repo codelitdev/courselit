@@ -36,7 +36,10 @@ export default async function handler(
     });
 
     try {
-        const emailBody = pug.render(MagicCodeEmailTemplate, { code });
+        const emailBody = pug.render(MagicCodeEmailTemplate, {
+            code,
+            hideCourseLitBranding: domain.settings.hideCourseLitBranding,
+        });
         await send({
             to: [<string>email],
             subject: `${responses.sign_in_mail_prefix} ${req.headers["host"]}`,

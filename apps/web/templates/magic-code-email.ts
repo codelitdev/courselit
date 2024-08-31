@@ -21,12 +21,13 @@ html
             strong IMPORTANT:
             |   Do not share this email with anyone as anyone can log in to your
             |   account using the link in this email.
-        div(class="courselit-branding-container")
-            a(
-                href="https://courselit.app"
-                target="_blank"
-                class="courselit-branding-cta"
-            ) Powered by <strong> CourseLit </strong>
+        if !hideCourseLitBranding
+            div(class="courselit-branding-container")
+                a(
+                    href="https://courselit.app"
+                    target="_blank"
+                    class="courselit-branding-cta"
+                ) Powered by <strong> CourseLit </strong>
 `;
 
 export default magicCodeEmail;
