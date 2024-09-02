@@ -84,12 +84,16 @@ const ComponentScaffold = ({
             )}
 
             {!siteinfo.hideCourseLitBranding && showCourseLitBranding && (
-                <Link href={`https://courselit.app`} openInSameTab={false}>
-                    <div className="md:w-[155px] md:mx-[44px] lg:w-auto h-9 p-2 mx-[55px] my-[10px] border rounded-md bg-[#FFFFFF] text-[#000000] text-sm text-center">
+                <span className="flex justify-center align-center">
+                    <Link
+                        href={`https://courselit.app`}
+                        openInSameTab={false}
+                        className="p-2 my-[10px] border rounded-md bg-[#FFFFFF] text-[#000000] text-sm text-center"
+                    >
                         Powered by{" "}
                         <span className="font-semibold">CourseLit</span>
-                    </div>
-                </Link>
+                    </Link>
+                </span>
             )}
         </ul>
     );
