@@ -19,16 +19,16 @@ html
             .cta:hover {
                 background-color: #060665;
             }
-             .courselit-branding-container {
+            .courselit-branding-container {
                 margin: 40px 0px;
             }
             .courselit-branding-cta {
                 text-decoration: none;
                 color: #000000;
-                padding: 10px;
+                padding: 6px 10px;
                 background-color: #FFFFFF;
                 border: 1px solid;
-                border-radius: 4px;
+                border-radius: 6px;
                 text-align: center;
             }
     body

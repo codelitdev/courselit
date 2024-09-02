@@ -124,7 +124,7 @@ const Widget = ({
                                 <Link
                                     href={`https://courselit.app`}
                                     openInSameTab={false}
-                                    className="p-2 border rounded-md bg-[#FFFFFF] text-[#000000] text-sm text-center"
+                                    className="px-2 py-1 border rounded-md bg-[#FFFFFF] text-[#000000] text-sm text-center"
                                 >
                                     Powered by{" "}
                                     <span className="font-semibold">

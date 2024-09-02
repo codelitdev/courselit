@@ -88,7 +88,7 @@ const ComponentScaffold = ({
                     <Link
                         href={`https://courselit.app`}
                         openInSameTab={false}
-                        className="p-2 my-[10px] border rounded-md bg-[#FFFFFF] text-[#000000] text-sm text-center"
+                        className="px-2 py-1 my-[10px] border rounded-md bg-[#FFFFFF] text-[#000000] text-sm text-center"
                     >
                         Powered by{" "}
                         <span className="font-semibold">CourseLit</span>
