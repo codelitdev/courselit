@@ -1,6 +1,6 @@
 {
     "name": "@courselit/text-editor",
-    "version": "0.30.12",
+    "version": "0.30.13",
     "description": "A text editor based on Remirror",
     "keywords": [
         "text editor",
