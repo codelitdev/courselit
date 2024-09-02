@@ -477,15 +477,13 @@ const LessonEditor = ({
                         onSubmit={onLessonCreate}
                         className="flex flex-col gap-4"
                     >
-                        {course?.type?.toLowerCase() === COURSE_TYPE_COURSE && (
-                            <FormField
-                                required
-                                label="Title"
-                                name="title"
-                                value={lesson.title}
-                                onChange={onLessonDetailsChange}
-                            />
-                        )}
+                        <FormField
+                            required
+                            label="Title"
+                            name="title"
+                            value={lesson.title}
+                            onChange={onLessonDetailsChange}
+                        />
                         {course?.type?.toLowerCase() === COURSE_TYPE_COURSE && (
                             <Select
                                 title={TYPE_DROPDOWN}

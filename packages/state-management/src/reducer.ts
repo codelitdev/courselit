@@ -59,6 +59,12 @@ function siteinfoReducer(state = initialState.siteinfo, action: Action) {
                     codeInjectionBody:
                         decode(action.siteinfo.codeInjectionBody) ||
                         initialState.siteinfo.codeInjectionBody,
+                    mailingAddress:
+                        action.siteinfo.mailingAddress ||
+                        initialState.siteinfo.mailingAddress,
+                    hideCourseLitBranding:
+                        action.siteinfo.hideCourseLitBranding ||
+                        initialState.siteinfo.hideCourseLitBranding,
                     razorpayKey:
                         action.siteinfo.razorpayKey ||
                         initialState.siteinfo.razorpayKey,
