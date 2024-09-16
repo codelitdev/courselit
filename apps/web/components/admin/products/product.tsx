@@ -8,6 +8,7 @@ import {
     PRODUCT_STATUS_PUBLISHED,
     PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
     PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE,
+    PRODUCT_TABLE_CONTEXT_MENU_INVITE_A_CUSTOMER,
     VIEW_PAGE_MENU_ITEM,
 } from "../../../ui-config/strings";
 import { MoreVert } from "@courselit/icons";
@@ -122,6 +123,15 @@ function Product({
                             {PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE}
                         </Link>
                     </MenuItem>
+                    <div className="flex w-full border-b border-slate-300"></div>
+                    <MenuItem>
+                        <Link
+                            href={`/dashboard/product/${product.courseId}/customer/new`}
+                        >
+                            {PRODUCT_TABLE_CONTEXT_MENU_INVITE_A_CUSTOMER}
+                        </Link>
+                    </MenuItem>
+                    <div className="flex w-full border-b border-slate-300"></div>
                     <MenuItem
                         component="dialog"
                         title={PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT}

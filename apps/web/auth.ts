@@ -53,6 +53,10 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
                     domain: domain._id,
                     email: sanitizedEmail,
                 });
+                if (user && user.invited) {
+                    user.invited = false;
+                    await user.save();
+                }
                 if (!user) {
                     user = await createUser({
                         domain,

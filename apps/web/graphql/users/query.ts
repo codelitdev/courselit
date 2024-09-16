@@ -3,6 +3,7 @@ import {
     GraphQLString,
     GraphQLList,
     GraphQLNonNull,
+    GraphQLID
 } from "graphql";
 import types from "./types";
 import {
@@ -12,6 +13,7 @@ import {
     getSegments,
     getTagsWithDetails,
     getTags,
+    inviteCustomer,
 } from "./logic";
 import GQLContext from "../../models/GQLContext";
 
@@ -33,6 +35,18 @@ const queries = {
         resolve: (_: any, { searchData }: any, context: GQLContext) =>
             getUsers({ searchData, ctx: context }),
     },
+
+    inviteCustomer: {
+        type: types.userType,
+        args: {
+            email: { type: GraphQLString },
+            tags: { type: new GraphQLList(GraphQLString) },
+            id: { type: new GraphQLNonNull(GraphQLID) },
+        },
+        resolve: (_: any, { email, tags, id }: any, context: GQLContext) =>
+            inviteCustomer(email, tags, id, context),
+    },
+
     getUsersCount: {
         type: new GraphQLNonNull(GraphQLInt),
         args: {

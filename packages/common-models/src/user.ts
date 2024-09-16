@@ -15,4 +15,5 @@ export default interface User {
     lead: (typeof Constants.leads)[number];
     tags?: string[];
     avatar: Media;
+    invited?: boolean;
 }
