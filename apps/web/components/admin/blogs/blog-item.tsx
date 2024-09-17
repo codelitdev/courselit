@@ -8,14 +8,15 @@ import {
     PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
 } from "../../../ui-config/strings";
 import { MoreVert } from "@courselit/icons";
-import type { AppDispatch, AppState } from "@courselit/state-management";
+import type { AppDispatch } from "@courselit/state-management";
 import type { SiteInfo, Address } from "@courselit/common-models";
-import { connect } from "react-redux";
+// import { connect } from "react-redux";
 import { Chip, Menu2, MenuItem, Link } from "@courselit/components-library";
 import { deleteProduct } from "./helpers";
 import { TableRow } from "@courselit/components-library";
+import { usePathname } from "next/navigation";
 
-function BlogItem({
+export default function BlogItem({
     details,
     address,
     dispatch,
@@ -27,16 +28,20 @@ function BlogItem({
     };
     siteinfo: SiteInfo;
     address: Address;
-    dispatch: AppDispatch;
+    dispatch?: AppDispatch;
     position: number;
     onDelete: (position: number) => void;
 }) {
     const product = details;
+    const path = usePathname();
+    const pathPrefix = path?.startsWith("/dashboard2")
+        ? "/dashboard2"
+        : "/dashboard";
 
     return (
         <TableRow key={product.courseId}>
             <td className="py-4">
-                <Link href={`/dashboard/blog/${product.courseId}/details`}>
+                <Link href={`${pathPrefix}/blog/${product.courseId}/details`}>
                     <p>{product.title}</p>
                 </Link>
             </td>
@@ -79,11 +84,11 @@ function BlogItem({
     );
 }
 
-const mapStateToProps = (state: AppState) => ({
-    siteinfo: state.siteinfo,
-    address: state.address,
-});
+// const mapStateToProps = (state: AppState) => ({
+//     siteinfo: state.siteinfo,
+//     address: state.address,
+// });
 
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
+// const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
 
-export default connect(mapStateToProps, mapDispatchToProps)(BlogItem);
+// export default connect(mapStateToProps, mapDispatchToProps)(BlogItem);

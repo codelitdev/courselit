@@ -1,3 +1,5 @@
+"use client";
+
 import { SiteInfo } from "@courselit/common-models";
 import { Link } from "@courselit/components-library";
 import { AppState } from "@courselit/state-management";
@@ -11,7 +13,7 @@ interface TodoProps {
     siteinfo: SiteInfo;
 }
 
-const Todo = ({ siteinfo }) => {
+export const Todo = ({ siteinfo }) => {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {(!siteinfo.title || (siteinfo.logo && !siteinfo.logo.file)) && (

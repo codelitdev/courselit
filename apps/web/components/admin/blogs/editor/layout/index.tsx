@@ -1,33 +1,41 @@
-import { useRouter } from "next/router";
 import React, { ReactNode } from "react";
 import dynamic from "next/dynamic";
-import { MANAGE_COURSES_PAGE_HEADING } from "../../../../../ui-config/strings";
 import generateTabs from "./tabs-data";
+import { Address, Profile, SiteInfo } from "@courselit/common-models";
 
-const BaseLayout = dynamic(() => import("../../../base-layout"));
 const BlogHeader = dynamic(() => import("./header"));
 const Tabs = dynamic(() => import("../../../../tabs"));
 
 interface ProductEditorLayoutProps {
+    id: string;
+    profile: Profile;
+    siteInfo: SiteInfo;
     children: ReactNode;
+    address: Address;
+    prefix: string;
 }
 
 export default function ProductEditorLayout({
+    id,
     children,
+    profile,
+    siteInfo,
+    address,
+    prefix,
 }: ProductEditorLayoutProps) {
-    const router = useRouter();
-    const { id } = router.query;
-    const breadcrumbs = [{ text: "Blogs", url: `/dashboard/blogs` }];
+    const breadcrumbs = [{ text: "Blogs", url: `/${prefix}/blogs` }];
 
     return (
-        <BaseLayout title={MANAGE_COURSES_PAGE_HEADING}>
-            <div className="flex flex-col">
-                <BlogHeader id={id as string} breadcrumbs={breadcrumbs} />
-                <div className="mb-4">
-                    <Tabs tabs={generateTabs(id as string)} />
-                </div>
-                {children}
+        <div className="flex flex-col">
+            <BlogHeader
+                id={id as string}
+                breadcrumbs={breadcrumbs}
+                address={address}
+            />
+            <div className="mb-4">
+                <Tabs tabs={generateTabs(prefix, id as string)} />
             </div>
-        </BaseLayout>
+            {children}
+        </div>
     );
 }

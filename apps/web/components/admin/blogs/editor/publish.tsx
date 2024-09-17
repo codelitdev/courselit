@@ -21,12 +21,12 @@ import { AppDispatch, AppState } from "@courselit/state-management";
 interface PublishProps {
     id: string;
     address: Address;
-    dispatch: AppDispatch;
+    dispatch?: AppDispatch;
     loading: boolean;
 }
 
-function Publish({ id, address, dispatch, loading }: PublishProps) {
-    let course = useCourse(id);
+export function Publish({ id, address, dispatch, loading }: PublishProps) {
+    let course = useCourse(id, address, dispatch);
     const [published, setPublished] = useState(course?.published);
     const [privacy, setPrivacy] = useState(course?.privacy);
 
@@ -80,15 +80,15 @@ function Publish({ id, address, dispatch, loading }: PublishProps) {
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.course) {
                 return response.course;
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     };
 

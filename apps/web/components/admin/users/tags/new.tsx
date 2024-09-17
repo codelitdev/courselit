@@ -1,33 +1,37 @@
 import React, { useState, ChangeEvent } from "react";
 import { Address, AppMessage } from "@courselit/common-models";
 import {
+    Breadcrumbs,
     Button,
     Form,
     FormField,
-    Section,
+    Link,
 } from "@courselit/components-library";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import {
     BTN_CONTINUE,
     BTN_NEW_TAG,
     BUTTON_CANCEL_TEXT,
+    USERS_MANAGER_PAGE_HEADING,
+    USERS_TAG_HEADER,
 } from "@ui-config/strings";
 import { connect } from "react-redux";
 import { FetchBuilder } from "@courselit/utils";
 import { actionCreators } from "@courselit/state-management";
-import { useRouter } from "next/router";
 import { FormEvent } from "react";
+import { usePathname, useRouter } from "next/navigation";
 const { networkAction, setAppMessage } = actionCreators;
 
 interface NewTagProps {
     address: Address;
-    dispatch: AppDispatch;
+    dispatch?: AppDispatch;
 }
 
-function NewTag({ address, dispatch }: NewTagProps) {
+export function NewTag({ address, dispatch }: NewTagProps) {
     const [name, setName] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const path = usePathname();
 
     const createTag = async (e: FormEvent) => {
         e.preventDefault();
@@ -49,21 +53,46 @@ function NewTag({ address, dispatch }: NewTagProps) {
             .build();
         try {
             setLoading(true);
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.tags) {
-                router.replace("/dashboard/users/tags");
+                router.replace(
+                    `/dashboard${
+                        path?.startsWith("/dashboard2") ? "2" : ""
+                    }/users/tags`,
+                );
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
             setLoading(false);
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     };
 
     return (
-        <Section>
+        <div className="flex flex-col">
+            <div className="mb-4">
+                <Breadcrumbs aria-label="breakcrumb">
+                    <Link
+                        href={`/dashboard${
+                            path?.startsWith("/dashboard2") ? "2" : ""
+                        }/users`}
+                    >
+                        {USERS_MANAGER_PAGE_HEADING}
+                    </Link>
+
+                    <Link
+                        href={`/dashboard${
+                            path?.startsWith("/dashboard2") ? "2" : ""
+                        }/users/tags`}
+                    >
+                        {USERS_TAG_HEADER}
+                    </Link>
+
+                    <p>{BTN_NEW_TAG}</p>
+                </Breadcrumbs>
+            </div>
             <div className="flex flex-col">
                 <h1 className="text-4xl font-semibold mb-4">{BTN_NEW_TAG}</h1>
                 <Form onSubmit={createTag} className="flex flex-col gap-4">
@@ -86,7 +115,9 @@ function NewTag({ address, dispatch }: NewTagProps) {
                         </Button>
                         <Button
                             component="link"
-                            href="/dashboard/users/tags"
+                            href={`/dashboard${
+                                path?.startsWith("/dashboard2") ? "2" : ""
+                            }/users/tags`}
                             variant="soft"
                         >
                             {BUTTON_CANCEL_TEXT}
@@ -94,7 +125,7 @@ function NewTag({ address, dispatch }: NewTagProps) {
                     </div>
                 </Form>
             </div>
-        </Section>
+        </div>
     );
 }
 

@@ -1,14 +1,38 @@
 "use client";
 
 import { ReactNode, useContext, useEffect, useState } from "react";
-import { IconButton, Image, Modal } from "@courselit/components-library";
-import { Menu } from "@courselit/icons";
-import { Chip } from "@courselit/components-library";
-import { AddressContext, SiteInfoContext } from "./contexts";
-import Link from "next/link";
+import { IconButton, Image, Link, Modal } from "@courselit/components-library";
+import {
+    Exit,
+    ExpandMore,
+    Globe,
+    Help,
+    Mail,
+    Menu,
+    Overview,
+    Person,
+    Products,
+    Settings,
+    Text,
+} from "@courselit/icons";
+import { AddressContext, ProfileContext, SiteInfoContext } from "./contexts";
 import { SiteInfo } from "@courselit/common-models";
-import { FetchBuilder } from "@courselit/utils";
+import { checkPermission, FetchBuilder } from "@courselit/utils";
 import { defaultState } from "./default-state";
+import { MyContent } from "@courselit/icons";
+import { UIConstants } from "@courselit/common-models";
+import {
+    SIDEBAR_MENU_BLOGS,
+    SIDEBAR_MENU_MAILS,
+    SIDEBAR_MENU_PAGES,
+    SIDEBAR_MENU_PRODUCTS,
+    SIDEBAR_MENU_SETTINGS,
+    SIDEBAR_MENU_USERS,
+} from "@ui-config/strings";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { ExpandMoreRight } from "@courselit/icons";
+import clsx from "clsx";
+const { permissions } = UIConstants;
 
 export default function Layout({
     session,
@@ -78,28 +102,30 @@ export default function Layout({
             }}
         >
             <SiteInfoContext.Provider value={siteinfo}>
-                <div className="z-20 fixed flex w-full p-4 h-[64px] items-center border-0 border-b border-slate-200 bg-white/80 backdrop-blur-md">
-                    <Header onMenuClick={() => setOpen(true)} />
-                </div>
-                <div className="flex h-screen pt-[64px] w-full">
-                    <div
-                        style={{ width: 240 }}
-                        className={`hidden md:!flex overflow-x-hidden overflow-y-auto min-w-[240px] max-h-screen border-r border-slate-200 z-10 bg-white`}
+                <ProfileContext.Provider value={profile}>
+                    <div className="z-20 fixed flex w-full p-4 h-[64px] items-center border-0 border-b border-slate-200 bg-white/80 backdrop-blur-md">
+                        <Header onMenuClick={() => setOpen(true)} />
+                    </div>
+                    <div className="flex h-screen pt-[64px] w-full">
+                        <div
+                            style={{ width: 240 }}
+                            className={`hidden md:!flex overflow-x-hidden overflow-y-auto min-w-[240px] max-h-screen border-r border-slate-200 z-10 bg-white`}
+                        >
+                            <Sidebar session={session} onItemClick={setOpen} />
+                        </div>
+                        <main className="w-full max-h-screen overflow-y-auto scroll-smooth p-4">
+                            {children}
+                        </main>
+                    </div>
+                    <Modal
+                        open={open}
+                        onOpenChange={(status: boolean) => setOpen(status)}
+                        className="top-0 w-full z-20"
                     >
                         <Sidebar session={session} onItemClick={setOpen} />
-                    </div>
-                    <main className="w-full max-h-screen overflow-y-auto scroll-smooth p-4">
-                        {children}
-                    </main>
-                </div>
-                <Modal
-                    open={open}
-                    onOpenChange={(status: boolean) => setOpen(status)}
-                    className="top-0 w-full z-20"
-                >
-                    <Sidebar session={session} onItemClick={setOpen} />
-                </Modal>
-                {/* <AppToast /> */}
+                    </Modal>
+                    {/* <AppToast /> */}
+                </ProfileContext.Provider>
             </SiteInfoContext.Provider>
         </AddressContext.Provider>
     );
@@ -136,17 +162,26 @@ function Header({ onMenuClick }: { onMenuClick: (value: boolean) => void }) {
     );
 }
 
+interface SubItem {
+    label: string;
+    badge?: string;
+    href?: string;
+    icon?: ReactNode;
+}
+
 interface Item {
     label: string;
     badge?: string;
     href?: string;
     icon?: ReactNode;
-    iconPlacementRight?: boolean;
+    items?: SubItem[];
 }
 
 type Divider = "divider";
 
-type SidebarItem = Item | Divider;
+type Blank = "blank";
+
+type SidebarItem = Item | Divider | Blank;
 
 function Sidebar({
     session,
@@ -156,58 +191,213 @@ function Sidebar({
     onItemClick?: (state: boolean) => void;
 }) {
     const address = useContext(AddressContext);
-    const items: SidebarItem[] = [
-        { label: "My content", href: "/my-content" },
-        "divider",
-    ];
+    const profile = useContext(ProfileContext);
+    const items: SidebarItem[] = [];
+    const router = useRouter();
+
     if (session) {
-        items.push({ label: "Log out", href: "/logout" });
+        items.push({
+            label: "My content",
+            href: "/dashboard2/my-content",
+            icon: <MyContent />,
+        });
+        items.push("divider");
+        if (
+            checkPermission(profile.permissions!, [
+                permissions.manageCourse,
+                permissions.manageAnyCourse,
+            ])
+        ) {
+            items.push({
+                label: "Overview",
+                href: "/dashboard2/overview",
+                icon: <Overview />,
+            });
+            items.push({
+                label: SIDEBAR_MENU_PRODUCTS,
+                href: "/dashboard2/products",
+                icon: <Products />,
+            });
+        }
+
+        if (
+            checkPermission(profile.permissions!, [permissions.publishCourse])
+        ) {
+            items.push({
+                label: SIDEBAR_MENU_BLOGS,
+                href: "/dashboard2/blogs",
+                icon: <Text />,
+            });
+        }
+
+        if (profile.permissions!.includes(permissions.manageUsers)) {
+            items.push({
+                label: SIDEBAR_MENU_USERS,
+                icon: <Person />,
+                items: [
+                    {
+                        label: "All users",
+                        href: "/dashboard2/users",
+                    },
+                    {
+                        label: "Tags",
+                        href: "/dashboard2/users/tags",
+                    },
+                ],
+            });
+            items.push({
+                label: SIDEBAR_MENU_MAILS,
+                href: "/dashboard2/mails",
+                icon: <Mail />,
+                items: [
+                    {
+                        label: "Broadcasts",
+                        href: "/dashboard2/mails?tab=Broadcasts",
+                    },
+                    {
+                        label: "Sequences",
+                        href: "/dashboard2/mails?tab=Sequences",
+                    },
+                ],
+            });
+        }
+
+        if (profile.permissions!.includes(permissions.manageSite)) {
+            items.push({
+                label: SIDEBAR_MENU_PAGES,
+                href: "/dashboard2/pages",
+                icon: <Globe />,
+            });
+        }
+
+        if (profile.permissions!.includes(permissions.manageSettings)) {
+            items.push({
+                label: SIDEBAR_MENU_SETTINGS,
+                icon: <Settings />,
+                items: [
+                    {
+                        label: "Branding",
+                        href: "/dashboard2/settings?tab=Branding",
+                    },
+                    {
+                        label: "Payment",
+                        href: "/dashboard2/settings?tab=Payment",
+                    },
+                    {
+                        label: "Mails",
+                        href: "/dashboard2/settings?tab=Mails",
+                    },
+                    {
+                        label: "Code injection",
+                        href: "/dashboard2/settings?tab=Code%20Injection",
+                    },
+                    {
+                        label: "API Keys",
+                        href: "/dashboard2/settings?tab=API%20Keys",
+                    },
+                ],
+            });
+        }
+        items.push("blank");
+        items.push({
+            label: "Profile",
+            href: "/dashboard2/profile",
+            icon: <Person />,
+        });
+        items.push({
+            label: "Get help",
+            href: "/dashboard2/help",
+            icon: <Help />,
+        });
+        items.push("divider");
+        items.push({ label: "Log out", href: "/logout", icon: <Exit /> });
     }
 
     return (
-        <ul className="w-full">
+        <ul className="w-full text-gray-500 flex flex-col">
             {items.map((item: SidebarItem, index: number) =>
                 item === "divider" ? (
-                    <div className="my-4 border-b" key={index}></div>
-                ) : item.href ? (
-                    <li
-                        key={index}
-                        onClick={() => {
-                            // onItemClick(false);
-                            // navigateTo(item.href as string);
-                        }}
-                        style={
-                            {
-                                // backgroundColor:
-                                //     router.asPath === item.href
-                                //         ? "#d6d6d6"
-                                //         : "inherit",
-                            }
-                        }
-                        className={`flex items-center px-2 py-3 hover:!bg-slate-200 cursor-pointer ${
-                            item.icon && item.iconPlacementRight
-                                ? "justify-between"
-                                : "justify-start"
-                        }`}
-                    >
-                        {item.icon && !item.iconPlacementRight && (
-                            <div className="mr-2">{item.icon}</div>
-                        )}
-                        <p className="text-sm">{item.label as string}</p>
-                        {item.icon && item.iconPlacementRight && (
-                            <div>{item.icon}</div>
-                        )}
-                    </li>
+                    <div className="border-b" key={index}></div>
+                ) : item === "blank" ? (
+                    <div className="flex-1"></div>
                 ) : (
-                    <li
-                        key={index}
-                        className="px-2 py-3 border-b text-slate-900 flex flex-col gap-2 mt-6 font-semibold"
-                    >
-                        {item.label as string}
-                        {item.badge && <Chip>{item.badge}</Chip>}
-                    </li>
+                    <SidebarItem item={item} key={index} />
                 ),
             )}
         </ul>
+    );
+}
+
+function SidebarItem({ item }: { item: Item }) {
+    const path = usePathname();
+    const searchParams = useSearchParams();
+    const tab = searchParams?.get("tab");
+    const [open, setOpen] = useState(
+        path &&
+            item.items?.some((x) => {
+                return x.href?.startsWith(path);
+            }),
+    );
+
+    return (
+        <>
+            <li
+                onClick={() => {
+                    if (item.items?.length) {
+                        setOpen(!open);
+                    }
+                }}
+            >
+                {item.items?.length && (
+                    <div className="flex items-center px-4 py-3 hover:!bg-slate-200 cursor-pointer select-none">
+                        {item.icon && <div className="mr-2">{item.icon}</div>}
+                        <div className="flex justify-between w-full items-center">
+                            <p className="text-sm">{item.label as string}</p>
+                            {open ? <ExpandMore /> : <ExpandMoreRight />}
+                        </div>
+                    </div>
+                )}
+                {(!item.items || !item.items?.length) && (
+                    <Link href={item.href as string}>
+                        <div
+                            className={clsx(
+                                "flex items-center px-4 py-3 hover:!bg-slate-200 cursor-pointer select-none",
+                                item.href === path
+                                    ? "text-black font-semibold"
+                                    : "text-inherit",
+                            )}
+                        >
+                            {item.icon && (
+                                <div className="mr-2">{item.icon}</div>
+                            )}
+                            <p className="text-sm">{item.label as string}</p>
+                        </div>
+                    </Link>
+                )}
+            </li>
+            {open && item.items?.length && (
+                <ul>
+                    {item.items.map((subitem) => (
+                        <li
+                            key={subitem.label}
+                            className={clsx(
+                                "flex items-center text-sm hover:bg-slate-200 cursor-pointer select-none",
+                                subitem.label.toLowerCase() ===
+                                    tab?.toLowerCase()
+                                    ? "text-black font-semibold"
+                                    : "text-inherit",
+                            )}
+                        >
+                            <Link
+                                href={subitem.href as string}
+                                className="w-full px-10 py-3 "
+                            >
+                                {subitem.label}
+                            </Link>
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </>
     );
 }

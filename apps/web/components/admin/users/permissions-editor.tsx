@@ -19,11 +19,11 @@ const { networkAction, setAppMessage } = actionCreators;
 interface PermissionsEditorProps {
     user: User;
     address: Address;
-    dispatch: AppDispatch;
+    dispatch?: AppDispatch;
     networkAction: boolean;
 }
 
-function PermissionsEditor({
+export function PermissionsEditor({
     user,
     address,
     dispatch,
@@ -63,21 +63,24 @@ function PermissionsEditor({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            (dispatch as ThunkDispatch<State, null, AnyAction>)(
-                networkAction(true),
-            );
+            dispatch &&
+                (dispatch as ThunkDispatch<State, null, AnyAction>)(
+                    networkAction(true),
+                );
             const response = await fetch.exec();
             if (response.user) {
                 setActivePermissions(response.user.permissions);
             }
         } catch (err: any) {
-            (dispatch as ThunkDispatch<State, null, AnyAction>)(
-                setAppMessage(new AppMessage(err.message)),
-            );
+            dispatch &&
+                (dispatch as ThunkDispatch<State, null, AnyAction>)(
+                    setAppMessage(new AppMessage(err.message)),
+                );
         } finally {
-            (dispatch as ThunkDispatch<State, null, AnyAction>)(
-                networkAction(false),
-            );
+            dispatch &&
+                (dispatch as ThunkDispatch<State, null, AnyAction>)(
+                    networkAction(false),
+                );
         }
     };
 

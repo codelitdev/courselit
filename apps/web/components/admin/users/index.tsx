@@ -31,7 +31,6 @@ import {
     AvatarFallback,
     AvatarImage,
 } from "@courselit/components-library";
-import { useRouter } from "next/router";
 import { formattedLocaleDate } from "@ui-lib/utils";
 import FilterContainer from "./filter-container";
 import { useCallback } from "react";
@@ -44,7 +43,7 @@ interface UserManagerProps {
     loading: boolean;
 }
 
-const UsersManager = ({ address, dispatch, loading }: UserManagerProps) => {
+export const Users = ({ address, dispatch, loading }: UserManagerProps) => {
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [users, setUsers] = useState<User[]>([]);
@@ -52,7 +51,6 @@ const UsersManager = ({ address, dispatch, loading }: UserManagerProps) => {
     const [filtersAggregator, setFiltersAggregator] =
         useState<UserFilterAggregator>("or");
     const [count, setCount] = useState(0);
-    const router = useRouter();
 
     /*
     const handleRowsPerPageChange = (
@@ -168,71 +166,6 @@ const UsersManager = ({ address, dispatch, loading }: UserManagerProps) => {
         loadUsers();
     }, [loadUsers]);
 
-    /*
-    const createMail = async () => {
-        const query =
-            type !== ""
-                ? `
-                mutation {
-                    mail: createMail(
-                        searchData: {
-                            type: ${type.toUpperCase()}
-                        } 
-                    ) {
-                        mailId
-                    }
-                }
-            `
-                : searchEmail
-                ? `
-                mutation {
-                    mail: createMail(
-                        searchData: {
-                            email: "${searchEmail}"
-                        } 
-                    ) {
-                        mailId
-                    }
-                }
-            `
-                : `
-                mutation {
-                    mail: createMail(
-                        searchData: {
-                            offset: ${page}
-                        } 
-                    ) {
-                        mailId
-                    }
-                }
-            `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                networkAction(true),
-            );
-            const response = await fetch.exec();
-            if (response.mail && response.mail.mailId) {
-                router.push(`/dashboard/mails/${response.mail.mailId}/edit`);
-            }
-        } catch (err) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
-        } finally {
-            (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                networkAction(false),
-            );
-        }
-    };
-
-    const exportData = () => {
-        exportToCsv(users.map((user) => Object.values(user)));
-    };
-    */
-
     const onFilterChange = useCallback(({ filters, aggregator, segmentId }) => {
         setFilters(filters);
         setFiltersAggregator(aggregator);
@@ -336,4 +269,4 @@ const mapDispatchToProps = (dispatch: AppDispatch) => ({
     dispatch: dispatch,
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(UsersManager);
+export default connect(mapStateToProps, mapDispatchToProps)(Users);

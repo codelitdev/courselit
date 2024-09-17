@@ -32,11 +32,12 @@ import { FetchBuilder } from "@courselit/utils";
 import { Address, AppMessage } from "@courselit/common-models";
 import { useState } from "react";
 import { MoreVert } from "@courselit/icons";
+import { usePathname } from "next/navigation";
 const { networkAction, setAppMessage } = actionCreators;
 
 interface TagsProps {
     address: Address;
-    dispatch: AppDispatch;
+    dispatch?: AppDispatch;
 }
 
 interface TagWithDetails {
@@ -44,9 +45,10 @@ interface TagWithDetails {
     count: number;
 }
 
-function Tags({ address, dispatch }: TagsProps) {
+export function Tags({ address, dispatch }: TagsProps) {
     const [tags, setTags] = useState<TagWithDetails[]>([]);
     const [loading, setLoading] = useState(false);
+    const path = usePathname();
 
     const getTags = useCallback(async () => {
         const query = `
@@ -64,7 +66,7 @@ function Tags({ address, dispatch }: TagsProps) {
             .build();
         try {
             setLoading(true);
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.tags) {
                 setTags(response.tags);
@@ -72,7 +74,7 @@ function Tags({ address, dispatch }: TagsProps) {
         } catch (err) {
         } finally {
             setLoading(false);
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     }, [address.backend, dispatch]);
 
@@ -100,15 +102,15 @@ function Tags({ address, dispatch }: TagsProps) {
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.tags) {
                 setTags(response.tags);
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     };
 
@@ -132,15 +134,15 @@ function Tags({ address, dispatch }: TagsProps) {
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.tags) {
                 setTags(response.tags);
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     };
 
@@ -160,7 +162,12 @@ function Tags({ address, dispatch }: TagsProps) {
                     {USERS_TAG_HEADER}
                 </h1>
                 <div>
-                    <Button component="link" href="/dashboard/users/tags/new">
+                    <Button
+                        component="link"
+                        href={`/dashboard${
+                            path?.startsWith("/dashboard2") ? "2" : ""
+                        }/users/tags/new`}
+                    >
                         {BTN_NEW_TAG}
                     </Button>
                 </div>
