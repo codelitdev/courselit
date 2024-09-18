@@ -101,13 +101,12 @@ export const updateUser = async (userData: any, ctx: GQLContext) => {
     checkIfAuthenticated(ctx);
     const { id } = userData;
 
-    const hasPermissionToManageUser = checkPermission(ctx.user.permissions, [
-        permissions.manageUsers,
-    ]);
-    if (!hasPermissionToManageUser) {
-        if (id !== ctx.user._id.toString()) {
-            throw new Error(responses.action_not_allowed);
-        }
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    if (id === ctx.user._id.toString()) {
+        throw new Error(responses.action_not_allowed);
     }
 
     let user = await UserModel.findOne({ _id: id, domain: ctx.subdomain._id });
