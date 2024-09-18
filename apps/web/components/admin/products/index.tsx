@@ -11,7 +11,7 @@ import {
     PRODUCTS_TABLE_HEADER_TYPE,
 } from "../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
-import type { Address, Course } from "@courselit/common-models";
+import type { Address, Course, SiteInfo } from "@courselit/common-models";
 import { AppMessage } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
@@ -23,21 +23,27 @@ import {
     TableHead,
     TableBody,
 } from "@courselit/components-library";
+import { usePathname } from "next/navigation";
 
 const { networkAction, setAppMessage } = actionCreators;
 
 interface IndexProps {
-    dispatch: AppDispatch;
+    dispatch?: AppDispatch;
     address: Address;
     loading: boolean;
+    siteinfo: SiteInfo;
 }
 
-const Index = ({ loading, address, dispatch }: IndexProps) => {
+export const Index = ({ loading, address, dispatch, siteinfo }: IndexProps) => {
     const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1);
     const [creatorCourses, setCreatorCourses] = useState([]);
     const [searchText, setSearchText] = useState("");
     const [searchState, setSearchState] = useState(0);
     const [endReached, setEndReached] = useState(false);
+    const path = usePathname();
+    const pathPrefix = path?.startsWith("/dashboard2")
+        ? "/dashboard2"
+        : "/dashboard";
 
     useEffect(() => {
         loadCreatorCourses();
@@ -98,7 +104,7 @@ const Index = ({ loading, address, dispatch }: IndexProps) => {
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             setEndReached(false);
             const response = await fetch.exec();
             if (response.courses) {
@@ -108,9 +114,9 @@ const Index = ({ loading, address, dispatch }: IndexProps) => {
                 }
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     };
 
@@ -134,7 +140,7 @@ const Index = ({ loading, address, dispatch }: IndexProps) => {
                     {MANAGE_COURSES_PAGE_HEADING}
                 </h1>
                 <div>
-                    <Link href="/dashboard/product/new">
+                    <Link href={`${pathPrefix}/product/new`}>
                         <Button>{BTN_NEW_PRODUCT}</Button>
                     </Link>
                 </div>
@@ -170,6 +176,8 @@ const Index = ({ loading, address, dispatch }: IndexProps) => {
                                 details={product}
                                 position={index}
                                 onDelete={onDelete}
+                                siteinfo={siteinfo}
+                                address={address}
                             />
                         ),
                     )}
@@ -182,6 +190,7 @@ const Index = ({ loading, address, dispatch }: IndexProps) => {
 const mapStateToProps = (state: AppState) => ({
     address: state.address,
     loading: state.networkAction,
+    siteinfo: state.siteinfo,
 });
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({

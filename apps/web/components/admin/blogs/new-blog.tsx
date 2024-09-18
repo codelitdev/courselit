@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { FormEvent, useState } from "react";
 import { Address, AppMessage } from "@courselit/common-models";
 import {
     Form,
@@ -42,7 +42,9 @@ export function NewBlog({
         ? "/dashboard2"
         : "/dashboard";
 
-    const createCourse = async () => {
+    const createCourse = async (e: FormEvent) => {
+        e.preventDefault();
+
         const query = `
             mutation {
                 course: createCourse(courseData: {

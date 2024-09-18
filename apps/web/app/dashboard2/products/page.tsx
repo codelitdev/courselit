@@ -1,6 +1,6 @@
 "use client";
 
-import { Index as Blogs } from "@components/admin/blogs";
+import { Index as Products } from "@components/admin/products";
 import {
     AddressContext,
     ProfileContext,
@@ -28,7 +28,7 @@ export default function Page() {
 
     return (
         <div className="mx-auto lg:max-w-[1200px] w-full">
-            <Blogs address={address} loading={false} siteinfo={siteinfo} />
+            <Products address={address} loading={false} siteinfo={siteinfo} />
         </div>
     );
 }

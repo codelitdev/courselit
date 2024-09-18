@@ -11,9 +11,8 @@ import {
     VIEW_PAGE_MENU_ITEM,
 } from "../../../ui-config/strings";
 import { MoreVert } from "@courselit/icons";
-import type { AppDispatch, AppState } from "@courselit/state-management";
+import type { AppDispatch } from "@courselit/state-management";
 import type { SiteInfo, Address } from "@courselit/common-models";
-import { connect } from "react-redux";
 import { capitalize, FetchBuilder, formatCurrency } from "@courselit/utils";
 import {
     networkAction,
@@ -27,7 +26,7 @@ import {
     TableRow,
 } from "@courselit/components-library";
 
-function Product({
+export default function Product({
     details,
     siteinfo,
     address,
@@ -134,12 +133,3 @@ function Product({
         </TableRow>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    siteinfo: state.siteinfo,
-    address: state.address,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(Product);

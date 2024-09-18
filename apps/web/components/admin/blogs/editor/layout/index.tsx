@@ -18,8 +18,6 @@ interface ProductEditorLayoutProps {
 export default function ProductEditorLayout({
     id,
     children,
-    profile,
-    siteInfo,
     address,
     prefix,
 }: ProductEditorLayoutProps) {

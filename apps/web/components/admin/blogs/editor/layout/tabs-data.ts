@@ -1,4 +1,4 @@
-import Tab from "../../../../../models/Tab";
+import Tab from "@/models/Tab";
 
 export default function generateTabs(prefix: string, id: string): Tab[] {
     if (!id) return [];

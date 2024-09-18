@@ -6,7 +6,7 @@ import {
     EDIT_SECTION_HEADER,
     LESSON_GROUP_DELETED,
 } from "../../../../../ui-config/strings";
-import useCourse, { CourseFrontend } from "../course-hook";
+import useCourse, { CourseWithAdminProps } from "../course-hook";
 import { Add, MoreVert } from "@courselit/icons";
 import { Lesson, Address, AppMessage, Group } from "@courselit/common-models";
 import { useRouter } from "next/router";
@@ -29,7 +29,7 @@ import { FetchBuilder } from "@courselit/utils";
 
 interface LessonSectionProps {
     group: Group;
-    course: CourseFrontend;
+    course: CourseWithAdminProps;
     onGroupDelete: (groupId: string, courseId: string) => void;
     address: Address;
     dispatch: AppDispatch;

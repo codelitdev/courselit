@@ -11,14 +11,16 @@ import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 
-export type CourseFrontend = Partial<
+export type CourseWithAdminProps = Partial<
     Course & {
         lessons: Pick<Lesson, "title" | "groupId" | "lessonId" | "type"> &
             { id: string }[];
     }
 >;
 
-export default function useCourse(id: string): CourseFrontend | undefined {
+export default function useCourse(
+    id: string,
+): CourseWithAdminProps | undefined {
     const address: Address = useSelector((state: AppState) => state.address);
     const dispatch: AppDispatch = useDispatch();
     const [course, setCourse] = useState();

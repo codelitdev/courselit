@@ -1,31 +1,32 @@
-import { useRouter } from "next/router";
 import React, { ReactNode } from "react";
 import dynamic from "next/dynamic";
-import { MANAGE_COURSES_PAGE_HEADING } from "../../../../../ui-config/strings";
 import generateTabs from "./tabs-data";
+import { Address } from "@courselit/common-models";
 
-const BaseLayout = dynamic(() => import("../../../base-layout"));
 const ProductHeader = dynamic(() => import("./header"));
-const Tabs = dynamic(() => import("../../../../tabs"));
+const Tabs = dynamic(() => import("@components/tabs"));
 
 export interface ProductEditorLayoutProps {
+    id: string;
     children: ReactNode;
+    address: Address;
+    prefix: string;
 }
 
 export default function ProductEditorLayout({
+    id,
     children,
+    prefix,
 }: ProductEditorLayoutProps) {
-    const router = useRouter();
-    const { id } = router.query;
     const breadcrumbs = [{ text: "Products", url: `/dashboard/products` }];
 
     return (
-        <BaseLayout title={MANAGE_COURSES_PAGE_HEADING}>
+        <div className="flex flex-col">
             <div className="flex flex-col gap-4">
                 <ProductHeader id={id as string} breadcrumbs={breadcrumbs} />
-                <Tabs tabs={generateTabs(id as string)} />
+                <Tabs tabs={generateTabs(prefix, id as string)} />
                 {children}
             </div>
-        </BaseLayout>
+        </div>
     );
 }
