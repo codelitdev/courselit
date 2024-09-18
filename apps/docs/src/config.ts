@@ -57,6 +57,7 @@ export const SIDEBAR: Sidebar = {
             { text: "Control visibility", link: "en/courses/visibility" },
             { text: "Add content", link: "en/courses/add-content" },
             { text: "Manage sections", link: "en/products/section" },
+            { text: "Invite customers", link: "en/products/invite-customers" },
         ],
         "Digital downloads": [
             { text: "Introduction", link: "en/downloads/introduction" },
