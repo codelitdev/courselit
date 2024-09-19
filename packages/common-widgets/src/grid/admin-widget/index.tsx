@@ -3,8 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Settings, { Item } from "../settings";
 import ItemEditor from "./item-editor";
-import { Address, Auth, Profile, Alignment } from "@courselit/common-models";
-import { AppDispatch } from "@courselit/state-management";
+import { Address, Profile, Alignment } from "@courselit/common-models";
 import {
     AdminWidgetPanel,
     ColorSelector,
@@ -27,8 +26,6 @@ export interface AdminWidgetProps {
     settings: Settings;
     onChange: (...args: any[]) => void;
     address: Address;
-    dispatch: AppDispatch;
-    auth: Auth;
     profile: Profile;
     hideActionButtons: (
         e: boolean,
@@ -40,9 +37,7 @@ export interface AdminWidgetProps {
 export default function AdminWidget({
     settings,
     onChange,
-    auth,
     profile,
-    dispatch,
     address,
     hideActionButtons,
     preservedStateAcrossRerender,
@@ -209,9 +204,7 @@ export default function AdminWidget({
                 index={itemBeingEditedIndex}
                 onChange={onItemChange}
                 onDelete={onDelete}
-                auth={auth}
                 profile={profile}
-                dispatch={dispatch}
                 address={address}
             />
         );
