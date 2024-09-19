@@ -3,7 +3,7 @@ import {
     GraphQLString,
     GraphQLList,
     GraphQLNonNull,
-    GraphQLID
+    GraphQLID,
 } from "graphql";
 import types from "./types";
 import {

@@ -22,7 +22,7 @@ const nextConfig = {
     ],
     experimental: {
         serverComponentsExternalPackages: ["pug"],
-      },
+    },
 };
 
 module.exports = nextConfig;

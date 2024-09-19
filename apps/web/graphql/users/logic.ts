@@ -163,6 +163,10 @@ export const inviteCustomer = async (
     }
 
     const course = await getCourseOrThrow(undefined, ctx, id);
+    if (!course.published) {
+        throw new Error(responses.cannot_invite_to_unpublished_product);
+    }
+
     const sanitizedEmail = (email as string).toLowerCase();
     let user = await UserModel.findOne({
         email: sanitizedEmail,
@@ -176,6 +180,14 @@ export const inviteCustomer = async (
             invited: true,
         });
     }
+
+    if (tags.length) {
+        user = await updateUser(
+            { id: user._id, tags: [...user.tags, ...tags] },
+            ctx,
+        );
+    }
+
     if (
         !user.purchases.some(
             (purchase) => purchase.courseId === course.courseId,
@@ -193,7 +205,7 @@ export const inviteCustomer = async (
 
             await send({
                 to: [user.email],
-                subject: `You have been invited in ${course.title}`,
+                subject: `You have been invited to ${course.title}`,
                 body: emailBody,
             });
         } catch (error) {
@@ -201,7 +213,7 @@ export const inviteCustomer = async (
             console.log("error", error);
         }
     }
-    user = await updateUser({ id: user._id, tags }, ctx);
+
     return user;
 };
 

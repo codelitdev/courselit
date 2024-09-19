@@ -123,7 +123,7 @@ function Product({
                             {PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE}
                         </Link>
                     </MenuItem>
-                    <div className="flex w-full border-b border-slate-300"></div>
+                    <div className="flex w-full border-b border-slate-200 my-1"></div>
                     <MenuItem>
                         <Link
                             href={`/dashboard/product/${product.courseId}/customer/new`}
@@ -131,7 +131,7 @@ function Product({
                             {PRODUCT_TABLE_CONTEXT_MENU_INVITE_A_CUSTOMER}
                         </Link>
                     </MenuItem>
-                    <div className="flex w-full border-b border-slate-300"></div>
+                    <div className="flex w-full border-b border-slate-200 my-1"></div>
                     <MenuItem
                         component="dialog"
                         title={PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT}

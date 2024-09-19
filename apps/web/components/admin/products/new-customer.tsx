@@ -39,7 +39,8 @@ function NewCustomer({
     networkAction: loading,
 }: NewCustomerProps) {
     const [email, setEmail] = useState("");
-    const [tags, setTags] = useState([]);
+    const [tags, setTags] = useState<string[]>([]);
+    const [systemTags, setSystemTags] = useState<string[]>([]);
 
     const getTags = useCallback(async () => {
         const query = `
@@ -56,7 +57,7 @@ function NewCustomer({
             dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.tags) {
-                setTags(response.tags);
+                setSystemTags(response.tags);
             }
         } catch (err) {
         } finally {
@@ -103,6 +104,7 @@ function NewCustomer({
             const response = await fetch.exec();
             if (response.user) {
                 setEmail("");
+                setTags([]);
                 dispatch(
                     setAppMessage(
                         new AppMessage(
@@ -122,7 +124,9 @@ function NewCustomer({
         <div className="flex flex-col gap-4">
             <Breadcrumbs aria-label="breakcrumb">
                 <Link href="/dashboard/products/">Products</Link>
-                <Link href={`/dashboard/product/${courseId}/reports`}>Product</Link>
+                <Link href={`/dashboard/product/${courseId}/reports`}>
+                    Product
+                </Link>
                 <p>{PRODUCT_TABLE_CONTEXT_MENU_INVITE_A_CUSTOMER}</p>
             </Breadcrumbs>
             <Section>
@@ -144,8 +148,12 @@ function NewCustomer({
                         <div className="flex flex-col gap-2">
                             <p>{USER_TAGS_SUBHEADER}</p>
                             <ComboBox
+                                key={
+                                    JSON.stringify(systemTags) +
+                                    JSON.stringify(tags)
+                                }
                                 side="bottom"
-                                options={tags}
+                                options={systemTags}
                                 selectedOptions={new Set(tags)}
                                 onChange={(values: string[]) => setTags(values)}
                             />
