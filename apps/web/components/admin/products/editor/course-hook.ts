@@ -19,7 +19,7 @@ export type CourseWithAdminProps = Partial<
 export default function useCourse(
     id: string,
     address: Address,
-    dispatch: AppDispatch,
+    dispatch?: AppDispatch,
 ): CourseWithAdminProps | undefined {
     const [course, setCourse] = useState();
 

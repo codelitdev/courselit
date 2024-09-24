@@ -11,16 +11,11 @@ import {
     Section,
     Switch,
 } from "@courselit/components-library";
-import {
-    actionCreators,
-    AppDispatch,
-    AppState,
-} from "@courselit/state-management";
+import { actionCreators, AppDispatch } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { ChangeEvent, useEffect, useState } from "react";
-import { connect } from "react-redux";
 import {
     BTN_CONTINUE,
     DRIP_SECTION_STATUS,
@@ -41,17 +36,19 @@ import { MailEditorAndPreview } from "@components/admin/mails/mail-editor-and-pr
 interface SectionEditorProps {
     id: string;
     section?: string;
-    loading: boolean;
+    loading?: boolean;
     address: Address;
-    dispatch: AppDispatch;
+    dispatch?: AppDispatch;
+    prefix: string;
 }
 
-function SectionEditor({
+export default function SectionEditor({
     id,
-    loading,
+    loading = false,
     section,
     dispatch,
     address,
+    prefix,
 }: SectionEditorProps) {
     const [name, setName] = useState("");
     const [status, setStatus] = useState(true);
@@ -62,7 +59,7 @@ function SectionEditor({
     const [emailContent, setEmailContent] = useState("");
     const [emailSubject, setEmailSubject] = useState("");
     const router = useRouter();
-    const course = useCourse(id);
+    const course = useCourse(id, address, dispatch);
 
     useEffect(() => {
         if (section && course && course.groups) {
@@ -184,15 +181,18 @@ function SectionEditor({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(actionCreators.networkAction(true));
+            dispatch && dispatch(actionCreators.networkAction(true));
             const response = await fetch.exec();
             if (response.course) {
-                router.replace(`/dashboard/product/${course.courseId}/content`);
+                router.replace(`${prefix}/product/${course.courseId}/content`);
             }
         } catch (err: any) {
-            dispatch(actionCreators.setAppMessage(new AppMessage(err.message)));
+            dispatch &&
+                dispatch(
+                    actionCreators.setAppMessage(new AppMessage(err.message)),
+                );
         } finally {
-            dispatch(actionCreators.networkAction(false));
+            dispatch && dispatch(actionCreators.networkAction(false));
         }
     };
 
@@ -202,7 +202,7 @@ function SectionEditor({
 
     return (
         <div className="flex flex-col">
-            <h1 className="text-4xl font-semibold mb-4">
+            <h1 className="text-3xl font-semibold mb-4">
                 {section ? EDIT_SECTION_HEADER : NEW_SECTION_HEADER}
             </h1>
             <Form onSubmit={updateGroup} className="flex flex-col gap-4">
@@ -328,7 +328,7 @@ function SectionEditor({
                     </Button>
                     {course.courseId && (
                         <Link
-                            href={`/dashboard/product/${course.courseId}/content`}
+                            href={`${prefix}/product/${course.courseId}/content`}
                         >
                             <Button variant="soft">
                                 {POPUP_CANCEL_ACTION}
@@ -340,12 +340,3 @@ function SectionEditor({
         </div>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    loading: state.networkAction,
-    address: state.address,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(SectionEditor);

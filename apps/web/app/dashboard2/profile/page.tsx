@@ -207,7 +207,7 @@ export default function Page() {
     };
 
     return (
-        <div className="mx-auto lg:max-w-[1200px] w-full">
+        <div>
             <div className="flex flex-col gap-4">
                 <h1 className="text-4xl font-semibold mb-2">
                     {PROFILE_PAGE_HEADER}

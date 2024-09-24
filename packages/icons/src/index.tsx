@@ -30,6 +30,7 @@ export { DotsVerticalIcon as MoreVert } from "@radix-ui/react-icons";
 export { MagnifyingGlassIcon as Search } from "@radix-ui/react-icons";
 export { ChevronDownIcon as ExpandMore } from "@radix-ui/react-icons";
 export { ChevronUpIcon as ExpandLess } from "@radix-ui/react-icons";
+export { ChevronLeftIcon as Back } from "@radix-ui/react-icons";
 export { CheckIcon as Check } from "@radix-ui/react-icons";
 export { QuestionMarkCircledIcon as Help } from "@radix-ui/react-icons";
 export { CrossCircledIcon as Cancel } from "@radix-ui/react-icons";

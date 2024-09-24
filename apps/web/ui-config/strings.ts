@@ -135,6 +135,7 @@ export const DANGER_ZONE_DESCRIPTION = "This action is irreversible.";
 export const DELETE_COURSE_POPUP_HEADER = "Delete course?";
 export const POPUP_OK_ACTION = "Delete";
 export const POPUP_CANCEL_ACTION = "Cancel";
+export const BTN_BACK_TO_CONTENT = "Back to content";
 export const LOGIN_SECTION_HEADER = "Sign In";
 export const LABEL_GROUP_NAME = "Name";
 export const LABEL_DRIP_EMAIL_SUBJECT = "Subject";

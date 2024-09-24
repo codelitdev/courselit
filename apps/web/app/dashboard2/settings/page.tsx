@@ -25,18 +25,15 @@ export default function Page() {
     }
 
     return (
-        <div className="mx-auto lg:max-w-[1200px] w-full">
-            {/** TODO: Remove dispatch and loading from Settings component */}
-            <Settings
-                key={tab}
-                siteinfo={siteinfo}
-                address={address}
-                profile={profile as Profile}
-                selectedTab={tab as any}
-                dispatch={() => {}}
-                loading={false}
-                networkAction={false}
-            />
-        </div>
+        <Settings
+            key={tab}
+            siteinfo={siteinfo}
+            address={address}
+            profile={profile as Profile}
+            selectedTab={tab as any}
+            dispatch={() => {}}
+            loading={false}
+            networkAction={false}
+        />
     );
 }

@@ -57,7 +57,7 @@ export default function BlogHeader({
                                     {crumb.text}
                                 </Link>
                             ) : (
-                                <li key={crumb.text}>{crumb.text}</li>
+                                <span key={crumb.text}>{crumb.text}</span>
                             ),
                         )}
                     </Breadcrumbs>

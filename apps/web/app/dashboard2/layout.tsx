@@ -95,7 +95,7 @@ export default async function Page({ children }: PageProps) {
 
     return (
         <Layout session={session} address={address} siteinfo={finalSiteInfo}>
-            {children}
+            <div className="mx-auto lg:max-w-[1200px] w-full">{children}</div>
         </Layout>
     );
 }

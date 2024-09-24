@@ -7,7 +7,7 @@ import {
     Link,
     Select,
 } from "@courselit/components-library";
-import { AppDispatch, AppState } from "@courselit/state-management";
+import { AppDispatch } from "@courselit/state-management";
 import {
     networkAction,
     setAppMessage,
@@ -23,15 +23,15 @@ import {
     PAGE_HEADER_EDIT_SEQUENCE,
 } from "@ui-config/strings";
 import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { connect } from "react-redux";
 import { MailEditorAndPreview } from "./mail-editor-and-preview";
 
 interface SequenceMailEditorProps {
     address: Address;
-    dispatch: AppDispatch;
     sequenceId: string;
     mailId: string;
-    loading: boolean;
+    loading?: boolean;
+    dispatch?: AppDispatch;
+    prefix: string;
 }
 
 const SequenceMailEditor = ({
@@ -39,7 +39,8 @@ const SequenceMailEditor = ({
     dispatch,
     sequenceId,
     mailId,
-    loading,
+    prefix,
+    loading = false,
 }: SequenceMailEditorProps) => {
     const [delay, setDelay] = useState<number>(0);
     const [subject, setSubject] = useState<string>("");
@@ -90,7 +91,7 @@ const SequenceMailEditor = ({
             .build();
 
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetcher.exec();
             if (response.sequence) {
                 const { sequence } = response;
@@ -105,9 +106,9 @@ const SequenceMailEditor = ({
                 }
             }
         } catch (e: any) {
-            dispatch(setAppMessage(new AppMessage(e.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     }, [dispatch, fetch, sequenceId]);
 
@@ -180,7 +181,7 @@ const SequenceMailEditor = ({
             .build();
 
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetcher.exec();
             if (response.sequence) {
                 const { sequence } = response;
@@ -195,9 +196,9 @@ const SequenceMailEditor = ({
                 }
             }
         } catch (e: any) {
-            dispatch(setAppMessage(new AppMessage(e.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     }, [
         dispatch,
@@ -214,10 +215,10 @@ const SequenceMailEditor = ({
     return (
         <div className="flex flex-col gap-4">
             <Breadcrumbs aria-label="breakcrumb">
-                <Link href="/dashboard/mails?tab=Sequences">
+                <Link href={`${prefix}/mails?tab=Sequences`}>
                     {PAGE_HEADER_ALL_MAILS}
                 </Link>
-                <Link href={`/dashboard/mails/sequence/${sequenceId}/edit`}>
+                <Link href={`${prefix}/mails/sequence/${sequenceId}/edit`}>
                     {PAGE_HEADER_EDIT_SEQUENCE}
                 </Link>
                 {PAGE_HEADER_EDIT_MAIL}
@@ -307,13 +308,4 @@ const SequenceMailEditor = ({
     );
 };
 
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-    loading: state.networkAction,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({
-    dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(SequenceMailEditor);
+export default SequenceMailEditor;

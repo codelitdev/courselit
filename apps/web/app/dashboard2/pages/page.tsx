@@ -16,10 +16,5 @@ export default function Page() {
         redirect("/dashboard2");
     }
 
-    return (
-        <div className="mx-auto lg:max-w-[1200px] w-full">
-            {/** TODO: Remove dispatch and loading from Pages component */}
-            <Pages address={address} loading={false} dispatch={() => {}} />
-        </div>
-    );
+    return <Pages address={address} loading={false} dispatch={() => {}} />;
 }

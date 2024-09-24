@@ -1,8 +1,6 @@
-"use client";
-
 import { Address, AppMessage } from "@courselit/common-models";
 import { Form, FormField, FormSubmit } from "@courselit/components-library";
-import { AppDispatch, AppState } from "@courselit/state-management";
+import { AppDispatch } from "@courselit/state-management";
 import {
     networkAction,
     setAppMessage,
@@ -16,12 +14,11 @@ import {
     MAIL_REQUEST_RECEIVED,
 } from "@ui-config/strings";
 import { ChangeEvent, useEffect, useState } from "react";
-import { connect } from "react-redux";
 
 interface RequestFormProps {
     address: Address;
-    dispatch: AppDispatch;
-    loading: boolean;
+    loading?: boolean;
+    dispatch?: AppDispatch;
 }
 
 const RequestForm = ({ address, dispatch, loading }: RequestFormProps) => {
@@ -47,7 +44,7 @@ const RequestForm = ({ address, dispatch, loading }: RequestFormProps) => {
                     .setIsGraphQLEndpoint(true)
                     .setPayload(query)
                     .build();
-                dispatch(networkAction(true));
+                dispatch && dispatch(networkAction(true));
                 const response = await fetch.exec();
                 if (response.getMailRequest) {
                     const { reason, message, status } = response.getMailRequest;
@@ -56,9 +53,9 @@ const RequestForm = ({ address, dispatch, loading }: RequestFormProps) => {
                     setStatus(status);
                 }
             } catch (e: any) {
-                dispatch(setAppMessage(new AppMessage(e.message)));
+                dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
             } finally {
-                dispatch(networkAction(false));
+                dispatch && dispatch(networkAction(false));
             }
         };
 
@@ -95,15 +92,18 @@ const RequestForm = ({ address, dispatch, loading }: RequestFormProps) => {
                     },
                 })
                 .build();
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.updateMailRequest) {
-                dispatch(setAppMessage(new AppMessage(MAIL_REQUEST_RECEIVED)));
+                dispatch &&
+                    dispatch(
+                        setAppMessage(new AppMessage(MAIL_REQUEST_RECEIVED)),
+                    );
             }
         } catch (e: any) {
-            dispatch(setAppMessage(new AppMessage(e.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     };
 
@@ -150,11 +150,4 @@ const RequestForm = ({ address, dispatch, loading }: RequestFormProps) => {
     );
 };
 
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-    loading: state.networkAction,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(RequestForm);
+export default RequestForm;

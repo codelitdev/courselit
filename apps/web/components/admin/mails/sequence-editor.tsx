@@ -19,7 +19,7 @@ import {
 import { Pause } from "@courselit/icons";
 import { Play } from "@courselit/icons";
 import { Add, MoreVert } from "@courselit/icons";
-import { AppDispatch, AppState } from "@courselit/state-management";
+import { AppDispatch } from "@courselit/state-management";
 import {
     networkAction,
     setAppMessage,
@@ -43,13 +43,13 @@ import {
     useMemo,
     useState,
 } from "react";
-import { connect } from "react-redux";
 
 interface SequenceEditorProps {
     id: string;
     address: Address;
-    dispatch: AppDispatch;
-    loading: boolean;
+    dispatch?: AppDispatch;
+    loading?: boolean;
+    prefix: string;
 }
 
 interface TagWithDetails {
@@ -60,7 +60,8 @@ const SequenceEditor = ({
     id,
     address,
     dispatch,
-    loading,
+    loading = false,
+    prefix,
 }: SequenceEditorProps) => {
     const [title, setTitle] = useState("");
     const [from, setFrom] = useState("");
@@ -68,7 +69,6 @@ const SequenceEditor = ({
     const [triggerType, setTriggerType] = useState("SUBSCRIBER_ADDED");
     const [triggerData, setTriggerData] = useState("");
     const [emails, setEmails] = useState([]);
-    // const [loaded, setLoaded] = useState(false);
     const [sequence, setSequence] = useState(null);
     const [tags, setTags] = useState<TagWithDetails[]>([]);
     const [products, setProducts] = useState<
@@ -121,7 +121,7 @@ const SequenceEditor = ({
             .build();
 
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetcher.exec();
             if (response.sequence) {
                 const { sequence } = response;
@@ -136,9 +136,9 @@ const SequenceEditor = ({
                 setStatus(sequence.status);
             }
         } catch (e: any) {
-            dispatch(setAppMessage(new AppMessage(e.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
             // setLoaded(true);
         }
     }, [dispatch, fetch, id]);
@@ -170,14 +170,14 @@ const SequenceEditor = ({
         `;
         const fetcher = fetch.setPayload(query).build();
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetcher.exec();
             if (response.tags) {
                 setTags(response.tags);
             }
         } catch (err) {
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
             // setLoaded(false);
         }
     }, [dispatch, fetch]);
@@ -199,7 +199,7 @@ const SequenceEditor = ({
                 setProducts([...response.courses]);
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         }
     }, [dispatch, fetch]);
 
@@ -233,7 +233,7 @@ const SequenceEditor = ({
             .build();
 
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetcher.exec();
             if (response.sequence) {
                 const { sequence } = response;
@@ -248,9 +248,9 @@ const SequenceEditor = ({
                 setStatus(sequence.status);
             }
         } catch (e: any) {
-            dispatch(setAppMessage(new AppMessage(e.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
             // setLoaded(true);
         }
     }, [dispatch, fetch, id]);
@@ -310,7 +310,7 @@ const SequenceEditor = ({
             .build();
 
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetcher.exec();
             if (response.sequence) {
                 const { sequence } = response;
@@ -325,9 +325,9 @@ const SequenceEditor = ({
                 setStatus(sequence.status);
             }
         } catch (e: any) {
-            dispatch(setAppMessage(new AppMessage(e.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
             // setLoaded(true);
         }
     }, [
@@ -411,7 +411,7 @@ const SequenceEditor = ({
                 .build();
 
             try {
-                dispatch(networkAction(true));
+                dispatch && dispatch(networkAction(true));
                 const response = await fetcher.exec();
                 if (response.sequence) {
                     const { sequence } = response;
@@ -426,9 +426,9 @@ const SequenceEditor = ({
                     setStatus(sequence.status);
                 }
             } catch (e: any) {
-                dispatch(setAppMessage(new AppMessage(e.message)));
+                dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
             } finally {
-                dispatch(networkAction(false));
+                dispatch && dispatch(networkAction(false));
                 // setLoaded(true);
             }
         },
@@ -478,7 +478,7 @@ const SequenceEditor = ({
                 .build();
 
             try {
-                dispatch(networkAction(true));
+                dispatch && dispatch(networkAction(true));
                 const response = await fetcher.exec();
                 if (response.sequence) {
                     const { sequence } = response;
@@ -493,9 +493,9 @@ const SequenceEditor = ({
                     setStatus(sequence.status);
                 }
             } catch (e: any) {
-                dispatch(setAppMessage(new AppMessage(e.message)));
+                dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
             } finally {
-                dispatch(networkAction(false));
+                dispatch && dispatch(networkAction(false));
                 // setLoaded(true);
             }
         },
@@ -505,12 +505,12 @@ const SequenceEditor = ({
     return (
         <div className="flex flex-col gap-4">
             <Breadcrumbs aria-label="breakcrumb">
-                <Link href="/dashboard/mails?tab=Sequences">
+                <Link href={`${prefix}/mails?tab=Sequences`}>
                     {PAGE_HEADER_ALL_MAILS}
                 </Link>
                 {PAGE_HEADER_EDIT_SEQUENCE}
             </Breadcrumbs>
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex justify-between items-center mb-2">
                 <h1 className="text-4xl font-semibold mb-4">
                     {PAGE_HEADER_EDIT_SEQUENCE}
                 </h1>
@@ -699,7 +699,7 @@ const SequenceEditor = ({
                                     day
                                 </div>
                                 <Link
-                                    href={`/dashboard/mails/sequence/${id}/${email.emailId}/edit`}
+                                    href={`${prefix}/mails/sequence/${id}/${email.emailId}/edit`}
                                     style={{
                                         flex: "1",
                                     }}
@@ -747,13 +747,4 @@ const SequenceEditor = ({
     );
 };
 
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-    loading: state.networkAction,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({
-    dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(SequenceEditor);
+export default SequenceEditor;

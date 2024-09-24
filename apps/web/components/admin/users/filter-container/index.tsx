@@ -10,7 +10,6 @@ import {
 import { AppDispatch, AppState } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import { useState } from "react";
-import { connect } from "react-redux";
 import { ThunkDispatch } from "redux-thunk";
 import {
     USER_FILTER_AGGREGATOR_ALL,
@@ -60,7 +59,7 @@ interface FilterContainerProps {
     disabled?: boolean;
 }
 
-export function FilterContainer({
+export default function FilterContainer({
     onChange,
     address,
     dispatch,
@@ -245,6 +244,8 @@ export function FilterContainer({
                     disabled={disabled}
                 >
                     <SegmentEditor
+                        address={address}
+                        dispatch={dispatch}
                         segments={segments}
                         selectedSegment={activeSegment}
                         dismissPopover={({
@@ -303,6 +304,8 @@ export function FilterContainer({
                             }
                             setFilterOpen(false);
                         }}
+                        address={address}
+                        dispatch={dispatch}
                     />
                 </Popover>
                 <Form
@@ -411,6 +414,8 @@ export function FilterContainer({
                                         }
                                         setSegmentSaveOpen(false);
                                     }}
+                                    address={address}
+                                    dispatch={dispatch}
                                 />
                             </Popover>
                         </>
@@ -421,12 +426,12 @@ export function FilterContainer({
     );
 }
 
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-});
+// const mapStateToProps = (state: AppState) => ({
+//     address: state.address,
+// });
 
-const mapDispatchToProps = (dispatch: AppDispatch) => ({
-    dispatch: dispatch,
-});
+// const mapDispatchToProps = (dispatch: AppDispatch) => ({
+//     dispatch: dispatch,
+// });
 
-export default connect(mapStateToProps, mapDispatchToProps)(FilterContainer);
+// export default connect(mapStateToProps, mapDispatchToProps)(FilterContainer);

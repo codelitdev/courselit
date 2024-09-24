@@ -19,7 +19,7 @@ export default function Page() {
     const profile = useContext(ProfileContext);
 
     if (
-        checkPermission(profile.permissions!, [
+        !checkPermission(profile.permissions!, [
             UIConstants.permissions.manageAnyCourse,
             UIConstants.permissions.manageCourse,
             UIConstants.permissions.manageMedia,
@@ -32,7 +32,7 @@ export default function Page() {
     }
 
     return (
-        <div className="mx-auto lg:max-w-[1200px] w-full">
+        <div>
             <h1 className="text-4xl font-semibold mb-8">
                 {DASHBOARD_PAGE_HEADER}
             </h1>

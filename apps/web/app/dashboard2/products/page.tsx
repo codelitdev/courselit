@@ -26,9 +26,5 @@ export default function Page() {
         redirect("/dashboard2");
     }
 
-    return (
-        <div className="mx-auto lg:max-w-[1200px] w-full">
-            <Products address={address} loading={false} siteinfo={siteinfo} />
-        </div>
-    );
+    return <Products address={address} loading={false} siteinfo={siteinfo} />;
 }

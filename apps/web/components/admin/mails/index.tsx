@@ -15,13 +15,11 @@ import {
     BROADCASTS,
     SEQUENCES,
     BTN_NEW_SEQUENCE,
-    //BTN_NEW_SEQUENCE,
 } from "../../../ui-config/strings";
-import { connect } from "react-redux";
 import { FetchBuilder } from "@courselit/utils";
 import { actionCreators } from "@courselit/state-management";
 import { setAppMessage } from "@courselit/state-management/dist/action-creators";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { ThunkDispatch } from "redux-thunk";
 import {
     Button,
@@ -41,14 +39,21 @@ const { networkAction } = actionCreators;
 interface MailsProps {
     address: Address;
     profile: Profile;
-    dispatch: AppDispatch;
-    loading: boolean;
     selectedTab: typeof BROADCASTS | typeof SEQUENCES;
+    dispatch?: AppDispatch;
+    prefix: string;
+    loading: boolean;
 }
 
 type MailsTab = typeof BROADCASTS | typeof SEQUENCES;
 
-function Mails({ address, dispatch, loading, selectedTab }: MailsProps) {
+export default function Mails({
+    address,
+    dispatch,
+    selectedTab,
+    prefix,
+    loading,
+}: MailsProps) {
     const [broadcastPage, setBroadcastPage] = useState(1);
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -94,15 +99,15 @@ function Mails({ address, dispatch, loading, selectedTab }: MailsProps) {
             const fetcher = fetch.setPayload({ query }).build();
 
             try {
-                dispatch(networkAction(true));
+                dispatch && dispatch(networkAction(true));
                 const response = await fetcher.exec();
                 if (response.siteInfo) {
                     setSiteInfo(response.siteInfo);
                 }
             } catch (e: any) {
-                dispatch(setAppMessage(new AppMessage(e.message)));
+                dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
             } finally {
-                dispatch(networkAction(false));
+                dispatch && dispatch(networkAction(false));
             }
         };
 
@@ -134,58 +139,17 @@ function Mails({ address, dispatch, loading, selectedTab }: MailsProps) {
             .build();
 
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetcher.exec();
             if (response.broadcasts) {
                 setBroadcasts(response.broadcasts);
             }
         } catch (e: any) {
-            dispatch(setAppMessage(new AppMessage(e.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     };
-
-    // const loadMails = async () => {
-    //     const query = `
-    //         query {
-    //             mails: getMails(searchData: {
-    //                 offset: ${page},
-    //                 rowsPerPage: ${rowsPerPage}
-    //             }) {
-    //                 mailId,
-    //                 to,
-    //                 subject,
-    //                 body,
-    //                 published,
-    //                 user {
-    //                     userId,
-    //                     email,
-    //                     name
-    //                 },
-    //                 updatedAt
-    //             },
-    //             count: getMailsCount
-    //         }`;
-
-    //     const fetcher = fetch.setPayload(query).build();
-
-    //     try {
-    //         dispatch(networkAction(true));
-    //         const response = await fetcher.exec();
-    //         if (response.mails) {
-    //             setMails(response.mails);
-    //         }
-    //     } catch (e: any) {
-    //         dispatch(setAppMessage(new AppMessage(e.message)));
-    //     } finally {
-    //         dispatch(networkAction(false));
-    //     }
-    // };
-
-    // useEffect(() => {
-    //     loadMails();
-    // }, [page, rowsPerPage]);
 
     useEffect(() => {
         loadBroadcasts();
@@ -207,7 +171,7 @@ function Mails({ address, dispatch, loading, selectedTab }: MailsProps) {
             .build();
 
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetcher.exec();
             if (response.count) {
                 if (type === Constants.mailTypes[0].toUpperCase()) {
@@ -218,80 +182,15 @@ function Mails({ address, dispatch, loading, selectedTab }: MailsProps) {
                 }
             }
         } catch (e: any) {
-            dispatch(setAppMessage(new AppMessage(e.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     };
 
     useEffect(() => {
         loadSequenceCount(Constants.mailTypes[0].toUpperCase() as SequenceType);
-        //loadSequenceCount("sequence");
     }, []);
-
-    // const createMail = async () => {
-    //     const mutation = `
-    //         mutation {
-    //             mail: createMail {
-    //                 mailId
-    //             }
-    //         }
-    //     `;
-    //     const fetch = new FetchBuilder()
-    //         .setUrl(`${address.backend}/api/graph`)
-    //         .setPayload(mutation)
-    //         .setIsGraphQLEndpoint(true)
-    //         .build();
-    //     try {
-    //         (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-    //             networkAction(true),
-    //         );
-    //         const response = await fetch.exec();
-    //         if (response.mail && response.mail.mailId) {
-    //             router.push(`/dashboard/mails/${response.mail.mailId}/edit`);
-    //         }
-    //     } catch (err) {
-    //         dispatch(setAppMessage(new AppMessage(err.message)));
-    //     } finally {
-    //         (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-    //             networkAction(false),
-    //         );
-    //     }
-    // };
-
-    /*
-    const createSequence = async () => {
-        const mutation = `
-            mutation {
-              sequence: createSequence {
-                  sequenceId
-                }
-        }
-    `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(mutation)
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                networkAction(true),
-            );
-            const response = await fetch.exec();
-            if (response.sequence && response.sequence.sequenceId) {
-                router.push(
-                    `/dashboard/mails/sequence/${response.mail.mailId}/edit`,
-                );
-            }
-        } catch (err) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
-        } finally {
-            (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                networkAction(false),
-            );
-        }
-    };
-    */
 
     const createSequence = async (type: SequenceType) => {
         const mutation = `
@@ -314,23 +213,25 @@ function Mails({ address, dispatch, loading, selectedTab }: MailsProps) {
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                networkAction(true),
-            );
+            dispatch &&
+                (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
+                    networkAction(true),
+                );
             const response = await fetch.exec();
             if (response.sequence && response.sequence.sequenceId) {
                 router.push(
-                    `/dashboard/mails/${
+                    `${prefix}/mails/${
                         tab === BROADCASTS ? "broadcast" : "sequence"
                     }/${response.sequence.sequenceId}/edit`,
                 );
             }
         } catch (err) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                networkAction(false),
-            );
+            dispatch &&
+                (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
+                    networkAction(false),
+                );
         }
     };
 
@@ -371,7 +272,7 @@ function Mails({ address, dispatch, loading, selectedTab }: MailsProps) {
                             <div className="w-[120px]">
                                 <Button
                                     component="link"
-                                    href={`/dashboard/settings?tab=Mails`}
+                                    href={`${prefix}/settings?tab=Mails`}
                                 >
                                     Go to settings
                                 </Button>
@@ -390,7 +291,7 @@ function Mails({ address, dispatch, loading, selectedTab }: MailsProps) {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <RequestForm />
+                            <RequestForm address={address} />
                         </CardContent>
                     </Card>
                 )}
@@ -409,11 +310,6 @@ function Mails({ address, dispatch, loading, selectedTab }: MailsProps) {
                     <Button onClick={onPrimaryButtonClick}>
                         {tab === BROADCASTS ? BTN_NEW_MAIL : BTN_NEW_SEQUENCE}
                     </Button>
-                    {/*
-                    <Button onClick={() => createSequence()}>
-                        {BTN_NEW_SEQUENCE}
-                    </Button>
-                    */}
                 </div>
             </div>
             <Tabs
@@ -423,18 +319,19 @@ function Mails({ address, dispatch, loading, selectedTab }: MailsProps) {
                     setTab(tab);
                 }}
             >
-                <SequencesList type={Constants.mailTypes[0] as SequenceType} />
-                <SequencesList type={Constants.mailTypes[1] as SequenceType} />
+                <SequencesList
+                    type={Constants.mailTypes[0] as SequenceType}
+                    address={address}
+                    loading={loading}
+                    dispatch={dispatch}
+                />
+                <SequencesList
+                    type={Constants.mailTypes[1] as SequenceType}
+                    address={address}
+                    loading={loading}
+                    dispatch={dispatch}
+                />
             </Tabs>
         </div>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-    loading: state.networkAction,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(Mails);
