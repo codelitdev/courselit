@@ -60,6 +60,9 @@ MyApp.getInitialProps = wrapper.getInitialAppProps(
             store.dispatch(actionCreators.updateBackend(backend));
             try {
                 await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
+                    actionCreators.updateConfig(),
+                );
+                await (store.dispatch as ThunkDispatch<State, void, AnyAction>)(
                     actionCreators.updateSiteInfo(),
                 );
             } catch (error: any) {

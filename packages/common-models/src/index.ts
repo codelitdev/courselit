@@ -54,3 +54,4 @@ export type { Domain } from "./domain";
 export type { Progress } from "./progress";
 export type { Drip, DripType } from "./drip";
 export type { PaymentMethod } from "./payment-method";
+export type { ServerConfig } from "./server-config";

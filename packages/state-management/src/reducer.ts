@@ -13,6 +13,7 @@ import {
     THEME_AVAILABLE,
     SET_ADDRESS,
     TYPEFACES_AVAILABLE,
+    CONFIG_AVAILABLE,
 } from "./action-types";
 import { HYDRATE } from "next-redux-wrapper";
 import initialState from "./default-state";
@@ -167,6 +168,15 @@ function typefacesReducer(state = initialState.typefaces, action: Action) {
     }
 }
 
+function configReducer(state = initialState.config, action: Action) {
+    switch (action.type) {
+        case CONFIG_AVAILABLE:
+            return action.config;
+        default:
+            return state;
+    }
+}
+
 const appReducers = combineReducers({
     auth: authReducer,
     siteinfo: siteinfoReducer,
@@ -176,6 +186,7 @@ const appReducers = combineReducers({
     theme: themeReducer,
     address: addressReducer,
     typefaces: typefacesReducer,
+    config: configReducer,
     //widgetsData: widgetsDataReducer,
 });
 

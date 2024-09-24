@@ -9,3 +9,4 @@ export { default as getGraphQLQueryStringFromObject } from "./get-graphql-query-
 export { default as convertFiltersToDBConditions } from "./convert-filters-to-db-conditions";
 export { default as slugify } from "@sindresorhus/slugify";
 export { default as renderEmailContent } from "./render-email-content";
+export { default as validateTurnstileToken } from "./validate-turnstile-token";
