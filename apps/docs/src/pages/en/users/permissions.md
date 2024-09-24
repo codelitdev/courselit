@@ -44,21 +44,9 @@ Let take a moment to understand what all permissions are available and what aspe
 
     Access/update school's users.
 
--   **View files**
-
-    Access school's files like images, videos, PDFs etc.
-
--   **Upload files**
-
-    Upload media assets like images, videos, PDFs etc.
-
 -   **Manage files**
 
     Update/delete your media assets
-
--   **Manage all files**
-
-    Update/delete any media asset. This includes media uploaded by other creators in the school.
 
 ## Stuck somewhere?
 

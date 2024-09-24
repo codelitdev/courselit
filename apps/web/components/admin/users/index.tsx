@@ -25,9 +25,11 @@ import {
     TableHead,
     TableBody,
     TableRow,
-    Avatar,
     Link,
     Button,
+    Avatar,
+    AvatarFallback,
+    AvatarImage,
 } from "@courselit/components-library";
 import { useRouter } from "next/router";
 import { formattedLocaleDate } from "@ui-lib/utils";
@@ -81,7 +83,18 @@ const UsersManager = ({ address, dispatch, loading }: UserManagerProps) => {
                         email,
                         permissions,
                         createdAt,
-                        updatedAt
+                        updatedAt,
+                        invited,
+                        avatar {
+                            mediaId,
+                            originalFileName,
+                            mimeType,
+                            size,
+                            access,
+                            file,
+                            thumbnail,
+                            caption
+            },
                     },
                     count: getUsersCount(searchData: {
                         filters: ${JSON.stringify(
@@ -104,7 +117,18 @@ const UsersManager = ({ address, dispatch, loading }: UserManagerProps) => {
                         email,
                         permissions,
                         createdAt,
-                        updatedAt
+                        updatedAt,
+                        invited,
+                        avatar {
+                            mediaId,
+                            originalFileName,
+                            mimeType,
+                            size,
+                            access,
+                            file,
+                            thumbnail,
+                            caption
+                        },
                     },
                     count: getUsersCount
                 }
@@ -250,22 +274,24 @@ const UsersManager = ({ address, dispatch, loading }: UserManagerProps) => {
                     loading={loading}
                 >
                     {users.map((user) => (
-                        <TableRow
-                            key={user.email}
-                            sx={{
-                                "&:last-child td, &:last-child th": {
-                                    border: 0,
-                                },
-                            }}
-                        >
+                        <TableRow key={user.email}>
                             <td className="py-2">
                                 <div className="flex items-center gap-2">
-                                    <Avatar
-                                        fallbackText={(user.name
-                                            ? user.name.charAt(0)
-                                            : user.email.charAt(0)
-                                        ).toUpperCase()}
-                                    />
+                                    <Avatar>
+                                        <AvatarImage
+                                            src={
+                                                user.avatar
+                                                    ? user.avatar?.file
+                                                    : "/courselit_backdrop_square.webp"
+                                            }
+                                        />
+                                        <AvatarFallback>
+                                            {(user.name
+                                                ? user.name.charAt(0)
+                                                : user.email.charAt(0)
+                                            ).toUpperCase()}
+                                        </AvatarFallback>
+                                    </Avatar>
                                     <div>
                                         <Link
                                             href={`/dashboard/users/${user.userId}`}
@@ -289,8 +315,12 @@ const UsersManager = ({ address, dispatch, loading }: UserManagerProps) => {
                             </td>
                             <td align="right">
                                 {user.updatedAt !== user.createdAt
-                                    ? user.updatedAt
-                                        ? formattedLocaleDate(user.updatedAt)
+                                    ? !user.invited
+                                        ? user.updatedAt
+                                            ? formattedLocaleDate(
+                                                  user.updatedAt,
+                                              )
+                                            : ""
                                         : ""
                                     : ""}
                             </td>

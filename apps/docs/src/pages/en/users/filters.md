@@ -59,7 +59,7 @@ This filter behaves just like any other filter. Multiple patterns can be searche
 
 ## Next step
 
-Learn how to [segment users](/en/users/segment).
+Learn how to [segment users](/en/users/segments).
 
 ## Stuck somewhere?
 

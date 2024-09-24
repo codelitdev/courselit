@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import Settings, { Item } from "../settings";
 import ItemEditor from "./item-editor";

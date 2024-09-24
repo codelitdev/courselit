@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import { Course, WidgetProps } from "@courselit/common-models";
 import {

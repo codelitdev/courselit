@@ -2,12 +2,3 @@
 . "$(dirname "$0")/_/husky.sh"
 
 yarn dlx lint-staged
- 
-# build packages
-yarn workspace @courselit/icons build
-yarn workspace @courselit/common-models build
-yarn workspace @courselit/utils build
-yarn workspace @courselit/text-editor build
-yarn workspace @courselit/state-management build
-yarn workspace @courselit/components-library build
-yarn workspace @courselit/common-widgets build

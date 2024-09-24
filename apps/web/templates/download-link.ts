@@ -19,6 +19,18 @@ html
             .cta:hover {
                 background-color: #060665;
             }
+            .courselit-branding-container {
+                margin: 40px 0px;
+            }
+            .courselit-branding-cta {
+                text-decoration: none;
+                color: #000000;
+                padding: 6px 10px;
+                background-color: #FFFFFF;
+                border: 1px solid;
+                border-radius: 6px;
+                text-align: center;
+            }
     body
         p   Thank you for signing up for #{courseName}.
         div(class="cta-container") 
@@ -30,7 +42,14 @@ html
         p   #{name}
         p 
             |   To access all of your content, 
-            |   #[a(href=\`\${loginLink}\`) log in] here. 
+            |   #[a(href=\`\${loginLink}\`) log in] here.
+        if !hideCourseLitBranding
+            div(class="courselit-branding-container")
+                a(
+                    href="https://courselit.app"
+                    target="_blank"
+                    class="courselit-branding-cta"
+                ) Powered by <strong> CourseLit </strong>
 `;
 
 export default digitalDownloadTemplate;

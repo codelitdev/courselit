@@ -6,7 +6,7 @@ export const SITE = {
 
 export const OPEN_GRAPH = {
     image: {
-        src: "https://courselit.app/_next/image?url=%2Flogo.png&w=96&q=75",
+        src: "/favicon.svg",
         alt: "CourseLit open source learning management system logo",
     },
     twitter: "courselit",
@@ -48,7 +48,6 @@ export const SIDEBAR: Sidebar = {
         "Getting started": [
             { text: "What is CourseLit", link: "en/introduction" },
             { text: "Features", link: "en/features" },
-            // { text: 'Page 3', link: 'en/page-3' },
         ],
         "Online courses": [
             { text: "Introduction", link: "en/courses/introduction" },
@@ -58,12 +57,28 @@ export const SIDEBAR: Sidebar = {
             { text: "Control visibility", link: "en/courses/visibility" },
             { text: "Add content", link: "en/courses/add-content" },
             { text: "Manage sections", link: "en/products/section" },
+            { text: "Invite customers", link: "en/products/invite-customers" },
         ],
         "Digital downloads": [
             { text: "Introduction", link: "en/downloads/introduction" },
             { text: "Create a download", link: "en/downloads/create" },
             { text: "Set a price", link: "en/downloads/set-a-price" },
             { text: "Lead magnet", link: "en/downloads/lead-magnet" },
+        ],
+        "Email marketing and automation": [
+            { text: "Introduction", link: "en/email-marketing/introduction" },
+            {
+                text: "Requesting access to email marketing",
+                link: "en/email-marketing/mail-access-request",
+            },
+            {
+                text: "Broadcast mails",
+                link: "en/email-marketing/broadcast-mails",
+            },
+            {
+                text: "Sequences (Campaigns)",
+                link: "en/email-marketing/sequences",
+            },
         ],
         Pages: [
             { text: "Introduction", link: "en/pages/introduction" },
@@ -75,7 +90,7 @@ export const SIDEBAR: Sidebar = {
             { text: "Banner", link: "en/pages/banner" },
             { text: "Hero", link: "en/pages/hero" },
             { text: "Grid", link: "en/pages/grid" },
-            { text: "Content", link: "en/pages/content" },
+            { text: "Curriculum", link: "en/pages/curriculum" },
             { text: "Newsletter signup", link: "en/pages/newsletter-signup" },
             { text: "Footer", link: "en/pages/footer" },
         ],

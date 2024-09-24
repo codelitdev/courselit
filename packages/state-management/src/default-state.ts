@@ -13,9 +13,12 @@ export default {
         },
         currencyISOCode: "",
         paymentMethod: "",
-        stripePublishableKey: "",
+        stripeKey: "",
         codeInjectionHead: "",
         codeInjectionBody: "",
+        mailingAddress: "",
+        hideCourseLitBranding: false,
+        razorpayKey: "",
     },
     networkAction: false,
     profile: {
@@ -27,6 +30,11 @@ export default {
         bio: "",
         permissions: [],
         userId: "",
+        avatar: {
+            file: "",
+            thumbnail: "",
+            caption: "",
+        },
     },
     message: {
         open: false,

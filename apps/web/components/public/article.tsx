@@ -3,9 +3,11 @@ import { formattedLocaleDate } from "../../ui-lib/utils";
 import { connect } from "react-redux";
 import {
     Image,
-    Link,
     TextRenderer,
     TextEditorEmptyDoc,
+    Avatar,
+    AvatarImage,
+    AvatarFallback,
 } from "@courselit/components-library";
 import { AppState } from "@courselit/state-management";
 import { Course, Profile, SiteInfo } from "@courselit/common-models";
@@ -26,7 +28,7 @@ interface ArticleOptionsProps {
 }
 
 const Article = (props: ArticleProps) => {
-    const { course, options = { hideTitle: false } } = props;
+    const { course, options = { hideTitle: false }, profile } = props;
 
     return (
         <div className="flex flex-col">
@@ -37,13 +39,30 @@ const Article = (props: ArticleProps) => {
                     </h1>
                 )}
                 {options?.showAttribution && (
-                    <div className="flex flex-col mb-8">
-                        <Link href={`/profile/${course.creatorId}`}>
+                    <div className="flex items-center gap-2 ">
+                        <div>
+                            <Avatar className="h-[45px] w-[45px]">
+                                <AvatarImage
+                                    src={
+                                        profile.avatar
+                                            ? profile.avatar?.file
+                                            : "/courselit_backdrop_square.webp"
+                                    }
+                                />
+                                <AvatarFallback>
+                                    {(profile.name
+                                        ? profile.name.charAt(0)
+                                        : profile.email.charAt(0)
+                                    ).toUpperCase()}
+                                </AvatarFallback>
+                            </Avatar>
+                        </div>
+                        <div className="flex flex-col">
                             <p className="font-medium">{course.creatorName}</p>
-                        </Link>
-                        <p className="font-light text-sm">
-                            {formattedLocaleDate(course.updatedAt, "long")}
-                        </p>
+                            <p className="font-light text-sm">
+                                {formattedLocaleDate(course.updatedAt, "long")}
+                            </p>
+                        </div>
                     </div>
                 )}
             </header>

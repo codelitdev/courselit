@@ -410,3 +410,11 @@ h2.heading {
     border: 1px solid rgb(223, 223, 223);
     box-shadow: 0 1px 2px #f6f2f2;
 }
+
+.chip {
+    background-color: darkgrey;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: small;
+    color: white;
+}

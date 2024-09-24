@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import Settings, { Link } from "../settings";
 import LinkEditor from "./link-editor";

@@ -27,7 +27,7 @@ interface MasterLayoutProps {
     theme: Theme;
     dispatch: AppDispatch;
     description?: string;
-    socialImage: Media;
+    socialImage?: Media;
     robotsAllowed?: boolean;
 }
 
@@ -72,6 +72,7 @@ const MasterLayout = ({
                 <meta name="twitter:title" content={siteTitle} />
                 <link
                     rel="icon"
+                    type="image/x-icon"
                     href={
                         siteInfo.logo && siteInfo.logo.file
                             ? siteInfo.logo.file

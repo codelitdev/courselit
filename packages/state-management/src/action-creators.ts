@@ -58,6 +58,16 @@ export function refreshUserProfile(): ThunkAction<
             completedLessons,
             accessibleGroups
           }
+           avatar {
+                mediaId,
+                originalFileName,
+                mimeType,
+                size,
+                access,
+                file,
+                thumbnail,
+                caption
+            },
         }
       }
       `;
@@ -117,9 +127,12 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
                         },
                         currencyISOCode,
                         paymentMethod,
-                        stripePublishableKey,
+                        stripeKey,
                         codeInjectionHead,
-                        codeInjectionBody
+                        codeInjectionBody,
+                        mailingAddress,
+                        hideCourseLitBranding,
+                        razorpayKey,
                     },
                     theme {
                         name,

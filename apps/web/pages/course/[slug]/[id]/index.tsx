@@ -288,6 +288,7 @@ const CourseViewer = (props: CourseProps) => {
             <RouteBasedComponentScaffold
                 items={generateSideBarItems(course, profile)}
                 drawerWidth={360}
+                showCourseLitBranding={true}
             >
                 <div className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[48rem] mx-auto">
                     <h1 className="text-4xl font-semibold mb-8">

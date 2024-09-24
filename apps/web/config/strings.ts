@@ -20,7 +20,7 @@ export const responses = {
     user_not_found: "User not found.",
     request_not_authenticated: "Request not authenticated",
     content_cannot_be_null: "Content cannot be empty",
-    media_id_cannot_be_null: "Media Id cannot be empty",
+    media_id_cannot_be_null: "Media cannot be empty",
     item_not_found: "Item not found",
     drip_not_released: "This section is not yet released for you",
     not_a_creator: "You do not have rights to perform this action",
@@ -40,7 +40,7 @@ export const responses = {
     user_name_cant_be_null: "Name cannot be null",
     action_not_allowed: "You do not have rights to perform this action",
     invalid_input: "Invalid input",
-    stripe_invalid_settings: "Stripe configuration is invalid.",
+    payment_invalid_settings: "configuration is invalid.",
     unrecognised_currency_code: "Unrecognised currency code",
     only_admins_can_purchase:
         "Only admins can purchase courses on behalf of others",
@@ -105,6 +105,8 @@ export const responses = {
     mandatory_tags_missing: "Mandatory tags are missing",
     cannot_delete_last_email: "Cannot delete the last email in the sequence",
     invalid_drip_email: "Drip email needs a subject and a body",
+    cannot_invite_to_unpublished_product:
+        "Cannot invite customers to an unpublished product",
 
     // api responses
     digital_download_no_files:

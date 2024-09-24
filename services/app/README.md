@@ -14,7 +14,7 @@ The app will be available at http://localhost:3000
 
 ### Environment variables
 
-**NEXTAUTH_SECRET**
+**AUTH_SECRET**
 
 A random string to use as a secret to sign the JWT tokens the API generates. Required parameter. No default value.
 
@@ -41,4 +41,5 @@ The URL of the MediaLit server. Defaults to `https://medialit.cloud`.
 The API key to access MediaLit.
 
 ## Support
+
 Come chat with us in our official [Discord channel](https://discord.gg/GR4bQsN).

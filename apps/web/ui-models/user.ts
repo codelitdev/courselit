@@ -1,3 +1,5 @@
+import { Media } from "@courselit/common-models";
+
 export default interface User {
     id: string;
     email: string;
@@ -7,4 +9,5 @@ export default interface User {
     userId: number;
     bio: string;
     permissions: string[];
+    avatar: Media;
 }

@@ -21,6 +21,7 @@ export const DRAFTJS_ENTITY_TYPE_AUDIO = "audio";
 export const PAYMENT_METHOD_STRIPE = "stripe";
 export const PAYMENT_METHOD_PAYPAL = "paypal";
 export const PAYMENT_METHOD_PAYTM = "paytm";
+export const PAYMENT_METHOD_RAZORPAY = "razorpay";
 export const PAYMENT_METHOD_NONE = "";
 
 // transaction statuses from backend
@@ -45,9 +46,6 @@ export const permissions = {
     publishCourse: "course:publish",
     enrollInCourse: "course:enroll",
     manageMedia: "media:manage",
-    manageAnyMedia: "media:manage_any",
-    uploadMedia: "media:upload",
-    viewAnyMedia: "media:view_any",
     manageSite: "site:manage",
     manageSettings: "setting:manage",
     manageUsers: "user:manage",

@@ -1,17 +1,9 @@
-import {
-    EmailForm,
-    Faq,
-    Grid,
-    Hero,
-    Media,
-    RichText,
-} from "@courselit/common-widgets";
 import { generateUniqueId } from "@courselit/utils";
 
 export const homePageTemplate = [
     {
         widgetId: generateUniqueId(),
-        name: RichText.metadata.name,
+        name: "rich-text",
         deleteable: true,
         shared: false,
         settings: {
@@ -49,7 +41,7 @@ export const homePageTemplate = [
     },
     {
         widgetId: generateUniqueId(),
-        name: Hero.metadata.name,
+        name: "hero",
         deleteable: true,
         shared: false,
         settings: {
@@ -94,7 +86,7 @@ export const homePageTemplate = [
     },
     {
         widgetId: generateUniqueId(),
-        name: Grid.metadata.name,
+        name: "grid",
         deleteable: true,
         shared: false,
         settings: {
@@ -199,7 +191,7 @@ export const homePageTemplate = [
     },
     {
         widgetId: generateUniqueId(),
-        name: Media.metadata.name,
+        name: "media",
         deleteable: true,
         shared: false,
         settings: {
@@ -207,16 +199,15 @@ export const homePageTemplate = [
             type: "site",
             entityId: "demo",
             media: {
-                mediaId: "hvWJSmSgCqeyHVhKA0qU0wd3Gp0T-Lqv1_Dtd-21",
+                mediaId: "dM3L-CVOXLGv3XxsnRUd_D3SD-S5hCkuTzTx432L",
                 originalFileName: "Basics.jpg",
                 mimeType: "image/jpeg",
                 size: 113901,
                 access: "public",
-                file: "https://d27g932tzd9f7s.cloudfront.net/medialit-service/public/hvWJSmSgCqeyHVhKA0qU0wd3Gp0T-Lqv1_Dtd-21/main.jpg",
+                file: "https://d27g932tzd9f7s.cloudfront.net/medialit-service/public/dM3L-CVOXLGv3XxsnRUd_D3SD-S5hCkuTzTx432L/main.jpg",
                 thumbnail:
-                    "https://d27g932tzd9f7s.cloudfront.net/medialit-service/public/hvWJSmSgCqeyHVhKA0qU0wd3Gp0T-Lqv1_Dtd-21/thumb.webp",
+                    "https://d27g932tzd9f7s.cloudfront.net/medialit-service/public/dM3L-CVOXLGv3XxsnRUd_D3SD-S5hCkuTzTx432L/thumb.webp",
                 caption: "",
-                group: "demo",
             },
             mediaRadius: 2,
             horizontalPadding: 100,
@@ -226,7 +217,7 @@ export const homePageTemplate = [
     },
     {
         widgetId: generateUniqueId(),
-        name: Faq.metadata.name,
+        name: "faq",
         deleteable: true,
         shared: false,
         settings: {
@@ -321,13 +312,13 @@ export const homePageTemplate = [
     },
     {
         widgetId: generateUniqueId(),
-        name: EmailForm.metadata.name,
+        name: "newsletter-signup",
         deleteable: true,
         shared: true,
     },
     {
         widgetId: generateUniqueId(),
-        name: RichText.metadata.name,
+        name: "rich-text",
         deleteable: true,
         shared: false,
         settings: {
@@ -358,7 +349,7 @@ export const homePageTemplate = [
     },
     {
         widgetId: generateUniqueId(),
-        name: RichText.metadata.name,
+        name: "rich-text",
         deleteable: true,
         shared: false,
         settings: {

@@ -1,4 +1,4 @@
-import { Constants } from ".";
+import { Constants, Media } from ".";
 import { Progress } from "./progress";
 
 export default interface User {
@@ -14,4 +14,6 @@ export default interface User {
     subscribedToUpdates: boolean;
     lead: (typeof Constants.leads)[number];
     tags?: string[];
+    avatar: Media;
+    invited?: boolean;
 }

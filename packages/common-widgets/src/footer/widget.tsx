@@ -119,6 +119,20 @@ const Widget = ({
                                 </>
                             ))}
                         </div>
+                        {!state.siteinfo.hideCourseLitBranding && (
+                            <span className="flex justify-start align-center">
+                                <Link
+                                    href={`https://courselit.app`}
+                                    openInSameTab={false}
+                                    className="px-2 py-1 border rounded-md bg-[#FFFFFF] text-[#000000] text-sm text-center"
+                                >
+                                    Powered by{" "}
+                                    <span className="font-semibold">
+                                        CourseLit
+                                    </span>
+                                </Link>
+                            </span>
+                        )}
                     </div>
                     <div className="flex flex-col flex-wrap lg:!flex-row gap-8">
                         {sections &&

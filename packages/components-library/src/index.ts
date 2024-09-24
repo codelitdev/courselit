@@ -4,7 +4,6 @@ import "./styles.css";
 
 import PriceTag from "./pricetag";
 import Section from "./section";
-// import WidgetHelpers from "./widget-helpers";
 import CourseItem from "./course-item";
 import Image from "./image";
 import Link from "./link";

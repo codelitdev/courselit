@@ -93,7 +93,7 @@ const lessonInputType = new GraphQLInputObjectType({
             type: new GraphQLNonNull(GraphQLBoolean),
         },
         content: { type: GraphQLString },
-        media: { type: mediaTypes.mediaInputType },
+        // media: { type: mediaTypes.mediaInputType },
         downloadable: { type: GraphQLBoolean },
         groupId: { type: new GraphQLNonNull(GraphQLID) },
     },

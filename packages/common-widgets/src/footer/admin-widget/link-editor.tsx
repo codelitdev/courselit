@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { Edit } from "@courselit/icons";
 import { Link } from "../settings";

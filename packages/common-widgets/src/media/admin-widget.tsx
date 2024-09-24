@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import type { Address, Auth, Media, Profile } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
@@ -110,6 +112,7 @@ export default function AdminWidget({
                     strings={{}}
                     access="public"
                     mediaId={media && media.mediaId}
+                    type="page"
                 />
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Design">

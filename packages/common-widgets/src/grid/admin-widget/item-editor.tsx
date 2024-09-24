@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { Item } from "../settings";
 import {
@@ -105,6 +107,7 @@ export default function ItemEditor({
                         onRemove={() => {
                             setMedia({});
                         }}
+                        type="page"
                     />
                     <Select
                         title="Media alignment"

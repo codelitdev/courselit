@@ -31,13 +31,14 @@ const mutations = {
     createSubscription: {
         type: GraphQLBoolean,
         args: {
+            name: { type: new GraphQLNonNull(GraphQLString) },
             email: { type: new GraphQLNonNull(GraphQLString) },
         },
         resolve: async (
             _: any,
-            { email }: { email: string },
+            { name, email }: { name: string; email: string },
             context: GQLContext,
-        ) => createSubscription(email, context),
+        ) => createSubscription(name, email, context),
     },
     // createMail: {
     //     type: types.mail,

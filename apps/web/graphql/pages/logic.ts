@@ -6,7 +6,6 @@ import { getPageResponse } from "./helpers";
 import constants from "../../config/constants";
 import Course from "../../models/Course";
 import { checkPermission, generateUniqueId } from "@courselit/utils";
-import { Footer, Header } from "@courselit/common-widgets";
 import { Media, User, Constants } from "@courselit/common-models";
 import { Domain } from "../../models/Domain";
 import { homePageTemplate } from "./page-templates";
@@ -238,7 +237,7 @@ export const updatePage = async ({
     if (description) {
         page.draftDescription = description;
     }
-    if (socialImage) {
+    if (typeof socialImage !== "undefined") {
         page.draftSocialImage = socialImage;
     }
     if (typeof robotsAllowed === "boolean") {
@@ -287,14 +286,12 @@ export const publish = async (
         page.description = page.draftDescription;
         page.draftDescription = undefined;
     }
-    if (page.draftSocialImage) {
-        page.socialImage = page.draftSocialImage;
-        page.draftSocialImage = undefined;
-    }
     if (page.draftRobotsAllowed) {
         page.robotsAllowed = page.draftRobotsAllowed;
         page.draftRobotsAllowed = undefined;
     }
+    page.socialImage = page.draftSocialImage;
+
     ctx.subdomain.typefaces = ctx.subdomain.draftTypefaces;
     ctx.subdomain.sharedWidgets = ctx.subdomain.draftSharedWidgets;
     ctx.subdomain.draftSharedWidgets = {};
@@ -344,13 +341,13 @@ export const initMandatoryPages = async (domain: Domain, user: User) => {
             entityId: domain.name,
             layout: [
                 {
-                    name: Header.metadata.name,
+                    name: "header",
                     deleteable: false,
                     shared: true,
                 },
                 ...homePageTemplate,
                 {
-                    name: Footer.metadata.name,
+                    name: "footer",
                     deleteable: false,
                     shared: true,
                 },
@@ -366,12 +363,12 @@ export const initMandatoryPages = async (domain: Domain, user: User) => {
             entityId: domain.name,
             layout: [
                 {
-                    name: Header.metadata.name,
+                    name: "header",
                     deleteable: false,
                     shared: true,
                 },
                 {
-                    name: Footer.metadata.name,
+                    name: "footer",
                     deleteable: false,
                     shared: true,
                 },
@@ -387,12 +384,12 @@ export const initMandatoryPages = async (domain: Domain, user: User) => {
             entityId: domain.name,
             layout: [
                 {
-                    name: Header.metadata.name,
+                    name: "header",
                     deleteable: false,
                     shared: true,
                 },
                 {
-                    name: Footer.metadata.name,
+                    name: "footer",
                     deleteable: false,
                     shared: true,
                 },
@@ -408,12 +405,12 @@ export const initMandatoryPages = async (domain: Domain, user: User) => {
             entityId: domain.name,
             layout: [
                 {
-                    name: Header.metadata.name,
+                    name: "header",
                     deleteable: false,
                     shared: true,
                 },
                 {
-                    name: Footer.metadata.name,
+                    name: "footer",
                     deleteable: false,
                     shared: true,
                 },
@@ -457,12 +454,12 @@ export const createPage = async ({
         deleteable: true,
         layout: [
             {
-                name: Header.metadata.name,
+                name: "header",
                 deleteable: false,
                 shared: true,
             },
             {
-                name: Footer.metadata.name,
+                name: "footer",
                 deleteable: false,
                 shared: true,
             },

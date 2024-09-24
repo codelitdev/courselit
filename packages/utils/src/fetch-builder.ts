@@ -4,8 +4,6 @@
  * a 401 etc.
  */
 
-// TODO: remove this dependency
-import Router from "next/router";
 import { debuglog } from "util";
 
 const debugLog = debuglog("fetch-builder");
@@ -54,12 +52,12 @@ class Fetch {
         );
 
         if (response.status === 401) {
-            typeof window !== "undefined" &&
-                Router.replace(
+            if (typeof window !== "undefined") {
+                window.location.href =
                     options && options.redirectToOnUnAuth
                         ? `/login?redirect=${options.redirectToOnUnAuth}`
-                        : "/logout",
-                );
+                        : "/logout";
+            }
             return {};
         }
 

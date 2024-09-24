@@ -17,9 +17,18 @@ import {
 } from "@courselit/utils";
 import UserSegmentModel, { UserSegment } from "../../models/UserSegment";
 import mongoose from "mongoose";
-import { Constants, UserFilterWithAggregator } from "@courselit/common-models";
+import {
+    Constants,
+    Media,
+    UserFilterWithAggregator,
+} from "@courselit/common-models";
 import { recordActivity } from "../../lib/record-activity";
 import { triggerSequences } from "../../lib/trigger-sequences";
+import finalizePurchase from "@/lib/finalize-purchase";
+import { getCourseOrThrow } from "../courses/logic";
+import pug from "pug";
+import courseEnrollTemplate from "@/templates/course-enroll";
+import { send } from "../../services/mail";
 
 const removeAdminFieldsFromUserObject = ({
     id,
@@ -27,18 +36,21 @@ const removeAdminFieldsFromUserObject = ({
     userId,
     bio,
     email,
+    avatar,
 }: {
     id: string;
     name: string;
     userId: string;
     bio: string;
     email: string;
+    avatar: Media;
 }) => ({
     id,
     name,
     userId,
     bio,
     email,
+    avatar,
 });
 
 export const getUser = async (email = null, userId = null, ctx: GQLContext) => {
@@ -90,7 +102,10 @@ const checkForInvalidPermissions = (user) => {
     }
 };
 
-export const updateUser = async (userData: any, ctx: GQLContext) => {
+export const updateUser = async (
+    userData: Record<string, unknown>,
+    ctx: GQLContext,
+) => {
     checkIfAuthenticated(ctx);
     const { id } = userData;
 
@@ -98,7 +113,7 @@ export const updateUser = async (userData: any, ctx: GQLContext) => {
         permissions.manageUsers,
     ]);
     if (!hasPermissionToManageUser) {
-        if (id !== ctx.user.id) {
+        if (id !== ctx.user._id.toString()) {
             throw new Error(responses.action_not_allowed);
         }
     }
@@ -111,9 +126,12 @@ export const updateUser = async (userData: any, ctx: GQLContext) => {
             continue;
         }
 
-        if (!["subscribedToUpdates"].includes(key) && id === ctx.user.id) {
-            throw new Error(responses.action_not_allowed);
-        }
+        // if (
+        //     !["subscribedToUpdates"].includes(key) &&
+        //     id === ctx.user._id.toString()
+        // ) {
+        //     throw new Error(responses.action_not_allowed);
+        // }
 
         if (key === "tags") {
             addTags(userData["tags"], ctx);
@@ -128,6 +146,72 @@ export const updateUser = async (userData: any, ctx: GQLContext) => {
 
     if (userData.name) {
         await updateCoursesForCreatorName(user.userId || user.id, user.name);
+    }
+
+    return user;
+};
+
+export const inviteCustomer = async (
+    email: string,
+    tags: string[],
+    id: string,
+    ctx: GQLContext,
+) => {
+    checkIfAuthenticated(ctx);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const course = await getCourseOrThrow(undefined, ctx, id);
+    if (!course.published) {
+        throw new Error(responses.cannot_invite_to_unpublished_product);
+    }
+
+    const sanitizedEmail = (email as string).toLowerCase();
+    let user = await UserModel.findOne({
+        email: sanitizedEmail,
+        domain: ctx.subdomain._id,
+    });
+    if (!user) {
+        user = await createUser({
+            domain: ctx.subdomain!,
+            email: sanitizedEmail,
+            subscribedToUpdates: true,
+            invited: true,
+        });
+    }
+
+    if (tags.length) {
+        user = await updateUser(
+            { id: user._id, tags: [...user.tags, ...tags] },
+            ctx,
+        );
+    }
+
+    if (
+        !user.purchases.some(
+            (purchase) => purchase.courseId === course.courseId,
+        )
+    ) {
+        await finalizePurchase(user.userId, id);
+
+        try {
+            const emailBody = pug.render(courseEnrollTemplate, {
+                courseName: course.title,
+                loginLink: `${ctx.address}/login`,
+                hideCourseLitBranding:
+                    ctx.subdomain.settings.hideCourseLitBranding,
+            });
+
+            await send({
+                to: [user.email],
+                subject: `You have been invited to ${course.title}`,
+                body: emailBody,
+            });
+        } catch (error) {
+            // eslint-disable-next-line no-console
+            console.log("error", error);
+        }
     }
 
     return user;
@@ -247,12 +331,15 @@ export const recordProgress = async ({
 
 export async function createUser({
     domain,
+    name,
     email,
     lead,
     superAdmin = false,
     subscribedToUpdates = true,
+    invited,
 }: {
     domain: Domain;
+    name?: string;
     email: string;
     lead?:
         | typeof constants.leadWebsite
@@ -260,32 +347,34 @@ export async function createUser({
         | typeof constants.leadApi;
     superAdmin?: boolean;
     subscribedToUpdates?: boolean;
+    invited?: boolean;
 }): Promise<User> {
     const newUser: Partial<User> = {
         domain: domain._id,
+        name: name,
         email: email,
         active: true,
         purchases: [],
         permissions: [],
         lead: lead || constants.leadWebsite,
         subscribedToUpdates,
+        invited,
     };
     if (superAdmin) {
         newUser.permissions = [
             constants.permissions.manageCourse,
             constants.permissions.manageAnyCourse,
             constants.permissions.publishCourse,
-            // TODO: replace media perms with course perms
             constants.permissions.manageMedia,
-            constants.permissions.manageAnyMedia,
-            constants.permissions.uploadMedia,
-            constants.permissions.viewAnyMedia,
             constants.permissions.manageSite,
             constants.permissions.manageSettings,
             constants.permissions.manageUsers,
         ];
     } else {
-        newUser.permissions = [constants.permissions.enrollInCourse];
+        newUser.permissions = [
+            constants.permissions.enrollInCourse,
+            constants.permissions.manageMedia,
+        ];
     }
     newUser.lead = lead;
     const user = await UserModel.create(newUser);

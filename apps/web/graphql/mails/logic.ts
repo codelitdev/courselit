@@ -31,19 +31,22 @@ import MailRequestStatusModel, {
 const { permissions } = constants;
 
 export async function createSubscription(
+    name: string,
     email: string,
     ctx: GQLContext,
 ): Promise<boolean> {
     try {
+        const sanitizedEmail = email.toLowerCase();
         let dbUser: User | null = await UserModel.findOne({
-            email,
+            email: sanitizedEmail,
             domain: ctx.subdomain._id,
         });
 
         if (!dbUser) {
             dbUser = await createUser({
                 domain: ctx.subdomain!,
-                email: email,
+                name: name,
+                email: sanitizedEmail,
                 lead: constants.leadNewsletter,
             });
         }

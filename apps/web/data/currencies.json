@@ -1,0 +1,878 @@
+[
+    {
+        "name": "United Arab Emirates Dirham",
+        "isoCode": "AED",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Albanian lek",
+        "isoCode": "ALL",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Armenian dram",
+        "isoCode": "AMD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Argentine peso",
+        "isoCode": "ARS",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Australian dollar",
+        "isoCode": "AUD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Aruban florin",
+        "isoCode": "AWG",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Azerbaijan Manat",
+        "isoCode": "AZN",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Convertible Mark",
+        "isoCode": "BAM",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Barbadian dollar",
+        "isoCode": "BBD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Bangladeshi taka",
+        "isoCode": "BDT",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Bulgarian Lev",
+        "isoCode": "BGN",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Bahraini Dinar",
+        "isoCode": "BHD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Burundi Franc",
+        "isoCode": "BIF",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Bermudian dollar",
+        "isoCode": "BMD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Brunei dollar",
+        "isoCode": "BND",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Bolivian boliviano",
+        "isoCode": "BOB",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Brazilian Real",
+        "isoCode": "BRL",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Bahamian dollar",
+        "isoCode": "BSD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Bhutanese Ngultrum",
+        "isoCode": "BTN",
+        "razorpay": true,
+        "stripe": false
+    },
+    {
+        "name": "Botswana pula",
+        "isoCode": "BWP",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Belarusian Ruble",
+        "isoCode": "BYN",
+        "razorpay": false,
+        "stripe": true
+    },
+    {
+        "name": "Belize dollar",
+        "isoCode": "BZD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Canadian dollar",
+        "isoCode": "CAD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Congolese Franc",
+        "isoCode": "CDF",
+        "razorpay": false,
+        "stripe": true
+    },
+    {
+        "name": "Swiss franc",
+        "isoCode": "CHF",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Chilean Peso",
+        "isoCode": "CLP",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Chinese yuan renminbi",
+        "isoCode": "CNY",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Colombian peso",
+        "isoCode": "COP",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Costa Rican colon",
+        "isoCode": "CRC",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Cuban peso",
+        "isoCode": "CUP",
+        "razorpay": true,
+        "stripe": false
+    },
+    {
+        "name": "Cabo Verde Escudo",
+        "isoCode": "CVE",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Czech koruna",
+        "isoCode": "CZK",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Djibouti Franc",
+        "isoCode": "DJF",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Danish krone",
+        "isoCode": "DKK",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Dominican peso",
+        "isoCode": "DOP",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Algerian dinar",
+        "isoCode": "DZD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Egyptian pound",
+        "isoCode": "EGP",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Ethiopian birr",
+        "isoCode": "ETB",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "European euro",
+        "isoCode": "EUR",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Fijian dollar",
+        "isoCode": "FJD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Falkland Islands Pound",
+        "isoCode": "FKP",
+        "razorpay": false,
+        "stripe": true
+    },
+    {
+        "name": "Pound sterling",
+        "isoCode": "GBP",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Lari",
+        "isoCode": "GEL",
+        "razorpay": false,
+        "stripe": true
+    },
+    {
+        "name": "Ghanian Cedi",
+        "isoCode": "GHS",
+        "razorpay": true,
+        "stripe": false
+    },
+    {
+        "name": "Gibraltar pound",
+        "isoCode": "GIP",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Gambian dalasi",
+        "isoCode": "GMD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Guinean Franc",
+        "isoCode": "GNF",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Guatemalan quetzal",
+        "isoCode": "GTQ",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Guyanese dollar",
+        "isoCode": "GYD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Hong Kong dollar",
+        "isoCode": "HKD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Honduran lempira",
+        "isoCode": "HNL",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Croatian kuna",
+        "isoCode": "HRK",
+        "razorpay": true,
+        "stripe": false
+    },
+    {
+        "name": "Haitian gourde",
+        "isoCode": "HTG",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Hungarian forint",
+        "isoCode": "HUF",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Indonesian rupiah",
+        "isoCode": "IDR",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Israeli new shekel",
+        "isoCode": "ILS",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Indian rupee",
+        "isoCode": "INR",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Iraqi Dinar",
+        "isoCode": "IQD",
+        "razorpay": true,
+        "stripe": false
+    },
+    {
+        "name": "Iceland Krona",
+        "isoCode": "ISK",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Jamaican dollar",
+        "isoCode": "JMD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Jordanian Dinar",
+        "isoCode": "JOD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Japanese Yen",
+        "isoCode": "JPY",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Kenyan shilling",
+        "isoCode": "KES",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Kyrgyzstani som",
+        "isoCode": "KGS",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Cambodian riel",
+        "isoCode": "KHR",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Comorian Franc ",
+        "isoCode": "KMF",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Korean Won",
+        "isoCode": "KRW",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Kuwaiti Dinar",
+        "isoCode": "KWD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Cayman Islands dollar",
+        "isoCode": "KYD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Kazakhstani tenge",
+        "isoCode": "KZT",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Lao kip",
+        "isoCode": "LAK",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Sri Lankan rupee",
+        "isoCode": "LKR",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Liberian dollar",
+        "isoCode": "LRD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Lesotho loti",
+        "isoCode": "LSL",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Moroccan dirham",
+        "isoCode": "MAD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Moldovan leu",
+        "isoCode": "MDL",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Malagasy Ariary",
+        "isoCode": "MGA",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Macedonian denar",
+        "isoCode": "MKD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Myanmar kyat",
+        "isoCode": "MMK",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Mongolian tugrik",
+        "isoCode": "MNT",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Macanese pataca",
+        "isoCode": "MOP",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Mauritian rupee",
+        "isoCode": "MUR",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Maldivian rufiyaa",
+        "isoCode": "MVR",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Malawian kwacha",
+        "isoCode": "MWK",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Mexican peso",
+        "isoCode": "MXN",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Malaysian ringgit",
+        "isoCode": "MYR",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Mozambique Metical",
+        "isoCode": "MZN",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Namibian dollar",
+        "isoCode": "NAD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Nigerian naira",
+        "isoCode": "NGN",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Nicaraguan cordoba",
+        "isoCode": "NIO",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Norwegian krone",
+        "isoCode": "NOK",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Nepalese rupee",
+        "isoCode": "NPR",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "New Zealand dollar",
+        "isoCode": "NZD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Rial Omani",
+        "isoCode": "OMR",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Balboa",
+        "isoCode": "PAB",
+        "razorpay": false,
+        "stripe": true
+    },
+    {
+        "name": "Peruvian sol",
+        "isoCode": "PEN",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Papua New Guinean kina",
+        "isoCode": "PGK",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Philippine peso",
+        "isoCode": "PHP",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Pakistani rupee",
+        "isoCode": "PKR",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Polish Zloty",
+        "isoCode": "PLN",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Paraguayan Guarani",
+        "isoCode": "PYG",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Qatari riyal",
+        "isoCode": "QAR",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Romanian Leu",
+        "isoCode": "RON",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Serbian Dinar",
+        "isoCode": "RSD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Russian ruble",
+        "isoCode": "RUB",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Rwanda Franc",
+        "isoCode": "RWF",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Saudi Arabian riyal",
+        "isoCode": "SAR",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Solomon Islands Dollar",
+        "isoCode": "SBD",
+        "razorpay": false,
+        "stripe": true
+    },
+    {
+        "name": "Seychellois rupee",
+        "isoCode": "SCR",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Swedish krona",
+        "isoCode": "SEK",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Singapore dollar",
+        "isoCode": "SGD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Saint Helena Pound",
+        "isoCode": "SHP",
+        "razorpay": false,
+        "stripe": true
+    },
+    {
+        "name": "Sierra Leonean leone",
+        "isoCode": "SLE",
+        "razorpay": false,
+        "stripe": true
+    },
+    {
+        "name": "Somali shilling",
+        "isoCode": "SOS",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Surinam Dollar",
+        "isoCode": "SRD",
+        "razorpay": false,
+        "stripe": true
+    },
+    {
+        "name": "Dobra",
+        "isoCode": "STD",
+        "razorpay": false,
+        "stripe": true
+    },
+    {
+        "name": "South Sudanese pound",
+        "isoCode": "SSP",
+        "razorpay": true,
+        "stripe": false
+    },
+    {
+        "name": "Salvadoran colón",
+        "isoCode": "SVC",
+        "razorpay": true,
+        "stripe": false
+    },
+    {
+        "name": "Swazi lilangeni",
+        "isoCode": "SZL",
+        "razorpay": true,
+        "stripe": false
+    },
+    {
+        "name": "Thai baht",
+        "isoCode": "THB",
+        "razorpay": true,
+        "stripe": false
+    },
+    {
+        "name": "Somoni",
+        "isoCode": "TJS",
+        "razorpay": false,
+        "stripe": true
+    },
+    {
+        "name": "Pa'anga",
+        "isoCode": "TOP",
+        "razorpay": false,
+        "stripe": true
+    },
+    {
+        "name": "Tunisian Dinar",
+        "isoCode": "TND",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Turkish Lira",
+        "isoCode": "TRY",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Trinidad and Tobago dollar",
+        "isoCode": "TTD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "New Taiwan Dollar",
+        "isoCode": "TWD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Tanzanian shilling",
+        "isoCode": "TZS",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Ukrainian Hryvnia",
+        "isoCode": "UAH",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Uganda Shilling",
+        "isoCode": "UGX",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Peso Uruguayo",
+        "isoCode": "UYU",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "United States dollar",
+        "isoCode": "USD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Netherlands Antillean Guilder",
+        "isoCode": "ANG",
+        "razorpay": false,
+        "stripe": true
+    },
+    {
+        "name": "Lebanese Pound",
+        "isoCode": "LBP",
+        "razorpay": false,
+        "stripe": true
+    },
+    {
+        "name": "Kwanza",
+        "isoCode": "AOA",
+        "razorpay": false,
+        "stripe": true
+    },
+    {
+        "name": "Afghani",
+        "isoCode": "AFN",
+        "razorpay": false,
+        "stripe": true
+    },
+    {
+        "name": "Uzbekistani so'm",
+        "isoCode": "UZS",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Vietnamese Dong",
+        "isoCode": "VND",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Vatu",
+        "isoCode": "VUV",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Tala",
+        "isoCode": "WST",
+        "razorpay": false,
+        "stripe": true
+    },
+    {
+        "name": "CFA Franc BEAC",
+        "isoCode": "XAF",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "East Caribbean Dollar",
+        "isoCode": "XCD",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "CFA Franc BCEAO",
+        "isoCode": "XOF",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "CFP Franc",
+        "isoCode": "XPF",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Yemeni rial",
+        "isoCode": "YER",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "South African rand",
+        "isoCode": "ZAR",
+        "razorpay": true,
+        "stripe": true
+    },
+    {
+        "name": "Zambian Kwacha",
+        "isoCode": "ZMW",
+        "razorpay": true,
+        "stripe": true
+    }
+]
