@@ -12,9 +12,8 @@ import {
     VIEW_PAGE_MENU_ITEM,
 } from "../../../ui-config/strings";
 import { MoreVert } from "@courselit/icons";
-import type { AppDispatch, AppState } from "@courselit/state-management";
+import type { AppDispatch } from "@courselit/state-management";
 import type { SiteInfo, Address } from "@courselit/common-models";
-import { connect } from "react-redux";
 import { capitalize, FetchBuilder, formatCurrency } from "@courselit/utils";
 import {
     networkAction,
@@ -27,8 +26,9 @@ import {
     Chip,
     TableRow,
 } from "@courselit/components-library";
+import { usePathname } from "next/navigation";
 
-function Product({
+export default function Product({
     details,
     siteinfo,
     address,
@@ -49,6 +49,10 @@ function Product({
     onDelete: (position: number) => void;
 }) {
     const product = details;
+    const path = usePathname();
+    const pathPrefix = path?.startsWith("/dashboard2")
+        ? "/dashboard2"
+        : "/dashboard";
 
     const deleteProduct = async () => {
         const query = `
@@ -81,7 +85,9 @@ function Product({
     return (
         <TableRow key={product.courseId}>
             <td className="py-4">
-                <Link href={`/dashboard/product/${product.courseId}/reports`}>
+                <Link
+                    href={`${pathPrefix}/product/${product.courseId}/reports`}
+                >
                     <p>{product.title}</p>
                 </Link>
             </td>
@@ -117,7 +123,7 @@ function Product({
                     </MenuItem>
                     <MenuItem>
                         <Link
-                            href={`/dashboard/page/${product.pageId}/edit?redirectTo=/dashboard/products`}
+                            href={`/dashboard/page/${product.pageId}/edit?redirectTo=${pathPrefix}/products`}
                             className="flex w-full"
                         >
                             {PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE}
@@ -144,12 +150,3 @@ function Product({
         </TableRow>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    siteinfo: state.siteinfo,
-    address: state.address,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(Product);

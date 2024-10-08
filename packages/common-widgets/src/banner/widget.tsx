@@ -97,10 +97,10 @@ export default function Widget({
         typeof editingViewShowSuccess === "undefined"
             ? "0"
             : editingViewShowSuccess;
-    const featuredImage: Media =
+    const featuredImage: Partial<Media> =
         type === "site"
             ? state.siteinfo.logo
-            : (product.featuredImage as Media);
+            : (product.featuredImage as Partial<Media>);
 
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();

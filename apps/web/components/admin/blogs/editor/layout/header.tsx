@@ -1,7 +1,6 @@
 import React from "react";
 import dynamic from "next/dynamic";
 import useCourse from "../course-hook";
-import { useRouter } from "next/router";
 import {
     MenuItem,
     Menu2,
@@ -16,9 +15,9 @@ import {
 } from "../../../../../ui-config/strings";
 import { MoreVert } from "@courselit/icons";
 import { deleteProduct } from "../../helpers";
-import { AppDispatch, AppState } from "@courselit/state-management";
-import { connect } from "react-redux";
+import { AppDispatch } from "@courselit/state-management";
 import { Address } from "@courselit/common-models";
+import { useRouter } from "next/navigation";
 
 const AppLoader = dynamic(() => import("../../../../app-loader"));
 
@@ -31,11 +30,16 @@ interface BlogHeaderProps {
     breadcrumbs?: Breadcrumb[];
     id: string;
     address: Address;
-    dispatch: AppDispatch;
+    dispatch?: AppDispatch;
 }
 
-function BlogHeader({ id, breadcrumbs, address, dispatch }: BlogHeaderProps) {
-    const course = useCourse(id);
+export default function BlogHeader({
+    id,
+    breadcrumbs,
+    address,
+    dispatch,
+}: BlogHeaderProps) {
+    const course = useCourse(id, address);
     const router = useRouter();
 
     if (!course) {
@@ -53,7 +57,7 @@ function BlogHeader({ id, breadcrumbs, address, dispatch }: BlogHeaderProps) {
                                     {crumb.text}
                                 </Link>
                             ) : (
-                                <li key={crumb.text}>{crumb.text}</li>
+                                <span key={crumb.text}>{crumb.text}</span>
                             ),
                         )}
                     </Breadcrumbs>
@@ -95,11 +99,3 @@ function BlogHeader({ id, breadcrumbs, address, dispatch }: BlogHeaderProps) {
         </div>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(BlogHeader);

@@ -24,7 +24,7 @@ export function MobileNav({
     logoColor,
 }: {
     title: string;
-    logo: Media;
+    logo: Partial<Media>;
     color: string;
     links: any[];
     linkColor: string;

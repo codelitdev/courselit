@@ -11,5 +11,5 @@ export default interface Profile {
     permissions: string[];
     userId: string;
     subscribedToUpdates: string;
-    avatar: Media;
+    avatar: Partial<Media>;
 }

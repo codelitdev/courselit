@@ -11,22 +11,33 @@ import {
     PlaceholderExtension,
     TaskListExtension,
     TextExtension,
-    wysiwygPreset,
     BlockquoteExtension,
     HardBreakExtension,
+    BoldExtension,
+    ItalicExtension,
+    GapCursorExtension,
+    HorizontalRuleExtension,
+    StrikeExtension,
+    UnderlineExtension,
+    CodeExtension,
+    BidiExtension,
+    CodeBlockExtension,
+    FindExtension,
+    TrailingNodeExtension,
+    IframeExtension,
+    ShortcutsExtension,
 } from "remirror/extensions";
 import { CodeMirrorExtension } from "@remirror/extension-codemirror6";
 import { TableExtension } from "@remirror/extension-react-tables";
-import { languages } from "@codemirror/language-data";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { basicSetup } from "codemirror";
 import { DelayedPromiseCreator, ErrorConstant, invariant } from "remirror";
 import { FetchBuilder } from "@courselit/utils";
 import { Media } from "@courselit/common-models";
 
-const wysiwygPresetArrayWithoutImageExtension = wysiwygPreset().filter(
-    (extension) => extension instanceof ImageExtension !== true,
-);
+// const wysiwygPresetArrayWithoutImageExtension = wysiwygPreset().filter(
+//     (extension) => extension instanceof ImageExtension !== true,
+// );
 
 type SetProgress = (progress: number) => void;
 
@@ -107,10 +118,30 @@ export const getExtensions = (placeholder, url) => () => [
     }),
     new DropCursorExtension(),
     new CodeMirrorExtension({
-        languages: languages,
         extensions: [basicSetup, oneDark],
     }),
     new BlockquoteExtension(),
     new HardBreakExtension(),
-    ...wysiwygPresetArrayWithoutImageExtension,
+    new BoldExtension(null),
+    new ItalicExtension(),
+    new HardBreakExtension(),
+    new GapCursorExtension(),
+    new HardBreakExtension(),
+    new HorizontalRuleExtension(),
+    new StrikeExtension(),
+    new UnderlineExtension(),
+    new BlockquoteExtension(),
+    new CodeExtension(),
+    new BidiExtension(null),
+    new CodeBlockExtension(null),
+    new DropCursorExtension(),
+    new HeadingExtension(null),
+    new FindExtension(),
+    new TrailingNodeExtension(),
+    new IframeExtension({ enableResizing: false }),
+    new BulletListExtension({}),
+    new OrderedListExtension(),
+    new TaskListExtension(),
+    new ShortcutsExtension(),
+    //    ...wysiwygPresetArrayWithoutImageExtension,
 ];
