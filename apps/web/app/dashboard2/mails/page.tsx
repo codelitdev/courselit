@@ -1,22 +1,23 @@
-"use client";
+import { Metadata, ResolvingMetadata } from "next";
+import MailHub from "./mail-hub";
 
-import Mails from "@components/admin/mails";
-import { AddressContext } from "@components/contexts";
-import { useSearchParams } from "next/navigation";
-import { useContext } from "react";
+export async function generateMetadata(
+    {
+        params,
+        searchParams,
+    }: {
+        params: any;
+        searchParams: { [key: string]: string | string[] | undefined };
+    },
+    parent: ResolvingMetadata,
+): Promise<Metadata> {
+    const tab = searchParams["tab"] || "Broadcasts";
+
+    return {
+        title: `${tab} | ${(await parent)?.title?.absolute}`,
+    };
+}
 
 export default function Page() {
-    const address = useContext(AddressContext);
-    const searchParams = useSearchParams();
-
-    const tab = searchParams?.get("tab") || "Broadcasts";
-
-    return (
-        <Mails
-            selectedTab={tab}
-            address={address}
-            prefix="/dashboard2"
-            loading={false}
-        />
-    );
+    return <MailHub />;
 }

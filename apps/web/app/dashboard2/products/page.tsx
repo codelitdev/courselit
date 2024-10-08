@@ -1,5 +1,6 @@
 "use client";
 
+import LoadingScreen from "@components/admin/loading-screen";
 import { Index as Products } from "@components/admin/products";
 import {
     AddressContext,
@@ -8,7 +9,6 @@ import {
 } from "@components/contexts";
 import { UIConstants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
-import { redirect } from "next/navigation";
 import { useContext } from "react";
 const { permissions } = UIConstants;
 
@@ -23,7 +23,7 @@ export default function Page() {
             permissions.manageCourse,
         ])
     ) {
-        redirect("/dashboard2");
+        return <LoadingScreen />;
     }
 
     return <Products address={address} loading={false} siteinfo={siteinfo} />;

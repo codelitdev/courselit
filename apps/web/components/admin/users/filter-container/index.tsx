@@ -425,13 +425,3 @@ export default function FilterContainer({
         </div>
     );
 }
-
-// const mapStateToProps = (state: AppState) => ({
-//     address: state.address,
-// });
-
-// const mapDispatchToProps = (dispatch: AppDispatch) => ({
-//     dispatch: dispatch,
-// });
-
-// export default connect(mapStateToProps, mapDispatchToProps)(FilterContainer);

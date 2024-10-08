@@ -1,9 +1,9 @@
 "use client";
 
+import LoadingScreen from "@components/admin/loading-screen";
 import { ProfileContext } from "@components/contexts";
 import { UIConstants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
-import { redirect } from "next/navigation";
 import { ReactNode, useContext } from "react";
 const { permissions } = UIConstants;
 
@@ -16,8 +16,8 @@ export default function Page({ children }: { children: ReactNode }) {
             permissions.manageCourse,
         ])
     ) {
-        redirect("/dashboard2");
+        return <LoadingScreen />;
     }
 
-    return <>{children}</>;
+    return children;
 }

@@ -32,7 +32,7 @@ export function Publish({
                 profile={profile}
                 siteInfo={siteInfo}
                 address={address}
-                prefix="dashboard"
+                prefix="/dashboard"
             >
                 <PublishEditor id={id as string} />
             </BlogEditorLayout>

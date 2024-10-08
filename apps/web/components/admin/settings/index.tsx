@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { connect } from "react-redux";
 import {
     SITE_SETTINGS_TITLE,
     SITE_SETTINGS_SUBTITLE,
@@ -45,7 +44,6 @@ import { FetchBuilder, capitalize } from "@courselit/utils";
 import { decode, encode } from "base-64";
 import { AppMessage, Profile, UIConstants } from "@courselit/common-models";
 import type { SiteInfo, Address, Media } from "@courselit/common-models";
-import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
 import currencies from "@/data/currencies.json";
 import {
@@ -64,6 +62,7 @@ import {
     PageBuilderPropertyHeader,
     Checkbox,
 } from "@courselit/components-library";
+import { useRouter } from "next/navigation";
 
 const {
     PAYMENT_METHOD_PAYPAL,
@@ -89,9 +88,10 @@ interface SettingsProps {
         | typeof SITE_MAILS_HEADER
         | typeof SITE_CUSTOMISATIONS_SETTING_HEADER
         | typeof SITE_APIKEYS_SETTING_HEADER;
+    prefix: string;
 }
 
-export const Settings = (props: SettingsProps) => {
+const Settings = (props: SettingsProps) => {
     const [settings, setSettings] = useState<Partial<SiteInfo>>({});
     const [newSettings, setNewSettings] = useState<Partial<SiteInfo>>({});
     const [apikeyPage, setApikeyPage] = useState(1);
@@ -105,6 +105,7 @@ export const Settings = (props: SettingsProps) => {
     ].includes(props.selectedTab)
         ? props.selectedTab
         : SITE_SETTINGS_SECTION_GENERAL;
+    const router = useRouter();
 
     const fetch = new FetchBuilder()
         .setUrl(`${props.address.backend}/api/graph`)
@@ -601,7 +602,10 @@ export const Settings = (props: SettingsProps) => {
                     SITE_CUSTOMISATIONS_SETTING_HEADER,
                     SITE_APIKEYS_SETTING_HEADER,
                 ]}
-                defaultValue={selectedTab}
+                value={selectedTab}
+                onChange={(tab: string) => {
+                    router.replace(`${props.prefix}/settings?tab=${tab}`);
+                }}
             >
                 <div className="flex flex-col gap-8">
                     <Form
@@ -700,7 +704,6 @@ export const Settings = (props: SettingsProps) => {
                         />
                     </div>
                 </div>
-
                 <Form
                     onSubmit={handlePaymentSettingsSubmit}
                     className="flex flex-col gap-4 pt-4"
@@ -1002,16 +1005,4 @@ export const Settings = (props: SettingsProps) => {
     );
 };
 
-const mapStateToProps = (state: AppState) => ({
-    siteinfo: state.siteinfo,
-    address: state.address,
-    networkAction: state.networkAction,
-    profile: state.profile,
-    loading: state.networkAction,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({
-    dispatch: dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(Settings);
+export default Settings;

@@ -73,7 +73,7 @@ const getSidebarMenuItems = (profile: Profile) => {
         });
         items.push({
             label: SIDEBAR_MENU_MAILS,
-            href: "/dashboard/mails",
+            href: "/dashboard/mails?tab=Broadcasts",
             icon: <Mail />,
         });
     }

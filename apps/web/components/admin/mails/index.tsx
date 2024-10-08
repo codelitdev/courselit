@@ -4,7 +4,6 @@ import {
     AppMessage,
     Constants,
     Domain,
-    Profile,
     Sequence,
     SequenceType,
 } from "@courselit/common-models";
@@ -38,7 +37,6 @@ const { networkAction } = actionCreators;
 
 interface MailsProps {
     address: Address;
-    profile: Profile;
     selectedTab: typeof BROADCASTS | typeof SEQUENCES;
     dispatch?: AppDispatch;
     prefix: string;
@@ -65,11 +63,6 @@ export default function Mails({
     >([]);
     const [siteInfo, setSiteInfo] = useState<Domain>();
     const router = useRouter();
-    const [tab, setTab] = useState<MailsTab>(
-        [BROADCASTS, SEQUENCES].includes(selectedTab)
-            ? selectedTab
-            : BROADCASTS,
-    );
 
     const handleBroadcastPageChange = (newPage: number) => {
         setBroadcastPage(newPage);
@@ -207,7 +200,7 @@ export default function Mails({
             .setPayload({
                 query: mutation,
                 variables: {
-                    type,
+                    type: type.toUpperCase(),
                 },
             })
             .setIsGraphQLEndpoint(true)
@@ -221,7 +214,7 @@ export default function Mails({
             if (response.sequence && response.sequence.sequenceId) {
                 router.push(
                     `${prefix}/mails/${
-                        tab === BROADCASTS ? "broadcast" : "sequence"
+                        selectedTab === BROADCASTS ? "broadcast" : "sequence"
                     }/${response.sequence.sequenceId}/edit`,
                 );
             }
@@ -236,10 +229,10 @@ export default function Mails({
     };
 
     const onPrimaryButtonClick = () => {
-        if (tab === BROADCASTS) {
-            createSequence("BROADCAST");
-        } else if (tab === SEQUENCES) {
-            createSequence("SEQUENCE");
+        if (selectedTab === BROADCASTS) {
+            createSequence("broadcast");
+        } else if (selectedTab === SEQUENCES) {
+            createSequence("sequence");
         } else {
         }
     };
@@ -308,15 +301,17 @@ export default function Mails({
                 </h1>
                 <div className="flex gap-2">
                     <Button onClick={onPrimaryButtonClick}>
-                        {tab === BROADCASTS ? BTN_NEW_MAIL : BTN_NEW_SEQUENCE}
+                        {selectedTab === BROADCASTS
+                            ? BTN_NEW_MAIL
+                            : BTN_NEW_SEQUENCE}
                     </Button>
                 </div>
             </div>
             <Tabs
                 items={[BROADCASTS, SEQUENCES]}
-                value={tab}
+                value={selectedTab}
                 onChange={(tab: MailsTab) => {
-                    setTab(tab);
+                    router.replace(`${prefix}/mails?tab=${tab}`);
                 }}
             >
                 <SequencesList
@@ -324,12 +319,14 @@ export default function Mails({
                     address={address}
                     loading={loading}
                     dispatch={dispatch}
+                    prefix={prefix}
                 />
                 <SequencesList
                     type={Constants.mailTypes[1] as SequenceType}
                     address={address}
                     loading={loading}
                     dispatch={dispatch}
+                    prefix={prefix}
                 />
             </Tabs>
         </div>

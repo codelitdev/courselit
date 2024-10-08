@@ -1,6 +1,7 @@
 "use client";
 
-import { Settings } from "@components/admin/settings";
+import LoadingScreen from "@components/admin/loading-screen";
+import Settings from "@components/admin/settings";
 import {
     AddressContext,
     ProfileContext,
@@ -8,7 +9,7 @@ import {
 } from "@components/contexts";
 import { Profile, UIConstants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
-import { redirect, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useContext } from "react";
 const { permissions } = UIConstants;
 
@@ -21,7 +22,7 @@ export default function Page() {
     const tab = searchParams?.get("tab") || "Branding";
 
     if (!checkPermission(profile.permissions!, [permissions.manageSettings])) {
-        redirect("/dashboard2");
+        return <LoadingScreen />;
     }
 
     return (
@@ -34,6 +35,7 @@ export default function Page() {
             dispatch={() => {}}
             loading={false}
             networkAction={false}
+            prefix="/dashboard2"
         />
     );
 }

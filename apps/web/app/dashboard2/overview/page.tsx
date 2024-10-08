@@ -2,6 +2,7 @@
 
 import { Metric } from "@components/admin/dashboard/metric";
 import { Todo } from "@components/admin/dashboard/to-do";
+import LoadingScreen from "@components/admin/loading-screen";
 import {
     AddressContext,
     ProfileContext,
@@ -10,7 +11,6 @@ import {
 import { UIConstants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
 import { DASHBOARD_PAGE_HEADER } from "@ui-config/strings";
-import { redirect } from "next/navigation";
 import { useContext } from "react";
 
 export default function Page() {
@@ -28,7 +28,7 @@ export default function Page() {
             UIConstants.permissions.manageUsers,
         ])
     ) {
-        redirect("/dashboard2");
+        return <LoadingScreen />;
     }
 
     return (

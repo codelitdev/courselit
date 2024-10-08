@@ -17,6 +17,7 @@ import {
     LESSON_CONTENT_EMBED_HEADER,
     LESSON_CONTENT_EMBED_PLACEHOLDER,
     BUTTON_SAVING,
+    MANAGE_COURSES_PAGE_HEADING,
 } from "@ui-config/strings";
 import {
     LESSON_TYPE_TEXT,
@@ -57,6 +58,7 @@ import {
     Switch,
     TextEditorEmptyDoc,
     IconButton,
+    Breadcrumbs,
 } from "@courselit/components-library";
 import { QuizBuilder } from "./quiz-builder";
 
@@ -456,25 +458,29 @@ const LessonEditor = ({
 
     return (
         <div className="flex flex-col gap-4">
-            {/* <Breadcrumbs aria-label="lesson-breadcrumbs">
-                <Link href="/dashboard/products">
-                    {MANAGE_COURSES_PAGE_HEADING}
-                </Link>
-                <Link href={`/dashboard/product/${courseId}/content`}>
-                    {BREADCRUMBS_EDIT_LESSON_COURSE_NAME}
-                </Link>
-                {EDIT_LESSON_TEXT}
-            </Breadcrumbs> */}
+            {prefix === "/dashboard" && (
+                <Breadcrumbs aria-label="lesson-breadcrumbs">
+                    <Link href="/dashboard/products">
+                        {MANAGE_COURSES_PAGE_HEADING}
+                    </Link>
+                    <Link href={`/dashboard/product/${courseId}/content`}>
+                        {course?.title || "..."}
+                    </Link>
+                    {EDIT_LESSON_TEXT}
+                </Breadcrumbs>
+            )}
             <div className="flex flex-col gap-4 mb-4">
-                <div className="flex items-center mb-4">
+                <div className="flex items-center mb-4 gap-2">
                     {courseId && (
-                        <IconButton variant="soft">
-                            <Link
-                                href={`${prefix}/product/${courseId}/content`}
-                            >
-                                <Back />
-                            </Link>
-                        </IconButton>
+                        <Tooltip title="Go back to content">
+                            <IconButton variant="soft">
+                                <Link
+                                    href={`${prefix}/product/${courseId}/content`}
+                                >
+                                    <Back />
+                                </Link>
+                            </IconButton>
+                        </Tooltip>
                     )}
                     <h1 className="text-3xl font-semibold ">
                         {lessonId ? EDIT_LESSON_TEXT : BUTTON_NEW_LESSON_TEXT}

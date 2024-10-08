@@ -32,7 +32,7 @@ export function Details({
                 profile={profile}
                 siteInfo={siteInfo}
                 address={address}
-                prefix="dashboard"
+                prefix="/dashboard"
             >
                 <DetailsEditor id={id as string} />
             </BlogEditorLayout>

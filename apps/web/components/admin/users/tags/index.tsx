@@ -9,7 +9,7 @@ import {
     TableHead,
     TableRow,
 } from "@courselit/components-library";
-import { AppDispatch, AppState } from "@courselit/state-management";
+import { AppDispatch } from "@courselit/state-management";
 import {
     BTN_NEW_TAG,
     DELETE_TAG_POPUP_DESC,
@@ -26,17 +26,18 @@ import {
 } from "@ui-config/strings";
 import { useCallback } from "react";
 import { useEffect } from "react";
-import { connect } from "react-redux";
 import { actionCreators } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import { Address, AppMessage } from "@courselit/common-models";
 import { useState } from "react";
 import { MoreVert } from "@courselit/icons";
 import { usePathname } from "next/navigation";
+import clsx from "clsx";
 const { networkAction, setAppMessage } = actionCreators;
 
 interface TagsProps {
     address: Address;
+    prefix: string;
     dispatch?: AppDispatch;
 }
 
@@ -45,7 +46,7 @@ interface TagWithDetails {
     count: number;
 }
 
-export function Tags({ address, dispatch }: TagsProps) {
+export default function Tags({ address, dispatch, prefix }: TagsProps) {
     const [tags, setTags] = useState<TagWithDetails[]>([]);
     const [loading, setLoading] = useState(false);
     const path = usePathname();
@@ -148,31 +149,38 @@ export function Tags({ address, dispatch }: TagsProps) {
 
     return (
         <div className="flex flex-col">
-            <div className="mb-4">
-                <Breadcrumbs aria-label="breakcrumb">
-                    <Link href="/dashboard/users">
-                        {USERS_MANAGER_PAGE_HEADING}
-                    </Link>
+            {prefix === "/dashboard" && (
+                <>
+                    <div className="mb-4">
+                        <Breadcrumbs aria-label="breakcrumb">
+                            <Link href="/dashboard/users">
+                                {USERS_MANAGER_PAGE_HEADING}
+                            </Link>
 
-                    <p>{USERS_TAG_HEADER}</p>
-                </Breadcrumbs>
-            </div>
-            <div className="flex justify-between items-center mb-8">
-                <h1 className="text-4xl font-semibold mb-4">
-                    {USERS_TAG_HEADER}
-                </h1>
-                <div>
-                    <Button
-                        component="link"
-                        href={`/dashboard${
-                            path?.startsWith("/dashboard2") ? "2" : ""
-                        }/users/tags/new`}
-                    >
-                        {BTN_NEW_TAG}
-                    </Button>
-                </div>
-            </div>
-            <Table aria-label="Tags">
+                            <p>{USERS_TAG_HEADER}</p>
+                        </Breadcrumbs>
+                    </div>
+                    <div className="flex justify-between items-center mb-8">
+                        <h1 className="text-4xl font-semibold mb-4">
+                            {USERS_TAG_HEADER}
+                        </h1>
+                        <div>
+                            <Button
+                                component="link"
+                                href={`/dashboard${
+                                    path?.startsWith("/dashboard2") ? "2" : ""
+                                }/users/tags/new`}
+                            >
+                                {BTN_NEW_TAG}
+                            </Button>
+                        </div>
+                    </div>
+                </>
+            )}
+            <Table
+                aria-label="Tags"
+                className={clsx(prefix === "/dashboard2" ? "mt-4" : "")}
+            >
                 <TableHead>
                     <td>{TAG_TABLE_HEADER_NAME}</td>
                     <td align="right">{TAG_TABLE_HEADER_SUBS_COUNT}</td>
@@ -214,13 +222,3 @@ export function Tags({ address, dispatch }: TagsProps) {
         </div>
     );
 }
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-    profile: state.profile,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({
-    dispatch: dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(Tags);

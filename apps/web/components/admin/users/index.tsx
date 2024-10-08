@@ -189,7 +189,11 @@ export const Users = ({ address, dispatch, loading }: UserManagerProps) => {
                 </div>
             </div>
             <div className="mb-4">
-                <FilterContainer onChange={onFilterChange} />
+                <FilterContainer
+                    onChange={onFilterChange}
+                    address={address}
+                    dispatch={dispatch}
+                />
             </div>
             <Table aria-label="Users">
                 <TableHead>

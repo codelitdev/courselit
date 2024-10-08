@@ -91,7 +91,9 @@ export default function Page() {
                     </div>
                 ))}
             {loaded && !courses.length && (
-                <p className="p-4">{ACCOUNT_NO_PURCHASE_PLACEHOLDER}</p>
+                <p className="text-slate-700">
+                    {ACCOUNT_NO_PURCHASE_PLACEHOLDER}
+                </p>
             )}
         </div>
     );

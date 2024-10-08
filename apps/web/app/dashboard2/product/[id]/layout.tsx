@@ -1,25 +1,25 @@
-"use client";
+import type { Metadata, ResolvingMetadata } from "next";
+import ProductLayout from "./product-layout";
+import { ReactNode } from "react";
+import { EDIT_PRODUCT_HEADER } from "@ui-config/strings";
 
-import ProductEditorLayout from "@components/admin/products/editor/layout";
-import { AddressContext, ProfileContext } from "@components/contexts";
-import { UIConstants } from "@courselit/common-models";
-import { ReactNode, useContext } from "react";
-const { permissions } = UIConstants;
+export async function generateMetadata(
+    { params }: { params: any },
+    parent: ResolvingMetadata,
+): Promise<Metadata> {
+    return {
+        title: `${EDIT_PRODUCT_HEADER} | ${(await parent)?.title?.absolute}`,
+    };
+}
 
-export default function Page({
+export default function Layout({
     params,
     children,
 }: {
     params: { id: string };
     children: ReactNode;
 }) {
-    const address = useContext(AddressContext);
     const { id } = params;
-    const profile = useContext(ProfileContext);
 
-    return (
-        <ProductEditorLayout prefix="/dashboard2" address={address} id={id}>
-            {children}
-        </ProductEditorLayout>
-    );
+    return <ProductLayout id={id}>{children}</ProductLayout>;
 }

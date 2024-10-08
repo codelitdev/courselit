@@ -183,7 +183,7 @@ export default function Page({ params }: { params: { id: string } }) {
     return (
         <div className="flex flex-col gap-4">
             <Breadcrumbs aria-label="breakcrumb">
-                <Link href="/dashboard/users">
+                <Link href={"/dashboard2/users?tab=All%20users"}>
                     {USERS_MANAGER_PAGE_HEADING}
                 </Link>
 

@@ -535,11 +535,6 @@ const SequenceEditor = ({
                             <Pause /> Pause
                         </Button>
                     )}
-                    {/*
-                    <Button onClick={() => createSequence()}>
-                        {BTN_NEW_SEQUENCE}
-                    </Button>
-                    */}
                 </div>
             </div>
             {!sequence && (
@@ -652,9 +647,9 @@ const SequenceEditor = ({
                             loading={loading}
                             disabled={
                                 loading ||
-                                title === "" ||
-                                from === "" ||
-                                fromEmail === "" ||
+                                !title ||
+                                !from ||
+                                // !fromEmail ||
                                 triggerType === "" ||
                                 (triggerType !== "SUBSCRIBER_ADDED" &&
                                     !triggerData) ||

@@ -59,7 +59,9 @@ export function NewTag({ address, dispatch }: NewTagProps) {
                 router.replace(
                     `/dashboard${
                         path?.startsWith("/dashboard2") ? "2" : ""
-                    }/users/tags`,
+                    }/users${
+                        path?.startsWith("/dashboard2") ? "?tab=Tags" : "/tags"
+                    }`,
                 );
             }
         } catch (err: any) {
@@ -77,7 +79,11 @@ export function NewTag({ address, dispatch }: NewTagProps) {
                     <Link
                         href={`/dashboard${
                             path?.startsWith("/dashboard2") ? "2" : ""
-                        }/users`}
+                        }/users${
+                            path?.startsWith("/dashboard2")
+                                ? "?tab=All%20users"
+                                : ""
+                        }`}
                     >
                         {USERS_MANAGER_PAGE_HEADING}
                     </Link>
@@ -85,7 +91,11 @@ export function NewTag({ address, dispatch }: NewTagProps) {
                     <Link
                         href={`/dashboard${
                             path?.startsWith("/dashboard2") ? "2" : ""
-                        }/users/tags`}
+                        }/users${
+                            path?.startsWith("/dashboard2")
+                                ? "?tab=Tags"
+                                : "/tags"
+                        }`}
                     >
                         {USERS_TAG_HEADER}
                     </Link>
@@ -117,7 +127,11 @@ export function NewTag({ address, dispatch }: NewTagProps) {
                             component="link"
                             href={`/dashboard${
                                 path?.startsWith("/dashboard2") ? "2" : ""
-                            }/users/tags`}
+                            }/users${
+                                path?.startsWith("/dashboard2")
+                                    ? "?tab=Tags"
+                                    : "/tags"
+                            }`}
                             variant="soft"
                         >
                             {BUTTON_CANCEL_TEXT}
@@ -131,7 +145,6 @@ export function NewTag({ address, dispatch }: NewTagProps) {
 
 const mapStateToProps = (state: AppState) => ({
     address: state.address,
-    profile: state.profile,
 });
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({

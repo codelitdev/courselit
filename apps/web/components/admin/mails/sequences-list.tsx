@@ -32,6 +32,7 @@ interface SequencesListProps {
     address: Address;
     loading: boolean;
     type: SequenceType;
+    prefix: string;
     dispatch?: AppDispatch;
 }
 
@@ -40,6 +41,7 @@ const SequencesList = ({
     dispatch,
     loading,
     type,
+    prefix,
 }: SequencesListProps) => {
     const [page, setPage] = useState(1);
     // const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -149,7 +151,7 @@ const SequencesList = ({
                     <TableRow key={broadcast.sequenceId}>
                         <td className="py-4">
                             <Link
-                                href={`/dashboard/mails/${type}/${broadcast.sequenceId}/edit`}
+                                href={`${prefix}/mails/${type}/${broadcast.sequenceId}/edit`}
                                 className="flex"
                             >
                                 {type === "broadcast" &&

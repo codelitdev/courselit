@@ -29,7 +29,7 @@ import {
     SIDEBAR_MENU_SETTINGS,
     SIDEBAR_MENU_USERS,
 } from "@ui-config/strings";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { ExpandMoreRight } from "@courselit/icons";
 import clsx from "clsx";
 const { permissions } = UIConstants;
@@ -47,6 +47,8 @@ export default function Layout({
 }) {
     const [open, setOpen] = useState(false);
     const [profile, setProfile] = useState(defaultState.profile);
+    const params = useSearchParams();
+    const tab = params?.get("tab");
 
     useEffect(() => {
         const getUserProfile = async () => {
@@ -111,7 +113,11 @@ export default function Layout({
                             style={{ width: 240 }}
                             className={`hidden md:!flex overflow-x-hidden overflow-y-auto min-w-[240px] max-h-screen border-r border-slate-200 z-10 bg-white`}
                         >
-                            <Sidebar session={session} onItemClick={setOpen} />
+                            <Sidebar
+                                session={session}
+                                onItemClick={setOpen}
+                                tab={tab}
+                            />
                         </div>
                         <main className="w-full max-h-screen overflow-y-auto scroll-smooth p-4">
                             {children}
@@ -122,7 +128,12 @@ export default function Layout({
                         onOpenChange={(status: boolean) => setOpen(status)}
                         className="top-0 w-full z-20"
                     >
-                        <Sidebar session={session} onItemClick={setOpen} />
+                        <Sidebar
+                            session={session}
+                            onItemClick={(value) => {
+                                setOpen(value);
+                            }}
+                        />
                     </Modal>
                     {/* <AppToast /> */}
                 </ProfileContext.Provider>
@@ -135,16 +146,18 @@ function Header({ onMenuClick }: { onMenuClick: (value: boolean) => void }) {
     const siteInfo = useContext(SiteInfoContext);
 
     return (
-        <header className="flex w-full z-10 justify-between">
-            <IconButton
-                className="px-2 md:!hidden"
-                variant="soft"
-                onClick={onMenuClick}
-            >
-                <Menu />
-            </IconButton>
+        <header className="flex w-full z-10 gap-2 items-center">
+            <div>
+                <IconButton
+                    className="px-2 md:!hidden"
+                    variant="soft"
+                    onClick={onMenuClick}
+                >
+                    <Menu />
+                </IconButton>
+            </div>
             <Link href="/">
-                <div className="flex items-center">
+                <div className="flex items-center max-w-[200px] md:max-w-[300px] lg:max-w-[400px]">
                     <div className="mr-2">
                         <Image
                             borderRadius={1}
@@ -154,7 +167,9 @@ function Header({ onMenuClick }: { onMenuClick: (value: boolean) => void }) {
                             alt="logo"
                         />
                     </div>
-                    <p className="text-2xl font-bold">{siteInfo.title}</p>
+                    <p className="text-2xl font-bold whitespace-nowrap overflow-hidden text-ellipsis">
+                        {siteInfo.title}
+                    </p>
                 </div>
             </Link>
             <div></div>
@@ -186,14 +201,14 @@ type SidebarItem = Item | Divider | Blank;
 function Sidebar({
     session,
     onItemClick,
+    tab,
 }: {
     session: any;
-    onItemClick?: (state: boolean) => void;
+    onItemClick: (state: boolean) => void;
+    tab?: string | null;
 }) {
-    const address = useContext(AddressContext);
     const profile = useContext(ProfileContext);
     const items: SidebarItem[] = [];
-    const router = useRouter();
 
     if (session) {
         items.push({
@@ -237,11 +252,11 @@ function Sidebar({
                 items: [
                     {
                         label: "All users",
-                        href: "/dashboard2/users",
+                        href: "/dashboard2/users?tab=All%20users",
                     },
                     {
                         label: "Tags",
-                        href: "/dashboard2/users/tags",
+                        href: "/dashboard2/users?tab=Tags",
                     },
                 ],
             });
@@ -321,21 +336,34 @@ function Sidebar({
                 ) : item === "blank" ? (
                     <div className="flex-1"></div>
                 ) : (
-                    <SidebarItem item={item} key={index} />
+                    <SidebarItem
+                        item={item}
+                        key={index}
+                        tab={tab}
+                        onItemClick={onItemClick}
+                    />
                 ),
             )}
         </ul>
     );
 }
 
-function SidebarItem({ item }: { item: Item }) {
+function SidebarItem({
+    item,
+    tab,
+    onItemClick,
+}: {
+    item: Item;
+    onItemClick: (value: boolean) => void;
+    tab?: string | null;
+}) {
     const path = usePathname();
-    const searchParams = useSearchParams();
-    const tab = searchParams?.get("tab");
     const [open, setOpen] = useState(
         path &&
             item.items?.some((x) => {
-                return x.href?.startsWith(path);
+                return tab && x.href
+                    ? x.href.endsWith(`tab=${encodeURI(tab)}`)
+                    : false;
             }),
     );
 
@@ -345,6 +373,8 @@ function SidebarItem({ item }: { item: Item }) {
                 onClick={() => {
                     if (item.items?.length) {
                         setOpen(!open);
+                    } else {
+                        onItemClick(false);
                     }
                 }}
             >
@@ -387,6 +417,7 @@ function SidebarItem({ item }: { item: Item }) {
                                     ? "text-black font-semibold"
                                     : "text-inherit",
                             )}
+                            onClick={() => onItemClick(false)}
                         >
                             <Link
                                 href={subitem.href as string}
