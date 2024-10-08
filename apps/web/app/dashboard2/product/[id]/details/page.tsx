@@ -1,10 +1,7 @@
 "use client";
 
 import DetailsEditor from "@components/admin/products/editor/details";
-import {
-    AddressContext,
-    ProfileContext,
-} from "@components/contexts";
+import { AddressContext, ProfileContext } from "@components/contexts";
 import { Profile } from "@courselit/common-models";
 import { useContext } from "react";
 

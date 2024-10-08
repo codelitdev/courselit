@@ -1,10 +1,6 @@
 import React, { FormEvent, useEffect, useState } from "react";
 import { Address, AppMessage, SiteInfo } from "@courselit/common-models";
-import {
-    FormField,
-    Form,
-    Button,
-} from "@courselit/components-library";
+import { FormField, Form, Button } from "@courselit/components-library";
 import type { AppDispatch } from "@courselit/state-management";
 import {
     networkAction,

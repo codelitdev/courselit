@@ -2,9 +2,7 @@ import React, { FormEvent, useEffect, useState } from "react";
 import { Form, Button } from "@courselit/components-library";
 import useCourse from "./course-hook";
 import { capitalize, FetchBuilder } from "@courselit/utils";
-import {
-    setAppMessage,
-} from "@courselit/state-management/dist/action-creators";
+import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import { Address, AppMessage } from "@courselit/common-models";
 import {
     BTN_PUBLISH,

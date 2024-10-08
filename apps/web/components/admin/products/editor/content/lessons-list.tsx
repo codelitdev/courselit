@@ -18,10 +18,7 @@ import {
     MenuItem,
     DragAndDrop,
 } from "@courselit/components-library";
-import {
-    actionCreators,
-    AppDispatch,
-} from "@courselit/state-management";
+import { actionCreators, AppDispatch } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 
 interface LessonSectionProps {
