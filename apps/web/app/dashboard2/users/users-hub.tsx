@@ -43,7 +43,7 @@ export default function UsersHub() {
     const tab = searchParams?.get("tab") || "Users";
 
     const [page, setPage] = useState(1);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, _] = useState(10);
     const [users, setUsers] = useState<User[]>([]);
     const [filters, setFilters] = useState<UserFilter[]>([]);
     const [filtersAggregator, setFiltersAggregator] =

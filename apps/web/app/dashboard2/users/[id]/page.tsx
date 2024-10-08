@@ -24,7 +24,7 @@ import { useCallback, useContext, useEffect, useState } from "react";
 
 export default function Page({ params }: { params: { id: string } }) {
     const [userData, setUserData] = useState<UserWithAdminFields>();
-    const [enrolledCourses, setEnrolledCourses] = useState([]);
+    const [_, setEnrolledCourses] = useState([]);
     const [tags, setTags] = useState([]);
     const address = useContext(AddressContext);
     const { id } = params;

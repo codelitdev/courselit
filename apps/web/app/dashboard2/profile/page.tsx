@@ -29,7 +29,7 @@ import {
     PROFILE_SECTION_DETAILS_NAME,
     PROFILE_SECTION_DISPLAY_PICTURE,
 } from "@ui-config/strings";
-import { FormEvent, useContext, useState } from "react";
+import { FormEvent, useContext, useEffect, useState } from "react";
 
 export default function Page() {
     const [bio, setBio] = useState("");
@@ -42,8 +42,9 @@ export default function Page() {
     const profile = useContext(ProfileContext);
     const address = useContext(AddressContext);
 
-    const getUser = async function (userId: string) {
-        const query = `
+    useEffect(() => {
+        const getUser = async function (userId: string) {
+            const query = `
         query {
           user: getUser(userId: "${userId}") {
             name,
@@ -63,25 +64,29 @@ export default function Page() {
           }
         }
       `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
-            .setIsGraphQLEndpoint(true)
-            .build();
+            const fetch = new FetchBuilder()
+                .setUrl(`${address.backend}/api/graph`)
+                .setPayload(query)
+                .setIsGraphQLEndpoint(true)
+                .build();
 
-        try {
-            const response = await fetch.exec();
-            if (response.user) {
-                setUser(response.user);
-                setName(response.user.name);
-                setBio(response.user.bio);
-                setAvatar(response.user.avatar);
-                setSubscribedToUpdates(response.user.subscribedToUpdates);
+            try {
+                const response = await fetch.exec();
+                if (response.user) {
+                    setUser(response.user);
+                    setName(response.user.name);
+                    setBio(response.user.bio);
+                    setAvatar(response.user.avatar);
+                    setSubscribedToUpdates(response.user.subscribedToUpdates);
+                }
+            } catch (err: any) {
+                console.error(`Profile page: ${err.message}`);
             }
-        } catch (err: any) {
-            console.error(`Profile page: ${err.message}`);
+        };
+        if (profile.userId && address.backend) {
+            getUser(profile.userId);
         }
-    };
+    }, [profile, address.backend]);
 
     const updateProfilePic = async (media?: Media) => {
         const mutation = `
