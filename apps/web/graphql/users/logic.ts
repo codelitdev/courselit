@@ -200,7 +200,7 @@ export const inviteCustomer = async (
                 courseName: course.title,
                 loginLink: `${ctx.address}/login`,
                 hideCourseLitBranding:
-                    ctx.subdomain.settings.hideCourseLitBranding,
+                    ctx.subdomain.settings?.hideCourseLitBranding,
             });
 
             await send({
