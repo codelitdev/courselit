@@ -88,7 +88,7 @@ export async function createTemplateAndSendMail({
         loginLink: `${ctx.address}/login`,
         courseName: course.title,
         name: course.creatorName || ctx.subdomain.settings.title || "",
-        hideCourseLitBranding: ctx.subdomain.settings.hideCourseLitBranding,
+        hideCourseLitBranding: ctx.subdomain.settings?.hideCourseLitBranding,
     });
 
     await send({
