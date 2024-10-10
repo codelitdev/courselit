@@ -40,7 +40,7 @@ export default async function handler(
     try {
         const emailBody = pug.render(MagicCodeEmailTemplate, {
             code,
-            hideCourseLitBranding: domain.settings.hideCourseLitBranding,
+            hideCourseLitBranding: domain.settings?.hideCourseLitBranding,
         });
         await send({
             to: [sanitizedEmail],
