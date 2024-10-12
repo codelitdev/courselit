@@ -22,8 +22,8 @@ const queries = {
             email: { type: GraphQLString },
             userId: { type: GraphQLString },
         },
-        resolve: (_: any, { email, userId }: any, context: GQLContext) =>
-            getUser(email, userId, context),
+        resolve: (_: any, { userId }: any, context: GQLContext) =>
+            getUser(userId, context),
     },
     getUsers: {
         type: new GraphQLList(types.userType),
