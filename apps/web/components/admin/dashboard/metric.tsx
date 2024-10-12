@@ -1,3 +1,5 @@
+"use client";
+
 import {
     Card,
     CardContent,
@@ -34,7 +36,7 @@ interface MetricProps {
     address: Address;
 }
 
-const Metric = ({
+export const Metric = ({
     title,
     duration = "7d",
     type,

@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Address, Auth, Media, Profile } from "@courselit/common-models";
-import { AppDispatch } from "@courselit/state-management";
+import type { Address, Media, Profile } from "@courselit/common-models";
 import Settings from "./settings";
 import {
     AdminWidgetPanel,
@@ -26,16 +25,12 @@ interface AdminWidgetProps {
     onChange: (...args: any[]) => void;
     address: Address;
     networkAction: boolean;
-    dispatch: AppDispatch;
-    auth: Auth;
     profile: Profile;
 }
 
 export default function AdminWidget({
     settings,
     onChange,
-    dispatch,
-    auth,
     profile,
     address,
 }: AdminWidgetProps) {
@@ -97,8 +92,6 @@ export default function AdminWidget({
                     title=""
                     src={media && media.thumbnail}
                     srcTitle={media && media.originalFileName}
-                    dispatch={dispatch}
-                    auth={auth}
                     profile={profile}
                     address={address}
                     onSelection={(media: Media) => {

@@ -12,6 +12,7 @@ interface ComboBoxProps {
     selectedOptions: Set<string>;
     onChange: (options: string[]) => void;
     className?: string;
+    side?: "left" | "right" | "top" | "bottom";
 }
 
 export default function ComboBox({
@@ -19,13 +20,14 @@ export default function ComboBox({
     selectedOptions,
     onChange,
     className,
+    side = "top",
 }: ComboBoxProps) {
     const [internalOptions, setInternalOptions] = useState(options);
     const [internalSelectedOptions, setInternalSelectedOptions] =
         useState<Set<string>>(selectedOptions);
     const [text, setText] = useState("");
     const [internalOpen, setInternalOpen] = useState(false);
-    const outlineClass = `flex flex-wrap max-w-[220px] min-w-[220px] min-h-[36px] gap-2 border border-slate-300 hover:border-slate-400 rounded py-1 px-2 outline-none focus:border-slate-600 disabled:pointer-events-none overflow-y-auto ${className}`;
+    const outlineClass = `flex flex-wrap min-w-[220px] min-h-[36px] gap-2 border border-slate-300 hover:border-slate-400 rounded py-1 px-2 outline-none focus:border-slate-600 disabled:pointer-events-none overflow-y-auto ${className}`;
 
     const onOptionAdd = () => {
         internalSelectedOptions.add(text);
@@ -61,6 +63,7 @@ export default function ComboBox({
             <Portal>
                 <Content
                     align="start"
+                    side={side}
                     className="bg-white shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)]"
                 >
                     <div className={outlineClass}>
@@ -92,11 +95,12 @@ export default function ComboBox({
                         <Form
                             onSubmit={(e) => {
                                 e.preventDefault();
+                                e.stopPropagation();
                                 onOptionAdd();
                             }}
                         >
                             <input
-                                className="outline-none max-w-[100px]"
+                                className="outline-none"
                                 type="text"
                                 value={text}
                                 autoFocus

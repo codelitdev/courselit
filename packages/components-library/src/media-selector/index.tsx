@@ -2,18 +2,10 @@
 
 import { ChangeEvent, useEffect, useState } from "react";
 import Image from "../image";
-import {
-    Address,
-    AppMessage,
-    Auth,
-    Media,
-    Profile,
-} from "@courselit/common-models";
-import { AppDispatch } from "@courselit/state-management";
+import { Address, Media, Profile } from "@courselit/common-models";
 import Access from "./access";
 import Dialog2 from "../dialog2";
 import { FetchBuilder } from "@courselit/utils";
-import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import Form from "../form";
 import FormField from "../form-field";
 import React from "react";
@@ -49,9 +41,8 @@ interface Strings {
 }
 
 interface MediaSelectorProps {
-    auth: Auth;
     profile: Profile;
-    dispatch: AppDispatch;
+    onError?: (err: Error) => void;
     address: Address;
     title: string;
     src: string;
@@ -83,13 +74,13 @@ const MediaSelector = (props: MediaSelectorProps) => {
     const [caption, setCaption] = useState("");
     const {
         strings,
-        dispatch,
         address,
         src,
         title,
         srcTitle,
         tooltip,
         disabled = false,
+        onError,
     } = props;
 
     const onSelection = (media: Media) => {
@@ -154,7 +145,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
             const media = await uploadToServer(presignedUrl);
             onSelection(media);
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            onError && onError(err);
         } finally {
             setUploading(false);
             setSelectedFile(undefined);
@@ -181,7 +172,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
                 props.onRemove();
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            onError && onError(err);
         } finally {
             setUploading(false);
             setDialogOpened(false);

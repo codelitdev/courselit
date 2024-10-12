@@ -73,7 +73,7 @@ const getSidebarMenuItems = (profile: Profile) => {
         });
         items.push({
             label: SIDEBAR_MENU_MAILS,
-            href: "/dashboard/mails",
+            href: "/dashboard/mails?tab=Broadcasts",
             icon: <Mail />,
         });
     }
@@ -102,10 +102,10 @@ interface BaseLayoutProps {
     siteInfo: SiteInfo;
     children: ReactNode;
     title: string;
-    dispatch: AppDispatch;
+    dispatch?: AppDispatch;
 }
 
-const BaseLayoutAdmin = ({
+export const BaseLayoutAdmin = ({
     profile,
     siteInfo,
     children,
@@ -123,11 +123,11 @@ const BaseLayoutAdmin = ({
 
     useEffect(() => {
         if (status === "authenticated") {
-            dispatch(actionCreators.signedIn());
-            dispatch(actionCreators.authChecked());
+            dispatch && dispatch(actionCreators.signedIn());
+            dispatch && dispatch(actionCreators.authChecked());
         }
         if (status === "unauthenticated") {
-            dispatch(actionCreators.authChecked());
+            dispatch && dispatch(actionCreators.authChecked());
             router.push(`/login?redirect=${router.asPath}`);
         }
     }, [status]);

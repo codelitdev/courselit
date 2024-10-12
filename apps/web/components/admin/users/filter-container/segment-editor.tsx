@@ -19,7 +19,6 @@ import PopoverDescription from "./popover-description";
 import PopoverHeader from "./popover-header";
 import type { AnyAction } from "redux";
 import { actionCreators } from "@courselit/state-management";
-import { connect } from "react-redux";
 import DocumentationLink from "@components/public/documentation-link";
 const { networkAction, setAppMessage } = actionCreators;
 
@@ -33,11 +32,11 @@ interface SegmentEditorProps {
     segments: Segment[];
     selectedSegment: string;
     address: Address;
-    dispatch: AppDispatch;
+    dispatch?: AppDispatch;
     dismissPopover: (props: DismissPopoverProps) => void;
 }
 
-function SegmentEditor({
+export default function SegmentEditor({
     segments,
     selectedSegment,
     address,
@@ -72,9 +71,10 @@ function SegmentEditor({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                networkAction(true),
-            );
+            dispatch &&
+                (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
+                    networkAction(true),
+                );
             const response = await fetch.exec();
             const segmentId =
                 activeSegment.segmentId === selectedSegment
@@ -91,11 +91,12 @@ function SegmentEditor({
                 });
             }
         } catch (err) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                networkAction(false),
-            );
+            dispatch &&
+                (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
+                    networkAction(false),
+                );
         }
     };
 
@@ -184,15 +185,3 @@ function SegmentEditor({
         </div>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    auth: state.auth,
-    address: state.address,
-    loading: state.networkAction,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({
-    dispatch: dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(SegmentEditor);

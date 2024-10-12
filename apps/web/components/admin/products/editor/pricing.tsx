@@ -1,18 +1,12 @@
 import React, { FormEvent, useEffect, useState } from "react";
 import { Address, AppMessage, SiteInfo } from "@courselit/common-models";
-import {
-    FormField,
-    Section,
-    Form,
-    Button,
-} from "@courselit/components-library";
-import type { AppDispatch, AppState } from "@courselit/state-management";
+import { FormField, Form, Button } from "@courselit/components-library";
+import type { AppDispatch } from "@courselit/state-management";
 import {
     networkAction,
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
-import { connect } from "react-redux";
 import {
     APP_MESSAGE_COURSE_SAVED,
     BUTTON_SAVE,
@@ -36,11 +30,16 @@ interface PricingProps {
     id: string;
     siteinfo: SiteInfo;
     address: Address;
-    dispatch: AppDispatch;
+    dispatch?: AppDispatch;
 }
 
-function Pricing({ id, siteinfo, address, dispatch }: PricingProps) {
-    const course = useCourse(id);
+export default function Pricing({
+    id,
+    siteinfo,
+    address,
+    dispatch,
+}: PricingProps) {
+    const course = useCourse(id, address);
     const [cost, setCost] = useState(course?.cost);
     const [costType, setCostType] = useState<string>(
         course?.costType?.toLowerCase() || PRICING_FREE,
@@ -73,17 +72,18 @@ function Pricing({ id, siteinfo, address, dispatch }: PricingProps) {
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.updateCourse) {
-                dispatch(
-                    setAppMessage(new AppMessage(APP_MESSAGE_COURSE_SAVED)),
-                );
+                dispatch &&
+                    dispatch(
+                        setAppMessage(new AppMessage(APP_MESSAGE_COURSE_SAVED)),
+                    );
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     };
 
@@ -115,53 +115,40 @@ function Pricing({ id, siteinfo, address, dispatch }: PricingProps) {
     }
 
     return (
-        <Section>
-            <Form onSubmit={updatePricing} className="flex flex-col gap-4">
-                <Select
-                    value={costType}
-                    title={PRICING_DROPDOWN}
-                    onChange={(val: string) => {
-                        setCostType(val);
-                    }}
-                    options={options}
+        <Form onSubmit={updatePricing} className="flex flex-col gap-4">
+            <Select
+                value={costType}
+                title={PRICING_DROPDOWN}
+                onChange={(val: string) => {
+                    setCostType(val);
+                }}
+                options={options}
+            />
+            {PRICING_PAID === costType && (
+                <FormField
+                    required
+                    label="Cost"
+                    name="title"
+                    value={cost}
+                    type="number"
+                    step="0.1"
+                    onChange={(e) => setCost(+e.target.value as number)}
                 />
-                {PRICING_PAID === costType && (
-                    <FormField
-                        required
-                        label="Cost"
-                        name="title"
-                        value={cost}
-                        type="number"
-                        step="0.1"
-                        onChange={(e) => setCost(+e.target.value as number)}
-                    />
-                )}
-                <div>
-                    <Button
-                        type="submit"
-                        disabled={
-                            !course ||
-                            (costType === PRICING_PAID &&
-                                (!cost || course.cost === cost)) ||
-                            (costType !== PRICING_PAID &&
-                                costType === course.costType?.toLowerCase())
-                        }
-                    >
-                        {BUTTON_SAVE}
-                    </Button>
-                </div>
-            </Form>
-        </Section>
+            )}
+            <div>
+                <Button
+                    type="submit"
+                    disabled={
+                        !course ||
+                        (costType === PRICING_PAID &&
+                            (!cost || course.cost === cost)) ||
+                        (costType !== PRICING_PAID &&
+                            costType === course.costType?.toLowerCase())
+                    }
+                >
+                    {BUTTON_SAVE}
+                </Button>
+            </div>
+        </Form>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    siteinfo: state.siteinfo,
-    address: state.address,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({
-    dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(Pricing);

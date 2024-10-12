@@ -1,5 +1,5 @@
 import React from "react";
-import { useRouter } from "next/router";
+import { usePathname } from "next/navigation";
 import Tab from "../models/Tab";
 import { Link } from "@courselit/components-library";
 
@@ -8,7 +8,7 @@ interface TabsProps {
 }
 
 function Tabs({ tabs }: TabsProps) {
-    const router = useRouter();
+    const path = usePathname();
 
     return (
         <ul className="flex gap-2">
@@ -16,7 +16,7 @@ function Tabs({ tabs }: TabsProps) {
                 <li
                     key={tab.text}
                     className={`text-xl font-medium ${
-                        router.asPath === tab.url ? "underline" : "no-underline"
+                        path === tab.url ? "underline" : "no-underline"
                     }`}
                 >
                     <Link href={tab.url}>{tab.text}</Link>

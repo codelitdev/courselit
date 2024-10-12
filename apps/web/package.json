@@ -1,6 +1,6 @@
 {
     "name": "@courselit/web",
-    "version": "0.53.13",
+    "version": "0.54.2",
     "private": true,
     "scripts": {
         "dev": "next dev",
@@ -20,6 +20,7 @@
         "@types/base-64": "^1.0.0",
         "archiver": "^5.3.1",
         "base-64": "^1.0.0",
+        "clsx": "^2.1.1",
         "cookie": "^0.4.2",
         "graphql": "^16.4.0",
         "graphql-type-json": "^0.3.2",
@@ -35,7 +36,7 @@
         "react-dom": "^18.2.0",
         "react-redux": "^8.1.2",
         "recharts": "^2.12.3",
-        "remirror": "^2.0.9",
+        "remirror": "^3.0.1",
         "sharp": "^0.33.2",
         "slugify": "^1.6.5",
         "stripe": "^8.219.0",

@@ -243,8 +243,6 @@ const Details = ({ userId, address, dispatch }: DetailsProps) => {
                     <div className="flex items-center justify-between">
                         {SWITCH_ACCOUNT_ACTIVE}
                         <Switch
-                            type="checkbox"
-                            name="active"
                             checked={userData.active}
                             onChange={(value) => toggleActiveState(value)}
                         />
@@ -255,6 +253,7 @@ const Details = ({ userId, address, dispatch }: DetailsProps) => {
                             options={tags}
                             selectedOptions={new Set(userData.tags)}
                             onChange={updateTags}
+                            side="bottom"
                         />
                     </div>
                 </Section>

@@ -20,6 +20,9 @@ const nextConfig = {
         "@courselit/common-widgets",
         "@courselit/components-library",
     ],
+    experimental: {
+        serverComponentsExternalPackages: ["pug"],
+    },
 };
 
 module.exports = nextConfig;

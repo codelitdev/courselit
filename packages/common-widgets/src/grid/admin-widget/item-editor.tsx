@@ -14,12 +14,10 @@ import {
 } from "@courselit/components-library";
 import {
     Address,
-    Auth,
     Media,
     Profile,
     VerticalAlignment,
 } from "@courselit/common-models";
-import { AppDispatch } from "@courselit/state-management";
 
 interface ItemProps {
     item: Item;
@@ -27,8 +25,6 @@ interface ItemProps {
     onChange: (newItemData: Item) => void;
     onDelete: () => void;
     address: Address;
-    dispatch: AppDispatch;
-    auth: Auth;
     profile: Profile;
 }
 
@@ -37,8 +33,6 @@ export default function ItemEditor({
     onChange,
     onDelete,
     address,
-    dispatch,
-    auth,
     profile,
 }: ItemProps) {
     const [title, setTitle] = useState(item.title);
@@ -92,8 +86,6 @@ export default function ItemEditor({
                         title=""
                         src={media && media.thumbnail}
                         srcTitle={media && media.originalFileName}
-                        dispatch={dispatch}
-                        auth={auth}
                         profile={profile}
                         address={address}
                         onSelection={(media: Media) => {

@@ -9,7 +9,6 @@ import {
 import { FormEvent } from "react";
 import { FetchBuilder } from "@courselit/utils";
 import type { AppDispatch, AppState } from "@courselit/state-management";
-import { connect } from "react-redux";
 import {
     Address,
     AppMessage,
@@ -27,11 +26,11 @@ interface FilterSaveProps {
     filters: UserFilter[];
     aggregator: UserFilterAggregator;
     address: Address;
-    dispatch: AppDispatch;
     dismissPopover: (segments?: Segment[]) => void;
+    dispatch?: AppDispatch;
 }
 
-function FilterSave({
+export default function FilterSave({
     filters,
     aggregator,
     address,
@@ -74,9 +73,10 @@ function FilterSave({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                networkAction(true),
-            );
+            dispatch &&
+                (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
+                    networkAction(true),
+                );
             const response = await fetch.exec();
             if (response.segments) {
                 dismissPopover(response.segments);
@@ -84,11 +84,12 @@ function FilterSave({
                 dismissPopover();
             }
         } catch (err) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                networkAction(false),
-            );
+            dispatch &&
+                (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
+                    networkAction(false),
+                );
         }
     };
 
@@ -113,15 +114,3 @@ function FilterSave({
         </div>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    auth: state.auth,
-    address: state.address,
-    loading: state.networkAction,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({
-    dispatch: dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(FilterSave);

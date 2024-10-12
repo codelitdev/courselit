@@ -1,16 +1,16 @@
-import React, { useState } from "react";
+import React, { FormEvent, useState } from "react";
 import { Address, AppMessage } from "@courselit/common-models";
 import {
     Form,
     FormField,
-    Section,
     Select,
     Link,
     Button,
+    Breadcrumbs,
 } from "@courselit/components-library";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { connect } from "react-redux";
 import {
     COURSE_TYPE_COURSE,
@@ -24,20 +24,22 @@ import {
     FORM_NEW_PRODUCT_MENU_DOWNLOADS_SUBTITLE,
     FORM_NEW_PRODUCT_TITLE_PLC,
     FORM_NEW_PRODUCT_TYPE,
+    MANAGE_COURSES_PAGE_HEADING,
 } from "../../../ui-config/strings";
 import { capitalize } from "../../../ui-lib/utils";
 import {
     networkAction,
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
+import { usePathname } from "next/navigation";
 
 interface NewProductProps {
     address: Address;
-    dispatch: AppDispatch;
+    dispatch?: AppDispatch;
     networkAction: boolean;
 }
 
-function NewProduct({
+export function NewProduct({
     address,
     dispatch,
     networkAction: loading,
@@ -45,8 +47,14 @@ function NewProduct({
     const [title, setTitle] = useState("");
     const [type, setType] = useState(COURSE_TYPE_COURSE);
     const router = useRouter();
+    const path = usePathname();
+    const pathPrefix = path?.startsWith("/dashboard2")
+        ? "/dashboard2"
+        : "/dashboard";
 
-    const createCourse = async () => {
+    const createCourse = async (e: FormEvent) => {
+        e.preventDefault();
+
         const query = `
             mutation {
                 course: createCourse(courseData: {
@@ -64,22 +72,31 @@ function NewProduct({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.course) {
                 router.replace(
-                    `/dashboard/product/${response.course.courseId}/content`,
+                    `${pathPrefix}/product/${response.course.courseId}/content`,
                 );
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     };
 
     return (
-        <Section>
+        <div className="flex flex-col">
+            <div className="mb-4">
+                <Breadcrumbs aria-label="breakcrumb">
+                    <Link href={`${pathPrefix}/products`}>
+                        {MANAGE_COURSES_PAGE_HEADING}
+                    </Link>
+
+                    <p>{BTN_NEW_PRODUCT}</p>
+                </Breadcrumbs>
+            </div>
             <div className="flex flex-col">
                 <h1 className="text-4xl font-semibold mb-4">
                     {BTN_NEW_PRODUCT}
@@ -123,13 +140,13 @@ function NewProduct({
                         >
                             {BTN_CONTINUE}
                         </Button>
-                        <Link href={`/dashboard/products`}>
+                        <Link href={`${pathPrefix}/products`}>
                             <Button variant="soft">{BUTTON_CANCEL_TEXT}</Button>
                         </Link>
                     </div>
                 </Form>
             </div>
-        </Section>
+        </div>
     );
 }
 

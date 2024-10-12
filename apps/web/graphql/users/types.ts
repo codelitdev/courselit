@@ -39,6 +39,7 @@ const userType = new GraphQLObjectType({
             type: mediaTypes.mediaType,
             resolve: (user, _, __, ___) => getMedia(user.avatar),
         },
+        invited: { type: GraphQLBoolean },
     },
 });
 
@@ -55,6 +56,7 @@ const userUpdateInput = new GraphQLInputObjectType({
         avatar: {
             type: mediaTypes.mediaInputType,
         },
+        invited: { type: GraphQLBoolean },
     },
 });
 

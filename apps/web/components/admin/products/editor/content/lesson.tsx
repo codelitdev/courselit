@@ -18,7 +18,6 @@ import {
     LESSON_CONTENT_EMBED_PLACEHOLDER,
     BUTTON_SAVING,
     MANAGE_COURSES_PAGE_HEADING,
-    BREADCRUMBS_EDIT_LESSON_COURSE_NAME,
 } from "@ui-config/strings";
 import {
     LESSON_TYPE_TEXT,
@@ -35,23 +34,20 @@ import {
     LESSON_TYPE_EMBED,
 } from "@ui-config/constants";
 import { FetchBuilder, capitalize } from "@courselit/utils";
-import { connect } from "react-redux";
 import { AppMessage, Media, Profile, Quiz } from "@courselit/common-models";
-import type { AppDispatch, AppState } from "@courselit/state-management";
+import type { AppDispatch } from "@courselit/state-management";
 import type {
-    Auth,
     Lesson,
     Address,
     TextEditorContent,
 } from "@courselit/common-models";
 import { actionCreators } from "@courselit/state-management";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import useCourse from "../course-hook";
-import { Help, Info } from "@courselit/icons";
+import { Back, Help, Info } from "@courselit/icons";
 import {
     Tooltip,
     Link,
-    Section,
     Button,
     Select,
     TextEditor,
@@ -61,6 +57,7 @@ import {
     FormField,
     Switch,
     TextEditorEmptyDoc,
+    IconButton,
     Breadcrumbs,
 } from "@courselit/components-library";
 import { QuizBuilder } from "./quiz-builder";
@@ -71,10 +68,10 @@ interface LessonEditorProps {
     courseId: string;
     sectionId: string;
     lessonId?: string;
-    auth: Auth;
     profile: Profile;
-    dispatch: AppDispatch;
+    dispatch?: AppDispatch;
     address: Address;
+    prefix: string;
 }
 
 const LessonEditor = ({
@@ -84,7 +81,7 @@ const LessonEditor = ({
     dispatch,
     address,
     profile,
-    auth,
+    prefix,
 }: LessonEditorProps) => {
     const [lesson, setLesson] = useState<Lesson>({
         lessonId: "",
@@ -107,7 +104,7 @@ const LessonEditor = ({
     const [c1, setC1] = useState({
         b1: false,
     });
-    const course = useCourse(courseId);
+    const course = useCourse(courseId, address, dispatch);
 
     useEffect(() => {
         lessonId && loadLesson(lessonId);
@@ -157,7 +154,7 @@ const LessonEditor = ({
             .build();
 
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.lesson) {
                 setLesson(response.lesson);
@@ -176,9 +173,9 @@ const LessonEditor = ({
                 }
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     };
 
@@ -213,13 +210,13 @@ const LessonEditor = ({
             .build();
 
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             setLoading(true);
             await fetch.exec();
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
             setLoading(false);
         }
     };
@@ -253,13 +250,13 @@ const LessonEditor = ({
             .build();
 
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             setLoading(true);
             await fetch.exec();
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
             setLoading(false);
         }
     };
@@ -298,7 +295,7 @@ const LessonEditor = ({
             .build();
 
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             setLoading(true);
             const response = await fetch.exec();
             if (response.lesson) {
@@ -309,9 +306,9 @@ const LessonEditor = ({
                 );
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
             setLoading(false);
         }
     };
@@ -330,20 +327,22 @@ const LessonEditor = ({
                 .build();
 
             try {
-                dispatch(networkAction(true));
+                dispatch && dispatch(networkAction(true));
                 setLoading(true);
                 const response = await fetch.exec();
 
                 if (response.result) {
-                    dispatch(
-                        setAppMessage(
-                            new AppMessage(APP_MESSAGE_LESSON_DELETED),
-                        ),
-                    );
+                    dispatch &&
+                        dispatch(
+                            setAppMessage(
+                                new AppMessage(APP_MESSAGE_LESSON_DELETED),
+                            ),
+                        );
                     router.replace(`/dashboard/product/${courseId}/content`);
                 }
             } catch (err: any) {
-                dispatch(setAppMessage(new AppMessage(err.message)));
+                dispatch &&
+                    dispatch(setAppMessage(new AppMessage(err.message)));
             } finally {
                 setLoading(false);
             }
@@ -459,162 +458,157 @@ const LessonEditor = ({
 
     return (
         <div className="flex flex-col gap-4">
-            <Breadcrumbs aria-label="lesson-breadcrumbs">
-                <Link href="/dashboard/products">
-                    {MANAGE_COURSES_PAGE_HEADING}
-                </Link>
-                <Link href={`/dashboard/product/${courseId}/content`}>
-                    {BREADCRUMBS_EDIT_LESSON_COURSE_NAME}
-                </Link>
-                {EDIT_LESSON_TEXT}
-            </Breadcrumbs>
-            <Section>
-                <div className="flex flex-col gap-4">
-                    <h1 className="text-4xl font-semibold mb-4">
+            {prefix === "/dashboard" && (
+                <Breadcrumbs aria-label="lesson-breadcrumbs">
+                    <Link href="/dashboard/products">
+                        {MANAGE_COURSES_PAGE_HEADING}
+                    </Link>
+                    <Link href={`/dashboard/product/${courseId}/content`}>
+                        {course?.title || "..."}
+                    </Link>
+                    {EDIT_LESSON_TEXT}
+                </Breadcrumbs>
+            )}
+            <div className="flex flex-col gap-4 mb-4">
+                <div className="flex items-center mb-4 gap-2">
+                    {courseId && (
+                        <Tooltip title="Go back to content">
+                            <IconButton variant="soft">
+                                <Link
+                                    href={`${prefix}/product/${courseId}/content`}
+                                >
+                                    <Back />
+                                </Link>
+                            </IconButton>
+                        </Tooltip>
+                    )}
+                    <h1 className="text-3xl font-semibold ">
                         {lessonId ? EDIT_LESSON_TEXT : BUTTON_NEW_LESSON_TEXT}
                     </h1>
-                    <Form
-                        onSubmit={onLessonCreate}
-                        className="flex flex-col gap-4"
-                    >
-                        <FormField
-                            required
-                            label="Title"
-                            name="title"
-                            value={lesson.title}
-                            onChange={onLessonDetailsChange}
+                </div>
+                <Form onSubmit={onLessonCreate} className="flex flex-col gap-4">
+                    {course?.type?.toLowerCase() === COURSE_TYPE_COURSE && (
+                        <Select
+                            title={TYPE_DROPDOWN}
+                            value={lesson.type}
+                            options={selectOptions}
+                            onChange={(value) => {
+                                setLesson(
+                                    Object.assign({}, lesson, {
+                                        type: value,
+                                    }),
+                                );
+                            }}
+                            disabled={!!lesson.lessonId}
                         />
-                        {course?.type?.toLowerCase() === COURSE_TYPE_COURSE && (
-                            <Select
-                                title={TYPE_DROPDOWN}
-                                value={lesson.type}
-                                options={selectOptions}
-                                onChange={(value) => {
+                    )}
+                    <FormField
+                        required
+                        label="Title"
+                        name="title"
+                        value={lesson.title}
+                        onChange={onLessonDetailsChange}
+                    />
+                    {lesson.type.toLowerCase() === LESSON_TYPE_TEXT && (
+                        <div className="flex flex-col">
+                            <h2>{LESSON_CONTENT_HEADER}</h2>
+                            <TextEditor
+                                initialContent={textContent}
+                                refresh={refresh}
+                                onChange={(state: any) => setTextContent(state)}
+                                url={address.backend}
+                            />
+                        </div>
+                    )}
+                    {lesson.type.toLowerCase() === LESSON_TYPE_QUIZ && (
+                        <QuizBuilder
+                            content={quizContent}
+                            onChange={(state: any) => setQuizContent(state)}
+                        />
+                    )}
+                    {lesson.type.toLowerCase() === LESSON_TYPE_EMBED && (
+                        <div className="flex flex-col">
+                            <FormField
+                                label={LESSON_CONTENT_EMBED_HEADER}
+                                placeholder={LESSON_CONTENT_EMBED_PLACEHOLDER}
+                                required
+                                value={content.value}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                    setContent({
+                                        value: e.target.value,
+                                    })
+                                }
+                            />
+                        </div>
+                    )}
+                    {[
+                        LESSON_TYPE_VIDEO,
+                        LESSON_TYPE_AUDIO,
+                        LESSON_TYPE_PDF,
+                    ].includes(lesson.type) && (
+                        <div className="flex justify-between items-center">
+                            <h2>{DOWNLOADABLE_SWITCH}</h2>
+                            <Switch
+                                name="downloadable"
+                                checked={lesson.downloadable}
+                                onChange={(value: boolean) => {
                                     setLesson(
                                         Object.assign({}, lesson, {
-                                            type: value,
+                                            downloadable: value,
                                         }),
                                     );
                                 }}
-                                disabled={!!lesson.lessonId}
                             />
-                        )}
-                        {lesson.type.toLowerCase() === LESSON_TYPE_TEXT && (
-                            <div className="flex flex-col">
-                                <h2>{LESSON_CONTENT_HEADER}</h2>
-                                <TextEditor
-                                    initialContent={textContent}
-                                    refresh={refresh}
-                                    onChange={(state: any) =>
-                                        setTextContent(state)
-                                    }
-                                    url={address.backend}
-                                />
-                            </div>
-                        )}
-                        {lesson.type.toLowerCase() === LESSON_TYPE_QUIZ && (
-                            <QuizBuilder
-                                content={quizContent}
-                                onChange={(state: any) => setQuizContent(state)}
-                            />
-                        )}
-                        {lesson.type.toLowerCase() === LESSON_TYPE_EMBED && (
-                            <div className="flex flex-col">
-                                <FormField
-                                    label={LESSON_CONTENT_EMBED_HEADER}
-                                    placeholder={
-                                        LESSON_CONTENT_EMBED_PLACEHOLDER
-                                    }
-                                    required
-                                    value={content.value}
-                                    onChange={(
-                                        e: ChangeEvent<HTMLInputElement>,
-                                    ) =>
-                                        setContent({
-                                            value: e.target.value,
-                                        })
-                                    }
-                                />
-                            </div>
-                        )}
-                        {[
-                            LESSON_TYPE_VIDEO,
-                            LESSON_TYPE_AUDIO,
-                            LESSON_TYPE_PDF,
-                        ].includes(lesson.type) && (
-                            <div className="flex justify-between items-center">
-                                <h2>{DOWNLOADABLE_SWITCH}</h2>
-                                <Switch
-                                    name="downloadable"
-                                    checked={lesson.downloadable}
-                                    onChange={(value: boolean) => {
-                                        setLesson(
-                                            Object.assign({}, lesson, {
-                                                downloadable: value,
-                                            }),
-                                        );
-                                    }}
-                                />
-                            </div>
-                        )}
-                        {lesson.type.toLowerCase() !== LESSON_TYPE_QUIZ && (
-                            <div className="flex justify-between items-center">
-                                <div className="flex items-center gap-2">
-                                    <h2>{LESSON_PREVIEW}</h2>
-                                    <Tooltip title={LESSON_PREVIEW_TOOLTIP}>
-                                        <Help />
-                                    </Tooltip>
-                                </div>
-                                <Switch
-                                    checked={!lesson.requiresEnrollment}
-                                    onChange={(value: boolean) => {
-                                        setLesson(
-                                            Object.assign({}, lesson, {
-                                                requiresEnrollment: !value,
-                                            }),
-                                        );
-                                    }}
-                                />
-                            </div>
-                        )}
-                        <div className="flex justify-between">
-                            <div className="flex gap-2">
-                                <Button
-                                    type="submit"
-                                    disabled={!lesson.title || loading}
-                                    sx={{ mr: 1 }}
-                                >
-                                    {loading ? BUTTON_SAVING : BUTTON_SAVE}
-                                </Button>
-                                {/* {courseId && (
-                                    <Link
-                                        href={`/dashboard/product/${courseId}/content`}
-                                    >
-                                        <Button variant="soft">
-                                            {POPUP_CANCEL_ACTION}
-                                        </Button>
-                                    </Link>
-                                )} */}
-                            </div>
-                            <Dialog2
-                                title={DELETE_LESSON_POPUP_HEADER}
-                                trigger={
-                                    <Button className="!bg-red-500">
-                                        {BUTTON_DELETE_LESSON_TEXT}
-                                    </Button>
-                                }
-                                onClick={onLessonDelete}
-                            ></Dialog2>
                         </div>
-                    </Form>
-                </div>
-            </Section>
+                    )}
+                    {lesson.type.toLowerCase() !== LESSON_TYPE_QUIZ && (
+                        <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                                <h2>{LESSON_PREVIEW}</h2>
+                                <Tooltip title={LESSON_PREVIEW_TOOLTIP}>
+                                    <Help />
+                                </Tooltip>
+                            </div>
+                            <Switch
+                                checked={!lesson.requiresEnrollment}
+                                onChange={(value: boolean) => {
+                                    setLesson(
+                                        Object.assign({}, lesson, {
+                                            requiresEnrollment: !value,
+                                        }),
+                                    );
+                                }}
+                            />
+                        </div>
+                    )}
+                    <div className="flex justify-between">
+                        <div className="flex gap-2">
+                            <Button
+                                type="submit"
+                                disabled={!lesson.title || loading}
+                                sx={{ mr: 1 }}
+                            >
+                                {loading ? BUTTON_SAVING : BUTTON_SAVE}
+                            </Button>
+                        </div>
+                        <Dialog2
+                            title={DELETE_LESSON_POPUP_HEADER}
+                            trigger={
+                                <Button className="!bg-red-500">
+                                    {BUTTON_DELETE_LESSON_TEXT}
+                                </Button>
+                            }
+                            onClick={onLessonDelete}
+                        ></Dialog2>
+                    </div>
+                </Form>
+            </div>
             {![
                 String.prototype.toUpperCase.call(LESSON_TYPE_TEXT),
                 String.prototype.toUpperCase.call(LESSON_TYPE_QUIZ),
                 String.prototype.toUpperCase.call(LESSON_TYPE_EMBED),
             ].includes(lesson.type) && (
-                <Section>
+                <div>
                     <MediaSelector
                         disabled={!lesson.lessonId}
                         title={CONTENT_URL_LABEL}
@@ -638,9 +632,7 @@ const LessonEditor = ({
                         }}
                         mimeTypesToShow={getMimeTypesToShow()}
                         strings={{}}
-                        auth={auth}
                         profile={profile}
-                        dispatch={dispatch}
                         address={address}
                         mediaId={lesson.media?.mediaId}
                         onRemove={() => {
@@ -659,20 +651,10 @@ const LessonEditor = ({
                             Set the title of the lesson to enable media upload
                         </p>
                     )}
-                </Section>
+                </div>
             )}
         </div>
     );
 };
 
-const mapStateToProps = (state: AppState) => ({
-    auth: state.auth,
-    profile: state.profile,
-    address: state.address,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({
-    dispatch: dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(LessonEditor);
+export default LessonEditor;

@@ -10,7 +10,7 @@ import { APP_MESSAGE_COURSE_DELETED } from "../../../ui-config/strings";
 interface DeleteProductProps {
     id: string;
     backend: string;
-    dispatch: AppDispatch;
+    dispatch?: AppDispatch;
     onDeleteComplete?: (...args: any[]) => void;
 }
 export const deleteProduct = async ({
@@ -32,7 +32,7 @@ export const deleteProduct = async ({
         .build();
 
     try {
-        dispatch(networkAction(true));
+        dispatch && dispatch(networkAction(true));
         const response = await fetch.exec();
 
         if (response.result) {
@@ -41,9 +41,10 @@ export const deleteProduct = async ({
         }
     } catch (err: any) {
         console.error(err);
-        dispatch(setAppMessage(new AppMessage(err.message)));
+        dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
     } finally {
-        dispatch(networkAction(false));
-        dispatch(setAppMessage(new AppMessage(APP_MESSAGE_COURSE_DELETED)));
+        dispatch && dispatch(networkAction(false));
+        dispatch &&
+            dispatch(setAppMessage(new AppMessage(APP_MESSAGE_COURSE_DELETED)));
     }
 };
