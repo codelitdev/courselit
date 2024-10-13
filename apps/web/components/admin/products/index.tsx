@@ -11,11 +11,11 @@ import {
     PRODUCTS_TABLE_HEADER_TYPE,
 } from "../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
-import type { Address, Course, SiteInfo } from "@courselit/common-models";
+import type { Address, SiteInfo } from "@courselit/common-models";
 import { AppMessage } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
-import Product from "./product";
+import Product, { CourseDetails } from "./product";
 import {
     Link,
     Button,
@@ -163,14 +163,7 @@ export const Index = ({ loading, address, dispatch, siteinfo }: IndexProps) => {
                     }}
                 >
                     {creatorCourses.map(
-                        (
-                            product: Course & {
-                                published: boolean;
-                                sales: number;
-                                customers: number;
-                            },
-                            index: number,
-                        ) => (
+                        (product: CourseDetails, index: number) => (
                             <Product
                                 key={product.courseId}
                                 details={product}
@@ -178,6 +171,7 @@ export const Index = ({ loading, address, dispatch, siteinfo }: IndexProps) => {
                                 onDelete={onDelete}
                                 siteinfo={siteinfo}
                                 address={address}
+                                prefix={pathPrefix}
                             />
                         ),
                     )}

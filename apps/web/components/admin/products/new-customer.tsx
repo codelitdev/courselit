@@ -5,42 +5,44 @@ import { Address, AppMessage } from "@courselit/common-models";
 import {
     Form,
     FormField,
-    Section,
     Link,
     Button,
     ComboBox,
     Breadcrumbs,
+    useToast,
 } from "@courselit/components-library";
-import { AppDispatch, AppState } from "@courselit/state-management";
+import { AppDispatch } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
-import { connect } from "react-redux";
 import {
     BTN_GO_BACK,
     BTN_INVITE,
     PRODUCT_TABLE_CONTEXT_MENU_INVITE_A_CUSTOMER,
     USER_TAGS_SUBHEADER,
-} from "../../../ui-config/strings";
+} from "@/ui-config/strings";
 import {
     networkAction,
     setAppMessage,
 } from "@courselit/state-management/dist/action-creators";
+import useCourse from "./editor/course-hook";
 
 interface NewCustomerProps {
     address: Address;
-    dispatch: AppDispatch;
-    networkAction: boolean;
     courseId: string;
+    prefix: string;
+    dispatch?: AppDispatch;
 }
 
-function NewCustomer({
+export default function NewCustomer({
     courseId,
     address,
+    prefix,
     dispatch,
-    networkAction: loading,
 }: NewCustomerProps) {
     const [email, setEmail] = useState("");
     const [tags, setTags] = useState<string[]>([]);
     const [systemTags, setSystemTags] = useState<string[]>([]);
+    const course = useCourse(courseId, address, dispatch);
+    const { toast } = useToast();
 
     const getTags = useCallback(async () => {
         const query = `
@@ -54,14 +56,14 @@ function NewCustomer({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.tags) {
                 setSystemTags(response.tags);
             }
         } catch (err) {
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     }, [address.backend, dispatch]);
 
@@ -100,36 +102,39 @@ function NewCustomer({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.user) {
                 setEmail("");
                 setTags([]);
-                dispatch(
-                    setAppMessage(
-                        new AppMessage(
-                            `${response.user.email} has been invited.`,
-                        ),
-                    ),
-                );
+                const message = `${response.user.email} has been invited.`;
+                dispatch && dispatch(setAppMessage(new AppMessage(message)));
+                toast({
+                    title: "Success",
+                    description: message,
+                });
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: "Error",
+                description: err.message,
+            });
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     };
 
     return (
         <div className="flex flex-col gap-4">
             <Breadcrumbs aria-label="breakcrumb">
-                <Link href="/dashboard/products/">Products</Link>
-                <Link href={`/dashboard/product/${courseId}/reports`}>
-                    Product
+                <Link href={`${prefix}/products/`}>Products</Link>
+                <Link href={`${prefix}/product/${courseId}/reports`}>
+                    {course?.title || "..."}
                 </Link>
                 <p>{PRODUCT_TABLE_CONTEXT_MENU_INVITE_A_CUSTOMER}</p>
             </Breadcrumbs>
-            <Section>
+            <>
                 <div className="flex flex-col">
                     <h1 className="text-4xl font-semibold mb-4">
                         {PRODUCT_TABLE_CONTEXT_MENU_INVITE_A_CUSTOMER}
@@ -146,7 +151,7 @@ function NewCustomer({
                             onChange={(e) => setEmail(e.target.value)}
                         />
                         <div className="flex flex-col gap-2">
-                            <p>{USER_TAGS_SUBHEADER}</p>
+                            <h2>{USER_TAGS_SUBHEADER}</h2>
                             <ComboBox
                                 key={
                                     JSON.stringify(systemTags) +
@@ -166,22 +171,13 @@ function NewCustomer({
                             >
                                 {BTN_INVITE}
                             </Button>
-                            <Link href={`/dashboard/products`}>
+                            <Link href={`${prefix}/products`}>
                                 <Button variant="soft">{BTN_GO_BACK}</Button>
                             </Link>
                         </div>
                     </Form>
                 </div>
-            </Section>
+            </>
         </div>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-    networkAction: state.networkAction,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(NewCustomer);

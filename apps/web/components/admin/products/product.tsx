@@ -28,6 +28,13 @@ import {
 } from "@courselit/components-library";
 import { usePathname } from "next/navigation";
 
+export type CourseDetails = Course & {
+    published: boolean;
+    sales: number;
+    customers: number;
+    pageId: string;
+};
+
 export default function Product({
     details,
     siteinfo,
@@ -35,24 +42,18 @@ export default function Product({
     dispatch,
     position,
     onDelete,
+    prefix,
 }: {
-    details: Course & {
-        published: boolean;
-        sales: number;
-        customers: number;
-        pageId: string;
-    };
+    details: CourseDetails;
     siteinfo: SiteInfo;
     address: Address;
-    dispatch: AppDispatch;
+    dispatch?: AppDispatch;
     position: number;
     onDelete: (position: number) => void;
+    prefix: string;
 }) {
     const product = details;
     const path = usePathname();
-    const pathPrefix = path?.startsWith("/dashboard2")
-        ? "/dashboard2"
-        : "/dashboard";
 
     const deleteProduct = async () => {
         const query = `
@@ -68,26 +69,27 @@ export default function Product({
             .build();
 
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
 
             if (response.result) {
                 onDelete(position);
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            dispatch(networkAction(false));
-            dispatch(setAppMessage(new AppMessage(APP_MESSAGE_COURSE_DELETED)));
+            dispatch && dispatch(networkAction(false));
+            dispatch &&
+                dispatch(
+                    setAppMessage(new AppMessage(APP_MESSAGE_COURSE_DELETED)),
+                );
         }
     };
 
     return (
         <TableRow key={product.courseId}>
             <td className="py-4">
-                <Link
-                    href={`${pathPrefix}/product/${product.courseId}/reports`}
-                >
+                <Link href={`${prefix}/product/${product.courseId}/reports`}>
                     <p>{product.title}</p>
                 </Link>
             </td>
@@ -123,7 +125,7 @@ export default function Product({
                     </MenuItem>
                     <MenuItem>
                         <Link
-                            href={`/dashboard/page/${product.pageId}/edit?redirectTo=${pathPrefix}/products`}
+                            href={`/dashboard/page/${product.pageId}/edit?redirectTo=${prefix}/products`}
                             className="flex w-full"
                         >
                             {PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE}
@@ -132,7 +134,7 @@ export default function Product({
                     <div className="flex w-full border-b border-slate-200 my-1"></div>
                     <MenuItem>
                         <Link
-                            href={`/dashboard/product/${product.courseId}/customer/new`}
+                            href={`${prefix}/product/${product.courseId}/customer/new`}
                         >
                             {PRODUCT_TABLE_CONTEXT_MENU_INVITE_A_CUSTOMER}
                         </Link>
