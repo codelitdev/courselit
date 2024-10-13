@@ -8,7 +8,6 @@ import { User } from "../../models/User";
 import Page from "../../models/Page";
 import slugify from "slugify";
 import { addGroup } from "./logic";
-import { Banner, Footer, Header } from "@courselit/common-widgets";
 
 const validatePaymentMethod = async (domain: string) => {
     try {
@@ -186,15 +185,15 @@ export const setupBlog = async ({
 const getInitialLayout = () => {
     return [
         {
-            name: Header.metadata.name,
+            name: "header",
             deleteable: false,
             shared: true,
         },
         {
-            name: Banner.metadata.name,
+            name: "banner",
         },
         {
-            name: Footer.metadata.name,
+            name: "footer",
             deleteable: false,
             shared: true,
         },

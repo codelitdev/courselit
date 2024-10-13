@@ -8,6 +8,11 @@ const { auth } = NextAuth(authConfig);
 export default auth(async (request: NextRequest) => {
     const requestHeaders = request.headers;
     const backend = getBackendAddress(requestHeaders);
+
+    if (request.nextUrl.pathname === "/healthy") {
+        return Response.json({ success: true });
+    }
+
     try {
         const response = await fetch(`${backend}/verify-domain`);
 
@@ -53,11 +58,14 @@ export default auth(async (request: NextRequest) => {
             },
         });
     } catch (err) {
-        return NextResponse.rewrite(new URL("/notfound", request.url));
+        return Response.json(
+            { success: false, error: err.message },
+            { status: 404 },
+        );
     }
 });
 
 export const config = {
-    matcher: ["/", "/favicon.ico", "/api/:path*"],
+    matcher: ["/", "/favicon.ico", "/api/:path*", "/healthy"],
     unstable_allowDynamic: ["/node_modules/next-auth/**"],
 };

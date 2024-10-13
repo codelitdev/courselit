@@ -24,6 +24,11 @@ import {
 } from "@courselit/common-models";
 import { recordActivity } from "../../lib/record-activity";
 import { triggerSequences } from "../../lib/trigger-sequences";
+import finalizePurchase from "@/lib/finalize-purchase";
+import { getCourseOrThrow } from "../courses/logic";
+import pug from "pug";
+import courseEnrollTemplate from "@/templates/course-enroll";
+import { send } from "../../services/mail";
 
 const removeAdminFieldsFromUserObject = ({
     id,
@@ -97,7 +102,10 @@ const checkForInvalidPermissions = (user) => {
     }
 };
 
-export const updateUser = async (userData: any, ctx: GQLContext) => {
+export const updateUser = async (
+    userData: Record<string, unknown>,
+    ctx: GQLContext,
+) => {
     checkIfAuthenticated(ctx);
     const { id } = userData;
 
@@ -138,6 +146,72 @@ export const updateUser = async (userData: any, ctx: GQLContext) => {
 
     if (userData.name) {
         await updateCoursesForCreatorName(user.userId || user.id, user.name);
+    }
+
+    return user;
+};
+
+export const inviteCustomer = async (
+    email: string,
+    tags: string[],
+    id: string,
+    ctx: GQLContext,
+) => {
+    checkIfAuthenticated(ctx);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const course = await getCourseOrThrow(undefined, ctx, id);
+    if (!course.published) {
+        throw new Error(responses.cannot_invite_to_unpublished_product);
+    }
+
+    const sanitizedEmail = (email as string).toLowerCase();
+    let user = await UserModel.findOne({
+        email: sanitizedEmail,
+        domain: ctx.subdomain._id,
+    });
+    if (!user) {
+        user = await createUser({
+            domain: ctx.subdomain!,
+            email: sanitizedEmail,
+            subscribedToUpdates: true,
+            invited: true,
+        });
+    }
+
+    if (tags.length) {
+        user = await updateUser(
+            { id: user._id, tags: [...user.tags, ...tags] },
+            ctx,
+        );
+    }
+
+    if (
+        !user.purchases.some(
+            (purchase) => purchase.courseId === course.courseId,
+        )
+    ) {
+        await finalizePurchase(user.userId, id);
+
+        try {
+            const emailBody = pug.render(courseEnrollTemplate, {
+                courseName: course.title,
+                loginLink: `${ctx.address}/login`,
+                hideCourseLitBranding:
+                    ctx.subdomain.settings?.hideCourseLitBranding,
+            });
+
+            await send({
+                to: [user.email],
+                subject: `You have been invited to ${course.title}`,
+                body: emailBody,
+            });
+        } catch (error) {
+            // eslint-disable-next-line no-console
+            console.log("error", error);
+        }
     }
 
     return user;
@@ -262,6 +336,7 @@ export async function createUser({
     lead,
     superAdmin = false,
     subscribedToUpdates = true,
+    invited,
 }: {
     domain: Domain;
     name?: string;
@@ -272,6 +347,7 @@ export async function createUser({
         | typeof constants.leadApi;
     superAdmin?: boolean;
     subscribedToUpdates?: boolean;
+    invited?: boolean;
 }): Promise<User> {
     const newUser: Partial<User> = {
         domain: domain._id,
@@ -282,6 +358,7 @@ export async function createUser({
         permissions: [],
         lead: lead || constants.leadWebsite,
         subscribedToUpdates,
+        invited,
     };
     if (superAdmin) {
         newUser.permissions = [

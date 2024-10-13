@@ -105,6 +105,8 @@ export const responses = {
     mandatory_tags_missing: "Mandatory tags are missing",
     cannot_delete_last_email: "Cannot delete the last email in the sequence",
     invalid_drip_email: "Drip email needs a subject and a body",
+    cannot_invite_to_unpublished_product:
+        "Cannot invite customers to an unpublished product",
 
     // api responses
     digital_download_no_files:

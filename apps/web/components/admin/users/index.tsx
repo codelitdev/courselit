@@ -81,7 +81,8 @@ export const Users = ({ address, dispatch, loading }: UserManagerProps) => {
                         email,
                         permissions,
                         createdAt,
-                        updatedAt
+                        updatedAt,
+                        invited,
                         avatar {
                             mediaId,
                             originalFileName,
@@ -114,7 +115,8 @@ export const Users = ({ address, dispatch, loading }: UserManagerProps) => {
                         email,
                         permissions,
                         createdAt,
-                        updatedAt
+                        updatedAt,
+                        invited,
                         avatar {
                             mediaId,
                             originalFileName,
@@ -250,8 +252,12 @@ export const Users = ({ address, dispatch, loading }: UserManagerProps) => {
                             </td>
                             <td align="right">
                                 {user.updatedAt !== user.createdAt
-                                    ? user.updatedAt
-                                        ? formattedLocaleDate(user.updatedAt)
+                                    ? !user.invited
+                                        ? user.updatedAt
+                                            ? formattedLocaleDate(
+                                                  user.updatedAt,
+                                              )
+                                            : ""
                                         : ""
                                     : ""}
                             </td>
