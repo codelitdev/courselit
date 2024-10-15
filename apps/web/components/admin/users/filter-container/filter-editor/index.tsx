@@ -11,12 +11,19 @@ const ProductFilterEditor = dynamic(() => import("./product"));
 const EmailFilterEditor = dynamic(() => import("./email"));
 const SubscriptionFilterEditor = dynamic(() => import("./subscription"));
 const TaggedFilterEditor = dynamic(() => import("./tagged"));
-import { UserFilter as Filter } from "@courselit/common-models";
+import { Address, UserFilter as Filter } from "@courselit/common-models";
+import { AppDispatch } from "@courselit/state-management";
 
 interface FilterEditorProps {
     dismissPopover: (filter: Filter) => void;
+    address: Address;
+    dispatch?: AppDispatch;
 }
-export default function FilterEditor({ dismissPopover }: FilterEditorProps) {
+export default function FilterEditor({
+    dismissPopover,
+    address,
+    dispatch,
+}: FilterEditorProps) {
     const [activeCategory, setActiveCategory] = useState<Filter["name"]>();
 
     const changeFilter = (
@@ -51,7 +58,11 @@ export default function FilterEditor({ dismissPopover }: FilterEditorProps) {
                 <EmailFilterEditor onApply={changeFilter} />
             )}
             {activeCategory && activeCategory === "product" && (
-                <ProductFilterEditor onApply={changeFilter} />
+                <ProductFilterEditor
+                    onApply={changeFilter}
+                    address={address}
+                    dispatch={dispatch}
+                />
             )}
             {activeCategory && activeCategory === "lastActive" && (
                 <LastActiveFilterEditor onApply={changeFilter} />
@@ -66,7 +77,11 @@ export default function FilterEditor({ dismissPopover }: FilterEditorProps) {
                 <PermissionFilterEditor onApply={changeFilter} />
             )}
             {activeCategory && activeCategory === "tag" && (
-                <TaggedFilterEditor onApply={changeFilter} />
+                <TaggedFilterEditor
+                    onApply={changeFilter}
+                    address={address}
+                    dispatch={dispatch}
+                />
             )}
         </div>
     );

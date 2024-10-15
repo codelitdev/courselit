@@ -8,8 +8,7 @@ import {
     USER_FILTER_PRODUCT_DROPDOWN_LABEL,
     USER_FILTER_PRODUCT_HAS,
 } from "@ui-config/strings";
-import { AppDispatch, AppState } from "@courselit/state-management";
-import { connect } from "react-redux";
+import { AppDispatch } from "@courselit/state-management";
 import PopoverHeader from "../popover-header";
 import {
     Button,
@@ -24,10 +23,10 @@ const { setAppMessage } = actionCreators;
 interface ProductFilterEditorProps {
     onApply: (...args: any[]) => any;
     address: Address;
-    dispatch: AppDispatch;
+    dispatch?: AppDispatch;
 }
 
-function ProductFilterEditor({
+export default function ProductFilterEditor({
     onApply,
     address,
     dispatch,
@@ -59,7 +58,7 @@ function ProductFilterEditor({
                 setProducts([...response.courses]);
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         }
     }, [address.backend, dispatch]);
 
@@ -132,16 +131,3 @@ function ProductFilterEditor({
         </Form>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({
-    dispatch: dispatch,
-});
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps,
-)(ProductFilterEditor);

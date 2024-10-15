@@ -13,8 +13,6 @@ import {
     ShortcutHandlerProps,
 } from "remirror/extensions";
 import {
-    CommandButton,
-    CommandButtonGroup,
     FloatingWrapper,
     useActive,
     useAttrs,
@@ -23,6 +21,7 @@ import {
     useExtensionEvent,
     useUpdateReason,
 } from "@remirror/react";
+import { CommandButton, CommandButtonGroup } from "@remirror/react-ui";
 
 function useLinkShortcut() {
     const [linkShortcut, setLinkShortcut] = useState<

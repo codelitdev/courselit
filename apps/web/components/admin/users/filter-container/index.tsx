@@ -10,7 +10,6 @@ import {
 import { AppDispatch, AppState } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import { useState } from "react";
-import { connect } from "react-redux";
 import { ThunkDispatch } from "redux-thunk";
 import {
     USER_FILTER_AGGREGATOR_ALL,
@@ -55,12 +54,12 @@ interface FilterContainerProps {
         count: number;
     }) => void;
     address: Address;
-    dispatch: AppDispatch;
+    dispatch?: AppDispatch;
     filter?: UserFilterWithAggregator;
     disabled?: boolean;
 }
 
-function FilterContainer({
+export default function FilterContainer({
     onChange,
     address,
     dispatch,
@@ -124,19 +123,21 @@ function FilterContainer({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                networkAction(true),
-            );
+            dispatch &&
+                (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
+                    networkAction(true),
+                );
             const response = await fetch.exec();
             if (response.segments) {
                 mapSegments(response.segments);
             }
         } catch (err) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            (dispatch as ThunkDispatch<State, null, AnyAction>)(
-                networkAction(false),
-            );
+            dispatch &&
+                (dispatch as ThunkDispatch<State, null, AnyAction>)(
+                    networkAction(false),
+                );
         }
     }, [address.backend, dispatch, mapSegments]);
 
@@ -183,11 +184,18 @@ function FilterContainer({
                 });
             }
         } catch (err) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
             setCountLoading(false);
         }
-    }, [address.backend, dispatch, internalFilters, internalAggregator]);
+    }, [
+        address.backend,
+        dispatch,
+        internalFilters,
+        internalAggregator,
+        activeSegment,
+        onChange,
+    ]);
 
     useEffect(() => {
         loadCount();
@@ -236,6 +244,8 @@ function FilterContainer({
                     disabled={disabled}
                 >
                     <SegmentEditor
+                        address={address}
+                        dispatch={dispatch}
                         segments={segments}
                         selectedSegment={activeSegment}
                         dismissPopover={({
@@ -294,6 +304,8 @@ function FilterContainer({
                             }
                             setFilterOpen(false);
                         }}
+                        address={address}
+                        dispatch={dispatch}
                     />
                 </Popover>
                 <Form
@@ -402,6 +414,8 @@ function FilterContainer({
                                         }
                                         setSegmentSaveOpen(false);
                                     }}
+                                    address={address}
+                                    dispatch={dispatch}
                                 />
                             </Popover>
                         </>
@@ -411,13 +425,3 @@ function FilterContainer({
         </div>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({
-    dispatch: dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(FilterContainer);

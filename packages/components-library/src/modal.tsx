@@ -2,11 +2,13 @@ import { ReactNode } from "react";
 import ReactDOM from "react-dom";
 import { Cross } from "@courselit/icons";
 import IconButton from "./icon-button";
+import { cn } from "./lib/utils";
 
 interface ModalProps {
     open: boolean;
     onOpenChange: (...args: any[]) => void;
     children: ReactNode;
+    className?: string;
 }
 
 const Portal = (props: {
@@ -20,12 +22,22 @@ const Portal = (props: {
         : null;
 };
 
-export default function Modal({ open, children, onOpenChange }: ModalProps) {
+export default function Modal({
+    open,
+    children,
+    onOpenChange,
+    className,
+}: ModalProps) {
     if (!open) return null;
 
     return (
         <Portal>
-            <div className="fixed flex z-10 inset-0 bg-white/90 backdrop-blur-md">
+            <div
+                className={cn(
+                    "fixed flex z-10 inset-0 bg-white/90 backdrop-blur-md",
+                    className,
+                )}
+            >
                 <IconButton
                     onClick={() => onOpenChange(false)}
                     className="absolute right-4 top-4"

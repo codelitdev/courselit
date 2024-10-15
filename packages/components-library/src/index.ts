@@ -51,6 +51,8 @@ export * from "./components/ui/card";
 export * from "./components/ui/badge";
 export * from "./components/ui/skeleton";
 
+export * from "./toast2";
+
 export {
     PriceTag,
     Section,

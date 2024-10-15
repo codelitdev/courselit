@@ -12,12 +12,7 @@ import {
 } from "../../../../../../ui-config/strings";
 import { ChangeEvent, useEffect, useState } from "react";
 import { FetchBuilder } from "@courselit/utils";
-import {
-    actionCreators,
-    AppDispatch,
-    AppState,
-} from "@courselit/state-management";
-import { connect } from "react-redux";
+import { actionCreators, AppDispatch } from "@courselit/state-management";
 import { Address } from "@courselit/common-models";
 import { Search, Circle, CheckCircled } from "@courselit/icons";
 import useCourse from "../../course-hook";
@@ -33,8 +28,9 @@ const { networkAction } = actionCreators;
 interface StudentsProps {
     course: ReturnType<typeof useCourse>;
     address: Address;
-    dispatch: AppDispatch;
+    dispatch?: AppDispatch;
     loading: boolean;
+    prefix: string;
 }
 
 interface Student {
@@ -46,7 +42,13 @@ interface Student {
     lastAccessedOn: number;
 }
 
-function Students({ course, address, dispatch, loading }: StudentsProps) {
+export default function Students({
+    course,
+    address,
+    dispatch,
+    loading,
+    prefix,
+}: StudentsProps) {
     const [students, setStudents] = useState<Student[]>([]);
     const [text, setText] = useState("");
 
@@ -94,11 +96,11 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             setStudents(response.report.students);
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     };
 
@@ -156,7 +158,7 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
                         >
                             <td className="py-2">
                                 <Link
-                                    href={`/dashboard/users/${student.userId}`}
+                                    href={`${prefix}/users/${student.userId}`}
                                 >
                                     {student.name || (student.email as string)}
                                 </Link>
@@ -260,12 +262,3 @@ function Students({ course, address, dispatch, loading }: StudentsProps) {
         </div>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-    loading: state.networkAction,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(Students);

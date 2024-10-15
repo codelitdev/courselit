@@ -179,3 +179,7 @@ export function hashCode(code: number) {
 export const sortCourseGroups = (course: Course) => {
     return course.groups.sort((a: Group, b: Group) => a.rank - b.rank);
 };
+
+export function truncate(str: string, length: number) {
+    return str.length < length ? str.length : `${str.substring(0, length)}...`;
+}
