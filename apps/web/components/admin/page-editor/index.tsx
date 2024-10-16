@@ -570,8 +570,8 @@ function PageEditor({
                         typeof page.draftRobotsAllowed === "boolean"
                             ? page.draftRobotsAllowed
                             : typeof page.robotsAllowed === "boolean"
-                            ? page.robotsAllowed
-                            : true
+                              ? page.robotsAllowed
+                              : true
                     }
                     socialImage={page.draftSocialImage || {}}
                     onClose={(e) => setLeftPaneContent("none")}
