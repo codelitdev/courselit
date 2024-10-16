@@ -127,7 +127,7 @@ export const internal = {
     invalid_cloud_storage_settings: "Cloud storage settings are invalid",
     domain_not_specified: "Domain is not specified",
     default_group_name: "First section",
-    default_email_broadcast_subject: "New broadcast",
+    default_email_broadcast_subject: "Untitled broadcast",
     default_email_sequence_subject: "First email",
     default_email_sequence_name: "Untitled Sequence",
     default_email_content:
