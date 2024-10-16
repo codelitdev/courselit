@@ -54,8 +54,8 @@ const Widget = ({
         alignment === "center"
             ? "center"
             : alignment === "right"
-            ? "flex-end"
-            : "flex-start";
+              ? "flex-end"
+              : "flex-start";
 
     useEffect(() => {
         if (state.config.turnstileSiteKey) {
