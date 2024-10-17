@@ -1,8 +1,15 @@
 import CourseModel, { Course } from "../models/Course";
 import UserModel, { User } from "../models/User";
+import PurchaseModel, { Purchase } from "@models/Purchase";
+import DomainModel, { Domain } from "@models/Domain";
 import { triggerSequences } from "./trigger-sequences";
 import { recordActivity } from "./record-activity";
 import { Constants, Progress } from "@courselit/common-models";
+import saleEmailTemplate from "@/templates/sale-email";
+import pug from "pug";
+import { send } from "@/services/mail";
+import { formattedLocaleDate } from "@ui-lib/utils";
+import { error } from "@/services/logger";
 
 export default async (
     userId: string,
@@ -52,6 +59,56 @@ export default async (
                     purchaseId,
                 },
             });
+
+            await sendSaleNotificationToAdmins({
+                user,
+                course,
+                purchaseId,
+            });
         }
     }
 };
+
+async function sendSaleNotificationToAdmins({ user, course, purchaseId }) {
+    try {
+        const domain: Domain | null = await DomainModel.findOne({
+            _id: user?.domain,
+        });
+
+        const purchase: Purchase | null = await PurchaseModel.findOne({
+            orderId: purchaseId,
+        });
+
+        const usersWithManagePermissions = await UserModel.find(
+            {
+                domain: domain?._id,
+                $or: [
+                    { userId: course.creatorId, permissions: "course:manage" },
+                    { permissions: "course:manage_any" },
+                ],
+            },
+            { email: 1 },
+        ).lean();
+
+        const courseAdminsEmails = usersWithManagePermissions.map(
+            (x) => x.email,
+        );
+
+        const emailBody = pug.render(saleEmailTemplate, {
+            order: purchase?.orderId,
+            courseName: course.title,
+            coursePrice: course.cost,
+            date: formattedLocaleDate(purchase.purchasedOn),
+            email: user?.email,
+            hideCourseLitBranding: domain?.settings.hideCourseLitBranding,
+        });
+
+        await send({
+            to: courseAdminsEmails,
+            subject: `Yay! You have made a sale!`,
+            body: emailBody,
+        });
+    } catch (err) {
+        error("Failed to send sale notification mail", err);
+    }
+}
