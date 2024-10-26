@@ -13,7 +13,7 @@ const NewBlog = dynamic(
 export default function New() {
     return (
         <BaseLayout title={PAGE_HEADER_NEW_BLOG}>
-            <NewBlog />
+            <NewBlog prefix="/dashboard" />
         </BaseLayout>
     );
 }

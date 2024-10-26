@@ -32,11 +32,11 @@ export default function ProductEditorLayout({
         <div className="flex flex-col gap-4">
             <ProductHeader
                 id={id as string}
-                breadcrumbs={breadcrumbs}
+                breadcrumbs={prefix === "/dashboard" ? breadcrumbs : undefined}
                 address={address}
             />
             {!(
-                path?.indexOf("section/") !== -1 && prefix === "/dashboard2"
+                path?.indexOf("section/") !== -1 && prefix === "/dashboard4"
             ) && <Tabs tabs={generateTabs(prefix, id as string)} />}
 
             {course && children}

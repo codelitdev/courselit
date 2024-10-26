@@ -14,7 +14,6 @@ import type { SiteInfo, Address } from "@courselit/common-models";
 import { Chip, Menu2, MenuItem, Link } from "@courselit/components-library";
 import { deleteProduct } from "./helpers";
 import { TableRow } from "@courselit/components-library";
-import { usePathname } from "next/navigation";
 
 export default function BlogItem({
     details,
@@ -22,6 +21,7 @@ export default function BlogItem({
     dispatch,
     position,
     onDelete,
+    prefix,
 }: {
     details: Course & {
         published: boolean;
@@ -31,17 +31,18 @@ export default function BlogItem({
     dispatch?: AppDispatch;
     position: number;
     onDelete: (position: number) => void;
+    prefix: string;
 }) {
     const product = details;
-    const path = usePathname();
-    const pathPrefix = path?.startsWith("/dashboard2")
-        ? "/dashboard2"
-        : "/dashboard";
 
     return (
         <TableRow key={product.courseId}>
             <td className="py-4">
-                <Link href={`${pathPrefix}/blog/${product.courseId}/details`}>
+                <Link
+                    href={`${prefix}/blog/${product.courseId}${
+                        prefix === "/dashboard" ? "/details" : ""
+                    }`}
+                >
                     <p>{product.title}</p>
                 </Link>
             </td>

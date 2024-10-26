@@ -39,16 +39,16 @@ export default function Publish({ id, address, dispatch }: PublishProps) {
 
     const togglePublishedStatus = async () => {
         const query = `
-      mutation {
-        course: updateCourse(courseData: {
-          id: "${course!.id}"
-          published: ${!published}
-        }) {
-          id,
-          published
-        }
-      }
-    `;
+            mutation {
+                course: updateCourse(courseData: {
+                id: "${course!.id}"
+                published: ${!published}
+                }) {
+                id,
+                published
+                }
+            }
+        `;
         const response = await saveSettings(query);
         setPublished(response.published);
     };

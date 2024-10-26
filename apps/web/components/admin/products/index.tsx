@@ -23,7 +23,6 @@ import {
     TableHead,
     TableBody,
 } from "@courselit/components-library";
-import { usePathname } from "next/navigation";
 
 const { networkAction, setAppMessage } = actionCreators;
 
@@ -32,18 +31,21 @@ interface IndexProps {
     address: Address;
     loading: boolean;
     siteinfo: SiteInfo;
+    prefix: string;
 }
 
-export const Index = ({ loading, address, dispatch, siteinfo }: IndexProps) => {
+export const Index = ({
+    loading,
+    address,
+    dispatch,
+    siteinfo,
+    prefix,
+}: IndexProps) => {
     const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1);
     const [creatorCourses, setCreatorCourses] = useState([]);
     const [searchText, setSearchText] = useState("");
     const [searchState, setSearchState] = useState(0);
     const [endReached, setEndReached] = useState(false);
-    const path = usePathname();
-    const pathPrefix = path?.startsWith("/dashboard2")
-        ? "/dashboard2"
-        : "/dashboard";
 
     useEffect(() => {
         loadCreatorCourses();
@@ -140,7 +142,7 @@ export const Index = ({ loading, address, dispatch, siteinfo }: IndexProps) => {
                     {MANAGE_COURSES_PAGE_HEADING}
                 </h1>
                 <div>
-                    <Link href={`${pathPrefix}/product/new`}>
+                    <Link href={`${prefix}/product/new`}>
                         <Button>{BTN_NEW_PRODUCT}</Button>
                     </Link>
                 </div>
@@ -171,7 +173,7 @@ export const Index = ({ loading, address, dispatch, siteinfo }: IndexProps) => {
                                 onDelete={onDelete}
                                 siteinfo={siteinfo}
                                 address={address}
-                                prefix={pathPrefix}
+                                prefix={prefix}
                             />
                         ),
                     )}

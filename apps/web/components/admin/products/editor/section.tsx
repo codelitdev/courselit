@@ -9,6 +9,7 @@ import {
     Form,
     FormField,
     Section,
+    Skeleton,
     Switch,
 } from "@courselit/components-library";
 import { actionCreators, AppDispatch } from "@courselit/state-management";
@@ -174,7 +175,7 @@ export default function SectionEditor({
                               : undefined,
                       }
                     : {
-                          courseId: course.id,
+                          courseId: course?.id,
                           name,
                       },
             })
@@ -184,7 +185,11 @@ export default function SectionEditor({
             dispatch && dispatch(actionCreators.networkAction(true));
             const response = await fetch.exec();
             if (response.course) {
-                router.replace(`${prefix}/product/${course.courseId}/content`);
+                router.replace(
+                    `${prefix}/product/${course?.courseId}${
+                        prefix === "/dashboard" ? "/content" : "?tab=Content"
+                    }`,
+                );
             }
         } catch (err: any) {
             dispatch &&
@@ -197,7 +202,16 @@ export default function SectionEditor({
     };
 
     if (!course) {
-        return <></>;
+        return (
+            <div className="flex flex-col gap-4">
+                <Skeleton className="w-full h-8" />
+                <Skeleton className="w-full h-20" />
+                <div className="flex gap-2">
+                    <Skeleton className="w-20 h-9" />
+                    <Skeleton className="w-20 h-9" />
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -206,15 +220,13 @@ export default function SectionEditor({
                 {section ? EDIT_SECTION_HEADER : NEW_SECTION_HEADER}
             </h1>
             <Form onSubmit={updateGroup} className="flex flex-col gap-4">
-                <Section>
-                    <FormField
-                        label={LABEL_GROUP_NAME}
-                        name="Section name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                    />
-                </Section>
+                <FormField
+                    label={LABEL_GROUP_NAME}
+                    name="Section name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                />
                 {section && (
                     <Section>
                         <h2 className="text-xl font-medium mb-4">
@@ -328,7 +340,11 @@ export default function SectionEditor({
                     </Button>
                     {course.courseId && (
                         <Link
-                            href={`${prefix}/product/${course.courseId}/content`}
+                            href={`${prefix}/product/${course.courseId}${
+                                prefix === "/dashboard"
+                                    ? "/content"
+                                    : "?tab=Content"
+                            }`}
                         >
                             <Button variant="soft">
                                 {POPUP_CANCEL_ACTION}

@@ -26,5 +26,12 @@ export default function Page() {
         return <LoadingScreen />;
     }
 
-    return <Blogs address={address} loading={false} siteinfo={siteinfo} />;
+    return (
+        <Blogs
+            address={address}
+            loading={false}
+            siteinfo={siteinfo}
+            prefix="/dashboard2"
+        />
+    );
 }

@@ -15,7 +15,6 @@ import { connect } from "react-redux";
 import {
     BLOG_TABLE_HEADER_NAME,
     BTN_NEW_BLOG,
-    LOAD_MORE_TEXT,
     MANAGE_BLOG_PAGE_HEADING,
     PRODUCTS_TABLE_HEADER_ACTIONS,
     PRODUCTS_TABLE_HEADER_STATUS,
@@ -36,18 +35,22 @@ interface IndexProps {
     address: Address;
     loading: boolean;
     siteinfo: SiteInfo;
+    prefix: string;
 }
 
-export const Index = ({ loading, dispatch, address, siteinfo }: IndexProps) => {
+export const Index = ({
+    loading,
+    dispatch,
+    address,
+    siteinfo,
+    prefix,
+}: IndexProps) => {
     const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1);
     const [creatorCourses, setCreatorCourses] = useState<
         (Course & { published: boolean })[]
     >([]);
     const [endReached, setEndReached] = useState(false);
     const path = usePathname();
-    const pathPrefix = path?.startsWith("/dashboard2")
-        ? "/dashboard2"
-        : "/dashboard";
 
     const loadBlogs = useCallback(async () => {
         const query = `
@@ -108,13 +111,13 @@ export const Index = ({ loading, dispatch, address, siteinfo }: IndexProps) => {
                     {MANAGE_BLOG_PAGE_HEADING}
                 </h1>
                 <div className="flex items-center gap-4">
-                    <Link href={`${pathPrefix}/blog/new`}>
+                    <Link href={`${prefix}/blog/new`}>
                         <Button>{BTN_NEW_BLOG}</Button>
                     </Link>
                     <Menu2 icon={<MoreVert />} variant="soft">
                         <MenuItem>
                             <Link
-                                href={`/dashboard/page/blog/edit?redirectTo=${pathPrefix}/blogs`}
+                                href={`/dashboard/page/blog/edit?redirectTo=${prefix}/blogs`}
                                 className="flex w-full"
                             >
                                 {PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE}
@@ -151,12 +154,13 @@ export const Index = ({ loading, dispatch, address, siteinfo }: IndexProps) => {
                                 onDelete={onDelete}
                                 siteinfo={siteinfo}
                                 address={address}
+                                prefix={prefix}
                             />
                         ),
                     )}
                 </TableBody>
             </Table>
-            {creatorCourses.length > 0 && (
+            {/* {creatorCourses.length > 0 && (
                 <div className="flex justify-center">
                     <Button
                         variant="soft"
@@ -169,7 +173,7 @@ export const Index = ({ loading, dispatch, address, siteinfo }: IndexProps) => {
                         {LOAD_MORE_TEXT}
                     </Button>
                 </div>
-            )}
+            )} */}
         </div>
     );
 };

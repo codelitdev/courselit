@@ -214,15 +214,17 @@ const SequenceMailEditor = ({
 
     return (
         <div className="flex flex-col gap-4">
-            <Breadcrumbs aria-label="breakcrumb">
-                <Link href={`${prefix}/mails?tab=Sequences`}>
-                    {PAGE_HEADER_ALL_MAILS}
-                </Link>
-                <Link href={`${prefix}/mails/sequence/${sequenceId}/edit`}>
-                    {PAGE_HEADER_EDIT_SEQUENCE}
-                </Link>
-                {PAGE_HEADER_EDIT_MAIL}
-            </Breadcrumbs>
+            {prefix === "/dashboard" && (
+                <Breadcrumbs aria-label="breakcrumb">
+                    <Link href={`${prefix}/mails?tab=Sequences`}>
+                        {PAGE_HEADER_ALL_MAILS}
+                    </Link>
+                    <Link href={`${prefix}/mails/sequence/${sequenceId}/edit`}>
+                        {PAGE_HEADER_EDIT_SEQUENCE}
+                    </Link>
+                    {PAGE_HEADER_EDIT_MAIL}
+                </Breadcrumbs>
+            )}
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-4xl font-semibold mb-4">
                     {PAGE_HEADER_EDIT_MAIL}

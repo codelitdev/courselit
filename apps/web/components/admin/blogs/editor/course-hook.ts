@@ -18,9 +18,11 @@ export default function useCourse(
     id: string,
     address: Address,
     dispatch?: AppDispatch,
-): CourseWithAdminProps | undefined {
+): CourseWithAdminProps | undefined | null {
     // const address = useSelector((state: AppState) => state.address);
-    const [course, setCourse] = useState();
+    const [course, setCourse] = useState<
+        CourseWithAdminProps | undefined | null
+    >();
 
     const loadCourse = useCallback(
         async (courseId: string) => {
@@ -57,8 +59,11 @@ export default function useCourse(
                 const response = await fetch.exec();
                 if (response.course) {
                     setCourse(response.course);
+                } else {
+                    setCourse(null);
                 }
             } catch (err: any) {
+                setCourse(null);
                 dispatch &&
                     dispatch(setAppMessage(new AppMessage(err.message)));
             } finally {

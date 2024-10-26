@@ -475,7 +475,11 @@ const LessonEditor = ({
                         <Tooltip title="Go back to content">
                             <IconButton variant="soft">
                                 <Link
-                                    href={`${prefix}/product/${courseId}/content`}
+                                    href={`${prefix}/product/${courseId}${
+                                        prefix === "/dashboard"
+                                            ? "/content"
+                                            : "?tab=Content"
+                                    }`}
                                 >
                                     <Back />
                                 </Link>

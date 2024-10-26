@@ -7,5 +7,7 @@ import { useContext } from "react";
 export default function Page() {
     const address = useContext(AddressContext);
 
-    return <NewBlog address={address} networkAction={false} />;
+    return (
+        <NewBlog address={address} networkAction={false} prefix="/dashboard2" />
+    );
 }

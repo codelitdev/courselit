@@ -83,7 +83,7 @@ export {
     Toast,
     Switch,
     Checkbox,
-    Tabs,
+    Tabs as Tabbs,
     Table,
     TableHead,
     TableBody,

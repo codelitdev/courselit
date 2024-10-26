@@ -427,12 +427,14 @@ function MailEditor({ id, address, dispatch, prefix }: MailEditorProps) {
 
     return (
         <div className="flex flex-col gap-4">
-            <Breadcrumbs aria-label="breakcrumb">
-                <Link href={`${prefix}/mails?tab=Broadcasts`}>
-                    {PAGE_HEADER_ALL_MAILS}
-                </Link>
-                {PAGE_HEADER_EDIT_MAIL}
-            </Breadcrumbs>
+            {prefix === "/dashboard" && (
+                <Breadcrumbs aria-label="breakcrumb">
+                    <Link href={`${prefix}/mails?tab=Broadcasts`}>
+                        {PAGE_HEADER_ALL_MAILS}
+                    </Link>
+                    {PAGE_HEADER_EDIT_MAIL}
+                </Breadcrumbs>
+            )}
             <h1 className="text-4xl font-semibold mb-4">
                 {PAGE_HEADER_EDIT_MAIL}
             </h1>

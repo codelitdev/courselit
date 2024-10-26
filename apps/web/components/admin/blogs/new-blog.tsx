@@ -8,7 +8,7 @@ import {
 } from "@courselit/components-library";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { connect } from "react-redux";
 import {
     BTN_CONTINUE,
@@ -17,7 +17,7 @@ import {
     COURSE_TYPE_BLOG,
     FORM_NEW_PRODUCT_TITLE_PLC,
     MANAGE_BLOG_PAGE_HEADING,
-} from "../../../ui-config/strings";
+} from "@/ui-config/strings";
 import {
     networkAction,
     setAppMessage,
@@ -28,19 +28,17 @@ interface NewBlogProps {
     address: Address;
     dispatch?: AppDispatch;
     networkAction: boolean;
+    prefix: string;
 }
 
 export function NewBlog({
     address,
     dispatch,
     networkAction: loading,
+    prefix,
 }: NewBlogProps) {
     const [title, setTitle] = useState("");
     const router = useRouter();
-    const path = usePathname();
-    const pathPrefix = path?.startsWith("/dashboard2")
-        ? "/dashboard2"
-        : "/dashboard";
 
     const createCourse = async (e: FormEvent) => {
         e.preventDefault();
@@ -66,7 +64,9 @@ export function NewBlog({
             const response = await fetch.exec();
             if (response.course) {
                 router.replace(
-                    `${pathPrefix}/blog/${response.course.courseId}/details`,
+                    `${prefix}/blog/${response.course.courseId}${
+                        prefix === "/dashboard" ? "/details" : ""
+                    }`,
                 );
             }
         } catch (err: any) {
@@ -78,15 +78,17 @@ export function NewBlog({
 
     return (
         <div className="flex flex-col">
-            <div className="mb-4">
-                <Breadcrumbs aria-label="breakcrumb">
-                    <Link href={`${pathPrefix}/blogs`}>
-                        {MANAGE_BLOG_PAGE_HEADING}
-                    </Link>
+            {prefix === "/dashboard" && (
+                <div className="mb-4">
+                    <Breadcrumbs aria-label="breakcrumb">
+                        <Link href={`${prefix}/blogs`}>
+                            {MANAGE_BLOG_PAGE_HEADING}
+                        </Link>
 
-                    <p>{BTN_NEW_BLOG}</p>
-                </Breadcrumbs>
-            </div>
+                        <p>{BTN_NEW_BLOG}</p>
+                    </Breadcrumbs>
+                </div>
+            )}
             <div className="flex flex-col">
                 <h1 className="text-4xl font-semibold mb-4">{BTN_NEW_BLOG}</h1>
                 <Form onSubmit={createCourse} className="flex flex-col gap-4">
@@ -105,7 +107,7 @@ export function NewBlog({
                         >
                             {BTN_CONTINUE}
                         </Button>
-                        <Link href={`${pathPrefix}/blogs`} legacyBehavior>
+                        <Link href={`${prefix}/blogs`} legacyBehavior>
                             <Button variant="soft">{BUTTON_CANCEL_TEXT}</Button>
                         </Link>
                     </div>
