@@ -18,6 +18,7 @@ import { deleteProduct } from "../../helpers";
 import { AppDispatch } from "@courselit/state-management";
 import { Address } from "@courselit/common-models";
 import { useRouter } from "next/navigation";
+import { truncate } from "@ui-lib/utils";
 
 const AppLoader = dynamic(() => import("../../../../app-loader"));
 
@@ -64,7 +65,9 @@ export default function BlogHeader({
                 </div>
             )}
             <div className="flex justify-between items-center">
-                <h1 className="text-4xl font-semibold mb-4">{course.title}</h1>
+                <h1 className="text-4xl font-semibold mb-4">
+                    {truncate(course.title || "", 50)}
+                </h1>
                 <div>
                     <Menu2 icon={<MoreVert />} variant="soft">
                         <MenuItem>

@@ -4,6 +4,7 @@ import generateTabs from "./tabs-data";
 import { Address } from "@courselit/common-models";
 import { usePathname } from "next/navigation";
 import useCourse from "../course-hook";
+import { truncate } from "@ui-lib/utils";
 
 const ProductHeader = dynamic(() => import("./header"));
 const Tabs = dynamic(() => import("@components/tabs"));
@@ -24,7 +25,7 @@ export default function ProductEditorLayout({
     const course = useCourse(id, address);
     const breadcrumbs = [
         { text: "Products", url: `${prefix}/products` },
-        { text: course?.title || "", url: "" },
+        { text: truncate(course?.title || "", 20).toString(), url: "" },
     ];
     const path = usePathname();
 
