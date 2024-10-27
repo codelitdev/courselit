@@ -18,9 +18,7 @@ export default function Page({ params }: { params: { id: string } }) {
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard4/products" },
         {
-            label: course
-                ? truncate(course.title || "", 20).toString() || "..."
-                : "...",
+            label: course ? truncate(course.title || "", 20) || "..." : "...",
             href: `/dashboard4/product/${id}?tab=Content`,
         },
         { label: BUTTON_NEW_GROUP_TEXT, href: "#" },

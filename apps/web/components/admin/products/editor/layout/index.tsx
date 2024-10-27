@@ -25,7 +25,7 @@ export default function ProductEditorLayout({
     const course = useCourse(id, address);
     const breadcrumbs = [
         { text: "Products", url: `${prefix}/products` },
-        { text: truncate(course?.title || "", 20).toString(), url: "" },
+        { text: truncate(course?.title || "", 20), url: "" },
     ];
     const path = usePathname();
 

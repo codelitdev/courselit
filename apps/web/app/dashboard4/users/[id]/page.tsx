@@ -4,12 +4,7 @@ import DashboardContent from "@components/admin/dashboard-content";
 import { PermissionsEditor } from "@components/admin/users/permissions-editor";
 import { AddressContext } from "@components/contexts";
 import { UserWithAdminFields } from "@courselit/common-models";
-import {
-    ComboBox,
-    Link,
-    Section,
-    Switch,
-} from "@courselit/components-library";
+import { ComboBox, Link, Section, Switch } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
 import {
     PAGE_HEADER_ALL_USER,
