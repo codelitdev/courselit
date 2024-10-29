@@ -29,6 +29,7 @@ interface MasterLayoutProps {
     description?: string;
     socialImage?: Media;
     robotsAllowed?: boolean;
+    state: AppState;
 }
 
 const MasterLayout = ({
@@ -43,6 +44,7 @@ const MasterLayout = ({
     description,
     socialImage,
     robotsAllowed = true,
+    state,
 }: MasterLayoutProps) => {
     const { status } = useSession();
 
@@ -124,6 +126,8 @@ const MasterLayout = ({
                 layout={layout}
                 childrenOnTop={childrenOnTop}
                 pageData={pageData}
+                state={state}
+                dispatch={dispatch}
             >
                 {children}
             </Template>
@@ -143,6 +147,7 @@ const mapStateToProps = (state: AppState) => ({
     address: state.address,
     typefaces: state.typefaces,
     theme: state.theme,
+    state: state,
 });
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });

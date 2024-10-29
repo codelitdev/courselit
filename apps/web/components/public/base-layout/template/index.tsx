@@ -1,10 +1,11 @@
 import React, { ReactNode } from "react";
 import WidgetByName from "./widget-by-name";
-import AppToast from "../../../app-toast";
-import { WidgetInstance } from "@courselit/common-models";
+import { AppToast } from "../../../app-toast";
+import { Message, WidgetInstance } from "@courselit/common-models";
 import { Footer, Header } from "@courselit/common-widgets";
 import { ArrowDownward, ArrowUpward } from "@courselit/icons";
 import { Button } from "@courselit/components-library";
+import { AppDispatch, AppState } from "@courselit/state-management";
 
 interface TemplateProps {
     layout: WidgetInstance[];
@@ -13,9 +14,12 @@ interface TemplateProps {
     onEditClick?: (widgetId: string) => void;
     children?: ReactNode;
     childrenOnTop: boolean;
-    onAddWidgetBelow: (index: number) => void;
-    onMoveWidgetUp: (index: number) => void;
-    onMoveWidgetDown: (index: number) => void;
+    onAddWidgetBelow?: (index: number) => void;
+    onMoveWidgetUp?: (index: number) => void;
+    onMoveWidgetDown?: (index: number) => void;
+    dispatch?: AppDispatch;
+    message?: Message;
+    state: Partial<AppState>;
 }
 
 const EditableWidget = ({
@@ -30,6 +34,8 @@ const EditableWidget = ({
     onAddWidgetBelow,
     onMoveWidgetUp,
     onMoveWidgetDown,
+    dispatch,
+    state,
 }: {
     item: Record<string, any>;
     pageData: Record<string, unknown>;
@@ -39,9 +45,11 @@ const EditableWidget = ({
     allowsUpwardMovement?: boolean;
     allowsWidgetAddition?: boolean;
     index: number;
-    onAddWidgetBelow: (index: number) => void;
-    onMoveWidgetUp: (index: number) => void;
-    onMoveWidgetDown: (index: number) => void;
+    onAddWidgetBelow?: (index: number) => void;
+    onMoveWidgetUp?: (index: number) => void;
+    onMoveWidgetDown?: (index: number) => void;
+    state: AppState;
+    dispatch?: AppDispatch;
 }) => {
     if (editing) {
         return (
@@ -57,6 +65,8 @@ const EditableWidget = ({
                     pageData={pageData}
                     id={`widget${item._id}`}
                     editing={editing}
+                    dispatch={dispatch}
+                    state={state}
                 />
                 <div className="w-full justify-evenly hidden group-hover:flex absolute bottom-[-16px] z-10">
                     {allowsUpwardMovement && (
@@ -64,7 +74,7 @@ const EditableWidget = ({
                             component="button"
                             onClick={(e) => {
                                 e.stopPropagation();
-                                onMoveWidgetUp(index);
+                                onMoveWidgetUp && onMoveWidgetUp(index);
                             }}
                         >
                             <ArrowUpward /> Move up
@@ -75,7 +85,7 @@ const EditableWidget = ({
                             component="button"
                             onClick={(e) => {
                                 e.stopPropagation();
-                                onAddWidgetBelow(index);
+                                onAddWidgetBelow && onAddWidgetBelow(index);
                             }}
                         >
                             Add widget below{" "}
@@ -86,7 +96,7 @@ const EditableWidget = ({
                             component="button"
                             onClick={(e) => {
                                 e.stopPropagation();
-                                onMoveWidgetDown(index);
+                                onMoveWidgetDown && onMoveWidgetDown(index);
                             }}
                         >
                             Move down <ArrowDownward />
@@ -103,6 +113,9 @@ const EditableWidget = ({
             settings={item.settings || {}}
             pageData={pageData}
             id={`widget${item._id}`}
+            dispatch={dispatch}
+            state={state}
+            editing={false}
         />
     );
 };
@@ -118,6 +131,9 @@ const Template = (props: TemplateProps) => {
         onAddWidgetBelow,
         onMoveWidgetUp,
         onMoveWidgetDown,
+        dispatch,
+        message,
+        state,
     } = props;
     if (!layout) return <></>;
     const footer = layout.filter(
@@ -147,6 +163,8 @@ const Template = (props: TemplateProps) => {
                 onMoveWidgetDown={onMoveWidgetDown}
                 onMoveWidgetUp={onMoveWidgetUp}
                 index={index + 1}
+                dispatch={dispatch}
+                state={state}
             />
         ),
     );
@@ -163,6 +181,8 @@ const Template = (props: TemplateProps) => {
                     onMoveWidgetDown={onMoveWidgetDown}
                     onMoveWidgetUp={onMoveWidgetUp}
                     index={0}
+                    dispatch={dispatch}
+                    state={state}
                 />
             )}
             {childrenOnTop && (
@@ -184,9 +204,13 @@ const Template = (props: TemplateProps) => {
                     editing={editing}
                     onEditClick={onEditClick}
                     index={layout.length - 1}
+                    dispatch={dispatch}
+                    state={state}
                 />
             )}
-            <AppToast />
+            {message && dispatch && (
+                <AppToast dispatch={dispatch} message={message} />
+            )}
         </div>
     );
 };

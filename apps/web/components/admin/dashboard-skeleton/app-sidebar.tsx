@@ -137,7 +137,9 @@ function getSidebarItems(profile: Partial<Profile>, path, tab) {
             title: SIDEBAR_MENU_PAGES,
             url: "/dashboard4/pages",
             icon: Globe,
-            isActive: path === "/dashboard4/pages",
+            isActive:
+                path === "/dashboard4/pages" ||
+                path.startsWith("/dashboard4/page"),
             items: [],
         });
     }

@@ -1,14 +1,13 @@
 import React from "react";
 import widgets from "../../../../ui-config/widgets";
-import { connect } from "react-redux";
 import type { AppState, AppDispatch } from "@courselit/state-management";
 import { COMPONENT_MISSING_SUFFIX } from "../../../../ui-config/strings";
 
 interface WidgetByNameProps {
     id: string;
     name: string;
-    state: AppState;
-    dispatch: AppDispatch;
+    state: Partial<AppState>;
+    dispatch?: AppDispatch;
     settings: Record<string, unknown>;
     pageData: Record<string, unknown>;
     editing: boolean;
@@ -36,7 +35,4 @@ const WidgetByName = ({
     });
 };
 
-const mapStateToProps = (state: AppState) => ({ state });
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(WidgetByName);
+export default WidgetByName;

@@ -6,3 +6,5 @@ export const AddressContext = createContext(defaultState.address);
 export const SiteInfoContext = createContext(defaultState.siteinfo);
 
 export const ProfileContext = createContext(defaultState.profile);
+
+export const TypefacesContext = createContext(defaultState.typefaces);

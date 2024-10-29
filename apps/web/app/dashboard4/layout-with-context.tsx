@@ -1,8 +1,6 @@
 "use client";
 
-import { AppSidebar } from "@components/admin/dashboard-skeleton/app-sidebar";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { SiteInfo } from "@courselit/common-models";
+import { SiteInfo, Typeface } from "@courselit/common-models";
 import { ReactNode, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { defaultState } from "@components/default-state";
@@ -11,18 +9,22 @@ import {
     AddressContext,
     ProfileContext,
     SiteInfoContext,
+    TypefacesContext,
 } from "@components/contexts";
+import { Toaster } from "@courselit/components-library";
 
 export default function Layout({
     session,
     address,
     children,
     siteinfo,
+    typefaces,
 }: {
     session: any;
     address: string;
     children: ReactNode;
     siteinfo: SiteInfo;
+    typefaces: Typeface[];
 }) {
     const [open, setOpen] = useState(false);
     const [profile, setProfile] = useState(defaultState.profile);
@@ -84,12 +86,16 @@ export default function Layout({
         >
             <SiteInfoContext.Provider value={siteinfo}>
                 <ProfileContext.Provider value={profile}>
-                    <SidebarProvider>
-                        <AppSidebar />
-                        <SidebarInset>{children}</SidebarInset>
-                    </SidebarProvider>
+                    <TypefacesContext.Provider value={typefaces}>
+                        {children}
+                        {/* <SidebarProvider>
+                            <AppSidebar />
+                            <SidebarInset>{children}</SidebarInset>
+                        </SidebarProvider> */}
+                    </TypefacesContext.Provider>
                 </ProfileContext.Provider>
             </SiteInfoContext.Provider>
+            <Toaster />
         </AddressContext.Provider>
     );
 }

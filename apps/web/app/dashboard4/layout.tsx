@@ -64,41 +64,38 @@ export default async function Layout({
         .setIsGraphQLEndpoint(true)
         .build();
     const siteInfoResponse = await siteInfoFetch.exec();
-    let finalSiteInfo: SiteInfo = {};
-    if (siteInfoResponse.site.settings) {
-        const siteinfo = siteInfoResponse.site.settings;
-        finalSiteInfo = {
-            title: siteinfo.title || defaultState.siteinfo.title,
-            subtitle: siteinfo.subtitle || defaultState.siteinfo.subtitle,
-            logo: siteinfo.logo || defaultState.siteinfo.logo,
-            currencyISOCode:
-                siteinfo.currencyISOCode ||
-                defaultState.siteinfo.currencyISOCode,
-            paymentMethod:
-                siteinfo.paymentMethod || defaultState.siteinfo.paymentMethod,
-            stripeKey: siteinfo.stripeKey || defaultState.siteinfo.stripeKey,
-            codeInjectionHead:
-                decode(siteinfo.codeInjectionHead) ||
-                defaultState.siteinfo.codeInjectionHead,
-            codeInjectionBody:
-                decode(siteinfo.codeInjectionBody) ||
-                defaultState.siteinfo.codeInjectionBody,
-            mailingAddress:
-                siteinfo.mailingAddress || defaultState.siteinfo.mailingAddress,
-            hideCourseLitBranding:
-                siteinfo.hideCourseLitBranding ||
-                defaultState.siteinfo.hideCourseLitBranding,
-            razorpayKey:
-                siteinfo.razorpayKey || defaultState.siteinfo.razorpayKey,
-        };
-    }
+
     return (
         <LayoutWithContext
             session={session}
             address={address}
-            siteinfo={finalSiteInfo}
+            siteinfo={formatSiteInfo(siteInfoResponse.site.settings)}
+            typefaces={siteInfoResponse.site.typefaces}
         >
             {children}
         </LayoutWithContext>
     );
 }
+
+const formatSiteInfo = (siteinfo: SiteInfo) => ({
+    title: siteinfo.title || defaultState.siteinfo.title,
+    subtitle: siteinfo.subtitle || defaultState.siteinfo.subtitle,
+    logo: siteinfo.logo || defaultState.siteinfo.logo,
+    currencyISOCode:
+        siteinfo.currencyISOCode || defaultState.siteinfo.currencyISOCode,
+    paymentMethod:
+        siteinfo.paymentMethod || defaultState.siteinfo.paymentMethod,
+    stripeKey: siteinfo.stripeKey || defaultState.siteinfo.stripeKey,
+    codeInjectionHead: siteinfo.codeInjectionHead
+        ? decode(siteinfo.codeInjectionHead)
+        : defaultState.siteinfo.codeInjectionHead,
+    codeInjectionBody: siteinfo.codeInjectionBody
+        ? decode(siteinfo.codeInjectionBody)
+        : defaultState.siteinfo.codeInjectionBody,
+    mailingAddress:
+        siteinfo.mailingAddress || defaultState.siteinfo.mailingAddress,
+    hideCourseLitBranding:
+        siteinfo.hideCourseLitBranding ||
+        defaultState.siteinfo.hideCourseLitBranding,
+    razorpayKey: siteinfo.razorpayKey || defaultState.siteinfo.razorpayKey,
+});

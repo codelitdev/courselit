@@ -3,11 +3,10 @@ import {
     AppMessage,
     Page,
     SiteInfo,
-    Theme,
     Typeface,
     WidgetInstance,
 } from "@courselit/common-models";
-import type { Address, Auth, Media, Profile } from "@courselit/common-models";
+import type { Address, Media, Profile } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import {
     networkAction,
@@ -19,7 +18,6 @@ import {
     generateUniqueId,
     getGraphQLQueryStringFromObject,
 } from "@courselit/utils";
-import { connect } from "react-redux";
 import {
     EDIT_PAGE_BUTTON_DONE,
     EDIT_PAGE_BUTTON_UPDATE,
@@ -27,9 +25,8 @@ import {
     EDIT_PAGE_BUTTON_FONTS,
     EDIT_PAGE_BUTTON_SEO,
 } from "../../../ui-config/strings";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import {
-    canAccessDashboard,
     generateFontString,
     moveMemberUp,
     moveMemberDown,
@@ -39,8 +36,7 @@ import dynamic from "next/dynamic";
 import Head from "next/head";
 import widgets from "../../../ui-config/widgets";
 import { Sync, CheckCircled } from "@courselit/icons";
-import AppToast from "../../app-toast";
-import { Button, CircularProgress } from "@courselit/components-library";
+import { Button, Skeleton } from "@courselit/components-library";
 import SeoEditor from "./seo-editor";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
@@ -52,14 +48,14 @@ const DEBOUNCE_TIME = 500;
 interface PageEditorProps {
     id: string;
     address: Address;
-    auth: Auth;
     profile: Profile;
-    dispatch: AppDispatch;
-    loading: boolean;
+    dispatch?: AppDispatch;
+    loading?: boolean;
     siteInfo: SiteInfo;
-    theme: Theme;
     typefaces: Typeface[];
     redirectTo?: string;
+    prefix: string;
+    state: AppState;
 }
 
 type LeftPaneContent =
@@ -70,17 +66,16 @@ type LeftPaneContent =
     | "seo"
     | "none";
 
-function PageEditor({
+export default function PageEditor({
     id,
     address,
-    auth,
     profile,
     dispatch,
-    loading,
-    theme,
+    loading = false,
     redirectTo,
+    prefix,
+    state,
 }: PageEditorProps) {
-    const [pages, setPages] = useState([]);
     const [page, setPage] = useState<
         Partial<
             Page & {
@@ -115,20 +110,7 @@ function PageEditor({
     useEffect(() => {
         loadDraftTypefaces();
         loadPage();
-        loadPages();
     }, []);
-
-    useEffect(() => {
-        if (profile.fetched && !canAccessDashboard(profile)) {
-            router.push("/");
-        }
-    }, [profile.fetched]);
-
-    useEffect(() => {
-        if (auth.checked && auth.guest) {
-            router.push(`/login?redirect=${router.asPath}`);
-        }
-    }, [auth.checked]);
 
     useEffect(() => {
         if (JSON.stringify(layout) !== JSON.stringify(page.draftLayout)) {
@@ -190,35 +172,6 @@ function PageEditor({
             }
         `;
         await fetchPage({ query: mutation });
-    };
-
-    const loadPages = async () => {
-        const query = `
-        query {
-            pages: getPages {
-                pageId,
-                name,
-                entityId
-            }
-        }
-        `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            dispatch(networkAction(true));
-            const response = await fetch.exec();
-            if (response.pages) {
-                setPages(response.pages);
-            }
-        } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
-            router.replace(`/dashboard`);
-        } finally {
-            dispatch(networkAction(false));
-        }
     };
 
     const loadPage = async () => {
@@ -285,15 +238,15 @@ function PageEditor({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.site.draftTypefaces) {
                 setDraftTypefaces(response.site.draftTypefaces);
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     };
 
@@ -317,7 +270,7 @@ function PageEditor({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.page) {
                 const pageBeingEdited = response.page;
@@ -328,15 +281,18 @@ function PageEditor({
                 }
                 setPage(pageBeingEdited);
             } else {
-                dispatch(
-                    setAppMessage(new AppMessage(`The page does not exist.`)),
-                );
-                router.replace(`/dashboard`);
+                dispatch &&
+                    dispatch(
+                        setAppMessage(
+                            new AppMessage(`The page does not exist.`),
+                        ),
+                    );
+                router.replace(`${prefix}/pages`);
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     };
 
@@ -485,6 +441,8 @@ function PageEditor({
                 onChange={onWidgetSettingsChanged}
                 onClose={onClose}
                 onDelete={deleteWidget}
+                state={state as AppState}
+                dispatch={dispatch || (() => {})}
             />
         ),
         [selectedWidget],
@@ -520,15 +478,15 @@ function PageEditor({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.site) {
                 setDraftTypefaces(response.site.draftTypefaces);
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     };
 
@@ -562,6 +520,8 @@ function PageEditor({
             )}
             {leftPaneContent === "seo" && (
                 <SeoEditor
+                    address={address}
+                    profile={profile}
                     title={page.draftTitle || page.title || ""}
                     description={
                         page.draftDescription || page.description || ""
@@ -599,96 +559,106 @@ function PageEditor({
         </>
     );
 
-    return (
-        <div className="flex flex-col">
-            <Head>
-                <title>{`${PAGE_TITLE_EDIT_PAGE} ${page.name || ""}`}</title>
-                {fontString && <link rel="stylesheet" href={fontString} />}
-            </Head>
-            <div className="fixed w-full border-0 border-b border-slate-200 z-10">
-                <header className="flex w-full p-4 justify-between bg-white/80 backdrop-blur-md">
-                    <div className="flex gap-2">
-                        <Button
-                            onClick={() => {
-                                setLeftPaneContent("fonts");
-                            }}
-                            variant="soft"
-                        >
-                            {EDIT_PAGE_BUTTON_FONTS}
-                        </Button>
-                        <Button
-                            onClick={() => {
-                                setLeftPaneContent("seo");
-                            }}
-                            variant="soft"
-                        >
-                            {EDIT_PAGE_BUTTON_SEO}
-                        </Button>
-                    </div>
-                    <div className="flex justify-end items-center gap-2">
-                        {loading && <Sync />}
-                        {!loading && <CheckCircled />}
-                        <Button
-                            variant="soft"
-                            component="link"
-                            href={
-                                redirectTo ||
-                                (page.type === "product"
-                                    ? `/dashboard/product/${page.entityId}/content`
-                                    : "/dashboard/products")
-                            }
-                        >
-                            {EDIT_PAGE_BUTTON_DONE}
-                        </Button>
-                        <Button onClick={onPublish} sx={{ color: "white" }}>
-                            {EDIT_PAGE_BUTTON_UPDATE}
-                        </Button>
-                    </div>
-                </header>
-            </div>
-            <div className="flex h-screen pt-[64px] w-full">
-                {leftPaneContent !== "none" && (
-                    <div className="overflow-y-auto w-[440px] max-h-screen border-0 border-r border-slate-200">
-                        {activeSidePaneContent}
-                    </div>
-                )}
-                <div className="w-full max-h-screen overflow-y-auto scroll-smooth">
-                    {draftTypefaces.length === 0 && <CircularProgress />}
-                    {draftTypefaces.length > 0 && (
-                        <Template
-                            layout={layout}
-                            pageData={page.pageData || {}}
-                            editing={true}
-                            onEditClick={onWidgetClicked}
-                            selectedWidget={selectedWidget}
-                            onAddWidgetBelow={onAddWidgetBelow}
-                            onMoveWidgetDown={onMoveWidgetDown}
-                            onMoveWidgetUp={onMoveWidgetUp}
-                        />
+    if (Object.keys(page).length > 0) {
+        return (
+            <div className="flex flex-col">
+                <Head>
+                    <title>{`${PAGE_TITLE_EDIT_PAGE} ${
+                        page.name || ""
+                    }`}</title>
+                    {fontString && <link rel="stylesheet" href={fontString} />}
+                </Head>
+                <div className="fixed w-full border-0 border-b border-slate-200 z-10">
+                    <header className="flex w-full p-4 justify-between bg-white/80 backdrop-blur-md">
+                        <div className="flex gap-2">
+                            <Button
+                                onClick={() => {
+                                    setLeftPaneContent("fonts");
+                                }}
+                                variant="soft"
+                            >
+                                {EDIT_PAGE_BUTTON_FONTS}
+                            </Button>
+                            <Button
+                                onClick={() => {
+                                    setLeftPaneContent("seo");
+                                }}
+                                variant="soft"
+                            >
+                                {EDIT_PAGE_BUTTON_SEO}
+                            </Button>
+                        </div>
+                        <div className="flex justify-end items-center gap-2">
+                            {loading && <Sync />}
+                            {!loading && <CheckCircled />}
+                            <Button
+                                variant="soft"
+                                component="link"
+                                href={
+                                    redirectTo ||
+                                    (page.type === "product"
+                                        ? `${prefix}/product/${page.entityId}${
+                                              prefix === "/dashboard"
+                                                  ? "/content"
+                                                  : ""
+                                          }`
+                                        : `${prefix}/products`)
+                                }
+                            >
+                                {EDIT_PAGE_BUTTON_DONE}
+                            </Button>
+                            <Button onClick={onPublish} sx={{ color: "white" }}>
+                                {EDIT_PAGE_BUTTON_UPDATE}
+                            </Button>
+                        </div>
+                    </header>
+                </div>
+                <div className="flex h-screen pt-[64px] w-full">
+                    {leftPaneContent !== "none" && (
+                        <div className="overflow-y-auto w-[440px] max-h-screen border-0 border-r border-slate-200">
+                            {activeSidePaneContent}
+                        </div>
                     )}
-                    <style jsx global>{`
-                        :root {
-                            --primary-font: ${primaryFontFamily}, sans-serif;
-                            --secondary-font: ${primaryFontFamily}, sans-serif;
-                        }
-                    `}</style>
+                    <div className="w-full max-h-screen overflow-y-auto scroll-smooth">
+                        {draftTypefaces.length === 0 && (
+                            <div>
+                                <Skeleton className="w-full h-10" />
+                            </div>
+                        )}
+                        {draftTypefaces.length > 0 && (
+                            <Template
+                                layout={layout}
+                                pageData={page.pageData || {}}
+                                editing={true}
+                                onEditClick={onWidgetClicked}
+                                selectedWidget={selectedWidget}
+                                onAddWidgetBelow={onAddWidgetBelow}
+                                onMoveWidgetDown={onMoveWidgetDown}
+                                onMoveWidgetUp={onMoveWidgetUp}
+                                state={state}
+                                dispatch={dispatch}
+                            />
+                        )}
+                        <style jsx global>{`
+                            :root {
+                                --primary-font: ${primaryFontFamily}, sans-serif;
+                                --secondary-font: ${primaryFontFamily},
+                                    sans-serif;
+                            }
+                        `}</style>
+                    </div>
                 </div>
             </div>
-            <AppToast />
+        );
+    }
+
+    return (
+        <div className="flex flex-col gap-4">
+            <Skeleton className="w-full h-16" />
+            <div className="flex gap-4 px-4">
+                <Skeleton className="w-1/4 h-90" />
+                <Skeleton className="w-3/4 h-screen" />
+            </div>
         </div>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    auth: state.auth,
-    profile: state.profile,
-    address: state.address,
-    loading: state.networkAction,
-    siteInfo: state.siteinfo,
-    theme: state.theme,
-    typefaces: state.typefaces,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(PageEditor);

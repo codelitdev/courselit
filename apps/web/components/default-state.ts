@@ -1,10 +1,11 @@
-import { Address, Profile, SiteInfo } from "@courselit/common-models";
+import { Address, Profile, SiteInfo, Typeface } from "@courselit/common-models";
 
 export const defaultState: {
     siteinfo: SiteInfo;
     networkAction: boolean;
     profile: Partial<Profile>;
     address: Address;
+    typefaces: Typeface[];
     [x: string]: any;
 } = {
     siteinfo: {

@@ -1,4 +1,4 @@
-import { Address, Auth, Profile, Media } from "@courselit/common-models";
+import { Address, Profile, Media } from "@courselit/common-models";
 import {
     Checkbox,
     Form,
@@ -8,7 +8,6 @@ import {
     MediaSelector,
     PageBuilderPropertyHeader,
 } from "@courselit/components-library";
-import { AppDispatch, AppState } from "@courselit/state-management";
 import {
     BUTTON_SAVE,
     EDIT_PAGE_SEO_HEADER,
@@ -19,16 +18,13 @@ import {
     SEO_FORM_SOCIAL_IMAGE_TOOLTIP,
 } from "@ui-config/strings";
 import { ChangeEvent, FormEvent, useState } from "react";
-import { connect } from "react-redux";
 import { Cross as Close } from "@courselit/icons";
 
-function SeoEditor({
+export default function SeoEditor({
     title,
     description,
     socialImage,
     robotsAllowed,
-    dispatch,
-    auth,
     profile,
     address,
     onClose,
@@ -38,8 +34,6 @@ function SeoEditor({
     description: string;
     socialImage: Media | {};
     robotsAllowed: boolean;
-    dispatch: AppDispatch;
-    auth: Auth;
     profile: Profile;
     address: Address;
     onClose: (...args: any[]) => void;
@@ -123,8 +117,6 @@ function SeoEditor({
                             innerSocialImage.originalFileName) ||
                         ""
                     }
-                    dispatch={dispatch}
-                    auth={auth}
                     profile={profile}
                     address={address}
                     onSelection={(media: Media) => {
@@ -146,13 +138,3 @@ function SeoEditor({
         </div>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-    auth: state.auth,
-    profile: state.profile,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(SeoEditor);

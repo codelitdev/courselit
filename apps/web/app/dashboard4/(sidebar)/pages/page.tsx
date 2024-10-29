@@ -22,7 +22,12 @@ export default function Page() {
 
     return (
         <DashboardContent breadcrumbs={breadcrumbs}>
-            <Pages address={address} loading={false} dispatch={() => {}} />
+            <Pages
+                address={address}
+                loading={false}
+                dispatch={() => {}}
+                prefix="/dashboard4"
+            />
         </DashboardContent>
     );
 }

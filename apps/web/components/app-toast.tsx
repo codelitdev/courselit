@@ -3,26 +3,16 @@ import { connect } from "react-redux";
 import { actionCreators } from "@courselit/state-management";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { Toast } from "@courselit/components-library";
+import { Message } from "@courselit/common-models";
 
 const { clearAppMessage } = actionCreators;
-
-interface Action {
-    text: string;
-    cb: (...args: any[]) => any;
-}
-
-interface Message {
-    message: string;
-    open: boolean;
-    action: Action | null;
-}
 
 interface AppToastProps {
     message: Message;
     dispatch: any;
 }
 
-const AppToast = (props: AppToastProps) => {
+export const AppToast = (props: AppToastProps) => {
     const { message, dispatch } = props;
 
     /*

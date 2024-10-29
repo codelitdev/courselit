@@ -2,10 +2,10 @@ import React, { ReactNode, useState } from "react";
 import Header from "./base-layout/header";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
-import { AppState } from "@courselit/state-management";
+import { AppDispatch, AppState } from "@courselit/state-management";
 import { Chip, Link, Modal } from "@courselit/components-library";
-import AppToast from "@components/app-toast";
-import { SiteInfo } from "@courselit/common-models";
+import { AppToast } from "@components/app-toast";
+import { Message, SiteInfo } from "@courselit/common-models";
 
 export interface ComponentScaffoldMenuItem {
     label: string;
@@ -23,6 +23,8 @@ interface ComponentScaffoldProps {
     drawerWidth?: number;
     siteinfo: SiteInfo;
     showCourseLitBranding?: boolean;
+    dispatch?: AppDispatch;
+    message?: Message;
 }
 
 const ComponentScaffold = ({
@@ -31,6 +33,8 @@ const ComponentScaffold = ({
     drawerWidth = 240,
     siteinfo,
     showCourseLitBranding,
+    dispatch,
+    message,
 }: ComponentScaffoldProps) => {
     const [open, setOpen] = useState(false);
     const router = useRouter();
@@ -121,13 +125,18 @@ const ComponentScaffold = ({
             >
                 {drawer}
             </Modal>
-            <AppToast />
+            {message && dispatch && (
+                <AppToast dispatch={dispatch} message={message} />
+            )}
         </div>
     );
 };
 
 const mapStateToProps = (state: AppState) => ({
     siteinfo: state.siteinfo,
+    message: state.message,
 });
+
+const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
 
 export default connect(mapStateToProps)(ComponentScaffold);
