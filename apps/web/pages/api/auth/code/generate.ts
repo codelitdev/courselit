@@ -42,10 +42,13 @@ export default async function handler(
             code,
             hideCourseLitBranding: domain.settings?.hideCourseLitBranding,
         });
+
+        const emailfrom = `${domain?.settings?.title || domain.name} <${process.env.EMAIL_FROM || domain.email}>`;
         await send({
             to: [sanitizedEmail],
             subject: `${responses.sign_in_mail_prefix} ${req.headers["host"]}`,
             body: emailBody,
+            from: emailfrom,
         });
     } catch (err: any) {
         res.status(500).json({

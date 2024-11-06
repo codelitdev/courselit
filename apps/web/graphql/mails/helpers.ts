@@ -91,10 +91,12 @@ export async function createTemplateAndSendMail({
         hideCourseLitBranding: ctx.subdomain.settings?.hideCourseLitBranding,
     });
 
+    const emailfrom = `${ctx.subdomain?.settings?.title || ctx.subdomain.name} <${process.env.EMAIL_FROM || ctx.subdomain.email}>`;
     await send({
         to: [user.email],
         subject: `Thank you for signing up for ${course.title}`,
         body: emailBody,
+        from: emailfrom,
     });
 }
 

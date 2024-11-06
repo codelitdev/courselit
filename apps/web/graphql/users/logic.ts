@@ -203,10 +203,12 @@ export const inviteCustomer = async (
                     ctx.subdomain.settings?.hideCourseLitBranding,
             });
 
+            const emailfrom = `${ctx.subdomain?.settings?.title || ctx.subdomain.name} <${process.env.EMAIL_FROM || ctx.subdomain.email}>`;
             await send({
                 to: [user.email],
                 subject: `You have been invited to ${course.title}`,
                 body: emailBody,
+                from: emailfrom,
             });
         } catch (error) {
             // eslint-disable-next-line no-console
