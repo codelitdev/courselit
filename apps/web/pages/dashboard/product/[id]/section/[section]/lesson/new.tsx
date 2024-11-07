@@ -31,6 +31,7 @@ function NewLesson({
                 address={address}
                 profile={profile}
                 prefix="/dashboard"
+                isNew={true}
             />
         </BaseLayout>
     );
