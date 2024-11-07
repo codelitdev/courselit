@@ -5,6 +5,7 @@ import Profile from "../profile";
 import SiteInfo from "../site-info";
 import Theme from "../theme";
 import { Typeface } from "../typeface";
+import { ServerConfig } from "../server-config";
 
 export default interface State {
     auth: Auth;
@@ -15,4 +16,5 @@ export default interface State {
     theme: Theme;
     typefaces: Typeface[];
     message: Message;
+    config: ServerConfig;
 }

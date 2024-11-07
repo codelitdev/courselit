@@ -8,6 +8,6 @@ export default defineConfig((options: Options) => ({
     dts: true,
     minify: true,
     clean: true,
-    external: ["react", "react-dom", "next/link"],
+    external: ["react", "react-dom", "next/script"],
     ...options,
 }));
