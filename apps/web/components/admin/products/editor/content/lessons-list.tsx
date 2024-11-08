@@ -17,6 +17,7 @@ import {
     Menu2,
     MenuItem,
     DragAndDrop,
+    useToast,
 } from "@courselit/components-library";
 import { actionCreators, AppDispatch } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
@@ -186,6 +187,7 @@ export default function LessonsList({
     course,
     prefix,
 }: LessonsProps) {
+    const { toast } = useToast();
     const removeGroup = async (groupId: string, courseId: string) => {
         const mutation = `
         mutation {
@@ -212,6 +214,10 @@ export default function LessonsList({
                             new AppMessage(LESSON_GROUP_DELETED),
                         ),
                     );
+                toast({
+                    title: "",
+                    description: LESSON_GROUP_DELETED,
+                });
                 course.groups.splice(
                     course.groups.findIndex((group) => group.id === groupId),
                     1,
