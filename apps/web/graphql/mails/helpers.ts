@@ -8,6 +8,7 @@ import pug from "pug";
 import digitalDownloadTemplate from "../../templates/download-link";
 import { send } from "../../services/mail";
 import { responses } from "@config/strings";
+import { generateEmailFrom } from "@/lib/utils";
 
 export function areAllEmailIdsValid(
     emailsOrder: string[],
@@ -91,12 +92,14 @@ export async function createTemplateAndSendMail({
         hideCourseLitBranding: ctx.subdomain.settings?.hideCourseLitBranding,
     });
 
-    const emailfrom = `${ctx.subdomain?.settings?.title || ctx.subdomain.name} <${process.env.EMAIL_FROM || ctx.subdomain.email}>`;
     await send({
         to: [user.email],
         subject: `Thank you for signing up for ${course.title}`,
         body: emailBody,
-        from: emailfrom,
+        from: generateEmailFrom({
+            name: ctx.subdomain?.settings?.title || ctx.subdomain.name,
+            email: process.env.EMAIL_FROM || ctx.subdomain.email,
+        }),
     });
 }
 
