@@ -63,6 +63,9 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
                         email: sanitizedEmail,
                     });
                 }
+                if (!user.active) {
+                    return null;
+                }
                 return {
                     id: user.userId,
                     email: sanitizedEmail,

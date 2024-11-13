@@ -257,7 +257,7 @@ const Details = ({ userId, address, dispatch }: DetailsProps) => {
                         />
                     </div>
                 </Section>
-                <PermissionsEditor user={userData} />
+                {userData.permissions && <PermissionsEditor user={userData} />}
             </div>
 
             {/*
