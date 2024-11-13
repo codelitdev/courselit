@@ -57,9 +57,9 @@ export async function GET(req: Request) {
         if (!domain) {
             return Response.json(
                 {
-                    message: `${responses.domain_doesnt_exist}: ${
-                        host?.split(".")[0]
-                    }`,
+                    message: `${responses.domain_doesnt_exist}: ${host?.split(
+                        ".",
+                    )[0]}`,
                 },
                 { status: 404 },
             );
