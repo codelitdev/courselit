@@ -6,6 +6,7 @@ import pug from "pug";
 import MagicCodeEmailTemplate from "../../../../templates/magic-code-email";
 import { send } from "../../../../services/mail";
 import DomainModel, { Domain } from "@models/Domain";
+import { generateEmailFrom } from "@/lib/utils";
 
 export default async function handler(
     req: NextApiRequest,
@@ -42,10 +43,15 @@ export default async function handler(
             code,
             hideCourseLitBranding: domain.settings?.hideCourseLitBranding,
         });
+
         await send({
             to: [sanitizedEmail],
             subject: `${responses.sign_in_mail_prefix} ${req.headers["host"]}`,
             body: emailBody,
+            from: generateEmailFrom({
+                name: domain?.settings?.title || domain.name,
+                email: process.env.EMAIL_FROM || domain.email,
+            }),
         });
     } catch (err: any) {
         res.status(500).json({

@@ -29,6 +29,7 @@ import { getCourseOrThrow } from "../courses/logic";
 import pug from "pug";
 import courseEnrollTemplate from "@/templates/course-enroll";
 import { send } from "../../services/mail";
+import { generateEmailFrom } from "@/lib/utils";
 
 const removeAdminFieldsFromUserObject = (user: User) => ({
     id: user._id,
@@ -181,6 +182,10 @@ export const inviteCustomer = async (
                 to: [user.email],
                 subject: `You have been invited to ${course.title}`,
                 body: emailBody,
+                from: generateEmailFrom({
+                    name: ctx.subdomain?.settings?.title || ctx.subdomain.name,
+                    email: process.env.EMAIL_FROM || ctx.subdomain.email,
+                }),
             });
         } catch (error) {
             // eslint-disable-next-line no-console

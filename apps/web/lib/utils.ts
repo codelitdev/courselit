@@ -33,3 +33,13 @@ export const getAddress = (
 export const getProtocol = (protocol: string | string[] = "http") => {
     return protocol.includes("https") ? "https" : "http";
 };
+
+export const generateEmailFrom = ({
+    name,
+    email,
+}: {
+    name: string;
+    email: string;
+}) => {
+    return `${name} <${email}>`;
+};
