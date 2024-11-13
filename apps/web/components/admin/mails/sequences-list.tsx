@@ -15,7 +15,7 @@ import {
     TableHead,
     TableRow,
 } from "@courselit/components-library";
-import { AppDispatch, AppState } from "@courselit/state-management";
+import { AppDispatch } from "@courselit/state-management";
 import {
     networkAction,
     setAppMessage,
@@ -26,14 +26,14 @@ import {
     MAIL_TABLE_HEADER_SUBJECT,
 } from "@ui-config/strings";
 import { useEffect, useState } from "react";
-import { connect } from "react-redux";
 import { isDateInFuture } from "../../../lib/utils";
 
 interface SequencesListProps {
     address: Address;
-    dispatch: AppDispatch;
     loading: boolean;
     type: SequenceType;
+    prefix: string;
+    dispatch?: AppDispatch;
 }
 
 const SequencesList = ({
@@ -41,6 +41,7 @@ const SequencesList = ({
     dispatch,
     loading,
     type,
+    prefix,
 }: SequencesListProps) => {
     const [page, setPage] = useState(1);
     // const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -94,15 +95,15 @@ const SequencesList = ({
             .build();
 
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetcher.exec();
             if (response.broadcasts) {
                 setSequences(response.broadcasts);
             }
         } catch (e: any) {
-            dispatch(setAppMessage(new AppMessage(e.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     };
 
@@ -122,15 +123,15 @@ const SequencesList = ({
             .build();
 
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetcher.exec();
             if (response.count) {
                 setCount(response.count);
             }
         } catch (e: any) {
-            dispatch(setAppMessage(new AppMessage(e.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     };
 
@@ -150,14 +151,17 @@ const SequencesList = ({
                     <TableRow key={broadcast.sequenceId}>
                         <td className="py-4">
                             <Link
-                                href={`/dashboard/mails/${type}/${broadcast.sequenceId}/edit`}
+                                href={`${prefix}/mails/${type}/${broadcast.sequenceId}/edit`}
                                 className="flex"
                             >
                                 {type === "broadcast" &&
                                     (broadcast.emails[0].subject === " "
                                         ? "--"
                                         : broadcast.emails[0].subject)}
-                                {type === "sequence" && broadcast.title}
+                                {type === "sequence" &&
+                                    (broadcast.title === " "
+                                        ? "Untitled Sequence"
+                                        : broadcast.title)}
                             </Link>
                         </td>
                         <td align="right">
@@ -219,11 +223,4 @@ const SequencesList = ({
     );
 };
 
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-    loading: state.networkAction,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(SequencesList);
+export default SequencesList;

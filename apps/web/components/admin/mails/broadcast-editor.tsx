@@ -5,7 +5,7 @@ import {
     Breadcrumbs,
     Link,
 } from "@courselit/components-library";
-import { AppDispatch, AppState } from "@courselit/state-management";
+import { AppDispatch } from "@courselit/state-management";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { actionCreators } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
@@ -17,7 +17,6 @@ import {
     UserFilter,
     UserFilterAggregator,
 } from "@courselit/common-models";
-import { connect } from "react-redux";
 import {
     BTN_SCHEDULE,
     BTN_SEND,
@@ -45,10 +44,11 @@ const { networkAction } = actionCreators;
 interface MailEditorProps {
     id: string;
     address: Address;
-    dispatch: AppDispatch;
+    dispatch?: AppDispatch;
+    prefix: string;
 }
 
-function MailEditor({ id, address, dispatch }: MailEditorProps) {
+function MailEditor({ id, address, dispatch, prefix }: MailEditorProps) {
     const [filters, setFilters] = useState<UserFilter[]>([]);
     const [filtersAggregator, setFiltersAggregator] =
         useState<UserFilterAggregator>("or");
@@ -110,7 +110,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
             .build();
 
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetcher.exec();
             if (response.sequence) {
                 const { sequence } = response;
@@ -127,9 +127,9 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                 setStatus(sequence.status);
             }
         } catch (e: any) {
-            dispatch(setAppMessage(new AppMessage(e.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
             setLoaded(true);
         }
     }, [dispatch, fetch, id]);
@@ -208,12 +208,12 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
             .build();
 
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             await fetcher.exec();
         } catch (e: any) {
-            dispatch(setAppMessage(new AppMessage(e.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     }, [
         dispatch,
@@ -235,13 +235,15 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
         e.preventDefault();
 
         if (!subject.trim()) {
-            dispatch(setAppMessage(new AppMessage(ERROR_SUBJECT_EMPTY)));
+            dispatch &&
+                dispatch(setAppMessage(new AppMessage(ERROR_SUBJECT_EMPTY)));
             setConfirmationDialogOpen(false);
             return;
         }
 
         if (sendLater && delay === 0) {
-            dispatch(setAppMessage(new AppMessage(ERROR_DELAY_EMPTY)));
+            dispatch &&
+                dispatch(setAppMessage(new AppMessage(ERROR_DELAY_EMPTY)));
             setConfirmationDialogOpen(false);
             return;
         }
@@ -302,7 +304,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
             .build();
 
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetcher.exec();
             if (response.sequence) {
                 const { sequence } = response;
@@ -318,12 +320,13 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                 setReport(sequence.report);
                 setStatus(sequence.status);
                 setShowScheduleInput(false);
-                dispatch(setAppMessage(new AppMessage(TOAST_MAIL_SENT)));
+                dispatch &&
+                    dispatch(setAppMessage(new AppMessage(TOAST_MAIL_SENT)));
             }
         } catch (e: any) {
-            dispatch(setAppMessage(new AppMessage(e.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
             setConfirmationDialogOpen(false);
         }
     };
@@ -375,7 +378,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
             .build();
 
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetcher.exec();
             if (response.sequence) {
                 const { sequence } = response;
@@ -392,16 +395,23 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                 setStatus(sequence.status);
             }
         } catch (e: any) {
-            dispatch(setAppMessage(new AppMessage(e.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     };
 
-    const onFilterChange = ({ filters, aggregator, segmentId, count }) => {
-        setFilters(filters);
-        setFiltersAggregator(aggregator);
-        setFilteredUsersCount(count);
+    const onFilterChange = ({
+        filters: inputFilters,
+        aggregator,
+        segmentId,
+        count,
+    }) => {
+        if (JSON.stringify(filters) !== JSON.stringify(inputFilters)) {
+            setFilters(filters);
+            setFiltersAggregator(aggregator);
+            setFilteredUsersCount(count);
+        }
     };
 
     const isPublished = useMemo(() => {
@@ -418,7 +428,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
     return (
         <div className="flex flex-col gap-4">
             <Breadcrumbs aria-label="breakcrumb">
-                <Link href="/dashboard/mails?tab=Broadcasts">
+                <Link href={`${prefix}/mails?tab=Broadcasts`}>
                     {PAGE_HEADER_ALL_MAILS}
                 </Link>
                 {PAGE_HEADER_EDIT_MAIL}
@@ -432,6 +442,8 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                     filter={{ aggregator: filtersAggregator, filters }}
                     onChange={onFilterChange}
                     disabled={isPublished}
+                    address={address}
+                    dispatch={dispatch}
                 />
             </fieldset>
             <Form className="flex flex-col gap-4" onSubmit={onSubmit}>
@@ -580,13 +592,4 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
     );
 }
 
-const mapStateToProps = (state: AppState) => ({
-    auth: state.auth,
-    address: state.address,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({
-    dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(MailEditor);
+export default MailEditor;

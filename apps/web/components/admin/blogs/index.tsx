@@ -1,5 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { Address, AppMessage, Course } from "@courselit/common-models";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+    Address,
+    AppMessage,
+    Course,
+    SiteInfo,
+} from "@courselit/common-models";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import {
     networkAction,
@@ -22,31 +27,29 @@ import { MenuItem, Menu2, Button, Link } from "@courselit/components-library";
 import { Table } from "@courselit/components-library";
 import { TableHead } from "@courselit/components-library";
 import { TableBody } from "@courselit/components-library";
+import { usePathname } from "next/navigation";
 
 const BlogItem = dynamic(() => import("./blog-item"));
 
 interface IndexProps {
-    dispatch: AppDispatch;
+    dispatch?: AppDispatch;
     address: Address;
     loading: boolean;
+    siteinfo: SiteInfo;
 }
 
-const Index = ({ loading, dispatch, address }: IndexProps) => {
+export const Index = ({ loading, dispatch, address, siteinfo }: IndexProps) => {
     const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1);
     const [creatorCourses, setCreatorCourses] = useState<
         (Course & { published: boolean })[]
     >([]);
     const [endReached, setEndReached] = useState(false);
+    const path = usePathname();
+    const pathPrefix = path?.startsWith("/dashboard2")
+        ? "/dashboard2"
+        : "/dashboard";
 
-    useEffect(() => {
-        loadBlogs();
-    }, []);
-
-    useEffect(() => {
-        loadBlogs();
-    }, [coursesPaginationOffset]);
-
-    const loadBlogs = async () => {
+    const loadBlogs = useCallback(async () => {
         const query = `
     query {
       courses: getCoursesAsAdmin(
@@ -69,7 +72,7 @@ const Index = ({ loading, dispatch, address }: IndexProps) => {
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             setEndReached(false);
             const response = await fetch.exec();
             if (response.courses) {
@@ -79,11 +82,19 @@ const Index = ({ loading, dispatch, address }: IndexProps) => {
                 }
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
-    };
+    }, [address.backend, coursesPaginationOffset, dispatch]);
+
+    useEffect(() => {
+        loadBlogs();
+    }, []);
+
+    useEffect(() => {
+        loadBlogs();
+    }, [coursesPaginationOffset, loadBlogs]);
 
     const onDelete = (index: number) => {
         creatorCourses.splice(index, 1);
@@ -97,13 +108,13 @@ const Index = ({ loading, dispatch, address }: IndexProps) => {
                     {MANAGE_BLOG_PAGE_HEADING}
                 </h1>
                 <div className="flex items-center gap-4">
-                    <Link href="/dashboard/blog/new">
+                    <Link href={`${pathPrefix}/blog/new`}>
                         <Button>{BTN_NEW_BLOG}</Button>
                     </Link>
                     <Menu2 icon={<MoreVert />} variant="soft">
                         <MenuItem>
                             <Link
-                                href={`/dashboard/page/blog/edit?redirectTo=/dashboard/blogs`}
+                                href={`/dashboard/page/blog/edit?redirectTo=${pathPrefix}/blogs`}
                                 className="flex w-full"
                             >
                                 {PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE}
@@ -138,6 +149,8 @@ const Index = ({ loading, dispatch, address }: IndexProps) => {
                                 details={product}
                                 position={index}
                                 onDelete={onDelete}
+                                siteinfo={siteinfo}
+                                address={address}
                             />
                         ),
                     )}
@@ -162,10 +175,10 @@ const Index = ({ loading, dispatch, address }: IndexProps) => {
 };
 
 const mapStateToProps = (state: AppState) => ({
-    auth: state.auth,
     profile: state.profile,
     address: state.address,
     loading: state.networkAction,
+    siteinfo: state.siteinfo,
 });
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({

@@ -30,46 +30,20 @@ import pug from "pug";
 import courseEnrollTemplate from "@/templates/course-enroll";
 import { send } from "../../services/mail";
 
-const removeAdminFieldsFromUserObject = ({
-    id,
-    name,
-    userId,
-    bio,
-    email,
-    avatar,
-}: {
-    id: string;
-    name: string;
-    userId: string;
-    bio: string;
-    email: string;
-    avatar: Media;
-}) => ({
-    id,
-    name,
-    userId,
-    bio,
-    email,
-    avatar,
+const removeAdminFieldsFromUserObject = (user: User) => ({
+    id: user._id,
+    name: user.name,
+    userId: user.userId,
+    bio: user.bio,
+    email: user.email,
+    avatar: user.avatar,
 });
 
-export const getUser = async (email = null, userId = null, ctx: GQLContext) => {
-    const { user: loggedInUser } = ctx;
-    const loggedUserEmail = loggedInUser && loggedInUser.email;
-    const loggedUserId = loggedInUser && loggedInUser.userId;
+export const getUser = async (userId = null, ctx: GQLContext) => {
+    let user: User | undefined | null;
+    user = ctx.user;
 
-    if (!email && !userId && !loggedInUser) {
-        throw new Error(responses.invalid_user_id);
-    }
-
-    if (!email && !userId && loggedInUser) {
-        email = loggedUserEmail;
-    }
-
-    let user;
-    if (email) {
-        user = await UserModel.findOne({ email, domain: ctx.subdomain._id });
-    } else {
+    if (userId) {
         user = await UserModel.findOne({ userId, domain: ctx.subdomain._id });
     }
 
@@ -77,16 +51,14 @@ export const getUser = async (email = null, userId = null, ctx: GQLContext) => {
         throw new Error(responses.item_not_found);
     }
 
-    user.userId = user.userId || -1; // Set -1 for empty userIds; Backward compatibility;
-
-    return loggedInUser &&
-        (loggedUserEmail === email ||
-            loggedUserId === userId ||
-            checkPermission(loggedInUser.permissions, [
-                permissions.manageUsers,
-            ]))
-        ? user
-        : removeAdminFieldsFromUserObject(user);
+    if (
+        user.userId === ctx.user.userId ||
+        checkPermission(ctx.user.permissions, [permissions.manageUsers])
+    ) {
+        return user;
+    } else {
+        return removeAdminFieldsFromUserObject(user);
+    }
 };
 
 const validateUserProperties = (user) => {
@@ -102,39 +74,41 @@ const checkForInvalidPermissions = (user) => {
     }
 };
 
-export const updateUser = async (
-    userData: Record<string, unknown>,
-    ctx: GQLContext,
-) => {
+interface UserData {
+    id: string;
+    name?: string;
+    active?: boolean;
+    bio?: string;
+    permissions?: string[];
+    subscribedToUpdates?: boolean;
+    tags?: string[];
+    avatar?: Media;
+}
+
+export const updateUser = async (userData: UserData, ctx: GQLContext) => {
     checkIfAuthenticated(ctx);
     const { id } = userData;
+    const keys = Object.keys(userData);
 
     const hasPermissionToManageUser = checkPermission(ctx.user.permissions, [
         permissions.manageUsers,
     ]);
-    if (!hasPermissionToManageUser) {
-        if (id !== ctx.user._id.toString()) {
-            throw new Error(responses.action_not_allowed);
-        }
+    const isModifyingSelf = id === ctx.user._id.toString();
+    const restrictedKeys = ["permissions", "active"];
+
+    if (
+        (isModifyingSelf && keys.some((key) => restrictedKeys.includes(key))) ||
+        (!isModifyingSelf && !hasPermissionToManageUser)
+    ) {
+        throw new Error(responses.action_not_allowed);
     }
 
     let user = await UserModel.findOne({ _id: id, domain: ctx.subdomain._id });
     if (!user) throw new Error(responses.item_not_found);
 
-    for (const key of Object.keys(userData)) {
-        if (key === "id") {
-            continue;
-        }
-
-        // if (
-        //     !["subscribedToUpdates"].includes(key) &&
-        //     id === ctx.user._id.toString()
-        // ) {
-        //     throw new Error(responses.action_not_allowed);
-        // }
-
+    for (const key of keys.filter((key) => key !== "id")) {
         if (key === "tags") {
-            addTags(userData["tags"], ctx);
+            addTags(userData["tags"]!, ctx);
         }
 
         user[key] = userData[key];
@@ -200,7 +174,7 @@ export const inviteCustomer = async (
                 courseName: course.title,
                 loginLink: `${ctx.address}/login`,
                 hideCourseLitBranding:
-                    ctx.subdomain.settings.hideCourseLitBranding,
+                    ctx.subdomain.settings?.hideCourseLitBranding,
             });
 
             await send({

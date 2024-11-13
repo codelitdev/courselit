@@ -5,7 +5,7 @@ import {
     FormSubmit,
     Select,
 } from "@courselit/components-library";
-import { AppDispatch, AppState } from "@courselit/state-management";
+import { AppDispatch } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import {
     POPUP_CANCEL_ACTION,
@@ -18,7 +18,6 @@ import {
 import React, { useState } from "react";
 import { useCallback } from "react";
 import { useMemo } from "react";
-import { connect } from "react-redux";
 import PopoverHeader from "../popover-header";
 import { actionCreators } from "@courselit/state-management";
 import { useEffect } from "react";
@@ -27,10 +26,10 @@ const { setAppMessage } = actionCreators;
 interface TaggedFilterEditorProps {
     onApply: (...args: any[]) => any;
     address: Address;
-    dispatch: AppDispatch;
+    dispatch?: AppDispatch;
 }
 
-function TaggedFilterEditor({
+export default function TaggedFilterEditor({
     onApply,
     address,
     dispatch,
@@ -125,13 +124,3 @@ function TaggedFilterEditor({
         </Form>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({
-    dispatch: dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(TaggedFilterEditor);

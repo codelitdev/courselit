@@ -6,10 +6,9 @@ import {
     EDIT_SECTION_HEADER,
     LESSON_GROUP_DELETED,
 } from "../../../../../ui-config/strings";
-import useCourse, { CourseFrontend } from "../course-hook";
+import { CourseWithAdminProps } from "../course-hook";
 import { Add, MoreVert } from "@courselit/icons";
 import { Lesson, Address, AppMessage, Group } from "@courselit/common-models";
-import { useRouter } from "next/router";
 import {
     Section,
     Link,
@@ -19,36 +18,34 @@ import {
     MenuItem,
     DragAndDrop,
 } from "@courselit/components-library";
-import {
-    actionCreators,
-    AppDispatch,
-    AppState,
-} from "@courselit/state-management";
-import { connect } from "react-redux";
+import { actionCreators, AppDispatch } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 
 interface LessonSectionProps {
     group: Group;
-    course: CourseFrontend;
+    course: CourseWithAdminProps;
     onGroupDelete: (groupId: string, courseId: string) => void;
     address: Address;
-    dispatch: AppDispatch;
+    dispatch?: AppDispatch;
+    prefix: string;
 }
 
 function LessonItem({
     lesson,
     courseId,
     groupId,
+    prefix,
 }: {
     lesson: Lesson;
     courseId: string;
     groupId: string;
+    prefix: string;
 }) {
     return (
         <div className="flex items-center gap-2" key={lesson.lessonId}>
             <LessonIcon type={lesson.type} />
             <Link
-                href={`/dashboard/product/${courseId}/section/${groupId}/lesson/${lesson.lessonId}`}
+                href={`${prefix}/product/${courseId}/section/${groupId}/lesson/${lesson.lessonId}`}
             >
                 {lesson.title}
             </Link>
@@ -62,6 +59,7 @@ function LessonSection({
     onGroupDelete,
     address,
     dispatch,
+    prefix,
 }: LessonSectionProps) {
     const updateGroup = async (lessonsOrder: string[]) => {
         const mutation = `
@@ -89,12 +87,15 @@ function LessonSection({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(actionCreators.networkAction(true));
+            dispatch && dispatch(actionCreators.networkAction(true));
             const response = await fetch.exec();
         } catch (err: any) {
-            dispatch(actionCreators.setAppMessage(new AppMessage(err.message)));
+            dispatch &&
+                dispatch(
+                    actionCreators.setAppMessage(new AppMessage(err.message)),
+                );
         } finally {
-            dispatch(actionCreators.networkAction(false));
+            dispatch && dispatch(actionCreators.networkAction(false));
         }
     };
 
@@ -106,7 +107,7 @@ function LessonSection({
                     <Menu2 icon={<MoreVert />} variant="soft">
                         <MenuItem>
                             <Link
-                                href={`/dashboard/product/${course.courseId}/section/${group.id}`}
+                                href={`${prefix}/product/${course.courseId}/section/${group.id}`}
                                 className="flex w-full"
                             >
                                 {EDIT_SECTION_HEADER}
@@ -142,6 +143,7 @@ function LessonSection({
                                 courseId: course.courseId,
                                 groupId: lesson.groupId,
                                 lesson,
+                                prefix,
                             }))}
                         Renderer={LessonItem}
                         key={JSON.stringify(course.lessons)}
@@ -156,7 +158,7 @@ function LessonSection({
                 </div>
                 <div>
                     <Link
-                        href={`/dashboard/product/${course.courseId}/section/${group.id}/lesson/new`}
+                        href={`${prefix}/product/${course.courseId}/section/${group.id}/lesson/new`}
                     >
                         <Button variant="soft">
                             <Add />
@@ -171,14 +173,19 @@ function LessonSection({
 
 interface LessonsProps {
     id: string;
-    dispatch: AppDispatch;
     address: Address;
+    dispatch?: AppDispatch;
+    course: CourseWithAdminProps;
+    prefix: string;
 }
 
-function LessonsList({ id, dispatch, address }: LessonsProps) {
-    const course = useCourse(id);
-    const router = useRouter();
-
+export default function LessonsList({
+    id,
+    dispatch,
+    address,
+    course,
+    prefix,
+}: LessonsProps) {
     const removeGroup = async (groupId: string, courseId: string) => {
         const mutation = `
         mutation {
@@ -196,23 +203,27 @@ function LessonsList({ id, dispatch, address }: LessonsProps) {
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(actionCreators.networkAction(true));
+            dispatch && dispatch(actionCreators.networkAction(true));
             const response = await fetch.exec();
             if (response.removeGroup?.courseId) {
-                dispatch(
-                    actionCreators.setAppMessage(
-                        new AppMessage(LESSON_GROUP_DELETED),
-                    ),
-                );
+                dispatch &&
+                    dispatch(
+                        actionCreators.setAppMessage(
+                            new AppMessage(LESSON_GROUP_DELETED),
+                        ),
+                    );
                 course.groups.splice(
                     course.groups.findIndex((group) => group.id === groupId),
                     1,
                 );
             }
         } catch (err: any) {
-            dispatch(actionCreators.setAppMessage(new AppMessage(err.message)));
+            dispatch &&
+                dispatch(
+                    actionCreators.setAppMessage(new AppMessage(err.message)),
+                );
         } finally {
-            dispatch(actionCreators.networkAction(false));
+            dispatch && dispatch(actionCreators.networkAction(false));
         }
     };
 
@@ -230,22 +241,14 @@ function LessonsList({ id, dispatch, address }: LessonsProps) {
                     key={group.id}
                     address={address}
                     dispatch={dispatch}
+                    prefix={prefix}
                 />
             ))}
             <div>
-                <Link href={`/dashboard/product/${id}/section/new`}>
+                <Link href={`${prefix}/product/${id}/section/new`}>
                     <Button>{BUTTON_NEW_GROUP_TEXT}</Button>
                 </Link>
             </div>
         </div>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    loading: state.networkAction,
-    address: state.address,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(LessonsList);

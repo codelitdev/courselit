@@ -1,5 +1,5 @@
 import React, { FC } from "react";
-import { FloatingToolbar, FormattingButtonGroup } from "@remirror/react";
+import { FloatingToolbar, FormattingButtonGroup } from "@remirror/react-ui";
 import FloatingLinkCommandGroup from "./FloatingLinkCommandGroup";
 
 /**

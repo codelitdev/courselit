@@ -1,12 +1,8 @@
 import React, { FormEvent, useEffect, useState } from "react";
-import { Form, Section, Button } from "@courselit/components-library";
+import { Form, Button } from "@courselit/components-library";
 import useCourse from "./course-hook";
-import { connect } from "react-redux";
 import { capitalize, FetchBuilder } from "@courselit/utils";
-import {
-    networkAction,
-    setAppMessage,
-} from "@courselit/state-management/dist/action-creators";
+import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import { Address, AppMessage } from "@courselit/common-models";
 import {
     BTN_PUBLISH,
@@ -16,24 +12,24 @@ import {
     PUBLISH_TAB_VISIBILITY_SUBTITLE,
     PUBLISH_TAB_VISIBILITY_TITLE,
 } from "../../../../ui-config/strings";
-import { AppDispatch, AppState } from "@courselit/state-management";
+import { AppDispatch } from "@courselit/state-management";
 
 interface PublishProps {
     id: string;
     address: Address;
-    dispatch: AppDispatch;
-    loading: boolean;
+    dispatch?: AppDispatch;
 }
 
-function Publish({ id, address, dispatch, loading }: PublishProps) {
-    let course = useCourse(id);
+export default function Publish({ id, address, dispatch }: PublishProps) {
+    let course = useCourse(id, address);
     const [published, setPublished] = useState(course?.published);
-    const [privacy, setPrivacy] = useState(course?.privacy);
+    const [privacy, setPrivacy] = useState<string>(course?.privacy as string);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (course) {
             setPublished(course.published);
-            setPrivacy(course.privacy);
+            setPrivacy(course.privacy as string);
         }
     }, [course]);
 
@@ -80,15 +76,15 @@ function Publish({ id, address, dispatch, loading }: PublishProps) {
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(networkAction(true));
+            setLoading(true);
             const response = await fetch.exec();
             if (response.course) {
                 return response.course;
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -97,51 +93,40 @@ function Publish({ id, address, dispatch, loading }: PublishProps) {
     }
 
     return (
-        <Section>
-            <Form
-                onSubmit={updatePublishingDetails}
-                className="flex flex-col gap-4"
-            >
-                <div className="flex justify-between items-center">
-                    <div>
-                        <h2>{PUBLISH_TAB_STATUS_TITLE}</h2>
-                        <p className="text-sm text-slate-400">
-                            {PUBLISH_TAB_STATUS_SUBTITLE}
-                        </p>
-                    </div>
-                    <Button
-                        onClick={togglePublishedStatus}
-                        variant="soft"
-                        disabled={loading}
-                    >
-                        {published ? BTN_UNPUBLISH : BTN_PUBLISH}
-                    </Button>
+        <Form
+            onSubmit={updatePublishingDetails}
+            className="flex flex-col gap-4"
+        >
+            <div className="flex justify-between items-center">
+                <div>
+                    <h2>{PUBLISH_TAB_STATUS_TITLE}</h2>
+                    <p className="text-sm text-slate-400">
+                        {PUBLISH_TAB_STATUS_SUBTITLE}
+                    </p>
                 </div>
-                <div className="flex justify-between items-center">
-                    <div>
-                        <h2>{PUBLISH_TAB_VISIBILITY_TITLE}</h2>
-                        <p className="text-sm text-slate-400">
-                            {PUBLISH_TAB_VISIBILITY_SUBTITLE}
-                        </p>
-                    </div>
-                    <Button
-                        onClick={toggleVisibility}
-                        variant="soft"
-                        disabled={loading || !published}
-                    >
-                        {capitalize(privacy)}
-                    </Button>
+                <Button
+                    onClick={togglePublishedStatus}
+                    variant="soft"
+                    disabled={loading}
+                >
+                    {published ? BTN_UNPUBLISH : BTN_PUBLISH}
+                </Button>
+            </div>
+            <div className="flex justify-between items-center">
+                <div>
+                    <h2>{PUBLISH_TAB_VISIBILITY_TITLE}</h2>
+                    <p className="text-sm text-slate-400">
+                        {PUBLISH_TAB_VISIBILITY_SUBTITLE}
+                    </p>
                 </div>
-            </Form>
-        </Section>
+                <Button
+                    onClick={toggleVisibility}
+                    variant="soft"
+                    disabled={loading || !published}
+                >
+                    {capitalize(privacy)}
+                </Button>
+            </div>
+        </Form>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-    loading: state.networkAction,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(Publish);

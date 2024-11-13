@@ -16,10 +16,10 @@ export async function processRules() {
             `Starting process of rules at ${currentTime.toDateString()}`,
         );
 
-        const dueRules: Rule[] = await RuleModel.find({
+        const dueRules: Rule[] = (await RuleModel.find({
             event: Constants.eventTypes[4],
             eventDateInMillis: { $lt: currentTime.getTime() },
-        }).lean();
+        }).lean()) as any;
 
         for (const rule of dueRules) {
             try {

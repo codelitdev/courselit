@@ -147,10 +147,12 @@ docker ps
 Once you have the ID of the `MediaLit` container, run the following to generate an API key
 
 ```
-docker exec <container_id_from_above_step> node dist/scripts/create-local-user.js
+docker exec <container_id | container_name> node /app/apps/api/dist/src/scripts/create-local-user.js <email>
 ```
 
 Keep the generated API key safe. We will use it in the following step.
+
+> For the most up-to-date instructions, refer to the official [Readme](https://github.com/codelitdev/medialit?tab=readme-ov-file#creating-a-local-user) of MediaLit.
 
 #### Using Self-hosted MediaLit With CourseLit
 

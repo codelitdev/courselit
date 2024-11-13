@@ -58,5 +58,5 @@ export async function getDomain(id: mongoose.Schema.Types.ObjectId) {
 }
 
 export async function getTemplate(id: string): Promise<EmailTemplate | null> {
-    return await emailTemplate.find({ templateId: id }).lean();
+    return (await emailTemplate.find({ templateId: id }).lean()) as any;
 }

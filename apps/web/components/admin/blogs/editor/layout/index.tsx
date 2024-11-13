@@ -1,33 +1,49 @@
-import { useRouter } from "next/router";
 import React, { ReactNode } from "react";
 import dynamic from "next/dynamic";
-import { MANAGE_COURSES_PAGE_HEADING } from "../../../../../ui-config/strings";
 import generateTabs from "./tabs-data";
+import { Address, Profile, SiteInfo } from "@courselit/common-models";
+import useCourse from "../course-hook";
+import { truncate } from "@ui-lib/utils";
 
-const BaseLayout = dynamic(() => import("../../../base-layout"));
 const BlogHeader = dynamic(() => import("./header"));
 const Tabs = dynamic(() => import("../../../../tabs"));
 
-interface ProductEditorLayoutProps {
+interface BlogEditorLayoutProps {
+    id: string;
+    profile: Profile;
+    siteInfo: SiteInfo;
     children: ReactNode;
+    address: Address;
+    prefix: string;
 }
 
-export default function ProductEditorLayout({
+export default function BlogEditorLayout({
+    id,
     children,
-}: ProductEditorLayoutProps) {
-    const router = useRouter();
-    const { id } = router.query;
-    const breadcrumbs = [{ text: "Blogs", url: `/dashboard/blogs` }];
+    address,
+    prefix,
+}: BlogEditorLayoutProps) {
+    const course = useCourse(id, address);
+    const breadcrumbs = [
+        { text: "Blogs", url: `${prefix}/blogs` },
+        {
+            text:
+                course && course.title
+                    ? (truncate(course.title, 10) as string)
+                    : "",
+            url: "",
+        },
+    ];
 
     return (
-        <BaseLayout title={MANAGE_COURSES_PAGE_HEADING}>
-            <div className="flex flex-col">
-                <BlogHeader id={id as string} breadcrumbs={breadcrumbs} />
-                <div className="mb-4">
-                    <Tabs tabs={generateTabs(id as string)} />
-                </div>
-                {children}
-            </div>
-        </BaseLayout>
+        <div className="flex flex-col gap-4">
+            <BlogHeader
+                id={id as string}
+                breadcrumbs={breadcrumbs}
+                address={address}
+            />
+            <Tabs tabs={generateTabs(prefix, id as string)} />
+            {course && children}
+        </div>
     );
 }

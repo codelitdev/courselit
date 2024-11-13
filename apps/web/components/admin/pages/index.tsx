@@ -33,7 +33,7 @@ interface IndexProps {
     loading: boolean;
 }
 
-const Index = ({ loading, address, dispatch }: IndexProps) => {
+export const Pages = ({ loading, address, dispatch }: IndexProps) => {
     const [pages, setPages] = useState<Page[]>([]);
 
     useEffect(() => {
@@ -189,4 +189,4 @@ const mapDispatchToProps = (dispatch: AppDispatch) => ({
     dispatch,
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(Index);
+export default connect(mapStateToProps, mapDispatchToProps)(Pages);

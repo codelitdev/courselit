@@ -1,14 +1,14 @@
-import React, { useState } from "react";
+import React, { FormEvent, useState } from "react";
 import { Address, AppMessage } from "@courselit/common-models";
 import {
-    Section,
     Form,
     FormField,
     Button,
+    Breadcrumbs,
 } from "@courselit/components-library";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
-import { useRouter } from "next/router";
+import { usePathname, useRouter } from "next/navigation";
 import { connect } from "react-redux";
 import {
     BTN_CONTINUE,
@@ -16,6 +16,7 @@ import {
     BUTTON_CANCEL_TEXT,
     COURSE_TYPE_BLOG,
     FORM_NEW_PRODUCT_TITLE_PLC,
+    MANAGE_BLOG_PAGE_HEADING,
 } from "../../../ui-config/strings";
 import {
     networkAction,
@@ -25,15 +26,25 @@ import Link from "next/link";
 
 interface NewBlogProps {
     address: Address;
-    dispatch: AppDispatch;
+    dispatch?: AppDispatch;
     networkAction: boolean;
 }
 
-function NewBlog({ address, dispatch, networkAction: loading }: NewBlogProps) {
+export function NewBlog({
+    address,
+    dispatch,
+    networkAction: loading,
+}: NewBlogProps) {
     const [title, setTitle] = useState("");
     const router = useRouter();
+    const path = usePathname();
+    const pathPrefix = path?.startsWith("/dashboard2")
+        ? "/dashboard2"
+        : "/dashboard";
 
-    const createCourse = async () => {
+    const createCourse = async (e: FormEvent) => {
+        e.preventDefault();
+
         const query = `
             mutation {
                 course: createCourse(courseData: {
@@ -51,22 +62,31 @@ function NewBlog({ address, dispatch, networkAction: loading }: NewBlogProps) {
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.course) {
                 router.replace(
-                    `/dashboard/blog/${response.course.courseId}/details`,
+                    `${pathPrefix}/blog/${response.course.courseId}/details`,
                 );
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     };
 
     return (
-        <Section>
+        <div className="flex flex-col">
+            <div className="mb-4">
+                <Breadcrumbs aria-label="breakcrumb">
+                    <Link href={`${pathPrefix}/blogs`}>
+                        {MANAGE_BLOG_PAGE_HEADING}
+                    </Link>
+
+                    <p>{BTN_NEW_BLOG}</p>
+                </Breadcrumbs>
+            </div>
             <div className="flex flex-col">
                 <h1 className="text-4xl font-semibold mb-4">{BTN_NEW_BLOG}</h1>
                 <Form onSubmit={createCourse} className="flex flex-col gap-4">
@@ -85,13 +105,13 @@ function NewBlog({ address, dispatch, networkAction: loading }: NewBlogProps) {
                         >
                             {BTN_CONTINUE}
                         </Button>
-                        <Link href={`/dashboard/blogs`} legacyBehavior>
+                        <Link href={`${pathPrefix}/blogs`} legacyBehavior>
                             <Button variant="soft">{BUTTON_CANCEL_TEXT}</Button>
                         </Link>
                     </div>
                 </Form>
             </div>
-        </Section>
+        </div>
     );
 }
 

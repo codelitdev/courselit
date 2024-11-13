@@ -72,8 +72,8 @@ export default function Widget({
                 : undefined
             : description
         : product.description
-        ? JSON.parse(product.description as string)
-        : undefined;
+          ? JSON.parse(product.description as string)
+          : undefined;
 
     let direction: any;
     switch (alignment) {
@@ -97,10 +97,10 @@ export default function Widget({
         typeof editingViewShowSuccess === "undefined"
             ? "0"
             : editingViewShowSuccess;
-    const featuredImage: Media =
+    const featuredImage: Partial<Media> =
         type === "site"
             ? state.siteinfo.logo
-            : (product.featuredImage as Media);
+            : (product.featuredImage as Partial<Media>);
 
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();

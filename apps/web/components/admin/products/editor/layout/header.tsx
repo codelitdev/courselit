@@ -11,6 +11,7 @@ import {
     Link,
     Breadcrumbs,
 } from "@courselit/components-library";
+import { Address } from "@courselit/common-models";
 
 interface Breadcrumb {
     text: string;
@@ -20,10 +21,15 @@ interface Breadcrumb {
 interface ProductHeaderProps {
     breadcrumbs?: Breadcrumb[];
     id: string;
+    address: Address;
 }
 
-export default function ProductHeader({ id, breadcrumbs }: ProductHeaderProps) {
-    const course = useCourse(id);
+export default function ProductHeader({
+    id,
+    breadcrumbs,
+    address,
+}: ProductHeaderProps) {
+    const course = useCourse(id, address);
 
     if (!course) {
         return <></>;

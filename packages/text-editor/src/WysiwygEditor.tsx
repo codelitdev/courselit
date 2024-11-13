@@ -5,10 +5,10 @@ import React, { useEffect, FC, PropsWithChildren, useCallback } from "react";
 import {
     EditorComponent,
     Remirror,
-    TableComponents,
     ThemeProvider,
     useRemirror,
 } from "@remirror/react";
+import { TableComponents } from "@remirror/extension-react-tables";
 import { AllStyledComponent } from "@remirror/styles/emotion";
 import { RemirrorContentType } from "@remirror/core-types";
 import { getTextContentFromSlice } from "@remirror/core";
@@ -58,10 +58,6 @@ const WysiwygEditor: FC<PropsWithChildren<WysiwygEditorProps>> = ({
             }),
         );
     }, [refresh]);
-
-    // const wysiwygPresetArrayWithoutImageExtension = wysiwygPreset().filter(
-    //     (extension) => extension instanceof ImageExtension !== true,
-    // );
 
     const extensions = useCallback(getExtensions(placeholder, url), [
         placeholder,
