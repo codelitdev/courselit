@@ -10,8 +10,9 @@ import pug from "pug";
 import { send } from "@/services/mail";
 import { formattedLocaleDate } from "@ui-lib/utils";
 import { error } from "@/services/logger";
+import { responses } from "@/config/strings";
 
-export default async (
+const finalizePurchase = async (
     userId: string,
     courseId: string,
     purchaseId?: string,
@@ -60,19 +61,27 @@ export default async (
                 },
             });
 
-            await sendSaleNotificationToAdmins({
+            sendSaleNotificationToAdmins({
                 user,
                 course,
-                purchaseId,
+                purchaseId: purchaseId!,
             });
         }
     }
 };
 
-async function sendSaleNotificationToAdmins({ user, course, purchaseId }) {
+async function sendSaleNotificationToAdmins({
+    user,
+    course,
+    purchaseId,
+}: {
+    user: User;
+    course: Course;
+    purchaseId: string;
+}) {
     try {
         const domain: Domain | null = await DomainModel.findOne({
-            _id: user?.domain,
+            _id: user.domain,
         });
 
         const purchase: Purchase | null = await PurchaseModel.findOne({
@@ -98,17 +107,19 @@ async function sendSaleNotificationToAdmins({ user, course, purchaseId }) {
             order: purchase?.orderId,
             courseName: course.title,
             coursePrice: course.cost,
-            date: formattedLocaleDate(purchase.purchasedOn),
+            date: formattedLocaleDate(purchase!.purchasedOn),
             email: user?.email,
             hideCourseLitBranding: domain?.settings.hideCourseLitBranding,
         });
 
         await send({
             to: courseAdminsEmails,
-            subject: `Yay! You have made a sale!`,
+            subject: responses.sales_made_subject,
             body: emailBody,
         });
     } catch (err) {
         error("Failed to send sale notification mail", err);
     }
 }
+
+export default finalizePurchase;
