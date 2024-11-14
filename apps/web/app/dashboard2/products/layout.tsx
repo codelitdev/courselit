@@ -7,9 +7,8 @@ export async function generateMetadata(
     parent: ResolvingMetadata,
 ): Promise<Metadata> {
     return {
-        title: `${MANAGE_COURSES_PAGE_HEADING} | ${
-            (await parent)?.title?.absolute
-        }`,
+        title: `${MANAGE_COURSES_PAGE_HEADING} | ${(await parent)?.title
+            ?.absolute}`,
     };
 }
 
