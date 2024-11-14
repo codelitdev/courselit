@@ -6,7 +6,6 @@ import { addMailJob } from "./queue";
 const mailHost = process.env.EMAIL_HOST;
 const mailUser = process.env.EMAIL_USER;
 const mailPass = process.env.EMAIL_PASS;
-const mailFrom = process.env.EMAIL_FROM || "";
 const mailPort = process.env.EMAIL_PORT ? +process.env.EMAIL_PORT : 587;
 
 let transporter: any;
@@ -36,15 +35,10 @@ interface MailProps {
     to: string[];
     subject: string;
     body: string;
-    from?: string;
+    from: string;
 }
 
-export const send = async ({
-    to,
-    subject,
-    body,
-    from = mailFrom,
-}: MailProps) => {
+export const send = async ({ to, subject, body, from }: MailProps) => {
     if (process.env.QUEUE_SERVER) {
         try {
             await addMailJob({
