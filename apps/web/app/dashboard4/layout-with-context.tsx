@@ -1,6 +1,6 @@
 "use client";
 
-import { SiteInfo, Typeface } from "@courselit/common-models";
+import { SiteInfo, Typeface, ServerConfig } from "@courselit/common-models";
 import { ReactNode, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { defaultState } from "@components/default-state";
@@ -10,6 +10,7 @@ import {
     ProfileContext,
     SiteInfoContext,
     TypefacesContext,
+    ServerConfigContext,
 } from "@components/contexts";
 import { Toaster } from "@courselit/components-library";
 
@@ -19,12 +20,14 @@ export default function Layout({
     children,
     siteinfo,
     typefaces,
+    config,
 }: {
     session: any;
     address: string;
     children: ReactNode;
     siteinfo: SiteInfo;
     typefaces: Typeface[];
+    config: ServerConfig;
 }) {
     const [open, setOpen] = useState(false);
     const [profile, setProfile] = useState(defaultState.profile);
@@ -87,11 +90,9 @@ export default function Layout({
             <SiteInfoContext.Provider value={siteinfo}>
                 <ProfileContext.Provider value={profile}>
                     <TypefacesContext.Provider value={typefaces}>
+                        <ServerConfigContext.Provider value={config}>
                         {children}
-                        {/* <SidebarProvider>
-                            <AppSidebar />
-                            <SidebarInset>{children}</SidebarInset>
-                        </SidebarProvider> */}
+                        </ServerConfigContext.Provider>
                     </TypefacesContext.Provider>
                 </ProfileContext.Provider>
             </SiteInfoContext.Provider>

@@ -64,6 +64,9 @@ export default async function Layout({
         .setIsGraphQLEndpoint(true)
         .build();
     const siteInfoResponse = await siteInfoFetch.exec();
+    const config = {
+        turnstileSiteKey: process.env.TURNSTILE_SITE_KEY || "",
+    }
 
     return (
         <LayoutWithContext
@@ -71,6 +74,7 @@ export default async function Layout({
             address={address}
             siteinfo={formatSiteInfo(siteInfoResponse.site.settings)}
             typefaces={siteInfoResponse.site.typefaces}
+            config={config}
         >
             {children}
         </LayoutWithContext>

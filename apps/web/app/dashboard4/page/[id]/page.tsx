@@ -4,6 +4,7 @@ import PageEditor from "@components/admin/page-editor";
 import {
     AddressContext,
     ProfileContext,
+    ServerConfigContext,
     SiteInfoContext,
     TypefacesContext,
 } from "@components/contexts";
@@ -19,6 +20,7 @@ export default function Page({ params }: { params: { id: string } }) {
     const siteInfo = useContext(SiteInfoContext);
     const typefaces = useContext(TypefacesContext);
     const profile = useContext(ProfileContext);
+    const config = useContext(ServerConfigContext);
 
     return (
         <PageEditor
@@ -36,6 +38,7 @@ export default function Page({ params }: { params: { id: string } }) {
             }
             prefix="/dashboard4"
             state={{
+                config: config,
                 siteinfo: siteInfo,
                 address: address,
                 profile: profile as Profile,

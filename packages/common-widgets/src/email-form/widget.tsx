@@ -1,7 +1,7 @@
 "use client";
 
 import React, { FormEvent, useState, useEffect } from "react";
-import { AppMessage } from "@courselit/common-models";
+import { AppMessage, WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
 import { actionCreators } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
@@ -12,19 +12,12 @@ import {
     DEFAULT_SUCCESS_MESSAGE,
     DEFAULT_TITLE,
 } from "./constants";
-import type { AppState, AppDispatch } from "@courselit/state-management";
 import { Form, FormField, Button2 } from "@courselit/components-library";
 import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
 } from "./defaults";
 import Script from "next/script";
-
-export interface WidgetProps {
-    settings: Settings;
-    state: AppState;
-    dispatch: AppDispatch;
-}
 
 const Widget = ({
     settings: {
@@ -44,7 +37,8 @@ const Widget = ({
     },
     state,
     dispatch,
-}: WidgetProps) => {
+    editing,
+}: WidgetProps<Settings>) => {
     const [email, setEmail] = useState("");
     const [name, setName] = useState("");
     const [turnstileToken, setTurnstileToken] = useState<string>("");
@@ -58,17 +52,17 @@ const Widget = ({
               : "flex-start";
 
     useEffect(() => {
-        if (state.config.turnstileSiteKey) {
+        if (!editing && state.config.turnstileSiteKey) {
             (window as any).turnstileCallback = async (token: string) => {
                 setTurnstileToken(token);
             };
         }
-    }, [state.config.turnstileSiteKey]);
+    }, [state.config.turnstileSiteKey, editing]);
 
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
-        if (state.config.turnstileSiteKey) {
+        if (!editing && state.config.turnstileSiteKey) {
             const payload = JSON.stringify({ token: turnstileToken });
             const verificationFetch = new FetchBuilder()
                 .setUrl(`${state.address.backend}/api/cloudflare`)
