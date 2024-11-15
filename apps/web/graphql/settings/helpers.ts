@@ -8,8 +8,8 @@ import {
     UIConstants,
 } from "@courselit/common-models";
 
-const currencyISOCodes = currencies.map(
-    (currency) => currency.isoCode?.toLowerCase(),
+const currencyISOCodes = currencies.map((currency) =>
+    currency.isoCode?.toLowerCase(),
 );
 
 const verifyCurrencyISOCode = (isoCode: string) => {
