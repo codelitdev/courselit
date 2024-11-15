@@ -1,7 +1,7 @@
 import React, { ReactNode } from "react";
 import WidgetByName from "./widget-by-name";
 import { AppToast } from "../../../app-toast";
-import { Message, WidgetInstance } from "@courselit/common-models";
+import { WidgetInstance } from "@courselit/common-models";
 import { Footer, Header } from "@courselit/common-widgets";
 import { ArrowDownward, ArrowUpward } from "@courselit/icons";
 import { Button } from "@courselit/components-library";
@@ -18,7 +18,6 @@ interface TemplateProps {
     onMoveWidgetUp?: (index: number) => void;
     onMoveWidgetDown?: (index: number) => void;
     dispatch?: AppDispatch;
-    message?: Message;
     state: Partial<AppState>;
 }
 
@@ -48,7 +47,7 @@ const EditableWidget = ({
     onAddWidgetBelow?: (index: number) => void;
     onMoveWidgetUp?: (index: number) => void;
     onMoveWidgetDown?: (index: number) => void;
-    state: AppState;
+    state: Partial<AppState>;
     dispatch?: AppDispatch;
 }) => {
     if (editing) {
@@ -132,7 +131,6 @@ const Template = (props: TemplateProps) => {
         onMoveWidgetUp,
         onMoveWidgetDown,
         dispatch,
-        message,
         state,
     } = props;
     if (!layout) return <></>;
@@ -208,8 +206,8 @@ const Template = (props: TemplateProps) => {
                     state={state}
                 />
             )}
-            {message && dispatch && (
-                <AppToast dispatch={dispatch} message={message} />
+            {state.message && dispatch && (
+                <AppToast dispatch={dispatch} message={state.message} />
             )}
         </div>
     );

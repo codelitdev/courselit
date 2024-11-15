@@ -134,7 +134,6 @@ const Widget = ({
             }}
             id={cssId}
         >
-            {id}
             <div className="mx-auto lg:max-w-[1200px]">
                 <Form
                     onSubmit={onSubmit}
@@ -205,11 +204,12 @@ const Widget = ({
                                 color: btnForegroundColor,
                             }}
                             disabled={
-                                isSubmitting ||
-                                !name ||
-                                !email ||
-                                (state.config.turnstileSiteKey &&
-                                    !turnstileToken)
+                                !editing &&
+                                (isSubmitting ||
+                                    !name ||
+                                    !email ||
+                                    (state.config.turnstileSiteKey &&
+                                        !turnstileToken))
                             }
                             type="submit"
                         >
