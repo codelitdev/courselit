@@ -28,7 +28,6 @@ import {
     USERS_MANAGER_PAGE_HEADING,
 } from "@ui-config/strings";
 import { formattedLocaleDate } from "@ui-lib/utils";
-import { useRouter } from "next/navigation";
 import { useCallback, useContext, useEffect, useState } from "react";
 
 const { permissions } = UIConstants;
@@ -45,7 +44,6 @@ export default function UsersHub() {
     const [filtersAggregator, setFiltersAggregator] =
         useState<UserFilterAggregator>("or");
     const [count, setCount] = useState(0);
-    const router = useRouter();
 
     const profile = useContext(ProfileContext);
 

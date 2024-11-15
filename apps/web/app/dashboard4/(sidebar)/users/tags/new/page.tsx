@@ -11,16 +11,14 @@ import {
     USERS_TAG_NEW_HEADER,
 } from "@ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
-import { actionCreators } from "@courselit/state-management";
 import { FormEvent } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { AddressContext, ProfileContext } from "@components/contexts";
 import DashboardContent from "@components/admin/dashboard-content";
 import { UIConstants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
 import LoadingScreen from "@components/admin/loading-screen";
 
-const { networkAction, setAppMessage } = actionCreators;
 const { permissions } = UIConstants;
 
 const breadcrumbs = [
@@ -43,7 +41,6 @@ export default function Page() {
     const [name, setName] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
-    const path = usePathname();
     const profile = useContext(ProfileContext);
 
     const createTag = async (e: FormEvent) => {

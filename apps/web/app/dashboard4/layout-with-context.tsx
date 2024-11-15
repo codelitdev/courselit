@@ -2,7 +2,6 @@
 
 import { SiteInfo, Typeface, ServerConfig } from "@courselit/common-models";
 import { ReactNode, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { defaultState } from "@components/default-state";
 import { FetchBuilder } from "@courselit/utils";
 import {
@@ -15,24 +14,19 @@ import {
 import { Toaster } from "@courselit/components-library";
 
 export default function Layout({
-    session,
     address,
     children,
     siteinfo,
     typefaces,
     config,
 }: {
-    session: any;
     address: string;
     children: ReactNode;
     siteinfo: SiteInfo;
     typefaces: Typeface[];
     config: ServerConfig;
 }) {
-    const [open, setOpen] = useState(false);
     const [profile, setProfile] = useState(defaultState.profile);
-    const params = useSearchParams();
-    const tab = params?.get("tab");
 
     useEffect(() => {
         const getUserProfile = async () => {
@@ -91,7 +85,7 @@ export default function Layout({
                 <ProfileContext.Provider value={profile}>
                     <TypefacesContext.Provider value={typefaces}>
                         <ServerConfigContext.Provider value={config}>
-                        {children}
+                            {children}
                         </ServerConfigContext.Provider>
                     </TypefacesContext.Provider>
                 </ProfileContext.Provider>
