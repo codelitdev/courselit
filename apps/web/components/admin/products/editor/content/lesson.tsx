@@ -681,10 +681,12 @@ const LessonEditor = ({
     }
 
     return (
-        <div className="flex flex-col gap-10 mt-14">
-            <Skeleton className="w-[200px] h-[35px]" />
-            <Skeleton className="w-full h-[30px]" />
-            <Skeleton className="w-full h-[30px]" />
+        <div className="flex flex-col mt-12">
+            <Skeleton className="w-[200px] h-[35px] mb-5" />
+            <Skeleton className="w-[60px] h-[27px] mb-1" />
+            <Skeleton className="w-full h-[38px] mb-4" />
+            <Skeleton className="w-[60px] h-[27px] mb-1" />
+            <Skeleton className="w-full h-[38px]" />
         </div>
     );
 };
