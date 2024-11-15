@@ -38,11 +38,13 @@ const Widget = ({
     state,
     dispatch,
     editing,
+    id,
 }: WidgetProps<Settings>) => {
     const [email, setEmail] = useState("");
     const [name, setName] = useState("");
     const [turnstileToken, setTurnstileToken] = useState<string>("");
     const [errorMessage, setErrorMessage] = useState<string>("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const justifyContent =
         alignment === "center"
@@ -53,14 +55,16 @@ const Widget = ({
 
     useEffect(() => {
         if (!editing && state.config.turnstileSiteKey) {
-            (window as any).turnstileCallback = async (token: string) => {
+            const callbackName = `turnstileCallback_${id}`;
+            (window as any)[callbackName] = (token: string) => {
                 setTurnstileToken(token);
             };
         }
-    }, [state.config.turnstileSiteKey, editing]);
+    }, [state.config.turnstileSiteKey, editing, id]);
 
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
+        setIsSubmitting(true);
 
         if (!editing && state.config.turnstileSiteKey) {
             const payload = JSON.stringify({ token: turnstileToken });
@@ -74,6 +78,7 @@ const Widget = ({
             const response = await verificationFetch.exec();
             if (!response.success) {
                 setErrorMessage("Could not verify that you are a human.");
+                setIsSubmitting(false);
                 return;
             }
         }
@@ -116,6 +121,7 @@ const Widget = ({
             console.error(e.message);
         } finally {
             dispatch(actionCreators.networkAction(false));
+            setIsSubmitting(false);
         }
     };
 
@@ -128,6 +134,7 @@ const Widget = ({
             }}
             id={cssId}
         >
+            {id}
             <div className="mx-auto lg:max-w-[1200px]">
                 <Form
                     onSubmit={onSubmit}
@@ -188,18 +195,19 @@ const Widget = ({
                                 <span
                                     className="cf-turnstile"
                                     data-sitekey={state.config.turnstileSiteKey}
-                                    data-callback="turnstileCallback"
+                                    data-callback={`turnstileCallback_${id}`}
                                 />
                             </>
                         )}
-
                         <Button2
                             style={{
                                 backgroundColor: btnBackgroundColor,
                                 color: btnForegroundColor,
                             }}
                             disabled={
-                                state.networkAction ||
+                                isSubmitting ||
+                                !name ||
+                                !email ||
                                 (state.config.turnstileSiteKey &&
                                     !turnstileToken)
                             }
