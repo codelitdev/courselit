@@ -66,7 +66,7 @@ export default async function Layout({
     const siteInfoResponse = await siteInfoFetch.exec();
     const config = {
         turnstileSiteKey: process.env.TURNSTILE_SITE_KEY || "",
-    }
+    };
 
     return (
         <LayoutWithContext
