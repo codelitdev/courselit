@@ -77,7 +77,6 @@ function EditPage({
                     }
                     address={address}
                     dispatch={dispatch}
-                    loading={loading}
                     siteInfo={siteInfo}
                     typefaces={typefaces}
                     profile={profile}

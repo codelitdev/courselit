@@ -50,7 +50,6 @@ interface PageEditorProps {
     address: Address;
     profile: Profile;
     dispatch?: AppDispatch;
-    loading?: boolean;
     siteInfo: SiteInfo;
     typefaces: Typeface[];
     redirectTo?: string;
@@ -71,7 +70,6 @@ export default function PageEditor({
     address,
     profile,
     dispatch,
-    loading = false,
     redirectTo,
     prefix,
     state,
@@ -94,6 +92,7 @@ export default function PageEditor({
         useState<LeftPaneContent>("none");
     const [primaryFontFamily, setPrimaryFontFamily] =
         useState("Roboto, sans-serif");
+    const [loading, setLoading] = useState(false);
 
     const router = useRouter();
     const debouncedSave = useCallback(
@@ -315,6 +314,8 @@ export default function PageEditor({
             return;
         }
 
+        setLoading(true); // Set loading to true before saving
+
         const mutation = `
             mutation updatePage(
                 $pageId: String!,
@@ -379,6 +380,8 @@ export default function PageEditor({
                 robotsAllowed,
             },
         });
+
+        setLoading(false); // Set loading to false after saving
     };
 
     const onWidgetSettingsChanged = (
