@@ -63,7 +63,7 @@ const EditableWidget = ({
                     settings={item.settings || {}}
                     pageData={pageData}
                     id={item.widgetId}
-                    editing={editing}
+                    editing={true}
                     dispatch={dispatch}
                     state={state}
                 />

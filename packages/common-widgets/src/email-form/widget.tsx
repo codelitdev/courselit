@@ -183,7 +183,7 @@ const Widget = ({
                                 },
                             ]}
                         />
-                        {state.config.turnstileSiteKey && (
+                        {!editing && state.config.turnstileSiteKey && (
                             <>
                                 <Script
                                     src="https://challenges.cloudflare.com/turnstile/v0/api.js"
