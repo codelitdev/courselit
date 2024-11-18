@@ -27,10 +27,7 @@ export default function BlogEditorLayout({
     const breadcrumbs = [
         { text: "Blogs", url: `${prefix}/blogs` },
         {
-            text:
-                course && course.title
-                    ? (truncate(course.title, 10) as string)
-                    : "",
+            text: course && course.title ? truncate(course.title, 10) : "",
             url: "",
         },
     ];

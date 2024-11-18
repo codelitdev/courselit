@@ -31,9 +31,10 @@ interface IndexProps {
     dispatch: AppDispatch;
     address: Address;
     loading: boolean;
+    prefix: string;
 }
 
-export const Pages = ({ loading, address, dispatch }: IndexProps) => {
+export const Pages = ({ loading, address, dispatch, prefix }: IndexProps) => {
     const [pages, setPages] = useState<Page[]>([]);
 
     useEffect(() => {
@@ -107,7 +108,7 @@ export const Pages = ({ loading, address, dispatch }: IndexProps) => {
                     {MANAGE_PAGES_PAGE_HEADING}
                 </h1>
                 <div>
-                    <Link href="/dashboard/page/new">
+                    <Link href={`${prefix}/page/new`}>
                         <Button>{BTN_NEW_PAGE}</Button>
                     </Link>
                 </div>
@@ -141,7 +142,13 @@ export const Pages = ({ loading, address, dispatch }: IndexProps) => {
                                             </Button>
                                         </Link>
                                         <Link
-                                            href={`/dashboard/page/${page.pageId}/edit?redirectTo=/dashboard/pages`}
+                                            href={`${prefix}/page/${
+                                                page.pageId
+                                            }${
+                                                prefix === "/dashboard"
+                                                    ? "/edit"
+                                                    : ""
+                                            }?redirectTo=${prefix}/pages`}
                                         >
                                             <Button variant="soft">
                                                 <Edit />

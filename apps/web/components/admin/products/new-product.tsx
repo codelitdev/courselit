@@ -37,20 +37,19 @@ interface NewProductProps {
     address: Address;
     dispatch?: AppDispatch;
     networkAction: boolean;
+    prefix: string;
 }
 
 export function NewProduct({
     address,
     dispatch,
     networkAction: loading,
+    prefix,
 }: NewProductProps) {
     const [title, setTitle] = useState("");
     const [type, setType] = useState(COURSE_TYPE_COURSE);
     const router = useRouter();
     const path = usePathname();
-    const pathPrefix = path?.startsWith("/dashboard2")
-        ? "/dashboard2"
-        : "/dashboard";
 
     const createCourse = async (e: FormEvent) => {
         e.preventDefault();
@@ -76,7 +75,9 @@ export function NewProduct({
             const response = await fetch.exec();
             if (response.course) {
                 router.replace(
-                    `${pathPrefix}/product/${response.course.courseId}/content`,
+                    `${prefix}/product/${response.course.courseId}${
+                        prefix === "/dashboard" ? "/content" : ""
+                    }`,
                 );
             }
         } catch (err: any) {
@@ -88,15 +89,17 @@ export function NewProduct({
 
     return (
         <div className="flex flex-col">
-            <div className="mb-4">
-                <Breadcrumbs aria-label="breakcrumb">
-                    <Link href={`${pathPrefix}/products`}>
-                        {MANAGE_COURSES_PAGE_HEADING}
-                    </Link>
+            {prefix === "/dashboard" && (
+                <div className="mb-4">
+                    <Breadcrumbs aria-label="breakcrumb">
+                        <Link href={`${prefix}/products`}>
+                            {MANAGE_COURSES_PAGE_HEADING}
+                        </Link>
 
-                    <p>{BTN_NEW_PRODUCT}</p>
-                </Breadcrumbs>
-            </div>
+                        <p>{BTN_NEW_PRODUCT}</p>
+                    </Breadcrumbs>
+                </div>
+            )}
             <div className="flex flex-col">
                 <h1 className="text-4xl font-semibold mb-4">
                     {BTN_NEW_PRODUCT}
@@ -140,7 +143,7 @@ export function NewProduct({
                         >
                             {BTN_CONTINUE}
                         </Button>
-                        <Link href={`${pathPrefix}/products`}>
+                        <Link href={`${prefix}/products`}>
                             <Button variant="soft">{BUTTON_CANCEL_TEXT}</Button>
                         </Link>
                     </div>

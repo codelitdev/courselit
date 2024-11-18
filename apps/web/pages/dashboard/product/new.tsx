@@ -13,7 +13,7 @@ const NewProduct = dynamic(
 export default function New() {
     return (
         <BaseLayout title={PAGE_HEADER_NEW_PRODUCT}>
-            <NewProduct />
+            <NewProduct prefix="/dashboard" />
         </BaseLayout>
     );
 }

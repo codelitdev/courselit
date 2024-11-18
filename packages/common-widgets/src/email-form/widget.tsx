@@ -1,7 +1,7 @@
 "use client";
 
 import React, { FormEvent, useState, useEffect } from "react";
-import { AppMessage } from "@courselit/common-models";
+import { AppMessage, WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
 import { actionCreators } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
@@ -12,19 +12,12 @@ import {
     DEFAULT_SUCCESS_MESSAGE,
     DEFAULT_TITLE,
 } from "./constants";
-import type { AppState, AppDispatch } from "@courselit/state-management";
 import { Form, FormField, Button2 } from "@courselit/components-library";
 import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
 } from "./defaults";
 import Script from "next/script";
-
-export interface WidgetProps {
-    settings: Settings;
-    state: AppState;
-    dispatch: AppDispatch;
-}
 
 const Widget = ({
     settings: {
@@ -44,31 +37,36 @@ const Widget = ({
     },
     state,
     dispatch,
-}: WidgetProps) => {
+    editing,
+    id,
+}: WidgetProps<Settings>) => {
     const [email, setEmail] = useState("");
     const [name, setName] = useState("");
     const [turnstileToken, setTurnstileToken] = useState<string>("");
     const [errorMessage, setErrorMessage] = useState<string>("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const justifyContent =
         alignment === "center"
             ? "center"
             : alignment === "right"
-            ? "flex-end"
-            : "flex-start";
+              ? "flex-end"
+              : "flex-start";
 
     useEffect(() => {
-        if (state.config.turnstileSiteKey) {
-            (window as any).turnstileCallback = async (token: string) => {
+        if (!editing && state.config.turnstileSiteKey) {
+            const callbackName = `turnstileCallback_${id}`;
+            (window as any)[callbackName] = (token: string) => {
                 setTurnstileToken(token);
             };
         }
-    }, [state.config.turnstileSiteKey]);
+    }, [state.config.turnstileSiteKey, editing, id]);
 
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
+        setIsSubmitting(true);
 
-        if (state.config.turnstileSiteKey) {
+        if (!editing && state.config.turnstileSiteKey) {
             const payload = JSON.stringify({ token: turnstileToken });
             const verificationFetch = new FetchBuilder()
                 .setUrl(`${state.address.backend}/api/cloudflare`)
@@ -80,6 +78,7 @@ const Widget = ({
             const response = await verificationFetch.exec();
             if (!response.success) {
                 setErrorMessage("Could not verify that you are a human.");
+                setIsSubmitting(false);
                 return;
             }
         }
@@ -122,6 +121,7 @@ const Widget = ({
             console.error(e.message);
         } finally {
             dispatch(actionCreators.networkAction(false));
+            setIsSubmitting(false);
         }
     };
 
@@ -183,7 +183,7 @@ const Widget = ({
                                 },
                             ]}
                         />
-                        {state.config.turnstileSiteKey && (
+                        {!editing && state.config.turnstileSiteKey && (
                             <>
                                 <Script
                                     src="https://challenges.cloudflare.com/turnstile/v0/api.js"
@@ -194,20 +194,22 @@ const Widget = ({
                                 <span
                                     className="cf-turnstile"
                                     data-sitekey={state.config.turnstileSiteKey}
-                                    data-callback="turnstileCallback"
+                                    data-callback={`turnstileCallback_${id}`}
                                 />
                             </>
                         )}
-
                         <Button2
                             style={{
                                 backgroundColor: btnBackgroundColor,
                                 color: btnForegroundColor,
                             }}
                             disabled={
-                                state.networkAction ||
-                                (state.config.turnstileSiteKey &&
-                                    !turnstileToken)
+                                !editing &&
+                                (isSubmitting ||
+                                    !name ||
+                                    !email ||
+                                    (state.config.turnstileSiteKey &&
+                                        !turnstileToken))
                             }
                             type="submit"
                         >

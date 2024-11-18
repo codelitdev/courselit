@@ -89,7 +89,11 @@ export default function Product({
     return (
         <TableRow key={product.courseId}>
             <td className="py-4">
-                <Link href={`${prefix}/product/${product.courseId}/reports`}>
+                <Link
+                    href={`${prefix}/product/${product.courseId}${
+                        prefix === "/dashboard" ? "/reports" : ""
+                    }`}
+                >
                     <p>{product.title}</p>
                 </Link>
             </td>

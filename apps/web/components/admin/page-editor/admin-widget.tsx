@@ -1,6 +1,4 @@
-import { AppState } from "@courselit/state-management";
-import { ComponentType } from "react";
-import { connect } from "react-redux";
+import { AppDispatch, AppState } from "@courselit/state-management";
 import widgets from "../../../ui-config/widgets";
 
 interface AdminWidgetProps {
@@ -13,31 +11,32 @@ interface AdminWidgetProps {
     ) => void;
     preservedStateAcrossRerender: Record<string, unknown>;
     pageData: Record<string, unknown>;
+    dispatch: AppDispatch;
+    state: AppState;
 }
 
-function AdminWidget({
+export default function AdminWidget({
     name,
     settings,
     onChange,
     hideActionButtons,
     preservedStateAcrossRerender,
     pageData,
+    dispatch,
+    state,
 }: AdminWidgetProps) {
     const AdminWidget = widgets[name].adminWidget;
-    const AdminWidgetWithStateAndDispatch: any = connect(
-        (state: AppState) => state,
-    )(AdminWidget as ComponentType<never>);
 
     return (
-        <AdminWidgetWithStateAndDispatch
+        <AdminWidget
             name={name}
             settings={settings}
             onChange={onChange}
             hideActionButtons={hideActionButtons}
             preservedStateAcrossRerender={preservedStateAcrossRerender}
             pageData={pageData}
+            dispatch={dispatch}
+            {...state}
         />
     );
 }
-
-export default AdminWidget;

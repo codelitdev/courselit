@@ -16,7 +16,10 @@
     "bugs": {
         "url": "https://github.com/codelitdev/courselit/issues"
     },
+    "dependencies": {
+        "tailwindcss-animate": "^1.0.7"
+    },
     "devDependencies": {
-        "tailwindcss": "^3.3.3"
+        "tailwindcss": "^3.4.1"
     }
 }

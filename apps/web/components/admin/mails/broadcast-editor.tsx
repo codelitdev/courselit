@@ -402,15 +402,19 @@ function MailEditor({ id, address, dispatch, prefix }: MailEditorProps) {
     };
 
     const onFilterChange = ({
-        filters: inputFilters,
+        filters: newFilters,
         aggregator,
         segmentId,
-        count,
+        count: filteredCount,
     }) => {
-        if (JSON.stringify(filters) !== JSON.stringify(inputFilters)) {
-            setFilters(filters);
+        if (
+            JSON.stringify(filters) !== JSON.stringify(newFilters) ||
+            filtersAggregator !== aggregator ||
+            filteredUsersCount !== filteredCount
+        ) {
+            setFilters(newFilters);
             setFiltersAggregator(aggregator);
-            setFilteredUsersCount(count);
+            setFilteredUsersCount(filteredCount);
         }
     };
 
@@ -427,12 +431,14 @@ function MailEditor({ id, address, dispatch, prefix }: MailEditorProps) {
 
     return (
         <div className="flex flex-col gap-4">
-            <Breadcrumbs aria-label="breakcrumb">
-                <Link href={`${prefix}/mails?tab=Broadcasts`}>
-                    {PAGE_HEADER_ALL_MAILS}
-                </Link>
-                {PAGE_HEADER_EDIT_MAIL}
-            </Breadcrumbs>
+            {prefix === "/dashboard" && (
+                <Breadcrumbs aria-label="breakcrumb">
+                    <Link href={`${prefix}/mails?tab=Broadcasts`}>
+                        {PAGE_HEADER_ALL_MAILS}
+                    </Link>
+                    {PAGE_HEADER_EDIT_MAIL}
+                </Breadcrumbs>
+            )}
             <h1 className="text-4xl font-semibold mb-4">
                 {PAGE_HEADER_EDIT_MAIL}
             </h1>
@@ -455,17 +461,6 @@ function MailEditor({ id, address, dispatch, prefix }: MailEditorProps) {
                         setSubject(e.target.value)
                     }
                 />
-                {/* <FormField
-                    component="textarea"
-                    value={content}
-                    disabled={isPublished}
-                    multiline="true"
-                    rows={5}
-                    label={MAIL_BODY_PLACEHOLDER}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                        setContent(e.target.value)
-                    }
-                /> */}
                 <MailEditorAndPreview
                     content={content}
                     onChange={setContent}
@@ -487,23 +482,6 @@ function MailEditor({ id, address, dispatch, prefix }: MailEditorProps) {
                             setDelay(selectedDate.getTime());
                         }}
                     />
-                    /*
-                    <FormField
-                        value={
-                            new Date(delay || new Date().getTime())
-                            .toISOString()
-                            .slice(0, 16)
-                        }
-                        type="datetime-local"
-                        label={FORM_MAIL_SCHEDULE_TIME_LABEL}
-                        min={new Date().toISOString().slice(0, 16)}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                            const selectedDate = new Date(e.target.value);
-                            const utcDate = new Date(Date.UTC(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), selectedDate.getHours(), selectedDate.getMinutes()));
-                            setDelay(utcDate.getTime());
-                        }}
-                    />
-                    */
                 )}
                 {[
                     Constants.sequenceStatus[0],

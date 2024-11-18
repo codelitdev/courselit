@@ -16,5 +16,12 @@ export default function Page() {
         return <LoadingScreen />;
     }
 
-    return <Pages address={address} loading={false} dispatch={() => {}} />;
+    return (
+        <Pages
+            address={address}
+            loading={false}
+            dispatch={() => {}}
+            prefix="/dashboard2"
+        />
+    );
 }

@@ -72,8 +72,8 @@ export default function Widget({
                 : undefined
             : description
         : product.description
-        ? JSON.parse(product.description as string)
-        : undefined;
+          ? JSON.parse(product.description as string)
+          : undefined;
 
     let direction: any;
     switch (alignment) {

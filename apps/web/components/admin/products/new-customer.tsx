@@ -127,13 +127,15 @@ export default function NewCustomer({
 
     return (
         <div className="flex flex-col gap-4">
-            <Breadcrumbs aria-label="breakcrumb">
-                <Link href={`${prefix}/products/`}>Products</Link>
-                <Link href={`${prefix}/product/${courseId}/reports`}>
-                    {course?.title || "..."}
-                </Link>
-                <p>{PRODUCT_TABLE_CONTEXT_MENU_INVITE_A_CUSTOMER}</p>
-            </Breadcrumbs>
+            {prefix === "/dashboard" && (
+                <Breadcrumbs aria-label="breakcrumb">
+                    <Link href={`${prefix}/products/`}>Products</Link>
+                    <Link href={`${prefix}/product/${courseId}/reports`}>
+                        {course?.title || "..."}
+                    </Link>
+                    <p>{PRODUCT_TABLE_CONTEXT_MENU_INVITE_A_CUSTOMER}</p>
+                </Breadcrumbs>
+            )}
             <>
                 <div className="flex flex-col">
                     <h1 className="text-4xl font-semibold mb-4">
@@ -171,7 +173,11 @@ export default function NewCustomer({
                             >
                                 {BTN_INVITE}
                             </Button>
-                            <Link href={`${prefix}/products`}>
+                            <Link
+                                href={`${prefix}/product/${courseId}${
+                                    prefix === "/dashboard" ? "/reports" : ""
+                                }`}
+                            >
                                 <Button variant="soft">{BTN_GO_BACK}</Button>
                             </Link>
                         </div>

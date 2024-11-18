@@ -504,12 +504,14 @@ const SequenceEditor = ({
 
     return (
         <div className="flex flex-col gap-4">
-            <Breadcrumbs aria-label="breakcrumb">
-                <Link href={`${prefix}/mails?tab=Sequences`}>
-                    {PAGE_HEADER_ALL_MAILS}
-                </Link>
-                {PAGE_HEADER_EDIT_SEQUENCE}
-            </Breadcrumbs>
+            {prefix === "/dashboard" && (
+                <Breadcrumbs aria-label="breakcrumb">
+                    <Link href={`${prefix}/mails?tab=Sequences`}>
+                        {PAGE_HEADER_ALL_MAILS}
+                    </Link>
+                    {PAGE_HEADER_EDIT_SEQUENCE}
+                </Breadcrumbs>
+            )}
             <div className="flex justify-between items-center mb-2">
                 <h1 className="text-4xl font-semibold mb-4">
                     {PAGE_HEADER_EDIT_SEQUENCE}
@@ -633,11 +635,11 @@ const SequenceEditor = ({
                                           value: tag.tag,
                                       }))
                                     : triggerType === "PRODUCT_PURCHASED"
-                                    ? products.map((product) => ({
-                                          label: product.title,
-                                          value: product.courseId,
-                                      }))
-                                    : []
+                                      ? products.map((product) => ({
+                                            label: product.title,
+                                            value: product.courseId,
+                                        }))
+                                      : []
                             }
                         />
                     )}
@@ -694,7 +696,9 @@ const SequenceEditor = ({
                                     day
                                 </div>
                                 <Link
-                                    href={`${prefix}/mails/sequence/${id}/${email.emailId}/edit`}
+                                    href={`${prefix}/mails/sequence/${id}/${
+                                        email.emailId
+                                    }${prefix === "/dashboard" ? "/edit" : ""}`}
                                     style={{
                                         flex: "1",
                                     }}

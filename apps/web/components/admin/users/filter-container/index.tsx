@@ -175,13 +175,13 @@ export default function FilterContainer({
             setCountLoading(true);
             const response = await fetch.exec();
             if (typeof response.count !== "undefined") {
-                setCount(response.count);
                 onChange({
                     filters: [...internalFilters],
                     aggregator: internalAggregator,
                     segmentId: activeSegment,
                     count: response.count,
                 });
+                setCount(response.count);
             }
         } catch (err) {
             dispatch && dispatch(setAppMessage(new AppMessage(err.message)));

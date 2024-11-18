@@ -7,7 +7,7 @@ const Pages = dynamic(() => import("../../components/admin/pages"));
 export default function AllPages() {
     return (
         <BaseLayout title={MANAGE_PAGES_PAGE_HEADING}>
-            <Pages />
+            <Pages prefix="/dashboard" />
         </BaseLayout>
     );
 }

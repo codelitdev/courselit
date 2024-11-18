@@ -177,6 +177,22 @@ export default function Tags({ address, dispatch, prefix }: TagsProps) {
                     </div>
                 </>
             )}
+            {prefix === "/dashboard4" && (
+                <div className="flex justify-between items-center mb-8">
+                    <h1 className="text-4xl font-semibold mb-4">
+                        {USERS_TAG_HEADER}
+                    </h1>
+                    <div>
+                        <Button
+                            component="link"
+                            variant="soft"
+                            href="/dashboard4/users/tags/new"
+                        >
+                            {BTN_NEW_TAG}
+                        </Button>
+                    </div>
+                </div>
+            )}
             <Table
                 aria-label="Tags"
                 className={clsx(prefix === "/dashboard2" ? "mt-4" : "")}

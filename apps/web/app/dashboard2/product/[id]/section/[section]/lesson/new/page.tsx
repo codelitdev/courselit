@@ -20,6 +20,7 @@ export default function Page({
             address={address}
             profile={profile as Profile}
             prefix="/dashboard2"
+            isNew={true}
         />
     );
 }

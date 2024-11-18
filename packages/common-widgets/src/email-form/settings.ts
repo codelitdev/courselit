@@ -1,6 +1,6 @@
-import { Alignment } from "@courselit/common-models";
+import { Alignment, WidgetDefaultSettings } from "@courselit/common-models";
 
-export default interface Settings {
+export default interface Settings extends WidgetDefaultSettings {
     title?: string;
     subtitle?: string;
     btnText?: string;

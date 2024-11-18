@@ -22,7 +22,7 @@ import { useRouter } from "next/navigation";
 import { ThunkDispatch } from "redux-thunk";
 import {
     Button,
-    Tabs,
+    Tabbs,
     Card,
     CardHeader,
     CardDescription,
@@ -215,7 +215,9 @@ export default function Mails({
                 router.push(
                     `${prefix}/mails/${
                         selectedTab === BROADCASTS ? "broadcast" : "sequence"
-                    }/${response.sequence.sequenceId}/edit`,
+                    }/${response.sequence.sequenceId}${
+                        prefix === "/dashboard" ? "/edit" : ""
+                    }`,
                 );
             }
         } catch (err) {
@@ -307,7 +309,7 @@ export default function Mails({
                     </Button>
                 </div>
             </div>
-            <Tabs
+            <Tabbs
                 items={[BROADCASTS, SEQUENCES]}
                 value={selectedTab}
                 onChange={(tab: MailsTab) => {
@@ -328,7 +330,7 @@ export default function Mails({
                     dispatch={dispatch}
                     prefix={prefix}
                 />
-            </Tabs>
+            </Tabbs>
         </div>
     );
 }

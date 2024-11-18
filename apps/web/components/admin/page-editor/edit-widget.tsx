@@ -1,14 +1,11 @@
 import { useState } from "react";
-import { Address } from "@courselit/common-models";
 import widgets from "../../../ui-config/widgets";
-import { connect } from "react-redux";
-import { AppState } from "@courselit/state-management";
+import { AppDispatch, AppState } from "@courselit/state-management";
 import { Cross as Close } from "@courselit/icons";
 import AdminWidget from "./admin-widget";
 import { IconButton, Button } from "@courselit/components-library";
 
 interface EditWidgetProps {
-    address: Address;
     onChange: (widgetId: string, settings: Record<string, unknown>) => void;
     onClose: (...args: any[]) => void;
     onDelete: (widgetId: string) => void;
@@ -19,14 +16,18 @@ interface EditWidgetProps {
         deleteable: boolean;
     };
     pageData: Record<string, unknown>;
+    state: AppState;
+    dispatch: AppDispatch;
 }
 
-function EditWidget({
+export default function EditWidget({
     onChange,
     onClose,
     onDelete,
     widget,
     pageData,
+    state,
+    dispatch,
 }: EditWidgetProps) {
     const [deleteConfirmation, setDeleteConfirmation] = useState(false);
     const [hideActionButtons, setHideActionButtons] = useState(false);
@@ -73,6 +74,8 @@ function EditWidget({
                             preservedStateAcrossRerender
                         }
                         pageData={pageData}
+                        state={state}
+                        dispatch={dispatch}
                     />
                     {!hideActionButtons && (
                         <div
@@ -102,9 +105,3 @@ function EditWidget({
         </div>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-});
-
-export default connect(mapStateToProps)(EditWidget);

@@ -345,7 +345,9 @@ const LessonEditor = ({
                                 new AppMessage(APP_MESSAGE_LESSON_DELETED),
                             ),
                         );
-                    router.replace(`/dashboard/product/${courseId}/content`);
+                    router.replace(
+                        `${prefix}/product/${courseId}${prefix === "/dashboard" ? "/content" : "?tab=Content"}`,
+                    );
                 }
             } catch (err: any) {
                 dispatch &&
@@ -481,7 +483,7 @@ const LessonEditor = ({
                             <Tooltip title="Go back to content">
                                 <IconButton variant="soft">
                                     <Link
-                                        href={`${prefix}/product/${courseId}/content`}
+                                        href={`${prefix}/product/${courseId}${prefix === "/dashboard" ? "/content" : "?tab=Content"}`}
                                     >
                                         <Back />
                                     </Link>

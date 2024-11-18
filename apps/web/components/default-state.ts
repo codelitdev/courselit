@@ -1,10 +1,18 @@
-import { Address, Profile, SiteInfo } from "@courselit/common-models";
+import {
+    Address,
+    Profile,
+    SiteInfo,
+    Typeface,
+    ServerConfig,
+} from "@courselit/common-models";
 
 export const defaultState: {
     siteinfo: SiteInfo;
     networkAction: boolean;
     profile: Partial<Profile>;
     address: Address;
+    typefaces: Typeface[];
+    config: ServerConfig;
     [x: string]: any;
 } = {
     siteinfo: {
@@ -51,4 +59,7 @@ export const defaultState: {
         frontend: "",
     },
     typefaces: [],
+    config: {
+        turnstileSiteKey: "",
+    },
 };

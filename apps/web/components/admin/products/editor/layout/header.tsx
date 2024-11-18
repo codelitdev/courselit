@@ -12,6 +12,7 @@ import {
     Breadcrumbs,
 } from "@courselit/components-library";
 import { Address } from "@courselit/common-models";
+import { truncate } from "@ui-lib/utils";
 
 interface Breadcrumb {
     text: string;
@@ -51,7 +52,9 @@ export default function ProductHeader({
                 </Breadcrumbs>
             )}
             <div className="flex justify-between items-center">
-                <h1 className="text-4xl font-semibold mb-4">{course.title}</h1>
+                <h1 className="text-4xl font-semibold mb-4">
+                    {truncate(course.title || "", 50)}
+                </h1>
                 <Menu2 icon={<MoreVert />} variant="soft">
                     <MenuItem>
                         <Link

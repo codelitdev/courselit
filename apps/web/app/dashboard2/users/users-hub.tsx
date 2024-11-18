@@ -20,7 +20,7 @@ import {
     TableBody,
     TableHead,
     TableRow,
-    Tabs,
+    Tabbs,
 } from "@courselit/components-library";
 import { checkPermission, FetchBuilder } from "@courselit/utils";
 import {
@@ -172,7 +172,7 @@ export default function UsersHub() {
                     </div>
                 )}
             </div>
-            <Tabs
+            <Tabbs
                 items={["All users", "Tags"]}
                 value={tab}
                 onChange={(tab: string) => {
@@ -258,7 +258,7 @@ export default function UsersHub() {
                     </Table>
                 </div>
                 <Tags address={address} prefix="/dashboard2" />
-            </Tabs>
+            </Tabbs>
         </div>
     );
 }

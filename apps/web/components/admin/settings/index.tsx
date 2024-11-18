@@ -49,7 +49,7 @@ import currencies from "@/data/currencies.json";
 import {
     Select,
     MediaSelector,
-    Tabs,
+    Tabbs,
     Form,
     FormField,
     Button,
@@ -594,7 +594,7 @@ const Settings = (props: SettingsProps) => {
                     {SITE_SETTINGS_PAGE_HEADING}
                 </h1>
             </div>
-            <Tabs
+            <Tabbs
                 items={[
                     SITE_SETTINGS_SECTION_GENERAL,
                     SITE_SETTINGS_SECTION_PAYMENT,
@@ -1000,7 +1000,7 @@ const Settings = (props: SettingsProps) => {
                         </TableBody>
                     </Table>
                 </div>
-            </Tabs>
+            </Tabbs>
         </div>
     );
 };
