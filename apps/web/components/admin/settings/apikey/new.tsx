@@ -6,7 +6,7 @@ import {
     FormField,
     IconButton,
 } from "@courselit/components-library";
-import { AppDispatch, AppState } from "@courselit/state-management";
+import { AppDispatch } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import {
     APIKEY_NEW_BTN_CAPTION,
@@ -20,7 +20,6 @@ import {
 } from "@ui-config/strings";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import { connect } from "react-redux";
 import {
     networkAction,
     setAppMessage,
@@ -29,14 +28,16 @@ import { Clipboard } from "@courselit/icons";
 
 interface NewApikeyProps {
     address: Address;
-    dispatch: AppDispatch;
-    networkAction: boolean;
+    dispatch?: AppDispatch;
+    loading?: boolean;
+    prefix: string;
 }
 
-function NewApikey({
+export default function NewApikey({
     address,
     dispatch,
-    networkAction: loading,
+    loading = false,
+    prefix,
 }: NewApikeyProps) {
     const [name, setName] = useState("");
     const [apikey, setApikey] = useState("");
@@ -46,9 +47,12 @@ function NewApikey({
 
         if (window.isSecureContext && navigator.clipboard) {
             navigator.clipboard.writeText(apikey);
-            dispatch(
-                setAppMessage(new AppMessage(APIKEY_NEW_GENERATED_KEY_COPIED)),
-            );
+            dispatch &&
+                dispatch(
+                    setAppMessage(
+                        new AppMessage(APIKEY_NEW_GENERATED_KEY_COPIED),
+                    ),
+                );
         }
     };
 
@@ -72,23 +76,25 @@ function NewApikey({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(networkAction(true));
+            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.apikey) {
                 setApikey(response.apikey.key);
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
-            dispatch(networkAction(false));
+            dispatch && dispatch(networkAction(false));
         }
     };
 
     return (
         <div className="flex flex-col gap-4">
-            <Breadcrumbs aria-label="new-apikey-breadcrumbs">
-                <Link href="/dashboard/settings">Apikeys</Link>
-            </Breadcrumbs>
+            {prefix === "/dasboard" && (
+                <Breadcrumbs aria-label="new-apikey-breadcrumbs">
+                    <Link href="/dashboard/settings">Apikeys</Link>
+                </Breadcrumbs>
+            )}
             <h1 className="text-4xl font-semibold mb-4">{APIKEY_NEW_HEADER}</h1>
             <Form
                 method="post"
@@ -121,7 +127,7 @@ function NewApikey({
                                 <Clipboard fontSize="small" />
                             </IconButton>
                         </div>
-                        <Link href={`/dashboard/settings`}>
+                        <Link href={`${prefix}/settings?tab=API%20Keys`}>
                             <Button>{BUTTON_DONE_TEXT}</Button>
                         </Link>
                     </div>
@@ -131,7 +137,7 @@ function NewApikey({
                         <Button disabled={!name || loading} sx={{ mr: 1 }}>
                             {APIKEY_NEW_BTN_CAPTION}
                         </Button>
-                        <Link href={`/dashboard/products`}>
+                        <Link href={`${prefix}/settings?tab=API%20Keys`}>
                             <Button variant="soft">{BUTTON_CANCEL_TEXT}</Button>
                         </Link>
                     </div>
@@ -141,11 +147,11 @@ function NewApikey({
     );
 }
 
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-    networkAction: state.networkAction,
-});
+// const mapStateToProps = (state: AppState) => ({
+//     address: state.address,
+//     networkAction: state.networkAction,
+// });
 
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
+// const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
 
-export default connect(mapStateToProps, mapDispatchToProps)(NewApikey);
+// export default connect(mapStateToProps, mapDispatchToProps)(NewApikey);

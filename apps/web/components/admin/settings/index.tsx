@@ -939,7 +939,7 @@ const Settings = (props: SettingsProps) => {
                         <h2 className="text-lg font-semibold">
                             {APIKEY_EXISTING_HEADER}
                         </h2>
-                        <Link href="/dashboard/settings/apikeys/new">
+                        <Link href={`${props.prefix}/settings/apikeys/new`}>
                             <Button>{APIKEY_NEW_BUTTON}</Button>
                         </Link>
                     </div>
