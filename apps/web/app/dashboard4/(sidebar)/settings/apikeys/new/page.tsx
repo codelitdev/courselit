@@ -3,11 +3,7 @@
 import { useContext } from "react";
 import LoadingScreen from "@components/admin/loading-screen";
 import { checkPermission } from "@courselit/utils";
-import {
-    AddressContext,
-    ProfileContext,
-    SiteInfoContext,
-} from "@components/contexts";
+import { AddressContext, ProfileContext } from "@components/contexts";
 import { UIConstants } from "@courselit/common-models";
 import DashboardContent from "@components/admin/dashboard-content";
 import { SITE_SETTINGS_PAGE_HEADING } from "@ui-config/strings";
@@ -21,7 +17,6 @@ const ApikeyNew = dynamic(
 const breadcrumbs = [{ label: SITE_SETTINGS_PAGE_HEADING, href: "#" }];
 
 export default function Page() {
-    const siteinfo = useContext(SiteInfoContext);
     const address = useContext(AddressContext);
     const profile = useContext(ProfileContext);
 
