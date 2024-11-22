@@ -151,7 +151,9 @@ const SequencesList = ({
                     <TableRow key={broadcast.sequenceId}>
                         <td className="py-4">
                             <Link
-                                href={`${prefix}/mails/${type}/${broadcast.sequenceId}/edit`}
+                                href={`${prefix}/mails/${type}/${broadcast.sequenceId}${
+                                    prefix === "/dashboard" ? "/edit" : ""
+                                }`}
                                 className="flex"
                             >
                                 {type === "broadcast" &&
