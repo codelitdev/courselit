@@ -575,3 +575,4 @@ export const DELETE_EMAIL_MENU = "Delete";
 export const LOGIN_SUCCESS = "Login successful. Redirecting...";
 export const OVERVIEW_HEADER = "Overview";
 export const HELP_HEADER = "Help";
+export const COMMUNITY_HEADER = "Community";
