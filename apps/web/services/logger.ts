@@ -14,7 +14,7 @@ export const info = async (
             metadata,
         });
     } else {
-        console.error(severityError, message, metadata);
+        console.error(severityInfo, message, metadata);
     }
 };
 

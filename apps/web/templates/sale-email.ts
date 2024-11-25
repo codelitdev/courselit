@@ -3,6 +3,9 @@ doctype html
 html
     head
         style(type='text/css').
+            .email-container {
+                max-width: 960px;
+            }
             .cta-container {
                 margin: 32px 0px;
                 text-align: center;
@@ -31,26 +34,40 @@ html
                 border-radius: 6px;
                 text-align: center;
             }
-            .signature {
-                padding-top: 20px;
+            .sale-notification-heading {
+                padding-bottom: 5px;
+            }
+            .sale-details {
+                padding-bottom: 10px;
+            }
+            .course-name-and-price {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-weight: bold;
+                padding-bottom: 20px;
             }
     body
-        p   Yay! You have made a sale!
-        p   Order: #{order}
-        p   Date: #{date}
-        p   Email: #{email}
-        p   Course Title: #{courseName}
-        p   Course Price: #{coursePrice}
+        div(class="email-container")
+        div(class="sale-notification-heading")
+            p Yay! You have made a sale!
+        div(class="sale-details")    
+            p <strong>Order</strong>: #{order}
+            p <strong>Date</strong>: #{date}
+            p <strong>Email</strong>: #{email}
+        div(class="course-name-and-price")
+            span #{courseName}
+            span #{coursePrice}
         p(class="signature") 
-            | Best,
-        p   #[a(href="https://x.com/courselit") @CourseLit]
+                | Best,
+        p #[a(href="https://x.com/courselit") @CourseLit]
         if !hideCourseLitBranding
             div(class="courselit-branding-container")
                 a(
                     href="https://courselit.app"
                     target="_blank"
                     class="courselit-branding-cta"
-                ) Powered by <strong> CourseLit </strong>
+                ) Powered by <strong>CourseLit</strong>
 `;
 
 export default saleEmailTemplate;

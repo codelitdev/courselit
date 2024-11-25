@@ -11,6 +11,7 @@ import { send } from "@/services/mail";
 import { formattedLocaleDate } from "@ui-lib/utils";
 import { error } from "@/services/logger";
 import { responses } from "@/config/strings";
+import getSymbolFromCurrency from "currency-symbol-map";
 
 const finalizePurchase = async (
     userId: string,
@@ -103,10 +104,13 @@ async function sendSaleNotificationToAdmins({
             (x) => x.email,
         );
 
+        const currencySymbol = getSymbolFromCurrency(
+            domain?.settings?.currencyISOCode,
+        );
         const emailBody = pug.render(saleEmailTemplate, {
             order: purchase?.orderId,
             courseName: course.title,
-            coursePrice: course.cost,
+            coursePrice: `${currencySymbol}${course.cost}`,
             date: formattedLocaleDate(purchase!.purchasedOn),
             email: user?.email,
             hideCourseLitBranding: domain?.settings.hideCourseLitBranding,
