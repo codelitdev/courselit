@@ -6,7 +6,7 @@ import { getPaymentMethod } from "../../../payments";
 import PurchaseModel from "../../../models/Purchase";
 import finalizePurchase from "../../../lib/finalize-purchase";
 import { error } from "../../../services/logger";
-import User from "@models/User";
+import UserModel from "@models/User";
 import DomainModel, { Domain } from "@models/Domain";
 import { auth } from "@/auth";
 
@@ -32,7 +32,7 @@ export default async function handler(
 
     let user;
     if (session) {
-        user = await User.findOne({
+        user = await UserModel.findOne({
             email: session.user!.email,
             domain: domain._id,
             active: true,

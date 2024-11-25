@@ -77,8 +77,8 @@ export default function Widget({ state, settings }: WidgetProps) {
                             linkAlignment === "right"
                                 ? "justify-end"
                                 : linkAlignment === "center"
-                                  ? "justify-center"
-                                  : "justify-start"
+                                ? "justify-center"
+                                : "justify-start"
                         }`}
                         style={{
                             gap: `${spacingBetweenLinks}px`,

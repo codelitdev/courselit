@@ -115,6 +115,7 @@ export const responses = {
     user_already_exists: "The user already exists",
     unsubscribe_success:
         "Sorry to see you go. You have been unsubscribed from our mailing list.",
+    sales_made_subject: `Yay! You have made a sale!`,
 };
 
 export const internal = {
