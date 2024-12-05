@@ -93,29 +93,32 @@ export const getCourse = async (
             ]) || checkOwnershipWithoutModel(course, ctx);
 
         if (isOwner) {
+            await loadFirstLesson(course, ctx);
             return course;
         }
     }
 
     if (course.published) {
-        if (
-            [constants.course, constants.download].includes(
-                course.type as
-                    | typeof constants.course
-                    | typeof constants.download,
-            )
-        ) {
-            const { nextLesson } = await getPrevNextCursor(
-                course.courseId,
-                ctx.subdomain._id,
-            );
-            (course as any).firstLesson = nextLesson;
-        }
-        // course.groups = accessibleGroups;
+        await loadFirstLesson(course, ctx);
         return course;
     } else {
         throw new Error(responses.item_not_found);
     }
+};
+
+const loadFirstLesson = async (course: Course, ctx: GQLContext) => {
+    if (
+        [constants.course, constants.download].includes(
+            course.type as typeof constants.course | typeof constants.download,
+        )
+    ) {
+        const { nextLesson } = await getPrevNextCursor(
+            course.courseId,
+            ctx.subdomain._id,
+        );
+        (course as any).firstLesson = nextLesson;
+    }
+    // course.groups = accessibleGroups;
 };
 
 export const createCourse = async (
