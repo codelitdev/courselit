@@ -70,6 +70,7 @@ export default {
     product: "product",
     site: "site",
     blogPage: "blog",
+    communityPage: "community",
 
     // default pages
     defaultPages: ["homepage", "terms", "privacy", "blog"],

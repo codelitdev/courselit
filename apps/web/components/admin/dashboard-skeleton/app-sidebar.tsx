@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import {
     Box,
     Globe,
@@ -38,14 +37,16 @@ import {
     SIDEBAR_MENU_PAGES,
     SIDEBAR_MENU_SETTINGS,
     SIDEBAR_MENU_USERS,
+    SITE_SETTINGS_SECTION_COMMUNITIES,
 } from "@ui-config/strings";
 import { NavSecondary } from "./nav-secondary";
 import { usePathname, useSearchParams } from "next/navigation";
+import { ComponentProps, useContext } from "react";
 const { permissions } = UIConstants;
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-    const siteInfo = React.useContext(SiteInfoContext);
-    const profile = React.useContext(ProfileContext);
+export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
+    const siteInfo = useContext(SiteInfoContext);
+    const { profile } = useContext(ProfileContext);
     const path = usePathname();
     const searchParams = useSearchParams();
     const tab = searchParams?.get("tab");
@@ -188,48 +189,58 @@ function getSidebarItems(profile: Partial<Profile>, path, tab) {
         });
     }
     if (profile.permissions!.includes(permissions.manageSettings)) {
+        const items = [
+            {
+                title: "Branding",
+                url: "/dashboard4/settings?tab=Branding",
+                isActive:
+                    `${path}?tab=${tab}` ===
+                    "/dashboard4/settings?tab=Branding",
+            },
+            {
+                title: "Payment",
+                url: "/dashboard4/settings?tab=Payment",
+                isActive:
+                    `${path}?tab=${tab}` === "/dashboard4/settings?tab=Payment",
+            },
+            {
+                title: "Mails",
+                url: "/dashboard4/settings?tab=Mails",
+                isActive:
+                    `${path}?tab=${tab}` === "/dashboard4/settings?tab=Mails",
+            },
+            {
+                title: "Code injection",
+                url: "/dashboard4/settings?tab=Code%20Injection",
+                isActive:
+                    `${path}?tab=${tab}` ===
+                    "/dashboard4/settings?tab=Code Injection",
+            },
+            {
+                title: "API Keys",
+                url: "/dashboard4/settings?tab=API%20Keys",
+                isActive:
+                    `${path}?tab=${tab}` ===
+                    "/dashboard4/settings?tab=API Keys",
+            },
+        ];
+        if (
+            checkPermission(profile.permissions!, [permissions.manageCommunity])
+        ) {
+            items.push({
+                title: SITE_SETTINGS_SECTION_COMMUNITIES,
+                url: `/dashboard4/settings?tab=${SITE_SETTINGS_SECTION_COMMUNITIES}`,
+                isActive:
+                    `${path}?tab=${tab}` ===
+                    `/dashboard4/settings?tab=${SITE_SETTINGS_SECTION_COMMUNITIES}`,
+            });
+        }
         navMainItems.push({
             title: SIDEBAR_MENU_SETTINGS,
             url: "#",
             icon: Settings,
             isActive: path?.startsWith("/dashboard4/settings"),
-            items: [
-                {
-                    title: "Branding",
-                    url: "/dashboard4/settings?tab=Branding",
-                    isActive:
-                        `${path}?tab=${tab}` ===
-                        "/dashboard4/settings?tab=Branding",
-                },
-                {
-                    title: "Payment",
-                    url: "/dashboard4/settings?tab=Payment",
-                    isActive:
-                        `${path}?tab=${tab}` ===
-                        "/dashboard4/settings?tab=Payment",
-                },
-                {
-                    title: "Mails",
-                    url: "/dashboard4/settings?tab=Mails",
-                    isActive:
-                        `${path}?tab=${tab}` ===
-                        "/dashboard4/settings?tab=Mails",
-                },
-                {
-                    title: "Code injection",
-                    url: "/dashboard4/settings?tab=Code%20Injection",
-                    isActive:
-                        `${path}?tab=${tab}` ===
-                        "/dashboard4/settings?tab=Code Injection",
-                },
-                {
-                    title: "API Keys",
-                    url: "/dashboard4/settings?tab=API%20Keys",
-                    isActive:
-                        `${path}?tab=${tab}` ===
-                        "/dashboard4/settings?tab=API Keys",
-                },
-            ],
+            items,
         });
     }
 

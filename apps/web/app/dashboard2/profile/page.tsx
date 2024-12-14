@@ -39,7 +39,7 @@ export default function Page() {
     const [avatar, setAvatar] = useState<Partial<Media>>({});
     const [subscribedToUpdates, setSubscribedToUpdates] = useState(false);
 
-    const profile = useContext(ProfileContext);
+    const { profile } = useContext(ProfileContext);
     const address = useContext(AddressContext);
 
     useEffect(() => {

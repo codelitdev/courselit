@@ -23,7 +23,7 @@ export default function Page() {
     const [courses, setCourses] = useState([]);
     const [loaded, setLoaded] = useState(false);
 
-    const profile = useContext(ProfileContext);
+    const { profile } = useContext(ProfileContext);
     const address = useContext(AddressContext);
 
     useEffect(() => {

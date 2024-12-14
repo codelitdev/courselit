@@ -7,7 +7,7 @@ import {
     Media,
 } from "@courselit/common-models";
 import MediaSchema from "./Media";
-const { product, site, blogPage } = constants;
+const { product, site, blogPage, communityPage } = constants;
 
 export interface Page extends PublicPage {
     id: mongoose.Types.ObjectId;
@@ -27,7 +27,7 @@ const PageSchema = new mongoose.Schema<Page>(
         type: {
             type: String,
             required: true,
-            enum: [product, site, blogPage],
+            enum: [product, site, blogPage, communityPage],
             default: product,
         },
         creatorId: { type: String, required: true },

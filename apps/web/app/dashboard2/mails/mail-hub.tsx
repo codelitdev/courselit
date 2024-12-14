@@ -12,7 +12,7 @@ const { permissions } = UIConstants;
 
 export default function MailHub() {
     const address = useContext(AddressContext);
-    const profile = useContext(ProfileContext);
+    const { profile } = useContext(ProfileContext);
     const searchParams = useSearchParams();
 
     const tab = searchParams?.get("tab") || "Broadcasts";

@@ -8,7 +8,7 @@ import mediaTypes from "../media/types";
 import { Media } from "@courselit/common-models";
 const { mediaInputType } = mediaTypes;
 
-export default {
+const mutations = {
     updatePage: {
         type: types.page,
         args: {
@@ -90,3 +90,5 @@ export default {
         ) => deletePage(context, id),
     },
 };
+
+export default mutations;

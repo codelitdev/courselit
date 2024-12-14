@@ -19,7 +19,7 @@ export default function Page({ params }: { params: { id: string } }) {
     const address = useContext(AddressContext);
     const siteInfo = useContext(SiteInfoContext);
     const typefaces = useContext(TypefacesContext);
-    const profile = useContext(ProfileContext);
+    const { profile } = useContext(ProfileContext);
     const config = useContext(ServerConfigContext);
 
     return (

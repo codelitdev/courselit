@@ -17,7 +17,7 @@ export default function Page({
     params: { id: string; section: string };
 }) {
     const address = useContext(AddressContext);
-    const profile = useContext(ProfileContext);
+    const { profile } = useContext(ProfileContext);
     const { id, section } = params;
     const course = useCourse(id, address);
     const breadcrumbs = [

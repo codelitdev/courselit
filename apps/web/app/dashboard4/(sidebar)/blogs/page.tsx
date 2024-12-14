@@ -18,7 +18,7 @@ const breadcrumbs = [{ label: MANAGE_BLOG_PAGE_HEADING, href: "#" }];
 
 export default function Page() {
     const address = useContext(AddressContext);
-    const profile = useContext(ProfileContext);
+    const { profile } = useContext(ProfileContext);
     const siteinfo = useContext(SiteInfoContext);
 
     if (

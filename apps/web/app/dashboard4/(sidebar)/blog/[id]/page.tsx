@@ -38,7 +38,7 @@ export default function Page({ params }: { params: { id: string } }) {
     const searchParams = useSearchParams();
     const [tab, setTab] = useState(searchParams?.get("tab") || "Details");
     const address = useContext(AddressContext);
-    const profile = useContext(ProfileContext);
+    const { profile } = useContext(ProfileContext);
     const course = useCourse(id, address);
     const router = useRouter();
 

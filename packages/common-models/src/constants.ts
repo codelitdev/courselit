@@ -54,3 +54,14 @@ export const paymentMethods = [
     PAYMENT_METHOD_RAZORPAY,
     PAYMENT_METHOD_STRIPE,
 ] as const;
+export const communityMemberStatus = [
+    "pending",
+    "approved",
+    "rejected",
+] as const;
+export const PageType = {
+    PRODUCT: "product",
+    SITE: "site",
+    BLOG: "blog",
+    COMMUNITY: "community",
+} as const;

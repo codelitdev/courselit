@@ -42,7 +42,7 @@ export default function Page() {
     const [avatar, setAvatar] = useState<Partial<Media>>({});
     const [subscribedToUpdates, setSubscribedToUpdates] = useState(false);
 
-    const profile = useContext(ProfileContext);
+    const { profile, setProfile } = useContext(ProfileContext);
     const address = useContext(AddressContext);
 
     useEffect(() => {
@@ -98,19 +98,27 @@ export default function Page() {
               id: $id
               avatar: $avatar
             }) {
-              id,
-              name,
-              bio,
-               avatar {
-                mediaId,
-                originalFileName,
-                mimeType,
-                size,
-                access,
-                file,
-                thumbnail,
-                caption
-              },
+                id,
+                name,
+                userId,
+                email,
+                permissions,
+                purchases {
+                    courseId,
+                    completedLessons,
+                    accessibleGroups
+                },
+                bio,
+                avatar {
+                    mediaId,
+                    originalFileName,
+                    mimeType,
+                    size,
+                    access,
+                    file,
+                    thumbnail,
+                    caption
+                }
             }
           }
         `;
@@ -127,7 +135,10 @@ export default function Page() {
             .build();
 
         try {
-            await fetch.exec();
+            const response = await fetch.exec();
+            if (response.user) {
+                setProfile(response.user);
+            }
         } catch (err: any) {
             console.error(err);
         } finally {
@@ -144,19 +155,27 @@ export default function Page() {
               name: $name
               bio: $bio
             }) {
-              id,
-              name,
-              bio,
-               avatar {
-                mediaId,
-                originalFileName,
-                mimeType,
-                size,
-                access,
-                file,
-                thumbnail,
-                caption
-              },
+                id,
+                name,
+                userId,
+                email,
+                permissions,
+                purchases {
+                    courseId,
+                    completedLessons,
+                    accessibleGroups
+                },
+                bio,
+                avatar {
+                    mediaId,
+                    originalFileName,
+                    mimeType,
+                    size,
+                    access,
+                    file,
+                    thumbnail,
+                    caption
+                }
             }
           }
         `;
@@ -174,7 +193,10 @@ export default function Page() {
             .build();
 
         try {
-            await fetch.exec();
+            const response = await fetch.exec();
+            if (response.user) {
+                setProfile(response.user);
+            }
         } catch (err: any) {
             console.error(err);
         } finally {

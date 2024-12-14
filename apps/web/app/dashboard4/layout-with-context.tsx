@@ -82,7 +82,7 @@ export default function Layout({
             }}
         >
             <SiteInfoContext.Provider value={siteinfo}>
-                <ProfileContext.Provider value={profile}>
+                <ProfileContext.Provider value={{ profile, setProfile }}>
                     <TypefacesContext.Provider value={typefaces}>
                         <ServerConfigContext.Provider value={config}>
                             {children}

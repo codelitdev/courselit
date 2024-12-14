@@ -10,7 +10,7 @@ export default function Page({
     params: { id: string; section: string; lesson: string };
 }) {
     const address = useContext(AddressContext);
-    const profile = useContext(ProfileContext);
+    const { profile } = useContext(ProfileContext);
     const { id, section, lesson } = params;
 
     return (

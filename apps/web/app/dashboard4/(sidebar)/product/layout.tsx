@@ -9,7 +9,7 @@ import { ReactNode, useContext } from "react";
 const { permissions } = UIConstants;
 
 export default function Page({ children }: { children: ReactNode }) {
-    const profile = useContext(ProfileContext);
+    const { profile } = useContext(ProfileContext);
 
     if (
         !checkPermission(profile.permissions!, [

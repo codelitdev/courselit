@@ -20,7 +20,7 @@ const breadcrumbs = [{ label: SITE_SETTINGS_PAGE_HEADING, href: "#" }];
 export default function Page() {
     const siteinfo = useContext(SiteInfoContext);
     const address = useContext(AddressContext);
-    const profile = useContext(ProfileContext);
+    const { profile } = useContext(ProfileContext);
     const searchParams = useSearchParams();
 
     const tab = searchParams?.get("tab") || "Branding";

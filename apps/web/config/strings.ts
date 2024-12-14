@@ -107,6 +107,9 @@ export const responses = {
     invalid_drip_email: "Drip email needs a subject and a body",
     cannot_invite_to_unpublished_product:
         "Cannot invite customers to an unpublished product",
+    rejection_reason_missing: "Rejection reason is missing",
+    invalid_category: "Invalid category",
+    community_exists: "A community with the same name already exists",
 
     // api responses
     digital_download_no_files:

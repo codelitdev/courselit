@@ -10,8 +10,9 @@ import lessons from "./lessons";
 import pages from "./pages";
 import mails from "./mails";
 import activities from "./activities";
+import communities from "./communities";
 
-export default new graphql.GraphQLSchema({
+const schema = new graphql.GraphQLSchema({
     query: new graphql.GraphQLObjectType({
         name: "RootQuery",
         fields: {
@@ -25,6 +26,7 @@ export default new graphql.GraphQLSchema({
             ...pages.queries,
             ...mails.queries,
             ...activities.queries,
+            ...communities.queries,
         },
     }),
     mutation: new graphql.GraphQLObjectType({
@@ -40,6 +42,9 @@ export default new graphql.GraphQLSchema({
             ...pages.mutations,
             ...mails.mutations,
             ...activities.mutations,
+            ...communities.mutations,
         },
     }),
 });
+
+export default schema;

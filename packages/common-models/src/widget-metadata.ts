@@ -1,6 +1,15 @@
-import { PageTypeBlog, PageTypeProduct, PageTypeSite } from ".";
+import {
+    PageTypeBlog,
+    PageTypeProduct,
+    PageTypeSite,
+    PageTypeCommunity,
+} from ".";
 
-type PageType = PageTypeProduct | PageTypeSite | PageTypeBlog;
+type PageType =
+    | PageTypeProduct
+    | PageTypeSite
+    | PageTypeBlog
+    | PageTypeCommunity;
 
 export default interface WidgetMetadata {
     name: string;

@@ -39,11 +39,18 @@ import {
     SITE_SETTINGS_RAZORPAY_KEY_TEXT,
     MEDIA_SELECTOR_UPLOAD_BTN_CAPTION,
     MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
+    SITE_SETTINGS_SECTION_COMMUNITIES,
+    NEW_COMMUNITY_BUTTON,
 } from "../../../ui-config/strings";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import { decode, encode } from "base-64";
 import { AppMessage, Profile, UIConstants } from "@courselit/common-models";
-import type { SiteInfo, Address, Media } from "@courselit/common-models";
+import type {
+    SiteInfo,
+    Address,
+    Media,
+    Community,
+} from "@courselit/common-models";
 import { actionCreators } from "@courselit/state-management";
 import currencies from "@/data/currencies.json";
 import {
@@ -61,8 +68,10 @@ import {
     Dialog2,
     PageBuilderPropertyHeader,
     Checkbox,
+    PaginatedTable,
 } from "@courselit/components-library";
 import { useRouter } from "next/navigation";
+import { SquareArrowOutUpRight } from "lucide-react";
 
 const {
     PAYMENT_METHOD_PAYPAL,
@@ -74,6 +83,7 @@ const {
 } = UIConstants;
 
 const { networkAction, newSiteInfoAvailable, setAppMessage } = actionCreators;
+const communitiesResultsLimit = 10;
 
 interface SettingsProps {
     siteinfo: SiteInfo;
@@ -87,7 +97,8 @@ interface SettingsProps {
         | typeof SITE_SETTINGS_SECTION_PAYMENT
         | typeof SITE_MAILS_HEADER
         | typeof SITE_CUSTOMISATIONS_SETTING_HEADER
-        | typeof SITE_APIKEYS_SETTING_HEADER;
+        | typeof SITE_APIKEYS_SETTING_HEADER
+        | typeof SITE_SETTINGS_SECTION_COMMUNITIES;
     prefix: string;
 }
 
@@ -96,12 +107,16 @@ const Settings = (props: SettingsProps) => {
     const [newSettings, setNewSettings] = useState<Partial<SiteInfo>>({});
     const [apikeyPage, setApikeyPage] = useState(1);
     const [apikeys, setApikeys] = useState([]);
+    const [communities, setCommunities] = useState<Community[]>([]);
+    const [totalCommunities, setTotalCommunities] = useState(0);
+    const [communitiesPage, setCommunitiesPage] = useState(1);
     const selectedTab = [
         SITE_SETTINGS_SECTION_GENERAL,
         SITE_SETTINGS_SECTION_PAYMENT,
         SITE_MAILS_HEADER,
         SITE_CUSTOMISATIONS_SETTING_HEADER,
         SITE_APIKEYS_SETTING_HEADER,
+        SITE_SETTINGS_SECTION_COMMUNITIES,
     ].includes(props.selectedTab)
         ? props.selectedTab
         : SITE_SETTINGS_SECTION_GENERAL;
@@ -113,7 +128,39 @@ const Settings = (props: SettingsProps) => {
 
     useEffect(() => {
         loadAdminSettings();
+        loadCommunities();
     }, []);
+
+    useEffect(() => {
+        loadCommunities();
+    }, [communitiesPage]);
+
+    const loadCommunities = async () => {
+        const query = `
+            query ($page: Int, $limit: Int) {
+                communities: getCommunities(page: $page, limit: $limit) {
+                    name,
+                    communityId,
+                },
+                totalCommunities: getCommunitiesCount
+            }`;
+        try {
+            const fetchRequest = fetch
+                .setPayload({
+                    query,
+                    variables: {
+                        page: communitiesPage,
+                        limit: communitiesResultsLimit,
+                    },
+                })
+                .build();
+            const response = await fetchRequest.exec();
+            if (response.communities) {
+                setCommunities(response.communities);
+                setTotalCommunities(response.totalCommunities);
+            }
+        } catch (e) {}
+    };
 
     useEffect(() => {
         props.dispatch(
@@ -167,6 +214,10 @@ const Settings = (props: SettingsProps) => {
                     name,
                     keyId,
                     createdAt
+                },
+                communities: getCommunities {
+                    name,
+                    communityId,
                 }
             }`;
         try {
@@ -587,6 +638,20 @@ const Settings = (props: SettingsProps) => {
         }
     };
 
+    const items = [
+        SITE_SETTINGS_SECTION_GENERAL,
+        SITE_SETTINGS_SECTION_PAYMENT,
+        SITE_MAILS_HEADER,
+        SITE_CUSTOMISATIONS_SETTING_HEADER,
+        SITE_APIKEYS_SETTING_HEADER,
+    ];
+    const canManageCommunities = props.profile.permissions.includes(
+        UIConstants.permissions.manageCommunity,
+    );
+    if (canManageCommunities) {
+        items.push(SITE_SETTINGS_SECTION_COMMUNITIES);
+    }
+
     return (
         <div>
             <div className="flex justify-between items-baseline">
@@ -595,13 +660,7 @@ const Settings = (props: SettingsProps) => {
                 </h1>
             </div>
             <Tabbs
-                items={[
-                    SITE_SETTINGS_SECTION_GENERAL,
-                    SITE_SETTINGS_SECTION_PAYMENT,
-                    SITE_MAILS_HEADER,
-                    SITE_CUSTOMISATIONS_SETTING_HEADER,
-                    SITE_APIKEYS_SETTING_HEADER,
-                ]}
+                items={items}
                 value={selectedTab}
                 onChange={(tab: string) => {
                     router.replace(`${props.prefix}/settings?tab=${tab}`);
@@ -1000,6 +1059,162 @@ const Settings = (props: SettingsProps) => {
                         </TableBody>
                     </Table>
                 </div>
+                {/* <Form
+                    onSubmit={handleCommunitySettingsSubmit}
+                    className="flex flex-col gap-4 pt-4"
+                >
+                    <div className="flex justify-between items-center">
+                        <PageBuilderPropertyHeader label="Community Enabled" />
+                        <Switch
+                            checked={newSettings.communityEnabled}
+                            onChange={(value: boolean) => {
+                                setNewSettings(
+                                    Object.assign({}, newSettings, {
+                                        communityEnabled: value,
+                                    }),
+                                );
+                            }}
+                        />
+                    </div>
+                    <FormField
+                        label="Community Name"
+                        name="communityName"
+                        value={newSettings.communityName || ""}
+                        onChange={onChangeData}
+                        required
+                        disabled={!newSettings.communityEnabled}
+                    />
+                    <FormField
+                        label="Community Description"
+                        name="communityDescription"
+                        value={newSettings.communityDescription || ""}
+                        onChange={onChangeData}
+                        disabled={!newSettings.communityEnabled}
+                    />
+                    <div>
+                        <Button
+                            type="submit"
+                            value={BUTTON_SAVE}
+                            color="primary"
+                            disabled={
+                                !newSettings.communityEnabled ||
+                                props.networkAction
+                            }
+                        >
+                            {BUTTON_SAVE}
+                        </Button>
+                    </div>
+                </Form>
+                {selectedTab === SITE_SETTINGS_SECTION_COMMUNITIES && ( */}
+                {canManageCommunities && (
+                    <div className="flex flex-col gap-4 pt-4">
+                        <div className="flex justify-between">
+                            <h2 className="text-lg font-semibold">
+                                Communities
+                            </h2>
+                            <Link
+                                href={`${props.prefix}/settings/community/new`}
+                            >
+                                <Button>{NEW_COMMUNITY_BUTTON}</Button>
+                            </Link>
+                            {/* <Button onClick={handleCreateCommunity}>
+                            New Community
+                        </Button> */}
+                        </div>
+                        <PaginatedTable
+                            page={communitiesPage}
+                            totalPages={Math.ceil(
+                                totalCommunities / communitiesResultsLimit,
+                            )}
+                            onPageChange={setCommunitiesPage}
+                        >
+                            <Table
+                                aria-label="Communities"
+                                className="mb-4 w-full"
+                            >
+                                <TableHead className="border-0 border-b border-slate-200">
+                                    <td>Name</td>
+                                    <td align="right">Actions</td>
+                                </TableHead>
+                                <TableBody>
+                                    {communities.map((community) => (
+                                        <TableRow key={community.communityId}>
+                                            <td className="py-4">
+                                                {community.name}
+                                            </td>
+                                            <td align="right">
+                                                <Link
+                                                    href={`${props.prefix}/community/${community.communityId}/settings`}
+                                                >
+                                                    <Button variant="soft">
+                                                        <SquareArrowOutUpRight
+                                                            width={16}
+                                                        />{" "}
+                                                        Settings
+                                                    </Button>
+                                                </Link>
+                                            </td>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </PaginatedTable>
+                        {/* <Pagination>
+                        <PaginationContent>
+                            <PaginationItem>
+                                <PaginationPrevious
+                                    onClick={() =>
+                                        setCommunitiesPage(communitiesPage - 1)
+                                    }
+                                    aria-disabled={communitiesPage === 1}
+                                    tabIndex={
+                                        communitiesPage === 1 ? -1 : undefined
+                                    }
+                                    className={
+                                        communitiesPage === 1
+                                            ? "pointer-events-none opacity-50"
+                                            : undefined
+                                    }
+                                />
+                            </PaginationItem>
+                            <PaginationItem>
+                                <PaginationLink>
+                                    {communitiesPage}
+                                </PaginationLink>
+                            </PaginationItem>
+                            <PaginationItem>
+                                <PaginationNext
+                                    onClick={() =>
+                                        setCommunitiesPage(communitiesPage + 1)
+                                    }
+                                    aria-disabled={
+                                        communitiesPage === totalCommunities ||
+                                        totalCommunities === 0
+                                    }
+                                    tabIndex={
+                                        communitiesPage === totalCommunities ||
+                                        totalCommunities === 0
+                                            ? -1
+                                            : undefined
+                                    }
+                                    className={
+                                        communitiesPage === totalCommunities ||
+                                        totalCommunities === 0
+                                            ? "pointer-events-none opacity-50"
+                                            : undefined
+                                    }
+                                />
+                            </PaginationItem>
+                            <PaginationItem>
+                                <PaginationLink className="pointer-events-none">
+                                    of {totalCommunities}
+                                </PaginationLink>
+                            </PaginationItem>
+                        </PaginationContent>
+                    </Pagination> */}
+                    </div>
+                )}
+                {/* )} */}
             </Tabbs>
         </div>
     );

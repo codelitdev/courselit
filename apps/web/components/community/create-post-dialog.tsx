@@ -22,22 +22,22 @@ import { Paperclip, Link2, Video, Smile, Image } from "lucide-react";
 import { EmojiPicker } from "./emoji-picker";
 import { GifSelector } from "./gif-selector";
 import { MediaPreview } from "./media-preview";
-import { Post } from "@/lib/mockData";
-
-interface MediaItem {
-    type: "youtube" | "pdf" | "image" | "video" | "gif";
-    url: string;
-    title?: string;
-    fileSize?: string;
-}
+import { CommunityPost } from "@courselit/common-models";
+import { type MediaItem } from "./media-item";
 
 interface CreatePostDialogProps {
     onPostCreated: (
-        post: Omit<Post, "id" | "likes" | "comments" | "isPinned" | "hasLiked">,
+        post: Pick<CommunityPost, "title" | "content" | "category"> & {
+            media: MediaItem[];
+        },
     ) => void;
+    categories: string[];
 }
 
-export function CreatePostDialog({ onPostCreated }: CreatePostDialogProps) {
+export function CreatePostDialog({
+    onPostCreated,
+    categories,
+}: CreatePostDialogProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
@@ -88,7 +88,8 @@ export function CreatePostDialog({ onPostCreated }: CreatePostDialogProps) {
                         type,
                         url,
                         title: file.name,
-                        fileSize: `${(file.size / (1024 * 1024)).toFixed(1)}mb`,
+                        file,
+                        // fileSize: `${(file.size / (1024 * 1024)).toFixed(1)}mb`,
                     },
                 ]);
             });
@@ -143,22 +144,10 @@ export function CreatePostDialog({ onPostCreated }: CreatePostDialogProps) {
         }
 
         onPostCreated({
-            author: "Your Name",
-            avatar: "/placeholder.svg",
-            time: "Just now",
             category,
-            content: `${title}\n\n${content}`,
-            media:
-                media.length > 0
-                    ? {
-                          type: media[0].type as
-                              | "image"
-                              | "video"
-                              | "gif"
-                              | "youtube",
-                          url: media[0].url,
-                      }
-                    : undefined,
+            title,
+            content,
+            media,
         });
         setIsOpen(false);
         // Reset form
@@ -379,13 +368,21 @@ export function CreatePostDialog({ onPostCreated }: CreatePostDialogProps) {
                                     <SelectValue placeholder="Select a category" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="general">
+                                    {categories.map((category) => (
+                                        <SelectItem
+                                            key={category}
+                                            value={category}
+                                        >
+                                            {category}
+                                        </SelectItem>
+                                    ))}
+                                    {/* <SelectItem value="general">
                                         General Discussion
                                     </SelectItem>
                                     <SelectItem value="tips">Tips</SelectItem>
                                     <SelectItem value="questions">
                                         Questions
-                                    </SelectItem>
+                                    </SelectItem> */}
                                 </SelectContent>
                             </Select>
                             {errors.category && (

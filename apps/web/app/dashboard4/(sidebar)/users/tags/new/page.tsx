@@ -41,7 +41,7 @@ export default function Page() {
     const [name, setName] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
-    const profile = useContext(ProfileContext);
+    const { profile } = useContext(ProfileContext);
 
     const createTag = async (e: FormEvent) => {
         e.preventDefault();

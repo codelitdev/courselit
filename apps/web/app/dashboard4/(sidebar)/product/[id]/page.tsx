@@ -55,7 +55,7 @@ export default function Page({ params }: { params: { id: string } }) {
     const [tab, setTab] = useState(searchParams?.get("tab") || "Reports");
     const address = useContext(AddressContext);
     const siteInfo = useContext(SiteInfoContext);
-    const profile = useContext(ProfileContext);
+    const { profile } = useContext(ProfileContext);
     const course = useCourse(id, address);
 
     return (

@@ -19,7 +19,7 @@ const breadcrumbs = [{ label: OVERVIEW_HEADER, href: "#" }];
 export default function Page() {
     const siteInfo = useContext(SiteInfoContext);
     const address = useContext(AddressContext);
-    const profile = useContext(ProfileContext);
+    const { profile } = useContext(ProfileContext);
 
     if (
         !checkPermission(profile.permissions!, [

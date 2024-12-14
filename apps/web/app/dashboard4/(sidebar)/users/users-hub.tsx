@@ -45,7 +45,7 @@ export default function UsersHub() {
         useState<UserFilterAggregator>("or");
     const [count, setCount] = useState(0);
 
-    const profile = useContext(ProfileContext);
+    const { profile } = useContext(ProfileContext);
 
     const loadUsers = useCallback(async () => {
         const query =

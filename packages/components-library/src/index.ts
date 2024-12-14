@@ -52,6 +52,7 @@ export * from "./components/ui/badge";
 export * from "./components/ui/skeleton";
 
 export * from "./toast2";
+export * from "./paginated-table";
 
 export {
     PriceTag,

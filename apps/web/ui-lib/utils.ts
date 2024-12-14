@@ -1,11 +1,13 @@
 import type {
+    CommunityMemberStatus,
     Course,
     Group,
     Profile,
+    TextEditorContent,
     Typeface,
 } from "@courselit/common-models";
 import { checkPermission, FetchBuilder } from "@courselit/utils";
-import { UIConstants } from "@courselit/common-models";
+import { Constants, UIConstants } from "@courselit/common-models";
 import { getProtocol } from "../lib/utils";
 const { permissions } = UIConstants;
 
@@ -182,4 +184,15 @@ export const sortCourseGroups = (course: Course) => {
 
 export function truncate(str: string, length: number) {
     return str.length <= length ? str : `${str.substring(0, length)}...`;
+}
+
+export function isTextEditorNonEmpty(content: TextEditorContent) {
+    return content.content[0].content;
+}
+
+export function getNextStatusForCommunityMember(status: CommunityMemberStatus) {
+    const index = Constants.communityMemberStatus.indexOf(status);
+    return Constants.communityMemberStatus[
+        (index + 1) % Constants.communityMemberStatus.length
+    ];
 }
