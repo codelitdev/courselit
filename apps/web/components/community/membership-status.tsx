@@ -36,7 +36,6 @@ export default function MembershipStatus({
     const { profile } = useContext(ProfileContext);
 
     const handleJoinSubmit = async (e: FormEvent) => {
-        // Handle join request submission
         e.preventDefault();
         const query = `
             mutation JoinCommunity(

@@ -93,6 +93,7 @@ export function CommunityForum({
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
     const [comments, setComments] = useState<CommentType[]>([]);
     const { community, loaded } = useCommunity(id);
+    const [refreshCommunityStatus, setRefreshCommunityStatus] = useState(0);
 
     const loadTotalPosts = useCallback(async () => {
         const query = `
@@ -145,13 +146,13 @@ export function CommunityForum({
         try {
             const response = await fetch.exec();
             setMemberStatus(response.communityMembershipStatus);
+            setRefreshCommunityStatus((prev) => prev + 1);
         } catch (err: any) {
             toast({
                 title: "Error",
                 description: err.message,
             });
-        } finally {
-        }
+        } 
     }, [address.backend, id, toast]);
 
     const loadPosts = useCallback(async () => {
@@ -740,10 +741,11 @@ export function CommunityForum({
                 />
             ) : (
                 <MembershipStatus
-                    id={id}
+                    id={id!}
                     status={memberStatus?.status}
                     rejectionReason={memberStatus?.rejectionReason}
-                    joiningReasonText={community.joiningReasonText}
+                    joiningReasonText={community?.joiningReasonText}
+                    key={refreshCommunityStatus}
                 />
             )}
 

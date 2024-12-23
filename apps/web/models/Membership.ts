@@ -50,6 +50,8 @@ const MembershipSchema = new mongoose.Schema<InternalMembership>(
             default: MembershipStatus.PENDING,
         },
         paymentHistory: [MembershipPaymentSchema],
+        joiningReason: { type: String },
+        rejectionReason: { type: String },
     },
     {
         timestamps: true,
