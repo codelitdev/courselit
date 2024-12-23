@@ -7,7 +7,7 @@
         "strict": false,
         "paths": {
             "@/*": ["./src/*"],
-            "react": [ "./node_modules/@types/react" ]
+            "react": ["./node_modules/@types/react"]
         }
     },
     "include": ["src/**/*", "additional.d.ts"]

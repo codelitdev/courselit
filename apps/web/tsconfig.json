@@ -13,7 +13,7 @@
             "@ui-lib/*": ["./ui-lib/*"],
             "@config/*": ["./config/*"],
             "@models/*": ["./models/*"],
-            "@/*": ["./*"],
+            "@/*": ["./*"]
         },
         "strictNullChecks": true
     },
