@@ -1837,6 +1837,7 @@ __metadata:
     "@remirror/react-editors": ^2.0.1
     "@remirror/react-ui": ^1.0.1
     "@types/node": ^18.8.0
+    "@types/react": ^17.0.43
     codemirror: ^6.0.1
     eslint: ^8.57.0
     remirror: ^3.0.1
