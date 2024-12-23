@@ -43,9 +43,9 @@ import {
 import { AddressContext } from "@components/contexts";
 import { capitalize, FetchBuilder } from "@courselit/utils";
 import {
-    CommunityMember,
     CommunityMemberStatus,
     Constants,
+    Membership,
     User,
 } from "@courselit/common-models";
 import { getNextStatusForCommunityMember } from "@ui-lib/utils";
@@ -102,17 +102,15 @@ const mockRequests: MembershipRequest[] = [
 const itemsPerPage = 10;
 
 type Member = Pick<
-    CommunityMember,
-    "communityId" | "status" | "rejectionReason" | "joiningReason"
+    Membership,
+    "entityId" | "status" | "rejectionReason" | "joiningReason"
 > & {
     user: Pick<User, "email" | "name" | "userId" | "avatar">;
 };
 
 export function MembershipList({ id }: { id: string }) {
     const [requests, setRequests] = useState<MembershipRequest[]>(mockRequests);
-    const [filter, setFilter] = useState<
-        "all" | "pending" | "approved" | "rejected"
-    >("all");
+    const [filter, setFilter] = useState<"all" | CommunityMemberStatus>("all");
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedRequest, setSelectedMember] = useState<Member | null>(null);
     const [rejectionReason, setRejectionReason] = useState("");
@@ -243,30 +241,12 @@ export function MembershipList({ id }: { id: string }) {
     //     return matchesFilter && matchesSearch;
     // });
 
-    // // const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
-    // const paginatedRequests = filteredRequests.slice(
-    //     (currentPage - 1) * itemsPerPage,
-    //     currentPage * itemsPerPage,
-    // );
-
-    // const getNextStatus = (
-    //     currentStatus: MembershipRequest["status"],
-    // ): MembershipRequest["status"] => {
-    //     const statusCycle: MembershipRequest["status"][] = [
-    //         "pending",
-    //         "approved",
-    //         "rejected",
-    //     ];
-    //     const currentIndex = statusCycle.indexOf(currentStatus);
-    //     return statusCycle[(currentIndex + 1) % statusCycle.length];
-    // };
-
     const handleStatusChange = (member: Member) => {
         const nextStatus = getNextStatusForCommunityMember(
             member.status.toLowerCase() as CommunityMemberStatus,
         );
         setSelectedMember(member);
-        if (nextStatus === Constants.communityMemberStatus[2]) {
+        if (nextStatus === Constants.MembershipStatus.REJECTED) {
             setIsDialogOpen(true);
         } else {
             updateMemberStatus(member.user.userId);
@@ -294,11 +274,6 @@ export function MembershipList({ id }: { id: string }) {
 
     const handleDialogConfirm = async () => {
         if (selectedRequest && rejectionReason) {
-            // updateRequestStatus(
-            //     selectedRequest.id,
-            //     "rejected",
-            //     rejectionReason,
-            // );
             await updateMemberStatus(selectedRequest.user.userId);
             setIsDialogOpen(false);
             setSelectedMember(null);
@@ -327,7 +302,11 @@ export function MembershipList({ id }: { id: string }) {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All</SelectItem>
-                            {Constants.communityMemberStatus.map((status) => (
+                            {[
+                                Constants.MembershipStatus.PENDING,
+                                Constants.MembershipStatus.ACTIVE,
+                                Constants.MembershipStatus.REJECTED,
+                            ].map((status) => (
                                 <SelectItem value={status} key={status}>
                                     {capitalize(status)}
                                 </SelectItem>

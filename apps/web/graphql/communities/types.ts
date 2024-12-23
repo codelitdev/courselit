@@ -14,9 +14,14 @@ import { Constants } from "@courselit/common-models";
 import userTypes from "../users/types";
 import { getUser } from "../users/logic";
 import GQLContext from "@models/GQLContext";
+import paymentPlansTypes from "../paymentplans/types";
 
 const memberStatusMap = {};
-for (const status of Constants.communityMemberStatus) {
+for (const status of [
+    Constants.MembershipStatus.PENDING,
+    Constants.MembershipStatus.ACTIVE,
+    Constants.MembershipStatus.REJECTED,
+]) {
     memberStatusMap[status.toUpperCase()] = { value: status };
 }
 
@@ -37,6 +42,9 @@ const community = new GraphQLObjectType({
         autoAcceptMembers: { type: GraphQLBoolean },
         joiningReasonText: { type: GraphQLString },
         pageId: { type: new GraphQLNonNull(GraphQLString) },
+        paymentPlans: {
+            type: new GraphQLList(paymentPlansTypes.paymentPlan),
+        },
     },
 });
 
@@ -136,7 +144,7 @@ const communityComment = new GraphQLObjectType({
     },
 });
 
-const exportedCommunity = {
+const types = {
     community,
     communityPost,
     communityMemberStatus,
@@ -144,4 +152,4 @@ const exportedCommunity = {
     communityPostInputMedia,
     communityComment,
 };
-export default exportedCommunity;
+export default types;

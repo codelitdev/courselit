@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useContext } from "react";
+import { useState, useEffect, useRef, useContext, useCallback } from "react";
 import { CreatePostDialog } from "./create-post-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,6 @@ import {
     useToast,
 } from "@courselit/components-library";
 import {
-    Community,
     CommunityMedia,
     CommunityMemberStatus,
     CommunityPost,
@@ -57,18 +56,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import CommentSection from "./comment-section";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-
-// const allCategories = [
-//     "All",
-//     "General discussion",
-//     "Tips",
-//     "Questions",
-//     "Announcements",
-//     "Events",
-//     "Feedback",
-//     "Ideas",
-//     "Off-topic",
-// ];
+import { useCommunity } from "@components/hooks/useCommunity";
+import NotFound from "@components/admin/not-found";
 
 const itemsPerPage = 10;
 
@@ -87,7 +76,6 @@ export function CommunityForum({
     }>({});
     const commentsEndRef = useRef<HTMLDivElement>(null);
     const address = useContext(AddressContext);
-    const [community, setCommunity] = useState<Community | null>(null);
     const { toast } = useToast();
     const [categories, setCategories] = useState<string[]>(["All"]);
     const [memberStatus, setMemberStatus] = useState<
@@ -104,31 +92,9 @@ export function CommunityForum({
     );
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
     const [comments, setComments] = useState<CommentType[]>([]);
+    const { community, loaded } = useCommunity(id);
 
-    useEffect(() => {
-        loadCommunity();
-    }, []);
-
-    useEffect(() => {
-        if (
-            memberStatus?.status.toLowerCase() ===
-            Constants.communityMemberStatus[1]
-        ) {
-            loadPosts();
-            loadTotalPosts();
-        }
-    }, [memberStatus]);
-
-    useEffect(() => {
-        loadPosts();
-    }, [page, activeCategory]);
-
-    useEffect(() => {
-        setPage(1);
-        loadTotalPosts();
-    }, [activeCategory]);
-
-    const loadTotalPosts = async () => {
+    const loadTotalPosts = useCallback(async () => {
         const query = `
             query ($communityId: String!, $category: String) {
                 totalPosts: getPostsCount(communityId: $communityId, category: $category)
@@ -160,9 +126,35 @@ export function CommunityForum({
                 description: err.message,
             });
         }
-    };
+    }, [id, activeCategory, address.backend, toast]);
 
-    const loadPosts = async () => {
+    const loadMemberStatus = useCallback(async () => {
+        const query = `
+            query ($id: String) {
+                communityMembershipStatus: getMemberStatus(id: $id) {
+                    status,
+                    rejectionReason
+                }
+            }
+        `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload({ query, variables: { id } })
+            .setIsGraphQLEndpoint(true)
+            .build();
+        try {
+            const response = await fetch.exec();
+            setMemberStatus(response.communityMembershipStatus);
+        } catch (err: any) {
+            toast({
+                title: "Error",
+                description: err.message,
+            });
+        } finally {
+        }
+    }, [address.backend, id, toast]);
+
+    const loadPosts = useCallback(async () => {
         const query = `
             query ($communityId: String!, $page: Int!, $limit: Int!, $category: String) {
                 posts: getPosts(communityId: $communityId, category: $category, page: $page, limit: $limit) {
@@ -226,46 +218,38 @@ export function CommunityForum({
                 description: err.message,
             });
         }
-    };
+    }, [address.backend, activeCategory, id, page, toast]);
 
-    const loadCommunity = async () => {
-        const query = `
-            query ($id: String) {
-                community: getCommunity(id: $id) {
-                    communityId,
-                    name,
-                    banner,
-                    categories,
-                    joiningReasonText,
-                }
-                communityMembershipStatus: getMemberStatus(id: $id) {
-                    status,
-                    rejectionReason
-                }
-            }
-        `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload({ query, variables: { id } })
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            const response = await fetch.exec();
-            if (response.community) {
-                setCommunity(response.community);
-                setCategories(["All", ...response.community.categories]);
-                setMemberStatus(response.communityMembershipStatus);
-            } else {
-                setCommunity(null);
-            }
-        } catch (err: any) {
-            toast({
-                title: "Error",
-                description: err.message,
-            });
-        } finally {
+    useEffect(() => {
+        if (
+            community &&
+            memberStatus?.status.toLowerCase() ===
+                Constants.MembershipStatus.ACTIVE
+        ) {
+            loadPosts();
+            loadTotalPosts();
         }
-    };
+    }, [memberStatus, loadTotalPosts, loadPosts]);
+
+    useEffect(() => {
+        if (community) {
+            loadPosts();
+        }
+    }, [page, activeCategory, loadPosts]);
+
+    useEffect(() => {
+        if (community) {
+            setCategories(["All", ...community.categories]);
+            loadMemberStatus();
+        }
+    }, [community, loadMemberStatus]);
+
+    useEffect(() => {
+        if (community) {
+            setPage(1);
+            loadTotalPosts();
+        }
+    }, [activeCategory, loadTotalPosts]);
 
     useEffect(() => {
         scrollToBottom();
@@ -732,14 +716,24 @@ export function CommunityForum({
         }
     };
 
-    if (!community) {
+    if (!loaded) {
         return <LoadingSkeleton />;
+    }
+
+    if (loaded && !community) {
+        return (
+            <NotFound
+                resource="Community"
+                backLink="/"
+                backLinkText="Back to Home"
+            />
+        );
     }
 
     return (
         <div className="max-w-3xl mx-auto p-4 space-y-6 w-full">
             {memberStatus?.status.toLowerCase() ===
-            Constants.communityMemberStatus[1] ? (
+            Constants.MembershipStatus.ACTIVE ? (
                 <CreatePostDialog
                     categories={categories.filter((x) => x !== "All")}
                     onPostCreated={createPost}

@@ -53,6 +53,7 @@ export * from "./components/ui/skeleton";
 
 export * from "./toast2";
 export * from "./paginated-table";
+import getSymbolFromCurrency from "currency-symbol-map";
 
 export {
     PriceTag,
@@ -98,4 +99,5 @@ export {
     PageBuilderPropertyHeader,
     CssIdField,
     DragAndDrop,
+    getSymbolFromCurrency,
 };

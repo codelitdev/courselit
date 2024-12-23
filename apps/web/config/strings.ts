@@ -110,6 +110,9 @@ export const responses = {
     rejection_reason_missing: "Rejection reason is missing",
     invalid_category: "Invalid category",
     community_exists: "A community with the same name already exists",
+    payment_plan_required: "Add a payment plan before enabling the community",
+    community_requires_payment: "Community requires payment",
+    duplicate_payment_plan: "A payment plan with the same type already exists",
 
     // api responses
     digital_download_no_files:

@@ -12,6 +12,7 @@ import {
     ServerConfigContext,
 } from "@components/contexts";
 import { Toaster } from "@courselit/components-library";
+import { Session } from "next-auth";
 
 export default function Layout({
     address,
@@ -19,12 +20,14 @@ export default function Layout({
     siteinfo,
     typefaces,
     config,
+    session,
 }: {
     address: string;
     children: ReactNode;
     siteinfo: SiteInfo;
     typefaces: Typeface[];
     config: ServerConfig;
+    session: Session | null;
 }) {
     const [profile, setProfile] = useState(defaultState.profile);
 
@@ -69,10 +72,10 @@ export default function Layout({
             } catch (e) {}
         };
 
-        if (address) {
+        if (address && session) {
             getUserProfile();
         }
-    }, [address]);
+    }, [address, session]);
 
     return (
         <AddressContext.Provider

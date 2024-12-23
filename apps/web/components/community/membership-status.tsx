@@ -86,7 +86,7 @@ export default function MembershipStatus({
     return (
         <div>
             {innerStatus?.toLowerCase() ===
-                Constants.communityMemberStatus[0] && (
+                Constants.MembershipStatus.PENDING && (
                 <Alert>
                     <Clock className="w-4 h-4" />
                     <AlertTitle className="font-semibold">
@@ -95,14 +95,14 @@ export default function MembershipStatus({
                 </Alert>
             )}
             {innerStatus?.toLowerCase() ===
-                Constants.communityMemberStatus[1] && (
+                Constants.MembershipStatus.ACTIVE && (
                 <div>
                     <p>You are a member of this community.</p>
                     <button>Leave Community</button>
                 </div>
             )}
             {innerStatus?.toLowerCase() ===
-                Constants.communityMemberStatus[2] && (
+                Constants.MembershipStatus.REJECTED && (
                 <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle className="font-semibold">

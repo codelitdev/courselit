@@ -2,15 +2,11 @@ import { Community } from "@courselit/common-models";
 import { generateUniqueId } from "@courselit/utils";
 import mongoose from "mongoose";
 
-export interface InternalCommunity extends Community {
+export interface InternalCommunity extends Omit<Community, "paymentPlans"> {
     domain: mongoose.Types.ObjectId;
-    id: mongoose.Types.ObjectId;
-    default: boolean;
-    enabled: boolean;
     createdAt: Date;
     updatedAt: Date;
-    autoAcceptMembers: boolean;
-    joiningReasonText: string;
+    paymentPlans: string[];
 }
 
 const CommunitySchema = new mongoose.Schema<InternalCommunity>(
@@ -31,6 +27,7 @@ const CommunitySchema = new mongoose.Schema<InternalCommunity>(
         autoAcceptMembers: { type: Boolean, default: false },
         joiningReasonText: { type: String },
         pageId: { type: String, required: true },
+        paymentPlans: [String],
     },
     {
         timestamps: true,

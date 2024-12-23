@@ -1,22 +1,33 @@
 "use client";
 
 import DashboardContent from "@components/admin/dashboard-content";
-import { AddressContext, ProfileContext } from "@components/contexts";
+import {
+    AddressContext,
+    ProfileContext,
+    SiteInfoContext,
+} from "@components/contexts";
 import {
     COMMUNITY_HEADER,
     COMMUNITY_SETTINGS,
     TOAST_DESCRIPTION_CHANGES_SAVED,
+    TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import { ChangeEvent, useContext, useEffect, useState } from "react";
 import { checkPermission, FetchBuilder } from "@courselit/utils";
-import { UIConstants } from "@courselit/common-models";
+import {
+    PaymentPlan,
+    Constants,
+    UIConstants,
+    PaymentPlanType,
+} from "@courselit/common-models";
 import LoadingScreen from "@components/admin/loading-screen";
 import {
     Badge,
     Button,
     Form,
     FormField,
+    getSymbolFromCurrency,
     Link,
     TextEditor,
     useToast,
@@ -51,6 +62,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import PaymentPlanList from "@components/admin/payments/payment-plan-list";
+import {
+    MembershipEntityType,
+    PaymentPlanType,
+} from "@courselit/common-models/dist/constants";
+import { useCommunity } from "@components/hooks/useCommunity";
+const { PaymentPlanType: paymentPlanType } = Constants;
 
 export default function Page({
     params,
@@ -69,6 +87,7 @@ export default function Page({
     ];
     const { profile } = useContext(ProfileContext);
     const address = useContext(AddressContext);
+    const siteinfo = useContext(SiteInfoContext);
 
     const [name, setName] = useState("");
     const [enabled, setEnabled] = useState(false);
@@ -84,7 +103,31 @@ export default function Page({
     );
     const [migrationCategory, setMigrationCategory] = useState<string>("");
     const [pageId, setPageId] = useState("");
+    const [paymentPlans, setPaymentPlans] = useState<PaymentPlan[]>([]);
     const { toast } = useToast();
+    const { community, error } = useCommunity(id);
+
+    useEffect(() => {
+        if (community) {
+            setName(community.name);
+            setEnabled(community.enabled);
+            setDefaultCommunity(community.default);
+            if (community.banner) {
+                setBanner(community.banner);
+            }
+            setCategories(community.categories);
+            setAutoAcceptMembers(community.autoAcceptMembers);
+            setJoiningReasonText(community.joiningReasonText);
+            setPageId(community.pageId);
+            setPaymentPlans(community.paymentPlans);
+        }
+    }, [community]);
+
+    useEffect(() => {
+        if (banner) {
+            setRefresh((r) => r + 1);
+        }
+    }, [banner]);
 
     const handleDeleteConfirm = () => {
         toast({
@@ -95,9 +138,9 @@ export default function Page({
         });
     };
 
-    useEffect(() => {
-        loadCommunity();
-    }, []);
+    // useEffect(() => {
+    //     loadCommunity();
+    // }, []);
 
     const loadCommunity = async () => {
         const query = `
@@ -111,6 +154,16 @@ export default function Page({
                     autoAcceptMembers
                     joiningReasonText
                     pageId
+                    paymentPlans {
+                        planId
+                        name
+                        type
+                        oneTimeAmount
+                        emiAmount
+                        emiTotalInstallments
+                        subscriptionMonthlyAmount
+                        subscriptionYearlyAmount
+                    }
                 }
             }
         `;
@@ -130,7 +183,11 @@ export default function Page({
                 setCommunity(response.community);
             }
         } catch (error) {
-            console.error("Error loading community:", error);
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: error.message,
+                variant: "destructive",
+            });
         }
     };
 
@@ -145,6 +202,7 @@ export default function Page({
         setAutoAcceptMembers(community.autoAcceptMembers);
         setJoiningReasonText(community.joiningReasonText);
         setPageId(community.pageId);
+        setPaymentPlans(community.paymentPlans);
         setRefresh(refresh + 1);
     };
 
@@ -176,6 +234,16 @@ export default function Page({
                     categories
                     autoAcceptMembers
                     joiningReasonText
+                    paymentPlans {
+                        planId
+                        name
+                        type
+                        oneTimeAmount
+                        emiAmount
+                        emiTotalInstallments
+                        subscriptionMonthlyAmount
+                        subscriptionYearlyAmount
+                    }
                 }
             }
         `;
@@ -204,10 +272,14 @@ export default function Page({
                     description: TOAST_DESCRIPTION_CHANGES_SAVED,
                 });
             } else {
-                console.error("Error updating community:", response.error);
+                throw new Error(response.error);
             }
         } catch (error) {
-            console.error("Error updating community:", error);
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: error.message,
+                variant: "destructive",
+            });
         }
     };
 
@@ -251,7 +323,11 @@ export default function Page({
                     });
                 }
             } catch (error) {
-                console.error("Error adding category:", error);
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: error.message,
+                    variant: "destructive",
+                });
             }
         }
     };
@@ -294,8 +370,125 @@ export default function Page({
                     setMigrationCategory("");
                 }
             } catch (error) {
-                console.error("Error deleting category:", error);
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: error.message,
+                    variant: "destructive",
+                });
             }
+        }
+    };
+
+    const onPlanSubmitted = async (plan: PaymentPlan) => {
+        const query = `
+            mutation CreatePlan(
+                $name: String!, 
+                $type: PaymentPlanType!, 
+                $entityId: String!,
+                $entityType: MembershipEntityType!
+                $oneTimeAmount: Int, 
+                $emiAmount: Int,
+                $emiTotalInstallments: Int,
+                $subscriptionMonthlyAmount: Int,
+                $subscriptionYearlyAmount: Int,
+            ) {
+                plan: createPlan(
+                    name: $name, 
+                    type: $type, 
+                    entityId: $entityId,
+                    entityType: $entityType,
+                    oneTimeAmount: $oneTimeAmount, 
+                    emiAmount: $emiAmount,
+                    emiTotalInstallments: $emiTotalInstallments,
+                    subscriptionMonthlyAmount: $subscriptionMonthlyAmount,
+                    subscriptionYearlyAmount: $subscriptionYearlyAmount,
+                ) {
+                    planId
+                    name
+                    type
+                    oneTimeAmount
+                    emiAmount
+                    emiTotalInstallments
+                    subscriptionMonthlyAmount
+                    subscriptionYearlyAmount
+                }
+            }
+        `;
+        try {
+            const fetchRequest = new FetchBuilder()
+                .setUrl(`${address.backend}/api/graph`)
+                .setPayload({
+                    query,
+                    variables: {
+                        name: plan.name,
+                        type: plan.type,
+                        entityId: id,
+                        entityType:
+                            MembershipEntityType.COMMUNITY.toUpperCase(),
+                        oneTimeAmount: plan.oneTimeAmount,
+                        emiAmount: plan.emiAmount,
+                        emiTotalInstallments: plan.emiTotalInstallments,
+                        subscriptionMonthlyAmount:
+                            plan.subscriptionMonthlyAmount,
+                        subscriptionYearlyAmount: plan.subscriptionYearlyAmount,
+                    },
+                })
+                .setIsGraphQLEndpoint(true)
+                .build();
+            const response = await fetchRequest.exec();
+            if (response.plan) {
+                setPaymentPlans([...paymentPlans, response.plan]);
+            }
+        } catch (error: any) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: error.message,
+                variant: "destructive",
+            });
+        }
+    };
+
+    const onPlanArchived = async (planId: string) => {
+        const query = `
+            mutation ArchivePlan($planId: String!, $entityId: String!, $entityType: MembershipEntityType!) {
+                plan: archivePlan(planId: $planId, entityId: $entityId, entityType: $entityType) {
+                    planId
+                    name
+                    type
+                    oneTimeAmount
+                    emiAmount
+                    emiTotalInstallments
+                    subscriptionMonthlyAmount
+                    subscriptionYearlyAmount
+                }   
+            }
+        `;
+        try {
+            const fetchRequest = new FetchBuilder()
+                .setUrl(`${address.backend}/api/graph`)
+                .setPayload({
+                    query,
+                    variables: {
+                        planId,
+                        entityId: id,
+                        entityType:
+                            MembershipEntityType.COMMUNITY.toUpperCase(),
+                    },
+                })
+                .setIsGraphQLEndpoint(true)
+                .build();
+            const response = await fetchRequest.exec();
+            if (response.plan) {
+                setPaymentPlans(
+                    paymentPlans.filter((p) => p.planId !== planId),
+                );
+            }
+        } catch (error: any) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: error.message,
+                variant: "destructive",
+            });
         }
     };
 
@@ -445,6 +638,35 @@ export default function Page({
                         <Button variant="secondary">Edit Community Page</Button>
                     </Link>
                 </div>
+            </div>
+            <Separator className="my-8" />
+            <div className="space-y-4 flex flex-col md:flex-row md:items-start md:justify-between w-full">
+                <div className="space-y-2">
+                    <Label className="text-base font-semibold">Pricing</Label>
+                    <p className="text-sm text-muted-foreground">
+                        Manage your community pricing plans
+                    </p>
+                </div>
+                <PaymentPlanList
+                    paymentPlans={paymentPlans.map((plan) => ({
+                        ...plan,
+                        type: plan.type.toLowerCase() as PaymentPlanType,
+                    }))}
+                    onPlanSubmit={onPlanSubmitted}
+                    onPlanArchived={onPlanArchived}
+                    allowedPlanTypes={[
+                        paymentPlanType.SUBSCRIPTION,
+                        paymentPlanType.FREE,
+                        paymentPlanType.ONE_TIME,
+                        paymentPlanType.EMI,
+                    ]}
+                    currencySymbol={getSymbolFromCurrency(
+                        siteinfo.currencyISOCode || "USD",
+                    )}
+                    currencyISOCode={
+                        siteinfo.currencyISOCode?.toUpperCase() || "USD"
+                    }
+                />
             </div>
             <Separator className="my-8" />
             <div className="space-y-4">

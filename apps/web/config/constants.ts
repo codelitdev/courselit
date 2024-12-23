@@ -99,6 +99,7 @@ export default {
         "newsletter_subscribed",
         "newsletter_unsubscribed",
         "user_created",
+        "community_joined",
     ],
 
     // durations

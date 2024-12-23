@@ -1,3 +1,4 @@
+import { PaymentPlan } from "./payment-plan";
 import { TextEditorContent } from "./text-editor-content";
 
 export interface Community {
@@ -10,4 +11,7 @@ export interface Community {
     default: boolean;
     joiningReasonText?: string;
     pageId: string;
+    products: string[];
+    autoAcceptMembers: boolean;
+    paymentPlans: PaymentPlan[];
 }

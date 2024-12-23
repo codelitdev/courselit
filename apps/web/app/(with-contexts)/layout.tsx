@@ -7,23 +7,18 @@ import { getBackendAddress } from "@ui-lib/utils";
 import { defaultState } from "@components/default-state";
 import { decode } from "base-64";
 import { SiteInfo } from "@courselit/common-models";
-import { redirect } from "next/navigation";
-// import "../../styles/globals.css";
 
 export default async function Layout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const session = await auth();
-    if (!session) {
-        redirect("/login");
-    }
     const headersList = headers();
     const address = getBackendAddress({
         "x-forwarded-proto": headersList.get("x-forwarded-proto"),
         host: headersList.get("host"),
     });
+    const session = await auth();
 
     const siteInfoQuery = `
             { site: getSiteInfo {
@@ -70,11 +65,11 @@ export default async function Layout({
 
     return (
         <LayoutWithContext
-            session={session}
             address={address}
             siteinfo={formatSiteInfo(siteInfoResponse.site.settings)}
             typefaces={siteInfoResponse.site.typefaces}
             config={config}
+            session={session}
         >
             {children}
         </LayoutWithContext>

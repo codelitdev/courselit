@@ -1,8 +1,7 @@
-import { Rule, Constants, Sequence } from "@courselit/common-models";
+import { Rule, Constants, Sequence, User } from "@courselit/common-models";
 import OngoingSequence from "@models/OngoingSequence";
 import RuleModel from "@models/Rule";
 import SequenceModel from "@models/Sequence";
-import { User } from "@models/User";
 import mongoose from "mongoose";
 import { error } from "../services/logger";
 

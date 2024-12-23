@@ -2,7 +2,6 @@ const graphql = require("graphql");
 
 import users from "./users";
 import settings from "./settings";
-//import design from "./design";
 import menus from "./menus";
 import widgets from "./widgets";
 import courses from "./courses";
@@ -11,6 +10,7 @@ import pages from "./pages";
 import mails from "./mails";
 import activities from "./activities";
 import communities from "./communities";
+import paymentplans from "./paymentplans";
 
 const schema = new graphql.GraphQLSchema({
     query: new graphql.GraphQLObjectType({
@@ -20,13 +20,13 @@ const schema = new graphql.GraphQLSchema({
             ...lessons.queries,
             ...courses.queries,
             ...settings.queries,
-            //...design.queries,
             ...menus.queries,
             ...widgets.queries,
             ...pages.queries,
             ...mails.queries,
             ...activities.queries,
             ...communities.queries,
+            ...paymentplans.queries,
         },
     }),
     mutation: new graphql.GraphQLObjectType({
@@ -36,13 +36,13 @@ const schema = new graphql.GraphQLSchema({
             ...lessons.mutations,
             ...courses.mutations,
             ...settings.mutations,
-            //...design.mutations,
             ...menus.mutations,
             ...widgets.mutations,
             ...pages.mutations,
             ...mails.mutations,
             ...activities.mutations,
             ...communities.mutations,
+            ...paymentplans.mutations,
         },
     }),
 });

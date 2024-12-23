@@ -23,6 +23,7 @@ export const eventTypes = [
     "product:purchased",
     "subscriber:added",
     "date:occurred",
+    "community:joined",
 ] as const;
 export const actionTypes = [
     "tag:add",
@@ -54,14 +55,31 @@ export const paymentMethods = [
     PAYMENT_METHOD_RAZORPAY,
     PAYMENT_METHOD_STRIPE,
 ] as const;
-export const communityMemberStatus = [
-    "pending",
-    "approved",
-    "rejected",
-] as const;
 export const PageType = {
     PRODUCT: "product",
     SITE: "site",
     BLOG: "blog",
     COMMUNITY: "community",
+} as const;
+export const PaymentPlanType = {
+    FREE: "free",
+    ONE_TIME: "onetime",
+    EMI: "emi",
+    SUBSCRIPTION: "subscription",
+} as const;
+export const MembershipEntityType = {
+    COURSE: "course",
+    COMMUNITY: "community",
+} as const;
+export const MembershipStatus = {
+    ACTIVE: "active",
+    FAILED: "failed",
+    EXPIRED: "expired",
+    PENDING: "pending",
+    REJECTED: "rejected",
+} as const;
+export const MembershipPaymentStatus = {
+    PENDING: "pending",
+    PAID: "paid",
+    FAILED: "failed",
 } as const;

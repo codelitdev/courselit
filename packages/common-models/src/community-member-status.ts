@@ -1,4 +1,9 @@
 import { Constants } from ".";
 
-export type CommunityMemberStatus =
-    (typeof Constants.communityMemberStatus)[number];
+const CommunityMembershipTypes = [
+    Constants.MembershipStatus.PENDING,
+    Constants.MembershipStatus.ACTIVE,
+    Constants.MembershipStatus.REJECTED,
+];
+
+export type CommunityMemberStatus = (typeof CommunityMembershipTypes)[number];

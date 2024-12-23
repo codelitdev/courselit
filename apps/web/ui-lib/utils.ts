@@ -2,6 +2,7 @@ import type {
     CommunityMemberStatus,
     Course,
     Group,
+    Page,
     Profile,
     TextEditorContent,
     Typeface,
@@ -61,7 +62,20 @@ export const canAccessDashboard = (profile: Profile) => {
 export const constructThumbnailUrlFromFileUrl = (url: string) =>
     url ? url.replace(url.split("/").pop(), "thumb.webp") : null;
 
-export const getPage = async (backend: string, id?: string) => {
+export const getPage = async (
+    backend: string,
+    id?: string,
+): Promise<
+    Pick<
+        Page,
+        | "title"
+        | "layout"
+        | "pageData"
+        | "description"
+        | "socialImage"
+        | "robotsAllowed"
+    >
+> => {
     const query = id
         ? `
     query {
@@ -105,6 +119,7 @@ export const getPage = async (backend: string, id?: string) => {
     } catch (e: any) {
         console.log("getPage", e.message); // eslint-disable-line no-console
     }
+    return undefined as unknown as Page;
 };
 
 export const isEnrolled = (courseId: string, profile: Profile) =>
@@ -187,12 +202,15 @@ export function truncate(str: string, length: number) {
 }
 
 export function isTextEditorNonEmpty(content: TextEditorContent) {
-    return content.content[0].content;
+    return content.content && content.content[0]?.content;
 }
 
 export function getNextStatusForCommunityMember(status: CommunityMemberStatus) {
-    const index = Constants.communityMemberStatus.indexOf(status);
-    return Constants.communityMemberStatus[
-        (index + 1) % Constants.communityMemberStatus.length
+    const statusCycle = [
+        Constants.MembershipStatus.PENDING,
+        Constants.MembershipStatus.ACTIVE,
+        Constants.MembershipStatus.REJECTED,
     ];
+    const index = statusCycle.indexOf(status);
+    return statusCycle[(index + 1) % statusCycle.length];
 }
