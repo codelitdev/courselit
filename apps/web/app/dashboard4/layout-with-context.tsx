@@ -11,7 +11,8 @@ import {
     TypefacesContext,
     ServerConfigContext,
 } from "@components/contexts";
-import { Toaster } from "@courselit/components-library";
+import { Toaster, useToast } from "@courselit/components-library";
+import { ERROR_SNACKBAR_PREFIX } from "@ui-config/strings";
 
 export default function Layout({
     address,
@@ -27,6 +28,7 @@ export default function Layout({
     config: ServerConfig;
 }) {
     const [profile, setProfile] = useState(defaultState.profile);
+    const { toast } = useToast();
 
     useEffect(() => {
         const getUserProfile = async () => {
@@ -66,7 +68,12 @@ export default function Layout({
                 if (response.profile) {
                     setProfile(response.profile);
                 }
-            } catch (e) {}
+            } catch (err) {
+                toast({
+                    title: ERROR_SNACKBAR_PREFIX,
+                    description: err.message,
+                });
+            }
         };
 
         if (address) {

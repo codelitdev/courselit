@@ -1,4 +1,9 @@
-import { Form, FormField, Section } from "@courselit/components-library";
+import {
+    Form,
+    FormField,
+    Section,
+    useToast,
+} from "@courselit/components-library";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { actionCreators } from "@courselit/state-management";
@@ -7,16 +12,12 @@ import {
     FetchBuilder,
     getGraphQLQueryStringFromObject,
 } from "@courselit/utils";
-import {
-    Address,
-    AppMessage,
-    Mail,
-    UIConstants,
-} from "@courselit/common-models";
+import { Address, Mail, UIConstants } from "@courselit/common-models";
 import { connect } from "react-redux";
 import {
     BTN_SEND,
     BTN_SENDING,
+    ERROR_SNACKBAR_PREFIX,
     MAIL_BODY_PLACEHOLDER,
     MAIL_SUBJECT_PLACEHOLDER,
     MAIL_TO_PLACEHOLDER,
@@ -24,7 +25,6 @@ import {
     PAGE_HEADER_EDIT_MAIL,
     TOAST_MAIL_SENT,
 } from "../../../ui-config/strings";
-import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import { Breadcrumbs, Link, Button } from "@courselit/components-library";
 const { networkAction } = actionCreators;
 
@@ -43,6 +43,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
         published: false,
     });
     const [sending, setSending] = useState(false);
+    const { toast } = useToast();
     const debouncedSave = debounce(async () => await saveMail(), 1000);
 
     useEffect(() => {
@@ -86,7 +87,10 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                 });
             }
         } catch (e: any) {
-            dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: e.message,
+            });
         } finally {
             dispatch(networkAction(false));
         }
@@ -108,7 +112,10 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
             dispatch(networkAction(true));
             await fetcher.exec();
         } catch (e: any) {
-            dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: e.message,
+            });
         } finally {
             dispatch(networkAction(false));
         }
@@ -145,9 +152,15 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
             if (response.mail) {
                 setMail(response.mail);
             }
-            dispatch(setAppMessage(new AppMessage(TOAST_MAIL_SENT)));
+            toast({
+                title: "",
+                description: TOAST_MAIL_SENT,
+            });
         } catch (e: any) {
-            dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: e.message,
+            });
         } finally {
             dispatch(networkAction(false));
             setSending(false);

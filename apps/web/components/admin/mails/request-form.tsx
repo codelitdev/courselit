@@ -1,12 +1,15 @@
-import { Address, AppMessage } from "@courselit/common-models";
-import { Form, FormField, FormSubmit } from "@courselit/components-library";
-import { AppDispatch } from "@courselit/state-management";
+import { Address } from "@courselit/common-models";
 import {
-    networkAction,
-    setAppMessage,
-} from "@courselit/state-management/dist/action-creators";
+    Form,
+    FormField,
+    FormSubmit,
+    useToast,
+} from "@courselit/components-library";
+import { AppDispatch } from "@courselit/state-management";
+import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import {
+    ERROR_SNACKBAR_PREFIX,
     MAIL_REQUEST_FORM_REASON_FIELD,
     MAIL_REQUEST_FORM_REASON_PLACEHOLDER,
     MAIL_REQUEST_FORM_SUBMIT_INITIAL_REQUEST_TEXT,
@@ -25,6 +28,7 @@ const RequestForm = ({ address, dispatch, loading }: RequestFormProps) => {
     const [reason, setReason] = useState("");
     const [message, setMessage] = useState("");
     const [status, setStatus] = useState("");
+    const { toast } = useToast();
 
     useEffect(() => {
         const loadMailRequestStatus = async () => {
@@ -53,7 +57,10 @@ const RequestForm = ({ address, dispatch, loading }: RequestFormProps) => {
                     setStatus(status);
                 }
             } catch (e: any) {
-                dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
+                toast({
+                    title: ERROR_SNACKBAR_PREFIX,
+                    description: e.message,
+                });
             } finally {
                 dispatch && dispatch(networkAction(false));
             }
@@ -95,13 +102,16 @@ const RequestForm = ({ address, dispatch, loading }: RequestFormProps) => {
             dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.updateMailRequest) {
-                dispatch &&
-                    dispatch(
-                        setAppMessage(new AppMessage(MAIL_REQUEST_RECEIVED)),
-                    );
+                toast({
+                    title: "",
+                    description: MAIL_REQUEST_RECEIVED,
+                });
             }
         } catch (e: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: e.message,
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }

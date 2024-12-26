@@ -1,6 +1,5 @@
 import {
     Address,
-    AppMessage,
     Question,
     Quiz as QuizViewer,
 } from "@courselit/common-models";
@@ -9,17 +8,17 @@ import {
     AppDispatch,
     AppState,
 } from "@courselit/state-management";
-import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
 import { ChangeEvent, useState } from "react";
 import { connect } from "react-redux";
 import {
+    ERROR_SNACKBAR_PREFIX,
     QUIZ_FAIL_MESSAGE,
     QUIZ_PASS_MESSAGE,
     QUIZ_VIEWER_EVALUATE_BTN,
     QUIZ_VIEWER_EVALUATE_BTN_LOADING,
 } from "../../../ui-config/strings";
-import { Form, FormSubmit } from "@courselit/components-library";
+import { Form, FormSubmit, useToast } from "@courselit/components-library";
 
 const { networkAction } = actionCreators;
 
@@ -36,6 +35,7 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
         ...content.questions.map((item) => []),
     ]);
     const [loading, setLoading] = useState(false);
+    const { toast } = useToast();
 
     const setAnswerForQuestion = (
         checked: boolean,
@@ -98,25 +98,22 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
             if (response.result) {
                 const { pass, score, passingGrade } = response.result;
                 if (pass) {
-                    dispatch(
-                        setAppMessage(
-                            new AppMessage(
-                                `${QUIZ_PASS_MESSAGE} ${score} points.`,
-                            ),
-                        ),
-                    );
+                    toast({
+                        title: "",
+                        description: `${QUIZ_PASS_MESSAGE} ${score} points.`,
+                    });
                 } else {
-                    dispatch(
-                        setAppMessage(
-                            new AppMessage(
-                                `${QUIZ_FAIL_MESSAGE} ${score} points. Requires ${passingGrade} points.`,
-                            ),
-                        ),
-                    );
+                    toast({
+                        title: "",
+                        description: `${QUIZ_FAIL_MESSAGE} ${score} points. Requires ${passingGrade} points.`,
+                    });
                 }
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch(networkAction(false));
             setLoading(false);

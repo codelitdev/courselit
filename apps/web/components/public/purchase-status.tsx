@@ -15,16 +15,17 @@ import {
     VERIFY_PAYMENT_BUTTON,
     VISIT_COURSE_BUTTON,
     PURCHASE_ID_HEADER,
+    ERROR_SNACKBAR_PREFIX,
 } from "../../ui-config/strings";
 import dynamic from "next/dynamic";
 import type { AppDispatch, AppState } from "@courselit/state-management";
-import { Address, AppMessage, Auth } from "@courselit/common-models";
+import { Address, Auth } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
 import { actionCreators } from "@courselit/state-management";
-import { Button, Button2 } from "@courselit/components-library";
+import { Button, Button2, useToast } from "@courselit/components-library";
 import Link from "next/link";
 
-const { networkAction, setAppMessage } = actionCreators;
+const { networkAction } = actionCreators;
 
 const AppLoader = dynamic(() => import("../app-loader"));
 
@@ -42,6 +43,7 @@ const PurchaseStatus = (props: PurchaseStatusProps) => {
     const { id, source } = router.query;
     const courseLink: string = (source as string) || "";
     const { dispatch, address } = props;
+    const { toast } = useToast();
 
     useEffect(() => {
         if (props.auth.checked && props.auth.guest) {
@@ -69,7 +71,10 @@ const PurchaseStatus = (props: PurchaseStatusProps) => {
             const response = await fetch.exec();
             setStatus(response.status);
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch(networkAction(false));
         }

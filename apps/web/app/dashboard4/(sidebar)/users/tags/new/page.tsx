@@ -1,11 +1,17 @@
 "use client";
 
 import React, { useState, ChangeEvent, useContext } from "react";
-import { Button, Form, FormField } from "@courselit/components-library";
+import {
+    Button,
+    Form,
+    FormField,
+    useToast,
+} from "@courselit/components-library";
 import {
     BTN_CONTINUE,
     BTN_NEW_TAG,
     BUTTON_CANCEL_TEXT,
+    ERROR_SNACKBAR_PREFIX,
     USERS_MANAGER_PAGE_HEADING,
     USERS_TAG_HEADER,
     USERS_TAG_NEW_HEADER,
@@ -41,6 +47,7 @@ export default function Page() {
     const [name, setName] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const { toast } = useToast();
     const profile = useContext(ProfileContext);
 
     const createTag = async (e: FormEvent) => {
@@ -68,6 +75,10 @@ export default function Page() {
                 router.replace("/dashboard4/users/tags");
             }
         } catch (err: any) {
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             setLoading(false);
         }

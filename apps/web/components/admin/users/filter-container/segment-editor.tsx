@@ -1,12 +1,17 @@
 import type { Address } from "@courselit/common-models";
-import { AppMessage } from "@courselit/common-models";
-import { Button, IconButton, ScrollArea } from "@courselit/components-library";
+import {
+    Button,
+    IconButton,
+    ScrollArea,
+    useToast,
+} from "@courselit/components-library";
 import { Delete } from "@courselit/icons";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import React, { useState } from "react";
 import type { ThunkDispatch } from "redux-thunk";
 import {
+    ERROR_SNACKBAR_PREFIX,
     POPUP_CANCEL_ACTION,
     POPUP_OK_ACTION,
     USER_DELETE_SEGMENT,
@@ -20,7 +25,7 @@ import PopoverHeader from "./popover-header";
 import type { AnyAction } from "redux";
 import { actionCreators } from "@courselit/state-management";
 import DocumentationLink from "@components/public/documentation-link";
-const { networkAction, setAppMessage } = actionCreators;
+const { networkAction } = actionCreators;
 
 interface DismissPopoverProps {
     selectedSegment: string;
@@ -44,6 +49,7 @@ export default function SegmentEditor({
     dismissPopover,
 }: SegmentEditorProps) {
     const [activeSegment, setActiveSegment] = useState<Segment>();
+    const { toast } = useToast();
 
     const deleteSegment = async () => {
         const mutation = `
@@ -91,7 +97,10 @@ export default function SegmentEditor({
                 });
             }
         } catch (err) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch &&
                 (dispatch as ThunkDispatch<AppState, null, AnyAction>)(

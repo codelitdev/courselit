@@ -6,6 +6,7 @@ import {
     Menu2,
     Link,
     Breadcrumbs,
+    useToast,
 } from "@courselit/components-library";
 import {
     DELETE_PRODUCT_POPUP_HEADER,
@@ -42,6 +43,7 @@ export default function BlogHeader({
 }: BlogHeaderProps) {
     const course = useCourse(id, address);
     const router = useRouter();
+    const { toast } = useToast();
 
     if (!course) {
         return <></>;
@@ -93,6 +95,7 @@ export default function BlogHeader({
                                     onDeleteComplete: () => {
                                         router.replace(`/dashboard/blogs`);
                                     },
+                                    toast,
                                 })
                             }
                         ></MenuItem>

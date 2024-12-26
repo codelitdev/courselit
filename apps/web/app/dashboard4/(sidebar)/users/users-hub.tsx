@@ -19,9 +19,11 @@ import {
     TableBody,
     TableHead,
     TableRow,
+    useToast,
 } from "@courselit/components-library";
 import { checkPermission, FetchBuilder } from "@courselit/utils";
 import {
+    ERROR_SNACKBAR_PREFIX,
     USER_TABLE_HEADER_JOINED,
     USER_TABLE_HEADER_LAST_ACTIVE,
     USER_TABLE_HEADER_NAME,
@@ -44,6 +46,7 @@ export default function UsersHub() {
     const [filtersAggregator, setFiltersAggregator] =
         useState<UserFilterAggregator>("or");
     const [count, setCount] = useState(0);
+    const { toast } = useToast();
 
     const profile = useContext(ProfileContext);
 
@@ -130,10 +133,11 @@ export default function UsersHub() {
                 setCount(response.count);
             }
         } catch (err) {
-            console.error(err);
-        } finally {
-        }
-    }, [address.backend, page, rowsPerPage, filters, filtersAggregator]);
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
+    }}, [address.backend, page, rowsPerPage, filters, filtersAggregator]);
 
     useEffect(() => {
         loadUsers();

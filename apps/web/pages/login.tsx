@@ -10,18 +10,22 @@ import {
     LOGIN_FORM_DISCLAIMER,
     LOADING,
     LOGIN_SUCCESS,
+    ERROR_SNACKBAR_PREFIX,
 } from "../ui-config/strings";
 import { useRouter } from "next/router";
 import type { Address, Auth, State } from "@courselit/common-models";
-import { AppMessage } from "@courselit/common-models";
 import { connect } from "react-redux";
 import { AppDispatch } from "@courselit/state-management";
 import BaseLayout from "../components/public/base-layout";
 import { getBackendAddress, getPage } from "../ui-lib/utils";
-import { Form, FormField, FormSubmit } from "@courselit/components-library";
+import {
+    Form,
+    FormField,
+    FormSubmit,
+    useToast,
+} from "@courselit/components-library";
 import { signIn } from "next-auth/react";
 import { FormEvent } from "react";
-import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import Link from "next/link";
 import { useEffect } from "react";
 
@@ -44,6 +48,7 @@ const Login = ({ page, auth, dispatch }: LoginProps) => {
     const router = useRouter();
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const { toast } = useToast();
 
     useEffect(() => {
         if (!auth.guest) {
@@ -75,7 +80,10 @@ const Login = ({ page, auth, dispatch }: LoginProps) => {
             if (response.ok) {
                 setShowCode(true);
             } else {
-                dispatch(setAppMessage(new AppMessage(resp.error)));
+                toast({
+                    title: ERROR_SNACKBAR_PREFIX,
+                    description: resp.error,
+                });
             }
         } finally {
             setLoading(false);
@@ -94,7 +102,10 @@ const Login = ({ page, auth, dispatch }: LoginProps) => {
             if (response?.error) {
                 setError(`Can't sign you in at this time`);
             } else {
-                dispatch(setAppMessage(new AppMessage(LOGIN_SUCCESS)));
+                toast({
+                    title: "",
+                    description: LOGIN_SUCCESS,
+                });
             }
         } finally {
             setLoading(false);

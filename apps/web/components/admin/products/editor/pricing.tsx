@@ -1,11 +1,14 @@
 import React, { FormEvent, useEffect, useState } from "react";
-import { Address, AppMessage, SiteInfo } from "@courselit/common-models";
-import { FormField, Form, Button } from "@courselit/components-library";
-import type { AppDispatch } from "@courselit/state-management";
+import { Address, SiteInfo } from "@courselit/common-models";
 import {
-    networkAction,
-    setAppMessage,
-} from "@courselit/state-management/dist/action-creators";
+    FormField,
+    Form,
+    Button,
+    Select,
+    useToast,
+} from "@courselit/components-library";
+import type { AppDispatch } from "@courselit/state-management";
+import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
 import {
     APP_MESSAGE_COURSE_SAVED,
@@ -23,7 +26,6 @@ import {
     PRICING_PAID_SUBTITLE,
 } from "../../../../ui-config/strings";
 import useCourse from "./course-hook";
-import { Select } from "@courselit/components-library";
 import { COURSE_TYPE_DOWNLOAD } from "../../../../ui-config/constants";
 
 interface PricingProps {
@@ -44,6 +46,7 @@ export default function Pricing({
     const [costType, setCostType] = useState<string>(
         course?.costType?.toLowerCase() || PRICING_FREE,
     );
+    const { toast } = useToast();
 
     useEffect(() => {
         if (course) {
@@ -75,13 +78,12 @@ export default function Pricing({
             dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.updateCourse) {
-                dispatch &&
-                    dispatch(
-                        setAppMessage(new AppMessage(APP_MESSAGE_COURSE_SAVED)),
-                    );
+                toast({
+                    title: "",
+                    description: APP_MESSAGE_COURSE_SAVED,
+                });
             }
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
         } finally {
             dispatch && dispatch(networkAction(false));
         }

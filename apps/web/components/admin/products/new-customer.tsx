@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { Address, AppMessage } from "@courselit/common-models";
+import { Address } from "@courselit/common-models";
 import {
     Form,
     FormField,
@@ -16,13 +16,11 @@ import { FetchBuilder } from "@courselit/utils";
 import {
     BTN_GO_BACK,
     BTN_INVITE,
+    ERROR_SNACKBAR_PREFIX,
     PRODUCT_TABLE_CONTEXT_MENU_INVITE_A_CUSTOMER,
     USER_TAGS_SUBHEADER,
 } from "@/ui-config/strings";
-import {
-    networkAction,
-    setAppMessage,
-} from "@courselit/state-management/dist/action-creators";
+import { networkAction } from "@courselit/state-management/dist/action-creators";
 import useCourse from "./editor/course-hook";
 
 interface NewCustomerProps {
@@ -108,16 +106,14 @@ export default function NewCustomer({
                 setEmail("");
                 setTags([]);
                 const message = `${response.user.email} has been invited.`;
-                dispatch && dispatch(setAppMessage(new AppMessage(message)));
                 toast({
                     title: "Success",
                     description: message,
                 });
             }
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
             toast({
-                title: "Error",
+                title: ERROR_SNACKBAR_PREFIX,
                 description: err.message,
             });
         } finally {

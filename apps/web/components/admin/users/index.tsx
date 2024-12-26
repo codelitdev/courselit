@@ -5,6 +5,7 @@ import {
     USERS_MANAGER_PAGE_HEADING,
     USER_TABLE_HEADER_LAST_ACTIVE,
     BTN_MANAGE_TAGS,
+    ERROR_SNACKBAR_PREFIX,
 } from "../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";
@@ -14,7 +15,6 @@ import {
     User,
     Address,
     State,
-    AppMessage,
     UserFilter,
     UserFilterAggregator,
 } from "@courselit/common-models";
@@ -30,12 +30,13 @@ import {
     Avatar,
     AvatarFallback,
     AvatarImage,
+    useToast,
 } from "@courselit/components-library";
 import { formattedLocaleDate } from "@ui-lib/utils";
 import FilterContainer from "./filter-container";
 import { useCallback } from "react";
 
-const { networkAction, setAppMessage } = actionCreators;
+const { networkAction } = actionCreators;
 
 interface UserManagerProps {
     address: Address;
@@ -51,6 +52,7 @@ export const Users = ({ address, dispatch, loading }: UserManagerProps) => {
     const [filtersAggregator, setFiltersAggregator] =
         useState<UserFilterAggregator>("or");
     const [count, setCount] = useState(0);
+    const { toast } = useToast();
 
     /*
     const handleRowsPerPageChange = (
@@ -149,7 +151,10 @@ export const Users = ({ address, dispatch, loading }: UserManagerProps) => {
                 setCount(response.count);
             }
         } catch (err) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             (dispatch as ThunkDispatch<State, null, AnyAction>)(
                 networkAction(false),

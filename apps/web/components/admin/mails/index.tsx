@@ -1,23 +1,25 @@
 import React, { useEffect, useState } from "react";
 import {
     Address,
-    AppMessage,
     Constants,
     Domain,
     Sequence,
     SequenceType,
 } from "@courselit/common-models";
-import { AppDispatch, AppState } from "@courselit/state-management";
+import {
+    AppDispatch,
+    AppState,
+    actionCreators,
+} from "@courselit/state-management";
 import {
     BTN_NEW_MAIL,
     PAGE_HEADER_ALL_MAILS,
     BROADCASTS,
     SEQUENCES,
     BTN_NEW_SEQUENCE,
+    ERROR_SNACKBAR_PREFIX,
 } from "../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
-import { actionCreators } from "@courselit/state-management";
-import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import { useRouter } from "next/navigation";
 import { ThunkDispatch } from "redux-thunk";
 import {
@@ -29,6 +31,7 @@ import {
     CardContent,
     CardFooter,
     CardTitle,
+    useToast,
 } from "@courselit/components-library";
 import { AnyAction } from "redux";
 import RequestForm from "./request-form";
@@ -63,6 +66,7 @@ export default function Mails({
     >([]);
     const [siteInfo, setSiteInfo] = useState<Domain>();
     const router = useRouter();
+    const { toast } = useToast();
 
     const handleBroadcastPageChange = (newPage: number) => {
         setBroadcastPage(newPage);
@@ -98,7 +102,10 @@ export default function Mails({
                     setSiteInfo(response.siteInfo);
                 }
             } catch (e: any) {
-                dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
+                toast({
+                    title: ERROR_SNACKBAR_PREFIX,
+                    description: e.message,
+                });
             } finally {
                 dispatch && dispatch(networkAction(false));
             }
@@ -138,7 +145,10 @@ export default function Mails({
                 setBroadcasts(response.broadcasts);
             }
         } catch (e: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: e.message,
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }
@@ -175,7 +185,10 @@ export default function Mails({
                 }
             }
         } catch (e: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: e.message,
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }
@@ -221,7 +234,10 @@ export default function Mails({
                 );
             }
         } catch (err) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch &&
                 (dispatch as ThunkDispatch<AppState, null, AnyAction>)(

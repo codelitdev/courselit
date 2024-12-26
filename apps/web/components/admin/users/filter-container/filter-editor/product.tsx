@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { FetchBuilder } from "@courselit/utils";
 import {
+    ERROR_SNACKBAR_PREFIX,
     POPUP_CANCEL_ACTION,
     USER_FILTER_APPLY_BTN,
     USER_FILTER_CATEGORY_PRODUCT,
@@ -15,10 +16,9 @@ import {
     Form,
     FormSubmit,
     Select,
+    useToast,
 } from "@courselit/components-library";
-import { Address, AppMessage, Course } from "@courselit/common-models";
-import { actionCreators } from "@courselit/state-management";
-const { setAppMessage } = actionCreators;
+import { Address, Course } from "@courselit/common-models";
 
 interface ProductFilterEditorProps {
     onApply: (...args: any[]) => any;
@@ -36,6 +36,7 @@ export default function ProductFilterEditor({
     const [products, setProducts] = useState<
         Pick<Course, "title" | "courseId">[]
     >([]);
+    const { toast } = useToast();
 
     const loadCreatorCourses = useCallback(async () => {
         const query = `
@@ -58,7 +59,10 @@ export default function ProductFilterEditor({
                 setProducts([...response.courses]);
             }
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         }
     }, [address.backend, dispatch]);
 

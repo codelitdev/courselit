@@ -1,8 +1,14 @@
 import React, { useState, ChangeEvent } from "react";
-import { Form, FormField, FormSubmit } from "@courselit/components-library";
+import {
+    Form,
+    FormField,
+    FormSubmit,
+    useToast,
+} from "@courselit/components-library";
 import Segment from "@ui-models/segment";
 import {
     BUTTON_SAVE,
+    ERROR_SNACKBAR_PREFIX,
     USER_FILTER_NEW_SEGMENT_NAME,
     USER_FILTER_SAVE_DESCRIPTION,
 } from "@ui-config/strings";
@@ -11,7 +17,6 @@ import { FetchBuilder } from "@courselit/utils";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import {
     Address,
-    AppMessage,
     UserFilter,
     UserFilterAggregator,
 } from "@courselit/common-models";
@@ -20,7 +25,7 @@ import { actionCreators } from "@courselit/state-management";
 import type { AnyAction } from "redux";
 import PopoverDescription from "./popover-description";
 
-const { networkAction, setAppMessage } = actionCreators;
+const { networkAction } = actionCreators;
 
 interface FilterSaveProps {
     filters: UserFilter[];
@@ -38,6 +43,7 @@ export default function FilterSave({
     dismissPopover,
 }: FilterSaveProps) {
     const [name, setName] = useState("");
+    const { toast } = useToast();
 
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -84,7 +90,10 @@ export default function FilterSave({
                 dismissPopover();
             }
         } catch (err) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch &&
                 (dispatch as ThunkDispatch<AppState, null, AnyAction>)(

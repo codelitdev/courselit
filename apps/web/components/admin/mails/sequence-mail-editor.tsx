@@ -1,4 +1,4 @@
-import { Address, AppMessage } from "@courselit/common-models";
+import { Address } from "@courselit/common-models";
 import {
     Breadcrumbs,
     Button,
@@ -6,16 +6,15 @@ import {
     FormField,
     Link,
     Select,
+    useToast,
 } from "@courselit/components-library";
 import { AppDispatch } from "@courselit/state-management";
-import {
-    networkAction,
-    setAppMessage,
-} from "@courselit/state-management/dist/action-creators";
+import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
 import {
     BUTTON_SAVE,
     COMPOSE_SEQUENCE_EDIT_DELAY,
+    ERROR_SNACKBAR_PREFIX,
     MAIL_PREVIEW_TITLE,
     MAIL_SUBJECT_PLACEHOLDER,
     PAGE_HEADER_ALL_MAILS,
@@ -50,7 +49,7 @@ const SequenceMailEditor = ({
     const [published, setPublished] = useState<"unpublished" | "published">(
         null,
     );
-
+    const { toast } = useToast();
     const fetch = useMemo(
         () =>
             new FetchBuilder()
@@ -106,7 +105,10 @@ const SequenceMailEditor = ({
                 }
             }
         } catch (e: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: e.message,
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }
@@ -196,7 +198,10 @@ const SequenceMailEditor = ({
                 }
             }
         } catch (e: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: e.message,
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }

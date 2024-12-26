@@ -3,8 +3,7 @@ import Header from "./base-layout/header";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
 import { AppDispatch, AppState } from "@courselit/state-management";
-import { Chip, Link, Modal } from "@courselit/components-library";
-import { AppToast } from "@components/app-toast";
+import { Chip, Link, Modal, Toaster } from "@courselit/components-library";
 import { Message, SiteInfo } from "@courselit/common-models";
 
 export interface ComponentScaffoldMenuItem {
@@ -125,9 +124,7 @@ const ComponentScaffold = ({
             >
                 {drawer}
             </Modal>
-            {message && dispatch && (
-                <AppToast dispatch={dispatch} message={message} />
-            )}
+            <Toaster />
         </div>
     );
 };

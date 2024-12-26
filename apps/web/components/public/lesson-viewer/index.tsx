@@ -17,6 +17,7 @@ import {
     COURSE_PROGRESS_NEXT,
     COURSE_PROGRESS_PREV,
     ENROLL_BUTTON_TEXT,
+    ERROR_SNACKBAR_PREFIX,
     NOT_ENROLLED_HEADER,
 } from "../../../ui-config/strings";
 import {
@@ -24,6 +25,7 @@ import {
     Link,
     Button2,
     Skeleton,
+    useToast,
 } from "@courselit/components-library";
 import type {
     Address,
@@ -32,13 +34,9 @@ import type {
     Quiz,
     SiteInfo,
 } from "@courselit/common-models";
-import { AppMessage } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { useRouter } from "next/router";
-import {
-    refreshUserProfile,
-    setAppMessage,
-} from "@courselit/state-management/dist/action-creators";
+import { refreshUserProfile } from "@courselit/state-management/dist/action-creators";
 import { ArrowLeft, ArrowRight, ArrowDownward } from "@courselit/icons";
 import { isEnrolled } from "../../../ui-lib/utils";
 import LessonEmbedViewer from "./embed-viewer";
@@ -86,6 +84,7 @@ const LessonViewer = ({
     const [lesson, setLesson] = useState<Lesson>();
     const [error, setError] = useState();
     const router = useRouter();
+    const { toast } = useToast();
 
     useEffect(() => {
         if (status === "authenticated") {
@@ -176,7 +175,10 @@ const LessonViewer = ({
                 }
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch(networkAction(false));
         }

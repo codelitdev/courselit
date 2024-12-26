@@ -1,9 +1,10 @@
 import React from "react";
-import { AppMessage, Course } from "@courselit/common-models";
+import { Course } from "@courselit/common-models";
 import {
     APP_MESSAGE_COURSE_DELETED,
     DELETE_PRODUCT_POPUP_HEADER,
     DELETE_PRODUCT_POPUP_TEXT,
+    ERROR_SNACKBAR_PREFIX,
     PRODUCT_STATUS_DRAFT,
     PRODUCT_STATUS_PUBLISHED,
     PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
@@ -15,16 +16,14 @@ import { MoreVert } from "@courselit/icons";
 import type { AppDispatch } from "@courselit/state-management";
 import type { SiteInfo, Address } from "@courselit/common-models";
 import { capitalize, FetchBuilder, formatCurrency } from "@courselit/utils";
-import {
-    networkAction,
-    setAppMessage,
-} from "@courselit/state-management/dist/action-creators";
+import { networkAction } from "@courselit/state-management/dist/action-creators";
 import {
     Menu2,
     MenuItem,
     Link,
     Chip,
     TableRow,
+    useToast,
 } from "@courselit/components-library";
 import { usePathname } from "next/navigation";
 
@@ -54,6 +53,7 @@ export default function Product({
 }) {
     const product = details;
     const path = usePathname();
+    const { toast } = useToast();
 
     const deleteProduct = async () => {
         const query = `
@@ -76,13 +76,16 @@ export default function Product({
                 onDelete(position);
             }
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
-            dispatch &&
-                dispatch(
-                    setAppMessage(new AppMessage(APP_MESSAGE_COURSE_DELETED)),
-                );
+            toast({
+                title: "",
+                description: APP_MESSAGE_COURSE_DELETED,
+            });
         }
     };
 

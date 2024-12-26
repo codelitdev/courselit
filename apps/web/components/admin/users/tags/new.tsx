@@ -1,17 +1,19 @@
 import React, { useState, ChangeEvent } from "react";
-import { Address, AppMessage } from "@courselit/common-models";
+import { Address } from "@courselit/common-models";
 import {
     Breadcrumbs,
     Button,
     Form,
     FormField,
     Link,
+    useToast,
 } from "@courselit/components-library";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import {
     BTN_CONTINUE,
     BTN_NEW_TAG,
     BUTTON_CANCEL_TEXT,
+    ERROR_SNACKBAR_PREFIX,
     USERS_MANAGER_PAGE_HEADING,
     USERS_TAG_HEADER,
 } from "@ui-config/strings";
@@ -20,7 +22,7 @@ import { FetchBuilder } from "@courselit/utils";
 import { actionCreators } from "@courselit/state-management";
 import { FormEvent } from "react";
 import { usePathname, useRouter } from "next/navigation";
-const { networkAction, setAppMessage } = actionCreators;
+const { networkAction } = actionCreators;
 
 interface NewTagProps {
     address: Address;
@@ -32,6 +34,7 @@ export function NewTag({ address, dispatch }: NewTagProps) {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const path = usePathname();
+    const { toast } = useToast();
 
     const createTag = async (e: FormEvent) => {
         e.preventDefault();
@@ -65,7 +68,10 @@ export function NewTag({ address, dispatch }: NewTagProps) {
                 );
             }
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             setLoading(false);
             dispatch && dispatch(networkAction(false));

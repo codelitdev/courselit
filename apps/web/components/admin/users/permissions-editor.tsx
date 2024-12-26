@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+    ERROR_SNACKBAR_PREFIX,
     PERM_SECTION_HEADER,
     USER_PERMISSION_AREA_SUBTEXT,
 } from "@ui-config/strings";
@@ -7,14 +8,13 @@ import { connect } from "react-redux";
 import { FetchBuilder } from "@courselit/utils";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
-import { AppMessage } from "@courselit/common-models";
 import type { User, Address } from "@courselit/common-models";
-import { Checkbox } from "@courselit/components-library";
+import { Checkbox, useToast } from "@courselit/components-library";
 import { Section } from "@courselit/components-library";
 import permissionToCaptionMap from "./permissions-to-caption-map";
 import DocumentationLink from "@components/public/documentation-link";
 
-const { networkAction, setAppMessage } = actionCreators;
+const { networkAction } = actionCreators;
 
 interface PermissionsEditorProps {
     user: User;
@@ -30,6 +30,7 @@ export function PermissionsEditor({
     networkAction: networkCallUnderway,
 }: PermissionsEditorProps) {
     const [activePermissions, setActivePermissions] = useState<string[]>([]);
+    const { toast } = useToast();
 
     useEffect(() => {
         setActivePermissions(user.permissions);
@@ -72,10 +73,10 @@ export function PermissionsEditor({
                 setActivePermissions(response.user.permissions);
             }
         } catch (err: any) {
-            dispatch &&
-                (dispatch as ThunkDispatch<State, null, AnyAction>)(
-                    setAppMessage(new AppMessage(err.message)),
-                );
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch &&
                 (dispatch as ThunkDispatch<State, null, AnyAction>)(

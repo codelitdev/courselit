@@ -1,4 +1,3 @@
-export { default as AppMessage } from "./app-message";
 export { default as Message } from "./message";
 export type { default as Address } from "./address";
 export type { default as Auth } from "./auth";

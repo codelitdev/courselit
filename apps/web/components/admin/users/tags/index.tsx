@@ -8,12 +8,14 @@ import {
     TableBody,
     TableHead,
     TableRow,
+    useToast,
 } from "@courselit/components-library";
 import { AppDispatch } from "@courselit/state-management";
 import {
     BTN_NEW_TAG,
     DELETE_TAG_POPUP_DESC,
     DELETE_TAG_POPUP_HEADER,
+    ERROR_SNACKBAR_PREFIX,
     PRODUCTS_TABLE_HEADER_ACTIONS,
     TAGS_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
     TAGS_TABLE_CONTEXT_MENU_UNTAG,
@@ -28,12 +30,12 @@ import { useCallback } from "react";
 import { useEffect } from "react";
 import { actionCreators } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
-import { Address, AppMessage } from "@courselit/common-models";
+import { Address } from "@courselit/common-models";
 import { useState } from "react";
 import { MoreVert } from "@courselit/icons";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
-const { networkAction, setAppMessage } = actionCreators;
+const { networkAction } = actionCreators;
 
 interface TagsProps {
     address: Address;
@@ -50,6 +52,7 @@ export default function Tags({ address, dispatch, prefix }: TagsProps) {
     const [tags, setTags] = useState<TagWithDetails[]>([]);
     const [loading, setLoading] = useState(false);
     const path = usePathname();
+    const { toast } = useToast();
 
     const getTags = useCallback(async () => {
         const query = `
@@ -109,7 +112,10 @@ export default function Tags({ address, dispatch, prefix }: TagsProps) {
                 setTags(response.tags);
             }
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }
@@ -141,7 +147,10 @@ export default function Tags({ address, dispatch, prefix }: TagsProps) {
                 setTags(response.tags);
             }
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }

@@ -1,16 +1,14 @@
 import React, { FormEvent, useEffect, useState } from "react";
-import { Button, Form } from "@courselit/components-library";
+import { Button, Form, useToast } from "@courselit/components-library";
 import useCourse from "./course-hook";
 import { connect } from "react-redux";
 import { capitalize, FetchBuilder } from "@courselit/utils";
-import {
-    networkAction,
-    setAppMessage,
-} from "@courselit/state-management/dist/action-creators";
-import { Address, AppMessage } from "@courselit/common-models";
+import { networkAction } from "@courselit/state-management/dist/action-creators";
+import { Address } from "@courselit/common-models";
 import {
     BTN_PUBLISH,
     BTN_UNPUBLISH,
+    ERROR_SNACKBAR_PREFIX,
     PUBLISH_TAB_STATUS_SUBTITLE,
     PUBLISH_TAB_STATUS_TITLE,
     PUBLISH_TAB_VISIBILITY_SUBTITLE,
@@ -29,6 +27,7 @@ export function Publish({ id, address, dispatch, loading }: PublishProps) {
     let course = useCourse(id, address, dispatch);
     const [published, setPublished] = useState(course?.published);
     const [privacy, setPrivacy] = useState(course?.privacy);
+    const { toast } = useToast();
 
     useEffect(() => {
         if (course) {
@@ -86,7 +85,10 @@ export function Publish({ id, address, dispatch, loading }: PublishProps) {
                 return response.course;
             }
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }

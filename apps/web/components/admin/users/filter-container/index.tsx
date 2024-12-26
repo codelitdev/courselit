@@ -6,12 +6,14 @@ import {
     IconButton,
     Popover,
     Select,
+    useToast,
 } from "@courselit/components-library";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import { useState } from "react";
 import { ThunkDispatch } from "redux-thunk";
 import {
+    ERROR_SNACKBAR_PREFIX,
     USER_FILTER_AGGREGATOR_ALL,
     USER_FILTER_AGGREGATOR_ANY,
     USER_FILTER_AGGREGATOR_HEADER,
@@ -25,7 +27,6 @@ import SegmentEditor from "./segment-editor";
 import { AnyAction } from "redux";
 import {
     Address,
-    AppMessage,
     State,
     UserFilter,
     UserFilterAggregator,
@@ -39,7 +40,7 @@ import AppLoader from "@components/app-loader";
 const FilterChip = dynamic(() => import("./filter-chip"));
 const FilterSave = dynamic(() => import("./filter-save"));
 const FilterEditor = dynamic(() => import("./filter-editor"));
-const { networkAction, setAppMessage } = actionCreators;
+const { networkAction } = actionCreators;
 
 interface FilterContainerProps {
     onChange: ({
@@ -69,6 +70,8 @@ export default function FilterContainer({
     const [internalFilters, setInternalFilters] = useState<UserFilter[]>(
         filter?.filters || [],
     );
+    const { toast } = useToast();
+
     const defaultSegment: Segment = useMemo(
         () => ({
             name: USER_FILTER_LABEL_DEFAULT,
@@ -132,7 +135,10 @@ export default function FilterContainer({
                 mapSegments(response.segments);
             }
         } catch (err) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch &&
                 (dispatch as ThunkDispatch<State, null, AnyAction>)(
@@ -184,7 +190,10 @@ export default function FilterContainer({
                 setCount(response.count);
             }
         } catch (err) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             setCountLoading(false);
         }

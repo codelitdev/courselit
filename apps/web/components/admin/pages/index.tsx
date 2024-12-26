@@ -1,5 +1,10 @@
-import { Address, AppMessage, Page } from "@courselit/common-models";
-import { Menu2, MenuItem, TableBody } from "@courselit/components-library";
+import { Address, Page } from "@courselit/common-models";
+import {
+    Menu2,
+    MenuItem,
+    TableBody,
+    useToast,
+} from "@courselit/components-library";
 import { TableRow } from "@courselit/components-library";
 import { TableHead } from "@courselit/components-library";
 import { Table } from "@courselit/components-library";
@@ -7,16 +12,14 @@ import { Button, Link } from "@courselit/components-library";
 import { View } from "@courselit/icons";
 import { Edit, MoreVert } from "@courselit/icons";
 import { AppDispatch, AppState } from "@courselit/state-management";
-import {
-    networkAction,
-    setAppMessage,
-} from "@courselit/state-management/dist/action-creators";
+import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
 import {
     APP_MESSAGE_PAGE_DELETED,
     BTN_NEW_PAGE,
     DELETE_PAGE_POPUP_HEADER,
     DELETE_PAGE_POPUP_TEXT,
+    ERROR_SNACKBAR_PREFIX,
     MANAGE_PAGES_PAGE_HEADING,
     PAGES_TABLE_HEADER_ACTIONS,
     PAGES_TABLE_HEADER_NAME,
@@ -36,6 +39,7 @@ interface IndexProps {
 
 export const Pages = ({ loading, address, dispatch, prefix }: IndexProps) => {
     const [pages, setPages] = useState<Page[]>([]);
+    const { toast } = useToast();
 
     useEffect(() => {
         loadPages();
@@ -64,7 +68,10 @@ export const Pages = ({ loading, address, dispatch, prefix }: IndexProps) => {
                 setPages(response.pages);
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch(networkAction(false));
         }
@@ -93,9 +100,15 @@ export const Pages = ({ loading, address, dispatch, prefix }: IndexProps) => {
                 setPages([...pages]);
             }
 
-            dispatch(setAppMessage(new AppMessage(APP_MESSAGE_PAGE_DELETED)));
+            toast({
+                title: "",
+                description: APP_MESSAGE_PAGE_DELETED,
+            });
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch(networkAction(false));
         }

@@ -1,5 +1,5 @@
 import React, { FormEvent, useState } from "react";
-import { Address, AppMessage } from "@courselit/common-models";
+import { Address } from "@courselit/common-models";
 import {
     Form,
     FormField,
@@ -7,6 +7,7 @@ import {
     Link,
     Button,
     Breadcrumbs,
+    useToast,
 } from "@courselit/components-library";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
@@ -20,6 +21,7 @@ import {
     BTN_CONTINUE,
     BTN_NEW_PRODUCT,
     BUTTON_CANCEL_TEXT,
+    ERROR_SNACKBAR_PREFIX,
     FORM_NEW_PRODUCT_MENU_COURSE_SUBTITLE,
     FORM_NEW_PRODUCT_MENU_DOWNLOADS_SUBTITLE,
     FORM_NEW_PRODUCT_TITLE_PLC,
@@ -27,10 +29,7 @@ import {
     MANAGE_COURSES_PAGE_HEADING,
 } from "../../../ui-config/strings";
 import { capitalize } from "../../../ui-lib/utils";
-import {
-    networkAction,
-    setAppMessage,
-} from "@courselit/state-management/dist/action-creators";
+import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { usePathname } from "next/navigation";
 
 interface NewProductProps {
@@ -50,6 +49,7 @@ export function NewProduct({
     const [type, setType] = useState(COURSE_TYPE_COURSE);
     const router = useRouter();
     const path = usePathname();
+    const { toast } = useToast();
 
     const createCourse = async (e: FormEvent) => {
         e.preventDefault();
@@ -81,7 +81,10 @@ export function NewProduct({
                 );
             }
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }

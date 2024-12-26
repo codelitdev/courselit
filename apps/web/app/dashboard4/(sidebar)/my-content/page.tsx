@@ -7,11 +7,13 @@ import {
     Link,
     Section,
     Skeleton,
+    useToast,
 } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
 import {
     ACCOUNT_NO_PURCHASE_PLACEHOLDER,
     ACCOUNT_PROGRESS_SUFFIX,
+    ERROR_SNACKBAR_PREFIX,
     MY_CONTENT_HEADER,
     VISIT_COURSE_BUTTON,
 } from "@ui-config/strings";
@@ -22,6 +24,7 @@ const breadcrumbs = [{ label: MY_CONTENT_HEADER, href: "#" }];
 export default function Page() {
     const [courses, setCourses] = useState([]);
     const [loaded, setLoaded] = useState(false);
+    const { toast } = useToast();
 
     const profile = useContext(ProfileContext);
     const address = useContext(AddressContext);
@@ -50,7 +53,12 @@ export default function Page() {
                     setCourses(response.courses);
                 }
                 setLoaded(true);
-            } catch (e: any) {}
+            } catch (e: any) {
+                toast({
+                    title: ERROR_SNACKBAR_PREFIX,
+                    description: e.message,
+                });
+            }
         };
 
         loadEnrolledCourses();

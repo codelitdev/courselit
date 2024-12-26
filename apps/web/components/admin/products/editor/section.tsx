@@ -1,9 +1,4 @@
-import {
-    Address,
-    AppMessage,
-    Constants,
-    DripType,
-} from "@courselit/common-models";
+import { Address, Constants, DripType } from "@courselit/common-models";
 import {
     Button,
     Form,
@@ -11,6 +6,7 @@ import {
     Section,
     Skeleton,
     Switch,
+    useToast,
 } from "@courselit/components-library";
 import { actionCreators, AppDispatch } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
@@ -22,6 +18,7 @@ import {
     DRIP_SECTION_STATUS,
     EDIT_SECTION_DRIP,
     EDIT_SECTION_HEADER,
+    ERROR_SNACKBAR_PREFIX,
     LABEL_DRIP_DATE,
     LABEL_DRIP_DELAY,
     LABEL_DRIP_EMAIL_SUBJECT,
@@ -61,6 +58,7 @@ export default function SectionEditor({
     const [emailSubject, setEmailSubject] = useState("");
     const router = useRouter();
     const course = useCourse(id, address, dispatch);
+    const { toast } = useToast();
 
     useEffect(() => {
         if (section && course && course.groups) {
@@ -192,10 +190,10 @@ export default function SectionEditor({
                 );
             }
         } catch (err: any) {
-            dispatch &&
-                dispatch(
-                    actionCreators.setAppMessage(new AppMessage(err.message)),
-                );
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch && dispatch(actionCreators.networkAction(false));
         }

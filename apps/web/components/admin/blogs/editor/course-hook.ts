@@ -1,10 +1,9 @@
-import { Address, AppMessage, Course } from "@courselit/common-models";
+import { Address, Course } from "@courselit/common-models";
+import { useToast } from "@courselit/components-library";
 import { AppDispatch /*AppState*/ } from "@courselit/state-management";
-import {
-    networkAction,
-    setAppMessage,
-} from "@courselit/state-management/dist/action-creators";
+import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
+import { ERROR_SNACKBAR_PREFIX } from "@ui-config/strings";
 import { useCallback, useEffect, useState } from "react";
 
 type CourseWithAdminProps = Partial<
@@ -23,6 +22,7 @@ export default function useCourse(
     const [course, setCourse] = useState<
         CourseWithAdminProps | undefined | null
     >();
+    const { toast } = useToast();
 
     const loadCourse = useCallback(
         async (courseId: string) => {
@@ -64,8 +64,10 @@ export default function useCourse(
                 }
             } catch (err: any) {
                 setCourse(null);
-                dispatch &&
-                    dispatch(setAppMessage(new AppMessage(err.message)));
+                toast({
+                    title: ERROR_SNACKBAR_PREFIX,
+                    description: err.message,
+                });
             } finally {
                 dispatch && dispatch(networkAction(false));
             }

@@ -13,6 +13,7 @@ import {
     PROFILE_SECTION_DISPLAY_PICTURE,
     MEDIA_SELECTOR_UPLOAD_BTN_CAPTION,
     MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
+    ERROR_SNACKBAR_PREFIX,
 } from "../../ui-config/strings";
 import { connect } from "react-redux";
 import { actionCreators } from "@courselit/state-management";
@@ -29,6 +30,7 @@ import {
     Avatar,
     AvatarFallback,
     AvatarImage,
+    useToast,
 } from "@courselit/components-library";
 import type {
     Address,
@@ -38,7 +40,6 @@ import type {
     Profile,
     State,
 } from "@courselit/common-models";
-import { AppMessage } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
 import BaseLayout from "../../components/public/base-layout";
 import { useRouter } from "next/router";
@@ -67,8 +68,9 @@ function ProfileIndex({
         useState<Pick<Profile, "bio" | "name" | "avatar">>();
     const [avatar, setAvatar] = useState<Partial<Media>>({});
     const [subscribedToUpdates, setSubscribedToUpdates] = useState(false);
-    const { networkAction, refreshUserProfile, setAppMessage } = actionCreators;
+    const { networkAction, refreshUserProfile } = actionCreators;
     const router = useRouter();
+    const { toast } = useToast();
 
     useEffect(() => {
         if (auth.checked && auth.guest) {
@@ -162,9 +164,15 @@ function ProfileIndex({
             dispatch(networkAction(true));
             await fetch.exec();
             dispatch(refreshUserProfile());
-            dispatch(setAppMessage(new AppMessage(APP_MESSAGE_CHANGES_SAVED)));
+            toast({
+                title: "",
+                description: APP_MESSAGE_CHANGES_SAVED,
+            });
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch(networkAction(false));
         }
@@ -213,9 +221,15 @@ function ProfileIndex({
             dispatch(networkAction(true));
             await fetch.exec();
             dispatch(refreshUserProfile());
-            dispatch(setAppMessage(new AppMessage(APP_MESSAGE_CHANGES_SAVED)));
+            toast({
+                title: "",
+                description: APP_MESSAGE_CHANGES_SAVED,
+            });
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch(networkAction(false));
         }
@@ -250,7 +264,10 @@ function ProfileIndex({
             await fetch.exec();
         } catch (err: any) {
             setSubscribedToUpdates(!state);
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch(networkAction(false));
         }

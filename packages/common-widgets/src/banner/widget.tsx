@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { AppMessage, Media, WidgetProps } from "@courselit/common-models";
+import { Media, WidgetProps } from "@courselit/common-models";
 import {
     Image,
     PriceTag,
@@ -10,9 +10,9 @@ import {
     FormField,
     Button2,
     Link,
+    useToast,
 } from "@courselit/components-library";
 import { actionCreators } from "@courselit/state-management";
-import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
 import { DEFAULT_FAILURE_MESSAGE, DEFAULT_SUCCESS_MESSAGE } from "./constants";
 import Settings from "./settings";
@@ -40,6 +40,7 @@ export default function Widget({
 }: WidgetProps<Settings>) {
     const [email, setEmail] = useState("");
     const [success, setSuccess] = useState(false);
+    const { toast } = useToast();
     const type = Object.keys(product).length === 0 ? "site" : "product";
     const defaultSuccessMessage: Record<string, unknown> = {
         type: "doc",
@@ -128,11 +129,10 @@ export default function Widget({
                 setSuccess(true);
             }
         } catch (e) {
-            dispatch(
-                setAppMessage(
-                    new AppMessage(failureMessage || DEFAULT_FAILURE_MESSAGE),
-                ),
-            );
+            toast({
+                title: "",
+                description: failureMessage || DEFAULT_FAILURE_MESSAGE,
+            });
         } finally {
             dispatch(actionCreators.networkAction(false));
         }

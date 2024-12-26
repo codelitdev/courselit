@@ -8,9 +8,9 @@ import {
     USER_EMAIL_SUBHEADER,
     USER_NAME_SUBHEADER,
     USER_TAGS_SUBHEADER,
+    ERROR_SNACKBAR_PREFIX,
 } from "../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
-import { AppMessage } from "@courselit/common-models";
 import PermissionsEditor from "./permissions-editor";
 import type { Address, UserWithAdminFields } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
@@ -21,10 +21,11 @@ import {
     Switch,
     Breadcrumbs,
     ComboBox,
+    useToast,
 } from "@courselit/components-library";
 import { useCallback } from "react";
 
-const { networkAction, setAppMessage } = actionCreators;
+const { networkAction } = actionCreators;
 
 interface DetailsProps {
     userId: string;
@@ -36,6 +37,7 @@ const Details = ({ userId, address, dispatch }: DetailsProps) => {
     const [userData, setUserData] = useState<UserWithAdminFields>();
     const [enrolledCourses, setEnrolledCourses] = useState([]);
     const [tags, setTags] = useState([]);
+    const { toast } = useToast();
 
     useEffect(() => {
         getUserDetails();
@@ -100,7 +102,10 @@ const Details = ({ userId, address, dispatch }: DetailsProps) => {
                 setUserData(response.user);
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch(networkAction(false));
         }
@@ -160,7 +165,10 @@ const Details = ({ userId, address, dispatch }: DetailsProps) => {
                 setUserData(response.user);
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch(networkAction(false));
         }
@@ -201,7 +209,10 @@ const Details = ({ userId, address, dispatch }: DetailsProps) => {
                 setUserData(response.user);
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch(networkAction(false));
         }

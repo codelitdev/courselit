@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-    AppMessage,
     Page,
     SiteInfo,
     Typeface,
@@ -8,10 +7,7 @@ import {
 } from "@courselit/common-models";
 import type { Address, Media, Profile } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
-import {
-    networkAction,
-    setAppMessage,
-} from "@courselit/state-management/dist/action-creators";
+import { networkAction } from "@courselit/state-management/dist/action-creators";
 import {
     debounce,
     FetchBuilder,
@@ -24,6 +20,7 @@ import {
     PAGE_TITLE_EDIT_PAGE,
     EDIT_PAGE_BUTTON_FONTS,
     EDIT_PAGE_BUTTON_SEO,
+    ERROR_SNACKBAR_PREFIX,
 } from "../../../ui-config/strings";
 import { useRouter } from "next/navigation";
 import {
@@ -36,7 +33,7 @@ import dynamic from "next/dynamic";
 import Head from "next/head";
 import widgets from "../../../ui-config/widgets";
 import { Sync, CheckCircled } from "@courselit/icons";
-import { Button, Skeleton } from "@courselit/components-library";
+import { Button, Skeleton, useToast } from "@courselit/components-library";
 import SeoEditor from "./seo-editor";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
@@ -93,6 +90,7 @@ export default function PageEditor({
     const [primaryFontFamily, setPrimaryFontFamily] =
         useState("Roboto, sans-serif");
     const [loading, setLoading] = useState(false);
+    const { toast } = useToast();
 
     const router = useRouter();
     const debouncedSave = useCallback(
@@ -243,7 +241,10 @@ export default function PageEditor({
                 setDraftTypefaces(response.site.draftTypefaces);
             }
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }
@@ -280,16 +281,17 @@ export default function PageEditor({
                 }
                 setPage(pageBeingEdited);
             } else {
-                dispatch &&
-                    dispatch(
-                        setAppMessage(
-                            new AppMessage(`The page does not exist.`),
-                        ),
-                    );
+                toast({
+                    title: "",
+                    description: `The page does not exist.`,
+                });
                 router.replace(`${prefix}/pages`);
             }
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }
@@ -487,7 +489,10 @@ export default function PageEditor({
                 setDraftTypefaces(response.site.draftTypefaces);
             }
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }

@@ -4,9 +4,16 @@ import DashboardContent from "@components/admin/dashboard-content";
 import { PermissionsEditor } from "@components/admin/users/permissions-editor";
 import { AddressContext } from "@components/contexts";
 import { UserWithAdminFields } from "@courselit/common-models";
-import { ComboBox, Link, Section, Switch } from "@courselit/components-library";
+import {
+    ComboBox,
+    Link,
+    Section,
+    Switch,
+    useToast,
+} from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
 import {
+    ERROR_SNACKBAR_PREFIX,
     PAGE_HEADER_ALL_USER,
     PAGE_HEADER_EDIT_USER,
     SWITCH_ACCOUNT_ACTIVE,
@@ -28,6 +35,7 @@ export default function Page({ params }: { params: { id: string } }) {
     const [tags, setTags] = useState([]);
     const address = useContext(AddressContext);
     const { id } = params;
+    const { toast } = useToast();
 
     useEffect(() => {
         getUserDetails();
@@ -49,7 +57,12 @@ export default function Page({ params }: { params: { id: string } }) {
             if (response.tags) {
                 setTags(response.tags);
             }
-        } catch (err) {}
+        } catch (err) {
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
+        }
     }, [address.backend]);
 
     useEffect(() => {
@@ -86,7 +99,12 @@ export default function Page({ params }: { params: { id: string } }) {
             if (response.user) {
                 setUserData(response.user);
             }
-        } catch (err: any) {}
+        } catch (err: any) {
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
+        }
     };
 
     // TODO: test this method. A hard-coded userId was there in the query.
@@ -107,7 +125,12 @@ export default function Page({ params }: { params: { id: string } }) {
         try {
             const response = await fetch.exec();
             setEnrolledCourses(response.enrolledCourses);
-        } catch (err) {}
+        } catch (err) {
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
+        }
     };
 
     const toggleActiveState = async (value: boolean) => {
@@ -137,7 +160,12 @@ export default function Page({ params }: { params: { id: string } }) {
             if (response.user) {
                 setUserData(response.user);
             }
-        } catch (err: any) {}
+        } catch (err: any) {
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
+        }
     };
 
     const updateTags = async (tags: string[]) => {
@@ -173,7 +201,12 @@ export default function Page({ params }: { params: { id: string } }) {
             if (response.user) {
                 setUserData(response.user);
             }
-        } catch (err: any) {}
+        } catch (err: any) {
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
+        }
     };
 
     if (!userData) {

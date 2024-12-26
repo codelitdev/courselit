@@ -15,10 +15,13 @@ import {
     MediaSelector,
     PageBuilderPropertyHeader,
     Section,
+    useToast,
 } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
 import {
+    APP_MESSAGE_CHANGES_SAVED,
     BUTTON_SAVE,
+    ERROR_SNACKBAR_PREFIX,
     MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
     MEDIA_SELECTOR_UPLOAD_BTN_CAPTION,
     PROFILE_EMAIL_PREFERENCES,
@@ -41,6 +44,7 @@ export default function Page() {
         useState<Pick<Profile, "bio" | "name" | "avatar">>();
     const [avatar, setAvatar] = useState<Partial<Media>>({});
     const [subscribedToUpdates, setSubscribedToUpdates] = useState(false);
+    const { toast } = useToast();
 
     const profile = useContext(ProfileContext);
     const address = useContext(AddressContext);
@@ -83,7 +87,10 @@ export default function Page() {
                     setSubscribedToUpdates(response.user.subscribedToUpdates);
                 }
             } catch (err: any) {
-                console.error(`Profile page: ${err.message}`);
+                toast({
+                    title: ERROR_SNACKBAR_PREFIX,
+                    description: err.message,
+                });
             }
         };
         if (profile.userId && address.backend) {
@@ -128,9 +135,15 @@ export default function Page() {
 
         try {
             await fetch.exec();
+            toast({
+                title: "",
+                description: APP_MESSAGE_CHANGES_SAVED,
+            });
         } catch (err: any) {
-            console.error(err);
-        } finally {
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         }
     };
 
@@ -175,9 +188,15 @@ export default function Page() {
 
         try {
             await fetch.exec();
+            toast({
+                title: "",
+                description: APP_MESSAGE_CHANGES_SAVED,
+            });
         } catch (err: any) {
-            console.error(err);
-        } finally {
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         }
     };
 
@@ -209,8 +228,10 @@ export default function Page() {
             await fetch.exec();
         } catch (err: any) {
             setSubscribedToUpdates(!state);
-            console.error(err);
-        } finally {
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: err.message,
+            });
         }
     };
 

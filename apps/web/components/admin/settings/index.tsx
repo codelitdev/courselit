@@ -39,10 +39,11 @@ import {
     SITE_SETTINGS_RAZORPAY_KEY_TEXT,
     MEDIA_SELECTOR_UPLOAD_BTN_CAPTION,
     MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
+    ERROR_SNACKBAR_PREFIX,
 } from "../../../ui-config/strings";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import { decode, encode } from "base-64";
-import { AppMessage, Profile, UIConstants } from "@courselit/common-models";
+import { Profile, UIConstants } from "@courselit/common-models";
 import type { SiteInfo, Address, Media } from "@courselit/common-models";
 import { actionCreators } from "@courselit/state-management";
 import currencies from "@/data/currencies.json";
@@ -61,6 +62,7 @@ import {
     Dialog2,
     PageBuilderPropertyHeader,
     Checkbox,
+    useToast,
 } from "@courselit/components-library";
 import { useRouter } from "next/navigation";
 
@@ -73,7 +75,7 @@ const {
     MIMETYPE_IMAGE,
 } = UIConstants;
 
-const { networkAction, newSiteInfoAvailable, setAppMessage } = actionCreators;
+const { networkAction, newSiteInfoAvailable } = actionCreators;
 
 interface SettingsProps {
     siteinfo: SiteInfo;
@@ -106,6 +108,7 @@ const Settings = (props: SettingsProps) => {
         ? props.selectedTab
         : SITE_SETTINGS_SECTION_GENERAL;
     const router = useRouter();
+    const { toast } = useToast();
 
     const fetch = new FetchBuilder()
         .setUrl(`${props.address.backend}/api/graph`)
@@ -266,12 +269,16 @@ const Settings = (props: SettingsProps) => {
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
-                props.dispatch(
-                    setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)),
-                );
+                toast({
+                    title: "",
+                    description: APP_MESSAGE_SETTINGS_SAVED,
+                });
             }
         } catch (e: any) {
-            props.dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: e.message,
+            });
         } finally {
             props.dispatch(networkAction(false));
         }
@@ -321,12 +328,16 @@ const Settings = (props: SettingsProps) => {
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
-                props.dispatch(
-                    setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)),
-                );
+                toast({
+                    title: "",
+                    description: APP_MESSAGE_SETTINGS_SAVED,
+                });
             }
         } catch (e: any) {
-            props.dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: e.message,
+            });
         } finally {
             props.dispatch(networkAction(false));
         }
@@ -378,12 +389,16 @@ const Settings = (props: SettingsProps) => {
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
-                props.dispatch(
-                    setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)),
-                );
+                toast({
+                    title: "",
+                    description: APP_MESSAGE_SETTINGS_SAVED,
+                });
             }
         } catch (e: any) {
-            props.dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: e.message,
+            });
         } finally {
             props.dispatch(networkAction(false));
         }
@@ -434,12 +449,16 @@ const Settings = (props: SettingsProps) => {
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
-                props.dispatch(
-                    setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)),
-                );
+                toast({
+                    title: "",
+                    description: APP_MESSAGE_SETTINGS_SAVED,
+                });
             }
         } catch (e: any) {
-            props.dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: e.message,
+            });
         } finally {
             props.dispatch(networkAction(false));
         }
@@ -526,12 +545,16 @@ const Settings = (props: SettingsProps) => {
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
-                props.dispatch(
-                    setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)),
-                );
+                toast({
+                    title: "",
+                    description: APP_MESSAGE_SETTINGS_SAVED,
+                });
             }
         } catch (e: any) {
-            props.dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: e.message,
+            });
         } finally {
             props.dispatch(networkAction(false));
         }
@@ -581,7 +604,10 @@ const Settings = (props: SettingsProps) => {
                 ),
             );
         } catch (e: any) {
-            props.dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: ERROR_SNACKBAR_PREFIX,
+                description: e.message,
+            });
         } finally {
             props.dispatch(networkAction(false));
         }
