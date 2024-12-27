@@ -12,10 +12,15 @@ import {
 } from "@courselit/common-models";
 import CommunityModel from "@models/Community";
 import CourseModel from "@models/Course";
-import MembershipModel from "@models/Membership";
+import MembershipModel, { InternalMembership } from "@models/Membership";
 import constants from "@config/constants";
 import PaymentPlanModel from "@models/PaymentPlan";
 import { getPaymentMethodFromSettings } from "@/payments-new";
+import { generateUniqueId } from "@courselit/utils";
+import Invoice from "@models/Invoice";
+import { error } from "@/services/logger";
+import { finalizePurchase } from "../webhook-new/route";
+import { responses } from "@config/strings";
 
 const { transactionSuccess, transactionFailed, transactionInitiated } =
     constants;
@@ -70,17 +75,11 @@ export async function POST(req: NextRequest) {
             return Response.json({ message: "Invalid type" }, { status: 400 });
         }
 
-        const existingActiveMembership =
-            await MembershipModel.findOne<Membership>({
-                domain: domain._id,
-                userId: user.userId,
-                entityType: type,
-                entityId: id,
-                status: Constants.MembershipStatus.ACTIVE,
-            });
-
-        if (existingActiveMembership) {
-            return Response.json({ status: transactionSuccess });
+        if (!entity) {
+            return Response.json(
+                { message: responses.item_not_found },
+                { status: 400 },
+            );
         }
 
         const paymentPlan = await PaymentPlanModel.findOne<PaymentPlan>({
@@ -96,47 +95,63 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        if (paymentPlan.type === Constants.PaymentPlanType.FREE) {
-            await MembershipModel.create({
-                domain: domain._id,
-                userId: user.userId,
-                paymentPlanId: planId,
-                entityId: id,
-                entityType: type,
-                status: Constants.MembershipStatus.ACTIVE,
-            });
-            // TODO: implement finalizePurchase
-            return Response.json({ status: transactionSuccess });
-        }
-
         const siteinfo = domain.settings;
         const paymentMethod = await getPaymentMethodFromSettings(siteinfo);
 
-        const existingPendingMembership =
-            await MembershipModel.findOne<Membership>({
+        const existingMembership =
+            await MembershipModel.findOne<InternalMembership>({
                 domain: domain._id,
                 userId: user.userId,
-                entityId: id,
                 entityType: type,
-                status: Constants.MembershipStatus.PENDING,
+                entityId: id,
             });
-
-        let membership: Membership;
-
-        if (existingPendingMembership) {
-            membership = existingPendingMembership;
-        } else {
-            membership = await MembershipModel.create({
+        let membership: InternalMembership =
+            existingMembership ||
+            (await MembershipModel.create({
                 domain: domain._id,
                 userId: user.userId,
                 paymentPlanId: planId,
                 entityId: id,
                 entityType: type,
                 status: Constants.MembershipStatus.PENDING,
-            });
+            }));
+
+        if (membership.status === Constants.MembershipStatus.ACTIVE) {
+            if (paymentPlan.type === Constants.PaymentPlanType.FREE) {
+                return Response.json({ status: transactionSuccess });
+            }
+            if (
+                membership.subscriptionId &&
+                (paymentPlan.type === Constants.PaymentPlanType.EMI ||
+                    paymentPlan.type === Constants.PaymentPlanType.SUBSCRIPTION)
+            ) {
+                if (
+                    await paymentMethod.validateSubscription(
+                        membership.subscriptionId,
+                    )
+                ) {
+                    return Response.json({ status: transactionSuccess });
+                } else {
+                    membership.status = Constants.MembershipStatus.FAILED;
+                    await membership.save();
+                }
+            }
         }
 
+        if (paymentPlan.type === Constants.PaymentPlanType.FREE) {
+            membership.status = Constants.MembershipStatus.ACTIVE;
+            await (membership as any).save();
+            await finalizePurchase({
+                domain,
+                membership,
+                paymentPlan,
+            });
+            return Response.json({ status: transactionSuccess });
+        }
+
+        const invoiceId = generateUniqueId();
         metadata["membershipId"] = membership.membershipId;
+        metadata["invoiceId"] = invoiceId;
 
         const paymentTracker = await paymentMethod.initiate({
             metadata,
@@ -150,11 +165,33 @@ export async function POST(req: NextRequest) {
             },
         });
 
+        await Invoice.create({
+            domain: domain._id,
+            invoiceId,
+            membershipId: membership.membershipId,
+            amount:
+                paymentPlan.oneTimeAmount ||
+                paymentPlan.subscriptionMonthlyAmount ||
+                paymentPlan.subscriptionYearlyAmount ||
+                paymentPlan.emiAmount ||
+                0,
+            status: Constants.InvoiceStatus.PENDING,
+            paymentProcessor: paymentMethod.name,
+            paymentProcessorTransactionId: paymentTracker,
+        });
+
+        await (membership as any).save();
+
         return Response.json({
             status: transactionInitiated,
             paymentTracker,
         });
     } catch (err: any) {
+        error(`Error initiating payment: ${err.message}`, {
+            domain: domainName,
+            body,
+            stack: err.stack,
+        });
         return Response.json(
             { status: transactionFailed, error: err.message },
             { status: 500 },
