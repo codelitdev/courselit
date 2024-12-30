@@ -53,13 +53,41 @@ Check out this live example to see what you can build with CourseLit. [Click her
 
 Checkout our [documentation](https://docs.courselit.app/en/introduction/#key-features) for an updated list of features.
 
-## Getting started
+## Getting Started
 
-Visit [courselit.app](https://courselit.app) to use the cloud hosted version. Sign up for a free account to get a 14 days trial period to experience the platform without any restrictions. No credit card required.
+### Option 1: Use the Cloud-Hosted Version
 
-To self host CourseLit, follow our [official guide](https://docs.courselit.app/en/self-hosting/).
+1. Visit [courselit.app](https://courselit.app) to start using the cloud-hosted version of CourseLit.
+2. Sign up for a free account to explore the platform with full functionality.
+   - You’ll get a **14-day trial period** with no restrictions.
+   - **No credit card required** during the trial.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fcodelitdev%2Fcourselit&env=DB_CONNECTION_STRING,AUTH_SECRET,SUPER_ADMIN_EMAIL,EMAIL_USER,EMAIL_PASS,EMAIL_HOST,EMAIL_FROM&envDescription=Configuration%20for%20your%20app&project-name=courselit&root-directory=apps%2Fweb&build-command=cd+..%2F+%26%26+NODE_OPTIONS%3D--openssl-legacy-provider+yarn+build)
+---
+
+### Option 2: Self-Host CourseLit
+
+If you want full control over your CourseLit instance, you can self-host it by following these steps:
+
+1. **Follow the Self-Hosting Guide**  
+   Refer to the [official self-hosting guide](https://docs.courselit.app/en/self-hosting/) for step-by-step instructions.
+
+2. **Quick Deploy with Vercel**  
+   You can also deploy CourseLit on Vercel with one click.  
+   Click the button below to get started:
+
+   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fcodelitdev%2Fcourselit&env=DB_CONNECTION_STRING,AUTH_SECRET,SUPER_ADMIN_EMAIL,EMAIL_USER,EMAIL_PASS,EMAIL_HOST,EMAIL_FROM&envDescription=Configuration%20for%20your%20app&project-name=courselit&root-directory=apps%2Fweb&build-command=cd+..%2F+%26%26+NODE_OPTIONS%3D--openssl-legacy-provider+yarn+build)
+
+---
+
+### Option 3: Local Development Setup
+
+Want to contribute or test CourseLit locally? Follow these steps:
+
+1. **Clone the Repository**  
+   Clone the CourseLit repository from GitHub:
+   ```sh
+   git clone https://github.com/codelitdev/courselit.git
+   cd courselit
 
 ## Development
 
