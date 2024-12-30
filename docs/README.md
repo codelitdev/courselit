@@ -51,8 +51,8 @@ Check out this live example to see what you can build with CourseLit. [Click her
 
 ## Features
 
-Checkout our [documentation](https://docs.courselit.app/en/introduction/#key-features) for an updated list of features.
 
+<p align="center"> <img src="./assets/card.png"> </p> <h1 align="center">CourseLit</h1> <p align="center"> Sell online courses and digital downloads directly from your own website. <br /> <b>A modern LMS for everyone</b> <br /> CourseLit is a <a href="https://en.wikipedia.org/wiki/Batteries_Included">batteries included</a> learning management system (aka LMS) that empowers everyone to create, manage, and sell courses with ease. <br /> It’s an open-source alternative to platforms like Teachable, Thinkific, Podia, Teachery, and LearnDash. </p> <p align="center"> <b>Why choose CourseLit?</b> <br />It comes pre-equipped with all the tools you need to efficiently run your online teaching business: <ul> <li>Easy course authoring</li> <li>Student management</li> <li>Secure payment processing (via Stripe)</li> <li>Customizable website builder</li> <li>Custom sales pages</li> <li>Basic analytics to track progress</li> </ul> <br /> Check out what you can build with CourseLit. <a href="https://codelit.dev">Click here</a>. </p>
 ## Getting started
 
 Visit [courselit.app](https://courselit.app) to use the cloud hosted version. Sign up for a free account to get a 14 days trial period to experience the platform without any restrictions. No credit card required.
