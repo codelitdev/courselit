@@ -11,7 +11,6 @@ import {
     COMMUNITY_FIELD_NAME,
     COMMUNITY_NEW_BTN_CAPTION,
     NEW_COMMUNITY_BUTTON,
-    SITE_SETTINGS_SECTION_COMMUNITIES,
 } from "@ui-config/strings";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -48,9 +47,7 @@ export default function CommunityCreator({
             setLoading(true);
             const response = await fetch.exec();
             if (response.community) {
-                router.replace(
-                    `${prefix}/settings?tab=${SITE_SETTINGS_SECTION_COMMUNITIES}`,
-                );
+                router.replace(`${prefix}/communities`);
             }
         } catch (err: any) {
             toast({
@@ -83,9 +80,7 @@ export default function CommunityCreator({
                     <Button disabled={!name || loading} sx={{ mr: 1 }}>
                         {COMMUNITY_NEW_BTN_CAPTION}
                     </Button>
-                    <Link
-                        href={`${prefix}/settings?tab=${SITE_SETTINGS_SECTION_COMMUNITIES}`}
-                    >
+                    <Link href={`${prefix}/communities`}>
                         <Button variant="soft">{BUTTON_CANCEL_TEXT}</Button>
                     </Link>
                 </div>

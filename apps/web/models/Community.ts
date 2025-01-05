@@ -1,6 +1,7 @@
 import { Community } from "@courselit/common-models";
 import { generateUniqueId } from "@courselit/utils";
 import mongoose from "mongoose";
+import MediaSchema from "./Media";
 
 export interface InternalCommunity extends Omit<Community, "paymentPlans"> {
     domain: mongoose.Types.ObjectId;
@@ -19,15 +20,17 @@ const CommunitySchema = new mongoose.Schema<InternalCommunity>(
             default: generateUniqueId,
         },
         name: { type: String, required: true },
-        description: { type: String },
+        description: { type: mongoose.Schema.Types.Mixed, default: null },
         banner: { type: mongoose.Schema.Types.Mixed, default: null },
-        default: { type: Boolean, default: false },
         enabled: { type: Boolean, default: false },
-        categories: [String],
+        categories: { type: [String], default: ["General"] },
         autoAcceptMembers: { type: Boolean, default: false },
         joiningReasonText: { type: String },
         pageId: { type: String, required: true },
         paymentPlans: [String],
+        defaultPaymentPlan: { type: String },
+        featuredImage: MediaSchema,
+        deleted: { type: Boolean, default: false },
     },
     {
         timestamps: true,
@@ -35,16 +38,6 @@ const CommunitySchema = new mongoose.Schema<InternalCommunity>(
 );
 
 CommunitySchema.index({ domain: 1, name: 1 }, { unique: true });
-
-CommunitySchema.pre("save", async function (next) {
-    if (this.default) {
-        await this.constructor.updateMany(
-            { domain: this.domain, _id: { $ne: this._id } },
-            { $set: { default: false } },
-        );
-    }
-    next();
-});
 
 CommunitySchema.statics.paginatedFind = async function (filter, options) {
     const page = options.page || 1;

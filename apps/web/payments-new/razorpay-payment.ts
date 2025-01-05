@@ -78,4 +78,16 @@ export default class RazorpayPayment implements Payment {
             );
         });
     }
+
+    cancel(id: string) {
+        throw new Error("Method not implemented.");
+    }
+
+    getSubscriptionId(event: any): string {
+        throw new Error("Method not implemented.");
+    }
+
+    validateSubscription(subscriptionId: string): boolean {
+        throw new Error("Method not implemented.");
+    }
 }

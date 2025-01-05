@@ -9,26 +9,38 @@ import {
     Constants,
     CommunityMemberStatus,
     CommunityPost,
-    User,
     CommunityComment,
     CommunityMedia,
     PaymentPlan,
     Membership,
+    Media,
+    CommunityReportType,
+    CommunityReportStatus,
 } from "@courselit/common-models";
-import CommunityPostModel, {
-    InternalCommunityPost,
-} from "@models/CommunityPost";
-import { getNextStatusForCommunityMember } from "@ui-lib/utils";
-import CommunityCommentModel, {
-    InternalCommunityComment,
-} from "@models/CommunityComment";
+import CommunityPostModel from "@models/CommunityPost";
+import {
+    getNextStatusForCommunityMember,
+    getNextStatusForCommunityReport,
+} from "@ui-lib/utils";
+import CommunityCommentModel from "@models/CommunityComment";
 import UserModel from "@models/User";
 import PageModel from "@models/Page";
 import PaymentPlanModel from "@models/PaymentPlan";
 import MembershipModel from "@models/Membership";
 import { getPlans } from "../paymentplans/logic";
-import PaymentPlan from "@models/PaymentPlan";
-import PaymentPlan from "@models/PaymentPlan";
+import { getPaymentMethodFromSettings } from "@/payments-new";
+import CommunityReportModel, {
+    InternalCommunityReport,
+} from "@models/CommunityReport";
+import {
+    CommunityReportPartial,
+    formatComment,
+    formatCommunityReport,
+    formatPost,
+    hasPermissionToDelete,
+    PublicPost,
+    toggleContentVisibility,
+} from "./helpers";
 
 const { permissions, communityPage } = constants;
 
@@ -90,12 +102,21 @@ export async function createCommunity({
         pageId,
     });
 
+    await MembershipModel.create({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+        status: Constants.MembershipStatus.ACTIVE,
+        joiningReason: "Joining as creator",
+    });
+
     return community;
 }
 
 type PublicCommunity = Pick<
     Community,
-    "name" | "communityId" | "banner" | "enabled" | "default" | "categories"
+    "name" | "communityId" | "banner" | "enabled" | "categories"
 > & {
     paymentPlans: PaymentPlan[];
 };
@@ -105,11 +126,11 @@ export async function getCommunity({
     id,
 }: {
     ctx: GQLContext;
-    id?: string;
+    id: string;
 }): Promise<Community | null> {
     const query = {
         domain: ctx.subdomain._id,
-        ...(id ? { communityId: id } : { default: true }),
+        communityId: id,
     };
 
     const community = await CommunityModel.findOne<InternalCommunity>(query);
@@ -125,33 +146,7 @@ export async function getCommunity({
         return null;
     }
 
-    return formatCommunity(
-        community,
-        await getPlans({
-            planIds: community.paymentPlans,
-            ctx,
-        }),
-    );
-}
-
-function formatCommunity(
-    community: InternalCommunity,
-    paymentPlans: PaymentPlan[],
-): Community & Pick<InternalCommunity, "autoAcceptMembers"> {
-    return {
-        name: community.name,
-        communityId: community.communityId,
-        banner: community.banner,
-        enabled: community.enabled,
-        default: community.default,
-        categories: community.categories,
-        autoAcceptMembers: community.autoAcceptMembers,
-        description: community.description,
-        pageId: community.pageId,
-        products: community.products,
-        joiningReasonText: community.joiningReasonText,
-        paymentPlans,
-    };
+    return await formatCommunity(community, ctx);
 }
 
 export async function getCommunities({
@@ -163,27 +158,46 @@ export async function getCommunities({
     page?: number;
     limit?: number;
 }): Promise<Community[]> {
-    checkIfAuthenticated(ctx);
+    const query: Partial<InternalCommunity> = {
+        domain: ctx.subdomain._id,
+    };
 
-    if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
-        throw new Error(responses.action_not_allowed);
+    if (
+        !ctx.user ||
+        (ctx.user &&
+            !checkPermission(ctx.user.permissions, [
+                permissions.manageCommunity,
+            ]))
+    ) {
+        query.enabled = true;
     }
 
-    const communities = await (CommunityModel as any).paginatedFind(
-        {
-            domain: ctx.subdomain._id,
-        },
-        { page, limit },
-    );
+    const communities = await (CommunityModel as any).paginatedFind(query, {
+        page,
+        limit,
+    });
 
     return communities.map(async (community) => ({
         name: community.name,
         communityId: community.communityId,
+        banner: community.banner,
         enabled: community.enabled,
-        default: community.default,
+        categories: community.categories,
+        autoAcceptMembers: community.autoAcceptMembers,
+        description: community.description,
+        pageId: community.pageId,
+        products: community.products,
+        joiningReasonText: community.joiningReasonText,
         paymentPlans: await getPlans({
             planIds: community.paymentPlans,
             ctx,
+        }),
+        defaultPaymentPlan: community.defaultPaymentPlan,
+        featuredImage: community.featuredImage,
+        membersCount: await getMembersCount({
+            ctx,
+            communityId: community.communityId,
+            status: Constants.MembershipStatus.ACTIVE,
         }),
     }));
 }
@@ -193,15 +207,21 @@ export async function getCommunitiesCount({
 }: {
     ctx: GQLContext;
 }): Promise<number> {
-    checkIfAuthenticated(ctx);
+    const query: Partial<InternalCommunity> = {
+        domain: ctx.subdomain._id,
+    };
 
-    if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
-        throw new Error(responses.action_not_allowed);
+    if (
+        !ctx.user ||
+        (ctx.user &&
+            !checkPermission(ctx.user.permissions, [
+                permissions.manageCommunity,
+            ]))
+    ) {
+        query.enabled = true;
     }
 
-    const count = await (CommunityModel as any).countDocuments({
-        domain: ctx.subdomain._id,
-    });
+    const count = await (CommunityModel as any).countDocuments(query);
 
     return count;
 }
@@ -209,21 +229,23 @@ export async function getCommunitiesCount({
 export async function updateCommunity({
     id,
     name,
+    description,
     ctx,
     enabled,
-    defaultCommunity,
     banner,
     autoAcceptMembers,
     joiningReasonText,
+    featuredImage,
 }: {
     id: string;
     name?: string;
+    description?: string;
     ctx: GQLContext;
     enabled?: boolean;
-    defaultCommunity?: boolean;
     banner?: string;
     autoAcceptMembers?: boolean;
     joiningReasonText?: string;
+    featuredImage: Media;
 }): Promise<Community> {
     checkIfAuthenticated(ctx);
 
@@ -244,8 +266,8 @@ export async function updateCommunity({
         community.name = name;
     }
 
-    if (defaultCommunity !== undefined) {
-        community.default = defaultCommunity;
+    if (description) {
+        community.description = JSON.parse(description);
     }
 
     if (banner) {
@@ -260,6 +282,10 @@ export async function updateCommunity({
         community.joiningReasonText = joiningReasonText;
     }
 
+    if (featuredImage !== undefined) {
+        community.featuredImage = featuredImage;
+    }
+
     const plans = await getPlans({
         planIds: community.paymentPlans,
         ctx,
@@ -267,14 +293,19 @@ export async function updateCommunity({
     if (enabled !== undefined) {
         community.enabled = enabled;
 
-        if (enabled && plans.length === 0) {
-            throw new Error(responses.payment_plan_required);
+        if (enabled) {
+            if (plans.length === 0) {
+                throw new Error(responses.payment_plan_required);
+            }
+            if (!community.defaultPaymentPlan) {
+                throw new Error(responses.default_payment_plan_required);
+            }
         }
     }
 
     await (community as any).save();
 
-    return formatCommunity(community, plans);
+    return await formatCommunity(community, ctx);
 }
 
 export async function addCategory({
@@ -307,13 +338,7 @@ export async function addCategory({
 
     await (community as any).save();
 
-    return formatCommunity(
-        community,
-        await getPlans({
-            planIds: community.paymentPlans,
-            ctx,
-        }),
-    );
+    return await formatCommunity(community, ctx);
 }
 
 export async function deleteCategory({
@@ -352,13 +377,7 @@ export async function deleteCategory({
 
     await (community as any).save();
 
-    return formatCommunity(
-        community,
-        await getPlans({
-            planIds: community.paymentPlans,
-            ctx,
-        }),
-    );
+    return await formatCommunity(community, ctx);
 }
 
 export async function joinCommunity({
@@ -372,11 +391,9 @@ export async function joinCommunity({
 }): Promise<boolean> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>({
-        domain: ctx.subdomain._id,
-        communityId: id,
-        enabled: true,
-    });
+    const community = await CommunityModel.findOne<InternalCommunity>(
+        getCommunityQuery(ctx, id),
+    );
 
     if (!community) {
         throw new Error(responses.item_not_found);
@@ -414,10 +431,10 @@ export async function joinCommunity({
         });
     }
 
-    return member.status;
+    return member;
 }
 
-async function isCommunityMember(
+async function getMembership(
     ctx: GQLContext,
     communityId: string,
 ): Promise<boolean> {
@@ -430,10 +447,6 @@ async function isCommunityMember(
     });
     return !!member;
 }
-
-type PublicPost = Omit<CommunityPost, "createdAt" | "user"> & {
-    userId: string;
-};
 
 export async function createCommunityPost({
     communityId,
@@ -456,17 +469,15 @@ export async function createCommunityPost({
         throw new Error(responses.action_not_allowed);
     }
 
-    const community = await CommunityModel.findOne<InternalCommunity>({
-        domain: ctx.subdomain._id,
-        communityId,
-        enabled: true,
-    });
+    const community = await CommunityModel.findOne<InternalCommunity>(
+        getCommunityQuery(ctx, communityId),
+    );
 
     if (!community) {
         throw new Error(responses.item_not_found);
     }
 
-    const member = await isCommunityMember(ctx, communityId);
+    const member = await getMembership(ctx, communityId);
 
     if (!member) {
         throw new Error(responses.action_not_allowed);
@@ -489,6 +500,46 @@ export async function createCommunityPost({
     return formatPost(post, ctx.user);
 }
 
+export async function deleteCommunityPost({
+    ctx,
+    communityId,
+    postId,
+}: {
+    ctx: GQLContext;
+    communityId: string;
+    postId: string;
+}): Promise<CommunityPost> {
+    checkIfAuthenticated(ctx);
+
+    const community = await CommunityModel.findOne<InternalCommunity>(
+        getCommunityQuery(ctx, communityId),
+    );
+
+    if (!community) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const query: Record<string, unknown> = {
+        domain: ctx.subdomain._id,
+        communityId,
+        postId,
+    };
+    if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
+        query["userId"] = ctx.user.userId;
+    }
+
+    const post = await CommunityPostModel.findOne<CommunityPost>(query);
+
+    if (!post) {
+        throw new Error(responses.item_not_found);
+    }
+
+    post.deleted = true;
+    await (post as any).save();
+
+    return post;
+}
+
 export async function getPost({
     ctx,
     communityId,
@@ -500,11 +551,9 @@ export async function getPost({
 }): Promise<PublicPost | null> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>({
-        domain: ctx.subdomain._id,
-        communityId,
-        enabled: true,
-    });
+    const community = await CommunityModel.findOne<InternalCommunity>(
+        getCommunityQuery(ctx, communityId),
+    );
     if (!community) {
         throw new Error(responses.item_not_found);
     }
@@ -518,12 +567,23 @@ export async function getPost({
         throw new Error(responses.item_not_found);
     }
 
-    const member = await isCommunityMember(ctx, communityId);
+    const member = await getMembership(ctx, communityId);
     if (!member) {
         return null;
     }
 
     return formatPost(post, ctx.user);
+}
+
+function getCommunityQuery(ctx: GQLContext, communityId: string) {
+    const query: Record<string, unknown> = {
+        domain: ctx.subdomain._id,
+        communityId,
+    };
+    if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
+        query.enabled = true;
+    }
+    return query;
 }
 
 export async function getPosts({
@@ -541,18 +601,14 @@ export async function getPosts({
 }): Promise<PublicPost[]> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>({
-        domain: ctx.subdomain._id,
-        communityId,
-        enabled: true,
-    });
-
+    const community = await CommunityModel.findOne<InternalCommunity>(
+        getCommunityQuery(ctx, communityId),
+    );
     if (!community) {
         throw new Error(responses.item_not_found);
     }
 
-    const member = await isCommunityMember(ctx, communityId);
-
+    const member = await getMembership(ctx, communityId);
     if (!member) {
         return [];
     }
@@ -560,6 +616,7 @@ export async function getPosts({
     const query: Record<string, unknown> = {
         domain: ctx.subdomain._id,
         communityId,
+        deleted: false,
     };
 
     if (category) {
@@ -584,21 +641,6 @@ export async function getPosts({
     return posts.map(async (post) => formatPost(post, ctx.user));
 }
 
-const formatPost = (post: InternalCommunityPost, user: User): PublicPost => ({
-    communityId: post.communityId,
-    postId: post.postId,
-    title: post.title,
-    content: post.content,
-    category: post.category,
-    media: post.media,
-    pinned: post.pinned,
-    commentsCount: post.commentsCount,
-    likesCount: post.likes.length,
-    updatedAt: post.updatedAt,
-    hasLiked: post.likes.includes(user.userId),
-    userId: post.userId,
-});
-
 export async function getPostsCount({
     ctx,
     communityId,
@@ -610,17 +652,15 @@ export async function getPostsCount({
 }): Promise<number> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>({
-        domain: ctx.subdomain._id,
-        communityId,
-        enabled: true,
-    });
+    const community = await CommunityModel.findOne<InternalCommunity>(
+        getCommunityQuery(ctx, communityId),
+    );
 
     if (!community) {
         throw new Error(responses.item_not_found);
     }
 
-    const member = await isCommunityMember(ctx, communityId);
+    const member = await getMembership(ctx, communityId);
 
     if (!member) {
         return 0;
@@ -649,11 +689,9 @@ export async function getMemberStatus({
 }): Promise<string> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>({
-        domain: ctx.subdomain._id,
-        communityId,
-        enabled: true,
-    });
+    const community = await CommunityModel.findOne<InternalCommunity>(
+        getCommunityQuery(ctx, communityId),
+    );
 
     if (!community) {
         throw new Error(responses.item_not_found);
@@ -691,7 +729,6 @@ export async function getMembers({
     const community = await CommunityModel.findOne<InternalCommunity>({
         domain: ctx.subdomain._id,
         communityId,
-        enabled: true,
     });
 
     if (!community) {
@@ -721,6 +758,35 @@ export async function getMembers({
     }));
 }
 
+async function formatCommunity(
+    community: InternalCommunity,
+    ctx: GQLContext,
+): Promise<Community & Pick<InternalCommunity, "autoAcceptMembers">> {
+    return {
+        name: community.name,
+        communityId: community.communityId,
+        banner: community.banner,
+        enabled: community.enabled,
+        categories: community.categories,
+        autoAcceptMembers: community.autoAcceptMembers,
+        description: community.description,
+        pageId: community.pageId,
+        products: community.products,
+        joiningReasonText: community.joiningReasonText,
+        paymentPlans: await getPlans({
+            planIds: community.paymentPlans,
+            ctx,
+        }),
+        defaultPaymentPlan: community.defaultPaymentPlan,
+        featuredImage: community.featuredImage,
+        membersCount: await getMembersCount({
+            ctx,
+            communityId: community.communityId,
+            status: Constants.MembershipStatus.ACTIVE,
+        }),
+    };
+}
+
 export async function getMembersCount({
     ctx,
     communityId,
@@ -730,12 +796,6 @@ export async function getMembersCount({
     communityId: string;
     status?: CommunityMemberStatus;
 }): Promise<number> {
-    checkIfAuthenticated(ctx);
-
-    if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
-        throw new Error(responses.action_not_allowed);
-    }
-
     const query: Record<string, unknown> = {
         domain: ctx.subdomain._id,
         entityId: communityId,
@@ -768,11 +828,13 @@ export async function updateMemberStatus({
         throw new Error(responses.action_not_allowed);
     }
 
-    const community = await CommunityModel.findOne<InternalCommunity>({
-        domain: ctx.subdomain._id,
-        communityId,
-        enabled: true,
-    });
+    if (ctx.user.userId === userId) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const community = await CommunityModel.findOne<InternalCommunity>(
+        getCommunityQuery(ctx, communityId),
+    );
 
     if (!community) {
         throw new Error(responses.item_not_found);
@@ -831,11 +893,9 @@ export async function togglePostLike({
 }): Promise<PublicPost> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>({
-        domain: ctx.subdomain._id,
-        communityId,
-        enabled: true,
-    });
+    const community = await CommunityModel.findOne<InternalCommunity>(
+        getCommunityQuery(ctx, communityId),
+    );
 
     if (!community) {
         throw new Error(responses.item_not_found);
@@ -851,7 +911,7 @@ export async function togglePostLike({
         throw new Error(responses.item_not_found);
     }
 
-    const member = await isCommunityMember(ctx, communityId);
+    const member = await getMembership(ctx, communityId);
 
     if (!member) {
         throw new Error(responses.action_not_allowed);
@@ -883,11 +943,9 @@ export async function togglePinned({
         throw new Error(responses.action_not_allowed);
     }
 
-    const community = await CommunityModel.findOne<InternalCommunity>({
-        domain: ctx.subdomain._id,
-        communityId,
-        enabled: true,
-    });
+    const community = await CommunityModel.findOne<InternalCommunity>(
+        getCommunityQuery(ctx, communityId),
+    );
 
     if (!community) {
         throw new Error(responses.item_not_found);
@@ -903,7 +961,7 @@ export async function togglePinned({
         throw new Error(responses.item_not_found);
     }
 
-    const member = await isCommunityMember(ctx, communityId);
+    const member = await getMembership(ctx, communityId);
 
     if (!member) {
         throw new Error(responses.action_not_allowed);
@@ -948,11 +1006,9 @@ export async function postComment({
         throw new Error(responses.action_not_allowed);
     }
 
-    const community = await CommunityModel.findOne<InternalCommunity>({
-        domain: ctx.subdomain._id,
-        communityId,
-        enabled: true,
-    });
+    const community = await CommunityModel.findOne<InternalCommunity>(
+        getCommunityQuery(ctx, communityId),
+    );
 
     if (!community) {
         throw new Error(responses.item_not_found);
@@ -968,7 +1024,7 @@ export async function postComment({
         throw new Error(responses.item_not_found);
     }
 
-    const member = await isCommunityMember(ctx, communityId);
+    const member = await getMembership(ctx, communityId);
 
     if (!member) {
         throw new Error(responses.action_not_allowed);
@@ -1012,32 +1068,6 @@ export async function postComment({
     return formatComment(comment, ctx.user);
 }
 
-const formatComment = (comment: any, user: User) => ({
-    communityId: comment.communityId,
-    postId: comment.postId,
-    userId: comment.userId,
-    commentId: comment.commentId,
-    content: comment.content,
-    hasLiked: comment.likes.includes(user.userId),
-    createdAt: comment.createdAt,
-    updatedAt: comment.updatedAt,
-    media: comment.media,
-    likesCount: comment.likes.length,
-    replies: comment.replies.map((reply) => ({
-        replyId: reply.replyId,
-        userId: reply.userId,
-        content: reply.content,
-        media: reply.media,
-        parentReplyId: reply.parentReplyId,
-        createdAt: reply.createdAt,
-        updatedAt: reply.updatedAt,
-        likesCount: reply.likes.length,
-        hasLiked: reply.likes.includes(user.userId),
-        deleted: reply.deleted,
-    })),
-    deleted: comment.deleted,
-});
-
 export async function getComments({
     ctx,
     communityId,
@@ -1053,17 +1083,15 @@ export async function getComments({
 }): Promise<PublicComment[]> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>({
-        domain: ctx.subdomain._id,
-        communityId,
-        enabled: true,
-    });
+    const community = await CommunityModel.findOne<InternalCommunity>(
+        getCommunityQuery(ctx, communityId),
+    );
 
     if (!community) {
         throw new Error(responses.item_not_found);
     }
 
-    const member = await isCommunityMember(ctx, communityId);
+    const member = await getMembership(ctx, communityId);
 
     if (!member) {
         return [];
@@ -1097,11 +1125,9 @@ export async function toggleCommentLike({
 }): Promise<PublicComment> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>({
-        domain: ctx.subdomain._id,
-        communityId,
-        enabled: true,
-    });
+    const community = await CommunityModel.findOne<InternalCommunity>(
+        getCommunityQuery(ctx, communityId),
+    );
 
     if (!community) {
         throw new Error(responses.item_not_found);
@@ -1118,7 +1144,7 @@ export async function toggleCommentLike({
         throw new Error(responses.item_not_found);
     }
 
-    const member = await isCommunityMember(ctx, communityId);
+    const member = await getMembership(ctx, communityId);
 
     if (!member) {
         throw new Error(responses.action_not_allowed);
@@ -1150,11 +1176,9 @@ export async function toggleCommentReplyLike({
 }): Promise<PublicComment> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>({
-        domain: ctx.subdomain._id,
-        communityId,
-        enabled: true,
-    });
+    const community = await CommunityModel.findOne<InternalCommunity>(
+        getCommunityQuery(ctx, communityId),
+    );
 
     if (!community) {
         throw new Error(responses.item_not_found);
@@ -1171,7 +1195,7 @@ export async function toggleCommentReplyLike({
         throw new Error(responses.item_not_found);
     }
 
-    const member = await isCommunityMember(ctx, communityId);
+    const member = await getMembership(ctx, communityId);
 
     if (!member) {
         throw new Error(responses.action_not_allowed);
@@ -1209,11 +1233,9 @@ export async function deleteComment({
 }): Promise<PublicComment | null> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>({
-        domain: ctx.subdomain._id,
-        communityId,
-        enabled: true,
-    });
+    const community = await CommunityModel.findOne<InternalCommunity>(
+        getCommunityQuery(ctx, communityId),
+    );
 
     if (!community) {
         throw new Error(responses.item_not_found);
@@ -1292,16 +1314,333 @@ export async function deleteComment({
     return comment ? formatComment(comment, ctx.user) : null;
 }
 
-function hasPermissionToDelete(
-    user: User,
-    comment: InternalCommunityComment,
-    replyId,
-) {
-    const ownerUserId = replyId
-        ? comment.replies.find((r) => r.replyId === replyId)?.userId
-        : comment.userId;
-    return (
-        user.userId === ownerUserId ||
-        checkPermission(user.permissions, [permissions.manageCommunity])
+export async function leaveCommunity({
+    ctx,
+    id,
+}: {
+    ctx: GQLContext;
+    id: string;
+}): Promise<boolean> {
+    checkIfAuthenticated(ctx);
+
+    const community = await CommunityModel.findOne<InternalCommunity>({
+        domain: ctx.subdomain._id,
+        communityId: id,
+    });
+
+    if (!community) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const member = await MembershipModel.findOne({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+        entityId: id,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+    });
+
+    if (!member) {
+        return true;
+    }
+
+    if (member.subscriptionId) {
+        const paymentMethod = await getPaymentMethodFromSettings(
+            ctx.subdomain.settings,
+            member.subscriptionMethod,
+        );
+        await paymentMethod.cancel(member.subscriptionId);
+    }
+
+    await member.deleteOne();
+
+    return true;
+}
+
+export async function deleteCommunity({
+    ctx,
+    id,
+}: {
+    ctx: GQLContext;
+    id: string;
+}): Promise<boolean> {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const community = await CommunityModel.findOne<InternalCommunity>({
+        domain: ctx.subdomain._id,
+        communityId: id,
+        deleted: false,
+    });
+
+    if (!community) {
+        return true;
+    }
+
+    // await deleteCommunityData(ctx, community.communityId);
+    await PageModel.updateOne(
+        {
+            domain: ctx.subdomain._id,
+            pageId: community.pageId,
+            entityId: community.communityId,
+        },
+        {
+            deleted: true,
+        },
     );
+
+    // await PageModel.deleteOne({
+    //     domain: ctx.subdomain._id,
+    //     pageId: community.pageId,
+    //     entityId: community.communityId,
+    // });
+
+    await CommunityModel.updateOne(
+        {
+            domain: ctx.subdomain._id,
+            communityId: id,
+        },
+        {
+            deleted: true,
+        },
+    );
+
+    // await CommunityModel.deleteOne({
+    //     domain: ctx.subdomain._id,
+    //     communityId: community.communityId,
+    // });
+
+    return true;
+}
+
+export async function reportCommunityContent({
+    communityId,
+    contentId,
+    type,
+    reason,
+    ctx,
+    contentParentId,
+}: {
+    communityId: string;
+    contentId: string;
+    type: CommunityReportType;
+    reason: string;
+    ctx: GQLContext;
+    contentParentId?: string;
+}): Promise<CommunityReportPartial> {
+    checkIfAuthenticated(ctx);
+
+    const community = await CommunityModel.findOne<InternalCommunity>(
+        getCommunityQuery(ctx, communityId),
+    );
+
+    if (!community) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const member = await getMembership(ctx, communityId);
+
+    if (!member) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const existingReport = await CommunityReportModel.findOne({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+        communityId,
+        contentId,
+    });
+
+    if (existingReport) {
+        throw new Error(responses.community_content_already_reported);
+    }
+
+    let content: any = undefined;
+
+    if (type === Constants.CommunityReportType.POST) {
+        content = await CommunityPostModel.findOne({
+            domain: ctx.subdomain._id,
+            communityId,
+            postId: contentId,
+        });
+    } else if (type === Constants.CommunityReportType.COMMENT) {
+        content = await CommunityCommentModel.findOne({
+            domain: ctx.subdomain._id,
+            communityId,
+            commentId: contentId,
+        });
+    } else if (type === Constants.CommunityReportType.REPLY) {
+        const comment = await CommunityCommentModel.findOne<CommunityComment>({
+            domain: ctx.subdomain._id,
+            communityId,
+            commentId: contentParentId,
+        });
+
+        if (!comment) {
+            throw new Error(responses.item_not_found);
+        }
+
+        content = comment.replies.find((r) => r.replyId === contentId);
+    }
+
+    if (!content) {
+        throw new Error(responses.item_not_found);
+    }
+
+    if (content.userId === ctx.user.userId) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const report = await CommunityReportModel.create({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+        communityId,
+        contentId,
+        type: type.toLowerCase(),
+        reason,
+        contentParentId,
+    });
+
+    return formatCommunityReport(report, ctx);
+}
+
+export async function getCommunityReports({
+    ctx,
+    communityId,
+    page = 1,
+    limit = 10,
+    status,
+}: {
+    ctx: GQLContext;
+    communityId: string;
+    page?: number;
+    limit?: number;
+    status?: CommunityReportStatus;
+}): Promise<CommunityReportPartial[]> {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const community = await CommunityModel.findOne<InternalCommunity>(
+        getCommunityQuery(ctx, communityId),
+    );
+
+    if (!community) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const query: Record<string, unknown> = {
+        domain: ctx.subdomain._id,
+        communityId,
+    };
+
+    if (status) {
+        query.status = status;
+    }
+
+    const reports = await (CommunityReportModel as any).paginatedFind(query, {
+        page,
+        limit,
+    });
+
+    return reports.map(async (report) => formatCommunityReport(report, ctx));
+}
+
+export async function getCommunityReportsCount({
+    ctx,
+    communityId,
+    status,
+}: {
+    ctx: GQLContext;
+    communityId: string;
+    status?: CommunityReportStatus;
+}): Promise<number> {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const community = await CommunityModel.findOne<InternalCommunity>(
+        getCommunityQuery(ctx, communityId),
+    );
+
+    if (!community) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const query: Record<string, unknown> = {
+        domain: ctx.subdomain._id,
+        communityId,
+    };
+
+    if (status) {
+        query.status = status;
+    }
+
+    const count = await (CommunityReportModel as any).countDocuments(query);
+
+    return count;
+}
+
+export async function updateCommunityReportStatus({
+    ctx,
+    communityId,
+    reportId,
+    rejectionReason,
+}: {
+    ctx: GQLContext;
+    communityId: string;
+    reportId: string;
+    rejectionReason?: string;
+}): Promise<CommunityReportPartial> {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const community = await CommunityModel.findOne<InternalCommunity>(
+        getCommunityQuery(ctx, communityId),
+    );
+
+    if (!community) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const report = await CommunityReportModel.findOne<InternalCommunityReport>({
+        domain: ctx.subdomain._id,
+        communityId,
+        reportId,
+    });
+
+    if (!report) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const nextStatus = getNextStatusForCommunityReport(report.status);
+    if (nextStatus === Constants.CommunityReportStatus.REJECTED) {
+        if (!rejectionReason) {
+            throw new Error(responses.rejection_reason_missing);
+        }
+        report.rejectionReason = rejectionReason;
+    } else {
+        report.rejectionReason = "";
+    }
+
+    report.status = nextStatus;
+
+    await (report as any).save();
+
+    if (report.status === Constants.CommunityReportStatus.ACCEPTED) {
+        toggleContentVisibility(report.contentId, report.type, true);
+    } else {
+        toggleContentVisibility(report.contentId, report.type, false);
+    }
+
+    return formatCommunityReport(report, ctx);
 }

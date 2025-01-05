@@ -2,13 +2,12 @@ import { NextRequest } from "next/server";
 import DomainModel, { Domain } from "@models/Domain";
 import { auth } from "@/auth";
 import User from "@models/User";
-import { PaymentInitiateRequest } from "@models/payment-intiate-request";
 import {
     Community,
     Constants,
     Course,
+    MembershipEntityType,
     PaymentPlan,
-    Membership,
 } from "@courselit/common-models";
 import CommunityModel from "@models/Community";
 import CourseModel from "@models/Course";
@@ -19,62 +18,48 @@ import { getPaymentMethodFromSettings } from "@/payments-new";
 import { generateUniqueId } from "@courselit/utils";
 import Invoice from "@models/Invoice";
 import { error } from "@/services/logger";
-import { finalizePurchase } from "../webhook-new/route";
+import { activateMembership } from "../webhook-new/route";
 import { responses } from "@config/strings";
+import mongoose from "mongoose";
 
 const { transactionSuccess, transactionFailed, transactionInitiated } =
     constants;
+
+export interface PaymentInitiateRequest {
+    id: string;
+    type: MembershipEntityType;
+    planId: string;
+    origin: string;
+    joiningReason?: string;
+}
 
 export async function POST(req: NextRequest) {
     const body: PaymentInitiateRequest = await req.json();
     const domainName = req.headers.get("domain");
 
     try {
-        const domain = await DomainModel.findOne<Domain>({
-            name: domainName,
-        });
+        const domain = await getDomain(domainName);
         if (!domain) {
             return Response.json(
                 { message: "Domain not found" },
                 { status: 404 },
             );
         }
-        const session = await auth();
 
-        let user;
-        if (session) {
-            user = await User.findOne({
-                email: session.user!.email,
-                domain: domain._id,
-                active: true,
-            });
-        }
+        const session = await auth();
+        const user = await getUser(session, domain._id);
 
         if (!user) {
             return Response.json({}, { status: 401 });
         }
 
-        const { id, type, planId, metadata } = body;
+        const { id, type, planId, origin, joiningReason } = body;
 
         if (!id || !type || !planId) {
             return Response.json({ message: "Bad request" }, { status: 400 });
         }
 
-        let entity: Community | Course | null = null;
-        if (type === Constants.MembershipEntityType.COMMUNITY) {
-            entity = await CommunityModel.findOne<Community>({
-                communityId: id,
-                domain: domain._id,
-            });
-        } else if (type === Constants.MembershipEntityType.COURSE) {
-            entity = await CourseModel.findOne<Course>({
-                courseId: id,
-                domain: domain._id,
-            });
-        } else {
-            return Response.json({ message: "Invalid type" }, { status: 400 });
-        }
-
+        const entity = await getEntity(type, id, domain._id);
         if (!entity) {
             return Response.json(
                 { message: responses.item_not_found },
@@ -82,12 +67,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const paymentPlan = await PaymentPlanModel.findOne<PaymentPlan>({
-            domain: domain._id,
-            planId,
-            archived: false,
-        });
-
+        const paymentPlan = await getPaymentPlan(domain._id, planId);
         if (!paymentPlan) {
             return Response.json(
                 { message: "Invalid payment plan" },
@@ -105,6 +85,7 @@ export async function POST(req: NextRequest) {
                 entityType: type,
                 entityId: id,
             });
+
         let membership: InternalMembership =
             existingMembership ||
             (await MembershipModel.create({
@@ -139,30 +120,48 @@ export async function POST(req: NextRequest) {
         }
 
         if (paymentPlan.type === Constants.PaymentPlanType.FREE) {
-            membership.status = Constants.MembershipStatus.ACTIVE;
-            await (membership as any).save();
-            await finalizePurchase({
-                domain,
-                membership,
-                paymentPlan,
+            if (
+                type === Constants.MembershipEntityType.COMMUNITY &&
+                !(entity as Community).autoAcceptMembers
+            ) {
+                if (!joiningReason) {
+                    return Response.json(
+                        {
+                            status: transactionFailed,
+                            error: responses.joining_reason_missing,
+                        },
+                        { status: 400 },
+                    );
+                } else {
+                    membership.joiningReason = joiningReason;
+                }
+            }
+
+            await activateMembership(domain, membership, paymentPlan);
+
+            return Response.json({
+                status: transactionSuccess,
             });
-            return Response.json({ status: transactionSuccess });
         }
 
         const invoiceId = generateUniqueId();
-        metadata["membershipId"] = membership.membershipId;
-        metadata["invoiceId"] = invoiceId;
+        const metadata = {
+            membershipId: membership.membershipId,
+            invoiceId,
+        };
 
         const paymentTracker = await paymentMethod.initiate({
             metadata,
             paymentPlan,
             product: {
+                id: id,
                 title:
                     type === Constants.MembershipEntityType.COMMUNITY
                         ? (entity as Community)!.name
                         : (entity as Course)!.title,
                 type,
             },
+            origin,
         });
 
         await Invoice.create({
@@ -198,3 +197,60 @@ export async function POST(req: NextRequest) {
         );
     }
 }
+
+export async function getDomain(domainName: string | null) {
+    if (!domainName) return null;
+    return await DomainModel.findOne<Domain>({ name: domainName });
+}
+
+export async function getUser(session: any, domainId: mongoose.Types.ObjectId) {
+    if (!session) return null;
+    return await User.findOne({
+        email: session.user!.email,
+        domain: domainId,
+        active: true,
+    });
+}
+
+async function getEntity(
+    type: string,
+    id: string,
+    domainId: mongoose.Types.ObjectId,
+) {
+    if (type === Constants.MembershipEntityType.COMMUNITY) {
+        return await CommunityModel.findOne<Community>({
+            communityId: id,
+            domain: domainId,
+        });
+    } else if (type === Constants.MembershipEntityType.COURSE) {
+        return await CourseModel.findOne<Course>({
+            courseId: id,
+            domain: domainId,
+        });
+    }
+    return null;
+}
+
+async function getPaymentPlan(
+    domainId: mongoose.Types.ObjectId,
+    planId: string,
+) {
+    return await PaymentPlanModel.findOne<PaymentPlan>({
+        domain: domainId,
+        planId,
+        archived: false,
+    });
+}
+
+// async function handleFreePlan(
+//     membership: InternalMembership,
+//     domain: Domain,
+//     paymentPlan: PaymentPlan,
+// ) {
+//     if (membership.status !== Constants.MembershipStatus.ACTIVE) {
+//         membership.status = Constants.MembershipStatus.ACTIVE;
+//         await (membership as any).save();
+//         await finalizePurchase({ domain, membership, paymentPlan });
+//     }
+//     return Response.json({ status: transactionSuccess });
+// }

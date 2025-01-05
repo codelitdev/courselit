@@ -128,6 +128,31 @@ const tagWithDetails = new GraphQLObjectType({
     },
 });
 
+const entityType = new GraphQLObjectType({
+    name: "EntityType",
+    fields: {
+        id: { type: new GraphQLNonNull(GraphQLString) },
+        title: { type: new GraphQLNonNull(GraphQLString) },
+        slug: { type: GraphQLString },
+        membersCount: { type: GraphQLInt },
+        totalLessons: { type: GraphQLInt },
+        completedLessonsCount: { type: GraphQLInt },
+        featuredImage: {
+            type: mediaTypes.mediaType,
+            resolve: (content, args, context, info) =>
+                getMedia(content.featuredImage),
+        },
+    },
+});
+
+const userContent = new GraphQLObjectType({
+    name: "UserContent",
+    fields: {
+        entityType: { type: new GraphQLNonNull(GraphQLString) },
+        entity: { type: entityType },
+    },
+});
+
 const userTypes = {
     filter,
     userType,
@@ -139,6 +164,7 @@ const userTypes = {
     userFilter,
     createSegmentInput,
     tagWithDetails,
+    userContent,
 };
 
 export default userTypes;

@@ -1,5 +1,4 @@
 import UserModel, { User } from "../../models/User";
-import Course from "../../models/Course";
 import { responses } from "../../config/strings";
 import {
     makeModelTextSearchable,
@@ -20,6 +19,7 @@ import mongoose from "mongoose";
 import {
     Constants,
     Media,
+    Membership,
     UserFilterWithAggregator,
 } from "@courselit/common-models";
 import { recordActivity } from "../../lib/record-activity";
@@ -30,6 +30,9 @@ import pug from "pug";
 import courseEnrollTemplate from "@/templates/course-enroll";
 import { send } from "../../services/mail";
 import { generateEmailFrom } from "@/lib/utils";
+import MembershipModel from "@models/Membership";
+import CommunityModel from "@models/Community";
+import CourseModel from "@models/Course";
 
 const removeAdminFieldsFromUserObject = (user: User) => ({
     id: user._id,
@@ -197,7 +200,7 @@ export const inviteCustomer = async (
 };
 
 const updateCoursesForCreatorName = async (creatorId, creatorName) => {
-    await Course.updateMany(
+    await CourseModel.updateMany(
         {
             creatorId,
         },
@@ -568,4 +571,120 @@ export const untagUsers = async (tag: string, ctx: GQLContext) => {
     );
 
     return getTagsWithDetails(ctx);
+};
+
+export const getUserContent = async (
+    ctx: GQLContext,
+    userId?: string,
+): Promise<any> => {
+    checkIfAuthenticated(ctx);
+
+    let id = ctx.user.userId;
+    if (userId) {
+        if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+            throw new Error(responses.action_not_allowed);
+        }
+        id = userId;
+    }
+
+    const user = await UserModel.findOne({
+        userId: id,
+        domain: ctx.subdomain._id,
+    });
+
+    if (!user) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const memberships = await MembershipModel.find<Membership>({
+        domain: ctx.subdomain._id,
+        userId: user.userId,
+        status: Constants.MembershipStatus.ACTIVE,
+    });
+
+    const content: Record<string, unknown>[] = [];
+
+    for (const membership of memberships) {
+        if (membership.entityType === Constants.MembershipEntityType.COURSE) {
+            const course = await CourseModel.findOne({
+                courseId: membership.entityId,
+                domain: ctx.subdomain._id,
+            });
+
+            if (course) {
+                content.push({
+                    entityType: Constants.MembershipEntityType.COURSE,
+                    entity: {
+                        id: course.courseId,
+                        title: course.title,
+                        slug: course.slug,
+                        totalLessons: course.lessons.length,
+                        completedLessonsCount: user.purchases.find(
+                            (progress: Progress) =>
+                                progress.courseId === course.courseId,
+                        )?.completedLessons.length,
+                        featuredImage: course.featuredImage,
+                    },
+                });
+            }
+        }
+        if (
+            membership.entityType === Constants.MembershipEntityType.COMMUNITY
+        ) {
+            const community = await CommunityModel.findOne({
+                communityId: membership.entityId,
+                domain: ctx.subdomain._id,
+            });
+
+            if (community) {
+                content.push({
+                    entityType: Constants.MembershipEntityType.COMMUNITY,
+                    entity: {
+                        id: community.communityId,
+                        title: community.name,
+                        featuredImage: community.featuredImage,
+                    },
+                });
+            }
+        }
+    }
+
+    const enrolledCourses = await CourseModel.find(
+        {
+            courseId: {
+                $in: [
+                    ...user.purchases.map(
+                        (course: Progress) => course.courseId,
+                    ),
+                ],
+            },
+            domain: ctx.subdomain._id,
+        },
+        {
+            courseId: 1,
+            title: 1,
+            lessons: 1,
+            type: 1,
+            slug: 1,
+        },
+    );
+
+    for (const course of enrolledCourses) {
+        content.push({
+            entityType: Constants.MembershipEntityType.COURSE,
+            entity: {
+                id: course.courseId,
+                title: course.title,
+                slug: course.slug,
+                totalLessons: course.lessons.length,
+                featuredImage: course.featuredImage,
+                completedLessonsCount: user.purchases.find(
+                    (progress: Progress) =>
+                        progress.courseId === course.courseId,
+                )?.completedLessons.length,
+            },
+        });
+    }
+
+    return content;
 };

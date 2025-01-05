@@ -9,7 +9,7 @@ import {
 import { Separator } from "@components/ui/separator";
 import { SidebarTrigger } from "@components/ui/sidebar";
 import Link from "next/link";
-import { ReactNode } from "react";
+import { Fragment, ReactNode } from "react";
 
 export default function DashboardContent({
     breadcrumbs,
@@ -31,7 +31,7 @@ export default function DashboardContent({
                         <Breadcrumb>
                             <BreadcrumbList>
                                 {breadcrumbs.map((breadcrumb, index) => (
-                                    <>
+                                    <Fragment key={index}>
                                         {index < breadcrumbs.length - 1 && (
                                             <>
                                                 <BreadcrumbItem className="hidden md:block">
@@ -55,7 +55,7 @@ export default function DashboardContent({
                                                 </BreadcrumbPage>
                                             </BreadcrumbItem>
                                         )}
-                                    </>
+                                    </Fragment>
                                 ))}
                                 {/* <BreadcrumbItem className="hidden md:block">
                                     <BreadcrumbLink href="#">

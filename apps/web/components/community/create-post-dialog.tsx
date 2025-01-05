@@ -171,7 +171,10 @@ export function CreatePostDialog({
             <DialogContent className="sm:max-w-[90vw] md:max-w-[600px] w-full overflow-y-auto max-h-[calc(100vh-4rem)] my-8">
                 <div className="flex items-center gap-2 mb-4">
                     <Avatar className="h-10 w-10">
-                        <AvatarImage src="/placeholder.svg" alt="Your avatar" />
+                        <AvatarImage
+                            src="/courselit_backdrop_square.webp"
+                            alt="Your avatar"
+                        />
                         <AvatarFallback>YN</AvatarFallback>
                     </Avatar>
                     <div>

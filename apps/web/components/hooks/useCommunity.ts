@@ -22,11 +22,12 @@ export const useCommunity = (id?: string | null) => {
 
         const loadCommunity = async () => {
             const query = `
-            query ($id: String) {
+            query ($id: String!) {
                 community: getCommunity(id: $id) {
+                    communityId
                     name
+                    description
                     enabled
-                    default
                     banner
                     categories
                     autoAcceptMembers
@@ -42,7 +43,18 @@ export const useCommunity = (id?: string | null) => {
                         subscriptionMonthlyAmount
                         subscriptionYearlyAmount
                     }
-                    communityId,
+                    defaultPaymentPlan
+                    featuredImage {
+                        mediaId
+                        originalFileName
+                        mimeType
+                        size
+                        access
+                        file
+                        thumbnail
+                        caption
+                    }
+                    membersCount
                 }
             }
             `;
@@ -69,5 +81,5 @@ export const useCommunity = (id?: string | null) => {
         loadCommunity();
     }, [address.backend, id]);
 
-    return { community, error, loaded };
+    return { community, error, loaded, setCommunity };
 };

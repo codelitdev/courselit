@@ -38,6 +38,7 @@ export const MEDIA_SEARCH_INPUT_PLACEHOLDER = "Search your media";
 export const LOAD_MORE_TEXT = "Load more";
 export const MANAGE_MEDIA_BUTTON_TEXT = "Insert media";
 export const MANAGE_COURSES_PAGE_HEADING = "Products";
+export const MANAGE_COMMUNITIES_PAGE_HEADING = "Communities";
 export const MANAGE_PAGES_PAGE_HEADING = "Pages";
 export const BREADCRUMBS_EDIT_LESSON_COURSE_NAME = "Product";
 export const NEW_PAGE_HEADING = "New page";
@@ -581,13 +582,16 @@ export const OVERVIEW_HEADER = "Overview";
 export const HELP_HEADER = "Help";
 export const COMMUNITY_HEADER = "Community";
 export const COMMUNITY_MEMBERSHIP_LIST_HEADER = "Memberships";
+export const COMMUNITY_REPORTS_HEADER = "Reported content";
+export const COMMUNITY_REPORTS_SUBHEADER =
+    "Review and manage reported content in your community";
 export const COMMUNITY_MEMBERSHIP_LIST_SUBHEADER =
     "Review and manage memberships in your community";
 export const SITE_SETTINGS_SECTION_COMMUNITIES = "Communities";
 export const NEW_COMMUNITY_BUTTON = "New community";
 export const COMMUNITY_FIELD_NAME = "Community name";
 export const COMMUNITY_NEW_BTN_CAPTION = "Create";
-export const COMMUNITY_SETTINGS = "Settings";
+export const COMMUNITY_SETTINGS = "Manage";
 export const TOAST_TITLE_SUCCESS = "Success";
 export const TOAST_TITLE_ERROR = "Error";
 export const TOAST_DESCRIPTION_CHANGES_SAVED = "Changes saved";

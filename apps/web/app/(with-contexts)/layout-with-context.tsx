@@ -1,7 +1,7 @@
 "use client";
 
-import { SiteInfo, Typeface, ServerConfig } from "@courselit/common-models";
 import { ReactNode, useEffect, useState } from "react";
+import { SiteInfo, Typeface, ServerConfig } from "@courselit/common-models";
 import { defaultState } from "@components/default-state";
 import { FetchBuilder } from "@courselit/utils";
 import {

@@ -39,6 +39,7 @@ export interface Course {
     customers: string[];
     pageId?: string;
     paymentPlans: string[];
+    defaultPaymentPlan: string;
 }
 
 const CourseSchema = new mongoose.Schema<Course>(
@@ -98,6 +99,7 @@ const CourseSchema = new mongoose.Schema<Course>(
         customers: [String],
         pageId: { type: String },
         paymentPlans: [String],
+        defaultPaymentPlan: { type: String },
     },
     {
         timestamps: true,

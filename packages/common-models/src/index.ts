@@ -65,3 +65,5 @@ export type { CommunityComment } from "./community-comment";
 export type { CommunityCommentReply } from "./community-comment-reply";
 export type { PaymentPlanType, PaymentPlan } from "./payment-plan";
 export * from "./membership";
+export * from "./invoice";
+export * from "./community-report";

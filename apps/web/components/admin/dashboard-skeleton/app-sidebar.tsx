@@ -6,6 +6,7 @@ import {
     LibraryBig,
     LifeBuoy,
     Mail,
+    MessageCircleHeart,
     Settings,
     Target,
     Text,
@@ -37,7 +38,6 @@ import {
     SIDEBAR_MENU_PAGES,
     SIDEBAR_MENU_SETTINGS,
     SIDEBAR_MENU_USERS,
-    SITE_SETTINGS_SECTION_COMMUNITIES,
 } from "@ui-config/strings";
 import { NavSecondary } from "./nav-secondary";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -119,6 +119,15 @@ function getSidebarItems(profile: Partial<Profile>, path, tab) {
             isActive:
                 path === "/dashboard4/products" ||
                 path.startsWith("/dashboard4/product"),
+            items: [],
+        });
+    }
+    if (checkPermission(profile.permissions!, [permissions.manageCommunity])) {
+        navMainItems.push({
+            title: "Communities",
+            url: "/dashboard4/communities",
+            icon: MessageCircleHeart,
+            isActive: path === "/dashboard4/communities",
             items: [],
         });
     }
@@ -224,17 +233,6 @@ function getSidebarItems(profile: Partial<Profile>, path, tab) {
                     "/dashboard4/settings?tab=API Keys",
             },
         ];
-        if (
-            checkPermission(profile.permissions!, [permissions.manageCommunity])
-        ) {
-            items.push({
-                title: SITE_SETTINGS_SECTION_COMMUNITIES,
-                url: `/dashboard4/settings?tab=${SITE_SETTINGS_SECTION_COMMUNITIES}`,
-                isActive:
-                    `${path}?tab=${tab}` ===
-                    `/dashboard4/settings?tab=${SITE_SETTINGS_SECTION_COMMUNITIES}`,
-            });
-        }
         navMainItems.push({
             title: SIDEBAR_MENU_SETTINGS,
             url: "#",

@@ -1,14 +1,17 @@
 import type {
     CommunityMemberStatus,
+    CommunityReportStatus,
     Course,
     Group,
     Page,
+    PaymentPlan,
     Profile,
     TextEditorContent,
     Typeface,
 } from "@courselit/common-models";
 import { checkPermission, FetchBuilder } from "@courselit/utils";
 import { Constants, UIConstants } from "@courselit/common-models";
+import { createHash, randomInt } from "crypto";
 import { getProtocol } from "../lib/utils";
 const { permissions } = UIConstants;
 
@@ -180,8 +183,6 @@ export const moveMemberUp = (arr: any[], index: number) =>
 export const moveMemberDown = (arr: any[], index: number) =>
     swapMembers(arr, index, index + 1);
 
-import { createHash, randomInt } from "crypto";
-
 export function generateUniquePasscode() {
     return randomInt(100000, 999999);
 }
@@ -202,7 +203,10 @@ export function truncate(str: string, length: number) {
 }
 
 export function isTextEditorNonEmpty(content: TextEditorContent) {
-    return content.content && content.content[0]?.content;
+    return (
+        content?.content &&
+        (!!content.content[0]?.content || content.content.length > 1)
+    );
 }
 
 export function getNextStatusForCommunityMember(status: CommunityMemberStatus) {
@@ -213,4 +217,43 @@ export function getNextStatusForCommunityMember(status: CommunityMemberStatus) {
     ];
     const index = statusCycle.indexOf(status);
     return statusCycle[(index + 1) % statusCycle.length];
+}
+
+export function getNextStatusForCommunityReport(status: CommunityReportStatus) {
+    const statusCycle = Object.values(Constants.CommunityReportStatus);
+    const index = statusCycle.indexOf(status);
+    return statusCycle[(index + 1) % statusCycle.length];
+}
+
+export function getPlanPrice(plan: PaymentPlan): {
+    amount: number;
+    period: string;
+} {
+    if (!plan) {
+        return { amount: 0, period: "" };
+    }
+    switch (plan.type) {
+        case Constants.PaymentPlanType.FREE:
+            return { amount: 0, period: "" };
+        case Constants.PaymentPlanType.ONE_TIME:
+            return { amount: plan.oneTimeAmount || 0, period: "" };
+        case Constants.PaymentPlanType.SUBSCRIPTION:
+            if (plan.subscriptionYearlyAmount) {
+                return {
+                    amount: plan.subscriptionYearlyAmount,
+                    period: "/yr",
+                };
+            }
+            return {
+                amount: plan.subscriptionMonthlyAmount || 0,
+                period: "/mo",
+            };
+        case Constants.PaymentPlanType.EMI:
+            return {
+                amount: plan.emiAmount || 0,
+                period: "/mo",
+            };
+        default:
+            return { amount: 0, period: "" };
+    }
 }

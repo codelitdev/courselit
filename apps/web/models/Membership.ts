@@ -1,31 +1,13 @@
-import type { Membership, MembershipPayment } from "@courselit/common-models";
-import mongoose from "mongoose";
+import type { Membership } from "@courselit/common-models";
+import mongoose, { Document } from "mongoose";
 import { Constants } from "@courselit/common-models";
 import { generateUniqueId } from "@courselit/utils";
 
-const { MembershipEntityType, MembershipStatus, MembershipPaymentStatus } =
-    Constants;
+const { MembershipEntityType, MembershipStatus } = Constants;
 
-export interface InternalMembership extends Membership {
+export interface InternalMembership extends Membership, Document {
     domain: mongoose.Types.ObjectId;
 }
-
-const MembershipPaymentSchema = new mongoose.Schema<MembershipPayment>(
-    {
-        installmentNumber: { type: Number, required: true },
-        amount: { type: Number, required: true },
-        status: {
-            type: String,
-            enum: Object.values(MembershipPaymentStatus),
-            required: true,
-        },
-        paymentProcessor: { type: String, required: true },
-        paymentProcessorTransactionId: { type: String, required: true },
-    },
-    {
-        timestamps: true,
-    },
-);
 
 const MembershipSchema = new mongoose.Schema<InternalMembership>(
     {
@@ -37,7 +19,7 @@ const MembershipSchema = new mongoose.Schema<InternalMembership>(
             default: generateUniqueId,
         },
         userId: { type: String, required: true },
-        paymentPlanId: { type: String, required: true },
+        paymentPlanId: String,
         entityId: { type: String, required: true },
         entityType: {
             type: String,
@@ -49,9 +31,10 @@ const MembershipSchema = new mongoose.Schema<InternalMembership>(
             enum: Object.values(MembershipStatus),
             default: MembershipStatus.PENDING,
         },
-        paymentHistory: [MembershipPaymentSchema],
         joiningReason: { type: String },
         rejectionReason: { type: String },
+        subscriptionId: { type: String },
+        subscriptionMethod: { type: String },
     },
     {
         timestamps: true,
@@ -66,6 +49,11 @@ MembershipSchema.statics.paginatedFind = async function (filter, options) {
     const docs = await this.find(filter).skip(skip).limit(limit).exec();
     return docs;
 };
+
+MembershipSchema.index(
+    { domain: 1, userId: 1, entityId: 1, entityType: 1 },
+    { unique: true },
+);
 
 export default mongoose.models.Membership ||
     mongoose.model("Membership", MembershipSchema);

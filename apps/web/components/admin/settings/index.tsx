@@ -39,8 +39,6 @@ import {
     SITE_SETTINGS_RAZORPAY_KEY_TEXT,
     MEDIA_SELECTOR_UPLOAD_BTN_CAPTION,
     MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
-    SITE_SETTINGS_SECTION_COMMUNITIES,
-    NEW_COMMUNITY_BUTTON,
 } from "../../../ui-config/strings";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import { decode, encode } from "base-64";
@@ -68,10 +66,8 @@ import {
     Dialog2,
     PageBuilderPropertyHeader,
     Checkbox,
-    PaginatedTable,
 } from "@courselit/components-library";
 import { useRouter } from "next/navigation";
-import { SquareArrowOutUpRight } from "lucide-react";
 
 const {
     PAYMENT_METHOD_PAYPAL,
@@ -116,7 +112,6 @@ const Settings = (props: SettingsProps) => {
         SITE_MAILS_HEADER,
         SITE_CUSTOMISATIONS_SETTING_HEADER,
         SITE_APIKEYS_SETTING_HEADER,
-        SITE_SETTINGS_SECTION_COMMUNITIES,
     ].includes(props.selectedTab)
         ? props.selectedTab
         : SITE_SETTINGS_SECTION_GENERAL;
@@ -645,12 +640,6 @@ const Settings = (props: SettingsProps) => {
         SITE_CUSTOMISATIONS_SETTING_HEADER,
         SITE_APIKEYS_SETTING_HEADER,
     ];
-    const canManageCommunities = props.profile.permissions.includes(
-        UIConstants.permissions.manageCommunity,
-    );
-    if (canManageCommunities) {
-        items.push(SITE_SETTINGS_SECTION_COMMUNITIES);
-    }
 
     return (
         <div>
@@ -1106,115 +1095,6 @@ const Settings = (props: SettingsProps) => {
                     </div>
                 </Form>
                 {selectedTab === SITE_SETTINGS_SECTION_COMMUNITIES && ( */}
-                {canManageCommunities && (
-                    <div className="flex flex-col gap-4 pt-4">
-                        <div className="flex justify-between">
-                            <h2 className="text-lg font-semibold">
-                                Communities
-                            </h2>
-                            <Link
-                                href={`${props.prefix}/settings/community/new`}
-                            >
-                                <Button>{NEW_COMMUNITY_BUTTON}</Button>
-                            </Link>
-                            {/* <Button onClick={handleCreateCommunity}>
-                            New Community
-                        </Button> */}
-                        </div>
-                        <PaginatedTable
-                            page={communitiesPage}
-                            totalPages={Math.ceil(
-                                totalCommunities / communitiesResultsLimit,
-                            )}
-                            onPageChange={setCommunitiesPage}
-                        >
-                            <Table
-                                aria-label="Communities"
-                                className="mb-4 w-full"
-                            >
-                                <TableHead className="border-0 border-b border-slate-200">
-                                    <td>Name</td>
-                                    <td align="right">Actions</td>
-                                </TableHead>
-                                <TableBody>
-                                    {communities.map((community) => (
-                                        <TableRow key={community.communityId}>
-                                            <td className="py-4">
-                                                {community.name}
-                                            </td>
-                                            <td align="right">
-                                                <Link
-                                                    href={`${props.prefix}/community/${community.communityId}/settings`}
-                                                >
-                                                    <Button variant="soft">
-                                                        <SquareArrowOutUpRight
-                                                            width={16}
-                                                        />{" "}
-                                                        Settings
-                                                    </Button>
-                                                </Link>
-                                            </td>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </PaginatedTable>
-                        {/* <Pagination>
-                        <PaginationContent>
-                            <PaginationItem>
-                                <PaginationPrevious
-                                    onClick={() =>
-                                        setCommunitiesPage(communitiesPage - 1)
-                                    }
-                                    aria-disabled={communitiesPage === 1}
-                                    tabIndex={
-                                        communitiesPage === 1 ? -1 : undefined
-                                    }
-                                    className={
-                                        communitiesPage === 1
-                                            ? "pointer-events-none opacity-50"
-                                            : undefined
-                                    }
-                                />
-                            </PaginationItem>
-                            <PaginationItem>
-                                <PaginationLink>
-                                    {communitiesPage}
-                                </PaginationLink>
-                            </PaginationItem>
-                            <PaginationItem>
-                                <PaginationNext
-                                    onClick={() =>
-                                        setCommunitiesPage(communitiesPage + 1)
-                                    }
-                                    aria-disabled={
-                                        communitiesPage === totalCommunities ||
-                                        totalCommunities === 0
-                                    }
-                                    tabIndex={
-                                        communitiesPage === totalCommunities ||
-                                        totalCommunities === 0
-                                            ? -1
-                                            : undefined
-                                    }
-                                    className={
-                                        communitiesPage === totalCommunities ||
-                                        totalCommunities === 0
-                                            ? "pointer-events-none opacity-50"
-                                            : undefined
-                                    }
-                                />
-                            </PaginationItem>
-                            <PaginationItem>
-                                <PaginationLink className="pointer-events-none">
-                                    of {totalCommunities}
-                                </PaginationLink>
-                            </PaginationItem>
-                        </PaginationContent>
-                    </Pagination> */}
-                    </div>
-                )}
-                {/* )} */}
             </Tabbs>
         </div>
     );

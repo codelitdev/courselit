@@ -145,7 +145,7 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
             }
             `;
         const fetch = new FetchBuilder()
-            .setUrl(`${address}/api/graph`)
+            .setUrl(`${address.backend}/api/graph`)
             .setPayload(query)
             .setIsGraphQLEndpoint(true)
             .build();
@@ -204,6 +204,7 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
                             type="button"
                             onClick={handleRequestOTP}
                             className="w-full"
+                            disabled={loading}
                         >
                             Continue
                         </Button>
@@ -235,6 +236,7 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
                             type="button"
                             onClick={handleVerifyOTP}
                             className="w-full"
+                            disabled={loading}
                         >
                             Verify OTP
                         </Button>

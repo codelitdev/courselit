@@ -108,11 +108,17 @@ export const responses = {
     cannot_invite_to_unpublished_product:
         "Cannot invite customers to an unpublished product",
     rejection_reason_missing: "Rejection reason is missing",
+    joining_reason_missing: "Joining reason required",
     invalid_category: "Invalid category",
     community_exists: "A community with the same name already exists",
     payment_plan_required: "Add a payment plan before enabling the community",
     community_requires_payment: "Community requires payment",
     duplicate_payment_plan: "A payment plan with the same type already exists",
+    default_payment_plan_cannot_be_archived:
+        "Default payment plan cannot be archived",
+    default_payment_plan_required:
+        "Mark a payment plan as default before enabling the community",
+    community_content_already_reported: "Content already reported",
 
     // api responses
     digital_download_no_files:

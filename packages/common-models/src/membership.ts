@@ -1,33 +1,21 @@
 import { Constants } from ".";
 
-const { MembershipEntityType, MembershipStatus, MembershipPaymentStatus } =
-    Constants;
+const { MembershipEntityType, MembershipStatus } = Constants;
 
 export type MembershipEntityType =
     (typeof MembershipEntityType)[keyof typeof MembershipEntityType];
 export type MembershipStatus =
     (typeof MembershipStatus)[keyof typeof MembershipStatus];
-export type MembershipPaymentStatus =
-    (typeof MembershipPaymentStatus)[keyof typeof MembershipPaymentStatus];
-
-export interface MembershipPayment {
-    installmentNumber: number;
-    amount: number;
-    status: MembershipPaymentStatus;
-    paymentProcessor: string;
-    paymentProcessorTransactionId: string;
-    createdAt?: Date;
-    updatedAt?: Date;
-}
 
 export interface Membership {
     membershipId: string;
     userId: string;
-    paymentPlanId: string;
     entityId: string;
     entityType: MembershipEntityType;
     status: MembershipStatus;
-    paymentHistory: MembershipPayment[];
+    paymentPlanId?: string;
+    subscriptionId?: string;
+    subscriptionMethod?: string;
     joiningReason?: string;
     rejectionReason?: string;
     createdAt?: Date;

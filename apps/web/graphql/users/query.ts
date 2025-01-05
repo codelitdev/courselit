@@ -14,6 +14,7 @@ import {
     getTagsWithDetails,
     getTags,
     inviteCustomer,
+    getUserContent,
 } from "./logic";
 import GQLContext from "../../models/GQLContext";
 
@@ -46,7 +47,6 @@ const queries = {
         resolve: (_: any, { email, tags, id }: any, context: GQLContext) =>
             inviteCustomer(email, tags, id, context),
     },
-
     getUsersCount: {
         type: new GraphQLNonNull(GraphQLInt),
         args: {
@@ -66,6 +66,19 @@ const queries = {
     tagsWithDetails: {
         type: new GraphQLList(types.tagWithDetails),
         resolve: (_: any, __: any, ctx: any) => getTagsWithDetails(ctx),
+    },
+    getUserContent: {
+        type: new GraphQLList(types.userContent),
+        args: {
+            userId: {
+                type: GraphQLString,
+            },
+        },
+        resolve: (
+            _: any,
+            { userId }: { userId?: string },
+            context: GQLContext,
+        ) => getUserContent(context, userId),
     },
 };
 

@@ -1692,6 +1692,7 @@ __metadata:
     typescript: ^5.1.6
     typescript-eslint: ^7.4.0
   peerDependencies:
+    lucide-react: "*"
     next: "*"
     react: "*"
     react-dom: "*"
@@ -1880,7 +1881,7 @@ __metadata:
     "@radix-ui/react-alert-dialog": ^1.1.2
     "@radix-ui/react-avatar": ^1.1.1
     "@radix-ui/react-collapsible": ^1.1.2
-    "@radix-ui/react-dialog": ^1.1.2
+    "@radix-ui/react-dialog": ^1.1.4
     "@radix-ui/react-dropdown-menu": ^2.1.2
     "@radix-ui/react-label": ^2.1.1
     "@radix-ui/react-popover": ^1.1.2
@@ -1892,7 +1893,7 @@ __metadata:
     "@radix-ui/react-switch": ^1.1.1
     "@radix-ui/react-tooltip": ^1.1.6
     "@radix-ui/react-visually-hidden": ^1.1.0
-    "@stripe/stripe-js": ^1.29.0
+    "@stripe/stripe-js": ^5.4.0
     "@types/base-64": ^1.0.0
     "@types/bcryptjs": ^2.4.2
     "@types/cookie": ^0.4.1
@@ -1932,7 +1933,7 @@ __metadata:
     remirror: ^3.0.1
     sharp: ^0.33.2
     slugify: ^1.6.5
-    stripe: ^8.219.0
+    stripe: ^17.5.0
     tailwind-config: "workspace:^"
     tailwind-merge: ^2.5.4
     tailwindcss: ^3.4.1
@@ -3966,7 +3967,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@radix-ui/react-dialog@npm:1.1.2, @radix-ui/react-dialog@npm:^1.0.5, @radix-ui/react-dialog@npm:^1.1.2":
+"@radix-ui/react-dialog@npm:1.1.2, @radix-ui/react-dialog@npm:^1.0.5":
   version: 1.1.2
   resolution: "@radix-ui/react-dialog@npm:1.1.2"
   dependencies:
@@ -3995,6 +3996,38 @@ __metadata:
     "@types/react-dom":
       optional: true
   checksum: abf379c021fabad01a4e5d4e0253a73d7cc9aa4947fb63fbdaf9f56d1a7ee82c61a028f09953a1c734ae4f52733f4dcbd2b404e7eada13fc4f74f690aa65395b
+  languageName: node
+  linkType: hard
+
+"@radix-ui/react-dialog@npm:^1.1.4":
+  version: 1.1.4
+  resolution: "@radix-ui/react-dialog@npm:1.1.4"
+  dependencies:
+    "@radix-ui/primitive": 1.1.1
+    "@radix-ui/react-compose-refs": 1.1.1
+    "@radix-ui/react-context": 1.1.1
+    "@radix-ui/react-dismissable-layer": 1.1.3
+    "@radix-ui/react-focus-guards": 1.1.1
+    "@radix-ui/react-focus-scope": 1.1.1
+    "@radix-ui/react-id": 1.1.0
+    "@radix-ui/react-portal": 1.1.3
+    "@radix-ui/react-presence": 1.1.2
+    "@radix-ui/react-primitive": 2.0.1
+    "@radix-ui/react-slot": 1.1.1
+    "@radix-ui/react-use-controllable-state": 1.1.0
+    aria-hidden: ^1.1.1
+    react-remove-scroll: ^2.6.1
+  peerDependencies:
+    "@types/react": "*"
+    "@types/react-dom": "*"
+    react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+    "@types/react-dom":
+      optional: true
+  checksum: 695b35c7283adfe2be4ad88d30f0ad08be099a55dfd54e49ede61074846255b426eb57734509b5fc6f349439a051b48e44e58b542c2605383aa721a1b2bd7861
   languageName: node
   linkType: hard
 
@@ -6963,10 +6996,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@stripe/stripe-js@npm:^1.29.0":
-  version: 1.54.2
-  resolution: "@stripe/stripe-js@npm:1.54.2"
-  checksum: d5c4a71383c33da3f3badd2ac03073a90250fc0e04b2ecd571f73f34db2266c9fdfc64947410845d58dce074547424bd133f8f24bf86de69dfeb73d140c0bdc8
+"@stripe/stripe-js@npm:^5.4.0":
+  version: 5.4.0
+  resolution: "@stripe/stripe-js@npm:5.4.0"
+  checksum: d92f27e56245189a718dee88016587c8be9a1eff5b66bcec287350cef9fb854b52a6e64e51057711adb68c22115cb0723dcc424063f1841b499779eb09154b94
   languageName: node
   linkType: hard
 
@@ -16171,12 +16204,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"qs@npm:6.13.0, qs@npm:^6.10.3":
+"qs@npm:6.13.0":
   version: 6.13.0
   resolution: "qs@npm:6.13.0"
   dependencies:
     side-channel: ^1.0.6
   checksum: e9404dc0fc2849245107108ce9ec2766cde3be1b271de0bf1021d049dc5b98d1a2901e67b431ac5509f865420a7ed80b7acb3980099fe1c118a1c5d2e1432ad8
+  languageName: node
+  linkType: hard
+
+"qs@npm:^6.11.0":
+  version: 6.13.1
+  resolution: "qs@npm:6.13.1"
+  dependencies:
+    side-channel: ^1.0.6
+  checksum: 86c5059146955fab76624e95771031541328c171b1d63d48a7ac3b1fdffe262faf8bc5fcadc1684e6f3da3ec87a8dedc8c0009792aceb20c5e94dc34cf468bb9
   languageName: node
   linkType: hard
 
@@ -17897,13 +17939,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"stripe@npm:^8.219.0":
-  version: 8.222.0
-  resolution: "stripe@npm:8.222.0"
+"stripe@npm:^17.5.0":
+  version: 17.5.0
+  resolution: "stripe@npm:17.5.0"
   dependencies:
     "@types/node": ">=8.1.0"
-    qs: ^6.10.3
-  checksum: ac9a5b569abf274a9f10cf5bad09d6cf47d457dad21191e8fc896c356608e75337b2e39b6e39526579d39f5b29c74a34e61c55e706def2498a079f7b4dbaea17
+    qs: ^6.11.0
+  checksum: 3f4298c838f7f67189a2ed2a98cf237fb521f81e90bbe5295c7862ab7029741a083f6e222af1aacc9a5fb2628b5a154855f25ac5341e909032bdf942a882cc45
   languageName: node
   linkType: hard
 

@@ -40,7 +40,7 @@ import {
     COMMUNITY_MEMBERSHIP_LIST_SUBHEADER,
     TOAST_TITLE_ERROR,
 } from "@ui-config/strings";
-import { AddressContext } from "@components/contexts";
+import { AddressContext, ProfileContext } from "@components/contexts";
 import { capitalize, FetchBuilder } from "@courselit/utils";
 import {
     CommunityMemberStatus,
@@ -60,45 +60,6 @@ interface MembershipRequest {
     rejectionReason?: string;
 }
 
-const mockRequests: MembershipRequest[] = [
-    {
-        id: "1",
-        name: "John Doe",
-        email: "john@example.com",
-        avatar: "/placeholder.svg",
-        reason: "I want to join the community to share my experiences.",
-        status: "pending",
-    },
-    {
-        id: "2",
-        name: "Jane Smith",
-        email: "jane@example.com",
-        avatar: "/placeholder.svg",
-        reason: "I'm interested in learning from others in this field.",
-        status: "approved",
-    },
-    {
-        id: "3",
-        name: "Bob Johnson",
-        email: "bob@example.com",
-        avatar: "/placeholder.svg",
-        reason: "I have valuable insights to contribute to discussions.",
-        status: "rejected",
-        rejectionReason: "Does not meet community guidelines.",
-    },
-    // Add more mock data to test pagination
-    ...Array.from({ length: 20 }, (_, i) => ({
-        id: `${i + 4}`,
-        name: `User ${i + 4}`,
-        email: `user${i + 4}@example.com`,
-        avatar: "/placeholder.svg",
-        reason: `Reason ${i + 4}`,
-        status: ["pending", "approved", "rejected"][
-            Math.floor(Math.random() * 3)
-        ] as MembershipRequest["status"],
-    })),
-];
-
 const itemsPerPage = 10;
 
 type Member = Pick<
@@ -109,19 +70,19 @@ type Member = Pick<
 };
 
 export function MembershipList({ id }: { id: string }) {
-    const [requests, setRequests] = useState<MembershipRequest[]>(mockRequests);
+    const [requests, setRequests] = useState<MembershipRequest[]>([]);
     const [filter, setFilter] = useState<"all" | CommunityMemberStatus>("all");
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedRequest, setSelectedMember] = useState<Member | null>(null);
     const [rejectionReason, setRejectionReason] = useState("");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [currentPage, setCurrentPage] = useState(1);
     const [page, setPage] = useState(1);
     const [totalMembers, setTotalMembers] = useState(0);
     const [members, setMembers] = useState<Member[]>([]);
     const address = useContext(AddressContext);
     const { toast } = useToast();
     const [isUpdating, setIsUpdating] = useState(false);
+    const { profile } = useContext(ProfileContext);
 
     const fetch = new FetchBuilder()
         .setUrl(`${address.backend}/api/graph`)
@@ -253,24 +214,24 @@ export function MembershipList({ id }: { id: string }) {
         }
     };
 
-    const updateRequestStatus = (
-        id: string,
-        newStatus: MembershipRequest["status"],
-        reason?: string,
-    ) => {
-        setRequests(
-            requests.map((request) =>
-                request.id === id
-                    ? {
-                          ...request,
-                          status: newStatus,
-                          rejectionReason:
-                              newStatus === "rejected" ? reason : undefined,
-                      }
-                    : request,
-            ),
-        );
-    };
+    // const updateRequestStatus = (
+    //     id: string,
+    //     newStatus: MembershipRequest["status"],
+    //     reason?: string,
+    // ) => {
+    //     setRequests(
+    //         requests.map((request) =>
+    //             request.id === id
+    //                 ? {
+    //                       ...request,
+    //                       status: newStatus,
+    //                       rejectionReason:
+    //                           newStatus === "rejected" ? reason : undefined,
+    //                   }
+    //                 : request,
+    //         ),
+    //     );
+    // };
 
     const handleDialogConfirm = async () => {
         if (selectedRequest && rejectionReason) {
@@ -354,10 +315,9 @@ export function MembershipList({ id }: { id: string }) {
                                                         <AvatarImage
                                                             src={
                                                                 member.user
-                                                                    .avatar &&
-                                                                member.user
                                                                     .avatar
-                                                                    .thumbnail
+                                                                    ?.thumbnail ||
+                                                                "/courselit_backdrop_square.webp"
                                                             }
                                                             alt={
                                                                 member.user
@@ -376,7 +336,7 @@ export function MembershipList({ id }: { id: string }) {
                                                         </AvatarFallback>
                                                     </Avatar>
                                                     <div className="flex flex-col">
-                                                        <span>
+                                                        <span className="font-semibold">
                                                             {member.user.name ||
                                                                 member.user
                                                                     .email}
@@ -417,17 +377,22 @@ export function MembershipList({ id }: { id: string }) {
                                             {member.rejectionReason || "-"}
                                         </TableCell>
                                         <TableCell>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() =>
-                                                    handleStatusChange(member)
-                                                }
-                                                disabled={isUpdating}
-                                            >
-                                                <RotateCcw className="mr-2 h-3 w-3" />{" "}
-                                                Change
-                                            </Button>
+                                            {member.user.userId !==
+                                                profile.userId && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        handleStatusChange(
+                                                            member,
+                                                        )
+                                                    }
+                                                    disabled={isUpdating}
+                                                >
+                                                    <RotateCcw className="mr-2 h-3 w-3" />{" "}
+                                                    Change
+                                                </Button>
+                                            )}
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -435,11 +400,6 @@ export function MembershipList({ id }: { id: string }) {
                         </Table>
                     </PaginatedTable>
                 </div>
-                {/* <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={setCurrentPage}
-                /> */}
             </div>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent>

@@ -44,6 +44,7 @@ const PageSchema = new mongoose.Schema<Page>(
         draftDescription: String,
         draftSocialImage: MediaSchema,
         draftRobotsAllowed: Boolean,
+        deleted: { type: Boolean, default: false },
     },
     {
         timestamps: true,

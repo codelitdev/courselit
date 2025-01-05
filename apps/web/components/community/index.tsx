@@ -16,8 +16,8 @@ import {
     Pin,
     MoreVertical,
     Trash,
+    FlagTriangleRight,
 } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
     Dialog,
     DialogContent,
@@ -28,26 +28,22 @@ import {
 } from "@/components/ui/dialog";
 import { Comment as CommentType } from "./mock-data";
 import { useRouter } from "next/navigation";
-import { capitalize, FetchBuilder } from "@courselit/utils";
-import { AddressContext } from "@components/contexts";
-import {
-    PaginatedTable,
-    TextEditorEmptyDoc,
-    TextRenderer,
-    useToast,
-} from "@courselit/components-library";
+import { capitalize, checkPermission, FetchBuilder } from "@courselit/utils";
+import { AddressContext, ProfileContext } from "@components/contexts";
+import { PaginatedTable, useToast } from "@courselit/components-library";
 import {
     CommunityMedia,
     CommunityMemberStatus,
     CommunityPost,
     Constants,
+    UIConstants,
 } from "@courselit/common-models";
 import LoadingSkeleton from "./loading-skeleton";
-import { formattedLocaleDate, isTextEditorNonEmpty } from "@ui-lib/utils";
+import { formattedLocaleDate } from "@ui-lib/utils";
 import { MediaItem } from "./media-item";
 import Image from "next/image";
 import MembershipStatus from "./membership-status";
-import { TOAST_TITLE_ERROR } from "@ui-config/strings";
+import { TOAST_TITLE_ERROR, TOAST_TITLE_SUCCESS } from "@ui-config/strings";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -58,6 +54,9 @@ import CommentSection from "./comment-section";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useCommunity } from "@components/hooks/useCommunity";
 import NotFound from "@components/admin/not-found";
+import { CommunityInfo } from "./info";
+import Banner from "./banner";
+import { Textarea } from "@/components/ui/textarea";
 
 const itemsPerPage = 10;
 
@@ -92,8 +91,14 @@ export function CommunityForum({
     );
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
     const [comments, setComments] = useState<CommentType[]>([]);
-    const { community, loaded } = useCommunity(id);
+    const { community, loaded, setCommunity } = useCommunity(id);
     const [refreshCommunityStatus, setRefreshCommunityStatus] = useState(0);
+    const { profile } = useContext(ProfileContext);
+    const [showReportConfirmation, setShowReportConfirmation] = useState(false);
+    const [reportReason, setReportReason] = useState("");
+    const [postToReport, setPostToReport] = useState<CommunityPost | null>(
+        null,
+    );
 
     const loadTotalPosts = useCallback(async () => {
         const query = `
@@ -152,7 +157,7 @@ export function CommunityForum({
                 title: "Error",
                 description: err.message,
             });
-        } 
+        }
     }, [address.backend, id, toast]);
 
     const loadPosts = useCallback(async () => {
@@ -707,13 +712,186 @@ export function CommunityForum({
         setShowDeleteConfirmation(true);
     };
 
-    const confirmDeletePost = () => {
+    const confirmDeletePost = async () => {
         if (postToDelete) {
-            setPosts((prevPosts) =>
-                prevPosts.filter((post) => post.postId !== postToDelete.postId),
-            );
-            setShowDeleteConfirmation(false);
-            setPostToDelete(null);
+            const query = `
+                mutation ($communityId: String!, $postId: String!) {
+                    post: deleteCommunityPost(communityId: $communityId, postId: $postId) {
+                        communityId
+                        postId
+                    }
+                }
+            `;
+
+            const fetch = new FetchBuilder()
+                .setUrl(`${address.backend}/api/graph`)
+                .setPayload({
+                    query,
+                    variables: {
+                        communityId: id,
+                        postId: postToDelete.postId,
+                    },
+                })
+                .setIsGraphQLEndpoint(true)
+                .build();
+
+            try {
+                const response = await fetch.exec();
+                if (!response.post) {
+                    toast({
+                        title: "Error",
+                        description: "Failed to delete post",
+                        variant: "destructive",
+                    });
+                } else {
+                    setPosts((prevPosts) =>
+                        prevPosts.filter(
+                            (post) => post.postId !== postToDelete.postId,
+                        ),
+                    );
+                    setShowDeleteConfirmation(false);
+                    setPostToDelete(null);
+                }
+            } catch (err: any) {
+                toast({
+                    title: "Error",
+                    description: err.message,
+                    variant: "destructive",
+                });
+            }
+        }
+    };
+
+    const updateBanner = async (json: Record<string, unknown>) => {
+        const query = `
+            mutation UpdateCommunity(
+                $id: String!
+                $banner: String 
+            ) {
+                community: updateCommunity(
+                    id: $id
+                    banner: $banner
+                ) {
+                    communityId
+                    name
+                    description
+                    enabled
+                    banner
+                    categories
+                    autoAcceptMembers
+                    joiningReasonText
+                    pageId
+                    paymentPlans {
+                        planId
+                        name
+                        type
+                        oneTimeAmount
+                        emiAmount
+                        emiTotalInstallments
+                        subscriptionMonthlyAmount
+                        subscriptionYearlyAmount
+                    }
+                    defaultPaymentPlan
+                    featuredImage {
+                        mediaId
+                        originalFileName
+                        mimeType
+                        size
+                        access
+                        file
+                        thumbnail
+                        caption
+                    }
+                    membersCount
+                }
+            }
+        `;
+        try {
+            const fetchRequest = new FetchBuilder()
+                .setUrl(`${address.backend}/api/graph`)
+                .setPayload({
+                    query,
+                    variables: {
+                        id,
+                        banner: JSON.stringify(json),
+                    },
+                })
+                .setIsGraphQLEndpoint(true)
+                .build();
+            const response = await fetchRequest.exec();
+            if (response.community) {
+                setCommunity(response.community);
+            } else {
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: response.error,
+                    variant: "destructive",
+                });
+            }
+        } catch (error) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: error.message,
+                variant: "destructive",
+            });
+        }
+    };
+
+    const handleReportPost = (post: CommunityPost) => {
+        setPostToReport(post);
+        setShowReportConfirmation(true);
+    };
+
+    const confirmReportPost = async () => {
+        if (postToReport && reportReason.trim()) {
+            const query = `
+                mutation ($communityId: String!, $contentId: String!, $type: CommunityReportContentType!, $reason: String!) {
+                    report: reportCommunityContent(communityId: $communityId, contentId: $contentId, type: $type, reason: $reason) {
+                        communityId
+                        reportId
+                        content {
+                            id
+                            content
+                        }
+                        type
+                        reason
+                        status
+                        rejectionReason
+                        createdAt
+                        updatedAt
+                    }
+                }
+            `;
+            const fetch = new FetchBuilder()
+                .setUrl(`${address.backend}/api/graph`)
+                .setPayload({
+                    query,
+                    variables: {
+                        communityId: id,
+                        contentId: postToReport.postId,
+                        type: Constants.CommunityReportType.POST.toUpperCase(),
+                        reason: reportReason,
+                    },
+                })
+                .setIsGraphQLEndpoint(true)
+                .build();
+
+            try {
+                await fetch.exec();
+                toast({
+                    title: "Reported",
+                    description: "Post has been reported",
+                });
+                setShowReportConfirmation(false);
+                setPostToReport(null);
+                setReportReason("");
+            } catch (err: any) {
+                toast({
+                    title: "Error",
+                    description: err.message,
+                    variant: "destructive",
+                });
+            }
         }
     };
 
@@ -731,290 +909,474 @@ export function CommunityForum({
         );
     }
 
+    const handleJoin = async (joiningReason?: string) => {
+        const query = `
+            mutation JoinCommunity(
+                $id: String!
+                $joiningReason: String!
+            ) {
+                communityMembershipStatus: joinCommunity(
+                    id: $id
+                    joiningReason: $joiningReason
+                ) {
+                    status,
+                    rejectionReason
+                } 
+            }
+        `;
+        try {
+            const fetchRequest = new FetchBuilder()
+                .setUrl(`${address.backend}/api/graph`)
+                .setPayload({
+                    query,
+                    variables: {
+                        id,
+                        joiningReason,
+                    },
+                })
+                .setIsGraphQLEndpoint(true)
+                .build();
+            const response = await fetchRequest.exec();
+            setMemberStatus(response.communityMembershipStatus);
+            setRefreshCommunityStatus((prev) => prev + 1);
+            if (response.communityMembershipStatus) {
+                toast({
+                    title: TOAST_TITLE_SUCCESS,
+                    description: `Your request to join has been sent.`,
+                });
+            } else {
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: response.error,
+                });
+            }
+        } catch (error) {
+            console.error("Error updating community:", error);
+        }
+    };
+
+    const handleLeave = async () => {
+        const query = `
+            mutation LeaveCommunity(
+                $id: String!
+            ) {
+                communityMembershipStatus: leaveCommunity(
+                    id: $id
+                ) {
+                    status,
+                } 
+            }
+        `;
+        try {
+            const fetchRequest = new FetchBuilder()
+                .setUrl(`${address.backend}/api/graph`)
+                .setPayload({
+                    query,
+                    variables: {
+                        id,
+                    },
+                })
+                .setIsGraphQLEndpoint(true)
+                .build();
+            const response = await fetchRequest.exec();
+            if (response.communityMembershipStatus) {
+                setMemberStatus(undefined);
+                toast({
+                    title: TOAST_TITLE_SUCCESS,
+                    description: `You have left the community.`,
+                });
+            } else {
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: response.error,
+                });
+            }
+        } catch (error) {
+            console.error("Error updating community:", error);
+        }
+    };
+
     return (
-        <div className="max-w-3xl mx-auto p-4 space-y-6 w-full">
-            {memberStatus?.status.toLowerCase() ===
-            Constants.MembershipStatus.ACTIVE ? (
-                <CreatePostDialog
-                    categories={categories.filter((x) => x !== "All")}
-                    onPostCreated={createPost}
-                />
-            ) : (
-                <MembershipStatus
-                    id={id!}
-                    status={memberStatus?.status}
-                    rejectionReason={memberStatus?.rejectionReason}
-                    joiningReasonText={community?.joiningReasonText}
-                    key={refreshCommunityStatus}
-                />
+        <div className="container mx-auto p-0">
+            {!community?.enabled && (
+                <div className="bg-red-400 p-2 mb-4 text-sm text-white rounded-md">
+                    This community is not enabled. It is not visible to your
+                    audience.
+                </div>
             )}
-
-            <div className="flex gap-2 flex-wrap">
-                {visibleCategories.map((category, index) => (
-                    <Button
-                        key={category}
-                        variant={
-                            category === activeCategory ? "primary" : "outline"
-                        }
-                        size="sm"
-                        className={`rounded-full ${category === activeCategory ? "bg-gray-500 text-white" : ""}`}
-                        onClick={() => handleCategoryClick(category)}
-                    >
-                        {category}
-                    </Button>
-                ))}
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-full"
-                    onClick={toggleCategories}
-                >
-                    {showAllCategories ? "Less" : "More..."}
-                </Button>
-            </div>
-
-            {community?.banner && isTextEditorNonEmpty(community.banner) && (
-                <Alert>
-                    <AlertDescription>
-                        <TextRenderer
-                            json={community.banner || TextEditorEmptyDoc}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <div className="lg:col-span-2 space-y-6">
+                    {profile.name &&
+                    memberStatus?.status.toLowerCase() ===
+                        Constants.MembershipStatus.ACTIVE ? (
+                        <CreatePostDialog
+                            categories={categories.filter((x) => x !== "All")}
+                            onPostCreated={createPost}
                         />
-                    </AlertDescription>
-                </Alert>
-            )}
+                    ) : (
+                        <MembershipStatus
+                            id={id!}
+                            status={memberStatus?.status}
+                            rejectionReason={memberStatus?.rejectionReason}
+                            joiningReasonText={community?.joiningReasonText}
+                            key={refreshCommunityStatus}
+                            paymentPlan={community?.paymentPlans.find(
+                                (plan) =>
+                                    plan.planId ===
+                                    community?.defaultPaymentPlan,
+                            )}
+                        />
+                    )}
 
-            <PaginatedTable
-                page={page}
-                totalPages={Math.ceil(totalPosts / itemsPerPage)}
-                onPageChange={setPage}
-            >
-                <div className="flex flex-col gap-4 mb-4">
-                    {posts.length > 0 ? (
-                        posts.map((post) => (
-                            <Dialog key={post.postId}>
-                                <DialogTrigger asChild>
-                                    <Card className="cursor-pointer hover:bg-accent/50 transition-colors">
-                                        <CardHeader className="flex flex-row items-start space-y-0 gap-4">
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <Avatar className="h-10 w-10 flex-shrink-0">
-                                                        <AvatarImage
-                                                            src={
-                                                                post.user
-                                                                    .avatar &&
-                                                                post.user.avatar
-                                                                    .thumbnail
-                                                            }
-                                                            alt={`${post.user.name}'s avatar`}
-                                                        />
-                                                        <AvatarFallback>
-                                                            {post.user.name &&
-                                                                post.user.name
-                                                                    .split(" ")
-                                                                    .map(
-                                                                        (n) =>
-                                                                            n[0],
-                                                                    )
-                                                                    .join("")}
-                                                        </AvatarFallback>
-                                                    </Avatar>
-                                                    <div className="min-w-0 flex-1">
-                                                        <div className="truncate text-sm">
-                                                            {post.user.name ||
-                                                                post.user.email}
-                                                        </div>
-                                                        <div className="text-xs text-muted-foreground">
-                                                            {formattedLocaleDate(
-                                                                post.updatedAt,
-                                                            )}{" "}
-                                                            •{" "}
-                                                            {capitalize(
-                                                                post.category,
-                                                            )}
+                    <div className="flex gap-2 flex-wrap">
+                        {visibleCategories.map((category, index) => (
+                            <Button
+                                key={category}
+                                variant={
+                                    category === activeCategory
+                                        ? "primary"
+                                        : "outline"
+                                }
+                                size="sm"
+                                className={`rounded-full ${category === activeCategory ? "bg-gray-500 text-white" : ""}`}
+                                onClick={() => handleCategoryClick(category)}
+                            >
+                                {category}
+                            </Button>
+                        ))}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-full"
+                            onClick={toggleCategories}
+                        >
+                            {showAllCategories ? "Less" : "More..."}
+                        </Button>
+                    </div>
+
+                    <Banner
+                        canEdit={checkPermission(profile.permissions, [
+                            UIConstants.permissions.manageCommunity,
+                        ])}
+                        initialBannerText={community?.banner}
+                        onSaveBanner={updateBanner}
+                    />
+
+                    <PaginatedTable
+                        page={page}
+                        totalPages={Math.ceil(totalPosts / itemsPerPage)}
+                        onPageChange={setPage}
+                    >
+                        <div className="flex flex-col gap-4 mb-4">
+                            {posts.length > 0 ? (
+                                posts.map((post) => (
+                                    <Dialog key={post.postId}>
+                                        <DialogTrigger asChild>
+                                            <Card className="cursor-pointer hover:bg-accent/50 transition-colors">
+                                                <CardHeader className="flex flex-row items-start space-y-0 gap-4">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <Avatar className="h-10 w-10 flex-shrink-0">
+                                                                <AvatarImage
+                                                                    src={
+                                                                        post
+                                                                            .user
+                                                                            .avatar
+                                                                            ?.thumbnail ||
+                                                                        "/courselit_backdrop_square.webp"
+                                                                    }
+                                                                    alt={`${post.user.name}'s avatar`}
+                                                                />
+                                                                <AvatarFallback>
+                                                                    {post.user
+                                                                        .name &&
+                                                                        post.user.name
+                                                                            .split(
+                                                                                " ",
+                                                                            )
+                                                                            .map(
+                                                                                (
+                                                                                    n,
+                                                                                ) =>
+                                                                                    n[0],
+                                                                            )
+                                                                            .join(
+                                                                                "",
+                                                                            )}
+                                                                </AvatarFallback>
+                                                            </Avatar>
+                                                            <div className="min-w-0 flex-1">
+                                                                <div className="truncate text-sm">
+                                                                    {post.user
+                                                                        .name ||
+                                                                        post
+                                                                            .user
+                                                                            .email}
+                                                                </div>
+                                                                <div className="text-xs text-muted-foreground">
+                                                                    {formattedLocaleDate(
+                                                                        post.updatedAt,
+                                                                    )}{" "}
+                                                                    •{" "}
+                                                                    {capitalize(
+                                                                        post.category,
+                                                                    )}
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
+                                                    {checkPermission(
+                                                        profile.permissions,
+                                                        [
+                                                            UIConstants
+                                                                .permissions
+                                                                .manageCommunity,
+                                                        ],
+                                                    ) && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className={`flex-shrink-0 rounded-full ${post.pinned ? "bg-accent" : ""}`}
+                                                            onClick={(e) =>
+                                                                togglePin(
+                                                                    post.postId,
+                                                                    e,
+                                                                )
+                                                            }
+                                                        >
+                                                            <Pin className="h-4 w-4" />
+                                                            <span className="sr-only">
+                                                                Pin post
+                                                            </span>
+                                                        </Button>
+                                                    )}
+                                                </CardHeader>
+                                                <CardContent>
+                                                    <p className="text-base mb-4 font-semibold line-clamp-3">
+                                                        {post.title}
+                                                    </p>
+                                                    <p className="text-sm mb-4 line-clamp-3">
+                                                        {post.content}
+                                                    </p>
+                                                    {post.media && (
+                                                        <div className="flex gap-2 overflow-x-auto">
+                                                            {post.media.map(
+                                                                (media) => (
+                                                                    <div
+                                                                        className="flex-shrink-0"
+                                                                        key={
+                                                                            media.title
+                                                                        }
+                                                                    >
+                                                                        {renderMediaPreview(
+                                                                            media,
+                                                                        )}
+                                                                    </div>
+                                                                ),
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </CardContent>
+                                                <CardFooter>
+                                                    <div className="flex items-center gap-4">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className={`text-muted-foreground ${post.hasLiked ? "bg-accent" : ""}`}
+                                                            onClick={(e) =>
+                                                                handleLike(
+                                                                    post.postId,
+                                                                    e,
+                                                                )
+                                                            }
+                                                        >
+                                                            <ThumbsUp className="h-4 w-4 mr-2" />
+                                                            {post.likesCount}
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="text-muted-foreground"
+                                                        >
+                                                            <MessageSquare className="h-4 w-4 mr-2" />
+                                                            {post.commentsCount}
+                                                        </Button>
+                                                    </div>
+                                                </CardFooter>
+                                            </Card>
+                                        </DialogTrigger>
+                                        <DialogContent
+                                            className="sm:max-w-[600px] w-full overflow-y-auto max-h-[calc(100vh-4rem)] my-8"
+                                            aria-describedby={undefined}
+                                        >
+                                            <VisuallyHidden>
+                                                <DialogTitle>
+                                                    Post&apos; content
+                                                </DialogTitle>
+                                            </VisuallyHidden>
+                                            <div className="grid gap-4">
+                                                <div className="flex items-center gap-2 justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <Avatar className="h-10 w-10">
+                                                            <AvatarImage
+                                                                src={
+                                                                    post.user
+                                                                        .avatar
+                                                                        ?.thumbnail ||
+                                                                    "/courselit_backdrop_square.webp"
+                                                                }
+                                                                alt={`${post.user.name}'s avatar`}
+                                                            />
+                                                            <AvatarFallback>
+                                                                {post.user
+                                                                    .name &&
+                                                                    post.user.name
+                                                                        .split(
+                                                                            " ",
+                                                                        )
+                                                                        .map(
+                                                                            (
+                                                                                n,
+                                                                            ) =>
+                                                                                n[0],
+                                                                        )
+                                                                        .join(
+                                                                            "",
+                                                                        )}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                        <div>
+                                                            <div className="font-semibold">
+                                                                {post.user
+                                                                    .name ||
+                                                                    post.user
+                                                                        .email}
+                                                            </div>
+                                                            <div className="text-sm text-muted-foreground">
+                                                                {formattedLocaleDate(
+                                                                    post.updatedAt,
+                                                                )}{" "}
+                                                                •{" "}
+                                                                {post.category}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger
+                                                            asChild
+                                                        >
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-8 w-8 p-0"
+                                                            >
+                                                                <span className="sr-only">
+                                                                    Open menu
+                                                                </span>
+                                                                <MoreVertical className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            {checkPermission(
+                                                                profile.permissions,
+                                                                [
+                                                                    UIConstants
+                                                                        .permissions
+                                                                        .manageCommunity,
+                                                                ],
+                                                            ) && (
+                                                                <DropdownMenuItem
+                                                                    onClick={() =>
+                                                                        togglePin(
+                                                                            post.postId,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <Pin className="h-4 w-4" />
+                                                                    {post.pinned
+                                                                        ? "Unpin"
+                                                                        : "Pin"}
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                            {profile.userId !==
+                                                                post.user
+                                                                    .userId && (
+                                                                <DropdownMenuItem
+                                                                    onClick={() =>
+                                                                        handleReportPost(
+                                                                            post,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <FlagTriangleRight className="h-4 w-4" />{" "}
+                                                                    Report
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                            {(checkPermission(
+                                                                profile.permissions,
+                                                                [
+                                                                    UIConstants
+                                                                        .permissions
+                                                                        .manageCommunity,
+                                                                ],
+                                                            ) ||
+                                                                post.user
+                                                                    .userId ===
+                                                                    profile.userId) && (
+                                                                <DropdownMenuItem
+                                                                    onClick={() =>
+                                                                        handleDeletePost(
+                                                                            post,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <Trash className="h-4 w-4" />
+                                                                    Delete
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                 </div>
-                                            </div>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className={`flex-shrink-0 rounded-full ${post.pinned ? "bg-accent" : ""}`}
-                                                onClick={(e) =>
-                                                    togglePin(post.postId, e)
-                                                }
-                                            >
-                                                <Pin className="h-4 w-4" />
-                                                <span className="sr-only">
-                                                    Pin post
-                                                </span>
-                                            </Button>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <p className="text-base mb-4 font-semibold line-clamp-3">
-                                                {post.title}
-                                            </p>
-                                            <p className="text-sm mb-4 line-clamp-3">
-                                                {post.content}
-                                            </p>
-                                            {post.media && (
-                                                <div className="flex gap-2 overflow-x-auto">
-                                                    {post.media.map((media) => (
+                                                <p>{post.content}</p>
+                                                {post.media &&
+                                                    post.media.map((media) => (
                                                         <div
                                                             className="flex-shrink-0"
                                                             key={media.title}
                                                         >
                                                             {renderMediaPreview(
                                                                 media,
+                                                                {
+                                                                    renderActualFile:
+                                                                        true,
+                                                                },
                                                             )}
                                                         </div>
                                                     ))}
-                                                </div>
-                                            )}
-                                        </CardContent>
-                                        <CardFooter>
-                                            <div className="flex items-center gap-4">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className={`text-muted-foreground ${post.hasLiked ? "bg-accent" : ""}`}
-                                                    onClick={(e) =>
-                                                        handleLike(
-                                                            post.postId,
-                                                            e,
-                                                        )
-                                                    }
-                                                >
-                                                    <ThumbsUp className="h-4 w-4 mr-2" />
-                                                    {post.likesCount}
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="text-muted-foreground"
-                                                >
-                                                    <MessageSquare className="h-4 w-4 mr-2" />
-                                                    {post.commentsCount}
-                                                </Button>
-                                            </div>
-                                        </CardFooter>
-                                    </Card>
-                                </DialogTrigger>
-                                <DialogContent
-                                    className="sm:max-w-[600px] w-full overflow-y-auto max-h-[calc(100vh-4rem)] my-8"
-                                    aria-describedby={undefined}
-                                >
-                                    <VisuallyHidden>
-                                        <DialogTitle>
-                                            Post&apos; content
-                                        </DialogTitle>
-                                    </VisuallyHidden>
-                                    <div className="grid gap-4">
-                                        <div className="flex items-center gap-2 justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Avatar className="h-10 w-10">
-                                                    <AvatarImage
-                                                        src={
-                                                            post.user.avatar
-                                                                ?.thumbnail
-                                                        }
-                                                        alt={`${post.user.name}'s avatar`}
-                                                    />
-                                                    <AvatarFallback>
-                                                        {post.user.name &&
-                                                            post.user.name
-                                                                .split(" ")
-                                                                .map(
-                                                                    (n) => n[0],
-                                                                )
-                                                                .join("")}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div>
-                                                    <div className="font-semibold">
-                                                        {post.user.name ||
-                                                            post.user.email}
-                                                    </div>
-                                                    <div className="text-sm text-muted-foreground">
-                                                        {formattedLocaleDate(
-                                                            post.updatedAt,
-                                                        )}{" "}
-                                                        • {post.category}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
+                                                <div className="flex items-center gap-4">
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        className="h-8 w-8 p-0"
-                                                    >
-                                                        <span className="sr-only">
-                                                            Open menu
-                                                        </span>
-                                                        <MoreVertical className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem
+                                                        className={`text-muted-foreground ${post.hasLiked ? "bg-accent" : ""}`}
                                                         onClick={() =>
-                                                            togglePin(
+                                                            handleLike(
                                                                 post.postId,
                                                             )
                                                         }
                                                     >
-                                                        <Pin className="mr-2 h-4 w-4" />
-                                                        {post.pinned
-                                                            ? "Unpin"
-                                                            : "Pin"}
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem
-                                                        onClick={() =>
-                                                            handleDeletePost(
-                                                                post,
-                                                            )
-                                                        }
+                                                        <ThumbsUp className="h-4 w-4 mr-2" />
+                                                        {post.likesCount}
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="text-muted-foreground"
                                                     >
-                                                        <Trash className="mr-2 h-4 w-4" />
-                                                        Delete
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </div>
-                                        <p>{post.content}</p>
-                                        {post.media &&
-                                            post.media.map((media) => (
-                                                <div
-                                                    className="flex-shrink-0"
-                                                    key={media.title}
-                                                >
-                                                    {renderMediaPreview(media, {
-                                                        renderActualFile: true,
-                                                    })}
+                                                        <MessageSquare className="h-4 w-4 mr-2" />
+                                                        {post.commentsCount}
+                                                    </Button>
                                                 </div>
-                                            ))}
-                                        <div className="flex items-center gap-4">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className={`text-muted-foreground ${post.hasLiked ? "bg-accent" : ""}`}
-                                                onClick={() =>
-                                                    handleLike(post.postId)
-                                                }
-                                            >
-                                                <ThumbsUp className="h-4 w-4 mr-2" />
-                                                {post.likesCount}
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="text-muted-foreground"
-                                            >
-                                                <MessageSquare className="h-4 w-4 mr-2" />
-                                                {post.commentsCount}
-                                            </Button>
-                                        </div>
-                                        {/* 
+                                                {/* 
                                     <div className="space-y-4 max-h-[300px] overflow-y-auto">
                                         {post.comments.map((comment) => (
                                             <Comment
@@ -1053,61 +1415,130 @@ export function CommunityForum({
                                         Post Comment
                                     </Button>
 */}
-                                        <CommentSection
-                                            postId={post.postId}
-                                            communityId={id!}
-                                            onPostUpdated={(
-                                                postId: string,
-                                                count: number,
-                                            ) => {
-                                                setPosts((prevPosts) =>
-                                                    prevPosts.map((p) =>
-                                                        p.postId === postId
-                                                            ? {
-                                                                  ...p,
-                                                                  commentsCount:
-                                                                      count,
-                                                              }
-                                                            : p,
-                                                    ),
-                                                );
-                                            }}
-                                        />
-                                    </div>
-                                </DialogContent>
-                            </Dialog>
-                        ))
-                    ) : (
-                        <div className="text-center py-8">No posts found.</div>
+                                                <CommentSection
+                                                    postId={post.postId}
+                                                    communityId={id!}
+                                                    onPostUpdated={(
+                                                        postId: string,
+                                                        count: number,
+                                                    ) => {
+                                                        setPosts((prevPosts) =>
+                                                            prevPosts.map(
+                                                                (p) =>
+                                                                    p.postId ===
+                                                                    postId
+                                                                        ? {
+                                                                              ...p,
+                                                                              commentsCount:
+                                                                                  count,
+                                                                          }
+                                                                        : p,
+                                                            ),
+                                                        );
+                                                    }}
+                                                />
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
+                                ))
+                            ) : (
+                                <div className="text-center py-8">
+                                    No posts found.
+                                </div>
+                            )}
+                        </div>
+                    </PaginatedTable>
+                    <Dialog
+                        open={showDeleteConfirmation}
+                        onOpenChange={setShowDeleteConfirmation}
+                    >
+                        <DialogContent>
+                            <DialogTitle>Delete Post</DialogTitle>
+                            <DialogDescription>
+                                Are you sure you want to delete this post? This
+                                action cannot be undone.
+                            </DialogDescription>
+                            <DialogFooter>
+                                <Button
+                                    variant="secondary"
+                                    onClick={() =>
+                                        setShowDeleteConfirmation(false)
+                                    }
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    onClick={confirmDeletePost}
+                                >
+                                    Delete
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                    <Dialog
+                        open={showReportConfirmation}
+                        onOpenChange={setShowReportConfirmation}
+                    >
+                        <DialogContent>
+                            <DialogTitle>Report Post</DialogTitle>
+                            <DialogDescription>
+                                Please provide a reason for reporting this post.
+                            </DialogDescription>
+                            <Textarea
+                                placeholder="Reason for reporting..."
+                                value={reportReason}
+                                onChange={(e) =>
+                                    setReportReason(e.target.value)
+                                }
+                            />
+                            <DialogFooter>
+                                <Button
+                                    variant="secondary"
+                                    onClick={() =>
+                                        setShowReportConfirmation(false)
+                                    }
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    onClick={confirmReportPost}
+                                    disabled={!reportReason.trim()}
+                                >
+                                    Submit
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                </div>
+                <div className="lg:col-start-3 lg:row-start-1">
+                    {community && (
+                        <CommunityInfo
+                            id={community?.communityId}
+                            name={community?.name}
+                            description={community?.description}
+                            image={
+                                community?.featuredImage?.file ||
+                                "/courselit_backdrop_square.webp"
+                            }
+                            memberCount={community?.membersCount}
+                            membershipStatus={memberStatus?.status.toLowerCase()}
+                            rejectionReason={memberStatus?.rejectionReason}
+                            paymentPlan={
+                                community?.paymentPlans.find(
+                                    (plan) =>
+                                        plan.planId ===
+                                        community?.defaultPaymentPlan,
+                                )!
+                            }
+                            joiningReasonText={community?.joiningReasonText}
+                            onJoin={handleJoin}
+                            onLeave={handleLeave}
+                        />
                     )}
                 </div>
-            </PaginatedTable>
-            <Dialog
-                open={showDeleteConfirmation}
-                onOpenChange={setShowDeleteConfirmation}
-            >
-                <DialogContent>
-                    <DialogTitle>Delete Post</DialogTitle>
-                    <DialogDescription>
-                        Are you sure you want to delete this post? This action
-                        cannot be undone.
-                    </DialogDescription>
-                    <DialogFooter>
-                        <Button
-                            variant="secondary"
-                            onClick={() => setShowDeleteConfirmation(false)}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            variant="destructive"
-                            onClick={confirmDeletePost}
-                        >
-                            Delete
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            </div>
         </div>
     );
 }

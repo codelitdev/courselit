@@ -58,8 +58,6 @@ export async function getPlans({
     planIds: string[];
     ctx: any;
 }): Promise<PaymentPlan[]> {
-    checkIfAuthenticated(ctx);
-
     return PaymentPlanModel.find<PaymentPlan>({
         domain: ctx.subdomain._id,
         planId: { $in: planIds },
@@ -152,6 +150,10 @@ export async function createPlan({
         subscriptionYearlyAmount,
     });
 
+    if (entity.paymentPlans.length === 0) {
+        (entity as Course | Community).defaultPaymentPlan = paymentPlan.planId;
+    }
+
     (entity as Course | Community).paymentPlans.push(paymentPlan.planId);
     await (entity as any).save();
 
@@ -188,8 +190,51 @@ export async function archivePaymentPlan({
         throw new Error(responses.item_not_found);
     }
 
+    if (
+        (entity as Community | Course).defaultPaymentPlan === paymentPlan.planId
+    ) {
+        throw new Error(responses.default_payment_plan_cannot_be_archived);
+    }
+
     paymentPlan.archived = true;
     await paymentPlan.save();
+
+    return paymentPlan;
+}
+
+export async function changeDefaultPlan({
+    planId,
+    entityId,
+    entityType,
+    ctx,
+}: {
+    planId: string;
+    entityId: string;
+    entityType: MembershipEntityType;
+    ctx: any;
+}): Promise<PaymentPlan> {
+    checkIfAuthenticated(ctx);
+
+    const entity = await fetchEntity(entityType, entityId, ctx);
+
+    if (!entity) {
+        throw new Error(responses.item_not_found);
+    }
+
+    checkEntityPermission(entityType, ctx);
+
+    const paymentPlan = await PaymentPlanModel.findOne({
+        domain: ctx.subdomain._id,
+        planId,
+        archived: false,
+    });
+
+    if (!paymentPlan) {
+        throw new Error(responses.item_not_found);
+    }
+
+    (entity as Community | Course).defaultPaymentPlan = paymentPlan.planId;
+    await (entity as any).save();
 
     return paymentPlan;
 }

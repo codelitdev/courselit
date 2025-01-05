@@ -1,9 +1,9 @@
-import { AddressContext } from "@components/contexts";
+import { AddressContext, ProfileContext } from "@components/contexts";
 import { Button } from "@components/ui/button";
 import { Textarea } from "@components/ui/textarea";
 import { FetchBuilder } from "@courselit/utils";
 import { useContext, useEffect, useRef, useState } from "react";
-import { useToast } from "@courselit/components-library";
+import { Link, useToast } from "@courselit/components-library";
 import { Comment } from "./comment";
 import {
     CommunityComment,
@@ -25,6 +25,7 @@ export default function CommentSection({
     const commentsEndRef = useRef<HTMLDivElement>(null);
     const address = useContext(AddressContext);
     const [post, setPost] = useState<CommunityPost>();
+    const { profile } = useContext(ProfileContext);
     const { toast } = useToast();
 
     const scrollToBottom = () => {
@@ -584,6 +585,7 @@ export default function CommentSection({
             <div className="space-y-4 max-h-[300px] overflow-y-auto">
                 {comments.map((comment) => (
                     <Comment
+                        communityId={communityId}
                         key={comment.commentId}
                         comment={comment}
                         onLike={(commentId: string, replyId?: string) => {
@@ -605,14 +607,25 @@ export default function CommentSection({
                 ))}
                 <div ref={commentsEndRef} />
             </div>
-            <div className="flex flex-col gap-2">
-                <Textarea
-                    placeholder="Add a comment..."
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                />
-                <Button onClick={handlePostComment}>Post Comment</Button>
-            </div>
+            {!profile.name && (
+                <div className="text-center text-gray-500">
+                    Complete your{" "}
+                    <span className="underline">
+                        <Link href={"/dashboard4/profile"}>profile</Link>
+                    </span>{" "}
+                    to join this community or post here
+                </div>
+            )}
+            {profile.name && (
+                <div className="flex flex-col gap-2">
+                    <Textarea
+                        placeholder="Add a comment..."
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                    />
+                    <Button onClick={handlePostComment}>Post Comment</Button>
+                </div>
+            )}
         </div>
     );
 }

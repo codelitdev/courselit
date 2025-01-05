@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Archive, X } from "lucide-react";
+import { Plus, Archive, X, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -195,6 +195,8 @@ export default function PaymentPlanList({
     ],
     currencySymbol = "$",
     currencyISOCode = "USD",
+    onDefaultPlanChanged,
+    defaultPaymentPlanId,
 }: {
     paymentPlans: PaymentPlan[];
     onPlanSubmit: (values: z.infer<typeof formSchema>) => void;
@@ -202,6 +204,8 @@ export default function PaymentPlanList({
     allowedPlanTypes: PaymentPlanType[];
     currencySymbol?: string;
     currencyISOCode?: string;
+    onDefaultPlanChanged?: (planId: string) => void;
+    defaultPaymentPlanId?: string;
 }) {
     const [isFormVisible, setIsFormVisible] = useState(false);
     const [planType, setPlanType] = useState<PaymentPlanType>(
@@ -259,67 +263,107 @@ export default function PaymentPlanList({
                     >
                         <div className="flex justify-between items-center mb-1">
                             <h3 className="text-sm font-medium">{plan.name}</h3>
-                            <Dialog
-                                open={isDialogOpen}
-                                onOpenChange={setIsDialogOpen}
-                            >
+                            <div className="flex items-center space-x-2">
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <DialogTrigger asChild>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-6 w-6"
-                                                    onClick={() => {
-                                                        setPlanToArchive(plan);
-                                                        setIsDialogOpen(true);
-                                                    }}
-                                                >
-                                                    <Archive className="h-3 w-3" />
-                                                </Button>
-                                            </DialogTrigger>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6"
+                                                onClick={() =>
+                                                    onDefaultPlanChanged(
+                                                        plan.planId,
+                                                    )
+                                                }
+                                                disabled={
+                                                    defaultPaymentPlanId ===
+                                                    plan.planId
+                                                }
+                                            >
+                                                <Star
+                                                    className={`h-3 w-3`}
+                                                    color={
+                                                        defaultPaymentPlanId ===
+                                                        plan.planId
+                                                            ? "black"
+                                                            : "#d3d3d3"
+                                                    }
+                                                />
+                                            </Button>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                            <p>Archive plan</p>
+                                            <p>Make default</p>
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
-                                <DialogContent>
-                                    <DialogHeader>
-                                        <DialogTitle>
-                                            Are you sure you want to archive
-                                            this plan?
-                                        </DialogTitle>
-                                        <DialogDescription>
-                                            This action cannot be undone. This
-                                            will permanently archive the payment
-                                            plan &quot;{planToArchive?.name}
-                                            &quot;.
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <DialogFooter>
-                                        <Button
-                                            variant="outline"
-                                            onClick={() => {
-                                                setPlanToArchive(null);
-                                                setIsDialogOpen(false);
-                                            }}
-                                        >
-                                            Cancel
-                                        </Button>
-                                        <Button
-                                            variant="destructive"
-                                            onClick={() =>
-                                                planToArchive &&
-                                                handleArchive(planToArchive)
-                                            }
-                                        >
-                                            Archive
-                                        </Button>
-                                    </DialogFooter>
-                                </DialogContent>
-                            </Dialog>
+                                <Dialog
+                                    open={isDialogOpen}
+                                    onOpenChange={setIsDialogOpen}
+                                >
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <DialogTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-6 w-6"
+                                                        onClick={() => {
+                                                            setPlanToArchive(
+                                                                plan,
+                                                            );
+                                                            setIsDialogOpen(
+                                                                true,
+                                                            );
+                                                        }}
+                                                    >
+                                                        <Archive className="h-3 w-3" />
+                                                    </Button>
+                                                </DialogTrigger>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Archive plan</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>
+                                                Are you sure you want to archive
+                                                this plan?
+                                            </DialogTitle>
+                                            <DialogDescription>
+                                                This action cannot be undone.
+                                                This will permanently archive
+                                                the payment plan &quot;
+                                                {planToArchive?.name}
+                                                &quot;.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <DialogFooter>
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => {
+                                                    setPlanToArchive(null);
+                                                    setIsDialogOpen(false);
+                                                }}
+                                            >
+                                                Cancel
+                                            </Button>
+                                            <Button
+                                                variant="destructive"
+                                                onClick={() =>
+                                                    planToArchive &&
+                                                    handleArchive(planToArchive)
+                                                }
+                                            >
+                                                Archive
+                                            </Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
                         </div>
                         <div className="flex items-center space-x-2">
                             <span className="text-xs">

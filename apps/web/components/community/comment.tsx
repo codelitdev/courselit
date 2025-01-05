@@ -2,10 +2,16 @@ import { useContext, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ThumbsUp, MessageSquare, MoreVertical } from "lucide-react";
+import {
+    ThumbsUp,
+    MessageSquare,
+    MoreVertical,
+    FlagTriangleRight,
+} from "lucide-react";
 import {
     CommunityComment,
     CommunityCommentReply,
+    Constants,
 } from "@courselit/common-models";
 import { formattedLocaleDate } from "@ui-lib/utils";
 import {
@@ -24,8 +30,11 @@ import {
 } from "@/components/ui/dialog";
 import { isCommunityComment } from "./utils";
 import { DELETED_COMMENT_PLACEHOLDER } from "@ui-config/strings";
+import { useToast } from "@courselit/components-library";
+import { FetchBuilder } from "@courselit/utils";
 
 interface CommentProps {
+    communityId: string;
     comment: CommunityComment | (CommunityCommentReply & { commentId: string });
     onLike: (commentId: string, replyId?: string) => void;
     onReply: (
@@ -38,6 +47,7 @@ interface CommentProps {
 }
 
 export function Comment({
+    communityId,
     comment,
     onLike,
     onReply,
@@ -50,8 +60,14 @@ export function Comment({
         CommunityComment | CommunityCommentReply | null
     >(null);
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+    const [showReportConfirmation, setShowReportConfirmation] = useState(false);
+    const [reportReason, setReportReason] = useState("");
+    const [commentToReport, setCommentToReport] = useState<
+        CommunityComment | CommunityCommentReply | null
+    >(null);
     const { profile } = useContext(ProfileContext);
     const address = useContext(AddressContext);
+    const { toast } = useToast();
 
     const handleDeletePost = (
         comment: CommunityComment | CommunityCommentReply,
@@ -68,12 +84,95 @@ export function Comment({
         }
     };
 
+    const handleReportPost = (
+        comment: CommunityComment | CommunityCommentReply,
+    ) => {
+        setCommentToReport(comment);
+        setShowReportConfirmation(true);
+    };
+
+    const confirmReportPost = () => {
+        if (commentToReport && reportReason.trim()) {
+            if (isCommunityComment(commentToReport)) {
+                handleReport(commentToReport.commentId, reportReason);
+            } else {
+                handleReport(
+                    commentToReport.replyId,
+                    reportReason,
+                    commentToReport.commentId,
+                );
+            }
+            setShowReportConfirmation(false);
+            setCommentToReport(null);
+            setReportReason("");
+        }
+    };
+
+    const handleReport = async (
+        contentId: string,
+        reason: string,
+        contentParentId?: string,
+    ) => {
+        const query = `
+            mutation ($communityId: String!, $contentId: String!, $type: CommunityReportContentType!, $reason: String!, $contentParentId: String) {
+                report: reportCommunityContent(communityId: $communityId, contentId: $contentId, type: $type, reason: $reason, contentParentId: $contentParentId) {
+                    communityId
+                    reportId
+                    content {
+                        id
+                        content
+                    }
+                    type
+                    reason
+                    status
+                    contentParentId
+                    rejectionReason
+                    createdAt
+                    updatedAt
+                }
+            }
+        `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload({
+                query,
+                variables: {
+                    communityId: communityId,
+                    contentId,
+                    type: contentParentId
+                        ? Constants.CommunityReportType.REPLY.toUpperCase()
+                        : Constants.CommunityReportType.COMMENT.toUpperCase(),
+                    reason,
+                    contentParentId,
+                },
+            })
+            .setIsGraphQLEndpoint(true)
+            .build();
+
+        try {
+            await fetch.exec();
+            toast({
+                title: "Reported",
+                description: "Content has been reported",
+            });
+        } catch (err: any) {
+            toast({
+                title: "Error",
+                description: err.message,
+                variant: "destructive",
+            });
+        }
+    };
+
     return (
         <div className={`space-y-2 ${depth > 0 ? "ml-6" : ""}`}>
             <div className="flex items-start gap-2">
                 <Avatar className="h-8 w-8">
                     <AvatarImage
-                        src={comment.user.avatar.thumbnail}
+                        src={
+                            comment.user.avatar?.thumbnail ||
+                            "/courselit_backdrop_square.webp"
+                        }
                         alt={`${comment.user.name}'s avatar`}
                     />
                     <AvatarFallback>
@@ -116,11 +215,11 @@ export function Comment({
                                 )}
                                 {profile?.userId !== comment.user.userId && (
                                     <DropdownMenuItem
-                                        onClick={() => {
-                                            /* handle report */
-                                        }}
+                                        onClick={() =>
+                                            handleReportPost(comment)
+                                        }
                                     >
-                                        Report
+                                        <FlagTriangleRight /> Report
                                     </DropdownMenuItem>
                                 )}
                             </DropdownMenuContent>
@@ -157,7 +256,7 @@ export function Comment({
                     </div>
                 </div>
             </div>
-            {isReplying && (
+            {isReplying && profile.name && (
                 <div className="mt-2 space-y-2 p-1">
                     <Textarea
                         placeholder="Write a reply..."
@@ -199,6 +298,7 @@ export function Comment({
             {isCommunityComment(comment) &&
                 comment.replies?.map((reply) => (
                     <Comment
+                        communityId={communityId}
                         key={reply.replyId}
                         comment={{
                             ...reply,
@@ -232,6 +332,37 @@ export function Comment({
                             onClick={confirmDeletePost}
                         >
                             Delete
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            <Dialog
+                open={showReportConfirmation}
+                onOpenChange={setShowReportConfirmation}
+            >
+                <DialogContent>
+                    <DialogTitle>Report comment</DialogTitle>
+                    <DialogDescription>
+                        Please provide a reason for reporting this comment.
+                    </DialogDescription>
+                    <Textarea
+                        placeholder="Reason for reporting..."
+                        value={reportReason}
+                        onChange={(e) => setReportReason(e.target.value)}
+                    />
+                    <DialogFooter>
+                        <Button
+                            variant="secondary"
+                            onClick={() => setShowReportConfirmation(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={confirmReportPost}
+                            disabled={!reportReason.trim()}
+                        >
+                            Submit
                         </Button>
                     </DialogFooter>
                 </DialogContent>

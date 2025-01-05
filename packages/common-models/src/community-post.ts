@@ -15,4 +15,5 @@ export interface CommunityPost {
     updatedAt: string;
     createdAt: string;
     hasLiked: boolean;
+    deleted: boolean;
 }

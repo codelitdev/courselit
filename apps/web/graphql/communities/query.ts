@@ -11,6 +11,8 @@ import {
     getCommunities,
     getCommunitiesCount,
     getCommunity,
+    getCommunityReports,
+    getCommunityReportsCount,
     getMemberStatus,
     getMembers,
     getMembersCount,
@@ -18,17 +20,20 @@ import {
     getPosts,
     getPostsCount,
 } from "./logic";
-import { CommunityMemberStatus } from "@courselit/common-models";
+import {
+    CommunityMemberStatus,
+    CommunityReportStatus,
+} from "@courselit/common-models";
 
 const queries = {
     getCommunity: {
         type: types.community,
         args: {
             id: {
-                type: GraphQLString,
+                type: new GraphQLNonNull(GraphQLString),
             },
         },
-        resolve: (_: any, { id }: { id?: string }, ctx: GQLContext) =>
+        resolve: (_: any, { id }: { id: string }, ctx: GQLContext) =>
             getCommunity({ ctx, id }),
     },
     getCommunities: {
@@ -226,6 +231,60 @@ const queries = {
             },
             ctx: GQLContext,
         ) => getComments({ ctx, communityId, postId, page, limit }),
+    },
+    getCommunityReports: {
+        type: new GraphQLList(types.communityReport),
+        args: {
+            communityId: {
+                type: new GraphQLNonNull(GraphQLString),
+            },
+            page: {
+                type: GraphQLInt,
+            },
+            limit: {
+                type: GraphQLInt,
+            },
+            status: {
+                type: types.communityReportStatusType,
+            },
+        },
+        resolve: async (
+            _: any,
+            {
+                communityId,
+                page,
+                limit,
+                status,
+            }: {
+                communityId: string;
+                page?: number;
+                limit?: number;
+                status?: CommunityReportStatus;
+            },
+            ctx: GQLContext,
+        ) => getCommunityReports({ ctx, communityId, page, limit, status }),
+    },
+    getCommunityReportsCount: {
+        type: GraphQLInt,
+        args: {
+            communityId: {
+                type: new GraphQLNonNull(GraphQLString),
+            },
+            status: {
+                type: types.communityReportStatusType,
+            },
+        },
+        resolve: (
+            _: any,
+            {
+                communityId,
+                status,
+            }: {
+                communityId: string;
+                status?: CommunityReportStatus;
+            },
+            ctx: GQLContext,
+        ) => getCommunityReportsCount({ ctx, communityId, status }),
     },
 };
 

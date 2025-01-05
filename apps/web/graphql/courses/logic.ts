@@ -175,7 +175,7 @@ export const deleteCourse = async (
     await deleteAllLessons(course.courseId, ctx);
     if (course.featuredImage) {
         try {
-            await deleteMedia(course.featuredImage);
+            await deleteMedia(course.featuredImage.mediaId);
         } catch (err) {
             error(err.message, {
                 stack: err.stack,

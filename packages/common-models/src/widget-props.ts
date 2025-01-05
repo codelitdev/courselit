@@ -7,7 +7,10 @@ export default interface WidgetProps<T extends WidgetDefaultSettings> {
     id: string;
     name: string;
     section: string;
-    pageData: Record<string, unknown>;
+    pageData: {
+        pageType: "site" | "product" | "community";
+        [x: string]: unknown;
+    };
     config: Record<string, unknown>;
     state: State;
     dispatch: ThunkDispatch<State, null, AnyAction>;

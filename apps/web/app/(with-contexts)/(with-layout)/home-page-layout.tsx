@@ -65,7 +65,7 @@ export default function HomepageLayout({
                 },
             }}
         >
-            {children}
+            <div className="mx-auto lg:max-w-[1200px] w-full">{children}</div>
         </MasterLayout>
     );
 }

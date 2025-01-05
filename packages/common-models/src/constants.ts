@@ -78,8 +78,18 @@ export const MembershipStatus = {
     PENDING: "pending",
     REJECTED: "rejected",
 } as const;
-export const MembershipPaymentStatus = {
+export const InvoiceStatus = {
     PENDING: "pending",
     PAID: "paid",
     FAILED: "failed",
+} as const;
+export const CommunityReportStatus = {
+    PENDING: "pending",
+    ACCEPTED: "accepted",
+    REJECTED: "rejected",
+} as const;
+export const CommunityReportType = {
+    POST: "post",
+    COMMENT: "comment",
+    REPLY: "reply",
 } as const;

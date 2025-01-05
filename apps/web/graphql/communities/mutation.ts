@@ -19,9 +19,15 @@ import {
     toggleCommentLike,
     toggleCommentReplyLike,
     deleteComment,
+    leaveCommunity,
+    deleteCommunity,
+    deleteCommunityPost,
+    reportCommunityContent,
+    updateCommunityReportStatus,
 } from "./logic";
 import types from "./types";
-import { CommunityMedia } from "@courselit/common-models";
+import { CommunityMedia, CommunityReportType } from "@courselit/common-models";
+import mediaTypes from "../media/types";
 
 const mutations = {
     createCommunity: {
@@ -37,42 +43,46 @@ const mutations = {
         args: {
             id: { type: new GraphQLNonNull(GraphQLString) },
             name: { type: GraphQLString },
-            default: { type: GraphQLBoolean },
+            description: { type: GraphQLString },
             enabled: { type: GraphQLBoolean },
             banner: { type: GraphQLString },
             autoAcceptMembers: { type: GraphQLBoolean },
             joiningReasonText: { type: GraphQLString },
+            featuredImage: { type: mediaTypes.mediaInputType },
         },
         resolve: async (
             _: any,
             {
                 id,
                 name,
-                default: defaultCommunity,
+                description,
                 enabled,
                 banner,
                 autoAcceptMembers,
                 joiningReasonText,
+                featuredImage,
             }: {
                 id: string;
                 name?: string;
-                default?: boolean;
+                description?: string;
                 enabled?: boolean;
                 banner?: string;
                 autoAcceptMembers?: boolean;
                 joiningReasonText?: string;
+                featuredImage?: Media;
             },
             ctx: GQLContext,
         ) =>
             updateCommunity({
                 id,
                 name,
+                description,
                 ctx,
                 enabled,
-                defaultCommunity,
                 banner,
                 autoAcceptMembers,
                 joiningReasonText,
+                featuredImage,
             }),
     },
     addCategory: {
@@ -105,7 +115,7 @@ const mutations = {
         ) => deleteCategory({ id, category, ctx, migrateToCategory }),
     },
     joinCommunity: {
-        type: types.memberStatusType,
+        type: types.communityMemberStatus,
         args: {
             id: { type: new GraphQLNonNull(GraphQLString) },
             joiningReason: { type: new GraphQLNonNull(GraphQLString) },
@@ -150,6 +160,18 @@ const mutations = {
                 media,
                 ctx,
             }),
+    },
+    deleteCommunityPost: {
+        type: types.communityPost,
+        args: {
+            communityId: { type: new GraphQLNonNull(GraphQLString) },
+            postId: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: async (
+            _: any,
+            { communityId, postId }: { communityId: string; postId: string },
+            ctx: GQLContext,
+        ) => deleteCommunityPost({ communityId, postId, ctx }),
     },
     updateMemberStatus: {
         type: types.communityMemberStatus,
@@ -312,6 +334,86 @@ const mutations = {
             },
             ctx: GQLContext,
         ) => deleteComment({ communityId, postId, commentId, replyId, ctx }),
+    },
+    leaveCommunity: {
+        type: types.communityMemberStatus,
+        args: {
+            id: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: async (_: any, { id }: { id: string }, ctx: GQLContext) =>
+            leaveCommunity({ id, ctx }),
+    },
+    deleteCommunity: {
+        type: types.community,
+        args: {
+            id: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: async (_: any, { id }: { id: string }, ctx: GQLContext) =>
+            deleteCommunity({ id, ctx }),
+    },
+    reportCommunityContent: {
+        type: types.communityReport,
+        args: {
+            communityId: { type: new GraphQLNonNull(GraphQLString) },
+            contentId: { type: new GraphQLNonNull(GraphQLString) },
+            type: {
+                type: new GraphQLNonNull(types.communityReportContentType),
+            },
+            reason: { type: new GraphQLNonNull(GraphQLString) },
+            contentParentId: { type: GraphQLString },
+        },
+        resolve: async (
+            _: any,
+            {
+                communityId,
+                contentId,
+                type,
+                reason,
+                contentParentId,
+            }: {
+                communityId: string;
+                contentId: string;
+                type: CommunityReportType;
+                reason: string;
+                contentParentId?: string;
+            },
+            ctx: GQLContext,
+        ) =>
+            reportCommunityContent({
+                communityId,
+                contentId,
+                type,
+                reason,
+                ctx,
+                contentParentId,
+            }),
+    },
+    updateCommunityReportStatus: {
+        type: types.communityReport,
+        args: {
+            communityId: { type: new GraphQLNonNull(GraphQLString) },
+            reportId: { type: new GraphQLNonNull(GraphQLString) },
+            rejectionReason: { type: GraphQLString },
+        },
+        resolve: async (
+            _: any,
+            {
+                communityId,
+                reportId,
+                rejectionReason,
+            }: {
+                communityId: string;
+                reportId: string;
+                rejectionReason?: string;
+            },
+            ctx: GQLContext,
+        ) =>
+            updateCommunityReportStatus({
+                communityId,
+                reportId,
+                rejectionReason,
+                ctx,
+            }),
     },
 };
 

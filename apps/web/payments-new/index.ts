@@ -21,12 +21,13 @@ export const getPaymentMethod = async (domainName: string) => {
 
 export const getPaymentMethodFromSettings = async (
     siteInfo: Domain["settings"] | null,
+    name?: string,
 ) => {
     if (!siteInfo || !siteInfo.paymentMethod) {
         throw new Error(updatePaymentMethod);
     }
 
-    switch (siteInfo.paymentMethod) {
+    switch (name || siteInfo.paymentMethod) {
         case UIConstants.PAYMENT_METHOD_PAYPAL:
             throw new Error(notYetSupported);
         case UIConstants.PAYMENT_METHOD_STRIPE:

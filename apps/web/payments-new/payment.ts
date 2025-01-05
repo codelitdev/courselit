@@ -4,9 +4,12 @@ export interface InitiateProps {
     metadata: Record<string, unknown>;
     paymentPlan: PaymentPlan;
     product: {
+        id: string;
         title: string;
         type: MembershipEntityType;
     };
+    origin: string;
+    email: string;
 }
 
 export default interface Payment {
@@ -16,4 +19,7 @@ export default interface Payment {
     getPaymentIdentifier: (event: any) => unknown;
     getMetadata: (event: any) => Record<string, unknown>;
     getName: () => string;
+    cancel: (id: string) => void;
+    getSubscriptionId: (event: any) => string;
+    validateSubscription: (subscriptionId: string) => boolean;
 }

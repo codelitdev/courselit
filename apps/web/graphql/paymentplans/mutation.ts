@@ -1,6 +1,6 @@
 import { GraphQLInt, GraphQLNonNull, GraphQLString } from "graphql";
 import types from "./types";
-import { archivePaymentPlan, createPlan } from "./logic";
+import { archivePaymentPlan, changeDefaultPlan, createPlan } from "./logic";
 import { MembershipEntityType } from "@courselit/common-models";
 
 const mutations = {
@@ -79,6 +79,29 @@ const mutations = {
             },
             ctx: any,
         ) => archivePaymentPlan({ planId, entityId, entityType, ctx }),
+    },
+    changeDefaultPlan: {
+        type: types.paymentPlan,
+        args: {
+            planId: { type: new GraphQLNonNull(GraphQLString) },
+            entityId: { type: new GraphQLNonNull(GraphQLString) },
+            entityType: {
+                type: new GraphQLNonNull(types.membershipEntityType),
+            },
+        },
+        resolve: async (
+            _: any,
+            {
+                planId,
+                entityId,
+                entityType,
+            }: {
+                planId: string;
+                entityId: string;
+                entityType: MembershipEntityType;
+            },
+            ctx: any,
+        ) => changeDefaultPlan({ planId, entityId, entityType, ctx }),
     },
 };
 

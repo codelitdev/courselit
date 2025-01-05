@@ -1,7 +1,12 @@
 import Payment, { InitiateProps } from "./payment";
 import { responses } from "../config/strings";
 import Stripe from "stripe";
-import { Constants, SiteInfo, UIConstants } from "@courselit/common-models";
+import {
+    Constants,
+    PaymentPlan,
+    SiteInfo,
+    UIConstants,
+} from "@courselit/common-models";
 import { getUnitAmount } from "./helpers";
 
 const {
@@ -29,13 +34,13 @@ export default class StripePayment implements Payment {
         }
 
         this.stripe = new Stripe(this.siteinfo.stripeSecret, {
-            apiVersion: "2020-08-27",
+            typescript: true,
         });
 
         return this;
     }
 
-    async initiate({ metadata, paymentPlan, product }: InitiateProps) {
+    async initiate({ metadata, paymentPlan, product, origin }: InitiateProps) {
         const unit_amount = getUnitAmount(paymentPlan) * 100;
         const sessionPayload: any = {
             payment_method_types: ["card"],
@@ -47,38 +52,21 @@ export default class StripePayment implements Payment {
                             name: product.title,
                         },
                         unit_amount,
-                        recurring:
-                            paymentPlan.type ===
-                            Constants.PaymentPlanType.SUBSCRIPTION
-                                ? {
-                                      interval:
-                                          paymentPlan.subscriptionYearlyAmount
-                                              ? "year"
-                                              : "month",
-                                  }
-                                : undefined,
+                        recurring: this.getRecurring(paymentPlan),
                     },
                     quantity: 1,
                 },
             ],
             mode:
-                paymentPlan.type === Constants.PaymentPlanType.SUBSCRIPTION
+                paymentPlan.type === Constants.PaymentPlanType.SUBSCRIPTION ||
+                paymentPlan.type === Constants.PaymentPlanType.EMI
                     ? "subscription"
                     : "payment",
-            success_url: `${metadata.successUrl}?id=${metadata.membershipId}&source=${metadata.sourceUrl}`,
-            cancel_url: metadata.cancelUrl,
-            metadata: {
-                purchaseId: metadata.membershipId,
-            },
+            success_url: `${origin}/checkout/verify?id=${metadata.invoiceId}`,
+            cancel_url: `${origin}/checkout?type=${product.type}&id=${product.id}`,
+            metadata,
             allow_promotion_codes: true,
         };
-        // if (paymentPlan.type === Constants.PaymentPlanType.SUBSCRIPTION) {
-        //     sessionPayload.line_items[0].price_data.recurring = {
-        //         interval: paymentPlan.subscriptionYearlyAmount
-        //             ? "year"
-        //             : "month",
-        //     };
-        // }
         const session =
             await this.stripe.checkout.sessions.create(sessionPayload);
 
@@ -103,5 +91,50 @@ export default class StripePayment implements Payment {
 
     getName() {
         return this.name;
+    }
+
+    async cancel(subscriptionId: string) {
+        try {
+            const subscription =
+                await this.stripe.subscriptions.cancel(subscriptionId);
+            return subscription;
+        } catch (error) {
+            throw new Error(`Failed to cancel subscription: ${error.message}`);
+        }
+    }
+
+    getSubscriptionId(event: Stripe.Event): string {
+        return (event.data.object as any).subscription;
+    }
+
+    validateSubscription(subscriptionId: string) {
+        const subscription = this.stripe.subscriptions.retrieve(subscriptionId);
+
+        if (subscription.status === "active") {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    getRecurring(paymentPlan: PaymentPlan) {
+        let recurring: any = undefined;
+
+        switch (paymentPlan.type) {
+            case Constants.PaymentPlanType.SUBSCRIPTION:
+                recurring = {
+                    interval: paymentPlan.subscriptionYearlyAmount
+                        ? "year"
+                        : "month",
+                };
+                break;
+            case Constants.PaymentPlanType.EMI:
+                recurring = {
+                    interval: "month",
+                };
+                break;
+        }
+
+        return recurring;
     }
 }

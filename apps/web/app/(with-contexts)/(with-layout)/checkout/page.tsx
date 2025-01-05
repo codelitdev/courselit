@@ -1,10 +1,6 @@
 "use client";
 
-import {
-    AddressContext,
-    ProfileContext,
-    SiteInfoContext,
-} from "@components/contexts";
+import { AddressContext } from "@components/contexts";
 import Checkout, { Product } from "@components/public/payments/checkout";
 import { Constants, PaymentPlan } from "@courselit/common-models";
 import { useToast } from "@courselit/components-library";
@@ -15,52 +11,8 @@ import { useCallback, useContext, useEffect, useState } from "react";
 
 const { MembershipEntityType } = Constants;
 
-const product = {
-    id: "prod_001",
-    name: "Advanced AI Toolkit",
-    slug: "advanced-ai-toolkit",
-    featuredImage: "/placeholder.svg?height=400&width=400",
-    description: "Professional License",
-};
-
-const paymentPlans = [
-    {
-        id: "1",
-        name: "Basic Free",
-        type: "free",
-    },
-    {
-        id: "2",
-        name: "One-time Purchase",
-        type: "one-time",
-        oneTimeAmount: 299.99,
-    },
-    {
-        id: "3",
-        name: "Monthly Subscription",
-        type: "subscription",
-        subscriptionMonthlyAmount: 29.99,
-    },
-    {
-        id: "4",
-        name: "Yearly Subscription",
-        type: "subscription",
-        subscriptionMonthlyAmount: 24.99,
-        subscriptionYearlyAmount: 299.88,
-    },
-    {
-        id: "5",
-        name: "Flexible Payment",
-        type: "emi",
-        emiAmount: 59.99,
-        emiTotalInstallments: 6,
-    },
-] as const;
-
 export default function CheckoutPage() {
     const address = useContext(AddressContext);
-    const siteinfo = useContext(SiteInfoContext);
-    const { profile } = useContext(ProfileContext);
     const searchParams = useSearchParams();
     const entityId = searchParams?.get("id");
     const entityType = searchParams?.get("type");
@@ -126,20 +78,22 @@ export default function CheckoutPage() {
 
     const getCommunity = useCallback(async () => {
         const query = `
-            query ($id: String) {
+            query ($id: String!) {
                 community: getCommunity(id: $id) {
-                    communityId,
-                    name,
+                    communityId
+                    name
                     paymentPlans {
-                        planId,
-                        name,
-                        type,
-                        oneTimeAmount,
-                        emiAmount,
-                        emiTotalInstallments,
-                        subscriptionMonthlyAmount,
+                        planId
+                        name
+                        type
+                        oneTimeAmount
+                        emiAmount
+                        emiTotalInstallments
+                        subscriptionMonthlyAmount
                         subscriptionYearlyAmount
                     }
+                    autoAcceptMembers
+                    joiningReasonText
                 }
             }
         `;
@@ -155,6 +109,8 @@ export default function CheckoutPage() {
                     id: response.community.communityId,
                     name: response.community.name,
                     type: MembershipEntityType.COMMUNITY,
+                    joiningReasonText: response.community.joiningReasonText,
+                    autoAcceptMembers: response.community.autoAcceptMembers,
                 });
                 setPaymentPlans([...response.community.paymentPlans]);
             } else {

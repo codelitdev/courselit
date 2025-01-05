@@ -33,9 +33,10 @@ import {
     SiteInfoContext,
 } from "@components/contexts";
 import { FetchBuilder } from "@courselit/utils";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
 import { getSymbolFromCurrency, useToast } from "@courselit/components-library";
+import { getPlanPrice } from "@ui-lib/utils";
 const { PaymentPlanType: paymentPlanType } = Constants;
 
 export interface Product {
@@ -45,6 +46,8 @@ export interface Product {
     slug?: string;
     featuredImage?: string;
     description?: string;
+    autoAcceptMembers?: boolean;
+    joiningReasonText?: string;
 }
 
 export interface CheckoutScreenProps {
@@ -54,6 +57,7 @@ export interface CheckoutScreenProps {
 
 const formSchema = z.object({
     selectedPlan: z.string().min(1, "Please select a plan"),
+    joiningReason: z.string().optional(),
 });
 
 function getPlanDescription(plan: PaymentPlan, currencySymbol: string): string {
@@ -78,36 +82,6 @@ function getPlanDescription(plan: PaymentPlan, currencySymbol: string): string {
     }
 }
 
-function getPlanPrice(plan: PaymentPlan): { amount: number; period: string } {
-    if (!plan) {
-        return { amount: 0, period: "" };
-    }
-    switch (plan.type) {
-        case paymentPlanType.FREE:
-            return { amount: 0, period: "" };
-        case paymentPlanType.ONE_TIME:
-            return { amount: plan.oneTimeAmount || 0, period: "" };
-        case paymentPlanType.SUBSCRIPTION:
-            if (plan.subscriptionYearlyAmount) {
-                return {
-                    amount: plan.subscriptionYearlyAmount,
-                    period: "/yr",
-                };
-            }
-            return {
-                amount: plan.subscriptionMonthlyAmount || 0,
-                period: "/mo",
-            };
-        case paymentPlanType.EMI:
-            return {
-                amount: plan.emiAmount || 0,
-                period: "/mo",
-            };
-        default:
-            return { amount: 0, period: "" };
-    }
-}
-
 export default function Checkout({
     product,
     paymentPlans,
@@ -124,7 +98,6 @@ export default function Checkout({
     const [userEmail, setUserEmail] = useState(profile?.email || "");
     const [userName, setUserName] = useState(profile?.name || "");
 
-    const path = usePathname();
     const stripePromise = loadStripe(siteinfo.stripeKey as string);
     const router = useRouter();
     const { toast } = useToast();
@@ -133,34 +106,29 @@ export default function Checkout({
         resolver: zodResolver(formSchema),
         defaultValues: {
             selectedPlan: "",
+            joiningReason: "",
         },
     });
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         const { paymentMethod } = siteinfo;
 
-        let payload: Record<string, unknown> | null = null;
+        let payload: Record<string, unknown> | null = {
+            joiningReason: values.joiningReason,
+        };
 
         if (paymentMethod === UIConstants.PAYMENT_METHOD_STRIPE) {
-            payload = {
-                id: product.id,
-                type: product.type,
-                planId: selectedPlan!.planId,
-                metadata: {
-                    cancelUrl: `${address.frontend}/checkout?type=${product.type}&id=${product.id}`,
-                    successUrl: `${address.frontend}/checkout?type=${product.type}&id=${product.id}&success=true`,
-                    sourceUrl: `${address.frontend}/checkout?type=${product.type}&id=${product.id}`,
-                },
-            };
+            payload["id"] = product.id;
+            payload["type"] = product.type;
+            payload["planId"] = selectedPlan!.planId;
+            payload["origin"] = address.frontend;
         }
 
         if (paymentMethod === UIConstants.PAYMENT_METHOD_RAZORPAY) {
-            payload = {
-                id: product.id,
-                type: product.type,
-                planId: selectedPlan!.planId,
-                metadata: {},
-            };
+            payload["id"] = product.id;
+            payload["type"] = product.type;
+            payload["planId"] = selectedPlan!.planId;
+            payload["origin"] = address.frontend;
         }
 
         const fetch = new FetchBuilder()
@@ -194,6 +162,7 @@ export default function Checkout({
             toast({
                 title: "Error",
                 description: err.message,
+                variant: "destructive",
             });
         }
     }
@@ -272,7 +241,7 @@ export default function Checkout({
                                 <Image
                                     src={
                                         product.featuredImage ||
-                                        siteinfo.logo?.file
+                                        "/courselit_backdrop_square.webp"
                                     }
                                     alt={product.name}
                                     fill
@@ -319,7 +288,10 @@ export default function Checkout({
             <div className="flex items-start gap-4 pb-4">
                 <div className="h-16 w-16 relative rounded-lg overflow-hidden bg-gray-100">
                     <Image
-                        src={product.featuredImage || siteinfo.logo?.file}
+                        src={
+                            product.featuredImage ||
+                            "/courselit_backdrop_square.webp"
+                        }
                         alt={product.name}
                         fill
                         className="object-cover"
@@ -356,9 +328,9 @@ export default function Checkout({
 
     return (
         <div className="min-h-screen bg-background w-full">
-            <div className="w-full pb-8">
+            <div className="w-full">
                 <MobileOrderSummary />
-                <div className="w-full grid md:grid-cols-[1fr,400px] gap-8 items-start pt-8 px-4 md:px-8 lg:px-16">
+                <div className="w-full grid md:grid-cols-[1fr,400px] gap-8 items-start px-4 py-8">
                     <div className="space-y-8">
                         <div>
                             <h2 className="text-base font-semibold mb-2">
@@ -457,11 +429,43 @@ export default function Checkout({
                                         )}
                                     />
                                 </div>
+                                {selectedPlan?.type === paymentPlanType.FREE &&
+                                    product.type ===
+                                        Constants.MembershipEntityType
+                                            .COMMUNITY && (
+                                        <FormField
+                                            control={form.control}
+                                            name="joiningReason"
+                                            render={({ field }) => (
+                                                <FormItem className="mb-6">
+                                                    <FormLabel className="text-sm font-semibold mb-4">
+                                                        {product.joiningReasonText ||
+                                                            "Reason for joining"}
+                                                    </FormLabel>
+                                                    <FormControl>
+                                                        <textarea
+                                                            className="w-full border rounded p-2"
+                                                            {...field}
+                                                            placeholder="Please provide your reason for joining"
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    )}
                                 <Button
                                     type="submit"
                                     className="w-full bg-black text-white hover:bg-black/90"
                                     disabled={
-                                        !isLoggedIn || !form.formState.isValid
+                                        !isLoggedIn ||
+                                        !form.formState.isValid ||
+                                        (selectedPlan?.type ===
+                                            paymentPlanType.FREE &&
+                                            product.type ===
+                                                Constants.MembershipEntityType
+                                                    .COMMUNITY &&
+                                            !form.getValues("joiningReason"))
                                     }
                                 >
                                     Complete Purchase

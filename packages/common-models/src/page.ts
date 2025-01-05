@@ -7,9 +7,10 @@ export default interface Page {
     pageId: string;
     type: Product | Site | Community;
     layout: WidgetInstance[];
+    deleteable: boolean;
+    deleted: boolean;
     entityId?: string;
     pageData?: Record<string, unknown>;
-    deleteable: boolean;
     title?: string;
     description?: string;
     socialImage?: Media;
