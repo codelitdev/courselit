@@ -11,6 +11,7 @@ import mails from "./mails";
 import activities from "./activities";
 import communities from "./communities";
 import paymentplans from "./paymentplans";
+import notifications from "./notifications";
 
 const schema = new graphql.GraphQLSchema({
     query: new graphql.GraphQLObjectType({
@@ -27,6 +28,7 @@ const schema = new graphql.GraphQLSchema({
             ...activities.queries,
             ...communities.queries,
             ...paymentplans.queries,
+            ...notifications.queries,
         },
     }),
     mutation: new graphql.GraphQLObjectType({
@@ -43,6 +45,7 @@ const schema = new graphql.GraphQLSchema({
             ...activities.mutations,
             ...communities.mutations,
             ...paymentplans.mutations,
+            ...notifications.mutations,
         },
     }),
 });

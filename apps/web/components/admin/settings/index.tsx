@@ -39,16 +39,11 @@ import {
     SITE_SETTINGS_RAZORPAY_KEY_TEXT,
     MEDIA_SELECTOR_UPLOAD_BTN_CAPTION,
     MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
-} from "../../../ui-config/strings";
+} from "@/ui-config/strings";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import { decode, encode } from "base-64";
 import { AppMessage, Profile, UIConstants } from "@courselit/common-models";
-import type {
-    SiteInfo,
-    Address,
-    Media,
-    Community,
-} from "@courselit/common-models";
+import type { SiteInfo, Address, Media } from "@courselit/common-models";
 import { actionCreators } from "@courselit/state-management";
 import currencies from "@/data/currencies.json";
 import {
@@ -79,7 +74,6 @@ const {
 } = UIConstants;
 
 const { networkAction, newSiteInfoAvailable, setAppMessage } = actionCreators;
-const communitiesResultsLimit = 10;
 
 interface SettingsProps {
     siteinfo: SiteInfo;
@@ -93,8 +87,7 @@ interface SettingsProps {
         | typeof SITE_SETTINGS_SECTION_PAYMENT
         | typeof SITE_MAILS_HEADER
         | typeof SITE_CUSTOMISATIONS_SETTING_HEADER
-        | typeof SITE_APIKEYS_SETTING_HEADER
-        | typeof SITE_SETTINGS_SECTION_COMMUNITIES;
+        | typeof SITE_APIKEYS_SETTING_HEADER;
     prefix: string;
 }
 
@@ -103,9 +96,6 @@ const Settings = (props: SettingsProps) => {
     const [newSettings, setNewSettings] = useState<Partial<SiteInfo>>({});
     const [apikeyPage, setApikeyPage] = useState(1);
     const [apikeys, setApikeys] = useState([]);
-    const [communities, setCommunities] = useState<Community[]>([]);
-    const [totalCommunities, setTotalCommunities] = useState(0);
-    const [communitiesPage, setCommunitiesPage] = useState(1);
     const selectedTab = [
         SITE_SETTINGS_SECTION_GENERAL,
         SITE_SETTINGS_SECTION_PAYMENT,
@@ -123,39 +113,7 @@ const Settings = (props: SettingsProps) => {
 
     useEffect(() => {
         loadAdminSettings();
-        loadCommunities();
     }, []);
-
-    useEffect(() => {
-        loadCommunities();
-    }, [communitiesPage]);
-
-    const loadCommunities = async () => {
-        const query = `
-            query ($page: Int, $limit: Int) {
-                communities: getCommunities(page: $page, limit: $limit) {
-                    name,
-                    communityId,
-                },
-                totalCommunities: getCommunitiesCount
-            }`;
-        try {
-            const fetchRequest = fetch
-                .setPayload({
-                    query,
-                    variables: {
-                        page: communitiesPage,
-                        limit: communitiesResultsLimit,
-                    },
-                })
-                .build();
-            const response = await fetchRequest.exec();
-            if (response.communities) {
-                setCommunities(response.communities);
-                setTotalCommunities(response.totalCommunities);
-            }
-        } catch (e) {}
-    };
 
     useEffect(() => {
         props.dispatch(
@@ -209,10 +167,6 @@ const Settings = (props: SettingsProps) => {
                     name,
                     keyId,
                     createdAt
-                },
-                communities: getCommunities {
-                    name,
-                    communityId,
                 }
             }`;
         try {

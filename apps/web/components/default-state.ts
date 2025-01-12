@@ -63,6 +63,7 @@ export const defaultState: {
     typefaces: [],
     config: {
         turnstileSiteKey: "",
+        queueServer: "",
     },
     // page: {
     //     name: "",

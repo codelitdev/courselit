@@ -1,14 +1,23 @@
 import express from "express";
 import jobRoutes from "./job/routes";
+import sseRoutes from "./sse/routes";
 
 // start workers
 import "./domain/worker";
+import "./workers/notifications";
+
+// start loops
 import { startEmailAutomation } from "./start-email-automation";
 
 const app = express();
 app.use(express.json());
 
 app.use("/job", jobRoutes);
+app.use("/sse", sseRoutes);
+
+app.get("/healthy", (req, res) => {
+    res.status(200).json({ success: true });
+});
 
 startEmailAutomation();
 

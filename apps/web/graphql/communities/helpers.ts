@@ -20,8 +20,14 @@ import { error } from "@/services/logger";
 import { checkPermission } from "@courselit/utils";
 import mongoose from "mongoose";
 import { InternalCommunityReport } from "@models/CommunityReport";
+import CommunityPostSubscriberModel, {
+    CommunityPostSubscriber,
+} from "@models/CommunityPostSubscriber";
 
-export type PublicPost = Omit<CommunityPost, "createdAt" | "user"> & {
+export type PublicPost = Omit<
+    CommunityPost,
+    "createdAt" | "user" | "deleted"
+> & {
     userId: string;
 };
 
@@ -233,4 +239,44 @@ export async function formatCommunityReport(
         status: report.status,
         rejectionReason: report.rejectionReason,
     };
+}
+
+export async function addPostSubscription({
+    domain,
+    userId,
+    postId,
+}: {
+    domain: mongoose.Types.ObjectId;
+    userId: string;
+    postId: string;
+}) {
+    const existingSubscription = await CommunityPostSubscriberModel.findOne({
+        domain,
+        userId,
+        postId,
+    });
+
+    if (!existingSubscription) {
+        await CommunityPostSubscriberModel.create({
+            domain,
+            userId,
+            postId,
+        });
+    }
+}
+
+export async function getPostSubscribersExceptUserId({
+    domain,
+    userId,
+    postId,
+}: {
+    domain: mongoose.Types.ObjectId;
+    userId: string;
+    postId: string;
+}): Promise<CommunityPostSubscriber[]> {
+    return await CommunityPostSubscriberModel.find({
+        domain,
+        postId,
+        userId: { $nin: [userId] },
+    });
 }

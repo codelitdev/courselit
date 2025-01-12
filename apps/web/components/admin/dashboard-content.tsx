@@ -1,3 +1,4 @@
+import { NotificationsViewer } from "@components/notifications-viewer";
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -71,6 +72,9 @@ export default function DashboardContent({
                             </BreadcrumbList>
                         </Breadcrumb>
                     )}
+                </div>
+                <div className="ml-auto px-3">
+                    <NotificationsViewer />
                 </div>
             </header>
             <div className="flex flex-1 flex-col gap-4 p-4 pt-0">

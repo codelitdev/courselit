@@ -119,6 +119,7 @@ export const responses = {
     default_payment_plan_required:
         "Mark a payment plan as default before enabling the community",
     community_content_already_reported: "Content already reported",
+    profile_incomplete: "Complete your profile to join this community",
 
     // api responses
     digital_download_no_files:

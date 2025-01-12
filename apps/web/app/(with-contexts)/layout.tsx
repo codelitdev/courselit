@@ -6,7 +6,7 @@ import { headers } from "next/headers";
 import { getBackendAddress } from "@ui-lib/utils";
 import { defaultState } from "@components/default-state";
 import { decode } from "base-64";
-import { SiteInfo } from "@courselit/common-models";
+import { ServerConfig, SiteInfo } from "@courselit/common-models";
 
 export default async function Layout({
     children,
@@ -59,8 +59,9 @@ export default async function Layout({
         .setIsGraphQLEndpoint(true)
         .build();
     const siteInfoResponse = await siteInfoFetch.exec();
-    const config = {
+    const config: ServerConfig = {
         turnstileSiteKey: process.env.TURNSTILE_SITE_KEY || "",
+        queueServer: process.env.QUEUE_SERVER || "",
     };
 
     return (

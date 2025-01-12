@@ -39,6 +39,7 @@
         "class-variance-authority": "^0.7.0",
         "clsx": "^2.1.1",
         "cookie": "^0.4.2",
+        "date-fns": "^4.1.0",
         "graphql": "^16.4.0",
         "graphql-type-json": "^0.3.2",
         "lodash.debounce": "^4.0.8",

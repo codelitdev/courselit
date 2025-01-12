@@ -93,3 +93,13 @@ export const CommunityReportType = {
     COMMENT: "comment",
     REPLY: "reply",
 } as const;
+export const NotificationEntityAction = {
+    COMMUNITY_POSTED: "community:posted",
+    COMMUNITY_COMMENTED: "community:commented",
+    COMMUNITY_REPLIED: "community:replied",
+    COMMUNITY_POST_LIKED: "community:post:liked",
+    COMMUNITY_COMMENT_LIKED: "community:comment:liked",
+    COMMUNITY_REPLY_LIKED: "community:reply:liked",
+    COMMUNITY_MEMBERSHIP_REQUESTED: "community:membership:requested",
+    COMMUNITY_MEMBERSHIP_GRANTED: "community:membership:granted",
+} as const;

@@ -12,12 +12,13 @@ import {
     TableBody,
     TableHead,
     TableRow,
+    Tooltip,
 } from "@courselit/components-library";
 import {
     MANAGE_COMMUNITIES_PAGE_HEADING,
     NEW_COMMUNITY_BUTTON,
 } from "@ui-config/strings";
-import { SquareArrowOutUpRight } from "lucide-react";
+import { Eye, Settings } from "lucide-react";
 
 const communitiesResultsLimit = 10;
 
@@ -44,6 +45,7 @@ export default function List() {
             query ($page: Int, $limit: Int) {
                 communities: getCommunities(page: $page, limit: $limit) {
                     name,
+                    pageId
                     communityId,
                     membersCount
                 },
@@ -104,14 +106,24 @@ export default function List() {
                                     {community.membersCount}
                                 </td>
                                 <td align="right">
-                                    <Link
-                                        href={`/dashboard4/community/${community.communityId}/settings`}
-                                    >
-                                        <Button variant="soft">
-                                            <SquareArrowOutUpRight width={16} />{" "}
-                                            Settings
-                                        </Button>
-                                    </Link>
+                                    <div className="flex space-x-2 justify-end">
+                                        <Link href={`/p/${community.pageId}`}>
+                                            <Tooltip title="View page">
+                                                <Button variant="soft">
+                                                    <Eye width={16} />{" "}
+                                                </Button>
+                                            </Tooltip>
+                                        </Link>
+                                        <Link
+                                            href={`/dashboard4/community/${community.communityId}/manage`}
+                                        >
+                                            <Tooltip title="Settings">
+                                                <Button variant="soft">
+                                                    <Settings width={16} />{" "}
+                                                </Button>
+                                            </Tooltip>
+                                        </Link>
+                                    </div>
                                 </td>
                             </TableRow>
                         ))}

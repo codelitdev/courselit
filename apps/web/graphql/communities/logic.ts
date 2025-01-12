@@ -16,6 +16,7 @@ import {
     Media,
     CommunityReportType,
     CommunityReportStatus,
+    User,
 } from "@courselit/common-models";
 import CommunityPostModel from "@models/CommunityPost";
 import {
@@ -33,14 +34,19 @@ import CommunityReportModel, {
     InternalCommunityReport,
 } from "@models/CommunityReport";
 import {
+    addPostSubscription,
     CommunityReportPartial,
     formatComment,
     formatCommunityReport,
     formatPost,
+    getPostSubscribersExceptUserId,
     hasPermissionToDelete,
     PublicPost,
     toggleContentVisibility,
 } from "./helpers";
+import { error } from "@/services/logger";
+import NotificationModel from "@models/Notification";
+import { addNotification } from "@/services/queue";
 
 const { permissions, communityPage } = constants;
 
@@ -391,6 +397,10 @@ export async function joinCommunity({
 }): Promise<boolean> {
     checkIfAuthenticated(ctx);
 
+    if (!ctx.user.name) {
+        throw new Error(responses.profile_incomplete);
+    }
+
     const community = await CommunityModel.findOne<InternalCommunity>(
         getCommunityQuery(ctx, id),
     );
@@ -428,6 +438,28 @@ export async function joinCommunity({
                 ? Constants.MembershipStatus.ACTIVE
                 : Constants.MembershipStatus.PENDING,
             joiningReason,
+        });
+
+        const communityManagers: User[] = await UserModel.find(
+            {
+                domain: ctx.subdomain._id,
+                permissions: permissions.manageCommunity,
+                userId: { $nin: [ctx.user.userId] },
+            },
+            {
+                _id: 0,
+                userId: 1,
+            },
+        ).lean();
+
+        addNotification({
+            domain: ctx.subdomain._id.toString(),
+            entityId: community.communityId,
+            entityAction:
+                Constants.NotificationEntityAction
+                    .COMMUNITY_MEMBERSHIP_REQUESTED,
+            forUserIds: communityManagers.map((m) => m.userId),
+            userId: ctx.user.userId,
         });
     }
 
@@ -496,6 +528,40 @@ export async function createCommunityPost({
         category,
         media,
     });
+
+    await addPostSubscription({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+        postId: post.postId,
+    });
+
+    try {
+        const members = await MembershipModel.find<Membership>({
+            domain: ctx.subdomain._id,
+            entityId: community.communityId,
+            entityType: Constants.MembershipEntityType.COMMUNITY,
+            status: Constants.MembershipStatus.ACTIVE,
+        }).lean();
+
+        await addNotification({
+            domain: ctx.subdomain._id.toString(),
+            entityId: post.postId,
+            entityAction: Constants.NotificationEntityAction.COMMUNITY_POSTED,
+            forUserIds: members
+                .map((m) => m.userId)
+                .filter((id) => id !== ctx.user.userId),
+            userId: ctx.user.userId,
+        });
+    } catch (err) {
+        error(
+            `Error sending notifications for community post: ${err.message}`,
+            {
+                communityId: community.communityId,
+                postId: post.postId,
+                stack: err.stack,
+            },
+        );
+    }
 
     return formatPost(post, ctx.user);
 }
@@ -851,7 +917,9 @@ export async function updateMemberStatus({
         throw new Error(responses.item_not_found);
     }
 
-    const nextStatus = getNextStatusForCommunityMember(member.status);
+    const nextStatus = getNextStatusForCommunityMember(
+        member.status as CommunityMemberStatus,
+    );
     if (nextStatus === Constants.MembershipStatus.REJECTED) {
         if (!rejectionReason) {
             throw new Error(responses.rejection_reason_missing);
@@ -877,6 +945,15 @@ export async function updateMemberStatus({
                 },
             },
         );
+
+        await addNotification({
+            domain: ctx.subdomain._id.toString(),
+            entityId: community.communityId,
+            entityAction:
+                Constants.NotificationEntityAction.COMMUNITY_MEMBERSHIP_GRANTED,
+            forUserIds: [userId],
+            userId: ctx.user.userId,
+        });
     }
 
     return member;
@@ -917,13 +994,36 @@ export async function togglePostLike({
         throw new Error(responses.action_not_allowed);
     }
 
+    let liked = false;
     if (post.likes.includes(ctx.user.userId)) {
         post.likes = post.likes.filter((id) => id !== ctx.user.userId);
     } else {
         post.likes.push(ctx.user.userId);
+        liked = true;
     }
 
     await post.save();
+
+    if (liked && post.userId !== ctx.user.userId) {
+        const existingNotification = await NotificationModel.findOne({
+            domain: ctx.subdomain._id,
+            entityId: post.postId,
+            entityAction:
+                Constants.NotificationEntityAction.COMMUNITY_POST_LIKED,
+            forUserId: post.userId,
+            userId: ctx.user.userId,
+        });
+        if (!existingNotification) {
+            await addNotification({
+                domain: ctx.subdomain._id.toString(),
+                entityId: post.postId,
+                entityAction:
+                    Constants.NotificationEntityAction.COMMUNITY_POST_LIKED,
+                forUserIds: [post.userId],
+                userId: ctx.user.userId,
+            });
+        }
+    }
 
     return formatPost(post, ctx.user);
 }
@@ -1043,7 +1143,10 @@ export async function postComment({
             throw new Error(responses.item_not_found);
         }
 
+        const replyId = generateUniqueId();
+
         comment.replies.push({
+            replyId,
             userId: ctx.user.userId,
             content,
             media,
@@ -1051,6 +1154,21 @@ export async function postComment({
         });
 
         await comment.save();
+
+        const postSubscribers = await getPostSubscribersExceptUserId({
+            domain: ctx.subdomain._id,
+            postId: post.postId,
+            userId: ctx.user.userId,
+        });
+
+        await addNotification({
+            domain: ctx.subdomain._id.toString(),
+            entityId: replyId,
+            entityAction: Constants.NotificationEntityAction.COMMUNITY_REPLIED,
+            forUserIds: postSubscribers.map((s) => s.userId),
+            userId: ctx.user.userId,
+            entityTargetId: comment.commentId,
+        });
     } else {
         comment = await CommunityCommentModel.create({
             domain: ctx.subdomain._id,
@@ -1060,10 +1178,31 @@ export async function postComment({
             content,
             media,
         });
+
+        const postSubscribers = await getPostSubscribersExceptUserId({
+            domain: ctx.subdomain._id,
+            postId: post.postId,
+            userId: ctx.user.userId,
+        });
+
+        await addNotification({
+            domain: ctx.subdomain._id.toString(),
+            entityId: post.postId,
+            entityAction:
+                Constants.NotificationEntityAction.COMMUNITY_COMMENTED,
+            forUserIds: postSubscribers.map((s) => s.userId),
+            userId: ctx.user.userId,
+        });
     }
 
     post.commentsCount = post.commentsCount + 1;
     await post.save();
+
+    await addPostSubscription({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+        postId: post.postId,
+    });
 
     return formatComment(comment, ctx.user);
 }
@@ -1150,13 +1289,36 @@ export async function toggleCommentLike({
         throw new Error(responses.action_not_allowed);
     }
 
+    let liked = false;
     if (comment.likes.includes(ctx.user.userId)) {
         comment.likes = comment.likes.filter((id) => id !== ctx.user.userId);
     } else {
         comment.likes.push(ctx.user.userId);
+        liked = true;
     }
 
     await comment.save();
+
+    if (liked && comment.userId !== ctx.user.userId) {
+        const existingNotification = await NotificationModel.findOne({
+            domain: ctx.subdomain._id,
+            entityId: comment.commentId,
+            entityAction:
+                Constants.NotificationEntityAction.COMMUNITY_COMMENT_LIKED,
+            forUserId: comment.userId,
+            userId: ctx.user.userId,
+        });
+        if (!existingNotification) {
+            await addNotification({
+                domain: ctx.subdomain._id.toString(),
+                entityId: comment.commentId,
+                entityAction:
+                    Constants.NotificationEntityAction.COMMUNITY_COMMENT_LIKED,
+                forUserIds: [comment.userId],
+                userId: ctx.user.userId,
+            });
+        }
+    }
 
     return formatComment(comment, ctx.user);
 }
@@ -1207,13 +1369,37 @@ export async function toggleCommentReplyLike({
         throw new Error(responses.item_not_found);
     }
 
+    let liked = false;
     if (reply.likes.includes(ctx.user.userId)) {
         reply.likes = reply.likes.filter((id) => id !== ctx.user.userId);
     } else {
         reply.likes.push(ctx.user.userId);
+        liked = true;
     }
 
     await comment.save();
+
+    if (liked && reply.userId !== ctx.user.userId) {
+        const existingNotification = await NotificationModel.findOne({
+            domain: ctx.subdomain._id,
+            entityId: reply.replyId,
+            entityAction:
+                Constants.NotificationEntityAction.COMMUNITY_REPLY_LIKED,
+            forUserId: reply.userId,
+            userId: ctx.user.userId,
+        });
+        if (!existingNotification) {
+            await addNotification({
+                domain: ctx.subdomain._id.toString(),
+                entityId: reply.replyId,
+                entityAction:
+                    Constants.NotificationEntityAction.COMMUNITY_REPLY_LIKED,
+                forUserIds: [reply.userId],
+                userId: ctx.user.userId,
+                entityTargetId: comment.commentId,
+            });
+        }
+    }
 
     return formatComment(comment, ctx.user);
 }

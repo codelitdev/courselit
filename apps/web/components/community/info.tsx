@@ -100,7 +100,7 @@ export function CommunityInfo({
                     </p>
                 </div>
                 {!membershipStatus && (
-                    <Fragment className="w-full">
+                    <Fragment>
                         {amount > 0 && (
                             <Link
                                 href={`/checkout?id=${id}&type=${Constants.MembershipEntityType.COMMUNITY}`}

@@ -7,7 +7,10 @@
     "license": "MIT",
     "types": "dist/index.d.ts",
     "exports": {
-        ".": "./dist"
+        ".": {
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs"
+        }
     },
     "publishConfig": {
         "access": "public"

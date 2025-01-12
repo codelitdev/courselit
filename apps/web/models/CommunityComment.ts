@@ -15,6 +15,7 @@ export interface InternalCommunityComment
     userId: string;
     likes: string[];
     replies: InternalReply[];
+    deleted: boolean;
 }
 
 export interface InternalReply
@@ -54,7 +55,7 @@ const CommunityCommentSchema = new mongoose.Schema<InternalCommunityComment>(
         media: [CommunityMediaSchema],
         likes: [String],
         replies: [ReplySchema],
-        deleted: { type: Boolean, default: false },
+        deleted: { type: Boolean, required: true, default: false },
     },
     {
         timestamps: true,
