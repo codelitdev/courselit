@@ -5,9 +5,7 @@ import LoadingScreen from "@components/admin/loading-screen";
 import { ProfileContext } from "@components/contexts";
 import { UIConstants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
-import {
-    MANAGE_COMMUNITIES_PAGE_HEADING,
-} from "@ui-config/strings";
+import { MANAGE_COMMUNITIES_PAGE_HEADING } from "@ui-config/strings";
 import { useContext } from "react";
 import List from "./list";
 const { permissions } = UIConstants;

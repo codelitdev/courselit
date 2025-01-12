@@ -29,9 +29,7 @@ import {
     CommunityReportStatus,
     Constants,
 } from "@courselit/common-models";
-import {
-    getNextStatusForCommunityReport,
-} from "@ui-lib/utils";
+import { getNextStatusForCommunityReport } from "@ui-lib/utils";
 
 const itemsPerPage = 10;
 

@@ -1,6 +1,4 @@
-import {
-    COMMUNITY_REPORTS_HEADER,
-} from "@ui-config/strings";
+import { COMMUNITY_REPORTS_HEADER } from "@ui-config/strings";
 import type { Metadata, ResolvingMetadata } from "next";
 import { ReactNode } from "react";
 
