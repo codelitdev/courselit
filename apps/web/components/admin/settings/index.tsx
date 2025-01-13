@@ -39,6 +39,7 @@ import {
     SITE_SETTINGS_RAZORPAY_KEY_TEXT,
     MEDIA_SELECTOR_UPLOAD_BTN_CAPTION,
     MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
+    TOAST_TITLE_ERROR,
 } from "@/ui-config/strings";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import { decode, encode } from "base-64";
@@ -61,6 +62,7 @@ import {
     Dialog2,
     PageBuilderPropertyHeader,
     Checkbox,
+    useToast,
 } from "@courselit/components-library";
 import { useRouter } from "next/navigation";
 
@@ -106,6 +108,7 @@ const Settings = (props: SettingsProps) => {
         ? props.selectedTab
         : SITE_SETTINGS_SECTION_GENERAL;
     const router = useRouter();
+    const { toast } = useToast();
 
     const fetch = new FetchBuilder()
         .setUrl(`${props.address.backend}/api/graph`)
@@ -440,6 +443,11 @@ const Settings = (props: SettingsProps) => {
             }
         } catch (e: any) {
             props.dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: e.message,
+                variant: "destructive",
+            });
         } finally {
             props.dispatch(networkAction(false));
         }
