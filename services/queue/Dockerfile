@@ -1,4 +1,4 @@
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 
 # copy yarn specific files
@@ -20,7 +20,7 @@ RUN yarn rebuild
 RUN yarn build
 
 # Production image
-FROM node:20-alpine as runner
+FROM node:20-alpine AS runner
 
 ENV NODE_ENV production
 WORKDIR /app

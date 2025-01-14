@@ -15,8 +15,13 @@ import {
     getSymbolFromCurrency,
     Link,
     TextRenderer,
+    useToast,
 } from "@courselit/components-library";
-import { ProfileContext, SiteInfoContext } from "@components/contexts";
+import {
+    AddressContext,
+    ProfileContext,
+    SiteInfoContext,
+} from "@components/contexts";
 import {
     Dialog,
     DialogContent,
@@ -27,7 +32,8 @@ import {
     DialogTrigger,
 } from "@components/ui/dialog";
 import { checkPermission } from "@courselit/utils";
-import { COMMUNITY_SETTINGS } from "@ui-config/strings";
+import { COMMUNITY_SETTINGS, TOAST_TITLE_SUCCESS } from "@ui-config/strings";
+import { Share2 } from "lucide-react";
 const { permissions } = UIConstants;
 
 interface CommunityInfoProps {
@@ -40,6 +46,7 @@ interface CommunityInfoProps {
     rejectionReason?: string;
     paymentPlan: PaymentPlan;
     joiningReasonText?: string;
+    pageId: string;
     onJoin: (joiningReason?: string) => void;
     onLeave: () => void;
 }
@@ -54,6 +61,7 @@ export function CommunityInfo({
     rejectionReason,
     paymentPlan,
     joiningReasonText,
+    pageId,
     onJoin,
     onLeave,
 }: CommunityInfoProps) {
@@ -61,10 +69,12 @@ export function CommunityInfo({
     const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
     const [joiningReason, setJoiningReason] = useState("");
     const { amount, period } = getPlanPrice(paymentPlan);
+    const address = useContext(AddressContext);
     const siteinfo = useContext(SiteInfoContext);
     const { profile } = useContext(ProfileContext);
     const currencySymbol =
         getSymbolFromCurrency(siteinfo.currencyISOCode || "USD") || "$";
+    const { toast } = useToast();
 
     const handleJoinSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -80,10 +90,25 @@ export function CommunityInfo({
         setShowLeaveConfirmation(false);
     };
 
+    const handleShareClick = () => {
+        navigator.clipboard.writeText(`${address.frontend}/p/${pageId}`);
+        toast({
+            title: TOAST_TITLE_SUCCESS,
+            description: "Page ID copied to clipboard!",
+        });
+    };
+
     return (
         <Card>
-            <CardHeader>
-                <CardTitle>{name}</CardTitle>
+            <CardHeader className="flex justify-between items-center w-full">
+                <CardTitle className="w-full">
+                    <div class="flex justify-between items-center w-full">
+                        <p>{name}</p>
+                        <Button variant="ghost" onClick={handleShareClick}>
+                            <Share2 className="h-5 w-5" />
+                        </Button>
+                    </div>
+                </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
                 <img

@@ -1538,6 +1538,7 @@ export function CommunityForum({
                                 )!
                             }
                             joiningReasonText={community?.joiningReasonText}
+                            pageId={community?.pageId}
                             onJoin={handleJoin}
                             onLeave={handleLeave}
                         />
