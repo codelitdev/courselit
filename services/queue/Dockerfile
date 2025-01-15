@@ -20,7 +20,7 @@ RUN yarn rebuild
 RUN yarn build
 
 # Production image
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 
 ENV NODE_ENV production
 WORKDIR /app
