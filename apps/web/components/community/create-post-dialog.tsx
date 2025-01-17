@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -24,6 +24,7 @@ import { GifSelector } from "./gif-selector";
 import { MediaPreview } from "./media-preview";
 import { CommunityPost } from "@courselit/common-models";
 import { type MediaItem } from "./media-item";
+import { ProfileContext } from "@components/contexts";
 
 interface CreatePostDialogProps {
     onPostCreated: (
@@ -51,6 +52,7 @@ export function CreatePostDialog({
         category?: string;
     }>({});
     const [isPostButtonDisabled, setIsPostButtonDisabled] = useState(true);
+    const { profile } = useContext(ProfileContext);
 
     useEffect(() => {
         setIsPostButtonDisabled(title.trim() === "" || content.trim() === "");
@@ -172,13 +174,22 @@ export function CreatePostDialog({
                 <div className="flex items-center gap-2 mb-4">
                     <Avatar className="h-10 w-10">
                         <AvatarImage
-                            src="/courselit_backdrop_square.webp"
-                            alt="Your avatar"
+                            src={
+                                profile.avatar
+                                    ? profile.avatar.file
+                                    : "/courselit_backdrop_square.webp"
+                            }
+                            alt={`${profile.name} avatar`}
                         />
-                        <AvatarFallback>YN</AvatarFallback>
+                        <AvatarFallback>
+                            {(profile.name
+                                ? profile.name.charAt(0)
+                                : profile.email.charAt(0)
+                            ).toUpperCase()}
+                        </AvatarFallback>
                     </Avatar>
                     <div>
-                        <span className="font-semibold">Your Name</span>
+                        <span className="font-semibold">{profile.name}</span>
                     </div>
                 </div>
 

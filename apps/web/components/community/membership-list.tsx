@@ -100,7 +100,7 @@ export function MembershipList({ id }: { id: string }) {
 
     const loadMembers = async () => {
         const query = `
-            query ($communityId: String!, $page: Int, $limit: Int, $status: MemberStatus) {
+            query ($communityId: String!, $page: Int, $limit: Int, $status: MembershipStatusType) {
                 members: getMembers(communityId: $communityId, page: $page, limit: $limit, status: $status) {
                     user {
                         userId

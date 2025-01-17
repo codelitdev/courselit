@@ -4,9 +4,9 @@ import { generateUniquePasscode, hashCode } from "../../../../ui-lib/utils";
 import VerificationToken from "../../../../models/VerificationToken";
 import pug from "pug";
 import MagicCodeEmailTemplate from "../../../../templates/magic-code-email";
-import { send } from "../../../../services/mail";
 import DomainModel, { Domain } from "@models/Domain";
 import { generateEmailFrom } from "@/lib/utils";
+import { addMailJob } from "@/services/queue";
 
 export default async function handler(
     req: NextApiRequest,
@@ -44,7 +44,7 @@ export default async function handler(
             hideCourseLitBranding: domain.settings?.hideCourseLitBranding,
         });
 
-        await send({
+        await addMailJob({
             to: [sanitizedEmail],
             subject: `${responses.sign_in_mail_prefix} ${req.headers["host"]}`,
             body: emailBody,

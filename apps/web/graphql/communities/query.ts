@@ -24,6 +24,7 @@ import {
     CommunityMemberStatus,
     CommunityReportStatus,
 } from "@courselit/common-models";
+import userTypes from "../users/types";
 
 const queries = {
     getCommunity: {
@@ -65,7 +66,7 @@ const queries = {
                 type: new GraphQLNonNull(GraphQLString),
             },
             status: {
-                type: types.memberStatusType,
+                type: userTypes.membershipStatusType,
             },
         },
         resolve: async (
@@ -96,7 +97,7 @@ const queries = {
                 type: new GraphQLNonNull(GraphQLString),
             },
             status: {
-                type: types.memberStatusType,
+                type: userTypes.membershipStatusType,
             },
         },
         resolve: (

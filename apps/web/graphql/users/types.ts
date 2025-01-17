@@ -7,9 +7,42 @@ import {
     GraphQLInt,
     GraphQLList,
     GraphQLInputObjectType,
+    GraphQLEnumType,
 } from "graphql";
 import mediaTypes from "../media/types";
 import { getMedia } from "../media/logic";
+import { Constants } from "@courselit/common-models";
+
+const memberStatusMap = {};
+for (const status of [
+    Constants.MembershipStatus.PENDING,
+    Constants.MembershipStatus.ACTIVE,
+    Constants.MembershipStatus.REJECTED,
+    Constants.MembershipStatus.EXPIRED,
+    Constants.MembershipStatus.FAILED,
+]) {
+    memberStatusMap[status.toUpperCase()] = { value: status };
+}
+
+const membershipStatusType = new GraphQLEnumType({
+    name: "MembershipStatusType",
+    values: Object.fromEntries(
+        Object.entries(Constants.MembershipStatus).map(([key, value]) => [
+            key,
+            { value: value },
+        ]),
+    ),
+});
+
+const membershipEntityType = new GraphQLEnumType({
+    name: "MembershipEntityType",
+    values: Object.fromEntries(
+        Object.entries(Constants.MembershipEntityType).map(([key, value]) => [
+            key,
+            { value: value },
+        ]),
+    ),
+});
 
 const progress = new GraphQLObjectType({
     name: "Progress",
@@ -165,6 +198,8 @@ const userTypes = {
     createSegmentInput,
     tagWithDetails,
     userContent,
+    membershipStatusType,
+    membershipEntityType,
 };
 
 export default userTypes;

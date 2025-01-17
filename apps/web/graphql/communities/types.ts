@@ -16,20 +16,6 @@ import { getUser } from "../users/logic";
 import GQLContext from "@models/GQLContext";
 import paymentPlansTypes from "../paymentplans/types";
 
-const memberStatusMap = {};
-for (const status of [
-    Constants.MembershipStatus.PENDING,
-    Constants.MembershipStatus.ACTIVE,
-    Constants.MembershipStatus.REJECTED,
-]) {
-    memberStatusMap[status.toUpperCase()] = { value: status };
-}
-
-const memberStatusType = new GraphQLEnumType({
-    name: "MemberStatus",
-    values: memberStatusMap,
-});
-
 const communityReportContentType = new GraphQLEnumType({
     name: "CommunityReportContentType",
     values: Object.fromEntries(
@@ -121,7 +107,7 @@ const communityMemberStatus = new GraphQLObjectType({
             resolve: (member, _, ctx: GQLContext, __) =>
                 getUser(member.userId, ctx),
         },
-        status: { type: memberStatusType },
+        status: { type: userTypes.membershipStatusType },
         joiningReason: { type: GraphQLString },
         rejectionReason: { type: GraphQLString },
     },
@@ -201,7 +187,6 @@ const types = {
     community,
     communityPost,
     communityMemberStatus,
-    memberStatusType,
     communityPostInputMedia,
     communityComment,
     communityReportContentType,

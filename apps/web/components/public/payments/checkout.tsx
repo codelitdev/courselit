@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -19,13 +19,14 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronUp, ShoppingCart } from "lucide-react";
+import { Check, ChevronUp, ShoppingCart } from "lucide-react";
 import { LoginForm } from "./login-form";
 import {
     PaymentPlan,
     Constants,
     MembershipEntityType,
     UIConstants,
+    MembershipStatus,
 } from "@courselit/common-models";
 import {
     AddressContext,
@@ -97,10 +98,53 @@ export default function Checkout({
     const [isLoggedIn, setIsLoggedIn] = useState(!!profile?.email);
     const [userEmail, setUserEmail] = useState(profile?.email || "");
     const [userName, setUserName] = useState(profile?.name || "");
+    const [membershipStatus, setMembershipStatus] = useState<
+        MembershipStatus | undefined
+    >();
 
     const stripePromise = loadStripe(siteinfo.stripeKey as string);
     const router = useRouter();
     const { toast } = useToast();
+
+    useEffect(() => {
+        const fetchMembership = async () => {
+            const query = `
+                query ($entityId: String!, $entityType: MembershipEntityType!) {
+                    membershipStatus: getMembershipStatus(entityId: $entityId, entityType: $entityType)
+                }
+            `;
+            const fetch = new FetchBuilder()
+                .setUrl(`${address.backend}/api/graph`)
+                .setIsGraphQLEndpoint(true)
+                .setPayload({
+                    query,
+                    variables: {
+                        entityId: product.id,
+                        entityType: product.type.toUpperCase(),
+                    },
+                })
+                .build();
+
+            try {
+                const response = await fetch.exec();
+                if (response.membershipStatus) {
+                    setMembershipStatus(
+                        response.membershipStatus.toLowerCase(),
+                    );
+                }
+            } catch (err) {
+                toast({
+                    title: "Error",
+                    description: err.message,
+                    variant: "destructive",
+                });
+            }
+        };
+
+        if (profile.userId) {
+            fetchMembership();
+        }
+    }, [profile]);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -332,148 +376,193 @@ export default function Checkout({
                 <MobileOrderSummary />
                 <div className="w-full grid md:grid-cols-[1fr,400px] gap-8 items-start px-4 py-8">
                     <div className="space-y-8">
-                        <div>
-                            <h2 className="text-base font-semibold mb-2">
-                                Personal Information
-                            </h2>
-                            {!isLoggedIn ? (
-                                <LoginForm
-                                    onLoginComplete={handleLoginComplete}
-                                />
-                            ) : (
-                                <div className="text-sm space-y-2">
-                                    <p>
-                                        <span className="font-semibold">
-                                            Email:
-                                        </span>{" "}
-                                        {userEmail}
-                                    </p>
-                                    <p>
-                                        <span className="font-semibold">
-                                            Name:
-                                        </span>{" "}
-                                        {userName}
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                        <FormProvider {...form}>
-                            <form
-                                onSubmit={form.handleSubmit(onSubmit)}
-                                className="space-y-6"
-                            >
-                                <div className="mb-6">
-                                    <h2 className="text-base font-semibold mb-4">
-                                        Select Payment Plan
+                        {membershipStatus ===
+                            Constants.MembershipStatus.ACTIVE ||
+                        membershipStatus ===
+                            Constants.MembershipStatus.REJECTED ? (
+                            <div className="">
+                                <h2 className="text-lg mb-4 flex items-center font-semibold gap-2">
+                                    <Check /> Already owned
+                                </h2>
+                                <p className="text-muted-foreground mb-8">
+                                    You already have access to this resource.
+                                </p>
+                                <Button
+                                    onClick={() => {
+                                        if (
+                                            product.type ===
+                                            Constants.MembershipEntityType
+                                                .COMMUNITY
+                                        ) {
+                                            router.replace(
+                                                `/dashboard4/community/${product.id}`,
+                                            );
+                                        } else if (
+                                            product.type ===
+                                            Constants.MembershipEntityType
+                                                .COURSE
+                                        ) {
+                                            router.replace(
+                                                `/course/${product.id}`,
+                                            );
+                                        }
+                                    }}
+                                    className="bg-black text-white hover:bg-black/90"
+                                >
+                                    Go to the resource
+                                </Button>
+                            </div>
+                        ) : (
+                            <>
+                                <div>
+                                    <h2 className="text-base font-semibold mb-2">
+                                        Personal Information
                                     </h2>
-                                    <FormField
-                                        control={form.control}
-                                        name="selectedPlan"
-                                        render={({ field }) => (
-                                            <FormItem className="space-y-3">
-                                                <FormControl>
-                                                    <RadioGroup
-                                                        onValueChange={(
-                                                            value,
-                                                        ) => {
-                                                            field.onChange(
-                                                                value,
-                                                            );
-                                                            handlePlanSelection(
-                                                                value,
-                                                            );
-                                                        }}
-                                                        defaultValue={
-                                                            field.value
-                                                        }
-                                                        className="space-y-3"
-                                                    >
-                                                        {paymentPlans.map(
-                                                            (plan) => (
-                                                                <FormItem
-                                                                    key={
-                                                                        plan.planId
-                                                                    }
-                                                                    className="flex items-start space-x-3 space-y-0"
-                                                                >
-                                                                    <FormControl>
-                                                                        <RadioGroupItem
-                                                                            value={
+                                    {!isLoggedIn ? (
+                                        <LoginForm
+                                            onLoginComplete={
+                                                handleLoginComplete
+                                            }
+                                        />
+                                    ) : (
+                                        <div className="text-sm space-y-2">
+                                            <p>
+                                                <span className="font-semibold">
+                                                    Email:
+                                                </span>{" "}
+                                                {userEmail}
+                                            </p>
+                                            <p>
+                                                <span className="font-semibold">
+                                                    Name:
+                                                </span>{" "}
+                                                {userName}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                                <FormProvider {...form}>
+                                    <form
+                                        onSubmit={form.handleSubmit(onSubmit)}
+                                        className="space-y-6"
+                                    >
+                                        <div className="mb-6">
+                                            <h2 className="text-base font-semibold mb-4">
+                                                Select Payment Plan
+                                            </h2>
+                                            <FormField
+                                                control={form.control}
+                                                name="selectedPlan"
+                                                render={({ field }) => (
+                                                    <FormItem className="space-y-3">
+                                                        <FormControl>
+                                                            <RadioGroup
+                                                                onValueChange={(
+                                                                    value,
+                                                                ) => {
+                                                                    field.onChange(
+                                                                        value,
+                                                                    );
+                                                                    handlePlanSelection(
+                                                                        value,
+                                                                    );
+                                                                }}
+                                                                defaultValue={
+                                                                    field.value
+                                                                }
+                                                                className="space-y-3"
+                                                            >
+                                                                {paymentPlans.map(
+                                                                    (plan) => (
+                                                                        <FormItem
+                                                                            key={
                                                                                 plan.planId
                                                                             }
-                                                                            disabled={
-                                                                                !isLoggedIn
-                                                                            }
-                                                                        />
-                                                                    </FormControl>
-                                                                    <div className="space-y-0.5">
-                                                                        <FormLabel className="text-base font-normal">
-                                                                            {
-                                                                                plan.name
-                                                                            }
-                                                                        </FormLabel>
-                                                                        <p className="text-sm text-muted-foreground">
-                                                                            {getPlanDescription(
-                                                                                plan,
-                                                                                currencySymbol,
-                                                                            )}
-                                                                        </p>
-                                                                    </div>
-                                                                </FormItem>
-                                                            ),
-                                                        )}
-                                                    </RadioGroup>
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
-                                {selectedPlan?.type === paymentPlanType.FREE &&
-                                    product.type ===
-                                        Constants.MembershipEntityType
-                                            .COMMUNITY && (
-                                        <FormField
-                                            control={form.control}
-                                            name="joiningReason"
-                                            render={({ field }) => (
-                                                <FormItem className="mb-6">
-                                                    <FormLabel className="text-sm font-semibold mb-4">
-                                                        {product.joiningReasonText ||
-                                                            "Reason for joining"}
-                                                    </FormLabel>
-                                                    <FormControl>
-                                                        <textarea
-                                                            className="w-full border rounded p-2"
-                                                            {...field}
-                                                            placeholder="Please provide your reason for joining"
-                                                        />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                    )}
-                                <Button
-                                    type="submit"
-                                    className="w-full bg-black text-white hover:bg-black/90"
-                                    disabled={
-                                        !isLoggedIn ||
-                                        !form.formState.isValid ||
-                                        (selectedPlan?.type ===
+                                                                            className="flex items-start space-x-3 space-y-0"
+                                                                        >
+                                                                            <FormControl>
+                                                                                <RadioGroupItem
+                                                                                    value={
+                                                                                        plan.planId
+                                                                                    }
+                                                                                    disabled={
+                                                                                        !isLoggedIn
+                                                                                    }
+                                                                                />
+                                                                            </FormControl>
+                                                                            <div className="space-y-0.5">
+                                                                                <FormLabel className="text-base font-normal">
+                                                                                    {
+                                                                                        plan.name
+                                                                                    }
+                                                                                </FormLabel>
+                                                                                <p className="text-sm text-muted-foreground">
+                                                                                    {getPlanDescription(
+                                                                                        plan,
+                                                                                        currencySymbol,
+                                                                                    )}
+                                                                                </p>
+                                                                            </div>
+                                                                        </FormItem>
+                                                                    ),
+                                                                )}
+                                                            </RadioGroup>
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
+                                        {selectedPlan?.type ===
                                             paymentPlanType.FREE &&
                                             product.type ===
                                                 Constants.MembershipEntityType
-                                                    .COMMUNITY &&
-                                            !form.getValues("joiningReason"))
-                                    }
-                                >
-                                    Complete Purchase
-                                </Button>
-                            </form>
-                        </FormProvider>
+                                                    .COMMUNITY && (
+                                                <FormField
+                                                    control={form.control}
+                                                    name="joiningReason"
+                                                    render={({ field }) => (
+                                                        <FormItem className="mb-6">
+                                                            <FormLabel className="text-sm font-semibold mb-4">
+                                                                {product.joiningReasonText ||
+                                                                    "Reason for joining"}
+                                                            </FormLabel>
+                                                            <FormControl>
+                                                                <textarea
+                                                                    className="w-full border rounded p-2"
+                                                                    {...field}
+                                                                    placeholder="Please provide your reason for joining"
+                                                                />
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            )}
+                                        <Button
+                                            type="submit"
+                                            className="w-full bg-black text-white hover:bg-black/90"
+                                            disabled={
+                                                !isLoggedIn ||
+                                                !form.formState.isValid ||
+                                                (selectedPlan?.type ===
+                                                    paymentPlanType.FREE &&
+                                                    product.type ===
+                                                        Constants
+                                                            .MembershipEntityType
+                                                            .COMMUNITY &&
+                                                    !form.getValues(
+                                                        "joiningReason",
+                                                    ))
+                                            }
+                                        >
+                                            Complete Purchase
+                                        </Button>
+                                    </form>
+                                </FormProvider>
+                            </>
+                        )}
                     </div>
-
                     <div className="hidden md:block">
                         <DesktopOrderSummary />
                     </div>

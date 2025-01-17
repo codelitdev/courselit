@@ -20,6 +20,8 @@ import {
     Constants,
     Media,
     Membership,
+    MembershipEntityType,
+    MembershipStatus,
     UserFilterWithAggregator,
 } from "@courselit/common-models";
 import { recordActivity } from "../../lib/record-activity";
@@ -28,11 +30,11 @@ import finalizePurchase from "@/lib/finalize-purchase";
 import { getCourseOrThrow } from "../courses/logic";
 import pug from "pug";
 import courseEnrollTemplate from "@/templates/course-enroll";
-import { send } from "../../services/mail";
 import { generateEmailFrom } from "@/lib/utils";
 import MembershipModel from "@models/Membership";
 import CommunityModel from "@models/Community";
 import CourseModel from "@models/Course";
+import { addMailJob } from "@/services/queue";
 
 const removeAdminFieldsFromUserObject = (user: User) => ({
     id: user._id,
@@ -181,7 +183,7 @@ export const inviteCustomer = async (
                     ctx.subdomain.settings?.hideCourseLitBranding,
             });
 
-            await send({
+            await addMailJob({
                 to: [user.email],
                 subject: `You have been invited to ${course.title}`,
                 body: emailBody,
@@ -687,4 +689,25 @@ export const getUserContent = async (
     }
 
     return content;
+};
+
+export const getMembershipStatus = async ({
+    entityId,
+    entityType,
+    ctx,
+}: {
+    entityId: string;
+    entityType: MembershipEntityType;
+    ctx: GQLContext;
+}): Promise<MembershipStatus | null> => {
+    checkIfAuthenticated(ctx);
+
+    const membership: Membership | null = await MembershipModel.findOne({
+        domain: ctx.subdomain._id,
+        entityId,
+        entityType,
+        userId: ctx.user.userId,
+    });
+
+    return membership ? membership.status : null;
 };

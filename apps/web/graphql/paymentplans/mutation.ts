@@ -2,6 +2,7 @@ import { GraphQLInt, GraphQLNonNull, GraphQLString } from "graphql";
 import types from "./types";
 import { archivePaymentPlan, changeDefaultPlan, createPlan } from "./logic";
 import { MembershipEntityType } from "@courselit/common-models";
+import userTypes from "../users/types";
 
 const mutations = {
     createPlan: {
@@ -11,7 +12,7 @@ const mutations = {
             type: { type: new GraphQLNonNull(types.paymentPlanType) },
             entityId: { type: new GraphQLNonNull(GraphQLString) },
             entityType: {
-                type: new GraphQLNonNull(types.membershipEntityType),
+                type: new GraphQLNonNull(userTypes.membershipEntityType),
             },
             oneTimeAmount: { type: GraphQLInt },
             emiAmount: { type: GraphQLInt },
@@ -63,7 +64,7 @@ const mutations = {
             planId: { type: new GraphQLNonNull(GraphQLString) },
             entityId: { type: new GraphQLNonNull(GraphQLString) },
             entityType: {
-                type: new GraphQLNonNull(types.membershipEntityType),
+                type: new GraphQLNonNull(userTypes.membershipEntityType),
             },
         },
         resolve: async (
@@ -86,7 +87,7 @@ const mutations = {
             planId: { type: new GraphQLNonNull(GraphQLString) },
             entityId: { type: new GraphQLNonNull(GraphQLString) },
             entityType: {
-                type: new GraphQLNonNull(types.membershipEntityType),
+                type: new GraphQLNonNull(userTypes.membershipEntityType),
             },
         },
         resolve: async (

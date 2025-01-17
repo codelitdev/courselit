@@ -15,8 +15,10 @@ import {
     getTags,
     inviteCustomer,
     getUserContent,
+    getMembershipStatus,
 } from "./logic";
 import GQLContext from "../../models/GQLContext";
+import { MembershipEntityType } from "@courselit/common-models";
 
 const queries = {
     getUser: {
@@ -79,6 +81,24 @@ const queries = {
             { userId }: { userId?: string },
             context: GQLContext,
         ) => getUserContent(context, userId),
+    },
+    getMembershipStatus: {
+        type: types.membershipStatusType,
+        args: {
+            userId: { type: GraphQLString },
+            entityId: { type: new GraphQLNonNull(GraphQLString) },
+            entityType: {
+                type: new GraphQLNonNull(types.membershipEntityType),
+            },
+        },
+        resolve: (
+            _: any,
+            {
+                entityId,
+                entityType,
+            }: { entityId: string; entityType: MembershipEntityType },
+            context: GQLContext,
+        ) => getMembershipStatus({ entityId, entityType, ctx: context }),
     },
 };
 

@@ -6,17 +6,7 @@ import {
     GraphQLString,
 } from "graphql";
 import { Constants } from "@courselit/common-models";
-const { PaymentPlanType, MembershipEntityType } = Constants;
-
-const membershipEntityType = new GraphQLEnumType({
-    name: "MembershipEntityType",
-    values: Object.fromEntries(
-        Object.entries(MembershipEntityType).map(([key, value]) => [
-            key,
-            { value: value },
-        ]),
-    ),
-});
+const { PaymentPlanType } = Constants;
 
 const paymentPlanType = new GraphQLEnumType({
     name: "PaymentPlanType",
@@ -45,7 +35,6 @@ const paymentPlan = new GraphQLObjectType({
 const types = {
     paymentPlan,
     paymentPlanType,
-    membershipEntityType,
 };
 
 export default types;

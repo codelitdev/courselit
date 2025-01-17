@@ -94,7 +94,7 @@ export function CommunityInfo({
         navigator.clipboard.writeText(`${address.frontend}/p/${pageId}`);
         toast({
             title: TOAST_TITLE_SUCCESS,
-            description: "Page ID copied to clipboard!",
+            description: "Page URL copied to clipboard!",
         });
     };
 
