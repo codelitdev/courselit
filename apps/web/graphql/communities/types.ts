@@ -110,6 +110,8 @@ const communityMemberStatus = new GraphQLObjectType({
         status: { type: userTypes.membershipStatusType },
         joiningReason: { type: GraphQLString },
         rejectionReason: { type: GraphQLString },
+        subscriptionMethod: { type: GraphQLString },
+        subscriptionId: { type: GraphQLString },
     },
 });
 

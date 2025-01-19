@@ -21,5 +21,5 @@ export default interface Payment {
     getName: () => string;
     cancel: (id: string) => void;
     getSubscriptionId: (event: any) => string;
-    validateSubscription: (subscriptionId: string) => boolean;
+    validateSubscription: (subscriptionId: string) => Promise<boolean>;
 }

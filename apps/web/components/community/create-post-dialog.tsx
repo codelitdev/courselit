@@ -18,7 +18,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { Paperclip, Link2, Video, Smile, Image } from "lucide-react";
+import { Paperclip, Video, Smile, Image } from "lucide-react";
 import { EmojiPicker } from "./emoji-picker";
 import { GifSelector } from "./gif-selector";
 import { MediaPreview } from "./media-preview";
@@ -233,7 +233,7 @@ export function CreatePostDialog({
 
                 <div className="flex flex-wrap items-center justify-between gap-4 mt-6">
                     <div className="flex flex-wrap items-center gap-2">
-                        <Popover>
+                        <Popover modal={true}>
                             <PopoverTrigger asChild>
                                 <Button
                                     variant="ghost"
@@ -261,7 +261,7 @@ export function CreatePostDialog({
                                 </div>
                             </PopoverContent>
                         </Popover>
-                        <Popover>
+                        {/* <Popover modal={true}>
                             <PopoverTrigger asChild>
                                 <Button
                                     variant="ghost"
@@ -297,8 +297,8 @@ export function CreatePostDialog({
                                     </Button>
                                 </div>
                             </PopoverContent>
-                        </Popover>
-                        <Popover>
+                        </Popover> */}
+                        <Popover modal={true}>
                             <PopoverTrigger asChild>
                                 <Button
                                     variant="ghost"
@@ -318,6 +318,7 @@ export function CreatePostDialog({
                                         id="video"
                                         type="url"
                                         placeholder="https://youtube.com/watch?v="
+                                        onChange={(e) => {}}
                                     />
                                     <Button
                                         size="sm"
@@ -338,6 +339,7 @@ export function CreatePostDialog({
                         <Popover
                             open={isEmojiPickerOpen}
                             onOpenChange={setIsEmojiPickerOpen}
+                            modal={true}
                         >
                             <PopoverTrigger asChild>
                                 <Button
@@ -358,6 +360,7 @@ export function CreatePostDialog({
                         <Popover
                             open={isGifSelectorOpen}
                             onOpenChange={setIsGifSelectorOpen}
+                            modal={true}
                         >
                             <PopoverTrigger asChild>
                                 <Button

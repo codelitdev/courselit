@@ -16,7 +16,7 @@ import {
     TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import { ChangeEvent, useContext, useEffect, useState } from "react";
-import { checkPermission, FetchBuilder } from "@courselit/utils";
+import { FetchBuilder } from "@courselit/utils";
 import {
     PaymentPlan,
     Constants,
@@ -25,7 +25,6 @@ import {
     Profile,
     Media,
 } from "@courselit/common-models";
-import LoadingScreen from "@components/admin/loading-screen";
 import {
     Badge,
     Form,
@@ -308,14 +307,6 @@ export default function Page({
         }
     };
 
-    if (
-        !checkPermission(profile.permissions!, [
-            UIConstants.permissions.manageSite,
-        ])
-    ) {
-        return <LoadingScreen />;
-    }
-
     const handleAddCategory = async (e: React.FormEvent) => {
         e.preventDefault();
         if (newCategory.trim()) {
@@ -553,7 +544,10 @@ export default function Page({
     };
 
     return (
-        <DashboardContent breadcrumbs={breadcrumbs}>
+        <DashboardContent
+            breadcrumbs={breadcrumbs}
+            permissions={[UIConstants.permissions.manageCommunity]}
+        >
             <Form onSubmit={handleSubmit} className="space-y-8">
                 <div className="space-y-2">
                     <div className="flex flex-col lg:flex-row gap-4 lg:items-center justify-between mb-8">

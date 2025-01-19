@@ -35,6 +35,7 @@ import MembershipModel from "@models/Membership";
 import CommunityModel from "@models/Community";
 import CourseModel from "@models/Course";
 import { addMailJob } from "@/services/queue";
+import { getPaymentMethodFromSettings } from "@/payments-new";
 
 const removeAdminFieldsFromUserObject = (user: User) => ({
     id: user._id,
@@ -710,4 +711,23 @@ export const getMembershipStatus = async ({
     });
 
     return membership ? membership.status : null;
+};
+
+export const hasActiveSubscription = async (
+    member: Membership,
+    ctx: GQLContext,
+) => {
+    if (!member.subscriptionId || !member.subscriptionMethod) {
+        return false;
+    }
+
+    const paymentMethod = await getPaymentMethodFromSettings(
+        ctx.subdomain.settings,
+        member.subscriptionMethod,
+    );
+    const isSubscriptionActive = await paymentMethod.validateSubscription(
+        member.subscriptionId,
+    );
+
+    return isSubscriptionActive;
 };

@@ -47,6 +47,8 @@ import {
 import { error } from "@/services/logger";
 import NotificationModel from "@models/Notification";
 import { addNotification } from "@/services/queue";
+import { hasActiveSubscription } from "../users/logic";
+import { internal } from "@config/strings";
 
 const { permissions, communityPage } = constants;
 
@@ -114,7 +116,7 @@ export async function createCommunity({
         entityId: community.communityId,
         entityType: Constants.MembershipEntityType.COMMUNITY,
         status: Constants.MembershipStatus.ACTIVE,
-        joiningReason: "Joining as creator",
+        joiningReason: internal.joining_reason_creator,
     });
 
     return community;
@@ -821,6 +823,8 @@ export async function getMembers({
         status: member.status,
         joiningReason: member.joiningReason,
         rejectionReason: member.rejectionReason,
+        subscriptionMethod: member.subscriptionMethod,
+        subscriptionId: member.subscriptionId,
     }));
 }
 
@@ -924,14 +928,19 @@ export async function updateMemberStatus({
         if (!rejectionReason) {
             throw new Error(responses.rejection_reason_missing);
         }
+        if (await hasActiveSubscription(member, ctx)) {
+            throw new Error(
+                responses.cannot_reject_member_with_active_subscription,
+            );
+        }
         member.rejectionReason = rejectionReason;
     }
 
     member.status = nextStatus;
 
-    await (member as any).save();
-
     if (member.status === Constants.MembershipStatus.ACTIVE) {
+        member.rejectionReason = undefined;
+
         await UserModel.updateOne(
             { userId: userId },
             {
@@ -955,6 +964,8 @@ export async function updateMemberStatus({
             userId: ctx.user.userId,
         });
     }
+
+    await (member as any).save();
 
     return member;
 }
@@ -1098,10 +1109,7 @@ export async function postComment({
     checkIfAuthenticated(ctx);
 
     if (
-        !checkPermission(ctx.user.permissions, [
-            permissions.postInCommunity,
-            permissions.commentInCommunity,
-        ])
+        !checkPermission(ctx.user.permissions, [permissions.commentInCommunity])
     ) {
         throw new Error(responses.action_not_allowed);
     }

@@ -649,7 +649,6 @@ export function CommunityForum({
 
         switch (media.type) {
             case "image":
-            case "gif":
                 if (media.media) {
                     return (
                         <Image
@@ -659,7 +658,7 @@ export function CommunityForum({
                                     : media.media.thumbnail
                             }
                             alt="Post media"
-                            className="w-24 h-24 object-cover rounded-md"
+                            className="w-48 h-48 object-cover rounded-md"
                             width={96}
                             height={96}
                         />
@@ -667,13 +666,22 @@ export function CommunityForum({
                 } else {
                     return null;
                 }
+            case "gif":
+                return (
+                    <img
+                        src={media.url}
+                        alt="GIF"
+                        className="w-48 h-48 object-cover rounded-md"
+                    />
+                );
             case "video":
                 if (media.media) {
                     return (
                         <video
                             src={media.media.file}
                             poster={media.media.thumbnail}
-                            className="w-24 h-24 object-cover rounded-md"
+                            className="w-full h-48 aspect-video object-cover rounded-md"
+                            controls
                         >
                             Your browser does not support the video tag.
                         </video>
@@ -682,16 +690,55 @@ export function CommunityForum({
                     return null;
                 }
             case "youtube":
+                if (options && options.renderActualFile) {
+                    return (
+                        <iframe
+                            width="100%"
+                            height="100%"
+                            src={media.url}
+                            title="YouTube video player"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                        ></iframe>
+                    );
+                }
                 return (
-                    <img
-                        src={`https://img.youtube.com/vi/${media.url.split("/").pop()}/hqdefault.jpg`}
-                        alt="YouTube thumbnail"
-                        className="w-24 h-24 object-cover rounded-md"
-                    />
+                    <div className="relative w-full aspect-video">
+                        <img
+                            src={`https://img.youtube.com/vi/${media.url.split("/").pop()}/hqdefault.jpg`}
+                            alt="YouTube thumbnail"
+                            className="w-full h-full object-cover rounded-md"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 68 48"
+                                width="68"
+                                height="48"
+                            >
+                                <path
+                                    className="ytp-large-play-button-bg"
+                                    fill="#f00"
+                                    d="M.66,37.2C1.15,38.8,2.4,40,4,40.5c3.5,1,17,1,30,1s26.5,0,30-1c1.6-.5,2.85-1.7,3.34-3.3.9-3.5,1-11.5,1-15.5s-.1-12-1-15.5C62.85,1.7,61.6.5,60,.1,56.5-.9,43-.9,30-.9S3.5-.9,0,.1C-1.6.5-2.85,1.7-3.34,3.3c-.9,3.5-1,11.5-1,15.5s.1,12,1,15.5Z"
+                                />
+                                <path fill="#fff" d="M 45,24 27,14 27,34" />
+                            </svg>
+                        </div>
+                    </div>
                 );
             case "pdf":
+                if (options && options.renderActualFile) {
+                    // embed pdf
+                    return (
+                        <iframe
+                            src={media.media?.file}
+                            className="w-full h-48"
+                        ></iframe>
+                    );
+                }
                 return (
-                    <div className="w-24 h-24 rounded bg-red-500 flex flex-col justify-between">
+                    <div className="w-36 h-48 rounded bg-red-500 flex flex-col justify-between">
                         <div>
                             <div className="p-1 mt-1 ml-1 rounded bg-gray-900 text-xs text-white inline-block">
                                 PDF
@@ -1343,21 +1390,28 @@ export function CommunityForum({
                                                     </DropdownMenu>
                                                 </div>
                                                 <p>{post.content}</p>
-                                                {post.media &&
-                                                    post.media.map((media) => (
-                                                        <div
-                                                            className="flex-shrink-0"
-                                                            key={media.title}
-                                                        >
-                                                            {renderMediaPreview(
-                                                                media,
-                                                                {
-                                                                    renderActualFile:
-                                                                        true,
-                                                                },
-                                                            )}
-                                                        </div>
-                                                    ))}
+                                                {post.media && (
+                                                    <div className="flex gap-2 overflow-x-auto">
+                                                        {post.media.map(
+                                                            (media) => (
+                                                                <div
+                                                                    className="flex-shrink-0"
+                                                                    key={
+                                                                        media.title
+                                                                    }
+                                                                >
+                                                                    {renderMediaPreview(
+                                                                        media,
+                                                                        {
+                                                                            renderActualFile:
+                                                                                true,
+                                                                        },
+                                                                    )}
+                                                                </div>
+                                                            ),
+                                                        )}
+                                                    </div>
+                                                )}
                                                 <div className="flex items-center gap-4">
                                                     <Button
                                                         variant="ghost"

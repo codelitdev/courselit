@@ -107,8 +107,9 @@ export default class StripePayment implements Payment {
         return (event.data.object as any).subscription;
     }
 
-    validateSubscription(subscriptionId: string) {
-        const subscription = this.stripe.subscriptions.retrieve(subscriptionId);
+    async validateSubscription(subscriptionId: string) {
+        const subscription =
+            await this.stripe.subscriptions.retrieve(subscriptionId);
 
         if (subscription.status === "active") {
             return true;

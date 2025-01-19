@@ -28,11 +28,12 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Copy } from "lucide-react";
 import {
     Badge,
     Link,
     PaginatedTable,
+    Tooltip,
     useToast,
 } from "@courselit/components-library";
 import {
@@ -64,7 +65,12 @@ const itemsPerPage = 10;
 
 type Member = Pick<
     Membership,
-    "entityId" | "status" | "rejectionReason" | "joiningReason"
+    | "entityId"
+    | "status"
+    | "rejectionReason"
+    | "joiningReason"
+    | "subscriptionMethod"
+    | "subscriptionId"
 > & {
     user: Pick<User, "email" | "name" | "userId" | "avatar">;
 };
@@ -114,6 +120,8 @@ export function MembershipList({ id }: { id: string }) {
                     status
                     rejectionReason
                     joiningReason
+                    subscriptionMethod
+                    subscriptionId
                 },
                 totalMembers: getMembersCount(communityId: $communityId, status: $status) 
             }`;
@@ -139,6 +147,7 @@ export function MembershipList({ id }: { id: string }) {
             toast({
                 title: TOAST_TITLE_ERROR,
                 description: e.message,
+                variant: "destructive",
             });
         }
     };
@@ -188,6 +197,7 @@ export function MembershipList({ id }: { id: string }) {
             toast({
                 title: TOAST_TITLE_ERROR,
                 description: e.message,
+                variant: "destructive",
             });
         } finally {
             setIsUpdating(false);
@@ -240,6 +250,14 @@ export function MembershipList({ id }: { id: string }) {
             setSelectedMember(null);
             setRejectionReason("");
         }
+    };
+
+    const handleCopyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        toast({
+            title: "Success",
+            description: "Subscription ID is copied to clipboard",
+        });
     };
 
     return (
@@ -296,11 +314,12 @@ export function MembershipList({ id }: { id: string }) {
                                     <TableHead className="hidden lg:table-cell">
                                         Reason
                                     </TableHead>
-                                    <TableHead>Status</TableHead>
                                     <TableHead className="hidden xl:table-cell">
                                         Rejection Reason
                                     </TableHead>
-                                    <TableHead>Actions</TableHead>
+                                    <TableHead>Subscription ID</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    {/* <TableHead>Actions</TableHead> */}
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -356,7 +375,7 @@ export function MembershipList({ id }: { id: string }) {
                                         <TableCell className="hidden lg:table-cell max-w-xs truncate">
                                             {member.joiningReason}
                                         </TableCell>
-                                        <TableCell>
+                                        {/* <TableCell className="flex items-center space-x-2">
                                             <Badge
                                                 variant={
                                                     member.status === "pending"
@@ -372,11 +391,6 @@ export function MembershipList({ id }: { id: string }) {
                                                     .toUpperCase() +
                                                     member.status.slice(1)}
                                             </Badge>
-                                        </TableCell>
-                                        <TableCell className="hidden xl:table-cell max-w-xs truncate">
-                                            {member.rejectionReason || "-"}
-                                        </TableCell>
-                                        <TableCell>
                                             {member.user.userId !==
                                                 profile.userId && (
                                                 <Button
@@ -389,11 +403,84 @@ export function MembershipList({ id }: { id: string }) {
                                                     }
                                                     disabled={isUpdating}
                                                 >
-                                                    <RotateCcw className="mr-2 h-3 w-3" />{" "}
-                                                    Change
+                                                    <RotateCcw className="h-3 w-3" />{" "}
                                                 </Button>
                                             )}
+                                        </TableCell> */}
+                                        <TableCell className="hidden xl:table-cell max-w-xs truncate">
+                                            {member.rejectionReason || "-"}
                                         </TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center gap-2">
+                                                {member.subscriptionId || "-"}
+                                                {member.subscriptionId && (
+                                                    <Tooltip title="Copy Subscription ID">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() =>
+                                                                handleCopyToClipboard(
+                                                                    member.subscriptionId,
+                                                                )
+                                                            }
+                                                        >
+                                                            <Copy className="h-4 w-4" />
+                                                        </Button>
+                                                    </Tooltip>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="flex items-center space-x-2">
+                                            <Badge
+                                                variant={
+                                                    member.status === "pending"
+                                                        ? "default"
+                                                        : member.status ===
+                                                            "approved"
+                                                          ? "success"
+                                                          : "destructive"
+                                                }
+                                            >
+                                                {member.status
+                                                    .charAt(0)
+                                                    .toUpperCase() +
+                                                    member.status.slice(1)}
+                                            </Badge>
+                                            {member.user.userId !==
+                                                profile.userId && (
+                                                <Tooltip title="Change status">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() =>
+                                                            handleStatusChange(
+                                                                member,
+                                                            )
+                                                        }
+                                                        disabled={isUpdating}
+                                                    >
+                                                        <RotateCcw className="h-3 w-3" />{" "}
+                                                    </Button>
+                                                </Tooltip>
+                                            )}
+                                        </TableCell>
+                                        {/* <TableCell>
+                                            {member.user.userId !==
+                                                profile.userId && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        handleStatusChange(
+                                                            member,
+                                                        )
+                                                    }
+                                                    disabled={isUpdating}
+                                                >
+                                                    <RotateCcw className="h-3 w-3" />{" "}
+                                                </Button>
+                                            )}
+                                        </TableCell> */}
                                     </TableRow>
                                 ))}
                             </TableBody>

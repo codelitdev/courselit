@@ -6,8 +6,8 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 interface MediaPreviewProps {
     items: Array<{
-        type: "youtube" | "pdf" | "image" | "video";
-        url: string;
+        type: "youtube" | "pdf" | "image" | "video" | "gif";
+        url?: string;
         title?: string;
         fileSize?: string;
     }>;
@@ -39,6 +39,13 @@ export function MediaPreview({ items, onRemove }: MediaPreviewProps) {
                                 )}
                                 {item.type === "video" && (
                                     <Video className="h-10 w-10 text-muted-foreground" />
+                                )}
+                                {item.type === "gif" && (
+                                    <img
+                                        src={item.url}
+                                        alt={item.title}
+                                        className="object-cover w-full h-full"
+                                    />
                                 )}
                             </div>
                             <p className="mt-1 text-sm font-medium truncate">
