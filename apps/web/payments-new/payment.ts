@@ -1,7 +1,7 @@
 import { MembershipEntityType, PaymentPlan } from "@courselit/common-models";
 
 export interface InitiateProps {
-    metadata: Record<string, unknown>;
+    metadata: Metadata;
     paymentPlan: PaymentPlan;
     product: {
         id: string;
@@ -9,7 +9,11 @@ export interface InitiateProps {
         type: MembershipEntityType;
     };
     origin: string;
-    email: string;
+}
+
+interface Metadata {
+    membershipId: string;
+    invoiceId: string;
 }
 
 export default interface Payment {

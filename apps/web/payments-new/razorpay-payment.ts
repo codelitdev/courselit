@@ -2,6 +2,7 @@ import { SiteInfo, UIConstants } from "@courselit/common-models";
 import Payment, { InitiateProps } from "./payment";
 import { responses } from "@config/strings";
 import Razorpay from "razorpay";
+import { getUnitAmount } from "./helpers";
 
 const {
     payment_invalid_settings: paymentInvalidSettings,
@@ -35,8 +36,12 @@ export default class RazorpayPayment implements Payment {
         return this;
     }
 
-    async initiate({ course, purchaseId }: InitiateProps) {
-        const order = await this.generateOrder({ course, purchaseId });
+    async initiate({ product, paymentPlan, metadata }: InitiateProps) {
+        const order = await this.generateOrder({
+            product,
+            paymentPlan,
+            metadata,
+        });
         return order.id;
     }
 
@@ -57,16 +62,20 @@ export default class RazorpayPayment implements Payment {
     }
 
     private generateOrder({
-        course,
-        purchaseId,
-    }: Pick<InitiateProps, "course" | "purchaseId">): Promise<{ id: string }> {
+        metadata,
+        product,
+        paymentPlan,
+    }: Pick<InitiateProps, "product" | "paymentPlan" | "metadata">): Promise<{
+        id: string;
+    }> {
         return new Promise((resolve, reject) => {
+            const unit_amount = getUnitAmount(paymentPlan) * 100;
             this.razorpay.orders.create(
                 {
-                    amount: course.cost * 100,
+                    amount: unit_amount,
                     currency: this.siteinfo.currencyISOCode?.toUpperCase(),
                     notes: {
-                        purchaseId,
+                        ...metadata,
                     },
                 },
                 (err, order) => {
