@@ -680,7 +680,7 @@ export function CommunityForum({
                         <video
                             src={media.media.file}
                             poster={media.media.thumbnail}
-                            className="w-full h-48 aspect-video object-cover rounded-md"
+                            className="h-48 aspect-video object-cover rounded-md"
                             controls
                         >
                             Your browser does not support the video tag.
