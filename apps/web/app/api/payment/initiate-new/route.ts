@@ -16,7 +16,7 @@ import constants from "@config/constants";
 import PaymentPlanModel from "@models/PaymentPlan";
 import { getPaymentMethodFromSettings } from "@/payments-new";
 import { generateUniqueId } from "@courselit/utils";
-import Invoice from "@models/Invoice";
+import InvoiceModel from "@models/Invoice";
 import { error } from "@/services/logger";
 import { activateMembership } from "../webhook-new/route";
 import { responses } from "@config/strings";
@@ -148,6 +148,7 @@ export async function POST(req: NextRequest) {
         const metadata = {
             membershipId: membership.membershipId,
             invoiceId,
+            currencyISOCode: siteinfo.currencyISOCode,
         };
 
         const paymentTracker = await paymentMethod.initiate({
@@ -164,7 +165,7 @@ export async function POST(req: NextRequest) {
             origin,
         });
 
-        await Invoice.create({
+        await InvoiceModel.create({
             domain: domain._id,
             invoiceId,
             membershipId: membership.membershipId,
@@ -176,14 +177,18 @@ export async function POST(req: NextRequest) {
                 0,
             status: Constants.InvoiceStatus.PENDING,
             paymentProcessor: paymentMethod.name,
-            paymentProcessorTransactionId: paymentTracker,
+            paymentProcessorEntityId: paymentTracker,
+            currencyISOCode: siteinfo.currencyISOCode,
         });
 
+        membership.subscriptionId = undefined;
+        membership.subscriptionMethod = undefined;
         await (membership as any).save();
 
         return Response.json({
             status: transactionInitiated,
             paymentTracker,
+            metadata,
         });
     } catch (err: any) {
         error(`Error initiating payment: ${err.message}`, {

@@ -1,4 +1,4 @@
-import { SiteInfo, UIConstants } from "@courselit/common-models";
+import { Constants, SiteInfo, UIConstants } from "@courselit/common-models";
 import Payment, { InitiateProps } from "./payment";
 import { responses } from "@config/strings";
 import Razorpay from "razorpay";
@@ -46,15 +46,44 @@ export default class RazorpayPayment implements Payment {
     }
 
     verify(event) {
-        return event && event.event === "payment.authorized";
+        if (!event) {
+            return false;
+        }
+        if (
+            event.event === "order.paid" &&
+            event.payload.order.entity.notes.membershipId
+        ) {
+            return true;
+        }
+        if (
+            event.event === "subscription.charged" &&
+            event.payload.subscription.entity.notes.membershipId
+        ) {
+            return true;
+        }
+        return false;
     }
 
     getMetadata(event: any) {
-        return event.payload.payment.entity.notes;
+        if (event.event === "order.paid") {
+            return event.payload.order.entity.notes;
+        } else {
+            return event.payload.subscription.entity.notes;
+        }
     }
 
     getPaymentIdentifier(event: any) {
-        return event.payload.payment.entity.notes.purchaseId;
+        // if (
+        //     event.event === "order.paid"
+        // ) {
+        //     return event.payload.order.entity.id;
+        // }
+        // if (
+        //     event.event === "subscription.charged"
+        // ) {
+        //     return event.payload.subscription.entity.id;
+        // }
+        return event.payload.payment.entity.id;
     }
 
     getName() {
@@ -70,33 +99,104 @@ export default class RazorpayPayment implements Payment {
     }> {
         return new Promise((resolve, reject) => {
             const unit_amount = getUnitAmount(paymentPlan) * 100;
-            this.razorpay.orders.create(
-                {
-                    amount: unit_amount,
-                    currency: this.siteinfo.currencyISOCode?.toUpperCase(),
-                    notes: {
-                        ...metadata,
+            if (
+                paymentPlan.type === Constants.PaymentPlanType.SUBSCRIPTION ||
+                paymentPlan.type === Constants.PaymentPlanType.EMI
+            ) {
+                this.razorpay.plans.create(
+                    {
+                        period: paymentPlan.subscriptionYearlyAmount
+                            ? "yearly"
+                            : "monthly",
+                        interval: 1,
+                        item: {
+                            name: product.title,
+                            amount: unit_amount,
+                            currency:
+                                this.siteinfo.currencyISOCode?.toUpperCase(),
+                        },
+                        notes: {
+                            ...metadata,
+                        },
                     },
-                },
-                (err, order) => {
-                    if (err) {
-                        reject(new Error(err.error.description));
-                    }
-                    resolve(order);
-                },
-            );
+                    (err, plan) => {
+                        if (err) {
+                            reject(new Error(err.error.description));
+                        }
+                        this.razorpay.subscriptions.create(
+                            {
+                                plan_id: plan.id,
+                                total_count:
+                                    paymentPlan.type ===
+                                    Constants.PaymentPlanType.EMI
+                                        ? paymentPlan.emiTotalInstallments
+                                        : paymentPlan.subscriptionYearlyAmount
+                                          ? 10
+                                          : 120, // Subscribe for 10 years
+                                customer_notify: 1,
+                                // start_at: Math.floor(Date.now() / 1000) + 120, // 2 minutes from now
+                                // end_at:
+                                //     paymentPlan.type ===
+                                //     Constants.PaymentPlanType.SUBSCRIPTION
+                                //         ? Math.floor(Date.now() / 1000) +
+                                //           157680000 // 5 years from now
+                                //         : undefined,
+                                notes: {
+                                    ...metadata,
+                                },
+                            },
+                            (err, subscription) => {
+                                if (err) {
+                                    reject(new Error(err.error.description));
+                                }
+                                resolve(subscription);
+                            },
+                        );
+                    },
+                );
+            } else {
+                this.razorpay.orders.create(
+                    {
+                        amount: unit_amount,
+                        currency: this.siteinfo.currencyISOCode?.toUpperCase(),
+                        notes: {
+                            ...metadata,
+                        },
+                    },
+                    (err, order) => {
+                        if (err) {
+                            reject(new Error(err.error.description));
+                        }
+                        resolve(order);
+                    },
+                );
+            }
         });
     }
 
-    cancel(id: string) {
-        throw new Error("Method not implemented.");
+    async cancel(id: string) {
+        try {
+            let subscription = await this.razorpay.subscriptions.fetch(id);
+            if (
+                !["cancelled", "completed", "expired"].includes(
+                    subscription.status,
+                )
+            ) {
+                subscription = await this.razorpay.subscriptions.cancel(id);
+            }
+            return subscription;
+        } catch (err) {
+            throw new Error(`Failed to cancel subscription: ${err.message}`);
+        }
     }
 
     getSubscriptionId(event: any): string {
-        throw new Error("Method not implemented.");
+        return event.payload.subscription.entity.id;
     }
 
-    validateSubscription(subscriptionId: string): boolean {
-        throw new Error("Method not implemented.");
+    async validateSubscription(subscriptionId: string): Promise<boolean> {
+        const subscription =
+            await this.razorpay.subscriptions.fetch(subscriptionId);
+        return subscription.status === "active";
     }
 }

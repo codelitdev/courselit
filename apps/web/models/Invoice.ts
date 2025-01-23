@@ -23,7 +23,9 @@ const InvoiceSchema = new mongoose.Schema<InternalInvoice>(
             default: Constants.InvoiceStatus.PENDING,
         },
         paymentProcessor: { type: String, required: true },
-        paymentProcessorTransactionId: { type: String, required: true },
+        paymentProcessorEntityId: { type: String },
+        paymentProcessorTransactionId: { type: String },
+        currencyISOCode: { type: String, required: true },
     },
     {
         timestamps: true,

@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
         }
 
         const metadata = paymentMethod.getMetadata(body);
-        const { membershipId, invoiceId } = metadata;
+        const { membershipId, invoiceId, currencyISOCode } = metadata;
 
         const membership = await getMembership(domain._id, membershipId);
         if (!membership) {
@@ -62,11 +62,12 @@ export async function POST(req: NextRequest) {
         );
 
         await handleInvoice(
-            domain._id,
+            domain,
             invoiceId,
             membershipId,
             paymentPlan,
             paymentMethod,
+            currencyISOCode,
             body,
         );
 
@@ -141,21 +142,27 @@ async function handleSubscription(
 }
 
 async function handleInvoice(
-    domainId: mongoose.Types.ObjectId,
+    domain: Domain,
     invoiceId: string,
     membershipId: string,
     paymentPlan: PaymentPlan | null,
     paymentMethod: any,
+    currencyISOCode: string,
     body: any,
 ) {
-    const invoice = await InvoiceModel.findOne<Invoice>({ invoiceId });
+    const invoice = await InvoiceModel.findOne<Invoice>({
+        domain: domain._id,
+        invoiceId,
+        status: Constants.InvoiceStatus.PENDING,
+    });
     if (invoice) {
+        invoice.paymentProcessorTransactionId =
+            paymentMethod.getPaymentIdentifier(body);
         invoice.status = Constants.InvoiceStatus.PAID;
         await (invoice as any).save();
     } else {
         await InvoiceModel.create({
-            domain: domainId,
-            invoiceId,
+            domain: domain._id,
             membershipId,
             amount:
                 paymentPlan?.oneTimeAmount ||
@@ -167,6 +174,7 @@ async function handleInvoice(
             paymentProcessor: paymentMethod.name,
             paymentProcessorTransactionId:
                 paymentMethod.getPaymentIdentifier(body),
+            currencyISOCode,
         });
     }
 }

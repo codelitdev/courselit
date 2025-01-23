@@ -92,6 +92,10 @@ export default function CheckoutPage() {
                         subscriptionMonthlyAmount
                         subscriptionYearlyAmount
                     }
+                    featuredImage {
+                        thumbnail
+                        file
+                    }
                     autoAcceptMembers
                     joiningReasonText
                 }
@@ -109,6 +113,7 @@ export default function CheckoutPage() {
                     id: response.community.communityId,
                     name: response.community.name,
                     type: MembershipEntityType.COMMUNITY,
+                    featuredImage: response.community.featuredImage.file,
                     joiningReasonText: response.community.joiningReasonText,
                     autoAcceptMembers: response.community.autoAcceptMembers,
                 });

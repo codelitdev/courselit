@@ -10,7 +10,9 @@ export interface Invoice {
     amount: number;
     status: InvoicesStatus;
     paymentProcessor: string;
-    paymentProcessorTransactionId: string;
+    paymentProcessorTransactionId?: string;
+    paymentProcessorEntityId?: string;
+    currencyISOCode: string;
     createdAt?: Date;
     updatedAt?: Date;
 }

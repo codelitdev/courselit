@@ -318,6 +318,7 @@ export function MembershipList({ id }: { id: string }) {
                                         Rejection Reason
                                     </TableHead>
                                     <TableHead>Subscription ID</TableHead>
+                                    <TableHead>Subscription Method</TableHead>
                                     <TableHead>Status</TableHead>
                                     {/* <TableHead>Actions</TableHead> */}
                                 </TableRow>
@@ -373,7 +374,7 @@ export function MembershipList({ id }: { id: string }) {
                                             </Link>
                                         </TableCell>
                                         <TableCell className="hidden lg:table-cell max-w-xs truncate">
-                                            {member.joiningReason}
+                                            {member.joiningReason || "-"}
                                         </TableCell>
                                         {/* <TableCell className="flex items-center space-x-2">
                                             <Badge
@@ -430,13 +431,18 @@ export function MembershipList({ id }: { id: string }) {
                                                 )}
                                             </div>
                                         </TableCell>
+                                        <TableCell className="hidden xl:table-cell max-w-xs truncate">
+                                            {capitalize(
+                                                member.subscriptionMethod,
+                                            ) || "-"}
+                                        </TableCell>
                                         <TableCell className="flex items-center space-x-2">
                                             <Badge
                                                 variant={
                                                     member.status === "pending"
                                                         ? "default"
                                                         : member.status ===
-                                                            "approved"
+                                                            "active"
                                                           ? "success"
                                                           : "destructive"
                                                 }

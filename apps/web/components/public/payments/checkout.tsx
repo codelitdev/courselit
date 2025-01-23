@@ -38,6 +38,7 @@ import { useRouter } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
 import { getSymbolFromCurrency, useToast } from "@courselit/components-library";
 import { getPlanPrice } from "@ui-lib/utils";
+import Script from "next/script";
 const { PaymentPlanType: paymentPlanType } = Constants;
 
 export interface Product {
@@ -192,6 +193,34 @@ export default function Checkout({
                         sessionId: response.paymentTracker,
                     });
                 }
+                if (paymentMethod === UIConstants.PAYMENT_METHOD_RAZORPAY) {
+                    const razorpayPayload = {
+                        key: siteinfo.razorpayKey,
+                        name: product.name,
+                        image: product.featuredImage || siteinfo.logo?.file,
+                        prefill: {
+                            email: profile.email,
+                        },
+                        handler: function (response) {
+                            verifySignature(response);
+                        },
+                    };
+                    if (
+                        selectedPlan?.type === paymentPlanType.SUBSCRIPTION ||
+                        selectedPlan?.type === paymentPlanType.EMI
+                    ) {
+                        razorpayPayload["subscription_id"] =
+                            response.paymentTracker;
+                    } else {
+                        razorpayPayload["order_id"] = response.paymentTracker;
+                        // razorpayPayload["handler"] = function (response) {
+                        //     verifySignature(response);
+                        // }
+                    }
+                    // @ts-ignore
+                    const rzp1 = new Razorpay(razorpayPayload);
+                    rzp1.open();
+                }
             } else if (response.status === "success") {
                 if (product.type === Constants.MembershipEntityType.COMMUNITY) {
                     router.replace(
@@ -210,6 +239,39 @@ export default function Checkout({
             });
         }
     }
+
+    const verifySignature = async (response) => {
+        const payload = {
+            signature: response.razorpay_signature,
+            paymentId: response.razorpay_payment_id,
+        };
+        if (
+            selectedPlan?.type === paymentPlanType.SUBSCRIPTION ||
+            selectedPlan?.type === paymentPlanType.EMI
+        ) {
+            payload["subscriptionId"] = response.razorpay_subscription_id;
+        } else {
+            payload["orderId"] = response.razorpay_order_id;
+        }
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/payment/vendor/razorpay/verify-new`)
+            .setHeaders({
+                "Content-Type": "application/json",
+            })
+            .setPayload(JSON.stringify(payload))
+            .build();
+
+        try {
+            const verifyResponse = await fetch.exec();
+            router.replace(`/checkout/verify?id=${verifyResponse.purchaseId}`);
+        } catch (err: any) {
+            toast({
+                title: "Error",
+                description: err.message,
+                variant: "destructive",
+            });
+        }
+    };
 
     const redirectToStripeCheckout = async ({
         stripe,
@@ -568,6 +630,7 @@ export default function Checkout({
                     </div>
                 </div>
             </div>
+            <Script src="https://checkout.razorpay.com/v1/checkout.js" />
         </div>
     );
 }
