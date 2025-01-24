@@ -57,7 +57,7 @@ export default function CheckoutPage() {
                     id: response.course.courseId,
                     name: response.course.title,
                     slug: response.course.slug,
-                    featuredImage: response.course.featuredImage.file,
+                    featuredImage: response.course.featuredImage?.file,
                     type: MembershipEntityType.COURSE,
                 });
                 setPaymentPlans([...response.course.paymentPlans]);
@@ -113,7 +113,7 @@ export default function CheckoutPage() {
                     id: response.community.communityId,
                     name: response.community.name,
                     type: MembershipEntityType.COMMUNITY,
-                    featuredImage: response.community.featuredImage.file,
+                    featuredImage: response.community.featuredImage?.file,
                     joiningReasonText: response.community.joiningReasonText,
                     autoAcceptMembers: response.community.autoAcceptMembers,
                 });

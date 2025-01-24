@@ -19,7 +19,8 @@ for (const status of [
     Constants.MembershipStatus.ACTIVE,
     Constants.MembershipStatus.REJECTED,
     Constants.MembershipStatus.EXPIRED,
-    Constants.MembershipStatus.FAILED,
+    Constants.MembershipStatus.PAYMENT_FAILED,
+    Constants.MembershipStatus.PAUSED,
 ]) {
     memberStatusMap[status.toUpperCase()] = { value: status };
 }

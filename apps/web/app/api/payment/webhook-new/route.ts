@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
         await handleInvoice(
             domain,
             invoiceId,
-            membershipId,
+            membership,
             paymentPlan,
             paymentMethod,
             currencyISOCode,
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
         ) {
             await handleEMICancellation(
                 domain._id,
-                membershipId,
+                membership,
                 paymentPlan,
                 subscriptionId,
                 paymentMethod,
@@ -144,7 +144,7 @@ async function handleSubscription(
 async function handleInvoice(
     domain: Domain,
     invoiceId: string,
-    membershipId: string,
+    membership: Membership,
     paymentPlan: PaymentPlan | null,
     paymentMethod: any,
     currencyISOCode: string,
@@ -163,7 +163,8 @@ async function handleInvoice(
     } else {
         await InvoiceModel.create({
             domain: domain._id,
-            membershipId,
+            membershipId: membership.membershipId,
+            membershipSessionId: membership.sessionId,
             amount:
                 paymentPlan?.oneTimeAmount ||
                 paymentPlan?.subscriptionYearlyAmount ||
@@ -181,15 +182,16 @@ async function handleInvoice(
 
 async function handleEMICancellation(
     domainId: mongoose.Types.ObjectId,
-    membershipId: string,
+    membership: Membership,
     paymentPlan: PaymentPlan,
     subscriptionId: string,
     paymentMethod: any,
 ) {
     const paidInvoicesCount = await InvoiceModel.countDocuments({
         domain: domainId,
-        membershipId,
+        membershipId: membership.membershipId,
         status: Constants.InvoiceStatus.PAID,
+        membershipSessionId: membership.sessionId,
     });
     if (paidInvoicesCount >= paymentPlan.emiTotalInstallments!) {
         await paymentMethod.cancel(subscriptionId);

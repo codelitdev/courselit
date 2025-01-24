@@ -74,11 +74,22 @@ export default class StripePayment implements Payment {
     }
 
     verify(event: Stripe.Event) {
-        return (
-            event &&
+        if (!event) {
+            return false;
+        }
+        if (
             event.type === "checkout.session.completed" &&
             (event.data.object as any).payment_status === "paid"
-        );
+        ) {
+            return true;
+        }
+        if (
+            event.type === "invoice.paid" &&
+            (event.data.object as any).billing_reason === "subscription_cycle"
+        ) {
+            return true;
+        }
+        return false;
     }
 
     getPaymentIdentifier(event: Stripe.Event) {
@@ -86,7 +97,13 @@ export default class StripePayment implements Payment {
     }
 
     getMetadata(event: Stripe.Event) {
-        return (event.data.object as any).metadata;
+        let metadata;
+        if (event.type === "checkout.session.completed") {
+            metadata = (event.data.object as any).metadata;
+        } else {
+            metadata = (event.data.object as any).subscription_details.metadata;
+        }
+        return metadata;
     }
 
     getName() {
@@ -95,8 +112,12 @@ export default class StripePayment implements Payment {
 
     async cancel(subscriptionId: string) {
         try {
-            const subscription =
-                await this.stripe.subscriptions.cancel(subscriptionId);
+            let subscription =
+                await this.stripe.subscriptions.retrieve(subscriptionId);
+            if (subscription && subscription.status !== "canceled") {
+                subscription =
+                    await this.stripe.subscriptions.cancel(subscriptionId);
+            }
             return subscription;
         } catch (error) {
             throw new Error(`Failed to cancel subscription: ${error.message}`);
@@ -118,7 +139,7 @@ export default class StripePayment implements Payment {
         }
     }
 
-    getRecurring(paymentPlan: PaymentPlan) {
+    private getRecurring(paymentPlan: PaymentPlan) {
         let recurring: any = undefined;
 
         switch (paymentPlan.type) {

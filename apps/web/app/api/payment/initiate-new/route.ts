@@ -97,6 +97,10 @@ export async function POST(req: NextRequest) {
                 status: Constants.MembershipStatus.PENDING,
             }));
 
+        if (membership.status === Constants.MembershipStatus.REJECTED) {
+            return Response.json({ status: transactionFailed });
+        }
+
         if (membership.status === Constants.MembershipStatus.ACTIVE) {
             if (paymentPlan.type === Constants.PaymentPlanType.FREE) {
                 return Response.json({ status: transactionSuccess });
@@ -113,7 +117,7 @@ export async function POST(req: NextRequest) {
                 ) {
                     return Response.json({ status: transactionSuccess });
                 } else {
-                    membership.status = Constants.MembershipStatus.FAILED;
+                    membership.status = Constants.MembershipStatus.EXPIRED;
                     await membership.save();
                 }
             }
@@ -144,6 +148,10 @@ export async function POST(req: NextRequest) {
             });
         }
 
+        membership.paymentPlanId = planId;
+        membership.status = Constants.MembershipStatus.PENDING;
+        membership.sessionId = generateUniqueId();
+
         const invoiceId = generateUniqueId();
         const metadata = {
             membershipId: membership.membershipId,
@@ -169,6 +177,7 @@ export async function POST(req: NextRequest) {
             domain: domain._id,
             invoiceId,
             membershipId: membership.membershipId,
+            membershipSessionId: membership.sessionId,
             amount:
                 paymentPlan.oneTimeAmount ||
                 paymentPlan.subscriptionMonthlyAmount ||

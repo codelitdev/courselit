@@ -1044,7 +1044,11 @@ export function CommunityForum({
                 });
             }
         } catch (error) {
-            console.error("Error updating community:", error);
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: error.message,
+                variant: "destructive",
+            });
         }
     };
 

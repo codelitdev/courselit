@@ -18,6 +18,7 @@ export interface Membership {
     subscriptionMethod?: string;
     joiningReason?: string;
     rejectionReason?: string;
+    sessionId: string;
     createdAt?: Date;
     updatedAt?: Date;
 }

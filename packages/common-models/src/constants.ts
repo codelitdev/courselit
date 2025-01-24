@@ -73,10 +73,11 @@ export const MembershipEntityType = {
 } as const;
 export const MembershipStatus = {
     ACTIVE: "active",
-    FAILED: "failed",
+    PAYMENT_FAILED: "payment_failed",
     EXPIRED: "expired",
     PENDING: "pending",
     REJECTED: "rejected",
+    PAUSED: "paused",
 } as const;
 export const InvoiceStatus = {
     PENDING: "pending",

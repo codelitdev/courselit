@@ -178,6 +178,7 @@ export default class RazorpayPayment implements Payment {
         try {
             let subscription = await this.razorpay.subscriptions.fetch(id);
             if (
+                subscription &&
                 !["cancelled", "completed", "expired"].includes(
                     subscription.status,
                 )

@@ -35,6 +35,7 @@ const MembershipSchema = new mongoose.Schema<InternalMembership>(
         rejectionReason: { type: String },
         subscriptionId: { type: String },
         subscriptionMethod: { type: String },
+        sessionId: { type: String, required: true, default: generateUniqueId },
     },
     {
         timestamps: true,
@@ -50,10 +51,10 @@ MembershipSchema.statics.paginatedFind = async function (filter, options) {
     return docs;
 };
 
-MembershipSchema.index(
-    { domain: 1, userId: 1, entityId: 1, entityType: 1 },
-    { unique: true },
-);
+// MembershipSchema.index(
+//     { domain: 1, userId: 1, entityId: 1, entityType: 1 },
+//     { unique: true },
+// );
 
 export default mongoose.models.Membership ||
     mongoose.model("Membership", MembershipSchema);

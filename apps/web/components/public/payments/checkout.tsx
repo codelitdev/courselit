@@ -19,7 +19,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Check, ChevronUp, ShoppingCart } from "lucide-react";
+import { Check, ChevronUp, ShoppingCart, X } from "lucide-react";
 import { LoginForm } from "./login-form";
 import {
     PaymentPlan,
@@ -444,35 +444,50 @@ export default function Checkout({
                             Constants.MembershipStatus.REJECTED ? (
                             <div className="">
                                 <h2 className="text-lg mb-4 flex items-center font-semibold gap-2">
-                                    <Check /> Already owned
+                                    {membershipStatus ===
+                                    Constants.MembershipStatus.ACTIVE ? (
+                                        <Check />
+                                    ) : (
+                                        <X />
+                                    )}
+                                    {membershipStatus ===
+                                    Constants.MembershipStatus.ACTIVE
+                                        ? "Already owned"
+                                        : "Access Denied"}
                                 </h2>
                                 <p className="text-muted-foreground mb-8">
-                                    You already have access to this resource.
+                                    {membershipStatus ===
+                                    Constants.MembershipStatus.ACTIVE
+                                        ? "You already have access to this resource."
+                                        : "You have been rejected and cannot proceed with the checkout."}
                                 </p>
-                                <Button
-                                    onClick={() => {
-                                        if (
-                                            product.type ===
-                                            Constants.MembershipEntityType
-                                                .COMMUNITY
-                                        ) {
-                                            router.replace(
-                                                `/dashboard4/community/${product.id}`,
-                                            );
-                                        } else if (
-                                            product.type ===
-                                            Constants.MembershipEntityType
-                                                .COURSE
-                                        ) {
-                                            router.replace(
-                                                `/course/${product.id}`,
-                                            );
-                                        }
-                                    }}
-                                    className="bg-black text-white hover:bg-black/90"
-                                >
-                                    Go to the resource
-                                </Button>
+                                {membershipStatus ===
+                                    Constants.MembershipStatus.ACTIVE && (
+                                    <Button
+                                        onClick={() => {
+                                            if (
+                                                product.type ===
+                                                Constants.MembershipEntityType
+                                                    .COMMUNITY
+                                            ) {
+                                                router.replace(
+                                                    `/dashboard4/community/${product.id}`,
+                                                );
+                                            } else if (
+                                                product.type ===
+                                                Constants.MembershipEntityType
+                                                    .COURSE
+                                            ) {
+                                                router.replace(
+                                                    `/course/${product.id}`,
+                                                );
+                                            }
+                                        }}
+                                        className="bg-black text-white hover:bg-black/90"
+                                    >
+                                        Go to the resource
+                                    </Button>
+                                )}
                             </div>
                         ) : (
                             <>

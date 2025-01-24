@@ -1531,6 +1531,7 @@ export async function leaveCommunity({
         userId: ctx.user.userId,
         entityId: id,
         entityType: Constants.MembershipEntityType.COMMUNITY,
+        status: Constants.MembershipStatus.ACTIVE,
     });
 
     if (!member) {

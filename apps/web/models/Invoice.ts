@@ -16,6 +16,7 @@ const InvoiceSchema = new mongoose.Schema<InternalInvoice>(
             default: generateUniqueId,
         },
         membershipId: { type: String, required: true },
+        membershipSessionId: { type: String, required: true },
         amount: { type: Number, required: true },
         status: {
             type: String,

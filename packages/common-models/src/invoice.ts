@@ -7,6 +7,7 @@ export type InvoicesStatus = (typeof InvoiceStatus)[keyof typeof InvoiceStatus];
 export interface Invoice {
     invoiceId: string;
     membershipId: string;
+    membershipSessionId: string;
     amount: number;
     status: InvoicesStatus;
     paymentProcessor: string;
