@@ -125,6 +125,7 @@ function getSidebarItems(profile: Partial<Profile>, path, tab) {
     if (checkPermission(profile.permissions!, [permissions.manageCommunity])) {
         navMainItems.push({
             title: "Communities",
+            beta: true,
             url: "/dashboard4/communities",
             icon: MessageCircleHeart,
             isActive: path === "/dashboard4/communities",
@@ -174,6 +175,7 @@ function getSidebarItems(profile: Partial<Profile>, path, tab) {
         });
         navMainItems.push({
             title: SIDEBAR_MENU_MAILS,
+            beta: true,
             url: "#",
             icon: Mail,
             isActive:

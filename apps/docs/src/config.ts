@@ -65,6 +65,20 @@ export const SIDEBAR: Sidebar = {
             { text: "Set a price", link: "en/downloads/set-a-price" },
             { text: "Lead magnet", link: "en/downloads/lead-magnet" },
         ],
+        Communities: [
+            { text: "Introduction", link: "en/communities/introduction" },
+            { text: "Create a community", link: "en/communities/create" },
+            { text: "Manage members", link: "en/communities/manage-members" },
+            { text: "Set a price", link: "en/communities/set-a-price" },
+            {
+                text: "Manage permissions",
+                link: "en/communities/manage-member-permissions",
+            },
+            {
+                text: "Manage reported content",
+                link: "en/communities/manage-reported-content",
+            },
+        ],
         "Email marketing and automation": [
             { text: "Introduction", link: "en/email-marketing/introduction" },
             {
@@ -111,6 +125,10 @@ export const SIDEBAR: Sidebar = {
             { text: "User permissions", link: "en/users/permissions" },
             { text: "Filter users", link: "en/users/filters" },
             { text: "Segment users", link: "en/users/segments" },
+        ],
+        Developers: [
+            { text: "Introduction", link: "en/developers/introduction" },
+            { text: "Managing users", link: "en/developers/manage-users" },
         ],
         "Self hosting": [
             { text: "Why self host?", link: "en/self-hosting/introduction" },

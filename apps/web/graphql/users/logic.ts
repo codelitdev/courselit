@@ -7,7 +7,6 @@ import {
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
 const { permissions } = constants;
-import { Progress } from "../../models/Progress";
 import { initMandatoryPages } from "../pages/logic";
 import { Domain } from "../../models/Domain";
 import {
@@ -22,6 +21,7 @@ import {
     Membership,
     MembershipEntityType,
     MembershipStatus,
+    Progress,
     UserFilterWithAggregator,
 } from "@courselit/common-models";
 import { recordActivity } from "../../lib/record-activity";
@@ -36,6 +36,7 @@ import CommunityModel from "@models/Community";
 import CourseModel from "@models/Course";
 import { addMailJob } from "@/services/queue";
 import { getPaymentMethodFromSettings } from "@/payments-new";
+import { checkForInvalidPermissions } from "@/lib/check-invalid-permissions";
 
 const removeAdminFieldsFromUserObject = (user: User) => ({
     id: user._id,
@@ -69,16 +70,7 @@ export const getUser = async (userId = null, ctx: GQLContext) => {
 };
 
 const validateUserProperties = (user) => {
-    checkForInvalidPermissions(user);
-};
-
-const checkForInvalidPermissions = (user) => {
-    const invalidPerms = user.permissions.filter(
-        (x) => !Object.values(permissions).includes(x),
-    );
-    if (invalidPerms.length) {
-        throw new Error(responses.invalid_permission);
-    }
+    checkForInvalidPermissions(user.permissions);
 };
 
 interface UserData {
@@ -322,6 +314,7 @@ export async function createUser({
     superAdmin = false,
     subscribedToUpdates = true,
     invited,
+    permissions = [],
 }: {
     domain: Domain;
     name?: string;
@@ -329,11 +322,17 @@ export async function createUser({
     lead?:
         | typeof constants.leadWebsite
         | typeof constants.leadNewsletter
-        | typeof constants.leadApi;
+        | typeof constants.leadApi
+        | typeof constants.leadDownload;
     superAdmin?: boolean;
     subscribedToUpdates?: boolean;
     invited?: boolean;
+    permissions?: string[];
 }): Promise<User> {
+    if (permissions.length) {
+        checkForInvalidPermissions(permissions);
+    }
+
     const newUser: Partial<User> = {
         domain: domain._id,
         name: name,
@@ -360,6 +359,9 @@ export async function createUser({
             constants.permissions.enrollInCourse,
             constants.permissions.manageMedia,
         ];
+        if (permissions.length) {
+            newUser.permissions = [...newUser.permissions, ...permissions];
+        }
     }
     newUser.lead = lead;
     const user = await UserModel.create(newUser);
