@@ -7,6 +7,7 @@ export default function PageBuilderSlider({
     min,
     max,
     value,
+    step,
     onChange,
     tooltip,
     className,
@@ -15,6 +16,7 @@ export default function PageBuilderSlider({
     min: number;
     max: number;
     value: number;
+    step?: number;
     onChange: (value: number) => void;
     tooltip?: string;
     className?: string;
@@ -38,6 +40,7 @@ export default function PageBuilderSlider({
                 value={[value]}
                 max={max}
                 min={min}
+                step={step}
                 onValueChange={(value: number[]) => {
                     onChange(value[0]);
                 }}

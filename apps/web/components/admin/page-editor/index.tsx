@@ -436,6 +436,7 @@ export default function PageEditor({
     const editWidget = useMemo(
         () => (
             <EditWidget
+                key={selectedWidget}
                 widget={
                     page &&
                     layout?.filter((x) => x.widgetId === selectedWidget)[0]

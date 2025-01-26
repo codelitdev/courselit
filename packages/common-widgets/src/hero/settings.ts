@@ -4,6 +4,7 @@ import {
     WidgetDefaultSettings,
 } from "@courselit/common-models";
 import { MediaAspectRatio } from "./types";
+import { MediaLayout } from "./types";
 
 export default interface Settings extends WidgetDefaultSettings {
     title?: string;
@@ -30,4 +31,8 @@ export default interface Settings extends WidgetDefaultSettings {
     descriptionFontSize?: number;
     contentAlignment?: Alignment;
     cssId?: string;
+    backgroundMedia?: Media;
+    overlayColor: string;
+    overlayOpacity: number;
+    mediaLayout?: MediaLayout;
 }
