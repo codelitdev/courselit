@@ -71,6 +71,7 @@ import PaymentPlanList from "@components/admin/payments/payment-plan-list";
 import { MembershipEntityType } from "@courselit/common-models/dist/constants";
 import { useCommunity } from "@components/hooks/useCommunity";
 import { Button } from "@components/ui/button";
+import { redirect } from "next/navigation";
 const { PaymentPlanType: paymentPlanType } = Constants;
 
 export default function Page({
@@ -109,22 +110,57 @@ export default function Page({
     const [paymentPlans, setPaymentPlans] = useState<PaymentPlan[]>([]);
     const [featuredImage, setFeaturedImage] = useState<Media | null>(null);
     const { toast } = useToast();
-    const { community, error } = useCommunity(id);
+    const { community, error, loaded: communityLoaded } = useCommunity(id);
     const [defaultPaymentPlan, setDefaultPaymentPlan] = useState("");
 
     useEffect(() => {
-        if (community) {
+        if (communityLoaded && community) {
             setCommunity(community);
         }
-    }, [community]);
+        if (communityLoaded && community === null) {
+            redirect(`/dashboard4/community/${id}`);
+        }
+    }, [community, communityLoaded]);
 
-    const handleDeleteConfirm = () => {
-        toast({
-            title: "Community Deleted",
-            description:
-                "Your community and all associated data have been permanently deleted.",
-            variant: "destructive",
-        });
+    const fetcher = new FetchBuilder()
+        .setUrl(`${address.backend}/api/graph`)
+        .setIsGraphQLEndpoint(true);
+
+    const handleDeleteConfirm = async () => {
+        const query = `
+            mutation DeleteCommunity($id: String!) {
+                community: deleteCommunity(id: $id) {
+                    communityId
+                }
+            }
+        `;
+
+        const fetchRequest = fetcher
+            .setPayload({
+                query,
+                variables: {
+                    id,
+                },
+            })
+            .build();
+
+        try {
+            const response = await fetchRequest.exec();
+            if (response.community) {
+                toast({
+                    title: "Community Deleted",
+                    description:
+                        "Your community and all associated data have been permanently deleted.",
+                    variant: "destructive",
+                });
+            }
+        } catch (error) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: error.message,
+                variant: "destructive",
+            });
+        }
     };
 
     const setCommunity = (community: any) => {
@@ -198,22 +234,20 @@ export default function Page({
                 }
             }
         `;
+        const fetchRequest = fetcher
+            .setPayload({
+                query,
+                variables: {
+                    id,
+                    name,
+                    description: JSON.stringify(description),
+                    enabled,
+                    autoAcceptMembers,
+                    joiningReasonText,
+                },
+            })
+            .build();
         try {
-            const fetchRequest = new FetchBuilder()
-                .setUrl(`${address.backend}/api/graph`)
-                .setPayload({
-                    query,
-                    variables: {
-                        id,
-                        name,
-                        description: JSON.stringify(description),
-                        enabled,
-                        autoAcceptMembers,
-                        joiningReasonText,
-                    },
-                })
-                .setIsGraphQLEndpoint(true)
-                .build();
             const response = await fetchRequest.exec();
             if (response.community) {
                 setCommunity(response.community);
@@ -763,6 +797,7 @@ export default function Page({
                     }
                     onDefaultPlanChanged={onDefaultPlanChanged}
                     defaultPaymentPlanId={defaultPaymentPlan}
+                    paymentMethod={siteinfo.paymentMethod}
                 />
             </div>
             <Separator className="my-8" />

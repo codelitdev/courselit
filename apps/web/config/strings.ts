@@ -40,7 +40,8 @@ export const responses = {
     user_name_cant_be_null: "Name cannot be null",
     action_not_allowed: "You do not have rights to perform this action",
     invalid_input: "Invalid input",
-    payment_invalid_settings: "configuration is invalid.",
+    payment_invalid_settings: "Payment configuration is invalid",
+    payment_info_required: "Add payment method before creating a paid plan",
     unrecognised_currency_code: "Unrecognised currency code",
     only_admins_can_purchase:
         "Only admins can purchase courses on behalf of others",

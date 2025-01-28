@@ -158,7 +158,7 @@ async function getMessage({
             }
 
             return {
-                message: `${userName} commented on ${loggedInUserId === post1.postId ? "your" : ""} post '${truncate(post1.title, 20)}' in ${community1.name}`,
+                message: `${userName} commented on ${loggedInUserId === post1.userId ? "your" : ""} post '${truncate(post1.title, 20)}' in ${community1.name}`,
                 href: `/dashboard4/community/${community1.communityId}`,
             };
         case Constants.NotificationEntityAction.COMMUNITY_REPLIED:

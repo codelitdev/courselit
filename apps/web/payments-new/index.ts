@@ -1,5 +1,5 @@
 import { SiteInfo, UIConstants } from "@courselit/common-models";
-import { internal, responses } from "../config/strings";
+import { internal } from "../config/strings";
 import DomainModel, { Domain } from "../models/Domain";
 import StripePayment from "./stripe-payment";
 import RazorpayPayment from "./razorpay-payment";
@@ -8,7 +8,6 @@ const {
     error_unrecognised_payment_method: unrecognisedPaymentMethod,
     error_payment_method_not_implemented: notYetSupported,
 } = internal;
-const { update_payment_method: updatePaymentMethod } = responses;
 
 export const getPaymentMethod = async (domainName: string) => {
     const domain: Domain | null = await DomainModel.findOne({
@@ -24,7 +23,7 @@ export const getPaymentMethodFromSettings = async (
     name?: string,
 ) => {
     if (!siteInfo || !siteInfo.paymentMethod) {
-        throw new Error(updatePaymentMethod);
+        return null;
     }
 
     switch (name || siteInfo.paymentMethod) {

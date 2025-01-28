@@ -8,6 +8,7 @@ export interface InternalCommunity extends Omit<Community, "paymentPlans"> {
     createdAt: Date;
     updatedAt: Date;
     paymentPlans: string[];
+    deleted: boolean;
 }
 
 const CommunitySchema = new mongoose.Schema<InternalCommunity>(

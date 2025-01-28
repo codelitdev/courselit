@@ -11,6 +11,7 @@ import CommunityModel, { InternalCommunity } from "@models/Community";
 import constants from "@config/constants";
 import { checkPermission } from "@courselit/utils";
 import PaymentPlanModel from "@models/PaymentPlan";
+import { getPaymentMethodFromSettings } from "@/payments-new";
 const { MembershipEntityType: membershipEntityType } = Constants;
 const { permissions } = constants;
 
@@ -28,6 +29,7 @@ async function fetchEntity(
         return (await CommunityModel.findOne({
             domain: ctx.subdomain._id,
             communityId: entityId,
+            deleted: false,
         })) as InternalCommunity;
     }
     return null;
@@ -136,6 +138,13 @@ export async function createPlan({
                 throw new Error(responses.duplicate_payment_plan);
             }
         }
+    }
+
+    const paymentMethod = await getPaymentMethodFromSettings(
+        ctx.subdomain.settings,
+    );
+    if (!paymentMethod && type !== Constants.PaymentPlanType.FREE) {
+        throw new Error(responses.payment_info_required);
     }
 
     const paymentPlan = await PaymentPlanModel.create({

@@ -1393,7 +1393,14 @@ export function CommunityForum({
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </div>
-                                                <p>{post.content}</p>
+                                                <div>
+                                                    <p className="text-base mb-4 font-semibold line-clamp-3">
+                                                        {post.title}
+                                                    </p>
+                                                    <p className="text-sm mb-4 line-clamp-3">
+                                                        {post.content}
+                                                    </p>
+                                                </div>
                                                 {post.media && (
                                                     <div className="flex gap-2 overflow-x-auto">
                                                         {post.media.map(

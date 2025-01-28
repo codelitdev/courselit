@@ -102,6 +102,7 @@ export default function Checkout({
     const [membershipStatus, setMembershipStatus] = useState<
         MembershipStatus | undefined
     >();
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const stripePromise = loadStripe(siteinfo.stripeKey as string);
     const router = useRouter();
@@ -156,25 +157,16 @@ export default function Checkout({
     });
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
+        setIsSubmitting(true);
         const { paymentMethod } = siteinfo;
 
         let payload: Record<string, unknown> | null = {
             joiningReason: values.joiningReason,
+            id: product.id,
+            type: product.type,
+            planId: selectedPlan!.planId,
+            origin: address.frontend,
         };
-
-        if (paymentMethod === UIConstants.PAYMENT_METHOD_STRIPE) {
-            payload["id"] = product.id;
-            payload["type"] = product.type;
-            payload["planId"] = selectedPlan!.planId;
-            payload["origin"] = address.frontend;
-        }
-
-        if (paymentMethod === UIConstants.PAYMENT_METHOD_RAZORPAY) {
-            payload["id"] = product.id;
-            payload["type"] = product.type;
-            payload["planId"] = selectedPlan!.planId;
-            payload["origin"] = address.frontend;
-        }
 
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/payment/initiate-new`)
@@ -237,6 +229,8 @@ export default function Checkout({
                 description: err.message,
                 variant: "destructive",
             });
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
@@ -620,6 +614,7 @@ export default function Checkout({
                                             type="submit"
                                             className="w-full bg-black text-white hover:bg-black/90"
                                             disabled={
+                                                isSubmitting ||
                                                 !isLoggedIn ||
                                                 !form.formState.isValid ||
                                                 (selectedPlan?.type ===
@@ -633,7 +628,9 @@ export default function Checkout({
                                                     ))
                                             }
                                         >
-                                            Complete Purchase
+                                            {isSubmitting
+                                                ? "Working..."
+                                                : "Complete Purchase"}
                                         </Button>
                                     </form>
                                 </FormProvider>

@@ -42,6 +42,7 @@ import {
     PaymentPlanType,
     Constants,
     PaymentPlan,
+    PaymentMethod,
 } from "@courselit/common-models";
 import { capitalize } from "@courselit/utils";
 const { PaymentPlanType: paymentPlanType } = Constants;
@@ -197,6 +198,7 @@ export default function PaymentPlanList({
     currencyISOCode = "USD",
     onDefaultPlanChanged,
     defaultPaymentPlanId,
+    paymentMethod,
 }: {
     paymentPlans: PaymentPlan[];
     onPlanSubmit: (values: z.infer<typeof formSchema>) => void;
@@ -206,6 +208,7 @@ export default function PaymentPlanList({
     currencyISOCode?: string;
     onDefaultPlanChanged?: (planId: string) => void;
     defaultPaymentPlanId?: string;
+    paymentMethod?: PaymentMethod;
 }) {
     const [isFormVisible, setIsFormVisible] = useState(false);
     const [planType, setPlanType] = useState<PaymentPlanType>(
@@ -484,6 +487,9 @@ export default function PaymentPlanList({
                                                             value={
                                                                 paymentPlanType.EMI
                                                             }
+                                                            disabled={
+                                                                !paymentMethod
+                                                            }
                                                         >
                                                             EMI
                                                         </SelectItem>
@@ -495,6 +501,9 @@ export default function PaymentPlanList({
                                                             value={
                                                                 paymentPlanType.SUBSCRIPTION
                                                             }
+                                                            disabled={
+                                                                !paymentMethod
+                                                            }
                                                         >
                                                             Subscription
                                                         </SelectItem>
@@ -505,6 +514,9 @@ export default function PaymentPlanList({
                                                         <SelectItem
                                                             value={
                                                                 paymentPlanType.ONE_TIME
+                                                            }
+                                                            disabled={
+                                                                !paymentMethod
                                                             }
                                                         >
                                                             One-time

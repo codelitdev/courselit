@@ -17,5 +17,4 @@ export interface Community {
     defaultPaymentPlan?: string;
     featuredImage?: Media;
     membersCount: number;
-    deleted: boolean;
 }

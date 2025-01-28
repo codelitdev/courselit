@@ -353,6 +353,9 @@ export async function createUser({
             constants.permissions.manageSite,
             constants.permissions.manageSettings,
             constants.permissions.manageUsers,
+            constants.permissions.manageCommunity,
+            constants.permissions.postInCommunity,
+            constants.permissions.commentInCommunity,
         ];
     } else {
         newUser.permissions = [
@@ -639,6 +642,7 @@ export const getUserContent = async (
             const community = await CommunityModel.findOne({
                 communityId: membership.entityId,
                 domain: ctx.subdomain._id,
+                deleted: false,
             });
 
             if (community) {

@@ -163,9 +163,22 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
         setLoginStep("complete");
     };
 
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            if (loginStep === "email") {
+                handleRequestOTP();
+            } else if (loginStep === "otp") {
+                handleVerifyOTP();
+            } else if (loginStep === "name") {
+                handleNameSubmit();
+            }
+        }
+    };
+
     return (
         <FormProvider {...form}>
-            <form className="space-y-4">
+            <form className="space-y-4" onKeyDown={handleKeyDown}>
                 {loginStep === "email" && (
                     <>
                         <FormField

@@ -78,6 +78,19 @@ export async function POST(req: NextRequest) {
         const siteinfo = domain.settings;
         const paymentMethod = await getPaymentMethodFromSettings(siteinfo);
 
+        if (
+            !paymentMethod &&
+            paymentPlan.type !== Constants.PaymentPlanType.FREE
+        ) {
+            return Response.json(
+                {
+                    status: transactionFailed,
+                    error: responses.payment_invalid_settings,
+                },
+                { status: 500 },
+            );
+        }
+
         const existingMembership =
             await MembershipModel.findOne<InternalMembership>({
                 domain: domain._id,
@@ -111,7 +124,7 @@ export async function POST(req: NextRequest) {
                     paymentPlan.type === Constants.PaymentPlanType.SUBSCRIPTION)
             ) {
                 if (
-                    await paymentMethod.validateSubscription(
+                    await paymentMethod?.validateSubscription(
                         membership.subscriptionId,
                     )
                 ) {
@@ -159,7 +172,7 @@ export async function POST(req: NextRequest) {
             currencyISOCode: siteinfo.currencyISOCode,
         };
 
-        const paymentTracker = await paymentMethod.initiate({
+        const paymentTracker = await paymentMethod!.initiate({
             metadata,
             paymentPlan,
             product: {
@@ -185,7 +198,7 @@ export async function POST(req: NextRequest) {
                 paymentPlan.emiAmount ||
                 0,
             status: Constants.InvoiceStatus.PENDING,
-            paymentProcessor: paymentMethod.name,
+            paymentProcessor: paymentMethod!.name,
             paymentProcessorEntityId: paymentTracker,
             currencyISOCode: siteinfo.currencyISOCode,
         });
@@ -235,6 +248,7 @@ async function getEntity(
         return await CommunityModel.findOne<Community>({
             communityId: id,
             domain: domainId,
+            deleted: false,
         });
     } else if (type === Constants.MembershipEntityType.COURSE) {
         return await CourseModel.findOne<Course>({
