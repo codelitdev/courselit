@@ -1508,10 +1508,6 @@ export async function leaveCommunity({
 }): Promise<boolean> {
     checkIfAuthenticated(ctx);
 
-    // const community = await CommunityModel.findOne<InternalCommunity>({
-    //     domain: ctx.subdomain._id,
-    //     communityId: id,
-    // });
     const community = await CommunityModel.findOne<InternalCommunity>(
         getCommunityQuery(ctx, id),
     );
@@ -1530,6 +1526,33 @@ export async function leaveCommunity({
 
     if (!member) {
         return true;
+    }
+
+    if (checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
+        const otherMembers = await MembershipModel.find(
+            {
+                domain: ctx.subdomain._id,
+                entityId: id,
+                entityType: Constants.MembershipEntityType.COMMUNITY,
+                status: Constants.MembershipStatus.ACTIVE,
+                userId: { $ne: ctx.user.userId },
+            },
+            {
+                _id: 0,
+                userId: 1,
+            },
+        ).lean();
+
+        const otherMembersWithManageCommunityPermission =
+            await UserModel.countDocuments({
+                domain: ctx.subdomain._id,
+                userId: { $in: otherMembers.map((m) => m.userId) },
+                permissions: permissions.manageCommunity,
+            });
+
+        if (otherMembersWithManageCommunityPermission === 0) {
+            throw new Error(responses.cannot_leave_community_last_admin);
+        }
     }
 
     if (member.subscriptionId) {

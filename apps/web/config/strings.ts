@@ -123,6 +123,8 @@ export const responses = {
     profile_incomplete: "Complete your profile to join this community",
     cannot_reject_member_with_active_subscription:
         "Cannot reject a member with an active subscription",
+    cannot_leave_community_last_admin:
+        "Last manager cannot leave the community",
 
     // api responses
     digital_download_no_files:
