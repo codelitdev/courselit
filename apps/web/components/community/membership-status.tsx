@@ -1,11 +1,7 @@
 import { FormEvent, useContext, useState } from "react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-    CommunityMemberStatus,
-    Constants,
-    PaymentPlan,
-} from "@courselit/common-models";
+import { Constants, Membership, PaymentPlan } from "@courselit/common-models";
 import {
     CircularProgress,
     Form,
@@ -28,21 +24,19 @@ import { getPlanPrice } from "@ui-lib/utils";
 
 export default function MembershipStatus({
     id,
-    status,
-    rejectionReason,
+    membership,
     joiningReasonText,
     paymentPlan,
 }: {
     id: string;
-    status?: CommunityMemberStatus;
-    rejectionReason?: string;
+    membership?: Pick<Membership, "status" | "rejectionReason" | "role">;
     joiningReasonText?: string;
     paymentPlan: PaymentPlan;
 }) {
     const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
     const [joiningReason, setJoiningReason] = useState("");
     const [loading, setLoading] = useState(false);
-    const [innerStatus, setInnerStatus] = useState(status);
+    const [innerStatus, setInnerStatus] = useState(membership?.status);
     const address = useContext(AddressContext);
     const siteinfo = useContext(SiteInfoContext);
     const { toast } = useToast();
@@ -98,6 +92,10 @@ export default function MembershipStatus({
         }
     };
 
+    if (!membership) {
+        return null;
+    }
+
     return (
         <div>
             {innerStatus?.toLowerCase() ===
@@ -117,7 +115,7 @@ export default function MembershipStatus({
                         Membership {innerStatus?.toLowerCase()}
                     </AlertTitle>
                     <AlertDescription>
-                        Reason: {rejectionReason}
+                        Reason: {membership && membership.rejectionReason}
                     </AlertDescription>
                 </Alert>
             )}

@@ -9,16 +9,19 @@ import {
     CommunityComment,
     CommunityCommentReply,
     CommunityPost,
+    Membership,
 } from "@courselit/common-models";
 
 export default function CommentSection({
     communityId,
     postId,
     onPostUpdated,
+    membership,
 }: {
     communityId: string;
     postId: string;
     onPostUpdated: (postId: string, commentsCount: number) => void;
+    membership: Pick<Membership, "status" | "role" | "rejectionReason">;
 }) {
     const [comments, setComments] = useState<CommunityComment[]>([]);
     const [content, setContent] = useState("");
@@ -587,6 +590,7 @@ export default function CommentSection({
                     <Comment
                         communityId={communityId}
                         key={comment.commentId}
+                        membership={membership}
                         comment={comment}
                         onLike={(commentId: string, replyId?: string) => {
                             if (replyId) {

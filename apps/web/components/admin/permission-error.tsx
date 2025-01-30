@@ -16,8 +16,8 @@ export default function PermissionError({
                 <h1 className="text-2xl font-bold">Permission Required</h1>
                 <p className="text-muted-foreground">
                     You don&apos;t have the required permission
-                    {missingPermissions.length !== 1 ? "s" : ""} to perform this
-                    action.
+                    {missingPermissions.length !== 1 ? "s" : ""} to access this
+                    area.
                 </p>
                 {missingPermissions.length > 0 && (
                     <div className="space-y-2">

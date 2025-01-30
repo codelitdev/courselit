@@ -45,6 +45,16 @@ const membershipEntityType = new GraphQLEnumType({
     ),
 });
 
+const membershipRoleType = new GraphQLEnumType({
+    name: "MembershipRoleType",
+    values: Object.fromEntries(
+        Object.entries(Constants.MembershipRole).map(([key, value]) => [
+            key,
+            { value: value },
+        ]),
+    ),
+});
+
 const progress = new GraphQLObjectType({
     name: "Progress",
     fields: {
@@ -201,6 +211,7 @@ const userTypes = {
     userContent,
     membershipStatusType,
     membershipEntityType,
+    membershipRoleType,
 };
 
 export default userTypes;

@@ -20,7 +20,6 @@ import { FetchBuilder } from "@courselit/utils";
 import {
     PaymentPlan,
     Constants,
-    UIConstants,
     PaymentPlanType,
     Profile,
     Media,
@@ -71,7 +70,7 @@ import PaymentPlanList from "@components/admin/payments/payment-plan-list";
 import { MembershipEntityType } from "@courselit/common-models/dist/constants";
 import { useCommunity } from "@components/hooks/useCommunity";
 import { Button } from "@components/ui/button";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 const { PaymentPlanType: paymentPlanType } = Constants;
 
 export default function Page({
@@ -112,6 +111,7 @@ export default function Page({
     const { toast } = useToast();
     const { community, error, loaded: communityLoaded } = useCommunity(id);
     const [defaultPaymentPlan, setDefaultPaymentPlan] = useState("");
+    const router = useRouter();
 
     useEffect(() => {
         if (communityLoaded && community) {
@@ -148,11 +148,10 @@ export default function Page({
             const response = await fetchRequest.exec();
             if (response.community) {
                 toast({
-                    title: "Community Deleted",
-                    description:
-                        "Your community and all associated data have been permanently deleted.",
-                    variant: "destructive",
+                    title: TOAST_TITLE_SUCCESS,
+                    description: "Community has been deleted successfully",
                 });
+                router.replace("/dashboard4/communities");
             }
         } catch (error) {
             toast({
@@ -578,10 +577,7 @@ export default function Page({
     };
 
     return (
-        <DashboardContent
-            breadcrumbs={breadcrumbs}
-            permissions={[UIConstants.permissions.manageCommunity]}
-        >
+        <DashboardContent breadcrumbs={breadcrumbs}>
             <Form onSubmit={handleSubmit} className="space-y-8">
                 <div className="space-y-2">
                     <div className="flex flex-col lg:flex-row gap-4 lg:items-center justify-between mb-8">

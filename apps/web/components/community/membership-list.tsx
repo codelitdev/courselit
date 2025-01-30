@@ -50,6 +50,7 @@ import {
     User,
 } from "@courselit/common-models";
 import { getNextStatusForCommunityMember } from "@ui-lib/utils";
+import { useRouter } from "next/navigation";
 
 interface MembershipRequest {
     id: string;
@@ -71,6 +72,7 @@ type Member = Pick<
     | "joiningReason"
     | "subscriptionMethod"
     | "subscriptionId"
+    | "role"
 > & {
     user: Pick<User, "email" | "name" | "userId" | "avatar">;
 };
@@ -89,6 +91,7 @@ export function MembershipList({ id }: { id: string }) {
     const { toast } = useToast();
     const [isUpdating, setIsUpdating] = useState(false);
     const { profile } = useContext(ProfileContext);
+    const router = useRouter();
 
     const fetch = new FetchBuilder()
         .setUrl(`${address.backend}/api/graph`)
@@ -122,6 +125,7 @@ export function MembershipList({ id }: { id: string }) {
                     joiningReason
                     subscriptionMethod
                     subscriptionId
+                    role
                 },
                 totalMembers: getMembersCount(communityId: $communityId, status: $status) 
             }`;
@@ -144,11 +148,15 @@ export function MembershipList({ id }: { id: string }) {
                 setTotalMembers(response.totalMembers);
             }
         } catch (e) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: e.message,
-                variant: "destructive",
-            });
+            if (e.message === "Item not found") {
+                router.replace(`/dashboard4/community/${id}`);
+            } else {
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: e.message,
+                    variant: "destructive",
+                });
+            }
         }
     };
 
@@ -169,6 +177,7 @@ export function MembershipList({ id }: { id: string }) {
                     status
                     rejectionReason
                     joiningReason
+                    role
                 }
             }`;
         try {
@@ -204,13 +213,61 @@ export function MembershipList({ id }: { id: string }) {
         }
     };
 
-    // const filteredRequests = requests.filter((request) => {
-    //     const matchesFilter = filter === "all" || request.status === filter;
-    //     const matchesSearch =
-    //         request.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    //         request.email.toLowerCase().includes(searchTerm.toLowerCase());
-    //     return matchesFilter && matchesSearch;
-    // });
+    const updateMemberRole = async (userId: string) => {
+        setIsUpdating(true);
+        const query = `
+            mutation ($communityId: String!, $userId: String!) {
+                member: updateMemberRole(communityId: $communityId, userId: $userId) {
+                    user {
+                        userId
+                        name
+                        email
+                        avatar {
+                            mediaId
+                            thumbnail
+                        }
+                    }
+                    status
+                    rejectionReason
+                    joiningReason
+                    role
+                }
+            }`;
+        try {
+            const fetchRequest = fetch
+                .setPayload({
+                    query,
+                    variables: {
+                        communityId: id,
+                        userId,
+                    },
+                })
+                .build();
+            const response = await fetchRequest.exec();
+            if (response.member) {
+                setMembers((members: Member[]) =>
+                    members.map((member) =>
+                        member.user.userId === userId
+                            ? response.member
+                            : member,
+                    ),
+                );
+            }
+        } catch (e) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: e.message,
+                variant: "destructive",
+            });
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const handleRoleChange = (member: Member) => {
+        setSelectedMember(member);
+        updateMemberRole(member.user.userId);
+    };
 
     const handleStatusChange = (member: Member) => {
         const nextStatus = getNextStatusForCommunityMember(
@@ -223,25 +280,6 @@ export function MembershipList({ id }: { id: string }) {
             updateMemberStatus(member.user.userId);
         }
     };
-
-    // const updateRequestStatus = (
-    //     id: string,
-    //     newStatus: MembershipRequest["status"],
-    //     reason?: string,
-    // ) => {
-    //     setRequests(
-    //         requests.map((request) =>
-    //             request.id === id
-    //                 ? {
-    //                       ...request,
-    //                       status: newStatus,
-    //                       rejectionReason:
-    //                           newStatus === "rejected" ? reason : undefined,
-    //                   }
-    //                 : request,
-    //         ),
-    //     );
-    // };
 
     const handleDialogConfirm = async () => {
         if (selectedRequest && rejectionReason) {
@@ -292,12 +330,6 @@ export function MembershipList({ id }: { id: string }) {
                             ))}
                         </SelectContent>
                     </Select>
-                    {/* <Input
-                        placeholder="Search by name or email"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full sm:w-[300px]"
-                    /> */}
                 </div>
                 <div className="overflow-x-auto">
                     <PaginatedTable
@@ -320,7 +352,7 @@ export function MembershipList({ id }: { id: string }) {
                                     <TableHead>Subscription ID</TableHead>
                                     <TableHead>Subscription Method</TableHead>
                                     <TableHead>Status</TableHead>
-                                    {/* <TableHead>Actions</TableHead> */}
+                                    <TableHead>Role</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -376,38 +408,6 @@ export function MembershipList({ id }: { id: string }) {
                                         <TableCell className="hidden lg:table-cell max-w-xs truncate">
                                             {member.joiningReason || "-"}
                                         </TableCell>
-                                        {/* <TableCell className="flex items-center space-x-2">
-                                            <Badge
-                                                variant={
-                                                    member.status === "pending"
-                                                        ? "default"
-                                                        : member.status ===
-                                                            "approved"
-                                                          ? "success"
-                                                          : "destructive"
-                                                }
-                                            >
-                                                {member.status
-                                                    .charAt(0)
-                                                    .toUpperCase() +
-                                                    member.status.slice(1)}
-                                            </Badge>
-                                            {member.user.userId !==
-                                                profile.userId && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() =>
-                                                        handleStatusChange(
-                                                            member,
-                                                        )
-                                                    }
-                                                    disabled={isUpdating}
-                                                >
-                                                    <RotateCcw className="h-3 w-3" />{" "}
-                                                </Button>
-                                            )}
-                                        </TableCell> */}
                                         <TableCell className="hidden xl:table-cell max-w-xs truncate">
                                             {member.rejectionReason || "-"}
                                         </TableCell>
@@ -436,57 +436,71 @@ export function MembershipList({ id }: { id: string }) {
                                                 member.subscriptionMethod,
                                             ) || "-"}
                                         </TableCell>
-                                        <TableCell className="flex items-center space-x-2">
-                                            <Badge
-                                                variant={
-                                                    member.status === "pending"
-                                                        ? "default"
-                                                        : member.status ===
-                                                            "active"
-                                                          ? "success"
-                                                          : "destructive"
-                                                }
-                                            >
-                                                {member.status
-                                                    .charAt(0)
-                                                    .toUpperCase() +
-                                                    member.status.slice(1)}
-                                            </Badge>
-                                            {member.user.userId !==
-                                                profile.userId && (
-                                                <Tooltip title="Change status">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={() =>
-                                                            handleStatusChange(
-                                                                member,
-                                                            )
-                                                        }
-                                                        disabled={isUpdating}
-                                                    >
-                                                        <RotateCcw className="h-3 w-3" />{" "}
-                                                    </Button>
-                                                </Tooltip>
-                                            )}
-                                        </TableCell>
-                                        {/* <TableCell>
-                                            {member.user.userId !==
-                                                profile.userId && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() =>
-                                                        handleStatusChange(
-                                                            member,
-                                                        )
+                                        <TableCell>
+                                            <div className="flex items-center space-x-2">
+                                                <Badge
+                                                    variant={
+                                                        member.status ===
+                                                        "pending"
+                                                            ? "default"
+                                                            : member.status ===
+                                                                "active"
+                                                              ? "success"
+                                                              : "destructive"
                                                     }
-                                                    disabled={isUpdating}
                                                 >
-                                                    <RotateCcw className="h-3 w-3" />{" "}
-                                                </Button>
-                                            )}
-                                        </TableCell> */}
+                                                    {member.status
+                                                        .charAt(0)
+                                                        .toUpperCase() +
+                                                        member.status.slice(1)}
+                                                </Badge>
+                                                {member.user.userId !==
+                                                    profile.userId && (
+                                                    <Tooltip title="Change status">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() =>
+                                                                handleStatusChange(
+                                                                    member,
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                isUpdating
+                                                            }
+                                                        >
+                                                            <RotateCcw className="h-3 w-3" />{" "}
+                                                        </Button>
+                                                    </Tooltip>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center space-x-2">
+                                                <Badge>
+                                                    {capitalize(member.role)}
+                                                </Badge>
+                                                {member.user.userId !==
+                                                    profile.userId && (
+                                                    <Tooltip title="Change role">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() =>
+                                                                handleRoleChange(
+                                                                    member,
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                isUpdating
+                                                            }
+                                                        >
+                                                            <RotateCcw className="h-3 w-3" />
+                                                        </Button>
+                                                    </Tooltip>
+                                                )}
+                                            </div>
+                                        </TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>

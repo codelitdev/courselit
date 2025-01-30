@@ -79,6 +79,11 @@ export const MembershipStatus = {
     REJECTED: "rejected",
     PAUSED: "paused",
 } as const;
+export const MembershipRole = {
+    COMMENT: "comment",
+    POST: "post",
+    MODERATE: "moderate",
+} as const;
 export const InvoiceStatus = {
     PENDING: "pending",
     PAID: "paid",

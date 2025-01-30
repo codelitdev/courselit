@@ -28,18 +28,16 @@ import {
 } from "@/components/ui/dialog";
 import { Comment as CommentType } from "./mock-data";
 import { useRouter } from "next/navigation";
-import { capitalize, checkPermission, FetchBuilder } from "@courselit/utils";
+import { capitalize, FetchBuilder } from "@courselit/utils";
 import { AddressContext, ProfileContext } from "@components/contexts";
 import { PaginatedTable, useToast } from "@courselit/components-library";
 import {
     CommunityMedia,
-    CommunityMemberStatus,
     CommunityPost,
     Constants,
-    UIConstants,
 } from "@courselit/common-models";
 import LoadingSkeleton from "./loading-skeleton";
-import { formattedLocaleDate } from "@ui-lib/utils";
+import { formattedLocaleDate, hasCommunityPermission } from "@ui-lib/utils";
 import { MediaItem } from "./media-item";
 import Image from "next/image";
 import MembershipStatus from "./membership-status";
@@ -53,6 +51,7 @@ import {
 import CommentSection from "./comment-section";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useCommunity } from "@components/hooks/useCommunity";
+import { useMembership } from "@components/hooks/use-membership";
 import NotFound from "@components/admin/not-found";
 import { CommunityInfo } from "./info";
 import Banner from "./banner";
@@ -77,13 +76,6 @@ export function CommunityForum({
     const address = useContext(AddressContext);
     const { toast } = useToast();
     const [categories, setCategories] = useState<string[]>(["All"]);
-    const [memberStatus, setMemberStatus] = useState<
-        | {
-              status: CommunityMemberStatus;
-              rejectionReason?: string;
-          }
-        | undefined
-    >();
     const [page, setPage] = useState(1);
     const [totalPosts, setTotalPosts] = useState(0);
     const [postToDelete, setPostToDelete] = useState<CommunityPost | null>(
@@ -92,13 +84,20 @@ export function CommunityForum({
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
     const [comments, setComments] = useState<CommentType[]>([]);
     const { community, loaded, setCommunity } = useCommunity(id);
-    const [refreshCommunityStatus, setRefreshCommunityStatus] = useState(0);
+    const { membership, setMembership } = useMembership(id);
     const { profile } = useContext(ProfileContext);
     const [showReportConfirmation, setShowReportConfirmation] = useState(false);
     const [reportReason, setReportReason] = useState("");
     const [postToReport, setPostToReport] = useState<CommunityPost | null>(
         null,
     );
+    const [refreshCommunityStatus, setRefreshCommunityStatus] = useState(0);
+
+    useEffect(() => {
+        if (membership) {
+            setRefreshCommunityStatus((prev) => prev + 1);
+        }
+    }, [membership]);
 
     const loadTotalPosts = useCallback(async () => {
         const query = `
@@ -133,32 +132,6 @@ export function CommunityForum({
             });
         }
     }, [id, activeCategory, address.backend, toast]);
-
-    const loadMemberStatus = useCallback(async () => {
-        const query = `
-            query ($id: String) {
-                communityMembershipStatus: getMemberStatus(id: $id) {
-                    status,
-                    rejectionReason
-                }
-            }
-        `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload({ query, variables: { id } })
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            const response = await fetch.exec();
-            setMemberStatus(response.communityMembershipStatus);
-            setRefreshCommunityStatus((prev) => prev + 1);
-        } catch (err: any) {
-            toast({
-                title: "Error",
-                description: err.message,
-            });
-        }
-    }, [address.backend, id, toast]);
 
     const loadPosts = useCallback(async () => {
         const query = `
@@ -229,13 +202,13 @@ export function CommunityForum({
     useEffect(() => {
         if (
             community &&
-            memberStatus?.status.toLowerCase() ===
+            membership?.status.toLowerCase() ===
                 Constants.MembershipStatus.ACTIVE
         ) {
             loadPosts();
             loadTotalPosts();
         }
-    }, [memberStatus, loadTotalPosts, loadPosts]);
+    }, [membership, loadTotalPosts, loadPosts]);
 
     useEffect(() => {
         if (community) {
@@ -246,9 +219,8 @@ export function CommunityForum({
     useEffect(() => {
         if (community) {
             setCategories(["All", ...community.categories]);
-            loadMemberStatus();
         }
-    }, [community, loadMemberStatus]);
+    }, [community]);
 
     useEffect(() => {
         if (community) {
@@ -966,8 +938,9 @@ export function CommunityForum({
                     id: $id
                     joiningReason: $joiningReason
                 ) {
-                    status,
+                    status
                     rejectionReason
+                    role
                 } 
             }
         `;
@@ -984,7 +957,7 @@ export function CommunityForum({
                 .setIsGraphQLEndpoint(true)
                 .build();
             const response = await fetchRequest.exec();
-            setMemberStatus(response.communityMembershipStatus);
+            setMembership(response.communityMembershipStatus);
             setRefreshCommunityStatus((prev) => prev + 1);
             if (response.communityMembershipStatus) {
                 toast({
@@ -1032,7 +1005,7 @@ export function CommunityForum({
                 .build();
             const response = await fetchRequest.exec();
             if (response.communityMembershipStatus) {
-                setMemberStatus(undefined);
+                setMembership(undefined);
                 toast({
                     title: TOAST_TITLE_SUCCESS,
                     description: `You have left the community.`,
@@ -1057,23 +1030,29 @@ export function CommunityForum({
             {!community?.enabled && (
                 <div className="bg-red-400 p-2 mb-4 text-sm text-white rounded-md">
                     This community is not enabled. It is not visible to your
-                    audience.
+                    audience (including moderators).
                 </div>
             )}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <div className="lg:col-span-2 space-y-6">
                     {profile.name &&
-                    memberStatus?.status.toLowerCase() ===
+                    membership?.status.toLowerCase() ===
                         Constants.MembershipStatus.ACTIVE ? (
-                        <CreatePostDialog
-                            categories={categories.filter((x) => x !== "All")}
-                            onPostCreated={createPost}
-                        />
+                        hasCommunityPermission(
+                            membership,
+                            Constants.MembershipRole.POST,
+                        ) ? (
+                            <CreatePostDialog
+                                categories={categories.filter(
+                                    (x) => x !== "All",
+                                )}
+                                onPostCreated={createPost}
+                            />
+                        ) : null
                     ) : (
                         <MembershipStatus
                             id={id!}
-                            status={memberStatus?.status}
-                            rejectionReason={memberStatus?.rejectionReason}
+                            membership={membership}
                             joiningReasonText={community?.joiningReasonText}
                             key={refreshCommunityStatus}
                             paymentPlan={community?.paymentPlans.find(
@@ -1111,9 +1090,14 @@ export function CommunityForum({
                     </div>
 
                     <Banner
-                        canEdit={checkPermission(profile.permissions, [
-                            UIConstants.permissions.manageCommunity,
-                        ])}
+                        canEdit={
+                            membership
+                                ? hasCommunityPermission(
+                                      membership,
+                                      Constants.MembershipRole.MODERATE,
+                                  )
+                                : false
+                        }
                         initialBannerText={community?.banner}
                         onSaveBanner={updateBanner}
                     />
@@ -1181,31 +1165,30 @@ export function CommunityForum({
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    {checkPermission(
-                                                        profile.permissions,
-                                                        [
-                                                            UIConstants
-                                                                .permissions
-                                                                .manageCommunity,
-                                                        ],
-                                                    ) && (
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className={`flex-shrink-0 rounded-full ${post.pinned ? "bg-accent" : ""}`}
-                                                            onClick={(e) =>
-                                                                togglePin(
-                                                                    post.postId,
-                                                                    e,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Pin className="h-4 w-4" />
-                                                            <span className="sr-only">
-                                                                Pin post
-                                                            </span>
-                                                        </Button>
-                                                    )}
+                                                    {membership &&
+                                                        hasCommunityPermission(
+                                                            membership,
+                                                            Constants
+                                                                .MembershipRole
+                                                                .MODERATE,
+                                                        ) && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className={`flex-shrink-0 rounded-full ${post.pinned ? "bg-accent" : ""}`}
+                                                                onClick={(e) =>
+                                                                    togglePin(
+                                                                        post.postId,
+                                                                        e,
+                                                                    )
+                                                                }
+                                                            >
+                                                                <Pin className="h-4 w-4" />
+                                                                <span className="sr-only">
+                                                                    Pin post
+                                                                </span>
+                                                            </Button>
+                                                        )}
                                                 </CardHeader>
                                                 <CardContent>
                                                     <p className="text-base mb-4 font-semibold line-clamp-3">
@@ -1333,27 +1316,26 @@ export function CommunityForum({
                                                             </Button>
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end">
-                                                            {checkPermission(
-                                                                profile.permissions,
-                                                                [
-                                                                    UIConstants
-                                                                        .permissions
-                                                                        .manageCommunity,
-                                                                ],
-                                                            ) && (
-                                                                <DropdownMenuItem
-                                                                    onClick={() =>
-                                                                        togglePin(
-                                                                            post.postId,
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    <Pin className="h-4 w-4" />
-                                                                    {post.pinned
-                                                                        ? "Unpin"
-                                                                        : "Pin"}
-                                                                </DropdownMenuItem>
-                                                            )}
+                                                            {membership &&
+                                                                hasCommunityPermission(
+                                                                    membership,
+                                                                    Constants
+                                                                        .MembershipRole
+                                                                        .MODERATE,
+                                                                ) && (
+                                                                    <DropdownMenuItem
+                                                                        onClick={() =>
+                                                                            togglePin(
+                                                                                post.postId,
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <Pin className="h-4 w-4" />
+                                                                        {post.pinned
+                                                                            ? "Unpin"
+                                                                            : "Pin"}
+                                                                    </DropdownMenuItem>
+                                                                )}
                                                             {profile.userId !==
                                                                 post.user
                                                                     .userId && (
@@ -1368,14 +1350,13 @@ export function CommunityForum({
                                                                     Report
                                                                 </DropdownMenuItem>
                                                             )}
-                                                            {(checkPermission(
-                                                                profile.permissions,
-                                                                [
-                                                                    UIConstants
-                                                                        .permissions
-                                                                        .manageCommunity,
-                                                                ],
-                                                            ) ||
+                                                            {((membership &&
+                                                                hasCommunityPermission(
+                                                                    membership,
+                                                                    Constants
+                                                                        .MembershipRole
+                                                                        .MODERATE,
+                                                                )) ||
                                                                 post.user
                                                                     .userId ===
                                                                     profile.userId) && (
@@ -1486,6 +1467,7 @@ export function CommunityForum({
                                     </Button>
 */}
                                                 <CommentSection
+                                                    membership={membership}
                                                     postId={post.postId}
                                                     communityId={id!}
                                                     onPostUpdated={(
@@ -1593,8 +1575,7 @@ export function CommunityForum({
                                 "/courselit_backdrop_square.webp"
                             }
                             memberCount={community?.membersCount}
-                            membershipStatus={memberStatus?.status.toLowerCase()}
-                            rejectionReason={memberStatus?.rejectionReason}
+                            membership={membership}
                             paymentPlan={
                                 community?.paymentPlans.find(
                                     (plan) =>

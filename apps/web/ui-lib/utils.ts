@@ -3,6 +3,8 @@ import type {
     CommunityReportStatus,
     Course,
     Group,
+    Membership,
+    MembershipRole,
     Page,
     PaymentPlan,
     Profile,
@@ -225,6 +227,12 @@ export function getNextStatusForCommunityReport(status: CommunityReportStatus) {
     return statusCycle[(index + 1) % statusCycle.length];
 }
 
+export function getNextRoleForCommunityMember(role: MembershipRole) {
+    const roleCycle = Object.values(Constants.MembershipRole);
+    const index = roleCycle.indexOf(role);
+    return roleCycle[(index + 1) % roleCycle.length];
+}
+
 export function getPlanPrice(plan: PaymentPlan): {
     amount: number;
     period: string;
@@ -256,4 +264,21 @@ export function getPlanPrice(plan: PaymentPlan): {
         default:
             return { amount: 0, period: "" };
     }
+}
+
+export function hasCommunityPermission(
+    member: Pick<Membership, "role">,
+    requiredRole: MembershipRole,
+): boolean {
+    const roleHierarchy = [
+        Constants.MembershipRole.COMMENT,
+        Constants.MembershipRole.POST,
+        Constants.MembershipRole.MODERATE,
+    ];
+    const memberRoleIndex = roleHierarchy.indexOf(
+        member.role.toLowerCase() as MembershipRole,
+    );
+    const requiredRoleIndex = roleHierarchy.indexOf(requiredRole);
+
+    return memberRoleIndex >= requiredRoleIndex;
 }

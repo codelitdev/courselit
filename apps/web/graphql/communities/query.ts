@@ -13,7 +13,7 @@ import {
     getCommunity,
     getCommunityReports,
     getCommunityReportsCount,
-    getMemberStatus,
+    getMember,
     getMembers,
     getMembersCount,
     getPost,
@@ -112,7 +112,7 @@ const queries = {
             ctx: GQLContext,
         ) => getMembersCount({ ctx, communityId, status }),
     },
-    getMemberStatus: {
+    getMembership: {
         type: types.communityMemberStatus,
         args: {
             id: {
@@ -123,7 +123,7 @@ const queries = {
             _: any,
             { id: communityId }: { id: string },
             ctx: GQLContext,
-        ) => getMemberStatus({ ctx, communityId }),
+        ) => getMember({ ctx, communityId }),
     },
     getPost: {
         type: types.communityPost,

@@ -7,13 +7,15 @@ import {
     MessageSquare,
     MoreVertical,
     FlagTriangleRight,
+    Trash,
 } from "lucide-react";
 import {
     CommunityComment,
     CommunityCommentReply,
     Constants,
+    Membership,
 } from "@courselit/common-models";
-import { formattedLocaleDate } from "@ui-lib/utils";
+import { formattedLocaleDate, hasCommunityPermission } from "@ui-lib/utils";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -44,6 +46,7 @@ interface CommentProps {
     ) => void;
     onDelete: (comment: CommunityComment | CommunityCommentReply) => void;
     depth?: number;
+    membership: Pick<Membership, "status" | "role" | "rejectionReason">;
 }
 
 export function Comment({
@@ -52,6 +55,7 @@ export function Comment({
     onLike,
     onReply,
     onDelete,
+    membership,
     depth = 0,
 }: CommentProps) {
     const [isReplying, setIsReplying] = useState(false);
@@ -193,37 +197,46 @@ export function Comment({
                                 {formattedLocaleDate(comment.updatedAt)}
                             </span>
                         </div>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-muted-foreground mr-1"
-                                >
-                                    <MoreVertical className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                {profile?.userId === comment.user.userId && (
-                                    <DropdownMenuItem
-                                        onClick={() =>
-                                            handleDeletePost(comment)
-                                        }
+                        {!comment.deleted && (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-muted-foreground mr-1"
                                     >
-                                        Delete
-                                    </DropdownMenuItem>
-                                )}
-                                {profile?.userId !== comment.user.userId && (
-                                    <DropdownMenuItem
-                                        onClick={() =>
-                                            handleReportPost(comment)
-                                        }
-                                    >
-                                        <FlagTriangleRight /> Report
-                                    </DropdownMenuItem>
-                                )}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                        <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                    {(hasCommunityPermission(
+                                        membership,
+                                        Constants.MembershipRole.MODERATE,
+                                    ) ||
+                                        profile?.userId ===
+                                            comment.user.userId) && (
+                                        <DropdownMenuItem
+                                            onClick={() =>
+                                                handleDeletePost(comment)
+                                            }
+                                        >
+                                            <Trash className="h-4 w-4" />
+                                            Delete
+                                        </DropdownMenuItem>
+                                    )}
+                                    {profile?.userId !==
+                                        comment.user.userId && (
+                                        <DropdownMenuItem
+                                            onClick={() =>
+                                                handleReportPost(comment)
+                                            }
+                                        >
+                                            <FlagTriangleRight /> Report
+                                        </DropdownMenuItem>
+                                    )}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        )}
                     </div>
                     <p className="text-sm mt-1">
                         {comment.deleted ? (
@@ -307,6 +320,7 @@ export function Comment({
                         onLike={() => onLike(comment.commentId, reply.replyId)}
                         onReply={onReply}
                         onDelete={onDelete}
+                        membership={membership}
                         depth={depth + 1}
                     />
                 ))}

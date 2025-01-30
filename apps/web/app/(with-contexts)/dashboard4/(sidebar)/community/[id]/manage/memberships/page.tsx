@@ -1,6 +1,5 @@
 import DashboardContent from "@components/admin/dashboard-content";
 import { MembershipList } from "@components/community/membership-list";
-import { UIConstants } from "@courselit/common-models";
 import {
     COMMUNITY_HEADER,
     COMMUNITY_MEMBERSHIP_LIST_HEADER,
@@ -28,10 +27,7 @@ export default function Page({
     ];
 
     return (
-        <DashboardContent
-            breadcrumbs={breadcrumbs}
-            permissions={[UIConstants.permissions.manageCommunity]}
-        >
+        <DashboardContent breadcrumbs={breadcrumbs}>
             <MembershipList id={id} />
         </DashboardContent>
     );

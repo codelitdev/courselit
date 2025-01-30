@@ -24,6 +24,7 @@ import {
     deleteCommunityPost,
     reportCommunityContent,
     updateCommunityReportStatus,
+    updateMemberRole,
 } from "./logic";
 import types from "./types";
 import { CommunityMedia, CommunityReportType } from "@courselit/common-models";
@@ -197,6 +198,29 @@ const mutations = {
                 communityId,
                 userId,
                 rejectionReason,
+                ctx,
+            }),
+    },
+    updateMemberRole: {
+        type: types.communityMemberStatus,
+        args: {
+            communityId: { type: new GraphQLNonNull(GraphQLString) },
+            userId: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: async (
+            _: any,
+            {
+                communityId,
+                userId,
+            }: {
+                communityId: string;
+                userId: string;
+            },
+            ctx: GQLContext,
+        ) =>
+            updateMemberRole({
+                communityId,
+                userId,
                 ctx,
             }),
     },

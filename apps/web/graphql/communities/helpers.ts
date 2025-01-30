@@ -3,7 +3,7 @@ import {
     CommunityReport,
     CommunityReportType,
     Constants,
-    UIConstants,
+    Membership,
     User,
 } from "@courselit/common-models";
 import CommunityCommentModel, {
@@ -17,12 +17,12 @@ import { deleteMedia } from "@/services/medialit";
 import { responses } from "@/config/strings";
 import MembershipModel from "@models/Membership";
 import { error } from "@/services/logger";
-import { checkPermission } from "@courselit/utils";
 import mongoose from "mongoose";
 import { InternalCommunityReport } from "@models/CommunityReport";
 import CommunityPostSubscriberModel, {
     CommunityPostSubscriber,
 } from "@models/CommunityPostSubscriber";
+import { hasCommunityPermission } from "@ui-lib/utils";
 
 export type PublicPost = Omit<
     CommunityPost,
@@ -197,8 +197,9 @@ export async function deleteCommunityData(
         entityType: Constants.MembershipEntityType.COMMUNITY,
     });
 }
+
 export function hasPermissionToDelete(
-    user: User,
+    membership: Membership,
     comment: InternalCommunityComment,
     replyId,
 ) {
@@ -206,10 +207,8 @@ export function hasPermissionToDelete(
         ? comment.replies.find((r) => r.replyId === replyId)?.userId
         : comment.userId;
     return (
-        user.userId === ownerUserId ||
-        checkPermission(user.permissions, [
-            UIConstants.permissions.manageCommunity,
-        ])
+        membership.userId === ownerUserId ||
+        hasCommunityPermission(membership, Constants.MembershipRole.MODERATE)
     );
 }
 

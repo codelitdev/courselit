@@ -15,15 +15,15 @@ import {
     Media,
     CommunityReportType,
     CommunityReportStatus,
-    User,
+    MembershipRole,
 } from "@courselit/common-models";
 import CommunityPostModel from "@models/CommunityPost";
 import {
+    getNextRoleForCommunityMember,
     getNextStatusForCommunityMember,
     getNextStatusForCommunityReport,
 } from "@ui-lib/utils";
 import CommunityCommentModel from "@models/CommunityComment";
-import UserModel from "@models/User";
 import PageModel from "@models/Page";
 import PaymentPlanModel from "@models/PaymentPlan";
 import MembershipModel from "@models/Membership";
@@ -48,6 +48,7 @@ import NotificationModel from "@models/Notification";
 import { addNotification } from "@/services/queue";
 import { hasActiveSubscription } from "../users/logic";
 import { internal } from "@config/strings";
+import { hasCommunityPermission as hasPermission } from "@ui-lib/utils";
 
 const { permissions, communityPage } = constants;
 
@@ -116,6 +117,7 @@ export async function createCommunity({
         entityType: Constants.MembershipEntityType.COMMUNITY,
         status: Constants.MembershipStatus.ACTIVE,
         joiningReason: internal.joining_reason_creator,
+        role: Constants.MembershipRole.MODERATE,
     });
 
     return community;
@@ -251,9 +253,9 @@ export async function updateCommunity({
 }): Promise<Community> {
     checkIfAuthenticated(ctx);
 
-    if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
-        throw new Error(responses.action_not_allowed);
-    }
+    // if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
+    //     throw new Error(responses.action_not_allowed);
+    // }
 
     const community = await CommunityModel.findOne<InternalCommunity>(
         getCommunityQuery(ctx, id),
@@ -261,6 +263,12 @@ export async function updateCommunity({
 
     if (!community) {
         throw new Error(responses.item_not_found);
+    }
+
+    const member = await getMembership(ctx, id);
+
+    if (!member || !hasPermission(member, Constants.MembershipRole.MODERATE)) {
+        throw new Error(responses.action_not_allowed);
     }
 
     if (name) {
@@ -320,9 +328,9 @@ export async function addCategory({
 }): Promise<Community> {
     checkIfAuthenticated(ctx);
 
-    if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
-        throw new Error(responses.action_not_allowed);
-    }
+    // if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
+    //     throw new Error(responses.action_not_allowed);
+    // }
 
     const community = await CommunityModel.findOne<InternalCommunity>(
         getCommunityQuery(ctx, id),
@@ -330,6 +338,12 @@ export async function addCategory({
 
     if (!community) {
         throw new Error(responses.item_not_found);
+    }
+
+    const member = await getMembership(ctx, id);
+
+    if (!member || !hasPermission(member, Constants.MembershipRole.MODERATE)) {
+        throw new Error(responses.action_not_allowed);
     }
 
     if (!community.categories.includes(category)) {
@@ -354,9 +368,9 @@ export async function deleteCategory({
 }): Promise<Community> {
     checkIfAuthenticated(ctx);
 
-    if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
-        throw new Error(responses.action_not_allowed);
-    }
+    // if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
+    //     throw new Error(responses.action_not_allowed);
+    // }
 
     const community = await CommunityModel.findOne<InternalCommunity>(
         getCommunityQuery(ctx, id),
@@ -364,6 +378,12 @@ export async function deleteCategory({
 
     if (!community) {
         throw new Error(responses.item_not_found);
+    }
+
+    const member = await getMembership(ctx, id);
+
+    if (!member || !hasPermission(member, Constants.MembershipRole.MODERATE)) {
+        throw new Error(responses.action_not_allowed);
     }
 
     if (migrateToCategory) {
@@ -430,20 +450,29 @@ export async function joinCommunity({
             status: community.autoAcceptMembers
                 ? Constants.MembershipStatus.ACTIVE
                 : Constants.MembershipStatus.PENDING,
+            role: community.autoAcceptMembers
+                ? Constants.MembershipRole.POST
+                : Constants.MembershipRole.COMMENT,
             joiningReason,
         });
 
-        const communityManagers: User[] = await UserModel.find(
-            {
-                domain: ctx.subdomain._id,
-                permissions: permissions.manageCommunity,
-                userId: { $nin: [ctx.user.userId] },
-            },
-            {
-                _id: 0,
-                userId: 1,
-            },
-        ).lean();
+        // const communityManagers: User[] = await UserModel.find(
+        //     {
+        //         domain: ctx.subdomain._id,
+        //         permissions: permissions.manageCommunity,
+        //         userId: { $nin: [ctx.user.userId] },
+        //     },
+        //     {
+        //         _id: 0,
+        //         userId: 1,
+        //     },
+        // ).lean();
+        const communityManagers: Membership[] = await MembershipModel.find({
+            domain: ctx.subdomain._id,
+            entityId: community.communityId,
+            entityType: Constants.MembershipEntityType.COMMUNITY,
+            role: Constants.MembershipRole.MODERATE,
+        });
 
         addNotification({
             domain: ctx.subdomain._id.toString(),
@@ -462,15 +491,14 @@ export async function joinCommunity({
 async function getMembership(
     ctx: GQLContext,
     communityId: string,
-): Promise<boolean> {
-    const member = await MembershipModel.findOne({
+): Promise<Membership | null> {
+    return await MembershipModel.findOne({
         domain: ctx.subdomain._id,
         entityId: communityId,
         entityType: Constants.MembershipEntityType.COMMUNITY,
         userId: ctx.user.userId,
         status: Constants.MembershipStatus.ACTIVE,
     });
-    return !!member;
 }
 
 export async function createCommunityPost({
@@ -490,10 +518,6 @@ export async function createCommunityPost({
 }): Promise<PublicPost> {
     checkIfAuthenticated(ctx);
 
-    if (!checkPermission(ctx.user.permissions, [permissions.postInCommunity])) {
-        throw new Error(responses.action_not_allowed);
-    }
-
     const community = await CommunityModel.findOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
     );
@@ -504,7 +528,7 @@ export async function createCommunityPost({
 
     const member = await getMembership(ctx, communityId);
 
-    if (!member) {
+    if (!member || !hasPermission(member, Constants.MembershipRole.POST)) {
         throw new Error(responses.action_not_allowed);
     }
 
@@ -583,7 +607,11 @@ export async function deleteCommunityPost({
         communityId,
         postId,
     };
-    if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
+    // if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
+    //     query["userId"] = ctx.user.userId;
+    // }
+    const member = await getMembership(ctx, communityId);
+    if (!hasPermission(member!, Constants.MembershipRole.MODERATE)) {
         query["userId"] = ctx.user.userId;
     }
 
@@ -621,6 +649,7 @@ export async function getPost({
         domain: ctx.subdomain._id,
         communityId,
         postId,
+        deleted: false,
     });
     if (!post) {
         throw new Error(responses.item_not_found);
@@ -693,6 +722,7 @@ export async function getPosts({
             domain: ctx.subdomain._id,
             communityId,
             pinned: true,
+            deleted: false,
         });
         posts = posts.filter((post) => !post.pinned);
         posts.unshift(...pinnedPosts);
@@ -729,6 +759,7 @@ export async function getPostsCount({
     const query: Record<string, unknown> = {
         domain: ctx.subdomain._id,
         communityId,
+        deleted: false,
     };
 
     if (category) {
@@ -740,7 +771,7 @@ export async function getPostsCount({
     return count;
 }
 
-export async function getMemberStatus({
+export async function getMember({
     ctx,
     communityId,
 }: {
@@ -779,12 +810,23 @@ export async function getMembers({
     page?: number;
     limit?: number;
     status?: CommunityMemberStatus;
-}): Promise<Membership[]> {
+}): Promise<
+    Pick<
+        Membership,
+        | "userId"
+        | "status"
+        | "role"
+        | "joiningReason"
+        | "rejectionReason"
+        | "subscriptionMethod"
+        | "subscriptionId"
+    >[]
+> {
     checkIfAuthenticated(ctx);
 
-    if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
-        throw new Error(responses.action_not_allowed);
-    }
+    // if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
+    //     throw new Error(responses.action_not_allowed);
+    // }
 
     const community = await CommunityModel.findOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
@@ -792,6 +834,12 @@ export async function getMembers({
 
     if (!community) {
         throw new Error(responses.item_not_found);
+    }
+
+    const member = await getMembership(ctx, communityId);
+
+    if (!member || !hasPermission(member, Constants.MembershipRole.MODERATE)) {
+        throw new Error(responses.action_not_allowed);
     }
 
     const query: Record<string, unknown> = {
@@ -804,14 +852,18 @@ export async function getMembers({
         query.status = status;
     }
 
-    const members = await (MembershipModel as any).paginatedFind(query, {
-        page,
-        limit,
-    });
+    const members: Membership[] = await (MembershipModel as any).paginatedFind(
+        query,
+        {
+            page,
+            limit,
+        },
+    );
 
     return members.map((member) => ({
         userId: member.userId,
         status: member.status,
+        role: member.role,
         joiningReason: member.joiningReason,
         rejectionReason: member.rejectionReason,
         subscriptionMethod: member.subscriptionMethod,
@@ -885,9 +937,9 @@ export async function updateMemberStatus({
 }): Promise<Membership> {
     checkIfAuthenticated(ctx);
 
-    if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
-        throw new Error(responses.action_not_allowed);
-    }
+    // if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
+    //     throw new Error(responses.action_not_allowed);
+    // }
 
     if (ctx.user.userId === userId) {
         throw new Error(responses.action_not_allowed);
@@ -901,50 +953,55 @@ export async function updateMemberStatus({
         throw new Error(responses.item_not_found);
     }
 
-    const member = await MembershipModel.findOne<Membership>({
+    const member = await getMembership(ctx, communityId);
+
+    if (!member || !hasPermission(member, Constants.MembershipRole.MODERATE)) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const targetMember = await MembershipModel.findOne<Membership>({
         domain: ctx.subdomain._id,
         userId,
         entityId: communityId,
         entityType: Constants.MembershipEntityType.COMMUNITY,
     });
 
-    if (!member) {
+    if (!targetMember) {
         throw new Error(responses.item_not_found);
     }
 
+    const otherActiveModeratorsCount = await MembershipModel.countDocuments({
+        domain: ctx.subdomain._id,
+        entityId: communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+        role: Constants.MembershipRole.MODERATE,
+        status: Constants.MembershipStatus.ACTIVE,
+        userId: { $ne: userId },
+    });
+
+    if (otherActiveModeratorsCount === 0) {
+        throw new Error(responses.action_not_allowed);
+    }
+
     const nextStatus = getNextStatusForCommunityMember(
-        member.status as CommunityMemberStatus,
+        targetMember.status as CommunityMemberStatus,
     );
     if (nextStatus === Constants.MembershipStatus.REJECTED) {
         if (!rejectionReason) {
             throw new Error(responses.rejection_reason_missing);
         }
-        if (await hasActiveSubscription(member, ctx)) {
+        if (await hasActiveSubscription(targetMember, ctx)) {
             throw new Error(
                 responses.cannot_reject_member_with_active_subscription,
             );
         }
-        member.rejectionReason = rejectionReason;
+        targetMember.rejectionReason = rejectionReason;
     }
 
-    member.status = nextStatus;
+    targetMember.status = nextStatus;
 
-    if (member.status === Constants.MembershipStatus.ACTIVE) {
-        member.rejectionReason = undefined;
-
-        await UserModel.updateOne(
-            { userId: userId },
-            {
-                $addToSet: {
-                    permissions: {
-                        $each: [
-                            permissions.postInCommunity,
-                            permissions.commentInCommunity,
-                        ],
-                    },
-                },
-            },
-        );
+    if (targetMember.status === Constants.MembershipStatus.ACTIVE) {
+        targetMember.rejectionReason = undefined;
 
         await addNotification({
             domain: ctx.subdomain._id.toString(),
@@ -956,9 +1013,87 @@ export async function updateMemberStatus({
         });
     }
 
-    await (member as any).save();
+    await (targetMember as any).save();
 
-    return member;
+    return targetMember;
+}
+
+export async function updateMemberRole({
+    ctx,
+    communityId,
+    userId,
+}: {
+    ctx: GQLContext;
+    communityId: string;
+    userId: string;
+}): Promise<Membership> {
+    checkIfAuthenticated(ctx);
+
+    // if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
+    //     throw new Error(responses.action_not_allowed);
+    // }
+
+    if (ctx.user.userId === userId) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const community = await CommunityModel.findOne<InternalCommunity>(
+        getCommunityQuery(ctx, communityId),
+    );
+
+    if (!community) {
+        throw new Error(responses.item_not_found);
+    }
+
+    // const member = await MembershipModel.findOne<Membership>({
+    //     domain: ctx.subdomain._id,
+    //     userId,
+    //     entityId: communityId,
+    //     entityType: Constants.MembershipEntityType.COMMUNITY,
+    // });
+    const member = await getMembership(ctx, communityId);
+
+    if (!member || !hasPermission(member, Constants.MembershipRole.MODERATE)) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const targetMember = await MembershipModel.findOne({
+        domain: ctx.subdomain._id,
+        userId,
+        entityId: communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+    });
+
+    if (!targetMember) {
+        throw new Error(responses.item_not_found);
+    }
+
+    if (targetMember.status !== Constants.MembershipStatus.ACTIVE) {
+        throw new Error(responses.cannot_change_role_inactive_member);
+    }
+
+    const otherActiveModeratorsCount = await MembershipModel.countDocuments({
+        domain: ctx.subdomain._id,
+        entityId: communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+        role: Constants.MembershipRole.MODERATE,
+        status: Constants.MembershipStatus.ACTIVE,
+        userId: { $ne: userId },
+    });
+
+    if (otherActiveModeratorsCount === 0) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const nextRole = getNextRoleForCommunityMember(
+        targetMember.role as MembershipRole,
+    );
+
+    targetMember.role = nextRole;
+
+    await (targetMember as any).save();
+
+    return targetMember;
 }
 
 export async function togglePostLike({
@@ -984,6 +1119,7 @@ export async function togglePostLike({
         domain: ctx.subdomain._id,
         communityId,
         postId,
+        deleted: false,
     });
 
     if (!post) {
@@ -1041,9 +1177,9 @@ export async function togglePinned({
 }): Promise<PublicPost> {
     checkIfAuthenticated(ctx);
 
-    if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
-        throw new Error(responses.action_not_allowed);
-    }
+    // if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
+    //     throw new Error(responses.action_not_allowed);
+    // }
 
     const community = await CommunityModel.findOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
@@ -1057,6 +1193,7 @@ export async function togglePinned({
         domain: ctx.subdomain._id,
         communityId,
         postId,
+        deleted: false,
     });
 
     if (!post) {
@@ -1065,7 +1202,7 @@ export async function togglePinned({
 
     const member = await getMembership(ctx, communityId);
 
-    if (!member) {
+    if (!member || !hasPermission(member, Constants.MembershipRole.MODERATE)) {
         throw new Error(responses.action_not_allowed);
     }
 
@@ -1099,11 +1236,11 @@ export async function postComment({
 }): Promise<PublicComment> {
     checkIfAuthenticated(ctx);
 
-    if (
-        !checkPermission(ctx.user.permissions, [permissions.commentInCommunity])
-    ) {
-        throw new Error(responses.action_not_allowed);
-    }
+    // if (
+    //     !checkPermission(ctx.user.permissions, [permissions.commentInCommunity])
+    // ) {
+    //     throw new Error(responses.action_not_allowed);
+    // }
 
     const community = await CommunityModel.findOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
@@ -1117,6 +1254,7 @@ export async function postComment({
         domain: ctx.subdomain._id,
         communityId,
         postId,
+        deleted: false,
     });
 
     if (!post) {
@@ -1125,7 +1263,7 @@ export async function postComment({
 
     const member = await getMembership(ctx, communityId);
 
-    if (!member) {
+    if (!member || !hasPermission(member, Constants.MembershipRole.COMMENT)) {
         throw new Error(responses.action_not_allowed);
     }
 
@@ -1136,6 +1274,7 @@ export async function postComment({
             communityId,
             postId,
             commentId: parentCommentId,
+            deleted: false,
         });
 
         if (!comment) {
@@ -1276,6 +1415,7 @@ export async function toggleCommentLike({
         communityId,
         postId,
         commentId,
+        deleted: false,
     });
 
     if (!comment) {
@@ -1284,7 +1424,7 @@ export async function toggleCommentLike({
 
     const member = await getMembership(ctx, communityId);
 
-    if (!member) {
+    if (!member || !hasPermission(member, Constants.MembershipRole.COMMENT)) {
         throw new Error(responses.action_not_allowed);
     }
 
@@ -1350,6 +1490,7 @@ export async function toggleCommentReplyLike({
         communityId,
         postId,
         commentId,
+        deleted: false,
     });
 
     if (!comment) {
@@ -1358,7 +1499,7 @@ export async function toggleCommentReplyLike({
 
     const member = await getMembership(ctx, communityId);
 
-    if (!member) {
+    if (!member || !hasPermission(member, Constants.MembershipRole.COMMENT)) {
         throw new Error(responses.action_not_allowed);
     }
 
@@ -1430,6 +1571,7 @@ export async function deleteComment({
         domain: ctx.subdomain._id,
         communityId,
         postId,
+        deleted: false,
     });
 
     if (!post) {
@@ -1441,13 +1583,16 @@ export async function deleteComment({
         communityId,
         postId,
         commentId,
+        deleted: false,
     });
 
     if (!comment) {
         throw new Error(responses.item_not_found);
     }
 
-    if (!hasPermissionToDelete(ctx.user, comment, replyId)) {
+    const member = await getMembership(ctx, communityId);
+
+    if (!member || !hasPermissionToDelete(member, comment, replyId)) {
         throw new Error(responses.action_not_allowed);
     }
 
@@ -1528,30 +1673,25 @@ export async function leaveCommunity({
         return true;
     }
 
-    if (checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
-        const otherMembers = await MembershipModel.find(
-            {
-                domain: ctx.subdomain._id,
-                entityId: id,
-                entityType: Constants.MembershipEntityType.COMMUNITY,
-                status: Constants.MembershipStatus.ACTIVE,
-                userId: { $ne: ctx.user.userId },
-            },
-            {
-                _id: 0,
-                userId: 1,
-            },
-        ).lean();
+    if (member.role === Constants.MembershipRole.MODERATE) {
+        const otherModeratorsCount = await MembershipModel.countDocuments({
+            domain: ctx.subdomain._id,
+            entityId: id,
+            entityType: Constants.MembershipEntityType.COMMUNITY,
+            status: Constants.MembershipStatus.ACTIVE,
+            userId: { $ne: ctx.user.userId },
+            role: Constants.MembershipRole.MODERATE,
+        });
 
-        const otherMembersWithManageCommunityPermission =
-            await UserModel.countDocuments({
-                domain: ctx.subdomain._id,
-                userId: { $in: otherMembers.map((m) => m.userId) },
-                permissions: permissions.manageCommunity,
-            });
+        // const otherMembersWithManageCommunityPermission =
+        //     await UserModel.countDocuments({
+        //         domain: ctx.subdomain._id,
+        //         userId: { $in: otherMembers.map((m) => m.userId) },
+        //         permissions: permissions.manageCommunity,
+        //     });
 
-        if (otherMembersWithManageCommunityPermission === 0) {
-            throw new Error(responses.cannot_leave_community_last_admin);
+        if (otherModeratorsCount === 0) {
+            throw new Error(responses.cannot_leave_community_last_moderator);
         }
     }
 
@@ -1662,18 +1802,21 @@ export async function reportCommunityContent({
             domain: ctx.subdomain._id,
             communityId,
             postId: contentId,
+            deleted: false,
         });
     } else if (type === Constants.CommunityReportType.COMMENT) {
         content = await CommunityCommentModel.findOne({
             domain: ctx.subdomain._id,
             communityId,
             commentId: contentId,
+            deleted: false,
         });
     } else if (type === Constants.CommunityReportType.REPLY) {
         const comment = await CommunityCommentModel.findOne<CommunityComment>({
             domain: ctx.subdomain._id,
             communityId,
             commentId: contentParentId,
+            deleted: false,
         });
 
         if (!comment) {
@@ -1719,9 +1862,9 @@ export async function getCommunityReports({
 }): Promise<CommunityReportPartial[]> {
     checkIfAuthenticated(ctx);
 
-    if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
-        throw new Error(responses.action_not_allowed);
-    }
+    // if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
+    //     throw new Error(responses.action_not_allowed);
+    // }
 
     const community = await CommunityModel.findOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
@@ -1729,6 +1872,12 @@ export async function getCommunityReports({
 
     if (!community) {
         throw new Error(responses.item_not_found);
+    }
+
+    const member = await getMembership(ctx, communityId);
+
+    if (!member || !hasPermission(member, Constants.MembershipRole.MODERATE)) {
+        throw new Error(responses.action_not_allowed);
     }
 
     const query: Record<string, unknown> = {
@@ -1759,9 +1908,9 @@ export async function getCommunityReportsCount({
 }): Promise<number> {
     checkIfAuthenticated(ctx);
 
-    if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
-        throw new Error(responses.action_not_allowed);
-    }
+    // if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
+    //     throw new Error(responses.action_not_allowed);
+    // }
 
     const community = await CommunityModel.findOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
@@ -1769,6 +1918,12 @@ export async function getCommunityReportsCount({
 
     if (!community) {
         throw new Error(responses.item_not_found);
+    }
+
+    const member = await getMembership(ctx, communityId);
+
+    if (!member || !hasPermission(member, Constants.MembershipRole.MODERATE)) {
+        throw new Error(responses.action_not_allowed);
     }
 
     const query: Record<string, unknown> = {
@@ -1798,9 +1953,9 @@ export async function updateCommunityReportStatus({
 }): Promise<CommunityReportPartial> {
     checkIfAuthenticated(ctx);
 
-    if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
-        throw new Error(responses.action_not_allowed);
-    }
+    // if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
+    //     throw new Error(responses.action_not_allowed);
+    // }
 
     const community = await CommunityModel.findOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
@@ -1808,6 +1963,12 @@ export async function updateCommunityReportStatus({
 
     if (!community) {
         throw new Error(responses.item_not_found);
+    }
+
+    const member = await getMembership(ctx, communityId);
+
+    if (!member || !hasPermission(member, Constants.MembershipRole.MODERATE)) {
+        throw new Error(responses.action_not_allowed);
     }
 
     const report = await CommunityReportModel.findOne<InternalCommunityReport>({

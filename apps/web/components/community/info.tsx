@@ -2,13 +2,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
-    CommunityMemberStatus,
     Constants,
+    Membership,
     PaymentPlan,
     UIConstants,
 } from "@courselit/common-models";
 import { FormEvent, Fragment, useContext, useState } from "react";
-import { getPlanPrice } from "@ui-lib/utils";
+import { getPlanPrice, hasCommunityPermission } from "@ui-lib/utils";
 import {
     Form,
     FormField,
@@ -31,7 +31,6 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@components/ui/dialog";
-import { checkPermission } from "@courselit/utils";
 import { COMMUNITY_SETTINGS, TOAST_TITLE_SUCCESS } from "@ui-config/strings";
 import { Share2 } from "lucide-react";
 const { permissions } = UIConstants;
@@ -42,13 +41,12 @@ interface CommunityInfoProps {
     description: Record<string, unknown>;
     image: string;
     memberCount: number;
-    membershipStatus?: CommunityMemberStatus;
-    rejectionReason?: string;
     paymentPlan: PaymentPlan;
     joiningReasonText?: string;
     pageId: string;
     onJoin: (joiningReason?: string) => void;
     onLeave: () => void;
+    membership?: Pick<Membership, "status" | "rejectionReason" | "role">;
 }
 
 export function CommunityInfo({
@@ -57,8 +55,7 @@ export function CommunityInfo({
     description,
     image,
     memberCount,
-    membershipStatus,
-    rejectionReason,
+    membership,
     paymentPlan,
     joiningReasonText,
     pageId,
@@ -124,7 +121,7 @@ export function CommunityInfo({
                         <strong>{memberCount.toLocaleString()}</strong> members
                     </p>
                 </div>
-                {!membershipStatus && (
+                {!membership && (
                     <Fragment>
                         {amount > 0 && (
                             <Link
@@ -175,8 +172,8 @@ export function CommunityInfo({
                         )}
                     </Fragment>
                 )}
-                {membershipStatus &&
-                    membershipStatus === Constants.MembershipStatus.ACTIVE && (
+                {membership &&
+                    membership.status === Constants.MembershipStatus.ACTIVE && (
                         <>
                             <Button
                                 onClick={handleLeaveClick}
@@ -223,38 +220,42 @@ export function CommunityInfo({
                             </Dialog>
                         </>
                     )}
-                {membershipStatus &&
-                    membershipStatus === Constants.MembershipStatus.PENDING && (
+                {membership &&
+                    membership.status ===
+                        Constants.MembershipStatus.PENDING && (
                         <Button disabled className="w-full">
                             Membership Pending
                         </Button>
                     )}
-                {membershipStatus &&
-                    membershipStatus ===
+                {membership &&
+                    membership.status ===
                         Constants.MembershipStatus.REJECTED && (
                         <>
                             <Button disabled className="w-full">
                                 Membership Rejected
                             </Button>
-                            {rejectionReason && (
+                            {membership.rejectionReason && (
                                 <Alert variant="destructive">
                                     <AlertDescription>
                                         <b>Rejection reason</b>:{" "}
-                                        {rejectionReason}
+                                        {membership.rejectionReason}
                                     </AlertDescription>
                                 </Alert>
                             )}
                         </>
                     )}
-                {checkPermission(profile.permissions!, [
-                    permissions.manageCommunity,
-                ]) && (
-                    <Link href={`/dashboard4/community/${id}/manage`}>
-                        <Button variant="outline" className="w-full mt-2">
-                            {COMMUNITY_SETTINGS}
-                        </Button>
-                    </Link>
-                )}
+                {membership &&
+                    hasCommunityPermission(
+                        membership,
+                        Constants.MembershipRole.MODERATE,
+                    ) &&
+                    membership.status === Constants.MembershipStatus.ACTIVE && (
+                        <Link href={`/dashboard4/community/${id}/manage`}>
+                            <Button variant="outline" className="w-full mt-2">
+                                {COMMUNITY_SETTINGS}
+                            </Button>
+                        </Link>
+                    )}
             </CardContent>
         </Card>
     );

@@ -3,7 +3,7 @@ import mongoose, { Document } from "mongoose";
 import { Constants } from "@courselit/common-models";
 import { generateUniqueId } from "@courselit/utils";
 
-const { MembershipEntityType, MembershipStatus } = Constants;
+const { MembershipEntityType, MembershipStatus, MembershipRole } = Constants;
 
 export interface InternalMembership extends Membership, Document {
     domain: mongoose.Types.ObjectId;
@@ -26,16 +26,20 @@ const MembershipSchema = new mongoose.Schema<InternalMembership>(
             enum: Object.values(MembershipEntityType),
             required: true,
         },
+        sessionId: { type: String, required: true, default: generateUniqueId },
         status: {
             type: String,
             enum: Object.values(MembershipStatus),
             default: MembershipStatus.PENDING,
         },
+        role: {
+            type: String,
+            enum: Object.values(MembershipRole),
+        },
         joiningReason: { type: String },
         rejectionReason: { type: String },
         subscriptionId: { type: String },
         subscriptionMethod: { type: String },
-        sessionId: { type: String, required: true, default: generateUniqueId },
     },
     {
         timestamps: true,

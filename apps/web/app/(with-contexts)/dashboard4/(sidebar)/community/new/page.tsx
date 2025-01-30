@@ -1,6 +1,6 @@
 "use client";
 
-import { AddressContext, ProfileContext } from "@components/contexts";
+import { AddressContext } from "@components/contexts";
 import {
     MANAGE_COMMUNITIES_PAGE_HEADING,
     NEW_COMMUNITY_BUTTON,
@@ -21,12 +21,11 @@ const breadcrumbs = [
 
 export default function Page() {
     const address = useContext(AddressContext);
-    const { profile } = useContext(ProfileContext);
 
     return (
         <DashboardContent
             breadcrumbs={breadcrumbs}
-            permissions={[permissions.manageSite]}
+            permissions={[permissions.manageCommunity]}
         >
             <CommunityCreator prefix="/dashboard4" address={address} />
         </DashboardContent>

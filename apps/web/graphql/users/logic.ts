@@ -354,8 +354,6 @@ export async function createUser({
             constants.permissions.manageSettings,
             constants.permissions.manageUsers,
             constants.permissions.manageCommunity,
-            constants.permissions.postInCommunity,
-            constants.permissions.commentInCommunity,
         ];
     } else {
         newUser.permissions = [

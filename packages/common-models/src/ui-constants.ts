@@ -47,8 +47,6 @@ export const permissions = {
     manageSite: "site:manage",
     manageSettings: "setting:manage",
     manageUsers: "user:manage",
-    postInCommunity: "community:post",
-    commentInCommunity: "community:comment",
     manageCommunity: "community:manage",
 };
 
