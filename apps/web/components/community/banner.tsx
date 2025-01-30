@@ -59,6 +59,10 @@ export default function Banner({
         setIsEditing(false);
     };
 
+    if (!canEdit && !isTextEditorNonEmpty(initialBannerText)) {
+        return null;
+    }
+
     return (
         <div className="relative">
             <Alert>
