@@ -202,13 +202,12 @@ export function CommunityForum({
     useEffect(() => {
         if (
             community &&
-            membership?.status.toLowerCase() ===
-                Constants.MembershipStatus.ACTIVE
+            membership?.status === Constants.MembershipStatus.ACTIVE
         ) {
             loadPosts();
             loadTotalPosts();
         }
-    }, [membership, loadTotalPosts, loadPosts]);
+    }, [membership, community, loadTotalPosts, loadPosts]);
 
     useEffect(() => {
         if (community) {

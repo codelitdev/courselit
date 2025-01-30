@@ -68,6 +68,7 @@ export async function createCommunity({
     const existingCommunity = await CommunityModel.findOne({
         domain: ctx.subdomain._id,
         name,
+        deleted: false,
     });
 
     if (existingCommunity) {
@@ -386,6 +387,10 @@ export async function deleteCategory({
         throw new Error(responses.action_not_allowed);
     }
 
+    if (community.categories.length === 1) {
+        throw new Error(responses.cannot_delete_last_category);
+    }
+
     if (migrateToCategory) {
         // Logic to migrate posts from the deleted category to the new category
         // This is a placeholder and should be replaced with actual migration logic
@@ -420,6 +425,10 @@ export async function joinCommunity({
 
     if (!community) {
         throw new Error(responses.item_not_found);
+    }
+
+    if (community.paymentPlans.length === 0) {
+        throw new Error(responses.community_has_no_payment_plans);
     }
 
     const freePaymentPlanOfCommunity = await PaymentPlanModel.findOne({
@@ -1583,7 +1592,6 @@ export async function deleteComment({
         communityId,
         postId,
         commentId,
-        deleted: false,
     });
 
     if (!comment) {

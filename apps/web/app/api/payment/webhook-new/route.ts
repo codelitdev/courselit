@@ -207,23 +207,25 @@ export async function activateMembership(
         return;
     }
 
-    if (
-        membership.entityType === Constants.MembershipEntityType.COMMUNITY &&
-        paymentPlan?.type === Constants.PaymentPlanType.FREE
-    ) {
-        const community = await CommunityModel.findOne<Community>({
-            communityId: membership.entityId,
-        });
-        if (community) {
-            membership.status = community.autoAcceptMembers
-                ? Constants.MembershipStatus.ACTIVE
-                : Constants.MembershipStatus.PENDING;
-            (membership.role = community.autoAcceptMembers
-                ? Constants.MembershipRole.POST
-                : Constants.MembershipRole.COMMENT),
-                (membership.joiningReason = community.autoAcceptMembers
-                    ? `Auto accepted`
-                    : membership.joiningReason);
+    if (membership.entityType === Constants.MembershipEntityType.COMMUNITY) {
+        if (paymentPlan?.type === Constants.PaymentPlanType.FREE) {
+            const community = await CommunityModel.findOne<Community>({
+                communityId: membership.entityId,
+            });
+            if (community) {
+                membership.status = community.autoAcceptMembers
+                    ? Constants.MembershipStatus.ACTIVE
+                    : Constants.MembershipStatus.PENDING;
+                (membership.role = community.autoAcceptMembers
+                    ? Constants.MembershipRole.POST
+                    : Constants.MembershipRole.COMMENT),
+                    (membership.joiningReason = community.autoAcceptMembers
+                        ? `Auto accepted`
+                        : membership.joiningReason);
+            }
+        } else {
+            membership.status = Constants.MembershipStatus.ACTIVE;
+            membership.role = Constants.MembershipRole.POST;
         }
     } else {
         membership.status = Constants.MembershipStatus.ACTIVE;

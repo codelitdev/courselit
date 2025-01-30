@@ -114,6 +114,7 @@ export const responses = {
     community_exists: "A community with the same name already exists",
     payment_plan_required: "Add a payment plan before enabling the community",
     community_requires_payment: "Community requires payment",
+    community_has_no_payment_plans: "Community has no payment plans",
     duplicate_payment_plan: "A payment plan with the same type already exists",
     default_payment_plan_cannot_be_archived:
         "Default payment plan cannot be archived",
@@ -129,6 +130,7 @@ export const responses = {
         "Cannot change role of a member who is not active",
     cannot_change_role_last_moderator:
         "Cannot change role of the last moderator",
+    cannot_delete_last_category: "Cannot delete the last category",
 
     // api responses
     digital_download_no_files:

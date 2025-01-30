@@ -140,7 +140,7 @@ async function getMessage({
                 return { message: "", href: "" };
             }
             return {
-                message: `${userName} created a post '${truncate(post.title, 20)}' in ${community.name}`,
+                message: `${userName} created a post '${truncate(post.title, 20).trim()}' in ${community.name}`,
                 href: `/dashboard4/community/${community.communityId}`,
             };
         case Constants.NotificationEntityAction.COMMUNITY_COMMENTED:
@@ -158,7 +158,7 @@ async function getMessage({
             }
 
             return {
-                message: `${userName} commented on ${loggedInUserId === post1.userId ? "your" : ""} post '${truncate(post1.title, 20)}' in ${community1.name}`,
+                message: `${userName} commented on ${loggedInUserId === post1.userId ? "your" : ""} post '${truncate(post1.title, 20).trim()}' in ${community1.name}`,
                 href: `/dashboard4/community/${community1.communityId}`,
             };
         case Constants.NotificationEntityAction.COMMUNITY_REPLIED:
@@ -201,7 +201,7 @@ async function getMessage({
                   : "a";
 
             return {
-                message: `${userName} replied to ${prefix} comment on '${truncate(post2.title, 20)}' in ${community2.name}`,
+                message: `${userName} replied to ${prefix} comment on '${truncate(post2.title, 20).trim()}' in ${community2.name}`,
                 href: `/dashboard4/community/${community2.communityId}`,
             };
         case Constants.NotificationEntityAction.COMMUNITY_POST_LIKED:
@@ -219,7 +219,7 @@ async function getMessage({
             }
 
             return {
-                message: `${userName} liked your post '${truncate(post3.title, 20)}' in ${community3.name}`,
+                message: `${userName} liked your post '${truncate(post3.title, 20).trim()}' in ${community3.name}`,
                 href: `/dashboard4/community/${community3.communityId}`,
             };
         case Constants.NotificationEntityAction.COMMUNITY_COMMENT_LIKED:
@@ -243,7 +243,7 @@ async function getMessage({
             }
 
             return {
-                message: `${userName} liked your comment '${truncate(comment1.content, 20)}' on '${truncate(post4.title, 20)}' in ${community4.name}`,
+                message: `${userName} liked your comment '${truncate(comment1.content, 20).trim()}' on '${truncate(post4.title, 20).trim()}' in ${community4.name}`,
                 href: `/dashboard4/community/${community4.communityId}`,
             };
         case Constants.NotificationEntityAction.COMMUNITY_REPLY_LIKED:
@@ -272,7 +272,7 @@ async function getMessage({
             }
 
             return {
-                message: `${userName} liked your reply '${truncate(reply1.content, 20)}' on '${truncate(post5.title, 20)}' in ${community5.name}`,
+                message: `${userName} liked your reply '${truncate(reply1.content, 20).trim()}' on '${truncate(post5.title, 20).trim()}' in ${community5.name}`,
                 href: `/dashboard4/community/${community5.communityId}`,
             };
         case Constants.NotificationEntityAction.COMMUNITY_MEMBERSHIP_REQUESTED:

@@ -29,7 +29,7 @@ export default function Page() {
                     </CardHeader>
                     <CardContent>
                         <p className="mb-4">
-                            Our documentation contains tutorials to do
+                            Our documentation contains tutorials on how to do
                             everything in CourseLit.
                         </p>
                     </CardContent>
