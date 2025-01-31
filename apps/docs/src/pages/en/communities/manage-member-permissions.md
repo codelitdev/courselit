@@ -18,9 +18,8 @@ Managing member permissions is essential for controlling what actions members ca
 
 4. Edit permissions using the permissions panel.
 
-    - **Post in community**: Enable or disable the user's ability to create new posts in the community.
-    - **Comment in community**: Enable or disable the user's ability to comment on existing posts.
-    - **Manage community**: Enable or disable the user's ability to manage the community settings and content.
+    - **Manage community**: The user will be able to see, create and delete communities.
+    - **Manage pages**: The user will be able to edit the communities sales pages.
 
 > **Global Impact**: Changes to a user's permissions will affect all communities they are a member of. Ensure that the permissions you set are appropriate for the user's role across all communities.
 
