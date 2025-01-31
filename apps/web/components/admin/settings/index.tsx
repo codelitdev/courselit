@@ -41,6 +41,7 @@ import {
     MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
     TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS,
+    DOCUMENTATION_LINK_LABEL,
 } from "@/ui-config/strings";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import { decode, encode } from "base-64";
@@ -66,6 +67,16 @@ import {
     useToast,
 } from "@courselit/components-library";
 import { useRouter } from "next/navigation";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@components/ui/card";
+import { Copy, Info } from "lucide-react";
+import { Label } from "@components/ui/label";
+import { Input } from "@components/ui/input";
 
 const {
     PAYMENT_METHOD_PAYPAL,
@@ -617,6 +628,14 @@ const Settings = (props: SettingsProps) => {
         SITE_APIKEYS_SETTING_HEADER,
     ];
 
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        toast({
+            title: TOAST_TITLE_SUCCESS,
+            description: "Webhook URL copied to clipboard",
+        });
+    };
+
     return (
         <div>
             <div className="flex justify-between items-baseline">
@@ -728,105 +747,112 @@ const Settings = (props: SettingsProps) => {
                         />
                     </div>
                 </div>
-                <Form
-                    onSubmit={handlePaymentSettingsSubmit}
-                    className="flex flex-col gap-4 pt-4"
-                >
-                    <Select
-                        title={SITE_SETTINGS_CURRENCY}
-                        options={currencies.map((currency) => ({
-                            label: currency.name,
-                            value: currency.isoCode,
-                        }))}
-                        value={newSettings.currencyISOCode?.toUpperCase() || ""}
-                        onChange={(value) =>
-                            setNewSettings(
-                                Object.assign({}, newSettings, {
-                                    currencyISOCode: value,
-                                }),
-                            )
-                        }
-                    />
-                    <Select
-                        title={SITE_ADMIN_SETTINGS_PAYMENT_METHOD}
-                        value={newSettings.paymentMethod || PAYMENT_METHOD_NONE}
-                        options={[
-                            {
-                                label: capitalize(
-                                    PAYMENT_METHOD_STRIPE.toLowerCase(),
-                                ),
-                                value: PAYMENT_METHOD_STRIPE,
-                                disabled: currencies.some(
-                                    (x) =>
-                                        x.isoCode ===
-                                            newSettings.currencyISOCode?.toUpperCase() &&
-                                        !x.stripe,
-                                ),
-                            },
-                            {
-                                label: capitalize(
-                                    PAYMENT_METHOD_RAZORPAY.toLowerCase(),
-                                ),
-                                value: PAYMENT_METHOD_RAZORPAY,
-                                disabled: currencies.some(
-                                    (x) =>
-                                        x.isoCode ===
-                                            newSettings.currencyISOCode?.toUpperCase() &&
-                                        !x.razorpay,
-                                ),
-                            },
-                        ]}
-                        onChange={(value) =>
-                            setNewSettings(
-                                Object.assign({}, newSettings, {
-                                    paymentMethod: value,
-                                }),
-                            )
-                        }
-                        placeholderMessage={
-                            SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL
-                        }
-                    />
+                <div>
+                    <Form
+                        onSubmit={handlePaymentSettingsSubmit}
+                        className="flex flex-col gap-4 pt-4 mb-8"
+                    >
+                        <Select
+                            title={SITE_SETTINGS_CURRENCY}
+                            options={currencies.map((currency) => ({
+                                label: currency.name,
+                                value: currency.isoCode,
+                            }))}
+                            value={
+                                newSettings.currencyISOCode?.toUpperCase() || ""
+                            }
+                            onChange={(value) =>
+                                setNewSettings(
+                                    Object.assign({}, newSettings, {
+                                        currencyISOCode: value,
+                                    }),
+                                )
+                            }
+                        />
+                        <Select
+                            title={SITE_ADMIN_SETTINGS_PAYMENT_METHOD}
+                            value={
+                                newSettings.paymentMethod || PAYMENT_METHOD_NONE
+                            }
+                            options={[
+                                {
+                                    label: capitalize(
+                                        PAYMENT_METHOD_STRIPE.toLowerCase(),
+                                    ),
+                                    value: PAYMENT_METHOD_STRIPE,
+                                    disabled: currencies.some(
+                                        (x) =>
+                                            x.isoCode ===
+                                                newSettings.currencyISOCode?.toUpperCase() &&
+                                            !x.stripe,
+                                    ),
+                                },
+                                {
+                                    label: capitalize(
+                                        PAYMENT_METHOD_RAZORPAY.toLowerCase(),
+                                    ),
+                                    value: PAYMENT_METHOD_RAZORPAY,
+                                    disabled: currencies.some(
+                                        (x) =>
+                                            x.isoCode ===
+                                                newSettings.currencyISOCode?.toUpperCase() &&
+                                            !x.razorpay,
+                                    ),
+                                },
+                            ]}
+                            onChange={(value) =>
+                                setNewSettings(
+                                    Object.assign({}, newSettings, {
+                                        paymentMethod: value,
+                                    }),
+                                )
+                            }
+                            placeholderMessage={
+                                SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL
+                            }
+                        />
 
-                    {newSettings.paymentMethod === PAYMENT_METHOD_STRIPE && (
-                        <>
-                            <FormField
-                                label={
-                                    SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT
-                                }
-                                name="stripeKey"
-                                value={newSettings.stripeKey || ""}
-                                onChange={onChangeData}
-                            />
-                            <FormField
-                                label={SITE_ADMIN_SETTINGS_STRIPE_SECRET}
-                                name="stripeSecret"
-                                type="password"
-                                value={newSettings.stripeSecret || ""}
-                                onChange={onChangeData}
-                                sx={{ mb: 2 }}
-                                autoComplete="off"
-                            />
-                        </>
-                    )}
-                    {newSettings.paymentMethod === PAYMENT_METHOD_RAZORPAY && (
-                        <>
-                            <FormField
-                                label={SITE_SETTINGS_RAZORPAY_KEY_TEXT}
-                                name="razorpayKey"
-                                value={newSettings.razorpayKey || ""}
-                                onChange={onChangeData}
-                            />
-                            <FormField
-                                label={SITE_ADMIN_SETTINGS_RAZORPAY_SECRET}
-                                name="razorpaySecret"
-                                type="password"
-                                value={newSettings.razorpaySecret || ""}
-                                onChange={onChangeData}
-                                sx={{ mb: 2 }}
-                                autoComplete="off"
-                            />
-                            {/* <FormField
+                        {newSettings.paymentMethod ===
+                            PAYMENT_METHOD_STRIPE && (
+                            <>
+                                <FormField
+                                    label={
+                                        SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT
+                                    }
+                                    name="stripeKey"
+                                    value={newSettings.stripeKey || ""}
+                                    onChange={onChangeData}
+                                />
+                                <FormField
+                                    label={SITE_ADMIN_SETTINGS_STRIPE_SECRET}
+                                    name="stripeSecret"
+                                    type="password"
+                                    value={newSettings.stripeSecret || ""}
+                                    onChange={onChangeData}
+                                    sx={{ mb: 2 }}
+                                    autoComplete="off"
+                                />
+                            </>
+                        )}
+                        {newSettings.paymentMethod ===
+                            PAYMENT_METHOD_RAZORPAY && (
+                            <>
+                                <FormField
+                                    label={SITE_SETTINGS_RAZORPAY_KEY_TEXT}
+                                    name="razorpayKey"
+                                    value={newSettings.razorpayKey || ""}
+                                    onChange={onChangeData}
+                                />
+                                <FormField
+                                    label={SITE_ADMIN_SETTINGS_RAZORPAY_SECRET}
+                                    name="razorpaySecret"
+                                    type="password"
+                                    value={newSettings.razorpaySecret || ""}
+                                    onChange={onChangeData}
+                                    sx={{ mb: 2 }}
+                                    autoComplete="off"
+                                />
+                                {/* <FormField
                                 label={SITE_ADMIN_SETTINGS_RAZORPAY_WEBHOOK_SECRET}
                                 name="razorpayWebhookSecret"
                                 type="password"
@@ -835,57 +861,112 @@ const Settings = (props: SettingsProps) => {
                                 sx={{ mb: 2 }}
                                 autoComplete="off"
                             /> */}
-                        </>
-                    )}
-                    <div className="flex flex-col gap-2">
-                        <p className="font-medium">
-                            {HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK}
-                        </p>
-                        <p className="text-slate-600">
-                            {SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK}
-                        </p>
-                        <p>
-                            <Link
-                                href={`${props.address.backend}/api/payment/webhook`}
-                                className="hover:underline"
+                            </>
+                        )}
+                        {newSettings.paymentMethod ===
+                            PAYMENT_METHOD_PAYPAL && (
+                            <FormField
+                                label={SITE_ADMIN_SETTINGS_PAYPAL_SECRET}
+                                name="paypalSecret"
+                                type="password"
+                                value={newSettings.paypalSecret || ""}
+                                onChange={onChangeData}
+                                disabled={true}
+                            />
+                        )}
+                        {newSettings.paymentMethod === PAYMENT_METHOD_PAYTM && (
+                            <FormField
+                                label={SITE_ADMIN_SETTINGS_PAYTM_SECRET}
+                                name="paytmSecret"
+                                type="password"
+                                value={newSettings.paytmSecret || ""}
+                                onChange={onChangeData}
+                                disabled={true}
+                            />
+                        )}
+                        <div>
+                            <Button
+                                type="submit"
+                                value={BUTTON_SAVE}
+                                disabled={
+                                    JSON.stringify(getPaymentSettings()) ===
+                                    JSON.stringify(getPaymentSettings(true))
+                                }
                             >
-                                {`${props.address.backend}/api/payment/webhook`}
-                            </Link>
-                        </p>
-                    </div>
-                    {newSettings.paymentMethod === PAYMENT_METHOD_PAYPAL && (
-                        <FormField
-                            label={SITE_ADMIN_SETTINGS_PAYPAL_SECRET}
-                            name="paypalSecret"
-                            type="password"
-                            value={newSettings.paypalSecret || ""}
-                            onChange={onChangeData}
-                            disabled={true}
-                        />
-                    )}
-                    {newSettings.paymentMethod === PAYMENT_METHOD_PAYTM && (
-                        <FormField
-                            label={SITE_ADMIN_SETTINGS_PAYTM_SECRET}
-                            name="paytmSecret"
-                            type="password"
-                            value={newSettings.paytmSecret || ""}
-                            onChange={onChangeData}
-                            disabled={true}
-                        />
-                    )}
-                    <div>
-                        <Button
-                            type="submit"
-                            value={BUTTON_SAVE}
-                            disabled={
-                                JSON.stringify(getPaymentSettings()) ===
-                                JSON.stringify(getPaymentSettings(true))
-                            }
-                        >
-                            {BUTTON_SAVE}
-                        </Button>
-                    </div>
-                </Form>
+                                {BUTTON_SAVE}
+                            </Button>
+                        </div>
+                    </Form>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>
+                                {HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK}
+                            </CardTitle>
+                            <CardDescription className="flex items-center gap-2">
+                                <Info className="h-4 w-4" />
+                                <span>
+                                    {
+                                        SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK
+                                    }{" "}
+                                    <a
+                                        className="underline"
+                                        href="https://docs.courselit.app/en/schools/set-up-payments"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        {DOCUMENTATION_LINK_LABEL}
+                                    </a>
+                                    .
+                                </span>
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="grid gap-4">
+                            <div className="grid gap-2">
+                                <Label>
+                                    Old Payment Webhook (Required for products
+                                    but will be phased out soon)
+                                </Label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        readOnly
+                                        value="http://localhost:3000/api/payment/webhook-old"
+                                    />
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() =>
+                                            copyToClipboard(
+                                                "http://localhost:3000/api/payment/webhook-old",
+                                            )
+                                        }
+                                    >
+                                        <Copy className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>New Payment Plans Webhook</Label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        readOnly
+                                        value="http://localhost:3000/api/payment/webhook"
+                                    />
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() =>
+                                            copyToClipboard(
+                                                "http://localhost:3000/api/payment/webhook",
+                                            )
+                                        }
+                                    >
+                                        <Copy className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
                 <Form
                     onSubmit={handleMailsSettingsSubmit}
                     className="flex flex-col gap-4 pt-4"

@@ -249,9 +249,9 @@ export const APP_MESSAGE_THEME_INSTALLED = "Theme installed";
 export const APP_MESSAGE_THEME_APPLIED = "Theme applied";
 export const APP_MESSAGE_THEME_UNINSTALLED = "Theme uninstalled";
 export const HEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK =
-    "Payment Confirmation Webhook URL";
+    "Payment Webhook URLs";
 export const SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK =
-    "Your payment processor sends out notifications about purchases. CourseLit needs those notifications to correctly reflect user purchases. Right click the following link and copy the link address. Paste that into your payment processor's webhook settings.";
+    "Your payment processor sends out notifications about purchases. CourseLit needs these notifications to accurately reflect user purchases. Copy and paste these into your payment processor's webhook settings.";
 export const PURCHASE_STATUS_PAGE_HEADER = "Purchase Status";
 export const MAIN_MENU_ITEM_DASHBOARD = "Dashboard";
 export const MAIN_MENU_ITEM_PROFILE = "Profile";
