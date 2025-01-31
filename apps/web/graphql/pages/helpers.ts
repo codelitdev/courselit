@@ -26,8 +26,14 @@ export async function getPageResponse(
             );
             if (course) {
                 pageData = {
-                    ...course,
                     pageType: "product",
+                    title: course.title,
+                    cost: course.cost,
+                    costType: course.costType,
+                    type: course.type,
+                    tags: course.tags,
+                    featuredImage: course.featuredImage,
+                    courseId: course.courseId,
                 };
             }
             break;
@@ -38,6 +44,7 @@ export async function getPageResponse(
             });
             if (community) {
                 pageData = {
+                    pageType: "community",
                     name: community.name,
                     description: community.description,
                     communityId: community.communityId,
@@ -52,8 +59,8 @@ export async function getPageResponse(
                         name: p.name,
                         planId: p.planId,
                     })),
-                    pageType: "community",
                     membersCount: community.membersCount,
+                    featuredImage: community.featuredImage,
                 };
             }
             break;

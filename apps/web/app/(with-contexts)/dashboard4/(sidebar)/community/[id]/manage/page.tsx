@@ -71,6 +71,7 @@ import { MembershipEntityType } from "@courselit/common-models/dist/constants";
 import { useCommunity } from "@components/hooks/useCommunity";
 import { Button } from "@components/ui/button";
 import { redirect, useRouter } from "next/navigation";
+import { useMembership } from "@components/hooks/use-membership";
 const { PaymentPlanType: paymentPlanType } = Constants;
 
 export default function Page({
@@ -110,6 +111,7 @@ export default function Page({
     const [featuredImage, setFeaturedImage] = useState<Media | null>(null);
     const { toast } = useToast();
     const { community, error, loaded: communityLoaded } = useCommunity(id);
+    const { membership, loaded: membershipLoaded } = useMembership(id);
     const [defaultPaymentPlan, setDefaultPaymentPlan] = useState("");
     const router = useRouter();
 
@@ -117,10 +119,20 @@ export default function Page({
         if (communityLoaded && community) {
             setCommunity(community);
         }
-        if (communityLoaded && community === null) {
+    }, [community, communityLoaded]);
+
+    useEffect(() => {
+        if (
+            communityLoaded &&
+            membershipLoaded &&
+            (community === null ||
+                membership === null ||
+                (membership &&
+                    membership.role !== Constants.MembershipRole.MODERATE))
+        ) {
             redirect(`/dashboard4/community/${id}`);
         }
-    }, [community, communityLoaded]);
+    }, [community, communityLoaded, membership, membershipLoaded]);
 
     const fetcher = new FetchBuilder()
         .setUrl(`${address.backend}/api/graph`)

@@ -64,18 +64,6 @@ Let take a moment to understand what all permissions are available and what aspe
 
     _Technical name: `media:manage`_
 
--   **Post in community**
-
-    Create new posts in the community.
-
-    _Technical name: `community:post`_
-
--   **Comment in community**
-
-    Comment on posts in the community.
-
-    _Technical name: `community:comment`_
-
 -   **Manage community**
 
     Manage community posts, comments and settings.
