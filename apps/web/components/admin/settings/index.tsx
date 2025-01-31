@@ -922,6 +922,26 @@ const Settings = (props: SettingsProps) => {
                         </CardHeader>
                         <CardContent className="grid gap-4">
                             <div className="grid gap-2">
+                                <Label>New Payment Plans Webhook</Label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        readOnly
+                                        value="http://localhost:3000/api/payment/webhook"
+                                    />
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() =>
+                                            copyToClipboard(
+                                                "http://localhost:3000/api/payment/webhook",
+                                            )
+                                        }
+                                    >
+                                        <Copy className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="grid gap-2">
                                 <Label>
                                     Old Payment Webhook (Required for products
                                     but will be phased out soon)
@@ -937,26 +957,6 @@ const Settings = (props: SettingsProps) => {
                                         onClick={() =>
                                             copyToClipboard(
                                                 "http://localhost:3000/api/payment/webhook-old",
-                                            )
-                                        }
-                                    >
-                                        <Copy className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                            <div className="grid gap-2">
-                                <Label>New Payment Plans Webhook</Label>
-                                <div className="flex gap-2">
-                                    <Input
-                                        readOnly
-                                        value="http://localhost:3000/api/payment/webhook"
-                                    />
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() =>
-                                            copyToClipboard(
-                                                "http://localhost:3000/api/payment/webhook",
                                             )
                                         }
                                     >
