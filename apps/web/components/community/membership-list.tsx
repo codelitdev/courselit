@@ -49,7 +49,7 @@ import {
     Membership,
     User,
 } from "@courselit/common-models";
-import { getNextStatusForCommunityMember } from "@ui-lib/utils";
+import { getNextStatusForCommunityMember, truncate } from "@ui-lib/utils";
 import { useRouter } from "next/navigation";
 
 interface MembershipRequest {
@@ -413,7 +413,12 @@ export function MembershipList({ id }: { id: string }) {
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-2">
-                                                {member.subscriptionId || "-"}
+                                                {member.subscriptionId
+                                                    ? truncate(
+                                                          member.subscriptionId,
+                                                          10,
+                                                      )
+                                                    : "-"}
                                                 {member.subscriptionId && (
                                                     <Tooltip title="Copy Subscription ID">
                                                         <Button
