@@ -18,7 +18,7 @@ import { getPaymentMethodFromSettings } from "@/payments-new";
 import { generateUniqueId } from "@courselit/utils";
 import InvoiceModel from "@models/Invoice";
 import { error } from "@/services/logger";
-import { activateMembership } from "../webhook-new/route";
+import { activateMembership } from "../webhook/route";
 import { responses } from "@config/strings";
 import mongoose from "mongoose";
 
