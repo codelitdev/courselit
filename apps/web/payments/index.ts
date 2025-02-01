@@ -16,6 +16,12 @@ export const getPaymentMethod = async (domainName: string) => {
     });
     const siteInfo: SiteInfo | null = domain && domain.settings;
 
+    return await getPaymentMethodFromSettings(siteInfo);
+};
+
+export const getPaymentMethodFromSettings = async (
+    siteInfo: Domain["settings"] | null,
+) => {
     if (!siteInfo || !siteInfo.paymentMethod) {
         throw new Error(updatePaymentMethod);
     }

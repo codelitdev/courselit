@@ -5,7 +5,10 @@
         "outDir": "./dist",
         "lib": ["dom"],
         "strict": false,
-        "experimentalDecorators": false
+        "experimentalDecorators": false,
+        "paths": {
+            "react": ["./node_modules/@types/react"]
+        }
     },
     "include": ["src/**/*"]
 }

@@ -42,7 +42,6 @@ export default async function handler(
     }
 
     const session = await auth(req, res);
-    // console.log(session, req.body.query)
 
     let user;
     if (session) {

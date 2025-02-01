@@ -25,7 +25,7 @@ import Link from "next/link";
 
 export function NavUser() {
     const { isMobile } = useSidebar();
-    const user = useContext(ProfileContext);
+    const { profile: user } = useContext(ProfileContext);
     const alias = user.name
         ?.split(" ")
         .slice(0, 2)

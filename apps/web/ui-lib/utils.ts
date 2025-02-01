@@ -1,11 +1,19 @@
 import type {
+    CommunityMemberStatus,
+    CommunityReportStatus,
     Course,
     Group,
+    Membership,
+    MembershipRole,
+    Page,
+    PaymentPlan,
     Profile,
+    TextEditorContent,
     Typeface,
 } from "@courselit/common-models";
 import { checkPermission, FetchBuilder } from "@courselit/utils";
-import { UIConstants } from "@courselit/common-models";
+import { Constants, UIConstants } from "@courselit/common-models";
+import { createHash, randomInt } from "crypto";
 import { getProtocol } from "../lib/utils";
 const { permissions } = UIConstants;
 
@@ -59,7 +67,20 @@ export const canAccessDashboard = (profile: Profile) => {
 export const constructThumbnailUrlFromFileUrl = (url: string) =>
     url ? url.replace(url.split("/").pop(), "thumb.webp") : null;
 
-export const getPage = async (backend: string, id?: string) => {
+export const getPage = async (
+    backend: string,
+    id?: string,
+): Promise<
+    Pick<
+        Page,
+        | "title"
+        | "layout"
+        | "pageData"
+        | "description"
+        | "socialImage"
+        | "robotsAllowed"
+    >
+> => {
     const query = id
         ? `
     query {
@@ -103,6 +124,7 @@ export const getPage = async (backend: string, id?: string) => {
     } catch (e: any) {
         console.log("getPage", e.message); // eslint-disable-line no-console
     }
+    return undefined as unknown as Page;
 };
 
 export const isEnrolled = (courseId: string, profile: Profile) =>
@@ -163,8 +185,6 @@ export const moveMemberUp = (arr: any[], index: number) =>
 export const moveMemberDown = (arr: any[], index: number) =>
     swapMembers(arr, index, index + 1);
 
-import { createHash, randomInt } from "crypto";
-
 export function generateUniquePasscode() {
     return randomInt(100000, 999999);
 }
@@ -182,4 +202,83 @@ export const sortCourseGroups = (course: Course) => {
 
 export function truncate(str: string, length: number) {
     return str.length <= length ? str : `${str.substring(0, length)}...`;
+}
+
+export function isTextEditorNonEmpty(content: TextEditorContent) {
+    return (
+        content?.content &&
+        (!!content.content[0]?.content || content.content.length > 1)
+    );
+}
+
+export function getNextStatusForCommunityMember(status: CommunityMemberStatus) {
+    const statusCycle = [
+        Constants.MembershipStatus.PENDING,
+        Constants.MembershipStatus.ACTIVE,
+        Constants.MembershipStatus.REJECTED,
+    ];
+    const index = statusCycle.indexOf(status);
+    return statusCycle[(index + 1) % statusCycle.length];
+}
+
+export function getNextStatusForCommunityReport(status: CommunityReportStatus) {
+    const statusCycle = Object.values(Constants.CommunityReportStatus);
+    const index = statusCycle.indexOf(status);
+    return statusCycle[(index + 1) % statusCycle.length];
+}
+
+export function getNextRoleForCommunityMember(role: MembershipRole) {
+    const roleCycle = Object.values(Constants.MembershipRole);
+    const index = roleCycle.indexOf(role);
+    return roleCycle[(index + 1) % roleCycle.length];
+}
+
+export function getPlanPrice(plan: PaymentPlan): {
+    amount: number;
+    period: string;
+} {
+    if (!plan) {
+        return { amount: 0, period: "" };
+    }
+    switch (plan.type) {
+        case Constants.PaymentPlanType.FREE:
+            return { amount: 0, period: "" };
+        case Constants.PaymentPlanType.ONE_TIME:
+            return { amount: plan.oneTimeAmount || 0, period: "" };
+        case Constants.PaymentPlanType.SUBSCRIPTION:
+            if (plan.subscriptionYearlyAmount) {
+                return {
+                    amount: plan.subscriptionYearlyAmount,
+                    period: "/yr",
+                };
+            }
+            return {
+                amount: plan.subscriptionMonthlyAmount || 0,
+                period: "/mo",
+            };
+        case Constants.PaymentPlanType.EMI:
+            return {
+                amount: plan.emiAmount || 0,
+                period: "/mo",
+            };
+        default:
+            return { amount: 0, period: "" };
+    }
+}
+
+export function hasCommunityPermission(
+    member: Pick<Membership, "role">,
+    requiredRole: MembershipRole,
+): boolean {
+    const roleHierarchy = [
+        Constants.MembershipRole.COMMENT,
+        Constants.MembershipRole.POST,
+        Constants.MembershipRole.MODERATE,
+    ];
+    const memberRoleIndex = roleHierarchy.indexOf(
+        member.role.toLowerCase() as MembershipRole,
+    );
+    const requiredRoleIndex = roleHierarchy.indexOf(requiredRole);
+
+    return memberRoleIndex >= requiredRoleIndex;
 }

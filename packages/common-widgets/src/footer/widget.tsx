@@ -1,3 +1,4 @@
+import React from "react";
 import { Link } from "@courselit/components-library";
 import Settings from "./settings";
 import { State } from "@courselit/common-models";
@@ -65,7 +66,7 @@ const Widget = ({
                         </h2>
                         <div className="flex flex-wrap gap-4 items-center mb-8">
                             {Object.keys(socials).map((key) => (
-                                <>
+                                <React.Fragment key={key}>
                                     {socials[key] && (
                                         <Link
                                             key={key}
@@ -116,7 +117,7 @@ const Widget = ({
                                             )}
                                         </Link>
                                     )}
-                                </>
+                                </React.Fragment>
                             ))}
                         </div>
                         {!state.siteinfo.hideCourseLitBranding && (

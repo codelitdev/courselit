@@ -23,6 +23,7 @@ export const eventTypes = [
     "product:purchased",
     "subscriber:added",
     "date:occurred",
+    "community:joined",
 ] as const;
 export const actionTypes = [
     "tag:add",
@@ -54,3 +55,57 @@ export const paymentMethods = [
     PAYMENT_METHOD_RAZORPAY,
     PAYMENT_METHOD_STRIPE,
 ] as const;
+export const PageType = {
+    PRODUCT: "product",
+    SITE: "site",
+    BLOG: "blog",
+    COMMUNITY: "community",
+} as const;
+export const PaymentPlanType = {
+    FREE: "free",
+    ONE_TIME: "onetime",
+    EMI: "emi",
+    SUBSCRIPTION: "subscription",
+} as const;
+export const MembershipEntityType = {
+    COURSE: "course",
+    COMMUNITY: "community",
+} as const;
+export const MembershipStatus = {
+    ACTIVE: "active",
+    PAYMENT_FAILED: "payment_failed",
+    EXPIRED: "expired",
+    PENDING: "pending",
+    REJECTED: "rejected",
+    PAUSED: "paused",
+} as const;
+export const MembershipRole = {
+    COMMENT: "comment",
+    POST: "post",
+    MODERATE: "moderate",
+} as const;
+export const InvoiceStatus = {
+    PENDING: "pending",
+    PAID: "paid",
+    FAILED: "failed",
+} as const;
+export const CommunityReportStatus = {
+    PENDING: "pending",
+    ACCEPTED: "accepted",
+    REJECTED: "rejected",
+} as const;
+export const CommunityReportType = {
+    POST: "post",
+    COMMENT: "comment",
+    REPLY: "reply",
+} as const;
+export const NotificationEntityAction = {
+    COMMUNITY_POSTED: "community:posted",
+    COMMUNITY_COMMENTED: "community:commented",
+    COMMUNITY_REPLIED: "community:replied",
+    COMMUNITY_POST_LIKED: "community:post:liked",
+    COMMUNITY_COMMENT_LIKED: "community:comment:liked",
+    COMMUNITY_REPLY_LIKED: "community:reply:liked",
+    COMMUNITY_MEMBERSHIP_REQUESTED: "community:membership:requested",
+    COMMUNITY_MEMBERSHIP_GRANTED: "community:membership:granted",
+} as const;

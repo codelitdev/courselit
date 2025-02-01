@@ -25,7 +25,7 @@ const mail = new GraphQLObjectType({
         user: {
             type: userTypes.userType,
             resolve: (mail, _, ctx: GQLContext, __) =>
-                getUser(null, mail.creatorId, ctx),
+                getUser(mail.creatorId, ctx),
         },
         published: { type: new GraphQLNonNull(GraphQLBoolean) },
         createdAt: { type: GraphQLString },

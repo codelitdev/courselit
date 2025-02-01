@@ -38,6 +38,8 @@ export interface Course {
     sales: number;
     customers: string[];
     pageId?: string;
+    paymentPlans: string[];
+    defaultPaymentPlan: string;
 }
 
 const CourseSchema = new mongoose.Schema<Course>(
@@ -96,6 +98,8 @@ const CourseSchema = new mongoose.Schema<Course>(
         sales: { type: Number, required: true, default: 0.0 },
         customers: [String],
         pageId: { type: String },
+        paymentPlans: [String],
+        defaultPaymentPlan: { type: String },
     },
     {
         timestamps: true,

@@ -2,7 +2,9 @@ import React from "react";
 import { Control, CustomMatcher, Field, Message } from "@radix-ui/react-form";
 import { Input } from "./components/ui/input";
 import { Textarea } from "./components/ui/textarea";
-import PageBuilderPropertyHeader from "./page-builder-property-header";
+import { Help } from "@courselit/icons";
+import { Tooltip } from ".";
+import { Label } from "./components/ui/label";
 
 interface MessageItem {
     text: string;
@@ -50,10 +52,10 @@ export default function FormField({
     component = "input",
     type = "text",
     messages,
-    name,
     className = "",
     endIcon,
     tooltip,
+    name,
     ...componentProps
 }: FormFieldProps) {
     const Component = component === "input" ? Input : Textarea;
@@ -62,10 +64,16 @@ export default function FormField({
         <Field className={`flex flex-col ${className}`} name={name}>
             <div className="flex items-baseline justify-between">
                 {label && (
-                    <PageBuilderPropertyHeader
-                        label={label}
-                        tooltip={tooltip}
-                    />
+                    <div className="flex grow items-center gap-1">
+                        <Label htmlFor={name} className="mb-1 font-semibold">
+                            {label}
+                        </Label>
+                        {tooltip && (
+                            <Tooltip title={tooltip}>
+                                <Help />
+                            </Tooltip>
+                        )}
+                    </div>
                 )}
                 {messages &&
                     messages.map((message) => (
@@ -83,6 +91,7 @@ export default function FormField({
                     <Component
                         type={type}
                         className="outline-none w-full"
+                        name={name}
                         {...componentProps}
                     />
                 </Control>

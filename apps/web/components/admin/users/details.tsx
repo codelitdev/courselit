@@ -270,30 +270,6 @@ const Details = ({ userId, address, dispatch }: DetailsProps) => {
                 </Section>
                 {userData.permissions && <PermissionsEditor user={userData} />}
             </div>
-
-            {/*
-                    {userData.purchases && userData.purchases.length > 0 && (
-                        <Grid item>
-                                <Typography variant="h6">
-                                    {ENROLLED_COURSES_HEADER} (
-                                    {userData.purchases.length})
-                                </Typography>
-                                <Grid container direction="column">
-                                    {enrolledCourses.map((course: Course) => (
-                                        <Grid
-                                            item
-                                            key={course.id}
-                                            className={
-                                                classes.enrolledCourseItem
-                                            }
-                                        >
-                                            {course.title}
-                                        </Grid>
-                                    ))}
-                                </Grid>
-                        </Grid>
-                    )}
-                    */}
         </div>
     );
 };

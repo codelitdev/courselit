@@ -1,13 +1,16 @@
 {
     "name": "@courselit/utils",
-    "version": "0.55.1",
+    "version": "0.56.0",
     "description": "Utilities for CourseLit",
     "author": "Team CourseLit <hi@codelit.dev>",
     "homepage": "https://github.com/codelitdev/courselit#readme",
     "license": "MIT",
     "types": "dist/index.d.ts",
     "exports": {
-        ".": "./dist"
+        ".": {
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs"
+        }
     },
     "publishConfig": {
         "access": "public"
@@ -39,6 +42,8 @@
     "dependencies": {
         "@courselit/common-models": "workspace:^",
         "@sindresorhus/slugify": "^2.2.1",
-        "liquidjs": "^10.12.0"
+        "jsonwebtoken": "^9.0.2",
+        "liquidjs": "^10.12.0",
+        "nanoid": "^5.0.9"
     }
 }

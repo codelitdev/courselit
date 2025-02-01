@@ -10,3 +10,5 @@ export const ProfileContext = createContext(defaultState.profile);
 export const TypefacesContext = createContext(defaultState.typefaces);
 
 export const ServerConfigContext = createContext(defaultState.config);
+
+// export const PageContext = createContext(defaultState.page);

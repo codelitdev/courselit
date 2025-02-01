@@ -100,7 +100,6 @@ export function PermissionsEditor({
                 <div className="flex justify-between" key={permission}>
                     <p>{permissionToCaptionMap[permission]}</p>
                     <Checkbox
-                        name={permission}
                         disabled={networkCallUnderway}
                         checked={activePermissions.includes(permission)}
                         onChange={(value: boolean) =>

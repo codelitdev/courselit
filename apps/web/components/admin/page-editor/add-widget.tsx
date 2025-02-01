@@ -3,6 +3,7 @@ import {
     PageTypeProduct,
     PageTypeSite,
     PageTypeBlog,
+    PageTypeCommunity,
 } from "@courselit/common-models";
 import { IconButton } from "@courselit/components-library";
 import { Cross as Close } from "@courselit/icons";
@@ -10,7 +11,7 @@ import { EDIT_PAGE_ADD_WIDGET_TITLE } from "../../../ui-config/strings";
 import widgets from "../../../ui-config/widgets";
 
 interface WidgetsListProps {
-    pageType: PageTypeProduct | PageTypeSite | PageTypeBlog;
+    pageType: PageTypeProduct | PageTypeSite | PageTypeBlog | PageTypeCommunity;
     onSelection: (...args: any[]) => void;
     onClose: (...args: any[]) => void;
 }

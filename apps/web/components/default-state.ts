@@ -4,6 +4,7 @@ import {
     SiteInfo,
     Typeface,
     ServerConfig,
+    Page,
 } from "@courselit/common-models";
 
 export const defaultState: {
@@ -13,6 +14,7 @@ export const defaultState: {
     address: Address;
     typefaces: Typeface[];
     config: ServerConfig;
+    page: Page;
     [x: string]: any;
 } = {
     siteinfo: {
@@ -61,5 +63,13 @@ export const defaultState: {
     typefaces: [],
     config: {
         turnstileSiteKey: "",
+        queueServer: "",
     },
+    // page: {
+    //     name: "",
+    //     pageId: "",
+    //     type: "site",
+    //     deleteable: false,
+    //     layout: [],
+    // },
 };

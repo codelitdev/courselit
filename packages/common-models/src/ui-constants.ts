@@ -37,8 +37,6 @@ export const MIMETYPE_AUDIO = ["audio/mp3", "audio/mpeg"];
 export const MIMETYPE_IMAGE = ["image/png", "image/jpeg", "image/webp"];
 export const MIMETYPE_PDF = ["application/pdf"];
 
-export const THEMES_REPO = "https://github.com/codelitdev/courselit-themes";
-
 // Role-based access permissions
 export const permissions = {
     manageCourse: "course:manage",
@@ -49,6 +47,7 @@ export const permissions = {
     manageSite: "site:manage",
     manageSettings: "setting:manage",
     manageUsers: "user:manage",
+    manageCommunity: "community:manage",
 };
 
 export const COURSE_TYPE_COURSE = "course";

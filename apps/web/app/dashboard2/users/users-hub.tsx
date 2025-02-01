@@ -51,7 +51,7 @@ export default function UsersHub() {
     const [count, setCount] = useState(0);
     const router = useRouter();
 
-    const profile = useContext(ProfileContext);
+    const { profile } = useContext(ProfileContext);
 
     const loadUsers = useCallback(async () => {
         const query =

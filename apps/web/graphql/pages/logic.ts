@@ -9,7 +9,8 @@ import { checkPermission, generateUniqueId } from "@courselit/utils";
 import { Media, User, Constants } from "@courselit/common-models";
 import { Domain } from "../../models/Domain";
 import { homePageTemplate } from "./page-templates";
-const { product, site, blogPage, permissions, defaultPages } = constants;
+const { product, site, blogPage, communityPage, permissions, defaultPages } =
+    constants;
 const { pageNames } = Constants;
 
 export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
@@ -304,7 +305,11 @@ export const publish = async (
 
 export const getPages = async (
     ctx: GQLContext,
-    type: typeof product | typeof site | typeof blogPage,
+    type?:
+        | typeof product
+        | typeof site
+        | typeof blogPage
+        | typeof communityPage,
 ) => {
     checkIfAuthenticated(ctx);
     if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {

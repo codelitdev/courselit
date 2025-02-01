@@ -7,9 +7,53 @@ import {
     GraphQLInt,
     GraphQLList,
     GraphQLInputObjectType,
+    GraphQLEnumType,
 } from "graphql";
 import mediaTypes from "../media/types";
 import { getMedia } from "../media/logic";
+import { Constants } from "@courselit/common-models";
+
+const memberStatusMap = {};
+for (const status of [
+    Constants.MembershipStatus.PENDING,
+    Constants.MembershipStatus.ACTIVE,
+    Constants.MembershipStatus.REJECTED,
+    Constants.MembershipStatus.EXPIRED,
+    Constants.MembershipStatus.PAYMENT_FAILED,
+    Constants.MembershipStatus.PAUSED,
+]) {
+    memberStatusMap[status.toUpperCase()] = { value: status };
+}
+
+const membershipStatusType = new GraphQLEnumType({
+    name: "MembershipStatusType",
+    values: Object.fromEntries(
+        Object.entries(Constants.MembershipStatus).map(([key, value]) => [
+            key,
+            { value: value },
+        ]),
+    ),
+});
+
+const membershipEntityType = new GraphQLEnumType({
+    name: "MembershipEntityType",
+    values: Object.fromEntries(
+        Object.entries(Constants.MembershipEntityType).map(([key, value]) => [
+            key,
+            { value: value },
+        ]),
+    ),
+});
+
+const membershipRoleType = new GraphQLEnumType({
+    name: "MembershipRoleType",
+    values: Object.fromEntries(
+        Object.entries(Constants.MembershipRole).map(([key, value]) => [
+            key,
+            { value: value },
+        ]),
+    ),
+});
 
 const progress = new GraphQLObjectType({
     name: "Progress",
@@ -128,6 +172,31 @@ const tagWithDetails = new GraphQLObjectType({
     },
 });
 
+const entityType = new GraphQLObjectType({
+    name: "EntityType",
+    fields: {
+        id: { type: new GraphQLNonNull(GraphQLString) },
+        title: { type: new GraphQLNonNull(GraphQLString) },
+        slug: { type: GraphQLString },
+        membersCount: { type: GraphQLInt },
+        totalLessons: { type: GraphQLInt },
+        completedLessonsCount: { type: GraphQLInt },
+        featuredImage: {
+            type: mediaTypes.mediaType,
+            resolve: (content, args, context, info) =>
+                getMedia(content.featuredImage),
+        },
+    },
+});
+
+const userContent = new GraphQLObjectType({
+    name: "UserContent",
+    fields: {
+        entityType: { type: new GraphQLNonNull(GraphQLString) },
+        entity: { type: entityType },
+    },
+});
+
 const userTypes = {
     filter,
     userType,
@@ -139,6 +208,10 @@ const userTypes = {
     userFilter,
     createSegmentInput,
     tagWithDetails,
+    userContent,
+    membershipStatusType,
+    membershipEntityType,
+    membershipRoleType,
 };
 
 export default userTypes;

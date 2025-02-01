@@ -6,9 +6,9 @@ import SearchData from "./models/search-data";
 import DownloadLinkModel from "@models/DownloadLink";
 import pug from "pug";
 import digitalDownloadTemplate from "../../templates/download-link";
-import { send } from "../../services/mail";
 import { responses } from "@config/strings";
 import { generateEmailFrom } from "@/lib/utils";
+import { addMailJob } from "@/services/queue";
 
 export function areAllEmailIdsValid(
     emailsOrder: string[],
@@ -92,7 +92,7 @@ export async function createTemplateAndSendMail({
         hideCourseLitBranding: ctx.subdomain.settings?.hideCourseLitBranding,
     });
 
-    await send({
+    await addMailJob({
         to: [user.email],
         subject: `Thank you for signing up for ${course.title}`,
         body: emailBody,

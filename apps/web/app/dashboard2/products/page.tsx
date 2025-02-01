@@ -14,7 +14,7 @@ const { permissions } = UIConstants;
 
 export default function Page() {
     const address = useContext(AddressContext);
-    const profile = useContext(ProfileContext);
+    const { profile } = useContext(ProfileContext);
     const siteinfo = useContext(SiteInfoContext);
 
     if (
