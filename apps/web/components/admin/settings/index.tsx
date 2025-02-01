@@ -926,14 +926,14 @@ const Settings = (props: SettingsProps) => {
                                 <div className="flex gap-2">
                                     <Input
                                         readOnly
-                                        value="http://localhost:3000/api/payment/webhook"
+                                        value={`${props.address.backend}/api/payment/webhook`}
                                     />
                                     <Button
                                         variant="outline"
                                         size="icon"
                                         onClick={() =>
                                             copyToClipboard(
-                                                "http://localhost:3000/api/payment/webhook",
+                                                `${props.address.backend}/api/payment/webhook`,
                                             )
                                         }
                                     >
@@ -949,14 +949,14 @@ const Settings = (props: SettingsProps) => {
                                 <div className="flex gap-2">
                                     <Input
                                         readOnly
-                                        value="http://localhost:3000/api/payment/webhook-old"
+                                        value={`${props.address.backend}/api/payment/webhook-old`}
                                     />
                                     <Button
                                         variant="outline"
                                         size="icon"
                                         onClick={() =>
                                             copyToClipboard(
-                                                "http://localhost:3000/api/payment/webhook-old",
+                                                `${props.address.backend}/api/payment/webhook-old`,
                                             )
                                         }
                                     >
