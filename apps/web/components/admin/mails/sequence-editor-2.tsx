@@ -17,13 +17,14 @@ import { connect } from "react-redux";
 import {
     BTN_SEND,
     BTN_SENDING,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     MAIL_BODY_PLACEHOLDER,
     MAIL_SUBJECT_PLACEHOLDER,
     MAIL_TO_PLACEHOLDER,
     PAGE_HEADER_ALL_MAILS,
     PAGE_HEADER_EDIT_MAIL,
     TOAST_MAIL_SENT,
+    TOAST_TITLE_SUCCESS,
 } from "../../../ui-config/strings";
 import { Breadcrumbs, Link, Button } from "@courselit/components-library";
 const { networkAction } = actionCreators;
@@ -88,8 +89,9 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
             }
         } catch (e: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: e.message,
+                variant: "destructive",
             });
         } finally {
             dispatch(networkAction(false));
@@ -113,8 +115,9 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
             await fetcher.exec();
         } catch (e: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: e.message,
+                variant: "destructive",
             });
         } finally {
             dispatch(networkAction(false));
@@ -153,13 +156,14 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                 setMail(response.mail);
             }
             toast({
-                title: "",
+                title: TOAST_TITLE_SUCCESS,
                 description: TOAST_MAIL_SENT,
             });
         } catch (e: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: e.message,
+                variant: "destructive",
             });
         } finally {
             dispatch(networkAction(false));

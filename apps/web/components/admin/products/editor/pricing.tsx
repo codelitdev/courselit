@@ -24,6 +24,8 @@ import {
     PRICING_PAID_LABEL,
     PRICING_PAID_NO_PAYMENT_METHOD,
     PRICING_PAID_SUBTITLE,
+    TOAST_TITLE_ERROR,
+    TOAST_TITLE_SUCCESS,
 } from "../../../../ui-config/strings";
 import useCourse from "./course-hook";
 import { COURSE_TYPE_DOWNLOAD } from "../../../../ui-config/constants";
@@ -79,11 +81,16 @@ export default function Pricing({
             const response = await fetch.exec();
             if (response.updateCourse) {
                 toast({
-                    title: "",
+                    title: TOAST_TITLE_SUCCESS,
                     description: APP_MESSAGE_COURSE_SAVED,
                 });
             }
         } catch (err: any) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }

@@ -19,7 +19,7 @@ import { AppDispatch } from "@courselit/state-management";
 import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import {
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     MAIL_TABLE_HEADER_STATUS,
     MAIL_TABLE_HEADER_SUBJECT,
 } from "@ui-config/strings";
@@ -101,8 +101,9 @@ const SequencesList = ({
             }
         } catch (e: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: e.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));
@@ -132,8 +133,9 @@ const SequencesList = ({
             }
         } catch (e: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: e.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));

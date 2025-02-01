@@ -146,8 +146,9 @@ export default function Widget({
             }
         } catch (e) {
             toast({
-                title: "",
+                title: "Error",
                 description: failureMessage || DEFAULT_FAILURE_MESSAGE,
+                variant: "destructive",
             });
         } finally {
             dispatch(actionCreators.networkAction(false));

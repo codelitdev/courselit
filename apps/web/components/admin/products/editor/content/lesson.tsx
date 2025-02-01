@@ -18,7 +18,8 @@ import {
     LESSON_CONTENT_EMBED_PLACEHOLDER,
     BUTTON_SAVING,
     MANAGE_COURSES_PAGE_HEADING,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
+    TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import {
     LESSON_TYPE_TEXT,
@@ -184,8 +185,9 @@ const LessonEditor = ({
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));
@@ -226,10 +228,15 @@ const LessonEditor = ({
             dispatch && dispatch(networkAction(true));
             setLoading(true);
             await fetch.exec();
+            toast({
+                title: TOAST_TITLE_SUCCESS,
+                description: "Lesson updated",
+            });
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));
@@ -269,10 +276,15 @@ const LessonEditor = ({
             dispatch && dispatch(networkAction(true));
             setLoading(true);
             await fetch.exec();
+            toast({
+                title: TOAST_TITLE_SUCCESS,
+                description: "Lesson updated",
+            });
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));
@@ -326,8 +338,9 @@ const LessonEditor = ({
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));
@@ -355,7 +368,7 @@ const LessonEditor = ({
 
                 if (response.result) {
                     toast({
-                        title: "",
+                        title: TOAST_TITLE_SUCCESS,
                         description: APP_MESSAGE_LESSON_DELETED,
                     });
                     router.replace(
@@ -364,8 +377,9 @@ const LessonEditor = ({
                 }
             } catch (err: any) {
                 toast({
-                    title: ERROR_SNACKBAR_PREFIX,
+                    title: TOAST_TITLE_ERROR,
                     description: err.message,
+                    variant: "destructive",
                 });
             } finally {
                 setLoading(false);

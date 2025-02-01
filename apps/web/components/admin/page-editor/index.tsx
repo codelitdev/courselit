@@ -20,7 +20,7 @@ import {
     PAGE_TITLE_EDIT_PAGE,
     EDIT_PAGE_BUTTON_FONTS,
     EDIT_PAGE_BUTTON_SEO,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     EDIT_PAGE_BUTTON_VIEW,
 } from "../../../ui-config/strings";
 import { useRouter } from "next/navigation";
@@ -244,8 +244,9 @@ export default function PageEditor({
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));
@@ -284,15 +285,17 @@ export default function PageEditor({
                 setPage(pageBeingEdited);
             } else {
                 toast({
-                    title: "",
+                    title: TOAST_TITLE_ERROR,
                     description: `The page does not exist.`,
+                    variant: "destructive",
                 });
                 router.replace(`${prefix}/pages`);
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));
@@ -492,8 +495,9 @@ export default function PageEditor({
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));

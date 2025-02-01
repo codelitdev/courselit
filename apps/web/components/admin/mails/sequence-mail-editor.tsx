@@ -14,7 +14,7 @@ import { FetchBuilder } from "@courselit/utils";
 import {
     BUTTON_SAVE,
     COMPOSE_SEQUENCE_EDIT_DELAY,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     MAIL_PREVIEW_TITLE,
     MAIL_SUBJECT_PLACEHOLDER,
     PAGE_HEADER_ALL_MAILS,
@@ -106,8 +106,9 @@ const SequenceMailEditor = ({
             }
         } catch (e: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: e.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));
@@ -199,8 +200,9 @@ const SequenceMailEditor = ({
             }
         } catch (e: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: e.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));

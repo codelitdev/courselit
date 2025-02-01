@@ -39,7 +39,6 @@ import {
     SITE_SETTINGS_RAZORPAY_KEY_TEXT,
     MEDIA_SELECTOR_UPLOAD_BTN_CAPTION,
     MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
-    ERROR_SNACKBAR_PREFIX,
     TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS,
     DOCUMENTATION_LINK_LABEL,
@@ -283,14 +282,15 @@ const Settings = (props: SettingsProps) => {
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
                 toast({
-                    title: "",
+                    title: TOAST_TITLE_SUCCESS,
                     description: APP_MESSAGE_SETTINGS_SAVED,
                 });
             }
         } catch (e: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: e.message,
+                variant: "destructive",
             });
         } finally {
             props.dispatch(networkAction(false));
@@ -342,14 +342,15 @@ const Settings = (props: SettingsProps) => {
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
                 toast({
-                    title: "",
+                    title: TOAST_TITLE_SUCCESS,
                     description: APP_MESSAGE_SETTINGS_SAVED,
                 });
             }
         } catch (e: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: e.message,
+                variant: "destructive",
             });
         } finally {
             props.dispatch(networkAction(false));
@@ -403,14 +404,15 @@ const Settings = (props: SettingsProps) => {
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
                 toast({
-                    title: "",
+                    title: TOAST_TITLE_SUCCESS,
                     description: APP_MESSAGE_SETTINGS_SAVED,
                 });
             }
         } catch (e: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: e.message,
+                variant: "destructive",
             });
         } finally {
             props.dispatch(networkAction(false));
@@ -620,8 +622,9 @@ const Settings = (props: SettingsProps) => {
             );
         } catch (e: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: e.message,
+                variant: "destructive",
             });
         } finally {
             props.dispatch(networkAction(false));

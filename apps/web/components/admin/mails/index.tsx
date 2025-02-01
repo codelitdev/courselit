@@ -17,7 +17,7 @@ import {
     BROADCASTS,
     SEQUENCES,
     BTN_NEW_SEQUENCE,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
 } from "../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
 import { useRouter } from "next/navigation";
@@ -103,8 +103,9 @@ export default function Mails({
                 }
             } catch (e: any) {
                 toast({
-                    title: ERROR_SNACKBAR_PREFIX,
+                    title: TOAST_TITLE_ERROR,
                     description: e.message,
+                    variant: "destructive",
                 });
             } finally {
                 dispatch && dispatch(networkAction(false));
@@ -146,8 +147,9 @@ export default function Mails({
             }
         } catch (e: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: e.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));
@@ -186,8 +188,9 @@ export default function Mails({
             }
         } catch (e: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: e.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));
@@ -235,8 +238,9 @@ export default function Mails({
             }
         } catch (err) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch &&

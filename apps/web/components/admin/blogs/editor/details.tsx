@@ -17,8 +17,9 @@ import {
     APP_MESSAGE_COURSE_SAVED,
     BUTTON_SAVE,
     COURSE_CONTENT_HEADER,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     FORM_FIELD_FEATURED_IMAGE,
+    TOAST_TITLE_SUCCESS,
 } from "../../../../ui-config/strings";
 import { connect } from "react-redux";
 import { AppDispatch, AppState } from "@courselit/state-management";
@@ -77,14 +78,15 @@ export function Details({ id, address, dispatch, profile }: DetailsProps) {
             const response = await fetch.exec();
             if (response.updateCourse) {
                 toast({
-                    title: "",
+                    title: TOAST_TITLE_SUCCESS,
                     description: APP_MESSAGE_COURSE_SAVED,
                 });
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));
@@ -118,14 +120,15 @@ export function Details({ id, address, dispatch, profile }: DetailsProps) {
             const response = await fetch.exec();
             if (response.updateCourse) {
                 toast({
-                    title: "",
+                    title: TOAST_TITLE_SUCCESS,
                     description: APP_MESSAGE_COURSE_SAVED,
                 });
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));

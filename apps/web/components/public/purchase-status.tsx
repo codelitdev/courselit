@@ -15,7 +15,7 @@ import {
     VERIFY_PAYMENT_BUTTON,
     VISIT_COURSE_BUTTON,
     PURCHASE_ID_HEADER,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
 } from "../../ui-config/strings";
 import dynamic from "next/dynamic";
 import type { AppDispatch, AppState } from "@courselit/state-management";
@@ -72,8 +72,9 @@ const PurchaseStatus = (props: PurchaseStatusProps) => {
             setStatus(response.status);
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch(networkAction(false));

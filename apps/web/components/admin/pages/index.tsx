@@ -19,13 +19,14 @@ import {
     BTN_NEW_PAGE,
     DELETE_PAGE_POPUP_HEADER,
     DELETE_PAGE_POPUP_TEXT,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     MANAGE_PAGES_PAGE_HEADING,
     PAGES_TABLE_HEADER_ACTIONS,
     PAGES_TABLE_HEADER_NAME,
     PAGE_TABLE_CONTEXT_MENU_DELETE,
     PAGE_TITLE_EDIT_PAGE,
     PAGE_TITLE_VIEW_PAGE,
+    TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import { useEffect, useState } from "react";
 import { connect } from "react-redux";
@@ -69,8 +70,9 @@ export const Pages = ({ loading, address, dispatch, prefix }: IndexProps) => {
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch(networkAction(false));
@@ -101,13 +103,14 @@ export const Pages = ({ loading, address, dispatch, prefix }: IndexProps) => {
             }
 
             toast({
-                title: "",
+                title: TOAST_TITLE_SUCCESS,
                 description: APP_MESSAGE_PAGE_DELETED,
             });
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch(networkAction(false));

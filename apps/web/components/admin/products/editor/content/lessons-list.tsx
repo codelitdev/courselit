@@ -4,7 +4,7 @@ import {
     BUTTON_NEW_LESSON_TEXT,
     DELETE_SECTION_HEADER,
     EDIT_SECTION_HEADER,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     LESSON_GROUP_DELETED,
 } from "../../../../../ui-config/strings";
 import { CourseWithAdminProps } from "../course-hook";
@@ -30,7 +30,7 @@ interface LessonSectionProps {
     address: Address;
     dispatch?: AppDispatch;
     prefix: string;
-    toast: (options: { title: string; description: string }) => void;
+    toast: ReturnType<typeof useToast>["toast"];
 }
 
 function LessonItem({
@@ -95,8 +95,9 @@ function LessonSection({
             const response = await fetch.exec();
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(actionCreators.networkAction(false));
@@ -222,8 +223,9 @@ export default function LessonsList({
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(actionCreators.networkAction(false));

@@ -13,7 +13,7 @@ import {
 } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
 import {
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     PAGE_HEADER_ALL_USER,
     PAGE_HEADER_EDIT_USER,
     SWITCH_ACCOUNT_ACTIVE,
@@ -59,8 +59,9 @@ export default function Page({ params }: { params: { id: string } }) {
             }
         } catch (err) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         }
     }, [address.backend]);
@@ -101,8 +102,9 @@ export default function Page({ params }: { params: { id: string } }) {
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         }
     };
@@ -127,8 +129,9 @@ export default function Page({ params }: { params: { id: string } }) {
             setEnrolledCourses(response.enrolledCourses);
         } catch (err) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         }
     };
@@ -162,8 +165,9 @@ export default function Page({ params }: { params: { id: string } }) {
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         }
     };
@@ -203,8 +207,9 @@ export default function Page({ params }: { params: { id: string } }) {
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         }
     };

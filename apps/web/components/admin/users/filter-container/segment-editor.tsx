@@ -11,7 +11,7 @@ import { FetchBuilder } from "@courselit/utils";
 import React, { useState } from "react";
 import type { ThunkDispatch } from "redux-thunk";
 import {
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     POPUP_CANCEL_ACTION,
     POPUP_OK_ACTION,
     USER_DELETE_SEGMENT,
@@ -98,8 +98,9 @@ export default function SegmentEditor({
             }
         } catch (err) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch &&

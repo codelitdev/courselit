@@ -23,7 +23,7 @@ import {
 } from "@courselit/components-library";
 import { checkPermission, FetchBuilder } from "@courselit/utils";
 import {
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     USER_TABLE_HEADER_JOINED,
     USER_TABLE_HEADER_LAST_ACTIVE,
     USER_TABLE_HEADER_NAME,
@@ -134,8 +134,9 @@ export default function UsersHub() {
             }
         } catch (err) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         }
     }, [address.backend, page, rowsPerPage, filters, filtersAggregator]);

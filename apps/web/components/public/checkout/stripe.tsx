@@ -3,7 +3,7 @@ import { Button2, useToast } from "@courselit/components-library";
 import { loadStripe } from "@stripe/stripe-js";
 import {
     ENROLL_BUTTON_TEXT,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
 } from "../../../ui-config/strings";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
@@ -60,8 +60,9 @@ const Stripe = (props: StripeProps) => {
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch(networkAction(false));

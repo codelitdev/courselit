@@ -10,7 +10,7 @@ import {
 import {
     BTN_CONTINUE,
     BUTTON_CANCEL_TEXT,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     NEW_PAGE_FORM_WARNING,
     NEW_PAGE_HEADING,
     NEW_PAGE_NAME_PLC,
@@ -70,8 +70,9 @@ const NewPage = ({
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));

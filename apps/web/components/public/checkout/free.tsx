@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import {
     ENROLL_BUTTON_TEXT,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
 } from "../../../ui-config/strings";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
@@ -50,14 +50,16 @@ const Free = ({ course, dispatch, address }: FreeProps) => {
                 router.replace(`/my-content`);
             } else if (response.status === "failed") {
                 toast({
-                    title: ERROR_SNACKBAR_PREFIX,
+                    title: TOAST_TITLE_ERROR,
                     description: response.error,
+                    variant: "destructive",
                 });
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch(networkAction(false));

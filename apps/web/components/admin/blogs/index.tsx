@@ -7,7 +7,7 @@ import { connect } from "react-redux";
 import {
     BLOG_TABLE_HEADER_NAME,
     BTN_NEW_BLOG,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     MANAGE_BLOG_PAGE_HEADING,
     PRODUCTS_TABLE_HEADER_ACTIONS,
     PRODUCTS_TABLE_HEADER_STATUS,
@@ -86,8 +86,9 @@ export const Index = ({
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));

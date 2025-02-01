@@ -24,13 +24,14 @@ import {
     BUTTON_CANCEL_TEXT,
     DIALOG_SEND_HEADER,
     ERROR_DELAY_EMPTY,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     ERROR_SUBJECT_EMPTY,
     FORM_MAIL_SCHEDULE_TIME_LABEL,
     MAIL_SUBJECT_PLACEHOLDER,
     PAGE_HEADER_ALL_MAILS,
     PAGE_HEADER_EDIT_MAIL,
     TOAST_MAIL_SENT,
+    TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import FilterContainer from "@components/admin/users/filter-container";
 import { useCallback } from "react";
@@ -128,8 +129,9 @@ function MailEditor({ id, address, dispatch, prefix }: MailEditorProps) {
             }
         } catch (e: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: e.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));
@@ -215,8 +217,9 @@ function MailEditor({ id, address, dispatch, prefix }: MailEditorProps) {
             await fetcher.exec();
         } catch (e: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: e.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));
@@ -242,8 +245,9 @@ function MailEditor({ id, address, dispatch, prefix }: MailEditorProps) {
 
         if (!subject.trim()) {
             toast({
-                title: "",
+                title: TOAST_TITLE_ERROR,
                 description: ERROR_SUBJECT_EMPTY,
+                variant: "destructive",
             });
             setConfirmationDialogOpen(false);
             return;
@@ -251,8 +255,9 @@ function MailEditor({ id, address, dispatch, prefix }: MailEditorProps) {
 
         if (sendLater && delay === 0) {
             toast({
-                title: "",
+                title: TOAST_TITLE_ERROR,
                 description: ERROR_DELAY_EMPTY,
+                variant: "destructive",
             });
             setConfirmationDialogOpen(false);
             return;
@@ -331,14 +336,15 @@ function MailEditor({ id, address, dispatch, prefix }: MailEditorProps) {
                 setStatus(sequence.status);
                 setShowScheduleInput(false);
                 toast({
-                    title: "",
+                    title: TOAST_TITLE_SUCCESS,
                     description: TOAST_MAIL_SENT,
                 });
             }
         } catch (e: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: e.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));
@@ -411,8 +417,9 @@ function MailEditor({ id, address, dispatch, prefix }: MailEditorProps) {
             }
         } catch (e: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: e.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));

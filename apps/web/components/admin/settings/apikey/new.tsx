@@ -18,7 +18,8 @@ import {
     APIKEY_NEW_LABEL,
     BUTTON_CANCEL_TEXT,
     BUTTON_DONE_TEXT,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
+    TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
@@ -48,7 +49,7 @@ export default function NewApikey({
         if (window.isSecureContext && navigator.clipboard) {
             navigator.clipboard.writeText(apikey);
             toast({
-                title: "",
+                title: TOAST_TITLE_SUCCESS,
                 description: APIKEY_NEW_GENERATED_KEY_COPIED,
             });
         }
@@ -81,8 +82,9 @@ export default function NewApikey({
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));

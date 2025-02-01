@@ -16,7 +16,7 @@ import {
     BTN_NEW_BLOG,
     BUTTON_CANCEL_TEXT,
     COURSE_TYPE_BLOG,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     FORM_NEW_PRODUCT_TITLE_PLC,
     MANAGE_BLOG_PAGE_HEADING,
 } from "@/ui-config/strings";
@@ -71,8 +71,9 @@ export function NewBlog({
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));

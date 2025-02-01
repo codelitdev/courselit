@@ -9,7 +9,7 @@ import {
     PRODUCTS_TABLE_HEADER_ACTIONS,
     BTN_NEW_PRODUCT,
     PRODUCTS_TABLE_HEADER_TYPE,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
 } from "../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
 import type { Address, SiteInfo } from "@courselit/common-models";
@@ -119,8 +119,9 @@ export const Index = ({
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));

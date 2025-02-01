@@ -28,7 +28,6 @@ import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
 } from "./defaults";
-import { ERROR_SNACKBAR_PREFIX } from "../../../../apps/web/ui-config/strings";
 
 interface CourseWithGroups extends Course {
     groups: Group[];
@@ -118,8 +117,9 @@ export default function Widget({
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: "Error",
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch(actionCreators.networkAction(false));

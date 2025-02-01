@@ -17,7 +17,7 @@ import {
     COURSE_PROGRESS_NEXT,
     COURSE_PROGRESS_PREV,
     ENROLL_BUTTON_TEXT,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     NOT_ENROLLED_HEADER,
 } from "../../../ui-config/strings";
 import {
@@ -176,8 +176,9 @@ const LessonViewer = ({
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch(networkAction(false));

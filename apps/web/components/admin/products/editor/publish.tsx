@@ -6,7 +6,7 @@ import { Address } from "@courselit/common-models";
 import {
     BTN_PUBLISH,
     BTN_UNPUBLISH,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     PUBLISH_TAB_STATUS_SUBTITLE,
     PUBLISH_TAB_STATUS_TITLE,
     PUBLISH_TAB_VISIBILITY_SUBTITLE,
@@ -84,8 +84,9 @@ export default function Publish({ id, address, dispatch }: PublishProps) {
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             setLoading(false);

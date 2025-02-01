@@ -18,7 +18,7 @@ import {
     DRIP_SECTION_STATUS,
     EDIT_SECTION_DRIP,
     EDIT_SECTION_HEADER,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     LABEL_DRIP_DATE,
     LABEL_DRIP_DELAY,
     LABEL_DRIP_EMAIL_SUBJECT,
@@ -191,8 +191,9 @@ export default function SectionEditor({
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(actionCreators.networkAction(false));

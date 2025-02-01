@@ -12,11 +12,12 @@ import { FetchBuilder } from "@courselit/utils";
 import { ChangeEvent, useState } from "react";
 import { connect } from "react-redux";
 import {
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     QUIZ_FAIL_MESSAGE,
     QUIZ_PASS_MESSAGE,
     QUIZ_VIEWER_EVALUATE_BTN,
     QUIZ_VIEWER_EVALUATE_BTN_LOADING,
+    TOAST_TITLE_SUCCESS,
 } from "../../../ui-config/strings";
 import { Form, FormSubmit, useToast } from "@courselit/components-library";
 
@@ -99,20 +100,22 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
                 const { pass, score, passingGrade } = response.result;
                 if (pass) {
                     toast({
-                        title: "",
+                        title: TOAST_TITLE_SUCCESS,
                         description: `${QUIZ_PASS_MESSAGE} ${score} points.`,
                     });
                 } else {
                     toast({
-                        title: "",
+                        title: TOAST_TITLE_ERROR,
                         description: `${QUIZ_FAIL_MESSAGE} ${score} points. Requires ${passingGrade} points.`,
+                        variant: "destructive",
                     });
                 }
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch(networkAction(false));

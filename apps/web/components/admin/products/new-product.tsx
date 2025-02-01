@@ -21,7 +21,7 @@ import {
     BTN_CONTINUE,
     BTN_NEW_PRODUCT,
     BUTTON_CANCEL_TEXT,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     FORM_NEW_PRODUCT_MENU_COURSE_SUBTITLE,
     FORM_NEW_PRODUCT_MENU_DOWNLOADS_SUBTITLE,
     FORM_NEW_PRODUCT_TITLE_PLC,
@@ -82,8 +82,9 @@ export function NewProduct({
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));

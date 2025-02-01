@@ -9,7 +9,7 @@ import {
 import { AppDispatch } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import {
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     POPUP_CANCEL_ACTION,
     USER_FILTER_APPLY_BTN,
     USER_FILTER_CATEGORY_TAGGED,
@@ -57,8 +57,9 @@ export default function TaggedFilterEditor({
             }
         } catch (err) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         }
     }, [address.backend, dispatch]);

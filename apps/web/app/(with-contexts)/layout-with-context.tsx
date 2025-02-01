@@ -12,7 +12,7 @@ import {
     ServerConfigContext,
 } from "@components/contexts";
 import { Toaster, useToast } from "@courselit/components-library";
-import { ERROR_SNACKBAR_PREFIX } from "@ui-config/strings";
+import { TOAST_TITLE_ERROR } from "@ui-config/strings";
 import { Session } from "next-auth";
 
 export default function Layout({
@@ -73,8 +73,9 @@ export default function Layout({
                 }
             } catch (err) {
                 toast({
-                    title: ERROR_SNACKBAR_PREFIX,
+                    title: TOAST_TITLE_ERROR,
                     description: err.message,
+                    variant: "destructive",
                 });
             }
         };

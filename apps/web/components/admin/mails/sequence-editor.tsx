@@ -25,7 +25,7 @@ import {
     COMPOSE_SEQUENCE_FORM_TITLE,
     COMPOSE_SEQUENCE_FROM_PLC,
     DELETE_EMAIL_MENU,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     PAGE_HEADER_ALL_MAILS,
     PAGE_HEADER_EDIT_SEQUENCE,
 } from "@ui-config/strings";
@@ -132,8 +132,9 @@ const SequenceEditor = ({
             }
         } catch (e: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: e.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));
@@ -198,8 +199,9 @@ const SequenceEditor = ({
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         }
     }, [dispatch, fetch]);
@@ -250,8 +252,9 @@ const SequenceEditor = ({
             }
         } catch (e: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: e.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));
@@ -330,8 +333,9 @@ const SequenceEditor = ({
             }
         } catch (e: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: e.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));
@@ -434,8 +438,9 @@ const SequenceEditor = ({
                 }
             } catch (e: any) {
                 toast({
-                    title: ERROR_SNACKBAR_PREFIX,
+                    title: TOAST_TITLE_ERROR,
                     description: e.message,
+                    variant: "destructive",
                 });
             } finally {
                 dispatch && dispatch(networkAction(false));
@@ -504,8 +509,9 @@ const SequenceEditor = ({
                 }
             } catch (e: any) {
                 toast({
-                    title: ERROR_SNACKBAR_PREFIX,
+                    title: TOAST_TITLE_ERROR,
                     description: e.message,
+                    variant: "destructive",
                 });
             } finally {
                 dispatch && dispatch(networkAction(false));

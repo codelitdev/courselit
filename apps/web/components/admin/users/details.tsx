@@ -8,7 +8,7 @@ import {
     USER_EMAIL_SUBHEADER,
     USER_NAME_SUBHEADER,
     USER_TAGS_SUBHEADER,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
 } from "../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
 import PermissionsEditor from "./permissions-editor";
@@ -103,8 +103,9 @@ const Details = ({ userId, address, dispatch }: DetailsProps) => {
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch(networkAction(false));
@@ -166,8 +167,9 @@ const Details = ({ userId, address, dispatch }: DetailsProps) => {
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch(networkAction(false));
@@ -210,8 +212,9 @@ const Details = ({ userId, address, dispatch }: DetailsProps) => {
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch(networkAction(false));

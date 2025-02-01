@@ -16,9 +16,10 @@ import { FetchBuilder } from "@courselit/utils";
 import {
     BTN_GO_BACK,
     BTN_INVITE,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     PRODUCT_TABLE_CONTEXT_MENU_INVITE_A_CUSTOMER,
     USER_TAGS_SUBHEADER,
+    TOAST_TITLE_SUCCESS,
 } from "@/ui-config/strings";
 import { networkAction } from "@courselit/state-management/dist/action-creators";
 import useCourse from "./editor/course-hook";
@@ -107,14 +108,15 @@ export default function NewCustomer({
                 setTags([]);
                 const message = `${response.user.email} has been invited.`;
                 toast({
-                    title: "Success",
+                    title: TOAST_TITLE_SUCCESS,
                     description: message,
                 });
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));

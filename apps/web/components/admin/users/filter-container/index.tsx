@@ -13,7 +13,7 @@ import { FetchBuilder } from "@courselit/utils";
 import { useState } from "react";
 import { ThunkDispatch } from "redux-thunk";
 import {
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     USER_FILTER_AGGREGATOR_ALL,
     USER_FILTER_AGGREGATOR_ANY,
     USER_FILTER_AGGREGATOR_HEADER,
@@ -136,8 +136,9 @@ export default function FilterContainer({
             }
         } catch (err) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch &&
@@ -191,8 +192,9 @@ export default function FilterContainer({
             }
         } catch (err) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             setCountLoading(false);

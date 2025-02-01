@@ -13,7 +13,7 @@ import { FetchBuilder } from "@courselit/utils";
 import {
     ACCOUNT_NO_PURCHASE_PLACEHOLDER,
     ACCOUNT_PROGRESS_SUFFIX,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     MY_CONTENT_HEADER,
     VISIT_COURSE_BUTTON,
 } from "@ui-config/strings";
@@ -55,7 +55,7 @@ export default function Page() {
                 setLoaded(true);
             } catch (e: any) {
                 toast({
-                    title: ERROR_SNACKBAR_PREFIX,
+                    title: TOAST_TITLE_ERROR,
                     description: e.message,
                 });
             }

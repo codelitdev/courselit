@@ -10,7 +10,8 @@ import {
     LOGIN_FORM_DISCLAIMER,
     LOADING,
     LOGIN_SUCCESS,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
+    TOAST_TITLE_SUCCESS,
 } from "../ui-config/strings";
 import { useRouter } from "next/router";
 import type { Address, Auth, State } from "@courselit/common-models";
@@ -81,8 +82,9 @@ const Login = ({ page, auth, dispatch }: LoginProps) => {
                 setShowCode(true);
             } else {
                 toast({
-                    title: ERROR_SNACKBAR_PREFIX,
+                    title: TOAST_TITLE_ERROR,
                     description: resp.error,
+                    variant: "destructive",
                 });
             }
         } finally {
@@ -103,7 +105,7 @@ const Login = ({ page, auth, dispatch }: LoginProps) => {
                 setError(`Can't sign you in at this time`);
             } else {
                 toast({
-                    title: "",
+                    title: TOAST_TITLE_SUCCESS,
                     description: LOGIN_SUCCESS,
                 });
             }

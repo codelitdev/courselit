@@ -105,14 +105,14 @@ const Widget = ({
             const response = await fetch.exec();
             if (response.response) {
                 toast({
-                    title: "",
+                    title: "Success",
                     description: successMessage || DEFAULT_SUCCESS_MESSAGE,
                 });
                 setName("");
                 setEmail("");
             } else {
                 toast({
-                    title: "",
+                    title: "Error",
                     description: failureMessage || DEFAULT_FAILURE_MESSAGE,
                 });
             }

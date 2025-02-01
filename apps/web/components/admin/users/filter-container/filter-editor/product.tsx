@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { FetchBuilder } from "@courselit/utils";
 import {
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     POPUP_CANCEL_ACTION,
     USER_FILTER_APPLY_BTN,
     USER_FILTER_CATEGORY_PRODUCT,
@@ -60,8 +60,9 @@ export default function ProductFilterEditor({
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         }
     }, [address.backend, dispatch]);

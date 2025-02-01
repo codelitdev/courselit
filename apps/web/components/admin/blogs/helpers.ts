@@ -3,15 +3,17 @@ import { networkAction } from "@courselit/state-management/dist/action-creators"
 import { FetchBuilder } from "@courselit/utils";
 import {
     APP_MESSAGE_COURSE_DELETED,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
+    TOAST_TITLE_SUCCESS,
 } from "../../../ui-config/strings";
+import { useToast } from "@courselit/components-library";
 
 interface DeleteProductProps {
     id: string;
     backend: string;
     dispatch?: AppDispatch;
     onDeleteComplete?: (...args: any[]) => void;
-    toast: (options: { title: string; description: string }) => void;
+    toast: ReturnType<typeof useToast>["toast"];
 }
 
 export const deleteProduct = async ({
@@ -44,14 +46,15 @@ export const deleteProduct = async ({
     } catch (err: any) {
         toast &&
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
     } finally {
         dispatch && dispatch(networkAction(false));
         toast &&
             toast({
-                title: "",
+                title: TOAST_TITLE_SUCCESS,
                 description: APP_MESSAGE_COURSE_DELETED,
             });
     }

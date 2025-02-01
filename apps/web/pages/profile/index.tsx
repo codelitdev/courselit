@@ -13,7 +13,8 @@ import {
     PROFILE_SECTION_DISPLAY_PICTURE,
     MEDIA_SELECTOR_UPLOAD_BTN_CAPTION,
     MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
+    TOAST_TITLE_SUCCESS,
 } from "../../ui-config/strings";
 import { connect } from "react-redux";
 import { actionCreators } from "@courselit/state-management";
@@ -165,13 +166,14 @@ function ProfileIndex({
             await fetch.exec();
             dispatch(refreshUserProfile());
             toast({
-                title: "",
+                title: TOAST_TITLE_SUCCESS,
                 description: APP_MESSAGE_CHANGES_SAVED,
             });
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch(networkAction(false));
@@ -222,13 +224,14 @@ function ProfileIndex({
             await fetch.exec();
             dispatch(refreshUserProfile());
             toast({
-                title: "",
+                title: TOAST_TITLE_SUCCESS,
                 description: APP_MESSAGE_CHANGES_SAVED,
             });
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch(networkAction(false));
@@ -265,8 +268,9 @@ function ProfileIndex({
         } catch (err: any) {
             setSubscribedToUpdates(!state);
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch(networkAction(false));

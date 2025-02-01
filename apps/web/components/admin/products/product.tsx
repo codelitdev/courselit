@@ -4,13 +4,14 @@ import {
     APP_MESSAGE_COURSE_DELETED,
     DELETE_PRODUCT_POPUP_HEADER,
     DELETE_PRODUCT_POPUP_TEXT,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     PRODUCT_STATUS_DRAFT,
     PRODUCT_STATUS_PUBLISHED,
     PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
     PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE,
     PRODUCT_TABLE_CONTEXT_MENU_INVITE_A_CUSTOMER,
     VIEW_PAGE_MENU_ITEM,
+    TOAST_TITLE_SUCCESS,
 } from "../../../ui-config/strings";
 import { MoreVert } from "@courselit/icons";
 import type { AppDispatch } from "@courselit/state-management";
@@ -77,13 +78,14 @@ export default function Product({
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));
             toast({
-                title: "",
+                title: TOAST_TITLE_SUCCESS,
                 description: APP_MESSAGE_COURSE_DELETED,
             });
         }

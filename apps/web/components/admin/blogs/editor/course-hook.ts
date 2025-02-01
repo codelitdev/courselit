@@ -3,7 +3,7 @@ import { useToast } from "@courselit/components-library";
 import { AppDispatch /*AppState*/ } from "@courselit/state-management";
 import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
-import { ERROR_SNACKBAR_PREFIX } from "@ui-config/strings";
+import { TOAST_TITLE_ERROR } from "@ui-config/strings";
 import { useCallback, useEffect, useState } from "react";
 
 type CourseWithAdminProps = Partial<
@@ -65,8 +65,9 @@ export default function useCourse(
             } catch (err: any) {
                 setCourse(null);
                 toast({
-                    title: ERROR_SNACKBAR_PREFIX,
+                    title: TOAST_TITLE_ERROR,
                     description: err.message,
+                    variant: "destructive",
                 });
             } finally {
                 dispatch && dispatch(networkAction(false));

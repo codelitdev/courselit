@@ -20,7 +20,7 @@ import {
 import { FetchBuilder } from "@courselit/utils";
 import {
     BUTTON_SAVE,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
     MEDIA_SELECTOR_UPLOAD_BTN_CAPTION,
     PROFILE_EMAIL_PREFERENCES,
@@ -87,8 +87,9 @@ export default function Page() {
                 }
             } catch (err: any) {
                 toast({
-                    title: ERROR_SNACKBAR_PREFIX,
+                    title: TOAST_TITLE_ERROR,
                     description: err.message,
+                    variant: "destructive",
                 });
             }
         };
@@ -147,8 +148,9 @@ export default function Page() {
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         }
     };
@@ -207,8 +209,9 @@ export default function Page() {
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         }
     };
@@ -242,8 +245,9 @@ export default function Page() {
         } catch (err: any) {
             setSubscribedToUpdates(!state);
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         }
     };

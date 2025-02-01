@@ -13,7 +13,7 @@ import {
     BTN_CONTINUE,
     BTN_NEW_TAG,
     BUTTON_CANCEL_TEXT,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     USERS_MANAGER_PAGE_HEADING,
     USERS_TAG_HEADER,
 } from "@ui-config/strings";
@@ -69,8 +69,9 @@ export function NewTag({ address, dispatch }: NewTagProps) {
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             setLoading(false);

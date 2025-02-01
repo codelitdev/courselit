@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     PERM_SECTION_HEADER,
     USER_PERMISSION_AREA_SUBTEXT,
 } from "@ui-config/strings";
@@ -8,11 +8,13 @@ import { connect } from "react-redux";
 import { FetchBuilder } from "@courselit/utils";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
-import type { User, Address } from "@courselit/common-models";
+import type { User, Address, State } from "@courselit/common-models";
 import { Checkbox, useToast } from "@courselit/components-library";
 import { Section } from "@courselit/components-library";
 import permissionToCaptionMap from "./permissions-to-caption-map";
 import DocumentationLink from "@components/public/documentation-link";
+import { ThunkDispatch } from "redux-thunk";
+import { AnyAction } from "redux";
 
 const { networkAction } = actionCreators;
 
@@ -74,8 +76,9 @@ export function PermissionsEditor({
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch &&

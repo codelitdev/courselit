@@ -9,12 +9,13 @@ import { AppDispatch } from "@courselit/state-management";
 import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import {
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     MAIL_REQUEST_FORM_REASON_FIELD,
     MAIL_REQUEST_FORM_REASON_PLACEHOLDER,
     MAIL_REQUEST_FORM_SUBMIT_INITIAL_REQUEST_TEXT,
     MAIL_REQUEST_FORM_SUBMIT_UPDATE_REQUEST_TEXT,
     MAIL_REQUEST_RECEIVED,
+    TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import { ChangeEvent, useEffect, useState } from "react";
 
@@ -58,8 +59,9 @@ const RequestForm = ({ address, dispatch, loading }: RequestFormProps) => {
                 }
             } catch (e: any) {
                 toast({
-                    title: ERROR_SNACKBAR_PREFIX,
+                    title: TOAST_TITLE_ERROR,
                     description: e.message,
+                    variant: "destructive",
                 });
             } finally {
                 dispatch && dispatch(networkAction(false));
@@ -103,14 +105,15 @@ const RequestForm = ({ address, dispatch, loading }: RequestFormProps) => {
             const response = await fetch.exec();
             if (response.updateMailRequest) {
                 toast({
-                    title: "",
+                    title: TOAST_TITLE_SUCCESS,
                     description: MAIL_REQUEST_RECEIVED,
                 });
             }
         } catch (e: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: e.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));

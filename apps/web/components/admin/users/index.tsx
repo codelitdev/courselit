@@ -5,7 +5,7 @@ import {
     USERS_MANAGER_PAGE_HEADING,
     USER_TABLE_HEADER_LAST_ACTIVE,
     BTN_MANAGE_TAGS,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
 } from "../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";
@@ -152,8 +152,9 @@ export const Users = ({ address, dispatch, loading }: UserManagerProps) => {
             }
         } catch (err) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             (dispatch as ThunkDispatch<State, null, AnyAction>)(

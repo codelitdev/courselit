@@ -15,7 +15,7 @@ import {
     BTN_NEW_TAG,
     DELETE_TAG_POPUP_DESC,
     DELETE_TAG_POPUP_HEADER,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     PRODUCTS_TABLE_HEADER_ACTIONS,
     TAGS_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
     TAGS_TABLE_CONTEXT_MENU_UNTAG,
@@ -113,8 +113,9 @@ export default function Tags({ address, dispatch, prefix }: TagsProps) {
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));
@@ -148,8 +149,9 @@ export default function Tags({ address, dispatch, prefix }: TagsProps) {
             }
         } catch (err: any) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));

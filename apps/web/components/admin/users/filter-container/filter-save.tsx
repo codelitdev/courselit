@@ -8,7 +8,7 @@ import {
 import Segment from "@ui-models/segment";
 import {
     BUTTON_SAVE,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     USER_FILTER_NEW_SEGMENT_NAME,
     USER_FILTER_SAVE_DESCRIPTION,
 } from "@ui-config/strings";
@@ -91,8 +91,9 @@ export default function FilterSave({
             }
         } catch (err) {
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch &&
