@@ -1,10 +1,11 @@
 import React, { FormEvent, useState } from "react";
-import { Address, AppMessage } from "@courselit/common-models";
+import { Address } from "@courselit/common-models";
 import {
     Form,
     FormField,
     Button,
     Breadcrumbs,
+    useToast,
 } from "@courselit/components-library";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
@@ -15,13 +16,11 @@ import {
     BTN_NEW_BLOG,
     BUTTON_CANCEL_TEXT,
     COURSE_TYPE_BLOG,
+    TOAST_TITLE_ERROR,
     FORM_NEW_PRODUCT_TITLE_PLC,
     MANAGE_BLOG_PAGE_HEADING,
 } from "@/ui-config/strings";
-import {
-    networkAction,
-    setAppMessage,
-} from "@courselit/state-management/dist/action-creators";
+import { networkAction } from "@courselit/state-management/dist/action-creators";
 import Link from "next/link";
 
 interface NewBlogProps {
@@ -39,6 +38,7 @@ export function NewBlog({
 }: NewBlogProps) {
     const [title, setTitle] = useState("");
     const router = useRouter();
+    const { toast } = useToast();
 
     const createCourse = async (e: FormEvent) => {
         e.preventDefault();
@@ -70,7 +70,11 @@ export function NewBlog({
                 );
             }
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }

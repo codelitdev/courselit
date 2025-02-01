@@ -7,19 +7,19 @@ import {
     Form,
     FormField,
     PageBuilderPropertyHeader,
+    useToast,
 } from "@courselit/components-library";
 import useCourse from "./course-hook";
 import { FetchBuilder } from "@courselit/utils";
-import {
-    networkAction,
-    setAppMessage,
-} from "@courselit/state-management/dist/action-creators";
-import { Address, AppMessage, Media, Profile } from "@courselit/common-models";
+import { networkAction } from "@courselit/state-management/dist/action-creators";
+import { Address, Media, Profile } from "@courselit/common-models";
 import {
     APP_MESSAGE_COURSE_SAVED,
     BUTTON_SAVE,
     COURSE_CONTENT_HEADER,
+    TOAST_TITLE_ERROR,
     FORM_FIELD_FEATURED_IMAGE,
+    TOAST_TITLE_SUCCESS,
 } from "../../../../ui-config/strings";
 import { AppDispatch } from "@courselit/state-management";
 import { MIMETYPE_IMAGE } from "../../../../ui-config/constants";
@@ -42,6 +42,7 @@ export default function Details({
     const [featuredImage, setFeaturedImage] = useState<Partial<Media>>({});
     const [refresh, setRefresh] = useState(0);
     const course = useCourse(id, address, dispatch);
+    const { toast } = useToast();
 
     useEffect(() => {
         if (course) {
@@ -79,13 +80,17 @@ export default function Details({
             dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.updateCourse) {
-                dispatch &&
-                    dispatch(
-                        setAppMessage(new AppMessage(APP_MESSAGE_COURSE_SAVED)),
-                    );
+                toast({
+                    title: TOAST_TITLE_SUCCESS,
+                    description: APP_MESSAGE_COURSE_SAVED,
+                });
             }
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }
@@ -117,13 +122,17 @@ export default function Details({
             dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.updateCourse) {
-                dispatch &&
-                    dispatch(
-                        setAppMessage(new AppMessage(APP_MESSAGE_COURSE_SAVED)),
-                    );
+                toast({
+                    title: TOAST_TITLE_SUCCESS,
+                    description: APP_MESSAGE_COURSE_SAVED,
+                });
             }
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }

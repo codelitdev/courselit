@@ -4,11 +4,12 @@ import {
     BUTTON_NEW_LESSON_TEXT,
     DELETE_SECTION_HEADER,
     EDIT_SECTION_HEADER,
+    TOAST_TITLE_ERROR,
     LESSON_GROUP_DELETED,
 } from "../../../../../ui-config/strings";
 import { CourseWithAdminProps } from "../course-hook";
 import { Add, MoreVert } from "@courselit/icons";
-import { Lesson, Address, AppMessage, Group } from "@courselit/common-models";
+import { Lesson, Address, Group } from "@courselit/common-models";
 import {
     Section,
     Link,
@@ -29,6 +30,7 @@ interface LessonSectionProps {
     address: Address;
     dispatch?: AppDispatch;
     prefix: string;
+    toast: ReturnType<typeof useToast>["toast"];
 }
 
 function LessonItem({
@@ -61,6 +63,7 @@ function LessonSection({
     address,
     dispatch,
     prefix,
+    toast,
 }: LessonSectionProps) {
     const updateGroup = async (lessonsOrder: string[]) => {
         const mutation = `
@@ -91,10 +94,11 @@ function LessonSection({
             dispatch && dispatch(actionCreators.networkAction(true));
             const response = await fetch.exec();
         } catch (err: any) {
-            dispatch &&
-                dispatch(
-                    actionCreators.setAppMessage(new AppMessage(err.message)),
-                );
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch && dispatch(actionCreators.networkAction(false));
         }
@@ -208,12 +212,6 @@ export default function LessonsList({
             dispatch && dispatch(actionCreators.networkAction(true));
             const response = await fetch.exec();
             if (response.removeGroup?.courseId) {
-                dispatch &&
-                    dispatch(
-                        actionCreators.setAppMessage(
-                            new AppMessage(LESSON_GROUP_DELETED),
-                        ),
-                    );
                 toast({
                     title: "",
                     description: LESSON_GROUP_DELETED,
@@ -224,10 +222,11 @@ export default function LessonsList({
                 );
             }
         } catch (err: any) {
-            dispatch &&
-                dispatch(
-                    actionCreators.setAppMessage(new AppMessage(err.message)),
-                );
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch && dispatch(actionCreators.networkAction(false));
         }
@@ -248,6 +247,7 @@ export default function LessonsList({
                     address={address}
                     dispatch={dispatch}
                     prefix={prefix}
+                    toast={toast}
                 />
             ))}
             <div>

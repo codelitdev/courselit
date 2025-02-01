@@ -12,6 +12,7 @@ import {
     MenuItem,
     Skeleton,
     Tabbs,
+    useToast,
 } from "@courselit/components-library";
 import { MoreVert } from "@courselit/icons";
 import {
@@ -41,6 +42,7 @@ export default function Page({ params }: { params: { id: string } }) {
     const { profile } = useContext(ProfileContext);
     const course = useCourse(id, address);
     const router = useRouter();
+    const { toast } = useToast();
 
     return (
         <DashboardContent breadcrumbs={breadcrumbs}>
@@ -83,6 +85,7 @@ export default function Page({ params }: { params: { id: string } }) {
                                                     `/dashboard4/blogs`,
                                                 );
                                             },
+                                            toast,
                                         })
                                     }
                                 ></MenuItem>

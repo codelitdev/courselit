@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-    AppMessage,
     Course,
     Group,
     Lesson,
@@ -12,23 +11,23 @@ import {
 import Settings from "./settings";
 import { FetchBuilder } from "@courselit/utils";
 import { actionCreators } from "@courselit/state-management";
-import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import {
     Link,
     Chip,
     LessonIcon,
     TextRenderer,
     Skeleton,
+    useToast,
+    Badge,
+    Accordion,
+    AccordionItem,
+    AccordionTrigger,
+    AccordionContent,
 } from "@courselit/components-library";
 import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
 } from "./defaults";
-import { Badge } from "@courselit/components-library";
-import { Accordion } from "@courselit/components-library";
-import { AccordionItem } from "@courselit/components-library";
-import { AccordionTrigger } from "@courselit/components-library";
-import { AccordionContent } from "@courselit/components-library";
 
 interface CourseWithGroups extends Course {
     groups: Group[];
@@ -56,6 +55,7 @@ export default function Widget({
     const [formattedCourse, setFormattedCourse] = useState<
         Record<string, Lesson[]>
     >({});
+    const { toast } = useToast();
 
     useEffect(() => {
         if (product.courseId) {
@@ -116,7 +116,11 @@ export default function Widget({
                 setCourse(response.course);
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: "Error",
+                description: err.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch(actionCreators.networkAction(false));
         }

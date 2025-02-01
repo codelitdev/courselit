@@ -45,7 +45,7 @@ import {
 } from "@/ui-config/strings";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import { decode, encode } from "base-64";
-import { AppMessage, Profile, UIConstants } from "@courselit/common-models";
+import { Profile, UIConstants } from "@courselit/common-models";
 import type { SiteInfo, Address, Media } from "@courselit/common-models";
 import { actionCreators } from "@courselit/state-management";
 import currencies from "@/data/currencies.json";
@@ -87,7 +87,7 @@ const {
     MIMETYPE_IMAGE,
 } = UIConstants;
 
-const { networkAction, newSiteInfoAvailable, setAppMessage } = actionCreators;
+const { networkAction, newSiteInfoAvailable } = actionCreators;
 
 interface SettingsProps {
     siteinfo: SiteInfo;
@@ -281,12 +281,17 @@ const Settings = (props: SettingsProps) => {
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
-                props.dispatch(
-                    setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)),
-                );
+                toast({
+                    title: TOAST_TITLE_SUCCESS,
+                    description: APP_MESSAGE_SETTINGS_SAVED,
+                });
             }
         } catch (e: any) {
-            props.dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: e.message,
+                variant: "destructive",
+            });
         } finally {
             props.dispatch(networkAction(false));
         }
@@ -336,12 +341,17 @@ const Settings = (props: SettingsProps) => {
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
-                props.dispatch(
-                    setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)),
-                );
+                toast({
+                    title: TOAST_TITLE_SUCCESS,
+                    description: APP_MESSAGE_SETTINGS_SAVED,
+                });
             }
         } catch (e: any) {
-            props.dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: e.message,
+                variant: "destructive",
+            });
         } finally {
             props.dispatch(networkAction(false));
         }
@@ -393,12 +403,17 @@ const Settings = (props: SettingsProps) => {
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
-                props.dispatch(
-                    setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)),
-                );
+                toast({
+                    title: TOAST_TITLE_SUCCESS,
+                    description: APP_MESSAGE_SETTINGS_SAVED,
+                });
             }
         } catch (e: any) {
-            props.dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: e.message,
+                variant: "destructive",
+            });
         } finally {
             props.dispatch(networkAction(false));
         }
@@ -449,16 +464,12 @@ const Settings = (props: SettingsProps) => {
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
-                props.dispatch(
-                    setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)),
-                );
                 toast({
                     title: TOAST_TITLE_SUCCESS,
                     description: APP_MESSAGE_SETTINGS_SAVED,
                 });
             }
         } catch (e: any) {
-            props.dispatch(setAppMessage(new AppMessage(e.message)));
             toast({
                 title: TOAST_TITLE_ERROR,
                 description: e.message,
@@ -550,16 +561,12 @@ const Settings = (props: SettingsProps) => {
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
-                props.dispatch(
-                    setAppMessage(new AppMessage(APP_MESSAGE_SETTINGS_SAVED)),
-                );
                 toast({
                     title: TOAST_TITLE_SUCCESS,
                     description: APP_MESSAGE_SETTINGS_SAVED,
                 });
             }
         } catch (e: any) {
-            props.dispatch(setAppMessage(new AppMessage(e.message)));
             toast({
                 title: TOAST_TITLE_ERROR,
                 description: e.message,
@@ -614,7 +621,11 @@ const Settings = (props: SettingsProps) => {
                 ),
             );
         } catch (e: any) {
-            props.dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: e.message,
+                variant: "destructive",
+            });
         } finally {
             props.dispatch(networkAction(false));
         }

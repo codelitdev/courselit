@@ -1,20 +1,18 @@
 import React from "react";
-import { Button2 } from "@courselit/components-library";
+import { Button2, useToast } from "@courselit/components-library";
 import { loadStripe } from "@stripe/stripe-js";
-import { ENROLL_BUTTON_TEXT } from "../../../ui-config/strings";
+import {
+    ENROLL_BUTTON_TEXT,
+    TOAST_TITLE_ERROR,
+} from "../../../ui-config/strings";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
 import type { AppState, AppDispatch } from "@courselit/state-management";
-import {
-    Address,
-    AppMessage,
-    Course,
-    SiteInfo,
-} from "@courselit/common-models";
+import { Address, Course, SiteInfo } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
 import { actionCreators } from "@courselit/state-management";
 
-const { networkAction, setAppMessage } = actionCreators;
+const { networkAction } = actionCreators;
 
 interface StripeProps {
     course: Course;
@@ -27,6 +25,7 @@ const Stripe = (props: StripeProps) => {
     const { course, siteInfo, address, dispatch } = props;
     const stripePromise = loadStripe(siteInfo.stripeKey as string);
     const router = useRouter();
+    const { toast } = useToast();
 
     const handleClick = async () => {
         const payload = {
@@ -60,7 +59,11 @@ const Stripe = (props: StripeProps) => {
                 router.replace(`/course/${course.slug}/${course.courseId}`);
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch(networkAction(false));
         }
@@ -90,4 +93,4 @@ const mapStateToProps = (state: AppState) => ({
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
 
-export default connect(mapStateToProps)(Stripe);
+export default connect(mapStateToProps, mapDispatchToProps)(Stripe);

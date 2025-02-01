@@ -1,10 +1,11 @@
-import { Address, AppMessage } from "@courselit/common-models";
+import { Address } from "@courselit/common-models";
 import {
     Breadcrumbs,
     Button,
     Form,
     FormField,
     IconButton,
+    useToast,
 } from "@courselit/components-library";
 import { AppDispatch } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
@@ -17,13 +18,12 @@ import {
     APIKEY_NEW_LABEL,
     BUTTON_CANCEL_TEXT,
     BUTTON_DONE_TEXT,
+    TOAST_TITLE_ERROR,
+    TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import {
-    networkAction,
-    setAppMessage,
-} from "@courselit/state-management/dist/action-creators";
+import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { Clipboard } from "@courselit/icons";
 
 interface NewApikeyProps {
@@ -41,18 +41,17 @@ export default function NewApikey({
 }: NewApikeyProps) {
     const [name, setName] = useState("");
     const [apikey, setApikey] = useState("");
+    const { toast } = useToast();
 
     const copyApikey = (e: FormEvent) => {
         e.preventDefault();
 
         if (window.isSecureContext && navigator.clipboard) {
             navigator.clipboard.writeText(apikey);
-            dispatch &&
-                dispatch(
-                    setAppMessage(
-                        new AppMessage(APIKEY_NEW_GENERATED_KEY_COPIED),
-                    ),
-                );
+            toast({
+                title: TOAST_TITLE_SUCCESS,
+                description: APIKEY_NEW_GENERATED_KEY_COPIED,
+            });
         }
     };
 
@@ -82,7 +81,11 @@ export default function NewApikey({
                 setApikey(response.apikey.key);
             }
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }

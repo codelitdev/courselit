@@ -177,7 +177,7 @@ export const DELETE_LESSON_POPUP_HEADER = "Delete lesson";
 export const APP_MESSAGE_COURSE_DELETED = "Product deleted";
 export const APP_MESSAGE_LESSON_DELETED = "Lesson deleted";
 export const APP_MESSAGE_LESSON_SAVED = "Lesson details saved";
-export const APP_MESSAGE_COURSE_SAVED = "Course details saved";
+export const APP_MESSAGE_COURSE_SAVED = "Changes saved";
 export const ENROLL_IN_THE_COURSE =
     "You need to be enrolled in the course to view this lesson.";
 export const NOT_ENROLLED_HEADER = "Content Locked";
@@ -235,7 +235,6 @@ export const SUBHEADER_THEME_ADD_THEME_INPUT_LABEL = "Theme Editor";
 export const SUBHEADER_THEME_ADD_THEME_INPUT_PLACEHOLDER =
     "Paste valid JSON here";
 export const BUTTON_GET_THEMES = "Get more themes";
-export const ERROR_SNACKBAR_PREFIX = "Error";
 export const BUTTON_THEME_APPLY = "Apply";
 export const BUTTON_THEME_UNINSTALL = "Uninstall";
 export const BUTTON_THEME_INSTALL = "Install";

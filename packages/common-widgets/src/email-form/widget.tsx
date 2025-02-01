@@ -1,18 +1,22 @@
 "use client";
 
-import React, { FormEvent, useState, useEffect } from "react";
-import { AppMessage, WidgetProps } from "@courselit/common-models";
+import { FormEvent, useState, useEffect } from "react";
+import { WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
 import { actionCreators } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
-import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import {
     DEFAULT_BTN_TEXT,
     DEFAULT_FAILURE_MESSAGE,
     DEFAULT_SUCCESS_MESSAGE,
     DEFAULT_TITLE,
 } from "./constants";
-import { Form, FormField, Button2 } from "@courselit/components-library";
+import {
+    Form,
+    FormField,
+    Button2,
+    useToast,
+} from "@courselit/components-library";
 import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
@@ -45,6 +49,7 @@ const Widget = ({
     const [turnstileToken, setTurnstileToken] = useState<string>("");
     const [errorMessage, setErrorMessage] = useState<string>("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const { toast } = useToast();
 
     const justifyContent =
         alignment === "center"
@@ -99,23 +104,17 @@ const Widget = ({
             dispatch(actionCreators.networkAction(true));
             const response = await fetch.exec();
             if (response.response) {
-                dispatch(
-                    setAppMessage(
-                        new AppMessage(
-                            successMessage || DEFAULT_SUCCESS_MESSAGE,
-                        ),
-                    ),
-                );
+                toast({
+                    title: "Success",
+                    description: successMessage || DEFAULT_SUCCESS_MESSAGE,
+                });
                 setName("");
                 setEmail("");
             } else {
-                dispatch(
-                    setAppMessage(
-                        new AppMessage(
-                            failureMessage || DEFAULT_FAILURE_MESSAGE,
-                        ),
-                    ),
-                );
+                toast({
+                    title: "Error",
+                    description: failureMessage || DEFAULT_FAILURE_MESSAGE,
+                });
             }
         } catch (e) {
             console.error(e.message);

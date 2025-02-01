@@ -1,10 +1,9 @@
 import React, { ReactNode } from "react";
 import WidgetByName from "./widget-by-name";
-import { AppToast } from "../../../app-toast";
 import { WidgetInstance } from "@courselit/common-models";
 import { Footer, Header } from "@courselit/common-widgets";
 import { ArrowDownward, ArrowUpward } from "@courselit/icons";
-import { Button } from "@courselit/components-library";
+import { Button, Toaster } from "@courselit/components-library";
 import { AppDispatch, AppState } from "@courselit/state-management";
 
 interface TemplateProps {
@@ -206,9 +205,7 @@ const Template = (props: TemplateProps) => {
                     state={state}
                 />
             )}
-            {state.message && dispatch && (
-                <AppToast dispatch={dispatch} message={state.message} />
-            )}
+            <Toaster />
         </div>
     );
 };

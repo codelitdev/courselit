@@ -29,7 +29,7 @@ export function ContentCard({ item }: ContentCardProps) {
             </div>
             <CardContent className="p-4">
                 <h3 className="text-xl font-semibold mb-3">{entity.title}</h3>
-                {entityType === "course" && entity.totalLessons && (
+                {entityType === "course" && entity.totalLessons ? (
                     <div className="space-y-2">
                         <ProgressBar value={progress} />
                         <p className="text-sm text-muted-foreground flex justify-between">
@@ -37,7 +37,7 @@ export function ContentCard({ item }: ContentCardProps) {
                             <span>{`${Math.round(progress)}%`}</span>
                         </p>
                     </div>
-                )}
+                ) : null}
             </CardContent>
         </Card>
     );

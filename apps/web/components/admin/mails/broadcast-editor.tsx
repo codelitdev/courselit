@@ -4,14 +4,14 @@ import {
     FormField,
     Breadcrumbs,
     Link,
+    Dialog2,
+    useToast,
 } from "@courselit/components-library";
-import { AppDispatch } from "@courselit/state-management";
+import { AppDispatch, actionCreators } from "@courselit/state-management";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
-import { actionCreators } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import {
     Address,
-    AppMessage,
     Constants,
     SequenceReport,
     UserFilter,
@@ -24,19 +24,19 @@ import {
     BUTTON_CANCEL_TEXT,
     DIALOG_SEND_HEADER,
     ERROR_DELAY_EMPTY,
+    TOAST_TITLE_ERROR,
     ERROR_SUBJECT_EMPTY,
     FORM_MAIL_SCHEDULE_TIME_LABEL,
     MAIL_SUBJECT_PLACEHOLDER,
     PAGE_HEADER_ALL_MAILS,
     PAGE_HEADER_EDIT_MAIL,
     TOAST_MAIL_SENT,
+    TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
-import { setAppMessage } from "@courselit/state-management/dist/action-creators";
 import FilterContainer from "@components/admin/users/filter-container";
 import { useCallback } from "react";
 import { useMemo } from "react";
 import { PaperPlane, Clock } from "@courselit/icons";
-import { Dialog2 } from "@courselit/components-library";
 import { isDateInFuture } from "../../../lib/utils";
 import { MailEditorAndPreview } from "./mail-editor-and-preview";
 const { networkAction } = actionCreators;
@@ -63,6 +63,7 @@ function MailEditor({ id, address, dispatch, prefix }: MailEditorProps) {
     const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
     const [report, setReport] = useState<SequenceReport>();
     const [status, setStatus] = useState(null);
+    const { toast } = useToast();
 
     const fetch = useMemo(
         () =>
@@ -127,7 +128,11 @@ function MailEditor({ id, address, dispatch, prefix }: MailEditorProps) {
                 setStatus(sequence.status);
             }
         } catch (e: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: e.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
             setLoaded(true);
@@ -211,7 +216,11 @@ function MailEditor({ id, address, dispatch, prefix }: MailEditorProps) {
             dispatch && dispatch(networkAction(true));
             await fetcher.exec();
         } catch (e: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: e.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }
@@ -235,15 +244,21 @@ function MailEditor({ id, address, dispatch, prefix }: MailEditorProps) {
         e.preventDefault();
 
         if (!subject.trim()) {
-            dispatch &&
-                dispatch(setAppMessage(new AppMessage(ERROR_SUBJECT_EMPTY)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: ERROR_SUBJECT_EMPTY,
+                variant: "destructive",
+            });
             setConfirmationDialogOpen(false);
             return;
         }
 
         if (sendLater && delay === 0) {
-            dispatch &&
-                dispatch(setAppMessage(new AppMessage(ERROR_DELAY_EMPTY)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: ERROR_DELAY_EMPTY,
+                variant: "destructive",
+            });
             setConfirmationDialogOpen(false);
             return;
         }
@@ -320,11 +335,17 @@ function MailEditor({ id, address, dispatch, prefix }: MailEditorProps) {
                 setReport(sequence.report);
                 setStatus(sequence.status);
                 setShowScheduleInput(false);
-                dispatch &&
-                    dispatch(setAppMessage(new AppMessage(TOAST_MAIL_SENT)));
+                toast({
+                    title: TOAST_TITLE_SUCCESS,
+                    description: TOAST_MAIL_SENT,
+                });
             }
         } catch (e: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: e.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
             setConfirmationDialogOpen(false);
@@ -395,7 +416,11 @@ function MailEditor({ id, address, dispatch, prefix }: MailEditorProps) {
                 setStatus(sequence.status);
             }
         } catch (e: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: e.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }

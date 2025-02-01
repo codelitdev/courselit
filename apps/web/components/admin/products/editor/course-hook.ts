@@ -1,12 +1,11 @@
 import { Address } from "@courselit/common-models";
-import { AppMessage, Lesson } from "@courselit/common-models";
+import { Lesson } from "@courselit/common-models";
+import { useToast } from "@courselit/components-library";
 import { AppDispatch } from "@courselit/state-management";
-import {
-    networkAction,
-    setAppMessage,
-} from "@courselit/state-management/dist/action-creators";
+import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
 import { Course } from "@models/Course";
+import { TOAST_TITLE_ERROR } from "@ui-config/strings";
 import { useCallback, useEffect, useState } from "react";
 
 export type CourseWithAdminProps = Partial<
@@ -24,6 +23,7 @@ export default function useCourse(
     const [course, setCourse] = useState<
         CourseWithAdminProps | undefined | null
     >();
+    const { toast } = useToast();
 
     const loadCourse = useCallback(
         async (courseId: string) => {
@@ -92,8 +92,11 @@ export default function useCourse(
                 }
             } catch (err: any) {
                 setCourse(null);
-                dispatch &&
-                    dispatch(setAppMessage(new AppMessage(err.message)));
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: err.message,
+                    variant: "destructive",
+                });
             } finally {
                 dispatch && dispatch(networkAction(false));
             }

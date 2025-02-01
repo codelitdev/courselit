@@ -1,20 +1,13 @@
 import React, { useCallback, useEffect, useState } from "react";
-import {
-    Address,
-    AppMessage,
-    Course,
-    SiteInfo,
-} from "@courselit/common-models";
+import { Address, Course, SiteInfo } from "@courselit/common-models";
 import { AppDispatch, AppState } from "@courselit/state-management";
-import {
-    networkAction,
-    setAppMessage,
-} from "@courselit/state-management/dist/action-creators";
+import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
 import { connect } from "react-redux";
 import {
     BLOG_TABLE_HEADER_NAME,
     BTN_NEW_BLOG,
+    TOAST_TITLE_ERROR,
     MANAGE_BLOG_PAGE_HEADING,
     PRODUCTS_TABLE_HEADER_ACTIONS,
     PRODUCTS_TABLE_HEADER_STATUS,
@@ -22,10 +15,16 @@ import {
 } from "../../../ui-config/strings";
 import dynamic from "next/dynamic";
 import { MoreVert } from "@courselit/icons";
-import { MenuItem, Menu2, Button, Link } from "@courselit/components-library";
-import { Table } from "@courselit/components-library";
-import { TableHead } from "@courselit/components-library";
-import { TableBody } from "@courselit/components-library";
+import {
+    MenuItem,
+    Menu2,
+    Button,
+    Link,
+    Table,
+    TableHead,
+    TableBody,
+    useToast,
+} from "@courselit/components-library";
 import { usePathname } from "next/navigation";
 
 const BlogItem = dynamic(() => import("./blog-item"));
@@ -51,6 +50,7 @@ export const Index = ({
     >([]);
     const [endReached, setEndReached] = useState(false);
     const path = usePathname();
+    const { toast } = useToast();
 
     const loadBlogs = useCallback(async () => {
         const query = `
@@ -85,7 +85,11 @@ export const Index = ({
                 }
             }
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }

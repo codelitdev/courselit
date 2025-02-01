@@ -1,17 +1,21 @@
-import { Address, AppMessage } from "@courselit/common-models";
-import { Form, FormField, FormSubmit } from "@courselit/components-library";
-import { AppDispatch } from "@courselit/state-management";
+import { Address } from "@courselit/common-models";
 import {
-    networkAction,
-    setAppMessage,
-} from "@courselit/state-management/dist/action-creators";
+    Form,
+    FormField,
+    FormSubmit,
+    useToast,
+} from "@courselit/components-library";
+import { AppDispatch } from "@courselit/state-management";
+import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import {
+    TOAST_TITLE_ERROR,
     MAIL_REQUEST_FORM_REASON_FIELD,
     MAIL_REQUEST_FORM_REASON_PLACEHOLDER,
     MAIL_REQUEST_FORM_SUBMIT_INITIAL_REQUEST_TEXT,
     MAIL_REQUEST_FORM_SUBMIT_UPDATE_REQUEST_TEXT,
     MAIL_REQUEST_RECEIVED,
+    TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import { ChangeEvent, useEffect, useState } from "react";
 
@@ -25,6 +29,7 @@ const RequestForm = ({ address, dispatch, loading }: RequestFormProps) => {
     const [reason, setReason] = useState("");
     const [message, setMessage] = useState("");
     const [status, setStatus] = useState("");
+    const { toast } = useToast();
 
     useEffect(() => {
         const loadMailRequestStatus = async () => {
@@ -53,7 +58,11 @@ const RequestForm = ({ address, dispatch, loading }: RequestFormProps) => {
                     setStatus(status);
                 }
             } catch (e: any) {
-                dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: e.message,
+                    variant: "destructive",
+                });
             } finally {
                 dispatch && dispatch(networkAction(false));
             }
@@ -95,13 +104,17 @@ const RequestForm = ({ address, dispatch, loading }: RequestFormProps) => {
             dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.updateMailRequest) {
-                dispatch &&
-                    dispatch(
-                        setAppMessage(new AppMessage(MAIL_REQUEST_RECEIVED)),
-                    );
+                toast({
+                    title: TOAST_TITLE_SUCCESS,
+                    description: MAIL_REQUEST_RECEIVED,
+                });
             }
         } catch (e: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: e.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }

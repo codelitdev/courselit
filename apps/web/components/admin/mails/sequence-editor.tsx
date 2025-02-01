@@ -1,9 +1,4 @@
-import {
-    Address,
-    AppMessage,
-    Constants,
-    Course,
-} from "@courselit/common-models";
+import { Address, Constants, Course } from "@courselit/common-models";
 import {
     Breadcrumbs,
     Form,
@@ -15,15 +10,13 @@ import {
     MenuItem,
     FormSubmit,
     Skeleton,
+    useToast,
 } from "@courselit/components-library";
 import { Pause } from "@courselit/icons";
 import { Play } from "@courselit/icons";
 import { Add, MoreVert } from "@courselit/icons";
 import { AppDispatch } from "@courselit/state-management";
-import {
-    networkAction,
-    setAppMessage,
-} from "@courselit/state-management/dist/action-creators";
+import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
 import {
     COMPOSE_SEQUENCE_ENTRANCE_CONDITION,
@@ -32,6 +25,7 @@ import {
     COMPOSE_SEQUENCE_FORM_TITLE,
     COMPOSE_SEQUENCE_FROM_PLC,
     DELETE_EMAIL_MENU,
+    TOAST_TITLE_ERROR,
     PAGE_HEADER_ALL_MAILS,
     PAGE_HEADER_EDIT_SEQUENCE,
 } from "@ui-config/strings";
@@ -76,6 +70,7 @@ const SequenceEditor = ({
     >([]);
     const [emailsOrder, setEmailsOrder] = useState<string[]>([]);
     const [status, setStatus] = useState(null);
+    const { toast } = useToast();
 
     const onSubmit = async (e: FormEvent, sendLater: boolean = false) => {
         e.preventDefault();
@@ -136,7 +131,11 @@ const SequenceEditor = ({
                 setStatus(sequence.status);
             }
         } catch (e: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: e.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
             // setLoaded(true);
@@ -199,7 +198,11 @@ const SequenceEditor = ({
                 setProducts([...response.courses]);
             }
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         }
     }, [dispatch, fetch]);
 
@@ -248,7 +251,11 @@ const SequenceEditor = ({
                 setStatus(sequence.status);
             }
         } catch (e: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: e.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
             // setLoaded(true);
@@ -325,7 +332,11 @@ const SequenceEditor = ({
                 setStatus(sequence.status);
             }
         } catch (e: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: e.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
             // setLoaded(true);
@@ -426,7 +437,11 @@ const SequenceEditor = ({
                     setStatus(sequence.status);
                 }
             } catch (e: any) {
-                dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: e.message,
+                    variant: "destructive",
+                });
             } finally {
                 dispatch && dispatch(networkAction(false));
                 // setLoaded(true);
@@ -493,7 +508,11 @@ const SequenceEditor = ({
                     setStatus(sequence.status);
                 }
             } catch (e: any) {
-                dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: e.message,
+                    variant: "destructive",
+                });
             } finally {
                 dispatch && dispatch(networkAction(false));
                 // setLoaded(true);

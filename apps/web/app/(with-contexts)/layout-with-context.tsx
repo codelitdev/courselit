@@ -11,7 +11,8 @@ import {
     TypefacesContext,
     ServerConfigContext,
 } from "@components/contexts";
-import { Toaster } from "@courselit/components-library";
+import { Toaster, useToast } from "@courselit/components-library";
+import { TOAST_TITLE_ERROR } from "@ui-config/strings";
 import { Session } from "next-auth";
 
 export default function Layout({
@@ -30,6 +31,7 @@ export default function Layout({
     session: Session | null;
 }) {
     const [profile, setProfile] = useState(defaultState.profile);
+    const { toast } = useToast();
 
     useEffect(() => {
         const getUserProfile = async () => {
@@ -69,7 +71,13 @@ export default function Layout({
                 if (response.profile) {
                     setProfile(response.profile);
                 }
-            } catch (e) {}
+            } catch (err) {
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: err.message,
+                    variant: "destructive",
+                });
+            }
         };
 
         if (address && session) {

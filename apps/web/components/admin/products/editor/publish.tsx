@@ -1,12 +1,12 @@
 import React, { FormEvent, useEffect, useState } from "react";
-import { Form, Button } from "@courselit/components-library";
+import { Form, Button, useToast } from "@courselit/components-library";
 import useCourse from "./course-hook";
 import { capitalize, FetchBuilder } from "@courselit/utils";
-import { setAppMessage } from "@courselit/state-management/dist/action-creators";
-import { Address, AppMessage } from "@courselit/common-models";
+import { Address } from "@courselit/common-models";
 import {
     BTN_PUBLISH,
     BTN_UNPUBLISH,
+    TOAST_TITLE_ERROR,
     PUBLISH_TAB_STATUS_SUBTITLE,
     PUBLISH_TAB_STATUS_TITLE,
     PUBLISH_TAB_VISIBILITY_SUBTITLE,
@@ -25,6 +25,7 @@ export default function Publish({ id, address, dispatch }: PublishProps) {
     const [published, setPublished] = useState(course?.published);
     const [privacy, setPrivacy] = useState<string>(course?.privacy as string);
     const [loading, setLoading] = useState(false);
+    const { toast } = useToast();
 
     useEffect(() => {
         if (course) {
@@ -82,7 +83,11 @@ export default function Publish({ id, address, dispatch }: PublishProps) {
                 return response.course;
             }
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         } finally {
             setLoading(false);
         }

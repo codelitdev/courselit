@@ -1,16 +1,18 @@
 import React, { useState } from "react";
-import { ENROLL_BUTTON_TEXT } from "../../../ui-config/strings";
+import {
+    ENROLL_BUTTON_TEXT,
+    TOAST_TITLE_ERROR,
+} from "../../../ui-config/strings";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
 import { actionCreators } from "@courselit/state-management";
 import type { Address, Course } from "@courselit/common-models";
-import { AppMessage } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import { refreshUserProfile } from "@courselit/state-management/dist/action-creators";
-import { Button2 } from "@courselit/components-library";
+import { Button2, useToast } from "@courselit/components-library";
 
-const { networkAction, setAppMessage } = actionCreators;
+const { networkAction } = actionCreators;
 
 interface FreeProps {
     course: Course;
@@ -21,6 +23,7 @@ interface FreeProps {
 const Free = ({ course, dispatch, address }: FreeProps) => {
     const router = useRouter();
     const [disabled, setDisabled] = useState(false);
+    const { toast } = useToast();
 
     const handleClick = async () => {
         const payload = {
@@ -46,10 +49,18 @@ const Free = ({ course, dispatch, address }: FreeProps) => {
                 dispatch(refreshUserProfile());
                 router.replace(`/my-content`);
             } else if (response.status === "failed") {
-                dispatch(setAppMessage(new AppMessage(response.error)));
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: response.error,
+                    variant: "destructive",
+                });
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch(networkAction(false));
             setDisabled(false);

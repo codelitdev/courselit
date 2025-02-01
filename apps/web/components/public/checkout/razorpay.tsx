@@ -1,21 +1,18 @@
 import React from "react";
-import { Button2 } from "@courselit/components-library";
-import { ENROLL_BUTTON_TEXT } from "../../../ui-config/strings";
+import { Button2, useToast } from "@courselit/components-library";
+import {
+    ENROLL_BUTTON_TEXT,
+    TOAST_TITLE_ERROR,
+} from "../../../ui-config/strings";
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
 import type { AppState, AppDispatch } from "@courselit/state-management";
-import {
-    Address,
-    AppMessage,
-    Course,
-    Profile,
-    SiteInfo,
-} from "@courselit/common-models";
+import { Address, Course, Profile, SiteInfo } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
 import { actionCreators } from "@courselit/state-management";
 import Script from "next/script";
 
-const { networkAction, setAppMessage } = actionCreators;
+const { networkAction } = actionCreators;
 
 interface RazorpayProps {
     course: Course;
@@ -28,6 +25,7 @@ interface RazorpayProps {
 const RazorpayComp = (props: RazorpayProps) => {
     const { course, siteInfo, address, dispatch, profile } = props;
     const router = useRouter();
+    const { toast } = useToast();
 
     const verifySignature = async (response) => {
         const fetch = new FetchBuilder()
@@ -54,7 +52,11 @@ const RazorpayComp = (props: RazorpayProps) => {
                 `/checkout/${course.courseId}?id=${verifyResponse.purchaseId}&source=/course/${course.slug}/${course.courseId}`,
             );
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch(networkAction(false));
         }
@@ -102,7 +104,11 @@ const RazorpayComp = (props: RazorpayProps) => {
                 router.replace(`/course/${course.slug}/${course.courseId}`);
             }
         } catch (err: any) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch(networkAction(false));
         }

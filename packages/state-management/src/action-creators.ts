@@ -9,8 +9,6 @@ import {
     PROFILE_CLEAR,
     SITEINFO_AVAILABLE,
     AUTH_CHECKED,
-    SET_MESSAGE,
-    CLEAR_MESSAGE,
     THEME_AVAILABLE,
     SET_ADDRESS,
     TYPEFACES_AVAILABLE,
@@ -25,7 +23,6 @@ import type {
     Theme,
     Typeface,
 } from "@courselit/common-models";
-import { AppMessage } from "@courselit/common-models";
 import { ThunkAction } from "redux-thunk";
 import { AnyAction } from "redux";
 import { ServerConfig } from "@courselit/common-models";
@@ -199,14 +196,6 @@ export function newConfigAvailable(config: ServerConfig) {
 
 export function newSiteInfoAvailable(info: SiteInfo) {
     return { type: SITEINFO_AVAILABLE, siteinfo: info };
-}
-
-export function setAppMessage(message: AppMessage) {
-    return (dispatch: any) => dispatch({ type: SET_MESSAGE, message });
-}
-
-export function clearAppMessage() {
-    return (dispatch: any) => dispatch({ type: CLEAR_MESSAGE });
 }
 
 export function themeAvailable(theme: Theme) {

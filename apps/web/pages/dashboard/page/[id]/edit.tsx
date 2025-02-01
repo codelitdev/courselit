@@ -18,7 +18,7 @@ import {
 import { canAccessDashboard } from "@ui-lib/utils";
 import { useSession } from "next-auth/react";
 import AppLoader from "@components/app-loader";
-import { AppToast } from "@components/app-toast";
+import { Toaster } from "@courselit/components-library";
 
 interface EditPageProps {
     address: Address;
@@ -83,9 +83,7 @@ function EditPage({
                     prefix="/dashboard"
                     state={state}
                 />
-                {message && dispatch && (
-                    <AppToast dispatch={dispatch} message={message} />
-                )}
+                <Toaster />
             </>
         );
     }

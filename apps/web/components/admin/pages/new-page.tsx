@@ -1,4 +1,4 @@
-import { Address, AppMessage } from "@courselit/common-models";
+import { Address } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
 import {
     Form,
@@ -10,7 +10,7 @@ import {
 import {
     BTN_CONTINUE,
     BUTTON_CANCEL_TEXT,
-    ERROR_SNACKBAR_PREFIX,
+    TOAST_TITLE_ERROR,
     NEW_PAGE_FORM_WARNING,
     NEW_PAGE_HEADING,
     NEW_PAGE_NAME_PLC,
@@ -20,10 +20,7 @@ import {
 } from "@ui-config/strings";
 import { FormEvent, useEffect, useState } from "react";
 import { FetchBuilder, slugify } from "@courselit/utils";
-import {
-    networkAction,
-    setAppMessage,
-} from "@courselit/state-management/dist/action-creators";
+import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { Info } from "@courselit/icons";
 import { useRouter } from "next/navigation";
 
@@ -72,10 +69,10 @@ const NewPage = ({
                 );
             }
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
             toast({
-                title: ERROR_SNACKBAR_PREFIX,
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             dispatch && dispatch(networkAction(false));

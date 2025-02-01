@@ -18,6 +18,8 @@ import {
     LESSON_CONTENT_EMBED_PLACEHOLDER,
     BUTTON_SAVING,
     MANAGE_COURSES_PAGE_HEADING,
+    TOAST_TITLE_ERROR,
+    TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import {
     LESSON_TYPE_TEXT,
@@ -34,7 +36,7 @@ import {
     LESSON_TYPE_EMBED,
 } from "@ui-config/constants";
 import { FetchBuilder, capitalize } from "@courselit/utils";
-import { AppMessage, Media, Profile, Quiz } from "@courselit/common-models";
+import { Media, Profile, Quiz } from "@courselit/common-models";
 import type { AppDispatch } from "@courselit/state-management";
 import type {
     Lesson,
@@ -60,10 +62,11 @@ import {
     IconButton,
     Breadcrumbs,
     Skeleton,
+    useToast,
 } from "@courselit/components-library";
 import { QuizBuilder } from "./quiz-builder";
 
-const { networkAction, setAppMessage } = actionCreators;
+const { networkAction } = actionCreators;
 
 interface LessonEditorProps {
     courseId: string;
@@ -112,6 +115,7 @@ const LessonEditor = ({
         b1: false,
     });
     const course = useCourse(courseId, address, dispatch);
+    const { toast } = useToast();
 
     useEffect(() => {
         lessonId && loadLesson(lessonId);
@@ -180,7 +184,11 @@ const LessonEditor = ({
                 }
             }
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }
@@ -220,8 +228,16 @@ const LessonEditor = ({
             dispatch && dispatch(networkAction(true));
             setLoading(true);
             await fetch.exec();
+            toast({
+                title: TOAST_TITLE_SUCCESS,
+                description: "Lesson updated",
+            });
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
             setLoading(false);
@@ -260,8 +276,16 @@ const LessonEditor = ({
             dispatch && dispatch(networkAction(true));
             setLoading(true);
             await fetch.exec();
+            toast({
+                title: TOAST_TITLE_SUCCESS,
+                description: "Lesson updated",
+            });
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
             setLoading(false);
@@ -313,7 +337,11 @@ const LessonEditor = ({
                 );
             }
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
             setLoading(false);
@@ -339,19 +367,20 @@ const LessonEditor = ({
                 const response = await fetch.exec();
 
                 if (response.result) {
-                    dispatch &&
-                        dispatch(
-                            setAppMessage(
-                                new AppMessage(APP_MESSAGE_LESSON_DELETED),
-                            ),
-                        );
+                    toast({
+                        title: TOAST_TITLE_SUCCESS,
+                        description: APP_MESSAGE_LESSON_DELETED,
+                    });
                     router.replace(
                         `${prefix}/product/${courseId}${prefix === "/dashboard" ? "/content" : "?tab=Content"}`,
                     );
                 }
             } catch (err: any) {
-                dispatch &&
-                    dispatch(setAppMessage(new AppMessage(err.message)));
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: err.message,
+                    variant: "destructive",
+                });
             } finally {
                 setLoading(false);
             }

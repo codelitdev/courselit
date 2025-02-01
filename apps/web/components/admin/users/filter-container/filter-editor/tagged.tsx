@@ -1,13 +1,15 @@
-import { Address, AppMessage } from "@courselit/common-models";
+import { Address } from "@courselit/common-models";
 import {
     Button,
     Form,
     FormSubmit,
     Select,
+    useToast,
 } from "@courselit/components-library";
 import { AppDispatch } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import {
+    TOAST_TITLE_ERROR,
     POPUP_CANCEL_ACTION,
     USER_FILTER_APPLY_BTN,
     USER_FILTER_CATEGORY_TAGGED,
@@ -19,9 +21,7 @@ import React, { useState } from "react";
 import { useCallback } from "react";
 import { useMemo } from "react";
 import PopoverHeader from "../popover-header";
-import { actionCreators } from "@courselit/state-management";
 import { useEffect } from "react";
-const { setAppMessage } = actionCreators;
 
 interface TaggedFilterEditorProps {
     onApply: (...args: any[]) => any;
@@ -37,6 +37,7 @@ export default function TaggedFilterEditor({
     const [condition, setCondition] = useState(USER_FILTER_PRODUCT_HAS);
     const [value, setValue] = useState("");
     const [tags, setTags] = useState([]);
+    const { toast } = useToast();
 
     const getTags = useCallback(async () => {
         const query = `
@@ -55,7 +56,11 @@ export default function TaggedFilterEditor({
                 setTags(response.tags);
             }
         } catch (err) {
-            dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         }
     }, [address.backend, dispatch]);
 

@@ -2,7 +2,6 @@
 
 import {
     Address,
-    AppMessage,
     Constants,
     Sequence,
     SequenceType,
@@ -14,14 +13,13 @@ import {
     TableBody,
     TableHead,
     TableRow,
+    useToast,
 } from "@courselit/components-library";
 import { AppDispatch } from "@courselit/state-management";
-import {
-    networkAction,
-    setAppMessage,
-} from "@courselit/state-management/dist/action-creators";
+import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import {
+    TOAST_TITLE_ERROR,
     MAIL_TABLE_HEADER_STATUS,
     MAIL_TABLE_HEADER_SUBJECT,
 } from "@ui-config/strings";
@@ -49,6 +47,7 @@ const SequencesList = ({
     const [sequences, setSequences] = useState<
         Pick<Sequence, "sequenceId" | "title" | "emails" | "status">[]
     >([]);
+    const { toast } = useToast();
 
     const handlePageChange = (newPage: number) => {
         setPage(newPage);
@@ -101,7 +100,11 @@ const SequencesList = ({
                 setSequences(response.broadcasts);
             }
         } catch (e: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: e.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }
@@ -129,7 +132,11 @@ const SequencesList = ({
                 setCount(response.count);
             }
         } catch (e: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(e.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: e.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }

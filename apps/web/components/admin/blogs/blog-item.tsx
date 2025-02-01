@@ -11,7 +11,13 @@ import { MoreVert } from "@courselit/icons";
 import type { AppDispatch } from "@courselit/state-management";
 import type { SiteInfo, Address } from "@courselit/common-models";
 // import { connect } from "react-redux";
-import { Chip, Menu2, MenuItem, Link } from "@courselit/components-library";
+import {
+    Chip,
+    Menu2,
+    MenuItem,
+    Link,
+    useToast,
+} from "@courselit/components-library";
 import { deleteProduct } from "./helpers";
 import { TableRow } from "@courselit/components-library";
 
@@ -34,6 +40,7 @@ export default function BlogItem({
     prefix: string;
 }) {
     const product = details;
+    const { toast } = useToast();
 
     return (
         <TableRow key={product.courseId}>
@@ -76,6 +83,7 @@ export default function BlogItem({
                                 onDeleteComplete: () => {
                                     onDelete(position);
                                 },
+                                toast,
                             })
                         }
                     ></MenuItem>

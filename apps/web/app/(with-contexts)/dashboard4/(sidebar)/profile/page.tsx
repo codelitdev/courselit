@@ -15,10 +15,12 @@ import {
     MediaSelector,
     PageBuilderPropertyHeader,
     Section,
+    useToast,
 } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
 import {
     BUTTON_SAVE,
+    TOAST_TITLE_ERROR,
     MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
     MEDIA_SELECTOR_UPLOAD_BTN_CAPTION,
     PROFILE_EMAIL_PREFERENCES,
@@ -41,6 +43,7 @@ export default function Page() {
         useState<Pick<Profile, "bio" | "name" | "avatar">>();
     const [avatar, setAvatar] = useState<Partial<Media>>({});
     const [subscribedToUpdates, setSubscribedToUpdates] = useState(false);
+    const { toast } = useToast();
 
     const { profile, setProfile } = useContext(ProfileContext);
     const address = useContext(AddressContext);
@@ -83,7 +86,11 @@ export default function Page() {
                     setSubscribedToUpdates(response.user.subscribedToUpdates);
                 }
             } catch (err: any) {
-                console.error(`Profile page: ${err.message}`);
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: err.message,
+                    variant: "destructive",
+                });
             }
         };
         if (profile.userId && address.backend) {
@@ -140,8 +147,11 @@ export default function Page() {
                 setProfile(response.user);
             }
         } catch (err: any) {
-            console.error(err);
-        } finally {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         }
     };
 
@@ -198,8 +208,11 @@ export default function Page() {
                 setProfile(response.user);
             }
         } catch (err: any) {
-            console.error(err);
-        } finally {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         }
     };
 
@@ -231,8 +244,11 @@ export default function Page() {
             await fetch.exec();
         } catch (err: any) {
             setSubscribedToUpdates(!state);
-            console.error(err);
-        } finally {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         }
     };
 

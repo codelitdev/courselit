@@ -9,10 +9,10 @@ import {
     PRODUCTS_TABLE_HEADER_ACTIONS,
     BTN_NEW_PRODUCT,
     PRODUCTS_TABLE_HEADER_TYPE,
+    TOAST_TITLE_ERROR,
 } from "../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
 import type { Address, SiteInfo } from "@courselit/common-models";
-import { AppMessage } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { actionCreators } from "@courselit/state-management";
 import Product, { CourseDetails } from "./product";
@@ -22,9 +22,10 @@ import {
     Table,
     TableHead,
     TableBody,
+    useToast,
 } from "@courselit/components-library";
 
-const { networkAction, setAppMessage } = actionCreators;
+const { networkAction } = actionCreators;
 
 interface IndexProps {
     dispatch?: AppDispatch;
@@ -46,6 +47,7 @@ export const Index = ({
     const [searchText, setSearchText] = useState("");
     const [searchState, setSearchState] = useState(0);
     const [endReached, setEndReached] = useState(false);
+    const { toast } = useToast();
 
     useEffect(() => {
         loadCreatorCourses();
@@ -116,7 +118,11 @@ export const Index = ({
                 }
             }
         } catch (err: any) {
-            dispatch && dispatch(setAppMessage(new AppMessage(err.message)));
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         } finally {
             dispatch && dispatch(networkAction(false));
         }
