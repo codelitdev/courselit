@@ -24,6 +24,7 @@ jobs:
         uses: withastro/action@v2
         with:
           path: "./apps/docs"
+          package-manager: "yarn@3"
 
   deploy:
     needs: build
