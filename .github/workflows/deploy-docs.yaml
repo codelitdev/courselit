@@ -21,7 +21,7 @@ jobs:
       - name: Checkout your repository using git
         uses: actions/checkout@v4          
       - name: Install, build, and upload your site
-        uses: withastro/action@c8c696814679334d89096c035a21c3c0efa41db5
+        uses: withastro/action@v2
         with:
           path: "./apps/docs"
 
