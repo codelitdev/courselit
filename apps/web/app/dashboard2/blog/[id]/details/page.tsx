@@ -7,7 +7,7 @@ import { useContext } from "react";
 
 export default function Page({ params }: { params: { id: string } }) {
     const address = useContext(AddressContext);
-    const profile = useContext(ProfileContext);
+    const { profile } = useContext(ProfileContext);
     const { id } = params;
 
     return (

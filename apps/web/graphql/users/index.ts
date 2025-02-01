@@ -1,7 +1,9 @@
 import queries from "./query";
 import mutations from "./mutation";
 
-export default {
+const userModule = {
     queries,
     mutations,
 };
+
+export default userModule;

@@ -36,6 +36,7 @@
         "url": "https://github.com/codelitdev/courselit/issues"
     },
     "peerDependencies": {
+        "lucide-react": "*",
         "next": "*",
         "react": "*",
         "react-dom": "*"

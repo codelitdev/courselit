@@ -24,6 +24,7 @@ import {
     PAGE_TITLE_EDIT_PAGE,
     EDIT_PAGE_BUTTON_FONTS,
     EDIT_PAGE_BUTTON_SEO,
+    EDIT_PAGE_BUTTON_VIEW,
 } from "../../../ui-config/strings";
 import { useRouter } from "next/navigation";
 import {
@@ -38,6 +39,7 @@ import widgets from "../../../ui-config/widgets";
 import { Sync, CheckCircled } from "@courselit/icons";
 import { Button, Skeleton } from "@courselit/components-library";
 import SeoEditor from "./seo-editor";
+import { ArrowUpFromLine, Eye, LogOut } from "lucide-react";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
@@ -594,6 +596,22 @@ export default function PageEditor({
                         <div className="flex justify-end items-center gap-2">
                             {loading && <Sync />}
                             {!loading && <CheckCircled />}
+                            <Button onClick={onPublish}>
+                                <span className="flex items-center gap-2">
+                                    <ArrowUpFromLine width={16} />
+                                    {EDIT_PAGE_BUTTON_UPDATE}
+                                </span>
+                            </Button>
+                            <Button
+                                component="link"
+                                variant="soft"
+                                href={`/p/${page.pageId}`}
+                            >
+                                <span className="flex items-center gap-2">
+                                    <Eye width={16} />
+                                    {EDIT_PAGE_BUTTON_VIEW}
+                                </span>
+                            </Button>
                             <Button
                                 variant="soft"
                                 component="link"
@@ -608,10 +626,10 @@ export default function PageEditor({
                                         : `${prefix}/products`)
                                 }
                             >
-                                {EDIT_PAGE_BUTTON_DONE}
-                            </Button>
-                            <Button onClick={onPublish} sx={{ color: "white" }}>
-                                {EDIT_PAGE_BUTTON_UPDATE}
+                                <span className="flex items-center gap-2">
+                                    <LogOut width={16} />
+                                    {EDIT_PAGE_BUTTON_DONE}
+                                </span>
                             </Button>
                         </div>
                     </header>

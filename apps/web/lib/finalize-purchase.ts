@@ -4,11 +4,11 @@ import { triggerSequences } from "./trigger-sequences";
 import { recordActivity } from "./record-activity";
 import { Constants, Progress } from "@courselit/common-models";
 
-export default async (
+async function finalizePurchase(
     userId: string,
     courseId: string,
     purchaseId?: string,
-) => {
+) {
     const user: User | null = await UserModel.findOne({ userId });
     const course: Course | null = await CourseModel.findOne({ courseId });
 
@@ -54,4 +54,6 @@ export default async (
             });
         }
     }
-};
+}
+
+export default finalizePurchase;

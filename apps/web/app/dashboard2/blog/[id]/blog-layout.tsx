@@ -21,7 +21,7 @@ export default function BlogLayout({
 }) {
     const address = useContext(AddressContext);
     const siteinfo = useContext(SiteInfoContext);
-    const profile = useContext(ProfileContext);
+    const { profile } = useContext(ProfileContext);
 
     if (
         !checkPermission(profile.permissions!, [

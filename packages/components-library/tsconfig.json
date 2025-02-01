@@ -6,7 +6,8 @@
         "lib": ["dom"],
         "strict": false,
         "paths": {
-            "@/*": ["./src/*"]
+            "@/*": ["./src/*"],
+            "react": ["./node_modules/@types/react"]
         }
     },
     "include": ["src/**/*", "additional.d.ts"]

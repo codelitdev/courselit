@@ -1,3 +1,7 @@
+"use client";
+
+import { ProfileContext } from "@components/contexts";
+import { NotificationsViewer } from "@components/notifications-viewer";
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -8,19 +12,30 @@ import {
 } from "@components/ui/breadcrumb";
 import { Separator } from "@components/ui/separator";
 import { SidebarTrigger } from "@components/ui/sidebar";
+import { checkPermission } from "@courselit/utils";
 import Link from "next/link";
-import { ReactNode } from "react";
+import { Fragment, ReactNode, useContext } from "react";
+import LoadingScreen from "./loading-screen";
+import PermissionError from "./permission-error";
 
 export default function DashboardContent({
     breadcrumbs,
     children,
+    permissions = [],
 }: {
     breadcrumbs: {
         label: string;
         href: string;
     }[];
     children: ReactNode;
+    permissions?: string[];
 }) {
+    const { profile } = useContext(ProfileContext);
+
+    if (!profile.userId) {
+        return <LoadingScreen />;
+    }
+
     return (
         <>
             <header className="flex h-16 shrink-0 items-center gap-2">
@@ -31,7 +46,7 @@ export default function DashboardContent({
                         <Breadcrumb>
                             <BreadcrumbList>
                                 {breadcrumbs.map((breadcrumb, index) => (
-                                    <>
+                                    <Fragment key={index}>
                                         {index < breadcrumbs.length - 1 && (
                                             <>
                                                 <BreadcrumbItem className="hidden md:block">
@@ -55,7 +70,7 @@ export default function DashboardContent({
                                                 </BreadcrumbPage>
                                             </BreadcrumbItem>
                                         )}
-                                    </>
+                                    </Fragment>
                                 ))}
                                 {/* <BreadcrumbItem className="hidden md:block">
                                     <BreadcrumbLink href="#">
@@ -72,15 +87,20 @@ export default function DashboardContent({
                         </Breadcrumb>
                     )}
                 </div>
+                <div className="ml-auto px-3">
+                    <NotificationsViewer />
+                </div>
             </header>
             <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-                {children}
-                {/* <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-                    <div className="aspect-video rounded-xl bg-muted/50" />
-                    <div className="aspect-video rounded-xl bg-muted/50" />
-                    <div className="aspect-video rounded-xl bg-muted/50" />
-                </div>
-                <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" /> */}
+                {permissions.length > 0 ? (
+                    checkPermission(profile.permissions!, permissions) ? (
+                        children
+                    ) : (
+                        <PermissionError missingPermissions={permissions} />
+                    )
+                ) : (
+                    children
+                )}
             </div>
         </>
     );

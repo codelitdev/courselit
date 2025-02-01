@@ -30,18 +30,26 @@ Get a free website which you can customize using our powerful page builder.
         </a>
     </section>
     <section class="card">
-        <a href="/en/email-marketing/introduction">
-        <header>Email marketing and automation <span class="chip">Beta</span></header>
-        <p>
-Send broadcasts and email sequences to your audience.
-        </p>
-        </a>
-    </section>
-    <section class="card">
         <a href="/en/blog/introduction">
         <header>Blog</header>
         <p>
 Publish your blogs under the same roof as your courses and digital downloads, using our in-built tools. 
+        </p>
+        </a>
+    </section>
+    <section class="card">
+        <a href="/en/communities/introduction">
+        <header>Communities <span class="chip">Beta</span></header>
+        <p>
+Run your own free or paid communities that integrate deeply with your business.
+        </p>
+        </a>
+    </section>
+    <section class="card">
+        <a href="/en/email-marketing/introduction">
+        <header>Email marketing and automation <span class="chip">Beta</span></header>
+        <p>
+Send broadcasts and email sequences to your audience.
         </p>
         </a>
     </section>
@@ -51,15 +59,15 @@ Publish your blogs under the same roof as your courses and digital downloads, us
 
 ##### Student Management
 
-Track your students' progress, restrict access to the platform and more.
+Effortlessly track your students' progress, control platform access, and more.
 
 ##### Powerful user management
 
-Bring your entire team to the platform and control what they can do using our permission editor.
+Invite your entire team and control their access with our intuitive permission editor.
 
 ##### Payment integration
 
-Collect payments by integrating Stripe.
+Start getting paid directly with ease—integrate your own [Stripe](https://stripe.com) or [Razorpay](https://razorpay.com) account in just a few clicks!
 
 ##### Third Party Integrations
 

@@ -3,7 +3,7 @@ import GQLContext from "../../models/GQLContext";
 import { getPage, getPages } from "./logic";
 import types from "./types";
 import constants from "../../config/constants";
-const { product, site, blogPage } = constants;
+const { product, site, blogPage, communityPage } = constants;
 
 const pageType = new GraphQLEnumType({
     name: "PageType",
@@ -11,10 +11,11 @@ const pageType = new GraphQLEnumType({
         [product.toUpperCase()]: { value: product },
         [site.toUpperCase()]: { value: site },
         [blogPage.toUpperCase()]: { value: blogPage },
+        [communityPage.toUpperCase()]: { value: communityPage },
     },
 });
 
-export default {
+const queries = {
     getPage: {
         type: types.page,
         args: {
@@ -34,8 +35,18 @@ export default {
         },
         resolve: (
             _: any,
-            { type }: { type?: typeof product | typeof site | typeof blogPage },
+            {
+                type,
+            }: {
+                type?:
+                    | typeof product
+                    | typeof site
+                    | typeof blogPage
+                    | typeof communityPage;
+            },
             ctx: GQLContext,
         ) => getPages(ctx, type),
     },
 };
+
+export default queries;

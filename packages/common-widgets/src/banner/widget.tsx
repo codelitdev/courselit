@@ -16,6 +16,22 @@ import { setAppMessage } from "@courselit/state-management/dist/action-creators"
 import { FetchBuilder } from "@courselit/utils";
 import { DEFAULT_FAILURE_MESSAGE, DEFAULT_SUCCESS_MESSAGE } from "./constants";
 import Settings from "./settings";
+import { Users } from "lucide-react";
+
+function isEmptyDoc(description) {
+    return (
+        JSON.stringify({ type: "doc" }) === JSON.stringify(description) ||
+        JSON.stringify({
+            type: "doc",
+            content: [
+                {
+                    type: "paragraph",
+                    attrs: { dir: null, ignoreBidiAutoUpdate: null },
+                },
+            ],
+        }) === JSON.stringify(description)
+    );
+}
 
 export default function Widget({
     settings: {
@@ -40,7 +56,7 @@ export default function Widget({
 }: WidgetProps<Settings>) {
     const [email, setEmail] = useState("");
     const [success, setSuccess] = useState(false);
-    const type = Object.keys(product).length === 0 ? "site" : "product";
+    const type = product.pageType;
     const defaultSuccessMessage: Record<string, unknown> = {
         type: "doc",
         content: [
@@ -56,24 +72,24 @@ export default function Widget({
         ],
     };
 
-    const actualDescription = description
-        ? JSON.stringify({ type: "doc" }) === JSON.stringify(description) ||
-          JSON.stringify({
-              type: "doc",
-              content: [
-                  {
-                      type: "paragraph",
-                      attrs: { dir: null, ignoreBidiAutoUpdate: null },
-                  },
-              ],
-          }) === JSON.stringify(description)
-            ? product.description
-                ? JSON.parse(product.description as string)
-                : undefined
-            : description
-        : product.description
-          ? JSON.parse(product.description as string)
-          : undefined;
+    let finalDescription: any = undefined;
+    if (description && !isEmptyDoc(description)) {
+        finalDescription = description;
+    } else if (product.description && type === "product") {
+        finalDescription = JSON.parse(product.description as string);
+    } else if (product.description && type === "community") {
+        finalDescription = product.description;
+    }
+
+    // const actualDescription = description
+    //     ? isEmptyDoc(description)
+    //         ? product.description
+    //             ? JSON.parse(product.description as string)
+    //             : undefined
+    //         : description
+    //     : product.description
+    //       ? JSON.parse(product.description as string)
+    //       : undefined;
 
     let direction: any;
     switch (alignment) {
@@ -176,7 +192,7 @@ export default function Widget({
                                 : "items-start"
                         }`}
                     >
-                        {type !== "site" && (
+                        {type === "product" && (
                             <div className="pb-1">
                                 <PriceTag
                                     cost={product.cost as number}
@@ -192,10 +208,12 @@ export default function Widget({
                                 {title ||
                                     (type === "site"
                                         ? state.siteinfo.title
-                                        : product.title)}
+                                        : type === "product"
+                                          ? product.title
+                                          : product.name)}
                             </h1>
                         </div>
-                        {actualDescription && (
+                        {finalDescription && (
                             <div
                                 className={`pb-4 ${
                                     textAlignment === "center"
@@ -203,7 +221,7 @@ export default function Widget({
                                         : "text-left"
                                 }`}
                             >
-                                <TextRenderer json={actualDescription} />
+                                <TextRenderer json={finalDescription} />
                             </div>
                         )}
                         {type === "product" && product.costType === "email" && (
@@ -283,6 +301,26 @@ export default function Widget({
                                     {buttonCaption || "Set a URL"}
                                 </Button2>
                             </Link>
+                        )}
+                        {type === "community" && (
+                            <div className="flex flex-col gap-4">
+                                <span className="text-sm flex items-center gap-1 font-semibold">
+                                    <Users className="w-4 h-4" />{" "}
+                                    {product.membersCount} members
+                                </span>
+                                <Link
+                                    href={`/checkout?type=community&id=${product.communityId}`}
+                                >
+                                    <Button2
+                                        style={{
+                                            backgroundColor: buttonBackground,
+                                            color: buttonForeground,
+                                        }}
+                                    >
+                                        {buttonCaption || "Join community"}
+                                    </Button2>
+                                </Link>
+                            </div>
                         )}
                     </div>
                 </div>

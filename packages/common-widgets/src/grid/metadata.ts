@@ -1,9 +1,10 @@
-import { WidgetMetadata } from "@courselit/common-models";
+import { WidgetMetadata, Constants } from "@courselit/common-models";
+const { PageType } = Constants;
 
 const metadata: WidgetMetadata = {
     name: "grid",
     displayName: "Grid",
-    compatibleWith: ["product", "site"],
+    compatibleWith: [PageType.PRODUCT, PageType.SITE, PageType.COMMUNITY],
 };
 
 export default metadata;

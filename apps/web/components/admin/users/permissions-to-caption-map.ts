@@ -9,6 +9,7 @@ import {
     PERM_SETTINGS,
     PERM_USERS,
     PERM_SITE,
+    PERM_MANAGE_COMMUNITY,
 } from "@ui-config/strings";
 
 const permissionToCaptionMap = {
@@ -20,6 +21,7 @@ const permissionToCaptionMap = {
     [permissions.manageSite]: PERM_SITE,
     [permissions.manageSettings]: PERM_SETTINGS,
     [permissions.manageUsers]: PERM_USERS,
+    [permissions.manageCommunity]: PERM_MANAGE_COMMUNITY,
 };
 
 export default permissionToCaptionMap;

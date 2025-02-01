@@ -32,7 +32,7 @@ interface MasterLayoutProps {
     state: AppState;
 }
 
-const MasterLayout = ({
+export const MasterLayout = ({
     title,
     siteInfo,
     children,

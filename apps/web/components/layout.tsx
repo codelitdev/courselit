@@ -206,7 +206,7 @@ function Sidebar({
     onItemClick: (state: boolean) => void;
     tab?: string | null;
 }) {
-    const profile = useContext(ProfileContext);
+    const { profile } = useContext(ProfileContext);
     const items: SidebarItem[] = [];
 
     if (session) {
@@ -308,6 +308,10 @@ function Sidebar({
                     {
                         label: "API Keys",
                         href: "/dashboard2/settings?tab=API%20Keys",
+                    },
+                    {
+                        label: "Community",
+                        href: "/dashboard2/settings?tab=Community",
                     },
                 ],
             });

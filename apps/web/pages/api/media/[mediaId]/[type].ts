@@ -10,7 +10,14 @@ import CourseModel, { Course } from "@models/Course";
 import LessonModel, { Lesson } from "@models/Lesson";
 import PageModel, { Page } from "@models/Page";
 
-const types = ["course", "lesson", "page", "user", "domain"] as const;
+const types = [
+    "course",
+    "lesson",
+    "page",
+    "user",
+    "domain",
+    "community",
+] as const;
 
 type MediaType = (typeof types)[number];
 
@@ -153,6 +160,10 @@ async function isActionAllowed(
         case "domain":
             return checkPermission(user.permissions, [
                 constants.permissions.manageSettings,
+            ]);
+        case "community":
+            return checkPermission(user.permissions, [
+                constants.permissions.manageCommunity,
             ]);
         default:
             return false;

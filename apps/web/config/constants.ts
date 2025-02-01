@@ -70,6 +70,7 @@ export default {
     product: "product",
     site: "site",
     blogPage: "blog",
+    communityPage: "community",
 
     // default pages
     defaultPages: ["homepage", "terms", "privacy", "blog"],
@@ -98,6 +99,7 @@ export default {
         "newsletter_subscribed",
         "newsletter_unsubscribed",
         "user_created",
+        "community_joined",
     ],
 
     // durations

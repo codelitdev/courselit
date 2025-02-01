@@ -2,6 +2,7 @@ import constants from "../../config/constants";
 import CourseModel, { Course } from "../../models/Course";
 import GQLContext from "../../models/GQLContext";
 import { Page } from "../../models/Page";
+import { getCommunity } from "../communities/logic";
 
 export async function getPageResponse(
     page: Page,
@@ -14,13 +15,63 @@ export async function getPageResponse(
               })
             : widget,
     );
-    const pageData =
-        page.type.toLowerCase() === constants.product
-            ? await getCourse(
-                  page.entityId!,
-                  ctx.subdomain._id as unknown as string,
-              )
-            : {};
+    let pageData: any = {
+        pageType: "site",
+    };
+    switch (page.type.toLowerCase()) {
+        case constants.product:
+            const course = await getCourse(
+                page.entityId!,
+                ctx.subdomain._id as unknown as string,
+            );
+            if (course) {
+                pageData = {
+                    pageType: "product",
+                    title: course.title,
+                    cost: course.cost,
+                    costType: course.costType,
+                    type: course.type,
+                    tags: course.tags,
+                    featuredImage: course.featuredImage,
+                    courseId: course.courseId,
+                };
+            }
+            break;
+        case constants.communityPage:
+            const community = await getCommunity({
+                ctx,
+                id: page.entityId!,
+            });
+            if (community) {
+                pageData = {
+                    pageType: "community",
+                    name: community.name,
+                    description: community.description,
+                    communityId: community.communityId,
+                    defaultPaymentPlan: community.defaultPaymentPlan,
+                    paymentPlans: community.paymentPlans.map((p) => ({
+                        emiAmount: p.emiAmount,
+                        emiTotalInstallments: p.emiTotalInstallments,
+                        subscriptionMonthlyAmount: p.subscriptionMonthlyAmount,
+                        subscriptionYearlyAmount: p.subscriptionYearlyAmount,
+                        type: p.type,
+                        oneTimeAmount: p.oneTimeAmount,
+                        name: p.name,
+                        planId: p.planId,
+                    })),
+                    membersCount: community.membersCount,
+                    featuredImage: community.featuredImage,
+                };
+            }
+            break;
+    }
+    // const pageData =
+    //     page.type.toLowerCase() === constants.product
+    //         ? await getCourse(
+    //               page.entityId!,
+    //               ctx.subdomain._id as unknown as string,
+    //           )
+    //         : {};
 
     const sharedWidgetsToDraftSharedWidgets = (widget) =>
         widget.shared

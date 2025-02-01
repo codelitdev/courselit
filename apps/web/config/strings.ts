@@ -40,7 +40,8 @@ export const responses = {
     user_name_cant_be_null: "Name cannot be null",
     action_not_allowed: "You do not have rights to perform this action",
     invalid_input: "Invalid input",
-    payment_invalid_settings: "configuration is invalid.",
+    payment_invalid_settings: "Payment configuration is invalid",
+    payment_info_required: "Add payment method before creating a paid plan",
     unrecognised_currency_code: "Unrecognised currency code",
     only_admins_can_purchase:
         "Only admins can purchase courses on behalf of others",
@@ -107,6 +108,29 @@ export const responses = {
     invalid_drip_email: "Drip email needs a subject and a body",
     cannot_invite_to_unpublished_product:
         "Cannot invite customers to an unpublished product",
+    rejection_reason_missing: "Rejection reason is missing",
+    joining_reason_missing: "Joining reason required",
+    invalid_category: "Invalid category",
+    community_exists: "A community with the same name already exists",
+    payment_plan_required: "Add a payment plan before enabling the community",
+    community_requires_payment: "Community requires payment",
+    community_has_no_payment_plans: "Community has no payment plans",
+    duplicate_payment_plan: "A payment plan with the same type already exists",
+    default_payment_plan_cannot_be_archived:
+        "Default payment plan cannot be archived",
+    default_payment_plan_required:
+        "Mark a payment plan as default before enabling the community",
+    community_content_already_reported: "Content already reported",
+    profile_incomplete: "Complete your profile to join this community",
+    cannot_reject_member_with_active_subscription:
+        "Cannot reject a member with an active subscription",
+    cannot_leave_community_last_moderator:
+        "Last manager cannot leave the community",
+    cannot_change_role_inactive_member:
+        "Cannot change role of a member who is not active",
+    cannot_change_role_last_moderator:
+        "Cannot change role of the last moderator",
+    cannot_delete_last_category: "Cannot delete the last category",
 
     // api responses
     digital_download_no_files:
@@ -132,4 +156,5 @@ export const internal = {
     default_email_sequence_name: "Untitled Sequence",
     default_email_content:
         "<p>Replace this with actual content.</p>\n<p>You can use <b>HTML</b>.</p>\n<p>We also support <a href='https://shopify.github.io/liquid/'>Liquid</a>.</p>\n<br>\n<p>Our mailing address is:</p>\n<p>{{ address }}</p>\n<a href=\"{{ unsubscribe_link}}\">Unsubscribe</a>",
+    joining_reason_creator: "Joined as creator",
 };

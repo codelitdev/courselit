@@ -20,33 +20,55 @@ Let take a moment to understand what all permissions are available and what aspe
 
     Create/update/delete your products.
 
+    _Technical name: `course:manage`_
+
 -   **Manage all products**
 
     Create/update/delete any product in the school. This includes products created by other creators in the school.
+
+    _Technical name: `course:manage_any`_
 
 -   **Manage blog**
 
     Create/update/delete new any blog posts.
 
+    _Technical name: `course:publish`_
+
 -   **Buy products**
 
     Purchase products from the school.
+
+    _Technical name: `course:enroll`_
 
 -   **Manage pages**
 
     Update any page in the school.
 
+    _Technical name: `site:manage`_
+
 -   **Manage settings**
 
     Update school wide settings like payments integration etc.
+
+    _Technical name: `setting:manage`_
 
 -   **Manage users**
 
     Access/update school's users.
 
+    _Technical name: `user:manage`_
+
 -   **Manage files**
 
-    Update/delete your media assets
+    Update/delete your media assets.
+
+    _Technical name: `media:manage`_
+
+-   **Manage community**
+
+    Manage community posts, comments and settings.
+
+    _Technical name: `community:manage`_
 
 ## Stuck somewhere?
 
