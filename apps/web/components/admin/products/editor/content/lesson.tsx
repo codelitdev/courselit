@@ -17,7 +17,6 @@ import {
     LESSON_CONTENT_EMBED_HEADER,
     LESSON_CONTENT_EMBED_PLACEHOLDER,
     BUTTON_SAVING,
-    MANAGE_COURSES_PAGE_HEADING,
     TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
@@ -60,7 +59,6 @@ import {
     Switch,
     TextEditorEmptyDoc,
     IconButton,
-    Breadcrumbs,
     Skeleton,
     useToast,
 } from "@courselit/components-library";
@@ -75,7 +73,6 @@ interface LessonEditorProps {
     profile: Profile;
     dispatch?: AppDispatch;
     address: Address;
-    prefix: string;
     isNew: boolean;
 }
 
@@ -86,7 +83,6 @@ const LessonEditor = ({
     dispatch,
     address,
     profile,
-    prefix,
     isNew,
 }: LessonEditorProps) => {
     const [loading, setLoading] = useState(false);
@@ -372,7 +368,7 @@ const LessonEditor = ({
                         description: APP_MESSAGE_LESSON_DELETED,
                     });
                     router.replace(
-                        `${prefix}/product/${courseId}${prefix === "/dashboard" ? "/content" : "?tab=Content"}`,
+                        `/dashboard/product/${courseId}?tab=Content`,
                     );
                 }
             } catch (err: any) {
@@ -495,24 +491,13 @@ const LessonEditor = ({
     if (isNew || lesson?.lessonId) {
         return (
             <div className="flex flex-col gap-4">
-                {prefix === "/dashboard" && (
-                    <Breadcrumbs aria-label="lesson-breadcrumbs">
-                        <Link href="/dashboard/products">
-                            {MANAGE_COURSES_PAGE_HEADING}
-                        </Link>
-                        <Link href={`/dashboard/product/${courseId}/content`}>
-                            {course?.title || "..."}
-                        </Link>
-                        {EDIT_LESSON_TEXT}
-                    </Breadcrumbs>
-                )}
                 <div className="flex flex-col gap-4 mb-4">
                     <div className="flex items-center mb-4 gap-2">
                         {courseId && (
                             <Tooltip title="Go back to content">
                                 <IconButton variant="soft">
                                     <Link
-                                        href={`${prefix}/product/${courseId}${prefix === "/dashboard" ? "/content" : "?tab=Content"}`}
+                                        href={`/dashboard/product/${courseId}?tab=Content`}
                                     >
                                         <Back />
                                     </Link>

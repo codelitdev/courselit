@@ -102,7 +102,6 @@ interface SettingsProps {
         | typeof SITE_MAILS_HEADER
         | typeof SITE_CUSTOMISATIONS_SETTING_HEADER
         | typeof SITE_APIKEYS_SETTING_HEADER;
-    prefix: string;
 }
 
 const Settings = (props: SettingsProps) => {
@@ -658,7 +657,7 @@ const Settings = (props: SettingsProps) => {
                 items={items}
                 value={selectedTab}
                 onChange={(tab: string) => {
-                    router.replace(`${props.prefix}/settings?tab=${tab}`);
+                    router.replace(`/dashboard/settings?tab=${tab}`);
                 }}
             >
                 <div className="flex flex-col gap-8">
@@ -1055,7 +1054,7 @@ const Settings = (props: SettingsProps) => {
                         <h2 className="text-lg font-semibold">
                             {APIKEY_EXISTING_HEADER}
                         </h2>
-                        <Link href={`${props.prefix}/settings/apikeys/new`}>
+                        <Link href={`/dashboard/settings/apikeys/new`}>
                             <Button>{APIKEY_NEW_BUTTON}</Button>
                         </Link>
                     </div>

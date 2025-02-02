@@ -8,8 +8,7 @@ import {
     MenuItem2,
 } from "@courselit/components-library";
 import { Person } from "@courselit/icons";
-import { State, UIConstants } from "@courselit/common-models";
-import { checkPermission } from "@courselit/utils";
+import { State } from "@courselit/common-models";
 import { MobileNav } from "./mobile-nav";
 import {
     verticalPadding as defaultVerticalPadding,
@@ -172,46 +171,16 @@ export default function Widget({ state, settings }: WidgetProps) {
                                     </Button2>
                                 }
                             >
-                                {state.profile.fetched &&
-                                    checkPermission(state.profile.permissions, [
-                                        UIConstants.permissions.enrollInCourse,
-                                    ]) && (
-                                        <MenuItem2>
-                                            <AppLink
-                                                href={"/my-content"}
-                                                className={linkClasses}
-                                            >
-                                                My content
-                                            </AppLink>
-                                        </MenuItem2>
-                                    )}
                                 {!state.auth.guest && (
                                     <MenuItem2>
                                         <AppLink
-                                            href={"/profile"}
+                                            href={"/dashboard"}
                                             className={linkClasses}
                                         >
-                                            Profile
+                                            Dashboard
                                         </AppLink>
                                     </MenuItem2>
                                 )}
-                                {state.profile.fetched &&
-                                    checkPermission(state.profile.permissions, [
-                                        UIConstants.permissions.manageCourse,
-                                        UIConstants.permissions.manageAnyCourse,
-                                        UIConstants.permissions.manageSite,
-                                        UIConstants.permissions.manageSettings,
-                                        UIConstants.permissions.manageUsers,
-                                    ]) && (
-                                        <MenuItem2>
-                                            <AppLink
-                                                href={"/dashboard"}
-                                                className={linkClasses}
-                                            >
-                                                Dashboard
-                                            </AppLink>
-                                        </MenuItem2>
-                                    )}
                                 <MenuItem2>
                                     <AppLink
                                         href={

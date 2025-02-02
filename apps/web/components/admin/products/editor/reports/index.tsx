@@ -32,7 +32,6 @@ export default function CourseReports({
                 address={address}
                 loading={loading}
                 dispatch={dispatch}
-                prefix={prefix}
             />
         </div>
     );

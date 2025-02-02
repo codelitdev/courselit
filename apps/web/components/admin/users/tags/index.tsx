@@ -1,7 +1,5 @@
 import {
-    Breadcrumbs,
     Button,
-    Link,
     Menu2,
     MenuItem,
     Table,
@@ -23,7 +21,6 @@ import {
     TAG_TABLE_HEADER_SUBS_COUNT,
     UNTAG_POPUP_DESC,
     UNTAG_POPUP_HEADER,
-    USERS_MANAGER_PAGE_HEADING,
     USERS_TAG_HEADER,
 } from "@ui-config/strings";
 import { useCallback } from "react";
@@ -34,12 +31,10 @@ import { Address } from "@courselit/common-models";
 import { useState } from "react";
 import { MoreVert } from "@courselit/icons";
 import { usePathname } from "next/navigation";
-import clsx from "clsx";
 const { networkAction } = actionCreators;
 
 interface TagsProps {
     address: Address;
-    prefix: string;
     dispatch?: AppDispatch;
 }
 
@@ -48,7 +43,7 @@ interface TagWithDetails {
     count: number;
 }
 
-export default function Tags({ address, dispatch, prefix }: TagsProps) {
+export default function Tags({ address, dispatch }: TagsProps) {
     const [tags, setTags] = useState<TagWithDetails[]>([]);
     const [loading, setLoading] = useState(false);
     const path = usePathname();
@@ -160,54 +155,21 @@ export default function Tags({ address, dispatch, prefix }: TagsProps) {
 
     return (
         <div className="flex flex-col">
-            {prefix === "/dashboard" && (
-                <>
-                    <div className="mb-4">
-                        <Breadcrumbs aria-label="breakcrumb">
-                            <Link href="/dashboard/users">
-                                {USERS_MANAGER_PAGE_HEADING}
-                            </Link>
-
-                            <p>{USERS_TAG_HEADER}</p>
-                        </Breadcrumbs>
-                    </div>
-                    <div className="flex justify-between items-center mb-8">
-                        <h1 className="text-4xl font-semibold mb-4">
-                            {USERS_TAG_HEADER}
-                        </h1>
-                        <div>
-                            <Button
-                                component="link"
-                                href={`/dashboard${
-                                    path?.startsWith("/dashboard2") ? "2" : ""
-                                }/users/tags/new`}
-                            >
-                                {BTN_NEW_TAG}
-                            </Button>
-                        </div>
-                    </div>
-                </>
-            )}
-            {prefix === "/dashboard4" && (
-                <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-4xl font-semibold mb-4">
-                        {USERS_TAG_HEADER}
-                    </h1>
-                    <div>
-                        <Button
-                            component="link"
-                            variant="soft"
-                            href="/dashboard4/users/tags/new"
-                        >
-                            {BTN_NEW_TAG}
-                        </Button>
-                    </div>
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-4xl font-semibold mb-4">
+                    {USERS_TAG_HEADER}
+                </h1>
+                <div>
+                    <Button
+                        component="link"
+                        variant="soft"
+                        href="/dashboard/users/tags/new"
+                    >
+                        {BTN_NEW_TAG}
+                    </Button>
                 </div>
-            )}
-            <Table
-                aria-label="Tags"
-                className={clsx(prefix === "/dashboard2" ? "mt-4" : "")}
-            >
+            </div>
+            <Table aria-label="Tags">
                 <TableHead>
                     <td>{TAG_TABLE_HEADER_NAME}</td>
                     <td align="right">{TAG_TABLE_HEADER_SUBS_COUNT}</td>

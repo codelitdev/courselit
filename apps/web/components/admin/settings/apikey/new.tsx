@@ -1,6 +1,5 @@
 import { Address } from "@courselit/common-models";
 import {
-    Breadcrumbs,
     Button,
     Form,
     FormField,
@@ -30,14 +29,12 @@ interface NewApikeyProps {
     address: Address;
     dispatch?: AppDispatch;
     loading?: boolean;
-    prefix: string;
 }
 
 export default function NewApikey({
     address,
     dispatch,
     loading = false,
-    prefix,
 }: NewApikeyProps) {
     const [name, setName] = useState("");
     const [apikey, setApikey] = useState("");
@@ -93,11 +90,6 @@ export default function NewApikey({
 
     return (
         <div className="flex flex-col gap-4">
-            {prefix === "/dasboard" && (
-                <Breadcrumbs aria-label="new-apikey-breadcrumbs">
-                    <Link href="/dashboard/settings">Apikeys</Link>
-                </Breadcrumbs>
-            )}
             <h1 className="text-4xl font-semibold mb-4">{APIKEY_NEW_HEADER}</h1>
             <Form
                 method="post"
@@ -130,7 +122,7 @@ export default function NewApikey({
                                 <Clipboard fontSize="small" />
                             </IconButton>
                         </div>
-                        <Link href={`${prefix}/settings?tab=API%20Keys`}>
+                        <Link href={`/dashboard/settings?tab=API%20Keys`}>
                             <Button>{BUTTON_DONE_TEXT}</Button>
                         </Link>
                     </div>
@@ -140,7 +132,7 @@ export default function NewApikey({
                         <Button disabled={!name || loading} sx={{ mr: 1 }}>
                             {APIKEY_NEW_BTN_CAPTION}
                         </Button>
-                        <Link href={`${prefix}/settings?tab=API%20Keys`}>
+                        <Link href={`/dashboard/settings?tab=API%20Keys`}>
                             <Button variant="soft">{BUTTON_CANCEL_TEXT}</Button>
                         </Link>
                     </div>

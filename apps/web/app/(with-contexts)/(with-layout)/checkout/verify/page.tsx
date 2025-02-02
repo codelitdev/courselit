@@ -85,7 +85,7 @@ export default function Page() {
             <div className="flex space-x-4 mt-6">
                 {paymentStatus === "paid" && (
                     <Button asChild>
-                        <Link href="/dashboard4/my-content">
+                        <Link href="/dashboard/my-content">
                             Go to Dashboard
                         </Link>
                     </Button>

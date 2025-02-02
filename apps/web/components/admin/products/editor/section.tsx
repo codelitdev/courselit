@@ -37,7 +37,6 @@ interface SectionEditorProps {
     loading?: boolean;
     address: Address;
     dispatch?: AppDispatch;
-    prefix: string;
 }
 
 export default function SectionEditor({
@@ -46,7 +45,6 @@ export default function SectionEditor({
     section,
     dispatch,
     address,
-    prefix,
 }: SectionEditorProps) {
     const [name, setName] = useState("");
     const [status, setStatus] = useState(true);
@@ -184,9 +182,7 @@ export default function SectionEditor({
             const response = await fetch.exec();
             if (response.course) {
                 router.replace(
-                    `${prefix}/product/${course?.courseId}${
-                        prefix === "/dashboard" ? "/content" : "?tab=Content"
-                    }`,
+                    `/dashboard/product/${course?.courseId}?tab=Content`,
                 );
             }
         } catch (err: any) {
@@ -339,11 +335,7 @@ export default function SectionEditor({
                     </Button>
                     {course.courseId && (
                         <Link
-                            href={`${prefix}/product/${course.courseId}${
-                                prefix === "/dashboard"
-                                    ? "/content"
-                                    : "?tab=Content"
-                            }`}
+                            href={`/dashboard/product/${course.courseId}?tab=Content`}
                         >
                             <Button variant="soft">
                                 {POPUP_CANCEL_ACTION}

@@ -29,7 +29,6 @@ interface LessonSectionProps {
     onGroupDelete: (groupId: string, courseId: string) => void;
     address: Address;
     dispatch?: AppDispatch;
-    prefix: string;
     toast: ReturnType<typeof useToast>["toast"];
 }
 
@@ -37,18 +36,16 @@ function LessonItem({
     lesson,
     courseId,
     groupId,
-    prefix,
 }: {
     lesson: Lesson;
     courseId: string;
     groupId: string;
-    prefix: string;
 }) {
     return (
         <div className="flex items-center gap-2" key={lesson.lessonId}>
             <LessonIcon type={lesson.type} />
             <Link
-                href={`${prefix}/product/${courseId}/section/${groupId}/lesson/${lesson.lessonId}`}
+                href={`/dashboard/product/${courseId}/section/${groupId}/lesson/${lesson.lessonId}`}
             >
                 {lesson.title}
             </Link>
@@ -62,7 +59,6 @@ function LessonSection({
     onGroupDelete,
     address,
     dispatch,
-    prefix,
     toast,
 }: LessonSectionProps) {
     const updateGroup = async (lessonsOrder: string[]) => {
@@ -112,7 +108,7 @@ function LessonSection({
                     <Menu2 icon={<MoreVert />} variant="soft">
                         <MenuItem>
                             <Link
-                                href={`${prefix}/product/${course.courseId}/section/${group.id}`}
+                                href={`/dashboard/product/${course.courseId}/section/${group.id}`}
                                 className="flex w-full"
                             >
                                 {EDIT_SECTION_HEADER}
@@ -148,7 +144,6 @@ function LessonSection({
                                 courseId: course.courseId,
                                 groupId: lesson.groupId,
                                 lesson,
-                                prefix,
                             }))}
                         Renderer={LessonItem}
                         key={JSON.stringify(course.lessons)}
@@ -163,7 +158,7 @@ function LessonSection({
                 </div>
                 <div>
                     <Link
-                        href={`${prefix}/product/${course.courseId}/section/${group.id}/lesson/new`}
+                        href={`/dashboard/product/${course.courseId}/section/${group.id}/lesson/new`}
                     >
                         <Button variant="soft">
                             <Add />
@@ -181,7 +176,6 @@ interface LessonsProps {
     address: Address;
     dispatch?: AppDispatch;
     course: CourseWithAdminProps;
-    prefix: string;
 }
 
 export default function LessonsList({
@@ -189,7 +183,6 @@ export default function LessonsList({
     dispatch,
     address,
     course,
-    prefix,
 }: LessonsProps) {
     const { toast } = useToast();
     const removeGroup = async (groupId: string, courseId: string) => {
@@ -246,12 +239,11 @@ export default function LessonsList({
                     key={group.id}
                     address={address}
                     dispatch={dispatch}
-                    prefix={prefix}
                     toast={toast}
                 />
             ))}
             <div>
-                <Link href={`${prefix}/product/${id}/section/new`}>
+                <Link href={`/dashboard/product/${id}/section/new`}>
                     <Button>{BUTTON_NEW_GROUP_TEXT}</Button>
                 </Link>
             </div>

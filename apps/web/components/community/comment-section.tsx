@@ -615,7 +615,7 @@ export default function CommentSection({
                 <div className="text-center text-gray-500">
                     Complete your{" "}
                     <span className="underline">
-                        <Link href={"/dashboard4/profile"}>profile</Link>
+                        <Link href={"/dashboard/profile"}>profile</Link>
                     </span>{" "}
                     to join this community or post here
                 </div>

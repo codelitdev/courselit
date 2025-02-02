@@ -59,13 +59,7 @@ export function NewTag({ address, dispatch }: NewTagProps) {
             dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.tags) {
-                router.replace(
-                    `/dashboard${
-                        path?.startsWith("/dashboard2") ? "2" : ""
-                    }/users${
-                        path?.startsWith("/dashboard2") ? "?tab=Tags" : "/tags"
-                    }`,
-                );
+                router.replace(`/dashboard/users?tab=Tags`);
             }
         } catch (err: any) {
             toast({
@@ -83,27 +77,11 @@ export function NewTag({ address, dispatch }: NewTagProps) {
         <div className="flex flex-col">
             <div className="mb-4">
                 <Breadcrumbs aria-label="breakcrumb">
-                    <Link
-                        href={`/dashboard${
-                            path?.startsWith("/dashboard2") ? "2" : ""
-                        }/users${
-                            path?.startsWith("/dashboard2")
-                                ? "?tab=All%20users"
-                                : ""
-                        }`}
-                    >
+                    <Link href={`/dashboard/users?tab=All%20users`}>
                         {USERS_MANAGER_PAGE_HEADING}
                     </Link>
 
-                    <Link
-                        href={`/dashboard${
-                            path?.startsWith("/dashboard2") ? "2" : ""
-                        }/users${
-                            path?.startsWith("/dashboard2")
-                                ? "?tab=Tags"
-                                : "/tags"
-                        }`}
-                    >
+                    <Link href={`/dashboard/users?tab=Tags`}>
                         {USERS_TAG_HEADER}
                     </Link>
 
@@ -132,13 +110,7 @@ export function NewTag({ address, dispatch }: NewTagProps) {
                         </Button>
                         <Button
                             component="link"
-                            href={`/dashboard${
-                                path?.startsWith("/dashboard2") ? "2" : ""
-                            }/users${
-                                path?.startsWith("/dashboard2")
-                                    ? "?tab=Tags"
-                                    : "/tags"
-                            }`}
+                            href={`/dashboard/users?tab=Tags`}
                             variant="soft"
                         >
                             {BUTTON_CANCEL_TEXT}

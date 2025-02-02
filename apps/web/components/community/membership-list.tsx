@@ -149,7 +149,7 @@ export function MembershipList({ id }: { id: string }) {
             }
         } catch (e) {
             if (e.message === "Item not found") {
-                router.replace(`/dashboard4/community/${id}`);
+                router.replace(`/dashboard/community/${id}`);
             } else {
                 toast({
                     title: TOAST_TITLE_ERROR,
@@ -360,7 +360,7 @@ export function MembershipList({ id }: { id: string }) {
                                     <TableRow key={member.user.email}>
                                         <TableCell className="font-medium">
                                             <Link
-                                                href={`/dashboard4/users/${member.user.userId}`}
+                                                href={`/dashboard/users/${member.user.userId}`}
                                             >
                                                 <div className="flex items-center space-x-2">
                                                     <Avatar className="h-8 w-8">

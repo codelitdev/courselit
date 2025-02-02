@@ -66,7 +66,7 @@ export default function ProductHeader({
                     </MenuItem>
                     <MenuItem>
                         <Link
-                            href={`/dashboard/page/${course.pageId}/edit?redirectTo=/dashboard/product/${course.courseId}/content`}
+                            href={`/dashboard/page/${course.pageId}?redirectTo=/dashboard/product/${course.courseId}/content`}
                             className="flex w-full"
                         >
                             {EDIT_PAGE_MENU_ITEM}

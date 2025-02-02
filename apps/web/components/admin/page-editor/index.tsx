@@ -52,7 +52,6 @@ interface PageEditorProps {
     siteInfo: SiteInfo;
     typefaces: Typeface[];
     redirectTo?: string;
-    prefix: string;
     state: AppState;
 }
 
@@ -70,7 +69,6 @@ export default function PageEditor({
     profile,
     dispatch,
     redirectTo,
-    prefix,
     state,
 }: PageEditorProps) {
     const [page, setPage] = useState<
@@ -289,7 +287,7 @@ export default function PageEditor({
                     description: `The page does not exist.`,
                     variant: "destructive",
                 });
-                router.replace(`${prefix}/pages`);
+                router.replace("/dashboard/pages");
             }
         } catch (err: any) {
             toast({
@@ -627,12 +625,8 @@ export default function PageEditor({
                                 href={
                                     redirectTo ||
                                     (page.type === "product"
-                                        ? `${prefix}/product/${page.entityId}${
-                                              prefix === "/dashboard"
-                                                  ? "/content"
-                                                  : ""
-                                          }`
-                                        : `${prefix}/products`)
+                                        ? `/dashboard/product/${page.entityId}`
+                                        : `/dashboard/products`)
                                 }
                             >
                                 <span className="flex items-center gap-2">

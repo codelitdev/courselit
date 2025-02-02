@@ -28,14 +28,12 @@ interface NewPageProps {
     address: Address;
     dispatch?: AppDispatch;
     networkAction?: boolean;
-    prefix: string;
 }
 
 const NewPage = ({
     address,
     dispatch,
     networkAction: loading = false,
-    prefix,
 }: NewPageProps) => {
     const [name, setName] = useState("");
     const [pageId, setPageId] = useState("");
@@ -65,7 +63,7 @@ const NewPage = ({
             const response = await fetch.exec();
             if (response.page) {
                 router.replace(
-                    `/dashboard/page/${response.page.pageId}/edit?redirectTo=${prefix}/pages`,
+                    `/dashboard/page/${response.page.pageId}?redirectTo=/dashboard/pages`,
                 );
             }
         } catch (err: any) {
@@ -117,7 +115,7 @@ const NewPage = ({
                     >
                         {BTN_CONTINUE}
                     </Button>
-                    <Link href={`${prefix}/pages`}>
+                    <Link href="/dashboard/pages">
                         <Button variant="soft">{BUTTON_CANCEL_TEXT}</Button>
                     </Link>
                 </div>

@@ -141,7 +141,7 @@ async function getMessage({
             }
             return {
                 message: `${userName} created a post '${truncate(post.title, 20).trim()}' in ${community.name}`,
-                href: `/dashboard4/community/${community.communityId}`,
+                href: `/dashboard/community/${community.communityId}`,
             };
         case Constants.NotificationEntityAction.COMMUNITY_COMMENTED:
             const post1 = await CommunityPost.findOne({
@@ -159,7 +159,7 @@ async function getMessage({
 
             return {
                 message: `${userName} commented on ${loggedInUserId === post1.userId ? "your" : ""} post '${truncate(post1.title, 20).trim()}' in ${community1.name}`,
-                href: `/dashboard4/community/${community1.communityId}`,
+                href: `/dashboard/community/${community1.communityId}`,
             };
         case Constants.NotificationEntityAction.COMMUNITY_REPLIED:
             const comment = await CommunityComment.findOne({
@@ -202,7 +202,7 @@ async function getMessage({
 
             return {
                 message: `${userName} replied to ${prefix} comment on '${truncate(post2.title, 20).trim()}' in ${community2.name}`,
-                href: `/dashboard4/community/${community2.communityId}`,
+                href: `/dashboard/community/${community2.communityId}`,
             };
         case Constants.NotificationEntityAction.COMMUNITY_POST_LIKED:
             const post3 = await CommunityPost.findOne({
@@ -220,7 +220,7 @@ async function getMessage({
 
             return {
                 message: `${userName} liked your post '${truncate(post3.title, 20).trim()}' in ${community3.name}`,
-                href: `/dashboard4/community/${community3.communityId}`,
+                href: `/dashboard/community/${community3.communityId}`,
             };
         case Constants.NotificationEntityAction.COMMUNITY_COMMENT_LIKED:
             const comment1 = await CommunityComment.findOne({
@@ -244,7 +244,7 @@ async function getMessage({
 
             return {
                 message: `${userName} liked your comment '${truncate(comment1.content, 20).trim()}' on '${truncate(post4.title, 20).trim()}' in ${community4.name}`,
-                href: `/dashboard4/community/${community4.communityId}`,
+                href: `/dashboard/community/${community4.communityId}`,
             };
         case Constants.NotificationEntityAction.COMMUNITY_REPLY_LIKED:
             const comment2 = await CommunityComment.findOne({
@@ -273,7 +273,7 @@ async function getMessage({
 
             return {
                 message: `${userName} liked your reply '${truncate(reply1.content, 20).trim()}' on '${truncate(post5.title, 20).trim()}' in ${community5.name}`,
-                href: `/dashboard4/community/${community5.communityId}`,
+                href: `/dashboard/community/${community5.communityId}`,
             };
         case Constants.NotificationEntityAction.COMMUNITY_MEMBERSHIP_REQUESTED:
             const community6 = await Community.findOne({
@@ -285,7 +285,7 @@ async function getMessage({
 
             return {
                 message: `${userName} requested to join ${community6.name}`,
-                href: `/dashboard4/community/${community6.communityId}/manage/memberships`,
+                href: `/dashboard/community/${community6.communityId}/manage/memberships`,
             };
         case Constants.NotificationEntityAction.COMMUNITY_MEMBERSHIP_GRANTED:
             const community7 = await Community.findOne({
@@ -297,7 +297,7 @@ async function getMessage({
 
             return {
                 message: `${userName} granted your request to join ${community7.name}`,
-                href: `/dashboard4/community/${community7.communityId}`,
+                href: `/dashboard/community/${community7.communityId}`,
             };
         default:
             return { message: "", href: "" };

@@ -34,16 +34,9 @@ interface IndexProps {
     address: Address;
     loading: boolean;
     siteinfo: SiteInfo;
-    prefix: string;
 }
 
-export const Index = ({
-    loading,
-    dispatch,
-    address,
-    siteinfo,
-    prefix,
-}: IndexProps) => {
+export const Index = ({ loading, dispatch, address, siteinfo }: IndexProps) => {
     const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1);
     const [creatorCourses, setCreatorCourses] = useState<
         (Course & { published: boolean })[]
@@ -115,13 +108,13 @@ export const Index = ({
                     {MANAGE_BLOG_PAGE_HEADING}
                 </h1>
                 <div className="flex items-center gap-4">
-                    <Link href={`${prefix}/blog/new`}>
+                    <Link href={`/dashboard/blog/new`}>
                         <Button>{BTN_NEW_BLOG}</Button>
                     </Link>
                     <Menu2 icon={<MoreVert />} variant="soft">
                         <MenuItem>
                             <Link
-                                href={`/dashboard/page/blog/edit?redirectTo=${prefix}/blogs`}
+                                href={`/dashboard/page/blog?redirectTo=/dashboard/blogs`}
                                 className="flex w-full"
                             >
                                 {PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE}
@@ -158,7 +151,6 @@ export const Index = ({
                                 onDelete={onDelete}
                                 siteinfo={siteinfo}
                                 address={address}
-                                prefix={prefix}
                             />
                         ),
                     )}

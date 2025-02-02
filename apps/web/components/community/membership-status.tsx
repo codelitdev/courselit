@@ -128,7 +128,7 @@ export default function MembershipStatus({
                     <AlertDescription>
                         Complete your{" "}
                         <span className="underline">
-                            <Link href={"/dashboard4/profile"}>profile</Link>
+                            <Link href={"/dashboard/profile"}>profile</Link>
                         </span>{" "}
                         to join this community or post here
                     </AlertDescription>

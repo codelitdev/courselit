@@ -91,7 +91,7 @@ export function NavUser() {
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuGroup>
-                            <Link href={"/dashboard4/profile"}>
+                            <Link href={"/dashboard/profile"}>
                                 <DropdownMenuItem>
                                     <UserPen />
                                     Profile

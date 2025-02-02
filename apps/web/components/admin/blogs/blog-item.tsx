@@ -27,7 +27,6 @@ export default function BlogItem({
     dispatch,
     position,
     onDelete,
-    prefix,
 }: {
     details: Course & {
         published: boolean;
@@ -37,7 +36,6 @@ export default function BlogItem({
     dispatch?: AppDispatch;
     position: number;
     onDelete: (position: number) => void;
-    prefix: string;
 }) {
     const product = details;
     const { toast } = useToast();
@@ -45,11 +43,7 @@ export default function BlogItem({
     return (
         <TableRow key={product.courseId}>
             <td className="py-4">
-                <Link
-                    href={`${prefix}/blog/${product.courseId}${
-                        prefix === "/dashboard" ? "/details" : ""
-                    }`}
-                >
+                <Link href={`/dashboard/blog/${product.courseId}`}>
                     <p>{product.title}</p>
                 </Link>
             </td>
