@@ -14,18 +14,16 @@ interface BlogEditorLayoutProps {
     siteInfo: SiteInfo;
     children: ReactNode;
     address: Address;
-    prefix: string;
 }
 
 export default function BlogEditorLayout({
     id,
     children,
     address,
-    prefix,
 }: BlogEditorLayoutProps) {
     const course = useCourse(id, address);
     const breadcrumbs = [
-        { text: "Blogs", url: `${prefix}/blogs` },
+        { text: "Blogs", url: "/dashboard/blogs" },
         {
             text: course && course.title ? truncate(course.title, 10) : "",
             url: "",
@@ -39,7 +37,7 @@ export default function BlogEditorLayout({
                 breadcrumbs={breadcrumbs}
                 address={address}
             />
-            <Tabs tabs={generateTabs(prefix, id as string)} />
+            <Tabs tabs={generateTabs(id as string)} />
             {course && children}
         </div>
     );

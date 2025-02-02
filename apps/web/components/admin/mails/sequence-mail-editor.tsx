@@ -1,10 +1,8 @@
 import { Address } from "@courselit/common-models";
 import {
-    Breadcrumbs,
     Button,
     Form,
     FormField,
-    Link,
     Select,
     useToast,
 } from "@courselit/components-library";
@@ -17,9 +15,7 @@ import {
     TOAST_TITLE_ERROR,
     MAIL_PREVIEW_TITLE,
     MAIL_SUBJECT_PLACEHOLDER,
-    PAGE_HEADER_ALL_MAILS,
     PAGE_HEADER_EDIT_MAIL,
-    PAGE_HEADER_EDIT_SEQUENCE,
 } from "@ui-config/strings";
 import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { MailEditorAndPreview } from "./mail-editor-and-preview";
@@ -30,7 +26,6 @@ interface SequenceMailEditorProps {
     mailId: string;
     loading?: boolean;
     dispatch?: AppDispatch;
-    prefix: string;
 }
 
 const SequenceMailEditor = ({
@@ -38,7 +33,6 @@ const SequenceMailEditor = ({
     dispatch,
     sequenceId,
     mailId,
-    prefix,
     loading = false,
 }: SequenceMailEditorProps) => {
     const [delay, setDelay] = useState<number>(0);
@@ -221,17 +215,6 @@ const SequenceMailEditor = ({
 
     return (
         <div className="flex flex-col gap-4">
-            {prefix === "/dashboard" && (
-                <Breadcrumbs aria-label="breakcrumb">
-                    <Link href={`${prefix}/mails?tab=Sequences`}>
-                        {PAGE_HEADER_ALL_MAILS}
-                    </Link>
-                    <Link href={`${prefix}/mails/sequence/${sequenceId}/edit`}>
-                        {PAGE_HEADER_EDIT_SEQUENCE}
-                    </Link>
-                    {PAGE_HEADER_EDIT_MAIL}
-                </Breadcrumbs>
-            )}
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-4xl font-semibold mb-4">
                     {PAGE_HEADER_EDIT_MAIL}

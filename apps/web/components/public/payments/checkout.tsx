@@ -216,7 +216,7 @@ export default function Checkout({
             } else if (response.status === "success") {
                 if (product.type === Constants.MembershipEntityType.COMMUNITY) {
                     router.replace(
-                        `/dashboard4/community/${product.id}?success=true`,
+                        `/dashboard/community/${product.id}?success=true`,
                     );
                 }
                 if (product.type === Constants.MembershipEntityType.COURSE) {
@@ -465,7 +465,7 @@ export default function Checkout({
                                                     .COMMUNITY
                                             ) {
                                                 router.replace(
-                                                    `/dashboard4/community/${product.id}`,
+                                                    `/dashboard/community/${product.id}`,
                                                 );
                                             } else if (
                                                 product.type ===

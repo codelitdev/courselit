@@ -35,10 +35,9 @@ interface IndexProps {
     dispatch: AppDispatch;
     address: Address;
     loading: boolean;
-    prefix: string;
 }
 
-export const Pages = ({ loading, address, dispatch, prefix }: IndexProps) => {
+export const Pages = ({ loading, address, dispatch }: IndexProps) => {
     const [pages, setPages] = useState<Page[]>([]);
     const { toast } = useToast();
 
@@ -124,7 +123,7 @@ export const Pages = ({ loading, address, dispatch, prefix }: IndexProps) => {
                     {MANAGE_PAGES_PAGE_HEADING}
                 </h1>
                 <div>
-                    <Link href={`${prefix}/page/new`}>
+                    <Link href={`/dashboard/page/new`}>
                         <Button>{BTN_NEW_PAGE}</Button>
                     </Link>
                 </div>
@@ -158,13 +157,9 @@ export const Pages = ({ loading, address, dispatch, prefix }: IndexProps) => {
                                             </Button>
                                         </Link>
                                         <Link
-                                            href={`${prefix}/page/${
+                                            href={`/dashboard/page/${
                                                 page.pageId
-                                            }${
-                                                prefix === "/dashboard"
-                                                    ? "/edit"
-                                                    : ""
-                                            }?redirectTo=${prefix}/pages`}
+                                            }?redirectTo=/dashboard/pages`}
                                         >
                                             <Button variant="soft">
                                                 <Edit />

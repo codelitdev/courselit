@@ -32,16 +32,9 @@ interface IndexProps {
     address: Address;
     loading: boolean;
     siteinfo: SiteInfo;
-    prefix: string;
 }
 
-export const Index = ({
-    loading,
-    address,
-    dispatch,
-    siteinfo,
-    prefix,
-}: IndexProps) => {
+export const Index = ({ loading, address, dispatch, siteinfo }: IndexProps) => {
     const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1);
     const [creatorCourses, setCreatorCourses] = useState([]);
     const [searchText, setSearchText] = useState("");
@@ -148,7 +141,7 @@ export const Index = ({
                     {MANAGE_COURSES_PAGE_HEADING}
                 </h1>
                 <div>
-                    <Link href={`${prefix}/product/new`}>
+                    <Link href={`/dashboard/product/new`}>
                         <Button>{BTN_NEW_PRODUCT}</Button>
                     </Link>
                 </div>
@@ -179,7 +172,6 @@ export const Index = ({
                                 onDelete={onDelete}
                                 siteinfo={siteinfo}
                                 address={address}
-                                prefix={prefix}
                             />
                         ),
                     )}

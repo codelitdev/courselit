@@ -171,7 +171,7 @@ const LessonViewer = ({
                         }`,
                     );
                 } else {
-                    router.push(`/my-content`);
+                    router.push(`/dashboard/my-content`);
                 }
             }
         } catch (err: any) {

@@ -2,8 +2,6 @@ import {
     Button,
     Form,
     FormField,
-    Breadcrumbs,
-    Link,
     Dialog2,
     useToast,
 } from "@courselit/components-library";
@@ -28,7 +26,6 @@ import {
     ERROR_SUBJECT_EMPTY,
     FORM_MAIL_SCHEDULE_TIME_LABEL,
     MAIL_SUBJECT_PLACEHOLDER,
-    PAGE_HEADER_ALL_MAILS,
     PAGE_HEADER_EDIT_MAIL,
     TOAST_MAIL_SENT,
     TOAST_TITLE_SUCCESS,
@@ -45,10 +42,9 @@ interface MailEditorProps {
     id: string;
     address: Address;
     dispatch?: AppDispatch;
-    prefix: string;
 }
 
-function MailEditor({ id, address, dispatch, prefix }: MailEditorProps) {
+function MailEditor({ id, address, dispatch }: MailEditorProps) {
     const [filters, setFilters] = useState<UserFilter[]>([]);
     const [filtersAggregator, setFiltersAggregator] =
         useState<UserFilterAggregator>("or");
@@ -456,14 +452,6 @@ function MailEditor({ id, address, dispatch, prefix }: MailEditorProps) {
 
     return (
         <div className="flex flex-col gap-4">
-            {prefix === "/dashboard" && (
-                <Breadcrumbs aria-label="breakcrumb">
-                    <Link href={`${prefix}/mails?tab=Broadcasts`}>
-                        {PAGE_HEADER_ALL_MAILS}
-                    </Link>
-                    {PAGE_HEADER_EDIT_MAIL}
-                </Breadcrumbs>
-            )}
             <h1 className="text-4xl font-semibold mb-4">
                 {PAGE_HEADER_EDIT_MAIL}
             </h1>

@@ -12,15 +12,9 @@ interface EditorProps {
     id: string;
     address: Address;
     dispatch?: AppDispatch;
-    prefix: string;
 }
 
-export default function Content({
-    id,
-    address,
-    dispatch,
-    prefix,
-}: EditorProps) {
+export default function Content({ id, address, dispatch }: EditorProps) {
     const course = useCourse(id, address);
 
     if (!course) {
@@ -37,7 +31,6 @@ export default function Content({
                     address={address}
                     dispatch={dispatch}
                     course={course}
-                    prefix={prefix}
                 />
             )}
         </div>

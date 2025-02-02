@@ -47,7 +47,7 @@ const Free = ({ course, dispatch, address }: FreeProps) => {
 
             if (response.status === "success") {
                 dispatch(refreshUserProfile());
-                router.replace(`/my-content`);
+                router.replace(`/dashboard/my-content`);
             } else if (response.status === "failed") {
                 toast({
                     title: TOAST_TITLE_ERROR,

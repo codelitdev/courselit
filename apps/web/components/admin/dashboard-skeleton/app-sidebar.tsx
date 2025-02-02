@@ -107,18 +107,18 @@ function getSidebarItems(profile: Partial<Profile>, path, tab) {
     ) {
         navMainItems.push({
             title: "Overview",
-            url: "/dashboard4/overview",
+            url: "/dashboard/overview",
             icon: Target,
-            isActive: path === "/dashboard4/overview",
+            isActive: path === "/dashboard/overview",
             // items: [],
         });
         navMainItems.push({
             title: "Products",
-            url: "/dashboard4/products",
+            url: "/dashboard/products",
             icon: Box,
             isActive:
-                path === "/dashboard4/products" ||
-                path.startsWith("/dashboard4/product"),
+                path === "/dashboard/products" ||
+                path.startsWith("/dashboard/product"),
             items: [],
         });
     }
@@ -126,31 +126,31 @@ function getSidebarItems(profile: Partial<Profile>, path, tab) {
         navMainItems.push({
             title: "Communities",
             beta: true,
-            url: "/dashboard4/communities",
+            url: "/dashboard/communities",
             icon: MessageCircleHeart,
-            isActive: path === "/dashboard4/communities",
+            isActive: path === "/dashboard/communities",
             items: [],
         });
     }
     if (checkPermission(profile.permissions!, [permissions.publishCourse])) {
         navMainItems.push({
             title: SIDEBAR_MENU_BLOGS,
-            url: "/dashboard4/blogs",
+            url: "/dashboard/blogs",
             icon: Text,
             isActive:
-                path === "/dashboard4/blogs" ||
-                path.startsWith("/dashboard4/blog"),
+                path === "/dashboard/blogs" ||
+                path.startsWith("/dashboard/blog"),
             items: [],
         });
     }
     if (profile.permissions!.includes(permissions.manageSite)) {
         navMainItems.push({
             title: SIDEBAR_MENU_PAGES,
-            url: "/dashboard4/pages",
+            url: "/dashboard/pages",
             icon: Globe,
             isActive:
-                path === "/dashboard4/pages" ||
-                path.startsWith("/dashboard4/page"),
+                path === "/dashboard/pages" ||
+                path.startsWith("/dashboard/page"),
             items: [],
         });
     }
@@ -159,17 +159,17 @@ function getSidebarItems(profile: Partial<Profile>, path, tab) {
             title: SIDEBAR_MENU_USERS,
             url: "#",
             icon: Users,
-            isActive: path?.startsWith("/dashboard4/users"),
+            isActive: path?.startsWith("/dashboard/users"),
             items: [
                 {
                     title: "All users",
-                    url: "/dashboard4/users",
-                    isActive: path === "/dashboard4/users",
+                    url: "/dashboard/users",
+                    isActive: path === "/dashboard/users",
                 },
                 {
                     title: "Tags",
-                    url: "/dashboard4/users/tags",
-                    isActive: path === "/dashboard4/users/tags",
+                    url: "/dashboard/users/tags",
+                    isActive: path === "/dashboard/users/tags",
                 },
             ],
         });
@@ -179,22 +179,22 @@ function getSidebarItems(profile: Partial<Profile>, path, tab) {
             url: "#",
             icon: Mail,
             isActive:
-                path.startsWith("/dashboard4/mails") ||
+                path.startsWith("/dashboard/mails") ||
                 path.startsWith("/dashboard/mail"),
             items: [
                 {
                     title: "Broadcasts",
-                    url: "/dashboard4/mails?tab=Broadcasts",
+                    url: "/dashboard/mails?tab=Broadcasts",
                     isActive:
                         `${path}?tab=${tab}` ===
-                        "/dashboard4/mails?tab=Broadcasts",
+                        "/dashboard/mails?tab=Broadcasts",
                 },
                 {
                     title: "Sequences",
-                    url: "/dashboard4/mails?tab=Sequences",
+                    url: "/dashboard/mails?tab=Sequences",
                     isActive:
                         `${path}?tab=${tab}` ===
-                        "/dashboard4/mails?tab=Sequences",
+                        "/dashboard/mails?tab=Sequences",
                 },
             ],
         });
@@ -203,43 +203,41 @@ function getSidebarItems(profile: Partial<Profile>, path, tab) {
         const items = [
             {
                 title: "Branding",
-                url: "/dashboard4/settings?tab=Branding",
+                url: "/dashboard/settings?tab=Branding",
                 isActive:
-                    `${path}?tab=${tab}` ===
-                    "/dashboard4/settings?tab=Branding",
+                    `${path}?tab=${tab}` === "/dashboard/settings?tab=Branding",
             },
             {
                 title: "Payment",
-                url: "/dashboard4/settings?tab=Payment",
+                url: "/dashboard/settings?tab=Payment",
                 isActive:
-                    `${path}?tab=${tab}` === "/dashboard4/settings?tab=Payment",
+                    `${path}?tab=${tab}` === "/dashboard/settings?tab=Payment",
             },
             {
                 title: "Mails",
-                url: "/dashboard4/settings?tab=Mails",
+                url: "/dashboard/settings?tab=Mails",
                 isActive:
-                    `${path}?tab=${tab}` === "/dashboard4/settings?tab=Mails",
+                    `${path}?tab=${tab}` === "/dashboard/settings?tab=Mails",
             },
             {
                 title: "Code injection",
-                url: "/dashboard4/settings?tab=Code%20Injection",
+                url: "/dashboard/settings?tab=Code%20Injection",
                 isActive:
                     `${path}?tab=${tab}` ===
-                    "/dashboard4/settings?tab=Code Injection",
+                    "/dashboard/settings?tab=Code Injection",
             },
             {
                 title: "API Keys",
-                url: "/dashboard4/settings?tab=API%20Keys",
+                url: "/dashboard/settings?tab=API%20Keys",
                 isActive:
-                    `${path}?tab=${tab}` ===
-                    "/dashboard4/settings?tab=API Keys",
+                    `${path}?tab=${tab}` === "/dashboard/settings?tab=API Keys",
             },
         ];
         navMainItems.push({
             title: SIDEBAR_MENU_SETTINGS,
             url: "#",
             icon: Settings,
-            isActive: path?.startsWith("/dashboard4/settings"),
+            isActive: path?.startsWith("/dashboard/settings"),
             items,
         });
     }
@@ -247,17 +245,17 @@ function getSidebarItems(profile: Partial<Profile>, path, tab) {
     const navSecondaryItems = [
         {
             title: "Support",
-            url: "/dashboard4/support",
+            url: "/dashboard/support",
             icon: LifeBuoy,
-            isActive: path === "/dashboard4/support",
+            isActive: path === "/dashboard/support",
         },
     ];
     const navProjectItems = [
         {
             name: MY_CONTENT_HEADER,
-            url: "/dashboard4/my-content",
+            url: "/dashboard/my-content",
             icon: LibraryBig,
-            isActive: path === "/dashboard4/my-content",
+            isActive: path === "/dashboard/my-content",
         },
     ];
 

@@ -250,7 +250,7 @@ export function CommunityInfo({
                         Constants.MembershipRole.MODERATE,
                     ) &&
                     membership.status === Constants.MembershipStatus.ACTIVE && (
-                        <Link href={`/dashboard4/community/${id}/manage`}>
+                        <Link href={`/dashboard/community/${id}/manage`}>
                             <Button variant="outline" className="w-full mt-2">
                                 {COMMUNITY_SETTINGS}
                             </Button>

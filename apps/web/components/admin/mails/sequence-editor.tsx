@@ -1,6 +1,5 @@
 import { Address, Constants, Course } from "@courselit/common-models";
 import {
-    Breadcrumbs,
     Form,
     FormField,
     Link,
@@ -26,7 +25,6 @@ import {
     COMPOSE_SEQUENCE_FROM_PLC,
     DELETE_EMAIL_MENU,
     TOAST_TITLE_ERROR,
-    PAGE_HEADER_ALL_MAILS,
     PAGE_HEADER_EDIT_SEQUENCE,
 } from "@ui-config/strings";
 import {
@@ -43,7 +41,6 @@ interface SequenceEditorProps {
     address: Address;
     dispatch?: AppDispatch;
     loading?: boolean;
-    prefix: string;
 }
 
 interface TagWithDetails {
@@ -55,7 +52,6 @@ const SequenceEditor = ({
     address,
     dispatch,
     loading = false,
-    prefix,
 }: SequenceEditorProps) => {
     const [title, setTitle] = useState("");
     const [from, setFrom] = useState("");
@@ -523,14 +519,6 @@ const SequenceEditor = ({
 
     return (
         <div className="flex flex-col gap-4">
-            {prefix === "/dashboard" && (
-                <Breadcrumbs aria-label="breakcrumb">
-                    <Link href={`${prefix}/mails?tab=Sequences`}>
-                        {PAGE_HEADER_ALL_MAILS}
-                    </Link>
-                    {PAGE_HEADER_EDIT_SEQUENCE}
-                </Breadcrumbs>
-            )}
             <div className="flex justify-between items-center mb-2">
                 <h1 className="text-4xl font-semibold mb-4">
                     {PAGE_HEADER_EDIT_SEQUENCE}
@@ -715,9 +703,9 @@ const SequenceEditor = ({
                                     day
                                 </div>
                                 <Link
-                                    href={`${prefix}/mails/sequence/${id}/${
+                                    href={`/dashboard/mails/sequence/${id}/${
                                         email.emailId
-                                    }${prefix === "/dashboard" ? "/edit" : ""}`}
+                                    }`}
                                     style={{
                                         flex: "1",
                                     }}

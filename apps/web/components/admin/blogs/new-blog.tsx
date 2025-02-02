@@ -4,7 +4,6 @@ import {
     Form,
     FormField,
     Button,
-    Breadcrumbs,
     useToast,
 } from "@courselit/components-library";
 import { AppDispatch, AppState } from "@courselit/state-management";
@@ -18,7 +17,6 @@ import {
     COURSE_TYPE_BLOG,
     TOAST_TITLE_ERROR,
     FORM_NEW_PRODUCT_TITLE_PLC,
-    MANAGE_BLOG_PAGE_HEADING,
 } from "@/ui-config/strings";
 import { networkAction } from "@courselit/state-management/dist/action-creators";
 import Link from "next/link";
@@ -27,14 +25,12 @@ interface NewBlogProps {
     address: Address;
     dispatch?: AppDispatch;
     networkAction: boolean;
-    prefix: string;
 }
 
 export function NewBlog({
     address,
     dispatch,
     networkAction: loading,
-    prefix,
 }: NewBlogProps) {
     const [title, setTitle] = useState("");
     const router = useRouter();
@@ -64,9 +60,7 @@ export function NewBlog({
             const response = await fetch.exec();
             if (response.course) {
                 router.replace(
-                    `${prefix}/blog/${response.course.courseId}${
-                        prefix === "/dashboard" ? "/details" : ""
-                    }`,
+                    `/dashboard/blog/${response.course.courseId}`,
                 );
             }
         } catch (err: any) {
@@ -82,17 +76,6 @@ export function NewBlog({
 
     return (
         <div className="flex flex-col">
-            {prefix === "/dashboard" && (
-                <div className="mb-4">
-                    <Breadcrumbs aria-label="breakcrumb">
-                        <Link href={`${prefix}/blogs`}>
-                            {MANAGE_BLOG_PAGE_HEADING}
-                        </Link>
-
-                        <p>{BTN_NEW_BLOG}</p>
-                    </Breadcrumbs>
-                </div>
-            )}
             <div className="flex flex-col">
                 <h1 className="text-4xl font-semibold mb-4">{BTN_NEW_BLOG}</h1>
                 <Form onSubmit={createCourse} className="flex flex-col gap-4">
@@ -111,7 +94,7 @@ export function NewBlog({
                         >
                             {BTN_CONTINUE}
                         </Button>
-                        <Link href={`${prefix}/blogs`} legacyBehavior>
+                        <Link href={`/dashboard/blogs`} legacyBehavior>
                             <Button variant="soft">{BUTTON_CANCEL_TEXT}</Button>
                         </Link>
                     </div>

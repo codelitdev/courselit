@@ -42,7 +42,6 @@ interface MailsProps {
     address: Address;
     selectedTab: typeof BROADCASTS | typeof SEQUENCES;
     dispatch?: AppDispatch;
-    prefix: string;
     loading: boolean;
 }
 
@@ -52,7 +51,6 @@ export default function Mails({
     address,
     dispatch,
     selectedTab,
-    prefix,
     loading,
 }: MailsProps) {
     const [broadcastPage, setBroadcastPage] = useState(1);
@@ -229,11 +227,9 @@ export default function Mails({
             const response = await fetch.exec();
             if (response.sequence && response.sequence.sequenceId) {
                 router.push(
-                    `${prefix}/mails/${
+                    `/dashboard/mails/${
                         selectedTab === BROADCASTS ? "broadcast" : "sequence"
-                    }/${response.sequence.sequenceId}${
-                        prefix === "/dashboard" ? "/edit" : ""
-                    }`,
+                    }/${response.sequence.sequenceId}`,
                 );
             }
         } catch (err) {
@@ -287,7 +283,7 @@ export default function Mails({
                             <div className="w-[120px]">
                                 <Button
                                     component="link"
-                                    href={`${prefix}/settings?tab=Mails`}
+                                    href={`/dashboard/settings?tab=Mails`}
                                 >
                                     Go to settings
                                 </Button>
@@ -333,7 +329,7 @@ export default function Mails({
                 items={[BROADCASTS, SEQUENCES]}
                 value={selectedTab}
                 onChange={(tab: MailsTab) => {
-                    router.replace(`${prefix}/mails?tab=${tab}`);
+                    router.replace(`/dashboard/mails?tab=${tab}`);
                 }}
             >
                 <SequencesList
@@ -341,14 +337,12 @@ export default function Mails({
                     address={address}
                     loading={loading}
                     dispatch={dispatch}
-                    prefix={prefix}
                 />
                 <SequencesList
                     type={Constants.mailTypes[1] as SequenceType}
                     address={address}
                     loading={loading}
                     dispatch={dispatch}
-                    prefix={prefix}
                 />
             </Tabbs>
         </div>

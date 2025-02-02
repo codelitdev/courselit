@@ -246,7 +246,7 @@ export function CommunityForum({
 
     const handleCategoryClick = (category: string) => {
         router.push(
-            `/dashboard4/community${id ? `/${id}` : ""}?category=${category}`,
+            `/dashboard/community${id ? `/${id}` : ""}?category=${category}`,
         );
     };
 

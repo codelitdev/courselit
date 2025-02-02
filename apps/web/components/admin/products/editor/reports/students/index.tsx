@@ -30,7 +30,6 @@ interface StudentsProps {
     address: Address;
     dispatch?: AppDispatch;
     loading: boolean;
-    prefix: string;
 }
 
 interface Student {
@@ -47,7 +46,6 @@ export default function Students({
     address,
     dispatch,
     loading,
-    prefix,
 }: StudentsProps) {
     const [students, setStudents] = useState<Student[]>([]);
     const [text, setText] = useState("");
@@ -158,7 +156,7 @@ export default function Students({
                         >
                             <td className="py-2">
                                 <Link
-                                    href={`${prefix}/users/${student.userId}`}
+                                    href={`/dashboard/users/${student.userId}`}
                                 >
                                     {student.name || (student.email as string)}
                                 </Link>
