@@ -1,12 +1,10 @@
 import React, { ReactNode } from "react";
 import dynamic from "next/dynamic";
-import generateTabs from "./tabs-data";
 import { Address, Profile, SiteInfo } from "@courselit/common-models";
 import useCourse from "../course-hook";
 import { truncate } from "@ui-lib/utils";
 
 const BlogHeader = dynamic(() => import("./header"));
-const Tabs = dynamic(() => import("../../../../tabs"));
 
 interface BlogEditorLayoutProps {
     id: string;
@@ -37,7 +35,6 @@ export default function BlogEditorLayout({
                 breadcrumbs={breadcrumbs}
                 address={address}
             />
-            <Tabs tabs={generateTabs(id as string)} />
             {course && children}
         </div>
     );

@@ -16,13 +16,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
-export default function CommunityCreator({
-    address,
-    prefix,
-}: {
-    address: Address;
-    prefix;
-}) {
+export default function CommunityCreator({ address }: { address: Address }) {
     const [name, setName] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -47,7 +41,7 @@ export default function CommunityCreator({
             setLoading(true);
             const response = await fetch.exec();
             if (response.community) {
-                router.replace(`${prefix}/communities`);
+                router.replace(`/dashboard/communities`);
             }
         } catch (err: any) {
             toast({
@@ -80,7 +74,7 @@ export default function CommunityCreator({
                     <Button disabled={!name || loading} sx={{ mr: 1 }}>
                         {COMMUNITY_NEW_BTN_CAPTION}
                     </Button>
-                    <Link href={`${prefix}/communities`}>
+                    <Link href={`/dashboard/communities`}>
                         <Button variant="soft">{BUTTON_CANCEL_TEXT}</Button>
                     </Link>
                 </div>

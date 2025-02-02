@@ -7,7 +7,6 @@ import { AppDispatch } from "@courselit/state-management";
 interface CourseReportsProps {
     id: string;
     address: Address;
-    prefix: string;
     loading?: boolean;
     dispatch?: AppDispatch;
 }
@@ -17,7 +16,6 @@ export default function CourseReports({
     address,
     loading = false,
     dispatch,
-    prefix,
 }: CourseReportsProps) {
     let course = useCourse(id, address);
 

@@ -27,14 +27,7 @@ export default function ProductEditorLayout({
 
     return (
         <div className="flex flex-col gap-4">
-            <ProductHeader
-                id={id as string}
-                address={address}
-            />
-            {/* {!(
-                path?.indexOf("section/") !== -1 && prefix === "/dashboard"
-            ) && <Tabs tabs={generateTabs(prefix, id as string)} />} */}
-
+            <ProductHeader id={id as string} address={address} />
             {course && children}
         </div>
     );
