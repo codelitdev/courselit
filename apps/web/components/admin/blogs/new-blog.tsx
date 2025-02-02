@@ -59,9 +59,7 @@ export function NewBlog({
             dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.course) {
-                router.replace(
-                    `/dashboard/blog/${response.course.courseId}`,
-                );
+                router.replace(`/dashboard/blog/${response.course.courseId}`);
             }
         } catch (err: any) {
             toast({

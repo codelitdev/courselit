@@ -159,9 +159,7 @@ export default function NewCustomer({
                             >
                                 {BTN_INVITE}
                             </Button>
-                            <Link
-                                href={`/dashboard/product/${courseId}`}
-                            >
+                            <Link href={`/dashboard/product/${courseId}`}>
                                 <Button variant="soft">{BTN_GO_BACK}</Button>
                             </Link>
                         </div>
