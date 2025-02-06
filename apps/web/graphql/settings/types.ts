@@ -52,6 +52,10 @@ const siteType = new GraphQLObjectType({
         paymentMethod: { type: GraphQLString },
         stripeKey: { type: GraphQLString },
         razorpayKey: { type: GraphQLString },
+        lemonsqueezyStoreId: { type: GraphQLString },
+        lemonsqueezyOneTimeVariantId: { type: GraphQLString },
+        lemonsqueezySubscriptionMonthlyVariantId: { type: GraphQLString },
+        lemonsqueezySubscriptionYearlyVariantId: { type: GraphQLString },
         codeInjectionHead: { type: GraphQLString },
         codeInjectionBody: { type: GraphQLString },
         mailingAddress: { type: GraphQLString },
@@ -85,6 +89,12 @@ const sitePaymentUpdateType = new GraphQLInputObjectType({
         razorpayKey: { type: GraphQLString },
         razorpaySecret: { type: GraphQLString },
         razorpayWebhookSecret: { type: GraphQLString },
+        lemonsqueezyKey: { type: GraphQLString },
+        lemonsqueezyStoreId: { type: GraphQLString },
+        lemonsqueezyWebhookSecret: { type: GraphQLString },
+        lemonsqueezyOneTimeVariantId: { type: GraphQLString },
+        lemonsqueezySubscriptionMonthlyVariantId: { type: GraphQLString },
+        lemonsqueezySubscriptionYearlyVariantId: { type: GraphQLString },
     },
 });
 

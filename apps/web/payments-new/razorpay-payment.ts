@@ -45,7 +45,7 @@ export default class RazorpayPayment implements Payment {
         return order.id;
     }
 
-    verify(event) {
+    async verify(event) {
         if (!event) {
             return false;
         }
@@ -88,6 +88,10 @@ export default class RazorpayPayment implements Payment {
 
     getName() {
         return this.name;
+    }
+
+    async getCurrencyISOCode() {
+        return this.siteinfo.currencyISOCode!;
     }
 
     private generateOrder({

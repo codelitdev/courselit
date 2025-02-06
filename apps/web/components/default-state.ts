@@ -33,6 +33,10 @@ export const defaultState: {
         mailingAddress: "",
         hideCourseLitBranding: false,
         razorpayKey: "",
+        lemonsqueezyStoreId: "",
+        lemonsqueezyOneTimeVariantId: "",
+        lemonsqueezySubscriptionMonthlyVariantId: "",
+        lemonsqueezySubscriptionYearlyVariantId: "",
     },
     networkAction: false,
     profile: {

@@ -38,6 +38,10 @@ export default async function Layout({
                         mailingAddress,
                         hideCourseLitBranding,
                         razorpayKey,
+                        lemonsqueezyStoreId,
+                        lemonsqueezyOneTimeVariantId,
+                        lemonsqueezySubscriptionMonthlyVariantId,
+                        lemonsqueezySubscriptionYearlyVariantId,
                     },
                     theme {
                         name,
@@ -98,4 +102,6 @@ const formatSiteInfo = (siteinfo?: SiteInfo) => ({
         siteinfo?.hideCourseLitBranding ||
         defaultState.siteinfo.hideCourseLitBranding,
     razorpayKey: siteinfo?.razorpayKey || defaultState.siteinfo.razorpayKey,
+    lemonsqueezyKey:
+        siteinfo?.lemonsqueezyKey || defaultState.siteinfo.lemonsqueezyKey,
 });

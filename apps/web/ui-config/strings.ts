@@ -108,6 +108,13 @@ export const SITE_ADMIN_SETTINGS_PAYMENT_METHOD = "Payment Method";
 export const SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT =
     "Stripe Publishable Key";
 export const SITE_SETTINGS_RAZORPAY_KEY_TEXT = "Razorpay Key";
+export const SITE_SETTINGS_LEMONSQUEEZY_KEY_TEXT = "Lemonsqueezy Key";
+export const SITE_SETTINGS_LEMONSQUEEZY_STOREID_TEXT = "Lemonsqueezy Store ID";
+export const SITE_SETTINGS_LEMONSQUEEZY_ONETIME_TEXT = "One time variant ID";
+export const SITE_SETTINGS_LEMONSQUEEZY_SUB_MONTHLY_TEXT =
+    "Subscription (Monthly) variant ID";
+export const SITE_SETTINGS_LEMONSQUEEZY_SUB_YEARLY_TEXT =
+    "Subscription (Yearly) variant ID";
 export const SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL = "None";
 export const FREE_COST = "FREE";
 export const SIDEBAR_TEXT_COURSE_ABOUT = "Introduction";

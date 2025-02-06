@@ -19,6 +19,7 @@ export const DRAFTJS_ENTITY_TYPE_AUDIO = "audio";
 
 // Payment methods
 export const PAYMENT_METHOD_STRIPE = "stripe";
+export const PAYMENT_METHOD_LEMONSQUEEZY = "lemonsqueezy";
 export const PAYMENT_METHOD_PAYPAL = "paypal";
 export const PAYMENT_METHOD_PAYTM = "paytm";
 export const PAYMENT_METHOD_RAZORPAY = "razorpay";

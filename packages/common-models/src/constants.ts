@@ -1,4 +1,5 @@
 import {
+    PAYMENT_METHOD_LEMONSQUEEZY,
     PAYMENT_METHOD_NONE,
     PAYMENT_METHOD_PAYPAL,
     PAYMENT_METHOD_PAYTM,
@@ -54,6 +55,7 @@ export const paymentMethods = [
     PAYMENT_METHOD_PAYTM,
     PAYMENT_METHOD_RAZORPAY,
     PAYMENT_METHOD_STRIPE,
+    PAYMENT_METHOD_LEMONSQUEEZY,
 ] as const;
 export const PageType = {
     PRODUCT: "product",

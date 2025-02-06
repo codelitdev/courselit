@@ -73,7 +73,11 @@ export default class StripePayment implements Payment {
         return session.id;
     }
 
-    verify(event: Stripe.Event) {
+    async getCurrencyISOCode() {
+        return this.siteinfo.currencyISOCode!;
+    }
+
+    async verify(event: Stripe.Event) {
         if (!event) {
             return false;
         }

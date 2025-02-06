@@ -38,7 +38,11 @@ export async function POST(req: NextRequest) {
         }
 
         const paymentMethod = await getPaymentMethod(domain._id.toString());
-        if (!paymentMethod.verify(body)) {
+        if (!paymentMethod) {
+            return Response.json({ message: "Payment method not found" });
+        }
+
+        if (!(await paymentMethod.verify(body))) {
             return Response.json({ message: "Payment not verified" });
         }
 
