@@ -133,6 +133,7 @@ export const STRIPE_PUBLISHABLE_KEY_EMPTY =
 export const CAPTION_TRY_AGAIN = "Try again";
 export const CAPTION_CLOSE = "Close";
 export const LOADING = "Loading";
+export const WORKING = "Working...";
 export const BUTTON_NEW_LESSON_TEXT = "New Lesson";
 export const EDIT_LESSON_TEXT = "Edit Lesson";
 export const BUTTON_LESSON_DOWNLOAD = "Open in a new tab";

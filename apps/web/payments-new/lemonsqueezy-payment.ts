@@ -70,7 +70,6 @@ export default class LemonSqueezyPayment implements Payment {
                 variantId = this.siteinfo.lemonsqueezyOneTimeVariantId;
                 break;
         }
-        const store = await this.getStore(this.siteinfo.lemonsqueezyStoreId!);
 
         const payload = {
             data: {

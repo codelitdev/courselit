@@ -7,6 +7,7 @@ import { AppState } from "@courselit/state-management";
 const Stripe = dynamic(() => import("./stripe"));
 const Razorpay = dynamic(() => import("./razorpay"));
 const Free = dynamic(() => import("./free"));
+const Lemonsqueezy = dynamic(() => import("./lemonsqueezy"));
 
 interface CheckoutExternalProps {
     course: Course;
@@ -27,6 +28,10 @@ const CheckoutExternal = (props: CheckoutExternalProps) => {
                     )}
                     {paymentMethod === UIConstants.PAYMENT_METHOD_RAZORPAY && (
                         <Razorpay course={course} />
+                    )}
+                    {paymentMethod ===
+                        UIConstants.PAYMENT_METHOD_LEMONSQUEEZY && (
+                        <Lemonsqueezy course={course} />
                     )}
                     {paymentMethod === UIConstants.PAYMENT_METHOD_PAYTM && (
                         <></>
