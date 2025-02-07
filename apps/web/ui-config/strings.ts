@@ -602,3 +602,5 @@ export const TOAST_TITLE_SUCCESS = "Success";
 export const TOAST_TITLE_ERROR = "Error";
 export const TOAST_DESCRIPTION_CHANGES_SAVED = "Changes saved";
 export const DELETED_COMMENT_PLACEHOLDER = "Deleted";
+export const SETTINGS_RESOURCE_PAYMENT = "Set up payment";
+export const SETTINGS_RESOURCE_API = "API documentation";
