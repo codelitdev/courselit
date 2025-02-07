@@ -47,6 +47,8 @@ import {
     SITE_SETTINGS_LEMONSQUEEZY_ONETIME_TEXT,
     SITE_SETTINGS_LEMONSQUEEZY_SUB_MONTHLY_TEXT,
     SITE_SETTINGS_LEMONSQUEEZY_SUB_YEARLY_TEXT,
+    SETTINGS_RESOURCE_PAYMENT,
+    SETTINGS_RESOURCE_API,
 } from "@/ui-config/strings";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import { decode, encode } from "base-64";
@@ -82,6 +84,7 @@ import {
 import { Copy, Info } from "lucide-react";
 import { Label } from "@components/ui/label";
 import { Input } from "@components/ui/input";
+import Resources from "@components/resources";
 
 const {
     PAYMENT_METHOD_PAYPAL,
@@ -1142,6 +1145,14 @@ const Settings = (props: SettingsProps) => {
                             </div>
                         </CardContent>
                     </Card>
+                    <Resources
+                        links={[
+                            {
+                                href: "https://docs.courselit.app/en/schools/set-up-payments/",
+                                text: SETTINGS_RESOURCE_PAYMENT,
+                            },
+                        ]}
+                    />
                 </div>
                 <Form
                     onSubmit={handleMailsSettingsSubmit}
@@ -1280,54 +1291,15 @@ const Settings = (props: SettingsProps) => {
                             )}
                         </TableBody>
                     </Table>
+                    <Resources
+                        links={[
+                            {
+                                href: "https://docs.courselit.app/en/developers/introduction",
+                                text: SETTINGS_RESOURCE_API,
+                            },
+                        ]}
+                    />
                 </div>
-                {/* <Form
-                    onSubmit={handleCommunitySettingsSubmit}
-                    className="flex flex-col gap-4 pt-4"
-                >
-                    <div className="flex justify-between items-center">
-                        <PageBuilderPropertyHeader label="Community Enabled" />
-                        <Switch
-                            checked={newSettings.communityEnabled}
-                            onChange={(value: boolean) => {
-                                setNewSettings(
-                                    Object.assign({}, newSettings, {
-                                        communityEnabled: value,
-                                    }),
-                                );
-                            }}
-                        />
-                    </div>
-                    <FormField
-                        label="Community Name"
-                        name="communityName"
-                        value={newSettings.communityName || ""}
-                        onChange={onChangeData}
-                        required
-                        disabled={!newSettings.communityEnabled}
-                    />
-                    <FormField
-                        label="Community Description"
-                        name="communityDescription"
-                        value={newSettings.communityDescription || ""}
-                        onChange={onChangeData}
-                        disabled={!newSettings.communityEnabled}
-                    />
-                    <div>
-                        <Button
-                            type="submit"
-                            value={BUTTON_SAVE}
-                            color="primary"
-                            disabled={
-                                !newSettings.communityEnabled ||
-                                props.networkAction
-                            }
-                        >
-                            {BUTTON_SAVE}
-                        </Button>
-                    </div>
-                </Form>
-                {selectedTab === SITE_SETTINGS_SECTION_COMMUNITIES && ( */}
             </Tabbs>
         </div>
     );

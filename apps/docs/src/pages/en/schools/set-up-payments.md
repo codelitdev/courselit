@@ -10,10 +10,11 @@ CourseLit offers integrations with the following payment platforms:
 
 -   [Stripe](https://stripe.com)
 -   [Razorpay](https://razorpay.com)
+-   [Lemonsqueezy](https://lemonsqueezy.com) (Experimental)
 
 > A school can only have a single payment platform activated at a time.
 
-### Set up Stripe
+## Stripe setup
 
 1. Sign up for an account on Stripe and get your business approved (or use a test account).
 2. In the Stripe dashboard, go to `Developers > API Keys` section as shown below.
@@ -36,7 +37,7 @@ CourseLit offers integrations with the following payment platforms:
       ![Stripe webhook destination](/assets/schools/stripe-courselit-webhook-entry.png)
 9. That's it! Your Stripe configuration is complete, and you are ready to receive payments.
 
-### Set up Razorpay
+## Razorpay setup
 
 1. Sign up for an account on Razorpay and get your business approved (or use a test account).
 2. In the Razorpay dashboard, go to the `Account & Settings` tab and select `API keys` as shown below:  
@@ -56,6 +57,55 @@ CourseLit offers integrations with the following payment platforms:
         - `subscription.charged`: For confirming subscription payments  
           ![Razorpay webhook configuration](/assets/schools/razorpay-webhook-config.png)
 10. That's it! Your Razorpay configuration is complete, and you are ready to receive payments.
+
+## Lemon squeezy setup
+
+> Lemon Squeezy does not support creating custom products on the fly. Hence, we have built around the restrictions laid down by Lemon Squeezy. That's why we are calling our integration experimental. If something does not work, reach out to us.
+
+1. Sign up for an account on Lemon Squeezy and get your business approved (or use a test account).
+2. In the Lemon Squeezy dashboard, go to `Products` and click on the `New product` button to create a generic product.  
+   ![Lemon Squeezy product dashboard](/assets/schools/lemon-dashboard.png)  
+   This generic product will be used to create checkouts since Lemon Squeezy does not allow creating custom products on the fly.
+3. In the sidebar form that slides in, enter the product name and create three variants as described below.
+
+    > You can name these variants whatever you like, as we will use the `Variant IDs` instead of variant names. The same goes for pricing—we only care about the pricing type, not the actual price set on a variant, as we will override it during checkout.
+
+    - **A variant with one-time pricing**: To enable one-time payments in CourseLit
+    - **A variant with subscription pricing with a monthly frequency**: To enable monthly subscriptions and EMIs in CourseLit
+    - **A variant with subscription pricing with a yearly frequency**: To enable yearly subscriptions in CourseLit  
+      ![Lemon Squeezy variant creation](/assets/schools/lemon-create-variants.png)
+
+4. The following screenshot shows how to select a variant's pricing.  
+   ![Lemon Squeezy variant pricing](/assets/schools/lemon-variant-payment-config.png)
+
+5. In your CourseLit school's dashboard, go to `Settings > Payments` and configure the settings as described below.  
+   ![CourseLit Lemon Squeezy config](/assets/schools/courselit-lemonsqueezy-config.png)
+
+    1. **Currency**: This will be visible throughout your school but won't affect Lemon Squeezy checkouts, as Lemon Squeezy does not allow overriding it via custom checkout.
+    2. **Payment method**: Select Lemon Squeezy.
+    3. **Lemon Squeezy Store ID**: In the Lemon Squeezy dashboard, go to `Settings > Stores` as shown below. Copy and paste this ID into the CourseLit settings.  
+       ![Lemon Squeezy store ID](/assets/schools/lemon-store-id.png)
+    4. **One-time variant ID**: In the Lemon Squeezy dashboard, go to `Products` and click on the product you configured in the steps above. In the slider popup, scroll down to the `Variants` section, click on the triple dots menu of the one-time variant, and `Copy ID`. Paste this ID into the CourseLit settings.
+    5. **Subscription (Monthly) variant ID**: Do the same as #4.
+    6. **Subscription (Yearly) variant ID**: Do the same as #4.
+    7. **Lemon Squeezy Key**: In the Lemon Squeezy dashboard, go to `Settings > API` and click on the `+` icon to generate a new key. Paste this key into the CourseLit settings.  
+       ![Lemon Squeezy API](/assets/schools/lemon-api.png)
+
+6. Set up the webhooks. Using webhooks, your school receives timely updates about payments from Lemon Squeezy.
+7. In the Lemon Squeezy dashboard, go to `Settings > Webhooks` and click on the `+` icon to create a new webhook.  
+   ![Lemon Squeezy webhook](/assets/schools/lemon-webhook.png)
+
+8. In the webhook slider popup, enter the following:
+
+    - The webhook URL for your CourseLit school (listed in the same payment screen in your school).
+    - Enter any random string in `Signing secret` (coming soon).
+    - Check the following events:
+        - `order_created`: For confirming one-time payments.
+        - `subscription_payment_success`: For confirming subscription payments.
+        - `subscription_resumed`: For detecting canceled subscriptions that are resumed automatically by Lemon Squeezy. It is an edge case that we need to handle.  
+          ![Lemon Squeezy webhook configuration](/assets/schools/lemon-webhook-config.png)
+
+9. That's it! Your Lemon Squeezy configuration is complete, and you are ready to receive payments.
 
 ## Looking for developer docs?
 
