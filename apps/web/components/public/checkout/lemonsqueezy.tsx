@@ -10,7 +10,7 @@ import {
 import { connect } from "react-redux";
 import { useRouter } from "next/router";
 import type { AppState, AppDispatch } from "@courselit/state-management";
-import { Address, Course, SiteInfo } from "@courselit/common-models";
+import { Address, Course } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
 import { actionCreators } from "@courselit/state-management";
 import Script from "next/script";
@@ -19,13 +19,12 @@ const { networkAction } = actionCreators;
 
 interface LemonsqueezyProps {
     course: Course;
-    siteInfo: SiteInfo;
     address: Address;
     dispatch: AppDispatch;
 }
 
 const Lemonsqueezy = (props: LemonsqueezyProps) => {
-    const { course, siteInfo, address, dispatch } = props;
+    const { course, address, dispatch } = props;
     const router = useRouter();
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
@@ -95,7 +94,6 @@ const Lemonsqueezy = (props: LemonsqueezyProps) => {
 };
 
 const mapStateToProps = (state: AppState) => ({
-    siteInfo: state.siteinfo,
     address: state.address,
 });
 
