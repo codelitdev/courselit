@@ -83,6 +83,19 @@ export const checkForInvalidPaymentMethodSettings = (
         failedPaymentMethod = UIConstants.PAYMENT_METHOD_RAZORPAY;
     }
 
+    if (
+        siteInfo.paymentMethod === UIConstants.PAYMENT_METHOD_LEMONSQUEEZY &&
+        !(
+            siteInfo.lemonsqueezyKey &&
+            siteInfo.lemonsqueezyStoreId &&
+            siteInfo.lemonsqueezyOneTimeVariantId &&
+            siteInfo.lemonsqueezySubscriptionMonthlyVariantId &&
+            siteInfo.lemonsqueezySubscriptionYearlyVariantId
+        )
+    ) {
+        failedPaymentMethod = UIConstants.PAYMENT_METHOD_LEMONSQUEEZY;
+    }
+
     return failedPaymentMethod;
 };
 

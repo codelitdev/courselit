@@ -213,6 +213,11 @@ export default function Checkout({
                     const rzp1 = new Razorpay(razorpayPayload);
                     rzp1.open();
                 }
+                if (paymentMethod === UIConstants.PAYMENT_METHOD_LEMONSQUEEZY) {
+                    (window as any).LemonSqueezy.Url.Open(
+                        response.paymentTracker,
+                    );
+                }
             } else if (response.status === "success") {
                 if (product.type === Constants.MembershipEntityType.COMMUNITY) {
                     router.replace(
@@ -425,6 +430,20 @@ export default function Checkout({
             )}
         </div>
     );
+
+    useEffect(() => {
+        function setupLemonSqueezy() {
+            if (typeof (window as any).createLemonSqueezy !== "undefined") {
+                (window as any).createLemonSqueezy();
+            }
+        }
+
+        if (
+            siteinfo.paymentMethod === UIConstants.PAYMENT_METHOD_LEMONSQUEEZY
+        ) {
+            setupLemonSqueezy();
+        }
+    }, [siteinfo, (window as any).createLemonSqueezy]);
 
     return (
         <div className="min-h-screen bg-background w-full">
@@ -643,6 +662,10 @@ export default function Checkout({
                 </div>
             </div>
             <Script src="https://checkout.razorpay.com/v1/checkout.js" />
+            <Script
+                src="https://app.lemonsqueezy.com/js/lemon.js"
+                id="lemonsqueezy"
+            />
         </div>
     );
 }

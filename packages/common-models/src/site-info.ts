@@ -19,4 +19,10 @@ export default interface SiteInfo {
     razorpayKey?: string;
     razorpaySecret?: string;
     razorpayWebhookSecret?: string;
+    lemonsqueezyKey?: string;
+    lemonsqueezyStoreId?: string;
+    lemonsqueezyOneTimeVariantId?: string;
+    lemonsqueezySubscriptionMonthlyVariantId?: string;
+    lemonsqueezySubscriptionYearlyVariantId?: string;
+    lemonsqueezyWebhookSecret?: string;
 }

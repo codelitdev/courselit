@@ -33,6 +33,10 @@ export async function generateMetadata(): Promise<Metadata> {
                         mailingAddress,
                         hideCourseLitBranding,
                         razorpayKey,
+                        lemonsqueezyStoreId,
+                        lemonsqueezyOneTimeVariantId,
+                        lemonsqueezySubscriptionMonthlyVariantId,
+                        lemonsqueezySubscriptionYearlyVariantId,
                     },
                     theme {
                         name,

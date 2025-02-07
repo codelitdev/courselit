@@ -42,6 +42,11 @@ import {
     TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS,
     DOCUMENTATION_LINK_LABEL,
+    SITE_SETTINGS_LEMONSQUEEZY_KEY_TEXT,
+    SITE_SETTINGS_LEMONSQUEEZY_STOREID_TEXT,
+    SITE_SETTINGS_LEMONSQUEEZY_ONETIME_TEXT,
+    SITE_SETTINGS_LEMONSQUEEZY_SUB_MONTHLY_TEXT,
+    SITE_SETTINGS_LEMONSQUEEZY_SUB_YEARLY_TEXT,
 } from "@/ui-config/strings";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import { decode, encode } from "base-64";
@@ -83,6 +88,7 @@ const {
     PAYMENT_METHOD_PAYTM,
     PAYMENT_METHOD_RAZORPAY,
     PAYMENT_METHOD_STRIPE,
+    PAYMENT_METHOD_LEMONSQUEEZY,
     PAYMENT_METHOD_NONE,
     MIMETYPE_IMAGE,
 } = UIConstants;
@@ -146,6 +152,14 @@ const Settings = (props: SettingsProps) => {
                     : "",
                 mailingAddress: settings.mailingAddress || "",
                 hideCourseLitBranding: settings.hideCourseLitBranding ?? false,
+                razorpayKey: settings.razorpayKey,
+                lemonsqueezyStoreId: settings.lemonsqueezyStoreId,
+                lemonsqueezyOneTimeVariantId:
+                    settings.lemonsqueezyOneTimeVariantId,
+                lemonsqueezySubscriptionMonthlyVariantId:
+                    settings.lemonsqueezySubscriptionMonthlyVariantId,
+                lemonsqueezySubscriptionYearlyVariantId:
+                    settings.lemonsqueezySubscriptionYearlyVariantId,
             }),
         );
     }, [settings]);
@@ -171,6 +185,10 @@ const Settings = (props: SettingsProps) => {
                         paymentMethod,
                         stripeKey,
                         razorpayKey,
+                        lemonsqueezyStoreId,
+                        lemonsqueezyOneTimeVariantId,
+                        lemonsqueezySubscriptionMonthlyVariantId,
+                        lemonsqueezySubscriptionYearlyVariantId,
                         codeInjectionHead,
                         codeInjectionBody,
                         mailingAddress,
@@ -214,11 +232,18 @@ const Settings = (props: SettingsProps) => {
             paymentMethod: settingsResponse.paymentMethod || "",
             stripeKey: settingsResponse.stripeKey || "",
             razorpayKey: settingsResponse.razorpayKey || "",
+            lemonsqueezyStoreId: settingsResponse.lemonsqueezyStoreId || "",
             codeInjectionHead: settingsResponse.codeInjectionHead || "",
             codeInjectionBody: settingsResponse.codeInjectionBody || "",
             mailingAddress: settingsResponse.mailingAddress || "",
             hideCourseLitBranding:
                 settingsResponse.hideCourseLitBranding ?? false,
+            lemonsqueezyOneTimeVariantId:
+                settingsResponse.lemonsqueezyOneTimeVariantId || "",
+            lemonsqueezySubscriptionMonthlyVariantId:
+                settingsResponse.lemonsqueezySubscriptionMonthlyVariantId || "",
+            lemonsqueezySubscriptionYearlyVariantId:
+                settingsResponse.lemonsqueezySubscriptionYearlyVariantId || "",
         };
         setSettings(
             Object.assign({}, settings, settingsResponseWithNullsRemoved),
@@ -256,6 +281,10 @@ const Settings = (props: SettingsProps) => {
                         paymentMethod,
                         stripeKey,
                         razorpayKey,
+                        lemonsqueezyStoreId,
+                        lemonsqueezyOneTimeVariantId,
+                        lemonsqueezySubscriptionMonthlyVariantId,
+                        lemonsqueezySubscriptionYearlyVariantId,
                         codeInjectionHead,
                         codeInjectionBody,
                         mailingAddress,
@@ -319,6 +348,10 @@ const Settings = (props: SettingsProps) => {
                         paymentMethod,
                         stripeKey,
                         razorpayKey,
+                        lemonsqueezyStoreId,
+                        lemonsqueezyOneTimeVariantId,
+                        lemonsqueezySubscriptionMonthlyVariantId,
+                        lemonsqueezySubscriptionYearlyVariantId,
                         codeInjectionHead,
                         codeInjectionBody,
                         mailingAddress,
@@ -388,6 +421,10 @@ const Settings = (props: SettingsProps) => {
                     paymentMethod,
                     stripeKey,
                     razorpayKey,
+                    lemonsqueezyStoreId,
+                    lemonsqueezyOneTimeVariantId,
+                    lemonsqueezySubscriptionMonthlyVariantId,
+                    lemonsqueezySubscriptionYearlyVariantId,
                     codeInjectionHead,
                     codeInjectionBody,
                     mailingAddress,
@@ -449,6 +486,10 @@ const Settings = (props: SettingsProps) => {
                     paymentMethod,
                     stripeKey,
                     razorpayKey,
+                    lemonsqueezyStoreId,
+                    lemonsqueezyOneTimeVariantId,
+                    lemonsqueezySubscriptionMonthlyVariantId,
+                    lemonsqueezySubscriptionYearlyVariantId,
                     codeInjectionHead,
                     codeInjectionBody,
                     mailingAddress,
@@ -504,7 +545,13 @@ const Settings = (props: SettingsProps) => {
                 $stripeSecret: String,
                 $razorpayKey: String,
                 $razorpaySecret: String,
-                $razorpayWebhookSecret: String
+                $razorpayWebhookSecret: String,
+                $lemonsqueezyKey: String,
+                $lemonsqueezyStoreId: String,
+                $lemonsqueezyWebhookSecret: String
+                $lemonsqueezyOneTimeVariantId: String,
+                $lemonsqueezySubscriptionMonthlyVariantId: String,
+                $lemonsqueezySubscriptionYearlyVariantId: String
             ) {
                 settings: updatePaymentInfo(siteData: {
                     currencyISOCode: $currencyISOCode,
@@ -514,6 +561,12 @@ const Settings = (props: SettingsProps) => {
                     razorpayKey: $razorpayKey,
                     razorpaySecret: $razorpaySecret,
                     razorpayWebhookSecret: $razorpayWebhookSecret,
+                    lemonsqueezyKey: $lemonsqueezyKey,
+                    lemonsqueezyStoreId: $lemonsqueezyStoreId,
+                    lemonsqueezyWebhookSecret: $lemonsqueezyWebhookSecret,
+                    lemonsqueezyOneTimeVariantId: $lemonsqueezyOneTimeVariantId,
+                    lemonsqueezySubscriptionMonthlyVariantId: $lemonsqueezySubscriptionMonthlyVariantId,
+                    lemonsqueezySubscriptionYearlyVariantId: $lemonsqueezySubscriptionYearlyVariantId
                 }) {
                     settings {
                         title,
@@ -532,6 +585,10 @@ const Settings = (props: SettingsProps) => {
                         paymentMethod,
                         stripeKey,
                         razorpayKey,
+                        lemonsqueezyStoreId,
+                        lemonsqueezyOneTimeVariantId,
+                        lemonsqueezySubscriptionMonthlyVariantId,
+                        lemonsqueezySubscriptionYearlyVariantId,
                         codeInjectionHead,
                         codeInjectionBody,
                         mailingAddress,
@@ -553,6 +610,16 @@ const Settings = (props: SettingsProps) => {
                         razorpaySecret: newSettings.razorpaySecret,
                         razorpayWebhookSecret:
                             newSettings.razorpayWebhookSecret,
+                        lemonsqueezyKey: newSettings.lemonsqueezyKey,
+                        lemonsqueezyStoreId: newSettings.lemonsqueezyStoreId,
+                        lemonsqueezyWebhookSecret:
+                            newSettings.lemonsqueezyWebhookSecret,
+                        lemonsqueezyOneTimeVariantId:
+                            newSettings.lemonsqueezyOneTimeVariantId,
+                        lemonsqueezySubscriptionMonthlyVariantId:
+                            newSettings.lemonsqueezySubscriptionMonthlyVariantId,
+                        lemonsqueezySubscriptionYearlyVariantId:
+                            newSettings.lemonsqueezySubscriptionYearlyVariantId,
                     },
                 })
                 .build();
@@ -602,6 +669,24 @@ const Settings = (props: SettingsProps) => {
         razorpayWebhookSecret: getNewSettings
             ? newSettings.razorpayWebhookSecret
             : settings.razorpayWebhookSecret,
+        lemonsqueezyKey: getNewSettings
+            ? newSettings.lemonsqueezyKey
+            : settings.lemonsqueezyKey,
+        lemonsqueezyStoreId: getNewSettings
+            ? newSettings.lemonsqueezyStoreId
+            : settings.lemonsqueezyStoreId,
+        lemonsqueezyWebhookSecret: getNewSettings
+            ? newSettings.lemonsqueezyWebhookSecret
+            : settings.lemonsqueezyWebhookSecret,
+        lemonsqueezyOneTimeVariantId: getNewSettings
+            ? newSettings.lemonsqueezyOneTimeVariantId
+            : settings.lemonsqueezyOneTimeVariantId,
+        lemonsqueezySubscriptionMonthlyVariantId: getNewSettings
+            ? newSettings.lemonsqueezySubscriptionMonthlyVariantId
+            : settings.lemonsqueezySubscriptionMonthlyVariantId,
+        lemonsqueezySubscriptionYearlyVariantId: getNewSettings
+            ? newSettings.lemonsqueezySubscriptionYearlyVariantId
+            : settings.lemonsqueezySubscriptionYearlyVariantId,
     });
 
     const removeApikey = async (keyId: string) => {
@@ -762,23 +847,34 @@ const Settings = (props: SettingsProps) => {
                         onSubmit={handlePaymentSettingsSubmit}
                         className="flex flex-col gap-4 pt-4 mb-8"
                     >
-                        <Select
-                            title={SITE_SETTINGS_CURRENCY}
-                            options={currencies.map((currency) => ({
-                                label: currency.name,
-                                value: currency.isoCode,
-                            }))}
-                            value={
-                                newSettings.currencyISOCode?.toUpperCase() || ""
-                            }
-                            onChange={(value) =>
-                                setNewSettings(
-                                    Object.assign({}, newSettings, {
-                                        currencyISOCode: value,
-                                    }),
-                                )
-                            }
-                        />
+                        <div className="flex flex-col gap-2">
+                            <Select
+                                title={SITE_SETTINGS_CURRENCY}
+                                options={currencies.map((currency) => ({
+                                    label: currency.name,
+                                    value: currency.isoCode,
+                                }))}
+                                value={
+                                    newSettings.currencyISOCode?.toUpperCase() ||
+                                    ""
+                                }
+                                onChange={(value) =>
+                                    setNewSettings(
+                                        Object.assign({}, newSettings, {
+                                            currencyISOCode: value,
+                                        }),
+                                    )
+                                }
+                            />
+                            {newSettings.paymentMethod ===
+                                PAYMENT_METHOD_LEMONSQUEEZY && (
+                                <p className="text-xs text-red-500">
+                                    The currency selected will not be applied
+                                    during checkout. Set your desired currency
+                                    in your LemonSqueezy dashboard.
+                                </p>
+                            )}
+                        </div>
                         <Select
                             title={SITE_ADMIN_SETTINGS_PAYMENT_METHOD}
                             value={
@@ -809,6 +905,18 @@ const Settings = (props: SettingsProps) => {
                                             !x.razorpay,
                                     ),
                                 },
+                                {
+                                    label: capitalize(
+                                        PAYMENT_METHOD_LEMONSQUEEZY.toLowerCase(),
+                                    ),
+                                    value: PAYMENT_METHOD_LEMONSQUEEZY,
+                                    disabled: currencies.some(
+                                        (x) =>
+                                            x.isoCode ===
+                                                newSettings.currencyISOCode?.toUpperCase() &&
+                                            !x.lemonsqueezy,
+                                    ),
+                                },
                             ]}
                             onChange={(value) =>
                                 setNewSettings(
@@ -820,6 +928,7 @@ const Settings = (props: SettingsProps) => {
                             placeholderMessage={
                                 SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL
                             }
+                            disabled={!newSettings.currencyISOCode}
                         />
 
                         {newSettings.paymentMethod ===
@@ -871,6 +980,63 @@ const Settings = (props: SettingsProps) => {
                                 sx={{ mb: 2 }}
                                 autoComplete="off"
                             /> */}
+                            </>
+                        )}
+                        {newSettings.paymentMethod ===
+                            PAYMENT_METHOD_LEMONSQUEEZY && (
+                            <>
+                                <FormField
+                                    label={
+                                        SITE_SETTINGS_LEMONSQUEEZY_STOREID_TEXT
+                                    }
+                                    name="lemonsqueezyStoreId"
+                                    value={
+                                        newSettings.lemonsqueezyStoreId || ""
+                                    }
+                                    onChange={onChangeData}
+                                />
+                                <FormField
+                                    label={
+                                        SITE_SETTINGS_LEMONSQUEEZY_ONETIME_TEXT
+                                    }
+                                    name="lemonsqueezyOneTimeVariantId"
+                                    value={
+                                        newSettings.lemonsqueezyOneTimeVariantId ||
+                                        ""
+                                    }
+                                    onChange={onChangeData}
+                                />
+                                <FormField
+                                    label={
+                                        SITE_SETTINGS_LEMONSQUEEZY_SUB_MONTHLY_TEXT
+                                    }
+                                    name="lemonsqueezySubscriptionMonthlyVariantId"
+                                    value={
+                                        newSettings.lemonsqueezySubscriptionMonthlyVariantId ||
+                                        ""
+                                    }
+                                    onChange={onChangeData}
+                                />
+                                <FormField
+                                    label={
+                                        SITE_SETTINGS_LEMONSQUEEZY_SUB_YEARLY_TEXT
+                                    }
+                                    name="lemonsqueezySubscriptionYearlyVariantId"
+                                    value={
+                                        newSettings.lemonsqueezySubscriptionYearlyVariantId ||
+                                        ""
+                                    }
+                                    onChange={onChangeData}
+                                />
+                                <FormField
+                                    label={SITE_SETTINGS_LEMONSQUEEZY_KEY_TEXT}
+                                    name="lemonsqueezyKey"
+                                    type="password"
+                                    value={newSettings.lemonsqueezyKey || ""}
+                                    onChange={onChangeData}
+                                    sx={{ mb: 2 }}
+                                    autoComplete="off"
+                                />
                             </>
                         )}
                         {newSettings.paymentMethod ===

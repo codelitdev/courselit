@@ -19,6 +19,12 @@ const SettingsSchema = new mongoose.Schema<SiteInfo>({
     razorpayKey: { type: String },
     razorpaySecret: { type: String },
     razorpayWebhookSecret: { type: String },
+    lemonsqueezyKey: { type: String },
+    lemonsqueezyStoreId: { type: String },
+    lemonsqueezyWebhookSecret: { type: String },
+    lemonsqueezyOneTimeVariantId: { type: String },
+    lemonsqueezySubscriptionMonthlyVariantId: { type: String },
+    lemonsqueezySubscriptionYearlyVariantId: { type: String },
 });
 
 export default SettingsSchema;

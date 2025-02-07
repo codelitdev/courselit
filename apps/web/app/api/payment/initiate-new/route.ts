@@ -166,10 +166,12 @@ export async function POST(req: NextRequest) {
         membership.sessionId = generateUniqueId();
 
         const invoiceId = generateUniqueId();
+        const currencyISOCode = await paymentMethod?.getCurrencyISOCode();
+
         const metadata = {
             membershipId: membership.membershipId,
             invoiceId,
-            currencyISOCode: siteinfo.currencyISOCode,
+            currencyISOCode,
         };
 
         const paymentTracker = await paymentMethod!.initiate({
@@ -200,7 +202,7 @@ export async function POST(req: NextRequest) {
             status: Constants.InvoiceStatus.PENDING,
             paymentProcessor: paymentMethod!.name,
             paymentProcessorEntityId: paymentTracker,
-            currencyISOCode: siteinfo.currencyISOCode,
+            currencyISOCode,
         });
 
         membership.subscriptionId = undefined;
