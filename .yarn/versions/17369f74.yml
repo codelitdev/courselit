@@ -1,0 +1,12 @@
+undecided:
+  - "@courselit/docs"
+  - "@courselit/queue"
+  - "@courselit/web"
+  - "@courselit/common-models"
+  - "@courselit/common-widgets"
+  - "@courselit/components-library"
+  - "@courselit/icons"
+  - "@courselit/state-management"
+  - tailwind-config
+  - "@courselit/text-editor"
+  - tsconfig
