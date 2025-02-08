@@ -16,7 +16,7 @@ html
                 text-align: center;
             }
     body
-        p   Your verification code is: #{code}
+        p   #{code} is your verification code. 
         p
             strong IMPORTANT:
             |   Do not share this email with anyone as anyone can log in to your
