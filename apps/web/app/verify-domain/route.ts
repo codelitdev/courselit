@@ -104,7 +104,7 @@ export async function GET(req: Request) {
             const currentDate = new Date();
             const dateAfter24Hours = new Date(currentDate.getTime() + 86400000);
             domain.checkSubscriptionStatusAfter = dateAfter24Hours;
-            await (domain as any).save();
+            await (domain as any).save({ timestamps: true });
         }
     } else {
         domain = await DomainModel.findOne({
@@ -142,7 +142,7 @@ export async function GET(req: Request) {
             email: domain!.email,
             superAdmin: true,
         });
-        (domain! as any).save();
+        (domain! as any).save({ timestamps: true });
     }
 
     return Response.json({
