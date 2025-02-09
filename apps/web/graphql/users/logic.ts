@@ -333,64 +333,68 @@ export async function createUser({
         checkForInvalidPermissions(permissions);
     }
 
-    const newUser: Partial<User> = {
-        domain: domain._id,
-        name: name,
-        email: email,
-        active: true,
-        purchases: [],
-        permissions: [],
-        lead: lead || constants.leadWebsite,
-        subscribedToUpdates,
-        invited,
-    };
-    if (superAdmin) {
-        newUser.permissions = [
-            constants.permissions.manageCourse,
-            constants.permissions.manageAnyCourse,
-            constants.permissions.publishCourse,
-            constants.permissions.manageMedia,
-            constants.permissions.manageSite,
-            constants.permissions.manageSettings,
-            constants.permissions.manageUsers,
-            constants.permissions.manageCommunity,
-        ];
-    } else {
-        newUser.permissions = [
-            constants.permissions.enrollInCourse,
-            constants.permissions.manageMedia,
-        ];
-        if (permissions.length) {
-            newUser.permissions = [...newUser.permissions, ...permissions];
+    const rawResult = await UserModel.findOneAndUpdate(
+        { domain: domain._id, email },
+        {
+            $setOnInsert: {
+                domain: domain._id,
+                name,
+                email,
+                active: true,
+                purchases: [],
+                permissions: superAdmin
+                    ? [
+                          constants.permissions.manageCourse,
+                          constants.permissions.manageAnyCourse,
+                          constants.permissions.publishCourse,
+                          constants.permissions.manageMedia,
+                          constants.permissions.manageSite,
+                          constants.permissions.manageSettings,
+                          constants.permissions.manageUsers,
+                          constants.permissions.manageCommunity,
+                      ]
+                    : [
+                          constants.permissions.enrollInCourse,
+                          constants.permissions.manageMedia,
+                          ...permissions,
+                      ],
+                lead: lead || constants.leadWebsite,
+                subscribedToUpdates,
+                invited,
+            },
+        },
+        { upsert: true, new: true, includeResultMetadata: true },
+    );
+
+    const createdUser = rawResult.value;
+    const isNewUser = !rawResult.lastErrorObject!.updatedExisting;
+
+    if (isNewUser) {
+        if (superAdmin) {
+            await initMandatoryPages(domain, createdUser);
         }
-    }
-    newUser.lead = lead;
-    const user = await UserModel.create(newUser);
-
-    if (superAdmin) {
-        await initMandatoryPages(domain, user);
-    }
-
-    await recordActivity({
-        domain: domain._id,
-        userId: user.userId,
-        type: "user_created",
-    });
-
-    if (user.subscribedToUpdates) {
-        await triggerSequences({
-            user,
-            event: Constants.eventTypes[3],
-        });
 
         await recordActivity({
-            domain: domain!._id,
-            userId: user.userId,
-            type: "newsletter_subscribed",
+            domain: domain._id,
+            userId: createdUser.userId,
+            type: "user_created",
         });
+
+        if (createdUser.subscribedToUpdates) {
+            await triggerSequences({
+                user: createdUser,
+                event: Constants.eventTypes[3],
+            });
+
+            await recordActivity({
+                domain: domain!._id,
+                userId: createdUser.userId,
+                type: "newsletter_subscribed",
+            });
+        }
     }
 
-    return user;
+    return createdUser;
 }
 
 export async function getSegments(ctx: GQLContext): Promise<UserSegment[]> {

@@ -5,6 +5,7 @@ import { isDateInFuture } from "../../lib/utils";
 import { createUser } from "../../graphql/users/logic";
 import { headers } from "next/headers";
 import connectToDatabase from "../../services/db";
+import { warn } from "@/services/logger";
 
 const { domainNameForSingleTenancy } = constants;
 
@@ -103,8 +104,13 @@ export async function GET(req: Request) {
 
             const currentDate = new Date();
             const dateAfter24Hours = new Date(currentDate.getTime() + 86400000);
-            domain.checkSubscriptionStatusAfter = dateAfter24Hours;
-            await (domain as any).save({ timestamps: true });
+            // domain.checkSubscriptionStatusAfter = dateAfter24Hours;
+            // await (domain as any).save({ timestamps: true });
+            await DomainModel.findOneAndUpdate(
+                { _id: domain!._id },
+                { $set: { checkSubscriptionStatusAfter: dateAfter24Hours } },
+                { upsert: false },
+            );
         }
     } else {
         domain = await DomainModel.findOne({
@@ -117,32 +123,51 @@ export async function GET(req: Request) {
                 process.exit(1);
             }
 
-            domain = await DomainModel.create({
-                name: domainNameForSingleTenancy,
-                email: process.env.SUPER_ADMIN_EMAIL,
-                firstRun: true,
-                quota: {
-                    mail: {
-                        daily: 1000000,
-                        monthly: 100000000,
-                        dailyCount: 0,
-                        monthlyCount: 0,
-                        lastDailyCountUpdate: new Date(),
-                        lastMonthlyCountUpdate: new Date(),
+            domain = await DomainModel.findOneAndUpdate(
+                {
+                    name: domainNameForSingleTenancy,
+                },
+                {
+                    email: process.env.SUPER_ADMIN_EMAIL,
+                    firstRun: true,
+                    quota: {
+                        mail: {
+                            daily: 1000000,
+                            monthly: 100000000,
+                            dailyCount: 0,
+                            monthlyCount: 0,
+                            lastDailyCountUpdate: new Date(),
+                            lastMonthlyCountUpdate: new Date(),
+                        },
                     },
                 },
-            });
+                {
+                    upsert: true,
+                    new: true,
+                },
+            );
         }
     }
 
     if (domain!.firstRun) {
-        domain!.firstRun = false;
-        await createUser({
-            domain: domain!,
-            email: domain!.email,
-            superAdmin: true,
-        });
-        (domain! as any).save({ timestamps: true });
+        try {
+            await createUser({
+                domain: domain!,
+                email: domain!.email,
+                superAdmin: true,
+            });
+            await DomainModel.findOneAndUpdate(
+                { _id: domain!._id },
+                { $set: { firstRun: false } },
+                { upsert: false },
+            );
+        } catch (err) {
+            warn(`Error in creating user: ${err.message}`, {
+                domain: domain?.name,
+                route: "verify-domain",
+                stack: err.stack,
+            });
+        }
     }
 
     return Response.json({
