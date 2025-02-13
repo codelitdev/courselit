@@ -1,4 +1,3 @@
-import React from "react";
 import { WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
 import {
@@ -11,6 +10,7 @@ import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
     mediaAspectRatio as defaultMediaAspectRatio,
+    mediaLayout as defaultMediaLayout,
 } from "./defaults";
 import clsx from "clsx";
 
@@ -52,6 +52,10 @@ export default function Widget({
         descriptionFontSize,
         contentAlignment,
         cssId,
+        backgroundMedia,
+        overlayColor,
+        overlayOpacity,
+        mediaLayout = defaultMediaLayout,
     },
 }: WidgetProps<Settings>) {
     const hasHeroGraphic = youtubeLink || (media && media.mediaId);
@@ -69,7 +73,7 @@ export default function Widget({
 
     return (
         <section
-            className={`py-[${verticalPadding}px]`}
+            className={`relative py-[${verticalPadding}px] overflow-hidden `}
             style={
                 style === "card"
                     ? {}
@@ -80,7 +84,48 @@ export default function Widget({
             }
             id={cssId}
         >
-            <div className="mx-auto lg:max-w-[1200px]">
+            {backgroundMedia && backgroundMedia.mediaId && (
+                <>
+                    <div
+                        className={`absolute inset-0 ${twRoundedMap[mediaRadius]} overflow-hidden`}
+                    >
+                        {backgroundMedia.mimeType.split("/")[0] === "image" && (
+                            <img
+                                src={backgroundMedia.file}
+                                alt={backgroundMedia.caption}
+                                className={`w-full h-full ${mediaLayout}`}
+                            />
+                        )}
+                        {backgroundMedia.mimeType.split("/")[0] === "video" && (
+                            <video
+                                autoPlay
+                                loop
+                                muted
+                                controls
+                                controlsList="nodownload"
+                                className={clsx(
+                                    "w-full h-full rounded mb-2",
+                                    mediaLayout,
+                                )}
+                            >
+                                <source
+                                    src={backgroundMedia.file}
+                                    type={backgroundMedia.mimeType}
+                                />
+                                Your browser does not support the video tag.
+                            </video>
+                        )}
+                    </div>
+                    <div
+                        className={`absolute inset-0 ${twRoundedMap[mediaRadius]}`}
+                        style={{
+                            backgroundColor: overlayColor,
+                            opacity: overlayOpacity,
+                        }}
+                    />
+                </>
+            )}
+            <div className="relative z-10 mx-auto lg:max-w-[1200px]">
                 <div
                     className={clsx(
                         "w-full !mx-auto",
@@ -145,6 +190,9 @@ export default function Widget({
                                         {media.mimeType.split("/")[0] ===
                                             "video" && (
                                             <video
+                                                autoPlay
+                                                loop
+                                                muted
                                                 controls
                                                 controlsList="nodownload" // eslint-disable-line react/no-unknown-property
                                                 className={clsx(
@@ -154,7 +202,9 @@ export default function Widget({
                                             >
                                                 <source
                                                     src={media.file}
-                                                    type="video/mp4"
+                                                    type={
+                                                        backgroundMedia.mimeType
+                                                    }
                                                 />
                                                 Your browser does not support
                                                 the video tag.
@@ -165,9 +215,7 @@ export default function Widget({
                             </div>
                         )}
                         <div
-                            className={`w-full ${
-                                hasHeroGraphic ? "md:w-1/2" : "md:w-full"
-                            } sm:pr-0 sm:pl-0 ${
+                            className={`w-full ${hasHeroGraphic ? "md:w-1/2" : "md:w-full"} sm:pr-0 sm:pl-0 ${
                                 hasHeroGraphic && alignment === "right"
                                     ? "md:pr-1"
                                     : "md:pr-0"
