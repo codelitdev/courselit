@@ -29,6 +29,7 @@ interface SelectProps {
     defaultMessage?: string;
     variant?: "with-label" | "without-label";
     placeholderMessage?: string;
+    [x: string]: any;
 }
 
 export default function CustomSelect({
@@ -40,13 +41,14 @@ export default function CustomSelect({
     disabled,
     variant = "with-label",
     placeholderMessage = "Select a value",
+    ...props
 }: SelectProps) {
     return (
         <div>
             {variant !== "without-label" && (
                 <div className="mb-1 font-medium">{title}</div>
             )}
-            <Select value={value as string} onValueChange={onChange}>
+            <Select value={value as string} onValueChange={onChange} {...props}>
                 <SelectTrigger className="w-full" disabled={disabled}>
                     <SelectValue placeholder={placeholderMessage}>
                         {" "}

@@ -9,6 +9,7 @@ import {
 import {
     COMMUNITY_HEADER,
     COMMUNITY_SETTINGS,
+    DANGER_ZONE_HEADER,
     MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
     MEDIA_SELECTOR_UPLOAD_BTN_CAPTION,
     TOAST_DESCRIPTION_CHANGES_SAVED,
@@ -811,7 +812,7 @@ export default function Page({
             <Separator className="my-8" />
             <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-destructive">
-                    Danger Zone
+                    {DANGER_ZONE_HEADER}
                 </h3>
                 <AlertDialog>
                     <AlertDialogTrigger asChild>

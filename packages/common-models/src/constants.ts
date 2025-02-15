@@ -111,3 +111,8 @@ export const NotificationEntityAction = {
     COMMUNITY_MEMBERSHIP_REQUESTED: "community:membership:requested",
     COMMUNITY_MEMBERSHIP_GRANTED: "community:membership:granted",
 } as const;
+export const ProductPriceType = {
+    FREE: "free",
+    PAID: "paid",
+    EMAIL: "email",
+} as const;

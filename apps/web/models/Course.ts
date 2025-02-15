@@ -40,6 +40,8 @@ export interface Course {
     pageId?: string;
     paymentPlans: string[];
     defaultPaymentPlan: string;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 const CourseSchema = new mongoose.Schema<Course>(

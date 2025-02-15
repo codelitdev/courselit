@@ -1,4 +1,4 @@
-import constants from "../config/constants";
+import { Constants } from "@courselit/common-models";
 
 /**
  * This file provides application wide strings.
@@ -67,7 +67,7 @@ export const DIALOG_TITLE_FEATURED_IMAGE = "Select media";
 export const BUTTON_SET_FEATURED_IMAGE = "Select";
 export const BUTTON_SELECT_MEDIA = "Pick media";
 export const FORM_FIELD_FEATURED_IMAGE = "Featured image";
-export const BTN_DELETE_COURSE = "Delete course";
+export const BTN_DELETE_COURSE = "Delete product";
 export const BTN_EXIT_COURSE = "Exit";
 export const BTN_EXIT_COURSE_TOOLTIP = "Exit course";
 export const BTN_ADD_VIDEO = "Add";
@@ -134,7 +134,7 @@ export const CAPTION_TRY_AGAIN = "Try again";
 export const CAPTION_CLOSE = "Close";
 export const LOADING = "Loading";
 export const WORKING = "Working...";
-export const BUTTON_NEW_LESSON_TEXT = "New Lesson";
+export const BUTTON_NEW_LESSON_TEXT = "Add Lesson";
 export const EDIT_LESSON_TEXT = "Edit Lesson";
 export const BUTTON_LESSON_DOWNLOAD = "Open in a new tab";
 export const BUTTON_NEW_GROUP_TEXT = "New section";
@@ -416,22 +416,22 @@ export const FORM_NEW_PRODUCT_MENU_COURSE_SUBTITLE =
     "An online course consisting of images, videos, text and more.";
 export const FORM_NEW_PRODUCT_MENU_DOWNLOADS_SUBTITLE =
     "Allow users to download file(s).";
-export const NEW_SECTION_HEADER = "New section";
+export const NEW_SECTION_HEADER = "New Section";
 export const EDIT_SECTION_DRIP = "Drip";
-export const DRIP_SECTION_STATUS = "Enable drip";
-export const EDIT_SECTION_HEADER = "Edit section";
+export const DRIP_SECTION_STATUS = "Enable Drip";
+export const EDIT_SECTION_HEADER = "Edit Section";
 export const DELETE_SECTION_HEADER = "Delete section";
 export const PRICING_HEADER = "Pricing";
-export const PRICING_DROPDOWN = "Pick your pricing scheme";
-export const PRICING_FREE = constants.costFree;
+export const PRICING_DROPDOWN = "Pricing model";
+export const PRICING_FREE = Constants.ProductPriceType.FREE;
 export const PRICING_FREE_LABEL = "Free";
 export const PRICING_FREE_SUBTITLE =
     "People can access the content for free. The user needs to be signed in.";
-export const PRICING_EMAIL = constants.costEmail;
+export const PRICING_EMAIL = Constants.ProductPriceType.EMAIL;
 export const PRICING_EMAIL_LABEL = "Free email delivery";
 export const PRICING_EMAIL_SUBTITLE =
     "People will be sent the content over email. The user needs not be signed in.";
-export const PRICING_PAID = constants.costPaid;
+export const PRICING_PAID = Constants.ProductPriceType.PAID;
 export const PRICING_PAID_LABEL = "Paid";
 export const PRICING_PAID_SUBTITLE =
     "People can access the content after a one time payment. The user needs to be signed in.";
@@ -604,3 +604,4 @@ export const TOAST_DESCRIPTION_CHANGES_SAVED = "Changes saved";
 export const DELETED_COMMENT_PLACEHOLDER = "Deleted";
 export const SETTINGS_RESOURCE_PAYMENT = "Set up payment";
 export const SETTINGS_RESOURCE_API = "API documentation";
+export const EDIT_CONTENT_MENU_ITEM = "Edit content";

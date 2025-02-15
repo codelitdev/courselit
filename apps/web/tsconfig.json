@@ -25,6 +25,6 @@
         "additional.d.ts",
         "components/admin/mails/editor.tsx.notused",
         "services/mail.ts.notused"
-    ],
+, "app/(with-contexts)/dashboard/(sidebar)/product-new/[id]/content/section/new/page.tsx"    ],
     "exclude": ["node_modules"]
 }
